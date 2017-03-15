@@ -12,8 +12,8 @@
 #include "persist.h"
 
 HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_proxy *proxy_list,
-                                          int use_rmk, int *control_fd);
-HYD_status HYDT_bscd_persist_wait_for_completion(int timeout);
+                                          struct HYD_node *node_list, int use_rmk, int *control_fd);
+HYD_status HYDT_bscd_persist_wait_for_completion(int timeout, int *, int **, int **);
 
 extern int *HYDT_bscd_persist_control_fd;
 extern int HYDT_bscd_persist_node_count;

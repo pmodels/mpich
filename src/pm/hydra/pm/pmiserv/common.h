@@ -46,7 +46,10 @@ struct HYD_pmcd_hdr {
         PMI_CMD,
         STDOUT,
         STDERR,
-        PROCESS_TERMINATED
+        PROCESS_TERMINATED,
+        LAUNCH_CHILD_PROXY,
+        SEND_EXEC,
+        PIDS_INFO
     } cmd;
 
     /* Generic */

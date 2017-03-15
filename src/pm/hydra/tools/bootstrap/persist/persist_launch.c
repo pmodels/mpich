@@ -59,7 +59,7 @@ static HYD_status persist_cb(int fd, HYD_event_t events, void *userp)
 }
 
 HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_proxy *proxy_list,
-                                          int use_rmk, int *control_fd)
+                                          struct HYD_node *node_list, int use_rmk, int *control_fd)
 {
     struct HYD_proxy *proxy;
     int idx, i;

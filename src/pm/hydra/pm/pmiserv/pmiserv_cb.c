@@ -13,7 +13,39 @@
 #include "pmiserv_utils.h"
 #include "pmiserv_pmi.h"
 
-static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_version)
+static HYD_status send_exec_info(struct HYD_proxy *proxy)
+{
+    struct HYD_pmcd_hdr hdr;
+    int sent, closed;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYD_pmcd_init_header(&hdr);
+    hdr.cmd = PROC_INFO;
+    status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed,
+                             HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to write data to proxy\n");
+    HYDU_ASSERT(!closed, status);
+
+    if(HYD_server_info.user_global.branch_count != -1) {
+        status = HYDU_sock_write(proxy->control_fd, &proxy->proxy_id, sizeof(int), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "unable to write data to proxy\n");
+        HYDU_ASSERT(!closed, status);
+    }
+
+    status = HYDU_send_strlist(proxy->control_fd, proxy->exec_launch_info);
+    HYDU_ERR_POP(status, "error sending exec info\n");
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_version, int rank)
 {
     char **args = NULL, *cmd = NULL;
     struct HYD_pmcd_pmi_handle *h;
@@ -45,7 +77,7 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
     h = HYD_pmcd_pmi_handle;
     while (h->handler) {
         if (!strcmp(cmd, h->cmd)) {
-            status = h->handler(fd, pid, pgid, args);
+            status = h->handler(fd, pid, pgid, args, rank);
             HYDU_ERR_POP(status, "PMI handler returned error\n");
             break;
         }
@@ -209,6 +241,16 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
     }
 
     if (hdr.cmd == PID_LIST) {  /* Got PIDs */
+        struct HYD_proxy *tproxy;
+        if (HYD_server_info.user_global.branch_count != -1) {
+            for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {
+                if (tproxy->proxy_id == hdr.pid)
+                    break;
+            }
+            proxy = tproxy;
+            if (!proxy)
+                goto fn_exit;
+        }
         HYDU_MALLOC_OR_JUMP(proxy->pid, int *, proxy->proxy_process_count * sizeof(int), status);
         status = HYDU_sock_read(fd, (void *) proxy->pid,
                                 proxy->proxy_process_count * sizeof(int),
@@ -232,6 +274,14 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "debugger setup failed\n");
     }
     else if (hdr.cmd == EXIT_STATUS) {
+        if (HYD_server_info.user_global.branch_count != -1) {
+            for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next)
+                if (tproxy->proxy_id == hdr.pid)
+                    break;
+            proxy = tproxy;
+            if (proxy == NULL)
+                goto fn_exit;
+        }
         HYDU_MALLOC_OR_JUMP(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int),
                             status);
         status =
@@ -241,8 +291,13 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "unable to read status from proxy\n");
         HYDU_ASSERT(!closed, status);
 
-        status = cleanup_proxy(proxy);
-        HYDU_ERR_POP(status, "error cleaning up proxy connection\n");
+        if (proxy->proxy_id == ((struct HYD_proxy *)userp)->proxy_id) {
+            status = cleanup_proxy(proxy);
+            HYDU_ERR_POP(status, "unable to cleanup proxy connection\n");
+        }
+        else {
+            proxy->control_fd = HYD_FD_CLOSED;
+        }
 
         /* If any of the processes was killed with a signal, cleanup
          * the remaining processes */
@@ -284,7 +339,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
         buf[hdr.buflen] = 0;
 
-        status = handle_pmi_cmd(fd, proxy->pg->pgid, hdr.pid, buf, hdr.pmi_version);
+        status = handle_pmi_cmd(fd, proxy->pg->pgid, hdr.pid, buf, hdr.pmi_version, hdr.rank);
         HYDU_ERR_POP(status, "unable to process PMI command\n");
 
         MPL_free(buf);
@@ -398,35 +453,19 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
             }
         }
     }
+    else if (hdr.cmd == SEND_EXEC) {
+        for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {
+            if (tproxy->proxy_id == hdr.pid)
+                break;
+        }
+        HYDU_ERR_CHKANDJUMP(status, tproxy == NULL, HYD_INTERNAL_ERROR,
+                            "cannot find proxy with ID = %d\n", hdr.pid);
+        tproxy->control_fd = fd;
+        send_exec_info(tproxy);
+    }
     else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unhandled command = %d\n", hdr.cmd);
     }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status send_exec_info(struct HYD_proxy *proxy)
-{
-    struct HYD_pmcd_hdr hdr;
-    int sent, closed;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    HYD_pmcd_init_header(&hdr);
-    hdr.cmd = PROC_INFO;
-    status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed,
-                             HYDU_SOCK_COMM_MSGWAIT);
-    HYDU_ERR_POP(status, "unable to write data to proxy\n");
-    HYDU_ASSERT(!closed, status);
-
-    status = HYDU_send_strlist(proxy->control_fd, proxy->exec_launch_info);
-    HYDU_ERR_POP(status, "error sending exec info\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -470,6 +509,11 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
 
     /* This will be the control socket for this proxy */
     proxy->control_fd = fd;
+
+    /* Ask to start children if necessary */
+    if(HYD_server_info.nodes_lists != NULL && HYD_server_info.nodes_lists[proxy_id] != NULL && pgid == 0) {
+        HYDU_send_start_children(fd, HYD_server_info.nodes_lists[proxy_id], proxy_id);
+    }
 
     /* Send out the executable information */
     status = send_exec_info(proxy);

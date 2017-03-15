@@ -193,3 +193,98 @@ HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_
     MPL_free(key_pair);
     goto fn_exit;
 }
+
+HYD_status HYDU_send_start_children(int fd, char *nodes, int proxy_id)
+{
+    struct HYD_pmcd_hdr hdr;
+    int sent, closed;
+    HYD_status status = HYD_SUCCESS;
+    HYDU_FUNC_ENTER();
+
+    HYD_pmcd_init_header(&hdr);
+    hdr.cmd = LAUNCH_CHILD_PROXY;
+    hdr.buflen = strlen(nodes);
+    hdr.pid = proxy_id;
+    hdr.rank = 0;
+
+    status = HYDU_sock_write(fd, &hdr, sizeof(hdr), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to send LAUNCH_CHILD_PROXY header to proxy\n");
+    HYDU_ASSERT(!closed, status);
+
+    status = HYDU_sock_write(fd, nodes, hdr.buflen, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to send response to command\n");
+    HYDU_ASSERT(!closed, status);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status node_list_to_strings(struct HYD_node *node_list, int size, char **node_list_str)
+{
+    int i, j, k;
+    char *tmp[HYD_NUM_TMP_STRINGS], *foo = NULL;
+    struct HYD_node *node;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    i = 0;
+    j = 0;
+    k = 0;
+    for (node = node_list; node; node = node->next) {
+        tmp[i++] = MPL_strdup(node->hostname);
+        tmp[i++] = MPL_strdup(",");
+        tmp[i++] = HYDU_int_to_str(node->core_count);
+        tmp[i++] = MPL_strdup(",");
+        tmp[i++] = HYDU_int_to_str(node->node_id);
+        j++;
+        if (j == size) {
+            tmp[i] = NULL;
+            status = HYDU_str_alloc_and_join(tmp, &foo);
+            HYDU_ERR_POP(status, "error joining strings\n");
+            HYDU_free_strlist(tmp);
+
+            node_list_str[k++] = MPL_strdup(foo);
+            MPL_free(foo);
+            i = 0;
+            j = 0;
+        } else {
+            if (node->next)
+                tmp[i++] = MPL_strdup(",");
+
+            /* If we used up more than half of the array elements, merge
+             * what we have so far */
+            if (i > (HYD_NUM_TMP_STRINGS / 2)) {
+                tmp[i] = NULL;
+                status = HYDU_str_alloc_and_join(tmp, &foo);
+                HYDU_ERR_POP(status, "error joining strings\n");
+                HYDU_free_strlist(tmp);
+
+                i = 0;
+                tmp[i++] = MPL_strdup(foo);
+                MPL_free(foo);
+            }
+        }
+    }
+
+    if (i != 0) {
+        tmp[i] = NULL;
+        status = HYDU_str_alloc_and_join(tmp, &foo);
+        HYDU_ERR_POP(status, "error joining strings\n");
+        HYDU_free_strlist(tmp);
+
+        node_list_str[k] = MPL_strdup(foo);
+        MPL_free(foo);
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}

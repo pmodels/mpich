@@ -52,6 +52,14 @@ void HYD_uiu_init_params(void)
 void HYD_uiu_free_params(void)
 {
     struct stdoe_fd *tmp, *run;
+    int i;
+
+    if (HYD_server_info.nodes_lists) {
+        for(i = 0; i < HYD_server_info.user_global.branch_count; i++) {
+            MPL_free(HYD_server_info.nodes_lists[i]);
+        }
+        MPL_free(HYD_server_info.nodes_lists);
+    }
 
     HYDU_finalize_user_global(&HYD_server_info.user_global);
 

@@ -8,7 +8,7 @@
 #include "bsci.h"
 #include "persist_client.h"
 
-HYD_status HYDT_bscd_persist_wait_for_completion(int timeout)
+HYD_status HYDT_bscd_persist_wait_for_completion(int timeout, int *ncompleted, int **procs, int **exit_statuses)
 {
     int ret, i, all_done;
     HYD_status status = HYD_SUCCESS;

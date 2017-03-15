@@ -337,6 +337,7 @@ struct HYD_node {
     int active_processes;
 
     int node_id;
+    int pmi_level;
 
     /* Username */
     char *user;
@@ -403,6 +404,7 @@ struct HYD_user_global {
     int usize;
 
     int auto_cleanup;
+    int branch_count;
 
     struct HYD_env_global global_env;
 };

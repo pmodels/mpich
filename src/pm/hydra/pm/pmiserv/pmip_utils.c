@@ -33,6 +33,175 @@ void HYD_pmcd_pmip_send_signal(int sig)
     HYD_pmcd_pmip.downstream.forced_cleanup = 1;
 }
 
+HYD_status HYD_pmcd_pmi_fill_in_child_proxy_args(struct HYD_string_stash *proxy_stash , char *control_port, int pgid, int start_node_id)
+{
+    int i, arg = 0, use_ddd, use_valgrind;
+    struct HYD_string_stash stash;
+    char *str;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    /* Hack to use ddd and valgrind with the proxy */
+    if (MPL_env2bool("HYDRA_USE_DDD", &use_ddd) == 0)
+        use_ddd = 0;
+    if (MPL_env2bool("HYDRA_USE_VALGRIND", &use_valgrind) == 0)
+        use_valgrind = 0;
+
+    HYD_STRING_STASH_INIT(*proxy_stash);
+    if (use_ddd)
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("ddd"), status);
+
+    if (use_valgrind)
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("valgrind"), status);
+
+    HYD_STRING_STASH_INIT(stash);
+    HYD_STRING_STASH(stash, MPL_strdup(HYD_pmcd_pmip.base_path), status);
+    HYD_STRING_STASH(stash, MPL_strdup(HYDRA_PMI_PROXY), status);
+    HYD_STRING_SPIT(stash, str, status);
+
+    HYD_STRING_STASH(*proxy_stash, str, status);
+
+    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--control-port"), status);
+    HYD_STRING_STASH(*proxy_stash, MPL_strdup(control_port), status);
+
+    if (HYD_pmcd_pmip.user_global.debug == 1)
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--debug"), status);
+
+    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--branch-count"), status);
+    HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_pmcd_pmip.user_global.branch_count), status);
+
+    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--parent-proxy-id"), status);
+    HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_pmcd_pmip.local.id), status);
+
+    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--launcher"), status);
+    HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYD_pmcd_pmip.user_global.launcher), status);
+
+    if (HYD_pmcd_pmip.user_global.launcher_exec) {
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--launcher-exec"), status);
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYD_pmcd_pmip.user_global.launcher_exec), status);
+    }
+
+    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--demux"), status);
+    HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYD_pmcd_pmip.user_global.demux), status);
+
+    if (HYD_pmcd_pmip.user_global.iface) {
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--iface"), status);
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYD_pmcd_pmip.user_global.iface), status);
+    }
+
+    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--pgid"), status);
+    HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(pgid), status);
+
+    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--usize"), status);
+    HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_pmcd_pmip.user_global.usize), status);
+
+    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--proxy-id"), status);
+
+    if (use_ddd) {
+        HYDU_dump_noprefix(stdout, "\nUse proxy launch args: ");
+        HYDU_print_strlist(proxy_stash->strlist);
+        HYDU_dump_noprefix(stdout, "\n");
+    }
+
+    if (HYD_pmcd_pmip.user_global.debug == 1) {
+        HYDU_dump_noprefix(stdout, "\nProxy launch args: ");
+        HYDU_print_strlist(proxy_stash->strlist);
+        HYDU_dump_noprefix(stdout, "\n");
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYDU_send_procinfo_request(void)
+{
+    int sent, closed;
+    struct HYD_pmcd_hdr hdr;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYD_pmcd_init_header(&hdr);
+    hdr.cmd = SEND_EXEC;
+    hdr.buflen = 0;
+    hdr.pid = HYD_pmcd_pmip.local.id;
+    hdr.pmi_version = 1;
+    hdr.rank = 0;
+    /* We send command upstream */
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to send SEND_EXEC header upstream\n");
+    HYDU_ASSERT(!closed, status);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYD_pmci_wait_for_children_completion()
+{
+    int not_complete;
+    HYD_status status = HYD_SUCCESS;
+    int ncompleted = 0, *procs = NULL, *exit_statuses = NULL, i, j;
+
+    HYDU_FUNC_ENTER();
+
+    /* wait for the children to get back with the exit status */
+    status = HYDT_bsci_wait_for_completion(-1, &ncompleted, &procs, &exit_statuses);
+    HYDU_ERR_POP(status, "bootstrap server returned error waiting for completion\n");
+
+    /* Make sure all the children have sent their exit status'es */
+    not_complete = 1;
+    while (not_complete) {
+        int i;
+        not_complete = 0;
+        for (i = 0; i < HYD_pmcd_pmip.children.num; i++) {
+            if (HYD_pmcd_pmip.children.exited[i] == 0) {
+                not_complete = 1;
+                break;
+            }
+            if (not_complete)
+                break;
+        }
+        if (not_complete) {
+            status = HYDT_dmx_wait_for_event(-1);
+            HYDU_ERR_POP(status, "error waiting for demux event\n");
+        }
+    }
+
+    /* check if some application processes unexpectedly completed
+       (for example, with MPI_Abort) */
+    if(ncompleted) {
+        for(i = 0; i < ncompleted; i++) {
+            for(j = 0; j < HYD_pmcd_pmip.local.proxy_process_count; j++) {
+                if(procs[i] == HYD_pmcd_pmip.downstream.pid[j]) {
+                    HYD_pmcd_pmip.downstream.exit_status[j] = exit_statuses[i];
+                    break;
+                }
+            }
+        }
+    }
+
+  fn_exit:
+    if (procs)
+        MPL_free(procs);
+    if (exit_statuses)
+        MPL_free(exit_statuses);
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
 static HYD_status control_port_fn(char *arg, char ***argv)
 {
     char *port = NULL;
@@ -61,6 +230,17 @@ static HYD_status proxy_id_fn(char *arg, char ***argv)
     HYD_status status = HYD_SUCCESS;
 
     status = HYDU_set_int(arg, &HYD_pmcd_pmip.local.id, atoi(**argv));
+
+    (*argv)++;
+
+    return status;
+}
+
+static HYD_status parent_proxy_id_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_int(arg, &HYD_pmcd_pmip.local.parent_id, atoi(**argv));
 
     (*argv)++;
 
@@ -148,6 +328,22 @@ static HYD_status iface_fn(char *arg, char ***argv)
 
     return status;
 }
+
+static HYD_status branch_count_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_int(arg, &HYD_pmcd_pmip.user_global.branch_count, atoi(**argv));
+    HYDU_ERR_POP(status, "error setting branch count\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 
 static HYD_status auto_cleanup_fn(char *arg, char ***argv)
 {
@@ -631,6 +827,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     /* Proxy parameters */
     {"control-port", control_port_fn, NULL},
     {"proxy-id", proxy_id_fn, NULL},
+    {"parent-proxy-id", parent_proxy_id_fn, NULL},
     {"pgid", pgid_fn, NULL},
     {"debug", debug_fn, NULL},
     {"usize", usize_fn, NULL},
@@ -641,6 +838,7 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"iface", iface_fn, NULL},
     {"auto-cleanup", auto_cleanup_fn, NULL},
     {"retries", retries_fn, NULL},
+    {"branch-count", branch_count_fn, NULL},
 
     /* Executable parameters */
     {"pmi-kvsname", pmi_kvsname_fn, NULL},
@@ -728,8 +926,12 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
         HYD_pmcd_pmip.local.retries = 0;
 
     HYDU_dbg_finalize();
-    MPL_snprintf(dbg_prefix, 2 * MAX_HOSTNAME_LEN, "proxy:%d:%d",
-                 HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id);
+    if (HYD_pmcd_pmip.user_global.branch_count == -1)
+        MPL_snprintf(dbg_prefix, 2 * MAX_HOSTNAME_LEN, "proxy:%d:%d",
+                     HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id);
+    else
+        MPL_snprintf(dbg_prefix, 2 * MAX_HOSTNAME_LEN, "proxy:%d:%d:%d",
+                     HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id, HYD_pmcd_pmip.local.parent_id);
     status = HYDU_dbg_init((const char *) dbg_prefix);
     HYDU_ERR_POP(status, "unable to initialization debugging\n");
 
@@ -739,4 +941,116 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
 
   fn_fail:
     goto fn_exit;
+}
+
+static HYD_status HYDU_alloc_pmi_r2f(struct HYD_pmi_ranks2fds **r2f)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    HYDU_MALLOC_OR_JUMP(*r2f, struct HYD_pmi_ranks2fds *, sizeof(struct HYD_pmi_ranks2fds), status);
+    HYDU_ERR_POP(status, "Unable to alloc r2f table\n");
+
+    (*r2f)->rank = -1;
+    (*r2f)->fd = HYD_FD_UNSET;
+    (*r2f)->next = NULL;
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYDU_free_fd_list(struct HYD_pmi_ranks2fds **r2f_list)
+{
+    struct HYD_pmi_ranks2fds *next;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    while ( *r2f_list ){
+        next = (*r2f_list)->next;
+        MPL_free(*r2f_list);
+        *r2f_list = next;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYDU_add_pmi_r2f(struct HYD_pmi_ranks2fds **r2f_list, int rank, int fd)
+{
+    struct HYD_pmi_ranks2fds *r2f, *prev;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if ( *r2f_list == NULL ) {
+        status = HYDU_alloc_pmi_r2f(r2f_list);
+        HYDU_ERR_POP(status, "Unable to alloc PMI ranks2fds\n");
+        (*r2f_list)->rank = rank;
+        (*r2f_list)->fd = fd;
+    } else {
+        r2f = *r2f_list;
+        while ( r2f ){
+            if ( r2f->rank == rank ) {
+                goto fn_exit;
+            }
+            prev = r2f;
+            r2f = r2f->next;
+        }
+        status = HYDU_alloc_pmi_r2f(&r2f);
+        HYDU_ERR_POP(status, "unable to alloc PMI ranks2fds\n");
+        r2f->rank = rank;
+        r2f->fd = fd;
+        prev->next = r2f;
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+int HYDU_get_fd_by_rank(struct HYD_pmi_ranks2fds **r2f_list, int rank)
+{
+    struct HYD_pmi_ranks2fds *r2f;
+
+    if (*r2f_list == NULL) {
+        return -1;
+    } else {
+        r2f=*r2f_list;
+        while (r2f) {
+            if (r2f->rank == rank)
+                return r2f->fd;
+            r2f=r2f->next;
+        }
+    }
+    return -1;
+}
+
+int HYDU_get_rank_by_fd(struct HYD_pmi_ranks2fds **r2f_list, int fd)
+{
+    struct HYD_pmi_ranks2fds *r2f;
+
+    if (*r2f_list == NULL) {
+        return -1;
+    } else {
+        r2f=*r2f_list;
+        while (r2f) {
+            if (r2f->fd == fd)
+                return r2f->rank;
+            r2f=r2f->next;
+        }
+    }
+    return -1;
 }

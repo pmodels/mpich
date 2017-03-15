@@ -16,7 +16,7 @@ static HYD_status send_cmd_to_proxies(struct HYD_pmcd_hdr hdr)
 {
     struct HYD_pg *pg = &HYD_server_info.pg_list;
     struct HYD_proxy *proxy;
-    int sent, closed;
+    int sent, closed, count = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -30,6 +30,11 @@ static HYD_status send_cmd_to_proxies(struct HYD_pmcd_hdr hdr)
                                  HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to send checkpoint message\n");
         HYDU_ASSERT(!closed, status);
+        if (HYD_server_info.user_global.branch_count != -1) {
+            count++;
+            if (count == HYD_server_info.user_global.branch_count)
+                break;
+        }
     }
 
   fn_exit:
@@ -48,6 +53,7 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
     HYD_status status = HYD_SUCCESS;
+    int i = 0;
 
     HYDU_FUNC_ENTER();
 
@@ -67,7 +73,7 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "cleanup of processes failed\n");
 
         /* Force kill all bootstrap processes that we launched */
-        status = HYDT_bsci_wait_for_completion(0);
+        status = HYDT_bsci_wait_for_completion(0, NULL, NULL, NULL);
         HYDU_ERR_POP(status, "launcher returned error waiting for completion\n");
 
         exit(1);
@@ -75,6 +81,11 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
     else if (cmd.type == HYD_SIGNAL) {
         for (pg = &HYD_server_info.pg_list; pg; pg = pg->next) {
             for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
+                if (HYD_server_info.user_global.branch_count != -1 &&
+                    HYD_server_info.user_global.branch_count <= i) {
+                    break;
+                }
+                i++;
                 status = HYD_pmcd_pmiserv_send_signal(proxy, cmd.signum);
                 HYDU_ERR_POP(status, "unable to send signal downstream\n");
             }
@@ -95,8 +106,9 @@ HYD_status HYD_pmci_launch_procs(void)
 {
     struct HYD_proxy *proxy;
     struct HYD_string_stash proxy_stash;
+    struct HYD_node *node, *node_list, *tnode;
     char *control_port = NULL;
-    int node_count, i, *control_fd;
+    int node_count, i, j = 1, *control_fd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -122,16 +134,53 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(&HYD_server_info.pg_list);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
+    /* Copy the host list to pass to the bootstrap server */
+    node_list = NULL;
     node_count = 0;
-    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next)
+    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next) {
+        HYDU_alloc_node(&node);
+        node->hostname = MPL_strdup(proxy->node->hostname);
+        node->core_count = proxy->node->core_count;
+        node->next = NULL;
+
+        if (node_list == NULL) {
+            node_list = node;
+        }
+        else {
+            for (tnode = node_list; tnode->next; tnode = tnode->next);
+            tnode->next = node;
+        }
+        node->node_id = node_count;
+
+        if(HYD_server_info.user_global.branch_count != -1 ) {
+            if ( j > HYD_server_info.user_global.branch_count) {
+                proxy->node->pmi_level++;
+            }
+            j++;
+        }
         node_count++;
+    }
 
     HYDU_MALLOC_OR_JUMP(control_fd, int *, node_count * sizeof(int), status);
     for (i = 0; i < node_count; i++)
         control_fd[i] = HYD_FD_UNSET;
 
+    if(HYD_server_info.user_global.branch_count != -1 && node_count > HYD_server_info.user_global.branch_count) {
+        node = node_list;
+        for(i = 1; i < HYD_server_info.user_global.branch_count; i++) {
+            node = node->next;
+        }
+        tnode = node->next;
+        node->next = NULL;
+        i = (node_count - 1) / HYD_server_info.user_global.branch_count;
+        HYDU_MALLOC_OR_JUMP(HYD_server_info.nodes_lists, char **, HYD_server_info.user_global.branch_count * sizeof (char *), status);
+        memset(HYD_server_info.nodes_lists, 0, HYD_server_info.user_global.branch_count * sizeof (char *));
+        node_list_to_strings(tnode, i, HYD_server_info.nodes_lists);
+        HYDU_free_node_list(tnode);
+    }
+
     status = HYDT_bsci_launch_procs(proxy_stash.strlist, HYD_server_info.pg_list.proxy_list,
-                                    HYD_TRUE, control_fd);
+                                    node_list, HYD_TRUE, control_fd);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     for (i = 0, proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next, i++)
@@ -185,7 +234,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
                     HYDU_ERR_POP(status, "cleanup of processes failed\n");
 
                     /* Force kill all bootstrap processes that we launched */
-                    status = HYDT_bsci_wait_for_completion(0);
+                    status = HYDT_bsci_wait_for_completion(0, NULL, NULL, NULL);
                     HYDU_ERR_POP(status, "launcher returned error waiting for completion\n");
                 }
                 else
@@ -214,7 +263,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
     else
         time_left = timeout;
 
-    status = HYDT_bsci_wait_for_completion(time_left);
+    status = HYDT_bsci_wait_for_completion(time_left, NULL, NULL, NULL);
     HYDU_ERR_POP(status, "launcher returned error waiting for completion\n");
 
   fn_exit:

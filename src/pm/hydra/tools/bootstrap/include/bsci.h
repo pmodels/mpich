@@ -51,14 +51,13 @@ struct HYDT_bsci_fns {
 
     /* Launcher functions */
     /** \brief Launch processes */
-    HYD_status(*launch_procs) (char **args, struct HYD_proxy * proxy_list, int use_rmk,
-                               int *control_fd);
+    HYD_status(*launch_procs) (char **args, struct HYD_proxy * proxy_list, struct HYD_node * node_list, int use_rmk, int *control_fd);
 
     /** \brief Finalize the bootstrap control device */
     HYD_status(*launcher_finalize) (void);
 
     /** \brief Wait for launched processes to complete */
-    HYD_status(*wait_for_completion) (int timeout);
+    HYD_status(*wait_for_completion) (int timeout, int *ncompleted, int **pids, int **exit_statuses);
 
     /** \brief Query the ID of a proxy */
     HYD_status(*query_proxy_id) (int *proxy_id);
@@ -95,6 +94,7 @@ HYD_status HYDT_bsci_init(const char *rmk, const char *launcher,
  *
  * \param[in]   args            Arguments to be used for the launched processes
  * \param[in]   proxy_list      List of proxies to launch
+ * \param[in]   node_list       List of nodes to launch
  * \param[in]   use_rmk         Force not to use RMK if HYD_FALSE
  * \param[out]  control_fd      Control socket to communicate with the launched process
  *
@@ -128,8 +128,7 @@ HYD_status HYDT_bsci_init(const char *rmk, const char *launcher,
  * process.  On the other hand, if it is HYD_FALSE, we force not to
  * use RMK.  HYD_FALSE is passed in PMI spawn functions.
  */
-HYD_status HYDT_bsci_launch_procs(char **args, struct HYD_proxy *proxy_list, int use_rmk,
-                                  int *control_fd);
+HYD_status HYDT_bsci_launch_procs(char **args, struct HYD_proxy *proxy_list, struct HYD_node *node_list, int use_rmk, int *control_fd);
 
 
 /**
@@ -146,13 +145,19 @@ HYD_status HYDT_bsci_finalize(void);
  *
  * \param[in]  timeout        Time to wait for
  *
+ * \param[out] ncompleted     Number of completed processes
+ *
+ * \param[out] pids           Pids of the completed processes
+ *
+ * \param[out] exit_statuses  Exit statuses of the completed processes
+ *
  * \param[ret] status         HYD_TIMED_OUT if the timer expired
  *
  * This function waits for all processes it launched to finish. The
  * launcher should keep track of the processes it is launching and
  * wait for their completion.
  */
-HYD_status HYDT_bsci_wait_for_completion(int timeout);
+HYD_status HYDT_bsci_wait_for_completion(int timeout, int *ncompleted, int **pids, int **exit_statuses);
 
 
 /**
