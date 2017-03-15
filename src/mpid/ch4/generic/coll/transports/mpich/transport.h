@@ -276,10 +276,11 @@ static inline int TSP_send(const void  *buf,
 {
     TSP_req_t *req;
     MPIR_Assert(sched->total < 32);
-    req = &sched->requests[sched->total];
+    int vtx = sched->total;
+    req = &sched->requests[vtx];
     req->kind                  = TSP_KIND_SEND;
     init_request(req);
-    TSP_add_vtx_dependencies(sched, sched->total, n_invtcs, invtcs);
+    TSP_add_vtx_dependencies(sched, vtx, n_invtcs, invtcs);
     req->nbargs.sendrecv.buf   = (void *)buf;
     req->nbargs.sendrecv.count = count;
     req->nbargs.sendrecv.dt    = dt;
@@ -288,10 +289,10 @@ static inline int TSP_send(const void  *buf,
     req->nbargs.sendrecv.comm  = comm;
     req->mpid_req[1]           = NULL;
 
-    if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [send]\n",sched->total);
-
+    if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [send]\n",vtx);
+    sched->total++;
     TSP_test(sched);
-    return sched->total++;
+    return vtx;
 }
 
 static inline int TSP_send_accumulate(const void  *buf,
@@ -307,10 +308,11 @@ static inline int TSP_send_accumulate(const void  *buf,
 {
     TSP_req_t *req;
     MPIR_Assert(sched->total < 32);
-    req = &sched->requests[sched->total];
+    int vtx = sched->total;
+    req = &sched->requests[vtx];
     req->kind                  = TSP_KIND_SEND;
     init_request(req);
-    TSP_add_vtx_dependencies(sched, sched->total, n_invtcs, invtcs);
+    TSP_add_vtx_dependencies(sched, vtx, n_invtcs, invtcs);
     req->nbargs.sendrecv.buf   = (void *)buf;
     req->nbargs.sendrecv.count = count;
     req->nbargs.sendrecv.dt    = dt;
@@ -320,9 +322,9 @@ static inline int TSP_send_accumulate(const void  *buf,
     req->mpid_req[1]           = NULL;
 
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [send_accumulate]\n",sched->total);
-
+    sched->total++;
     TSP_test(sched);
-    return sched->total++;
+    return vtx;
 }
 
 static inline int TSP_recv(void        *buf,
@@ -337,10 +339,11 @@ static inline int TSP_recv(void        *buf,
 {
     TSP_req_t *req;
     MPIR_Assert(sched->total < 32);
-    req = &sched->requests[sched->total];
+    int vtx = sched->total;
+    req = &sched->requests[vtx];
     req->kind                  = TSP_KIND_RECV;
     init_request(req);
-    TSP_add_vtx_dependencies(sched, sched->total, n_invtcs, invtcs);
+    TSP_add_vtx_dependencies(sched, vtx, n_invtcs, invtcs);
     req->nbargs.sendrecv.buf   = buf;
     req->nbargs.sendrecv.count = count;
     req->nbargs.sendrecv.dt    = dt;
@@ -350,9 +353,9 @@ static inline int TSP_recv(void        *buf,
     req->mpid_req[1]           = NULL;
 
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [recv]\n",sched->total);
-
+    sched->total++;
     TSP_test(sched);
-    return sched->total++;
+    return vtx;
 }
 
 static inline int TSP_queryfcn(
@@ -408,10 +411,11 @@ static inline int TSP_recv_reduce(void        *buf,
     size_t     type_size, out_extent, lower_bound;
     TSP_req_t *req;
     MPIR_Assert(sched->total < 32);
-    req = &sched->requests[sched->total];
+    int vtx = sched->total;
+    req = &sched->requests[vtx];
     req->kind                = TSP_KIND_RECV_REDUCE;
     init_request(req);
-    TSP_add_vtx_dependencies(sched, sched->total, n_invtcs, invtcs);
+    TSP_add_vtx_dependencies(sched, vtx, n_invtcs, invtcs);
 
     TSP_dtinfo(datatype,&iscontig,&type_size,&out_extent,&lower_bound);
     req->nbargs.recv_reduce.inbuf    = MPL_malloc(count*out_extent);
@@ -427,9 +431,10 @@ static inline int TSP_recv_reduce(void        *buf,
     req->nbargs.recv_reduce.flags    = flags;
 
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [recv_reduce]\n",sched->total);
-
+    
+    sched->total++;
     TSP_test(sched);
-    return sched->total++;
+    return vtx;
 }
 
 static inline int TSP_rank(TSP_comm_t  *comm)
@@ -574,6 +579,22 @@ static inline int TSP_test(TSP_sched_t *sched)
             switch(rp->kind) {
                 case TSP_KIND_SEND:
                 case TSP_KIND_RECV:
+                    if(mpid_req0 && MPIR_Request_is_complete(mpid_req0)) {
+                        MPIR_Request_free(mpid_req0);
+                        rp->mpid_req[0] = NULL;
+                    }
+                    if(!rp->mpid_req[0]) {
+                        if(0){ fprintf(stderr, "  --> MPICH transport (kind=%d) complete\n",
+                                          rp->kind);
+                             if(rp->nbargs.sendrecv.count>=1) fprintf(stderr, "data send/recvd: %d\n", *(int *)(rp->nbargs.sendrecv.buf));
+                        }
+
+                        rp->state = TSP_STATE_COMPLETE;
+                        /*update the dependencies*/
+                        sched->completed++;
+                        decrement_num_unfinished_dependecies(rp,sched);
+                    }
+                    break;
                 case TSP_KIND_RECV_REDUCE:
                     if(mpid_req0 && MPIR_Request_is_complete(mpid_req0)) {
                         MPIR_Request_free(mpid_req0);
@@ -588,7 +609,7 @@ static inline int TSP_test(TSP_sched_t *sched)
                     if(!rp->mpid_req[0] && !rp->mpid_req[1]) {
                         if(0){ fprintf(stderr, "  --> MPICH transport (kind=%d) complete\n",
                                           rp->kind);
-                             fprintf(stderr, "data send/recvd: %d\n", *(int *)(rp->nbargs.sendrecv.buf));
+                             if(rp->nbargs.sendrecv.count>=1) fprintf(stderr, "data send/recvd: %d\n", *(int *)(rp->nbargs.sendrecv.buf));
                         }
 
                         rp->state = TSP_STATE_COMPLETE;
@@ -718,14 +739,14 @@ static inline int TSP_test(TSP_sched_t *sched)
             }
         }
     }
-
-    if(sched->completed==sched->total) {
-        if(0) fprintf(stderr, "  --> MPICH transport (test) complete:  sched->total=%ld\n",
-                          sched->total);
-
-        return 1;
-    } else
-        return 0;
+    
+    if(0){
+        if(sched->completed==sched->total) {
+            if(0) fprintf(stderr, "  --> MPICH transport (test) complete:  sched->total=%ld\n",
+                              sched->total);
+        }
+    }
+    return sched->completed==sched->total;
 }
 
 #endif
