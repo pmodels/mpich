@@ -4849,6 +4849,55 @@ if test "$ac_cv_func_thread_policy_set" = yes ; then
     fi
 fi
 
+AC_ARG_ENABLE(internal-openmp,
+    [--enable-internal-openmp
+       Enable MPICH to be OpenMP aware
+       level:
+         yes       - Enabled (includes -fopenmp flag)
+         no        - Disabled (default)
+    ],,enable_internal_openmp=no)
+
+if test "$enable_internal_openmp" = "yes"; then
+    AC_DEFINE([MPIDI_ENABLE_INTERNAL_OPENMP], [1], [Define when MPICH is OpenMP aware])
+
+    mpidi_check_compiler_vendor="unknown"
+
+    # Intel
+    AS_IF([test "$mpidi_check_compiler_vendor" = "unknown"],
+          [PAC_IF_IFELSE([defined(__INTEL_COMPILER) || defined(__ICC)],
+              mpidi_check_compiler_vendor="intel"
+              )])
+
+    # GNU
+    AS_IF([test "$mpidi_check_compiler_vendor" = "unknown"],
+          [PAC_IFDEF_IFELSE([__GNUC__],
+              mpidi_check_compiler_vendor="gnu"
+              )])
+
+    # XL
+    AS_IF([test "$mpidi_check_compiler_vendor" = "unknown"],
+         [PAC_IF_IFELSE([defined(__xlC__) || defined(__IBMC__) || defined(__IBMCPP__)],
+           mpidi_check_compiler_vendor="ibm"]))
+
+   # PGI
+   AS_IF([test "$mpidi_check_compiler_vendor" = "unknown"],
+         [PAC_IFDEF_IFELSE([__PGI],
+             mpidi_check_compiler_vendor="pgi"
+             )])
+
+   if test "$mpidi_check_compiler_vendor" = "intel"; then
+       PAC_APPEND_FLAG([-qopenmp],[CFLAGS])
+       PAC_APPEND_FLAG([-qopenmp],[CPPFLAGS])
+   elif test "$mpidi_check_compiler_vendor" = "gnu"; then
+       PAC_APPEND_FLAG([-fopenmp],[CFLAGS])
+       PAC_APPEND_FLAG([-fopenmp],[CPPFLAGS])
+   elif test "$mpidi_check_compiler_vendor" = "pgi"; then
+       PAC_APPEND_FLAG([-mp],[CFLAGS])
+       PAC_APPEND_FLAG([-mp],[CPPFLAGS])
+   fi
+
+fi
+
 # -----------------------------------------------------------------------------
 # End of thread configure
 # -----------------------------------------------------------------------------
