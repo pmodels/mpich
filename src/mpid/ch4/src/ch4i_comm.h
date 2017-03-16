@@ -1223,4 +1223,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_check_disjoint_lupids(int lupids1[], int n1,
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_work_queues_init(MPIR_Comm *comm) {
+    int i;
+    comm->dev.nqueues = 1;
+    comm->dev.work_queues = MPL_malloc(sizeof(MPIDI_workq_list_t) * comm->dev.nqueues);
+
+    /* FIXME: currently we assume round robin. Leter, we should create queue-to-ep mapping types. */
+
+    for (i = 0; i < comm->dev.nqueues; i++) {
+        int ep_idx = i % MPIDI_CH4_Global.n_netmod_eps;
+        MPIDI_workq_init(&comm->dev.work_queues[i].pend_ops);
+        MPID_THREAD_CS_ENTER(EP, MPIDI_CH4_Global.ep_locks[i]);
+        MPL_DL_APPEND(MPIDI_CH4_Global.ep_queues[i], &comm->dev.work_queues[i]);
+        MPID_THREAD_CS_EXIT(EP, MPIDI_CH4_Global.ep_locks[i]);
+    }
+}
+
 #endif /* CH4I_COMM_H_INCLUDED */
