@@ -192,6 +192,8 @@ int main(int argc, char **argv)
 
     /* See if HYDI_CONTROL_FD is set before trying to connect upstream */
     ret = MPL_env2int("HYDI_CONTROL_FD", &HYD_pmcd_pmip.upstream.control);
+    unsetenv("HYDI_CONTROL_FD");
+
     if (ret < 0) {
         HYDU_ERR_POP(status, "error reading HYDI_CONTROL_FD environment\n");
     }
