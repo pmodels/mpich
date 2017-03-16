@@ -184,6 +184,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_init_builtin_dt()
     INIT_DT_BUILTIN(MPI_LONG_DOUBLE_INT);
 
 #undef INIT_DT_BUILTIN
+
+#ifdef HAVE_CXX_BINDING
+
+#define INIT_DT_BUILTIN(X)              \
+    MPID_Datatype_get_ptr(X, dt_ptr);   \
+    dt_ptr->handle=X;                   \
+    MPIDI_COLL_dt_init(dt_ptr);
+
+    INIT_DT_BUILTIN(MPI_CXX_BOOL);
+    INIT_DT_BUILTIN(MPI_CXX_FLOAT_COMPLEX);
+    INIT_DT_BUILTIN(MPI_CXX_DOUBLE_COMPLEX);
+    INIT_DT_BUILTIN(MPI_CXX_LONG_DOUBLE_COMPLEX);
+#undef INIT_DT_BUILTIN
+#endif
+
+
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_init_builtin_ops()
