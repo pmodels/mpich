@@ -223,46 +223,27 @@ static inline int MPIDI_workq_global_progress(int* made_progress)
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_dispatch_send(int (*func)(const void *buf, int count,
-                                                             MPI_Datatype datatype, int rank,
-                                                             int tag, MPIR_Comm * comm,
-                                                             int context_offset,
-                                                             MPIR_Request ** request),
-                                                 MPIDI_workq_op_t op,
-                                                 const void *buf, int count,
-                                                 MPI_Datatype datatype, int rank,
-                                                 int tag, MPIR_Comm * comm,
-                                                 int context_offset,
-                                                 MPIR_Request ** request)
-{
-    int mpi_errno = MPI_SUCCESS;
-
 #ifdef MPIDI_CH4_MT_DIRECT
-    mpi_errno = func(buf, count, datatype, rank, tag, comm, context_offset, request);
+#define MPIDI_DISPATCH_PT2PT(op, func, buf, count, datatype, rank, tag, comm, context_offset, request, err) \
+do {                                                                                                        \
+    err = MPI_SUCCESS;                                                                                      \
+    mpi_errno = func(buf, count, datatype, rank, tag, comm, context_offset, request);                       \
+} while(0)
 #else
-#  ifdef MPIDI_CH4_MT_TRYLOCK
-    /* FIXME: Implement trylock-enqueue */
-#  else
-    {
-        int ep_idx;
-
-        *request = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
-
-        MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
-
-        MPID_THREAD_CS_ENTER(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);
-
-        /* Enqueue and hand-off */
-        /* FIXME: do we need to add a refcount while holding ownership in the queue? */
-        MPIDI_workq_pt2pt_enqueue(op, buf, NULL /* recv_buf */, count, datatype,
-                                  rank, tag, comm, context_offset, ep_idx, *request);
-
-
-        MPID_THREAD_CS_EXIT(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);
-    }
-#  endif
+#define MPIDI_DISPATCH_PT2PT(op, func, buf, count, datatype, rank, tag, comm, context_offset, request, err) \
+do {                                                                                                        \
+    err = MPI_SUCCESS;                                                                                      \
+    int ep_idx;                                                                                             \
+    if (op == MPIDI_SEND || op == MPIDI_ISEND)                                                              \
+        *request = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);                                            \
+    else if (op == MPIDI_RECV || op == MPIDI_IRECV)                                                         \
+        *request = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);                                            \
+    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);                                                            \
+    MPID_THREAD_CS_ENTER(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);                                            \
+    MPIDI_workq_pt2pt_enqueue(op, buf, NULL /* recv_buf */, count, datatype,                                \
+                              rank, tag, comm, context_offset, ep_idx, *request);                           \
+    MPID_THREAD_CS_EXIT(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);                                             \
+} while (0)
 #endif
-    return mpi_errno;
-}
 
 #endif /* CH4I_WORKQ_H_INCLUDED */
