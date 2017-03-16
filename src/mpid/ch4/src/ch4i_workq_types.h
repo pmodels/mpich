@@ -34,7 +34,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_dequeue(MPIDI_workq_t *q, void **pp) {
 #endif
 
 typedef enum MPIDI_workq_op MPIDI_workq_op_t;
-enum MPIDI_workq_op {MPIDI_SEND, MPIDI_ISEND, MPIDI_IRECV, MPIDI_PUT};
+enum MPIDI_workq_op {MPIDI_SEND, MPIDI_ISEND, MPIDI_RECV, MPIDI_IRECV, MPIDI_PUT};
 
 typedef struct MPIDI_workq_elemt MPIDI_workq_elemt_t;
 typedef struct MPIDI_workq_list  MPIDI_workq_list_t;
@@ -52,6 +52,7 @@ struct MPIDI_workq_elemt {
             int tag;
             MPIR_Comm *comm_ptr;
             int context_offset;
+            MPI_Status *status;
             MPIR_Request *request;
         };
         /* RMA */

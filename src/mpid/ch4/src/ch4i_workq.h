@@ -66,6 +66,7 @@ static inline void MPIDI_workq_pt2pt_enqueue_body(MPIDI_workq_op_t op,
                                                   MPIR_Comm *comm_ptr,
                                                   int context_offset,
                                                   int ep_idx,
+                                                  MPI_Status *status,
                                                   MPIR_Request *request)
 {
     MPIDI_workq_elemt_t* pt2pt_elemt = NULL;
@@ -79,6 +80,7 @@ static inline void MPIDI_workq_pt2pt_enqueue_body(MPIDI_workq_op_t op,
     pt2pt_elemt->tag      = tag;
     pt2pt_elemt->comm_ptr = comm_ptr;
     pt2pt_elemt->context_offset = context_offset;
+    pt2pt_elemt->status  = status;
     pt2pt_elemt->request  = request;
     MPIDI_workq_enqueue(&comm_ptr->dev.work_queues[ep_idx].pend_ops, pt2pt_elemt);
 }
@@ -141,8 +143,28 @@ static inline int MPIDI_workq_ep_progress_body(int ep_idx)
                                                &workq_elemt->request);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 break;
+            case MPIDI_RECV:
+                mpi_errno = MPIDI_NM_mpi_recv(workq_elemt->recv_buf,
+                                               workq_elemt->count,
+                                               workq_elemt->datatype,
+                                               workq_elemt->rank,
+                                               workq_elemt->tag,
+                                               workq_elemt->comm_ptr,
+                                               workq_elemt->context_offset,
+                                               workq_elemt->status,
+                                               &workq_elemt->request);
+                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                break;
             case MPIDI_IRECV:
-                /* FIXME: fill in */
+                mpi_errno = MPIDI_NM_mpi_irecv(workq_elemt->recv_buf,
+                                               workq_elemt->count,
+                                               workq_elemt->datatype,
+                                               workq_elemt->rank,
+                                               workq_elemt->tag,
+                                               workq_elemt->comm_ptr,
+                                               workq_elemt->context_offset,
+                                               &workq_elemt->request);
+                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 break;
             case MPIDI_PUT:
                 mpi_errno = MPIDI_NM_mpi_put(workq_elemt->origin_addr,
@@ -176,11 +198,12 @@ static inline void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
                                              MPIR_Comm *comm_ptr,
                                              int context_offset,
                                              int ep_idx,
+                                             MPI_Status *status,
                                              MPIR_Request *request)
 {
     MPIDI_WORKQ_PT2PT_ENQUEUE_START;
     MPIDI_workq_pt2pt_enqueue_body(op, send_buf, recv_buf, count, datatype,
-                                   rank, tag, comm_ptr, context_offset, ep_idx, request);
+                                   rank, tag, comm_ptr, context_offset, ep_idx, status, request);
     MPIDI_WORKQ_PT2PT_ENQUEUE_STOP;
 }
 
@@ -224,13 +247,18 @@ static inline int MPIDI_workq_global_progress(int* made_progress)
 }
 
 #ifdef MPIDI_CH4_MT_DIRECT
-#define MPIDI_DISPATCH_PT2PT(op, func, buf, count, datatype, rank, tag, comm, context_offset, request, err) \
+#define MPIDI_DISPATCH_PT2PT(op, func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err) \
 do {                                                                                                        \
     err = MPI_SUCCESS;                                                                                      \
-    mpi_errno = func(buf, count, datatype, rank, tag, comm, context_offset, request);                       \
+    if (op == MPI_RECV)                                                                                     \
+        mpi_errno = func(recv_buf, count, datatype, rank, tag, comm, context_offset, status, request);      \
+    else if (op == MPI_IRECV)                                                                               \
+        mpi_errno = func(recv_buf, count, datatype, rank, tag, comm, context_offset, request);              \
+    else                                                                                                    \
+        mpi_errno = func(buf, count, datatype, rank, tag, comm, context_offset, request);                   \
 } while(0)
 #else
-#define MPIDI_DISPATCH_PT2PT(op, func, buf, count, datatype, rank, tag, comm, context_offset, request, err) \
+#define MPIDI_DISPATCH_PT2PT(op, func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err) \
 do {                                                                                                        \
     err = MPI_SUCCESS;                                                                                      \
     int ep_idx;                                                                                             \
@@ -240,8 +268,8 @@ do {                                                                            
         *request = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);                                            \
     MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);                                                            \
     MPID_THREAD_CS_ENTER(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);                                            \
-    MPIDI_workq_pt2pt_enqueue(op, buf, NULL /* recv_buf */, count, datatype,                                \
-                              rank, tag, comm, context_offset, ep_idx, *request);                           \
+    MPIDI_workq_pt2pt_enqueue(op, send_buf, recv_buf, count, datatype,                                      \
+                              rank, tag, comm, context_offset, ep_idx, status, *request);                   \
     MPID_THREAD_CS_EXIT(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);                                             \
 } while (0)
 #endif
