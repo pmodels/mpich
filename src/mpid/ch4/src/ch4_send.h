@@ -39,10 +39,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
         goto fn_exit;
     }
 
-    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
-
-    MPID_THREAD_CS_ENTER(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);
-
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_dispatch_send(MPIDI_NM_mpi_send, MPIDI_SEND,
                                     buf, count, datatype, rank, tag, comm, context_offset,
@@ -59,8 +55,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
     if (mpi_errno == MPI_SUCCESS && *request)
         MPIDI_CH4I_REQUEST(*request, is_local) = r;
 #endif
-
-    MPID_THREAD_CS_EXIT(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);
 
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);

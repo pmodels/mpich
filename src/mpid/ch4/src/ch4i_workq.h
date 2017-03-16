@@ -245,12 +245,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_dispatch_send(int (*func)(const void *buf, in
 #  else
     {
         int ep_idx;
-        MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
-        /* Enqueue and hand-off */
+
         *request = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+
+        MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
+
+        MPID_THREAD_CS_ENTER(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);
+
+        /* Enqueue and hand-off */
         /* FIXME: do we need to add a refcount while holding ownership in the queue? */
         MPIDI_workq_pt2pt_enqueue(op, buf, NULL /* recv_buf */, count, datatype,
                                   rank, tag, comm, context_offset, ep_idx, *request);
+
+
+        MPID_THREAD_CS_EXIT(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);
     }
 #  endif
 #endif
