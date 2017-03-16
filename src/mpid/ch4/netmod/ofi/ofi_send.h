@@ -344,7 +344,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(MPIDI_OFI_SENDPARAMS)
         goto fn_exit;
     }
 
-    mpi_errno = MPIDI_OFI_send(MPIDI_OFI_SENDARGS, 1, 0ULL);
+    mpi_errno = MPIDI_OFI_send(MPIDI_OFI_SENDARGS, (request==NULL), 0ULL);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SEND);
