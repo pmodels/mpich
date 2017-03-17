@@ -26,6 +26,7 @@ typedef struct {
         MPIDI_COLL_MPICH_KNOMIAL_comm_t mpich_knomial;
         MPIDI_COLL_MPICH_RECEXCH_comm_t mpich_recexch;
         MPIDI_COLL_MPICH_DISSEM_comm_t mpich_dissem;
+        MPIDI_COLL_X_TREEBASIC_comm_t x_treebasic;
 } MPIDI_COLL_comm_t;
 
 typedef struct {
@@ -69,6 +70,7 @@ typedef struct {
         MPIDI_COLL_MPICH_KNOMIAL_global_t mpich_knomial;
         MPIDI_COLL_MPICH_RECEXCH_global_t mpich_recexch;
         MPIDI_COLL_MPICH_DISSEM_global_t mpich_dissem;
+        MPIDI_COLL_X_TREEBASIC_global_t x_treebasic;
 } MPIDI_COLL_global_t;
 
 
