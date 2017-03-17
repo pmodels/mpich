@@ -189,6 +189,7 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_tags.h"
 #include "mpir_pt2pt.h"
 #include "mpir_ext.h"
+#include "mpir_nsched.h"
 
 #ifdef HAVE_CXX_BINDING
 #include "mpii_cxxinterface.h"

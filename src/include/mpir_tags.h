@@ -40,7 +40,11 @@
 #define MPIR_REDUCE_SCATTER_BLOCK_TAG 28
 #define MPIR_SHRINK_TAG               29
 #define MPIR_AGREE_TAG                30
-#define MPIR_FIRST_NBC_TAG            31
+
+/* We need a different tag for each distinct algorithm of each NBC */
+#define MPIR_IBARRIER_TAG             31
+
+#define MPIR_FIRST_NBC_TAG            32
 
 /* These macros must be used carefully. These macros will not work with
  * negative tags. By definition, users are not to use negative tags and the

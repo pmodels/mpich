@@ -566,6 +566,8 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPIR_DBG_STRING = MPL_dbg_class_alloc("STRING", "string");
 #endif
 
+    MPIR_Nsched_init();
+
     /* Initialize the C versions of the Fortran link-time constants.
        
        We now initialize the Fortran symbols from within the Fortran 
