@@ -39,5 +39,11 @@
 #undef TRANSPORT_NAME
 #undef TRANSPORT_NAME_LC
 
+#define TRANSPORT_NAME X_
+#define TRANSPORT_NAME_LC x
+#include "../algorithms/treebasic/post.h"
+#undef TRANSPORT_NAME
+#undef TRANSPORT_NAME_LC
+
 #undef GLOBAL_NAME
 #endif /* MPIDI_CH4_COLL_POST_H_INCLUDED */

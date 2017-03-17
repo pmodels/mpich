@@ -25,7 +25,6 @@
 #undef TRANSPORT_NAME
 #undef TRANSPORT_NAME_LC
 
-
 #define TRANSPORT_NAME MPICH_
 #define TRANSPORT_NAME_LC mpich
 #include "../transports/mpich/transport_types.h"
@@ -35,7 +34,12 @@
 #include "../algorithms/recexch/pre.h"
 #include "../algorithms/dissem/pre.h"
 #include "../src/tsp_namespace_post.h"
+#undef TRANSPORT_NAME
+#undef TRANSPORT_NAME_LC
 
+#define TRANSPORT_NAME X_
+#define TRANSPORT_NAME_LC x
+#include "../algorithms/treebasic/pre.h"
 #undef TRANSPORT_NAME
 #undef TRANSPORT_NAME_LC
 
