@@ -42,7 +42,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
     }
 
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
-    MPIDI_DISPATCH_PT2PT(MPIDI_RECV, MPIDI_NM_mpi_recv, NULL /* send_buf */,
+    MPIDI_DISPATCH_PT2PT(RECV, MPIDI_NM_mpi_recv, NULL /* send_buf */,
                           buf, count, datatype, rank, tag,
                           comm, context_offset, status, request, mpi_errno);
 #else
@@ -54,7 +54,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
             MPIR_ERR_POP(mpi_errno);
         }
 
-        MPIDI_DISPATCH_PT2PT(MPIDI_IRECV, MPIDI_NM_mpi_irecv, NULL /* send_buf */,
+        MPIDI_DISPATCH_PT2PT(IRECV, MPIDI_NM_mpi_irecv, NULL /* send_buf */,
                           buf, count, datatype, rank, tag,
                           comm, context_offset, NULL /*status*/,
                           &(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)), mpi_errno);
@@ -86,7 +86,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
                 MPIDI_SHM_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status,
                                    request);
         else
-            MPIDI_DISPATCH_PT2PT(MPIDI_RECV, MPIDI_NM_mpi_recv, NULL /* send_buf */,
+            MPIDI_DISPATCH_PT2PT(RECV, MPIDI_NM_mpi_recv, NULL /* send_buf */,
                           buf, count, datatype, rank, tag,
                           comm, context_offset, status, request, mpi_errno);
         if (mpi_errno == MPI_SUCCESS && *request) {
@@ -286,7 +286,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
     }
 
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
-    MPIDI_DISPATCH_PT2PT(MPIDI_IRECV, MPIDI_NM_mpi_irecv, NULL /* send_buf */,
+    MPIDI_DISPATCH_PT2PT(IRECV, MPIDI_NM_mpi_irecv, NULL /* send_buf */,
                           buf, count, datatype, rank, tag,
                           comm, context_offset, NULL /*status*/,
                           request, mpi_errno);
@@ -299,7 +299,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
             MPIR_ERR_POP(mpi_errno);
         }
 
-        MPIDI_DISPATCH_PT2PT(MPIDI_IRECV, MPIDI_NM_mpi_irecv, NULL /* send_buf */,
+        MPIDI_DISPATCH_PT2PT(IRECV, MPIDI_NM_mpi_irecv, NULL /* send_buf */,
                           buf, count, datatype, rank, tag,
                           comm, context_offset, NULL /*status*/,
                           &(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)), mpi_errno);
@@ -321,7 +321,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
             mpi_errno =
                 MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
         else
-            MPIDI_DISPATCH_PT2PT(MPIDI_IRECV, MPIDI_NM_mpi_irecv, NULL /* send_buf */,
+            MPIDI_DISPATCH_PT2PT(IRECV, MPIDI_NM_mpi_irecv, NULL /* send_buf */,
                           buf, count, datatype, rank, tag,
                           comm, context_offset, NULL /*status*/,
                           request, mpi_errno);

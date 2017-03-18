@@ -40,6 +40,7 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
 #   define MPIR_Assert(a_)                             \
     do {                                               \
         if (unlikely(!(a_))) {                         \
+            abort();\
             MPIR_Assert_fail(#a_, __FILE__, __LINE__); \
         }                                              \
     } while (0)

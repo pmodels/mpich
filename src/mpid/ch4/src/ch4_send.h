@@ -40,7 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
     }
 
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
-    MPIDI_DISPATCH_PT2PT(MPIDI_SEND, MPIDI_NM_mpi_send,
+    MPIDI_DISPATCH_PT2PT(SEND, MPIDI_NM_mpi_send,
                           buf, NULL /* recv_buf */, count, datatype, rank, tag,
                           comm, context_offset, NULL /*status*/, request, mpi_errno);
 #else
@@ -49,7 +49,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
         mpi_errno =
             MPIDI_SHM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, request);
     else
-        MPIDI_DISPATCH_PT2PT(MPIDI_SEND, MPIDI_NM_mpi_send,
+        MPIDI_DISPATCH_PT2PT(SEND, MPIDI_NM_mpi_send,
                           buf, NULL /* recv_buf */, count, datatype, rank, tag,
                           comm, context_offset, NULL /*status*/, request, mpi_errno);
     if (mpi_errno == MPI_SUCCESS && *request)
@@ -92,7 +92,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
     }
 
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
-    MPIDI_DISPATCH_PT2PT(MPIDI_ISEND, MPIDI_NM_mpi_isend,
+    MPIDI_DISPATCH_PT2PT(ISEND, MPIDI_NM_mpi_isend,
                           buf, NULL /* recv_buf */, count, datatype, rank, tag,
                           comm, context_offset, NULL /*status*/, request, mpi_errno);
 #else
@@ -101,7 +101,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
         mpi_errno =
             MPIDI_SHM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, request);
     else
-        MPIDI_DISPATCH_PT2PT(MPIDI_ISEND, MPIDI_NM_mpi_isend,
+        MPIDI_DISPATCH_PT2PT(ISEND, MPIDI_NM_mpi_isend,
                           buf, NULL /* recv_buf */, count, datatype, rank, tag,
                           comm, context_offset, NULL /*status*/, request, mpi_errno);
     if (mpi_errno == MPI_SUCCESS)

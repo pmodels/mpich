@@ -121,7 +121,7 @@ static inline int MPIDI_workq_ep_progress_body(int ep_idx)
         while(workq_elemt != NULL) {
             MPIDI_WORKQ_ISSUE_START;
             switch(workq_elemt->op) {
-            case MPIDI_SEND:
+            case SEND:
                 mpi_errno = MPIDI_NM_mpi_send(workq_elemt->send_buf,
                                               workq_elemt->count,
                                               workq_elemt->datatype,
@@ -132,7 +132,7 @@ static inline int MPIDI_workq_ep_progress_body(int ep_idx)
                                               &workq_elemt->request);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 break;
-            case MPIDI_ISEND:
+            case ISEND:
                 mpi_errno = MPIDI_NM_mpi_isend(workq_elemt->send_buf,
                                                workq_elemt->count,
                                                workq_elemt->datatype,
@@ -143,7 +143,7 @@ static inline int MPIDI_workq_ep_progress_body(int ep_idx)
                                                &workq_elemt->request);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 break;
-            case MPIDI_RECV:
+            case RECV:
                 mpi_errno = MPIDI_NM_mpi_recv(workq_elemt->recv_buf,
                                                workq_elemt->count,
                                                workq_elemt->datatype,
@@ -155,7 +155,7 @@ static inline int MPIDI_workq_ep_progress_body(int ep_idx)
                                                &workq_elemt->request);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 break;
-            case MPIDI_IRECV:
+            case IRECV:
                 mpi_errno = MPIDI_NM_mpi_irecv(workq_elemt->recv_buf,
                                                workq_elemt->count,
                                                workq_elemt->datatype,
@@ -166,7 +166,7 @@ static inline int MPIDI_workq_ep_progress_body(int ep_idx)
                                                &workq_elemt->request);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 break;
-            case MPIDI_PUT:
+            case PUT:
                 mpi_errno = MPIDI_NM_mpi_put(workq_elemt->origin_addr,
                                              workq_elemt->origin_count,
                                              workq_elemt->origin_datatype,
@@ -248,23 +248,24 @@ static inline int MPIDI_workq_global_progress(int* made_progress)
 
 #ifdef MPIDI_CH4_MT_DIRECT
 #define MPIDI_DISPATCH_PT2PT(op, func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err) \
-do {                                                                                                        \
-    err = MPI_SUCCESS;                                                                                      \
-    if (op == MPI_RECV)                                                                                     \
-        mpi_errno = func(recv_buf, count, datatype, rank, tag, comm, context_offset, status, request);      \
-    else if (op == MPI_IRECV)                                                                               \
-        mpi_errno = func(recv_buf, count, datatype, rank, tag, comm, context_offset, request);              \
-    else                                                                                                    \
-        mpi_errno = func(buf, count, datatype, rank, tag, comm, context_offset, request);                   \
-} while(0)
+        MPIDI_DISPATCH_PT2PT_##op(func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err)
+
+#define MPIDI_DISPATCH_PT2PT_RECV(func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err) \
+    err = func(recv_buf, count, datatype, rank, tag, comm, context_offset, status, request);
+#define MPIDI_DISPATCH_PT2PT_IRECV(func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err) \
+    err = func(recv_buf, count, datatype, rank, tag, comm, context_offset, request);
+#define MPIDI_DISPATCH_PT2PT_SEND(func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err) \
+    err = func(send_buf, count, datatype, rank, tag, comm, context_offset, request);
+#define MPIDI_DISPATCH_PT2PT_ISEND(func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err) \
+    err = func(send_buf, count, datatype, rank, tag, comm, context_offset, request);
 #else
 #define MPIDI_DISPATCH_PT2PT(op, func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err) \
 do {                                                                                                        \
     err = MPI_SUCCESS;                                                                                      \
     int ep_idx;                                                                                             \
-    if (op == MPIDI_SEND || op == MPIDI_ISEND)                                                              \
+    if (op == SEND || op == ISEND)                                                              \
         *request = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);                                            \
-    else if (op == MPIDI_RECV || op == MPIDI_IRECV)                                                         \
+    else if (op == RECV || op == IRECV)                                                         \
         *request = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);                                            \
     MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);                                                            \
     MPID_THREAD_CS_ENTER(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);                                            \
