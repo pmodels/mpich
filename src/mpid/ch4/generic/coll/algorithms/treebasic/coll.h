@@ -114,27 +114,47 @@ static inline int COLL_bcast(void *buffer,
     int rank = comm->rank;
     int size = comm->size;
     int tag = comm->tag++;
+    MPIR_Comm *comm_ptr = comm->mpir_comm;
     MPI_Status status;
     int k=MPIR_CVAR_KVAL_KARY_BCAST;
     if(0) fprintf(stderr, "value of k for kary tree bcast = %d\n", k);
-    int i;
+
     if(root!=0){/*if root is not zero, send the data to rank 0*/
         if(rank==root){/*send data to root of the tree*/
-            MPIC_Send(buffer, count, datatype, 0, tag, comm->mpir_comm, errflag);
+            MPIC_Send(buffer, count, datatype, 0, tag, comm_ptr, errflag);
         }else if(root==0){/*receive data from root of the broadcast*/
-            MPIC_Recv(buffer, count, datatype, root, tag, comm->mpir_comm, &status, errflag);
+            MPIC_Recv(buffer, count, datatype, root, tag, comm_ptr, &status, errflag);
         }
     }
+
+    if(comm_ptr->node_comm != NULL){/*MPICH is shared memory aware*/
+        /*Do Internode bcast followed by Intranode bcast*/
+        
+        /*Internode bcast - performed only by node roots*/
+        if(comm_ptr->node_roots_comm!=NULL && comm_ptr->local_size>comm_ptr->node_comm->local_size){
+            if(0) fprintf(stderr, "starting internode bcast\n");
+            MPID_Bcast(buffer, count, datatype, 0, comm_ptr->node_roots_comm, errflag);
+            if(0) fprintf(stderr, "finished internode bcast\n");
+        }
+        /*Intranode bcast - performed by everyone*/
+        if(0) fprintf(stderr, "starting intranode bcast\n");
+        MPID_Bcast(buffer, count, datatype, 0, comm_ptr->node_comm, errflag);
+        if(0) fprintf(stderr, "finished intranode bcast\n");
+        
+    }
+
+    int i;
 
     /*do the broadcast over the tree*/
     if(comm->rank != 0){/*non-root rank, receive data from parent*/
         if(0) fprintf(stderr, "recv data from %d\n", comm->kary_parent[k]);
-        MPIC_Recv(buffer, count, datatype, comm->kary_parent[k], tag, comm->mpir_comm, &status, errflag);
+        MPIC_Recv(buffer, count, datatype, comm->kary_parent[k], tag, comm_ptr, &status, errflag);
     }
+    if(0) fprintf(stderr, "number of children: %d\n", comm->kary_nchildren[k]);
     /*send data to children*/
     for(i=0; i<comm->kary_nchildren[k]; i++){
         if(0) fprintf(stderr, "send data to %d\n", comm->kary_children[k][i]);
-        MPIC_Send(buffer, count, datatype, comm->kary_children[k][i], tag, comm->mpir_comm, errflag);
+        MPIC_Send(buffer, count, datatype, comm->kary_children[k][i], tag, comm_ptr, errflag);
     }
 
     return 0;
