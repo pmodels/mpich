@@ -222,16 +222,18 @@
 
 /* Conditional request allocation inside netmod functions */
 #ifdef MPIDI_CH4_MT_DIRECT
-#  define MPIDI_OFI_REQUEST_CREATE_COND 1 /* Always allocated by netmod */
+#  define MPIDI_OFI_REQUEST_CREATE_COND(req) 1 /* Always allocated by netmod */
 #elif defined MPIDI_CH4_MT_HANDOFF
-#  define MPIDI_OFI_REQUEST_CREATE_COND 0 /* Always allocated by CH4 */
-#else /* Trylock-enqueue */
-#  define MPIDI_OFI_REQUEST_CREATE_COND req /* Depends on upper layer */
+#  define MPIDI_OFI_REQUEST_CREATE_COND(req) 0 /* Always allocated by CH4 */
+#elif defined MPIDI_CH4_MT_TRYLOCK
+#  define MPIDI_OFI_REQUEST_CREATE_COND(req) (req == NULL) /* Depends on upper layer */
+#else
+#error "unknown thread safety model"
 #endif
 
 #define MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(req, kind)                 \
       do {                                                              \
-          if (MPIDI_OFI_REQUEST_CREATE_COND) {                          \
+          if (MPIDI_OFI_REQUEST_CREATE_COND(req)) {                     \
               MPIR_Assert((req) == NULL);                               \
               (req) = MPIR_Request_create(kind);                        \
           }                                                             \
@@ -241,7 +243,7 @@
 
 #define MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(req)               \
     do {                                                                \
-        if (MPIDI_OFI_REQUEST_CREATE_COND) {                            \
+        if (MPIDI_OFI_REQUEST_CREATE_COND(req)) {                       \
             MPIR_Assert((req) == NULL);                                 \
             (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);       \
         }                                                               \
