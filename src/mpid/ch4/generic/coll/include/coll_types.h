@@ -75,7 +75,7 @@ typedef struct {
 
 
 
-static MPIDI_COLL_global_t MPIDI_COLL_global_instance;
+extern MPIDI_COLL_global_t MPIDI_COLL_global_instance;
 
 typedef union {
         MPIDI_COLL_STUB_STUB_req_t stub_stub;
