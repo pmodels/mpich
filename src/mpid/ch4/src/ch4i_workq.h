@@ -246,10 +246,6 @@ static inline int MPIDI_workq_global_progress(int* made_progress)
     return mpi_errno;
 }
 
-#ifdef MPIDI_CH4_MT_DIRECT
-#define MPIDI_DISPATCH_PT2PT(op, func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err) \
-        MPIDI_DISPATCH_PT2PT_##op(func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err)
-
 #define MPIDI_DISPATCH_PT2PT_RECV(func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err) \
     err = func(recv_buf, count, datatype, rank, tag, comm, context_offset, status, request);
 #define MPIDI_DISPATCH_PT2PT_IRECV(func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err) \
@@ -258,7 +254,17 @@ static inline int MPIDI_workq_global_progress(int* made_progress)
     err = func(send_buf, count, datatype, rank, tag, comm, context_offset, request);
 #define MPIDI_DISPATCH_PT2PT_ISEND(func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err) \
     err = func(send_buf, count, datatype, rank, tag, comm, context_offset, request);
-#else
+
+#ifdef MPIDI_CH4_MT_DIRECT
+#define MPIDI_DISPATCH_PT2PT(op, func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err)   \
+do {                                                                                                        \
+    int ep_idx;                                                                                             \
+    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);                                                            \
+    MPID_THREAD_CS_ENTER(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);                                            \
+    MPIDI_DISPATCH_PT2PT_##op(func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err)\
+    MPID_THREAD_CS_EXIT(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);                                             \
+} while (0)
+#elif defined (MPIDI_CH4_MT_HANDOFF)
 #define MPIDI_DISPATCH_PT2PT(op, func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err) \
 do {                                                                                                        \
     err = MPI_SUCCESS;                                                                                      \
@@ -268,11 +274,30 @@ do {                                                                            
     else if (op == RECV || op == IRECV)                                                         \
         *request = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);                                            \
     MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);                                                            \
-    MPID_THREAD_CS_ENTER(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);                                            \
     MPIDI_workq_pt2pt_enqueue(op, send_buf, recv_buf, count, datatype,                                      \
                               rank, tag, comm, context_offset, ep_idx, status, *request);                   \
-    MPID_THREAD_CS_EXIT(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);                                             \
 } while (0)
+#elif defined (MPIDI_CH4_MT_TRYLOCK)
+#define MPIDI_DISPATCH_PT2PT(op, func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err) \
+do {                                                                                                        \
+    err = MPI_SUCCESS;                                                                                      \
+    int ep_idx, cs_acq = 0;                                                                                 \
+    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);                                                            \
+    MPID_THREAD_CS_TRYENTER(EP, MPIDI_CH4_Global.ep_locks[ep_idx], cs_acq);                                 \
+    if(!cs_acq) {                                                                                           \
+        if (op == SEND || op == ISEND)                                                                      \
+            *request = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);                                        \
+        else if (op == RECV || op == IRECV)                                                                 \
+            *request = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);                                        \
+        MPIDI_workq_pt2pt_enqueue(op, send_buf, recv_buf, count, datatype,                                  \
+                                  rank, tag, comm, context_offset, ep_idx, status, *request);               \
+    } else {                                                                                                \
+        MPIDI_DISPATCH_PT2PT_##op(func, send_buf, recv_buf, count, datatype, rank, tag, comm, context_offset, status, request, err);\
+        MPID_THREAD_CS_EXIT(EP, MPIDI_CH4_Global.ep_locks[ep_idx]);                                         \
+    }                                                                                                       \
+} while (0)
+#else
+#error "Unknown thread safety model"
 #endif
 
 #endif /* CH4I_WORKQ_H_INCLUDED */
