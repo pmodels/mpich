@@ -17,6 +17,22 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
  * ofi_capability_sets.h so we can refer to it if we want to preload a
  * capability set at runtime */
 {
+    { /* minimal required capability */
+        .enable_data               = MPIDI_OFI_ENABLE_DATA_MINIMAL,
+        .enable_av_table           = MPIDI_OFI_ENABLE_AV_TABLE_MINIMAL,
+        .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_MINIMAL,
+        .enable_stx_rma            = MPIDI_OFI_ENABLE_STX_RMA_MINIMAL,
+        .enable_mr_scalable        = MPIDI_OFI_ENABLE_MR_SCALABLE_MINIMAL,
+        .enable_tagged             = MPIDI_OFI_ENABLE_TAGGED_MINIMAL,
+        .enable_am                 = MPIDI_OFI_ENABLE_AM_MINIMAL,
+        .enable_rma                = MPIDI_OFI_ENABLE_RMA_MINIMAL,
+        .enable_atomics            = MPIDI_OFI_ENABLE_ATOMICS_MINIMAL,
+        .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_MINIMAL,
+        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_MINIMAL,
+        .context_bits              = MPIDI_OFI_CONTEXT_BITS_MINIMAL,
+        .source_bits               = MPIDI_OFI_SOURCE_BITS_MINIMAL,
+        .tag_bits                  = MPIDI_OFI_TAG_BITS_MINIMAL
+    },
     { /* psm */
         .enable_data               = MPIDI_OFI_ENABLE_DATA_PSM,
         .enable_av_table           = MPIDI_OFI_ENABLE_AV_TABLE_PSM,

@@ -15,7 +15,8 @@
 #define MPIDI_OFI_ON      1
 
 enum {
-    MPIDI_OFI_SET_NUMBER_PSM = 0,
+    MPIDI_OFI_SET_NUMBER_UNKNOWN = 0,
+    MPIDI_OFI_SET_NUMBER_PSM,
     MPIDI_OFI_SET_NUMBER_PSM2,
     MPIDI_OFI_SET_NUMBER_GNI,
     MPIDI_OFI_SET_NUMBER_SOCKETS,
@@ -45,7 +46,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
     } else if (!strcmp("verbs", set_name)) {
         return MPIDI_OFI_SET_NUMBER_VERBS;
     } else {
-        return -1;
+        return MPIDI_OFI_SET_NUMBER_UNKNOWN;
     }
 }
 
@@ -348,6 +349,29 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_VERBS
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_VERBS
 #endif
+
+/* capability set for default provider (to request the minimal supported capability) */
+#define MPIDI_OFI_ENABLE_DATA_MINIMAL               MPIDI_OFI_OFF
+#define MPIDI_OFI_ENABLE_AV_TABLE_MINIMAL           MPIDI_OFI_ON
+#define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_MINIMAL MPIDI_OFI_OFF
+#define MPIDI_OFI_MAX_ENDPOINTS_MINIMAL             MPIDI_OFI_MAX_ENDPOINTS_REGULAR
+#define MPIDI_OFI_MAX_ENDPOINTS_BITS_MINIMAL        MPIDI_OFI_MAX_ENDPOINTS_BITS_REGULAR
+#define MPIDI_OFI_ENABLE_STX_RMA_MINIMAL            MPIDI_OFI_OFF
+#define MPIDI_OFI_ENABLE_MR_SCALABLE_MINIMAL        MPIDI_OFI_OFF
+#define MPIDI_OFI_ENABLE_TAGGED_MINIMAL             MPIDI_OFI_OFF
+#define MPIDI_OFI_ENABLE_AM_MINIMAL                 MPIDI_OFI_ON
+#define MPIDI_OFI_ENABLE_RMA_MINIMAL                MPIDI_OFI_OFF
+#define MPIDI_OFI_ENABLE_ATOMICS_MINIMAL            MPIDI_OFI_ENABLE_RMA_MINIMAL
+#define MPIDI_OFI_FETCH_ATOMIC_IOVECS_MINIMAL       1
+#define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_MINIMAL MPIDI_OFI_OFF
+#define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_MINIMAL  MPIDI_OFI_OFF
+#define MPIDI_OFI_CONTEXT_MASK_MINIMAL              (0x0FFFF00000000000ULL)
+#define MPIDI_OFI_SOURCE_MASK_MINIMAL               (0x00000FFFFFF00000ULL) /* assume that provider does not support immediate data
+                                                                             * so this field needs to be available */
+#define MPIDI_OFI_TAG_MASK_MINIMAL                  (0x00000000000FFFFFULL)
+#define MPIDI_OFI_CONTEXT_BITS_MINIMAL              (16)
+#define MPIDI_OFI_SOURCE_BITS_MINIMAL               (24)
+#define MPIDI_OFI_TAG_BITS_MINIMAL                  (20)
 
 #ifdef MPIDI_CH4_OFI_USE_SET_RUNTIME
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     1
