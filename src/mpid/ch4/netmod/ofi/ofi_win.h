@@ -47,8 +47,8 @@ static inline int MPIDI_OFI_win_allgather(MPIR_Win * win, void *base, int disp_u
 
     bits_for_context_id = total_bits_avail -
         MPIDI_Global.max_windows_bits - MPIDI_Global.max_huge_rma_bits;
-    max_contexts_allowed = 1 << (bits_for_context_id);
-    max_instances_allowed = 1 << (bits_for_instance_id);
+    max_contexts_allowed = (uint64_t) 1 << (bits_for_context_id);
+    max_instances_allowed = (uint64_t) 1 << (bits_for_instance_id);
     MPIR_ERR_CHKANDSTMT(gen_id >= max_contexts_allowed, mpi_errno, MPI_ERR_OTHER,
                         goto fn_fail, "**ofid_mr_reg");
     MPIR_ERR_CHKANDSTMT(window_instance >= max_instances_allowed, mpi_errno, MPI_ERR_OTHER,
