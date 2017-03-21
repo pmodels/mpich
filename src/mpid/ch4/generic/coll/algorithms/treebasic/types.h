@@ -8,6 +8,7 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
+#include "../tree/tree_def.h"
 
 typedef struct COLL_comm_t {
     MPIR_Comm *mpir_comm;
@@ -18,17 +19,11 @@ typedef struct COLL_comm_t {
     int tag;
 
     int max_k; /*value of radix k up to which we may run collective algorithms*/
-    int *log_size; /*stores floor(log_k(nranks)) values for all possible values of k*/
+    
+    /*store kary and knomial trees*/
+    COLL_tree_t *kary_tree;
+    COLL_tree_t *knomial_tree;
 
-    /*store kary tree*/
-    int *kary_parent; /*stores parent in the tree for each value of k*/
-    int *kary_nchildren; /*number of children in the tree for each value of k*/
-    int **kary_children; /*list of children in each tree*/
-
-    /*store knomial trees (same arrays as kary trees above*/
-    int *knomial_parent;
-    int *knomial_nchildren;
-    int **knomial_children;
 } COLL_comm_t;
 
 typedef struct COLL_global_t {

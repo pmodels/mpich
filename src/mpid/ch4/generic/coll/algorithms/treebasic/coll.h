@@ -57,53 +57,21 @@ static inline int COLL_comm_init(COLL_comm_t *comm, int * tag, int rank, int siz
     int max_k = comm->max_k = 10; 
     int i,k;
     /*allocate space for arrays */
-    int *log_size = comm->log_size = (int*)MPL_malloc(sizeof(int)*max_k);
-    int *kary_parent = comm->kary_parent = (int*)MPL_malloc(sizeof(int*)*max_k);
-    int *kary_nchildren = comm->kary_nchildren = (int*)MPL_malloc(sizeof(int)*max_k);
-    int **kary_children = comm->kary_children = (int**)MPL_malloc(sizeof(int*)*max_k);
-
-    int *knomial_parent = comm->knomial_parent = (int*)MPL_malloc(sizeof(int*)*max_k);
-    int *knomial_nchildren = comm->knomial_nchildren = (int*)MPL_malloc(sizeof(int)*max_k);
-    int **knomial_children = comm->knomial_children = (int**)MPL_malloc(sizeof(int*)*max_k);
+    comm->kary_tree = (COLL_tree_t*)MPL_malloc(sizeof(COLL_tree_t)*max_k);
+    comm->knomial_tree = (COLL_tree_t*)MPL_malloc(sizeof(COLL_tree_t)*max_k);
 
     /*pre-calculate log_k(size) values for all possible values of k*/
-    memset(log_size, 0, sizeof(int)*max_k);
     for(k=2; k<max_k; k++){
-        /*calculate log value*/
-        int tmp = size;
-        while(tmp){
-            tmp/=k;
-            log_size[k]++;
-        }
-        log_size[k]--;
-        
-        /*calculate kary trees*/
-        kary_parent[k] = (rank-1)/k;
-        kary_nchildren[k] = max(0, min(k,size-(rank*k+1)));
-        kary_children[k] = (int*)MPL_malloc(sizeof(int)*kary_nchildren[k]);
-        for(i=0; i<kary_nchildren[k]; i++)
-            kary_children[k][i] = rank*k+i+1;
-
-        /*calculate knomial trees*/
+        COLL_tree_kary_init(rank,size,k,0,&comm->kary_tree[k]);
+        COLL_tree_knomial_init(rank,size,k,0,&comm->knomial_tree[k]);
     }
     return 0;
 }
 
 static inline int COLL_comm_cleanup(COLL_comm_t * comm)
 {
-    MPL_free(comm->log_size);
-    MPL_free(comm->kary_parent);
-    MPL_free(comm->kary_nchildren);
-    int i;
-    for(i=2; i<comm->max_k; i++)
-        MPL_free(comm->kary_children[i]);
-    MPL_free(comm->kary_children);
-
-    MPL_free(comm->knomial_parent);
-    MPL_free(comm->knomial_nchildren);
-    /*for(i=2; i<comm->max_k; i++)
-        MPL_free(comm->knomial_children[i]);*/
-    MPL_free(comm->knomial_children);
+    MPL_free(comm->kary_tree);
+    MPL_free(comm->knomial_tree);
     return 0;
 }
 
@@ -116,8 +84,6 @@ static inline int COLL_bcast(void *buffer,
     int tag = comm->tag++;
     MPIR_Comm *comm_ptr = comm->mpir_comm;
     MPI_Status status;
-    int k=MPIR_CVAR_KVAL_KARY_BCAST;
-    if(0) fprintf(stderr, "value of k for kary tree bcast = %d\n", k);
 
     if(root!=0){/*if root is not zero, send the data to rank 0*/
         if(rank==root){/*send data to root of the tree*/
@@ -143,18 +109,23 @@ static inline int COLL_bcast(void *buffer,
         
     }
 
-    int i;
-
+    int k=MPIR_CVAR_KVAL_KARY_BCAST;
+    if(0) fprintf(stderr, "value of k for kary tree bcast = %d\n", k);
+    int i,j;
+    
+    COLL_tree_t *tree = &comm->knomial_tree[k];
     /*do the broadcast over the tree*/
     if(comm->rank != 0){/*non-root rank, receive data from parent*/
-        if(0) fprintf(stderr, "recv data from %d\n", comm->kary_parent[k]);
-        MPIC_Recv(buffer, count, datatype, comm->kary_parent[k], tag, comm_ptr, &status, errflag);
+        if(0) fprintf(stderr, "recv data from %d\n", tree->parent);
+        MPIC_Recv(buffer, count, datatype, tree->parent, tag, comm_ptr, &status, errflag);
     }
-    if(0) fprintf(stderr, "number of children: %d\n", comm->kary_nchildren[k]);
+    //if(0) fprintf(stderr, "number of children: %d\n", comm->kary_nchildren[k]);
     /*send data to children*/
-    for(i=0; i<comm->kary_nchildren[k]; i++){
-        if(0) fprintf(stderr, "send data to %d\n", comm->kary_children[k][i]);
-        MPIC_Send(buffer, count, datatype, comm->kary_children[k][i], tag, comm_ptr, errflag);
+    for(i=0; i<tree->numRanges; i++){
+        for(j=tree->children[i].startRank; j<= tree->children[i].endRank; j++){
+            if(0) fprintf(stderr, "send data to %d\n", j);
+            MPIC_Send(buffer, count, datatype, j, tag, comm_ptr, errflag);
+        }
     }
 
     return 0;

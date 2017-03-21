@@ -9,21 +9,11 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
+#include "tree_def.h"
+
 typedef struct COLL_global_t {
 } COLL_global_t;
 
-typedef struct COLL_child_range_t {
-    int startRank;
-    int endRank;
-} COLL_child_range_t;
-
-typedef struct COLL_tree_t {
-    int rank;
-    int nranks;
-    int parent;
-    int numRanges;
-    COLL_child_range_t children[COLL_MAX_TREE_BREADTH];
-} COLL_tree_t;
 
 typedef struct COLL_tree_comm_t {
     COLL_tree_t tree;
