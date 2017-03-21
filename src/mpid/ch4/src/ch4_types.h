@@ -279,6 +279,7 @@ typedef struct MPIDI_CH4_Global_t {
     void *netmod_context[8];
     MPIU_buf_pool_t *buf_pool;
     int n_netmod_eps;
+    int next_ep_idx;
     MPID_Thread_mutex_t *ep_locks;
     MPIDI_workq_list_t **ep_queues;
     /* Per-endpoint queues for saving pending operations to issue */

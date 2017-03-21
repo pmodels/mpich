@@ -336,7 +336,7 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int 
 {
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, rank));
-        int ep_num = MPIDI_OFI_AV_TO_EP(av);
+        int ep_num = comm->ep_idx;
         int offset = MPIDI_Global.ctx[ep_num].ctx_offset;
         int rx_idx = offset + ep_family;
         return fi_rx_addr(MPIDI_OFI_AV_TO_PHYS(av), rx_idx, MPIDI_OFI_MAX_ENDPOINTS_BITS);

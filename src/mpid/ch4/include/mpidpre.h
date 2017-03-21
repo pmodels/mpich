@@ -392,6 +392,7 @@ typedef struct MPIDI_Devcomm_t {
 
     int nqueues;
     MPIDI_workq_list_t *work_queues;
+    int ep_idx;
 } MPIDI_Devcomm_t;
 #define MPIDI_CH4U_COMM(comm,field) ((comm)->dev.ch4.ch4u).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field

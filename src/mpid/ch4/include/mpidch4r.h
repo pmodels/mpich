@@ -22,5 +22,6 @@
 #include "ch4r_win.h"
 #include "ch4r_buf.h"
 #include "ch4r_request.h"
+#include "ch4r_ep.h"
 
 #endif /* MPIDCH4R_H_INCLUDED */
