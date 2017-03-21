@@ -117,20 +117,40 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
 
 ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
     off_t lseek_ret;
+    off_t old_offset;
+    ssize_t read_ret;
 
+    old_offset = lseek(fd, 0, SEEK_CUR);
     lseek_ret = lseek(fd, offset, SEEK_SET);
     if (lseek_ret == -1)
 	return lseek_ret;
-    return (read(fd, buf, count));
+    read_ret = read(fd, buf, count);
+    if (read_ret < 0)
+	return read_ret;
+    /* man page says "file offset is not changed" */
+    if ( (lseek_ret = lseek(fd, old_offset, SEEK_SET)) < 0)
+	return lseek_ret;
+
+    return read_ret;
 }
 
 ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset) {
     off_t lseek_ret;
+    off_t old_offset;
+    ssize_t write_ret;
 
+    old_offset = lseek(fd, 0, SEEK_CUR);
     lseek_ret = lseek(fd, offset, SEEK_SET);
     if (lseek_ret == -1)
 	return lseek_ret;
-    return (write(fd, buf, count));
+    write_ret = write(fd, buf, count);
+    if (write_ret < 0)
+	return write_ret;
+    /* man page says "file offset is not changed" */
+    if ( (lseek_ret = lseek(fd, old_offset, SEEK_SET)) < 0)
+	return lseek_ret;
+
+    return write_ret;
 }
 #endif
 
