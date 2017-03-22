@@ -746,7 +746,8 @@ static inline void MPIDI_find_tag_ep(MPIR_Comm* comm, int target_rank, int tag, 
 #if 0
     *ep_idx = ((comm->context_id + target_rank + tag) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
 #else
-    *ep_idx = 0;
+    // *ep_idx = 0;
+    *ep_idx = (comm->context_id % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
 #endif
     MPIR_Assert(*ep_idx >= 0);
 }
@@ -756,7 +757,8 @@ static inline void MPIDI_find_rma_ep(MPIR_Win* win, int target_rank, int* ep_idx
 #if 0
     *ep_idx = ((win->comm_ptr->context_id + target_rank) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
 #else
-    *ep_idx = 0;
+    // *ep_idx = 0;
+    *ep_idx = (win->comm_ptr->context_id % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
 #endif
     MPIR_Assert(*ep_idx >= 0);
 }

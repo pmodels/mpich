@@ -348,12 +348,12 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int 
 MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_ep_to_phys(MPIR_Comm * comm, int rank,
                                                              int ep_idx, int ep_family)
 {
-    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        int rx_idx = MPIDI_Global.ctx[ep_idx].ctx_offset + ep_family;
-        return fi_rx_addr(MPIDI_OFI_COMM_TO_PHYS(comm, rank), rx_idx, MPIDI_OFI_MAX_ENDPOINTS_BITS);
-    } else {
+    // if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+    //     int rx_idx = MPIDI_Global.ctx[ep_idx].ctx_offset + ep_family;
+    //     return fi_rx_addr(MPIDI_OFI_COMM_TO_PHYS(comm, rank), rx_idx, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+    // } else {
         return MPIDI_OFI_COMM_TO_PHYS(comm, rank);
-    }
+    // }
 }
 
 MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_to_phys(int rank, int ep_family)
