@@ -23,6 +23,11 @@ typedef struct COLL_comm_t {
     /*store kary and knomial trees*/
     COLL_tree_t *kary_tree;
     COLL_tree_t *knomial_tree;
+    
+    /*Communicators for multileader optimization*/
+    //MPIR_Comm subcomm; /*subcommunicator to which I belong*/
+    //MPIR_Comm subcomm_roots_comm;/*communicator of rank 0 in each subcomm, 
+    //                                this will be non-NULL only on rank 0 of comm*/
 
 } COLL_comm_t;
 
