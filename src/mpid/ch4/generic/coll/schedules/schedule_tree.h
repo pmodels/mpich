@@ -52,9 +52,9 @@ static inline int COLL_tree_dump(int tree_size, int root, int k)
     }
 
     fprintf(stderr, "}\n");
-
     return 0;
 }
+
 
 static inline int
 COLL_sched_bcast(void *buffer,
