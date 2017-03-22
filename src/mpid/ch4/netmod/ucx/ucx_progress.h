@@ -136,8 +136,6 @@ static inline int MPIDI_NM_progress(void *netmod_context, int blocking)
 
     ucp_worker_progress(MPIDI_UCX_global.worker);
 
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_THREAD_WORKER_MUTEX);
-
   fn_exit:
     return mpi_errno;
   fn_fail:
