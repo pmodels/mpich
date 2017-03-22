@@ -747,7 +747,9 @@ static inline void MPIDI_find_tag_ep(MPIR_Comm* comm, int target_rank, int tag, 
     *ep_idx = ((comm->context_id + target_rank + tag) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
 #else
     // *ep_idx = 0;
-    *ep_idx = (comm->context_id % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "CONTEXT_ID=%d",
+                                                   MPIR_CONTEXT_READ_PREFIX(comm->context_id)));
+    *ep_idx = (MPIR_CONTEXT_READ_PREFIX(comm->context_id) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
 #endif
     MPIR_Assert(*ep_idx >= 0);
 }
@@ -758,7 +760,7 @@ static inline void MPIDI_find_rma_ep(MPIR_Win* win, int target_rank, int* ep_idx
     *ep_idx = ((win->comm_ptr->context_id + target_rank) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
 #else
     // *ep_idx = 0;
-    *ep_idx = (win->comm_ptr->context_id % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
+    *ep_idx = (MPIR_CONTEXT_READ_PREFIX(win->comm_ptr->context_id) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
 #endif
     MPIR_Assert(*ep_idx >= 0);
 }
