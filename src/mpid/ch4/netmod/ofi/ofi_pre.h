@@ -171,6 +171,7 @@ typedef struct {
 
 typedef struct {
     fi_addr_t dest;
+    // Keep them for now
 #if defined MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS || defined MPIDI_OFI_ENABLE_RUNTIME_CHECKS
     unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
 #endif

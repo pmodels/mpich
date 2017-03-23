@@ -741,14 +741,15 @@ static inline void MPIDI_win_check_group_local_completed(MPIR_Win * win,
     }
 }
 
+static inline void MPIDI_find_tag_ep_comm_rr(MPIR_Comm* comm, int target_rank, int tag, int* ep_idx)
+{
+    *ep_idx = MPIR_CONTEXT_READ_FIELD(PREFIX, comm->context_id) % MPIDI_CH4_Global.n_netmod_eps;
+    MPIR_Assert(*ep_idx >= 0);
+}
+
 static inline void MPIDI_find_tag_ep(MPIR_Comm* comm, int target_rank, int tag, int* ep_idx)
 {
-#if 0
-    *ep_idx = ((comm->context_id + target_rank + tag) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
-#else
-    *ep_idx = 0;
-#endif
-    MPIR_Assert(*ep_idx >= 0);
+    MPIDI_find_tag_ep_comm_rr(comm, target_rank, tag, ep_idx);
 }
 
 static inline void MPIDI_find_rma_ep(MPIR_Win* win, int target_rank, int* ep_idx)
@@ -756,7 +757,8 @@ static inline void MPIDI_find_rma_ep(MPIR_Win* win, int target_rank, int* ep_idx
 #if 0
     *ep_idx = ((win->comm_ptr->context_id + target_rank) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
 #else
-    *ep_idx = 0;
+    // *ep_idx = 0;
+    *ep_idx = (MPIR_CONTEXT_READ_FIELD(PREFIX, win->comm_ptr->context_id) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
 #endif
     MPIR_Assert(*ep_idx >= 0);
 }

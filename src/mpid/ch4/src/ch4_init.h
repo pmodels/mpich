@@ -205,6 +205,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
                                        MPIR_Process.comm_world,
                                        MPIR_Process.comm_self, has_parent,
                                        16 /* n_eps_req */, &MPIDI_CH4_Global.n_netmod_eps);
+    MPIDI_CH4_Global.next_ep_idx = 0;
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POPFATAL(mpi_errno);
     }

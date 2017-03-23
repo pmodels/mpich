@@ -157,6 +157,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
     }
 #endif
 
+    /* initialize per-comm Endpoint (as Scalable EP with OFI now) */
+    // comm->dev.ep_idx = MPIDIU_endpoint_get_next();
+
     /* comm_world and comm_self are already initialized */
     if (comm != MPIR_Process.comm_world && comm != MPIR_Process.comm_self) {
         MPIDI_comm_create_rank_map(comm);

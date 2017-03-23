@@ -618,7 +618,7 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
         MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_win_cntr_incr(win),
                               fi_inject_write(MPIDI_OFI_EP_TX_CTR(ep_idx),
                                               (char *) origin_addr + origin_true_lb, target_bytes,
-                                              MPIDI_OFI_comm_to_phys(win->comm_ptr, target_rank,
+                                              MPIDI_OFI_comm_ep_to_phys(win->comm_ptr, target_rank, ep_idx,
                                                                      MPIDI_OFI_API_RMA),
                                               (uint64_t) MPIDI_OFI_winfo_base(win, target_rank)
                                               + target_disp * MPIDI_OFI_winfo_disp_unit(win,
@@ -936,7 +936,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     msg.msg_iov = &originv;
     msg.desc = NULL;
     msg.iov_count = 1;
-    msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, target_rank, MPIDI_OFI_API_RMA);
+    msg.addr = MPIDI_OFI_comm_ep_to_phys(win->comm_ptr, target_rank, ep_idx, MPIDI_OFI_API_RMA);
     msg.rma_iov = &targetv;
     msg.rma_iov_count = 1;
     msg.datatype = fi_dt;

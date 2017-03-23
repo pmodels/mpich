@@ -34,7 +34,7 @@ static inline void MPIDI_destroy_workqs(MPIR_Win* win){
         MPID_THREAD_CS_EXIT(EP, MPIDI_CH4_Global.ep_locks[i]);
     }
 
-    free(win->dev.work_queues);
+    MPL_free(win->dev.work_queues);
 }
 
 #undef FUNCNAME
