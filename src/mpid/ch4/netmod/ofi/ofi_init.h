@@ -472,6 +472,23 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             break;
         }
 
+        if (prov_first && !prov && !MPIR_CVAR_OFI_USE_PROVIDER) {
+            /* could not find suitable provider. ok, let's try fallback mode */
+            MPIDI_OFI_init_global_settings(prov_first->fabric_attr->prov_name);
+            MPIDI_OFI_init_hints(hints);
+            MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, hints, &prov), addrinfo);
+            MPIDI_OFI_CHOOSE_PROVIDER(prov, &prov_use, "No suitable provider provider found");
+
+            if (prov_use) {
+                /* If the provider passed the above tests, then run the selection
+                 * logic again and make sure to pick this provider again with the
+                 * hints included this time. */
+                hints->caps = prov_use->caps;
+            }
+            if (prov)
+                fi_freeinfo(prov);
+        }
+
         MPIR_Assert(prov);
 
         fi_freeinfo(prov_first);
