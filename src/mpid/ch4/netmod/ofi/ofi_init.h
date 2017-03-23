@@ -207,6 +207,8 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                                             struct fid_av *av,
                                             struct fid_ep **ep, int index);
 static inline int MPIDI_OFI_application_hints(int rank);
+static inline int MPIDI_OFI_init_global_settings(char *prov_name);
+static inline int MPIDI_OFI_init_hints(struct fi_info *hints);
 
 #define MPIDI_OFI_CHOOSE_PROVIDER(prov, prov_use,errstr)                          \
     do {                                                                \
@@ -353,39 +355,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_INIT);
 
-    /* Seed the global settings values for cases where we are using runtime sets */
-    MPIDI_Global.settings.enable_data               = MPIR_CVAR_CH4_OFI_ENABLE_DATA != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_DATA :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_data : MPIR_CVAR_CH4_OFI_ENABLE_DATA;
-    MPIDI_Global.settings.enable_av_table           = MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE  :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_av_table : MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE;
-    MPIDI_Global.settings.enable_scalable_endpoints = MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_scalable_endpoints : MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS;
-    /* If the user doesn't care, then try to use them and fall back if necessary in the RMA init code */
-    MPIDI_Global.settings.enable_stx_rma            = MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_stx_rma : MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA;
-    MPIDI_Global.settings.enable_mr_scalable        = MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_mr_scalable : MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE;
-    MPIDI_Global.settings.enable_tagged             = MPIR_CVAR_CH4_OFI_ENABLE_TAGGED != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_TAGGED :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_tagged : MPIR_CVAR_CH4_OFI_ENABLE_TAGGED;
-    MPIDI_Global.settings.enable_am                 = MPIR_CVAR_CH4_OFI_ENABLE_AM != 1 ? MPIR_CVAR_CH4_OFI_ENABLE_AM :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_am : MPIR_CVAR_CH4_OFI_ENABLE_AM;
-    MPIDI_Global.settings.enable_rma                = MPIR_CVAR_CH4_OFI_ENABLE_RMA != 1 ? MPIR_CVAR_CH4_OFI_ENABLE_RMA :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_rma : MPIR_CVAR_CH4_OFI_ENABLE_RMA;
-    /* try to enable atomics only when RMA is enabled */
-    MPIDI_Global.settings.enable_atomics            = MPIDI_OFI_ENABLE_RMA ? (MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS != 1 ? MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_atomics : MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS) : 0;
-    MPIDI_Global.settings.fetch_atomic_iovecs       = MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS != -1 ? MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].fetch_atomic_iovecs : MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS;
-    MPIDI_Global.settings.enable_data_auto_progress = MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_data_auto_progress : MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS;
-    MPIDI_Global.settings.enable_control_auto_progress  = MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_control_auto_progress : MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS;
-    MPIDI_Global.settings.context_bits              = MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS != 16 ? MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].context_bits : MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS;
-    MPIDI_Global.settings.source_bits                = MPIR_CVAR_CH4_OFI_RANK_BITS != 24 ? MPIR_CVAR_CH4_OFI_RANK_BITS :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].source_bits : MPIR_CVAR_CH4_OFI_RANK_BITS;
-    MPIDI_Global.settings.tag_bits                  = MPIR_CVAR_CH4_OFI_TAG_BITS != 20 ? MPIR_CVAR_CH4_OFI_TAG_BITS :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].tag_bits : MPIR_CVAR_CH4_OFI_TAG_BITS;
+    MPIDI_OFI_init_global_settings(MPIR_CVAR_OFI_USE_PROVIDER);
 
     CH4_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_chunk_request, context));
@@ -413,75 +383,11 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPID_Thread_mutex_create(&MPIDI_OFI_THREAD_SPAWN_MUTEX, &thr_err);
 
     /* ------------------------------------------------------------------------ */
-    /* Hints to filter providers                                                */
-    /* See man fi_getinfo for a list                                            */
-    /* of all filters                                                           */
-    /* mode:  Select capabilities that this netmod will support                 */
-    /*        FI_CONTEXT:  This netmod will pass in context into communication  */
-    /*        to optimize storage locality between MPI requests and OFI opaque  */
-    /*        data structures.                                                  */
-    /*        FI_ASYNC_IOV:  MPICH will provide storage for iovecs on           */
-    /*        communication calls, avoiding the OFI provider needing to require */
-    /*        a copy.                                                           */
-    /*        FI_LOCAL_MR unset:  Note that we do not set FI_LOCAL_MR,          */
-    /*        which means this netmod does not support exchange of memory       */
-    /*        regions on communication calls.                                   */
-    /* caps:     Capabilities required from the provider.  The bits specified   */
-    /*           with buffered receive, cancel, and remote complete implements  */
-    /*           MPI semantics.                                                 */
-    /*           Tagged: used to support tag matching, 2-sided                  */
-    /*           RMA|Atomics:  supports MPI 1-sided                             */
-    /*           MSG|MULTI_RECV:  Supports synchronization protocol for 1-sided */
-    /*           FI_DIRECTED_RECV: Support not putting the source in the match  */
-    /*                             bits                                         */
-    /*           We expect to register all memory up front for use with this    */
-    /*           endpoint, so the netmod requires dynamic memory regions        */
-    /* ------------------------------------------------------------------------ */
-
-    /* ------------------------------------------------------------------------ */
     /* fi_allocinfo: allocate and zero an fi_info structure and all related     */
     /* substructures                                                            */
     /* ------------------------------------------------------------------------ */
     hints = fi_allocinfo();
     MPIR_Assert(hints != NULL);
-
-    hints->mode = FI_CONTEXT | FI_ASYNC_IOV;    /* We can handle contexts  */
-    hints->caps = 0ULL;
-
-    /* RMA interface is used in AM and in native modes,
-     * it should be supported by OFI provider in any case */
-    hints->caps |= FI_RMA;      /* RMA(read/write)         */
-    hints->caps |= FI_WRITE;    /* We need to specify all of the extra
-                                   capabilities because we need to be
-                                   specific later when we create tx/rx
-                                   contexts. If we leave this off, the
-                                   context creation fails because it's not
-                                   a subset of this. */
-    hints->caps |= FI_READ;
-    hints->caps |= FI_REMOTE_WRITE;
-    hints->caps |= FI_REMOTE_READ;
-
-    if (MPIDI_OFI_ENABLE_ATOMICS) {
-        hints->caps |= FI_ATOMICS;  /* Atomics capabilities    */
-    }
-
-    if (MPIDI_OFI_ENABLE_TAGGED) {
-        hints->caps |= FI_TAGGED;       /* Tag matching interface  */
-        hints->caps |= FI_SEND;
-        hints->caps |= FI_RECV;
-    }
-
-    if (MPIDI_OFI_ENABLE_AM) {
-        hints->caps |= FI_MSG;  /* Message Queue apis      */
-        hints->caps |= FI_MULTI_RECV;   /* Shared receive buffer   */
-        hints->caps |= FI_SEND;
-        hints->caps |= FI_RECV;
-    }
-
-    if (MPIDI_OFI_ENABLE_DATA) {
-        hints->caps |= FI_DIRECTED_RECV;        /* Match source address    */
-        hints->domain_attr->cq_data_size = 4;   /* Minimum size for completion data entry */
-    }
 
     /* ------------------------------------------------------------------------ */
     /* FI_VERSION provides binary backward and forward compatibility support    */
@@ -490,47 +396,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* ------------------------------------------------------------------------ */
     fi_version = FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
 
-    /* ------------------------------------------------------------------------ */
-    /* Set object options to be filtered by getinfo                             */
-    /* domain_attr:  domain attribute requirements                              */
-    /* op_flags:     persistent flag settings for an endpoint                   */
-    /* endpoint type:  see FI_EP_RDM                                            */
-    /* Filters applied (for this netmod, we need providers that can support):   */
-    /* THREAD_DOMAIN:  Progress serialization is handled by netmod (locking)    */
-    /* PROGRESS_AUTO:  request providers that make progress without requiring   */
-    /*                 the ADI to dedicate a thread to advance the state        */
-    /* FI_DELIVERY_COMPLETE:  RMA operations are visible in remote memory       */
-    /* FI_COMPLETION:  Selective completions of RMA ops                         */
-    /* FI_EP_RDM:  Reliable datagram                                            */
-    /* ------------------------------------------------------------------------ */
-    hints->addr_format = FI_FORMAT_UNSPEC;
-    hints->domain_attr->threading = FI_THREAD_DOMAIN;
-    if(MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS){
-        hints->domain_attr->data_progress = FI_PROGRESS_AUTO;
-    } else{
-        hints->domain_attr->data_progress = FI_PROGRESS_MANUAL;
-    }
-    if(MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS){
-        hints->domain_attr->control_progress = FI_PROGRESS_AUTO;
-    } else{
-        hints->domain_attr->control_progress = FI_PROGRESS_MANUAL;
-    }
-    hints->domain_attr->resource_mgmt = FI_RM_ENABLED;
-    hints->domain_attr->av_type = MPIDI_OFI_ENABLE_AV_TABLE ? FI_AV_TABLE : FI_AV_MAP;
-    if (MPIDI_OFI_ENABLE_MR_SCALABLE)
-        hints->domain_attr->mr_mode = FI_MR_SCALABLE;
-    else
-        hints->domain_attr->mr_mode = FI_MR_BASIC;
-    hints->tx_attr->op_flags = FI_COMPLETION;
-    /* direct RMA operations supported only with delivery complete mode,
-     * else (AM mode) delivery complete is not required */
-    if(MPIDI_OFI_ENABLE_RMA)
-        hints->tx_attr->op_flags |= FI_DELIVERY_COMPLETE;
-    hints->tx_attr->msg_order = FI_ORDER_SAS;
-    hints->tx_attr->comp_order = FI_ORDER_NONE;
-    hints->rx_attr->op_flags = FI_COMPLETION;
-    hints->rx_attr->total_buffered_recv = 0;    /* FI_RM_ENABLED ensures buffering of unexpected messages */
-    hints->ep_attr->type = FI_EP_RDM;
+    MPIDI_OFI_init_hints(hints);
 
     /* ------------------------------------------------------------------------ */
     /* fi_getinfo:  returns information about fabric  services for reaching a   */
@@ -1521,6 +1387,156 @@ static inline int MPIDI_OFI_application_hints(int rank)
 
   fn_fail:
     return mpi_errno;
+}
+
+static inline int MPIDI_OFI_init_global_settings(char *prov_name)
+{
+    /* Seed the global settings values for cases where we are using runtime sets */
+    MPIDI_Global.settings.enable_data               = MPIR_CVAR_CH4_OFI_ENABLE_DATA != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_DATA :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_data : MPIR_CVAR_CH4_OFI_ENABLE_DATA;
+    MPIDI_Global.settings.enable_av_table           = MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE  :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_av_table : MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE;
+    MPIDI_Global.settings.enable_scalable_endpoints = MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_scalable_endpoints : MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS;
+    /* If the user doesn't care, then try to use them and fall back if necessary in the RMA init code */
+    MPIDI_Global.settings.enable_stx_rma            = MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_stx_rma : MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA;
+    MPIDI_Global.settings.enable_mr_scalable        = MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_mr_scalable : MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE;
+    MPIDI_Global.settings.enable_tagged             = MPIR_CVAR_CH4_OFI_ENABLE_TAGGED != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_TAGGED :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_tagged : MPIR_CVAR_CH4_OFI_ENABLE_TAGGED;
+    MPIDI_Global.settings.enable_am                 = MPIR_CVAR_CH4_OFI_ENABLE_AM != 1 ? MPIR_CVAR_CH4_OFI_ENABLE_AM :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_am : MPIR_CVAR_CH4_OFI_ENABLE_AM;
+    MPIDI_Global.settings.enable_rma                = MPIR_CVAR_CH4_OFI_ENABLE_RMA != 1 ? MPIR_CVAR_CH4_OFI_ENABLE_RMA :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_rma : MPIR_CVAR_CH4_OFI_ENABLE_RMA;
+    /* try to enable atomics only when RMA is enabled */
+    MPIDI_Global.settings.enable_atomics            = MPIDI_OFI_ENABLE_RMA ? (MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS != 1 ? MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_atomics : MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS) : 0;
+    MPIDI_Global.settings.fetch_atomic_iovecs       = MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS != -1 ? MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].fetch_atomic_iovecs : MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS;
+    MPIDI_Global.settings.enable_data_auto_progress = MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_data_auto_progress : MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS;
+    MPIDI_Global.settings.enable_control_auto_progress  = MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_control_auto_progress : MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS;
+    MPIDI_Global.settings.context_bits              = MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS != 16 ? MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].context_bits : MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS;
+    MPIDI_Global.settings.source_bits                = MPIR_CVAR_CH4_OFI_RANK_BITS != 24 ? MPIR_CVAR_CH4_OFI_RANK_BITS :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].source_bits : MPIR_CVAR_CH4_OFI_RANK_BITS;
+    MPIDI_Global.settings.tag_bits                  = MPIR_CVAR_CH4_OFI_TAG_BITS != 20 ? MPIR_CVAR_CH4_OFI_TAG_BITS :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].tag_bits : MPIR_CVAR_CH4_OFI_TAG_BITS;
+    return MPI_SUCCESS;
+}
+
+static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
+{
+    MPIR_Assert(hints != NULL);
+
+    /* ------------------------------------------------------------------------ */
+    /* Hints to filter providers                                                */
+    /* See man fi_getinfo for a list                                            */
+    /* of all filters                                                           */
+    /* mode:  Select capabilities that this netmod will support                 */
+    /*        FI_CONTEXT:  This netmod will pass in context into communication  */
+    /*        to optimize storage locality between MPI requests and OFI opaque  */
+    /*        data structures.                                                  */
+    /*        FI_ASYNC_IOV:  MPICH will provide storage for iovecs on           */
+    /*        communication calls, avoiding the OFI provider needing to require */
+    /*        a copy.                                                           */
+    /*        FI_LOCAL_MR unset:  Note that we do not set FI_LOCAL_MR,          */
+    /*        which means this netmod does not support exchange of memory       */
+    /*        regions on communication calls.                                   */
+    /* caps:     Capabilities required from the provider.  The bits specified   */
+    /*           with buffered receive, cancel, and remote complete implements  */
+    /*           MPI semantics.                                                 */
+    /*           Tagged: used to support tag matching, 2-sided                  */
+    /*           RMA|Atomics:  supports MPI 1-sided                             */
+    /*           MSG|MULTI_RECV:  Supports synchronization protocol for 1-sided */
+    /*           FI_DIRECTED_RECV: Support not putting the source in the match  */
+    /*                             bits                                         */
+    /*           We expect to register all memory up front for use with this    */
+    /*           endpoint, so the netmod requires dynamic memory regions        */
+    /* ------------------------------------------------------------------------ */
+    hints->mode = FI_CONTEXT | FI_ASYNC_IOV;    /* We can handle contexts  */
+    hints->caps = 0ULL;
+
+    /* RMA interface is used in AM and in native modes,
+     * it should be supported by OFI provider in any case */
+    hints->caps |= FI_RMA;      /* RMA(read/write)         */
+    hints->caps |= FI_WRITE;    /* We need to specify all of the extra
+                                   capabilities because we need to be
+                                   specific later when we create tx/rx
+                                   contexts. If we leave this off, the
+                                   context creation fails because it's not
+                                   a subset of this. */
+    hints->caps |= FI_READ;
+    hints->caps |= FI_REMOTE_WRITE;
+    hints->caps |= FI_REMOTE_READ;
+
+    if (MPIDI_OFI_ENABLE_ATOMICS) {
+        hints->caps |= FI_ATOMICS;  /* Atomics capabilities    */
+    }
+
+    if (MPIDI_OFI_ENABLE_TAGGED) {
+        hints->caps |= FI_TAGGED;       /* Tag matching interface  */
+        hints->caps |= FI_SEND;
+        hints->caps |= FI_RECV;
+    }
+
+    if (MPIDI_OFI_ENABLE_AM) {
+        hints->caps |= FI_MSG;  /* Message Queue apis      */
+        hints->caps |= FI_MULTI_RECV;   /* Shared receive buffer   */
+        hints->caps |= FI_SEND;
+        hints->caps |= FI_RECV;
+    }
+
+    if (MPIDI_OFI_ENABLE_DATA) {
+        hints->caps |= FI_DIRECTED_RECV;        /* Match source address    */
+        hints->domain_attr->cq_data_size = 4;   /* Minimum size for completion data entry */
+    }
+
+    /* ------------------------------------------------------------------------ */
+    /* Set object options to be filtered by getinfo                             */
+    /* domain_attr:  domain attribute requirements                              */
+    /* op_flags:     persistent flag settings for an endpoint                   */
+    /* endpoint type:  see FI_EP_RDM                                            */
+    /* Filters applied (for this netmod, we need providers that can support):   */
+    /* THREAD_DOMAIN:  Progress serialization is handled by netmod (locking)    */
+    /* PROGRESS_AUTO:  request providers that make progress without requiring   */
+    /*                 the ADI to dedicate a thread to advance the state        */
+    /* FI_DELIVERY_COMPLETE:  RMA operations are visible in remote memory       */
+    /* FI_COMPLETION:  Selective completions of RMA ops                         */
+    /* FI_EP_RDM:  Reliable datagram                                            */
+    /* ------------------------------------------------------------------------ */
+    hints->addr_format = FI_FORMAT_UNSPEC;
+    hints->domain_attr->threading = FI_THREAD_DOMAIN;
+    if(MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS){
+        hints->domain_attr->data_progress = FI_PROGRESS_AUTO;
+    } else{
+        hints->domain_attr->data_progress = FI_PROGRESS_MANUAL;
+    }
+    if(MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS){
+        hints->domain_attr->control_progress = FI_PROGRESS_AUTO;
+    } else{
+        hints->domain_attr->control_progress = FI_PROGRESS_MANUAL;
+    }
+    hints->domain_attr->resource_mgmt = FI_RM_ENABLED;
+    hints->domain_attr->av_type = MPIDI_OFI_ENABLE_AV_TABLE ? FI_AV_TABLE : FI_AV_MAP;
+    if (MPIDI_OFI_ENABLE_MR_SCALABLE)
+        hints->domain_attr->mr_mode = FI_MR_SCALABLE;
+    else
+        hints->domain_attr->mr_mode = FI_MR_BASIC;
+    hints->tx_attr->op_flags = FI_COMPLETION;
+    /* direct RMA operations supported only with delivery complete mode,
+     * else (AM mode) delivery complete is not required */
+    if(MPIDI_OFI_ENABLE_RMA)
+        hints->tx_attr->op_flags |= FI_DELIVERY_COMPLETE;
+    hints->tx_attr->msg_order = FI_ORDER_SAS;
+    hints->tx_attr->comp_order = FI_ORDER_NONE;
+    hints->rx_attr->op_flags = FI_COMPLETION;
+    hints->rx_attr->total_buffered_recv = 0;    /* FI_RM_ENABLED ensures buffering of unexpected messages */
+    hints->ep_attr->type = FI_EP_RDM;
+
+    return MPI_SUCCESS;
 }
 
 #endif /* OFI_INIT_H_INCLUDED */
