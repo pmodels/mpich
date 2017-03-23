@@ -341,7 +341,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     int mpi_errno = MPI_SUCCESS, pmi_errno, i, fi_version;
     int thr_err = 0, str_errno, maxlen, vallen;
     char *table = NULL, *provname = NULL;
-    struct fi_info *hints, *prov, *prov_use;
+    struct fi_info *hints, *prov, *prov_use, *prov_first;
     struct fi_cq_attr cq_attr;
     struct fi_cntr_attr cntr_attr;
     fi_addr_t *mapped_table;
@@ -547,6 +547,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIR_Assert(MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS <= 60);
 
         MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, NULL, &prov), addrinfo);
+        prov_first = prov;
         while (NULL != prov) {
             MPIDI_OFI_CHOOSE_PROVIDER(prov, &prov_use, "No suitable provider provider found");
 
@@ -607,7 +608,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
         MPIR_Assert(prov);
 
-        fi_freeinfo(prov);
+        fi_freeinfo(prov_first);
     }
 
     MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, hints, &prov), addrinfo);
