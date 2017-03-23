@@ -557,6 +557,8 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                     cell_buf    += buflen;
                     payload_len -= buflen;
 
+                    MPIR_Assert(payload_len >= 0);
+
                     mpi_errno = MPID_nem_handle_pkt(vc, cell_buf, payload_len);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     MPID_nem_mpich_release_fbox(cell);
@@ -783,6 +785,9 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 buflen -= len;
                 buf    += len;
+
+                MPIR_Assert(buflen >= 0);
+
                 MPL_DBG_STMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, if (!rreq) MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "...completed immediately"));
             }
             while (!rreq && buflen >= sizeof(MPIDI_CH3_Pkt_t));
@@ -848,6 +853,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
         /* copy data into user buffer described by iov in rreq */
         MPIR_Assert(rreq);
         MPIR_Assert(rreq->dev.iov_count > 0 && rreq->dev.iov[rreq->dev.iov_offset].MPL_IOV_LEN > 0);
+        MPIR_Assert(buflen >= 0);
 
         MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    copying into user buffer from IOV");
 
