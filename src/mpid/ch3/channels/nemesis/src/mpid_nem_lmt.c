@@ -509,7 +509,7 @@ static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, 
         mpi_errno = vc->ch.lmt_handle_cookie(vc, req, cookie);
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        *buflen = sizeof(MPIDI_CH3_Pkt_t);
+        *buflen = 0;
         *rreqp = NULL;
     }
 
