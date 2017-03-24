@@ -204,16 +204,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rank_is_local(int rank, MPIR_Comm * comm)
 {
-    int ret;
+    int ret = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_RANK_IS_LOCAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_RANK_IS_LOCAL);
 
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         ret = 0;
-        goto fn_exit;
+    } else {
+        ret = MPIDIU_comm_rank_to_av(comm, rank)->is_local;
     }
-    ret = MPIDIU_comm_rank_to_av(comm, rank)->is_local;
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " is_local=%d, rank=%d", ret, rank));
 #endif
