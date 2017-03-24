@@ -33,8 +33,10 @@ cvars:
       description : >-
         Controls bcast algorithm:
         0 - MPIR_bcast
-        1 - KNOMIAL_Bcast
-        2 - KARY_Bcast
+        1 - KARY_Bcast
+        2 - KNOMIAL_Bcast
+        3 - TREEBASIC_KARY_Bcast
+        4 - TREEBASIC_KNOMIAL_Bcast
     - name        : MPIR_CVAR_USE_REDUCE
       category    : COLLECTIVE
       type        : int
@@ -179,18 +181,22 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
 #ifdef MPIDI_BUILD_CH4_COLL
         break;
     case 1:
-        ret = MPIDI_COLL_MPICH_KNOMIAL_bcast(buffer, count,
-                &(MPIDI_COLL_DT(dt_ptr)->mpich_knomial),
-                root, &(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, 2);
-        break;
-    case 2:
         ret = MPIDI_COLL_MPICH_KARY_bcast(buffer, count,
                 &(MPIDI_COLL_DT(dt_ptr)->mpich_kary),
                 root, &(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, 2);
         break;
+    case 2:
+        ret = MPIDI_COLL_MPICH_KARY_bcast(buffer, count,
+                &(MPIDI_COLL_DT(dt_ptr)->mpich_knomial),
+                root, &(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, 2);
+        break;
     case 3:
         ret = MPIDI_COLL_X_TREEBASIC_bcast(buffer, count,
-                datatype, root, &(MPIDI_COLL_COMM(comm)->x_treebasic), errflag);
+                datatype, root, &(MPIDI_COLL_COMM(comm)->x_treebasic), errflag, 0);
+        break;
+    case 4:
+        ret = MPIDI_COLL_X_TREEBASIC_bcast(buffer, count,
+                datatype, root, &(MPIDI_COLL_COMM(comm)->x_treebasic), errflag, 1);
         break;
     }
 #endif

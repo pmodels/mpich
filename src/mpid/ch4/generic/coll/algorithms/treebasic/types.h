@@ -25,9 +25,10 @@ typedef struct COLL_comm_t {
     COLL_tree_t *knomial_tree;
     
     /*Communicators for multileader optimization*/
-    //MPIR_Comm subcomm; /*subcommunicator to which I belong*/
-    //MPIR_Comm subcomm_roots_comm;/*communicator of rank 0 in each subcomm, 
-    //                                this will be non-NULL only on rank 0 of comm*/
+    MPIR_Comm *subcomm; /*subcommunicator to which I belong*/
+    MPIR_Comm *subcomm_roots_comm;/*communicator of rank 0 in each subcomm, 
+                                    this will be non-NULL only on rank 0 of comm*/
+    bool is_subcomm; /*if a subcomm, do not create further subcomms*/
 
 } COLL_comm_t;
 

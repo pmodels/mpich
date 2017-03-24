@@ -28,7 +28,18 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_KVAL_KARY_BCAST
+    - name        : MPIR_CVAR_MAX_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 3
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Maximum K value that will be used for kary/knomial trees
+        Runtime will store the kary/knomial trees upto MPIR_CVAR_MAX_KVAL-1 value of k
+
+    - name        : MPIR_CVAR_BCAST_KARY_KVAL
       category    : COLLECTIVE
       type        : int
       default     : 2
@@ -37,6 +48,16 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         K value for Kary broadcast
+
+    - name        : MPIR_CVAR_BCAST_KNOMIAL_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        K value for Knomial broadcast
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -54,7 +75,7 @@ static inline int COLL_comm_init(COLL_comm_t *comm, int * tag, int rank, int siz
     comm->size = size;
     comm->tag = *tag;
   
-    int max_k = comm->max_k = 10; 
+    int max_k = comm->max_k = MPIR_CVAR_MAX_KVAL; 
     int i,k;
     /*allocate space for arrays */
     comm->kary_tree = (COLL_tree_t*)MPL_malloc(sizeof(COLL_tree_t)*max_k);
@@ -65,6 +86,20 @@ static inline int COLL_comm_init(COLL_comm_t *comm, int * tag, int rank, int siz
         COLL_tree_kary_init(rank,size,k,0,&comm->kary_tree[k]);
         COLL_tree_knomial_init(rank,size,k,0,&comm->knomial_tree[k]);
     }
+
+#if 0
+    /*initialize subcommunicator for multileader optimization, only if you have node information*/
+    if(comm->mpir_comm->node_comm != NULL && !comm->is_subcomm){
+        MPIR_Comm* node_comm = comm->mpir_comm->node_comm;
+        int num_subcomms = 2;
+        comm->subcomm = (MPIR_Comm*)MPL_malloc(sizeof(MPIR_Comm));
+        MPIDI_COLL_COMM(comm->subcomm)->x_treebasic.is_subcomm = true; /*don't break it into further subcomms*/
+        int ranks_on_node = node_comm->local_size;
+        int block_size = (ranks_on_node+num_subcomms-1)/num_subcomms; /*ceil of ranks_on_node/num_subcomms*/
+        int local_rank = node_comm->rank;
+        MPIR_comm_split_impl(comm->mpir_comm, local_rank/block_size, rank, comm->subcomm);
+    }
+#endif
     return 0;
 }
 
@@ -77,7 +112,7 @@ static inline int COLL_comm_cleanup(COLL_comm_t * comm)
 
 static inline int COLL_bcast(void *buffer,
                              int count,
-                             MPI_Datatype datatype, int root, COLL_comm_t * comm, int* errflag)
+                             MPI_Datatype datatype, int root, COLL_comm_t * comm, int* errflag, int tree_type)
 {
     int rank = comm->rank;
     int size = comm->size;
@@ -108,12 +143,26 @@ static inline int COLL_bcast(void *buffer,
         if(0) fprintf(stderr, "finished intranode bcast\n");
         
     }
-
-    int k=MPIR_CVAR_KVAL_KARY_BCAST;
-    if(0) fprintf(stderr, "value of k for kary tree bcast = %d\n", k);
     int i,j;
     
-    COLL_tree_t *tree = &comm->knomial_tree[k];
+    COLL_tree_t *tree; int k;
+    if(tree_type == 0){ /*Do kary bcast*/
+        k=MPIR_CVAR_BCAST_KARY_KVAL;
+        tree = &comm->kary_tree[k];
+        if(0) fprintf(stderr, "value of k for kary tree bcast = %d\n", k);
+    }else if(tree_type == 1){/*Do knomial bcast*/
+        k=MPIR_CVAR_BCAST_KNOMIAL_KVAL;
+        tree = &comm->knomial_tree[k];
+        if(0) fprintf(stderr, "value of k for knomial tree bcast = %d\n", k);
+    }else{
+        fprintf(stderr, "Invalid Tree Type for Broadcast\n");
+        exit(1);
+    }
+    if(k >= comm->max_k){
+        fprintf(stderr, "value of k for broadcast is greater than max_k\n");
+        exit(1);
+    }
+    
     /*do the broadcast over the tree*/
     if(comm->rank != 0){/*non-root rank, receive data from parent*/
         if(0) fprintf(stderr, "recv data from %d\n", tree->parent);
