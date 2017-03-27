@@ -440,13 +440,15 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 #define MPID_Op_commit_hook     MPIDI_Op_commit_hook
 #define MPID_Op_free_hook       MPIDI_Op_free_hook
 
-/* operation for (avtid, lpid) to/from "lpid64" */
-/* hard code limit on number of live comm worlds. This should be fixed by future
- * LUPID patch */
-#define MPIDIU_AVTID_BITS                    (8)
-#define MPIDIU_LPID_BITS                     (24)
-#define MPIDIU_LPID_MASK                     (0x00FFFFFFU)
-#define MPIDIU_AVTID_MASK                    (0xFF000000U)
+/*
+ * operation for (avtid, lpid) to/from "lupid"
+ * 1 bit is reserved for "new_avt_mark". It will be cleared before accessing
+ * the avtid and lpid. Therefore, the avtid mask does have that bit set to 0
+ */
+#define MPIDIU_AVTID_BITS                    (7)
+#define MPIDIU_LPID_BITS                     (8 * sizeof(int) - (MPIDIU_AVTID_BITS + 1))
+#define MPIDIU_LPID_MASK                     (0xFFFFFFFFU >> (MPIDIU_AVTID_BITS + 1))
+#define MPIDIU_AVTID_MASK                    (~MPIDIU_LPID_MASK)
 #define MPIDIU_NEW_AVT_MARK                  (0x80000000U)
 #define MPIDIU_LUPID_CREATE(avtid, lpid)      (((avtid) << MPIDIU_LPID_BITS) | (lpid))
 #define MPIDIU_LUPID_GET_AVTID(lupid)          ((((lupid) & MPIDIU_AVTID_MASK) >> MPIDIU_LPID_BITS))
