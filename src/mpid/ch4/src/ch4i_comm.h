@@ -533,7 +533,11 @@ static inline void MPIDI_direct_of_src_rmap(MPIDI_rank_map_t * src,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_DIRECT_OF_SRC_RMAP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_DIRECT_OF_SRC_RMAP);
     dest->mode = src->mode;
-    dest->size = MPIDI_map_size(*mapper);
+    if (mapper) {
+        dest->size = MPIDI_map_size(*mapper);
+    } else {
+        dest->size = src->size;
+    }
     dest->avtid = src->avtid;
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " source mode %d", (int) src->mode));
@@ -1138,7 +1142,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                             (MPL_DBG_FDEST, "\t create local_comm using src_comm"));
             MPIDI_direct_of_src_rmap(&MPIDI_COMM(comm, local_map),
-                                     &MPIDI_COMM(comm->local_comm, map), mapper);
+                                     &MPIDI_COMM(comm->local_comm, map), NULL);
 
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE,
                             (MPL_DBG_FDEST, "create local_comm using src_comm"));
