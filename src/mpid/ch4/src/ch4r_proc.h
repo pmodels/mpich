@@ -75,8 +75,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank,
         break;
     }
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                    (MPL_DBG_FDEST, " rank=%d, index=%d", rank, *index));
-
+                    (MPL_DBG_FDEST, " comm_to_pid: rank=%d, avtid=%d index=%d",
+                     rank, *avtid, *index));
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_COMM_RANK_TO_PID);
     return *index;
 }
@@ -196,8 +196,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int
         break;
     }
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                    (MPL_DBG_FDEST, " rank: rank=%d, index=%d", rank, *index));
-
+                    (MPL_DBG_FDEST, " comm_to_pid_local: rank=%d, avtid=%d index=%d",
+                     rank, *avtid, *index));
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_COMM_RANK_TO_PID_LOCAL);
     return *index;
 }
@@ -336,7 +336,9 @@ static inline int MPIDIU_get_avt_size(int avtid)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIU_alloc_globals_for_avtid(int avtid)
 {
+    int mpi_errno = MPI_SUCCESS;
     int max_n_avts;
+    MPID_Node_id_t *new_node_map = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_ALLOC_GLOBALS_FOR_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_ALLOC_GLOBALS_FOR_AVTID);
     max_n_avts = MPIDIU_get_max_n_avts();
@@ -346,10 +348,16 @@ static inline int MPIDIU_alloc_globals_for_avtid(int avtid)
                                                                     sizeof(MPID_Node_id_t *));
     }
 
-    MPIDI_CH4_Global.node_map[avtid] =
+    new_node_map =
         (MPID_Node_id_t *) MPL_malloc(MPIDI_av_table[avtid]->size * sizeof(MPID_Node_id_t));
+    MPIR_ERR_CHKANDJUMP(new_node_map == NULL, mpi_errno, MPI_ERR_NO_MEM, "**nomem");
+    MPIDI_CH4_Global.node_map[avtid] = new_node_map;
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_ALLOC_GLOBALS_FOR_AVTID);
-    return MPI_SUCCESS;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -391,6 +399,9 @@ static inline int MPIDIU_get_next_avtid(int *avtid)
     MPIDI_CH4_Global.avt_mgr.n_avts++;
     MPIR_Assert(MPIDI_CH4_Global.avt_mgr.n_avts <= MPIDI_CH4_Global.avt_mgr.max_n_avts);
 
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, " new_avtid=%d", *avtid));
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_NEXT_AVTID);
     return *avtid;
 }
@@ -400,6 +411,8 @@ static inline int MPIDIU_free_avtid(int avtid)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_FREE_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_FREE_AVTID);
 
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, " free_avtid=%d", avtid));
     MPIR_Assert(MPIDI_CH4_Global.avt_mgr.n_avts > 0);
     MPIDI_CH4_Global.avt_mgr.free_avtid[avtid] = MPIDI_CH4_Global.avt_mgr.next_avtid;
     MPIDI_CH4_Global.avt_mgr.next_avtid = avtid;
@@ -417,6 +430,8 @@ static inline int MPIDIU_new_avt(int size, int *avtid)
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_NEW_AVT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_NEW_AVT);
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, " new_avt: size=%d", size));
 
     MPIDIU_get_next_avtid(avtid);
 
@@ -457,6 +472,8 @@ static inline int MPIDIU_avt_add_ref(int avtid)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AVT_ADD_REF);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_AVT_ADD_REF);
 
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, " incr avtid=%d", avtid));
     MPIR_Object_add_ref(MPIDI_av_table[avtid]);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_AVT_ADD_REF);
@@ -470,6 +487,8 @@ static inline int MPIDIU_avt_release_ref(int avtid)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AVT_RELEASE_REF);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_AVT_RELEASE_REF);
 
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, " decr avtid=%d", avtid));
     MPIR_Object_release_ref(MPIDIU_get_av_table(avtid), &count);
     if (count == 0) {
         MPIDIU_free_avt(avtid);

@@ -1109,7 +1109,7 @@ static inline int MPIDI_OFI_upids_to_lupids_general(int size,
     /* create new av_table, insert processes */
     if (n_new_procs > 0) {
         int avtid;
-        MPIDIU_new_avt(n_new_procs, &avtid);
+        MPIDI_OFI_MPI_CALL_POP(MPIDIU_new_avt(n_new_procs, &avtid));
 
         for (i = 0; i < n_new_procs; i++) {
             if (use_av_table) { /* logical addressing */
