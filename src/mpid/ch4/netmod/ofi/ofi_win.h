@@ -898,13 +898,13 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
                                                    MPIR_Comm * comm_ptr,
                                                    void **base_ptr, MPIR_Win ** win_ptr)
 {
-    int i = 0, fd = -1, rc, first = 0, mpi_errno = MPI_SUCCESS;
+    int i = 0, fd = -1, rc, first = 0, mpi_errno = MPI_SUCCESS, shm_key_size;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     void *baseP = NULL;
     MPIR_Win *win = NULL;
     ssize_t total_size = 0LL;
     MPI_Aint size_out = 0;
-    char shm_key[64];
+    char *shm_key = NULL;
     void *map_ptr;
     MPIDI_CH4U_win_shared_info_t *shared_table = NULL;
 
@@ -962,8 +962,14 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    sprintf(shm_key, "/mpi-%X-%X-%" PRIx64, MPIDI_Global.jobid, root_rank,
-            MPIDI_OFI_WIN(win).win_id);
+    shm_key = (char *) MPL_malloc(sizeof(char));
+    shm_key_size = snprintf(shm_key, 1, "/mpi-%X-%X-%" PRIx64,
+                            MPIDI_Global.jobid, root_rank,
+                            MPIDI_OFI_WIN(win).win_id);
+    shm_key = (char *) MPL_realloc(shm_key, shm_key_size);
+    snprintf(shm_key, shm_key_size, "/mpi-%X-%X-%" PRIx64,
+             MPIDI_Global.jobid, root_rank, MPIDI_OFI_WIN(win).win_id);
+
     rc = shm_open(shm_key, O_CREAT | O_EXCL | O_RDWR, 0600);
     first = (rc != -1);
 
@@ -1062,6 +1068,8 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
         shm_unlink(shm_key);
 
   fn_exit:
+    if (shm_key != NULL)
+        MPL_free(shm_key);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_ALLOCATE_SHARED);
     return mpi_errno;
   fn_fail:
