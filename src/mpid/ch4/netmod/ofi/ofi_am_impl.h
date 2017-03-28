@@ -485,6 +485,10 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_do_inject
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_do_inject(int rank,
                                       MPIR_Comm * comm,
                                       int handler_id,
