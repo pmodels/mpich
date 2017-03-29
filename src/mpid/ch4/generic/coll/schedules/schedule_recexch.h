@@ -15,6 +15,23 @@
 #error "The tree template must be namespaced with COLL_NAMESPACE"
 #endif
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_ALLRED_RECEXCH_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        K value for allreduce with recursive koupling algorithm
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /*This function calculates the ranks to/from which the
 data is sent/recvd in various steps/phases of recursive koupling
 algorithm. Recursive Koupling is divided into three steps - Step 1, 2 and 3.
@@ -172,7 +189,7 @@ COLL_sched_allreduce(const void         *sendbuf,
                      int finalize)
 {
 
-    int k = 2;
+    int k = MPIR_CVAR_ALLRED_RECEXCH_KVAL;
     int is_inplace,is_contig,i;
     int dtcopy_id=-1;
     int nranks = TSP_size(&comm->tsp_comm);
