@@ -40,6 +40,9 @@
 use File::Path;
 use File::Copy qw(move);
 
+# Use high resolution timers
+use Time::HiRes qw(gettimeofday tv_interval);
+
 # Global variables
 $MPIMajorVersion = "@MPI_VERSION@";
 $MPIMinorVersion = "@MPI_SUBVERSION@";
@@ -690,6 +693,7 @@ sub RunMPIProgram {
     my $found_noerror = 0;
     my $inline = "";
     my $extraArgs = "";
+    my $runtime = 0;
 
     &RunPreMsg( $programname, $np, $curdir );
 
@@ -743,6 +747,7 @@ sub RunMPIProgram {
 	    }
 	}
     }
+    my $start_time = gettimeofday();
     open ( MPIOUT, "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs 2>&1 |" ) ||
 	die "Could not run ./$programname\n";
     if ($progEnv ne "") {
@@ -783,6 +788,9 @@ sub RunMPIProgram {
 	    }
 	}
 	$rc = close ( MPIOUT );
+	my $end_time = gettimeofday();
+	$runtime = $end_time - $start_time;
+	print STDOUT "Runtime: $runtime\n" if $verbose;
 	if ($rc == 0) {
 	    # Only generate a message if we think that the program
 	    # passed the test.
@@ -800,10 +808,10 @@ sub RunMPIProgram {
 	}
     }
     if ($found_error) {
-	&RunTestFailed( $programname, $np, $timeout, $curdir, $inline, $xfail );
+        &RunTestFailed( $programname, $np, $timeout, $curdir, $inline, $xfail, $runtime );
     }
     else { 
-	&RunTestPassed( $programname, $np, $curdir, $xfail );
+        &RunTestPassed( $programname, $np, $curdir, $xfail, $runtime );
     }
     &RunPostMsg( $programname, $np, $curdir );
 }
@@ -1184,15 +1192,16 @@ sub RunPostMsg {
     }
 }
 sub RunTestPassed {
-    my ($programname, $np, $workdir, $xfail) = @_;
+    my ($programname, $np, $workdir, $xfail, $runtime) = @_;
     if ($xmloutput) {
 	print XMLOUT "<STATUS>pass</STATUS>$newline";
+    print XMLOUT "<TIME>$runtime</TIME>$newline";
     }
     if ($tapoutput) {
-        print TAPOUT "ok ${total_run} - $workdir/$programname ${np}\n";
+        print TAPOUT "ok ${total_run} - $workdir/$programname ${np} # time=$runtime\n";
     }
     if ($junitoutput) {
-        print JUNITOUT "    <testcase name=\"${total_run} - $workdir/$programname ${np}\"></testcase>\n";
+        print JUNITOUT "    <testcase name=\"${total_run} - $workdir/$programname ${np}\" time=\"$runtime\"></testcase>\n";
     }
 }
 sub RunTestFailed {
@@ -1202,6 +1211,7 @@ sub RunTestFailed {
     my $workdir = shift;
     my $output = shift;
     my $xfail = shift;
+    my $runtime = shift;
 
     if ($xmloutput) {
         my $xout = $output;
@@ -1212,6 +1222,7 @@ sub RunTestFailed {
         $xout =~ s/\*AMP\*/&/g;
         # TODO: Also capture any non-printing characters (XML doesn't like them
         # either).
+        print XMLOUT "<TIME>$runtime</TIME>$newline";
 	print XMLOUT "<STATUS>fail</STATUS>$newline";
 	print XMLOUT "<TESTDIFF>$newline$xout</TESTDIFF>$newline";
     }
@@ -1221,7 +1232,7 @@ sub RunTestFailed {
         if ($xfail ne '') {
             $xfailstr = " # TODO $xfail";
         }
-        print TAPOUT "not ok ${total_run} - $workdir/$programname ${np}${xfailstr}\n";
+        print TAPOUT "not ok ${total_run} - $workdir/$programname ${np}${xfailstr} # time=$runtime\n";
         print TAPOUT "  ---\n";
         print TAPOUT "  Directory: $workdir\n";
         print TAPOUT "  File: $programname\n";
@@ -1261,7 +1272,7 @@ sub RunTestFailed {
             $xfailstr = " # TODO $xfail";
 	    $testtag  = "skipped";
         }
-        print JUNITOUT "    <testcase name=\"${total_run} - $workdir/$programname ${np}\">\n";
+        print JUNITOUT "    <testcase name=\"${total_run} - $workdir/$programname ${np}\" time=\"$runtime\">\n";
         print JUNITOUT "      <${testtag} type=\"TestFailed\"\n";
         print JUNITOUT "               message=\"not ok ${total_run} - $workdir/$programname ${np}${xfailstr}\"><![CDATA[";
         print JUNITOUT "not ok ${total_run} - $workdir/$programname ${np}${xfailstr}\n";
