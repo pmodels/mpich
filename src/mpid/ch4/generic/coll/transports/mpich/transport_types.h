@@ -14,10 +14,10 @@
 #include "../../src/tsp_namespace_pre.h"
 
 #undef MAX_EDGES
-#define MAX_EDGES 32
+#define MAX_EDGES 64
 
 #undef MAX_REQUESTS
-#define MAX_REQUESTS 32
+#define MAX_REQUESTS 64
 
 typedef struct TSP_dt_t {
     MPI_Datatype mpi_dt;
