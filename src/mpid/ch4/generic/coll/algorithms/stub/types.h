@@ -9,14 +9,17 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 typedef struct COLL_dt_t {
+    int id; /*unique id for the datatype*/
     TSP_dt_t tsp_dt;
 } COLL_dt_t;
 
 typedef struct COLL_op_t {
+    int id; /*unique id for the operation*/
     TSP_op_t tsp_op;
 } COLL_op_t;
 
 typedef struct COLL_comm_t {
+    int id; /*unique id for the communicator*/
     TSP_comm_t tsp_comm;
 } COLL_comm_t;
 

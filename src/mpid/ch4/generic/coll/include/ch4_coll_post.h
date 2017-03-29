@@ -12,6 +12,8 @@
 #if !defined(CH4_COLL_POST_H_INCLUDED)
 #define  CH4_COLL_POST_H_INCLUDED
 #include "./coll_post.h"
+
+extern int comm_counter, op_counter, dt_counter;
 MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_Comm_init(struct MPIR_Comm *comm)
 {
     int rank, size;
@@ -20,17 +22,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_Comm_init(struct MPIR_Comm *comm)
     MPIDI_COLL_COMM(comm)->issued_collectives = 0;
     rank = comm->rank;
     size = comm->local_size;
-    MPIDI_COLL_STUB_STUB_comm_init(&(MPIDI_COLL_COMM(comm)->stub_stub), tag,  rank, size);
-    MPIDI_COLL_STUB_KARY_comm_init(&(MPIDI_COLL_COMM(comm)->stub_kary), tag, rank, size);
-    MPIDI_COLL_STUB_KNOMIAL_comm_init(&(MPIDI_COLL_COMM(comm)->stub_knomial), tag,  rank, size);
-    MPIDI_COLL_STUB_RECEXCH_comm_init(&(MPIDI_COLL_COMM(comm)->stub_recexch), tag,  rank, size);
-    MPIDI_COLL_STUB_DISSEM_comm_init(&(MPIDI_COLL_COMM(comm)->stub_dissem), tag,  rank, size);
-    MPIDI_COLL_MPICH_STUB_comm_init(&(MPIDI_COLL_COMM(comm)->mpich_stub), tag, rank, size);
-    MPIDI_COLL_MPICH_KARY_comm_init(&(MPIDI_COLL_COMM(comm)->mpich_kary), tag, rank, size);
-    MPIDI_COLL_MPICH_KNOMIAL_comm_init(&(MPIDI_COLL_COMM(comm)->mpich_knomial), tag, rank, size);
-    MPIDI_COLL_MPICH_RECEXCH_comm_init(&(MPIDI_COLL_COMM(comm)->mpich_recexch), tag,  rank, size);
-    MPIDI_COLL_MPICH_DISSEM_comm_init(&(MPIDI_COLL_COMM(comm)->mpich_dissem), tag,  rank, size);
-    MPIDI_COLL_X_TREEBASIC_comm_init(&(MPIDI_COLL_COMM(comm)->x_treebasic), tag, rank, size);
+    MPIDI_COLL_STUB_STUB_comm_init(&(MPIDI_COLL_COMM(comm)->stub_stub), comm_counter++, tag,  rank, size);
+    MPIDI_COLL_STUB_KARY_comm_init(&(MPIDI_COLL_COMM(comm)->stub_kary), comm_counter++, tag, rank, size);
+    MPIDI_COLL_STUB_KNOMIAL_comm_init(&(MPIDI_COLL_COMM(comm)->stub_knomial), comm_counter++, tag,  rank, size);
+    MPIDI_COLL_STUB_RECEXCH_comm_init(&(MPIDI_COLL_COMM(comm)->stub_recexch), comm_counter++, tag,  rank, size);
+    MPIDI_COLL_STUB_DISSEM_comm_init(&(MPIDI_COLL_COMM(comm)->stub_dissem), comm_counter++, tag,  rank, size);
+    MPIDI_COLL_MPICH_STUB_comm_init(&(MPIDI_COLL_COMM(comm)->mpich_stub), comm_counter++, tag, rank, size);
+    MPIDI_COLL_MPICH_KARY_comm_init(&(MPIDI_COLL_COMM(comm)->mpich_kary), comm_counter++, tag, rank, size);
+    MPIDI_COLL_MPICH_KNOMIAL_comm_init(&(MPIDI_COLL_COMM(comm)->mpich_knomial), comm_counter++, tag, rank, size);
+    MPIDI_COLL_MPICH_RECEXCH_comm_init(&(MPIDI_COLL_COMM(comm)->mpich_recexch), comm_counter++, tag,  rank, size);
+    MPIDI_COLL_MPICH_DISSEM_comm_init(&(MPIDI_COLL_COMM(comm)->mpich_dissem), comm_counter++, tag,  rank, size);
+    MPIDI_COLL_X_TREEBASIC_comm_init(&(MPIDI_COLL_COMM(comm)->x_treebasic), comm_counter++, tag, rank, size);
 
 #ifdef MPIDI_NM_COLL_COMM_INIT_HOOK
     MPIDI_NM_COLL_COMM_INIT_HOOK;
@@ -62,16 +64,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_Comm_cleanup(struct MPIR_Comm *comm)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_dt_init(MPIR_Datatype * dt)
 {
-    MPIDI_COLL_STUB_STUB_dt_init(&(MPIDI_COLL_DT(dt)->stub_stub));
-    MPIDI_COLL_STUB_KARY_dt_init(&(MPIDI_COLL_DT(dt)->stub_kary));
-    MPIDI_COLL_STUB_KNOMIAL_dt_init(&(MPIDI_COLL_DT(dt)->stub_knomial));
-    MPIDI_COLL_STUB_RECEXCH_dt_init(&(MPIDI_COLL_DT(dt)->stub_recexch));
-    MPIDI_COLL_STUB_DISSEM_dt_init(&(MPIDI_COLL_DT(dt)->stub_dissem));
-    MPIDI_COLL_MPICH_STUB_dt_init(&(MPIDI_COLL_DT(dt)->mpich_stub));
-    MPIDI_COLL_MPICH_KARY_dt_init(&(MPIDI_COLL_DT(dt)->mpich_kary));
-    MPIDI_COLL_MPICH_KNOMIAL_dt_init(&(MPIDI_COLL_DT(dt)->mpich_knomial));
-    MPIDI_COLL_MPICH_RECEXCH_dt_init(&(MPIDI_COLL_DT(dt)->mpich_recexch));
-    MPIDI_COLL_MPICH_DISSEM_dt_init(&(MPIDI_COLL_DT(dt)->mpich_dissem));
+    MPIDI_COLL_STUB_STUB_dt_init(&(MPIDI_COLL_DT(dt)->stub_stub), dt_counter++);
+    MPIDI_COLL_STUB_KARY_dt_init(&(MPIDI_COLL_DT(dt)->stub_kary), dt_counter++);
+    MPIDI_COLL_STUB_KNOMIAL_dt_init(&(MPIDI_COLL_DT(dt)->stub_knomial), dt_counter++);
+    MPIDI_COLL_STUB_RECEXCH_dt_init(&(MPIDI_COLL_DT(dt)->stub_recexch), dt_counter++);
+    MPIDI_COLL_STUB_DISSEM_dt_init(&(MPIDI_COLL_DT(dt)->stub_dissem), dt_counter++);
+    MPIDI_COLL_MPICH_STUB_dt_init(&(MPIDI_COLL_DT(dt)->mpich_stub), dt_counter++);
+    MPIDI_COLL_MPICH_KARY_dt_init(&(MPIDI_COLL_DT(dt)->mpich_kary), dt_counter++);
+    MPIDI_COLL_MPICH_KNOMIAL_dt_init(&(MPIDI_COLL_DT(dt)->mpich_knomial), dt_counter++);
+    MPIDI_COLL_MPICH_RECEXCH_dt_init(&(MPIDI_COLL_DT(dt)->mpich_recexch), dt_counter++);
+    MPIDI_COLL_MPICH_DISSEM_dt_init(&(MPIDI_COLL_DT(dt)->mpich_dissem), dt_counter++);
 #ifdef MPIDI_NM_COLL_DT_INIT_HOOK
     MPIDI_NM_COLL_DT_INIT_HOOK;
 #endif
@@ -82,16 +84,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_dt_init(MPIR_Datatype * dt)
 MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_op_init(struct MPIR_Op *op)
 {
 
-    MPIDI_COLL_STUB_STUB_op_init(&(MPIDI_COLL_OP(op)->stub_stub));
-    MPIDI_COLL_STUB_KARY_op_init(&(MPIDI_COLL_OP(op)->stub_kary));
-    MPIDI_COLL_STUB_KNOMIAL_op_init(&(MPIDI_COLL_OP(op)->stub_knomial));
-    MPIDI_COLL_STUB_RECEXCH_op_init(&(MPIDI_COLL_OP(op)->stub_recexch));
-    MPIDI_COLL_STUB_DISSEM_op_init(&(MPIDI_COLL_OP(op)->stub_dissem));
-    MPIDI_COLL_MPICH_STUB_op_init(&(MPIDI_COLL_OP(op)->mpich_stub));
-    MPIDI_COLL_MPICH_KARY_op_init(&(MPIDI_COLL_OP(op)->mpich_kary));
-    MPIDI_COLL_MPICH_KNOMIAL_op_init(&(MPIDI_COLL_OP(op)->mpich_knomial));
-    MPIDI_COLL_MPICH_RECEXCH_op_init(&(MPIDI_COLL_OP(op)->mpich_recexch));
-    MPIDI_COLL_MPICH_DISSEM_op_init(&(MPIDI_COLL_OP(op)->mpich_dissem));
+    MPIDI_COLL_STUB_STUB_op_init(&(MPIDI_COLL_OP(op)->stub_stub), op_counter++);
+    MPIDI_COLL_STUB_KARY_op_init(&(MPIDI_COLL_OP(op)->stub_kary), op_counter++);
+    MPIDI_COLL_STUB_KNOMIAL_op_init(&(MPIDI_COLL_OP(op)->stub_knomial), op_counter++);
+    MPIDI_COLL_STUB_RECEXCH_op_init(&(MPIDI_COLL_OP(op)->stub_recexch), op_counter++);
+    MPIDI_COLL_STUB_DISSEM_op_init(&(MPIDI_COLL_OP(op)->stub_dissem), op_counter++);
+    MPIDI_COLL_MPICH_STUB_op_init(&(MPIDI_COLL_OP(op)->mpich_stub), op_counter++);
+    MPIDI_COLL_MPICH_KARY_op_init(&(MPIDI_COLL_OP(op)->mpich_kary), op_counter++);
+    MPIDI_COLL_MPICH_KNOMIAL_op_init(&(MPIDI_COLL_OP(op)->mpich_knomial), op_counter++);
+    MPIDI_COLL_MPICH_RECEXCH_op_init(&(MPIDI_COLL_OP(op)->mpich_recexch), op_counter++);
+    MPIDI_COLL_MPICH_DISSEM_op_init(&(MPIDI_COLL_OP(op)->mpich_dissem), op_counter++);
 #ifdef MPIDI_NM_COLL_OP_INIT_HOOK
     MPIDI_NM_COLL_OP_INIT_HOOK;
 #endif
@@ -228,6 +230,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_Op_get_ptr(MPI_Op op, MPIR_Op **ptr)
 MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_Init()
 {
     MPIDI_COLL_progress_global.progress_fn = MPID_Progress_test;
+    comm_counter=0;
+    op_counter=0;
+    dt_counter=0;
     MPIDI_COLL_TRANSPORT_STUB_init();
     MPIDI_COLL_TRANSPORT_MPICH_init();
     MPIDI_COLL_STUB_STUB_init();

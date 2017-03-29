@@ -67,9 +67,9 @@ static inline int COLL_init()
     return 0;
 }
 
-static inline int COLL_comm_init(COLL_comm_t *comm, int * tag, int rank, int size)
+static inline int COLL_comm_init(COLL_comm_t *comm, int id, int * tag, int rank, int size)
 {
-    
+    comm->id = id;
     comm->mpir_comm = container_of(COLL_COMM_BASE(comm), MPIR_Comm, dev.ch4.ch4_coll);
     comm->rank = rank;
     comm->size = size;
