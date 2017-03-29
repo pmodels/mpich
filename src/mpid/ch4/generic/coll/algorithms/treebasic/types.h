@@ -11,6 +11,7 @@
 #include "../tree/tree_def.h"
 
 typedef struct COLL_comm_t {
+    int id; /*unique id for the communicator*/
     MPIR_Comm *mpir_comm;
     /*Although rank and size can be obtained from mpir_comm, 
      *storing them here for ease of accessibility*/

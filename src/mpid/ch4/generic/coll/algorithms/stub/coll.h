@@ -21,20 +21,21 @@ static inline int COLL_init()
     return 0;
 }
 
-static inline int COLL_op_init(COLL_op_t * op)
+static inline int COLL_op_init(COLL_op_t * op, int id)
 {
+    op->id = id;
     TSP_op_init(&op->tsp_op, COLL_OP_BASE(op));
     return 0;
 }
 
-static inline int COLL_dt_init(COLL_dt_t * dt)
+static inline int COLL_dt_init(COLL_dt_t * dt, int id)
 {
-
+    dt->id = id;
     TSP_dt_init(&dt->tsp_dt, COLL_DT_BASE(dt));
     return 0;
 }
 
-static inline int COLL_comm_init(COLL_comm_t * comm, int * tag, int rank, int size)
+static inline int COLL_comm_init(COLL_comm_t * comm, int id, int * tag, int rank, int size)
 {
     TSP_comm_init(&comm->tsp_comm, COLL_COMM_BASE(comm));
     return 0;

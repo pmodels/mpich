@@ -20,8 +20,9 @@ static inline int COLL_init()
     return 0;
 }
 
-static inline int COLL_comm_init(COLL_comm_t * comm, int *tag_ptr, int rank, int comm_size)
+static inline int COLL_comm_init(COLL_comm_t * comm, int id, int *tag_ptr, int rank, int comm_size)
 {
+    comm->id = id;
     TSP_comm_init(&comm->tsp_comm, COLL_COMM_BASE(comm));
     COLL_tree_comm_t *mycomm = &comm->tree_comm;
     int k = COLL_TREE_RADIX_DEFAULT;
@@ -43,14 +44,16 @@ static inline int COLL_comm_cleanup(COLL_comm_t * comm)
     return 0;
 }
 
-static inline int COLL_op_init(COLL_op_t * op)
+static inline int COLL_op_init(COLL_op_t * op, int id)
 {
+    op->id = id;
     TSP_op_init(&op->tsp_op, COLL_OP_BASE(op));
     return 0;
 }
 
-static inline int COLL_dt_init(COLL_dt_t * dt)
+static inline int COLL_dt_init(COLL_dt_t * dt, int id)
 {
+    dt->id  = id;
     TSP_dt_init(&dt->tsp_dt, COLL_DT_BASE(dt));
     return 0;
 }
