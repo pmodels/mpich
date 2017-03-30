@@ -486,6 +486,42 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_do_emulated_inject
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
+                                               const MPIDI_OFI_am_header_t *msg_hdrp,
+                                               const void *am_hdr,
+                                               size_t am_hdr_sz,
+                                               int need_lock)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Request *sreq;
+    char *ibuf;
+    size_t len;
+
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+    MPIR_Assert(sreq);
+    len = am_hdr_sz + sizeof(*msg_hdrp);
+    ibuf = (char *) MPL_malloc(len);
+    MPIR_Assert(ibuf);
+    memcpy(ibuf, msg_hdrp, sizeof(*msg_hdrp));
+    memcpy(ibuf + sizeof(*msg_hdrp), am_hdr, am_hdr_sz);
+
+    MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_INJECT_EMU;
+    MPIDI_OFI_REQUEST(sreq, util.inject_buf) = ibuf;
+    OPA_incr_int(&MPIDI_Global.am_inflight_inject_emus);
+
+    MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_EP_TX_MSG(0), ibuf, len,
+                                    NULL /* desc*/, addr, &(MPIDI_OFI_REQUEST(sreq, context))),
+                                    need_lock, send);
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_OFI_do_inject
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -499,9 +535,9 @@ static inline int MPIDI_OFI_do_inject(int rank,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t msg_hdr;
-    struct fi_msg msg;
-    struct iovec msg_iov[2];
-    uint64_t send_flag = FI_INJECT;
+    fi_addr_t addr;
+    char buff[MPIDI_Global.max_buffered_send];
+    size_t buff_len;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_INJECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_INJECT);
@@ -516,46 +552,21 @@ static inline int MPIDI_OFI_do_inject(int rank,
 
     MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
 
-    msg_iov[0].iov_base = (void *) &msg_hdr;
-    msg_iov[0].iov_len = sizeof(msg_hdr);
-
-    msg_iov[1].iov_base = (void *) am_hdr;
-    msg_iov[1].iov_len = am_hdr_sz;
-
-    msg.msg_iov = &msg_iov[0];
-    msg.desc = NULL;
-    msg.iov_count = 2;
-    msg.context = NULL;
-    msg.addr = use_comm_table ?
+    addr = use_comm_table ?
         MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_MSG) :
         MPIDI_OFI_to_phys(rank, MPIDI_OFI_API_MSG);
 
     if (unlikely(am_hdr_sz + sizeof(msg_hdr) > MPIDI_Global.max_buffered_send)) {
-        MPIR_Request *sreq;
-        char *ibuf;
-        struct iovec *iov;
-
-        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
-        MPIR_Assert(sreq);
-        ibuf = (char *) MPL_malloc(am_hdr_sz + sizeof(msg_hdr));
-        MPIR_Assert(ibuf);
-        memcpy(ibuf, &msg_hdr, sizeof(msg_hdr));
-        memcpy(ibuf + sizeof(msg_hdr), am_hdr, am_hdr_sz);
-        iov = MPIDI_OFI_AMREQUEST_HDR(sreq, iov);
-        iov[0].iov_base = ibuf;
-        iov[0].iov_len = am_hdr_sz + sizeof(msg_hdr);
-        msg.msg_iov = iov;
-        msg.iov_count = 1;
-
-        MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_INJECT_EMU;
-        MPIDI_OFI_REQUEST(sreq, util.inject_buf) = ibuf;
-        /* Cancel FI_INJECT and ask for completion event */
-        send_flag = FI_COMPLETION;
-        msg.context = (void *) &(MPIDI_OFI_REQUEST(sreq, context));
-        OPA_incr_int(&MPIDI_Global.am_inflight_inject_emus);
+        mpi_errno = MPIDI_OFI_do_emulated_inject(addr, &msg_hdr, am_hdr, am_hdr_sz, need_lock);
+        goto fn_exit;
     }
 
-    MPIDI_OFI_CALL_RETRY_AM(fi_sendmsg(MPIDI_OFI_EP_TX_MSG(0), &msg, send_flag), need_lock, send);
+    memcpy(buff, &msg_hdr, sizeof(msg_hdr));
+    memcpy(buff + sizeof(msg_hdr), am_hdr, am_hdr_sz);
+    buff_len = sizeof(msg_hdr) + am_hdr_sz;
+
+    MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_OFI_EP_TX_MSG(0), buff, buff_len, addr),
+                            need_lock, inject);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_INJECT);
