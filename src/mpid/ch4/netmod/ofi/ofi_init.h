@@ -858,14 +858,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     OPA_store_int(&MPIDI_Global.am_inflight_inject_emus, 0);
     OPA_store_int(&MPIDI_Global.am_inflight_rma_send_mrs, 0);
 
-    /* max_inject_size is temporarily set to 1 inorder to avoid deadlock in
-     * shm initialization since PMI_Barrier does not call progress and flush its injects */
-    MPIDI_Global.max_buffered_send = 1;
-    MPIDI_Global.max_buffered_write = 1;
-
-    MPIDI_Global.max_buffered_send = prov_use->tx_attr->inject_size;
-    MPIDI_Global.max_buffered_write = prov_use->tx_attr->inject_size;
-
     MPIR_Datatype_init_names();
     MPIDI_OFI_index_datatypes();
 
