@@ -67,15 +67,26 @@ static inline int COLL_allreduce(const void  *sendbuf,
                                  COLL_comm_t *comm,
                                  int         *errflag)
 {
-    int                rc;
-    COLL_sched_t s;
-    int                tag = (*comm->curTag)++;
+    int rc=0;
+    /*Check if schedule already exists*/
+    coll_args_t coll_args = {.coll_type=ALLREDUCE, \
+            .args={.allreduce={.sbuf=sendbuf,.rbuf=recvbuf,.count=count,.dt_id=datatype->id,.op_id=op->id,.comm_id=comm->id}}};
+    
+    COLL_sched_t *s = get_sched(coll_args);
+    if(s==NULL){/*sched does not exist*/
+        if(0) fprintf(stderr, "schedule does not exist\n");
+        s = (COLL_sched_t*)MPL_malloc(sizeof(COLL_sched_t));
+        int                tag = (*comm->curTag)++;
 
-    COLL_sched_init(&s);
-    rc = COLL_sched_allreduce(sendbuf,recvbuf,count,
-                              datatype,op,tag,comm,&s,1);
-
-    COLL_sched_kick(&s);
+        COLL_sched_init(s);
+        rc = COLL_sched_allreduce(sendbuf,recvbuf,count,
+                                  datatype,op,tag,comm,s,1);
+        add_sched(coll_args, (void*)s);
+    }else{
+        COLL_sched_reset(s);
+        if(0) fprintf(stderr, "schedule already exists\n");
+    }
+    COLL_sched_kick(s);
     return rc;
 }
 

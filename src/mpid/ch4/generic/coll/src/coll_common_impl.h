@@ -38,6 +38,10 @@ static inline void COLL_sched_init(COLL_sched_t * s)
     TSP_sched_init(&(s->tsp_sched));
 }
 
+static inline void COLL_sched_reset(COLL_sched_t *s){
+    TSP_sched_reset(&s->tsp_sched);
+}
+
 static inline int COLL_kick(COLL_queue_elem_t * elem);
 static inline void COLL_sched_init_nb(COLL_sched_t ** sched, COLL_req_t * request)
 {

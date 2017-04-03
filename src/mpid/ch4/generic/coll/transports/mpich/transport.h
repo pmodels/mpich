@@ -52,6 +52,18 @@ static inline void TSP_sched_init(TSP_sched_t *sched)
     sched->last_wait = -1;
 }
 
+static inline void TSP_sched_reset(TSP_sched_t *sched){
+    sched->completed=0;
+    int i;
+    for(i=0; i<sched->total; i++){
+        TSP_req_t* req = &sched->requests[i];
+        req->state = TSP_STATE_INIT;
+        req->num_unfinished_dependencies = req->invtcs.used;
+        if(req->kind==TSP_KIND_RECV_REDUCE)
+            req->nbargs.recv_reduce.done=0;
+    }
+}
+
 static inline void TSP_sched_commit(TSP_sched_t *sched)
 {
 
@@ -144,6 +156,7 @@ static inline void TSP_add_vtx_dependencies(TSP_sched_t *sched, int vtx, int n_i
     TSP_IntArray *outvtcs;
     /*update the outgoing edges of incoming vertices*/
     for(i=0; i<n_invtcs; i++){
+        if(0)fprintf(stderr,"invtx: %d\n", invtcs[i]);
         outvtcs = &sched->requests[invtcs[i]].outvtcs;
         assert(outvtcs->used+1<=MAX_EDGES);
         outvtcs->array[outvtcs->used++] = vtx;
@@ -364,7 +377,6 @@ static inline int TSP_queryfcn(
 {
     TSP_recv_reduce_arg_t *rr
         = (TSP_recv_reduce_arg_t *)data;
-
     if(rr->req->mpid_req[0] == NULL && !rr->done) {
         MPI_Datatype dt = rr->datatype->mpi_dt;
         MPI_Op       op = rr->op->mpi_op;
@@ -383,7 +395,7 @@ static inline int TSP_queryfcn(
                            rr->inoutbuf,rr->count,dt);
         }
 
-        MPL_free(rr->inbuf);
+        //MPL_free(rr->inbuf);
         MPIR_Grequest_complete_impl(rr->req->mpid_req[1]);
         rr->done = 1;
     }
@@ -598,6 +610,7 @@ static inline int TSP_test(TSP_sched_t *sched)
                 case TSP_KIND_RECV_REDUCE:
                     if(mpid_req0 && MPIR_Request_is_complete(mpid_req0)) {
                         MPIR_Request_free(mpid_req0);
+                        if(0)fprintf(stderr,"recv in recv_reduce completed\n");
                         rp->mpid_req[0] = NULL;
                     }
 
@@ -629,7 +642,7 @@ static inline int TSP_test(TSP_sched_t *sched)
 
     for(i=0; i<sched->total; i++) {
         rp = &req[i];
-        if(0)printf("i: %d, rp->kind: %d, rp->num_unfinished_dependencies: %d, rp->state: %d\n", i, rp->kind, rp->num_unfinished_dependencies, rp->state);
+        if(0) printf("i: %d, rp->kind: %d, rp->num_unfinished_dependencies: %d, rp->state: %d\n", i, rp->kind, rp->num_unfinished_dependencies, rp->state);
         if(rp->state == TSP_STATE_INIT && rp->num_unfinished_dependencies==0) {
             switch(rp->kind) {
                 case TSP_KIND_SEND: {

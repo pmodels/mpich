@@ -14,6 +14,7 @@
 #include "./coll_post.h"
 
 extern int comm_counter, op_counter, dt_counter;
+extern sched_entry_t *sched_table;
 MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_Comm_init(struct MPIR_Comm *comm)
 {
     int rank, size;
@@ -233,6 +234,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_Init()
     comm_counter=0;
     op_counter=0;
     dt_counter=0;
+    sched_table = NULL;
     MPIDI_COLL_TRANSPORT_STUB_init();
     MPIDI_COLL_TRANSPORT_MPICH_init();
     MPIDI_COLL_STUB_STUB_init();
