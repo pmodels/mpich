@@ -58,6 +58,7 @@
 /* Schedule APIs */
 #define COLL_sched_execute      COLL_NAMESPACE(sched_execute)
 #define COLL_sched_init         COLL_NAMESPACE(sched_init)
+#define COLL_sched_reset        COLL_NAMESPACE(sched_reset)
 #define COLL_sched_init_nb      COLL_NAMESPACE(sched_init_nb)
 #define COLL_sched_kick         COLL_NAMESPACE(sched_kick)
 #define COLL_sched_kick_nb      COLL_NAMESPACE(sched_kick_nb)

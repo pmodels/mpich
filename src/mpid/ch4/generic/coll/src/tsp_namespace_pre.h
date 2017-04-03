@@ -45,6 +45,7 @@
 #define TSP_dt_init          TSP_NAMESPACE(dt_init)
 #define TSP_op_init          TSP_NAMESPACE(op_init)
 #define TSP_sched_init       TSP_NAMESPACE(sched_init)
+#define TSP_sched_reset       TSP_NAMESPACE(sched_reset)
 #define TSP_sched_commit     TSP_NAMESPACE(sched_commit)
 #define TSP_sched_start      TSP_NAMESPACE(sched_start)
 #define TSP_sched_finalize   TSP_NAMESPACE(sched_finalize)

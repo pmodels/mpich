@@ -205,8 +205,8 @@ COLL_sched_allreduce(const void         *sendbuf,
       to recvbuf and exit */
     if(nranks == 1){
          if(!is_inplace)
-             TSP_dtcopy(recvbuf,count,&datatype->tsp_dt, \
-                             sendbuf,count,&datatype->tsp_dt);
+             TSP_dtcopy_nb(recvbuf,count,&datatype->tsp_dt, \
+                             sendbuf,count,&datatype->tsp_dt,&s->tsp_sched,0,NULL);
          return 0;
     }
 
@@ -226,8 +226,8 @@ COLL_sched_allreduce(const void         *sendbuf,
 
     int rrid=-1;
     if(!is_inplace && step1_sendto==-1){/*copy the data to recvbuf but only if you are a rank participating in Step 2*/
-         TSP_dtcopy(recvbuf,count,&datatype->tsp_dt, \
-                        sendbuf,count,&datatype->tsp_dt);
+         rrid = TSP_dtcopy_nb(recvbuf,count,&datatype->tsp_dt, \
+                        sendbuf,count,&datatype->tsp_dt,&s->tsp_sched,0,NULL);
     }
 
     if(0) fprintf(stderr,"After initial dt copy\n");
@@ -244,7 +244,7 @@ COLL_sched_allreduce(const void         *sendbuf,
     for(i=0; i<step1_nrecvs; i++){/*partcipating rank gets data from non-partcipating ranks*/
         rrid= TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,
                               &op->tsp_op,step1_recvfrom[i],tag,&comm->tsp_comm,
-                              TSP_FLAG_REDUCE_L,&s->tsp_sched,i==0?0:1,&rrid);
+                              TSP_FLAG_REDUCE_L,&s->tsp_sched,(i==0 && is_inplace)?0:1,&rrid);
     }
     id[0] = TSP_fence(&s->tsp_sched);
     /*Step 2*/
@@ -294,10 +294,10 @@ COLL_sched_allreduce(const void         *sendbuf,
     send the data to non-partcipating ranks*/
     if(step1_sendto != -1){
         TSP_recv(recvbuf,count,&datatype->tsp_dt,step1_sendto,tag,&comm->tsp_comm,&s->tsp_sched,0,NULL);
-        TSP_free_mem(tmp_buf);
+        //TSP_free_mem(tmp_buf);
     }
     else{ /* free temporary buffer after it is used in last send */
-        TSP_free_mem_nb(tmp_buf,&s->tsp_sched,k-1,id+1);
+        //TSP_free_mem_nb(tmp_buf,&s->tsp_sched,k-1,id+1);
     }
 
     for(i=0; i<step1_nrecvs; i++) {
@@ -308,10 +308,10 @@ COLL_sched_allreduce(const void         *sendbuf,
     if(0) fprintf(stderr,"After step3\n");
     /*free all allocated memory for storing nbrs*/
     for(i=0;i<step2_nphases;i++)
-        TSP_free_mem_nb(step2_nbrs[i],&s->tsp_sched,0,NULL);
-    TSP_free_mem_nb(step2_nbrs,&s->tsp_sched,0,NULL);
+        TSP_free_mem(step2_nbrs[i]);
+    TSP_free_mem(step2_nbrs);
     if(0) fprintf(stderr,"freed step2_nbrs\n");
-    TSP_free_mem_nb(step1_recvfrom,&s->tsp_sched,0,NULL);
+    TSP_free_mem(step1_recvfrom);
 
     if(0) fprintf(stderr,"freed step1_recvfrom\n");
 

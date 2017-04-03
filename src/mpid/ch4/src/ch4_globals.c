@@ -28,6 +28,7 @@ MPIDI_COLL_global_t MPIDI_COLL_global_instance;
 int comm_counter;
 int op_counter;
 int dt_counter;
+sched_entry_t *sched_table;
 #endif
 #ifdef MPID_DEVICE_DEFINES_THREAD_CS
 pthread_mutex_t MPIDI_Mutex_lock[MPIDI_NUM_LOCKS];

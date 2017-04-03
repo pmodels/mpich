@@ -36,6 +36,7 @@
 #undef TSP_dt_init
 #undef TSP_op_init
 #undef TSP_sched_init
+#undef TSP_sched_reset
 #undef TSP_sched_commit
 #undef TSP_sched_start
 #undef TSP_sched_finalize
