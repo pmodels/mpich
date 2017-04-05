@@ -58,6 +58,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
  * MPIDI_OFI_ENABLE_AV_TABLE           Use FI_AV_TABLE instead of FI_AV_MAP
  * MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS fi_scalable_ep instead of fi_ep
  *                                     domain_attr.max_ep_tx_ctx > 1
+ * MPIDI_OFI_MAX_ENDPOINTS             Maximum number of endpoints (regular or scalable) to use
+ * MPIDI_OFI_MAX_ENDPOINTS_BITS        Number of bits used by MPIDI_OFI_MAX_ENDPOINTS_BITS
  * MPIDI_OFI_ENABLE_STX_RMA            Use shared transmit contexts for RMA
  *                                     Uses FI_SHARED_CONTEXT
  * MPIDI_OFI_ENABLE_MR_SCALABLE        Use FI_MR_SCALABLE instead of FI_MR_BASIC
@@ -67,6 +69,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
  * MPIDI_OFI_ENABLE_RMA                Use FI_RMA interfaces
  * MPIDI_OFI_ENABLE_ATOMICS            Use FI_ATOMICS interfaces
  * MPIDI_OFI_FETCH_ATOMIC_IOVECS       The maximum number of iovecs that can be used for fetch_atomic operations
+ * MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS Use a progress thread for normal data messages
+ * MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS Use a progress thread for control messages
  * MPIDI_OFI_CONTEXT_MASK_CAPSET       The bitmask used to extract the context ID from the match_bits in an OFI message
  * MPIDI_OFI_SOURCE_MASK_CAPSET        The bitmask used to extract the source rank from the match_bits in an OFI message
  * MPIDI_OFI_TAG_MASK_CAPSET           The bitmask used to extract the tag from the match_bits in an OFI message
