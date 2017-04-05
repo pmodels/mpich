@@ -34,7 +34,6 @@
 
 static inline void COLL_sched_init(COLL_sched_t * s)
 {
-    memset(s, 0, sizeof(*s));
     TSP_sched_init(&(s->tsp_sched));
 }
 
