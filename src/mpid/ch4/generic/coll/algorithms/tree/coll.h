@@ -81,12 +81,22 @@ static inline int COLL_bcast(void *buffer,
                              COLL_dt_t * datatype,
                              int root, COLL_comm_t * comm, int *errflag, int k)
 {
-    int rc;
-    COLL_sched_t s;
-    int tag = (*comm->tree_comm.curTag)++;
-    COLL_sched_init(&s);
-    rc = COLL_sched_bcast(buffer, count, datatype, root, tag, comm, k, &s, 1);
-    COLL_sched_kick(&s);
+    int rc = 0;
+    coll_args_t coll_args = {.coll_type=BCAST, \
+            .args={.bcast={.buf=buffer,.count=count,.dt_id=datatype->id,.root=root,.comm_id=comm->id}}};
+    
+    COLL_sched_t *s = get_sched(coll_args);
+    if(s==NULL){
+        if(0) fprintf(stderr, "schedule does not exist\n");
+        s = (COLL_sched_t*)MPL_malloc(sizeof(COLL_sched_t));
+        int tag = (*comm->tree_comm.curTag)++;
+        COLL_sched_init(s);
+        rc = COLL_sched_bcast(buffer, count, datatype, root, tag, comm, k, s, 1);
+        add_sched(coll_args, (void*)s);
+    } else{
+        COLL_sched_reset(s);
+    }
+    COLL_sched_kick(s);
     return rc;
 }
 
