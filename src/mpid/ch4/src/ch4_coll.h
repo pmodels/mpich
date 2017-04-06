@@ -150,24 +150,24 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
     int use_coll = (MPIR_CVAR_USE_BARRIER < 0)?
                         MPIDI_CH4_cycle_algorithm(comm, valid_coll, 1) :
                         MPIR_CVAR_USE_BARRIER;
+#else
+    int use_coll=0;
+#endif
     switch(use_coll) {
-    case 0:
-#endif
-        ret = MPIDI_NM_mpi_barrier(comm, errflag);
-#ifdef MPIDI_BUILD_CH4_COLL
-        break;
-    case 1:
-        ret = MPIDI_COLL_MPICH_DISSEM_barrier( &(MPIDI_COLL_COMM(comm)->mpich_dissem),
-                        errflag);
-        break;
-    case 2:
-        ret = MPIDI_COLL_MPICH_KARY_barrier(&(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, 2);
-        break;
-    case 3:
-        ret = MPIDI_COLL_MPICH_KNOMIAL_barrier(&(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, 2);
-        break;
+        case 0:
+            ret = MPIDI_NM_mpi_barrier(comm, errflag);
+            break;
+        case 1:
+            ret = MPIDI_COLL_MPICH_DISSEM_barrier( &(MPIDI_COLL_COMM(comm)->mpich_dissem),
+                            errflag);
+            break;
+        case 2:
+            ret = MPIDI_COLL_MPICH_KARY_barrier(&(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, 2);
+            break;
+        case 3:
+            ret = MPIDI_COLL_MPICH_KNOMIAL_barrier(&(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, 2);
+            break;
     }
-#endif
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BARRIER);
     return ret;
 }
@@ -188,34 +188,33 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
     }
     MPIR_Datatype *dt_ptr;
     MPID_Datatype_get_ptr(datatype, dt_ptr);
+#else
+    int use_coll=0;
+#endif
 
     switch(use_coll) {
-    case 0:
-#endif
-        ret = MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm, errflag);
-
-#ifdef MPIDI_BUILD_CH4_COLL
-        break;
-    case 1:
-        ret = MPIDI_COLL_MPICH_KARY_bcast(buffer, count,
-                &(MPIDI_COLL_DT(dt_ptr)->mpich_kary),
-                root, &(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, MPIR_CVAR_BCAST_KARY_KVAL);
-        break;
-    case 2:
-        ret = MPIDI_COLL_MPICH_KARY_bcast(buffer, count,
-                &(MPIDI_COLL_DT(dt_ptr)->mpich_knomial),
-                root, &(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, MPIR_CVAR_BCAST_KNOMIAL_KVAL);
-        break;
-    case 3:
-        ret = MPIDI_COLL_X_TREEBASIC_bcast(buffer, count,
-                datatype, root, &(MPIDI_COLL_COMM(comm)->x_treebasic), errflag, 0);
-        break;
-    case 4:
-        ret = MPIDI_COLL_X_TREEBASIC_bcast(buffer, count,
-                datatype, root, &(MPIDI_COLL_COMM(comm)->x_treebasic), errflag, 1);
-        break;
+        case 0:
+            ret = MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm, errflag);
+            break;
+        case 1:
+            ret = MPIDI_COLL_MPICH_KARY_bcast(buffer, count,
+                    &(MPIDI_COLL_DT(dt_ptr)->mpich_kary),
+                    root, &(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, MPIR_CVAR_BCAST_KARY_KVAL);
+            break;
+        case 2:
+            ret = MPIDI_COLL_MPICH_KARY_bcast(buffer, count,
+                    &(MPIDI_COLL_DT(dt_ptr)->mpich_knomial),
+                    root, &(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, MPIR_CVAR_BCAST_KNOMIAL_KVAL);
+            break;
+        case 3:
+            ret = MPIDI_COLL_X_TREEBASIC_bcast(buffer, count,
+                    datatype, root, &(MPIDI_COLL_COMM(comm)->x_treebasic), errflag, 0);
+            break;
+        case 4:
+            ret = MPIDI_COLL_X_TREEBASIC_bcast(buffer, count,
+                    datatype, root, &(MPIDI_COLL_COMM(comm)->x_treebasic), errflag, 1);
+            break;
     }
-#endif
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BCAST);
     return ret;
 }
@@ -237,40 +236,39 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
 
     int valid_coll[] = {1,2,3,4};
     int use_coll = (MPIR_CVAR_USE_ALLREDUCE < 0) ? MPIDI_CH4_cycle_algorithm(comm, valid_coll, 3) : MPIR_CVAR_USE_ALLREDUCE;
+#else
+    int use_coll=0;
+#endif
 
     switch (use_coll){
-    case 0:
-#endif
-        ret = MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag);
-
-#ifdef MPIDI_BUILD_CH4_COLL
-        break;
-    case 1:
-        ret = MPIDI_COLL_MPICH_KNOMIAL_allreduce(sendbuf, recvbuf, count,
-                                        &(MPIDI_COLL_DT(dt_ptr)->mpich_knomial),
-                                        &(MPIDI_COLL_OP(op_p)->mpich_knomial),
-                                        &(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, 2);
-        break;
-    case 2:
-        ret = MPIDI_COLL_MPICH_KARY_allreduce(sendbuf, recvbuf, count,
-                                        &(MPIDI_COLL_DT(dt_ptr)->mpich_kary),
-                                        &(MPIDI_COLL_OP(op_p)->mpich_kary),
-                                        &(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, 2);
-        break;
-    case 3:
-        ret = MPIDI_COLL_MPICH_RECEXCH_allreduce(sendbuf, recvbuf, count,
-                                        &(MPIDI_COLL_DT(dt_ptr)->mpich_recexch),
-                                        &(MPIDI_COLL_OP(op_p)->mpich_recexch),
-                                        &(MPIDI_COLL_COMM(comm)->mpich_recexch), errflag);
-        break;
-    case 4:
-        ret = MPIDI_COLL_MPICH_DISSEM_allreduce(sendbuf, recvbuf, count,
-                                        &(MPIDI_COLL_DT(dt_ptr)->mpich_dissem),
-                                        &(MPIDI_COLL_OP(op_p)->mpich_dissem),
-                                        &(MPIDI_COLL_COMM(comm)->mpich_dissem), errflag);
-        break;
+        case 0:
+            ret = MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+            break;
+        case 1:
+            ret = MPIDI_COLL_MPICH_KNOMIAL_allreduce(sendbuf, recvbuf, count,
+                                            &(MPIDI_COLL_DT(dt_ptr)->mpich_knomial),
+                                            &(MPIDI_COLL_OP(op_p)->mpich_knomial),
+                                            &(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, 2);
+            break;
+        case 2:
+            ret = MPIDI_COLL_MPICH_KARY_allreduce(sendbuf, recvbuf, count,
+                                            &(MPIDI_COLL_DT(dt_ptr)->mpich_kary),
+                                            &(MPIDI_COLL_OP(op_p)->mpich_kary),
+                                            &(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, 2);
+            break;
+        case 3:
+            ret = MPIDI_COLL_MPICH_RECEXCH_allreduce(sendbuf, recvbuf, count,
+                                            &(MPIDI_COLL_DT(dt_ptr)->mpich_recexch),
+                                            &(MPIDI_COLL_OP(op_p)->mpich_recexch),
+                                            &(MPIDI_COLL_COMM(comm)->mpich_recexch), errflag);
+            break;
+        case 4:
+            ret = MPIDI_COLL_MPICH_DISSEM_allreduce(sendbuf, recvbuf, count,
+                                            &(MPIDI_COLL_DT(dt_ptr)->mpich_dissem),
+                                            &(MPIDI_COLL_OP(op_p)->mpich_dissem),
+                                            &(MPIDI_COLL_COMM(comm)->mpich_dissem), errflag);
+            break;
     }
-#endif
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLREDUCE);
     return ret;
 }
@@ -397,13 +395,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, int sendcount,
 
     int valid_coll[] = {1};
     int use_coll = (MPIR_CVAR_USE_ALLTOALL < 0) ? MPIDI_CH4_cycle_algorithm(comm, valid_coll, 1) : MPIR_CVAR_USE_ALLTOALL;
-
+#else
+    int use_coll = 0;
+#endif
     switch (0){
     case 0:
-#endif
         ret = MPIDI_NM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
                                 recvcount, recvtype, comm, errflag);
-#ifdef MPIDI_BUILD_CH4_COLL
         break;
     case 1:
         ret = MPIDI_COLL_MPICH_DISSEM_alltoall(sendbuf, sendcount,
@@ -413,7 +411,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, int sendcount,
                                         &(MPIDI_COLL_COMM(comm)->mpich_dissem), errflag);
         break;
     }
-#endif
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLTOALL);
     return ret;
 }
@@ -471,28 +468,27 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
 
     int valid_coll[] = {1,2};
     int use_coll = (MPIR_CVAR_USE_REDUCE < 0) ? MPIDI_CH4_cycle_algorithm(comm_ptr, valid_coll, 2) : MPIR_CVAR_USE_REDUCE;
-
+#else
+    int use_coll = 0;
+#endif
     switch(use_coll) {
-    case 0:
-#endif
-        ret = MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+        case 0:
+            ret = MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
 
-#ifdef MPIDI_BUILD_CH4_COLL
-        break;
-    case 1:
-        ret = MPIDI_COLL_MPICH_KNOMIAL_reduce(sendbuf, recvbuf, count,
-                                        &(MPIDI_COLL_DT(dt_ptr)->mpich_knomial),
-                                        &(MPIDI_COLL_OP(op_p)->mpich_knomial), root,
-                                        &(MPIDI_COLL_COMM(comm_ptr)->mpich_knomial), errflag, 2);
-        break;
-    case 2:
-        ret = MPIDI_COLL_MPICH_KARY_reduce(sendbuf, recvbuf, count,
-                                        &(MPIDI_COLL_DT(dt_ptr)->mpich_kary),
-                                        &(MPIDI_COLL_OP(op_p)->mpich_kary), root,
-                                        &(MPIDI_COLL_COMM(comm_ptr)->mpich_kary), errflag, 2);
-        break;
+            break;
+        case 1:
+            ret = MPIDI_COLL_MPICH_KNOMIAL_reduce(sendbuf, recvbuf, count,
+                                            &(MPIDI_COLL_DT(dt_ptr)->mpich_knomial),
+                                            &(MPIDI_COLL_OP(op_p)->mpich_knomial), root,
+                                            &(MPIDI_COLL_COMM(comm_ptr)->mpich_knomial), errflag, 2);
+            break;
+        case 2:
+            ret = MPIDI_COLL_MPICH_KARY_reduce(sendbuf, recvbuf, count,
+                                            &(MPIDI_COLL_DT(dt_ptr)->mpich_kary),
+                                            &(MPIDI_COLL_OP(op_p)->mpich_kary), root,
+                                            &(MPIDI_COLL_COMM(comm_ptr)->mpich_kary), errflag, 2);
+            break;
     }
-#endif
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REDUCE);
     return ret;
 }
