@@ -18,13 +18,6 @@ typedef struct COLL_tree_t {
 }
 COLL_tree_t;
 
-typedef struct COLL_tree_comm_t {
-    int id; /*unique id for the communicator*/
-    COLL_tree_t  tree;
-    int         *curTag;
-}
-COLL_tree_comm_t;
-
 typedef struct COLL_dt_t {
     int id; /*unique id for the datatype*/
     TSP_dt_t tsp_dt;
@@ -39,8 +32,10 @@ COLL_op_t;
 
 typedef struct COLL_comm_t {
     int id;
-    TSP_comm_t       tsp_comm;
-    COLL_tree_comm_t tree_comm;
+    int *curTag;
+    int rank;    /*my rank*/
+    int nranks;  /*total ranks*/    
+    TSP_comm_t tsp_comm;
 }
 COLL_comm_t;
 
@@ -55,5 +50,3 @@ typedef struct COLL_req_t {
     COLL_sched_t      *phases;
 }
 COLL_req_t;
-
-typedef long int COLL_aint_t;
