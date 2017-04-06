@@ -39,26 +39,6 @@ cvars:
         Maximum K value that will be used for kary/knomial trees
         Runtime will store the kary/knomial trees upto MPIR_CVAR_MAX_KVAL-1 value of k
 
-    - name        : MPIR_CVAR_BCAST_KARY_KVAL
-      category    : COLLECTIVE
-      type        : int
-      default     : 2
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        K value for Kary broadcast
-
-    - name        : MPIR_CVAR_BCAST_KNOMIAL_KVAL
-      category    : COLLECTIVE
-      type        : int
-      default     : 2
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        K value for Knomial broadcast
-
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 

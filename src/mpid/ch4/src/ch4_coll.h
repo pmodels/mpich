@@ -106,9 +106,25 @@ cvars:
         Controls ialltoall algorithm:
         0 - MPIR_ialltoall
         1 - DISSEM_ialltoall
+    - name        : MPIR_CVAR_BCAST_KARY_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        K value for Kary broadcast
 
-
-
+    - name        : MPIR_CVAR_BCAST_KNOMIAL_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        K value for Knomial broadcast
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -183,12 +199,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
     case 1:
         ret = MPIDI_COLL_MPICH_KARY_bcast(buffer, count,
                 &(MPIDI_COLL_DT(dt_ptr)->mpich_kary),
-                root, &(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, 2);
+                root, &(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, MPIR_CVAR_BCAST_KARY_KVAL);
         break;
     case 2:
         ret = MPIDI_COLL_MPICH_KARY_bcast(buffer, count,
                 &(MPIDI_COLL_DT(dt_ptr)->mpich_knomial),
-                root, &(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, 2);
+                root, &(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, MPIR_CVAR_BCAST_KNOMIAL_KVAL);
         break;
     case 3:
         ret = MPIDI_COLL_X_TREEBASIC_bcast(buffer, count,
