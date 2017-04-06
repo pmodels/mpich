@@ -178,7 +178,7 @@ int COLL_get_neighbors_recexch(int rank, int nranks, int *k_, int *step1_sendto,
 }
 
 static inline int
-COLL_sched_allreduce(const void         *sendbuf,
+COLL_sched_allreduce_recexch(const void         *sendbuf,
                      void               *recvbuf,
                      int                 count,
                      COLL_dt_t          *datatype,
