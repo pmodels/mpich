@@ -205,20 +205,19 @@ COLL_sched_barrier_dissem(int                 tag,
 {
     int               i,n;
     int               nphases = 0;
-    COLL_tree_comm_t *mycomm  = &comm->tree_comm;
     TSP_dt_t         *dt      = &((TSP_global).control_dt);
 
-    for(n=mycomm->tree.nranks-1; n>0; n>>=1)nphases++;
+    for(n=comm->nranks-1; n>0; n>>=1)nphases++;
     if(0) printf("dissem barrier - nphases = %d\n", nphases);
 
     int *recvids = TSP_allocate_mem(sizeof(int)*nphases);
     for(i=0; i<nphases; i++) {
         if(0) printf("dissem barrier - start scheduling phase %d\n", i);
         int shift   = (1<<i);
-        int to      = (mycomm->tree.rank+shift)%mycomm->tree.nranks;
-        int from    = (mycomm->tree.rank)-shift;
+        int to      = (comm->rank+shift)%comm->nranks;
+        int from    = (comm->rank)-shift;
 
-        if(from<0) from = mycomm->tree.nranks+from;
+        if(from<0) from += comm->nranks;
         
         if(0) printf("dissem barrier - scheduling recv phase %d\n", i);
         recvids[i] = TSP_recv(NULL,0,dt,from,tag,&comm->tsp_comm,&s->tsp_sched,0,NULL);
@@ -246,52 +245,51 @@ COLL_sched_allreduce_dissem(const void         *sendbuf,
     /* does not handle in place or communative */
     int               upperPow,lowerPow,nphases = 0;
     int               i,n,is_contig,notPow2,inLower,dissemPhases,dissemRanks;
-    COLL_tree_comm_t *mycomm  = &comm->tree_comm;
     size_t            extent,lb,type_size;
 
     TSP_dtinfo(&datatype->tsp_dt,&is_contig,&type_size,&extent,&lb);
 
-    for(n=mycomm->tree.nranks-1; n>0; n>>=1)nphases++;
+    for(n=comm->nranks-1; n>0; n>>=1)nphases++;
 
     upperPow = (1<<nphases);
     lowerPow = (1<<(nphases-1));
-    notPow2  = (upperPow!=mycomm->tree.nranks);
+    notPow2  = (upperPow!=comm->nranks);
 
     int dtcopy_id = TSP_dtcopy_nb(recvbuf,count,&datatype->tsp_dt,
                   sendbuf,count,&datatype->tsp_dt,
                   &s->tsp_sched,0,NULL);
 
-    inLower        = mycomm->tree.rank<lowerPow;
+    inLower        = comm->rank<lowerPow;
     dissemPhases = nphases-1;
     dissemRanks  = lowerPow;
 
     int rrid=-1, sid;/*recv_reduce id and send id for supporting DAG*/
     if(notPow2 && inLower) {
-        int from = mycomm->tree.rank+lowerPow;
+        int from = comm->rank+lowerPow;
 
-        if(from < mycomm->tree.nranks) {
+        if(from < comm->nranks) {
             rrid = TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,
                             &op->tsp_op,from,tag,&comm->tsp_comm, TSP_FLAG_REDUCE_L,
                             &s->tsp_sched,1, &dtcopy_id);
         }
     }
     else if(notPow2) {
-        int to = mycomm->tree.rank%lowerPow;
+        int to = comm->rank%lowerPow;
         TSP_send_accumulate(sendbuf,count,&datatype->tsp_dt,
                             &op->tsp_op,to,tag,&comm->tsp_comm,
                             &s->tsp_sched,0, NULL);
     } else {
         inLower        = 1;
         dissemPhases = nphases;
-        dissemRanks  = mycomm->tree.nranks;
+        dissemRanks  = comm->nranks;
     }
     int id[2]; id[0]=(rrid==-1)?dtcopy_id:rrid;
     if(inLower) {
         void *tmpbuf = TSP_allocate_mem(extent*count);
         for(i=0; i<dissemPhases; i++) {
             int shift      = (1<<i);
-            int to         = (mycomm->tree.rank+shift)%dissemRanks;
-            int from       = (mycomm->tree.rank)-shift;
+            int to         = (comm->rank+shift)%dissemRanks;
+            int from       = (comm->rank)-shift;
 
             if(from<0)from = dissemRanks+from;
 
@@ -310,14 +308,14 @@ COLL_sched_allreduce_dissem(const void         *sendbuf,
     }
 
     if(notPow2 && inLower) {
-        int to = mycomm->tree.rank+lowerPow;
+        int to = comm->rank+lowerPow;
 
-        if(to < mycomm->tree.nranks) {
+        if(to < comm->nranks) {
             TSP_send(recvbuf,count,&datatype->tsp_dt,to,tag,
                      &comm->tsp_comm,&s->tsp_sched,1,id+1);
         }
     } else if(notPow2) {
-        int from = mycomm->tree.rank%lowerPow;
+        int from = comm->rank%lowerPow;
         TSP_recv(recvbuf,count,&datatype->tsp_dt,
                  from,tag,&comm->tsp_comm,&s->tsp_sched,0,NULL);
     }
