@@ -68,7 +68,7 @@
 #define COLL_sched_bcast              COLL_NAMESPACE(sched_bcast)
 #define COLL_sched_reduce_full        COLL_NAMESPACE(sched_reduce_full)
 #define COLL_sched_barrier            COLL_NAMESPACE(sched_barrier)
-#define COLL_sched_allreduce          COLL_NAMESPACE(sched_allreduce)
+#define COLL_sched_allreduce_recexch  COLL_NAMESPACE(sched_allreduce_recexch)
 #define COLL_sched_reduce_full        COLL_NAMESPACE(sched_reduce_full)
 #define COLL_sched_reduce             COLL_NAMESPACE(sched_reduce)
 #define COLL_sched_barrier            COLL_NAMESPACE(sched_barrier)

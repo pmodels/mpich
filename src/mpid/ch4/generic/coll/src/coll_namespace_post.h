@@ -55,7 +55,7 @@
 #undef COLL_sched_bcast
 #undef COLL_sched_reduce_full
 #undef COLL_sched_barrier
-#undef COLL_sched_allreduce
+#undef COLL_sched_allreduce_recexch
 #undef COLL_sched_reduce_full
 #undef COLL_sched_reduce
 #undef COLL_sched_barrier

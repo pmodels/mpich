@@ -69,9 +69,10 @@ static inline int COLL_allreduce(const void  *sendbuf,
 {
     int rc=0;
     /*Check if schedule already exists*/
+    /*generate the key to search this schedule*/
     coll_args_t coll_args = {.coll_type=ALLREDUCE, \
             .args={.allreduce={.sbuf=sendbuf,.rbuf=recvbuf,.count=count,.dt_id=datatype->id,.op_id=op->id,.comm_id=comm->id}}};
-    
+    /*search for schedule*/
     COLL_sched_t *s = get_sched(coll_args);
     if(s==NULL){/*sched does not exist*/
         if(0) fprintf(stderr, "schedule does not exist\n");
@@ -79,8 +80,8 @@ static inline int COLL_allreduce(const void  *sendbuf,
         int                tag = (*comm->curTag)++;
 
         COLL_sched_init(s);
-        rc = COLL_sched_allreduce(sendbuf,recvbuf,count,
-                                  datatype,op,tag,comm,s,1);
+        rc = COLL_sched_allreduce_recexch(sendbuf,recvbuf,count,
+                                          datatype,op,tag,comm,s,1);
         add_sched(coll_args, (void*)s);
     }else{
         COLL_sched_reset(s);
@@ -98,15 +99,15 @@ static inline int COLL_iallreduce(const void  *sendbuf,
                                   COLL_comm_t *comm,
                                   COLL_req_t  *request)
 {
-#if 0
+#if 0 /*The code needs to be tested*/
     COLL_sched_t  *s;
     int                  done = 0;
     int                  tag = (*comm->curTag)++;
     COLL_sched_init_nb(&s,request);
     TSP_addref_op(&op->tsp_op,1);
     TSP_addref_dt(&datatype->tsp_dt,1);
-    COLL_sched_allreduce(sendbuf,recvbuf,count,datatype,
-                         op,tag,comm,s,0);
+    COLL_sched_allreduce_recexch(sendbuf,recvbuf,count,datatype,
+                                    op,tag,comm,s,0);
     TSP_fence(&s->tsp_sched);
     TSP_addref_op_nb(&op->tsp_op,0,&s->tsp_sched);
     TSP_addref_dt_nb(&datatype->tsp_dt,0,&s->tsp_sched);
@@ -120,7 +121,8 @@ static inline int COLL_iallreduce(const void  *sendbuf,
 #endif
     return 0;
 }
-/*Unnecessary unless we do not have NB-colls here */
+
+/*Unnecessary unless we non-blocking colls here*/
 static inline int COLL_kick(COLL_queue_elem_t * elem)
 {
     return 0;
