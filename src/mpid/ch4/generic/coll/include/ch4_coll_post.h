@@ -23,6 +23,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_Comm_init(struct MPIR_Comm *comm)
     MPIDI_COLL_COMM(comm)->issued_collectives = 0;
     rank = comm->rank;
     size = comm->local_size;
+    /*initialize communicators for ch4 collectives
+    * each communiactor is assigned a unique id 
+    */
     MPIDI_COLL_STUB_STUB_comm_init(&(MPIDI_COLL_COMM(comm)->stub_stub), comm_counter++, tag,  rank, size);
     MPIDI_COLL_STUB_KARY_comm_init(&(MPIDI_COLL_COMM(comm)->stub_kary), comm_counter++, tag, rank, size);
     MPIDI_COLL_STUB_KNOMIAL_comm_init(&(MPIDI_COLL_COMM(comm)->stub_knomial), comm_counter++, tag,  rank, size);
@@ -43,9 +46,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_Comm_init(struct MPIR_Comm *comm)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_Comm_cleanup(struct MPIR_Comm *comm)
 {
-#ifdef MPIDI_NM_COLL_COMM_CLEANUP_HOOK
+    /*cleanup netmod collective communicators*/
+#ifdef MPIDI_NM_COLL_COMM_CLEANUP_HOOK 
     MPIDI_NM_COLL_COMM_CLEANUP_HOOK;
 #endif
+    /*cleanup all ch4 collective communicators*/
     MPIDI_COLL_STUB_STUB_comm_cleanup(&(MPIDI_COLL_COMM(comm)->stub_stub));
     MPIDI_COLL_STUB_KARY_comm_cleanup(&(MPIDI_COLL_COMM(comm)->stub_kary));
     MPIDI_COLL_STUB_KNOMIAL_comm_cleanup(&(MPIDI_COLL_COMM(comm)->stub_knomial));
@@ -65,6 +70,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_Comm_cleanup(struct MPIR_Comm *comm)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_dt_init(MPIR_Datatype * dt)
 {
+    /*initialize ch4 collective datatypes*/
     MPIDI_COLL_STUB_STUB_dt_init(&(MPIDI_COLL_DT(dt)->stub_stub), dt_counter++);
     MPIDI_COLL_STUB_KARY_dt_init(&(MPIDI_COLL_DT(dt)->stub_kary), dt_counter++);
     MPIDI_COLL_STUB_KNOMIAL_dt_init(&(MPIDI_COLL_DT(dt)->stub_knomial), dt_counter++);
@@ -84,7 +90,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_dt_init(MPIR_Datatype * dt)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_op_init(struct MPIR_Op *op)
 {
-
+    /*initialize ch4 collective operations*/
     MPIDI_COLL_STUB_STUB_op_init(&(MPIDI_COLL_OP(op)->stub_stub), op_counter++);
     MPIDI_COLL_STUB_KARY_op_init(&(MPIDI_COLL_OP(op)->stub_kary), op_counter++);
     MPIDI_COLL_STUB_KNOMIAL_op_init(&(MPIDI_COLL_OP(op)->stub_knomial), op_counter++);
