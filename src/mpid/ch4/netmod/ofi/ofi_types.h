@@ -557,12 +557,6 @@ typedef struct MPIDI_OFI_huge_recv {
                                          * (when in the unexpected list) */
 } MPIDI_OFI_huge_recv_t;
 
-typedef struct MPIDI_OFI_huge_counter_t {
-    uint16_t counter;
-    uint16_t outstanding;
-    struct fid_mr *mr;
-} MPIDI_OFI_huge_counter_t;
-
 /* The list of posted huge receives that haven't been matched yet. These need
  * to get matched up when handling the control message that starts transfering
  * data from the remote memory region and we need a way of matching up the
