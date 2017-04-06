@@ -283,33 +283,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
     if (c == 0) {
         MPIR_Comm *comm;
         void *ptr;
-        MPIDI_OFI_huge_counter_t *cntr;
+        struct fid_mr *huge_send_mr;
+        uint64_t key;
+        int key_back;
 
         comm = MPIDI_OFI_REQUEST(sreq, util_comm);
 
-        /* Look for the counter using the sreq handle */
+        /* Look for the memory region using the sreq handle */
         ptr = MPIDI_OFI_map_lookup(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
         MPIR_Assert(ptr != MPIDI_OFI_MAP_NOT_FOUND);
 
-        cntr = (MPIDI_OFI_huge_counter_t *) ptr;
-        cntr->outstanding--;
+        huge_send_mr = (struct fid_mr *) ptr;
 
-        /* If that was the last message to be sent, send a cleanup message to
-         * the receivier and clean up local resources. */
-        if (cntr->outstanding == 0) {
-            uint64_t key;
-            int key_back;
+        /* Send a cleanup message to the receivier and clean up local
+         * resources. */
+        /* Clean up the local counter */
+        MPIDI_OFI_map_erase(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
 
-            /* Clean up the local counter */
-            MPIDI_OFI_map_erase(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
-
-            /* Clean up the memory region */
-            key = fi_mr_key(cntr->mr);
-            key_back = (key >> MPIDI_Global.huge_rma_shift);
-            MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(comm).rma_id_allocator, key_back);
-            MPIDI_OFI_CALL_NOLOCK(fi_close(&cntr->mr->fid), mr_unreg);
-            MPL_free(ptr);
-        }
+        /* Clean up the memory region */
+        key = fi_mr_key(huge_send_mr);
+        key_back = (key >> MPIDI_Global.huge_rma_shift);
+        MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(comm).rma_id_allocator, key_back);
+        MPIDI_OFI_CALL_NOLOCK(fi_close(&huge_send_mr->fid), mr_unreg);
 
         if (MPIDI_OFI_REQUEST(sreq, noncontig))
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig));
