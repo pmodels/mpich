@@ -168,21 +168,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
         MPIDI_OFI_send_control_t ctrl;
         int c;
         uint64_t rma_key = 0;
-        MPIDI_OFI_huge_counter_t *cntr;
-        void *ptr;
+        struct fid_mr *huge_send_mr;
+
         c = 1;
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_HUGE;
         MPIR_cc_incr(sreq->cc_ptr, &c);
 
         MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
-
-        /* Create a new huge counter */
-        ptr = MPL_malloc(sizeof(MPIDI_OFI_huge_counter_t));
-        cntr = (MPIDI_OFI_huge_counter_t *) ptr;
-        MPIDI_OFI_map_set(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle, cntr);
-
-        cntr->outstanding = 0;
-        cntr->counter = 0;
 
         /* Set up a memory region for the lmt data transfer */
         ctrl.rma_key = MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(comm).rma_id_allocator);
@@ -196,22 +188,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
                                         0ULL,   /* In:  offset(not used)    */
                                         rma_key,        /* In:  requested key       */
                                         0ULL,   /* In:  flags               */
-                                        &cntr->mr,      /* Out: memregion object    */
+                                        &huge_send_mr,      /* Out: memregion object    */
                                         NULL), mr_reg); /* In:  context             */
+
+        /* Create map to the memory region */
+        MPIDI_OFI_map_set(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle, huge_send_mr);
 
         if (!MPIDI_OFI_ENABLE_MR_SCALABLE) {
             /* MR_BASIC */
-            ctrl.rma_key = fi_mr_key(cntr->mr);
+            ctrl.rma_key = fi_mr_key(huge_send_mr);
         }
 
         /* Send the maximum amount of data that we can here to get things
          * started, then do the rest using the MR below. This can be confirmed
          * in the MPIDI_OFI_get_huge code where we start the offset at
          * MPIDI_Global.max_send */
-        cntr->outstanding++;
-        cntr->counter++;
-        MPIR_Assert(cntr->outstanding != USHRT_MAX);
-        MPIR_Assert(cntr->counter != USHRT_MAX);
         MPIDI_OFI_REQUEST(sreq, util_comm) = comm;
         MPIDI_OFI_REQUEST(sreq, util_id) = rank;
         mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(0), send_buf,
@@ -226,7 +217,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         ctrl.type = MPIDI_OFI_CTRL_HUGE;
-        ctrl.seqno = cntr->counter - 1;
+        ctrl.seqno = 0;
         ctrl.tag = tag;
 
         /* Send information about the memory region here to get the lmt going. */
