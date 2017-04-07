@@ -23,6 +23,7 @@
 #define COLL_sched_t      COLL_NAMESPACE(sched_t)
 #define COLL_aint_t       COLL_NAMESPACE(aint_t)
 #define COLL_global_t     COLL_NAMESPACE(global_t)
+#define COLL_args_t       COLL_NAMESPACE(args_t)
 
 /* Tree collective types */
 #define COLL_fence_t        COLL_NAMESPACE(fence_t)
@@ -59,6 +60,7 @@
 #define COLL_sched_execute      COLL_NAMESPACE(sched_execute)
 #define COLL_sched_init         COLL_NAMESPACE(sched_init)
 #define COLL_sched_reset        COLL_NAMESPACE(sched_reset)
+#define COLL_sched_free         COLL_NAMESPACE(sched_free)
 #define COLL_sched_init_nb      COLL_NAMESPACE(sched_init_nb)
 #define COLL_sched_kick         COLL_NAMESPACE(sched_kick)
 #define COLL_sched_kick_nb      COLL_NAMESPACE(sched_kick_nb)

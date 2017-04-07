@@ -207,8 +207,15 @@ static inline void *TSP_allocate_mem(size_t size)
     return NULL;
 }
 
+static inline void* TSP_allocate_buffer(size_t size, TSP_sched_t *s){
+    return NULL;
+}
+
 static inline void TSP_free_mem(void *ptr)
 {
+}
+
+static inline void TSP_free_buffers(TSP_sched_t *s){
 }
 
 static inline int TSP_free_mem_nb(void *ptr, TSP_sched_t * sched, int n_invtcs, int *invtcs)

@@ -150,6 +150,14 @@ typedef struct TSP_sched_t {
     uint64_t   completed;
     uint64_t   last_wait; /*used by TSP_wait, to keep track of the last TSP_wait vtx id*/
     TSP_req_t  requests[MAX_REQUESTS];
+    /*Store the memory location of all the buffers that were temporarily
+    * allocated to execute the schedule. This information is later used
+    * to free those memory locations when the schedule is destroyed (TSP_free_sched_mem)
+    * Note that the temporary memory allocated by recv_reduce is not 
+    * recorded here since the transport already knows about it
+    */
+    uint64_t   nbufs;
+    void      *buf[MAX_REQUESTS];/*size of the array is currently arbitrarily set*/
 }
 TSP_sched_t;
 

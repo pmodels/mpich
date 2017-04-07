@@ -49,3 +49,20 @@ typedef struct COLL_req_t {
 } COLL_req_t;
 
 typedef long int COLL_aint_t;
+
+typedef struct{
+    int algo; /*algorithm type*/
+    int tsp; /*transport type*/
+    int nargs; /*number of arguments*/
+    union{
+        struct{
+            void *buf; int count; int dt_id; int root; int comm_id;
+        }bcast;
+        struct {
+            void *sbuf; void* rbuf; int count; int dt_id; int op_id; int root; int comm_id;    
+        } reduce;
+        struct {
+            void *sbuf; void *rbuf; int count; int dt_id; int op_id; int comm_id;
+        }allreduce;
+    } args;
+} COLL_args_t;

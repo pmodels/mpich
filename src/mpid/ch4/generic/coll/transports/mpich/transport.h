@@ -50,6 +50,7 @@ static inline void TSP_sched_init(TSP_sched_t *sched)
     sched->total      = 0;
     sched->completed  = 0;
     sched->last_wait = -1;
+    sched->nbufs     = 0;
 }
 
 static inline void TSP_sched_reset(TSP_sched_t *sched){
@@ -530,6 +531,19 @@ static inline void *TSP_allocate_mem(size_t size)
     return MPL_malloc(size);
 }
 
+/*This function allocates memory required for schedule execution.
+ *This is recorded in the schedule so that this memory can be 
+ *freed when the schedule is destroyed
+ */
+static inline void *TSP_allocate_buffer(size_t size, TSP_sched_t *s){
+    void *buf = TSP_allocate_mem(size);
+    /*record memory allocation*/
+    assert(s->nbufs<MAX_REQUESTS);
+    s->buf[s->nbufs] = buf;
+    s->nbufs += 1;
+    return buf;
+}
+
 static inline void TSP_free_mem(void *ptr)
 {
     MPL_free(ptr);
@@ -760,6 +774,21 @@ static inline int TSP_test(TSP_sched_t *sched)
         }
     }
     return sched->completed==sched->total;
+}
+
+ /*frees any memory allocated for execution of this schedule*/
+static inline void TSP_free_buffers(TSP_sched_t *s){
+    int i;
+    for(i=0; i<s->total; i++){
+        /*free the temporary memory allocated by recv_reduce call*/
+        if(s->requests[i].kind == TSP_KIND_RECV_REDUCE){
+            TSP_free_mem(s->requests[i].nbargs.recv_reduce.inbuf);
+        }
+    }
+    /*free temporary buffers*/
+    for(i=0; i<s->nbufs; i++){
+        TSP_free_mem(s->buf[i]);
+    }
 }
 
 #endif

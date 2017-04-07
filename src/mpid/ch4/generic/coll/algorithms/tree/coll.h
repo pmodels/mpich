@@ -82,17 +82,17 @@ static inline int COLL_bcast(void *buffer,
                              int root, COLL_comm_t * comm, int *errflag, int k)
 {
     int rc = 0;
-    coll_args_t coll_args = {.coll_type=BCAST, \
+    COLL_args_t coll_args = {.algo=COLL_NAME, .tsp=TRANSPORT_NAME, .nargs=5,\
             .args={.bcast={.buf=buffer,.count=count,.dt_id=datatype->id,.root=root,.comm_id=comm->id}}};
     
-    COLL_sched_t *s = get_sched(coll_args);
+    COLL_sched_t *s = get_sched((coll_args_t)coll_args);
     if(s==NULL){
         if(0) fprintf(stderr, "schedule does not exist\n");
         s = (COLL_sched_t*)MPL_malloc(sizeof(COLL_sched_t));
         int tag = (*comm->tree_comm.curTag)++;
         COLL_sched_init(s);
         rc = COLL_sched_bcast(buffer, count, datatype, root, tag, comm, k, s, 1);
-        add_sched(coll_args, (void*)s);
+        add_sched((coll_args_t)coll_args, (void*)s, COLL_sched_free);
     } else{
         COLL_sched_reset(s);
     }

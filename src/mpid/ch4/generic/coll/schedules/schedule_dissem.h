@@ -285,7 +285,7 @@ COLL_sched_allreduce_dissem(const void         *sendbuf,
     }
     int id[2]; id[0]=(rrid==-1)?dtcopy_id:rrid;
     if(inLower) {
-        void *tmpbuf = TSP_allocate_mem(extent*count);
+        void *tmpbuf = TSP_allocate_buffer(extent*count,&s->tsp_sched);
         for(i=0; i<dissemPhases; i++) {
             int shift      = (1<<i);
             int to         = (comm->rank+shift)%dissemRanks;
@@ -303,8 +303,6 @@ COLL_sched_allreduce_dissem(const void         *sendbuf,
                             &op->tsp_op,from,tag,&comm->tsp_comm,
                             TSP_FLAG_REDUCE_L,&s->tsp_sched,1, &dtcopy_id);
         }
-        /***FREE tmpbuf***/
-        TSP_free_mem_nb(tmpbuf,&s->tsp_sched,1,id);
     }
 
     if(notPow2 && inLower) {

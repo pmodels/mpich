@@ -326,7 +326,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 #endif
-
+    
+#ifdef MPIDI_BUILD_CH4_COLL
+    delete_sched_table();
+#endif
     int i;
     int max_n_avts;
     max_n_avts = MPIDIU_get_max_n_avts();
