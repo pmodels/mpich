@@ -11,7 +11,7 @@
 #ifndef MPICH_TRANSPORT_TYPES_H_INCLUDED
 #define MPICH_TRANSPORT_TYPES_H_INCLUDED
 
-#include "../../src/tsp_namespace_pre.h"
+#include "../../src/tsp_namespace_def.h"
 
 #undef MAX_EDGES
 #define MAX_EDGES 64
