@@ -56,7 +56,7 @@ COLL_brucks_pup(bool pack, void *rbuf, void *pupbuf, COLL_dt_t* rtype, int count
 }
 
 static inline int
-COLL_sched_alltoall(const void *sendbuf, int sendcount, COLL_dt_t *sendtype,
+COLL_sched_alltoall_brucks(const void *sendbuf, int sendcount, COLL_dt_t *sendtype,
                     void *recvbuf, int recvcount, COLL_dt_t *recvtype,
                     COLL_comm_t *comm, int tag, COLL_sched_t *s)
 {
