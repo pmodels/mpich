@@ -3,6 +3,6 @@
 #define COLL_NAME_LC treebasic
 #include "../../src/coll_namespace_def.h"
 #include "./types.h"
-#include "../../schedules/tree_util.h"
+#include "../common/tree_util.h"
 #include "../../src/coll_namespace_undef.h"
 #undef COLL_MAX_TREE_BREADTH
