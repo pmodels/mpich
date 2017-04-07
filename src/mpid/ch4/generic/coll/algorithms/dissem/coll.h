@@ -120,7 +120,7 @@ static inline int COLL_alltoall(const void  *sendbuf,
 
     COLL_sched_init(&s);
 
-    rc = COLL_sched_alltoall(sendbuf,sendcount,sendtype,recvbuf,recvcount,recvtype,comm,tag,&s);
+    rc = COLL_sched_alltoall_brucks(sendbuf,sendcount,sendtype,recvbuf,recvcount,recvtype,comm,tag,&s);
 
     TSP_fence(&s.tsp_sched);
     TSP_sched_commit(&s.tsp_sched);

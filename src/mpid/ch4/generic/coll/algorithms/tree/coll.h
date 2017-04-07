@@ -70,7 +70,7 @@ static inline int COLL_allreduce(const void *sendbuf,
     int tag = (*comm->tree_comm.curTag)++;
 
     COLL_sched_init(&s);
-    rc = COLL_sched_allreduce(sendbuf, recvbuf, count, datatype, op, tag, comm, k, &s, 1);
+    rc = COLL_sched_allreduce_tree(sendbuf, recvbuf, count, datatype, op, tag, comm, k, &s, 1);
     COLL_sched_kick(&s);
     return rc;
 }
@@ -91,7 +91,7 @@ static inline int COLL_bcast(void *buffer,
         s = (COLL_sched_t*)MPL_malloc(sizeof(COLL_sched_t));
         int tag = (*comm->tree_comm.curTag)++;
         COLL_sched_init(s);
-        rc = COLL_sched_bcast(buffer, count, datatype, root, tag, comm, k, s, 1);
+        rc = COLL_sched_bcast_tree(buffer, count, datatype, root, tag, comm, k, s, 1);
         add_sched((coll_args_t)coll_args, (void*)s, COLL_sched_free);
     } else{
         COLL_sched_reset(s);
@@ -111,7 +111,7 @@ static inline int COLL_reduce(const void *sendbuf,
     COLL_sched_t s;
     int tag = (*comm->tree_comm.curTag)++;
     COLL_sched_init(&s);
-    rc = COLL_sched_reduce_full(sendbuf, recvbuf, count, datatype, op, root, tag, comm, k, &s, 1);
+    rc = COLL_sched_reduce_tree_full(sendbuf, recvbuf, count, datatype, op, root, tag, comm, k, &s, 1);
     COLL_sched_kick(&s);
     return rc;
 }
@@ -124,7 +124,7 @@ static inline int COLL_barrier(COLL_comm_t *comm,
     COLL_sched_t s;
     int                tag = (*comm->tree_comm.curTag)++;
     COLL_sched_init(&s);
-    rc = COLL_sched_barrier(tag, comm, k, &s);
+    rc = COLL_sched_barrier_tree(tag, comm, k, &s);
     COLL_sched_kick(&s);
     return rc;
 }

@@ -57,7 +57,7 @@ static inline int COLL_tree_dump(int tree_size, int root, int k)
 
 
 static inline int
-COLL_sched_bcast(void *buffer,
+COLL_sched_bcast_tree(void *buffer,
                  int count,
                  COLL_dt_t * datatype,
                  int root, int tag, COLL_comm_t * comm, int k, COLL_sched_t * s, int finalize)
@@ -94,7 +94,7 @@ COLL_sched_bcast(void *buffer,
 }
 
 static inline int
-COLL_sched_reduce(const void *sendbuf,
+COLL_sched_reduce_tree(const void *sendbuf,
                   void *recvbuf,
                   int count,
                   COLL_dt_t * datatype,
@@ -182,7 +182,7 @@ COLL_sched_reduce(const void *sendbuf,
 }
 
 static inline int
-COLL_sched_reduce_full(const void *sendbuf,
+COLL_sched_reduce_tree_full(const void *sendbuf,
                        void *recvbuf,
                        int count,
                        COLL_dt_t * datatype,
@@ -193,7 +193,7 @@ COLL_sched_reduce_full(const void *sendbuf,
     TSP_opinfo(&op->tsp_op, &is_commutative);
 
     if (root == 0 || is_commutative) {
-        rc = COLL_sched_reduce(sendbuf, recvbuf, count, datatype,
+        rc = COLL_sched_reduce_tree(sendbuf, recvbuf, count, datatype,
                                op, root, tag, comm, k, is_commutative, s, finalize);
     }
     else {
@@ -214,7 +214,7 @@ COLL_sched_reduce_full(const void *sendbuf,
             sb = recvbuf;
         else
             sb = (void *) sendbuf;
-        rc = COLL_sched_reduce(sb, tmp_buf, count, datatype,
+        rc = COLL_sched_reduce_tree(sb, tmp_buf, count, datatype,
                                op, 0, tag, comm, k, is_commutative, s, 0);
         int fence_id = TSP_fence(&s->tsp_sched);
         int send_id;
@@ -237,7 +237,7 @@ COLL_sched_reduce_full(const void *sendbuf,
 }
 
 static inline int
-COLL_sched_allreduce(const void *sendbuf,
+COLL_sched_allreduce_tree(const void *sendbuf,
                      void *recvbuf,
                      int count,
                      COLL_dt_t * datatype,
@@ -260,9 +260,9 @@ COLL_sched_allreduce(const void *sendbuf,
         rbuf = tmp_buf;
     }
 
-    COLL_sched_reduce_full(sbuf, rbuf, count, datatype, op, 0, tag, comm, k, s, 0);
+    COLL_sched_reduce_tree_full(sbuf, rbuf, count, datatype, op, 0, tag, comm, k, s, 0);
     TSP_wait(&s->tsp_sched);
-    COLL_sched_bcast(rbuf, count, datatype, 0, tag, comm, k, s, 0);
+    COLL_sched_bcast_tree(rbuf, count, datatype, 0, tag, comm, k, s, 0);
 
     if (is_inplace) {
         int fence_id = TSP_fence(&s->tsp_sched);
@@ -280,7 +280,7 @@ COLL_sched_allreduce(const void *sendbuf,
 
 
 static inline int
-COLL_sched_barrier(int                 tag,
+COLL_sched_barrier_tree(int                 tag,
                    COLL_comm_t        *comm,
                    int                 k,
                    COLL_sched_t *s)
@@ -320,4 +320,3 @@ COLL_sched_barrier(int                 tag,
     }
     return 0;
 }
-
