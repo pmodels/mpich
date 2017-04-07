@@ -11,6 +11,7 @@
 #undef COLL_sched_t
 #undef COLL_aint_t
 #undef COLL_global_t
+#undef COLL_args_t
 #undef COLL_global
 
 /* Tree collective types */
@@ -46,6 +47,7 @@
 #undef COLL_sched_execute
 #undef COLL_sched_init
 #undef COLL_sched_reset
+#undef COLL_sched_free
 #undef COLL_sched_init_nb
 #undef COLL_sched_kick
 #undef COLL_sched_kick_nb

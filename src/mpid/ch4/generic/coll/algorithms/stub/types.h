@@ -35,3 +35,6 @@ typedef long int  COLL_aint_t;
 
 typedef struct COLL_global_t {
 } COLL_global_t;
+
+typedef struct {
+}COLL_args_t;

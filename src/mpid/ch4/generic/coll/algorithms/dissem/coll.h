@@ -66,7 +66,7 @@ static inline int COLL_kick(COLL_queue_elem_t *elem)
     if(done) {
         TAILQ_REMOVE(&COLL_progress_global.head, elem, list_data);
         TSP_sched_finalize(&s->tsp_sched);
-        TSP_free_mem(s);
+        COLL_sched_free(s);
     }
 
     return done;
@@ -168,7 +168,8 @@ static inline int COLL_allreduce(const void  *sendbuf,
 {
     int                 rc, is_inplace, is_commutative, is_contig;
     size_t              type_size,extent,lb;
-    COLL_sched_t        s;
+    COLL_sched_t       *s = TSP_allocate_mem(sizeof(COLL_sched_t));
+    TSP_sched_t        *tsp_sched = &s->tsp_sched;
     void               *tmp_buf;
     void               *sbuf    = (void *)sendbuf;
     void               *rbuf    = recvbuf;
@@ -180,29 +181,27 @@ static inline int COLL_allreduce(const void  *sendbuf,
 
     if(!is_commutative) return -1; /*this implementatation currently does not handle non-commutative operations*/
 
-    COLL_sched_init(&s);
+    COLL_sched_init(s);
 
     if(is_inplace) {/*allocate temporary buffer for receiving data*/
-        tmp_buf = TSP_allocate_mem(extent*count);
+        tmp_buf = TSP_allocate_buffer(extent*count, tsp_sched);
         sbuf    = recvbuf;
         rbuf    = tmp_buf;
     }
 
     rc = COLL_sched_allreduce_dissem(sbuf,rbuf,count,
-                                     datatype,op,tag,comm,&s);
+                                     datatype,op,tag,comm,s);
 
-    int fenceid = TSP_fence(&s.tsp_sched);
+    int fenceid = TSP_fence(tsp_sched);
     if(is_inplace) {/*copy the data back to receive buffer*/
         int dtcopy_id = TSP_dtcopy_nb(recvbuf,count,&datatype->tsp_dt,
-                      tmp_buf,count,&datatype->tsp_dt,
-                      &s.tsp_sched, 1, &fenceid);
-        /*once data copy is complete, free tmp_buf*/
-        TSP_free_mem_nb(tmp_buf,&s.tsp_sched,1,&dtcopy_id);
+                                      tmp_buf,count,&datatype->tsp_dt,
+                                      tsp_sched, 1, &fenceid);
     }
 
-    TSP_sched_commit(&s.tsp_sched);
-    COLL_sched_kick(&s);
-
+    TSP_sched_commit(tsp_sched);
+    COLL_sched_kick(s);
+    COLL_sched_free(s);
     return rc;
 }
 
@@ -216,7 +215,7 @@ static inline int COLL_iallreduce(const void  *sendbuf,
 {
     /*This is same as COLL_allreduce above, except that it initializes 
     * a non-blocking schedule and calls non-blocking kick function*/
-    COLL_sched_t *s;
+    COLL_sched_t        *s;
     int                 is_inplace,is_commutative,is_contig,rc,done = 0;
     size_t              type_size,extent,lb;
     int                 tag     = (*comm->curTag)++;
@@ -231,9 +230,10 @@ static inline int COLL_iallreduce(const void  *sendbuf,
     if(!is_commutative) return -1;
 
     COLL_sched_init_nb(&s,request);
+    TSP_sched_t *tsp_sched = &s->tsp_sched;
 
     if(is_inplace) {
-        tmp_buf = TSP_allocate_mem(extent*count);
+        tmp_buf = TSP_allocate_buffer(extent*count, tsp_sched);
         sbuf    = recvbuf;
         rbuf    = tmp_buf;
     }
@@ -242,24 +242,22 @@ static inline int COLL_iallreduce(const void  *sendbuf,
                                      datatype,op,tag,comm,
                                      s);
 
-    int fenceid = TSP_fence(&s->tsp_sched);
+    int fenceid = TSP_fence(tsp_sched);
     if(is_inplace) {/*copy the data back to receive buffer*/
         int dtcopy_id = TSP_dtcopy_nb(recvbuf,count,&datatype->tsp_dt,
-                      tmp_buf,count,&datatype->tsp_dt,
-                      &s->tsp_sched, 1, &fenceid);
-        /*once data copy is complete, free tmp_buf*/
-        TSP_free_mem_nb(tmp_buf,&s->tsp_sched,1,&dtcopy_id);
+                                      tmp_buf,count,&datatype->tsp_dt,
+                                      tsp_sched, 1, &fenceid);
     }
 
-    TSP_fence(&s->tsp_sched);
-    TSP_sched_commit(&s->tsp_sched);
+    TSP_fence(tsp_sched);
+    TSP_sched_commit(tsp_sched);
 
     done = COLL_sched_kick_nb(s);
 
     if(1 || !done) { /* always enqueue until we can fix the request interface */
         TAILQ_INSERT_TAIL(&COLL_progress_global.head,&request->elem,list_data);
     } else
-        TSP_free_mem(s);
+        COLL_sched_free(s);
 
     return rc;
 }

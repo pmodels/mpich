@@ -70,19 +70,19 @@ static inline int COLL_allreduce(const void  *sendbuf,
     int rc=0;
     /*Check if schedule already exists*/
     /*generate the key to search this schedule*/
-    coll_args_t coll_args = {.coll_type=ALLREDUCE, \
+    COLL_args_t coll_args = {.algo=COLL_NAME, .tsp=TRANSPORT_NAME, .nargs=6,\
             .args={.allreduce={.sbuf=sendbuf,.rbuf=recvbuf,.count=count,.dt_id=datatype->id,.op_id=op->id,.comm_id=comm->id}}};
     /*search for schedule*/
-    COLL_sched_t *s = get_sched(coll_args);
+    COLL_sched_t *s = get_sched((coll_args_t)coll_args);
     if(s==NULL){/*sched does not exist*/
         if(0) fprintf(stderr, "schedule does not exist\n");
-        s = (COLL_sched_t*)MPL_malloc(sizeof(COLL_sched_t));
+        s = (COLL_sched_t*)TSP_allocate_mem(sizeof(COLL_sched_t));
         int                tag = (*comm->curTag)++;
 
         COLL_sched_init(s);
         rc = COLL_sched_allreduce_recexch(sendbuf,recvbuf,count,
                                           datatype,op,tag,comm,s,1);
-        add_sched(coll_args, (void*)s);
+        add_sched((coll_args_t)coll_args, (void*)s, COLL_sched_free);
     }else{
         COLL_sched_reset(s);
         if(0) fprintf(stderr, "schedule already exists\n");

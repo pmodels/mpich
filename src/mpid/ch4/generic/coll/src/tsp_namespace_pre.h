@@ -71,7 +71,9 @@
 #define TSP_dtcopy           TSP_NAMESPACE(dtcopy)
 #define TSP_dtcopy_nb        TSP_NAMESPACE(dtcopy_nb)
 #define TSP_allocate_mem     TSP_NAMESPACE(allocate_mem)
+#define TSP_allocate_buffer  TSP_NAMESPACE(allocate_buffer)
 #define TSP_free_mem         TSP_NAMESPACE(free_mem)
+#define TSP_free_buffers     TSP_NAMESPACE(free_buffers)
 #define TSP_free_mem_nb      TSP_NAMESPACE(free_mem_nb)
 #define TSP_queryfcn         TSP_NAMESPACE(queryfcn)
 

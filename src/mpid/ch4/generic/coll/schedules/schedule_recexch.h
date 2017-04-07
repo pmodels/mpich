@@ -222,7 +222,7 @@ COLL_sched_allreduce_recexch(const void         *sendbuf,
     /*get the neighbors*/
     COLL_get_neighbors_recexch(rank, nranks, &k, &step1_sendto, &step1_recvfrom, &step1_nrecvs, &step2_nbrs, &step2_nphases,&p_of_k,&T);
 
-    void *tmp_buf = TSP_allocate_mem(count*extent);
+    void *tmp_buf = TSP_allocate_buffer(count*extent,&s->tsp_sched);
 
     int rrid=-1;
     if(!is_inplace && step1_sendto==-1){/*copy the data to recvbuf but only if you are a rank participating in Step 2*/

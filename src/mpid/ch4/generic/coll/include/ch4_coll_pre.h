@@ -29,7 +29,6 @@ struct MPIR_Op;
 #define MPIDI_COLL_OP(op) (&((op)->dev.ch4_coll))
 #define MPIDI_COLL_REQ(req) (&((req)->dev.ch4_coll))
 
-#include "../src/coll_sched_db.h"
 
 #include "../src/coll_progress_impl.h"
 
@@ -38,5 +37,7 @@ struct MPIR_Op;
 
 /* Generic datatypes (generated file) */
 #include "./coll_types.h"
+
+#include "../src/coll_sched_db.h"
 
 #endif /* MPIDI_CH4_PRE_H_INCLUDED */
