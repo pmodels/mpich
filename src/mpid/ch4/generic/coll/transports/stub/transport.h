@@ -10,7 +10,7 @@
 #ifndef STUBTRANSPORT_H_INCLUDED
 #define STUBTRANSPORT_H_INCLUDED
 
-#include "../../src/tsp_namespace_pre.h"
+#include "../../src/tsp_namespace_def.h"
 
 #ifndef TSP_NAMESPACE
 #error "TSP_NAMESPACE must be defined before including a collective transport"

@@ -22,7 +22,7 @@
 #include "../algorithms/tree/knomial_post.h"
 #include "../algorithms/recexch/post.h"
 #include "../algorithms/dissem/post.h"
-#include "../src/tsp_namespace_post.h"
+#include "../src/tsp_namespace_undef.h"
 #undef TRANSPORT_NAME
 #undef TRANSPORT_NAME_LC
 
@@ -34,7 +34,7 @@
 #include "../algorithms/tree/knomial_post.h"
 #include "../algorithms/recexch/post.h"
 #include "../algorithms/dissem/post.h"
-#include "../src/tsp_namespace_post.h"
+#include "../src/tsp_namespace_undef.h"
 
 #undef TRANSPORT_NAME
 #undef TRANSPORT_NAME_LC

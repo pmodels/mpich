@@ -9,7 +9,7 @@
  */
 
 
-#include "../../src/tsp_namespace_pre.h"
+#include "../../src/tsp_namespace_def.h"
 
 typedef struct TSP_dt_t {
 } TSP_dt_t;
