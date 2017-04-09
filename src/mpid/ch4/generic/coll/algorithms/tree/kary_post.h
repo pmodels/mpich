@@ -4,7 +4,7 @@
 #define COLL_NAME KARY_
 #define COLL_NAME_LC kary
 #include "../../src/coll_namespace_def.h"
-#include "../../src/coll_common_impl.h"
+#include "../common/common_fns.h"
 #include "../common/schedule_tree.h"
 #include "./coll.h"
 #include "../../src/coll_namespace_undef.h"
