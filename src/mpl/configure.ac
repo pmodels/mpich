@@ -837,12 +837,6 @@ if test "$ac_cv_func_strncmp" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <string.h>],strncmp)
 fi
 
-# Check for putenv
-AC_CHECK_FUNCS(putenv)
-if test "$ac_cv_func_putenv" = "yes" ; then
-    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
-fi
-
 # Check for strerror
 AC_CHECK_FUNCS(strerror)
 if test "$ac_cv_func_strerror" = "yes" ; then

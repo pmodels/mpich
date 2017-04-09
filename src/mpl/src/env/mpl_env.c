@@ -126,11 +126,6 @@ int MPL_env2str(const char *envName, const char **val)
     return 0;
 }
 
-int MPL_putenv(char *name_val)
-{
-    return putenv(name_val);
-}
-
 /*
  * Returns the value for a given envName in val if present, returns -1 if
  * there is an error, 0 for no value, and 1 for value found (note that this

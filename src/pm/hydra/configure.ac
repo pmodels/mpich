@@ -214,6 +214,12 @@ if test "$ac_cv_func_killpg" = "yes" ; then
    PAC_FUNC_NEEDS_DECL([#include <signal.h>],killpg)
 fi
 
+# Check for putenv
+AC_CHECK_FUNCS(putenv)
+if test "$ac_cv_func_putenv" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
+fi
+
 AC_TRY_LINK([
 	#include <stdio.h>
 	#include <sys/types.h>

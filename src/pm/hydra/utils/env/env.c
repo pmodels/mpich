@@ -284,7 +284,7 @@ HYD_status HYDU_putenv(struct HYD_env *env, HYD_env_overwrite_t overwrite)
     status = HYDU_str_alloc_and_join(tmp, &str);
     HYDU_ERR_POP(status, "unable to join strings\n");
 
-    MPL_putenv(str);
+    putenv(str);
 
     for (i = 0; tmp[i]; i++)
         MPL_free(tmp[i]);

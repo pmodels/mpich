@@ -97,6 +97,10 @@ int usleep(useconds_t usec);
 int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 # endif
 
+#if defined(MPL_HAVE_PUTENV) && defined(MPL_NEEDS_PUTENV_DECL)
+extern int putenv(char *string);
+#endif
+
 
 /*****************************************************************************
  * We use the following ordering of information in this file:
