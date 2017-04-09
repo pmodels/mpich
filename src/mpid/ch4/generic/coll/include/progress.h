@@ -8,10 +8,25 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef MPIDI_CH4_COLL_PROGRESS_H_INCLUDED
-#define MPIDI_CH4_COLL_PROGRESS_H_INCLUDED
+#ifndef MPIDI_COLL_PROGRESS_IMPL_H_INCLUDED
+#define MPIDI_COLL_PROGRESS_IMPL_H_INCLUDED
 #define MPIDI_COLL_NUM_ENTRIES (8)
 MPIDI_COLL_progress_global_t MPIDI_COLL_progress_global;
+struct MPIR_Request;
+
+#include <sys/queue.h>
+
+static inline int MPIDI_COLL_Progress(int n, void *cq[])
+{
+    int i = 0;
+    COLL_queue_elem_t *s = MPIDI_COLL_progress_global.head.tqh_first;
+    for ( ; ((s != NULL) && (i < n)); s = s->list_data.tqe_next) {
+        if(s->kick_fn(s))
+            cq[i++] = (void *) s;
+    }
+    return i;
+}
+
 static inline int MPIDI_COLL_progress_hook()
 {
     void *coll_entries[MPIDI_COLL_NUM_ENTRIES];
@@ -25,5 +40,4 @@ static inline int MPIDI_COLL_progress_hook()
     }
     return mpi_errno;
 }
-
-#endif
+#endif /* MPIDI_COLL_PROGRESS_IMPL_H_INCLUDED */

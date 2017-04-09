@@ -31,6 +31,7 @@
     })
 
 #endif /* COLL_MACROS */
+extern MPIDI_COLL_progress_global_t MPIDI_COLL_progress_global;
 
 static inline void COLL_sched_init(COLL_sched_t * s)
 {

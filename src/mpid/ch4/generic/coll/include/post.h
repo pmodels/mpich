@@ -11,7 +11,8 @@
 
 #if !defined(CH4_COLL_POST_H_INCLUDED)
 #define  CH4_COLL_POST_H_INCLUDED
-#include "./coll_post.h"
+#include "./coll_def.h"
+#include "./progress.h"
 
 extern int comm_counter, op_counter, dt_counter;
 extern sched_entry_t *sched_table;

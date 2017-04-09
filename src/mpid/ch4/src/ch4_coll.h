@@ -15,8 +15,8 @@
 #include "ch4r_proc.h"
 
 #ifdef MPIDI_BUILD_CH4_COLL
-#include "../generic/coll/include/ch4_coll_pre.h"
-#include "../generic/coll/include/ch4_coll_post.h"
+#include "../generic/coll/include/pre.h"
+#include "../generic/coll/include/post.h"
 #endif
 
 /*

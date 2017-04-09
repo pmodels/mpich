@@ -24,7 +24,7 @@
 #include "mpl_uthash.h"
 
 #ifdef MPIDI_BUILD_CH4_COLL
-#include "../generic/coll/include/ch4_coll_pre.h"
+#include "../generic/coll/include/pre.h"
 #endif
 
 typedef struct {
