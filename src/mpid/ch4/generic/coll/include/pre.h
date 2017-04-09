@@ -10,6 +10,7 @@
  */
 #ifndef MPIDI_CH4_COLL_PRE_H_INCLUDED
 #define MPIDI_CH4_COLL_PRE_H_INCLUDED
+#include "sys/queue.h"
 
 struct MPIR_Comm;
 struct MPIR_Op;
@@ -29,14 +30,23 @@ struct MPIR_Op;
 #define MPIDI_COLL_OP(op) (&((op)->dev.ch4_coll))
 #define MPIDI_COLL_REQ(req) (&((req)->dev.ch4_coll))
 
+typedef struct COLL_queue_elem_t {
+    TAILQ_ENTRY(COLL_queue_elem_t) list_data;
+    int (*kick_fn) (struct COLL_queue_elem_t *);
+} COLL_queue_elem_t;
 
-#include "../src/coll_progress_impl.h"
+typedef struct MPIDI_COLL_progress_global_t {
+    TAILQ_HEAD(COLL_queue_t, COLL_queue_elem_t) head;
+    int (*progress_fn) (void);
+    int do_progress;
+} MPIDI_COLL_progress_global_t;
+
 
 /* Coll 'pre'-definitions */
-#include "./coll_pre.h"
+#include "./types_decl.h"
 
 /* Generic datatypes (generated file) */
-#include "./coll_types.h"
+#include "./types.h"
 
 #include "../src/coll_sched_db.h"
 

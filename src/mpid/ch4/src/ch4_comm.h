@@ -16,8 +16,8 @@
 #include "ch4i_comm.h"
 
 #ifdef MPIDI_BUILD_CH4_COLL
-#include "../generic/coll/include/ch4_coll_pre.h"
-#include "../generic/coll/include/ch4_coll_post.h"
+#include "../generic/coll/include/pre.h"
+#include "../generic/coll/include/post.h"
 #endif
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm * comm)
 {

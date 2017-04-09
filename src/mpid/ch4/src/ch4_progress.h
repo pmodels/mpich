@@ -14,8 +14,8 @@
 #include "ch4_impl.h"
 
 #ifdef MPIDI_BUILD_CH4_COLL
-#include "../generic/coll/include/ch4_coll_pre.h"
-#include "../generic/coll/include/ch4_coll_progress.h"
+#include "../generic/coll/include/pre.h"
+#include "../generic/coll/include/progress.h"
 #endif
 
 #undef FUNCNAME
