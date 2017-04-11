@@ -120,11 +120,7 @@ static HYD_status get_params(int argc, char **argv)
         }
     }
 
-  fn_exit:
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static HYD_status get_bstrap_params(void)
@@ -497,8 +493,6 @@ static int parse_mapping(char *map_str, mapping_type_t * type, map_block_t ** ma
     *nblocks = num_blocks;
   fn_exit:
     return status;
-  fn_fail:
-    goto fn_exit;
 }
 
 static int populate_ids_from_mapping(char *mapping, int sz, int *out_nodemap)
