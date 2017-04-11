@@ -18,5 +18,5 @@ mpiexec_hydra_SOURCES = \
 	mpiexec/mpiexec_utils.c
 
 mpiexec_hydra_LDFLAGS = $(external_ldflags) -L$(top_builddir)
-mpiexec_hydra_LDADD = -lhydra $(external_libs)
-mpiexec_hydra_DEPENDENCIES = libhydra.la @mpl_lib@
+mpiexec_hydra_LDADD = -lmpx -lhydra $(external_libs)
+mpiexec_hydra_DEPENDENCIES = libmpx.la libhydra.la @mpl_lib@

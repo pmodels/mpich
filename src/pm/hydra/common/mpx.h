@@ -75,4 +75,10 @@ struct MPX_cmd {
     } u;
 };
 
+HYD_status MPX_bcast(struct MPX_cmd cmd, int upstream_fd, struct HYD_int_hash *downstream_fd_hash,
+                     void *buf);
+HYD_status MPX_primary_env_bcast(struct MPX_cmd cmd, int upstream_fd,
+                                 struct HYD_int_hash *downstream_fd_hash, int envcount,
+                                 char **env);
+
 #endif /* MPX_H_INCLUDED */
