@@ -356,8 +356,8 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
     MPL_env2int("PMI_SUBVERSION", &pmi_subversion);
 
     if (sz == 1) {
-        out_nodemap[0] = ++g_max_node_id;
-        *out_sz = g_max_node_id;
+        out_nodemap[0] = 0;
+        *out_sz = 1;
         goto fn_exit;
     }
 
