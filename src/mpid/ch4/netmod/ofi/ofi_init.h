@@ -669,6 +669,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         mapped_table = (fi_addr_t *) av_attr.map_addr;
         for (i = 0; i < size; i++) {
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+            if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+            }
         }
         mapped_table = NULL;
     }
@@ -796,6 +799,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
         for (i = 0; i < size; i++) {
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+            if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+            }
         }
         MPL_free(mapped_table);
 
@@ -1123,6 +1129,9 @@ static inline int MPIDI_OFI_upids_to_lupids_general(int size,
                                             (fi_addr_t *) &
                                             MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
                                             NULL), avmap);
+                if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+                    MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).ep_idx = 0;
+                }
             }
             /* highest bit is marked as 1 to indicate this is a new process */
             (*remote_lupids)[i] = MPIDIU_LUPID_CREATE(avtid, i);
