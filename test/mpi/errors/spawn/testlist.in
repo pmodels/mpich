@@ -1,7 +1,7 @@
 badport 2
 @namepub_tests@unpub 1
 @namepub_tests@lookup_name 1
-connect_timeout_no_accept 2 env=MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT=20
-connect_timeout_mismatch 2 env=MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT=20
-connect_timeout_no_accept 5 env=MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT=20
-connect_timeout_mismatch 5 env=MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT=20
+connect_timeout_no_accept 2 env=MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT=20 env=MPIR_CVAR_CH4_COMM_CONNECT_TIMEOUT=20
+connect_timeout_mismatch 2 env=MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT=20 env=MPIR_CVAR_CH4_COMM_CONNECT_TIMEOUT=20
+connect_timeout_no_accept 5 env=MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT=20 env=MPIR_CVAR_CH4_COMM_CONNECT_TIMEOUT=20
+connect_timeout_mismatch 5 env=MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT=20 env=MPIR_CVAR_CH4_COMM_CONNECT_TIMEOUT=20
