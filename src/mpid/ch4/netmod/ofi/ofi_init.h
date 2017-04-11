@@ -781,6 +781,13 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         mapped_table = (fi_addr_t *) av_attr.map_addr;
         for (i = 0; i < size; i++) {
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+#else
+#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+#endif
+#endif
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                             (MPL_DBG_FDEST, " grank mapped to: rank=%d, av=%p, dest=%lu",
                              i, (void*)&MPIDIU_get_av(0, i), mapped_table[i]));
@@ -912,6 +919,13 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
         for (i = 0; i < size; i++) {
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+#else
+#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+#endif
+#endif
         }
         MPL_free(mapped_table);
 
@@ -1240,6 +1254,13 @@ static inline int MPIDI_NM_upids_to_lupids(int size,
                                         (fi_addr_t *) &
                                         MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
                                         NULL), avmap);
+#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).ep_idx = 0;
+#else
+#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
+            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).ep_idx = 0;
+#endif
+#endif
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP,VERBOSE,
                             (MPL_DBG_FDEST, "\tupids to lupids avtid %d lpid %d mapped to %lu",
                              avtid, i, MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest));
