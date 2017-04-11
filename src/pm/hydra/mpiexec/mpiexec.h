@@ -92,10 +92,10 @@ struct mpiexec_pg {
 
     int num_downstream;
     struct {
-        int *fd_stdin;
-        int *fd_stdout;
-        int *fd_stderr;
-        int *fd_control;
+        int fd_stdin;
+        struct HYD_int_hash *fd_stdout_hash;
+        struct HYD_int_hash *fd_stderr_hash;
+        struct HYD_int_hash *fd_control_hash;
         int *proxy_id;
         int *pid;
 

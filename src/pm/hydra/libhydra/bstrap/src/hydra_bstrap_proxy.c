@@ -12,6 +12,7 @@
 #include "hydra_str.h"
 #include "hydra_mem.h"
 #include "hydra_node.h"
+#include "hydra_hash.h"
 
 static const char *upstream_host = NULL;
 static int upstream_port = -1;
@@ -27,10 +28,13 @@ static int subtree_size = -1;
 static int tree_width = -1;
 static char **proxy_args = NULL;
 static int num_downstream_proxies = 0;
-static int *downstream_stdin = NULL;
+static int downstream_stdin = -1;
 static int *downstream_stdout = NULL;
+static struct HYD_int_hash *downstream_stdout_hash = NULL;
 static int *downstream_stderr = NULL;
+static struct HYD_int_hash *downstream_stderr_hash = NULL;
 static int *downstream_control = NULL;
+static struct HYD_int_hash *downstream_control_hash = NULL;
 static int *downstream_proxy_id = NULL;
 static int *downstream_pid = NULL;
 static int debug = 0;
@@ -212,13 +216,37 @@ static HYD_status upstream_cb(int fd, HYD_dmx_event_t events, void *userp)
 
         /* launch the remaining bstrap proxies in this subtree */
         if (subtree_size > 1) {
+            struct HYD_int_hash *hash, *thash;
+
             status =
                 HYD_bstrap_setup(base_path, launcher, launcher_exec, subtree_size - 1,
                                  node_list + 1, proxy_id, port_range, proxy_args, pgid,
-                                 &num_downstream_proxies, &downstream_stdin, &downstream_stdout,
-                                 &downstream_stderr, &downstream_control, &downstream_proxy_id,
-                                 &downstream_pid, debug, tree_width);
+                                 &num_downstream_proxies, &downstream_stdin,
+                                 &downstream_stdout_hash, &downstream_stderr_hash,
+                                 &downstream_control_hash, &downstream_proxy_id, &downstream_pid,
+                                 debug, tree_width);
             HYD_ERR_POP(status, "error setting up the bstrap proxies\n");
+
+            HYD_MALLOC(downstream_control, int *, num_downstream_proxies * sizeof(int), status);
+            MPL_HASH_ITER(hh, downstream_control_hash, hash, thash) {
+                downstream_control[hash->val] = hash->key;
+                MPL_HASH_DEL(downstream_control_hash, hash);
+                MPL_free(hash);
+            }
+
+            HYD_MALLOC(downstream_stdout, int *, num_downstream_proxies * sizeof(int), status);
+            MPL_HASH_ITER(hh, downstream_stdout_hash, hash, thash) {
+                downstream_stdout[hash->val] = hash->key;
+                MPL_HASH_DEL(downstream_stdout_hash, hash);
+                MPL_free(hash);
+            }
+
+            HYD_MALLOC(downstream_stderr, int *, num_downstream_proxies * sizeof(int), status);
+            MPL_HASH_ITER(hh, downstream_stderr_hash, hash, thash) {
+                downstream_stderr[hash->val] = hash->key;
+                MPL_HASH_DEL(downstream_stderr_hash, hash);
+                MPL_free(hash);
+            }
 
             /* finalize the bstrap immediately since we will never
              * need to use it again */
@@ -254,8 +282,7 @@ static HYD_status upstream_cb(int fd, HYD_dmx_event_t events, void *userp)
                          downstream_control);
         HYD_ERR_POP(status, "unable to set environment\n");
 
-        status =
-            set_env_ints("HYDRA_BSTRAP_DOWNSTREAM_STDIN", num_downstream_proxies, downstream_stdin);
+        status = set_env_ints("HYDRA_BSTRAP_DOWNSTREAM_STDIN", 1, &downstream_stdin);
         HYD_ERR_POP(status, "unable to set environment\n");
 
         status =

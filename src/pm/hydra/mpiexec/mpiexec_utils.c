@@ -30,10 +30,9 @@ HYD_status mpiexec_alloc_pg(struct mpiexec_pg **pg, int pgid)
     tmp->exec_list = NULL;
 
     tmp->num_downstream = -1;
-    tmp->downstream.fd_stdin = NULL;
-    tmp->downstream.fd_stdout = NULL;
-    tmp->downstream.fd_stderr = NULL;
-    tmp->downstream.fd_control = NULL;
+    tmp->downstream.fd_stdout_hash = NULL;
+    tmp->downstream.fd_stderr_hash = NULL;
+    tmp->downstream.fd_control_hash = NULL;
     tmp->downstream.proxy_id = NULL;
     tmp->downstream.pid = NULL;
     tmp->downstream.kvcache = NULL;

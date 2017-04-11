@@ -13,6 +13,7 @@
 #include "hydra_tree.h"
 #include "hydra_err.h"
 #include "hydra_mem.h"
+#include "hydra_hash.h"
 #include "mpl_utlist.h"
 
 /* *INDENT-OFF* */
@@ -30,7 +31,7 @@ struct bstrap_control {
     int pgid;
     int my_proxy_id;
     int total_downstreams;
-    int *control_fds;
+    struct HYD_int_hash *fd_control_hash;
     int current_downstreams;
 };
 
@@ -45,23 +46,28 @@ int HYD_bstrap_query_avail(const char *bstrap)
     return 0;
 }
 
-static HYD_status enqueue_control_fd(int control_fd, struct bstrap_control *bstrap_control)
+static HYD_status enqueue_control_fd(int fd_control, struct bstrap_control *bstrap_control)
 {
     struct HYDI_bstrap_cmd cmd;
     int recvd, closed;
+    struct HYD_int_hash *hash;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();
 
     status =
-        HYD_sock_read(control_fd, &cmd, sizeof(cmd), &recvd, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
+        HYD_sock_read(fd_control, &cmd, sizeof(cmd), &recvd, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
     HYD_ERR_POP(status, "socket read error\n");
     HYD_ASSERT(!closed, status);
 
     /* the first command coming in should be the proxy ID */
     HYD_ASSERT(cmd.type == HYDI_BSTRAP_CMD__PROXY_ID, status);
 
-    bstrap_control->control_fds[cmd.u.proxy_id.id - bstrap_control->my_proxy_id - 1] = control_fd;
+    HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
+    hash->key = fd_control;
+    hash->val = cmd.u.proxy_id.id - bstrap_control->my_proxy_id - 1;
+    MPL_HASH_ADD_INT(bstrap_control->fd_control_hash, key, hash);
+
     bstrap_control->current_downstreams++;
 
   fn_exit:
@@ -99,16 +105,17 @@ static HYD_status listen_cb(int fd, HYD_dmx_event_t events, void *userp)
 HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *launcher_exec,
                             int num_nodes, struct HYD_node *node_list, int my_proxy_id,
                             const char *port_range, char *const *const pmi_args, int pgid,
-                            int *num_downstream, int **downstream_stdin, int **downstream_stdout,
-                            int **downstream_stderr, int **downstream_control,
-                            int **downstream_proxy_id, int **downstream_pid, int debug,
-                            int tree_width)
+                            int *num_downstream, int *downstream_stdin,
+                            struct HYD_int_hash **downstream_stdout_hash,
+                            struct HYD_int_hash **downstream_stderr_hash,
+                            struct HYD_int_hash **downstream_fd_hash, int **downstream_proxy_id,
+                            int **downstream_pid, int debug, int tree_width)
 {
     char *targs[HYD_NUM_TMP_STRINGS] = { NULL };
     char *tmp[HYD_NUM_TMP_STRINGS] = { NULL };
     char *bstrap_launcher;
     int i, j, k, m;
-    int *fd_stdin, *fd_stdout, *fd_stderr, *proxy_id, *pid;
+    int fd_stdin, fd_stdout, fd_stderr, *proxy_id, *pid;
     int listen_fd;
     uint16_t port;
     char *localhost;
@@ -117,6 +124,9 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
     int sent, closed;
     int total_core_count;
     struct bstrap_control *bstrap_control;
+    struct HYD_int_hash *hash, *thash;
+    struct HYD_int_hash *fd_stdout_hash = NULL;
+    struct HYD_int_hash *fd_stderr_hash = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();
@@ -146,23 +156,11 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
     bstrap_control->pgid = pgid;
     bstrap_control->my_proxy_id = my_proxy_id;
     bstrap_control->total_downstreams = (*num_downstream);
-    HYD_MALLOC(bstrap_control->control_fds, int *, bstrap_control->total_downstreams * sizeof(int),
-               status);
+    bstrap_control->fd_control_hash = NULL;
     bstrap_control->current_downstreams = 0;
 
-    HYD_MALLOC(fd_stdin, int *, (*num_downstream) * sizeof(int), status);
-    HYD_MALLOC(fd_stdout, int *, (*num_downstream) * sizeof(int), status);
-    HYD_MALLOC(fd_stderr, int *, (*num_downstream) * sizeof(int), status);
     HYD_MALLOC(proxy_id, int *, (*num_downstream) * sizeof(int), status);
     HYD_MALLOC(pid, int *, (*num_downstream) * sizeof(int), status);
-
-    *downstream_stdin = fd_stdin;
-    *downstream_stdout = fd_stdout;
-    *downstream_stderr = fd_stderr;
-    *downstream_proxy_id = proxy_id;
-    *downstream_pid = pid;
-
-    *downstream_control = bstrap_control->control_fds;
 
 
     /* setup a local listening socket for proxies to connect back to
@@ -256,8 +254,7 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
                     targs[i++] = MPL_strdup(pmi_args[j]);
             targs[i++] = NULL;
 
-            status =
-                HYD_spawn(targs, NULL, &fd_stdin[m], &fd_stdout[m], &fd_stderr[m], &pid[m], -1);
+            status = HYD_spawn(targs, NULL, &fd_stdin, &fd_stdout, &fd_stderr, &pid[m], -1);
             HYD_ERR_POP(status, "create process returned error\n");
 
             HYD_str_free_list(targs);
@@ -318,12 +315,25 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
             HYD_ASSERT(bstrap_names[i], status);
 
             status =
-                bstrap_launch_fns[i] (node_list[k].hostname, launcher_exec, targs, &fd_stdin[m],
-                                      &fd_stdout[m], &fd_stderr[m], &pid[m], debug);
+                bstrap_launch_fns[i] (node_list[k].hostname, launcher_exec, targs, &fd_stdin,
+                                      &fd_stdout, &fd_stderr, &pid[m], debug);
             HYD_ERR_POP(status, "error launching bstrap proxy\n");
 
             HYD_str_free_list(targs);
         }
+
+        HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
+        hash->key = fd_stdout;
+        hash->val = m;
+        MPL_HASH_ADD_INT(fd_stdout_hash, key, hash);
+
+        HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
+        hash->key = fd_stderr;
+        hash->val = m;
+        MPL_HASH_ADD_INT(fd_stderr_hash, key, hash);
+
+        if (m == 0)
+            *downstream_stdin = fd_stdin;
     }
 
     MPL_free(localhost);
@@ -346,26 +356,32 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
     total_core_count = 0;
     for (i = 0; i < num_nodes; i++)
         total_core_count += node_list[i].core_count;
-    for (m = 0; m < bstrap_control->total_downstreams; m++) {
-        k = HYD_tree_start(num_nodes, m, tree_width);
-        subtree_size = HYD_tree_size(num_nodes, m, tree_width);
+    MPL_HASH_ITER(hh, bstrap_control->fd_control_hash, hash, thash) {
+        k = HYD_tree_start(num_nodes, hash->val, tree_width);
+        subtree_size = HYD_tree_size(num_nodes, hash->val, tree_width);
 
         /* host list */
         MPL_VG_MEM_INIT(&cmd, sizeof(cmd));
         cmd.type = HYDI_BSTRAP_CMD__HOSTLIST;
         status =
-            HYD_sock_write(bstrap_control->control_fds[m], &cmd, sizeof(cmd), &sent, &closed,
+            HYD_sock_write(hash->key, &cmd, sizeof(cmd), &sent, &closed,
                            HYD_SOCK_COMM_TYPE__BLOCKING);
         HYD_ERR_POP(status, "error sending command to bstrap proxy\n");
         HYD_ASSERT(!closed, status);
 
         status =
-            HYD_sock_write(bstrap_control->control_fds[m], &node_list[k],
-                           subtree_size * sizeof(struct HYD_node), &sent, &closed,
-                           HYD_SOCK_COMM_TYPE__BLOCKING);
+            HYD_sock_write(hash->key, &node_list[k], subtree_size * sizeof(struct HYD_node), &sent,
+                           &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
         HYD_ERR_POP(status, "error sending command to bstrap proxy\n");
         HYD_ASSERT(!closed, status);
     }
+
+    *downstream_proxy_id = proxy_id;
+    *downstream_pid = pid;
+
+    *downstream_stdout_hash = fd_stdout_hash;
+    *downstream_stderr_hash = fd_stderr_hash;
+    *downstream_fd_hash = bstrap_control->fd_control_hash;
 
     MPL_free(bstrap_control);
 

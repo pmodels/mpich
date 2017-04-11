@@ -11,10 +11,11 @@
 
 HYD_status mpiexec_pmi_barrier(struct mpiexec_pg *pg)
 {
-    int i, j;
+    int i;
     struct MPX_cmd cmd;
     int sent, closed;
     int kvcache_num_blocks, kvcache_size;
+    struct HYD_int_hash *hash, *thash;
     HYD_status status = HYD_SUCCESS;
 
     pg->barrier_count++;
@@ -30,7 +31,7 @@ HYD_status mpiexec_pmi_barrier(struct mpiexec_pg *pg)
         }
 
         MPL_VG_MEM_INIT(&cmd, sizeof(cmd));
-        for (i = 0; i < pg->num_downstream; i++) {
+        MPL_HASH_ITER(hh, pg->downstream.fd_control_hash, hash, thash) {
             if (kvcache_num_blocks) {
                 cmd.type = MPX_CMD_TYPE__KVCACHE_OUT;
                 cmd.u.kvcache.pgid = pg->pgid;  /* FIXME: redundant */
@@ -38,30 +39,30 @@ HYD_status mpiexec_pmi_barrier(struct mpiexec_pg *pg)
                 cmd.data_len = kvcache_size;
 
                 status =
-                    HYD_sock_write(pg->downstream.fd_control[i], &cmd, sizeof(cmd), &sent, &closed,
+                    HYD_sock_write(hash->key, &cmd, sizeof(cmd), &sent, &closed,
                                    HYD_SOCK_COMM_TYPE__BLOCKING);
                 HYD_ERR_POP(status, "error sending kvcache cmd downstream\n");
 
                 /* send the lengths first */
-                for (j = 0; j < pg->num_downstream; j++) {
-                    if (pg->downstream.kvcache_num_blocks[j]) {
+                for (i = 0; i < pg->num_downstream; i++) {
+                    if (pg->downstream.kvcache_num_blocks[i]) {
                         status =
-                            HYD_sock_write(pg->downstream.fd_control[i], pg->downstream.kvcache[j],
-                                           2 * pg->downstream.kvcache_num_blocks[j] * sizeof(int),
+                            HYD_sock_write(hash->key, pg->downstream.kvcache[i],
+                                           2 * pg->downstream.kvcache_num_blocks[i] * sizeof(int),
                                            &sent, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
                         HYD_ERR_POP(status, "error sending kvcache cmd downstream\n");
                     }
                 }
 
                 /* now send the actual caches */
-                for (j = 0; j < pg->num_downstream; j++) {
-                    if (pg->downstream.kvcache_num_blocks[j]) {
+                for (i = 0; i < pg->num_downstream; i++) {
+                    if (pg->downstream.kvcache_num_blocks[i]) {
                         status =
-                            HYD_sock_write(pg->downstream.fd_control[i],
-                                           ((char *) pg->downstream.kvcache[j]) +
-                                           2 * pg->downstream.kvcache_num_blocks[j] * sizeof(int),
-                                           pg->downstream.kvcache_size[j] -
-                                           2 * pg->downstream.kvcache_num_blocks[j] * sizeof(int),
+                            HYD_sock_write(hash->key,
+                                           ((char *) pg->downstream.kvcache[i]) +
+                                           2 * pg->downstream.kvcache_num_blocks[i] * sizeof(int),
+                                           pg->downstream.kvcache_size[i] -
+                                           2 * pg->downstream.kvcache_num_blocks[i] * sizeof(int),
                                            &sent, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
                         HYD_ERR_POP(status, "error sending kvcache cmd downstream\n");
                     }
@@ -71,7 +72,7 @@ HYD_status mpiexec_pmi_barrier(struct mpiexec_pg *pg)
             /* send out the actual barrier_out */
             cmd.type = MPX_CMD_TYPE__PMI_BARRIER_OUT;
             status =
-                HYD_sock_write(pg->downstream.fd_control[i], &cmd, sizeof(cmd), &sent, &closed,
+                HYD_sock_write(hash->key, &cmd, sizeof(cmd), &sent, &closed,
                                HYD_SOCK_COMM_TYPE__BLOCKING);
             HYD_ERR_POP(status, "error sending barrier out downstream\n");
         }

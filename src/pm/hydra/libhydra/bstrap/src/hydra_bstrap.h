@@ -9,14 +9,17 @@
 
 #include "hydra_base.h"
 #include "hydra_node.h"
+#include "hydra_hash.h"
 
 int HYD_bstrap_query_avail(const char *bstrap);
 
 HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *launcher_exec,
                             int num_nodes, struct HYD_node *node_list, int my_proxy_id,
                             const char *port_range, char *const *const pmi_args, int pgid,
-                            int *num_downstream, int **downstream_stdin, int **downstream_stdout,
-                            int **downstream_stderr, int **downstream_control,
+                            int *num_downstream, int *downstream_stdin,
+                            struct HYD_int_hash **downstream_stdout_hash,
+                            struct HYD_int_hash **downstream_stderr_hash,
+                            struct HYD_int_hash **downstream_control_hash,
                             int **downstream_proxy_id, int **downstream_pid, int debug,
                             int tree_width);
 

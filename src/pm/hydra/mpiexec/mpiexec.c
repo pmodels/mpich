@@ -99,19 +99,20 @@ static void signal_cb(int signum)
 
 static HYD_status cmd_bcast_root(struct MPX_cmd cmd, struct mpiexec_pg *pg, void *buf)
 {
-    int i, sent, closed;
+    int sent, closed;
+    struct HYD_int_hash *hash, *thash;
     HYD_status status = HYD_SUCCESS;
 
-    for (i = 0; i < pg->num_downstream; i++) {
+    MPL_HASH_ITER(hh, pg->downstream.fd_control_hash, hash, thash) {
         status =
-            HYD_sock_write(pg->downstream.fd_control[i], &cmd, sizeof(cmd), &sent, &closed,
+            HYD_sock_write(hash->key, &cmd, sizeof(cmd), &sent, &closed,
                            HYD_SOCK_COMM_TYPE__BLOCKING);
         HYD_ERR_POP(status, "error sending cwd cmd to proxy\n");
         HYD_ASSERT(!closed, status);
 
         if (cmd.data_len) {
             status =
-                HYD_sock_write(pg->downstream.fd_control[i], buf, cmd.data_len, &sent, &closed,
+                HYD_sock_write(hash->key, buf, cmd.data_len, &sent, &closed,
                                HYD_SOCK_COMM_TYPE__BLOCKING);
             HYD_ERR_POP(status, "error sending cwd to proxy\n");
             HYD_ASSERT(!closed, status);
@@ -552,28 +553,27 @@ static HYD_status control_cb(int fd, HYD_dmx_event_t events, void *userp)
         HYD_ERR_POP(status, "error handling PMI barrier\n");
     }
     else if (cmd.type == MPX_CMD_TYPE__KVCACHE_IN) {
-        int i;
+        struct HYD_int_hash *hash;
 
         MPL_HASH_FIND_INT(mpiexec_pg_hash, &cmd.u.kvcache.pgid, pg);
 
-        /* FIXME: use a hash */
-        for (i = 0; i < pg->num_downstream; i++)
-            if (pg->downstream.fd_control[i] == fd)
-                break;
-        HYD_ASSERT(i < pg->num_downstream, status);
+        MPL_HASH_FIND_INT(pg->downstream.fd_control_hash, &fd, hash);
+        HYD_ASSERT(hash->val < pg->num_downstream, status);
 
-        HYD_ASSERT(pg->downstream.kvcache[i] == NULL, status);
-        HYD_ASSERT(pg->downstream.kvcache_size[i] == 0, status);
-        HYD_ASSERT(pg->downstream.kvcache_num_blocks[i] == 0, status);
+        HYD_ASSERT(pg->downstream.kvcache[hash->val] == NULL, status);
+        HYD_ASSERT(pg->downstream.kvcache_size[hash->val] == 0, status);
+        HYD_ASSERT(pg->downstream.kvcache_num_blocks[hash->val] == 0, status);
 
-        pg->downstream.kvcache_num_blocks[i] = cmd.u.kvcache.num_blocks;
-        pg->downstream.kvcache_size[i] = cmd.data_len;
+        pg->downstream.kvcache_num_blocks[hash->val] = cmd.u.kvcache.num_blocks;
+        pg->downstream.kvcache_size[hash->val] = cmd.data_len;
 
-        HYD_MALLOC(pg->downstream.kvcache[i], char *, pg->downstream.kvcache_size[i], status);
+        HYD_MALLOC(pg->downstream.kvcache[hash->val], char *,
+                   pg->downstream.kvcache_size[hash->val], status);
 
         status =
-            HYD_sock_read(fd, pg->downstream.kvcache[i], pg->downstream.kvcache_size[i], &recvd,
-                          &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
+            HYD_sock_read(fd, pg->downstream.kvcache[hash->val],
+                          pg->downstream.kvcache_size[hash->val], &recvd, &closed,
+                          HYD_SOCK_COMM_TYPE__BLOCKING);
         HYD_ERR_POP(status, "error reading PMI command\n");
     }
     else if (cmd.type == MPX_CMD_TYPE__STDOUT) {
@@ -717,6 +717,7 @@ int main(int argc, char **argv)
     struct mpiexec_pg *pg;
     char *args[MAX_CMD_ARGS];
     int pgid = 0, core_count;
+    struct HYD_int_hash *hash, *thash;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();
@@ -826,8 +827,8 @@ int main(int argc, char **argv)
         HYD_bstrap_setup(mpiexec_params.base_path, mpiexec_params.launcher,
                          mpiexec_params.launcher_exec, pg->node_count, pg->node_list, -1,
                          mpiexec_params.port_range, args, 0, &pg->num_downstream,
-                         &pg->downstream.fd_stdin, &pg->downstream.fd_stdout,
-                         &pg->downstream.fd_stderr, &pg->downstream.fd_control,
+                         &pg->downstream.fd_stdin, &pg->downstream.fd_stdout_hash,
+                         &pg->downstream.fd_stderr_hash, &pg->downstream.fd_control_hash,
                          &pg->downstream.proxy_id, &pg->downstream.pid, mpiexec_params.debug,
                          mpiexec_params.tree_width);
     HYD_ERR_POP(status, "error setting up the boostrap proxies\n");
@@ -858,34 +859,45 @@ int main(int argc, char **argv)
     status = initiate_process_launch(pg);
     HYD_ERR_POP(status, "error setting up the pmi_id propagation\n");
 
-    for (i = 0; i < pg->num_downstream; i++) {
-        status =
-            HYD_dmx_register_fd(pg->downstream.fd_control[i], HYD_DMX_POLLIN, NULL, control_cb);
+    MPL_HASH_ITER(hh, pg->downstream.fd_control_hash, hash, thash) {
+        status = HYD_dmx_register_fd(hash->key, HYD_DMX_POLLIN, NULL, control_cb);
         HYD_ERR_POP(status, "error registering control fd\n");
-
-        status = HYD_dmx_splice(pg->downstream.fd_stdout[i], STDOUT_FILENO);
-        HYD_ERR_POP(status, "error splicing stdout fd\n");
-
-        status = HYD_dmx_splice(pg->downstream.fd_stderr[i], STDERR_FILENO);
-        HYD_ERR_POP(status, "error splicing stderr fd\n");
-
-        if (i == 0) {
-            status = HYD_dmx_splice(STDIN_FILENO, pg->downstream.fd_stdin[i]);
-            HYD_ERR_POP(status, "error splicing stdin fd\n");
-        }
-        else {
-            close(pg->downstream.fd_stdin[i]);
-        }
     }
 
+    MPL_HASH_ITER(hh, pg->downstream.fd_stdout_hash, hash, thash) {
+        status = HYD_dmx_splice(hash->key, STDOUT_FILENO);
+        HYD_ERR_POP(status, "error splicing stdout fd\n");
+    }
+
+    MPL_HASH_ITER(hh, pg->downstream.fd_stderr_hash, hash, thash) {
+        status = HYD_dmx_splice(hash->key, STDERR_FILENO);
+        HYD_ERR_POP(status, "error splicing stderr fd\n");
+    }
+
+    status = HYD_dmx_splice(STDIN_FILENO, pg->downstream.fd_stdin);
+    HYD_ERR_POP(status, "error splicing stdin fd\n");
+
     /* wait for downstream processes to terminate */
-    for (i = 0; i < pg->num_downstream; i++)
-        while (HYD_dmx_query_fd_registration(pg->downstream.fd_stdout[i]) ||
-               HYD_dmx_query_fd_registration(pg->downstream.fd_stderr[i]) ||
-               HYD_dmx_query_fd_registration(pg->downstream.fd_control[i])) {
+    MPL_HASH_ITER(hh, pg->downstream.fd_control_hash, hash, thash) {
+        while (HYD_dmx_query_fd_registration(hash->key)) {
             status = HYD_dmx_wait_for_event(-1);
             HYD_ERR_POP(status, "error waiting for event\n");
         }
+    }
+
+    MPL_HASH_ITER(hh, pg->downstream.fd_stdout_hash, hash, thash) {
+        while (HYD_dmx_query_fd_registration(hash->key)) {
+            status = HYD_dmx_wait_for_event(-1);
+            HYD_ERR_POP(status, "error waiting for event\n");
+        }
+    }
+
+    MPL_HASH_ITER(hh, pg->downstream.fd_stderr_hash, hash, thash) {
+        while (HYD_dmx_query_fd_registration(hash->key)) {
+            status = HYD_dmx_wait_for_event(-1);
+            HYD_ERR_POP(status, "error waiting for event\n");
+        }
+    }
 
     for (i = 0; i < pg->num_downstream; i++) {
         int ret;
@@ -915,12 +927,20 @@ int main(int argc, char **argv)
     close(mpiexec_params.signal_pipe[0]);
     close(mpiexec_params.signal_pipe[1]);
 
-    for (i = 0; i < pg->num_downstream; i++) {
-        status = HYD_dmx_unsplice(pg->downstream.fd_stdout[i]);
+    MPL_HASH_ITER(hh, pg->downstream.fd_stdout_hash, hash, thash) {
+        status = HYD_dmx_unsplice(hash->key);
         HYD_ERR_POP(status, "error deregistering fd\n");
 
-        status = HYD_dmx_unsplice(pg->downstream.fd_stderr[i]);
+        MPL_HASH_DEL(pg->downstream.fd_stdout_hash, hash);
+        MPL_free(hash);
+    }
+
+    MPL_HASH_ITER(hh, pg->downstream.fd_stderr_hash, hash, thash) {
+        status = HYD_dmx_unsplice(hash->key);
         HYD_ERR_POP(status, "error deregistering fd\n");
+
+        MPL_HASH_DEL(pg->downstream.fd_stderr_hash, hash);
+        MPL_free(hash);
     }
 
     status = HYD_dmx_unsplice(STDIN_FILENO);
@@ -933,18 +953,15 @@ int main(int argc, char **argv)
     if (pg->exec_list)
         HYD_exec_free_list(pg->exec_list);
 
-    if (pg->downstream.fd_stdin)
-        MPL_free(pg->downstream.fd_stdin);
-    if (pg->downstream.fd_stdout)
-        MPL_free(pg->downstream.fd_stdout);
-    if (pg->downstream.fd_stderr)
-        MPL_free(pg->downstream.fd_stderr);
-    if (pg->downstream.fd_control)
-        MPL_free(pg->downstream.fd_control);
     if (pg->downstream.proxy_id)
         MPL_free(pg->downstream.proxy_id);
     if (pg->downstream.pid)
         MPL_free(pg->downstream.pid);
+
+    MPL_HASH_ITER(hh, pg->downstream.fd_control_hash, hash, thash) {
+        MPL_HASH_DEL(pg->downstream.fd_control_hash, hash);
+        MPL_free(hash);
+    }
 
     for (i = 0; i < pg->num_downstream; i++)
         if (pg->downstream.kvcache[i])
