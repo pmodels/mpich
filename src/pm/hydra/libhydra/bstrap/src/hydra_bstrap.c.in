@@ -28,9 +28,9 @@ static HYD_status(*bstrap_finalize_fns[])(void) = { @hydra_bstrap_finalize_fns@ 
 
 struct bstrap_control {
     int pgid;
+    int my_proxy_id;
     int total_downstreams;
     int *control_fds;
-    int *proxy_ids;
     int current_downstreams;
 };
 
@@ -61,8 +61,7 @@ static HYD_status enqueue_control_fd(int control_fd, struct bstrap_control *bstr
     /* the first command coming in should be the proxy ID */
     HYD_ASSERT(cmd.type == HYDI_BSTRAP_CMD__PROXY_ID, status);
 
-    bstrap_control->control_fds[bstrap_control->current_downstreams] = control_fd;
-    bstrap_control->proxy_ids[bstrap_control->current_downstreams] = cmd.u.proxy_id.id;
+    bstrap_control->control_fds[cmd.u.proxy_id.id - bstrap_control->my_proxy_id - 1] = control_fd;
     bstrap_control->current_downstreams++;
 
   fn_exit:
@@ -109,7 +108,7 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
     char *tmp[HYD_NUM_TMP_STRINGS] = { NULL };
     char *bstrap_launcher;
     int i, j, k, m;
-    int *fd_stdin, *fd_stdout, *fd_stderr, *fd_control, *proxy_id, *pid;
+    int *fd_stdin, *fd_stdout, *fd_stderr, *proxy_id, *pid;
     int listen_fd;
     uint16_t port;
     char *localhost;
@@ -141,19 +140,29 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
     else
         (*num_downstream) = tree_width;
 
+    /* setup the pg-specific control structure that we can fill out as
+     * we get incoming connections */
+    HYD_MALLOC(bstrap_control, struct bstrap_control *, sizeof(struct bstrap_control), status);
+    bstrap_control->pgid = pgid;
+    bstrap_control->my_proxy_id = my_proxy_id;
+    bstrap_control->total_downstreams = (*num_downstream);
+    HYD_MALLOC(bstrap_control->control_fds, int *, bstrap_control->total_downstreams * sizeof(int),
+               status);
+    bstrap_control->current_downstreams = 0;
+
     HYD_MALLOC(fd_stdin, int *, (*num_downstream) * sizeof(int), status);
     HYD_MALLOC(fd_stdout, int *, (*num_downstream) * sizeof(int), status);
     HYD_MALLOC(fd_stderr, int *, (*num_downstream) * sizeof(int), status);
-    HYD_MALLOC(fd_control, int *, (*num_downstream) * sizeof(int), status);
     HYD_MALLOC(proxy_id, int *, (*num_downstream) * sizeof(int), status);
     HYD_MALLOC(pid, int *, (*num_downstream) * sizeof(int), status);
 
     *downstream_stdin = fd_stdin;
     *downstream_stdout = fd_stdout;
     *downstream_stderr = fd_stderr;
-    *downstream_control = fd_control;
     *downstream_proxy_id = proxy_id;
     *downstream_pid = pid;
+
+    *downstream_control = bstrap_control->control_fds;
 
 
     /* setup a local listening socket for proxies to connect back to
@@ -180,17 +189,6 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
     }
 
 
-    /* setup the pg-specific control structure that we can fill out as
-     * we get incoming connections */
-    HYD_MALLOC(bstrap_control, struct bstrap_control *, sizeof(struct bstrap_control), status);
-    bstrap_control->pgid = pgid;
-    bstrap_control->total_downstreams = (*num_downstream);
-    HYD_MALLOC(bstrap_control->control_fds, int *, bstrap_control->total_downstreams * sizeof(int),
-               status);
-    HYD_MALLOC(bstrap_control->proxy_ids, int *, bstrap_control->total_downstreams * sizeof(int),
-               status);
-    bstrap_control->current_downstreams = 0;
-
     /* attach the bstrap_control to the listen callback, so we know
      * which pgid it belongs to */
     status = HYD_dmx_register_fd(listen_fd, HYD_DMX_POLLIN, (void *) bstrap_control, listen_cb);
@@ -215,7 +213,6 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
              * not shared by the child process. */
             status = HYD_sock_cloexec(sockpair[0]);
             HYD_ERR_POP(status, "unable to set control socket to close on exec\n");
-            fd_control[m] = sockpair[0];
 
             i = 0;
 
@@ -267,7 +264,7 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
 
             close(sockpair[1]);
 
-            status = enqueue_control_fd(fd_control[m], bstrap_control);
+            status = enqueue_control_fd(sockpair[0], bstrap_control);
             HYD_ERR_POP(status, "error enqueuing control fd\n");
         }
         else {
@@ -340,18 +337,6 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
         HYD_ERR_POP(status, "error waiting for event\n");
     }
 
-    /* find the accepted proxy ids and fill out my control fds */
-    for (m = 0; m < bstrap_control->total_downstreams; m++) {
-        k = HYD_tree_start(num_nodes, m, tree_width);
-        subtree_size = HYD_tree_size(num_nodes, m, tree_width);
-        for (i = 0; i < bstrap_control->total_downstreams; i++) {
-            if (bstrap_control->proxy_ids[i] == my_proxy_id + k + 1) {
-                fd_control[m] = bstrap_control->control_fds[i];
-                break;
-            }
-        }
-    }
-
     HYD_dmx_deregister_fd(listen_fd);
     close(listen_fd);
 
@@ -369,20 +354,19 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
         MPL_VG_MEM_INIT(&cmd, sizeof(cmd));
         cmd.type = HYDI_BSTRAP_CMD__HOSTLIST;
         status =
-            HYD_sock_write(fd_control[m], &cmd, sizeof(cmd), &sent, &closed,
+            HYD_sock_write(bstrap_control->control_fds[m], &cmd, sizeof(cmd), &sent, &closed,
                            HYD_SOCK_COMM_TYPE__BLOCKING);
         HYD_ERR_POP(status, "error sending command to bstrap proxy\n");
         HYD_ASSERT(!closed, status);
 
         status =
-            HYD_sock_write(fd_control[m], &node_list[k], subtree_size * sizeof(struct HYD_node),
-                           &sent, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
+            HYD_sock_write(bstrap_control->control_fds[m], &node_list[k],
+                           subtree_size * sizeof(struct HYD_node), &sent, &closed,
+                           HYD_SOCK_COMM_TYPE__BLOCKING);
         HYD_ERR_POP(status, "error sending command to bstrap proxy\n");
         HYD_ASSERT(!closed, status);
     }
 
-    MPL_free(bstrap_control->control_fds);
-    MPL_free(bstrap_control->proxy_ids);
     MPL_free(bstrap_control);
 
   fn_exit:
