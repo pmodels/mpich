@@ -34,7 +34,6 @@ struct proxy_params {
         int upstream_fd;
         const char *hostname;
         int subtree_size;
-        int barrier_ref_count;
         int pid_ref_count;
     } root;
 

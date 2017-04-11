@@ -19,7 +19,6 @@ struct proxy_params proxy_params = {
         .upstream_fd = -1,
         .hostname = NULL,
         .subtree_size = -1,
-        .barrier_ref_count = -1,
         .pid_ref_count = -1,
     },
 
@@ -82,7 +81,6 @@ static HYD_status check_params(void)
     HYD_ASSERT(proxy_params.root.upstream_fd != -1, status);
     HYD_ASSERT(proxy_params.root.hostname, status);
     HYD_ASSERT(proxy_params.root.subtree_size != -1, status);
-    HYD_ASSERT(proxy_params.root.barrier_ref_count != -1, status);
 
     /* immediate:proxy */
     HYD_ASSERT(!proxy_params.immediate.proxy.num_children ||

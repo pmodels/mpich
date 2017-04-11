@@ -416,13 +416,14 @@ HYD_status proxy_barrier_in(int fd, struct proxy_kv_hash *pmi_args)
 {
     struct MPX_cmd cmd;
     int sent, closed;
+    static int barrier_ref_count = 0;
     HYD_status status = HYD_SUCCESS;
 
-    proxy_params.root.barrier_ref_count++;
+    barrier_ref_count++;
 
-    if (proxy_params.root.barrier_ref_count ==
+    if (barrier_ref_count ==
         proxy_params.immediate.proxy.num_children + proxy_params.immediate.process.num_children) {
-        proxy_params.root.barrier_ref_count = 0;
+        barrier_ref_count = 0;
 
         status = flush_put_cache();
         HYD_ERR_POP(status, "error flushing pmi put cache\n");

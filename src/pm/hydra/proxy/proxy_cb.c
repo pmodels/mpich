@@ -158,9 +158,6 @@ HYD_status proxy_upstream_control_cb(int fd, HYD_dmx_event_t events, void *userp
         status = cmd_bcast_non_root(fd, cmd, NULL);
         HYD_ERR_POP(status, "error forwarding cmd downstream\n");
 
-        /* initialize the barrier ref count */
-        proxy_params.root.barrier_ref_count = 0;
-
         proxy_ready_to_launch = 1;
     }
     else if (cmd.type == MPX_CMD_TYPE__KVCACHE_OUT) {
