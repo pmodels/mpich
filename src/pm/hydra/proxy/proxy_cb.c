@@ -10,7 +10,7 @@
 
 static HYD_status cmd_bcast_non_root(int fd, struct MPX_cmd cmd, void **data)
 {
-    struct proxy_int_hash *hash, *tmp;
+    struct HYD_int_hash *hash, *tmp;
     int sent, recvd, closed;
     void *buf = NULL;
     HYD_status status = HYD_SUCCESS;
@@ -55,7 +55,7 @@ HYD_status proxy_upstream_control_cb(int fd, HYD_dmx_event_t events, void *userp
     int sent, recvd, closed;
     struct HYD_exec *exec;
     int i;
-    struct proxy_int_hash *hash, *tmp;
+    struct HYD_int_hash *hash, *tmp;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();
@@ -252,7 +252,7 @@ HYD_status proxy_downstream_control_cb(int fd, HYD_dmx_event_t events, void *use
 
     case MPX_CMD_TYPE__KVCACHE_IN:
         {
-            struct proxy_int_hash *hash;
+            struct HYD_int_hash *hash;
 
             /* simply stash the downstream kvcache.  when we get all our
              * barrier_in commands, we will repackage all of these caches
@@ -322,7 +322,7 @@ static HYD_status stdoe_cb(int type, int fd, HYD_dmx_event_t events, void *userp
     struct MPX_cmd cmd;
     int sent, recvd, closed;
     char buf[STDOE_BUF_SIZE];
-    struct proxy_int_hash *hash;
+    struct HYD_int_hash *hash;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();

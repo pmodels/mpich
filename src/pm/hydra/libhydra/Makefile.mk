@@ -25,4 +25,5 @@ include libhydra/tree/Makefile.mk
 include libhydra/bstrap/Makefile.mk
 include libhydra/hostfile/Makefile.mk
 include libhydra/rmk/Makefile.mk
+include libhydra/hash/Makefile.mk
 include libhydra/debugger/Makefile.mk

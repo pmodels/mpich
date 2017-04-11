@@ -25,6 +25,7 @@
 #include "hydra_bstrap.h"
 #include "hydra_hostfile.h"
 #include "hydra_rmk.h"
+#include "hydra_hash.h"
 #include "hydra_debugger.h"
 
 #endif /* HYDRA_H_INCLUDED */

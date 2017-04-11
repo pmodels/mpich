@@ -131,7 +131,7 @@ static HYD_status get_bstrap_params(void)
     int ret, i;
     const char *str = NULL;
     char *tmp;
-    struct proxy_int_hash *hash;
+    struct HYD_int_hash *hash;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();
@@ -177,7 +177,7 @@ static HYD_status get_bstrap_params(void)
                 tmp = strtok(NULL, ",");
             HYD_ASSERT(tmp, status);
 
-            HYD_MALLOC(hash, struct proxy_int_hash *, sizeof(struct proxy_int_hash), status);
+            HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
             hash->key = atoi(tmp);
             hash->val = i;
             MPL_HASH_ADD_INT(proxy_params.immediate.proxy.control_fd_hash, key, hash);
@@ -195,7 +195,7 @@ static HYD_status get_bstrap_params(void)
                 tmp = strtok(NULL, ",");
             HYD_ASSERT(tmp, status);
 
-            HYD_MALLOC(hash, struct proxy_int_hash *, sizeof(struct proxy_int_hash), status);
+            HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
             hash->key = atoi(tmp);
             hash->val = i;
             MPL_HASH_ADD_INT(proxy_params.immediate.proxy.stdin_fd_hash, key, hash);
@@ -213,7 +213,7 @@ static HYD_status get_bstrap_params(void)
                 tmp = strtok(NULL, ",");
             HYD_ASSERT(tmp, status);
 
-            HYD_MALLOC(hash, struct proxy_int_hash *, sizeof(struct proxy_int_hash), status);
+            HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
             hash->key = atoi(tmp);
             hash->val = i;
             MPL_HASH_ADD_INT(proxy_params.immediate.proxy.stdout_fd_hash, key, hash);
@@ -231,7 +231,7 @@ static HYD_status get_bstrap_params(void)
                 tmp = strtok(NULL, ",");
             HYD_ASSERT(tmp, status);
 
-            HYD_MALLOC(hash, struct proxy_int_hash *, sizeof(struct proxy_int_hash), status);
+            HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
             hash->key = atoi(tmp);
             hash->val = i;
             MPL_HASH_ADD_INT(proxy_params.immediate.proxy.stderr_fd_hash, key, hash);
@@ -249,7 +249,7 @@ static HYD_status get_bstrap_params(void)
                 tmp = strtok(NULL, ",");
             HYD_ASSERT(tmp, status);
 
-            HYD_MALLOC(hash, struct proxy_int_hash *, sizeof(struct proxy_int_hash), status);
+            HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
             hash->key = atoi(tmp);
             hash->val = i;
             MPL_HASH_ADD_INT(proxy_params.immediate.proxy.pid_hash, key, hash);
@@ -313,7 +313,7 @@ static HYD_status launch_processes(void)
         int stdin_fd, stdout_fd, stderr_fd, pid, *tmp;
         char *envval;
         int sockpair[2];
-        struct proxy_int_hash *hash;
+        struct HYD_int_hash *hash;
 
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockpair) < 0)
             HYD_ERR_SETANDJUMP(status, HYD_ERR_INTERNAL, "pipe error\n");
@@ -323,7 +323,7 @@ static HYD_status launch_processes(void)
         status = HYD_sock_cloexec(sockpair[0]);
         HYD_ERR_POP(status, "unable to set control socket to close on exec\n");
 
-        HYD_MALLOC(hash, struct proxy_int_hash *, sizeof(struct proxy_int_hash), status);
+        HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
         hash->key = sockpair[0];
         hash->val = i;
         MPL_HASH_ADD_INT(proxy_params.immediate.process.pmi_fd_hash, key, hash);
@@ -353,7 +353,7 @@ static HYD_status launch_processes(void)
 
         close(sockpair[1]);
 
-        HYD_MALLOC(hash, struct proxy_int_hash *, sizeof(struct proxy_int_hash), status);
+        HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
         hash->key = pid;
         hash->val = i;
         MPL_HASH_ADD_INT(proxy_params.immediate.process.pid_hash, key, hash);
@@ -361,7 +361,7 @@ static HYD_status launch_processes(void)
         status = HYD_dmx_register_fd(stdout_fd, HYD_DMX_POLLIN, NULL, proxy_process_stdout_cb);
         HYD_ERR_POP(status, "unable to register fd\n");
 
-        HYD_MALLOC(hash, struct proxy_int_hash *, sizeof(struct proxy_int_hash), status);
+        HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
         hash->key = stdout_fd;
         hash->val = i;
         MPL_HASH_ADD_INT(proxy_params.immediate.process.stdout_fd_hash, key, hash);
@@ -369,7 +369,7 @@ static HYD_status launch_processes(void)
         status = HYD_dmx_register_fd(stderr_fd, HYD_DMX_POLLIN, NULL, proxy_process_stderr_cb);
         HYD_ERR_POP(status, "unable to register fd\n");
 
-        HYD_MALLOC(hash, struct proxy_int_hash *, sizeof(struct proxy_int_hash), status);
+        HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
         hash->key = stderr_fd;
         hash->val = i;
         MPL_HASH_ADD_INT(proxy_params.immediate.process.stderr_fd_hash, key, hash);
@@ -556,7 +556,7 @@ static int populate_ids_from_mapping(char *mapping, int sz, int *out_nodemap)
 int main(int argc, char **argv)
 {
     int *process_ret;
-    struct proxy_int_hash *hash, *tmp;
+    struct HYD_int_hash *hash, *tmp;
     char dbg_prefix[2 * HYD_MAX_HOSTNAME_LEN];
     HYD_status status = HYD_SUCCESS;
     int *nodemap, i, local_rank;

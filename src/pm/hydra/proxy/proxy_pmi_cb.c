@@ -262,7 +262,7 @@ static HYD_status fn_get_appnum(int fd, struct proxy_kv_hash *pmi_args)
 {
     int skipped = 0, i;
     struct HYD_exec *exec;
-    struct proxy_int_hash *hash;
+    struct HYD_int_hash *hash;
     struct HYD_string_stash stash;
     char *cmd;
     HYD_status status = HYD_SUCCESS;
@@ -448,7 +448,7 @@ HYD_status proxy_barrier_in(int fd, struct proxy_kv_hash *pmi_args)
 HYD_status proxy_barrier_out(int fd, struct proxy_kv_hash *pmi_args)
 {
     char *cmd;
-    struct proxy_int_hash *hash, *tmp;
+    struct HYD_int_hash *hash, *tmp;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();
@@ -537,7 +537,7 @@ static HYD_status fn_finalize(int fd, struct proxy_kv_hash *pmi_args)
 
 static HYD_status fn_abort(int fd, struct proxy_kv_hash *pmi_args)
 {
-    struct proxy_int_hash *hash, *tmp;
+    struct HYD_int_hash *hash, *tmp;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();

@@ -15,12 +15,6 @@ struct proxy_kv_hash {
     MPL_UT_hash_handle hh;
 };
 
-struct proxy_int_hash {
-    int key;
-    int val;
-    MPL_UT_hash_handle hh;
-};
-
 struct proxy_params {
     int debug;
     char *cwd;
@@ -41,11 +35,11 @@ struct proxy_params {
     struct {
         struct {
             int num_children;
-            struct proxy_int_hash *control_fd_hash;
-            struct proxy_int_hash *stdin_fd_hash;
-            struct proxy_int_hash *stdout_fd_hash;
-            struct proxy_int_hash *stderr_fd_hash;
-            struct proxy_int_hash *pid_hash;
+            struct HYD_int_hash *control_fd_hash;
+            struct HYD_int_hash *stdin_fd_hash;
+            struct HYD_int_hash *stdout_fd_hash;
+            struct HYD_int_hash *stderr_fd_hash;
+            struct HYD_int_hash *pid_hash;
             int *block_start;
             int *block_size;
 
@@ -56,10 +50,10 @@ struct proxy_params {
 
         struct {
             int num_children;
-            struct proxy_int_hash *stdout_fd_hash;
-            struct proxy_int_hash *stderr_fd_hash;
-            struct proxy_int_hash *pmi_fd_hash;
-            struct proxy_int_hash *pid_hash;
+            struct HYD_int_hash *stdout_fd_hash;
+            struct HYD_int_hash *stderr_fd_hash;
+            struct HYD_int_hash *pmi_fd_hash;
+            struct HYD_int_hash *pid_hash;
             int *pmi_id;
         } process;
     } immediate;
