@@ -289,22 +289,10 @@ static HYD_status push_env_downstream(struct mpiexec_pg *pg)
     HYD_ERR_POP(status, "unable to get the inherited env list\n");
 
     if (mpiexec_params.envprop == MPIEXEC_ENVPROP__UNSET) {
-        /* inherited env is secondary */
-        if (mpiexec_params.secondary.list == NULL)
-            mpiexec_params.secondary.list = inherit;
-        else {
-            for (env = mpiexec_params.secondary.list; env->next; env = env->next);
-            env->next = inherit;
-        }
+        mpiexec_params.secondary.list = inherit;
     }
     else if (mpiexec_params.envprop == MPIEXEC_ENVPROP__ALL) {
-        /* inherited env is primary */
-        if (mpiexec_params.primary.list == NULL)
-            mpiexec_params.primary.list = inherit;
-        else {
-            for (env = mpiexec_params.primary.list; env->next; env = env->next);
-            env->next = inherit;
-        }
+        mpiexec_params.primary.list = inherit;
     }
     else if (mpiexec_params.envprop == MPIEXEC_ENVPROP__NONE) {
         /* inherited env is completely ignored */
