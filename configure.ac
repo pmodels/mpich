@@ -4741,6 +4741,11 @@ if test "$ac_cv_sizeof_int" = "$aint_size" ; then
     AC_DEFINE(SIZEOF_INT_IS_AINT,1,[define if sizeof(int) = sizeof(MPI_Aint)])
 fi
 
+# If sizeof(mpi_aint) = sizeof(int), set this value
+if test "$ac_cv_sizeof_void_p" = "$aint_size" ; then
+    AC_DEFINE(SIZEOF_PTR_IS_AINT,1,[define if sizeof(void *) = sizeof(MPI_Aint)])
+fi
+
 # ----------------------------------------------------------------------------
 # MPI_AINT datatype
 # ----------------------------------------------------------------------------
