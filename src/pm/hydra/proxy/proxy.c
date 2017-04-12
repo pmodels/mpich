@@ -25,10 +25,10 @@ struct proxy_params proxy_params = {
     .immediate = {
         .proxy = {
             .num_children = -1,
-            .control_fd_hash = NULL,
-            .stdin_fd_hash = NULL,
-            .stdout_fd_hash = NULL,
-            .stderr_fd_hash = NULL,
+            .fd_control_hash = NULL,
+            .fd_stdin_hash = NULL,
+            .fd_stdout_hash = NULL,
+            .fd_stderr_hash = NULL,
             .pid_hash = NULL,
             .block_start = NULL,
             .block_size = NULL,
@@ -39,9 +39,9 @@ struct proxy_params proxy_params = {
 
         .process = {
             .num_children = -1,
-            .stdout_fd_hash = NULL,
-            .stderr_fd_hash = NULL,
-            .pmi_fd_hash = NULL,
+            .fd_stdout_hash = NULL,
+            .fd_stderr_hash = NULL,
+            .fd_pmi_hash = NULL,
             .pid_hash = NULL,
             .pmi_id = NULL,
         },
@@ -180,7 +180,7 @@ static HYD_status get_bstrap_params(void)
             HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
             hash->key = atoi(tmp);
             hash->val = i;
-            MPL_HASH_ADD_INT(proxy_params.immediate.proxy.control_fd_hash, key, hash);
+            MPL_HASH_ADD_INT(proxy_params.immediate.proxy.fd_control_hash, key, hash);
         }
         tmp = strtok(NULL, ",");
         HYD_ASSERT(tmp == NULL, status);
@@ -198,7 +198,7 @@ static HYD_status get_bstrap_params(void)
             HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
             hash->key = atoi(tmp);
             hash->val = i;
-            MPL_HASH_ADD_INT(proxy_params.immediate.proxy.stdin_fd_hash, key, hash);
+            MPL_HASH_ADD_INT(proxy_params.immediate.proxy.fd_stdin_hash, key, hash);
         }
         tmp = strtok(NULL, ",");
         HYD_ASSERT(tmp == NULL, status);
@@ -216,7 +216,7 @@ static HYD_status get_bstrap_params(void)
             HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
             hash->key = atoi(tmp);
             hash->val = i;
-            MPL_HASH_ADD_INT(proxy_params.immediate.proxy.stdout_fd_hash, key, hash);
+            MPL_HASH_ADD_INT(proxy_params.immediate.proxy.fd_stdout_hash, key, hash);
         }
         tmp = strtok(NULL, ",");
         HYD_ASSERT(tmp == NULL, status);
@@ -234,7 +234,7 @@ static HYD_status get_bstrap_params(void)
             HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
             hash->key = atoi(tmp);
             hash->val = i;
-            MPL_HASH_ADD_INT(proxy_params.immediate.proxy.stderr_fd_hash, key, hash);
+            MPL_HASH_ADD_INT(proxy_params.immediate.proxy.fd_stderr_hash, key, hash);
         }
         tmp = strtok(NULL, ",");
         HYD_ASSERT(tmp == NULL, status);
@@ -326,7 +326,7 @@ static HYD_status launch_processes(void)
         HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
         hash->key = sockpair[0];
         hash->val = i;
-        MPL_HASH_ADD_INT(proxy_params.immediate.process.pmi_fd_hash, key, hash);
+        MPL_HASH_ADD_INT(proxy_params.immediate.process.fd_pmi_hash, key, hash);
 
         status = HYD_dmx_register_fd(sockpair[0], HYD_DMX_POLLIN, NULL, proxy_process_pmi_cb);
         HYD_ERR_POP(status, "unable to register fd\n");
@@ -364,7 +364,7 @@ static HYD_status launch_processes(void)
         HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
         hash->key = stdout_fd;
         hash->val = i;
-        MPL_HASH_ADD_INT(proxy_params.immediate.process.stdout_fd_hash, key, hash);
+        MPL_HASH_ADD_INT(proxy_params.immediate.process.fd_stdout_hash, key, hash);
 
         status = HYD_dmx_register_fd(stderr_fd, HYD_DMX_POLLIN, NULL, proxy_process_stderr_cb);
         HYD_ERR_POP(status, "unable to register fd\n");
@@ -372,7 +372,7 @@ static HYD_status launch_processes(void)
         HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
         hash->key = stderr_fd;
         hash->val = i;
-        MPL_HASH_ADD_INT(proxy_params.immediate.process.stderr_fd_hash, key, hash);
+        MPL_HASH_ADD_INT(proxy_params.immediate.process.fd_stderr_hash, key, hash);
 
         if (tmp) {
             status = HYD_dmx_splice(STDIN_FILENO, stdin_fd);
@@ -591,17 +591,17 @@ int main(int argc, char **argv)
                             proxy_upstream_control_cb);
     HYD_ERR_POP(status, "unable to register fd\n");
 
-    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.control_fd_hash, hash, tmp) {
+    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.fd_control_hash, hash, tmp) {
         status = HYD_dmx_register_fd(hash->key, HYD_DMX_POLLIN, NULL, proxy_downstream_control_cb);
         HYD_ERR_POP(status, "unable to register fd\n");
     }
 
-    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.stdout_fd_hash, hash, tmp) {
+    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.fd_stdout_hash, hash, tmp) {
         status = HYD_dmx_splice(hash->key, STDOUT_FILENO);
         HYD_ERR_POP(status, "unable to splice stdout\n");
     }
 
-    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.stderr_fd_hash, hash, tmp) {
+    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.fd_stderr_hash, hash, tmp) {
         status = HYD_dmx_splice(hash->key, STDERR_FILENO);
         HYD_ERR_POP(status, "unable to splice stderr\n");
     }
@@ -633,7 +633,7 @@ int main(int argc, char **argv)
     HYD_ERR_POP(status, "error checking parameters\n");
 
     /* step 3: close all downstream stdin fds */
-    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.stdin_fd_hash, hash, tmp) {
+    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.fd_stdin_hash, hash, tmp) {
         close(hash->key);
     }
 
@@ -661,28 +661,28 @@ int main(int argc, char **argv)
      * terminate, (5) deregister upstream fd and stdin */
 
     /* step 1: wait for MPI process stdout/stderr/pmi-fd to close */
-    MPL_HASH_ITER(hh, proxy_params.immediate.process.stdout_fd_hash, hash, tmp) {
+    MPL_HASH_ITER(hh, proxy_params.immediate.process.fd_stdout_hash, hash, tmp) {
         while (HYD_dmx_query_fd_registration(hash->key)) {
             status = HYD_dmx_wait_for_event(-1);
             HYD_ERR_POP(status, "error waiting for event\n");
         }
-        MPL_HASH_DEL(proxy_params.immediate.process.stdout_fd_hash, hash);
+        MPL_HASH_DEL(proxy_params.immediate.process.fd_stdout_hash, hash);
         MPL_free(hash);
     }
-    MPL_HASH_ITER(hh, proxy_params.immediate.process.stderr_fd_hash, hash, tmp) {
+    MPL_HASH_ITER(hh, proxy_params.immediate.process.fd_stderr_hash, hash, tmp) {
         while (HYD_dmx_query_fd_registration(hash->key)) {
             status = HYD_dmx_wait_for_event(-1);
             HYD_ERR_POP(status, "error waiting for event\n");
         }
-        MPL_HASH_DEL(proxy_params.immediate.process.stderr_fd_hash, hash);
+        MPL_HASH_DEL(proxy_params.immediate.process.fd_stderr_hash, hash);
         MPL_free(hash);
     }
-    MPL_HASH_ITER(hh, proxy_params.immediate.process.pmi_fd_hash, hash, tmp) {
+    MPL_HASH_ITER(hh, proxy_params.immediate.process.fd_pmi_hash, hash, tmp) {
         while (HYD_dmx_query_fd_registration(hash->key)) {
             status = HYD_dmx_wait_for_event(-1);
             HYD_ERR_POP(status, "error waiting for event\n");
         }
-        MPL_HASH_DEL(proxy_params.immediate.process.pmi_fd_hash, hash);
+        MPL_HASH_DEL(proxy_params.immediate.process.fd_pmi_hash, hash);
         MPL_free(hash);
     }
 
@@ -696,7 +696,7 @@ int main(int argc, char **argv)
     }
 
     /* step 3: wait for proxy stdout/stderr to close */
-    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.stdout_fd_hash, hash, tmp) {
+    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.fd_stdout_hash, hash, tmp) {
         while (HYD_dmx_query_fd_registration(hash->key)) {
             status = HYD_dmx_wait_for_event(-1);
             HYD_ERR_POP(status, "error waiting for event\n");
@@ -705,10 +705,10 @@ int main(int argc, char **argv)
         status = HYD_dmx_unsplice(hash->key);
         HYD_ERR_POP(status, "error unsplicing fd\n");
 
-        MPL_HASH_DEL(proxy_params.immediate.proxy.stdout_fd_hash, hash);
+        MPL_HASH_DEL(proxy_params.immediate.proxy.fd_stdout_hash, hash);
         close(hash->key);
     }
-    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.stderr_fd_hash, hash, tmp) {
+    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.fd_stderr_hash, hash, tmp) {
         while (HYD_dmx_query_fd_registration(hash->key)) {
             status = HYD_dmx_wait_for_event(-1);
             HYD_ERR_POP(status, "error waiting for event\n");
@@ -717,7 +717,7 @@ int main(int argc, char **argv)
         status = HYD_dmx_unsplice(hash->key);
         HYD_ERR_POP(status, "error unsplicing fd\n");
 
-        MPL_HASH_DEL(proxy_params.immediate.proxy.stderr_fd_hash, hash);
+        MPL_HASH_DEL(proxy_params.immediate.proxy.fd_stderr_hash, hash);
         close(hash->key);
     }
 
@@ -757,10 +757,10 @@ int main(int argc, char **argv)
     if (proxy_params.root.hostname)
         MPL_free(proxy_params.root.hostname);
 
-    HYD_ASSERT(proxy_params.immediate.proxy.control_fd_hash == NULL, status);
-    HYD_ASSERT(proxy_params.immediate.proxy.stdin_fd_hash == NULL, status);
-    HYD_ASSERT(proxy_params.immediate.proxy.stdout_fd_hash == NULL, status);
-    HYD_ASSERT(proxy_params.immediate.proxy.stderr_fd_hash == NULL, status);
+    HYD_ASSERT(proxy_params.immediate.proxy.fd_control_hash == NULL, status);
+    HYD_ASSERT(proxy_params.immediate.proxy.fd_stdin_hash == NULL, status);
+    HYD_ASSERT(proxy_params.immediate.proxy.fd_stdout_hash == NULL, status);
+    HYD_ASSERT(proxy_params.immediate.proxy.fd_stderr_hash == NULL, status);
     HYD_ASSERT(proxy_params.immediate.proxy.pid_hash == NULL, status);
 
     if (proxy_params.immediate.proxy.block_start)
@@ -777,9 +777,9 @@ int main(int argc, char **argv)
         MPL_free(proxy_params.immediate.proxy.kvcache_num_blocks);
     }
 
-    HYD_ASSERT(proxy_params.immediate.process.stdout_fd_hash == NULL, status);
-    HYD_ASSERT(proxy_params.immediate.process.stderr_fd_hash == NULL, status);
-    HYD_ASSERT(proxy_params.immediate.process.pmi_fd_hash == NULL, status);
+    HYD_ASSERT(proxy_params.immediate.process.fd_stdout_hash == NULL, status);
+    HYD_ASSERT(proxy_params.immediate.process.fd_stderr_hash == NULL, status);
+    HYD_ASSERT(proxy_params.immediate.process.fd_pmi_hash == NULL, status);
     HYD_ASSERT(proxy_params.immediate.process.pid_hash == NULL, status);
 
     if (proxy_params.immediate.process.pmi_id)

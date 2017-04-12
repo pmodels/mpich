@@ -35,10 +35,10 @@ struct proxy_params {
     struct {
         struct {
             int num_children;
-            struct HYD_int_hash *control_fd_hash;
-            struct HYD_int_hash *stdin_fd_hash;
-            struct HYD_int_hash *stdout_fd_hash;
-            struct HYD_int_hash *stderr_fd_hash;
+            struct HYD_int_hash *fd_control_hash;
+            struct HYD_int_hash *fd_stdin_hash;
+            struct HYD_int_hash *fd_stdout_hash;
+            struct HYD_int_hash *fd_stderr_hash;
             struct HYD_int_hash *pid_hash;
             int *block_start;
             int *block_size;
@@ -50,9 +50,9 @@ struct proxy_params {
 
         struct {
             int num_children;
-            struct HYD_int_hash *stdout_fd_hash;
-            struct HYD_int_hash *stderr_fd_hash;
-            struct HYD_int_hash *pmi_fd_hash;
+            struct HYD_int_hash *fd_stdout_hash;
+            struct HYD_int_hash *fd_stderr_hash;
+            struct HYD_int_hash *fd_pmi_hash;
             struct HYD_int_hash *pid_hash;
             int *pmi_id;
         } process;

@@ -23,7 +23,7 @@ static HYD_status cmd_bcast_non_root(int fd, struct MPX_cmd cmd, void **data)
         HYD_ASSERT(!closed, status);
     }
 
-    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.control_fd_hash, hash, tmp) {
+    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.fd_control_hash, hash, tmp) {
         status =
             HYD_sock_write(hash->key, &cmd, sizeof(cmd), &sent, &closed,
                            HYD_SOCK_COMM_TYPE__BLOCKING);
@@ -179,7 +179,7 @@ HYD_status proxy_upstream_control_cb(int fd, HYD_dmx_event_t events, void *userp
         HYD_ERR_POP(status, "error calling barrier_out\n");
 
         /* forward the command downstream */
-        MPL_HASH_ITER(hh, proxy_params.immediate.proxy.control_fd_hash, hash, tmp) {
+        MPL_HASH_ITER(hh, proxy_params.immediate.proxy.fd_control_hash, hash, tmp) {
             status =
                 HYD_sock_write(hash->key, &cmd, sizeof(cmd), &sent, &closed,
                                HYD_SOCK_COMM_TYPE__BLOCKING);
@@ -258,7 +258,7 @@ HYD_status proxy_downstream_control_cb(int fd, HYD_dmx_event_t events, void *use
              * barrier_in commands, we will repackage all of these caches
              * and flush them upstream. */
 
-            MPL_HASH_FIND_INT(proxy_params.immediate.proxy.control_fd_hash, &fd, hash);
+            MPL_HASH_FIND_INT(proxy_params.immediate.proxy.fd_control_hash, &fd, hash);
 
             proxy_params.immediate.proxy.kvcache_size[hash->val] = cmd.data_len;
             proxy_params.immediate.proxy.kvcache_num_blocks[hash->val] = cmd.u.kvcache.num_blocks;
@@ -345,9 +345,9 @@ static HYD_status stdoe_cb(int type, int fd, HYD_dmx_event_t events, void *userp
     cmd.u.stdoe.pgid = proxy_params.all.pgid;
     cmd.u.stdoe.proxy_id = proxy_params.root.proxy_id;
     if (type == MPX_CMD_TYPE__STDOUT)
-        MPL_HASH_FIND_INT(proxy_params.immediate.process.stdout_fd_hash, &fd, hash);
+        MPL_HASH_FIND_INT(proxy_params.immediate.process.fd_stdout_hash, &fd, hash);
     else
-        MPL_HASH_FIND_INT(proxy_params.immediate.process.stderr_fd_hash, &fd, hash);
+        MPL_HASH_FIND_INT(proxy_params.immediate.process.fd_stderr_hash, &fd, hash);
     HYD_ASSERT(hash, status);
     cmd.u.stdoe.pmi_id = proxy_params.immediate.process.pmi_id[hash->val];
 
