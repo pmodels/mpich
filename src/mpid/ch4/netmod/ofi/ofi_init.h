@@ -442,8 +442,11 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             MPIDI_OFI_CHOOSE_PROVIDER(prov, &prov_use, "No suitable provider provider found");
 
             /* If we picked the provider already, make sure we grab the right provider */
-            if ((NULL != provname) && (0 != strcmp(provname, hints->fabric_attr->prov_name)))
+            if ((NULL != provname) && (0 != strcmp(provname, prov_use->fabric_attr->prov_name))) {
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Skipping provider because not selected one"));
+                prov = prov_use->next;
                 continue;
+            }
 
             /* Check that this provider meets the minimum requirements for the user */
             if (MPIDI_OFI_ENABLE_DATA && ((0ULL == (prov_use->caps & FI_DIRECTED_RECV)) || (prov_use->domain_attr->cq_data_size < 4))) {
