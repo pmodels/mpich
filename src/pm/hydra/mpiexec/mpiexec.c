@@ -89,7 +89,6 @@ static void signal_cb(int signum)
     HYD_sock_write(mpiexec_params.signal_pipe[0], &cmd, sizeof(cmd), &sent, &closed,
                    HYD_SOCK_COMM_TYPE__BLOCKING);
 
-  fn_exit:
     HYD_FUNC_EXIT();
     return;
 }
