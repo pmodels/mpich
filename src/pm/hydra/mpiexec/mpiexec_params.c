@@ -115,11 +115,7 @@ static HYD_status help_fn(char *arg, char ***argv)
     help_help_fn();
     exit(0);
 
-  fn_exit:
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static void dump_env_notes(void)
@@ -246,11 +242,7 @@ static HYD_status genvnone_fn(char *arg, char ***argv)
 
     mpiexec_params.envprop = MPIEXEC_ENVPROP__NONE;
 
-  fn_exit:
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static void genvall_help_fn(void)
@@ -266,11 +258,7 @@ static HYD_status genvall_fn(char *arg, char ***argv)
 
     mpiexec_params.envprop = MPIEXEC_ENVPROP__ALL;
 
-  fn_exit:
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static void mfile_help_fn(void)
@@ -714,11 +702,7 @@ static HYD_status info_fn(char *arg, char ***argv)
 
     exit(0);
 
-  fn_exit:
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static void print_all_exitcodes_help_fn(void)
