@@ -287,20 +287,22 @@ static HYD_status push_env_downstream(struct mpiexec_pg *pg)
     for (env = inherit, count = 0; env; env = env->next, count++);
 
     if (mpiexec_params.envprop == MPIEXEC_ENVPROP__UNSET) {
-        mpiexec_params.secondary.envcount = count;
-        HYD_MALLOC(mpiexec_params.secondary.env, char **, count * sizeof(char *), status);
-        for (env = inherit, i = 0; env; env = env->next, i++) {
+        HYD_REALLOC(mpiexec_params.secondary.env, char **,
+                    (mpiexec_params.secondary.envcount + count) * sizeof(char *), status);
+        for (env = inherit, i = mpiexec_params.secondary.envcount; env; env = env->next, i++) {
             status = HYD_env_to_str(env, &mpiexec_params.secondary.env[i]);
             HYD_ERR_POP(status, "error converting env to string\n");
         }
+        mpiexec_params.secondary.envcount += count;
     }
     else if (mpiexec_params.envprop == MPIEXEC_ENVPROP__ALL) {
-        mpiexec_params.primary.envcount = count;
-        HYD_MALLOC(mpiexec_params.primary.env, char **, count * sizeof(char *), status);
-        for (env = inherit, i = 0; env; env = env->next, i++) {
+        HYD_REALLOC(mpiexec_params.primary.env, char **,
+                    (mpiexec_params.primary.envcount + count) * sizeof(char *), status);
+        for (env = inherit, i = mpiexec_params.primary.envcount; env; env = env->next, i++) {
             status = HYD_env_to_str(env, &mpiexec_params.primary.env[i]);
             HYD_ERR_POP(status, "error converting env to string\n");
         }
+        mpiexec_params.primary.envcount += count;
     }
     else if (mpiexec_params.envprop == MPIEXEC_ENVPROP__NONE) {
         /* inherited env is completely ignored */
@@ -308,14 +310,17 @@ static HYD_status push_env_downstream(struct mpiexec_pg *pg)
     else if (mpiexec_params.envprop == MPIEXEC_ENVPROP__LIST) {
         /* pick out specific variables from the inherited env and drop
          * the rest */
-        mpiexec_params.primary.envcount = mpiexec_params.envlist_count;
-        HYD_MALLOC(mpiexec_params.primary.env, char **,
-                   mpiexec_params.primary.envcount * sizeof(char *), status);
-
+        HYD_REALLOC(mpiexec_params.primary.env, char **,
+                    (mpiexec_params.primary.envcount +
+                     mpiexec_params.envlist_count) * sizeof(char *), status);
         for (i = 0; i < mpiexec_params.envlist_count; i++) {
             for (env = inherit; env; env = env->next) {
                 if (!strcmp(mpiexec_params.envlist[i], env->env_name)) {
-                    status = HYD_env_to_str(env, &mpiexec_params.primary.env[i]);
+                    status =
+                        HYD_env_to_str(env,
+                                       &mpiexec_params.primary.env[i +
+                                                                   mpiexec_params.primary.
+                                                                   envcount]);
                     HYD_ERR_POP(status, "error converting env to string\n");
                 }
             }
@@ -324,6 +329,7 @@ static HYD_status push_env_downstream(struct mpiexec_pg *pg)
                                    mpiexec_params.envlist[i]);
             }
         }
+        mpiexec_params.primary.envcount += count;
     }
 
     /* Preset common environment options for disabling STDIO buffering

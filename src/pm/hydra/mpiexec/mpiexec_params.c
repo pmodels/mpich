@@ -175,6 +175,7 @@ static HYD_status genv_fn(char *arg, char ***argv)
     HYD_ERR_POP(status, "error creating env\n");
     status = HYD_env_to_str(env, &mpiexec_params.primary.env[mpiexec_params.primary.envcount]);
     HYD_ERR_POP(status, "error converting env to string\n");
+    mpiexec_params.primary.envcount++;
 
     if (str[0])
         MPL_free(str[0]);
