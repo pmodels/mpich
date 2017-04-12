@@ -9,10 +9,11 @@
 #include "hydra_sock.h"
 #include "hydra_topo.h"
 
-HYD_status HYD_spawn(char **client_arg, struct HYD_env *env_list, int *in, int *out, int *err,
-                     int *pid, int idx)
+HYD_status HYD_spawn(char **client_arg, int envcount, char *const *const env, int *in, int *out,
+                     int *err, int *pid, int idx)
 {
-    int inpipe[2], outpipe[2], errpipe[2], tpid;
+    int inpipe[2], outpipe[2], errpipe[2], tpid, i;
+    char *str;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();
@@ -56,9 +57,9 @@ HYD_status HYD_spawn(char **client_arg, struct HYD_env *env_list, int *in, int *
         }
 
         /* Forced environment overwrites existing environment */
-        if (env_list) {
-            status = HYD_env_put_list(env_list);
-            HYD_ERR_POP(status, "unable to putenv\n");
+        for (i = 0; i < envcount; i++) {
+            str = MPL_strdup(env[i]);
+            putenv(str);
         }
 
         if (idx >= 0) {

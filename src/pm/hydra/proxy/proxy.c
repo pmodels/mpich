@@ -305,13 +305,24 @@ static struct HYD_exec *get_exec_by_id(int id)
 static HYD_status launch_processes(void)
 {
     int i;
+    char *envval;
+    char **envargs;
     struct HYD_env *env;
     HYD_status status = HYD_SUCCESS;
+
+    HYD_MALLOC(envargs, char **, 3 * sizeof(char *), status);
+
+    envval = HYD_str_from_int(proxy_params.all.global_process_count);
+    HYD_env_create(&env, "PMI_SIZE", envval);
+    MPL_free(envval);
+
+    status = HYD_env_to_str(env, &envargs[0]);
+    HYD_ERR_POP(status, "error converting env to string\n");
+    HYD_env_free(env);
 
     for (i = 0; i < proxy_params.immediate.process.num_children; i++) {
         struct HYD_exec *exec = get_exec_by_id(i);
         int stdin_fd, stdout_fd, stderr_fd, pid, *tmp;
-        char *envval;
         int sockpair[2];
         struct HYD_int_hash *hash;
 
@@ -335,21 +346,25 @@ static HYD_status launch_processes(void)
         HYD_env_create(&env, "PMI_RANK", envval);
         MPL_free(envval);
 
+        status = HYD_env_to_str(env, &envargs[1]);
+        HYD_ERR_POP(status, "error converting env to string\n");
+        HYD_env_free(env);
+
         envval = HYD_str_from_int(sockpair[1]);
-        HYD_env_create(&env->next, "PMI_FD", envval);
+        HYD_env_create(&env, "PMI_FD", envval);
         MPL_free(envval);
 
-        envval = HYD_str_from_int(proxy_params.all.global_process_count);
-        HYD_env_create(&env->next->next, "PMI_SIZE", envval);
-        MPL_free(envval);
+        status = HYD_env_to_str(env, &envargs[2]);
+        HYD_ERR_POP(status, "error converting env to string\n");
+        HYD_env_free(env);
 
         tmp = (!proxy_params.all.pgid && !proxy_params.root.proxy_id && !i) ? &stdin_fd : NULL;
 
-        status = HYD_spawn(exec->exec, env, tmp, &stdout_fd, &stderr_fd, &pid, -1);
+        status = HYD_spawn(exec->exec, 3, envargs, tmp, &stdout_fd, &stderr_fd, &pid, -1);
         HYD_ERR_POP(status, "error creating process\n");
 
-        status = HYD_env_free_list(env);
-        HYD_ERR_POP(status, "error freeing env\n");
+        MPL_free(envargs[1]);
+        MPL_free(envargs[2]);
 
         close(sockpair[1]);
 
@@ -379,6 +394,9 @@ static HYD_status launch_processes(void)
             HYD_ERR_POP(status, "error splicing stdin fd\n");
         }
     }
+
+    MPL_free(envargs[0]);
+    MPL_free(envargs);
 
   fn_exit:
     return status;

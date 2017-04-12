@@ -59,7 +59,7 @@ HYD_status HYDI_bstrap_ssh_launch(const char *hostname, const char *launch_exec,
     /* The stdin pointer is a dummy value. We don't just pass it NULL,
      * as older versions of ssh seem to freak out when no stdin socket
      * is provided. */
-    status = HYD_spawn(targs, NULL, fd_stdin, fd_stdout, fd_stderr, pid, -1);
+    status = HYD_spawn(targs, 0, NULL, fd_stdin, fd_stdout, fd_stderr, pid, -1);
     HYD_ERR_POP(status, "create process returned error\n");
 
   fn_exit:

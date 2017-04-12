@@ -254,7 +254,7 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
                     targs[i++] = MPL_strdup(pmi_args[j]);
             targs[i++] = NULL;
 
-            status = HYD_spawn(targs, NULL, &fd_stdin, &fd_stdout, &fd_stderr, &pid[m], -1);
+            status = HYD_spawn(targs, 0, NULL, &fd_stdin, &fd_stdout, &fd_stderr, &pid[m], -1);
             HYD_ERR_POP(status, "create process returned error\n");
 
             HYD_str_free_list(targs);

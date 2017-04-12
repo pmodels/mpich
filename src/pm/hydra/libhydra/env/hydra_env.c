@@ -18,11 +18,9 @@ HYD_status HYD_env_to_str(struct HYD_env *env, char **str)
     HYD_FUNC_ENTER();
 
     i = 0;
-    tmp[i++] = MPL_strdup("'");
     tmp[i++] = MPL_strdup(env->env_name);
     tmp[i++] = MPL_strdup("=");
     tmp[i++] = env->env_value ? MPL_strdup(env->env_value) : MPL_strdup("");
-    tmp[i++] = MPL_strdup("'");
     tmp[i++] = NULL;
 
     status = HYD_str_alloc_and_join(tmp, str);
