@@ -62,7 +62,7 @@ struct mpiexec_params_s mpiexec_params = {
     .outfile_pattern = NULL,
     .errfile_pattern = NULL,
 
-    .pid_ref_count = -1,
+    .pid_ref_count = 0,
 };
 /* *INDENT-ON* */
 
@@ -601,15 +601,11 @@ static HYD_status control_cb(int fd, HYD_dmx_event_t events, void *userp)
         /* Find the proxy id of the proxy sending the data */
         n_proxy_pids = cmd.data_len / (2 * sizeof(int));
 
-        /* Read the pid data from the socket */
-        HYD_MALLOC(proxy_pids, int *, cmd.data_len / 2, status);
+        /* Read the data from the socket */
+        HYD_MALLOC(proxy_pids, int *, cmd.data_len, status);
         status =
             HYD_sock_read(fd, proxy_pids, cmd.data_len, &recvd, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
-
-        /* Read the pmi_id data from the socket */
-        HYD_MALLOC(proxy_pmi_ids, int *, cmd.data_len / 2, status);
-        status =
-            HYD_sock_read(fd, proxy_pmi_ids, cmd.data_len, &recvd, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
+        proxy_pmi_ids = proxy_pids + (cmd.data_len / (2 * sizeof(int)));
 
         /* Move pid to the correct place in the pid array */
         for (i = 0; i < n_proxy_pids; i++) {
@@ -617,7 +613,6 @@ static HYD_status control_cb(int fd, HYD_dmx_event_t events, void *userp)
         }
 
         MPL_free(proxy_pids);
-        MPL_free(proxy_pmi_ids);
 
         mpiexec_params.pid_ref_count++;
 

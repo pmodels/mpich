@@ -661,11 +661,15 @@ int main(int argc, char **argv)
 
     /* step 5: report PIDs back to mpiexec for debugger */
     i = 0;
+    HYD_MALLOC(proxy_pids[0], int *, proxy_params.immediate.process.num_children, status);
+    HYD_MALLOC(proxy_pmi_ids[0], int *, proxy_params.immediate.process.num_children, status);
     MPL_HASH_ITER(hh, proxy_params.immediate.process.pid_hash, hash, tmp) {
         proxy_pids[0][i++] = hash->key; /* The pid of the child process */
     }
     n_proxy_pids[0] = proxy_params.immediate.process.num_children;
-    memcpy(proxy_pmi_ids, proxy_params.immediate.process.pmi_id, n_proxy_pids[0] * sizeof(int));
+    for (i = 0; i < proxy_params.immediate.process.num_children; i++) {
+        proxy_pmi_ids[0][i] = proxy_params.immediate.process.pmi_id[i];
+    }
     proxy_send_pids_upstream();
 
     /* The launch is now complete: we wait for the processes to

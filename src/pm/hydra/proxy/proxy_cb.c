@@ -418,13 +418,15 @@ HYD_status proxy_send_pids_upstream()
     proxy_params.root.pid_ref_count++;
 
     if (proxy_params.root.pid_ref_count == proxy_params.immediate.proxy.num_children) {
-        for (i = 0; i < proxy_params.immediate.proxy.num_children; i++) {
+        for (i = 0; i <= proxy_params.immediate.proxy.num_children; i++) {
             num_pids += n_proxy_pids[i];
         }
 
+        if (!num_pids) goto fn_exit;
+
         /* Move pids to contiguous array */
         HYD_MALLOC(contig_data, int *, 2 * num_pids * sizeof(int), status);
-        for (i = 0; i < proxy_params.immediate.proxy.num_children; i++) {
+        for (i = 0; i <= proxy_params.immediate.proxy.num_children; i++) {
             memcpy(&contig_data[next_pid], proxy_pids[i], n_proxy_pids[i] * sizeof(int));
             memcpy(&contig_data[num_pids+next_pid], proxy_pmi_ids[i], n_proxy_pids[i] * sizeof(int));
             next_pid += n_proxy_pids[i];
