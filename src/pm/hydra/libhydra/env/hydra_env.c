@@ -101,25 +101,6 @@ HYD_status HYD_env_free(struct HYD_env *env)
 }
 
 
-HYD_status HYD_env_free_list(struct HYD_env * env)
-{
-    struct HYD_env *run, *tmp;
-    HYD_status status = HYD_SUCCESS;
-
-    HYD_FUNC_ENTER();
-
-    run = env;
-    while (run) {
-        tmp = run->next;
-        HYD_env_free(run);
-        run = tmp;
-    }
-
-    HYD_FUNC_EXIT();
-    return status;
-}
-
-
 HYD_status HYD_env_append_to_list(const char *env_name, const char *env_value,
                                   struct HYD_env ** env_list)
 {
@@ -168,56 +149,6 @@ HYD_status HYD_env_append_to_list(const char *env_name, const char *env_value,
             }
             run = run->next;
         }
-    }
-
-  fn_exit:
-    HYD_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-HYD_status HYD_env_put(struct HYD_env *env)
-{
-    char *tmp[HYD_NUM_TMP_STRINGS], *str;
-    int i;
-    HYD_status status = HYD_SUCCESS;
-
-    HYD_FUNC_ENTER();
-
-    i = 0;
-    tmp[i++] = MPL_strdup(env->env_name);
-    tmp[i++] = MPL_strdup("=");
-    tmp[i++] = env->env_value ? MPL_strdup(env->env_value) : MPL_strdup("");
-    tmp[i++] = NULL;
-    status = HYD_str_alloc_and_join(tmp, &str);
-    HYD_ERR_POP(status, "unable to join strings\n");
-
-    putenv(str);
-
-    for (i = 0; tmp[i]; i++)
-        MPL_free(tmp[i]);
-
-  fn_exit:
-    HYD_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-
-HYD_status HYD_env_put_list(struct HYD_env *env_list)
-{
-    struct HYD_env *env;
-    HYD_status status = HYD_SUCCESS;
-
-    HYD_FUNC_ENTER();
-
-    for (env = env_list; env; env = env->next) {
-        status = HYD_env_put(env);
-        HYD_ERR_POP(status, "putenv failed\n");
     }
 
   fn_exit:
