@@ -149,6 +149,7 @@ static void genv_help_fn(void)
 static HYD_status genv_fn(char *arg, char ***argv)
 {
     char *env_name, *env_value, *str[2] = { 0 };
+    struct HYD_env *env;
     HYD_status status = HYD_SUCCESS;
 
     status = HYD_str_split(**argv, &str[0], &str[1], '=');
@@ -168,7 +169,12 @@ static HYD_status genv_fn(char *arg, char ***argv)
         env_value = MPL_strdup(str[1]);
     }
 
-    HYD_env_append_to_list(env_name, env_value, &mpiexec_params.primary.list);
+    HYD_REALLOC(mpiexec_params.primary.env, char **,
+                (mpiexec_params.primary.envcount + 1) * sizeof(char *), status);
+    status = HYD_env_create(&env, env_name, env_value);
+    HYD_ERR_POP(status, "error creating env\n");
+    status = HYD_env_to_str(env, &mpiexec_params.primary.env[mpiexec_params.primary.envcount]);
+    HYD_ERR_POP(status, "error converting env to string\n");
 
     if (str[0])
         MPL_free(str[0]);

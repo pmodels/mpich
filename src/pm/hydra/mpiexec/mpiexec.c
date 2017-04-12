@@ -45,13 +45,15 @@ struct mpiexec_params_s mpiexec_params = {
     .envlist = NULL,
 
     .primary = {
-        .list = NULL,
+        .envcount = 0,
+        .env = NULL,
         .serialized_buf_len = 0,
         .serialized_buf = NULL,
     },
 
     .secondary = {
-        .list = NULL,
+        .envcount = 0,
+        .env = NULL,
         .serialized_buf_len = 0,
         .serialized_buf = NULL,
     },
@@ -273,26 +275,32 @@ static HYD_status find_launcher(void)
 static HYD_status push_env_downstream(struct mpiexec_pg *pg)
 {
     struct HYD_env *env, *inherit;
-    int env_count;
-    char **env_args;
     int i;
     struct MPX_cmd cmd;
+    int count;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();
 
-    /* setup primary and secondary environment lists */
-    mpiexec_params.primary.list = NULL;
-    mpiexec_params.secondary.list = NULL;
-
     status = HYD_env_list_inherited(&inherit);
     HYD_ERR_POP(status, "unable to get the inherited env list\n");
+    for (env = inherit, count = 0; env; env = env->next, count++);
 
     if (mpiexec_params.envprop == MPIEXEC_ENVPROP__UNSET) {
-        mpiexec_params.secondary.list = inherit;
+        mpiexec_params.secondary.envcount = count;
+        HYD_MALLOC(mpiexec_params.secondary.env, char **, count * sizeof(char *), status);
+        for (env = inherit, i = 0; env; env = env->next, i++) {
+            status = HYD_env_to_str(env, &mpiexec_params.secondary.env[i]);
+            HYD_ERR_POP(status, "error converting env to string\n");
+        }
     }
     else if (mpiexec_params.envprop == MPIEXEC_ENVPROP__ALL) {
-        mpiexec_params.primary.list = inherit;
+        mpiexec_params.primary.envcount = count;
+        HYD_MALLOC(mpiexec_params.primary.env, char **, count * sizeof(char *), status);
+        for (env = inherit, i = 0; env; env = env->next, i++) {
+            status = HYD_env_to_str(env, &mpiexec_params.primary.env[i]);
+            HYD_ERR_POP(status, "error converting env to string\n");
+        }
     }
     else if (mpiexec_params.envprop == MPIEXEC_ENVPROP__NONE) {
         /* inherited env is completely ignored */
@@ -300,13 +308,15 @@ static HYD_status push_env_downstream(struct mpiexec_pg *pg)
     else if (mpiexec_params.envprop == MPIEXEC_ENVPROP__LIST) {
         /* pick out specific variables from the inherited env and drop
          * the rest */
+        mpiexec_params.primary.envcount = mpiexec_params.envlist_count;
+        HYD_MALLOC(mpiexec_params.primary.env, char **,
+                   mpiexec_params.primary.envcount * sizeof(char *), status);
+
         for (i = 0; i < mpiexec_params.envlist_count; i++) {
             for (env = inherit; env; env = env->next) {
                 if (!strcmp(mpiexec_params.envlist[i], env->env_name)) {
-                    status =
-                        HYD_env_append_to_list(env->env_name, env->env_value,
-                                               &mpiexec_params.primary.list);
-                    HYD_ERR_POP(status, "error setting env\n");
+                    status = HYD_env_to_str(env, &mpiexec_params.primary.env[i]);
+                    HYD_ERR_POP(status, "error converting env to string\n");
                 }
             }
             if (!env) {
@@ -318,38 +328,22 @@ static HYD_status push_env_downstream(struct mpiexec_pg *pg)
 
     /* Preset common environment options for disabling STDIO buffering
      * in Fortran */
-    HYD_env_append_to_list("GFORTRAN_UNBUFFERED_PRECONNECTED", "y", &mpiexec_params.primary.list);
+    HYD_REALLOC(mpiexec_params.primary.env, char **,
+                (mpiexec_params.primary.envcount + 1) * sizeof(char *), status);
+    mpiexec_params.primary.env[mpiexec_params.primary.envcount] =
+        MPL_strdup("GFORTRAN_UNBUFFERED_PRECONNECTED=y");
+    mpiexec_params.primary.envcount++;
 
-    env_count = 0;
-    for (env = mpiexec_params.primary.list; env; env = env->next)
-        env_count++;
-    if (env_count) {
-        HYD_MALLOC(env_args, char **, env_count * sizeof(char *), status);
-        for (env = mpiexec_params.primary.list, i = 0; env; env = env->next, i++) {
-            status = HYD_env_to_str(env, &env_args[i]);
-            HYD_ERR_POP(status, "error converting env to str\n");
-        }
-        MPL_args_serialize(env_count, env_args, &mpiexec_params.primary.serialized_buf_len,
+    if (mpiexec_params.primary.envcount) {
+        MPL_args_serialize(mpiexec_params.primary.envcount, mpiexec_params.primary.env,
+                           &mpiexec_params.primary.serialized_buf_len,
                            &mpiexec_params.primary.serialized_buf);
-        for (i = 0; i < env_count; i++)
-            MPL_free(env_args[i]);
-        MPL_free(env_args);
     }
 
-    env_count = 0;
-    for (env = mpiexec_params.secondary.list; env; env = env->next)
-        env_count++;
-    if (env_count) {
-        HYD_MALLOC(env_args, char **, env_count * sizeof(char *), status);
-        for (env = mpiexec_params.secondary.list, i = 0; env; env = env->next, i++) {
-            status = HYD_env_to_str(env, &env_args[i]);
-            HYD_ERR_POP(status, "error converting env to str\n");
-        }
-        MPL_args_serialize(env_count, env_args, &mpiexec_params.secondary.serialized_buf_len,
+    if (mpiexec_params.secondary.envcount) {
+        MPL_args_serialize(mpiexec_params.secondary.envcount, mpiexec_params.secondary.env,
+                           &mpiexec_params.secondary.serialized_buf_len,
                            &mpiexec_params.secondary.serialized_buf);
-        for (i = 0; i < env_count; i++)
-            MPL_free(env_args[i]);
-        MPL_free(env_args);
     }
 
     MPL_VG_MEM_INIT(&cmd, sizeof(cmd));
@@ -997,13 +991,19 @@ int main(int argc, char **argv)
     if (mpiexec_params.envlist)
         MPL_free(mpiexec_params.envlist);
 
-    if (mpiexec_params.primary.list)
-        HYD_env_free_list(mpiexec_params.primary.list);
+    for (i = 0; i < mpiexec_params.primary.envcount; i++)
+        MPL_free(mpiexec_params.primary.env[i]);
+    if (mpiexec_params.primary.envcount)
+        MPL_free(mpiexec_params.primary.env);
+
     if (mpiexec_params.primary.serialized_buf)
         MPL_free(mpiexec_params.primary.serialized_buf);
 
-    if (mpiexec_params.secondary.list)
-        HYD_env_free_list(mpiexec_params.secondary.list);
+    for (i = 0; i < mpiexec_params.secondary.envcount; i++)
+        MPL_free(mpiexec_params.secondary.env[i]);
+    if (mpiexec_params.secondary.envcount)
+        MPL_free(mpiexec_params.secondary.env);
+
     if (mpiexec_params.secondary.serialized_buf)
         MPL_free(mpiexec_params.secondary.serialized_buf);
 

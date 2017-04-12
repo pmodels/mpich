@@ -69,7 +69,8 @@ struct mpiexec_params_s {
     /* primary envs are force-propagated.  secondary envs are never
      * overwritten. */
     struct {
-        struct HYD_env *list;
+        int envcount;
+        char **env;
         int serialized_buf_len;
         void *serialized_buf;
     } primary, secondary;
