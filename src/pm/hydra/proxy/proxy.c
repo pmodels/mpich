@@ -20,6 +20,7 @@ struct proxy_params proxy_params = {
         .hostname = NULL,
         .subtree_size = -1,
         .barrier_ref_count = -1,
+        .pid_ref_count = -1,
     },
 
     .immediate = {
@@ -66,6 +67,10 @@ struct proxy_params proxy_params = {
 /* *INDENT-ON* */
 
 int proxy_ready_to_launch = 0;
+
+int **proxy_pids;
+int *n_proxy_pids;
+int **proxy_pmi_ids;
 
 static HYD_status check_params(void)
 {
@@ -561,11 +566,16 @@ int main(int argc, char **argv)
     status = HYD_print_set_prefix_str("proxy:unset");
     HYD_ERR_POP(status, "unable to set dbg prefix\n");
 
-    /* To launch the MPI processes, we follow a three-step process:
+    HYD_MALLOC(proxy_pids, int **, proxy_params.immediate.proxy.num_children * sizeof(int *), status);
+    HYD_MALLOC(n_proxy_pids, int *, proxy_params.immediate.proxy.num_children * sizeof(int), status);
+    HYD_MALLOC(proxy_pmi_ids, int **, proxy_params.immediate.proxy.num_children * sizeof(int *), status);
+
+    /* To launch the MPI processes, we follow a process:
      * (1) get parameters from the bstrap, as arguments or from
      * upstream, (2) make sure all the parameters we need are
      * available, (3) close all downstream stdins (downstream proxies
-     * never get stdin), (4) launch processes. */
+     * never get stdin), (4) launch processes, (5) send pids back upstream to
+     * put in the PROCDESC struct for debuggers. */
 
     /* step 1(a): get parameters */
     status = get_params(argc, argv);
@@ -633,6 +643,14 @@ int main(int argc, char **argv)
     status = launch_processes();
     HYD_ERR_POP(status, "error launching_processes\n");
 
+    /* step 5: report PIDs back to mpiexec for debugger */
+    i = 0;
+    MPL_HASH_ITER(hh, proxy_params.immediate.process.pid_hash, hash, tmp) {
+        proxy_pids[0][i++] = hash->key; /* The pid of the child process */
+    }
+    n_proxy_pids[0] = proxy_params.immediate.process.num_children;
+    memcpy(proxy_pmi_ids, proxy_params.immediate.process.pmi_id, n_proxy_pids[0] * sizeof(int));
+    proxy_send_pids_upstream();
 
     /* The launch is now complete: we wait for the processes to
      * complete their execution, in a five-step process: (1) wait for

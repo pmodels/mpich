@@ -35,6 +35,7 @@ struct proxy_params {
         const char *hostname;
         int subtree_size;
         int barrier_ref_count;
+        int pid_ref_count;
     } root;
 
     /* immediate children */
@@ -82,6 +83,9 @@ struct proxy_params {
 
 extern struct proxy_params proxy_params;
 extern int proxy_ready_to_launch;
+extern int **proxy_pids;
+extern int **proxy_pmi_ids;
+extern int *n_proxy_pids;
 
 HYD_status proxy_upstream_control_cb(int fd, HYD_dmx_event_t events, void *userp);
 HYD_status proxy_downstream_control_cb(int fd, HYD_dmx_event_t events, void *userp);
@@ -91,6 +95,7 @@ HYD_status proxy_process_pmi_cb(int fd, HYD_dmx_event_t events, void *userp);
 HYD_status proxy_barrier_in(int fd, struct proxy_kv_hash *hash);
 HYD_status proxy_barrier_out(int fd, struct proxy_kv_hash *hash);
 HYD_status proxy_pmi_kvcache_out(int num_blocks, int *kvlen, char *kvcache, int buflen);
+HYD_status proxy_send_pids_upstream();
 
 struct proxy_pmi_handle {
     const char *cmd;

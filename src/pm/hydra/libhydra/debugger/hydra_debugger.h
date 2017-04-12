@@ -9,6 +9,7 @@
 
 #include "hydra_base.h"
 #include "hydra_exec.h"
+#include "hydra_node.h"
 
 /* This structure is defined by the debugger interface */
 typedef struct MPIR_PROCDESC {
@@ -57,7 +58,7 @@ extern int (*MPIR_breakpointFn) (void);
 int MPIR_Breakpoint(void);
 
 HYD_status HYD_dbg_setup_procdesc(int process_count, struct HYD_exec *exec_list, int *pid,
-                                  int node_count, const char **node_names, int *core_counts);
+                                  int node_count, struct HYD_node * node_list);
 void HYD_dbg_free_procdesc(void);
 
 #endif /* HYDRA_DEBUGGER_H_INCLUDED */

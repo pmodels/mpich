@@ -32,6 +32,7 @@ struct MPX_cmd {
         MPX_CMD_TYPE__STDOUT,
         MPX_CMD_TYPE__STDERR,
         MPX_CMD_TYPE__KVCACHE_IN,
+        MPX_CMD_TYPE__PID,
     } type;
 
     int data_len;
@@ -65,6 +66,11 @@ struct MPX_cmd {
         struct {
             int signum;
         } signal;
+
+        struct {
+            int proxy_id;
+            int pgid;
+        } pids;
     } u;
 };
 

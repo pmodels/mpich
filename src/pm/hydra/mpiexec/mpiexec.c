@@ -59,10 +59,14 @@ struct mpiexec_params_s mpiexec_params = {
     .prepend_pattern = NULL,
     .outfile_pattern = NULL,
     .errfile_pattern = NULL,
+
+    .pid_ref_count = -1,
 };
 /* *INDENT-ON* */
 
 struct mpiexec_pg *mpiexec_pg_hash = NULL;
+
+int *contig_pids;
 
 static void signal_cb(int signum)
 {
@@ -600,6 +604,44 @@ static HYD_status control_cb(int fd, HYD_dmx_event_t events, void *userp)
 
         MPL_free(buf);
     }
+    else if (cmd.type == MPX_CMD_TYPE__PID) {
+        int *proxy_pids;
+        int n_proxy_pids;
+        int *proxy_pmi_ids;
+        int i;
+
+        /* Find the proxy id of the proxy sending the data */
+        n_proxy_pids = cmd.data_len / (2 * sizeof(int));
+
+        /* Read the pid data from the socket */
+        HYD_MALLOC(proxy_pids, int *, cmd.data_len / 2, status);
+        status =
+            HYD_sock_read(fd, proxy_pids, cmd.data_len, &recvd, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
+
+        /* Read the pmi_id data from the socket */
+        HYD_MALLOC(proxy_pmi_ids, int *, cmd.data_len / 2, status);
+        status =
+            HYD_sock_read(fd, proxy_pmi_ids, cmd.data_len, &recvd, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
+
+        /* Move pid to the correct place in the pid array */
+        for (i = 0; i < n_proxy_pids; i++) {
+            contig_pids[proxy_pmi_ids[i]] = proxy_pids[i];
+        }
+
+        MPL_free(proxy_pids);
+        MPL_free(proxy_pmi_ids);
+
+        mpiexec_params.pid_ref_count++;
+
+        MPL_HASH_FIND_INT(mpiexec_pg_hash, &cmd.u.pids.pgid, pg);
+
+        /* If we have all of the pids, post the list to the MPIR_PROCDESC struct so the debugger can find it */
+        if (mpiexec_params.pid_ref_count == pg->num_downstream) {
+            HYD_dbg_setup_procdesc(pg->total_proc_count, pg->exec_list, contig_pids, pg->node_count, pg->node_list);
+
+            MPL_free(contig_pids);
+        }
+    }
     else {
         HYD_ERR_SETANDJUMP(status, HYD_ERR_INTERNAL, "received unknown cmd %d\n", cmd.type);
     }
@@ -712,6 +754,8 @@ int main(int argc, char **argv)
             exec->proc_count = mpiexec_params.global_core_count;
         pg->total_proc_count += exec->proc_count;
     }
+
+    HYD_MALLOC(contig_pids, int *, pg->total_proc_count, status);
 
     if (mpiexec_params.usize == MPIEXEC_USIZE__SYSTEM)
         mpiexec_params.usize = mpiexec_params.global_core_count;

@@ -6,6 +6,7 @@
 
 #include "hydra_debugger.h"
 #include "hydra_mem.h"
+#include "hydra_node.h"
 
 struct MPIR_PROCDESC *MPIR_proctable = NULL;
 int MPIR_proctable_size = 0;
@@ -25,7 +26,7 @@ int MPIR_Breakpoint(void)
 }
 
 HYD_status HYD_dbg_setup_procdesc(int process_count, struct HYD_exec * exec_list, int *pid,
-                                  int node_count, const char **node_names, int *core_counts)
+                                  int node_count, struct HYD_node * node_list)
 {
     struct HYD_exec *exec;
     int i, exec_proc_count, node_id, node_core_count;
@@ -51,11 +52,10 @@ HYD_status HYD_dbg_setup_procdesc(int process_count, struct HYD_exec * exec_list
             exec_proc_count = 0;
         }
 
-        /* unsafe typecast to char * to keep the debugger model happy */
-        MPIR_proctable[i].host_name = (char *) node_names[node_id];
+        MPIR_proctable[i].host_name = node_list[i].hostname;
         node_core_count++;
 
-        if (node_core_count == core_counts[node_id]) {
+        if (node_core_count == node_list[i].core_count) {
             node_id++;
             node_core_count = 0;
 
