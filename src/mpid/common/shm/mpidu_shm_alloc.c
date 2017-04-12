@@ -220,6 +220,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t *memory, MPIDU_shm_barrier_t **barrier,
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
+        MPIR_CHKLMEM_MALLOC(key, char *, PMI2_MAX_KEYLEN, mpi_errno, "key");
+        MPL_snprintf(key, PMI2_MAX_KEYLEN, "sharedFilename-%d", num_segments);
 
         if (local_rank == 0) {
             mpi_errno = MPL_shm_seg_create_and_attach(memory->hnd, memory->segment_len, &(memory->base_addr), 0);
@@ -246,7 +248,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t *memory, MPIDU_shm_barrier_t **barrier,
              * serializing operation with our peers on the local node this
              * ensures that these initializations have occurred before any peer
              * attempts to use the resources. */
-            mpi_errno = PMI2_Info_PutNodeAttr("sharedFilename", serialized_hnd);
+            mpi_errno = PMI2_Info_PutNodeAttr(key, serialized_hnd);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         } else {
             int found = FALSE;
@@ -255,7 +257,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t *memory, MPIDU_shm_barrier_t **barrier,
             MPIR_CHKLMEM_MALLOC(val, char *, PMI2_MAX_VALLEN, mpi_errno, "val");
 
             /* get name of shared file */
-            mpi_errno = PMI2_Info_GetNodeAttr("sharedFilename", val, PMI2_MAX_VALLEN, &found, TRUE);
+            mpi_errno = PMI2_Info_GetNodeAttr(key, val, PMI2_MAX_VALLEN, &found, TRUE);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "nodeattr not found");
 
