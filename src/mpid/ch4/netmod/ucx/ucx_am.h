@@ -62,8 +62,7 @@ static inline int MPIDI_NM_am_isend(int rank,
                                     size_t am_hdr_sz,
                                     const void *data,
                                     MPI_Count count,
-                                    MPI_Datatype datatype, MPIR_Request * sreq,
-                                    void *netmod_context)
+                                    MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
@@ -94,7 +93,7 @@ static inline int MPIDI_NM_am_isend(int rank,
         MPIDI_CH4U_REQUEST(sreq, req->lreq).msg_tag = lreq_hdr.hdr.msg_tag;
         MPIDI_CH4U_REQUEST(sreq, rank) = rank;
         mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDI_CH4U_SEND_LONG_REQ,
-                                         &lreq_hdr, sizeof(lreq_hdr), NULL);
+                                         &lreq_hdr, sizeof(lreq_hdr));
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
@@ -171,7 +170,7 @@ static inline int MPIDI_NM_am_isendv(int rank,
                                      const void *data,
                                      MPI_Count count,
                                      MPI_Datatype datatype,
-                                     MPIR_Request * sreq, void *netmod_context)
+                                     MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t am_hdr_sz = 0, i;
@@ -352,7 +351,7 @@ static inline size_t MPIDI_NM_am_hdr_max_sz(void)
 static inline int MPIDI_NM_am_send_hdr(int rank,
                                        MPIR_Comm * comm,
                                        int handler_id,
-                                       const void *am_hdr, size_t am_hdr_sz, void *netmod_context)
+                                       const void *am_hdr, size_t am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;

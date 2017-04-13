@@ -14,7 +14,7 @@
 #include "ofi_am_impl.h"
 #include "ofi_am_events.h"
 
-static inline int MPIDI_OFI_progress_do_queue(void *netmod_context);
+static inline int MPIDI_OFI_progress_do_queue(void);
 
 static inline void MPIDI_NM_am_request_init(MPIR_Request * req)
 {
@@ -37,8 +37,7 @@ static inline int MPIDI_NM_am_isend(int rank,
                                     size_t am_hdr_sz,
                                     const void *data,
                                     MPI_Count count,
-                                    MPI_Datatype datatype, MPIR_Request * sreq,
-                                    void *netmod_context)
+                                    MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_SEND_AM);
@@ -66,7 +65,7 @@ static inline int MPIDI_NM_am_isendv(int rank,
                                      const void *data,
                                      MPI_Count count,
                                      MPI_Datatype datatype,
-                                     MPIR_Request * sreq, void *netmod_context)
+                                     MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS, is_allocated;
     size_t am_hdr_sz = 0, i;
@@ -97,7 +96,7 @@ static inline int MPIDI_NM_am_isendv(int rank,
     }
 
     mpi_errno = MPIDI_NM_am_isend(rank, comm, handler_id, am_hdr_buf, am_hdr_sz,
-                                  data, count, datatype, sreq, netmod_context);
+                                  data, count, datatype, sreq);
 
     if (is_allocated)
         MPL_free(am_hdr_buf);
@@ -151,14 +150,14 @@ static inline size_t MPIDI_NM_am_hdr_max_sz(void)
 static inline int MPIDI_NM_am_send_hdr(int rank,
                                        MPIR_Comm * comm,
                                        int handler_id,
-                                       const void *am_hdr, size_t am_hdr_sz, void *netmod_context)
+                                       const void *am_hdr, size_t am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_INJECT_AM_HDR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_INJECT_AM_HDR);
     mpi_errno = MPIDI_OFI_do_inject(rank, comm,
                                     handler_id, am_hdr, am_hdr_sz,
-                                    netmod_context, FALSE, TRUE, TRUE);
+                                    FALSE, TRUE, TRUE);
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
@@ -180,7 +179,7 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_INJECT_AM_HDR_REPLY);
 
     mpi_errno = MPIDI_OFI_do_inject(src_rank, MPIDI_CH4U_context_id_to_comm(context_id),
-                                    handler_id, am_hdr, am_hdr_sz, NULL, TRUE, TRUE, FALSE);
+                                    handler_id, am_hdr, am_hdr_sz, TRUE, TRUE, FALSE);
 
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);

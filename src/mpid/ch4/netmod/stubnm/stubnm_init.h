@@ -19,7 +19,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int *tag_ub,
                                          MPIR_Comm * comm_world,
                                          MPIR_Comm * comm_self,
-                                         int spawned, int num_contexts, void **netmod_contexts)
+                                         int spawned)
 {
     int mpi_errno = MPI_SUCCESS;
 
