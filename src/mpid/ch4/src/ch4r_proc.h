@@ -26,6 +26,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_COMM_RANK_TO_PID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_COMM_RANK_TO_PID);
 
+    *avtid = 0;
+
     switch (MPIDI_COMM(comm, map).mode) {
     case MPIDI_RANK_MAP_DIRECT:
         *avtid = MPIDI_COMM(comm, map).avtid;
