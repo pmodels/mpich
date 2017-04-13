@@ -1398,7 +1398,7 @@ static inline int MPIDI_OFI_application_hints(int rank)
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_get_size",
                              "**pmi_get_size %d", mpi_errno);
     }
-    if (world_size > (1UL << MPIDI_OFI_MAX_RANK_BITS)) {
+    if (MPIDI_OFI_MAX_RANK_BITS < 32 && world_size > (1 << MPIDI_OFI_MAX_RANK_BITS)) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|too_many_ranks");
     }
 
