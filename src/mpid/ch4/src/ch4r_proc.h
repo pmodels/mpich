@@ -220,7 +220,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rank_is_local(int rank, MPIR_Comm * comm
                     (MPL_DBG_FDEST, " is_local=%d, rank=%d", ret, rank));
 #endif
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_RANK_IS_LOCAL);
     return ret;
 }
