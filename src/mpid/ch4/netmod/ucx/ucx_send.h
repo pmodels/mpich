@@ -44,6 +44,7 @@ static inline int MPIDI_UCX_send(const void *buf,
                                  int tag,
                                  MPIR_Comm * comm,
                                  int context_offset,
+                                 MPIDI_av_entry_t *addr,
                                  MPIR_Request ** request,
                                  int have_request,
                                  int is_sync)
@@ -121,9 +122,11 @@ static inline int MPIDI_NM_mpi_send(const void *buf,
                                     MPI_Datatype datatype,
                                     int rank,
                                     int tag,
-                                    MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
+                                    MPIR_Comm * comm, int context_offset,
+                                    MPIDI_av_entry_t *addr, MPIR_Request ** request)
 {
-    return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset, request, 0, 0);
+    return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
+                          addr, request, 0, 0);
 }
 
 #undef FUNCNAME
@@ -135,9 +138,11 @@ static inline int MPIDI_NM_mpi_ssend(const void *buf,
                                      MPI_Datatype datatype,
                                      int rank,
                                      int tag,
-                                     MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
+                                     MPIR_Comm * comm, int context_offset,
+                                     MPIDI_av_entry_t *addr, MPIR_Request ** request)
 {
-    return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset, request, 0, 1);
+    return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
+                          addr, request, 0, 1);
 }
 
 #undef FUNCNAME
@@ -159,6 +164,7 @@ static inline int MPIDI_NM_mpi_send_init(const void *buf,
                                          int rank,
                                          int tag,
                                          MPIR_Comm * comm, int context_offset,
+                                         MPIDI_av_entry_t *addr,
                                          MPIR_Request ** request)
 {
     return MPIDIG_mpi_send_init(buf, count, datatype, rank, tag, comm, context_offset, request);
@@ -174,6 +180,7 @@ static inline int MPIDI_NM_mpi_ssend_init(const void *buf,
                                           int rank,
                                           int tag,
                                           MPIR_Comm * comm, int context_offset,
+                                          MPIDI_av_entry_t *addr,
                                           MPIR_Request ** request)
 {
     return MPIDIG_mpi_ssend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
@@ -189,6 +196,7 @@ static inline int MPIDI_NM_mpi_bsend_init(const void *buf,
                                           int rank,
                                           int tag,
                                           MPIR_Comm * comm, int context_offset,
+                                          MPIDI_av_entry_t *addr,
                                           MPIR_Request ** request)
 {
     return MPIDIG_mpi_bsend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
@@ -204,6 +212,7 @@ static inline int MPIDI_NM_mpi_rsend_init(const void *buf,
                                           int rank,
                                           int tag,
                                           MPIR_Comm * comm, int context_offset,
+                                          MPIDI_av_entry_t *addr,
                                           MPIR_Request ** request)
 {
     return MPIDIG_mpi_rsend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
@@ -218,9 +227,11 @@ static inline int MPIDI_NM_mpi_isend(const void *buf,
                                      MPI_Datatype datatype,
                                      int rank,
                                      int tag,
-                                     MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
+                                     MPIR_Comm * comm, int context_offset,
+                                     MPIDI_av_entry_t *addr, MPIR_Request ** request)
 {
-    return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0);
+    return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
+                          addr, request, 1, 0);
 }
 
 #undef FUNCNAME
@@ -232,9 +243,11 @@ static inline int MPIDI_NM_mpi_issend(const void *buf,
                                       MPI_Datatype datatype,
                                       int rank,
                                       int tag,
-                                      MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
+                                      MPIR_Comm * comm, int context_offset,
+                                      MPIDI_av_entry_t *addr, MPIR_Request ** request)
 {
-    return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 1);
+    return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
+                          addr, request, 1, 1);
 }
 
 #undef FUNCNAME

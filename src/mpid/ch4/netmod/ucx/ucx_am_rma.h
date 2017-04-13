@@ -19,7 +19,7 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
                                    MPI_Datatype origin_datatype,
                                    int target_rank,
                                    MPI_Aint target_disp,
-                                   int target_count, MPI_Datatype target_datatype, MPIR_Win * win)
+                                   int target_count, MPI_Datatype target_datatype, MPIR_Win * win, MPIDI_av_entry_t *addr)
 {
     int ret;
 
@@ -38,7 +38,7 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
                                    MPI_Datatype origin_datatype,
                                    int target_rank,
                                    MPI_Aint target_disp,
-                                   int target_count, MPI_Datatype target_datatype, MPIR_Win * win)
+                                   int target_count, MPI_Datatype target_datatype, MPIR_Win * win, MPIDI_av_entry_t *addr)
 {
     int ret;
 
@@ -59,7 +59,7 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
                                     MPI_Aint target_disp,
                                     int target_count,
                                     MPI_Datatype target_datatype,
-                                    MPIR_Win * win, MPIR_Request ** request)
+                                    MPIR_Win * win, MPIDI_av_entry_t *addr, MPIR_Request ** request)
 {
     int ret;
 
@@ -80,7 +80,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
                                                 void *result_addr,
                                                 MPI_Datatype datatype,
                                                 int target_rank, MPI_Aint target_disp,
-                                                MPIR_Win * win)
+                                                MPIR_Win * win, MPIDI_av_entry_t *addr)
 {
     int ret;
 
@@ -101,7 +101,7 @@ static inline int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
                                            MPI_Aint target_disp,
                                            int target_count,
                                            MPI_Datatype target_datatype,
-                                           MPI_Op op, MPIR_Win * win, MPIR_Request ** request)
+                                           MPI_Op op, MPIR_Win * win, MPIDI_av_entry_t *addr, MPIR_Request ** request)
 {
     int ret;
 
@@ -126,7 +126,7 @@ static inline int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
                                                MPI_Aint target_disp,
                                                int target_count,
                                                MPI_Datatype target_datatype,
-                                               MPI_Op op, MPIR_Win * win, MPIR_Request ** request)
+                                               MPI_Op op, MPIR_Win * win, MPIDI_av_entry_t *addr, MPIR_Request ** request)
 {
     int ret;
 
@@ -146,7 +146,7 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
                                             void *result_addr,
                                             MPI_Datatype datatype,
                                             int target_rank,
-                                            MPI_Aint target_disp, MPI_Op op, MPIR_Win * win)
+                                            MPI_Aint target_disp, MPI_Op op, MPIR_Win * win, MPIDI_av_entry_t *addr)
 {
     int ret;
 
@@ -168,7 +168,7 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
                                     MPI_Aint target_disp,
                                     int target_count,
                                     MPI_Datatype target_datatype,
-                                    MPIR_Win * win, MPIR_Request ** request)
+                                    MPIR_Win * win, MPIDI_av_entry_t *addr, MPIR_Request ** request)
 {
     int ret;
 
@@ -194,7 +194,7 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
                                               MPI_Aint target_disp,
                                               int target_count,
                                               MPI_Datatype target_datatype, MPI_Op op,
-                                              MPIR_Win * win)
+                                              MPIR_Win * win, MPIDI_av_entry_t *addr)
 {
     int ret;
 
@@ -216,7 +216,7 @@ static inline int MPIDI_NM_mpi_accumulate(const void *origin_addr,
                                           int target_rank,
                                           MPI_Aint target_disp,
                                           int target_count,
-                                          MPI_Datatype target_datatype, MPI_Op op, MPIR_Win * win)
+                                          MPI_Datatype target_datatype, MPI_Op op, MPIR_Win * win, MPIDI_av_entry_t *addr)
 {
     int ret;
 
