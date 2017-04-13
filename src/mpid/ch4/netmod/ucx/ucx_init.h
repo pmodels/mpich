@@ -24,7 +24,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int *tag_ub,
                                          MPIR_Comm * comm_world,
                                          MPIR_Comm * comm_self,
-                                         int spawned)
+                                         int spawned,
+                                         int *n_vnis_provided)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno;
     int str_errno = MPL_STR_SUCCESS;
@@ -54,6 +55,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT);
+
+    *n_vnis_provided = 1;
 
     ucx_status = ucp_config_read(NULL, NULL, &config);
     MPIDI_UCX_CHK_STATUS(ucx_status);
@@ -215,7 +218,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_UCX_CHK_STATUS(ucx_status);
     }
 
-    MPIDIG_init(comm_world, comm_self);
+    MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
@@ -294,6 +297,12 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
   fn_fail:
     goto fn_exit;
 
+}
+
+static inline int MPIDI_NM_get_vni_attr(int vni)
+{
+    MPIR_Assert(0 <= vni && vni < 1);
+    return MPIDI_VNI_TX | MPIDI_VNI_RX;
 }
 
 static inline int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,

@@ -338,7 +338,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int *tag_ub,
                                          MPIR_Comm * comm_world,
                                          MPIR_Comm * comm_self,
-                                         int spawned)
+                                         int spawned,
+                                         int *n_vnis_provided)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno, i, fi_version;
     int thr_err = 0, str_errno, maxlen;
@@ -707,6 +708,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         }
     }
 
+    *n_vnis_provided = 1;
+
     /* ------------------------------------------------------------------------ */
     /* Create a transport level communication endpoint.  To use the endpoint,   */
     /* it must be bound to completion counters or event queues and enabled,     */
@@ -835,7 +838,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_Global.max_send);
         MPIDI_Global.am_buf_pool =
             MPIDI_CH4U_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
-        mpi_errno = MPIDIG_init(comm_world, comm_self);
+        mpi_errno = MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
 
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -1006,6 +1009,12 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+static inline int MPIDI_NM_get_vni_attr(int vni)
+{
+    MPIR_Assert(0 <= vni && vni < 1);
+    return MPIDI_VNI_TX | MPIDI_VNI_RX;
 }
 
 static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
