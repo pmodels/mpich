@@ -103,7 +103,7 @@ static inline void MPIDI_UCX_Handle_am_recv(void *request, ucs_status_t status,
 #define FUNCNAME MPIDI_NM_progress
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_progress(int blocking)
+static inline int MPIDI_NM_progress(int vni, int blocking)
 {
     int mpi_errno = MPI_SUCCESS;
     ucp_tag_recv_info_t info;
