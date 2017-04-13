@@ -49,7 +49,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int *tag_ub,
                                          MPIR_Comm * comm_world,
                                          MPIR_Comm * comm_self,
-                                         int spawned, int num_contexts, void **netmod_contexts)
+                                         int spawned)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
@@ -163,7 +163,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     }
 
     /* Setup CH4R Active Messages */
-    MPIDIG_init(comm_world, comm_self, num_contexts, netmod_contexts);
+    MPIDIG_init(comm_world, comm_self);
     for (i = 0; i < MPIDI_PTL_NUM_OVERFLOW_BUFFERS; i++) {
         MPIDI_PTL_global.overflow_bufs[i] = MPL_malloc(MPIDI_PTL_OVERFLOW_BUFFER_SZ);
         MPIDI_PTL_append_overflow(i);

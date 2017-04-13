@@ -57,13 +57,13 @@ static inline int MPIDI_am_isend(const void *buf, int count, MPI_Datatype dataty
 
         mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SSEND_REQ,
                                       &ssend_req, sizeof(ssend_req),
-                                      buf, count, datatype, sreq, NULL);
+                                      buf, count, datatype, sreq);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
     else {
         mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SEND,
-                                      &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq, NULL);
+                                      &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
