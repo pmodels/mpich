@@ -13,7 +13,7 @@
 
 #include "ofi_impl.h"
 
-static inline int MPIDI_OFI_progress_do_queue(void *netmod_context);
+static inline int MPIDI_OFI_progress_do_queue(void);
 
 /*
   Per-object lock for OFI
@@ -43,7 +43,7 @@ static inline int MPIDI_OFI_progress_do_queue(void *netmod_context);
                                    FCNAME,                              \
                                    fi_strerror(-_ret));                 \
             if (LOCK) MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX); \
-            mpi_errno = MPIDI_OFI_progress_do_queue(NULL);      \
+            mpi_errno = MPIDI_OFI_progress_do_queue();                  \
             if (LOCK) MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX); \
             if (mpi_errno != MPI_SUCCESS)                                \
                 MPIR_ERR_POP(mpi_errno);                                \
@@ -142,7 +142,7 @@ static inline int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * req)
 #define FUNCNAME MPIDI_OFI_progress_do_queue
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_progress_do_queue(void *netmod_context)
+static inline int MPIDI_OFI_progress_do_queue(void)
 {
     int mpi_errno = MPI_SUCCESS, ret;
     struct fi_cq_tagged_entry cq_entry;
@@ -433,7 +433,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
         MPIDI_CH4U_REQUEST(sreq, req->lreq).msg_tag = lreq_hdr.hdr.msg_tag;
         MPIDI_CH4U_REQUEST(sreq, rank) = rank;
         mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDI_CH4U_SEND_LONG_REQ,
-                                         &lreq_hdr, sizeof(lreq_hdr), NULL);
+                                         &lreq_hdr, sizeof(lreq_hdr));
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
@@ -530,7 +530,6 @@ static inline int MPIDI_OFI_do_inject(int rank,
                                       int handler_id,
                                       const void *am_hdr,
                                       size_t am_hdr_sz,
-                                      void *netmod_context,
                                       int is_reply, int use_comm_table, int need_lock)
 {
     int mpi_errno = MPI_SUCCESS;

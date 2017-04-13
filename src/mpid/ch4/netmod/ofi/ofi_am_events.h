@@ -403,7 +403,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_dispatch_ack(int rank,
                                          int context_id,
-                                         uint64_t sreq_ptr, int am_type, void *netmod_context)
+                                         uint64_t sreq_ptr, int am_type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_ack_msg_t msg;

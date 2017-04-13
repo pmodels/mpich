@@ -613,7 +613,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_read_event(struct fi_cq_tagged_entry *
                                                      MPIR_Request * dont_use_me)
 {
     int mpi_errno = MPI_SUCCESS;
-    void *netmod_context = NULL;
     MPIR_Request *rreq;
     MPIDI_OFI_am_request_t *ofi_req;
 
@@ -630,7 +629,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_read_event(struct fi_cq_tagged_entry *
     mpi_errno = MPIDI_OFI_dispatch_ack(MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).src_rank,
                                        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).context_id,
                                        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).sreq_ptr,
-                                       MPIDI_AMTYPE_LMT_ACK, netmod_context);
+                                       MPIDI_AMTYPE_LMT_ACK);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

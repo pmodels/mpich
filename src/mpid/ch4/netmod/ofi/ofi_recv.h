@@ -286,7 +286,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
     if (ret == 0) {
         while ((!MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) && (!MPIR_cc_is_complete(&rreq->cc))) {
             if ((mpi_errno =
-                 MPIDI_NM_progress(&MPIDI_OFI_REQUEST(rreq, context), 0)) != MPI_SUCCESS)
+                 MPIDI_NM_progress(0)) != MPI_SUCCESS)
                 goto fn_exit;
         }
 
