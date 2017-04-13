@@ -17,6 +17,13 @@
 #include "strings.h"
 #include "datatype.h"
 
+#ifdef USE_PMI2_API
+/* PMI does not specify a max size for jobid_size in PMI2_Job_GetId.
+   CH3 uses jobid_size=MAX_JOBID_LEN=1024 when calling
+   PMI2_Job_GetId. */
+#define MPIDI_MAX_JOBID_LEN PMI2_MAX_VALLEN
+#endif
+
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -112,6 +119,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 #ifdef MPIDI_BUILD_CH4_SHM
     int n_shm_vnis_provided;
 #endif
+#ifndef USE_PMI2_API
+    int max_pmi_name_length;
+#endif
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
@@ -128,6 +138,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
     if (pmi_errno != PMI_SUCCESS) {
         MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_init", "**pmi_init %d", pmi_errno);
+    }
+
+    MPIDI_CH4_Global.jobid = (char *) MPL_malloc(MPIDI_MAX_JOBID_LEN);
+    pmi_errno = PMI2_Job_GetId(MPIDI_CH4_Global.jobid, MPIDI_MAX_JOBID_LEN);
+    if (pmi_errno != PMI_SUCCESS) {
+        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_job_getid",
+                             "**pmi_job_getid %d", pmi_errno);
     }
 #else
     pmi_errno = PMI_Init(&has_parent);
@@ -155,6 +172,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     if (pmi_errno != PMI_SUCCESS) {
         MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_get_appnum",
                              "**pmi_get_appnum %d", pmi_errno);
+    }
+
+    pmi_errno = PMI_KVS_Get_name_length_max(&max_pmi_name_length);
+    if (pmi_errno != PMI_SUCCESS) {
+        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_name_length_max",
+                             "**pmi_kvs_get_name_length_max %d", pmi_errno);
+    }
+
+    MPIDI_CH4_Global.jobid = (char *) MPL_malloc(max_pmi_name_length);
+    pmi_errno = PMI_KVS_Get_my_name(MPIDI_CH4_Global.jobid, max_pmi_name_length);
+    if (pmi_errno != PMI_SUCCESS) {
+        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_my_name",
+                             "**pmi_kvs_get_my_name %d", pmi_errno);
     }
 #endif
 
@@ -332,6 +362,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
     }
 
     MPIDIU_avt_destroy();
+    MPL_free(MPIDI_CH4_Global.jobid);
 
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
