@@ -7,7 +7,7 @@
 #include "mpl.h"
 #include <assert.h>
 
-int MPL_args_serialize(int argc, char * const * const argv, int *len, void **serialized_buf)
+int MPL_args_serialize(int argc, char **argv, int *len, void **serialized_buf)
 {
     int buf_size, offset, tmp;
     char *buf;
@@ -50,9 +50,9 @@ int MPL_args_serialize(int argc, char * const * const argv, int *len, void **ser
     return 0;
 }
 
-int MPL_args_deserialize(int len, void *serialized_buf, int *argc, char ***argv)
+int MPL_args_deserialize(int len, const void * serialized_buf, int *argc, char ***argv)
 {
-    char *buf = serialized_buf;
+    const char *buf = serialized_buf;
     int nargs;
     int *arg_lengths;
     char **targv;
