@@ -49,7 +49,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int *tag_ub,
                                          MPIR_Comm * comm_world,
                                          MPIR_Comm * comm_self,
-                                         int spawned)
+                                         int spawned,
+                                         int *n_vnis_provided)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
@@ -69,6 +70,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_Assert(((void *) &(((ptl_iovec_t *) 0)->iov_len)) ==
                 ((void *) &(((MPL_IOV *) 0)->MPL_IOV_LEN)));
     MPIR_Assert(sizeof(((ptl_iovec_t *) 0)->iov_len) == sizeof(((MPL_IOV *) 0)->MPL_IOV_LEN));
+
+    *n_vnis_provided = 1;
 
     /* init portals */
     ret = PtlInit();
@@ -163,7 +166,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     }
 
     /* Setup CH4R Active Messages */
-    MPIDIG_init(comm_world, comm_self);
+    MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
     for (i = 0; i < MPIDI_PTL_NUM_OVERFLOW_BUFFERS; i++) {
         MPIDI_PTL_global.overflow_bufs[i] = MPL_malloc(MPIDI_PTL_OVERFLOW_BUFFER_SZ);
         MPIDI_PTL_append_overflow(i);
@@ -211,6 +214,11 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     return mpi_errno;
 }
 
+static inline int MPIDI_NM_get_vni_attr(int vni)
+{
+    MPIR_Assert(0 <= vni && vni < 1);
+    return MPIDI_VNI_TX | MPIDI_VNI_RX;
+}
 
 static inline int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
                                          int idx, int *lpid_ptr, MPL_bool is_remote)

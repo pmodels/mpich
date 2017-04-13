@@ -108,6 +108,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 {
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
     int avtid;
+    int n_vnis_provided;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
 
@@ -246,7 +247,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
     mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &MPIR_Process.attrs.tag_ub,
                                        MPIR_Process.comm_world,
-                                       MPIR_Process.comm_self, has_parent);
+                                       MPIR_Process.comm_self, has_parent,
+                                       &n_nm_vnis_provided);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POPFATAL(mpi_errno);
     }

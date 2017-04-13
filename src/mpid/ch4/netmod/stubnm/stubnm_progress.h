@@ -13,7 +13,7 @@
 
 #include "stubnm_impl.h"
 
-static inline int MPIDI_NM_progress(int blocking)
+static inline int MPIDI_NM_progress(int vni, int blocking)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

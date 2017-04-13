@@ -39,6 +39,12 @@
 
 #define MAX_PROGRESS_HOOKS 4
 
+/* VNI attributes */
+enum {
+    MPIDI_VNI_TX = 0x1, /* Can send */
+    MPIDI_VNI_RX = 0x2, /* Can receive */
+};
+
 #define MPIDI_CH4I_BUF_POOL_NUM (1024)
 #define MPIDI_CH4I_BUF_POOL_SZ (256)
 

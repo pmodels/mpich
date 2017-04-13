@@ -17,9 +17,11 @@
 #define MPIDI_MAX_NETMOD_STRING_LEN 64
 
 typedef int (*MPIDI_NM_mpi_init_t) (int rank, int size, int appnum, int *tag_ub,
-                                    MPIR_Comm * comm_world, MPIR_Comm * comm_self, int spawned);
+                                    MPIR_Comm * comm_world, MPIR_Comm * comm_self, int spawned,
+                                    int *n_vnis_provided);
 typedef int (*MPIDI_NM_mpi_finalize_t) (void);
-typedef int (*MPIDI_NM_progress_t) (int blocking);
+typedef int (*MPIDI_NM_get_vni_attr_t)(int vni);
+typedef int (*MPIDI_NM_progress_t) (int vni, int blocking);
 typedef int (*MPIDI_NM_mpi_comm_connect_t) (const char *port_name, MPIR_Info * info, int root,
                                             int timeout, MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
 typedef int (*MPIDI_NM_mpi_comm_disconnect_t) (MPIR_Comm * comm_ptr);
@@ -344,6 +346,7 @@ typedef int (*MPIDI_NM_mpi_op_free_hook_t) (MPIR_Op * op_p);
 typedef struct MPIDI_NM_funcs {
     MPIDI_NM_mpi_init_t mpi_init;
     MPIDI_NM_mpi_finalize_t mpi_finalize;
+    MPIDI_NM_get_vni_attr_t get_vni_attr;
     MPIDI_NM_progress_t progress;
     MPIDI_NM_mpi_comm_connect_t mpi_comm_connect;
     MPIDI_NM_mpi_comm_disconnect_t mpi_comm_disconnect;
@@ -488,10 +491,11 @@ extern char MPIDI_NM_strings[][MPIDI_MAX_NETMOD_STRING_LEN];
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_ub,
                                                     MPIR_Comm * comm_world, MPIR_Comm * comm_self,
-                                                    int spawned)
+                                                    int spawned, int *n_vnis_provided)
     MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int blocking) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_get_vni_attr(int vni) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vni, int blocking) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_connect(const char *port_name, MPIR_Info * info,
                                                        int root, int timeout,
                                                        MPIR_Comm * comm, MPIR_Comm **
