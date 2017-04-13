@@ -126,7 +126,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
                                                int rank,
                                                int tag,
                                                MPIR_Comm * comm,
-                                               int context_offset,
+                                               int context_offset, MPIDI_av_entry_t *addr,
                                                MPI_Status * status, MPIR_Request ** request)
 {
     int mpi_errno;
@@ -156,7 +156,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
                                                     int rank,
                                                     int tag,
                                                     MPIR_Comm * comm,
-                                                    int context_offset, MPIR_Request ** request)
+                                                    int context_offset, MPIDI_av_entry_t *addr, MPIR_Request ** request)
 {
     MPIR_Request *rreq;
     int mpi_errno = MPI_SUCCESS;
@@ -239,7 +239,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 MPI_Datatype datatype,
                                                 int rank,
                                                 int tag,
-                                                MPIR_Comm * comm, int context_offset,
+                                                MPIR_Comm * comm, int context_offset, MPIDI_av_entry_t *addr,
                                                 MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;

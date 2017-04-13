@@ -103,6 +103,7 @@ static inline int MPIDI_UCX_recv(void *buf,
                                  int rank,
                                  int tag, MPIR_Comm * comm,
                                  int context_offset,
+                                 MPIDI_av_entry_t *addr,
                                  MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -224,9 +225,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
                                                int tag,
                                                MPIR_Comm * comm,
                                                int context_offset,
+                                               MPIDI_av_entry_t *addr,
                                                MPI_Status * status, MPIR_Request ** request)
 {
-    return MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, request);
+    return MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset,
+                          addr, request);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
@@ -235,9 +238,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 int rank,
                                                 int tag,
                                                 MPIR_Comm * comm, int context_offset,
+                                                MPIDI_av_entry_t *addr,
                                                 MPIR_Request ** request)
 {
-    return MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, request);
+    return MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset,
+                          addr, request);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
@@ -246,7 +251,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
                                                     int rank,
                                                     int tag,
                                                     MPIR_Comm * comm,
-                                                    int context_offset, MPIR_Request ** request)
+                                                    int context_offset,
+                                                    MPIDI_av_entry_t *addr,
+                                                    MPIR_Request ** request)
 {
     return MPIDIG_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 }

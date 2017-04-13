@@ -580,7 +580,7 @@ static inline int MPIDI_NM_mpi_win_test(MPIR_Win * win, int *flag)
 #define FUNCNAME MPIDI_NM_mpi_win_lock
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPIR_Win * win, MPIDI_av_entry_t *addr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -624,7 +624,7 @@ static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPI
 #define FUNCNAME MPIDI_NM_mpi_win_unlock
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_entry_t *addr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_UNLOCK);
@@ -1153,7 +1153,7 @@ static inline int MPIDI_NM_mpi_win_allocate(MPI_Aint size,
 #define FUNCNAME MPIDI_NM_mpi_win_flush
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win, MPIDI_av_entry_t *addr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH);
@@ -1308,7 +1308,7 @@ static inline int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info,
 #define FUNCNAME MPIDI_NM_mpi_win_flush_local
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win, MPIDI_av_entry_t *addr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL);

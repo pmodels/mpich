@@ -19,7 +19,9 @@ static inline int MPIDI_NM_mpi_recv(void *buf,
                                     int rank,
                                     int tag,
                                     MPIR_Comm * comm,
-                                    int context_offset, MPI_Status * status,
+                                    int context_offset,
+                                    MPIDI_av_entry_t *addr,
+                                    MPI_Status * status,
                                     MPIR_Request ** request)
 {
     return MPIDIG_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status, request);
@@ -31,6 +33,7 @@ static inline int MPIDI_NM_mpi_recv_init(void *buf,
                                          int rank,
                                          int tag,
                                          MPIR_Comm * comm, int context_offset,
+                                         MPIDI_av_entry_t *addr,
                                          MPIR_Request ** request)
 {
     MPIR_Assert(0);
@@ -51,7 +54,9 @@ static inline int MPIDI_NM_mpi_irecv(void *buf,
                                      MPI_Datatype datatype,
                                      int rank,
                                      int tag,
-                                     MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
+                                     MPIR_Comm * comm, int context_offset,
+                                     MPIDI_av_entry_t *addr,
+                                     MPIR_Request ** request)
 {
     return MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
 }

@@ -143,7 +143,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_lock(int lock_type, int rank, int assert, 
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_LOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_LOCK);
-    mpi_errno = MPIDI_NM_mpi_win_lock(lock_type, rank, assert, win);
+    mpi_errno = MPIDI_NM_mpi_win_lock(lock_type, rank, assert, win, NULL);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -163,7 +163,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock(int rank, MPIR_Win * win)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_UNLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_UNLOCK);
-    mpi_errno = MPIDI_NM_mpi_win_unlock(rank, win);
+    mpi_errno = MPIDI_NM_mpi_win_unlock(rank, win, NULL);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -312,7 +312,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local(int rank, MPIR_Win * win)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH_LOCAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_FLUSH_LOCAL);
-    mpi_errno = MPIDI_NM_mpi_win_flush_local(rank, win);
+    mpi_errno = MPIDI_NM_mpi_win_flush_local(rank, win, NULL);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -398,7 +398,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush(int rank, MPIR_Win * win)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_FLUSH);
-    mpi_errno = MPIDI_NM_mpi_win_flush(rank, win);
+    mpi_errno = MPIDI_NM_mpi_win_flush(rank, win, NULL);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }

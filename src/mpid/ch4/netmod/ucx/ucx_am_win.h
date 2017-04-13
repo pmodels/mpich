@@ -95,7 +95,7 @@ static inline int MPIDI_NM_mpi_win_test(MPIR_Win * win, int *flag)
     return ret;
 }
 
-static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPIR_Win * win, MPIDI_av_entry_t *addr)
 {
     int ret;
 
@@ -109,7 +109,7 @@ static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPI
 }
 
 
-static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_entry_t *addr)
 {
     int ret;
 
@@ -254,7 +254,7 @@ static inline int MPIDI_NM_mpi_win_allocate(MPI_Aint size,
     return ret;
 }
 
-static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win, MPIDI_av_entry_t *addr)
 {
     int ret;
 
@@ -307,7 +307,7 @@ static inline int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * 
     return ret;
 }
 
-static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win, MPIDI_av_entry_t *addr)
 {
     int ret;
 
