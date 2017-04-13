@@ -88,6 +88,8 @@ int main(int argc, char *argv[])
         MPI_Send(hostname, namelen + 1, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
         MPI_Send(&port, 1, MPI_INT, 0, 1, MPI_COMM_WORLD);
 
+        MPI_Barrier(MPI_COMM_WORLD);
+
         clilen = sizeof(cliaddr);
 
         connfd = accept(listenfd, (struct sockaddr *) &cliaddr, &clilen);
@@ -102,6 +104,8 @@ int main(int argc, char *argv[])
         MPI_Recv(hostname, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, 1, 0,
                  MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         MPI_Recv(&port, 1, MPI_INT, 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+        MPI_Barrier(MPI_COMM_WORLD);
 
         h = gethostbyname(hostname);
         if (h == NULL) {
