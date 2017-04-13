@@ -888,11 +888,11 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
         goto fn_fail;
 
     shm_key = (char *) MPL_malloc(sizeof(char));
-    shm_key_size = snprintf(shm_key, 1, "/mpi-%X-%X-%" PRIx64,
+    shm_key_size = snprintf(shm_key, 1, "/mpi-%s-%X-%" PRIx64,
                             MPIDI_CH4_Global.jobid, root_rank,
                             MPIDI_CH4U_WIN(win, win_id));
     shm_key = (char *) MPL_realloc(shm_key, shm_key_size);
-    snprintf(shm_key, shm_key_size, "/mpi-%X-%X-%" PRIx64,
+    snprintf(shm_key, shm_key_size, "/mpi-%s-%X-%" PRIx64,
              MPIDI_CH4_Global.jobid, root_rank, MPIDI_CH4U_WIN(win, win_id));
 
     rc = shm_open(shm_key, O_CREAT | O_EXCL | O_RDWR, 0600);
