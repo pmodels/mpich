@@ -386,7 +386,6 @@ typedef struct {
     /* Process management and PMI globals */
     int pname_set;
     int pname_len;
-    int jobid;
     char addrname[FI_NAME_MAX];
     size_t addrnamelen;
     char kvsname[MPIDI_KVSAPPSTRLEN];
