@@ -234,6 +234,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIDI_COMM(MPIR_Process.comm_self, local_map).mode = MPIDI_RANK_MAP_NONE;
     MPIDIU_avt_add_ref(0);
 
+#ifdef MPL_USE_DBG_LOGGING
+    int counter_;
+    if (size < 16) {
+        for (counter_ = 0; counter_ < size; ++counter_) {
+            MPIDIU_comm_rank_to_av(MPIR_Process.comm_world, counter_);
+        }
+    }
+#endif
+
     MPIR_Process.attrs.tag_ub = (1ULL << MPIDI_CH4U_TAG_SHIFT) - 1;
     /* discuss */
 

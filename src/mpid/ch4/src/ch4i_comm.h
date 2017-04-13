@@ -1051,6 +1051,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
         MPIDI_COMM(comm, local_map).mode = MPIDI_RANK_MAP_NONE;
     }
 
+#ifdef MPL_USE_DBG_LOGGING
+    int rank_;
+    int avtid_, lpid_;
+    if (comm->remote_size < 16) {
+        for (rank_ = 0; rank_ < comm->remote_size; ++rank_) {
+            MPIDIU_comm_rank_to_pid(comm, rank_, &lpid_, &avtid_);
+            MPIDIU_comm_rank_to_av(comm, rank_);
+        }
+    }
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM && comm->local_size < 16) {
+        for (rank_ = 0; rank_ < comm->local_size; ++rank_) {
+            MPIDIU_comm_rank_to_pid_local(comm, rank_, &lpid_, &avtid_);
+        }
+    }
+#endif
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_CREATE_RANK_MAP);
     return mpi_errno;
 }
