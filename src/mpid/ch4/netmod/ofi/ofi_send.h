@@ -16,10 +16,10 @@
 
 #define MPIDI_OFI_SENDPARAMS const void *buf,int count,MPI_Datatype datatype, \
     int rank,int tag,MPIR_Comm *comm,                               \
-    int context_offset,MPIR_Request **request
+    int context_offset, MPIDI_av_entry_t *addr, MPIR_Request **request
 
 #define MPIDI_OFI_SENDARGS buf,count,datatype,rank,tag, \
-                 comm,context_offset,request
+                 comm,context_offset,addr,request
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_OFI_send_lightweight
@@ -273,7 +273,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(MPIDI_OFI_SENDPARAMS, int noreq, uin
                                                            request);
     else
         mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, rank, tag, comm,
-                                          context_offset, request, dt_contig,
+                                          context_offset, addr, request, dt_contig,
                                           data_sz, dt_ptr, dt_true_lb, syncflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND);
@@ -433,6 +433,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * req
                                            MPIDI_OFI_REQUEST(preq,util.persist.tag),
                                            preq->comm,
                                            MPIDI_OFI_REQUEST(preq,util_id) - preq->comm->recvcontext_id,
+                                           NULL,
                                            &preq->u.persist.real_request);
             break;
 #else
@@ -457,6 +458,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * req
                                            MPIDI_OFI_REQUEST(preq,util.persist.tag),
                                            preq->comm,
                                            MPIDI_OFI_REQUEST(preq,util_id) - preq->comm->context_id,
+                                           NULL,
                                            &preq->u.persist.real_request);
             break;
 #else
