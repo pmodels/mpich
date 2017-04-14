@@ -284,20 +284,22 @@ HYD_status proxy_downstream_control_cb(int fd, HYD_dmx_event_t events, void *use
     case MPX_CMD_TYPE__PID:
         {
             int rel_proxy_id;
+            int *contig_data;
 
             /* Find the proxy id of the proxy sending the data */
             rel_proxy_id = cmd.u.pids.proxy_id - proxy_params.root.proxy_id;
-            n_proxy_pids[rel_proxy_id] = cmd.data_len / sizeof(int);
+            n_proxy_pids[rel_proxy_id] = cmd.data_len / (2 * sizeof(int));
 
-            /* Read the pid data from the socket */
+            /* Read the data from the socket */
+            HYD_MALLOC(contig_data, int *, cmd.data_len, status);
             HYD_MALLOC(proxy_pids[rel_proxy_id], int *, cmd.data_len / 2, status);
-            status =
-                HYD_sock_read(fd, proxy_pids[rel_proxy_id], cmd.data_len / 2, &recvd, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
-
-            /* Read the pmi_id data from the socket */
             HYD_MALLOC(proxy_pmi_ids[rel_proxy_id], int *, cmd.data_len / 2, status);
+
             status =
-                HYD_sock_read(fd, proxy_pmi_ids[rel_proxy_id], cmd.data_len / 2, &recvd, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
+                HYD_sock_read(fd, contig_data, cmd.data_len, &recvd, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
+
+            memcpy(proxy_pids[rel_proxy_id], contig_data, cmd.data_len / 2);
+            memcpy(proxy_pmi_ids[rel_proxy_id], &contig_data[n_proxy_pids[rel_proxy_id]], cmd.data_len / 2);
 
             /* Call the function to stitch it all together */
             proxy_send_pids_upstream();
