@@ -19,7 +19,7 @@ static inline int MPIDI_POSIX_am_isend(int rank,
                                      size_t am_hdr_sz,
                                      const void *data,
                                      MPI_Count count,
-                                     MPI_Datatype datatype, MPIR_Request * sreq, void *shm_context)
+                                     MPI_Datatype datatype, MPIR_Request * sreq)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISEND);
@@ -37,7 +37,7 @@ static inline int MPIDI_POSIX_am_isendv(int rank,
                                       size_t iov_len,
                                       const void *data,
                                       MPI_Count count,
-                                      MPI_Datatype datatype, MPIR_Request * sreq, void *shm_context)
+                                      MPI_Datatype datatype, MPIR_Request * sreq)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ISENDV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISENDV);
@@ -79,7 +79,7 @@ static inline size_t MPIDI_POSIX_am_hdr_max_sz(void)
 static inline int MPIDI_POSIX_am_send_hdr(int rank,
                                         MPIR_Comm * comm,
                                         int handler_id,
-                                        const void *am_hdr, size_t am_hdr_sz, void *shm_context)
+                                        const void *am_hdr, size_t am_hdr_sz)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);

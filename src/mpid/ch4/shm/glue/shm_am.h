@@ -13,14 +13,14 @@
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm,
                                                    int handler_id, const void *am_hdr,
-                                                   size_t am_hdr_sz, void *shm_context)
+                                                   size_t am_hdr_sz)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
 
-    ret = MPIDI_POSIX_am_send_hdr(rank, comm, handler_id, am_hdr, am_hdr_sz, shm_context);
+    ret = MPIDI_POSIX_am_send_hdr(rank, comm, handler_id, am_hdr, am_hdr_sz);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
     return ret;
@@ -29,8 +29,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm,
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend(int rank, MPIR_Comm * comm, int handler_id,
                                                 const void *am_hdr, size_t am_hdr_sz,
                                                 const void *data, MPI_Count count,
-                                                MPI_Datatype datatype, MPIR_Request * sreq,
-                                                void *shm_context)
+                                                MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int ret;
 
@@ -38,7 +37,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend(int rank, MPIR_Comm * comm, int 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISEND);
 
     ret = MPIDI_POSIX_am_isend(rank, comm, handler_id, am_hdr, am_hdr_sz, data, count,
-                               datatype, sreq, shm_context);
+                               datatype, sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISEND);
     return ret;
@@ -47,8 +46,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend(int rank, MPIR_Comm * comm, int 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isendv(int rank, MPIR_Comm * comm, int handler_id,
                                                  struct iovec *am_hdrs, size_t iov_len,
                                                  const void *data, MPI_Count count,
-                                                 MPI_Datatype datatype, MPIR_Request * sreq,
-                                                 void *shm_context)
+                                                 MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int ret;
 
@@ -56,7 +54,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isendv(int rank, MPIR_Comm * comm, int
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISENDV);
 
     ret = MPIDI_POSIX_am_isendv(rank, comm, handler_id, am_hdrs, iov_len, data, count,
-                                datatype, sreq, shm_context);
+                                datatype, sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISENDV);
     return ret;
