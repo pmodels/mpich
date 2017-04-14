@@ -6,3 +6,4 @@
 
 include libhydra/bstrap/src/Makefile.mk
 include libhydra/bstrap/ssh/Makefile.mk
+include libhydra/bstrap/slurm/Makefile.mk
