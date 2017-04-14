@@ -44,7 +44,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_test(void)
         MPIR_ERR_POP(mpi_errno);
     }
 #ifdef MPIDI_CH4_EXCLUSIVE_SHM
-    mpi_errno = MPIDI_SHM_progress(0);
+    mpi_errno = MPIDI_SHM_progress(0, 0);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
