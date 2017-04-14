@@ -23,7 +23,7 @@ extern char *MPIDI_POSIX_asym_base_addr;
 
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_POSIX_mpi_init_hook)
-static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size)
+static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_provided)
 {
     int mpi_errno = MPI_SUCCESS;
     int num_local = 0;
@@ -40,6 +40,8 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_INIT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_INIT);
+
+    *n_vnis_provided = 1;
 
     MPIDI_POSIX_mem_region.num_seg = 1;
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_mem_region.seg, MPIDU_shm_seg_info_t *,
@@ -262,6 +264,12 @@ static inline int MPIDI_POSIX_mpi_finalize_hook(void)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+static inline int MPIDI_POSIX_get_vni_attr(int vni)
+{
+    MPIR_Assert(0 <= vni && vni < 1);
+    return MPIDI_VNI_TX | MPIDI_VNI_RX;
 }
 
 static inline void *MPIDI_POSIX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)

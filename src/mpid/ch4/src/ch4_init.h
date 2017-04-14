@@ -108,7 +108,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 {
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
     int avtid;
-    int n_vnis_provided;
+    int n_nm_vnis_provided;
+#ifdef MPIDI_BUILD_CH4_SHM
+    int n_shm_vnis_provided;
+#endif
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
 
@@ -238,7 +242,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 #endif
 
 #ifdef MPIDI_BUILD_CH4_SHM
-    mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size);
+    mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vnis_provided);
 
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POPFATAL(mpi_errno);

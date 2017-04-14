@@ -11,14 +11,14 @@
 #include <shm.h>
 #include "../posix/shm_direct.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size)
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_vnis_provided)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
 
-    ret = MPIDI_POSIX_mpi_init_hook(rank, size);
+    ret = MPIDI_POSIX_mpi_init_hook(rank, size, n_vnis_provided);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_INIT_HOOK);
     return ret;
@@ -37,7 +37,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_finalize_hook(void)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int blocking)
+static inline int MPIDI_SHM_get_vni_attr(int vni)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_QUERY_VNI);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_QUERY_VNI);
+
+    ret = MPIDI_POSIX_get_vni_attr(vni);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_QUERY_VNI);
+    return ret;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vni, int blocking)
 {
     int ret;
 
