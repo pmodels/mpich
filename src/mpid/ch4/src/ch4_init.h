@@ -518,7 +518,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcom
     MPIDI_rank_map_mlut_t *mlut = NULL;
     MPIDI_COMM(newcomm_ptr, map).mode = MPIDI_RANK_MAP_MLUT;
     MPIDI_COMM(newcomm_ptr, map).avtid = -1;
-    mpi_errno = MPIDI_alloc_mlut(&mlut, size);
+    mpi_errno = MPIDIU_alloc_mlut(&mlut, size);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
