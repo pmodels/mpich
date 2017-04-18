@@ -578,4 +578,119 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
     goto fn_exit;
 }
 
+struct MPIDI_OFI_contig_blocks_params {
+    size_t max_pipe;
+    DLOOP_Count count;
+    DLOOP_Offset last_loc;
+    DLOOP_Offset start_loc;
+    size_t       last_chunk;
+};
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_contig_count_block
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+    int MPIDI_OFI_contig_count_block(DLOOP_Offset * blocks_p,
+                                     DLOOP_Type el_type,
+                                     DLOOP_Offset rel_off, DLOOP_Buffer bufp, void *v_paramp)
+{
+    DLOOP_Offset size, el_size;
+    size_t rem, num;
+    struct MPIDI_OFI_contig_blocks_params *paramp = v_paramp;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONTIG_COUNT_BLOCK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONTIG_COUNT_BLOCK);
+
+    DLOOP_Assert(*blocks_p > 0);
+
+    DLOOP_Handle_get_size_macro(el_type, el_size);
+    size = *blocks_p * el_size;
+    if (paramp->count > 0 && rel_off == paramp->last_loc) {
+        /* this region is adjacent to the last */
+        paramp->last_loc += size;
+        /* If necessary, recalculate the number of chunks in this block */
+        if(paramp->last_loc - paramp->start_loc > paramp->max_pipe) {
+            paramp->count -= paramp->last_chunk;
+            num = (paramp->last_loc - paramp->start_loc) / paramp->max_pipe;
+            rem = (paramp->last_loc - paramp->start_loc) % paramp->max_pipe;
+            if(rem) num++;
+            paramp->last_chunk = num;
+            paramp->count += num;
+        }
+    }
+    else {
+         /* new region */
+        num  = size / paramp->max_pipe;
+        rem  = size % paramp->max_pipe;
+        if(rem) num++;
+
+        paramp->last_chunk = num;
+        paramp->last_loc   = rel_off + size;
+        paramp->start_loc  = rel_off;
+        paramp->count     += num;
+    }
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONTIG_COUNT_BLOCK);
+    return 0;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_count_iov
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+    size_t MPIDI_OFI_count_iov(int dt_count, MPI_Datatype dt_datatype, size_t max_pipe)
+{
+    struct MPIDI_OFI_contig_blocks_params params;
+    MPIR_Segment dt_seg;
+    ssize_t dt_size, num, rem;
+    size_t dtc, count, count1, count2;;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_COUNT_IOV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_COUNT_IOV);
+
+    count = 0;
+    dtc = MPL_MIN(2, dt_count);
+    params.max_pipe = max_pipe;
+    MPIDI_Datatype_check_size(dt_datatype, dtc, dt_size);
+    if (dtc) {
+        params.count = 0;
+        params.last_loc = 0;
+        params.start_loc = 0;
+        params.last_chunk = 0;
+        MPIR_Segment_init(NULL, 1, dt_datatype, &dt_seg, 0);
+        MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
+                                 MPIDI_OFI_contig_count_block,
+                                 NULL, NULL, NULL, NULL, (void *) &params);
+        count1 = params.count;
+        params.count = 0;
+        params.last_loc = 0;
+        params.start_loc = 0;
+        params.last_chunk = 0;
+        MPIR_Segment_init(NULL, dtc, dt_datatype, &dt_seg, 0);
+        MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
+                                 MPIDI_OFI_contig_count_block,
+                                 NULL, NULL, NULL, NULL, (void *) &params);
+        count2 = params.count;
+        if (count2 == 1) {      /* Contiguous */
+            num = (dt_size * dt_count) / max_pipe;
+            rem = (dt_size * dt_count) % max_pipe;
+            if (rem)
+                num++;
+            count += num;
+        }
+        else if (count2 < count1 * 2)
+            /* The commented calculation assumes merged blocks  */
+            /* The iov processor will not merge adjacent blocks */
+            /* When the iov state machine adds this capability  */
+            /* we should switch to use the optimized calcultion */
+            /* count += (count1*dt_count) - (dt_count-1);       */
+             count += count1 * dt_count;
+        else
+            count += count1 * dt_count;
+    }
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_COUNT_IOV);
+    return count;
+}
+
 #endif /* OFI_IMPL_H_INCLUDED */
