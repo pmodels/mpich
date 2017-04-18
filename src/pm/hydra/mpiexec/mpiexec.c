@@ -738,7 +738,7 @@ int main(int argc, char **argv)
         pg->total_proc_count += exec->proc_count;
     }
 
-    HYD_MALLOC(contig_pids, int *, pg->total_proc_count, status);
+    HYD_MALLOC(contig_pids, int *, pg->total_proc_count * sizeof(int), status);
 
     if (mpiexec_params.usize == MPIEXEC_USIZE__SYSTEM)
         mpiexec_params.usize = mpiexec_params.global_core_count;
