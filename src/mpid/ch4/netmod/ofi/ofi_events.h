@@ -84,7 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_peek_empty_event(struct fi_cq_tagged_entr
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
-                                                  MPIR_Request * rreq)
+                                                  MPIR_Request * rreq, int event_id)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint last;
@@ -117,18 +117,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
     }
 
 #endif
-
-    if (MPIDI_OFI_REQUEST(rreq, noncontig)) {
+    if ((event_id == MPIDI_OFI_EVENT_RECV_PACK || event_id == MPIDI_OFI_EVENT_GET_HUGE) && (MPIDI_OFI_REQUEST(rreq, noncontig.pack))) {
         last = count;
-        MPIR_Segment_unpack(&MPIDI_OFI_REQUEST(rreq, noncontig->segment), 0, &last,
-                            MPIDI_OFI_REQUEST(rreq, noncontig->pack_buffer));
-        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig));
+        MPIR_Segment_unpack(&MPIDI_OFI_REQUEST(rreq, noncontig.pack->segment), 0, &last,
+                            MPIDI_OFI_REQUEST(rreq, noncontig.pack->pack_buffer));
+        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.pack));
         if (last != (MPI_Aint) count) {
             rreq->status.MPI_ERROR =
                 MPIR_Err_create_code(MPI_SUCCESS,
                                      MPIR_ERR_RECOVERABLE,
                                      __FUNCTION__, __LINE__, MPI_ERR_TYPE, "**dtypemismatch", 0);
         }
+    }
+    else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) && (MPIDI_OFI_REQUEST(rreq, noncontig.nopack))) {
+            last = count;
+            MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
     }
 
     dtype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, datatype));
@@ -179,7 +182,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry
     /* Check that the sender didn't underflow the message by sending less than
      * the huge message threshold. */
     if (wc->len < MPIDI_Global.max_send) {
-        return MPIDI_OFI_recv_event(wc, rreq);
+        return MPIDI_OFI_recv_event(wc, rreq, MPIDI_OFI_REQUEST(rreq, event_id));
     }
 
     comm_ptr = MPIDI_OFI_REQUEST(rreq, util_comm);
@@ -246,7 +249,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(struct fi_cq_tagged_entry *wc,
-                                                  MPIR_Request * sreq)
+                                                  MPIR_Request * sreq, int event_id)
 {
     int c;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_SEND_EVENT);
@@ -255,8 +258,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(struct fi_cq_tagged_entry *wc,
     MPIR_cc_decr(sreq->cc_ptr, &c);
 
     if (c == 0) {
-        if (MPIDI_OFI_REQUEST(sreq, noncontig))
-            MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig));
+        if ((event_id == MPIDI_OFI_EVENT_SEND_PACK) && (MPIDI_OFI_REQUEST(sreq, noncontig.pack)))
+            MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack));
+        else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && (event_id == MPIDI_OFI_EVENT_SEND_NOPACK) && MPIDI_OFI_REQUEST(sreq, noncontig.nopack))
+            MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
 
         dtype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
         MPIR_Request_free(sreq);
@@ -306,8 +311,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
         MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(comm).rma_id_allocator, key_back);
         MPIDI_OFI_CALL_NOLOCK(fi_close(&huge_send_mr->fid), mr_unreg);
 
-        if (MPIDI_OFI_REQUEST(sreq, noncontig))
-            MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig));
+        if (MPIDI_OFI_REQUEST(sreq, noncontig.pack))
+            MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack));
 
         dtype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
         MPIR_Request_free(sreq);
@@ -331,7 +336,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_ssend_ack_event(struct fi_cq_tagged_entry
     MPIDI_OFI_ssendack_request_t *req = (MPIDI_OFI_ssendack_request_t *) sreq;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_SSEND_ACK_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_SSEND_ACK_EVENT);
-    mpi_errno = MPIDI_OFI_send_event(NULL, req->signal_req);
+    mpi_errno = MPIDI_OFI_send_event(NULL, req->signal_req, MPIDI_OFI_REQUEST(req->signal_req, event_id));
+
     MPIDI_OFI_ssendack_request_t_tls_free(req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_SSEND_ACK_EVENT);
     return mpi_errno;
@@ -371,7 +377,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
         if (bytesToGet == 0ULL) {
             MPIDI_OFI_send_control_t ctrl;
             recv->wc.len = recv->cur_offset;
-            recv->done_fn(&recv->wc, recv->localreq);
+            recv->done_fn(&recv->wc, recv->localreq, recv->event_id);
             ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
             MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_do_control_send
                                    (&ctrl, NULL, 0, recv->remote_info.origin_rank, recv->comm_ptr,
@@ -665,11 +671,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_ent
     int mpi_errno = MPI_SUCCESS;
 
     if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_SEND)) {
-        mpi_errno = MPIDI_OFI_send_event(wc, req);
+        /* Passing the event_id as a parameter; do not need to load it from the
+         * request object each time the send_event handler is invoked */
+        mpi_errno = MPIDI_OFI_send_event(wc, req, MPIDI_OFI_EVENT_SEND);
         goto fn_exit;
     }
     else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_RECV)) {
-        mpi_errno = MPIDI_OFI_recv_event(wc, req);
+        /* Passing the event_id as a parameter; do not need to load it from the
+         * request object each time the send_event handler is invoked */
+        mpi_errno = MPIDI_OFI_recv_event(wc, req, MPIDI_OFI_EVENT_RECV);
         goto fn_exit;
     }
     else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_RMA_DONE)) {
@@ -707,8 +717,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_ent
             mpi_errno = MPIDI_OFI_recv_huge_event(wc, req);
             break;
 
+        case MPIDI_OFI_EVENT_RECV_PACK:
+            mpi_errno = MPIDI_OFI_recv_event(wc, req, MPIDI_OFI_EVENT_RECV_PACK);
+            break;
+
+        case MPIDI_OFI_EVENT_RECV_NOPACK:
+            mpi_errno = MPIDI_OFI_recv_event(wc, req, MPIDI_OFI_EVENT_RECV_NOPACK);
+            break;
+
         case MPIDI_OFI_EVENT_SEND_HUGE:
             mpi_errno = MPIDI_OFI_send_huge_event(wc, req);
+            break;
+
+        case MPIDI_OFI_EVENT_SEND_PACK:
+            mpi_errno = MPIDI_OFI_send_event(wc, req, MPIDI_OFI_EVENT_SEND_PACK);
+            break;
+
+        case MPIDI_OFI_EVENT_SEND_NOPACK:
+            mpi_errno = MPIDI_OFI_send_event(wc, req, MPIDI_OFI_EVENT_SEND_NOPACK);
             break;
 
         case MPIDI_OFI_EVENT_SSEND_ACK:

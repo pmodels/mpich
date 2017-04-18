@@ -199,7 +199,11 @@ enum {
     MPIDI_OFI_EVENT_AM_MULTI,
     MPIDI_OFI_EVENT_PEEK,
     MPIDI_OFI_EVENT_RECV_HUGE,
+    MPIDI_OFI_EVENT_RECV_PACK,
+    MPIDI_OFI_EVENT_RECV_NOPACK,
     MPIDI_OFI_EVENT_SEND_HUGE,
+    MPIDI_OFI_EVENT_SEND_PACK,
+    MPIDI_OFI_EVENT_SEND_NOPACK,
     MPIDI_OFI_EVENT_SSEND_ACK,
     MPIDI_OFI_EVENT_GET_HUGE,
     MPIDI_OFI_EVENT_CHUNK_DONE,
@@ -294,6 +298,7 @@ typedef struct {
     unsigned enable_am:1;
     unsigned enable_rma:1;
     unsigned enable_atomics:1;
+    unsigned enable_pt2pt_nopack:1;
 
     int max_endpoints;
     int max_endpoints_bits;
@@ -529,7 +534,7 @@ typedef struct MPIDI_OFI_huge_recv {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
-    int (*done_fn) (struct fi_cq_tagged_entry * wc, MPIR_Request * req);
+    int (*done_fn) (struct fi_cq_tagged_entry * wc, MPIR_Request * req, int event_id);
     MPIDI_OFI_send_control_t remote_info;
     size_t cur_offset;
     MPIR_Comm *comm_ptr;
