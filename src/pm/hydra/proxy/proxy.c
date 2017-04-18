@@ -20,6 +20,7 @@ struct proxy_params proxy_params = {
         .hostname = NULL,
         .subtree_size = -1,
         .pid_ref_count = -1,
+        .exitcode_ref_count = -1,
     },
 
     .immediate = {
@@ -70,6 +71,9 @@ int proxy_ready_to_launch = 0;
 int **proxy_pids;
 int *n_proxy_pids;
 int **proxy_pmi_ids;
+int **exitcodes = NULL;
+int **exitcode_node_ids = NULL;
+int *n_proxy_exitcodes = NULL;
 
 static HYD_status check_params(void)
 {
@@ -573,11 +577,10 @@ static int populate_ids_from_mapping(char *mapping, int sz, int *out_nodemap)
 
 int main(int argc, char **argv)
 {
-    int *process_ret;
     struct HYD_int_hash *hash, *tmp;
     char dbg_prefix[2 * HYD_MAX_HOSTNAME_LEN];
     HYD_status status = HYD_SUCCESS;
-    int *nodemap, i, local_rank;
+    int *nodemap, i, local_rank, tmp_ret;
 
     status = HYD_print_set_prefix_str("proxy:unset");
     HYD_ERR_POP(status, "unable to set dbg prefix\n");
@@ -661,8 +664,8 @@ int main(int argc, char **argv)
 
     /* step 5: report PIDs back to mpiexec for debugger */
     i = 0;
-    HYD_MALLOC(proxy_pids[0], int *, proxy_params.immediate.process.num_children, status);
-    HYD_MALLOC(proxy_pmi_ids[0], int *, proxy_params.immediate.process.num_children, status);
+    HYD_MALLOC(proxy_pids[0], int *, proxy_params.immediate.process.num_children * sizeof(int), status);
+    HYD_MALLOC(proxy_pmi_ids[0], int *, proxy_params.immediate.process.num_children * sizeof(int), status);
     MPL_HASH_ITER(hh, proxy_params.immediate.process.pid_hash, hash, tmp) {
         proxy_pids[0][i++] = hash->key; /* The pid of the child process */
     }
@@ -709,13 +712,20 @@ int main(int argc, char **argv)
     }
 
     /* step 2: wait for MPI process to terminate */
-    HYD_MALLOC(process_ret, int *, proxy_params.immediate.process.num_children * sizeof(int),
-               status);
+    HYD_MALLOC(exitcodes, int **, (1 + proxy_params.immediate.proxy.num_children) * sizeof(int *), status);
+    HYD_MALLOC(exitcodes[0], int *, (1 + proxy_params.immediate.process.num_children) * sizeof(int), status);
+    HYD_MALLOC(exitcode_node_ids, int **, (1 + proxy_params.immediate.proxy.num_children) * sizeof(int *), status);
+    HYD_MALLOC(exitcode_node_ids[0], int *, (1 + proxy_params.immediate.process.num_children) * sizeof(int), status);
     MPL_HASH_ITER(hh, proxy_params.immediate.process.pid_hash, hash, tmp) {
-        waitpid(hash->key, &process_ret[hash->val], 0);
+        waitpid(hash->key, &tmp_ret, 0);
+        exitcodes[0][hash->val] = WEXITSTATUS(tmp_ret);
+        exitcode_node_ids[0][hash->val] = proxy_params.root.node_id;
         MPL_HASH_DEL(proxy_params.immediate.process.pid_hash, hash);
         MPL_free(hash);
     }
+    HYD_MALLOC(n_proxy_exitcodes, int *, (1 + proxy_params.immediate.proxy.num_children) * sizeof(int), status);
+    n_proxy_exitcodes[0] = proxy_params.immediate.process.num_children;
+    proxy_send_exitcodes_upstream();
 
     /* step 3: wait for proxy stdout/stderr to close */
     MPL_HASH_ITER(hh, proxy_params.immediate.proxy.fd_stdout_hash, hash, tmp) {

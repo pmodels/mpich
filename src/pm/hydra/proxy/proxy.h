@@ -29,6 +29,7 @@ struct proxy_params {
         const char *hostname;
         int subtree_size;
         int pid_ref_count;
+        int exitcode_ref_count;
     } root;
 
     /* immediate children */
@@ -79,6 +80,9 @@ extern int proxy_ready_to_launch;
 extern int **proxy_pids;
 extern int **proxy_pmi_ids;
 extern int *n_proxy_pids;
+extern int **exitcodes;
+extern int **exitcode_node_ids;
+extern int *n_proxy_exitcodes;
 
 HYD_status proxy_upstream_control_cb(int fd, HYD_dmx_event_t events, void *userp);
 HYD_status proxy_downstream_control_cb(int fd, HYD_dmx_event_t events, void *userp);
@@ -89,6 +93,7 @@ HYD_status proxy_barrier_in(int fd, struct proxy_kv_hash *hash);
 HYD_status proxy_barrier_out(int fd, struct proxy_kv_hash *hash);
 HYD_status proxy_pmi_kvcache_out(int num_blocks, int *kvlen, char *kvcache, int buflen);
 HYD_status proxy_send_pids_upstream();
+HYD_status proxy_send_exitcodes_upstream();
 
 struct proxy_pmi_handle {
     const char *cmd;

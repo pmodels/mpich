@@ -32,6 +32,7 @@ enum MPX_cmd_type {
     MPX_CMD_TYPE__STDERR,
     MPX_CMD_TYPE__KVCACHE_IN,
     MPX_CMD_TYPE__PID,
+    MPX_CMD_TYPE__EXITCODE,
 };
 
 struct MPX_cmd {
@@ -72,6 +73,11 @@ struct MPX_cmd {
             int proxy_id;
             int pgid;
         } pids;
+
+        struct {
+            int proxy_id;
+            int pgid;
+        } exitcodes;
     } u;
 };
 

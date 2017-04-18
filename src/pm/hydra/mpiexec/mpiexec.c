@@ -69,6 +69,9 @@ struct mpiexec_params_s mpiexec_params = {
 struct mpiexec_pg *mpiexec_pg_hash = NULL;
 
 int *contig_pids;
+int **exitcodes;
+int **exitcode_node_ids;
+int *n_proxy_exitcodes;
 
 static void signal_cb(int signum)
 {
@@ -624,6 +627,30 @@ static HYD_status control_cb(int fd, HYD_dmx_event_t events, void *userp)
             MPL_free(contig_pids);
         }
     }
+    else if (cmd.type == MPX_CMD_TYPE__EXITCODE) {
+        int *contig_data;
+
+        MPL_HASH_FIND_INT(mpiexec_pg_hash, &cmd.u.exitcodes.pgid, pg);
+        if (n_proxy_exitcodes == NULL)
+            HYD_MALLOC(n_proxy_exitcodes, int *, pg->num_downstream * sizeof(int), status);
+        n_proxy_exitcodes[cmd.u.exitcodes.proxy_id] = cmd.data_len / (2 * sizeof(int));
+
+        if (exitcodes == NULL)
+            HYD_MALLOC(exitcodes, int **, pg->num_downstream * sizeof(int *), status);
+        HYD_MALLOC(exitcodes[cmd.u.exitcodes.proxy_id], int *, cmd.data_len / 2, status);
+        if (exitcode_node_ids == NULL)
+            HYD_MALLOC(exitcode_node_ids, int **, pg->num_downstream * sizeof(int *), status);
+        HYD_MALLOC(exitcode_node_ids[cmd.u.exitcodes.proxy_id], int *, cmd.data_len / 2, status);
+
+        /* Read the data from the socket */
+        HYD_MALLOC(contig_data, int *, cmd.data_len, status);
+        status =
+            HYD_sock_read(fd, contig_data, cmd.data_len, &recvd, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
+        MPL_free(contig_data);
+
+        memcpy(exitcodes[cmd.u.exitcodes.proxy_id], contig_data, cmd.data_len / 2);
+        memcpy(exitcode_node_ids[cmd.u.exitcodes.proxy_id], &contig_data[n_proxy_exitcodes[cmd.u.exitcodes.proxy_id]], cmd.data_len / 2);
+    }
     else {
         HYD_ERR_SETANDJUMP(status, HYD_ERR_INTERNAL, "received unknown cmd %d\n", cmd.type);
     }
@@ -695,7 +722,7 @@ static HYD_status compute_pmi_process_mapping(struct mpiexec_pg *pg)
 int main(int argc, char **argv)
 {
     struct HYD_exec *exec;
-    int exit_status = 0, i;
+    int exit_status = 0, i, j;
     struct mpiexec_pg *pg;
     char *args[MAX_CMD_ARGS];
     int pgid = 0, core_count;
@@ -899,6 +926,43 @@ int main(int argc, char **argv)
         }
     }
 
+    /* Print exitcodes if necessary */
+    if (mpiexec_params.print_all_exitcodes) {
+        HYD_PRINT(stdout, "Exit codes: ");
+    }
+    exit_status = 0;
+    for (i = 0; i < pg->num_downstream; i++) {
+        char *curr_nodename = NULL;
+
+        /* We didn't receive the exit status for this proxy */
+        HYD_ASSERT(exitcodes != NULL, status);
+        if (exitcodes[i] == NULL) continue;
+
+        for (j = 0; j < n_proxy_exitcodes[i]; j++) {
+            char *nodename;
+
+            /* Get the node name for this exitcode */
+            nodename = mpiexec_params.global_node_list[exitcode_node_ids[i][j]].hostname;
+
+            /* If the nodename has changed, print out a new nodename */
+            if (nodename != curr_nodename && mpiexec_params.print_all_exitcodes) {
+                HYD_PRINT_NOPREFIX(stdout, "[%s] ", nodename);
+                curr_nodename = nodename;
+            }
+
+            exit_status |= exitcodes[i][j];
+
+            /* Print the exitcode for this process */
+            if (mpiexec_params.print_all_exitcodes) {
+                HYD_PRINT_NOPREFIX(stdout, "%d", exitcodes[i][j]);
+                if (j + 1 < n_proxy_exitcodes[i] && mpiexec_params.global_node_list[exitcode_node_ids[i][j+1]].hostname == curr_nodename) {
+                    HYD_PRINT_NOPREFIX(stdout, ",");
+                } else {
+                    HYD_PRINT_NOPREFIX(stdout, "\n");
+                }
+            }
+        }
+    }
 
     /* cleanup memory allocations to keep valgrind happy */
     status = HYD_bstrap_finalize(mpiexec_params.launcher);

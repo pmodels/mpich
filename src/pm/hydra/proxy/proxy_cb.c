@@ -304,6 +304,29 @@ HYD_status proxy_downstream_control_cb(int fd, HYD_dmx_event_t events, void *use
             /* Call the function to stitch it all together */
             proxy_send_pids_upstream();
         }
+    case MPX_CMD_TYPE__EXITCODE:
+        {
+            int rel_proxy_id;
+            int *contig_data;
+
+            /* Find the proxy id of the proxy sending the data */
+            rel_proxy_id = cmd.u.pids.proxy_id - proxy_params.root.proxy_id;
+            n_proxy_exitcodes[rel_proxy_id] = cmd.data_len / (2 * sizeof(int));
+
+            /* Read the data from the socket */
+            HYD_MALLOC(contig_data, int *, cmd.data_len, status);
+            HYD_MALLOC(exitcodes[rel_proxy_id], int *, cmd.data_len / 2, status);
+            HYD_MALLOC(exitcode_node_ids[rel_proxy_id], int *, cmd.data_len / 2, status);
+
+            status =
+                HYD_sock_read(fd, contig_data, cmd.data_len, &recvd, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
+
+            memcpy(exitcodes[rel_proxy_id], contig_data, cmd.data_len / 2);
+            memcpy(exitcode_node_ids[rel_proxy_id], &contig_data[n_proxy_exitcodes[rel_proxy_id]], cmd.data_len / 2);
+
+            /* Call the function to stitch it all together */
+            proxy_send_exitcodes_upstream();
+        }
 
     default:
         HYD_ERR_SETANDJUMP(status, HYD_ERR_INTERNAL, "received unknown cmd %d\n", cmd.type);
@@ -452,6 +475,67 @@ HYD_status proxy_send_pids_upstream()
                            HYD_SOCK_COMM_TYPE__BLOCKING);
         HYD_ERR_POP(status, "error writing data\n");
         HYD_ASSERT(!closed, status);
+    }
+
+  fn_exit:
+    HYD_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status proxy_send_exitcodes_upstream()
+{
+    HYD_status status = HYD_SUCCESS;
+    struct MPX_cmd cmd;
+    int sent, closed, i;
+    int *contig_data;
+    int num_exitcodes = 0, next_exitcode;
+
+    HYD_FUNC_ENTER();
+
+    proxy_params.root.exitcode_ref_count++;
+
+    if (proxy_params.root.exitcode_ref_count == proxy_params.immediate.proxy.num_children) {
+        for (i = 0; i <= proxy_params.immediate.proxy.num_children; i++) {
+            num_exitcodes += n_proxy_exitcodes[i];
+        }
+
+        if (!num_exitcodes) goto fn_exit;
+
+        /* Move everything to a contiguous array */
+        HYD_MALLOC(contig_data, int *, 2 * num_exitcodes * sizeof(int), status);
+        next_exitcode = 0;
+        for (i = 0; i <= proxy_params.immediate.proxy.num_children; i++) {
+            memcpy(&contig_data[next_exitcode], exitcodes[i], n_proxy_exitcodes[i] * sizeof(int));
+            memcpy(&contig_data[num_exitcodes+next_exitcode], exitcode_node_ids[i], n_proxy_exitcodes[i] * sizeof(int));
+            next_exitcode += n_proxy_exitcodes[i];
+            MPL_free(exitcodes[i]);
+            MPL_free(exitcode_node_ids[i]);
+        }
+        MPL_free(exitcodes);
+        MPL_free(exitcode_node_ids);
+
+        /* Send the data to the parent */
+        cmd.type = MPX_CMD_TYPE__EXITCODE;
+        cmd.data_len = 2 * num_exitcodes * sizeof(int);
+        cmd.u.exitcodes.proxy_id = proxy_params.root.proxy_id;
+        cmd.u.exitcodes.pgid = proxy_params.all.pgid;
+
+        status =
+            HYD_sock_write(proxy_params.root.upstream_fd, &cmd, sizeof(cmd), &sent, &closed,
+                           HYD_SOCK_COMM_TYPE__BLOCKING);
+        HYD_ERR_POP(status, "error writing command\n");
+        HYD_ASSERT(!closed, status);
+
+        status =
+            HYD_sock_write(proxy_params.root.upstream_fd, contig_data, cmd.data_len, &sent, &closed,
+                           HYD_SOCK_COMM_TYPE__BLOCKING);
+        HYD_ERR_POP(status, "error writing data\n");
+        HYD_ASSERT(!closed, status);
+
+        MPL_free(contig_data);
     }
 
   fn_exit:
