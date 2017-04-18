@@ -598,7 +598,6 @@ static HYD_status control_cb(int fd, HYD_dmx_event_t events, void *userp)
         int *proxy_pmi_ids;
         int i;
 
-        /* Find the proxy id of the proxy sending the data */
         n_proxy_pids = cmd.data_len / (2 * sizeof(int));
 
         /* Read the data from the socket */
