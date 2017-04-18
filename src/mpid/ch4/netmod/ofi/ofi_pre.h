@@ -111,10 +111,10 @@ typedef struct {
 } MPIDI_OFI_am_request_t;
 
 
-typedef struct MPIDI_OFI_noncontig_t {
+typedef struct {
     struct MPIR_Segment segment;
     char pack_buffer[0];
-} MPIDI_OFI_noncontig_t;
+} MPIDI_OFI_pack_t;
 
 typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
@@ -122,7 +122,10 @@ typedef struct {
     int util_id;
     struct MPIR_Comm *util_comm;
     MPI_Datatype datatype;
-    MPIDI_OFI_noncontig_t *noncontig;
+    union {
+        MPIDI_OFI_pack_t *pack;
+        struct iovec *nopack;
+    } noncontig;
     /* persistent send fields */
     union {
         struct {

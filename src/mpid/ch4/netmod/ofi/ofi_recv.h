@@ -40,6 +40,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_Datatype *dt_ptr;
     struct fi_msg_tagged msg;
     char *recv_buf;
+    struct iovec *originv = NULL;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IRECV);
 
@@ -67,15 +69,79 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     recv_buf = (char *) buf + dt_true_lb;
 
     if (!dt_contig) {
-        MPIDI_OFI_REQUEST(rreq, noncontig) =
-            (MPIDI_OFI_noncontig_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment));
-        MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, noncontig->pack_buffer) == NULL, mpi_errno,
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK) {
+            size_t max_pipe = INT64_MAX;
+            size_t omax = MPIDI_Global.iov_limit;
+            size_t countp = MPIDI_OFI_count_iov(count, datatype, max_pipe);
+            size_t o_size = sizeof(struct iovec);
+            unsigned map_size;
+            int num_contig, size;
+
+            size_t oout = 0;
+            size_t cur_o = 0;
+            MPIR_Segment seg;
+
+            /* If the number of iovecs is greater than the supported hardware limit (to transfer in a single send),
+             *  fallback to the pack path */
+            if (countp > omax) {
+                goto unpack;
+            }
+
+            if (!flags) {
+                flags = FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0);
+            }
+
+            map_size = dt_ptr->max_contig_blocks * count + 1;
+            num_contig = map_size;   /* map_size is the maximum number of iovecs that can be generated */
+            DLOOP_Offset last = dt_ptr->size * count;
+
+            size = o_size*num_contig + sizeof(*(MPIDI_OFI_REQUEST(rreq, noncontig.nopack)));
+            MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = (struct iovec *) MPL_malloc(size);
+            memset(MPIDI_OFI_REQUEST(rreq, noncontig.nopack), 0, size);
+
+            MPIR_Segment_init(buf, count, datatype, &seg, 0);
+            MPIR_Segment_pack_vector(&seg, 0, &last, MPIDI_OFI_REQUEST(rreq, noncontig.nopack), &num_contig);
+
+            originv = &(MPIDI_OFI_REQUEST(rreq, noncontig.nopack[cur_o]));
+            oout = num_contig;  /* num_contig is the actual number of iovecs returned by the Segment_pack_vector function */
+
+            if (oout > omax) {
+                MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
+                goto unpack;
+            }
+
+            MPIDI_OFI_REQUEST(rreq, util_comm) = comm;
+            MPIDI_OFI_REQUEST(rreq, util_id) = context_id;
+
+            MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_NOPACK;
+
+            msg.msg_iov = originv;
+            msg.desc = NULL;
+            msg.iov_count = oout;
+            msg.tag = match_bits;
+            msg.ignore = mask_bits;
+            msg.context = (void *) &(MPIDI_OFI_REQUEST(rreq, context));
+            msg.data = 0;
+            msg.addr = (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_comm_to_phys(comm, rank);
+
+            MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_Global.ctx[0].rx, &msg, flags), trecv,
+                               MPIDI_OFI_CALL_LOCK);
+
+            goto fn_exit;
+        }
+  unpack:
+        MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_PACK;
+        MPIDI_OFI_REQUEST(rreq, noncontig.pack) =
+            (MPIDI_OFI_pack_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment));
+        MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, noncontig.pack->pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
-        recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig->pack_buffer);
-        MPIR_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(rreq, noncontig->segment), 0);
+        recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack->pack_buffer);
+        MPIR_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(rreq, noncontig.pack->segment), 0);
     }
-    else
-        MPIDI_OFI_REQUEST(rreq, noncontig) = NULL;
+    else {
+        MPIDI_OFI_REQUEST(rreq, noncontig.pack) = NULL;
+        MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = NULL;
+    }
 
     MPIDI_OFI_REQUEST(rreq, util_comm) = comm;
     MPIDI_OFI_REQUEST(rreq, util_id) = context_id;
@@ -84,7 +150,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_HUGE;
         data_sz = MPIDI_Global.max_send;
     }
-    else
+    else if (MPIDI_OFI_REQUEST(rreq, event_id) != MPIDI_OFI_EVENT_RECV_PACK)
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
 
     if (!flags) /* Branch should compile out */
