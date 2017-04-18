@@ -237,13 +237,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     }
 #endif
 
-    mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &MPIR_Process.attrs.tag_ub,
-                                       MPIR_Process.comm_world,
-                                       MPIR_Process.comm_self, has_parent, 1, &netmod_contexts);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POPFATAL(mpi_errno);
-    }
-
 #ifdef MPIDI_BUILD_CH4_SHM
     mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size);
 
@@ -251,6 +244,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
         MPIR_ERR_POPFATAL(mpi_errno);
     }
 #endif
+
+    mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &MPIR_Process.attrs.tag_ub,
+                                       MPIR_Process.comm_world,
+                                       MPIR_Process.comm_self, has_parent, 1, &netmod_contexts);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POPFATAL(mpi_errno);
+    }
 
     MPIR_Process.attrs.appnum = appnum;
     MPIR_Process.attrs.wtime_is_global = 1;
