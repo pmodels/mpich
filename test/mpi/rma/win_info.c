@@ -57,6 +57,7 @@ int main(int argc, char **argv)
     char invalid_key[] = "invalid_test_key";
     char buf[MPI_MAX_INFO_VAL];
     int flag;
+    MPI_Comm shm_comm = MPI_COMM_NULL;
 
     MPI_Init(&argc, &argv);
 
@@ -114,24 +115,54 @@ int main(int argc, char **argv)
     win_info_set(win, "accumulate_ordering", "none");
     errors += check_win_info_get(win, "accumulate_ordering", "none");
 
+    /*   #4.3: setting "accumulate_ordering" to "rar,waw" */
+    win_info_set(win, "accumulate_ordering", "rar,waw");
+    errors += check_win_info_get(win, "accumulate_ordering", "rar,waw");
 
-    /* Test#6: getting other info keys */
 
-    MPI_Win_get_info(win, &info_out);
+    /* Test#5: getting/setting "accumulate_ops" */
+    /*   #5.1: is the default "same_op_no_op" as stated in the standard? */
+    errors += check_win_info_get(win, "accumulate_ops", "same_op_no_op");
 
-    MPI_Info_get(info_out, "accumulate_ops", MPI_MAX_INFO_VAL, buf, &flag);
-    if (flag && VERBOSE)
-        printf("%d: accumulate_ops = %s\n", rank, buf);
+    /*   #5.2: setting "accumulate_ops" to "same_op" */
+    win_info_set(win, "accumulate_ops", "same_op");
+    errors += check_win_info_get(win, "accumulate_ops", "same_op");
 
-    MPI_Info_get(info_out, "same_size", MPI_MAX_INFO_VAL, buf, &flag);
-    if (flag && VERBOSE)
-        printf("%d: same_size = %s\n", rank, buf);
 
-    MPI_Info_get(info_out, "alloc_shm", MPI_MAX_INFO_VAL, buf, &flag);
-    if (flag && VERBOSE)
-        printf("%d: alloc_shm = %s\n", rank, buf);
+    /* Test#6: setting "same_size" (no default value) */
+    win_info_set(win, "same_size", "false");
+    errors += check_win_info_get(win, "same_size", "false");
 
-    MPI_Info_free(&info_out);
+    win_info_set(win, "same_size", "true");
+    errors += check_win_info_get(win, "same_size", "true");
+
+
+    /* Test#7: setting "same_disp_unit" (no default value) */
+    win_info_set(win, "same_disp_unit", "false");
+    errors += check_win_info_get(win, "same_disp_unit", "false");
+
+    win_info_set(win, "same_disp_unit", "true");
+    errors += check_win_info_get(win, "same_disp_unit", "true");
+
+    /* TODO: check alloc_shm as implementation-specific test */
+
+    /* Test#8: setting "alloc_shared_noncontig" (no default value) in shared window. */
+    MPI_Win_free(&win);
+
+    /*   #8.1: setting at window allocation */
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, rank, MPI_INFO_NULL, &shm_comm);
+
+    MPI_Info_create(&info_in);
+    MPI_Info_set(info_in, "alloc_shared_noncontig", "true");
+    MPI_Win_allocate_shared(sizeof(int), sizeof(int), info_in, shm_comm, &base, &win);
+    errors += check_win_info_get(win, "alloc_shared_noncontig", "true");
+    MPI_Info_free(&info_in);
+
+    /*   #8.2: setting info */
+    win_info_set(win, "alloc_shared_noncontig", "false");
+    errors += check_win_info_get(win, "alloc_shared_noncontig", "false");
+    MPI_Comm_free(&shm_comm);
+
     MPI_Win_free(&win);
 
     MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
