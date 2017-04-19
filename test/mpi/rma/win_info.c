@@ -11,10 +11,45 @@
 #include "mpitest.h"
 
 #define VERBOSE 0
+int rank, nproc;
+
+static int check_win_info_get(MPI_Win win, const char *key, const char *exp_val)
+{
+    int flag = 0;
+    MPI_Info info_out = MPI_INFO_NULL;
+    char buf[MPI_MAX_INFO_VAL];
+    int errors = 0;
+
+    MPI_Win_get_info(win, &info_out);
+    MPI_Info_get(info_out, key, MPI_MAX_INFO_VAL, buf, &flag);
+    if (!flag || strncmp(buf, exp_val, strlen(exp_val)) != 0) {
+        if (flag)
+            printf("%d: %s: expected \"%s\" but got %s\n", rank, key, exp_val, buf);
+        else
+            printf("%d: %s not defined\n", rank, key);
+        errors++;
+    }
+    else if (flag && VERBOSE)
+        printf("%d: %s = %s\n", rank, key, buf);
+
+    MPI_Info_free(&info_out);
+
+    return errors;
+}
+
+static void win_info_set(MPI_Win win, const char *key, const char *set_val)
+{
+    MPI_Info info_in = MPI_INFO_NULL;
+
+    MPI_Info_create(&info_in);
+    MPI_Info_set(info_in, key, set_val);
+
+    MPI_Win_set_info(win, info_in);
+    MPI_Info_free(&info_in);
+}
 
 int main(int argc, char **argv)
 {
-    int rank, nproc;
     MPI_Info info_in, info_out;
     int errors = 0, all_errors = 0;
     MPI_Win win;
@@ -34,20 +69,9 @@ int main(int argc, char **argv)
     MPI_Info_set(info_in, "no_locks", "true");
 
     MPI_Win_allocate(sizeof(int), sizeof(int), info_in, MPI_COMM_WORLD, &base, &win);
-
-    MPI_Win_get_info(win, &info_out);
-
-    MPI_Info_get(info_out, "no_locks", MPI_MAX_INFO_VAL, buf, &flag);
-    if (!flag || strncmp(buf, "true", strlen("true")) != 0) {
-        if (!flag)
-            printf("%d: no_locks is not defined\n", rank);
-        else
-            printf("%d: no_locks = %s, expected true\n", rank, buf);
-        errors++;
-    }
+    errors += check_win_info_get(win, "no_locks", "true");
 
     MPI_Info_free(&info_in);
-    MPI_Info_free(&info_out);
 
     /* We create a new window with no info argument for the next text to ensure that we have the
      * default settings */
@@ -57,12 +81,9 @@ int main(int argc, char **argv)
 
     /* Test#2: setting and getting invalid key */
 
-    MPI_Info_create(&info_in);
-    MPI_Info_set(info_in, invalid_key, "true");
+    win_info_set(win, invalid_key, "true");
 
-    MPI_Win_set_info(win, info_in);
     MPI_Win_get_info(win, &info_out);
-
     MPI_Info_get(info_out, invalid_key, MPI_MAX_INFO_VAL, buf, &flag);
 #ifndef USE_STRICT_MPI
     /* Check if our invalid key was ignored.  Note, this check's MPICH's
@@ -74,91 +95,25 @@ int main(int argc, char **argv)
     }
 #endif
 
-    MPI_Info_free(&info_in);
     MPI_Info_free(&info_out);
 
-    /* Test#3: setting info key "no_lock" to false and getting the key */
 
-    MPI_Info_create(&info_in);
-    MPI_Info_set(info_in, "no_locks", "false");
+    /* Test#3: setting info key "no_lock" (no default value) */
+    win_info_set(win, "no_locks", "false");
+    errors += check_win_info_get(win, "no_locks", "false");
 
-    MPI_Win_set_info(win, info_in);
-    MPI_Win_get_info(win, &info_out);
+    win_info_set(win, "no_locks", "true");
+    errors += check_win_info_get(win, "no_locks", "true");
 
-    MPI_Info_get(info_out, "no_locks", MPI_MAX_INFO_VAL, buf, &flag);
-    if (!flag || strncmp(buf, "false", strlen("false")) != 0) {
-        if (!flag)
-            printf("%d: no_locks is not defined\n", rank);
-        else
-            printf("%d: no_locks = %s, expected false\n", rank, buf);
-        errors++;
-    }
-    if (flag && VERBOSE)
-        printf("%d: no_locks = %s\n", rank, buf);
 
-    MPI_Info_free(&info_in);
-    MPI_Info_free(&info_out);
+    /* Test#4: getting/setting "accumulate_ordering" */
+    /*   #4.1: is the default "rar,raw,war,waw" as stated in the standard? */
+    errors += check_win_info_get(win, "accumulate_ordering", "rar,raw,war,waw");
 
-    /* Test#4: setting info key "no_lock" to true and getting the key */
+    /*   #4.2: setting "accumulate_ordering" to "none" */
+    win_info_set(win, "accumulate_ordering", "none");
+    errors += check_win_info_get(win, "accumulate_ordering", "none");
 
-    MPI_Info_create(&info_in);
-    MPI_Info_set(info_in, "no_locks", "true");
-
-    MPI_Win_set_info(win, info_in);
-    MPI_Win_get_info(win, &info_out);
-
-    MPI_Info_get(info_out, "no_locks", MPI_MAX_INFO_VAL, buf, &flag);
-    if (!flag || strncmp(buf, "true", strlen("true")) != 0) {
-        if (!flag)
-            printf("%d: no_locks is not defined\n", rank);
-        else
-            printf("%d: no_locks = %s, expected true\n", rank, buf);
-        errors++;
-    }
-    if (flag && VERBOSE)
-        printf("%d: no_locks = %s\n", rank, buf);
-
-    MPI_Info_free(&info_in);
-    MPI_Info_free(&info_out);
-
-    /* Test#5: getting/setting "accumulate_ordering" */
-    MPI_Win_get_info(win, &info_out);
-
-    /*   #5.1: is the default "rar,raw,war,waw" as stated in the standard? */
-    MPI_Info_get(info_out, "accumulate_ordering", MPI_MAX_INFO_VAL, buf, &flag);
-    if (!flag || strcmp(buf, "rar,raw,war,waw") != 0) {
-        if (flag)
-            printf("%d: accumulate_ordering: expected \"rar,raw,war,waw\" but got %s\n", rank, buf);
-        else
-            printf("%d: accumulate_ordering not defined\n", rank);
-        errors++;
-    }
-    else if (flag && VERBOSE)
-        printf("%d: accumulate_ordering = %s\n", rank, buf);
-
-    MPI_Info_free(&info_out);
-
-    /*   #5.2: setting "accumulate_ordering" to "none" */
-
-    MPI_Info_create(&info_in);
-    MPI_Info_set(info_in, "accumulate_ordering", "none");
-
-    MPI_Win_set_info(win, info_in);
-    MPI_Win_get_info(win, &info_out);
-
-    MPI_Info_get(info_out, "accumulate_ordering", MPI_MAX_INFO_VAL, buf, &flag);
-    if (!flag || strcmp(buf, "none") != 0) {
-        if (flag)
-            printf("%d: accumulate_ordering: expected \"none\" but got %s\n", rank, buf);
-        else
-            printf("%d: accumulate_ordering not defined\n", rank);
-        errors++;
-    }
-    else if (flag && VERBOSE)
-        printf("%d: accumulate_ordering = %s\n", rank, buf);
-
-    MPI_Info_free(&info_in);
-    MPI_Info_free(&info_out);
 
     /* Test#6: getting other info keys */
 
