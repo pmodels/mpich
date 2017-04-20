@@ -933,6 +933,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIDU_shm_seg_destroy(&memory, num_local);
+        PMI_Barrier();
     }
 
     /* -------------------------------- */
