@@ -320,13 +320,13 @@ int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_WIN_SET_INFO);
 
-    /********************************************************/
-    /************** check for info no_locks *****************/
-    /********************************************************/
-
     if (info != NULL) {
         int info_flag = 0;
         char info_value[MPI_MAX_INFO_VAL + 1];
+
+        /********************************************************/
+        /************** check for info no_locks *****************/
+        /********************************************************/
         MPIR_Info_get_impl(info, "no_locks", MPI_MAX_INFO_VAL, info_value, &info_flag);
         if (info_flag) {
             if (!strncmp(info_value, "true", strlen("true")))
@@ -334,15 +334,11 @@ int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
             if (!strncmp(info_value, "false", strlen("false")))
                 win->info_args.no_locks = 0;
         }
-    }
 
-    /********************************************************/
-    /*************** check for info alloc_shm ***************/
-    /********************************************************/
-
-    if (info != NULL) {
-        int info_flag = 0;
-        char info_value[MPI_MAX_INFO_VAL + 1];
+        /********************************************************/
+        /*************** check for info alloc_shm ***************/
+        /********************************************************/
+        info_flag = 0;
         MPIR_Info_get_impl(info, "alloc_shm", MPI_MAX_INFO_VAL, info_value, &info_flag);
         if (info_flag) {
             if (!strncmp(info_value, "true", sizeof("true")))
@@ -350,18 +346,14 @@ int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
             if (!strncmp(info_value, "false", sizeof("false")))
                 win->info_args.alloc_shm = FALSE;
         }
-    }
 
-    if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC)
-        win->info_args.alloc_shm = FALSE;
+        if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC)
+            win->info_args.alloc_shm = FALSE;
 
-    /********************************************************/
-    /******* check for info alloc_shared_noncontig **********/
-    /********************************************************/
-
-    if (info != NULL) {
-        int info_flag = 0;
-        char info_value[MPI_MAX_INFO_VAL + 1];
+        /********************************************************/
+        /******* check for info alloc_shared_noncontig **********/
+        /********************************************************/
+        info_flag = 0;
         MPIR_Info_get_impl(info, "alloc_shared_noncontig", MPI_MAX_INFO_VAL,
                            info_value, &info_flag);
         if (info_flag) {
@@ -370,11 +362,6 @@ int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
             if (!strncmp(info_value, "false", strlen("false")))
                 win->info_args.alloc_shared_noncontig = 0;
         }
-    }
-
-    if (info != NULL) {
-        int info_flag = 0;
-        char info_value[MPI_MAX_INFO_VAL + 1];
 
         /********************************************************/
         /******* check for info accumulate_ordering    **********/
