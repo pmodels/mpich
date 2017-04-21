@@ -455,6 +455,20 @@ static inline int MPIDI_CH4I_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_G
         MPID_END_ERROR_CHECKS;                                          \
     } while (0)
 
+/* NOTE: multiple lock access epochs can occur simultaneously, as long as
+ * target to different processes */
+#define MPIDI_CH4U_EPOCH_CHECK_LOCK_TYPE(win,rank,mpi_errno,stmt)       \
+    do {                                                                \
+        MPID_BEGIN_ERROR_CHECKS;                                        \
+        if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type != MPIDI_CH4U_EPOTYPE_NONE &&       \
+           MPIDI_CH4U_WIN(win, sync).origin_epoch_type != MPIDI_CH4U_EPOTYPE_REFENCE &&     \
+           !(MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK &&      \
+           MPIDI_CH4U_WIN(win, targets)[rank].sync.origin_epoch_type == MPIDI_CH4U_EPOTYPE_NONE))\
+            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,            \
+                                stmt, "**rmasync");                     \
+        MPID_END_ERROR_CHECKS;                                          \
+    } while (0)
+
 #define MPIDI_CH4U_EPOCH_START_CHECK(win,mpi_errno,stmt)                \
     do {                                                                \
         MPID_BEGIN_ERROR_CHECKS;                                        \
@@ -505,6 +519,17 @@ static inline int MPIDI_CH4I_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_G
         MPID_END_ERROR_CHECKS;                                          \
     } while (0)
 
+/* NOTE: lock/flush/flush_local needs to check per-target epoch */
+#define MPIDI_CH4U_EPOCH_PER_TARGET_LOCK_CHECK(win,rank,mpi_errno,stmt)                 \
+do {                                                                                    \
+    MPID_BEGIN_ERROR_CHECKS;                                                            \
+    if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK &&       \
+        MPIDI_CH4U_WIN(win, targets)[rank].sync.origin_epoch_type != MPIDI_CH4U_EPOTYPE_LOCK) \
+        MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,                \
+                            stmt, "**rmasync");                         \
+    MPID_END_ERROR_CHECKS;                                              \
+} while (0)
+
 #define MPIDI_CH4U_EPOCH_LOCK_CHECK(win,mpi_errno,stmt)               \
 do {                                                                  \
     MPID_BEGIN_ERROR_CHECKS;                                      \
@@ -534,6 +559,15 @@ do {                                                                  \
         MPID_END_ERROR_CHECKS;                                          \
     } while (0)
 
+#define MPIDI_CH4U_EPOCH_ORIGIN_LOCK_CHECK(win, rank, mpi_errno, stmt)  \
+    do {                                                                \
+        MPID_BEGIN_ERROR_CHECKS;                                        \
+        if (MPIDI_CH4U_WIN(win, targets)[rank].sync.origin_epoch_type != MPIDI_CH4U_EPOTYPE_LOCK)    \
+            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,            \
+                                stmt, "**rmasync");                     \
+        MPID_END_ERROR_CHECKS;                                          \
+    } while (0)
+
 #define MPIDI_CH4U_EPOCH_TARGET_CHECK(win, epoch_type, mpi_errno, stmt) \
     do {                                                                \
         MPID_BEGIN_ERROR_CHECKS;                                        \
@@ -546,13 +580,16 @@ do {                                                                  \
 #else /* HAVE_ERROR_CHECKING */
 #define MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, stmt)               if (0) goto fn_fail;
 #define MPIDI_CH4U_EPOCH_CHECK_TYPE(win, mpi_errno, stmt)               if (0) goto fn_fail;
+#define MPIDI_CH4U_EPOCH_CHECK_LOCK_TYPE(win,rank,mpi_errno,stmt)       if (0) goto fn_fail;
 #define MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, stmt)              if (0) goto fn_fail;
 #define MPIDI_CH4U_EPOCH_START_CHECK2(win, mpi_errno, stmt)             if (0) goto fn_fail;
 #define MPIDI_CH4U_EPOCH_FENCE_CHECK(win, mpi_errno, stmt)              if (0) goto fn_fail;
 #define MPIDI_CH4U_EPOCH_POST_CHECK(win, mpi_errno, stmt)               if (0) goto fn_fail;
 #define MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, stmt)               if (0) goto fn_fail;
+#define MPIDI_CH4U_EPOCH_PER_TARGET_LOCK_CHECK(win, rank, mpi_errno, stmt)  if (0) goto fn_fail;
 #define MPIDI_CH4U_EPOCH_FREE_CHECK(win, mpi_errno, stmt)               if (0) goto fn_fail;
 #define MPIDI_CH4U_EPOCH_ORIGIN_CHECK(win, epoch_type, mpi_errno, stmt) if (0) goto fn_fail;
+#define MPIDI_CH4U_EPOCH_ORIGIN_LOCK_CHECK(win, rank, mpi_errno, stmt)  if (0) goto fn_fail;
 #define MPIDI_CH4U_EPOCH_TARGET_CHECK(win, epoch_type, mpi_errno, stmt) if (0) goto fn_fail;
 #endif /* HAVE_ERROR_CHECKING */
 

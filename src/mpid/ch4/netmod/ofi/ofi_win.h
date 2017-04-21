@@ -592,11 +592,16 @@ static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPI
         goto fn_exit;
     }
 
-    MPIDI_CH4U_win_sync_lock *slock = &MPIDI_CH4U_WIN(win, sync).lock;
-    MPIDI_CH4U_EPOCH_CHECK_TYPE(win, mpi_errno, goto fn_fail);
-
     if (rank == MPI_PROC_NULL)
         goto fn_exit0;
+
+    MPIDI_CH4U_EPOCH_CHECK_LOCK_TYPE(win, rank, mpi_errno, goto fn_fail);
+
+    MPIDI_CH4U_win_target_t *target_ptr = NULL;
+    target_ptr = &MPIDI_CH4U_WIN(win, targets)[rank];
+
+    MPIDI_CH4U_win_target_sync_lock_t *slock = &target_ptr->sync.lock;
+    MPIR_Assert(slock->locked == 0);
 
     MPIDI_OFI_win_control_t msg;
 
@@ -608,10 +613,12 @@ static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPI
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
-    MPIDI_OFI_PROGRESS_WHILE(!slock->remote.locked);
+    MPIDI_OFI_PROGRESS_WHILE(!slock->locked);
+    target_ptr->sync.origin_epoch_type = MPIDI_CH4U_EPOTYPE_LOCK;
 
   fn_exit0:
     MPIDI_CH4U_WIN(win, sync).origin_epoch_type = MPIDI_CH4U_EPOTYPE_LOCK;
+    MPIDI_CH4U_WIN(win, sync).lock.count++;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_LOCK);
@@ -635,10 +642,20 @@ static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_ent
         goto fn_exit;
     }
 
+    /* Check window lock epoch.
+     * PROC_NULL does not update per-target epoch. */
     MPIDI_CH4U_EPOCH_ORIGIN_CHECK(win, MPIDI_CH4U_EPOTYPE_LOCK, mpi_errno, return mpi_errno);
-
     if (rank == MPI_PROC_NULL)
         goto fn_exit0;
+
+    /* Check per-target lock epoch */
+    MPIDI_CH4U_EPOCH_ORIGIN_LOCK_CHECK(win, rank, mpi_errno, return mpi_errno);
+
+    MPIDI_CH4U_win_target_t *target_ptr = NULL;
+    target_ptr = &MPIDI_CH4U_WIN(win, targets)[rank];
+
+    MPIDI_CH4U_win_target_sync_lock_t *slock = &target_ptr->sync.lock;
+    MPIR_Assert(slock->locked == 1);
 
     /* AM completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush(rank, win));
@@ -652,10 +669,18 @@ static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_ent
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
-    MPIDI_OFI_PROGRESS_WHILE(MPIDI_CH4U_WIN(win, sync).lock.remote.locked);
+    MPIDI_OFI_PROGRESS_WHILE(slock->locked);
+    target_ptr->sync.origin_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
+
   fn_exit0:
-    MPIDI_CH4U_WIN(win, sync).origin_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
-    MPIDI_CH4U_WIN(win, sync).target_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
+    MPIR_Assert(MPIDI_CH4U_WIN(win, sync).lock.count > 0);
+    MPIDI_CH4U_WIN(win, sync).lock.count--;
+
+    /* Reset window epoch only when all per-target lock epochs are closed.*/
+    if (MPIDI_CH4U_WIN(win, sync).lock.count == 0) {
+      MPIDI_CH4U_WIN(win, sync).origin_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
+      MPIDI_CH4U_WIN(win, sync).target_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_UNLOCK);
@@ -1164,7 +1189,13 @@ static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win, MPIDI_av_entr
         goto fn_exit;
     }
 
-    MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, goto fn_fail);
+    /* Check window lock epoch.
+     * PROC_NULL does not update per-target epoch. */
+    MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, return mpi_errno);
+    if (rank == MPI_PROC_NULL)
+        goto fn_exit;
+
+    MPIDI_CH4U_EPOCH_PER_TARGET_LOCK_CHECK(win, rank, mpi_errno, goto fn_fail);
 
     /* AM completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush(rank, win));
@@ -1217,7 +1248,6 @@ static inline int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_UNLOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_UNLOCK_ALL);
     int i;
-    MPIDI_CH4U_win_lock_info *lockQ;
 
     if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_unlock_all(win);
@@ -1225,32 +1255,25 @@ static inline int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
     }
 
     MPIDI_CH4U_EPOCH_ORIGIN_CHECK(win, MPIDI_CH4U_EPOTYPE_LOCK_ALL, mpi_errno, return mpi_errno);
+    /* Lockall blocking waits till all locks granted. */
+    MPIR_Assert(MPIDI_CH4U_WIN(win, sync).lockall.allLocked == win->comm_ptr->local_size);
 
     /* AM completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush_all(win));
     /* network completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
 
-    MPIR_Assert(MPIDI_CH4U_WIN(win, lockQ) != NULL);
-
-    lockQ = (MPIDI_CH4U_win_lock_info *) MPIDI_CH4U_WIN(win, lockQ);
-
     for (i = 0; i < win->comm_ptr->local_size; i++) {
         MPIDI_OFI_win_control_t msg;
-        lockQ[i].done = 0;
-        lockQ[i].peer = i;
-        lockQ[i].win = win;
+
         msg.type = MPIDI_OFI_CTRL_UNLOCKALL;
-        mpi_errno = MPIDI_OFI_do_control_win(&msg, lockQ[i].peer, win, 1, 1);
+        mpi_errno = MPIDI_OFI_do_control_win(&msg, i, win, 1, 1);
 
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-
-        if (MPIDI_CH4U_WIN(win, sync).lock.remote.allLocked == 1)
-            lockQ[i].done = 1;
     }
 
-    MPIDI_OFI_PROGRESS_WHILE(MPIDI_CH4U_WIN(win, sync).lock.remote.allLocked);
+    MPIDI_OFI_PROGRESS_WHILE(MPIDI_CH4U_WIN(win, sync).lockall.allLocked);
 
     MPIDI_CH4U_WIN(win, sync).origin_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
     MPIDI_CH4U_WIN(win, sync).target_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
@@ -1319,7 +1342,13 @@ static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win, MPIDI_a
         goto fn_exit;
     }
 
-    MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, goto fn_fail);
+    /* Check window lock epoch.
+     * PROC_NULL does not update per-target epoch. */
+    MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, return mpi_errno);
+    if (rank == MPI_PROC_NULL)
+        goto fn_exit;
+
+    MPIDI_CH4U_EPOCH_PER_TARGET_LOCK_CHECK(win, rank, mpi_errno, goto fn_fail);
 
     /* AM completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush_local(rank, win));
@@ -1396,7 +1425,6 @@ static inline int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
 static inline int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH4U_win_lock_info *lockQ;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_LOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_LOCK_ALL);
@@ -1407,39 +1435,25 @@ static inline int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * win)
     }
 
     MPIDI_CH4U_EPOCH_CHECK_TYPE(win, mpi_errno, goto fn_fail);
+    MPIR_Assert(MPIDI_CH4U_WIN(win, sync).lockall.allLocked == 0);
 
     int size;
     size = win->comm_ptr->local_size;
 
-    if (!MPIDI_CH4U_WIN(win, lockQ)) {
-        MPIDI_CH4U_WIN(win, lockQ) =
-            (MPIDI_CH4U_win_lock_info *) MPL_calloc(size, sizeof(MPIDI_CH4U_win_lock_info));
-        MPIR_Assert(MPIDI_CH4U_WIN(win, lockQ) != NULL);
-    }
-
-    lockQ = MPIDI_CH4U_WIN(win, lockQ);
     int i;
 
     for (i = 0; i < size; i++) {
         MPIDI_OFI_win_control_t msg;
 
-        lockQ[i].done = 0;
-        lockQ[i].peer = i;
-        lockQ[i].win = win;
-        lockQ[i].lock_type = MPI_LOCK_SHARED;
-
         msg.type = MPIDI_OFI_CTRL_LOCKALLREQ;
         msg.lock_type = MPI_LOCK_SHARED;
-        mpi_errno = MPIDI_OFI_do_control_win(&msg, lockQ[i].peer, lockQ[i].win, 1, 1);
+        mpi_errno = MPIDI_OFI_do_control_win(&msg, i, win, 1, 1);
 
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-
-        if (MPIDI_CH4U_WIN(win, sync).lock.remote.allLocked == 1)
-            lockQ[i].done = 1;
     }
 
-    MPIDI_OFI_PROGRESS_WHILE(size != (int) MPIDI_CH4U_WIN(win, sync).lock.remote.allLocked);
+    MPIDI_OFI_PROGRESS_WHILE(size != (int) MPIDI_CH4U_WIN(win, sync).lockall.allLocked);
 
     MPIDI_CH4U_WIN(win, sync).origin_epoch_type = MPIDI_CH4U_EPOTYPE_LOCK_ALL;
 
