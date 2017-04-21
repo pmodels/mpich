@@ -199,23 +199,19 @@ void MPIDI_OFI_index_allocator_destroy(void *indexmap)
 static inline int MPIDI_OFI_win_lock_advance(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct MPIDI_CH4U_win_sync_lock *slock = &MPIDI_CH4U_WIN(win, sync).lock;
-    struct MPIDI_CH4U_win_queue *q = &slock->local.requested;
+    MPIDI_CH4U_win_lock_recvd_t *lock_recvd_q = &MPIDI_CH4U_WIN(win, sync).lock_recvd;
 
-    if ((q->head != NULL) &&
-        ((slock->local.count == 0) ||
-         ((slock->local.type == MPI_LOCK_SHARED) && (q->head->type == MPI_LOCK_SHARED)
-)
-)
-) {
-        struct MPIDI_CH4U_win_lock *lock = q->head;
-        q->head = lock->next;
+    if ((lock_recvd_q->head != NULL) && ((lock_recvd_q->count == 0) ||
+         ((lock_recvd_q->type == MPI_LOCK_SHARED) &&
+                 (lock_recvd_q->head->type == MPI_LOCK_SHARED)))) {
+        struct MPIDI_CH4U_win_lock *lock = lock_recvd_q->head;
+        lock_recvd_q->head = lock->next;
 
-        if (q->head == NULL)
-            q->tail = NULL;
+        if (lock_recvd_q->head == NULL)
+            lock_recvd_q->tail = NULL;
 
-        ++slock->local.count;
-        slock->local.type = lock->type;
+        ++lock_recvd_q->count;
+        lock_recvd_q->type = lock->type;
 
         if (lock->mtype == MPIDI_OFI_REQUEST_LOCK) {
             MPIDI_OFI_win_control_t info;
@@ -261,15 +257,15 @@ static inline int MPIDI_OFI_win_lock_request_proc(const MPIDI_OFI_win_control_t 
 
     lock->rank = info->origin_rank;
     lock->type = info->lock_type;
-    struct MPIDI_CH4U_win_queue *q = &MPIDI_CH4U_WIN(win, sync).lock.local.requested;
-    MPIR_Assert((q->head != NULL) ^ (q->tail == NULL));
+    MPIDI_CH4U_win_lock_recvd_t *lock_recvd_q = &MPIDI_CH4U_WIN(win, sync).lock_recvd;
+    MPIR_Assert((lock_recvd_q->head != NULL) ^ (lock_recvd_q->tail == NULL));
 
-    if (q->tail == NULL)
-        q->head = lock;
+    if (lock_recvd_q->tail == NULL)
+        lock_recvd_q->head = lock;
     else
-        q->tail->next = lock;
+        lock_recvd_q->tail->next = lock;
 
-    q->tail = lock;
+    lock_recvd_q->tail = lock;
 
     mpi_errno = MPIDI_OFI_win_lock_advance(win);
     if (mpi_errno != MPI_SUCCESS)
@@ -284,10 +280,14 @@ static inline int MPIDI_OFI_win_lock_request_proc(const MPIDI_OFI_win_control_t 
 static inline void MPIDI_OFI_win_lock_ack_proc(const MPIDI_OFI_win_control_t * info,
                                                MPIR_Win * win, unsigned peer)
 {
-    if (info->type == MPIDI_OFI_CTRL_LOCKACK)
-        MPIDI_CH4U_WIN(win, sync).lock.remote.locked = 1;
+    if (info->type == MPIDI_OFI_CTRL_LOCKACK) {
+        MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
+
+        MPIR_Assert((int ) target_ptr->sync.lock.locked == 0);
+        target_ptr->sync.lock.locked = 1;
+    }
     else if (info->type == MPIDI_OFI_CTRL_LOCKALLACK)
-        MPIDI_CH4U_WIN(win, sync).lock.remote.allLocked += 1;
+        MPIDI_CH4U_WIN(win, sync).lockall.allLocked += 1;
 }
 
 
@@ -295,8 +295,10 @@ static inline int MPIDI_OFI_win_unlock_proc(const MPIDI_OFI_win_control_t * info
                                             MPIR_Win * win, unsigned peer)
 {
     int mpi_errno;
-    --MPIDI_CH4U_WIN(win, sync).lock.local.count;
-    MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lock.local.count >= 0);
+
+    /* NOTE: origin blocking waits in lock or lockall call till lock granted.*/
+    --MPIDI_CH4U_WIN(win, sync).lock_recvd.count;
+    MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lock_recvd.count >= 0);
     mpi_errno = MPIDI_OFI_win_lock_advance(win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
@@ -328,11 +330,15 @@ static inline void MPIDI_OFI_win_post_proc(const MPIDI_OFI_win_control_t * info,
 static inline void MPIDI_OFI_win_unlock_done_proc(const MPIDI_OFI_win_control_t * info,
                                                   MPIR_Win * win, unsigned peer)
 {
-    if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK)
-        MPIDI_CH4U_WIN(win, sync).lock.remote.locked = 0;
+    if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK) {
+        MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
+
+        MPIR_Assert((int ) target_ptr->sync.lock.locked == 1);
+        target_ptr->sync.lock.locked = 0;
+    }
     else if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK_ALL) {
-        MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lock.remote.allLocked > 0);
-        MPIDI_CH4U_WIN(win, sync).lock.remote.allLocked -= 1;
+        MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lockall.allLocked > 0);
+        MPIDI_CH4U_WIN(win, sync).lockall.allLocked -= 1;
     }
     else
         MPIR_Assert(0);

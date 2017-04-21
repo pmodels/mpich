@@ -228,45 +228,66 @@ struct MPIDI_CH4U_win_lock {
     uint16_t type;
 };
 
-struct MPIDI_CH4U_win_queue {
+typedef struct MPIDI_CH4U_win_lock_recvd {
     struct MPIDI_CH4U_win_lock *head;
     struct MPIDI_CH4U_win_lock *tail;
-};
+    int type;                   /* current lock's type */
+    unsigned count;             /* count of granted locks (not received) */
+} MPIDI_CH4U_win_lock_recvd_t;
 
-typedef struct MPIDI_CH4U_win_lock_info {
-    unsigned peer;
-    int lock_type;
-    struct MPIR_Win *win;
-    volatile unsigned done;
-} MPIDI_CH4U_win_lock_info;
+typedef struct MPIDI_CH4U_win_target_sync_lock {
+    /* NOTE: use volatile to avoid compiler optimization which keeps reading
+     * register value when no dependency or function pointer is found in fully
+     * inlined code.*/
+    volatile unsigned locked;   /* locked == 0 or 1 */
+} MPIDI_CH4U_win_target_sync_lock_t;
 
 typedef struct MPIDI_CH4U_win_sync_lock {
-    struct {
-        volatile unsigned locked;
-        volatile unsigned allLocked;
-    } remote;
-    struct {
-        struct MPIDI_CH4U_win_queue requested;
-        int type;
-        unsigned count;
-    } local;
-} MPIDI_CH4U_win_sync_lock;
+    unsigned count;             /* count of lock epochs on the window */
+} MPIDI_CH4U_win_sync_lock_t;
+
+typedef struct MPIDI_CH4U_win_sync_lockall {
+    /* NOTE: use volatile to avoid compiler optimization which keeps reading
+     * register value when no dependency or function pointer is found in fully
+     * inlined code.*/
+    volatile unsigned allLocked;        /* 0 <= allLocked < size */
+} MPIDI_CH4U_win_sync_lockall_t;
 
 typedef struct MPIDI_CH4U_win_sync_pscw {
     struct MPIR_Group *group;
+    /* NOTE: use volatile to avoid compiler optimization which keeps reading
+     * register value when no dependency or function pointer is found in fully
+     * inlined code.*/
     volatile unsigned count;
-} MPIDI_CH4U_win_sync_pscw;
+} MPIDI_CH4U_win_sync_pscw_t;
 
-typedef struct MPIDI_CH4U_win_sync_t {
-    volatile int origin_epoch_type;
-    volatile int target_epoch_type;
-    MPIDI_CH4U_win_sync_pscw sc, pw;
-    MPIDI_CH4U_win_sync_lock lock;
+typedef struct MPIDI_CH4U_win_target_sync {
+    int origin_epoch_type;      /* NONE, LOCK. */
+    MPIDI_CH4U_win_target_sync_lock_t lock;
+} MPIDI_CH4U_win_target_sync_t;
+
+typedef struct MPIDI_CH4U_win_sync {
+    /* TODO: replace with access/exposure */
+    int origin_epoch_type;      /* NONE, FENCE, LOCKALL, START,
+                                 * LOCK (refer to target_sync). */
+    int target_epoch_type;      /* NONE, FENCE, POST. */
+
+    /* access epochs */
+    /* TODO: Can we put access epochs in union,
+     * since no concurrent epochs is allowed ? */
+    MPIDI_CH4U_win_sync_pscw_t sc;
+    MPIDI_CH4U_win_sync_lockall_t lockall;
+    MPIDI_CH4U_win_sync_lock_t lock;
+
+    /* exposure epochs */
+    MPIDI_CH4U_win_sync_pscw_t pw;
+    MPIDI_CH4U_win_lock_recvd_t lock_recvd;
 } MPIDI_CH4U_win_sync_t;
 
 typedef struct MPIDI_CH4U_win_target {
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
+    MPIDI_CH4U_win_target_sync_t sync;
 } MPIDI_CH4U_win_target_t;
 
 typedef struct MPIDI_CH4U_win_t {
@@ -279,7 +300,6 @@ typedef struct MPIDI_CH4U_win_t {
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
 
     MPI_Aint *sizes;
-    MPIDI_CH4U_win_lock_info *lockQ;
     MPIDI_CH4U_win_sync_t sync;
     MPIDI_CH4U_win_info_args_t info_args;
     MPIDI_CH4U_win_shared_info_t *shared_table;
