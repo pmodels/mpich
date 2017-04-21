@@ -146,23 +146,22 @@ static inline int MPIDI_ack_get_acc(MPIR_Request * rreq)
 static inline int MPIDI_win_lock_advance(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct MPIDI_CH4U_win_sync_lock *slock = &MPIDI_CH4U_WIN(win, sync).lock;
-    struct MPIDI_CH4U_win_queue *q = &slock->local.requested;
+    MPIDI_CH4U_win_lock_recvd_t *lock_recvd_q = &MPIDI_CH4U_WIN(win, sync).lock_recvd;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_WIN_LOCK_ADVANCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_LOCK_ADVANCE);
 
-    if ((q->head != NULL) && ((slock->local.count == 0) ||
-                              ((slock->local.type == MPI_LOCK_SHARED) &&
-                               (q->head->type == MPI_LOCK_SHARED)))) {
-        struct MPIDI_CH4U_win_lock *lock = q->head;
-        q->head = lock->next;
+    if ((lock_recvd_q->head != NULL) && ((lock_recvd_q->count == 0) ||
+                                         ((lock_recvd_q->type == MPI_LOCK_SHARED) &&
+                                          (lock_recvd_q->head->type == MPI_LOCK_SHARED)))) {
+        struct MPIDI_CH4U_win_lock *lock = lock_recvd_q->head;
+        lock_recvd_q->head = lock->next;
 
-        if (q->head == NULL)
-            q->tail = NULL;
+        if (lock_recvd_q->head == NULL)
+            lock_recvd_q->tail = NULL;
 
-        ++slock->local.count;
-        slock->local.type = lock->type;
+        ++lock_recvd_q->count;
+        lock_recvd_q->type = lock->type;
 
         MPIDI_CH4U_win_cntrl_msg_t msg;
         int handler_id;
@@ -210,15 +209,15 @@ static inline void MPIDI_win_lock_req_proc(int handler_id,
     lock->mtype = handler_id;
     lock->rank = info->origin_rank;
     lock->type = info->lock_type;
-    struct MPIDI_CH4U_win_queue *q = &MPIDI_CH4U_WIN(win, sync).lock.local.requested;
-    MPIR_Assert((q->head != NULL) ^ (q->tail == NULL));
+    MPIDI_CH4U_win_lock_recvd_t *lock_recvd_q = &MPIDI_CH4U_WIN(win, sync).lock_recvd;
+    MPIR_Assert((lock_recvd_q->head != NULL) ^ (lock_recvd_q->tail == NULL));
 
-    if (q->tail == NULL)
-        q->head = lock;
+    if (lock_recvd_q->tail == NULL)
+        lock_recvd_q->head = lock;
     else
-        q->tail->next = lock;
+        lock_recvd_q->tail->next = lock;
 
-    q->tail = lock;
+    lock_recvd_q->tail = lock;
 
     MPIDI_win_lock_advance(win);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_WIN_LOCK_REQ_PROC);
@@ -235,10 +234,18 @@ static inline void MPIDI_win_lock_ack_proc(int handler_id,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_WIN_LOCK_ACK_PROC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_LOCK_ACK_PROC);
 
-    if (handler_id == MPIDI_CH4U_WIN_LOCK_ACK)
-        MPIDI_CH4U_WIN(win, sync).lock.remote.locked += 1;
-    else if (handler_id == MPIDI_CH4U_WIN_LOCKALL_ACK)
-        MPIDI_CH4U_WIN(win, sync).lock.remote.allLocked += 1;
+    if (handler_id == MPIDI_CH4U_WIN_LOCK_ACK) {
+        MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
+
+        MPIR_Assert((int) target_ptr->sync.lock.locked == 0);
+        target_ptr->sync.lock.locked = 1;
+    }
+    else if (handler_id == MPIDI_CH4U_WIN_LOCKALL_ACK) {
+        MPIDI_CH4U_WIN(win, sync).lockall.allLocked += 1;
+    }
+    else {
+        MPIR_Assert(0);
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_WIN_LOCK_ACK_PROC);
 }
@@ -254,8 +261,9 @@ static inline void MPIDI_win_unlock_proc(const MPIDI_CH4U_win_cntrl_msg_t * info
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_WIN_UNLOCK_PROC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_UNLOCK_PROC);
 
-    --MPIDI_CH4U_WIN(win, sync).lock.local.count;
-    MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lock.local.count >= 0);
+    /* NOTE: origin blocking waits in lock or lockall call till lock granted. */
+    --MPIDI_CH4U_WIN(win, sync).lock_recvd.count;
+    MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lock_recvd.count >= 0);
     MPIDI_win_lock_advance(win);
 
     MPIDI_CH4U_win_cntrl_msg_t msg;
@@ -313,11 +321,14 @@ static inline void MPIDI_win_unlock_done(const MPIDI_CH4U_win_cntrl_msg_t * info
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_UNLOCK_DONE);
 
     if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK) {
-        MPIDI_CH4U_WIN(win, sync).lock.remote.locked--;
+        MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
+
+        MPIR_Assert((int) target_ptr->sync.lock.locked == 1);
+        target_ptr->sync.lock.locked = 0;
     }
     else if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK_ALL) {
-        MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lock.remote.allLocked > 0);
-        MPIDI_CH4U_WIN(win, sync).lock.remote.allLocked -= 1;
+        MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lockall.allLocked > 0);
+        MPIDI_CH4U_WIN(win, sync).lockall.allLocked -= 1;
     }
     else {
         MPIR_Assert(0);
