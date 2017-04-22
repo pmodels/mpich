@@ -323,7 +323,7 @@ static inline int MPIDI_CH4R_mpi_win_complete(MPIR_Win * win)
     }
 
     MPL_free(ranks_in_win_grp);
-    MPIDI_CH4U_EPOCH_TARGET_EVENT(win);
+    MPIDI_CH4U_WIN(win, sync).origin_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
     MPIR_Group_release(MPIDI_CH4U_WIN(win, sync).sc.group);
     MPIDI_CH4U_WIN(win, sync).sc.group = NULL;
 
@@ -403,7 +403,7 @@ static inline int MPIDI_CH4R_mpi_win_wait(MPIR_Win * win)
     MPIDI_CH4U_WIN(win, sync).sc.count = 0;
     MPIDI_CH4U_WIN(win, sync).pw.group = NULL;
     MPIR_Group_release(group);
-    MPIDI_CH4U_EPOCH_ORIGIN_EVENT(win);
+    MPIDI_CH4U_WIN(win, sync).target_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_WAIT);
@@ -433,7 +433,7 @@ static inline int MPIDI_CH4R_mpi_win_test(MPIR_Win * win, int *flag)
         MPIDI_CH4U_WIN(win, sync).pw.group = NULL;
         *flag = 1;
         MPIR_Group_release(group);
-        MPIDI_CH4U_EPOCH_ORIGIN_EVENT(win);
+        MPIDI_CH4U_WIN(win, sync).target_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
     }
     else {
         MPIDI_CH4R_PROGRESS();
@@ -544,7 +544,6 @@ static inline int MPIDI_CH4R_mpi_win_unlock(int rank, MPIR_Win * win)
     /* Reset window epoch only when all per-target lock epochs are closed. */
     if (MPIDI_CH4U_WIN(win, sync).lock.count == 0) {
         MPIDI_CH4U_WIN(win, sync).origin_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
-        MPIDI_CH4U_WIN(win, sync).target_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
     }
 
   fn_exit:
@@ -1164,7 +1163,6 @@ static inline int MPIDI_CH4R_mpi_win_unlock_all(MPIR_Win * win)
     MPIDI_CH4R_PROGRESS_WHILE(MPIDI_CH4U_WIN(win, sync).lockall.allLocked);
 
     MPIDI_CH4U_WIN(win, sync).origin_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
-    MPIDI_CH4U_WIN(win, sync).target_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_UNLOCK_ALL);

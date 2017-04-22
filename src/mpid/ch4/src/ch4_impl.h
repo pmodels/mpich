@@ -432,8 +432,8 @@ static inline int MPIDI_CH4I_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_G
 #define MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, stmt)               \
     do {                                                                \
         MPID_BEGIN_ERROR_CHECKS;                                        \
-        if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_WIN(win, sync).target_epoch_type && \
-           MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_REFENCE) \
+        if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_REFENCE && \
+           MPIDI_CH4U_WIN(win, sync).target_epoch_type == MPIDI_CH4U_EPOTYPE_REFENCE) \
         {                                                               \
             MPIDI_CH4U_WIN(win, sync).origin_epoch_type = MPIDI_CH4U_EPOTYPE_FENCE; \
             MPIDI_CH4U_WIN(win, sync).target_epoch_type = MPIDI_CH4U_EPOTYPE_FENCE; \
@@ -497,13 +497,12 @@ static inline int MPIDI_CH4I_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_G
 #define MPIDI_CH4U_EPOCH_FENCE_CHECK(win,mpi_errno,stmt)                \
     do {                                                                \
         MPID_BEGIN_ERROR_CHECKS;                                        \
-        if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type != MPIDI_CH4U_WIN(win, sync).target_epoch_type) \
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,            \
-                                stmt, "**rmasync");                     \
-        if (!(massert & MPI_MODE_NOPRECEDE) &&                          \
-            MPIDI_CH4U_WIN(win, sync).origin_epoch_type != MPIDI_CH4U_EPOTYPE_FENCE && \
+        if ((MPIDI_CH4U_WIN(win, sync).target_epoch_type != MPIDI_CH4U_EPOTYPE_FENCE && \
+            MPIDI_CH4U_WIN(win, sync).target_epoch_type != MPIDI_CH4U_EPOTYPE_REFENCE && \
+            MPIDI_CH4U_WIN(win, sync).target_epoch_type != MPIDI_CH4U_EPOTYPE_NONE) || \
+            (MPIDI_CH4U_WIN(win, sync).origin_epoch_type != MPIDI_CH4U_EPOTYPE_FENCE && \
             MPIDI_CH4U_WIN(win, sync).origin_epoch_type != MPIDI_CH4U_EPOTYPE_REFENCE && \
-            MPIDI_CH4U_WIN(win, sync).origin_epoch_type != MPIDI_CH4U_EPOTYPE_NONE) \
+            MPIDI_CH4U_WIN(win, sync).origin_epoch_type != MPIDI_CH4U_EPOTYPE_NONE)) \
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,            \
                                 stmt, "**rmasync");                     \
         MPID_END_ERROR_CHECKS;                                          \
@@ -543,7 +542,8 @@ do {                                                                  \
 #define MPIDI_CH4U_EPOCH_FREE_CHECK(win,mpi_errno,stmt)                 \
     do {                                                                \
         MPID_BEGIN_ERROR_CHECKS;                                        \
-        if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type != MPIDI_CH4U_WIN(win, sync).target_epoch_type || \
+        if ((MPIDI_CH4U_WIN(win, sync).target_epoch_type != MPIDI_CH4U_EPOTYPE_NONE &&  \
+            MPIDI_CH4U_WIN(win, sync).target_epoch_type != MPIDI_CH4U_EPOTYPE_REFENCE) || \
            (MPIDI_CH4U_WIN(win, sync).origin_epoch_type != MPIDI_CH4U_EPOTYPE_NONE && \
             MPIDI_CH4U_WIN(win, sync).origin_epoch_type != MPIDI_CH4U_EPOTYPE_REFENCE)) \
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, stmt, "**rmasync"); \
@@ -605,22 +605,6 @@ do {                                                                  \
             MPIDI_CH4U_WIN(win, sync).origin_epoch_type = MPIDI_CH4U_EPOTYPE_REFENCE; \
             MPIDI_CH4U_WIN(win, sync).target_epoch_type = MPIDI_CH4U_EPOTYPE_REFENCE; \
         }                                                               \
-    } while (0)
-
-#define MPIDI_CH4U_EPOCH_TARGET_EVENT(win)                              \
-    do {                                                            \
-        if (MPIDI_CH4U_WIN(win, sync).target_epoch_type == MPIDI_CH4U_EPOTYPE_REFENCE) \
-            MPIDI_CH4U_WIN(win, sync).origin_epoch_type = MPIDI_CH4U_EPOTYPE_REFENCE; \
-        else                                                            \
-            MPIDI_CH4U_WIN(win, sync).origin_epoch_type = MPIDI_CH4U_EPOTYPE_NONE; \
-    } while (0)
-
-#define MPIDI_CH4U_EPOCH_ORIGIN_EVENT(Win)                              \
-    do {                                                                \
-        if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_REFENCE) \
-            MPIDI_CH4U_WIN(win, sync).target_epoch_type = MPIDI_CH4U_EPOTYPE_REFENCE; \
-        else                                                            \
-            MPIDI_CH4U_WIN(win, sync).target_epoch_type = MPIDI_CH4U_EPOTYPE_NONE; \
     } while (0)
 
 /*
