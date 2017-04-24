@@ -21,10 +21,16 @@
 #undef calloc
 #undef free
 #undef strdup
+#undef mmap
+#undef munmap
 /* Some GNU implementations use __strdup for strdup */
 #if defined(__strdup)
 #define strdup(s) __strdup(s)
 #endif
+#endif
+
+#ifdef MPL_HAVE_SYS_MMAN_H
+#include <sys/mman.h>
 #endif
 
 #define TR_ALIGN_BYTES 8
@@ -34,7 +40,13 @@
 #define COOKIE_VALUE   0xf0e0d0c9
 #define ALREADY_FREED  0x0f0e0d9c
 
+enum TR_mem_type {
+    TR_MALLOC_TYPE = 0,
+    TR_MMAP_TYPE = 1,
+};
+
 typedef struct TRSPACE {
+    enum TR_mem_type type;
     size_t size;
     int id;
     int lineno;
@@ -75,6 +87,8 @@ static int TRdebugLevel = 0;
 static int TRSetBytes   = 0;
 #define TR_MALLOC 0x1
 #define TR_FREE   0x2
+#define TR_MMAP   0x4
+#define TR_MUNMAP 0x8
 
 /* Used to keep track of allocations */
 static volatile size_t TRMaxMem = 0;
@@ -285,6 +299,7 @@ static void *trmalloc(size_t a, int lineno, const char fname[])
     }
     head->next = TRhead[1];
     TRhead[1] = head;
+    head->type = TR_MALLOC_TYPE;
     head->prev = 0;
     head->size = nsize;
     head->id = TRid;
@@ -800,6 +815,43 @@ void *MPL_trrealloc(void *p, size_t size, int lineno, const char fname[])
     retval = trrealloc(p, size, lineno, fname);
     TR_THREAD_CS_EXIT;
     return retval;
+}
+
+static void *trmmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset, int lineno, const char fname[])
+{
+    char *new = NULL;
+
+    new = (char *) mmap(addr, length, prot, flags, fd, offset);
+    if (new == MAP_FAILED) goto fn_exit;
+
+    if (TRlevel & TR_MMAP) {
+        MPL_error_printf("[%d] Mmapping %ld(%ld) bytes at %p in %s[%d]\n",
+                world_rank, (long) length, (long) length, new, fname, lineno);
+    }
+
+  fn_exit:
+    return (void *) new;
+}
+
+void *MPL_trmmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset, int lineno, const char fname[])
+{
+    void *retval;
+    TR_THREAD_CS_ENTER;
+    retval = trmmap(addr, length, prot, flags, fd, offset, lineno, fname);
+    TR_THREAD_CS_EXIT;
+    return retval;
+}
+
+static void trmunmap(void *addr, size_t length, int lineno, const char fname[])
+{
+    munmap(addr, length);
+}
+
+void MPL_trmunmap(void *addr, size_t length, int lineno, const char fname[])
+{
+    TR_THREAD_CS_ENTER;
+    trmunmap(addr, length, lineno, fname);
+    TR_THREAD_CS_EXIT;
 }
 
 /*+C
