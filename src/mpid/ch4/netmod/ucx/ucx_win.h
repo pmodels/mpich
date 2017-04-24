@@ -242,7 +242,10 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Win *win = *win_ptr;
-    MPIDI_CH4U_EPOCH_FREE_CHECK(win, mpi_errno, return mpi_errno);
+
+    MPIDI_CH4U_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
+    MPIDI_CH4U_EXPOSURE_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
+
     mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;

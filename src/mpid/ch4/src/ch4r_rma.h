@@ -39,6 +39,7 @@ static inline int MPIDI_do_put(const void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_DO_PUT);
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_OP_REFENCE(win);
 
     MPIDI_Datatype_check_size(origin_datatype, origin_count, data_sz);
     if (data_sz == 0 || target_rank == MPI_PROC_NULL) {
@@ -63,7 +64,7 @@ static inline int MPIDI_do_put(const void *origin_addr,
     MPIR_Assert(sreq);
     MPIDI_CH4U_REQUEST(sreq, req->preq.win_ptr) = win;
 
-    MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
     MPIR_cc_incr(sreq->cc_ptr, &c);
     am_hdr.src_rank = win->comm_ptr->rank;
     am_hdr.target_disp = target_disp;
@@ -170,6 +171,7 @@ static inline int MPIDI_do_get(void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_DO_GET);
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_OP_REFENCE(win);
 
     MPIDI_Datatype_check_size(origin_datatype, origin_count, data_sz);
     if (data_sz == 0 || target_rank == MPI_PROC_NULL) {
@@ -198,7 +200,7 @@ static inline int MPIDI_do_get(void *origin_addr,
     MPIDI_CH4U_REQUEST(sreq, req->greq.datatype) = origin_datatype;
     MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
 
-    MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
     MPIR_cc_incr(sreq->cc_ptr, &c);
     am_hdr.target_disp = target_disp;
     am_hdr.count = target_count;
@@ -287,6 +289,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_DO_ACCUMULATE);
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_OP_REFENCE(win);
 
     MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, data_sz, dt_ptr);
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
@@ -302,7 +305,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     MPIR_Assert(sreq);
     MPIDI_CH4U_REQUEST(sreq, req->areq.win_ptr) = win;
 
-    MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
     MPIR_cc_incr(sreq->cc_ptr, &c);
 
     am_hdr.req_ptr = (uint64_t) sreq;
@@ -434,6 +437,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_DO_GET_ACCUMULATE);
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_OP_REFENCE(win);
 
     MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, data_sz, dt_ptr);
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
@@ -456,7 +460,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     MPIDI_CH4U_REQUEST(sreq, req->areq.result_datatype) = result_datatype;
     dtype_add_ref_if_not_builtin(result_datatype);
 
-    MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
     MPIR_cc_incr(sreq->cc_ptr, &c);
 
     /* TODO: have common routine for accumulate/get_accumulate */
@@ -892,6 +896,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_MPI_COMPARE_AND_SWAP);
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_OP_REFENCE(win);
 
     MPIDI_Datatype_check_size(datatype, 1, data_sz);
     if (data_sz == 0 || target_rank == MPI_PROC_NULL) {
@@ -913,7 +918,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
     MPIDI_CH4U_REQUEST(sreq, req->creq.data) = p_data;
     MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
 
-    MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
     MPIR_cc_incr(sreq->cc_ptr, &c);
 
     am_hdr.target_disp = target_disp;
