@@ -91,6 +91,13 @@ extern MPL_dbg_class MPIR_DBG_STRING;
 #define calloc(a,b)       'Error use MPL_calloc' :::
 #define free(a)           'Error use MPL_free'   :::
 #define realloc(a)        'Error use MPL_realloc' :::
+/* These two functions can't be guarded because we use #include <sys/mman.h>
+ * throughout the code to be able to use other symbols in that header file.
+ * Because we include that header directly, we bypass this guard and cause
+ * compile problems.
+ * #define mmap(a,b,c,d,e,f) 'Error use MPL_mmap'   :::
+ * #define munmap(a,b)       'Error use MPL_munmap' :::
+ */
 #if defined(strdup) || defined(__strdup)
 #undef strdup
 #endif
