@@ -262,15 +262,14 @@ typedef struct MPIDI_CH4U_win_sync_pscw {
 } MPIDI_CH4U_win_sync_pscw_t;
 
 typedef struct MPIDI_CH4U_win_target_sync {
-    int origin_epoch_type;      /* NONE, LOCK. */
+    int access_epoch_type;      /* NONE, LOCK. */
     MPIDI_CH4U_win_target_sync_lock_t lock;
 } MPIDI_CH4U_win_target_sync_t;
 
 typedef struct MPIDI_CH4U_win_sync {
-    /* TODO: replace with access/exposure */
-    int origin_epoch_type;      /* NONE, FENCE, LOCKALL, START,
+    int access_epoch_type;      /* NONE, FENCE, LOCKALL, START,
                                  * LOCK (refer to target_sync). */
-    int target_epoch_type;      /* NONE, FENCE, POST. */
+    int exposure_epoch_type;    /* NONE, FENCE, POST. */
 
     /* access epochs */
     /* TODO: Can we put access epochs in union,

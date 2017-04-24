@@ -585,7 +585,8 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
     }
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
-    MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_OP_REFENCE(win);
 
     MPIDI_Datatype_check_contig_size_lb(target_datatype, target_count,
                                         target_contig, target_bytes, target_true_lb);
@@ -746,7 +747,8 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
     }
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
-    MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_OP_REFENCE(win);
 
     MPIDI_Datatype_check_contig_size(origin_datatype, origin_count, origin_contig, origin_bytes);
 
@@ -893,6 +895,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMPARE_AND_SWAP);
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_OP_REFENCE(win);
 
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
 
@@ -907,7 +910,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     rbuffer = (char *) result_addr + result_dt.true_lb;
     tbuffer = (void *) (MPIDI_OFI_winfo_base(win, target_rank) + offset);
 
-    MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
 
     max_size = MPIDI_OFI_QUERY_COMPARE_ATOMIC_COUNT;
     MPIDI_OFI_query_datatype(datatype, &fi_dt, MPI_OP_NULL, &fi_op, &max_size, &dt_size);
@@ -1034,6 +1037,8 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     if (!MPIDI_OFI_ENABLE_ATOMICS) goto am_fallback;
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_OP_REFENCE(win);
+
     MPIDI_Datatype_check_size(origin_datatype, origin_count, origin_bytes);
     if ((origin_bytes == 0) || (target_rank == MPI_PROC_NULL)) {
         mpi_errno = MPI_SUCCESS;
@@ -1047,7 +1052,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
 
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
 
-    MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
 
     basic_type = MPIDI_OFI_accumulate_get_basic_type(target_datatype, &acc_check);
     if (basic_type == MPI_DATATYPE_NULL || (acc_check && op != MPI_REPLACE))
@@ -1162,6 +1167,8 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     if (!MPIDI_OFI_ENABLE_ATOMICS) goto am_fallback;
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_OP_REFENCE(win);
+
     MPIDI_Datatype_check_size(target_datatype, target_count, target_bytes);
     if ((target_bytes == 0) || (target_rank == MPI_PROC_NULL)) {
         mpi_errno = MPI_SUCCESS;
@@ -1175,7 +1182,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
 
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
 
-    MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
     rt = result_datatype;
     basic_type = MPIDI_OFI_accumulate_get_basic_type(target_datatype, &acc_check);
     if (basic_type == MPI_DATATYPE_NULL || (acc_check && op != MPI_REPLACE && op != MPI_NO_OP))

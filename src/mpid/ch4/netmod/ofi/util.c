@@ -330,13 +330,13 @@ static inline void MPIDI_OFI_win_post_proc(const MPIDI_OFI_win_control_t * info,
 static inline void MPIDI_OFI_win_unlock_done_proc(const MPIDI_OFI_win_control_t * info,
                                                   MPIR_Win * win, unsigned peer)
 {
-    if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK) {
+    if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK) {
         MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
 
         MPIR_Assert((int ) target_ptr->sync.lock.locked == 1);
         target_ptr->sync.lock.locked = 0;
     }
-    else if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK_ALL) {
+    else if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK_ALL) {
         MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lockall.allLocked > 0);
         MPIDI_CH4U_WIN(win, sync).lockall.allLocked -= 1;
     }
