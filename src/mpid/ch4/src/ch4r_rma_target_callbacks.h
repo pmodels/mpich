@@ -320,13 +320,13 @@ static inline void MPIDI_win_unlock_done(const MPIDI_CH4U_win_cntrl_msg_t * info
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_WIN_UNLOCK_DONE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_UNLOCK_DONE);
 
-    if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK) {
+    if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK) {
         MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
 
         MPIR_Assert((int) target_ptr->sync.lock.locked == 1);
         target_ptr->sync.lock.locked = 0;
     }
-    else if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK_ALL) {
+    else if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK_ALL) {
         MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lockall.allLocked > 0);
         MPIDI_CH4U_WIN(win, sync).lockall.allLocked -= 1;
     }

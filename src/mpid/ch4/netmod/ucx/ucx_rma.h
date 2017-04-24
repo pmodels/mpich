@@ -26,7 +26,7 @@ static inline int MPIDI_UCX_contig_put(const void *origin_addr,
     MPIR_Comm *comm = win->comm_ptr;
     ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(comm, target_rank);
 
-    MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
     base = win_info->addr;
     offset = target_disp * win_info->disp + true_lb;
 
@@ -71,7 +71,7 @@ static inline int MPIDI_UCX_noncontig_put(const void *origin_addr,
     MPIDU_Segment_pack(segment_ptr, segment_first, &last, buffer);
     MPIDU_Segment_free(segment_ptr);
 
-    MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
     base = win_info->addr;
     offset = target_disp * win_info->disp + true_lb;
     /* We use the blocking put here - should be faster than send/recv - ucp_put returns when it is
@@ -102,7 +102,7 @@ static inline int MPIDI_UCX_contig_get(void *origin_addr,
     ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(comm, target_rank);
 
 
-    MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
     base = win_info->addr;
     offset = target_disp * win_info->disp + true_lb;
 
