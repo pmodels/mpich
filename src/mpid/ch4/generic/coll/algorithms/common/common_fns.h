@@ -36,10 +36,12 @@ extern MPIDI_COLL_progress_global_t MPIDI_COLL_progress_global;
 static inline void COLL_sched_init(COLL_sched_t * s)
 {
     TSP_sched_init(&(s->tsp_sched));
+    s->sched_started = 0;
 }
 
 static inline void COLL_sched_reset(COLL_sched_t *s){
     TSP_sched_reset(&s->tsp_sched);
+    s->sched_started = 0;
 }
 
 static inline void COLL_sched_free(COLL_sched_t *s){
@@ -58,6 +60,7 @@ static inline void COLL_sched_init_nb(COLL_sched_t ** sched, COLL_req_t * reques
     TSP_sched_init(&(s->tsp_sched));
     request->elem.kick_fn = COLL_kick;
     *sched = s;
+    
 }
 
 static inline void COLL_sched_kick(COLL_sched_t * s)

@@ -76,5 +76,9 @@
 #define TSP_free_buffers     TSP_NAMESPACE(free_buffers)
 #define TSP_free_mem_nb      TSP_NAMESPACE(free_mem_nb)
 #define TSP_queryfcn         TSP_NAMESPACE(queryfcn)
+#define TSP_record_request_completion   TSP_NAMESPACE(record_request_completion)
+#define TSP_record_request_issue        TSP_NAMESPACE(record_request_issue)
+#define TSP_issue_request               TSP_NAMESPACE(issue_request)
+#define TSP_decrement_num_unfinished_dependencies TSP_NAMESPACE(decrement_num_unfinished_dependecies)
 
 #define TSP_add_vtx_dependencies            TSP_NAMESPACE(add_vtx_dependencies)

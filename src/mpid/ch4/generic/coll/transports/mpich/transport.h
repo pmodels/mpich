@@ -1,4 +1,5 @@
 /*
+ *
  *  (C) 2006 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  *
@@ -15,6 +16,51 @@
 #ifndef TSP_NAMESPACE
 #error "TSP_NAMESPACE must be defined before including a collective transport"
 #endif
+
+static inline void TSP_issue_request(int,TSP_req_t*,TSP_sched_t*);
+
+static inline void TSP_decrement_num_unfinished_dependecies(TSP_req_t *rp, TSP_sched_t *sched){
+    /*for each outgoing vertex of request rp, decrement number of unfinished dependencies*/
+    TSP_IntArray *outvtcs = &rp->outvtcs;
+    if(0) fprintf(stderr,"num outvtcs of %d = %d\n", rp->kind, outvtcs->used);
+    int i;
+    for(i=0; i<outvtcs->used; i++){
+        int num_unfinished_dependencies = --(sched->requests[outvtcs->array[i]].num_unfinished_dependencies);
+        /*if all dependencies are complete, issue the op*/
+        if(num_unfinished_dependencies == 0){
+            if(0) fprintf(stderr,"issuing request number: %d\n",outvtcs->array[i]);
+            TSP_issue_request(outvtcs->array[i], &sched->requests[outvtcs->array[i]], sched);
+        }
+    }
+}
+
+static inline void TSP_record_request_completion(TSP_req_t *rp, TSP_sched_t *sched){
+    rp->state = TSP_STATE_COMPLETE;
+    /*update the dependencies*/
+    sched->num_completed++;
+    if(0) fprintf(stderr, "num completed vertices: %d\n", sched->num_completed);
+    TSP_decrement_num_unfinished_dependecies(rp,sched);
+}
+
+static inline void TSP_record_request_issue(TSP_req_t *rp, TSP_sched_t *sched){
+    rp->state = TSP_STATE_ISSUED;
+
+    if(sched->issued_head==NULL){
+        sched->issued_head = sched->last_issued = rp;
+        sched->issued_head->prev_issued = NULL;
+        if(0) fprintf(stderr, "setting last_issued\n");
+        if(0) fprintf(stderr, "sched->last_issued->next_issued = %p\n", sched->last_issued->next_issued);
+    }else if(sched->last_issued->next_issued == rp){
+        sched->last_issued = rp;
+    }else{
+        TSP_req_t *last_issued = sched->last_issued;
+        if(0)fprintf(stderr, "updating next_issued\n");
+        last_issued->next_issued = rp;
+        rp->prev_issued = last_issued;
+        sched->last_issued = rp;
+    }
+    sched->req_iter = sched->last_issued;
+}
 
 static inline int TSP_init()
 {
@@ -45,16 +91,31 @@ static inline int TSP_comm_cleanup(TSP_comm_t * comm)
         comm->mpid_comm = NULL;
 }
 
+static inline void reset_issued_list(TSP_sched_t *sched){
+    sched->issued_head = NULL;
+    int i;
+    /*If schedule is being reused, reset only used requests
+    else it is a new schedule being generated and therefore
+    reset all the requests**/
+    int nrequests = (sched->total==0)?MAX_REQUESTS:sched->total;
+    
+    for(i=0; i<nrequests; i++){
+        sched->requests[i].next_issued = NULL;
+        sched->requests[i].prev_issued = NULL;
+    }
+}
+
 static inline void TSP_sched_init(TSP_sched_t *sched)
 {
     sched->total      = 0;
-    sched->completed  = 0;
+    sched->num_completed  = 0;
     sched->last_wait = -1;
     sched->nbufs     = 0;
+    reset_issued_list(sched);
 }
 
 static inline void TSP_sched_reset(TSP_sched_t *sched){
-    sched->completed=0;
+    sched->num_completed=0;
     int i;
     for(i=0; i<sched->total; i++){
         TSP_req_t* req = &sched->requests[i];
@@ -63,6 +124,7 @@ static inline void TSP_sched_reset(TSP_sched_t *sched){
         if(req->kind==TSP_KIND_RECV_REDUCE)
             req->nbargs.recv_reduce.done=0;
     }
+    reset_issued_list(sched);
 }
 
 static inline void TSP_sched_commit(TSP_sched_t *sched)
@@ -148,7 +210,7 @@ static inline void TSP_add_vtx_dependencies(TSP_sched_t *sched, int vtx, int n_i
     int i;
     TSP_req_t *req = &sched->requests[vtx];
     TSP_IntArray *in = &req->invtcs;
-    if(0) printf("updating invtcs of vtx %d, kind %d, in->used %d, n_invtcs %d\n",vtx,req->kind,in->used, n_invtcs);
+    if(0) fprintf(stderr,"updating invtcs of vtx %d, kind %d, in->used %d, n_invtcs %d\n",vtx,req->kind,in->used, n_invtcs);
     /*insert the incoming edges*/
     assert(in->used+n_invtcs <= MAX_EDGES);
     memcpy(in->array+in->used, invtcs, sizeof(int)*n_invtcs);
@@ -305,7 +367,7 @@ static inline int TSP_send(const void  *buf,
 
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [send]\n",vtx);
     sched->total++;
-    TSP_test(sched);
+    TSP_issue_request(vtx, req, sched);
     return vtx;
 }
 
@@ -337,7 +399,7 @@ static inline int TSP_send_accumulate(const void  *buf,
 
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [send_accumulate]\n",sched->total);
     sched->total++;
-    TSP_test(sched);
+    TSP_issue_request(vtx, req, sched);
     return vtx;
 }
 
@@ -368,7 +430,7 @@ static inline int TSP_recv(void        *buf,
 
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [recv]\n",sched->total);
     sched->total++;
-    TSP_test(sched);
+    TSP_issue_request(vtx, req, sched);
     return vtx;
 }
 
@@ -446,7 +508,7 @@ static inline int TSP_recv_reduce(void        *buf,
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [recv_reduce]\n",sched->total);
     
     sched->total++;
-    TSP_test(sched);
+    TSP_issue_request(vtx, req, sched);
     return vtx;
 }
 
@@ -566,31 +628,148 @@ static inline int TSP_free_mem_nb(void        *ptr,
     return sched->total++;
 }
 
-static inline void decrement_num_unfinished_dependecies(TSP_req_t *rp, TSP_sched_t *sched){
-    /*for each outgoing vertex of request rp, decrement number of unfinished dependencies*/
-    TSP_IntArray *outvtcs = &rp->outvtcs;
-    if(0) printf("num outvtcs of %d = %d\n", rp->kind, outvtcs->used);
-    int i;
-    for(i=0; i<outvtcs->used; i++)
-        sched->requests[outvtcs->array[i]].num_unfinished_dependencies--;
+static inline void TSP_issue_request(int vtxid, TSP_req_t *rp, TSP_sched_t *sched){
+    if(rp->state == TSP_STATE_INIT && rp->num_unfinished_dependencies==0) {
+        if(0) fprintf(stderr, "issuing request: %d\n", vtxid);
+        switch(rp->kind) {
+            case TSP_KIND_SEND: {
+                if(0) fprintf(stderr, "  --> MPICH transport (isend) issued\n");
+
+                MPIR_Errflag_t  errflag  = MPIR_ERR_NONE;
+                MPIC_Isend(rp->nbargs.sendrecv.buf,
+                           rp->nbargs.sendrecv.count,
+                           rp->nbargs.sendrecv.dt->mpi_dt,
+                           rp->nbargs.sendrecv.dest,
+                           rp->nbargs.sendrecv.tag,
+                           rp->nbargs.sendrecv.comm->mpid_comm,
+                           &rp->mpid_req[0],
+                           &errflag);
+                TSP_record_request_issue(rp, sched);
+            }
+            break;
+
+            case TSP_KIND_RECV: {
+                if(0) fprintf(stderr, "  --> MPICH transport (irecv) issued\n");
+
+                MPIC_Irecv(rp->nbargs.sendrecv.buf,
+                           rp->nbargs.sendrecv.count,
+                           rp->nbargs.sendrecv.dt->mpi_dt,
+                           rp->nbargs.sendrecv.dest,
+                           rp->nbargs.sendrecv.tag,
+                           rp->nbargs.sendrecv.comm->mpid_comm,
+                           &rp->mpid_req[0]);
+                TSP_record_request_issue(rp, sched);
+            }
+            break;
+
+            case TSP_KIND_ADDREF_DT:
+                TSP_addref_dt(rp->nbargs.addref_dt.dt,
+                              rp->nbargs.addref_dt.up);
+
+                if(0) fprintf(stderr, "  --> MPICH transport (addref dt) complete\n");
+                TSP_record_request_completion(rp, sched);
+                break;
+
+            case TSP_KIND_ADDREF_OP:
+                TSP_addref_op(rp->nbargs.addref_op.op,
+                              rp->nbargs.addref_op.up);
+
+                if(0) fprintf(stderr, "  --> MPICH transport (addref op) complete\n");
+
+                TSP_record_request_completion(rp, sched);
+                break;
+
+            case TSP_KIND_DTCOPY:
+                TSP_dtcopy(rp->nbargs.dtcopy.tobuf,
+                           rp->nbargs.dtcopy.tocount,
+                           rp->nbargs.dtcopy.totype,
+                           rp->nbargs.dtcopy.frombuf,
+                           rp->nbargs.dtcopy.fromcount,
+                           rp->nbargs.dtcopy.fromtype);
+
+                if(0) fprintf(stderr, "  --> MPICH transport (dtcopy) complete\n");
+                TSP_record_request_completion(rp, sched);
+
+                break;
+
+            case TSP_KIND_FREE_MEM:
+                if(0) fprintf(stderr, "  --> MPICH transport (freemem) complete\n");
+
+                TSP_free_mem(rp->nbargs.free_mem.ptr);
+                TSP_record_request_completion(rp, sched);
+                break;
+
+            case TSP_KIND_NOOP:
+                if(0) fprintf(stderr, "  --> MPICH transport (noop) complete\n");
+
+                TSP_record_request_completion(rp, sched);
+                break;
+
+            case TSP_KIND_RECV_REDUCE: {
+                MPIC_Irecv(rp->nbargs.recv_reduce.inbuf,
+                           rp->nbargs.recv_reduce.count,
+                           rp->nbargs.recv_reduce.datatype->mpi_dt,
+                           rp->nbargs.recv_reduce.source,
+                           rp->nbargs.recv_reduce.tag,
+                           rp->nbargs.recv_reduce.comm->mpid_comm,
+                           &rp->mpid_req[0]);
+                MPIR_Grequest_start_impl(TSP_queryfcn,
+                                         NULL,
+                                         NULL,
+                                         &rp->nbargs.recv_reduce,
+                                         &rp->mpid_req[1]);
+
+                if(0) fprintf(stderr, "  --> MPICH transport (recv_reduce) issued\n");
+
+                TSP_record_request_issue(rp, sched);
+            }
+            break;
+
+            case TSP_KIND_REDUCE_LOCAL:
+                MPIR_Reduce_local_impl(rp->nbargs.reduce_local.inbuf,
+                                       rp->nbargs.reduce_local.inoutbuf,
+                                       rp->nbargs.reduce_local.count,
+                                       rp->nbargs.reduce_local.dt->mpi_dt,
+                                       rp->nbargs.reduce_local.op->mpi_op);
+
+                if(0) fprintf(stderr, "  --> MPICH transport (reduce local) complete\n");
+
+                TSP_record_request_completion(rp, sched);
+                break;
+        }
+    }
 }
 
-static inline void record_request_completion(TSP_req_t *rp, TSP_sched_t *sched){
-    rp->state = TSP_STATE_COMPLETE;
-    /*update the dependencies*/
-    sched->completed++;
-    decrement_num_unfinished_dependecies(rp,sched);
-}
+
 
 static inline int TSP_test(TSP_sched_t *sched)
 {
     TSP_req_t *req, *rp;
     int i;
     req = &sched->requests[0];
+    if(0)fprintf(stderr, "in TSP_test, num_completed=%d, total=%d\n", sched->num_completed, sched->total);
+    /*if issued list is empty, generate it*/
+    if(sched->issued_head == NULL){
+        if(0) fprintf(stderr, "issued list is empty, issue ready requests\n");
+        if(sched->total > 0 && sched->num_completed != sched->total){
+            for(i=0; i<sched->total; i++)
+                TSP_issue_request(i, &sched->requests[i], sched);
+            if(0) fprintf(stderr, "completed traversal of requests\n");
+            return 0;
+        }
+        else
+            return 1;
+    }
+    if(sched->total == sched->num_completed){
+        return 1;
+    }
+   
+    assert(sched->issued_head != NULL);
+    sched->req_iter = sched->issued_head;
+    sched->issued_head = NULL;
     /* Check for issued ops that have been completed */
-    for(i=0; i<sched->total; i++) {
-        rp = &req[i];
-
+    while(sched->req_iter!=NULL) {
+        rp = sched->req_iter;
         if(rp->state == TSP_STATE_ISSUED) {
             MPI_Status     status;
             MPIR_Request  *mpid_req0 = rp->mpid_req[0];
@@ -614,12 +793,9 @@ static inline int TSP_test(TSP_sched_t *sched)
                                           rp->kind);
                              if(rp->nbargs.sendrecv.count>=1) fprintf(stderr, "data send/recvd: %d\n", *(int *)(rp->nbargs.sendrecv.buf));
                         }
-
-                        rp->state = TSP_STATE_COMPLETE;
-                        /*update the dependencies*/
-                        sched->completed++;
-                        decrement_num_unfinished_dependecies(rp,sched);
-                    }
+                        TSP_record_request_completion(rp,sched);
+                    }else
+                        TSP_record_request_issue(rp,sched); /*record it again as issued*/
                     break;
                 case TSP_KIND_RECV_REDUCE:
                     if(mpid_req0 && MPIR_Request_is_complete(mpid_req0)) {
@@ -638,12 +814,9 @@ static inline int TSP_test(TSP_sched_t *sched)
                                           rp->kind);
                              if(rp->nbargs.sendrecv.count>=1) fprintf(stderr, "data send/recvd: %d\n", *(int *)(rp->nbargs.sendrecv.buf));
                         }
-
-                        rp->state = TSP_STATE_COMPLETE;
-                        /*update the dependencies*/
-                        sched->completed++;
-                        decrement_num_unfinished_dependecies(rp,sched);
-                    }
+                        TSP_record_request_completion(rp,sched);
+                    }else
+                        TSP_record_request_issue(rp,sched);/*record it again as issued*/
 
                     break;
 
@@ -651,129 +824,18 @@ static inline int TSP_test(TSP_sched_t *sched)
                     break;
             }
         }
+        sched->req_iter = sched->req_iter->next_issued;
     }
-    /* Now check for ops that need to be issued */
+    sched->last_issued->next_issued = NULL;
 
-    for(i=0; i<sched->total; i++) {
-        rp = &req[i];
-        if(0) printf("i: %d, rp->kind: %d, rp->num_unfinished_dependencies: %d, rp->state: %d\n", i, rp->kind, rp->num_unfinished_dependencies, rp->state);
-        if(rp->state == TSP_STATE_INIT && rp->num_unfinished_dependencies==0) {
-            switch(rp->kind) {
-                case TSP_KIND_SEND: {
-                    if(0) fprintf(stderr, "  --> MPICH transport (isend) issued\n");
 
-                    MPIR_Errflag_t  errflag  = MPIR_ERR_NONE;
-                    MPIC_Isend(rp->nbargs.sendrecv.buf,
-                               rp->nbargs.sendrecv.count,
-                               rp->nbargs.sendrecv.dt->mpi_dt,
-                               rp->nbargs.sendrecv.dest,
-                               rp->nbargs.sendrecv.tag,
-                               rp->nbargs.sendrecv.comm->mpid_comm,
-                               &rp->mpid_req[0],
-                               &errflag);
-                    rp->state = TSP_STATE_ISSUED;
-                }
-                break;
-
-                case TSP_KIND_RECV: {
-                    if(0) fprintf(stderr, "  --> MPICH transport (irecv) issued\n");
-
-                    MPIC_Irecv(rp->nbargs.sendrecv.buf,
-                               rp->nbargs.sendrecv.count,
-                               rp->nbargs.sendrecv.dt->mpi_dt,
-                               rp->nbargs.sendrecv.dest,
-                               rp->nbargs.sendrecv.tag,
-                               rp->nbargs.sendrecv.comm->mpid_comm,
-                               &rp->mpid_req[0]);
-                    rp->state = TSP_STATE_ISSUED;
-                }
-                break;
-
-                case TSP_KIND_ADDREF_DT:
-                    TSP_addref_dt(rp->nbargs.addref_dt.dt,
-                                  rp->nbargs.addref_dt.up);
-
-                    if(0) fprintf(stderr, "  --> MPICH transport (addref dt) complete\n");
-                    record_request_completion(rp, sched);
-                    break;
-
-                case TSP_KIND_ADDREF_OP:
-                    TSP_addref_op(rp->nbargs.addref_op.op,
-                                  rp->nbargs.addref_op.up);
-
-                    if(0) fprintf(stderr, "  --> MPICH transport (addref op) complete\n");
-
-                    record_request_completion(rp, sched);
-                    break;
-
-                case TSP_KIND_DTCOPY:
-                    TSP_dtcopy(rp->nbargs.dtcopy.tobuf,
-                               rp->nbargs.dtcopy.tocount,
-                               rp->nbargs.dtcopy.totype,
-                               rp->nbargs.dtcopy.frombuf,
-                               rp->nbargs.dtcopy.fromcount,
-                               rp->nbargs.dtcopy.fromtype);
-
-                    if(0) fprintf(stderr, "  --> MPICH transport (dtcopy) complete\n");
-                    record_request_completion(rp, sched);
-
-                    break;
-
-                case TSP_KIND_FREE_MEM:
-                    if(0) fprintf(stderr, "  --> MPICH transport (freemem) complete\n");
-
-                    TSP_free_mem(rp->nbargs.free_mem.ptr);
-                    record_request_completion(rp, sched);
-                    break;
-
-                case TSP_KIND_NOOP:
-                    if(0) fprintf(stderr, "  --> MPICH transport (noop) complete\n");
-
-                    record_request_completion(rp, sched);
-                    break;
-
-                case TSP_KIND_RECV_REDUCE: {
-                    MPIC_Irecv(rp->nbargs.recv_reduce.inbuf,
-                               rp->nbargs.recv_reduce.count,
-                               rp->nbargs.recv_reduce.datatype->mpi_dt,
-                               rp->nbargs.recv_reduce.source,
-                               rp->nbargs.recv_reduce.tag,
-                               rp->nbargs.recv_reduce.comm->mpid_comm,
-                               &rp->mpid_req[0]);
-                    MPIR_Grequest_start_impl(TSP_queryfcn,
-                                             NULL,
-                                             NULL,
-                                             &rp->nbargs.recv_reduce,
-                                             &rp->mpid_req[1]);
-
-                    if(0) fprintf(stderr, "  --> MPICH transport (recv_reduce) issued\n");
-
-                    rp->state = TSP_STATE_ISSUED;
-                }
-                break;
-
-                case TSP_KIND_REDUCE_LOCAL:
-                    MPIR_Reduce_local_impl(rp->nbargs.reduce_local.inbuf,
-                                           rp->nbargs.reduce_local.inoutbuf,
-                                           rp->nbargs.reduce_local.count,
-                                           rp->nbargs.reduce_local.dt->mpi_dt,
-                                           rp->nbargs.reduce_local.op->mpi_op);
-
-                    if(0) fprintf(stderr, "  --> MPICH transport (reduce local) complete\n");
-
-                    record_request_completion(rp, sched);
-                    break;
-            }
-        }
-    }
-    
     if(0){
-        if(sched->completed==sched->total) {
+        if(sched->num_completed==sched->total) {
             if(0) fprintf(stderr, "  --> MPICH transport (test) complete:  sched->total=%ld\n",
                               sched->total);
         }
     }
-    return sched->completed==sched->total;
+    return sched->num_completed==sched->total;
 }
 
  /*frees any memory allocated for execution of this schedule*/

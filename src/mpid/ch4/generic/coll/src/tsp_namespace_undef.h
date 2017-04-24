@@ -65,6 +65,10 @@
 #undef TSP_free_mem
 #undef TSP_free_mem_nb
 #undef TSP_queryfcn
+#undef TSP_record_request_completion
+#undef TSP_record_request_issue
+#undef TSP_issue_request
+#undef TSP_decement_num_unfinished_dependencies
 
 #undef TSP_add_vtx_dependencies
 

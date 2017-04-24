@@ -179,7 +179,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BCAST);
-
+    
 #ifdef MPIDI_BUILD_CH4_COLL
     int valid_coll[] = {1,2};
     int use_coll = (MPIR_CVAR_USE_BCAST < 0) ? MPIDI_CH4_cycle_algorithm(comm, valid_coll, 2) : MPIR_CVAR_USE_BCAST;
