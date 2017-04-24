@@ -54,7 +54,8 @@ static inline int COLL_comm_init(COLL_comm_t *comm, int id, int * tag, int rank,
     comm->rank = rank;
     comm->size = size;
     comm->tag = *tag;
-  
+    
+    comm->is_subcomm = false;
     int max_k = comm->max_k = MPIR_CVAR_MAX_KVAL; 
     int i,k;
     /*allocate space for arrays */
@@ -66,7 +67,6 @@ static inline int COLL_comm_init(COLL_comm_t *comm, int id, int * tag, int rank,
         COLL_tree_kary_init(rank,size,k,0,&comm->kary_tree[k]);
         COLL_tree_knomial_init(rank,size,k,0,&comm->knomial_tree[k]);
     }
-
 #if 0
     /*initialize subcommunicator for multileader optimization, only if you have node information*/
     if(comm->mpir_comm->node_comm != NULL && !comm->is_subcomm){

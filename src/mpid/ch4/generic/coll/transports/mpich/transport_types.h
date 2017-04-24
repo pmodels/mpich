@@ -123,7 +123,10 @@ typedef struct{
     int size;
 } TSP_IntArray;
 
+
 typedef struct TSP_req_t {
+    struct TSP_req_t* next_issued;
+    struct TSP_req_t* prev_issued;
     struct MPIR_Request *mpid_req[2];
     int        kind;
     int        state;
@@ -147,7 +150,7 @@ TSP_req_t;
 
 typedef struct TSP_sched_t {
     uint64_t   total;
-    uint64_t   completed;
+    uint64_t   num_completed;
     uint64_t   last_wait; /*used by TSP_wait, to keep track of the last TSP_wait vtx id*/
     TSP_req_t  requests[MAX_REQUESTS];
     /*Store the memory location of all the buffers that were temporarily
@@ -158,6 +161,10 @@ typedef struct TSP_sched_t {
     */
     uint64_t   nbufs;
     void      *buf[MAX_REQUESTS];/*size of the array is currently arbitrarily set*/
+    
+    TSP_req_t  *issued_head;/*head of the issued requests list*/
+    TSP_req_t  *req_iter;/*current request under consideration*/
+    TSP_req_t  *last_issued; /*points to the last task considered issued in the current pass*/
 }
 TSP_sched_t;
 
