@@ -103,12 +103,78 @@ char *MPL_strdup(const char *str);
 
 #define MPL_realloc(a,b)    MPL_trrealloc((a),(b),__LINE__,__FILE__)
 
+/*M
+  MPL_mmap - Map memory
+
+  Synopsis:
+.vb
+  void *MPL_mmap( void *addr, size_t length, int prot, int flags, int fd, off_t offset )
+.ve
+
+  Input Parameters:
+. addr - Starting address for the new mapping
+. length - Length of the mapping
+. prot - Desired memory protection of the mapping
+. flags - Determines whether updates to the mapping are visible to other
+  processes mapping the same region, and whether updates are carried
+  through to the underlying file.
+. fd - The file backing the memory region
+. offset - Offset into the file
+
+  Notes:
+  This routine will often be implemented as the simple macro
+.vb
+  #define MPL_mmap(a,b,c,d,e,f) mmap(a,b,c,d,e,f)
+.ve
+  However, it can also be defined as
+.vb
+  #define MPL_mmap(a,b,c,d,e,f) MPL_trmmap(a,b,c,d,e,f,__LINE__,__FILE__)
+.ve
+  where 'MPL_trmmap' is a tracing version of 'mmap' that is included with
+  MPICH.
+
+  Module:
+  Utility
+  M*/
+#define MPL_mmap(a,b,c,d,e,f) MPL_trmmap((a),(b),(c),(d),(e),(f),__LINE__,__FILE__)
+
+/*M
+  MPL_munmap - Unmapmemory
+
+  Synopsis:
+.vb
+  void *MPL_munmap( void *addr, size_t length )
+.ve
+
+  Input Parameters:
+. addr - Starting address for the new mapping
+. length - Length of the mapping
+
+  Notes:
+  This routine will often be implemented as the simple macro
+.vb
+  #define MPL_munmap(a,b) munmap(a,b)
+.ve
+  However, it can also be defined as
+.vb
+  #define MPL_munmap(a,b) MPL_trmunmap(a,b,__LINE__,__FILE__)
+.ve
+  where 'MPL_trmunmap' is a tracing version of 'munmap' that is included with
+  MPICH.
+
+  Module:
+  Utility
+  M*/
+#define MPL_munmap(a,b) MPL_trmunmap((a),(b),__LINE__,__FILE__)
+
 #else /* MPL_USE_MEMORY_TRACING */
 /* No memory tracing; just use native functions */
 #define MPL_malloc(a)    malloc((size_t)(a))
 #define MPL_calloc(a,b)  calloc((size_t)(a),(size_t)(b))
 #define MPL_free(a)      free((void *)(a))
 #define MPL_realloc(a,b)  realloc((void *)(a),(size_t)(b))
+#define MPL_mmap(a,b,c,d,e,f) mmap((void *)(a),(size_t)(b),(int)(c),(int)(d),(int)(e),(off_t)(f))
+#define MPL_munmap(a,b)  munmap((void *)(a),(size_t)(b))
 
 #endif /* MPL_USE_MEMORY_TRACING */
 
@@ -190,6 +256,9 @@ void MPL_trfree(void *, int, const char[]);
 int MPL_trvalid(const char[]);
 int MPL_trvalid2(const char[],int,const char[]);
 void *MPL_trcalloc(size_t, size_t, int, const char[]);
+#include <sys/types.h>
+void *MPL_trmmap(void *, size_t, int, int, int, off_t, int, const char[]);
+void MPL_trmunmap(void *, size_t, int, const char[]);
 void *MPL_trrealloc(void *, size_t, int, const char[]);
 void *MPL_trstrdup(const char *, int, const char[]);
 
