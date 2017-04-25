@@ -159,6 +159,7 @@ struct MPIR_Comm {
     int *internode_table;        /* internode_table[i] gives the rank in
                                     node_roots_comm of rank i in this comm.
                                     It is of size 'local_size'. */
+    int is_single_node;          /* if a communicator inside one node */
 
     int           is_low_group;  /* For intercomms only, this boolean is
 				    set for all members of one of the

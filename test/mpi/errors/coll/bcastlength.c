@@ -50,29 +50,7 @@ int main(int argc, char *argv[])
             printf("Found expected error; message is: %s\n", str);
         }
     }
-
-    if (rank == 0) {
-        ierr = MTest_Bcast(buf, 10, MPI_INT, 0, MPI_COMM_WORLD);
-    }
-    else {
-        ierr = MTest_Bcast(buf, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    }
-    if (ierr == MPI_SUCCESS) {
-        if (rank != 0) {
-            /* The root process may not detect that a too-short buffer
-             * was provided by the non-root processes, but those processes
-             * should detect this. */
-            errs++;
-            printf("Did not detect mismatched length (short) on process %d\n", rank);
-        }
-    }
-    else {
-        if (verbose) {
-            MPI_Error_string(ierr, str, &slen);
-            printf("Found expected error; message is: %s\n", str);
-        }
-    }
-
+	
     MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
 
     MTest_Finalize(errs);

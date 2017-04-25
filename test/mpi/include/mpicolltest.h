@@ -197,7 +197,7 @@ static inline int MTest_Allreduce(const void *sendbuf, void *recvbuf, int count,
     MPI_Request req = MPI_REQUEST_NULL;
 
     mpi_errno = MPI_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm, &req);
-    if (mpi_errno != MPI_SUCCESS)
+	if (mpi_errno != MPI_SUCCESS)
         return mpi_errno;
     mpi_errno = MPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;

@@ -121,7 +121,7 @@ int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm
 #define FUNCNAME MPIR_Bcast_binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIR_Bcast_binomial(
+int MPIR_Bcast_binomial(
     void *buffer, 
     int count, 
     MPI_Datatype datatype, 
@@ -471,7 +471,7 @@ static int scatter_for_bcast(
 #define FUNCNAME MPIR_Bcast_scatter_doubling_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIR_Bcast_scatter_doubling_allgather(
+int MPIR_Bcast_scatter_doubling_allgather(
     void *buffer, 
     int count, 
     MPI_Datatype datatype, 
@@ -779,7 +779,7 @@ fn_fail:
 #define FUNCNAME MPIR_Bcast_scatter_ring_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIR_Bcast_scatter_ring_allgather(
+int MPIR_Bcast_scatter_ring_allgather(
     void *buffer, 
     int count, 
     MPI_Datatype datatype, 
@@ -1565,10 +1565,17 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    mpi_errno = MPID_Bcast( buffer, count, datatype, root, comm_ptr, &errflag );
-    if (mpi_errno) goto fn_fail;
 
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+      /* intracommunicator */    
+      mpi_errno = MPID_Bcast( buffer, count, datatype, root, comm_ptr, &errflag );
+      if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    } 
+    else {
+      /* intercommunicator */
+      mpi_errno = MPIR_Bcast_inter( buffer, count, datatype, root, comm_ptr, &errflag );
+      if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    }
     /* ... end of body of routine ... */
     
   fn_exit:
