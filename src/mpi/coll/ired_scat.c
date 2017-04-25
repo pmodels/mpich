@@ -1070,10 +1070,8 @@ int MPI_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts
                         MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IREDUCE_SCATTER);
-    i = 0;
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IREDUCE_SCATTER);
@@ -1101,6 +1099,8 @@ int MPI_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts
     {
         MPID_BEGIN_ERROR_CHECKS
         {
+            int i = 0;
+
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 

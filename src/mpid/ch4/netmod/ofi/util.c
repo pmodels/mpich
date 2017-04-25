@@ -340,8 +340,9 @@ static inline void MPIDI_OFI_win_unlock_done_proc(const MPIDI_OFI_win_control_t 
         MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lockall.allLocked > 0);
         MPIDI_CH4U_WIN(win, sync).lockall.allLocked -= 1;
     }
-    else
+    else {
         MPIR_Assert(0);
+    }
 
 }
 
