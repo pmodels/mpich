@@ -524,13 +524,13 @@ static inline int MPIDIU_avt_init()
     MPIDI_CH4_Global.avt_mgr.n_avts = 0;
 
     MPIDI_av_table = (MPIDI_av_table_t **)
-                      mmap(NULL, MPIDI_CH4_Global.avt_mgr.mmapped_size,
-                           PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+                      MPL_mmap(NULL, MPIDI_CH4_Global.avt_mgr.mmapped_size,
+                               PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
     MPIR_ERR_CHKANDSTMT(MPIDI_av_table == MAP_FAILED, mpi_errno, MPI_ERR_NO_MEM,
                         goto fn_fail, "**nomem");
 
     MPIDI_CH4_Global.node_map = (int **)
-                                mmap(NULL, MPIDI_CH4_Global.avt_mgr.mmapped_size,
+                                MPL_mmap(NULL, MPIDI_CH4_Global.avt_mgr.mmapped_size,
                                      PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
     MPIR_ERR_CHKANDSTMT(MPIDI_CH4_Global.node_map == MAP_FAILED, mpi_errno,
                         MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
@@ -557,8 +557,8 @@ static inline int MPIDIU_avt_destroy()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AVT_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_AVT_DESTROY);
 
-    munmap((void *)MPIDI_CH4_Global.node_map, MPIDI_CH4_Global.avt_mgr.mmapped_size);
-    munmap((void *)MPIDI_av_table, MPIDI_CH4_Global.avt_mgr.mmapped_size);
+    MPL_munmap((void *)MPIDI_CH4_Global.node_map, MPIDI_CH4_Global.avt_mgr.mmapped_size);
+    MPL_munmap((void *)MPIDI_av_table, MPIDI_CH4_Global.avt_mgr.mmapped_size);
     MPL_free(MPIDI_CH4_Global.avt_mgr.free_avtid);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_AVT_DESTROY);
