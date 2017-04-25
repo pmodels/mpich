@@ -713,6 +713,19 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* and the resources consumed by it, such as address vectors, counters,     */
     /* completion queues, etc.                                                  */
     /* ------------------------------------------------------------------------ */
+
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+        /* Specify the number of TX/RX contexts we want
+
+           Currently, scalable endpoint contexts are created in a "bundle",
+           where each bundle consists of four TX contexts
+           (tagged, msg(untagged), rma-counter, rma-completion)
+           and three RX contexts (tagged, msg, rma.) */
+
+        int n_bundles = 1; /* Tentatively, we are creating only one bundle */
+        prov_use->ep_attr->tx_ctx_cnt = 4 * n_bundles;
+        prov_use->ep_attr->rx_ctx_cnt = 3 * n_bundles;
+    }
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_create_endpoint(prov_use,
                                                      MPIDI_Global.domain,
                                                      MPIDI_Global.p2p_cq,
