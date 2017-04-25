@@ -59,8 +59,9 @@ static inline int MPIDI_POSIX_mpi_improbe(int source,
 
             if (MPIDI_POSIX_ENVELOPE_MATCH
                 (MPIDI_POSIX_REQUEST(req), source, tag, comm->recvcontext_id + context_offset)) {
-                if (mqueue.head == NULL)
+                if (mqueue.head == NULL) {
                     MPIR_Assert(req == matched_req);
+                }
 
                 count += MPIR_STATUS_GET_COUNT(req->status);
                 MPIDI_POSIX_REQUEST_DEQUEUE(&req, prev_req, MPIDI_POSIX_recvq_unexpected);

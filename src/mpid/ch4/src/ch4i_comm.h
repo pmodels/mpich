@@ -882,13 +882,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
 
     /* do some sanity checks */
     MPL_LL_FOREACH(comm->mapper_head, mapper) {
-        if (mapper->src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+        if (mapper->src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
             MPIR_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
                         mapper->dir == MPIR_COMM_MAP_DIR__L2R);
+        }
 
-        if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
+        if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
             MPIR_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
                         mapper->dir == MPIR_COMM_MAP_DIR__R2L);
+        }
     }
 
     /* First, handle all the mappers that contribute to the local part
