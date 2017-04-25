@@ -82,8 +82,8 @@ static inline int MPL_shm_seg_create_attach_templ(
 
     if(flag & MPLI_SHM_FLAG_SHM_ATTACH){
         void *buf_ptr = NULL;
-        buf_ptr = mmap(NULL, seg_sz, PROT_READ | PROT_WRITE,
-                        MAP_SHARED, MPLI_shm_lhnd_get(hnd), 0);
+        buf_ptr = MPL_mmap(NULL, seg_sz, PROT_READ | PROT_WRITE,
+                           MAP_SHARED, MPLI_shm_lhnd_get(hnd), 0);
         *shm_addr_ptr = (char*)buf_ptr;
     }
 
