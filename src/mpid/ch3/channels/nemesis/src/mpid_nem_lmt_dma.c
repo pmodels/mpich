@@ -97,7 +97,7 @@ static int open_knem_dev(void)
 
     knem_has_dma = (info.features & KNEM_FEATURE_DMA);
 
-    knem_status = mmap(NULL, KNEM_STATUS_NR, PROT_READ|PROT_WRITE, MAP_SHARED, knem_fd, KNEM_STATUS_ARRAY_FILE_OFFSET);
+    knem_status = MPL_mmap(NULL, KNEM_STATUS_NR, PROT_READ|PROT_WRITE, MAP_SHARED, knem_fd, KNEM_STATUS_ARRAY_FILE_OFFSET);
     MPIR_ERR_CHKANDJUMP1(knem_status == MAP_FAILED, mpi_errno, MPI_ERR_OTHER, "**mmap",
                          "**mmap %d", errno);
     for (i = 0; i < KNEM_STATUS_NR; ++i) {

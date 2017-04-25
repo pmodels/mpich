@@ -739,7 +739,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
             goto fn_fail;
 
         if (anyfail && map_ptr != NULL && map_ptr != MAP_FAILED)
-            munmap(map_ptr, mapsize);
+            MPL_munmap(map_ptr, mapsize);
     }
 
     if (anyfail) {      /* Still fails after retry, report error. */

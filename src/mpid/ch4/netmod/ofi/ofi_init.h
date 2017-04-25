@@ -277,8 +277,8 @@ static inline int MPIDI_OFI_conn_manager_init()
     MPIDI_Global.conn_mgr.n_conn = 0;
 
     MPIDI_Global.conn_mgr.conn_list =
-        (MPIDI_OFI_conn_t *) mmap(NULL, MPIDI_Global.conn_mgr.mmapped_size,
-                                  PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+        (MPIDI_OFI_conn_t *) MPL_mmap(NULL, MPIDI_Global.conn_mgr.mmapped_size,
+                                      PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
     MPIR_ERR_CHKANDSTMT(MPIDI_Global.conn_mgr.conn_list == MAP_FAILED, mpi_errno,
                         MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
@@ -363,7 +363,7 @@ static inline int MPIDI_OFI_conn_manager_destroy()
         MPL_free(close_msg);
     }
 
-    munmap((void *) MPIDI_Global.conn_mgr.conn_list, MPIDI_Global.conn_mgr.mmapped_size);
+    MPL_munmap((void *) MPIDI_Global.conn_mgr.conn_list, MPIDI_Global.conn_mgr.mmapped_size);
     MPL_free(MPIDI_Global.conn_mgr.free_conn_id);
 
   fn_exit:

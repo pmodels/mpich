@@ -723,14 +723,14 @@ static inline int MPIDI_CH4R_win_finalize(MPIR_Win ** win_ptr)
 
     if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE && win->base) {
         if (MPIDI_CH4U_WIN(win, mmap_sz) > 0)
-            munmap(MPIDI_CH4U_WIN(win, mmap_addr), MPIDI_CH4U_WIN(win, mmap_sz));
+            MPL_munmap(MPIDI_CH4U_WIN(win, mmap_addr), MPIDI_CH4U_WIN(win, mmap_sz));
         else if (MPIDI_CH4U_WIN(win, mmap_sz) == -1)
             MPL_free(win->base);
     }
 
     if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         if (MPIDI_CH4U_WIN(win, mmap_addr))
-            munmap(MPIDI_CH4U_WIN(win, mmap_addr), MPIDI_CH4U_WIN(win, mmap_sz));
+            MPL_munmap(MPIDI_CH4U_WIN(win, mmap_addr), MPIDI_CH4U_WIN(win, mmap_sz));
         MPL_free(MPIDI_CH4U_WIN(win, sizes));
     }
 
@@ -1031,7 +1031,7 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
             goto fn_fail;
 
         if (anyfail && map_ptr != NULL && map_ptr != MAP_FAILED)
-            munmap(map_ptr, mapsize);
+            MPL_munmap(map_ptr, mapsize);
     }
 
     if (anyfail) {      /* Still fails after retry, report error. */

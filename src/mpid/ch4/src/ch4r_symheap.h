@@ -243,9 +243,8 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
 
             if (comm->rank == maxloc_result.loc) {
                 map_pointer = (uintptr_t) MPIDI_CH4R_generate_random_addr(mapsize);
-                baseP = mmap((void *) map_pointer,
-                             mapsize,
-                             PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0);
+                baseP = MPL_mmap((void *) map_pointer, mapsize,
+                                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0);
             }
 
             mpi_errno = MPIR_Bcast_impl(&map_pointer,
@@ -258,9 +257,8 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
                 int rc = MPIDI_CH4R_check_maprange_ok((void *) map_pointer, mapsize);
 
                 if (rc) {
-                    baseP = mmap((void *) map_pointer,
-                                 mapsize,
-                                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0);
+                    baseP = MPL_mmap((void *) map_pointer, mapsize,
+                                     PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0);
                 }
                 else
                     baseP = (void *) -1ULL;
@@ -277,7 +275,7 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
                 goto fn_fail;
 
             if (result == 0 && baseP != (void *) -1ULL)
-                munmap(baseP, mapsize);
+                MPL_munmap(baseP, mapsize);
         }
     }
     else
