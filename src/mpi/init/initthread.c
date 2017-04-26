@@ -504,7 +504,11 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     info_ptr->next  = NULL;
     info_ptr->key   = NULL;
     info_ptr->value = NULL;
-    
+
+#ifdef USE_MEMORY_TRACING
+    MPL_trinit();
+#endif
+
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided, 
 			  &has_args, &has_env);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -537,9 +541,9 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 		    MPIR_Process.comm_world->local_size);
 #ifdef USE_MEMORY_TRACING
 #ifdef MPICH_IS_THREADED
-    MPL_trinit( MPIR_Process.comm_world->rank, MPIR_ThreadInfo.isThreaded );
+    MPL_trconfig( MPIR_Process.comm_world->rank, MPIR_ThreadInfo.isThreaded );
 #else
-    MPL_trinit( MPIR_Process.comm_world->rank, 0 );
+    MPL_trconfig( MPIR_Process.comm_world->rank, 0 );
 #endif
     /* Indicate that we are near the end of the init step; memory 
        allocated already will have an id of zero; this helps 

@@ -86,6 +86,8 @@ static volatile size_t TRMaxMemAllow = 0;
 
 static int TR_is_threaded = 0;
 
+static int is_configured = 0;
+
 #if MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE
 
 static MPL_thread_mutex_t memalloc_mutex;
@@ -161,11 +163,9 @@ static void addrToHex(void *addr, char string[MAX_ADDRESS_CHARS])
    MPL_trinit - Setup the space package.  Only needed for
    error messages and flags.
 +*/
-void MPL_trinit(int rank, int need_thread_safety)
+void MPL_trinit()
 {
     char *s;
-
-    world_rank = rank;
 
     /* FIXME: We should use generalized parameter handling here
      * to allow use of the command line as well as environment
@@ -193,6 +193,14 @@ void MPL_trinit(int rank, int need_thread_safety)
         long l = atol(s);
         TRMaxOverhead = (size_t)l;
     }
+}
+
+void MPL_trconfig(int rank, int need_thread_safety)
+{
+    world_rank = rank;
+
+    if (is_configured)
+        return;
 
     /* If the upper layer asked for thread safety and there's no
      * threading package available, we need to return an error. */
@@ -213,6 +221,8 @@ void MPL_trinit(int rank, int need_thread_safety)
         TR_is_threaded = 1;
     }
 #endif
+
+    is_configured = 1;
 }
 
 /*+C
