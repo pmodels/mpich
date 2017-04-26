@@ -26,7 +26,6 @@ static inline int MPIDI_UCX_contig_put(const void *origin_addr,
     MPIR_Comm *comm = win->comm_ptr;
     ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(comm, target_rank);
 
-    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
     base = win_info->addr;
     offset = target_disp * win_info->disp + true_lb;
 
@@ -71,7 +70,6 @@ static inline int MPIDI_UCX_noncontig_put(const void *origin_addr,
     MPIDU_Segment_pack(segment_ptr, segment_first, &last, buffer);
     MPIDU_Segment_free(segment_ptr);
 
-    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
     base = win_info->addr;
     offset = target_disp * win_info->disp + true_lb;
     /* We use the blocking put here - should be faster than send/recv - ucp_put returns when it is
@@ -101,8 +99,6 @@ static inline int MPIDI_UCX_contig_get(void *origin_addr,
     MPIR_Comm *comm = win->comm_ptr;
     ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(comm, target_rank);
 
-
-    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
     base = win_info->addr;
     offset = target_disp * win_info->disp + true_lb;
 
@@ -140,6 +136,14 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
         return MPIDI_CH4U_mpi_put(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count, target_datatype, win);
 
+    MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_OP_REFENCE(win);
+
+    /* Check target sync status for any target_rank except PROC_NULL. */
+    if (target_rank == MPI_PROC_NULL)
+        goto fn_exit;
+    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
+
     MPIDI_Datatype_check_contig_size_lb(target_datatype, target_count,
                                         target_contig, target_bytes, target_true_lb);
     MPIDI_Datatype_check_contig_size_lb(origin_datatype, origin_count,
@@ -147,18 +151,15 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
 
     MPIR_ERR_CHKANDJUMP((origin_bytes != target_bytes), mpi_errno, MPI_ERR_SIZE, "**rmasize");
 
-    if (unlikely((origin_bytes == 0) || (target_rank == MPI_PROC_NULL)))
+    if (unlikely(origin_bytes == 0))
         goto fn_exit;
     if (!target_contig)
         return MPIDI_CH4U_mpi_put(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count, target_datatype, win);
 
-
-    MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
     if(!origin_contig)
         return  MPIDI_UCX_noncontig_put(origin_addr, origin_count,  origin_datatype, target_rank,
                                          target_bytes, target_disp, target_true_lb,  win, addr);
-
 
     if (target_rank == win->comm_ptr->rank) {
         offset = win->disp_unit * target_disp;
@@ -200,21 +201,26 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
         return MPIDI_CH4U_mpi_get(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count, target_datatype, win);
 
+    MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
+    MPIDI_CH4U_EPOCH_OP_REFENCE(win);
+
+    /* Check target sync status for any target_rank except PROC_NULL. */
+    if (target_rank == MPI_PROC_NULL)
+        goto fn_exit;
+    MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno, goto fn_fail);
+
     MPIDI_Datatype_check_contig_size_lb(target_datatype, target_count,
                                         target_contig, target_bytes, target_true_lb);
     MPIDI_Datatype_check_contig_size_lb(origin_datatype, origin_count,
                                         origin_contig, origin_bytes, origin_true_lb);
 
-    if (unlikely((origin_bytes == 0) || (target_rank == MPI_PROC_NULL)))
+    if (unlikely(origin_bytes == 0))
         goto fn_exit;
-
 
 
     if (!origin_contig || !target_contig || MPIDI_UCX_WIN_INFO(win, target_rank).rkey == NULL)
         return MPIDI_CH4U_mpi_get(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count, target_datatype, win);
-
-    MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
     if (target_rank == win->comm_ptr->rank) {
         offset = target_disp * win->disp_unit;
