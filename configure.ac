@@ -393,6 +393,24 @@ AC_ARG_ENABLE([mpit_pvars],
         all      - All variables above
 ],[],[enable_mpit_pvars=none])
 
+AC_ARG_ENABLE(ext-coll,
+    [--enable-ext-coll
+       Control extended collectives.
+       level:
+         yes       - Enabled (default)
+         no        - Disabled (may improve build times and code size)
+    ],,enable_ext_coll=no)
+
+if test "$enable_ext_coll" = "yes" ; then
+    AC_DEFINE([HAVE_EXT_COLL], [1],
+        [Define to enable extended collectives])
+    AC_MSG_NOTICE([Extended collectives are enabled.])
+else
+    AC_MSG_NOTICE([Extended collectives are disabled.])
+fi
+AM_CONDITIONAL([HAVE_EXT_COLL],[test "$enable_ext_coll" = "yes"])
+
+
 dnl We may want to force MPI_Aint to be the same size as MPI_Offset, 
 dnl particularly on 32 bit systems with large (64 bit) file systems.
 AC_ARG_WITH(aint-size,

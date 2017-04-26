@@ -109,6 +109,9 @@ typedef struct MPIR_Op {
 #ifdef MPID_DEV_OP_DECL
      MPID_DEV_OP_DECL
 #endif
+#ifdef HAVE_EXT_COLL
+     MPIC_OP_DECL
+#endif
   } MPIR_Op;
 #define MPIR_OP_N_BUILTIN 15
 extern MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN];

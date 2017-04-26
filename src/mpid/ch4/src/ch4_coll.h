@@ -14,140 +14,6 @@
 #include "ch4_impl.h"
 #include "ch4r_proc.h"
 
-#ifdef MPIDI_BUILD_CH4_COLL
-#include "../generic/coll/include/pre.h"
-#include "../generic/coll/include/post.h"
-#endif
-
-/*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-cvars:
-    - name        : MPIR_CVAR_USE_BCAST
-      category    : COLLECTIVE
-      type        : int
-      default     : -1
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Controls bcast algorithm:
-        0 - MPIR_bcast
-        1 - KARY_Bcast
-        2 - KNOMIAL_Bcast
-        3 - TREEBASIC_KARY_Bcast
-        4 - TREEBASIC_KNOMIAL_Bcast
-    - name        : MPIR_CVAR_USE_REDUCE
-      category    : COLLECTIVE
-      type        : int
-      default     : -1
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Controls reduce algorithm:
-        0 - MPIR_reduce
-        1 - KNOMIAL_reduce
-        2 - KARY_reduce
-    - name        : MPIR_CVAR_USE_ALLREDUCE
-      category    : COLLECTIVE
-      type        : int
-      default     : -1
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Controls allreduce algorithm:
-        0 - MPIR_allreduce
-        1 - KNOMIAL_allreduce
-        2 - KARY_allreduce
-        3 - RECEXCH_allreduce
-    - name        : MPIR_CVAR_USE_BARRIER
-      category    : COLLECTIVE
-      type        : int
-      default     : -1
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Controls barrier algorithm:
-        0 - MPIR_barrier
-        1 - DISSEM_barrier
-    - name        : MPIR_CVAR_USE_IBARRIER
-      category    : COLLECTIVE
-      type        : int
-      default     : -1
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Controls ibarrier algorithm:
-        0 - MPIR_ibarrier
-        1 - DISSEM_ibarrier
-    - name        : MPIR_CVAR_USE_ALLTOALL
-      category    : COLLECTIVE
-      type        : int
-      default     : -1
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Controls alltoall algorithm:
-        0 - MPIR_alltoall
-        1 - DISSEM_alltoall
-    - name        : MPIR_CVAR_USE_IALLTOALL
-      category    : COLLECTIVE
-      type        : int
-      default     : -1
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Controls ialltoall algorithm:
-        0 - MPIR_ialltoall
-        1 - DISSEM_ialltoall
-    - name        : MPIR_CVAR_BCAST_KARY_KVAL
-      category    : COLLECTIVE
-      type        : int
-      default     : 2
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        K value for Kary broadcast
-
-    - name        : MPIR_CVAR_BCAST_KNOMIAL_KVAL
-      category    : COLLECTIVE
-      type        : int
-      default     : 2
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        K value for Knomial broadcast
-
-    - name        : MPIR_CVAR_BCAST_TREE_SEGSIZE
-      category    : COLLECTIVE
-      type        : int
-      default     : -1
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Segment size for tree based pipelined broadcast
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
-*/
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_cycle_algorithm(MPIR_Comm *comm_ptr, int pick[], int num) {
-    return 0;
-    if(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        return 0;
-    int idx;
-    MPIDI_COLL_COMM(comm_ptr)->issued_collectives++;
-    idx = MPIDI_COLL_COMM(comm_ptr)->issued_collectives%num;
-    return pick[idx];
-}
-
 MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int ret;
@@ -155,29 +21,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BARRIER);
 
-#ifdef MPIDI_BUILD_CH4_COLL
-    int valid_coll[] = {0,1,2,3};
-    int use_coll = (MPIR_CVAR_USE_BARRIER < 0)?
-                        MPIDI_CH4_cycle_algorithm(comm, valid_coll, 1) :
-                        MPIR_CVAR_USE_BARRIER;
-#else
-    int use_coll=0;
-#endif
-    switch(use_coll) {
-        case 0:
-            ret = MPIDI_NM_mpi_barrier(comm, errflag);
-            break;
-        case 1:
-            ret = MPIDI_COLL_MPICH_DISSEM_barrier( &(MPIDI_COLL_COMM(comm)->mpich_dissem),
-                            errflag);
-            break;
-        case 2:
-            ret = MPIDI_COLL_MPICH_KARY_barrier(&(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, 2);
-            break;
-        case 3:
-            ret = MPIDI_COLL_MPICH_KNOMIAL_barrier(&(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, 2);
-            break;
-    }
+    ret = MPIDI_NM_mpi_barrier(comm, errflag);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BARRIER);
     return ret;
 }
@@ -189,52 +33,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BCAST);
-    
-#ifdef MPIDI_BUILD_CH4_COLL
-    int valid_coll[] = {1,2};
-    int use_coll = (MPIR_CVAR_USE_BCAST < 0) ? MPIDI_CH4_cycle_algorithm(comm, valid_coll, 2) : MPIR_CVAR_USE_BCAST;
-    if(comm->comm_kind == MPIR_COMM_KIND__INTERCOMM){
-        use_coll = 0;
-    }
-    MPIR_Datatype *dt_ptr;
-    MPID_Datatype_get_ptr(datatype, dt_ptr);
-#else
-    int use_coll=0;
-#endif
-
-    switch(use_coll) {
-        case 0:
-            ret = MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm, errflag);
-            break;
-        case 1:
-            ret = MPIDI_COLL_MPICH_KARY_bcast(buffer, count,
-                    &(MPIDI_COLL_DT(dt_ptr)->mpich_kary),
-                    root, &(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, MPIR_CVAR_BCAST_KARY_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
-            break;
-        case 2:
-            ret = MPIDI_COLL_MPICH_KNOMIAL_bcast(buffer, count,
-                    &(MPIDI_COLL_DT(dt_ptr)->mpich_knomial),
-                    root, &(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, MPIR_CVAR_BCAST_KNOMIAL_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
-            break;
-        case 3:
-            ret = MPIDI_COLL_X_TREEBASIC_bcast(buffer, count,
-                    datatype, root, &(MPIDI_COLL_COMM(comm)->x_treebasic), errflag, 0);
-            break;
-        case 4:
-            ret = MPIDI_COLL_X_TREEBASIC_bcast(buffer, count,
-                    datatype, root, &(MPIDI_COLL_COMM(comm)->x_treebasic), errflag, 1);
-            break;
-        case 5:
-            ret = MPIDI_COLL_BMPICH_KARY_bcast(buffer, count,
-                    &(MPIDI_COLL_DT(dt_ptr)->bmpich_kary),
-                    root, &(MPIDI_COLL_COMM(comm)->bmpich_kary), errflag, MPIR_CVAR_BCAST_KARY_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
-            break;
-        case 6:
-            ret = MPIDI_COLL_BMPICH_KNOMIAL_bcast(buffer, count,
-                    &(MPIDI_COLL_DT(dt_ptr)->bmpich_knomial),
-                    root, &(MPIDI_COLL_COMM(comm)->bmpich_knomial), errflag, MPIR_CVAR_BCAST_KNOMIAL_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
-            break;
-    }
+    ret = MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm, errflag);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BCAST);
     return ret;
 }
@@ -247,48 +46,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLREDUCE);
-
-#ifdef MPIDI_BUILD_CH4_COLL
-    MPIR_Datatype *dt_ptr;
-    MPID_Datatype_get_ptr(datatype, dt_ptr);
-    MPIR_Op *op_p;
-    MPIDI_COLL_Op_get_ptr(op, &op_p);
-
-    int valid_coll[] = {1,2,3,4};
-    int use_coll = (MPIR_CVAR_USE_ALLREDUCE < 0) ? MPIDI_CH4_cycle_algorithm(comm, valid_coll, 3) : MPIR_CVAR_USE_ALLREDUCE;
-#else
-    int use_coll=0;
-#endif
-
-    switch (use_coll){
-        case 0:
-            ret = MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag);
-            break;
-        case 1:
-            ret = MPIDI_COLL_MPICH_KNOMIAL_allreduce(sendbuf, recvbuf, count,
-                                            &(MPIDI_COLL_DT(dt_ptr)->mpich_knomial),
-                                            &(MPIDI_COLL_OP(op_p)->mpich_knomial),
-                                            &(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, 2);
-            break;
-        case 2:
-            ret = MPIDI_COLL_MPICH_KARY_allreduce(sendbuf, recvbuf, count,
-                                            &(MPIDI_COLL_DT(dt_ptr)->mpich_kary),
-                                            &(MPIDI_COLL_OP(op_p)->mpich_kary),
-                                            &(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, 2);
-            break;
-        case 3:
-            ret = MPIDI_COLL_MPICH_RECEXCH_allreduce(sendbuf, recvbuf, count,
-                                            &(MPIDI_COLL_DT(dt_ptr)->mpich_recexch),
-                                            &(MPIDI_COLL_OP(op_p)->mpich_recexch),
-                                            &(MPIDI_COLL_COMM(comm)->mpich_recexch), errflag);
-            break;
-        case 4:
-            ret = MPIDI_COLL_MPICH_DISSEM_allreduce(sendbuf, recvbuf, count,
-                                            &(MPIDI_COLL_DT(dt_ptr)->mpich_dissem),
-                                            &(MPIDI_COLL_OP(op_p)->mpich_dissem),
-                                            &(MPIDI_COLL_COMM(comm)->mpich_dissem), errflag);
-            break;
-    }
+    ret = MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLREDUCE);
     return ret;
 }
@@ -407,30 +165,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, int sendcount,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALL);
 
-#ifdef MPIDI_BUILD_CH4_COLL
-    MPIR_Datatype *send_dt_ptr;
-    MPID_Datatype_get_ptr(sendtype, send_dt_ptr);
-    MPIR_Datatype *recv_dt_ptr;
-    MPID_Datatype_get_ptr(recvtype, recv_dt_ptr);
-
-    int valid_coll[] = {1};
-    int use_coll = (MPIR_CVAR_USE_ALLTOALL < 0) ? MPIDI_CH4_cycle_algorithm(comm, valid_coll, 1) : MPIR_CVAR_USE_ALLTOALL;
-#else
-    int use_coll = 0;
-#endif
-    switch (0){
-    case 0:
-        ret = MPIDI_NM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
+    ret = MPIDI_NM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
                                 recvcount, recvtype, comm, errflag);
-        break;
-    case 1:
-        ret = MPIDI_COLL_MPICH_DISSEM_alltoall(sendbuf, sendcount,
-                                        &(MPIDI_COLL_DT(send_dt_ptr)->mpich_dissem),
-                                        recvbuf, recvcount,
-                                        &(MPIDI_COLL_DT(recv_dt_ptr)->mpich_dissem),
-                                        &(MPIDI_COLL_COMM(comm)->mpich_dissem), errflag);
-        break;
-    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLTOALL);
     return ret;
 }
@@ -480,35 +216,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE);
 
-#ifdef MPIDI_BUILD_CH4_COLL
-    MPIR_Datatype *dt_ptr;
-    MPID_Datatype_get_ptr(datatype, dt_ptr);
-    MPIR_Op *op_p;
-    MPIDI_COLL_Op_get_ptr(op, &op_p);
+    ret = MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
 
-    int valid_coll[] = {1,2};
-    int use_coll = (MPIR_CVAR_USE_REDUCE < 0) ? MPIDI_CH4_cycle_algorithm(comm_ptr, valid_coll, 2) : MPIR_CVAR_USE_REDUCE;
-#else
-    int use_coll = 0;
-#endif
-    switch(use_coll) {
-        case 0:
-            ret = MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
-
-            break;
-        case 1:
-            ret = MPIDI_COLL_MPICH_KNOMIAL_reduce(sendbuf, recvbuf, count,
-                                            &(MPIDI_COLL_DT(dt_ptr)->mpich_knomial),
-                                            &(MPIDI_COLL_OP(op_p)->mpich_knomial), root,
-                                            &(MPIDI_COLL_COMM(comm_ptr)->mpich_knomial), errflag, 2);
-            break;
-        case 2:
-            ret = MPIDI_COLL_MPICH_KARY_reduce(sendbuf, recvbuf, count,
-                                            &(MPIDI_COLL_DT(dt_ptr)->mpich_kary),
-                                            &(MPIDI_COLL_OP(op_p)->mpich_kary), root,
-                                            &(MPIDI_COLL_COMM(comm_ptr)->mpich_kary), errflag, 2);
-            break;
-    }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REDUCE);
     return ret;
 }

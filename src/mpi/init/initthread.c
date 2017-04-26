@@ -24,6 +24,11 @@
 #include <unistd.h>
 #endif
 
+#ifdef HAVE_EXT_COLL
+#include "mpir_coll_impl.h"
+#endif
+
+
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -500,6 +505,11 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 			  &has_args, &has_env);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
+    /* Init extended collectives infrastructure */
+#ifdef HAVE_EXT_COLL
+    mpi_errno = MPIC_init();
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+#endif
     /* Assert: tag_ub should be a power of 2 minus 1 */
     MPIR_Assert(((unsigned)MPIR_Process.attrs.tag_ub & ((unsigned)MPIR_Process.attrs.tag_ub + 1)) == 0);
 

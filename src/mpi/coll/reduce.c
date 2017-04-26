@@ -7,6 +7,10 @@
 
 #include "mpiimpl.h"
 #include "collutil.h"
+#ifdef HAVE_EXT_COLL
+#include "mpir_coll_impl.h"
+#endif
+
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -43,6 +47,19 @@ cvars:
       description : >-
         Maximum message size for which SMP-aware reduce is used.  A
         value of '0' uses SMP-aware reduce for all message sizes.
+
+    - name        : MPIR_CVAR_USE_REDUCE
+      category    : COLLECTIVE
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Controls reduce algorithm:
+        0 - MPIR_reduce
+        1 - KNOMIAL_reduce
+        2 - KARY_reduce
 
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
@@ -861,6 +878,32 @@ int MPIR_Reduce_intra (
     }
     }
 
+#ifdef HAVE_EXT_COLL
+    MPIR_Datatype *dt_ptr;
+    MPID_Datatype_get_ptr(datatype, dt_ptr);
+    MPIR_Op *op_p;
+    MPIC_Op_get_ptr(op, &op_p);
+
+    int valid_coll[] = {1,2};
+    int use_coll = (MPIR_CVAR_USE_REDUCE < 0) ? MPIR_Coll_cycle_algorithm(comm_ptr,
+                            valid_coll, 2) : MPIR_CVAR_USE_REDUCE;
+    switch(use_coll) {
+        case 0:
+            break;
+        case 1:
+            mpi_errno = MPIC_MPICH_KNOMIAL_reduce(sendbuf, recvbuf, count,
+                                            datatype, op, root,
+                                            &(MPIC_COMM(comm_ptr)->mpich_knomial), errflag, 2);
+            goto fn_exit;
+            break;
+        case 2:
+            mpi_errno = MPIC_MPICH_KARY_reduce(sendbuf, recvbuf, count,
+                                            datatype, op, root,
+                                            &(MPIC_COMM(comm_ptr)->mpich_kary), errflag, 2);
+            goto fn_exit;
+            break;
+    }
+#endif
     comm_size = comm_ptr->local_size;
 
     MPID_Datatype_get_size_macro(datatype, type_size);

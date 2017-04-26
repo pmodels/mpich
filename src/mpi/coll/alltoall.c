@@ -6,6 +6,10 @@
  */
 
 #include "mpiimpl.h"
+#ifdef HAVE_EXT_COLL
+#include "mpir_coll_impl.h"
+#endif
+
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -51,6 +55,18 @@ cvars:
        max no. of irecvs/isends posted at a time in some alltoall
        algorithms. Setting it to 0 causes all irecvs/isends to be
        posted at once
+
+   - name        : MPIR_CVAR_USE_ALLTOALL
+     category    : COLLECTIVE
+     type        : int
+     default     : -1
+     class       : device
+     verbosity   : MPI_T_VERBOSITY_USER_BASIC
+     scope       : MPI_T_SCOPE_ALL_EQ
+     description : >-
+       Controls alltoall algorithm:
+       0 - MPIR_alltoall
+       1 - DISSEM_alltoall
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -545,12 +561,25 @@ int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                   MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-        
+
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+#ifdef HAVE_EXT_COLL
+        int valid_coll[] = {1};
+        int use_coll = (MPIR_CVAR_USE_ALLTOALL < 0) ? MPIR_Coll_cycle_algorithm(comm_ptr,
+                                    valid_coll, 1) : MPIR_CVAR_USE_ALLTOALL;
+        if (use_coll) {
+            mpi_errno = MPIC_MPICH_DISSEM_alltoall(sendbuf, sendcount, sendtype,
+                                        recvbuf, recvcount, recvtype,
+                                        &(MPIC_COMM(comm_ptr)->mpich_dissem), errflag);
+
+        } else
+#endif
+        {
         /* intracommunicator */
-        mpi_errno = MPIR_Alltoall_intra(sendbuf, sendcount, sendtype,
+            mpi_errno = MPIR_Alltoall_intra(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
+        }
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     } else {
         /* intercommunicator */
