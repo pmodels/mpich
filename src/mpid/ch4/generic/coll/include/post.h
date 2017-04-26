@@ -37,6 +37,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_Comm_init(struct MPIR_Comm *comm)
     MPIDI_COLL_MPICH_KNOMIAL_comm_init(&(MPIDI_COLL_COMM(comm)->mpich_knomial), comm_counter++, tag, rank, size);
     MPIDI_COLL_MPICH_RECEXCH_comm_init(&(MPIDI_COLL_COMM(comm)->mpich_recexch), comm_counter++, tag,  rank, size);
     MPIDI_COLL_MPICH_DISSEM_comm_init(&(MPIDI_COLL_COMM(comm)->mpich_dissem), comm_counter++, tag,  rank, size);
+    MPIDI_COLL_BMPICH_KARY_comm_init(&(MPIDI_COLL_COMM(comm)->bmpich_kary), comm_counter++, tag, rank, size);
+    MPIDI_COLL_BMPICH_KNOMIAL_comm_init(&(MPIDI_COLL_COMM(comm)->bmpich_knomial), comm_counter++, tag, rank, size);
     MPIDI_COLL_X_TREEBASIC_comm_init(&(MPIDI_COLL_COMM(comm)->x_treebasic), comm_counter++, tag, rank, size);
 
 #ifdef MPIDI_NM_COLL_COMM_INIT_HOOK
@@ -64,6 +66,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_Comm_cleanup(struct MPIR_Comm *comm)
     MPIDI_COLL_MPICH_RECEXCH_comm_cleanup(&(MPIDI_COLL_COMM(comm)->mpich_recexch));
     MPIDI_COLL_MPICH_DISSEM_comm_cleanup(&(MPIDI_COLL_COMM(comm)->mpich_dissem));
 
+    MPIDI_COLL_BMPICH_KARY_comm_cleanup(&(MPIDI_COLL_COMM(comm)->bmpich_kary));
+    MPIDI_COLL_BMPICH_KNOMIAL_comm_cleanup(&(MPIDI_COLL_COMM(comm)->bmpich_knomial));
+
     MPIDI_COLL_X_TREEBASIC_comm_cleanup(&(MPIDI_COLL_COMM(comm)->x_treebasic));
 
     return 0;
@@ -82,6 +87,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_dt_init(MPIR_Datatype * dt)
     MPIDI_COLL_MPICH_KNOMIAL_dt_init(&(MPIDI_COLL_DT(dt)->mpich_knomial), dt_counter++);
     MPIDI_COLL_MPICH_RECEXCH_dt_init(&(MPIDI_COLL_DT(dt)->mpich_recexch), dt_counter++);
     MPIDI_COLL_MPICH_DISSEM_dt_init(&(MPIDI_COLL_DT(dt)->mpich_dissem), dt_counter++);
+    MPIDI_COLL_BMPICH_KARY_dt_init(&(MPIDI_COLL_DT(dt)->bmpich_kary), dt_counter++);
+    MPIDI_COLL_BMPICH_KNOMIAL_dt_init(&(MPIDI_COLL_DT(dt)->bmpich_knomial), dt_counter++);
 #ifdef MPIDI_NM_COLL_DT_INIT_HOOK
     MPIDI_NM_COLL_DT_INIT_HOOK;
 #endif
@@ -102,6 +109,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_op_init(struct MPIR_Op *op)
     MPIDI_COLL_MPICH_KNOMIAL_op_init(&(MPIDI_COLL_OP(op)->mpich_knomial), op_counter++);
     MPIDI_COLL_MPICH_RECEXCH_op_init(&(MPIDI_COLL_OP(op)->mpich_recexch), op_counter++);
     MPIDI_COLL_MPICH_DISSEM_op_init(&(MPIDI_COLL_OP(op)->mpich_dissem), op_counter++);
+    MPIDI_COLL_BMPICH_KARY_op_init(&(MPIDI_COLL_OP(op)->bmpich_kary), op_counter++);
+    MPIDI_COLL_BMPICH_KNOMIAL_op_init(&(MPIDI_COLL_OP(op)->bmpich_knomial), op_counter++);
 #ifdef MPIDI_NM_COLL_OP_INIT_HOOK
     MPIDI_NM_COLL_OP_INIT_HOOK;
 #endif
@@ -254,6 +263,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_COLL_Init()
     MPIDI_COLL_MPICH_KNOMIAL_init();
     MPIDI_COLL_MPICH_RECEXCH_init();
     MPIDI_COLL_MPICH_DISSEM_init();
+    MPIDI_COLL_BMPICH_KARY_init();
+    MPIDI_COLL_BMPICH_KNOMIAL_init();
     MPIDI_COLL_X_TREEBASIC_init();
 
 #ifdef MPIDI_NM_COLL_INIT_HOOK

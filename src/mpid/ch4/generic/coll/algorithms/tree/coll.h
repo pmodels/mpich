@@ -84,7 +84,6 @@ static inline int COLL_bcast(void *buffer,
     int rc = 0;
     COLL_args_t coll_args = {.algo=COLL_NAME, .tsp=TRANSPORT_NAME, .nargs=5,\
             .args={.bcast={.buf=buffer,.count=count,.dt_id=datatype->id,.root=root,.comm_id=comm->id}}};
-    
     COLL_sched_t *s = get_sched((coll_args_t)coll_args);
     if(s==NULL){
         if(0) fprintf(stderr, "schedule does not exist\n");
@@ -94,6 +93,7 @@ static inline int COLL_bcast(void *buffer,
         rc = COLL_sched_bcast_tree(buffer, count, datatype, root, tag, comm, k, s, 1);
         add_sched((coll_args_t)coll_args, (void*)s, COLL_sched_free);
     } else{
+        if(0) fprintf(stderr, "schedule already exists\n");
         COLL_sched_reset(s);
     }
     COLL_sched_kick(s);

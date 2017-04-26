@@ -26,6 +26,8 @@ typedef struct {
         MPIDI_COLL_MPICH_KNOMIAL_comm_t mpich_knomial;
         MPIDI_COLL_MPICH_RECEXCH_comm_t mpich_recexch;
         MPIDI_COLL_MPICH_DISSEM_comm_t mpich_dissem;
+        MPIDI_COLL_BMPICH_KARY_comm_t bmpich_kary;
+        MPIDI_COLL_BMPICH_KNOMIAL_comm_t bmpich_knomial;
         MPIDI_COLL_X_TREEBASIC_comm_t x_treebasic;
 } MPIDI_COLL_comm_t;
 
@@ -40,6 +42,8 @@ typedef struct {
         MPIDI_COLL_MPICH_KNOMIAL_dt_t mpich_knomial;
         MPIDI_COLL_MPICH_RECEXCH_dt_t mpich_recexch;
         MPIDI_COLL_MPICH_DISSEM_dt_t mpich_dissem;
+        MPIDI_COLL_BMPICH_KARY_dt_t bmpich_kary;
+        MPIDI_COLL_BMPICH_KNOMIAL_dt_t bmpich_knomial;
 } MPIDI_COLL_dt_t;
 
 typedef struct {
@@ -53,12 +57,15 @@ typedef struct {
         MPIDI_COLL_MPICH_KNOMIAL_op_t mpich_knomial;
         MPIDI_COLL_MPICH_RECEXCH_op_t mpich_recexch;
         MPIDI_COLL_MPICH_DISSEM_op_t mpich_dissem;
+        MPIDI_COLL_BMPICH_KARY_op_t bmpich_kary;
+        MPIDI_COLL_BMPICH_KNOMIAL_op_t bmpich_knomial;
 } MPIDI_COLL_op_t;
 
 
 typedef struct {
         MPIDI_COLL_TRANSPORT_STUB_global_t tsp_stub;
         MPIDI_COLL_TRANSPORT_MPICH_global_t tsp_mpich;
+        MPIDI_COLL_TRANSPORT_BMPICH_global_t tsp_bmpich;
 
         MPIDI_COLL_STUB_STUB_global_t stub_stub;
         MPIDI_COLL_STUB_KARY_global_t stub_kary;
@@ -71,6 +78,8 @@ typedef struct {
         MPIDI_COLL_MPICH_RECEXCH_global_t mpich_recexch;
         MPIDI_COLL_MPICH_DISSEM_global_t mpich_dissem;
         MPIDI_COLL_X_TREEBASIC_global_t x_treebasic;
+        MPIDI_COLL_BMPICH_KARY_global_t bmpich_kary;
+        MPIDI_COLL_BMPICH_KNOMIAL_global_t bmpich_knomial;
 } MPIDI_COLL_global_t;
 
 
@@ -88,6 +97,8 @@ typedef union {
         MPIDI_COLL_MPICH_KNOMIAL_req_t mpich_knomial;
         MPIDI_COLL_MPICH_RECEXCH_req_t mpich_recexch;
         MPIDI_COLL_MPICH_DISSEM_req_t mpich_dissem;
+        MPIDI_COLL_BMPICH_KARY_req_t bmpich_kary;
+        MPIDI_COLL_BMPICH_KNOMIAL_req_t bmpich_knomial;
 } MPIDI_COLL_req_t;
 
 #endif /* CH4_GENERIC_COLL_TYPES_H_INCLUDED */

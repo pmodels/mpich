@@ -202,7 +202,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
                     root, &(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, MPIR_CVAR_BCAST_KARY_KVAL);
             break;
         case 2:
-            ret = MPIDI_COLL_MPICH_KARY_bcast(buffer, count,
+            ret = MPIDI_COLL_MPICH_KNOMIAL_bcast(buffer, count,
                     &(MPIDI_COLL_DT(dt_ptr)->mpich_knomial),
                     root, &(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, MPIR_CVAR_BCAST_KNOMIAL_KVAL);
             break;
@@ -214,6 +214,17 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
             ret = MPIDI_COLL_X_TREEBASIC_bcast(buffer, count,
                     datatype, root, &(MPIDI_COLL_COMM(comm)->x_treebasic), errflag, 1);
             break;
+        case 5:
+            ret = MPIDI_COLL_BMPICH_KARY_bcast(buffer, count,
+                    &(MPIDI_COLL_DT(dt_ptr)->bmpich_kary),
+                    root, &(MPIDI_COLL_COMM(comm)->bmpich_kary), errflag, MPIR_CVAR_BCAST_KARY_KVAL);
+            break;
+        case 6:
+            ret = MPIDI_COLL_BMPICH_KNOMIAL_bcast(buffer, count,
+                    &(MPIDI_COLL_DT(dt_ptr)->bmpich_knomial),
+                    root, &(MPIDI_COLL_COMM(comm)->bmpich_knomial), errflag, MPIR_CVAR_BCAST_KNOMIAL_KVAL);
+            break;
+            
     }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BCAST);
     return ret;
