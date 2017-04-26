@@ -37,6 +37,15 @@
 #undef TRANSPORT_NAME
 #undef TRANSPORT_NAME_LC
 
+#define TRANSPORT_NAME BMPICH_
+#define TRANSPORT_NAME_LC bmpich
+#include "../transports/bmpich/transport_types.h"
+#include "../algorithms/tree/kary_pre.h"
+#include "../algorithms/tree/knomial_pre.h"
+#include "../src/tsp_namespace_undef.h"
+#undef TRANSPORT_NAME
+#undef TRANSPORT_NAME_LC
+
 #define TRANSPORT_NAME X_
 #define TRANSPORT_NAME_LC x
 #include "../algorithms/treebasic/pre.h"

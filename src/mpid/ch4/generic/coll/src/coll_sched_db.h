@@ -44,7 +44,8 @@ enum{
 
 /*enumerator for collective transports*/
 enum{
-    MPICH_
+    MPICH_,
+    BMPICH_
 };
 
 typedef void (*sched_free_fn)(void*);
@@ -52,6 +53,8 @@ typedef void (*sched_free_fn)(void*);
 typedef union {
         MPIDI_COLL_MPICH_KARY_args_t mpich_kary;
         MPIDI_COLL_MPICH_KNOMIAL_args_t mpich_knomial;
+        MPIDI_COLL_BMPICH_KARY_args_t bmpich_kary;
+        MPIDI_COLL_BMPICH_KNOMIAL_args_t bmpich_knomial;
         MPIDI_COLL_MPICH_DISSEM_args_t mpich_dissem;
         MPIDI_COLL_MPICH_RECEXCH_args_t mpich_recexch;
         MPIDI_COLL_STUB_KARY_args_t stub_kary;

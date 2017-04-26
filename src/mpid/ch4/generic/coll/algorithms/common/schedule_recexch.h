@@ -241,7 +241,7 @@ COLL_sched_allreduce_recexch(const void         *sendbuf,
             TSP_send(recvbuf,count,&datatype->tsp_dt,step1_sendto,
                                  tag,&comm->tsp_comm,&s->tsp_sched,0,NULL);
     }
-    for(i=0; i<step1_nrecvs; i++){/*partcipating rank gets data from non-partcipating ranks*/
+    for(i=0; i<step1_nrecvs; i++){/*participating rank gets data from non-partcipating ranks*/
         rrid= TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,
                               &op->tsp_op,step1_recvfrom[i],tag,&comm->tsp_comm,
                               TSP_FLAG_REDUCE_L,&s->tsp_sched,(i==0 && is_inplace)?0:1,&rrid);

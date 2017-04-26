@@ -45,5 +45,14 @@
 #undef TRANSPORT_NAME
 #undef TRANSPORT_NAME_LC
 
+#define TRANSPORT_NAME BMPICH_
+#define TRANSPORT_NAME_LC bmpich
+#include "../transports/bmpich/transport.h"
+#include "../algorithms/tree/kary_post.h"
+#include "../algorithms/tree/knomial_post.h"
+#include "../src/tsp_namespace_undef.h"
+#undef TRANSPORT_NAME
+#undef TRANSPORT_NAME_LC
+
 #undef GLOBAL_NAME
 #endif /* MPIDI_CH4_COLL_POST_H_INCLUDED */
