@@ -183,7 +183,8 @@ typedef union {
    gcc - this lets gcc-style compilers know that the returned pointer
    does not alias any pointer prior to the call.
  */
-void MPL_trinit(int, int);
+void MPL_trinit(void);
+void MPL_trconfig(int, int);
 void *MPL_trmalloc(size_t, int, const char[]);
 void MPL_trfree(void *, int, const char[]);
 int MPL_trvalid(const char[]);

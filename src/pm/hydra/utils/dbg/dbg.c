@@ -14,7 +14,8 @@ HYD_status HYDU_dbg_init(const char *str)
     HYD_status status = HYD_SUCCESS;
 
 #ifdef USE_MEMORY_TRACING
-    MPL_trinit(0, 0);
+    MPL_trinit();
+    MPL_trconfig(0, 0);
 #endif
 
     if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0)
