@@ -6,6 +6,10 @@
  */
 
 #include "mpiimpl.h"
+#ifdef HAVE_EXT_COLL
+#include "mpir_coll_impl.h"
+#endif
+
 
 /* -- Begin Profiling Symbol Block for routine MPI_Op_create */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -133,6 +137,10 @@ int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op)
 
 #ifdef MPID_Op_commit_hook
     MPID_Op_commit_hook(op_ptr);
+#endif
+
+#ifdef HAVE_EXT_COLL
+    MPIC_op_init(op_ptr);
 #endif
     /* ... end of body of routine ... */
 

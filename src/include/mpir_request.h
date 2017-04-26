@@ -151,6 +151,10 @@ struct MPIR_Request {
 #ifdef MPID_DEV_REQUEST_DECL
     MPID_DEV_REQUEST_DECL
 #endif
+    /* Collectives specific information */
+#ifdef HAVE_EXT_COLL
+    MPIC_REQ_DECL
+#endif
 };
 
 #define MPIR_REQUEST_PREALLOC 8

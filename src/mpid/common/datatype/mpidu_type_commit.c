@@ -8,6 +8,10 @@
 #include <mpiimpl.h>
 #include <mpidu_dataloop.h>
 #include <stdlib.h>
+#ifdef HAVE_EXT_COLL
+#include "mpir_coll_impl.h"
+#endif
+
 
 /*@
   MPIDU_Type_commit
@@ -64,9 +68,11 @@ int MPIDU_Type_commit(MPI_Datatype *datatype_p)
 #endif
 
 #ifdef MPID_Type_commit_hook
-       MPID_Type_commit_hook(datatype_ptr);
+    //   MPID_Type_commit_hook(datatype_ptr);
 #endif /* MPID_Type_commit_hook */
-
+#ifdef HAVE_EXT_COLL
+    MPIC_dt_init(datatype_ptr);
+#endif
     }
     return mpi_errno;
 }

@@ -22,14 +22,6 @@ MPIDI_av_table_t *MPIDI_av_table0;
 MPIDI_NM_funcs_t *MPIDI_NM_func;
 MPIDI_NM_native_funcs_t *MPIDI_NM_native_func;
 
-#ifdef MPIDI_BUILD_CH4_COLL
-MPIDI_COLL_global_t MPIDI_COLL_global_instance;
-/*counters to assign unique ids to communicator, operations, and datatypes*/
-int comm_counter;
-int op_counter;
-int dt_counter;
-sched_entry_t *sched_table;
-#endif
 #ifdef MPID_DEVICE_DEFINES_THREAD_CS
 pthread_mutex_t MPIDI_Mutex_lock[MPIDI_NUM_LOCKS];
 #endif

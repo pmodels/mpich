@@ -199,21 +199,6 @@ AC_ARG_ENABLE(ch4-shm,
          posix     - POSIX shared memory implementation
     ],,enable_ch4_shm=default)
 
-AC_ARG_ENABLE(ch4-coll,
-    [--enable-ch4-coll
-       Control CH4-level collectives.
-       level:
-         yes       - Enabled (default)
-         no        - Disabled (may improve build times and code size)
-    ],,enable_ch4_coll=yes)
-
-if test "$enable_ch4_coll" = "yes" ; then
-    AC_DEFINE([MPIDI_BUILD_CH4_COLL], [1],
-        [Define to enable ch4 -level collectives])
-    AC_MSG_NOTICE([CH4-level collectives are enabled.])
-fi
-AM_CONDITIONAL([BUILD_CH4_COLL],[test "$enable_ch4_coll" = "yes"])
-
 AC_ARG_ENABLE(ch4-shm-direct,
     [--enable-ch4-shm-direct
        Enables inlined shared memory build when a single shared memory module is used

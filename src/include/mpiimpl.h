@@ -188,7 +188,6 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_tags.h"
 #include "mpir_pt2pt.h"
 #include "mpir_ext.h"
-
 #ifdef HAVE_CXX_BINDING
 #include "mpii_cxxinterface.h"
 #endif
@@ -197,6 +196,9 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpii_f77interface.h"
 #endif
 
+#ifdef HAVE_EXT_COLL
+#include "mpir_coll_types.h"
+#endif
 
 /*****************************************************************************/
 /********************** PART 4: DEVICE PRE DECLARATION ***********************/
@@ -233,6 +235,9 @@ typedef struct MPIR_Topology MPIR_Topology;
 
 #include "mpidpost.h"
 
+/*****************************************************************************/
+/******************** PART 7: COLLECTIVES IMPLEMENTATION *********************/
+/*****************************************************************************/
 /* avoid conflicts in source files with old-style "char FCNAME[]" vars */
 #undef FUNCNAME
 #undef FCNAME

@@ -6,6 +6,10 @@
 
 #include "mpiimpl.h"
 #include "collutil.h"
+#ifdef HAVE_EXT_COLL
+#include "mpir_coll_impl.h"
+#endif
+
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -52,6 +56,20 @@ cvars:
       description : >-
         Maximum message size for which SMP-aware allreduce is used.  A
         value of '0' uses SMP-aware allreduce for all message sizes.
+
+    - name        : MPIR_CVAR_USE_ALLREDUCE
+      category    : COLLECTIVE
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Controls allreduce algorithm:
+        0 - MPIR_allreduce
+        1 - KNOMIAL_allreduce
+        2 - KARY_allreduce
+        3 - RECEXCH_allreduce
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -303,6 +321,42 @@ int MPIR_Allreduce_intra (
     {
         /* homogeneous */
 
+#ifdef HAVE_EXT_COLL
+        {
+
+            int valid_coll[] = {1,2,3,4};
+            int use_coll = (MPIR_CVAR_USE_ALLREDUCE < 0) ? MPIR_Coll_cycle_algorithm(comm_ptr, valid_coll, 3) : MPIR_CVAR_USE_ALLREDUCE;
+
+            switch (use_coll){
+                case 0:
+                    break;
+                case 1:
+                    mpi_errno = MPIC_MPICH_KNOMIAL_allreduce(sendbuf, recvbuf, count,
+                                                    datatype, op,
+                                                    &(MPIC_COMM(comm_ptr)->mpich_knomial), errflag, 2);
+                    goto fn_exit;
+                    break;
+                case 2:
+                    mpi_errno = MPIC_MPICH_KARY_allreduce(sendbuf, recvbuf, count,
+                                                    datatype, op,
+                                                    &(MPIC_COMM(comm_ptr)->mpich_kary), errflag, 2);
+                    goto fn_exit;
+                    break;
+                case 3:
+                    mpi_errno = MPIC_MPICH_RECEXCH_allreduce(sendbuf, recvbuf, count,
+                                                    datatype, op,
+                                                    &(MPIC_COMM(comm_ptr)->mpich_recexch), errflag);
+                    goto fn_exit;
+                    break;
+                case 4:
+                    mpi_errno = MPIC_MPICH_DISSEM_allreduce(sendbuf, recvbuf, count,
+                                                    datatype, op,
+                                                    &(MPIC_COMM(comm_ptr)->mpich_dissem), errflag);
+                    goto fn_exit;
+                    break;
+            }
+        }
+#endif
         comm_size = comm_ptr->local_size;
         rank = comm_ptr->rank;
 

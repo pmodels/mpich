@@ -17,11 +17,6 @@
 #include "strings.h"
 #include "datatype.h"
 
-#ifdef MPIDI_BUILD_CH4_COLL
-#include "../generic/coll/include/pre.h"
-#include "../generic/coll/include/post.h"
-#endif
-
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -327,9 +322,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
         MPIR_ERR_POP(mpi_errno);
 #endif
     
-#ifdef MPIDI_BUILD_CH4_COLL
-    delete_sched_table();
-#endif
     int i;
     int max_n_avts;
     max_n_avts = MPIDIU_get_max_n_avts();
@@ -609,13 +601,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Type_commit_hook(MPIR_Datatype * type)
     }
 #endif
 
-#ifdef MPIDI_BUILD_CH4_COLL
-    mpi_errno = MPIDI_COLL_dt_init(type);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
-#endif
-
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_TYPE_CREATE_HOOK);
     return mpi_errno;
@@ -671,13 +656,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Op_commit_hook(MPIR_Op * op)
 
 #ifdef MPIDI_BUILD_CH4_SHM
     mpi_errno = MPIDI_SHM_mpi_op_commit_hook(op);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
-#endif
-
-#ifdef MPIDI_BUILD_CH4_COLL
-    mpi_errno = MPIDI_COLL_op_init(op);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }

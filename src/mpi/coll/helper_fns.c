@@ -13,6 +13,15 @@
 #define MPIC_REQUEST_PTR_ARRAY_SIZE 64
 #endif
 
+/* Extended collectives globals*/
+#ifdef HAVE_EXT_COLL
+MPIC_global_t MPIC_global_instance;
+/*counters to assign unique ids to communicator, operations, and datatypes*/
+int MPIC_comm_counter;
+MPIC_sched_entry_t *MPIC_sched_table;
+MPIC_progress_global_t MPIC_progress_global;
+#endif
+
 /* These functions are used in the implementation of collective
    operations. They are wrappers around MPID send/recv functions. They do
    sends/receives by setting the context offset to
