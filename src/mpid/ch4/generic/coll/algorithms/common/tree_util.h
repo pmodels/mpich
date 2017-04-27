@@ -144,10 +144,10 @@ static inline void COLL_tree_knomial_init(int rank, int nranks, int k, int root,
     int running_rank; /*used for calculation below*/
     running_rank = current_rank +1; /*start with first child of the current_rank*/
     while(true){
-        if(rank == current_rank)/*desired rank found*/
+        if(lrank == current_rank)/*desired rank found*/
             break;
         for(j=1;j<k;j++){
-            if(rank >= running_rank && rank < running_rank+COLL_ipow(k,maxtime-time-1)){/*check if rank lies in this range*/
+            if(lrank >= running_rank && lrank < running_rank+COLL_ipow(k,maxtime-time-1)){/*check if rank lies in this range*/
                 /*move to the corresponding subtree*/
                 parent = current_rank;
                 current_rank = running_rank;
@@ -159,13 +159,17 @@ static inline void COLL_tree_knomial_init(int rank, int nranks, int k, int root,
         }
         time++;
     }
-    ct->parent=parent; int crank = rank+1;
-    if(0) fprintf(stderr, "parent of rank %d is %d, total ranks = %d\n", rank, ct->parent, nranks);
+    if(parent==-1)
+        ct->parent=-1;
+    else 
+        ct->parent=(parent+root)%nranks; 
+    int crank = lrank+1; /*cranks stands for child rank*/
+    if(0) fprintf(stderr, "parent of rank %d is %d, total ranks = %d (root=%d)\n", rank, ct->parent, nranks, root);
     for(i=time; i<maxtime; i++){
         for(j=1;j<k;j++){
             if(crank < nranks){
-                if(0) fprintf(stderr, "adding child %d to rank %d\n", crank, rank);
-                 COLL_tree_add_child(ct, crank);
+                if(0) fprintf(stderr, "adding child %d to rank %d\n", (crank+root)%nranks, rank);
+                 COLL_tree_add_child(ct, (crank+root)%nranks);
             }
             crank += COLL_ipow(k,maxtime-i-1);
         }
