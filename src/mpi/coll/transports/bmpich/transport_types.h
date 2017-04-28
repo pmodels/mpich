@@ -136,6 +136,7 @@ typedef struct MPIC_BMPICH_sched_t {
     uint64_t   nbufs;
     void      *buf[MPIC_BMPICH_MAX_REQUESTS];/*size of the array is currently arbitrarily set*/
     
+    int tag;   
 }
 MPIC_BMPICH_sched_t;
 

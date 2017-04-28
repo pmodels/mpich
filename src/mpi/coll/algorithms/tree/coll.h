@@ -55,7 +55,7 @@ static inline int COLL_allreduce(const void *sendbuf,
     COLL_sched_t s;
     int tag = (*comm->tree_comm.curTag)++;
 
-    COLL_sched_init(&s);
+    COLL_sched_init(&s, tag);
     rc = COLL_sched_allreduce_tree(sendbuf, recvbuf, count, datatype, op, tag, comm, k, &s, 1);
     COLL_sched_kick(&s);
     return rc;
@@ -75,7 +75,7 @@ static inline int COLL_bcast(void *buffer,
     if(s==NULL){
         if(0) fprintf(stderr, "schedule does not exist\n");
         s = (COLL_sched_t*)MPL_malloc(sizeof(COLL_sched_t));
-        COLL_sched_init(s);
+        COLL_sched_init(s, tag);
         rc = COLL_sched_bcast_tree_pipelined(buffer, count, datatype, root, tag, comm, k, segsize, s, 1);
         MPIC_add_sched((MPIC_coll_args_t)coll_args, (void*)s, COLL_sched_free);
     } else{
@@ -91,13 +91,13 @@ static inline int COLL_reduce(const void *sendbuf,
                               void *recvbuf,
                               int count,
                               COLL_dt_t datatype,
-                              COLL_op_t op, int root, COLL_comm_t * comm, int *errflag, int k)
+                              COLL_op_t op, int root, COLL_comm_t * comm, int *errflag, int k, int nbuffers)
 {
     int rc;
     COLL_sched_t s;
     int tag = (*comm->tree_comm.curTag)++;
-    COLL_sched_init(&s);
-    rc = COLL_sched_reduce_tree_full(sendbuf, recvbuf, count, datatype, op, root, tag, comm, k, &s, 1);
+    COLL_sched_init(&s, tag);
+    rc = COLL_sched_reduce_tree_full(sendbuf, recvbuf, count, datatype, op, root, tag, comm, k, &s, 1, nbuffers);
     COLL_sched_kick(&s);
     return rc;
 }
@@ -109,7 +109,7 @@ static inline int COLL_barrier(COLL_comm_t *comm,
     int                rc;
     COLL_sched_t s;
     int                tag = (*comm->tree_comm.curTag)++;
-    COLL_sched_init(&s);
+    COLL_sched_init(&s, tag);
     rc = COLL_sched_barrier_tree(tag, comm, k, &s);
     COLL_sched_kick(&s);
     return rc;

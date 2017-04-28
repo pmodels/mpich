@@ -66,7 +66,7 @@ static inline int COLL_allreduce(const void  *sendbuf,
         if(0) fprintf(stderr, "schedule does not exist\n");
         s = (COLL_sched_t*)TSP_allocate_mem(sizeof(COLL_sched_t));
 
-        COLL_sched_init(s);
+        COLL_sched_init(s,tag);
         rc = COLL_sched_allreduce_recexch(sendbuf,recvbuf,count,
                                           datatype,op,tag,comm,s,1);
         MPIC_add_sched((MPIC_coll_args_t)coll_args, (void*)s, COLL_sched_free);

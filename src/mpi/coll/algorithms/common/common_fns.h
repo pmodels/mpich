@@ -33,9 +33,9 @@
 #endif /* COLL_MACROS */
 extern MPIC_progress_global_t MPIC_progress_global;
 
-static inline void COLL_sched_init(COLL_sched_t * s)
+static inline void COLL_sched_init(COLL_sched_t * s, int tag)
 {
-    TSP_sched_init(&(s->tsp_sched));
+    TSP_sched_init(&(s->tsp_sched), tag);
     s->sched_started = 0;
 }
 
@@ -51,13 +51,13 @@ static inline void COLL_sched_free(COLL_sched_t *s){
 }
 
 static inline int COLL_kick(COLL_queue_elem_t * elem);
-static inline void COLL_sched_init_nb(COLL_sched_t ** sched, COLL_req_t * request)
+static inline void COLL_sched_init_nb(COLL_sched_t ** sched, int tag, COLL_req_t * request)
 {
     COLL_sched_t *s;
     int size = sizeof(*s);
     s = request->phases = (COLL_sched_t *) TSP_allocate_mem(size);
     memset(s, 0, size);
-    TSP_sched_init(&(s->tsp_sched));
+    TSP_sched_init(&(s->tsp_sched), tag);
     request->elem.kick_fn = COLL_kick;
     *sched = s;
     

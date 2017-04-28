@@ -270,8 +270,7 @@ static inline int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int co
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_REDUCE);
 
     *errflag = MPI_SUCCESS;
-
-        mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype,
+    mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype,
                                 op, root, comm_ptr, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_REDUCE);
