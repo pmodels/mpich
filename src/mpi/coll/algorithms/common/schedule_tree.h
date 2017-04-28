@@ -93,7 +93,7 @@ COLL_sched_bcast_tree(void *buffer,
 }
 
 static inline int
-COLL_sched_bcast_tree_pipelined(void *buffer, int count, COLL_dt_t datatype, int root, int *tag,
+COLL_sched_bcast_tree_pipelined(void *buffer, int count, COLL_dt_t datatype, int root, int tag,
                                  COLL_comm_t *comm, int k, int segsize, COLL_sched_t *s, int finalize)
 {
     int segment_size = (segsize==-1)?count:segsize;
@@ -119,9 +119,9 @@ COLL_sched_bcast_tree_pipelined(void *buffer, int count, COLL_dt_t datatype, int
     * correctly */
     int i;
     for(i=0; i<num_chunks; i++){
-        (*tag)++;
+        //(*tag)++;
         int msgsize = (i < num_chunks_floor) ? chunk_size_floor : chunk_size_ceil;
-        COLL_sched_bcast_tree((char*)buffer + offset*extent, msgsize, datatype, root, *tag, comm, k, s, 0);
+        COLL_sched_bcast_tree((char*)buffer + offset*extent, msgsize, datatype, root, tag, comm, k, s, 0);
         offset += msgsize;
     }
     if (finalize) {
@@ -139,7 +139,7 @@ COLL_sched_reduce_tree(const void *sendbuf,
                   COLL_op_t op,
                   int root,
                   int tag,
-                  COLL_comm_t * comm, int k, int is_commutative, COLL_sched_t * s, int finalize)
+                  COLL_comm_t * comm, int k, int is_commutative, COLL_sched_t * s, int finalize, int nbuffers)
 {
     COLL_tree_t myTree;
     int i, j, is_contig;
@@ -150,6 +150,7 @@ COLL_sched_reduce_tree(const void *sendbuf,
     COLL_tree_t *tree = &myTree;
     void *free_ptr0 = NULL;
     int is_inplace = TSP_isinplace((void *) sendbuf);
+    int  children   = 0;
 
     TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
     if (is_commutative)
@@ -158,64 +159,77 @@ COLL_sched_reduce_tree(const void *sendbuf,
         /* We have to use knomial trees to get rank order */
         COLL_tree_knomial_init(rank, size, k, root, tree);
 
-    if (tree->parent == -1) {
-        k = 0;
+    /*calculate the number of children to allocate #children buffers */
+    SCHED_FOREACHCHILDDO(children++);
 
-        if (!is_inplace)
-            TSP_dtcopy(recvbuf, count, datatype, sendbuf, count, datatype);
-        int rr_id;
-        if (is_commutative) {
-            SCHED_FOREACHCHILD() {
-                rr_id = TSP_recv_reduce(recvbuf, count, datatype,
-                                        op, j, tag,  &comm->tsp_comm,
-                                        TSP_FLAG_REDUCE_L, &s->tsp_sched,
-                                        j == tree->children[0].startRank ? 0 : 1, &rr_id);
-            }
-        }
-        else {
-            SCHED_FOREACHCHILD() {
-                rr_id = TSP_recv_reduce(recvbuf, count, datatype,
-                                        op, j, tag,  &comm->tsp_comm,
-                                        TSP_FLAG_REDUCE_R, &s->tsp_sched,
-                                        j == tree->children[0].startRank ? 0 : 1, &rr_id);
-            }
-        }
+    void *result_buf;
+    int rr_id[3];
+    int buf=0;
+    if (!is_inplace && tree->parent == -1){
+        rr_id[1] = TSP_dtcopy_nb(recvbuf, count, datatype, sendbuf, count, datatype,&s->tsp_sched,0,NULL);
     }
-    else {
-        void *result_buf;
-        free_ptr0 = result_buf = TSP_allocate_mem(extent * count);
+    else if(tree->parent != -1){
+        /* How about we just use recvbuf instead of result_buf for non root? Code could be simplied more */
+        result_buf = TSP_allocate_buffer(extent * count,&s->tsp_sched);
         result_buf = (void *) ((char *) result_buf - lb);
-        k = 0;
-        TSP_dtcopy(result_buf, count, datatype, sendbuf, count, datatype);
-
-        int rr_id, send_id;
+        rr_id[1] = TSP_dtcopy_nb(result_buf, count, datatype, sendbuf, count, datatype,&s->tsp_sched,0,NULL);
+    }
+    /*create #children buffers */
+    void *result_nbuf[children];
+    if(nbuffers!=1){ /* If using only one recv buffer, allocate memory here */
+        result_nbuf[0] = TSP_allocate_buffer(extent*count,&s->tsp_sched);
+        result_nbuf[0] = (void *)((char *)result_nbuf[0]-lb);
+    }
+    for(i=0; i<tree->numRanges; i++){
+       for(j=tree->children[i].startRank; j<=tree->children[i].endRank; j++){
+        if(nbuffers==1){
+            /* Allocate nth buffer to receive data */
+            result_nbuf[buf] = TSP_allocate_buffer(extent*count,&s->tsp_sched);
+            result_nbuf[buf] = (void *)((char *)result_nbuf[buf]-lb);
+            rr_id[0] = TSP_recv(result_nbuf[buf],count,datatype,
+                                j,tag,&comm->tsp_comm,
+                                &s->tsp_sched,0,NULL);
+        }
+        else{
+            rr_id[0] = TSP_recv(result_nbuf[buf],count,datatype,
+                                j,tag,&comm->tsp_comm,
+                                &s->tsp_sched,j==tree->children[0].startRank?0:1,&rr_id[2]);
+        }
         if (is_commutative) {
-            SCHED_FOREACHCHILD()        /*NOTE: We are assuming that each rank range has
-                                         * only one rank for the i==0 condition to be used correctly */
-                rr_id = TSP_recv_reduce(result_buf, count, datatype,
-                                        op, j, tag, &comm->tsp_comm,
-                                        TSP_FLAG_REDUCE_L, &s->tsp_sched,
-                                        j == tree->children[0].startRank ? 0 : 1, &rr_id);
+             /* Either branch or one additional data copy */
+             if(tree->parent == -1)
+                 rr_id[2] = TSP_reduce_local(result_nbuf[buf],recvbuf,count,
+                                             datatype, op, &s->tsp_sched,is_inplace?1:2,rr_id);
+             else
+                 rr_id[2] = TSP_reduce_local(result_nbuf[buf],result_buf,count,
+                                              datatype,op, &s->tsp_sched,2,rr_id);
         }
-        else {
-            SCHED_FOREACHCHILD() {
-                rr_id = TSP_recv_reduce(result_buf, count, datatype,
-                                        op, j, tag, &comm->tsp_comm,
-                                        TSP_FLAG_REDUCE_R, &s->tsp_sched,
-                                        j == tree->children[0].startRank ? 0 : 1, &rr_id);
-            }
+        else{
+             /* non commutative case. Order of reduction matters. Knomia tree has to constructed differently for reduce for optimal performace. 
+ *              If it is non commutative the tree is Knomial. Note: Works only when root is zero */
+             if(tree->parent == -1){
+                 rr_id[2] = TSP_reduce_local(recvbuf,result_nbuf[buf],count,
+                                             datatype,op, &s->tsp_sched,is_inplace?1:2,rr_id);
+                TSP_dtcopy_nb(recvbuf, count, datatype, result_nbuf[buf], count, datatype,&s->tsp_sched,1,&rr_id[2]);
+             }
+             else{
+                 rr_id[2] = TSP_reduce_local(result_buf,result_nbuf[buf],count,
+                                             datatype, op, &s->tsp_sched,2,rr_id);
+                TSP_dtcopy_nb(result_buf, count, datatype, result_nbuf[buf], count, datatype,&s->tsp_sched,1,&rr_id[2]);
+             }
         }
-        send_id = TSP_send_accumulate(result_buf, count, datatype,
-                                      op, tree->parent,
-                                      tag, &comm->tsp_comm, &s->tsp_sched,
-                                      (tree->numRanges == 0) ? 0 : 1, &rr_id);
-        TSP_free_mem_nb(free_ptr0, &s->tsp_sched, 1, &send_id);
+        if(nbuffers==1)
+             buf++;
+    }
+   }
+    if(tree->parent!=-1){
+        /* send date to parent if you are a non root node */
+        TSP_send(result_buf, count, datatype,
+                                    tree->parent,
+                                    tag, &comm->tsp_comm, &s->tsp_sched,
+                                    1, (tree->numRanges == 0) ? &rr_id[1]:&rr_id[2]);
     }
 
-    if (finalize) {
-        TSP_fence(&s->tsp_sched);
-        TSP_sched_commit(&s->tsp_sched);
-    }
     return 0;
 }
 
@@ -225,14 +239,14 @@ COLL_sched_reduce_tree_full(const void *sendbuf,
                        int count,
                        COLL_dt_t datatype,
                        COLL_op_t op,
-                       int root, int tag, COLL_comm_t * comm, int k, COLL_sched_t * s, int finalize)
+                       int root, int tag, COLL_comm_t * comm, int k, COLL_sched_t * s, int finalize, int nbuffers)
 {
     int is_commutative, rc;
     TSP_opinfo(op, &is_commutative);
 
     if (root == 0 || is_commutative) {
         rc = COLL_sched_reduce_tree(sendbuf, recvbuf, count, datatype,
-                               op, root, tag, comm, k, is_commutative, s, finalize);
+                               op, root, tag, comm, k, is_commutative, s, finalize, nbuffers);
     }
     else {
         COLL_tree_comm_t *mycomm = &comm->tree_comm;
@@ -253,7 +267,7 @@ COLL_sched_reduce_tree_full(const void *sendbuf,
         else
             sb = (void *) sendbuf;
         rc = COLL_sched_reduce_tree(sb, tmp_buf, count, datatype,
-                               op, 0, tag, comm, k, is_commutative, s, 0);
+                               op, 0, tag, comm, k, is_commutative, s, 0, nbuffers);
         int fence_id = TSP_fence(&s->tsp_sched);
         int send_id;
         if (rank == 0) {
@@ -297,8 +311,7 @@ COLL_sched_allreduce_tree(const void *sendbuf,
         sbuf = recvbuf;
         rbuf = tmp_buf;
     }
-
-    COLL_sched_reduce_tree_full(sbuf, rbuf, count, datatype, op, 0, tag, comm, k, s, 0);
+    COLL_sched_reduce_tree_full(sbuf, rbuf, count, datatype, op, 0, tag, comm, k, s, 0, 0);
     TSP_wait(&s->tsp_sched);
     COLL_sched_bcast_tree(rbuf, count, datatype, 0, tag, comm, k, s, 0);
 

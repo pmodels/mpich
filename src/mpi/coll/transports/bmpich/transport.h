@@ -31,13 +31,15 @@ static inline int MPIC_BMPICH_comm_cleanup(MPIC_BMPICH_comm_t * comm)
         comm->mpid_comm = NULL;
 }
 
-static inline void MPIC_BMPICH_sched_init(MPIC_BMPICH_sched_t *sched)
+static inline void MPIC_BMPICH_sched_init(MPIC_BMPICH_sched_t *sched, int tag)
 {
-    sched->total      = 0;
+    sched->total     = 0;
     sched->nbufs     = 0;
+    sched->tag       = tag;
 }
 
 static inline void MPIC_BMPICH_sched_reset(MPIC_BMPICH_sched_t *sched, int tag){
+    sched->tag = tag;
 }
 
 static inline void MPIC_BMPICH_sched_commit(MPIC_BMPICH_sched_t *sched)
@@ -359,16 +361,19 @@ static inline int MPIC_BMPICH_size(MPIC_BMPICH_comm_t *comm)
     return comm->mpid_comm->local_size;
 }
 
-static inline void MPIC_BMPICH_reduce_local(const void  *inbuf,
+static inline int MPIC_BMPICH_reduce_local(const void  *inbuf,
                                     void        *inoutbuf,
                                     int          count,
                                     MPIC_BMPICH_dt_t    datatype,
                                     MPIC_BMPICH_op_t    operation,
-                                    MPIC_BMPICH_sched_t *sched)
+                                    MPIC_BMPICH_sched_t *sched,
+                                    int          n_invtcs,
+                                    int         *invtcs)
 {
     MPIC_BMPICH_req_t *req;
     MPIR_Assert(sched->total < 32);
-    req = &sched->requests[sched->total];
+    int vtx = sched->total;
+    req = &sched->requests[vtx];
     req->kind                         = MPIC_BMPICH_KIND_REDUCE_LOCAL;
     sched->total++;
     req->nbargs.reduce_local.inbuf    = inbuf;
@@ -378,6 +383,7 @@ static inline void MPIC_BMPICH_reduce_local(const void  *inbuf,
     req->nbargs.reduce_local.op       = operation;
 
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [reduce_local]\n",sched->total);
+    return vtx;
 }
 
 static inline int MPIC_BMPICH_dtcopy(void       *tobuf,
@@ -470,7 +476,7 @@ static inline void MPIC_BMPICH_issue_request(int vtxid, MPIC_BMPICH_req_t *rp, M
                        rp->nbargs.sendrecv.count,
                        rp->nbargs.sendrecv.dt,
                        rp->nbargs.sendrecv.dest,
-                       rp->nbargs.sendrecv.tag,
+                       sched->tag,
                        rp->nbargs.sendrecv.comm->mpid_comm,
                        &errflag);
         }
@@ -484,7 +490,7 @@ static inline void MPIC_BMPICH_issue_request(int vtxid, MPIC_BMPICH_req_t *rp, M
                        rp->nbargs.sendrecv.count,
                        rp->nbargs.sendrecv.dt,
                        rp->nbargs.sendrecv.dest,
-                       rp->nbargs.sendrecv.tag,
+                       sched->tag,
                        rp->nbargs.sendrecv.comm->mpid_comm,
                        &status, &errflag);
         }
@@ -536,7 +542,7 @@ static inline void MPIC_BMPICH_issue_request(int vtxid, MPIC_BMPICH_req_t *rp, M
                        rp->nbargs.recv_reduce.count,
                        rp->nbargs.recv_reduce.datatype,
                        rp->nbargs.recv_reduce.source,
-                       rp->nbargs.recv_reduce.tag,
+                       sched->tag,
                        rp->nbargs.recv_reduce.comm->mpid_comm,
                        &status, &errflag);
             MPIR_Grequest_start_impl(MPIC_BMPICH_queryfcn,

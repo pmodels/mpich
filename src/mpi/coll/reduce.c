@@ -887,19 +887,20 @@ int MPIR_Reduce_intra (
     int valid_coll[] = {1,2};
     int use_coll = (MPIR_CVAR_USE_REDUCE < 0) ? MPIR_Coll_cycle_algorithm(comm_ptr,
                             valid_coll, 2) : MPIR_CVAR_USE_REDUCE;
+    use_coll=0;
     switch(use_coll) {
         case 0:
             break;
         case 1:
             mpi_errno = MPIC_MPICH_KNOMIAL_reduce(sendbuf, recvbuf, count,
                                             datatype, op, root,
-                                            &(MPIC_COMM(comm_ptr)->mpich_knomial), errflag, 2);
+                                            &(MPIC_COMM(comm_ptr)->mpich_knomial), errflag, 2, 0);
             goto fn_exit;
             break;
         case 2:
             mpi_errno = MPIC_MPICH_KARY_reduce(sendbuf, recvbuf, count,
                                             datatype, op, root,
-                                            &(MPIC_COMM(comm_ptr)->mpich_kary), errflag, 2);
+                                            &(MPIC_COMM(comm_ptr)->mpich_kary), errflag, 2, 0);
             goto fn_exit;
             break;
     }

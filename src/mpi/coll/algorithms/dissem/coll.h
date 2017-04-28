@@ -62,7 +62,7 @@ static inline int COLL_barrier(COLL_comm_t *comm,
     int                rc;
     COLL_sched_t s;
     int                tag = (*comm->curTag)++;
-    COLL_sched_init(&s);
+    COLL_sched_init(&s,tag);
     rc = COLL_sched_barrier_dissem(tag, comm, &s);
     COLL_sched_kick(&s);
     return rc;
@@ -76,7 +76,7 @@ static inline int COLL_ibarrier(COLL_comm_t *comm,
     int done = 0;
     int tag  = (*comm->curTag)++;
     /*initialize schedule*/
-    COLL_sched_init_nb(&s,request);
+    COLL_sched_init_nb(&s,tag,request);
     /*generate schedule*/
     rc = COLL_sched_barrier_dissem(tag,comm,s);
     /*kick start the schedule and return*/
@@ -102,7 +102,7 @@ static inline int COLL_alltoall(const void  *sendbuf,
     COLL_sched_t  s;
     int                 tag     = (*comm->curTag)++;
 
-    COLL_sched_init(&s);
+    COLL_sched_init(&s,tag);
 
     rc = COLL_sched_alltoall_brucks(sendbuf,sendcount,sendtype,recvbuf,recvcount,recvtype,comm,tag,&s);
 
@@ -127,7 +127,7 @@ static inline int COLL_ialltoall(const void  *sendbuf,
     COLL_sched_t        *s;
     int                 tag     = (*comm->curTag)++;
 
-    COLL_sched_init_nb(&s,request);
+    COLL_sched_init_nb(&s,tag,request);
 
     rc = COLL_sched_alltoall(sendbuf,sendcount,sendtype,recvbuf,recvcount,recvtype,comm,tag,s);
 
@@ -165,7 +165,7 @@ static inline int COLL_allreduce(const void  *sendbuf,
 
     if(!is_commutative) return -1; /*this implementatation currently does not handle non-commutative operations*/
 
-    COLL_sched_init(s);
+    COLL_sched_init(s,tag);
 
     if(is_inplace) {/*allocate temporary buffer for receiving data*/
         tmp_buf = TSP_allocate_buffer(extent*count, tsp_sched);
@@ -213,7 +213,7 @@ static inline int COLL_iallreduce(const void  *sendbuf,
 
     if(!is_commutative) return -1;
 
-    COLL_sched_init_nb(&s,request);
+    COLL_sched_init_nb(&s,tag,request);
     TSP_sched_t *tsp_sched = &s->tsp_sched;
 
     if(is_inplace) {

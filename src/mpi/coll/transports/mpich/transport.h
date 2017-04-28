@@ -120,12 +120,13 @@ static inline void MPIC_MPICH_reset_issued_list(MPIC_MPICH_sched_t *sched){
     sched->req_iter = NULL;
 }
 
-static inline void MPIC_MPICH_sched_init(MPIC_MPICH_sched_t *sched)
+static inline void MPIC_MPICH_sched_init(MPIC_MPICH_sched_t *sched, int tag)
 {
     sched->total      = 0;
     sched->num_completed  = 0;
     sched->last_wait = -1;
     sched->nbufs     = 0;
+    sched->tag       = tag;
     MPIC_MPICH_reset_issued_list(sched);
 }
 
@@ -263,7 +264,7 @@ static inline void MPIC_MPICH_add_vtx_dependencies(MPIC_MPICH_sched_t *sched, in
 from phase array to completely DAG based collectives*/
 static inline int MPIC_MPICH_fence(MPIC_MPICH_sched_t *sched)
 {
-    assert(sched->total < 32);
+    //assert(sched->total < 32);
     if(0) fprintf(stderr, "TSP(mpich) : sched [fence] total=%ld \n", sched->total);
     MPIC_MPICH_req_t *req = &sched->requests[sched->total];
     req->kind = MPIC_MPICH_KIND_NOOP;
@@ -539,20 +540,23 @@ static inline int MPIC_MPICH_size(MPIC_MPICH_comm_t *comm)
     return comm->mpid_comm->local_size;
 }
 
-static inline void MPIC_MPICH_reduce_local(const void  *inbuf,
+static inline int MPIC_MPICH_reduce_local(const void  *inbuf,
                                     void        *inoutbuf,
                                     int          count,
                                     MPIC_MPICH_dt_t    datatype,
                                     MPIC_MPICH_op_t    operation,
-                                    MPIC_MPICH_sched_t *sched)
+                                    MPIC_MPICH_sched_t *sched,
+                                    int          n_invtcs,
+                                    int         *invtcs)
 {
     MPIC_MPICH_req_t *req;
     MPIR_Assert(sched->total < 32);
-    req = &sched->requests[sched->total];
+    int vtx=sched->total;
+    req = &sched->requests[vtx];
     req->kind                         = MPIC_MPICH_KIND_REDUCE_LOCAL;
     req->state                        = MPIC_MPICH_STATE_INIT;
-    req->num_unfinished_dependencies = 0;
-    sched->total++;
+    init_request(req,vtx);
+    MPIC_MPICH_add_vtx_dependencies(sched, vtx, n_invtcs, invtcs);
     req->nbargs.reduce_local.inbuf    = inbuf;
     req->nbargs.reduce_local.inoutbuf = inoutbuf;
     req->nbargs.reduce_local.count    = count;
@@ -560,6 +564,9 @@ static inline void MPIC_MPICH_reduce_local(const void  *inbuf,
     req->nbargs.reduce_local.op       = operation;
 
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [reduce_local]\n",sched->total);
+    sched->total++;
+    //TSP_issue_request(vtx, req, sched);
+    return vtx;
 }
 
 static inline int MPIC_MPICH_dtcopy(void       *tobuf,
@@ -589,10 +596,11 @@ static inline int MPIC_MPICH_dtcopy_nb(void        *tobuf,
 {
     MPIC_MPICH_req_t *req;
     MPIR_Assert(sched->total < 32);
-    req = &sched->requests[sched->total];
+    int vtx=sched->total;
+    req = &sched->requests[vtx];
     req->kind   = MPIC_MPICH_KIND_DTCOPY;
     init_request(req,sched->total);
-    MPIC_MPICH_add_vtx_dependencies(sched, sched->total, n_invtcs, invtcs);
+    MPIC_MPICH_add_vtx_dependencies(sched, vtx, n_invtcs, invtcs);
 
     req->nbargs.dtcopy.tobuf      = tobuf;
     req->nbargs.dtcopy.tocount    = tocount;
@@ -602,7 +610,9 @@ static inline int MPIC_MPICH_dtcopy_nb(void        *tobuf,
     req->nbargs.dtcopy.fromtype   = fromtype;
 
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [dt_copy]\n",sched->total);
-    return sched->total++;
+    sched->total++;
+    //TSP_issue_request(vtx, req, sched);
+    return vtx; //sched->total++;
 }
 
 static inline void *MPIC_MPICH_allocate_mem(size_t size)
