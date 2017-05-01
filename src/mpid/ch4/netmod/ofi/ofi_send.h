@@ -164,7 +164,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
             num_contig = map_size;  /* map_size is the maximum number of iovecs that can be generated */
 
             size = o_size*num_contig + sizeof(*(MPIDI_OFI_REQUEST(sreq, noncontig.nopack)));
-            MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = (struct iovec *) MPL_malloc(size);
+            MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = (struct iovec *) MPL_malloc(size, MPL_MEM_BUFFER);
             memset(MPIDI_OFI_REQUEST(sreq, noncontig.nopack), 0, size);
 
             MPIR_Segment_init(buf, count, datatype, &seg, 0);
@@ -198,7 +198,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
             }
 
             if (countp_huge >= 1 && huge) {
-                originv_huge = (struct iovec *) MPL_malloc(sizeof(struct iovec) * countp_huge);
+                originv_huge = (struct iovec *) MPL_malloc(sizeof(struct iovec) * countp_huge, MPL_MEM_BUFFER);
 
                 for (j=0; j<num_contig; j++) {
                     l = 0;
@@ -252,7 +252,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_PACK;
 
         MPIDI_OFI_REQUEST(sreq, noncontig.pack) =
-            (MPIDI_OFI_pack_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment));
+            (MPIDI_OFI_pack_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment), MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(sreq, noncontig.pack) == NULL, mpi_errno, MPI_ERR_OTHER,
                              "**nomem", "**nomem %s", "Send Pack buffer alloc");
         size_t segment_first;
@@ -301,7 +301,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
         MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
 
         /* Set up a memory region for the lmt data transfer */
-        ctrl.rma_key = MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(comm).rma_id_allocator);
+        ctrl.rma_key = MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(comm).rma_id_allocator, MPL_MEM_RMA);
         MPIR_Assert(ctrl.rma_key < MPIDI_Global.max_huge_rmas);
         if (MPIDI_OFI_ENABLE_MR_SCALABLE)
             rma_key = ctrl.rma_key << MPIDI_Global.huge_rma_shift;
@@ -316,7 +316,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
                                         NULL), mr_reg); /* In:  context             */
 
         /* Create map to the memory region */
-        MPIDI_CH4U_map_set(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle, huge_send_mr);
+        MPIDI_CH4U_map_set(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle, huge_send_mr, MPL_MEM_BUFFER);
 
         if (!MPIDI_OFI_ENABLE_MR_SCALABLE) {
             /* MR_BASIC */

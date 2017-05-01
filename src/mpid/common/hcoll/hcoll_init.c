@@ -203,7 +203,7 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
         MPIR_ERR_POP(mpi_errno);
     }
     comm_ptr->hcoll_priv.hcoll_origin_coll_fns = comm_ptr->coll_fns;
-    comm_ptr->coll_fns = (MPIR_Collops *) MPL_malloc(sizeof(MPIR_Collops));
+    comm_ptr->coll_fns = (MPIR_Collops *) MPL_malloc(sizeof(MPIR_Collops), MPL_MEM_COMM);
     memset(comm_ptr->coll_fns, 0, sizeof(MPIR_Collops));
     if (comm_ptr->hcoll_priv.hcoll_origin_coll_fns != 0) {
         memcpy(comm_ptr->coll_fns, comm_ptr->hcoll_priv.hcoll_origin_coll_fns,

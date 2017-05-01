@@ -140,7 +140,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
         MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_init", "**pmi_init %d", pmi_errno);
     }
 
-    MPIDI_CH4_Global.jobid = (char *) MPL_malloc(MPIDI_MAX_JOBID_LEN);
+    MPIDI_CH4_Global.jobid = (char *) MPL_malloc(MPIDI_MAX_JOBID_LEN, MPL_MEM_OTHER);
     pmi_errno = PMI2_Job_GetId(MPIDI_CH4_Global.jobid, MPIDI_MAX_JOBID_LEN);
     if (pmi_errno != PMI_SUCCESS) {
         MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_job_getid",
@@ -180,7 +180,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
                              "**pmi_kvs_get_name_length_max %d", pmi_errno);
     }
 
-    MPIDI_CH4_Global.jobid = (char *) MPL_malloc(max_pmi_name_length);
+    MPIDI_CH4_Global.jobid = (char *) MPL_malloc(max_pmi_name_length, MPL_MEM_OTHER);
     pmi_errno = PMI_KVS_Get_my_name(MPIDI_CH4_Global.jobid, max_pmi_name_length);
     if (pmi_errno != PMI_SUCCESS) {
         MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_my_name",
@@ -212,7 +212,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
     MPIDI_av_table[0] = (MPIDI_av_table_t *)
         MPL_malloc(size * sizeof(MPIDI_av_entry_t)
-                   + sizeof(MPIDI_av_table_t));
+                   + sizeof(MPIDI_av_table_t), MPL_MEM_ADDRESS);
 
     MPIDI_av_table[0]->size = size;
     MPIR_Object_set_ref(MPIDI_av_table[0], 1);
@@ -467,13 +467,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_processor_name(char *name, int namelen, in
 #define FUNCNAME MPID_Alloc_mem
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr)
+MPL_STATIC_INLINE_PREFIX void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr, MPL_memory_class class)
 {
     void *p;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLOC_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLOC_MEM);
 
-    p = MPIDI_NM_mpi_alloc_mem(size, info_ptr);
+    p = MPIDI_NM_mpi_alloc_mem(size, info_ptr, class);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLOC_MEM);
     return p;

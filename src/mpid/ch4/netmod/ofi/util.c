@@ -42,16 +42,16 @@ typedef struct MPIDI_OFI_index_allocator_t {
     uint64_t *bitmask;
 } MPIDI_OFI_index_allocator_t;
 
-void MPIDI_OFI_index_allocator_create(void **indexmap, int start)
+void MPIDI_OFI_index_allocator_create(void **indexmap, int start, MPL_memory_class class)
 {
     MPIDI_OFI_index_allocator_t *allocator;
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-    allocator = MPL_malloc(sizeof(MPIDI_OFI_index_allocator_t));
+    allocator = MPL_malloc(sizeof(MPIDI_OFI_index_allocator_t), class);
     allocator->chunk_size = 128;
     allocator->num_ints = allocator->chunk_size;
     allocator->start = start;
     allocator->last_free_index = 0;
-    allocator->bitmask = MPL_malloc(sizeof(uint64_t) * allocator->num_ints);
+    allocator->bitmask = MPL_malloc(sizeof(uint64_t) * allocator->num_ints, class);
     memset(allocator->bitmask, 0xFF, sizeof(uint64_t) * allocator->num_ints);
     assert(allocator != NULL);
     *indexmap = allocator;
@@ -63,7 +63,7 @@ void MPIDI_OFI_index_allocator_create(void **indexmap, int start)
         val >>= shift##ULL;                               \
         nval += shift;                                    \
     }
-int MPIDI_OFI_index_allocator_alloc(void *indexmap)
+int MPIDI_OFI_index_allocator_alloc(void *indexmap, MPL_memory_class class)
 {
     int i;
     MPIDI_OFI_index_allocator_t *allocator = indexmap;
@@ -87,7 +87,7 @@ int MPIDI_OFI_index_allocator_alloc(void *indexmap)
         if (i == allocator->num_ints - 1) {
             allocator->num_ints += allocator->chunk_size;
             allocator->bitmask = MPL_realloc(allocator->bitmask,
-                                             sizeof(uint64_t) * allocator->num_ints);
+                                             sizeof(uint64_t) * allocator->num_ints, class);
             MPIR_Assert(allocator->bitmask);
             memset(&allocator->bitmask[i + 1], 0xFF, sizeof(uint64_t) * allocator->chunk_size);
         }
@@ -162,7 +162,7 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
         MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "CREATING UNEXPECTED HUGE RECV: (%d, %d, %d)", info->comm_id, info->origin_rank, info->tag));
 
         /* If this is unexpected, create a new tracker and put it in the unexpected list. */
-        recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1);
+        recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1, MPL_MEM_COMM);
         if (!recv) MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         LL_APPEND(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, recv);

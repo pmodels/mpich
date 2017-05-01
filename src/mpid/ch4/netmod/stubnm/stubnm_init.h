@@ -76,9 +76,9 @@ static inline int MPIDI_NM_mpi_free_mem(void *ptr)
     return MPIDI_CH4U_mpi_free_mem(ptr);
 }
 
-static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr, MPL_memory_class class)
 {
-    return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr);
+    return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr, class);
 }
 
 

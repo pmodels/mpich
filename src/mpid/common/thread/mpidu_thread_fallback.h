@@ -606,7 +606,7 @@ do {                                                                    \
 #define MPIDU_THREADPRIV_KEY_CREATE                                     \
     do {                                                                \
         int err_ = 0;                                                   \
-        MPL_THREADPRIV_KEY_CREATE(MPIR_Per_thread_key, MPIR_Per_thread, &err_); \
+        MPL_THREADPRIV_KEY_CREATE(MPIR_Per_thread_key, MPIR_Per_thread, &err_, MPL_MEM_THREAD); \
         MPIR_Assert(err_ == 0);                                         \
     } while (0)
 

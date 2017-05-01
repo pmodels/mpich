@@ -487,7 +487,7 @@ static inline int MPIU_SOCKW_Timeval_hnd_init(
     MPIR_Assert(hnd_ptr);
 
     *hnd_ptr = (MPIU_SOCKW_Timeval_hnd_t)
-                MPL_malloc(sizeof(MPIU_SOCKW_Timeval_t_));
+                MPL_malloc(sizeof(MPIU_SOCKW_Timeval_t_), MPL_MEM_OTHER);
     MPIR_ERR_CHKANDJUMP1( !(*hnd_ptr), mpi_errno, MPI_ERR_OTHER,
         "**nomem", "**nomem %s", "handle to timeval");
 
@@ -568,7 +568,7 @@ static inline int MPIU_SOCKW_Waitset_hnd_init(
     }
 
     *hnd_ptr = (MPIU_SOCKW_Waitset_hnd_t) MPL_malloc(
-            sizeof(MPIU_SOCKW_Waitset_));
+            sizeof(MPIU_SOCKW_Waitset_), MPL_MEM_OTHER);
 
     MPIR_ERR_CHKANDJUMP1(!(*hnd_ptr), mpi_errno, MPI_ERR_OTHER,
         "**nomem", "**nomem %s", "handle to waitset");
@@ -586,7 +586,7 @@ static inline int MPIU_SOCKW_Waitset_hnd_init(
 
     /* FIXME: Cheating - Expand dynamically */
     (*hnd_ptr)->fdset = (MPIU_SOCKW_Waitset_sock_hnd_ *)
-        MPL_malloc(FD_SETSIZE * sizeof(MPIU_SOCKW_Waitset_sock_hnd_));
+        MPL_malloc(FD_SETSIZE * sizeof(MPIU_SOCKW_Waitset_sock_hnd_), MPL_MEM_OTHER);
 
     MPIR_ERR_CHKANDJUMP1(!((*hnd_ptr)->fdset), mpi_errno, MPI_ERR_OTHER,
         "**nomem", "**nomem %s", "fdset array in waitSet");

@@ -153,7 +153,7 @@ int MPID_nem_ptl_rptl_ptinit(ptl_handle_ni_t ni_handle, ptl_handle_eq_t eq_handl
 
     /* setup the parts of rptls that can be done before world size or
      * target information */
-    MPIR_CHKPMEM_MALLOC(rptl, struct rptl *, sizeof(struct rptl), mpi_errno, "rptl");
+    MPIR_CHKPMEM_MALLOC(rptl, struct rptl *, sizeof(struct rptl), mpi_errno, "rptl", MPL_MEM_ADDRESS);
     DL_APPEND(rptl_info.rptl_list, rptl);
 
     rptl->local_state = RPTL_LOCAL_STATE_ACTIVE;
@@ -180,7 +180,7 @@ int MPID_nem_ptl_rptl_ptinit(ptl_handle_ni_t ni_handle, ptl_handle_eq_t eq_handl
     if (rptl->control.pt != PTL_PT_ANY) {
         MPIR_CHKPMEM_MALLOC(rptl->control.me, ptl_handle_me_t *,
                             2 * rptl_info.world_size * sizeof(ptl_handle_me_t), mpi_errno,
-                            "rptl target info");
+                            "rptl target info", MPL_MEM_BUFFER);
         for (i = 0; i < 2 * rptl_info.world_size; i++) {
             ret = rptli_post_control_buffer(rptl->ni, rptl->control.pt, &rptl->control.me[i]);
             RPTLU_ERR_POP(ret, "Error in rptli_post_control_buffer\n");

@@ -251,7 +251,7 @@ int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
 
     *new_vc = NULL; /* so that the err handling knows to cleanup */
 
-    MPIR_CHKPMEM_MALLOC (vc, MPIDI_VC_t *, sizeof(MPIDI_VC_t), mpi_errno, "vc");
+    MPIR_CHKPMEM_MALLOC (vc, MPIDI_VC_t *, sizeof(MPIDI_VC_t), mpi_errno, "vc", MPL_MEM_ADDRESS);
     /* FIXME - where does this vc get freed?
        ANSWER (goodell@) - ch3u_port.c FreeNewVC
                            (but the VC_Destroy is in this file) */
@@ -340,7 +340,7 @@ int MPID_nem_register_initcomp_cb(int (* callback)(void))
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_REGISTER_INITCOMP_CB);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_REGISTER_INITCOMP_CB);
-    MPIR_CHKPMEM_MALLOC(ep, initcomp_cb_t *, sizeof(*ep), mpi_errno, "initcomp callback element");
+    MPIR_CHKPMEM_MALLOC(ep, initcomp_cb_t *, sizeof(*ep), mpi_errno, "initcomp callback element", MPL_MEM_OTHER);
 
     ep->callback = callback;
     INITCOMP_S_PUSH(ep);

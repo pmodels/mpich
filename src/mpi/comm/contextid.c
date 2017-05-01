@@ -967,7 +967,7 @@ static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
         context_id_init();
     }
 
-    MPIR_CHKPMEM_MALLOC(st, struct gcn_state *, sizeof(struct gcn_state), mpi_errno, "gcn_state");
+    MPIR_CHKPMEM_MALLOC(st, struct gcn_state *, sizeof(struct gcn_state), mpi_errno, "gcn_state", MPL_MEM_COMM);
     st->ctx0 = ctx0;
     st->ctx1 = ctx1;
     if (gcn_cid_kind == MPIR_COMM_KIND__INTRACOMM) {

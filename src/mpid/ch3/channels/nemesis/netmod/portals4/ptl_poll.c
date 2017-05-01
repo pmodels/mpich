@@ -30,7 +30,7 @@ int MPID_nem_ptl_poll_init(void)
 
     /* create overflow buffers */
     for (i = 0; i < NUM_OVERFLOW_ME; ++i) {
-        MPIR_CHKPMEM_MALLOC(overflow_buf[i], void *, OVERFLOW_LENGTH, mpi_errno, "overflow buffer");
+        MPIR_CHKPMEM_MALLOC(overflow_buf[i], void *, OVERFLOW_LENGTH, mpi_errno, "overflow buffer", MPL_MEM_BUFFER);
         mpi_errno = append_overflow(i);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }

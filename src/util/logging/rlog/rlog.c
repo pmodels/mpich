@@ -65,7 +65,7 @@ RLOG_Struct* RLOG_InitLog(int rank, int size)
 {
     RLOG_Struct* pRLOG;
 
-    pRLOG = (RLOG_Struct*)MPL_malloc(sizeof(RLOG_Struct));
+    pRLOG = (RLOG_Struct*)MPL_malloc(sizeof(RLOG_Struct), MPL_MEM_DEBUG);
     if (pRLOG == NULL)
 	return NULL;
 

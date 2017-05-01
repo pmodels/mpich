@@ -621,7 +621,7 @@ HYD_status HYDU_sock_cloexec(int fd);
     {                                                                   \
         (p) = NULL; /* initialize p in case assert fails */             \
         HYDU_ASSERT(size, status);                                      \
-        (p) = (type) MPL_malloc((size));                                \
+        (p) = (type) MPL_malloc((size), MPL_MEM_PM);                 \
         if ((p) == NULL)                                                \
             HYDU_ERR_SETANDJUMP((status), HYD_NO_MEM,                   \
                                 "failed to allocate %d bytes\n",        \
@@ -631,7 +631,7 @@ HYD_status HYDU_sock_cloexec(int fd);
 #define HYDU_REALLOC_OR_JUMP(p, type, size, status)                     \
     {                                                                   \
         HYDU_ASSERT(size, status);                                      \
-        (p) = (type) MPL_realloc((p),(size));                           \
+        (p) = (type) MPL_realloc((p),(size), MPL_MEM_PM);            \
         if ((p) == NULL)                                                \
             HYDU_ERR_SETANDJUMP((status), HYD_NO_MEM,                   \
                                 "failed to allocate %d bytes\n",        \

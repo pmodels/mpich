@@ -23,7 +23,7 @@
         int tmp;                                                        \
         MPIDI_OFI_chunk_request *creq;                                  \
         MPIR_cc_incr((*sigreq)->cc_ptr, &tmp);                          \
-        creq=(MPIDI_OFI_chunk_request*)MPL_malloc(sizeof(*creq));       \
+        creq=(MPIDI_OFI_chunk_request*)MPL_malloc(sizeof(*creq), MPL_MEM_BUFFER);       \
         creq->event_id = MPIDI_OFI_EVENT_CHUNK_DONE;                    \
         creq->parent   = *sigreq;                                       \
         msg.context    = &creq->context;                                \
@@ -181,7 +181,7 @@ static inline void MPIDI_OFI_win_datatype_map(MPIDI_OFI_win_datatype_t * dt)
     else {
         unsigned map_size = dt->pointer->max_contig_blocks * dt->count + 1;
         dt->num_contig = map_size;
-        dt->map = (DLOOP_VECTOR *) MPL_malloc(map_size * sizeof(DLOOP_VECTOR));
+        dt->map = (DLOOP_VECTOR *) MPL_malloc(map_size * sizeof(DLOOP_VECTOR), MPL_MEM_RMA);
         MPIR_Assert(dt->map != NULL);
 
         MPIR_Segment seg;

@@ -211,7 +211,7 @@ void MPII_Wait_for_debugger( void )
 	int  val;
 
 	MPIR_proctable    = (MPIR_PROCDESC *)MPL_malloc(
-					 size * sizeof(MPIR_PROCDESC) );
+					 size * sizeof(MPIR_PROCDESC), MPL_MEM_DEBUG );
 	for (i=0; i<size; i++) {
 	    /* Initialize the proctable */
 	    MPIR_proctable[i].host_name       = 0;
@@ -228,7 +228,7 @@ void MPII_Wait_for_debugger( void )
 	    int msg[2];
 	    PMPI_Recv( msg, 2, MPI_INT, i, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 	    MPIR_proctable[i].pid = msg[1];
-	    MPIR_proctable[i].host_name = (char *)MPL_malloc( msg[0] + 1 );
+	    MPIR_proctable[i].host_name = (char *)MPL_malloc( msg[0] + 1, MPL_MEM_DEBUG );
 	    PMPI_Recv( MPIR_proctable[i].host_name, msg[0]+1, MPI_CHAR, 
 		       i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
 	    MPIR_proctable[i].host_name[msg[0]] = 0;
@@ -360,7 +360,7 @@ void MPII_Sendq_remember( MPIR_Request *req,
 	pool = p->next;
     }
     else {
-	p = (MPIR_Sendq *)MPL_malloc( sizeof(MPIR_Sendq) );
+	p = (MPIR_Sendq *)MPL_malloc( sizeof(MPIR_Sendq), MPL_MEM_DEBUG );
 	if (!p) {
 	    /* Just ignore it */
             if (MPIR_REQUEST_KIND__SEND == req->kind)
@@ -440,7 +440,7 @@ static void SendqInit( void )
 
     /* Preallocated a few send requests */
     for (i=0; i<10; i++) {
-	p = (MPIR_Sendq *)MPL_malloc( sizeof(MPIR_Sendq) );
+	p = (MPIR_Sendq *)MPL_malloc( sizeof(MPIR_Sendq), MPL_MEM_DEBUG );
 	if (!p) {
 	    /* Just ignore it */
 	    break;

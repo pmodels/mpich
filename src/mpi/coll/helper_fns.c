@@ -132,7 +132,7 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 	MPIR_Segment rseg;
 	intptr_t rfirst;
 
-        MPIR_CHKLMEM_MALLOC(buf, char *, COPY_BUFFER_SZ, mpi_errno, "buf");
+        MPIR_CHKLMEM_MALLOC(buf, char *, COPY_BUFFER_SZ, mpi_errno, "buf", MPL_MEM_BUFFER);
 
 	MPIR_Segment_init(sendbuf, sendcount, sendtype, &sseg, 0);
 	MPIR_Segment_init(recvbuf, recvcount, recvtype, &rseg, 0);
@@ -558,7 +558,7 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 
     if (count > 0 && dest != MPI_PROC_NULL) {
         MPIR_Pack_size_impl(count, datatype, &tmpbuf_size);
-        MPIR_CHKLMEM_MALLOC(tmpbuf, void *, tmpbuf_size, mpi_errno, "temporary send buffer");
+        MPIR_CHKLMEM_MALLOC(tmpbuf, void *, tmpbuf_size, mpi_errno, "temporary send buffer", MPL_MEM_BUFFER);
 
         mpi_errno = MPIR_Pack_impl(buf, count, datatype, tmpbuf, tmpbuf_size, &tmpbuf_count);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -747,8 +747,8 @@ int MPIC_Waitall(int numreq, MPIR_Request *requests[], MPI_Status statuses[], MP
     }
 
     if (numreq > MPIC_REQUEST_PTR_ARRAY_SIZE) {
-        MPIR_CHKLMEM_MALLOC(request_ptrs, MPI_Request *, numreq * sizeof(MPI_Request), mpi_errno, "request pointers");
-        MPIR_CHKLMEM_MALLOC(status_array, MPI_Status *, numreq * sizeof(MPI_Status), mpi_errno, "status objects");
+        MPIR_CHKLMEM_MALLOC(request_ptrs, MPI_Request *, numreq * sizeof(MPI_Request), mpi_errno, "request pointers", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(status_array, MPI_Status *, numreq * sizeof(MPI_Status), mpi_errno, "status objects", MPL_MEM_BUFFER);
     }
 
     for (i = 0; i < numreq; ++i) {

@@ -116,7 +116,7 @@ int MPIR_Iscatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
 
 /* Use binomial tree algorithm */
 
-    MPIR_SCHED_CHKPMEM_MALLOC(ss, struct shared_state *, sizeof(struct shared_state), mpi_errno, "shared_state");
+    MPIR_SCHED_CHKPMEM_MALLOC(ss, struct shared_state *, sizeof(struct shared_state), mpi_errno, "shared_state", MPL_MEM_BUFFER);
     ss->sendcount = sendcount;
 
     if (rank == root)
@@ -148,7 +148,7 @@ int MPIR_Iscatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
            receive data of max size (ss->nbytes*comm_size)/2 */
         if (relative_rank && !(relative_rank % 2)) {
             tmp_buf_size = (ss->nbytes*comm_size)/2;
-            MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+            MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
         }
 
         /* if the root is not rank 0, we reorder the sendbuf in order of
@@ -158,7 +158,7 @@ int MPIR_Iscatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
         if (rank == root) {
             if (root != 0) {
                 tmp_buf_size = ss->nbytes*comm_size;
-                MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+                MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
                 if (recvbuf != MPI_IN_PLACE)
                     mpi_errno = MPIR_Sched_copy(((char *) sendbuf + extent*sendcount*rank),
@@ -291,7 +291,7 @@ int MPIR_Iscatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
         if (rank == root) {
             MPIR_Pack_size_impl(sendcount*comm_size, sendtype, &tmp_buf_size);
 
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
           /* calculate the value of nbytes, the number of bytes in packed
              representation that each process receives. We can't
@@ -346,7 +346,7 @@ int MPIR_Iscatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
         }
         else {
             MPIR_Pack_size_impl(recvcount*(comm_size/2), recvtype, &tmp_buf_size);
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
             /* calculate nbytes */
             position = 0;
@@ -490,7 +490,7 @@ int MPIR_Iscatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
                                                  sendcount*remote_size*extent);
 
                 MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, recvcount*local_size*(MPL_MAX(extent,true_extent)),
-                                          mpi_errno, "tmp_buf");
+                                          mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
                 /* adjust for potential negative lower bound in datatype */
                 tmp_buf = (void *)((char*)tmp_buf - true_lb);

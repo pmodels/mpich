@@ -505,13 +505,13 @@ static HYD_status fn_keyval_cache(int fd, char *args[])
                          (sizeof(struct cache_elem) * (num_elems + token_count)), status);
     for (i = 0; i < num_elems; i++) {
         struct cache_elem *elem = cache_get + i;
-        HASH_ADD_STR(hash_get, key, elem);
+        HASH_ADD_STR(hash_get, key, elem, MPL_MEM_PM);
     }
     for (; i < num_elems + token_count; i++) {
         struct cache_elem *elem = cache_get + i;
         elem->key = MPL_strdup(tokens[i - num_elems].key);
         elem->val = MPL_strdup(tokens[i - num_elems].val);
-        HASH_ADD_STR(hash_get, key, elem);
+        HASH_ADD_STR(hash_get, key, elem, MPL_MEM_PM);
     }
     num_elems += token_count;
 

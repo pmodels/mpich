@@ -47,11 +47,11 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
     MPIDI_POSIX_mem_region.num_seg = 1;
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_mem_region.seg, MPIDU_shm_seg_info_t *,
                         MPIDI_POSIX_mem_region.num_seg * sizeof(MPIDU_shm_seg_info_t), mpi_errno,
-                        "mem_region segments");
+                        "mem_region segments", MPL_MEM_SHM);
     MPIR_CHKPMEM_MALLOC(local_procs, int *, size * sizeof(int), mpi_errno,
-                        "local process index array");
+                        "local process index array", MPL_MEM_SHM);
     MPIR_CHKPMEM_MALLOC(local_ranks, int *, size * sizeof(int), mpi_errno,
-                        "mem_region local ranks");
+                        "mem_region local ranks", MPL_MEM_SHM);
 
     for (i = 0; i < size; i++) {
         av = MPIDIU_comm_rank_to_av(MPIR_Process.comm_world, i);
@@ -78,7 +78,7 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
     mpi_errno =
         MPIDU_shm_seg_alloc(MAX
                             ((num_local * ((num_local - 1) * sizeof(MPIDI_POSIX_fastbox_t))),
-                             MPIDI_POSIX_ASYMM_NULL_VAL), (void **) &fastboxes_p);
+                             MPIDI_POSIX_ASYMM_NULL_VAL), (void **) &fastboxes_p, MPL_MEM_SHM);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -86,21 +86,21 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
     /* Request data cells region */
     mpi_errno =
         MPIDU_shm_seg_alloc(num_local * MPIDI_POSIX_NUM_CELLS * sizeof(MPIDI_POSIX_cell_t),
-                            (void **) &cells_p);
+                            (void **) &cells_p, MPL_MEM_SHM);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     /* Request free q region */
     mpi_errno =
-        MPIDU_shm_seg_alloc(num_local * sizeof(MPIDI_POSIX_queue_t), (void **) &free_queues_p);
+        MPIDU_shm_seg_alloc(num_local * sizeof(MPIDI_POSIX_queue_t), (void **) &free_queues_p, MPL_MEM_SHM);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     /* Request recv q region */
     mpi_errno =
-        MPIDU_shm_seg_alloc(num_local * sizeof(MPIDI_POSIX_queue_t), (void **) &recv_queues_p);
+        MPIDU_shm_seg_alloc(num_local * sizeof(MPIDI_POSIX_queue_t), (void **) &recv_queues_p, MPL_MEM_SHM);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -108,7 +108,7 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
     /* Request shared collectives barrier vars region */
     mpi_errno =
         MPIDU_shm_seg_alloc(MPIDI_POSIX_NUM_BARRIER_VARS * sizeof(MPIDI_POSIX_barrier_vars_t),
-                            (void **) &MPIDI_POSIX_mem_region.barrier_vars);
+                            (void **) &MPIDI_POSIX_mem_region.barrier_vars, MPL_MEM_SHM);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -117,7 +117,7 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
     mpi_errno =
         MPIDU_shm_seg_commit(&MPIDI_POSIX_mem_region.memory, &MPIDI_POSIX_mem_region.barrier,
                              num_local, local_rank, MPIDI_POSIX_mem_region.local_procs[0],
-                             MPIDI_POSIX_mem_region.rank);
+                             MPIDI_POSIX_mem_region.rank, MPL_MEM_SHM);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -150,9 +150,9 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
 
     /* Tables of pointers to shared memory Qs */
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_mem_region.FreeQ, MPIDI_POSIX_queue_ptr_t *,
-                        size * sizeof(MPIDI_POSIX_queue_ptr_t), mpi_errno, "FreeQ");
+                        size * sizeof(MPIDI_POSIX_queue_ptr_t), mpi_errno, "FreeQ", MPL_MEM_SHM);
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_mem_region.RecvQ, MPIDI_POSIX_queue_ptr_t *,
-                        size * sizeof(MPIDI_POSIX_queue_ptr_t), mpi_errno, "RecvQ");
+                        size * sizeof(MPIDI_POSIX_queue_ptr_t), mpi_errno, "RecvQ", MPL_MEM_SHM);
 
     /* Init table entry for our Qs */
     MPIDI_POSIX_mem_region.FreeQ[rank] = &free_queues_p[local_rank];
@@ -193,9 +193,9 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
 
     /* Allocate table of pointers to fastboxes */
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_mem_region.mailboxes.in, MPIDI_POSIX_fastbox_t **,
-                        num_local * sizeof(MPIDI_POSIX_fastbox_t *), mpi_errno, "fastboxes");
+                        num_local * sizeof(MPIDI_POSIX_fastbox_t *), mpi_errno, "fastboxes", MPL_MEM_SHM);
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_mem_region.mailboxes.out, MPIDI_POSIX_fastbox_t **,
-                        num_local * sizeof(MPIDI_POSIX_fastbox_t *), mpi_errno, "fastboxes");
+                        num_local * sizeof(MPIDI_POSIX_fastbox_t *), mpi_errno, "fastboxes", MPL_MEM_SHM);
 
     MPIR_Assert(num_local > 0);
 

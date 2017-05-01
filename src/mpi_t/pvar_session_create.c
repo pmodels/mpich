@@ -37,7 +37,7 @@ int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session *session)
 
     *session = MPI_T_PVAR_SESSION_NULL;
 
-    MPIR_CHKPMEM_MALLOC(*session, MPI_T_pvar_session, sizeof(**session), mpi_errno, "performance var session");
+    MPIR_CHKPMEM_MALLOC(*session, MPI_T_pvar_session, sizeof(**session), mpi_errno, "performance var session", MPL_MEM_MPIT);
 
     /* essential for utlist to work */
     (*session)->hlist = NULL;

@@ -214,7 +214,7 @@ int MPIR_Alltoall_intra(
 
         /* allocate temporary buffer */
         MPIR_Pack_size_impl(recvcount*comm_size, recvtype, &pack_size);
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, pack_size, mpi_errno, "tmp_buf");
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, pack_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* Do Phase 1 of the algorithim. Shift the data blocks on process i
          * upwards by a distance of i blocks. Store the result in recvbuf. */
@@ -238,7 +238,7 @@ int MPIR_Alltoall_intra(
         /* allocate displacements array for indexed datatype used in
            communication */
 
-        MPIR_CHKLMEM_MALLOC(displs, int *, comm_size * sizeof(int), mpi_errno, "displs");
+        MPIR_CHKLMEM_MALLOC(displs, int *, comm_size * sizeof(int), mpi_errno, "displs", MPL_MEM_BUFFER);
 
         pof2 = 1;
         while (pof2 < comm_size) {
@@ -291,7 +291,7 @@ int MPIR_Alltoall_intra(
 
         recvbuf_extent = recvcount * comm_size *
             (MPL_MAX(recvtype_true_extent, recvtype_extent));
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf");
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);
 
@@ -335,9 +335,9 @@ int MPIR_Alltoall_intra(
         bblock = MPIR_CVAR_ALLTOALL_THROTTLE;
         if (bblock == 0) bblock = comm_size;
 
-        MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request **, 2*bblock*sizeof(MPIR_Request*), mpi_errno, "reqarray");
+        MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request **, 2*bblock*sizeof(MPIR_Request*), mpi_errno, "reqarray", MPL_MEM_BUFFER);
 
-        MPIR_CHKLMEM_MALLOC(starray, MPI_Status *, 2*bblock*sizeof(MPI_Status), mpi_errno, "starray");
+        MPIR_CHKLMEM_MALLOC(starray, MPI_Status *, 2*bblock*sizeof(MPI_Status), mpi_errno, "starray", MPL_MEM_BUFFER);
 
         for (ii=0; ii<comm_size; ii+=bblock) {
             ss = comm_size-ii < bblock ? comm_size-ii : bblock;

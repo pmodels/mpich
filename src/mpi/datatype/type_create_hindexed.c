@@ -113,7 +113,7 @@ int MPI_Type_create_hindexed(int count,
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 1) * sizeof(int), mpi_errno, "content description");
+    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 1) * sizeof(int), mpi_errno, "content description", MPL_MEM_BUFFER);
 
     ints[0] = count;
 

@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 	}
     }
 
-    pOffset = (double*)MPL_malloc(range * sizeof(double));
+    pOffset = (double*)lPL_malloc(range * sizeof(double), MPL_MEM_DEBUG);
     if (pOffset == NULL)
     {
 	printf("malloc failed\n");

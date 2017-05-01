@@ -75,8 +75,7 @@ int MPIE_ChooseHosts( ProcessWorld *pWorld,
     app = pWorld->apps;
     while (app) {
 	if (!app->pState) {
-            pState = (ProcessState *)MPL_malloc(
-		app->nProcess * sizeof(ProcessState) );
+            pState = (ProcessState *)MPL_malloc( app->nProcess * sizeof(ProcessState), MPL_MEM_PM );
 	    if (!pState) {
 		return -1;
 	    }
@@ -256,7 +255,7 @@ MachineTable *MPIE_ReadMachines( const char *arch, int nNeeded,
 	MPL_error_printf( "Could not open machines file %s\n", machinesfile );
 	return 0;
     }
-    mt = (MachineTable *)MPL_malloc( sizeof(MachineTable) );
+    mt = (MachineTable *)MPL_malloc( sizeof(MachineTable), MPL_MEM_PM );
     if (!mt) {
 	MPL_internal_error_printf( "Could not allocate machine table\n" );
 	return 0;
@@ -264,7 +263,7 @@ MachineTable *MPIE_ReadMachines( const char *arch, int nNeeded,
     
     /* This may be larger than needed if the machines file has
        fewer entries than nNeeded */
-    mt->desc = (MachineDesc *)MPL_malloc( nNeeded * sizeof(MachineDesc) );
+    mt->desc = (MachineDesc *)MPL_malloc( nNeeded * sizeof(MachineDesc), MPL_MEM_PM );
     if (!mt->desc) {
 	return 0;
     }

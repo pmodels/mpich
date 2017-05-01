@@ -202,7 +202,7 @@ static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
             MPIDI_POSIX_REQUEST(rreq)->type = cell->pkt.mpich.type;
 
             if (data_sz > 0) {
-                MPIDI_POSIX_REQUEST(rreq)->user_buf = (char *) MPL_malloc(data_sz);
+                MPIDI_POSIX_REQUEST(rreq)->user_buf = (char *) MPL_malloc(data_sz, MPL_MEM_SHM);
                 MPIR_Memcpy(MPIDI_POSIX_REQUEST(rreq)->user_buf, (void *) cell->pkt.mpich.p.payload,
                             data_sz);
             }

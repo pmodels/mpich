@@ -270,8 +270,8 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(void);
-void MPIDI_OFI_index_allocator_create(void **_indexmap, int start);
-int MPIDI_OFI_index_allocator_alloc(void *_indexmap);
+void MPIDI_OFI_index_allocator_create(void **_indexmap, int start, MPL_memory_class class);
+int MPIDI_OFI_index_allocator_alloc(void *_indexmap, MPL_memory_class class);
 void MPIDI_OFI_index_allocator_free(void *_indexmap, int index);
 void MPIDI_OFI_index_allocator_destroy(void *_indexmap);
 
@@ -285,7 +285,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_alloc_an
     memset((char *) req + MPIDI_REQUEST_HDR_SIZE, 0,
            sizeof(MPIDI_OFI_win_request_t) - MPIDI_REQUEST_HDR_SIZE);
     req->noncontig =
-        (MPIDI_OFI_win_noncontig_t *) MPL_calloc(1, (extra) + sizeof(*(req->noncontig)));
+        (MPIDI_OFI_win_noncontig_t *) MPL_calloc(1, (extra) + sizeof(*(req->noncontig)), MPL_MEM_BUFFER);
     return req;
 }
 
@@ -461,7 +461,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn,
         old_max = MPIDI_Global.conn_mgr.max_n_conn;
         new_max = old_max + 1;
         MPIDI_Global.conn_mgr.free_conn_id =
-            (int *) MPL_realloc(MPIDI_Global.conn_mgr.free_conn_id, new_max * sizeof(int));
+            (int *) MPL_realloc(MPIDI_Global.conn_mgr.free_conn_id, new_max * sizeof(int), MPL_MEM_ADDRESS);
         for (i = old_max; i < new_max - 1; ++i) {
             MPIDI_Global.conn_mgr.free_conn_id[i] = i + 1;
         }

@@ -60,12 +60,12 @@ int MPIDI_CH3I_comm_create(MPIR_Comm *comm, void *param)
         }
 
         /* allocate and init new coll_fns table */
-        MPIR_CHKPMEM_MALLOC(cf, MPIR_Collops *, sizeof(*cf), mpi_errno, "cf");
+        MPIR_CHKPMEM_MALLOC(cf, MPIR_Collops *, sizeof(*cf), mpi_errno, "cf", MPL_MEM_COMM);
         *cf = *comm->coll_fns;
         cf->ref_count = 1;
         cf->Barrier = barrier;
         cf->prev_coll_fns = comm->coll_fns;
-        utarray_push_back(coll_fns_array, &cf);
+        utarray_push_back(coll_fns_array, &cf, MPL_MEM_COMM);
         
         /* replace coll_fns table */
         comm->coll_fns = cf;
@@ -279,7 +279,7 @@ int MPID_nem_coll_init(void)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_COLL_INIT);
 
-    utarray_new(coll_fns_array, &ut_ptr_icd);
+    utarray_new(coll_fns_array, &ut_ptr_icd, MPL_MEM_COMM);
     MPIR_Add_finalize(nem_coll_finalize, NULL, MPIR_FINALIZE_CALLBACK_PRIO-1);
     
  fn_exit:

@@ -1107,7 +1107,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_check_disjoint_lupids(int lupids1[], int n1,
 
     if (mask_size > 128) {
         MPIR_CHKLMEM_MALLOC(lupidmask, uint32_t *, mask_size * sizeof(uint32_t),
-                            mpi_errno, "lupidmask");
+                            mpi_errno, "lupidmask", MPL_MEM_COMM);
     }
     else {
         lupidmask = lupidmaskPrealloc;

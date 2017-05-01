@@ -58,7 +58,7 @@
 /* Returns 0 on success, -1 on error */
 #define MPL_shm_hnd_ref_alloc(hnd)(                               \
     ((hnd)->ghnd = (MPLI_shm_ghnd_t)                               \
-                    MPL_malloc(MPLI_SHM_GHND_SZ)) ? 0 : -1        \
+                    MPL_malloc(MPLI_SHM_GHND_SZ, MPL_MEM_SHM)) ? 0 : -1 \
 )
 
 
@@ -91,10 +91,10 @@
 /* Allocate mem for global handle.
  * Returns 0 on success, -1 on failure 
  */
-static inline int MPLI_shm_ghnd_alloc(MPL_shm_hnd_t hnd)
+static inline int MPLI_shm_ghnd_alloc(MPL_shm_hnd_t hnd, MPL_memory_class class)
 {
     if(!(hnd->ghnd)){
-        hnd->ghnd = (MPLI_shm_ghnd_t)MPL_malloc(MPLI_SHM_GHND_SZ);
+        hnd->ghnd = (MPLI_shm_ghnd_t)MPL_malloc(MPLI_SHM_GHND_SZ, class);
         if(!(hnd->ghnd)){ return -1; }
     }
     /* Global handle is no longer static */
@@ -105,9 +105,9 @@ static inline int MPLI_shm_ghnd_alloc(MPL_shm_hnd_t hnd)
 
 /* Allocate mem for handle. Lazy allocation for global handle */
 /* Returns 0 on success, -1 on error */
-static inline int MPLI_shm_hnd_alloc(MPL_shm_hnd_t *hnd_ptr)
+static inline int MPLI_shm_hnd_alloc(MPL_shm_hnd_t *hnd_ptr, MPL_memory_class class)
 {
-    *hnd_ptr = (MPL_shm_hnd_t) MPL_malloc(MPL_SHM_HND_SZ);
+    *hnd_ptr = (MPL_shm_hnd_t) MPL_malloc(MPL_SHM_HND_SZ, class);
     if(*hnd_ptr){
         (*hnd_ptr)->flag = MPLI_SHM_FLAG_GHND_STATIC;
     }

@@ -81,7 +81,7 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
 
     /* Allocate memory and bzero it */
     MPIR_CHKPMEM_CALLOC(hnd, MPIR_T_pvar_handle_t*, sizeof(*hnd) + extra,
-                        mpi_errno, "performance variable handle");
+                        mpi_errno, "performance variable handle", MPL_MEM_MPIT);
 #ifdef HAVE_ERROR_CHECKING
     hnd->kind = MPIR_T_PVAR_HANDLE;
 #endif

@@ -184,9 +184,9 @@ int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** pg_ptr)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PG_CREATE);
     
-    MPIR_CHKPMEM_MALLOC(pg,MPIDI_PG_t*,sizeof(MPIDI_PG_t),mpi_errno,"pg");
+    MPIR_CHKPMEM_MALLOC(pg,MPIDI_PG_t*,sizeof(MPIDI_PG_t),mpi_errno,"pg", MPL_MEM_GROUP);
     MPIR_CHKPMEM_MALLOC(pg->vct,MPIDI_VC_t *,sizeof(MPIDI_VC_t)*vct_sz,
-			mpi_errno,"pg->vct");
+			mpi_errno,"pg->vct", MPL_MEM_GROUP);
 
     if (verbose) {
 	fprintf( stdout, "Creating a process group of size %d\n", vct_sz );
@@ -740,7 +740,7 @@ static int connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
        needed space */
     len = 0;
     curSlen = 10 + pg->size * 128;
-    string = (char *)MPL_malloc( curSlen );
+    string = (char *)MPL_malloc( curSlen, MPL_MEM_STRINGS );
 
     /* Start with the id of the pg */
     while (*pg_idStr && len < curSlen) 
@@ -784,7 +784,7 @@ static int connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
 	if (len + vallen + 1 >= curSlen) {
 	    char *nstring = 0;
             curSlen += (pg->size - i) * (vallen + 1 );
-	    nstring = MPL_realloc( string, curSlen );
+	    nstring = MPL_realloc( string, curSlen, MPL_MEM_STRINGS );
 	    if (!nstring) {
 		MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 	    }
@@ -830,7 +830,7 @@ int MPIDI_PG_InitConnKVS( MPIDI_PG_t *pg )
 #ifdef USE_PMI2_API
     int mpi_errno = MPI_SUCCESS;
     
-    pg->connData = (char *)MPL_malloc(MAX_JOBID_LEN);
+    pg->connData = (char *)MPL_malloc(MAX_JOBID_LEN, MPL_MEM_STRINGS);
     if (pg->connData == NULL) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
     }
@@ -848,7 +848,7 @@ int MPIDI_PG_InitConnKVS( MPIDI_PG_t *pg )
 			     "**pmi_kvs_get_name_length_max %d", pmi_errno);
     }
     
-    pg->connData = (char *)MPL_malloc(kvs_name_sz + 1);
+    pg->connData = (char *)MPL_malloc(kvs_name_sz + 1, MPL_MEM_STRINGS);
     if (pg->connData == NULL) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
     }
@@ -923,7 +923,7 @@ static int connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
     MPIDI_ConnInfo *connInfo = (MPIDI_ConnInfo *)pg->connData;
 
     /* Create this from the string array */
-    MPIR_CHKPMEM_MALLOC(str, char *, connInfo->toStringLen, mpi_errno, "str");
+    MPIR_CHKPMEM_MALLOC(str, char *, connInfo->toStringLen, mpi_errno, "str", MPL_MEM_STRINGS);
 
 #if defined(MPICH_DEBUG_MEMINIT)
     memset(str, 0, connInfo->toStringLen);
@@ -992,8 +992,8 @@ static int connFromString( const char *buf, MPIDI_PG_t *pg )
     while (*buf) buf++;
     buf++;
 
-    conninfo = (MPIDI_ConnInfo *)MPL_malloc( sizeof(MPIDI_ConnInfo) );
-    conninfo->connStrings = (char **)MPL_malloc( pg->size * sizeof(char *));
+    conninfo = (MPIDI_ConnInfo *)MPL_malloc( sizeof(MPIDI_ConnInfo), MPL_MEM_OTHER );
+    conninfo->connStrings = (char **)MPL_malloc( pg->size * sizeof(char *), MPL_MEM_STRINGS);
 
     /* For now, make a copy of each item */
     for (i=0; i<pg->size; i++) {

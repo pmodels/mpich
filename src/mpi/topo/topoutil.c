@@ -101,7 +101,7 @@ static int *MPIR_Copy_array( int n, const int a[], int *err )
         return NULL;
     }
 
-    new_p = (int *)MPL_malloc( n * sizeof(int) );
+    new_p = (int *)MPL_malloc( n * sizeof(int), MPL_MEM_OTHER );
 
     /* --BEGIN ERROR HANDLING-- */
     if (!new_p) {
@@ -142,7 +142,7 @@ static int MPIR_Topology_copy_fn ( MPI_Comm comm ATTRIBUTE((unused)),
     *flag = 0;
     *(void **)attr_out = NULL;
 
-    MPIR_CHKPMEM_MALLOC(copy_topology, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno, "copy_topology");
+    MPIR_CHKPMEM_MALLOC(copy_topology, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno, "copy_topology", MPL_MEM_OTHER);
 
     MPL_VG_MEM_INIT(copy_topology, sizeof(MPIR_Topology));
 

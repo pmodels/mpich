@@ -303,7 +303,7 @@ static int _mxm_handle_rreq(MPIR_Request * req)
             n_iov = req_area->iov_count;
             iov_buf = req_area->iov_buf;
             if (last && n_iov > 0) {
-                iov = MPL_malloc(n_iov * sizeof(*iov));
+                iov = MPL_malloc(n_iov * sizeof(*iov), MPL_MEM_BUFFER);
                 MPIR_Assert(iov);
 
                 for (index = 0; index < n_iov; index++) {
@@ -460,7 +460,7 @@ static int _mxm_process_rdtype(MPIR_Request ** rreq_p, MPI_Datatype datatype,
     MPIR_Segment_count_contig_blocks(rreq->dev.segment_ptr, rreq->dev.segment_first, &last,
                                      (MPI_Aint *) & n_iov);
     MPIR_Assert(n_iov > 0);
-    iov = MPL_malloc(n_iov * sizeof(*iov));
+    iov = MPL_malloc(n_iov * sizeof(*iov), MPL_MEM_BUFFER);
     MPIR_Assert(iov);
 
     last = rreq->dev.segment_size;
@@ -478,7 +478,7 @@ static int _mxm_process_rdtype(MPIR_Request ** rreq_p, MPI_Datatype datatype,
 
     if (n_iov <= MXM_REQ_DATA_MAX_IOV) {
         if (n_iov > MXM_MPICH_MAX_IOV) {
-            *iov_buf = (mxm_req_buffer_t *) MPL_malloc(n_iov * sizeof(**iov_buf));
+            *iov_buf = (mxm_req_buffer_t *) MPL_malloc(n_iov * sizeof(**iov_buf), MPL_MEM_BUFFER);
             MPIR_Assert(*iov_buf);
         }
 
@@ -493,7 +493,7 @@ static int _mxm_process_rdtype(MPIR_Request ** rreq_p, MPI_Datatype datatype,
     else {
         MPI_Aint packsize = 0;
         MPIR_Pack_size_impl(rreq->dev.user_count, rreq->dev.datatype, &packsize);
-        rreq->dev.tmpbuf = MPL_malloc((size_t) packsize);
+        rreq->dev.tmpbuf = MPL_malloc((size_t) packsize, MPL_MEM_BUFFER);
         MPIR_Assert(rreq->dev.tmpbuf);
         rreq->dev.tmpbuf_sz = packsize;
         (*iov_buf)[0].ptr = rreq->dev.tmpbuf;

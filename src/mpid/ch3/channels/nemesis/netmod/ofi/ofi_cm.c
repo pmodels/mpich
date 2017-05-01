@@ -117,10 +117,10 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPIR_Re
                    GET_RCD_IGNORE_MASK(),
                    (void *) &(REQ_OFI(gl_data.conn_req)->ofi_context)), trecv);
 
-    addr = MPL_malloc(gl_data.bound_addrlen);
+    addr = MPL_malloc(gl_data.bound_addrlen, MPL_MEM_ADDRESS);
     MPIR_Assertp(addr);
 
-    vc = MPL_malloc(sizeof(MPIDI_VC_t));
+    vc = MPL_malloc(sizeof(MPIDI_VC_t), MPL_MEM_ADDRESS);
     MPIR_Assertp(vc);
 
     MPIDI_VC_Init(vc, NULL, 0);
@@ -216,7 +216,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPIR_R
     VC_READY_CHECK(vc);
 
     pkt_len = REQ_OFI(rreq)->msg_bytes;
-    pack_buffer = (char *) MPL_malloc(pkt_len);
+    pack_buffer = (char *) MPL_malloc(pkt_len, MPL_MEM_BUFFER);
     /* If the pack buffer is NULL, let OFI handle the truncation
      * in the progress loop
      */
@@ -337,7 +337,7 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
     /* Post recv for connection requests */
     /* --------------------------------- */
     MPID_nem_ofi_create_req(&conn_req, 1);
-    conn_req->dev.user_buf = MPL_malloc(OFI_KVSAPPSTRLEN * sizeof(char));
+    conn_req->dev.user_buf = MPL_malloc(OFI_KVSAPPSTRLEN * sizeof(char), MPL_MEM_BUFFER);
     conn_req->dev.OnDataAvail = NULL;
     conn_req->dev.next = NULL;
     REQ_OFI(conn_req)->vc = NULL;       /* We don't know the source yet */
@@ -400,7 +400,7 @@ int MPID_nem_ofi_vc_connect(MPIDI_VC_t * vc)
     char bc[OFI_KVSAPPSTRLEN], *addr = NULL;
 
     BEGIN_FUNC(FCNAME);
-    addr = MPL_malloc(gl_data.bound_addrlen);
+    addr = MPL_malloc(gl_data.bound_addrlen, MPL_MEM_ADDRESS);
     MPIR_Assert(addr);
     MPIR_Assert(1 != VC_OFI(vc)->ready);
 
@@ -528,8 +528,8 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     uint64_t conn_req_send_bits;
 
     BEGIN_FUNC(FCNAME);
-    addr = MPL_malloc(gl_data.bound_addrlen);
-    bc = MPL_malloc(OFI_KVSAPPSTRLEN);
+    addr = MPL_malloc(gl_data.bound_addrlen, MPL_MEM_ADDRESS);
+    bc = MPL_malloc(OFI_KVSAPPSTRLEN, MPL_MEM_ADDRESS);
     MPIR_Assertp(addr);
     MPIR_Assertp(bc);
     my_bc = bc;

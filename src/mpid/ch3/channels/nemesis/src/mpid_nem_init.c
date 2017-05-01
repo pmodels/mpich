@@ -80,7 +80,7 @@ static int MPID_nem_init_stats(int n_local_ranks)
     int mpi_errno = MPI_SUCCESS;
 
     if (ENABLE_PVAR_NEM) {
-        MPID_nem_fbox_fall_back_to_queue_count = MPL_calloc(n_local_ranks, sizeof(unsigned long long));
+        MPID_nem_fbox_fall_back_to_queue_count = MPL_calloc(n_local_ranks, sizeof(unsigned long long), MPL_MEM_MPIT);
     }
 
     MPIR_T_PVAR_COUNTER_REGISTER_DYNAMIC(
@@ -163,20 +163,20 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 #ifdef MEM_REGION_IN_HEAP
-    MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region_ptr, MPID_nem_mem_region_t *, sizeof(MPID_nem_mem_region_t), mpi_errno, "mem_region");
+    MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region_ptr, MPID_nem_mem_region_t *, sizeof(MPID_nem_mem_region_t), mpi_errno, "mem_region", MPL_MEM_SHM);
 #endif /* MEM_REGION_IN_HEAP */
 
     MPID_nem_mem_region.num_seg        = 7;
-    MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region.seg, MPIDU_shm_seg_info_t *, MPID_nem_mem_region.num_seg * sizeof(MPIDU_shm_seg_info_t), mpi_errno, "mem_region segments");
+    MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region.seg, MPIDU_shm_seg_info_t *, MPID_nem_mem_region.num_seg * sizeof(MPIDU_shm_seg_info_t), mpi_errno, "mem_region segments", MPL_MEM_SHM);
     MPID_nem_mem_region.rank           = pg_rank;
     MPID_nem_mem_region.num_local      = num_local;
     MPID_nem_mem_region.num_procs      = num_procs;
     MPID_nem_mem_region.local_procs    = local_procs;
     MPID_nem_mem_region.local_rank     = local_rank;
-    MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region.local_ranks, int *, num_procs * sizeof(int), mpi_errno, "mem_region local ranks");
+    MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region.local_ranks, int *, num_procs * sizeof(int), mpi_errno, "mem_region local ranks", MPL_MEM_SHM);
     MPID_nem_mem_region.ext_procs      = num_procs - num_local ;
     if (MPID_nem_mem_region.ext_procs > 0)
-        MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region.ext_ranks, int *, MPID_nem_mem_region.ext_procs * sizeof(int), mpi_errno, "mem_region ext ranks");
+        MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region.ext_ranks, int *, MPID_nem_mem_region.ext_procs * sizeof(int), mpi_errno, "mem_region ext ranks", MPL_MEM_SHM);
     MPID_nem_mem_region.next           = NULL;
 
     for (idx = 0 ; idx < num_procs; idx++)
@@ -239,30 +239,30 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 
     /* Request fastboxes region */
     mpi_errno = MPIDU_shm_seg_alloc(MPL_MAX((num_local*((num_local-1)*sizeof(MPID_nem_fastbox_t))), MPID_NEM_ASYMM_NULL_VAL),
-                                     (void **)&fastboxes_p);
+                                     (void **)&fastboxes_p, MPL_MEM_SHM);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     /* Request data cells region */
-    mpi_errno = MPIDU_shm_seg_alloc(num_local * MPID_NEM_NUM_CELLS * sizeof(MPID_nem_cell_t), (void **)&cells_p);
+    mpi_errno = MPIDU_shm_seg_alloc(num_local * MPID_NEM_NUM_CELLS * sizeof(MPID_nem_cell_t), (void **)&cells_p, MPL_MEM_SHM);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Request free q region */
-    mpi_errno = MPIDU_shm_seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&free_queues_p);
+    mpi_errno = MPIDU_shm_seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&free_queues_p, MPL_MEM_SHM);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Request recv q region */
-    mpi_errno = MPIDU_shm_seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&recv_queues_p);
+    mpi_errno = MPIDU_shm_seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&recv_queues_p, MPL_MEM_SHM);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Request shared collectives barrier vars region */
     mpi_errno = MPIDU_shm_seg_alloc(MPID_NEM_NUM_BARRIER_VARS * sizeof(MPID_nem_barrier_vars_t),
-                                     (void **)&MPID_nem_mem_region.barrier_vars);
+                                     (void **)&MPID_nem_mem_region.barrier_vars, MPL_MEM_SHM);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Actually allocate the segment and assign regions to the pointers */
     mpi_errno = MPIDU_shm_seg_commit(&MPID_nem_mem_region.memory, &MPID_nem_mem_region.barrier,
                                  num_local, local_rank, MPID_nem_mem_region.local_procs[0],
-                                 MPID_nem_mem_region.rank);
+                                 MPID_nem_mem_region.rank, MPL_MEM_SHM);
     /* check_alloc steps */
     if (MPID_nem_mem_region.memory.symmetrical == 1) {
         MPID_nem_asymm_base_addr = NULL;
@@ -287,8 +287,8 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPID_nem_mem_region.Elements = cells_p[local_rank];
 
     /* Tables of pointers to shared memory Qs */
-    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.FreeQ, MPID_nem_queue_ptr_t *, num_procs * sizeof(MPID_nem_queue_ptr_t), mpi_errno, "FreeQ");
-    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.RecvQ, MPID_nem_queue_ptr_t *, num_procs * sizeof(MPID_nem_queue_ptr_t), mpi_errno, "RecvQ");
+    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.FreeQ, MPID_nem_queue_ptr_t *, num_procs * sizeof(MPID_nem_queue_ptr_t), mpi_errno, "FreeQ", MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.RecvQ, MPID_nem_queue_ptr_t *, num_procs * sizeof(MPID_nem_queue_ptr_t), mpi_errno, "RecvQ", MPL_MEM_SHM);
 
     /* Init table entry for our Qs */
     MPID_nem_mem_region.FreeQ[pg_rank] = &free_queues_p[local_rank];
@@ -360,8 +360,8 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 
     
     /* Allocate table of pointers to fastboxes */
-    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.mailboxes.in,  MPID_nem_fastbox_t **, num_local * sizeof(MPID_nem_fastbox_t *), mpi_errno, "fastboxes");
-    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.mailboxes.out, MPID_nem_fastbox_t **, num_local * sizeof(MPID_nem_fastbox_t *), mpi_errno, "fastboxes");
+    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.mailboxes.in,  MPID_nem_fastbox_t **, num_local * sizeof(MPID_nem_fastbox_t *), mpi_errno, "fastboxes", MPL_MEM_SHM);
+    MPIR_CHKPMEM_MALLOC(MPID_nem_mem_region.mailboxes.out, MPID_nem_fastbox_t **, num_local * sizeof(MPID_nem_fastbox_t *), mpi_errno, "fastboxes", MPL_MEM_SHM);
 
     MPIR_Assert(num_local > 0);
 
@@ -461,7 +461,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
     vc_ch->ckpt_restart_vc    = NULL;
 #endif
     vc_ch->pending_pkt_len    = 0;
-    MPIR_CHKPMEM_MALLOC (vc_ch->pending_pkt, MPIDI_CH3_Pkt_t *, sizeof (MPIDI_CH3_Pkt_t), mpi_errno, "pending_pkt");
+    MPIR_CHKPMEM_MALLOC (vc_ch->pending_pkt, MPIDI_CH3_Pkt_t *, sizeof (MPIDI_CH3_Pkt_t), mpi_errno, "pending_pkt", MPL_MEM_BUFFER);
 
     /* We do different things for vcs in the COMM_WORLD pg vs other pgs
        COMM_WORLD vcs may use shared memory, and already have queues allocated
@@ -683,7 +683,7 @@ static int get_local_procs(MPIDI_PG_t *pg, int our_pg_rank, int *num_local_p,
     MPIR_Assert(our_pg_rank < pg->size);
     our_node_id = pg->vct[our_pg_rank].node_id;
 
-    MPIR_CHKPMEM_MALLOC(procs, int *, pg->size * sizeof(int), mpi_errno, "local process index array");
+    MPIR_CHKPMEM_MALLOC(procs, int *, pg->size * sizeof(int), mpi_errno, "local process index array", MPL_MEM_ADDRESS);
 
     for (i = 0; i < pg->size; ++i) {
         if (our_node_id == pg->vct[i].node_id) {

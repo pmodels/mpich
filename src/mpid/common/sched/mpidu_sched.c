@@ -401,7 +401,7 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp)
 
     /* this mem will be freed by the progress engine when the request is completed */
     MPIR_CHKPMEM_MALLOC(s, struct MPIDU_Sched *, sizeof(struct MPIDU_Sched), mpi_errno,
-                        "schedule object");
+                        "schedule object", MPL_MEM_COMM);
 
     s->size = MPIDU_SCHED_INITIAL_ENTRIES;
     s->idx = 0;
@@ -415,7 +415,7 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp)
     /* this mem will be freed by the progress engine when the request is completed */
     MPIR_CHKPMEM_MALLOC(s->entries, struct MPIDU_Sched_entry *,
                         MPIDU_SCHED_INITIAL_ENTRIES * sizeof(struct MPIDU_Sched_entry), mpi_errno,
-                        "schedule entries vector");
+                        "schedule entries vector", MPL_MEM_COMM);
 
     /* TODO in a debug build, defensively mark all entries as status=INVALID */
 
@@ -533,7 +533,7 @@ static int MPIDU_Sched_add_entry(struct MPIDU_Sched *s, int *idx, struct MPIDU_S
 
     if (s->num_entries == s->size) {
         /* need to grow the entries array */
-        s->entries = MPL_realloc(s->entries, 2 * s->size * sizeof(struct MPIDU_Sched_entry));
+        s->entries = MPL_realloc(s->entries, 2 * s->size * sizeof(struct MPIDU_Sched_entry), MPL_MEM_COMM);
         if (s->entries == NULL)
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
         s->size *= 2;

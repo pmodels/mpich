@@ -93,7 +93,7 @@ int MPIR_Iallgather_rec_dbl(const void *sendbuf, int sendcount, MPI_Datatype sen
         MPIR_SCHED_BARRIER(s);
     }
 
-    MPIR_SCHED_CHKPMEM_MALLOC(ss, struct shared_state *, sizeof(struct shared_state), mpi_errno, "ss");
+    MPIR_SCHED_CHKPMEM_MALLOC(ss, struct shared_state *, sizeof(struct shared_state), mpi_errno, "ss", MPL_MEM_BUFFER);
     ss->curr_count = recvcount;
     ss->recvtype = recvtype;
     /* ensure that recvtype doesn't disappear immediately after last _recv but before _cb */
@@ -260,7 +260,7 @@ int MPIR_Iallgather_bruck(const void *sendbuf, int sendcount, MPI_Datatype sendt
 
     recvbuf_extent = recvcount * comm_size * (MPL_MAX(recvtype_true_extent, recvtype_extent));
 
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void*, recvbuf_extent, mpi_errno, "tmp_buf");
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void*, recvbuf_extent, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);
@@ -514,7 +514,7 @@ int MPIR_Iallgather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendt
         extent = MPL_MAX(send_extent, true_extent);
 
         MPIR_Ensure_Aint_fits_in_pointer(extent * sendcount * local_size);
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void*, extent*sendcount*local_size, mpi_errno, "tmp_buf");
+        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void*, extent*sendcount*local_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - true_lb);

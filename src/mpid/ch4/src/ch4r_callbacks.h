@@ -247,7 +247,7 @@ static inline int MPIDI_do_send_target(void **data,
         n_iov = (int) num_iov;
         MPIR_Assert(n_iov > 0);
         MPIDI_CH4U_REQUEST(rreq, req->iov) =
-            (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec));
+            (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
         MPIR_Assert(MPIDI_CH4U_REQUEST(rreq, req->iov));
 
         last = *p_data_sz;
@@ -396,7 +396,7 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
         rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV, 2);
         MPIDI_CH4U_REQUEST(rreq, datatype) = MPI_BYTE;
         if (p_data_sz) {
-            MPIDI_CH4U_REQUEST(rreq, buffer) = (char *) MPL_malloc(*p_data_sz);
+            MPIDI_CH4U_REQUEST(rreq, buffer) = (char *) MPL_malloc(*p_data_sz, MPL_MEM_BUFFER);
             MPIDI_CH4U_REQUEST(rreq, count) = *p_data_sz;
         }
         else {

@@ -102,7 +102,7 @@ int MPIDI_GetIPInterface( MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found )
 	struct ifconf			ifconf;
 	int				rc;
 
-	buf_ptr = (char *) MPL_malloc(buf_len);
+	buf_ptr = (char *) MPL_malloc(buf_len, MPL_MEM_BUFFER);
 	if (buf_ptr == NULL) {
 	    MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d", buf_len);
 	}

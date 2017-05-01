@@ -89,7 +89,7 @@ int MPIDI_CH3I_Comm_init(void)
             char *envstr;
             int size = strlen("HCOLL_BCOL=") + strlen(MPID_CH3I_CH_HCOLL_BCOL) + 1;
 
-            MPIR_CHKLMEM_MALLOC(envstr, char *, size, mpi_errno, "**malloc");
+            MPIR_CHKLMEM_MALLOC(envstr, char *, size, mpi_errno, "**malloc", MPL_MEM_COMM);
             MPL_snprintf(envstr, size, "HCOLL_BCOL=%s", MPID_CH3I_CH_HCOLL_BCOL);
 
             r = MPL_putenv(envstr);
@@ -358,7 +358,7 @@ int MPIDI_CH3U_Comm_register_create_hook(int (*hook_fn)(struct MPIR_Comm *, void
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_CREATE_HOOK);
 
-    MPIR_CHKPMEM_MALLOC(elt, hook_elt *, sizeof(hook_elt), mpi_errno, "hook_elt");
+    MPIR_CHKPMEM_MALLOC(elt, hook_elt *, sizeof(hook_elt), mpi_errno, "hook_elt", MPL_MEM_OTHER);
 
     elt->hook_fn = hook_fn;
     elt->param = param;
@@ -387,7 +387,7 @@ int MPIDI_CH3U_Comm_register_destroy_hook(int (*hook_fn)(struct MPIR_Comm *, voi
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_DESTROY_HOOK);
 
-    MPIR_CHKPMEM_MALLOC(elt, hook_elt *, sizeof(hook_elt), mpi_errno, "hook_elt");
+    MPIR_CHKPMEM_MALLOC(elt, hook_elt *, sizeof(hook_elt), mpi_errno, "hook_elt", MPL_MEM_OTHER);
 
     elt->hook_fn = hook_fn;
     elt->param = param;

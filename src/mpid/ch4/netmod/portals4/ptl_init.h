@@ -125,11 +125,11 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     ret = PMI_KVS_Get_key_length_max(&key_max_sz);
     ret = PMI_KVS_Get_value_length_max(&val_max_sz);
     ret = PMI_KVS_Get_name_length_max(&name_max_sz);
-    MPIDI_PTL_global.kvsname = MPL_malloc(name_max_sz);
+    MPIDI_PTL_global.kvsname = MPL_malloc(name_max_sz, MPL_MEM_ADDRESS);
     ret = PMI_KVS_Get_my_name(MPIDI_PTL_global.kvsname, name_max_sz);
 
-    keyS = MPL_malloc(key_max_sz);
-    valS = MPL_malloc(val_max_sz);
+    keyS = MPL_malloc(key_max_sz, MPL_MEM_ADDRESS);
+    valS = MPL_malloc(val_max_sz, MPL_MEM_ADDRES);
     buscard = valS;
     val_sz_left = val_max_sz;
 
@@ -151,7 +151,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     ret = PMI_Barrier();
 
     /* get and store business cards in address table */
-    MPIDI_PTL_global.addr_table = MPL_malloc(size * sizeof(MPIDI_PTL_addr_t));
+    MPIDI_PTL_global.addr_table = MPL_malloc(size * sizeof(MPIDI_PTL_addr_t), MPL_MEM_ADDRESS);
     for (i = 0; i < size; i++) {
         MPL_snprintf(keyS, key_max_sz*sizeof(char), "PTL-%d", i);
         ret = PMI_KVS_Get(MPIDI_PTL_global.kvsname, keyS, valS, val_max_sz);
@@ -168,11 +168,11 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* Setup CH4R Active Messages */
     MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
     for (i = 0; i < MPIDI_PTL_NUM_OVERFLOW_BUFFERS; i++) {
-        MPIDI_PTL_global.overflow_bufs[i] = MPL_malloc(MPIDI_PTL_OVERFLOW_BUFFER_SZ);
+        MPIDI_PTL_global.overflow_bufs[i] = MPL_malloc(MPIDI_PTL_OVERFLOW_BUFFER_SZ, MPL_MEM_BUFFER);
         MPIDI_PTL_append_overflow(i);
     }
 
-    MPIDI_PTL_global.node_map = MPL_malloc(size * sizeof(*MPIDI_PTL_global.node_map));
+    MPIDI_PTL_global.node_map = MPL_malloc(size * sizeof(*MPIDI_PTL_global.node_map), MPL_MEM_ADDRESS);
     mpi_errno =
         MPIDI_CH4U_build_nodemap(rank, comm_world, size, MPIDI_PTL_global.node_map,
                                  &MPIDI_PTL_global.max_node_id);
@@ -254,9 +254,9 @@ static inline int MPIDI_NM_mpi_free_mem(void *ptr)
     return MPIDI_CH4U_mpi_free_mem(ptr);
 }
 
-static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr, MPL_memory_class class)
 {
-    return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr);
+    return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr, class);
 }
 
 

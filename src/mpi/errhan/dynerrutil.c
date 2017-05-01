@@ -139,7 +139,7 @@ int MPIR_Err_set_msg( int code, const char *msg_string )
 
     /* --------------------------------------------------------------------- */
     msg_len = strlen( msg_string );
-    str = (char *)MPL_malloc( msg_len + 1 );
+    str = (char *)MPL_malloc( msg_len + 1, MPL_MEM_BUFFER );
     /* --BEGIN ERROR HANDLING-- */
     if (!str) {
 	return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE,

@@ -117,9 +117,9 @@ int MPIR_Sched_cb_free_buf(MPIR_Comm *comm, int tag, void *state);
     int mpir_sched_chkpmem_stk_sp_=0;                             \
     MPIR_AssertDeclValue(const int mpir_sched_chkpmem_stk_sz_,n_)
 
-#define MPIR_SCHED_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_)  \
+#define MPIR_SCHED_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,stmt_)  \
     do {                                                                          \
-        (pointer_) = (type_)MPL_malloc(nbytes_);                                 \
+        (pointer_) = (type_)MPL_malloc(nbytes_,class_);                           \
         if (pointer_) {                                                           \
             MPIR_Assert(mpir_sched_chkpmem_stk_sp_ < mpir_sched_chkpmem_stk_sz_); \
             mpir_sched_chkpmem_stk_[mpir_sched_chkpmem_stk_sp_++] = (pointer_);   \
@@ -129,8 +129,8 @@ int MPIR_Sched_cb_free_buf(MPIR_Comm *comm, int tag, void *state);
         }                                                                         \
     } while (0)
 
-#define MPIR_SCHED_CHKPMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_) \
-    MPIR_SCHED_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,goto fn_fail)
+#define MPIR_SCHED_CHKPMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_,class_) \
+    MPIR_SCHED_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,goto fn_fail)
 
 /* just cleanup, don't add anything to the schedule */
 #define MPIR_SCHED_CHKPMEM_REAP(sched_)                                       \
