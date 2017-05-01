@@ -178,7 +178,7 @@ int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
         req->status.MPI_TAG = probe.tag & 0xffffffff;
         req->dev.recv_data_sz = probe.len;
         MPIR_STATUS_SET_COUNT(req->status, req->dev.recv_data_sz);
-        req->dev.tmpbuf = MPL_malloc(req->dev.recv_data_sz);
+        req->dev.tmpbuf = MPL_malloc(req->dev.recv_data_sz, MPL_MEM_BUFFER);
         MPIR_Assert(req->dev.tmpbuf);
 
         /* receive message in req->dev.tmpbuf */

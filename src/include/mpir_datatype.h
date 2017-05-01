@@ -559,7 +559,7 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype *new_dtp,
 
     contents_size = struct_sz + types_sz + ints_sz + aints_sz;
 
-    cp = (MPIR_Datatype_contents *) MPL_malloc(contents_size);
+    cp = (MPIR_Datatype_contents *) MPL_malloc(contents_size, MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
     if (cp == NULL) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,

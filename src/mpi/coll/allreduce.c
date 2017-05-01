@@ -363,7 +363,7 @@ int MPIR_Allreduce_inter (
          * inside the for loop */
         /* Should MPIR_CHKLMEM_MALLOC do this? */
         MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - true_lb);
     }
@@ -455,7 +455,7 @@ int MPIR_Allreduce_recursive_doubling(
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
     MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
+    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
 
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -635,7 +635,7 @@ int MPIR_Allreduce_reduce_scatter_allgather(
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
     MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
+    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
 
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -712,8 +712,8 @@ int MPIR_Allreduce_reduce_scatter_allgather(
        using recursive doubling in that case.) */
 
     if (newrank != -1) {
-      MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts");
-      MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements");
+      MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts", MPL_MEM_BUFFER);
+      MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements", MPL_MEM_BUFFER);
 
       for (i=0; i<pof2; i++)
           cnts[i] = count/pof2;

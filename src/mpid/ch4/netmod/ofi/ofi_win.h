@@ -72,7 +72,7 @@ static inline int MPIDI_OFI_win_allgather(MPIR_Win * win, void *base, int disp_u
                              &MPIDI_OFI_WIN(win).mr,    /* Out: memregion object    */
                              NULL), mr_reg);    /* In:  context             */
 
-    MPIDI_OFI_WIN(win).winfo = MPL_malloc(sizeof(*winfo) * comm_ptr->local_size);
+    MPIDI_OFI_WIN(win).winfo = MPL_malloc(sizeof(*winfo) * comm_ptr->local_size, MPL_MEM_RMA);
 
     winfo = MPIDI_OFI_WIN(win).winfo;
     winfo[comm_ptr->rank].disp_unit = disp_unit;
@@ -146,9 +146,9 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
 
     /* context id lower bits, window instance upper bits */
     window_instance =
-        MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator);
+        MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator, MPL_MEM_RMA);
     MPIDI_OFI_WIN(win).win_id = ((uint64_t) comm_ptr->context_id) | (window_instance << 32);
-    MPIDI_CH4U_map_set(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id, win);
+    MPIDI_CH4U_map_set(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id, win, MPL_MEM_RMA);
 
     if (MPIDI_OFI_ENABLE_STX_RMA && MPIDI_Global.stx_ctx != NULL) {
         /* Activate per-window EP/counter */
@@ -609,7 +609,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
     win = *win_ptr;
     MPIDI_CH4U_WIN(win, shared_table) =
         (MPIDI_CH4U_win_shared_info_t *) MPL_malloc(sizeof(MPIDI_CH4U_win_shared_info_t) *
-                                                    comm_ptr->local_size);
+                                                    comm_ptr->local_size, MPL_MEM_RMA);
     shared_table = MPIDI_CH4U_WIN(win, shared_table);
 
     shared_table[comm_ptr->rank].size = size;
@@ -648,10 +648,10 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    shm_key = (char *) MPL_malloc(sizeof(char));
+    shm_key = (char *) MPL_malloc(sizeof(char), MPL_MEM_SHM);
     shm_key_size = snprintf(shm_key, 1, "/mpi-%s-%X-%" PRIx64,
                             MPIDI_CH4_Global.jobid, root_rank, MPIDI_OFI_WIN(win).win_id);
-    shm_key = (char *) MPL_realloc(shm_key, shm_key_size);
+    shm_key = (char *) MPL_realloc(shm_key, shm_key_size, MPL_MEM_SHM);
     MPIR_Assert(shm_key);
     snprintf(shm_key, shm_key_size, "/mpi-%s-%X-%" PRIx64,
              MPIDI_CH4_Global.jobid, root_rank, MPIDI_OFI_WIN(win).win_id);
@@ -739,7 +739,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
             goto fn_fail;
 
         if (anyfail && map_ptr != NULL && map_ptr != MAP_FAILED)
-            MPL_munmap(map_ptr, mapsize);
+            MPL_munmap(map_ptr, mapsize, MPL_MEM_RMA);
     }
 
     if (anyfail) {      /* Still fails after retry, report error. */

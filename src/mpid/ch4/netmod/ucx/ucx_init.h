@@ -105,7 +105,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     val_max_sz = val_max_sz - key_max_sz - 100;
 
 
-    MPIR_CHKLMEM_MALLOC(valS, char *, val_max_sz, mpi_errno, "valS");
+    MPIR_CHKLMEM_MALLOC(valS, char *, val_max_sz, mpi_errno, "valS", MPL_MEM_BUFFER);
 /* In UCX we have the problem that the key size (as a string) van be larger than val_max_sz.
  * We create a string from the key - but we don't know the size that this string will have
  * So we guess the size - based on the worker address size. The decoding uses the hex-representation
@@ -113,9 +113,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
  */
 
     max_string = MPIDI_UCX_global.addrname_len * 2 + 128;
-    MPIR_CHKLMEM_MALLOC(keyS, char *, key_max_sz, mpi_errno, "keyS");
-    MPIR_CHKLMEM_MALLOC(string_addr, char *, max_string, mpi_errno, "string_addr");
-    MPIR_CHKLMEM_MALLOC(remote_addr, char *, max_string, mpi_errno, "remote_addr");
+    MPIR_CHKLMEM_MALLOC(keyS, char *, key_max_sz, mpi_errno, "keyS", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(string_addr, char *, max_string, mpi_errno, "string_addr", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(remote_addr, char *, max_string, mpi_errno, "remote_addr", MPL_MEM_BUFFER);
 
     maxlen = max_string;
     val = string_addr;
@@ -249,7 +249,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     ucs_status_ptr_t* pending;
 
     comm = MPIR_Process.comm_world;
-    pending = MPL_malloc(sizeof(ucs_status_ptr_t) * comm->local_size);
+    pending = MPL_malloc(sizeof(ucs_status_ptr_t) * comm->local_size, MPL_MEM_OTHER);
 
     for (i = 0;  i< comm->local_size; i++) {
         ucp_request = ucp_disconnect_nb(MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
@@ -362,13 +362,13 @@ static inline int MPIDI_NMI_allocate_address_table()
     val_max_sz = val_max_sz - 100 - key_max_sz; /*see comment at init */
 
     max_string = len * 2 + 128;
-    MPIR_CHKLMEM_MALLOC(valS, char *, val_max_sz, mpi_errno, "valS");
-    MPIR_CHKLMEM_MALLOC(keyS, char *, key_max_sz, mpi_errno, "keyS");
-    MPIR_CHKLMEM_MALLOC(string_addr, char *, max_string, mpi_errno, "string_addr");
+    MPIR_CHKLMEM_MALLOC(valS, char *, val_max_sz, mpi_errno, "valS", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(keyS, char *, key_max_sz, mpi_errno, "keyS", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(string_addr, char *, max_string, mpi_errno, "string_addr", MPL_MEM_BUFFER);
     val = valS;
 
     size = MPIR_Process.comm_world->local_size;
-    MPIDI_UCX_global.pmi_addr_table = MPL_malloc(size * len);
+    MPIDI_UCX_global.pmi_addr_table = MPL_malloc(size * len, MPL_MEM_ADDRESS);
     memset(MPIDI_UCX_global.pmi_addr_table, 0x0, len * size);
 
     for (i = 0; i < size; i++) {
@@ -421,8 +421,8 @@ static inline int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upi
     char valS[MPIDI_UCX_KVSAPPSTRLEN];
     int len = MPIDI_UCX_global.max_addr_len;
 
-    *local_upid_size = (size_t *) MPL_malloc(comm->local_size * sizeof(size_t));
-    temp_buf = (char *) MPL_malloc(comm->local_size * len);
+    *local_upid_size = (size_t *) MPL_malloc(comm->local_size * sizeof(size_t), MPL_MEM_ADDRESS);
+    temp_buf = (char *) MPL_malloc(comm->local_size * len, MPL_MEM_OTHER);
 
     for (i = 0; i < comm->local_size; i++) {
         MPL_snprintf(keyS, MPIDI_UCX_KVSAPPSTRLEN*sizeof(char), "UCX-%d", i);
@@ -433,7 +433,7 @@ static inline int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upi
         total_size += (*local_upid_size)[i];
     }
 
-    *local_upids = (char *) MPL_malloc(total_size * sizeof(char));
+    *local_upids = (char *) MPL_malloc(total_size * sizeof(char), MPL_MEM_ADDRESS);
     curr_ptr = (*local_upids);
     for (i = 0; i < comm->local_size; i++) {
         memcpy(curr_ptr, &temp_buf[i * len], (*local_upid_size)[i]);
@@ -459,8 +459,8 @@ static inline int MPIDI_NM_upids_to_lupids(int size,
     int n_new_procs = 0;
     int max_n_avts;
     char *curr_upid;
-    new_avt_procs = (int *) MPL_malloc(size * sizeof(int));
-    new_upids = (char **) MPL_malloc(size * sizeof(char *));
+    new_avt_procs = (int *) MPL_malloc(size * sizeof(int), MPL_MEM_ADDRESS);
+    new_upids = (char **) MPL_malloc(size * sizeof(char *), MPL_MEM_ADDRESS);
     max_n_avts = MPIDIU_get_max_n_avts();
     if (MPIDI_UCX_global.pmi_addr_table == NULL) {
         MPIDI_NMI_allocate_address_table();
@@ -519,9 +519,9 @@ static inline int MPIDI_NM_mpi_free_mem(void *ptr)
     return MPIDI_CH4U_mpi_free_mem(ptr);
 }
 
-static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr, MPL_memory_class class)
 {
-    return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr);
+    return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr, class);
 }
 
 #endif /* UCX_INIT_H_INCLUDED */

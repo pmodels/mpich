@@ -86,15 +86,15 @@ int MPIR_Graph_create( MPIR_Comm *comm_ptr, int nnodes,
 
     nedges = indx[nnodes-1];
     MPIR_CHKPMEM_MALLOC(graph_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
-			mpi_errno,"graph_ptr");
+			mpi_errno,"graph_ptr", MPL_MEM_COMM);
     
     graph_ptr->kind = MPI_GRAPH;
     graph_ptr->topo.graph.nnodes = nnodes;
     graph_ptr->topo.graph.nedges = nedges;
     MPIR_CHKPMEM_MALLOC(graph_ptr->topo.graph.index,int*,
-			nnodes*sizeof(int),mpi_errno,"graph.index");
+			nnodes*sizeof(int),mpi_errno,"graph.index", MPL_MEM_COMM);
     MPIR_CHKPMEM_MALLOC(graph_ptr->topo.graph.edges,int*,
-			nedges*sizeof(int),mpi_errno,"graph.edges");
+			nedges*sizeof(int),mpi_errno,"graph.edges", MPL_MEM_COMM);
     for (i=0; i<nnodes; i++) 
 	graph_ptr->topo.graph.index[i] = indx[i];
     for (i=0; i<nedges; i++) 

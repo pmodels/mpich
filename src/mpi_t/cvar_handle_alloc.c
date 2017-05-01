@@ -41,7 +41,7 @@ int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_h
     cvar_table_entry_t *cvar = (cvar_table_entry_t *) utarray_eltptr(cvar_table, cvar_index);
 
     /* Allocate handle memory */
-    MPIR_CHKPMEM_MALLOC(hnd, MPIR_T_cvar_handle_t*, sizeof(*hnd), mpi_errno, "control variable handle");
+    MPIR_CHKPMEM_MALLOC(hnd, MPIR_T_cvar_handle_t*, sizeof(*hnd), mpi_errno, "control variable handle", MPL_MEM_MPIT);
 #ifdef HAVE_ERROR_CHECKING
     hnd->kind = MPIR_T_CVAR_HANDLE;
 #endif

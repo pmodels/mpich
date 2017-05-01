@@ -93,7 +93,7 @@ typedef unsigned char uint8_t;
 #define uthash_fatal(msg) exit(-1)        /* fatal error (out of memory,etc) */
 #endif
 #ifndef uthash_malloc
-#define uthash_malloc(sz) MPL_malloc(sz)      /* malloc fcn                      */
+#define uthash_malloc(sz,class) MPL_malloc(sz,class)      /* malloc fcn */
 #endif
 #ifndef uthash_free
 #define uthash_free(ptr,sz) MPL_free(ptr)     /* free fcn                        */
@@ -149,10 +149,10 @@ do {                                                                            
 #ifdef HASH_BLOOM
 #define HASH_BLOOM_BITLEN (1UL << HASH_BLOOM)
 #define HASH_BLOOM_BYTELEN (HASH_BLOOM_BITLEN/8UL) + (((HASH_BLOOM_BITLEN%8UL)!=0UL) ? 1UL : 0UL)
-#define HASH_BLOOM_MAKE(tbl)                                                     \
+#define HASH_BLOOM_MAKE(tbl,class)                                               \
 do {                                                                             \
   (tbl)->bloom_nbits = HASH_BLOOM;                                               \
-  (tbl)->bloom_bv = (uint8_t*)uthash_malloc(HASH_BLOOM_BYTELEN);                 \
+  (tbl)->bloom_bv = (uint8_t*)uthash_malloc(HASH_BLOOM_BYTELEN,class);           \
   if (!((tbl)->bloom_bv))  { uthash_fatal( "out of memory"); }                   \
   memset((tbl)->bloom_bv, 0, HASH_BLOOM_BYTELEN);                                \
   (tbl)->bloom_sig = HASH_BLOOM_SIGNATURE;                                       \
@@ -173,17 +173,17 @@ do {                                                                            
   HASH_BLOOM_BITTEST((tbl)->bloom_bv, (hashv & (uint32_t)((1ULL << (tbl)->bloom_nbits) - 1U)))
 
 #else
-#define HASH_BLOOM_MAKE(tbl)
+#define HASH_BLOOM_MAKE(tbl,class)
 #define HASH_BLOOM_FREE(tbl)
 #define HASH_BLOOM_ADD(tbl,hashv)
 #define HASH_BLOOM_TEST(tbl,hashv) (1)
 #define HASH_BLOOM_BYTELEN 0U
 #endif
 
-#define HASH_MAKE_TABLE(hh,head)                                                 \
+#define HASH_MAKE_TABLE(hh,head,class)                                           \
 do {                                                                             \
   (head)->hh.tbl = (UT_hash_table*)uthash_malloc(                                \
-                  sizeof(UT_hash_table));                                        \
+                  sizeof(UT_hash_table),class);                                  \
   if (!((head)->hh.tbl))  { uthash_fatal( "out of memory"); }                    \
   memset((head)->hh.tbl, 0, sizeof(UT_hash_table));                              \
   (head)->hh.tbl->tail = &((head)->hh);                                          \
@@ -191,46 +191,46 @@ do {                                                                            
   (head)->hh.tbl->log2_num_buckets = HASH_INITIAL_NUM_BUCKETS_LOG2;              \
   (head)->hh.tbl->hho = (char*)(&(head)->hh) - (char*)(head);                    \
   (head)->hh.tbl->buckets = (UT_hash_bucket*)uthash_malloc(                      \
-          HASH_INITIAL_NUM_BUCKETS*sizeof(struct UT_hash_bucket));               \
+          HASH_INITIAL_NUM_BUCKETS*sizeof(struct UT_hash_bucket),class);         \
   if (! (head)->hh.tbl->buckets) { uthash_fatal( "out of memory"); }             \
   memset((head)->hh.tbl->buckets, 0,                                             \
           HASH_INITIAL_NUM_BUCKETS*sizeof(struct UT_hash_bucket));               \
-  HASH_BLOOM_MAKE((head)->hh.tbl);                                               \
+  HASH_BLOOM_MAKE((head)->hh.tbl,class);                                         \
   (head)->hh.tbl->signature = HASH_SIGNATURE;                                    \
 } while (0)
 
-#define HASH_REPLACE_BYHASHVALUE_INORDER(hh,head,fieldname,keylen_in,hashval,add,replaced,cmpfcn) \
+#define HASH_REPLACE_BYHASHVALUE_INORDER(hh,head,fieldname,keylen_in,hashval,add,replaced,cmpfcn,class) \
 do {                                                                             \
   (replaced) = NULL;                                                             \
   HASH_FIND_BYHASHVALUE(hh, head, &((add)->fieldname), keylen_in, hashval, replaced); \
   if (replaced) {                                                                \
      HASH_DELETE(hh, head, replaced);                                            \
   }                                                                              \
-  HASH_ADD_KEYPTR_BYHASHVALUE_INORDER(hh, head, &((add)->fieldname), keylen_in, hashval, add, cmpfcn); \
+  HASH_ADD_KEYPTR_BYHASHVALUE_INORDER(hh, head, &((add)->fieldname), keylen_in, hashval, add, cmpfcn, class); \
 } while (0)
 
-#define HASH_REPLACE_BYHASHVALUE(hh,head,fieldname,keylen_in,hashval,add,replaced) \
+#define HASH_REPLACE_BYHASHVALUE(hh,head,fieldname,keylen_in,hashval,add,replaced,class) \
 do {                                                                             \
   (replaced) = NULL;                                                             \
   HASH_FIND_BYHASHVALUE(hh, head, &((add)->fieldname), keylen_in, hashval, replaced); \
   if (replaced) {                                                                \
      HASH_DELETE(hh, head, replaced);                                            \
   }                                                                              \
-  HASH_ADD_KEYPTR_BYHASHVALUE(hh, head, &((add)->fieldname), keylen_in, hashval, add); \
+  HASH_ADD_KEYPTR_BYHASHVALUE(hh, head, &((add)->fieldname), keylen_in, hashval, add, class); \
 } while (0)
 
-#define HASH_REPLACE(hh,head,fieldname,keylen_in,add,replaced)                   \
+#define HASH_REPLACE(hh,head,fieldname,keylen_in,add,replaced,class)             \
 do {                                                                             \
   unsigned _hr_hashv;                                                            \
   HASH_VALUE(&((add)->fieldname), keylen_in, _hr_hashv);                         \
-  HASH_REPLACE_BYHASHVALUE(hh, head, fieldname, keylen_in, _hr_hashv, add, replaced); \
+  HASH_REPLACE_BYHASHVALUE(hh, head, fieldname, keylen_in, _hr_hashv, add, replaced, class); \
 } while (0)
 
-#define HASH_REPLACE_INORDER(hh,head,fieldname,keylen_in,add,replaced,cmpfcn)    \
+#define HASH_REPLACE_INORDER(hh,head,fieldname,keylen_in,add,replaced,cmpfcn,class) \
 do {                                                                             \
   unsigned _hr_hashv;                                                            \
   HASH_VALUE(&((add)->fieldname), keylen_in, _hr_hashv);                         \
-  HASH_REPLACE_BYHASHVALUE_INORDER(hh, head, fieldname, keylen_in, _hr_hashv, add, replaced, cmpfcn); \
+  HASH_REPLACE_BYHASHVALUE_INORDER(hh, head, fieldname, keylen_in, _hr_hashv, add, replaced, cmpfcn, class); \
 } while (0)
 
 #define HASH_APPEND_LIST(hh, head, add)                                          \
@@ -241,7 +241,7 @@ do {                                                                            
   (head)->hh.tbl->tail = &((add)->hh);                                           \
 } while (0)
 
-#define HASH_ADD_KEYPTR_BYHASHVALUE_INORDER(hh,head,keyptr,keylen_in,hashval,add,cmpfcn) \
+#define HASH_ADD_KEYPTR_BYHASHVALUE_INORDER(hh,head,keyptr,keylen_in,hashval,add,cmpfcn,class) \
 do {                                                                             \
   unsigned _ha_bkt;                                                              \
   (add)->hh.hashv = (hashval);                                                   \
@@ -251,7 +251,7 @@ do {                                                                            
     (add)->hh.next = NULL;                                                       \
     (add)->hh.prev = NULL;                                                       \
     (head) = (add);                                                              \
-    HASH_MAKE_TABLE(hh, head);                                                   \
+    HASH_MAKE_TABLE(hh, head, class);                                            \
   } else {                                                                       \
     void *_hs_iter = (head);                                                     \
     (add)->hh.tbl = (head)->hh.tbl;                                              \
@@ -273,26 +273,26 @@ do {                                                                            
   }                                                                              \
   (head)->hh.tbl->num_items++;                                                   \
   HASH_TO_BKT(hashval, (head)->hh.tbl->num_buckets, _ha_bkt);                    \
-  HASH_ADD_TO_BKT((head)->hh.tbl->buckets[_ha_bkt], &(add)->hh);                 \
+  HASH_ADD_TO_BKT((head)->hh.tbl->buckets[_ha_bkt], &(add)->hh, class);          \
   HASH_BLOOM_ADD((head)->hh.tbl, hashval);                                       \
   HASH_EMIT_KEY(hh, head, keyptr, keylen_in);                                    \
   HASH_FSCK(hh, head);                                                           \
 } while (0)
 
-#define HASH_ADD_KEYPTR_INORDER(hh,head,keyptr,keylen_in,add,cmpfcn)             \
+#define HASH_ADD_KEYPTR_INORDER(hh,head,keyptr,keylen_in,add,cmpfcn,class)       \
 do {                                                                             \
   unsigned _hs_hashv;                                                            \
   HASH_VALUE(keyptr, keylen_in, _hs_hashv);                                      \
-  HASH_ADD_KEYPTR_BYHASHVALUE_INORDER(hh, head, keyptr, keylen_in, _hs_hashv, add, cmpfcn); \
+  HASH_ADD_KEYPTR_BYHASHVALUE_INORDER(hh, head, keyptr, keylen_in, _hs_hashv, add, cmpfcn, class); \
 } while (0)
 
-#define HASH_ADD_BYHASHVALUE_INORDER(hh,head,fieldname,keylen_in,hashval,add,cmpfcn) \
-  HASH_ADD_KEYPTR_BYHASHVALUE_INORDER(hh, head, &((add)->fieldname), keylen_in, hashval, add, cmpfcn)
+#define HASH_ADD_BYHASHVALUE_INORDER(hh,head,fieldname,keylen_in,hashval,add,cmpfcn,class) \
+  HASH_ADD_KEYPTR_BYHASHVALUE_INORDER(hh, head, &((add)->fieldname), keylen_in, hashval, add, cmpfcn, class)
 
-#define HASH_ADD_INORDER(hh,head,fieldname,keylen_in,add,cmpfcn)                 \
-  HASH_ADD_KEYPTR_INORDER(hh, head, &((add)->fieldname), keylen_in, add, cmpfcn)
+#define HASH_ADD_INORDER(hh,head,fieldname,keylen_in,add,cmpfcn,class)           \
+  HASH_ADD_KEYPTR_INORDER(hh, head, &((add)->fieldname), keylen_in, add, cmpfcn, class)
 
-#define HASH_ADD_KEYPTR_BYHASHVALUE(hh,head,keyptr,keylen_in,hashval,add)        \
+#define HASH_ADD_KEYPTR_BYHASHVALUE(hh,head,keyptr,keylen_in,hashval,add,class)  \
 do {                                                                             \
   unsigned _ha_bkt;                                                              \
   (add)->hh.hashv = (hashval);                                                   \
@@ -302,31 +302,31 @@ do {                                                                            
     (add)->hh.next = NULL;                                                       \
     (add)->hh.prev = NULL;                                                       \
     (head) = (add);                                                              \
-    HASH_MAKE_TABLE(hh, head);                                                   \
+    HASH_MAKE_TABLE(hh, head, class);                                            \
   } else {                                                                       \
     (add)->hh.tbl = (head)->hh.tbl;                                              \
     HASH_APPEND_LIST(hh, head, add);                                             \
   }                                                                              \
   (head)->hh.tbl->num_items++;                                                   \
   HASH_TO_BKT(hashval, (head)->hh.tbl->num_buckets, _ha_bkt);                    \
-  HASH_ADD_TO_BKT((head)->hh.tbl->buckets[_ha_bkt], &(add)->hh);                 \
+  HASH_ADD_TO_BKT((head)->hh.tbl->buckets[_ha_bkt], &(add)->hh, class);          \
   HASH_BLOOM_ADD((head)->hh.tbl, hashval);                                       \
   HASH_EMIT_KEY(hh, head, keyptr, keylen_in);                                    \
   HASH_FSCK(hh, head);                                                           \
 } while (0)
 
-#define HASH_ADD_KEYPTR(hh,head,keyptr,keylen_in,add)                            \
+#define HASH_ADD_KEYPTR(hh,head,keyptr,keylen_in,add,class)                      \
 do {                                                                             \
   unsigned _ha_hashv;                                                            \
   HASH_VALUE(keyptr, keylen_in, _ha_hashv);                                      \
-  HASH_ADD_KEYPTR_BYHASHVALUE(hh, head, keyptr, keylen_in, _ha_hashv, add);      \
+  HASH_ADD_KEYPTR_BYHASHVALUE(hh, head, keyptr, keylen_in, _ha_hashv, add, class); \
 } while (0)
 
-#define HASH_ADD_BYHASHVALUE(hh,head,fieldname,keylen_in,hashval,add)            \
-  HASH_ADD_KEYPTR_BYHASHVALUE(hh, head, &((add)->fieldname), keylen_in, hashval, add)
+#define HASH_ADD_BYHASHVALUE(hh,head,fieldname,keylen_in,hashval,add,class)      \
+  HASH_ADD_KEYPTR_BYHASHVALUE(hh, head, &((add)->fieldname), keylen_in, hashval, add, class)
 
-#define HASH_ADD(hh,head,fieldname,keylen_in,add)                                \
-  HASH_ADD_KEYPTR(hh, head, &((add)->fieldname), keylen_in, add)
+#define HASH_ADD(hh,head,fieldname,keylen_in,add,class)                          \
+  HASH_ADD_KEYPTR(hh, head, &((add)->fieldname), keylen_in, add, class)
 
 #define HASH_TO_BKT(hashv,num_bkts,bkt)                                          \
 do {                                                                             \
@@ -384,22 +384,22 @@ do {                                                                            
 /* convenience forms of HASH_FIND/HASH_ADD/HASH_DEL */
 #define HASH_FIND_STR(head,findstr,out)                                          \
     HASH_FIND(hh,head,findstr,(unsigned)uthash_strlen(findstr),out)
-#define HASH_ADD_STR(head,strfield,add)                                          \
-    HASH_ADD(hh,head,strfield[0],(unsigned)uthash_strlen(add->strfield),add)
-#define HASH_REPLACE_STR(head,strfield,add,replaced)                             \
-    HASH_REPLACE(hh,head,strfield[0],(unsigned)uthash_strlen(add->strfield),add,replaced)
+#define HASH_ADD_STR(head,strfield,add,class)                                    \
+    HASH_ADD(hh,head,strfield[0],(unsigned)uthash_strlen(add->strfield),add,class)
+#define HASH_REPLACE_STR(head,strfield,add,replaced,class)                       \
+    HASH_REPLACE(hh,head,strfield[0],(unsigned)uthash_strlen(add->strfield),add,replaced,class)
 #define HASH_FIND_INT(head,findint,out)                                          \
     HASH_FIND(hh,head,findint,sizeof(int),out)
-#define HASH_ADD_INT(head,intfield,add)                                          \
-    HASH_ADD(hh,head,intfield,sizeof(int),add)
-#define HASH_REPLACE_INT(head,intfield,add,replaced)                             \
-    HASH_REPLACE(hh,head,intfield,sizeof(int),add,replaced)
+#define HASH_ADD_INT(head,intfield,add,class)                                    \
+    HASH_ADD(hh,head,intfield,sizeof(int),add,class)
+#define HASH_REPLACE_INT(head,intfield,add,replaced,class)                       \
+    HASH_REPLACE(hh,head,intfield,sizeof(int),add,replaced,class)
 #define HASH_FIND_PTR(head,findptr,out)                                          \
     HASH_FIND(hh,head,findptr,sizeof(void *),out)
-#define HASH_ADD_PTR(head,ptrfield,add)                                          \
-    HASH_ADD(hh,head,ptrfield,sizeof(void *),add)
-#define HASH_REPLACE_PTR(head,ptrfield,add,replaced)                             \
-    HASH_REPLACE(hh,head,ptrfield,sizeof(void *),add,replaced)
+#define HASH_ADD_PTR(head,ptrfield,add,class)                                    \
+    HASH_ADD(hh,head,ptrfield,sizeof(void *),add,class)
+#define HASH_REPLACE_PTR(head,ptrfield,add,replaced,class)                       \
+    HASH_REPLACE(hh,head,ptrfield,sizeof(void *),add,replaced,class)
 #define HASH_DEL(head,delptr)                                                    \
     HASH_DELETE(hh,head,delptr)
 
@@ -744,7 +744,7 @@ do {                                                                            
 } while (0)
 
 /* add an item to a bucket  */
-#define HASH_ADD_TO_BKT(head,addhh)                                              \
+#define HASH_ADD_TO_BKT(head,addhh,class)                                        \
 do {                                                                             \
  head.count++;                                                                   \
  (addhh)->hh_next = head.hh_head;                                                \
@@ -753,7 +753,7 @@ do {                                                                            
  (head).hh_head=addhh;                                                           \
  if ((head.count >= ((head.expand_mult+1U) * HASH_BKT_CAPACITY_THRESH))          \
      && ((addhh)->tbl->noexpand != 1U)) {                                        \
-       HASH_EXPAND_BUCKETS((addhh)->tbl);                                        \
+       HASH_EXPAND_BUCKETS((addhh)->tbl, class);                                 \
  }                                                                               \
 } while (0)
 
@@ -799,14 +799,14 @@ do {                                                                            
  *      ceil(n/b) = (n>>lb) + ( (n & (b-1)) ? 1:0)
  *
  */
-#define HASH_EXPAND_BUCKETS(tbl)                                                 \
+#define HASH_EXPAND_BUCKETS(tbl,class)                                           \
 do {                                                                             \
     unsigned _he_bkt;                                                            \
     unsigned _he_bkt_i;                                                          \
     struct UT_hash_handle *_he_thh, *_he_hh_nxt;                                 \
     UT_hash_bucket *_he_new_buckets, *_he_newbkt;                                \
     _he_new_buckets = (UT_hash_bucket*)uthash_malloc(                            \
-             2UL * tbl->num_buckets * sizeof(struct UT_hash_bucket));            \
+             2UL * tbl->num_buckets * sizeof(struct UT_hash_bucket),class);      \
     if (!_he_new_buckets) { uthash_fatal( "out of memory"); }                    \
     memset(_he_new_buckets, 0,                                                   \
             2UL * tbl->num_buckets * sizeof(struct UT_hash_bucket));             \
@@ -944,7 +944,7 @@ do {                                                                            
  * in both hashes. There is no copy of the items made; rather
  * they are added into the new hash through a secondary hash
  * hash handle that must be present in the structure. */
-#define HASH_SELECT(hh_dst, dst, hh_src, src, cond)                              \
+#define HASH_SELECT(hh_dst, dst, hh_src, src, cond, class)                       \
 do {                                                                             \
   unsigned _src_bkt, _dst_bkt;                                                   \
   void *_last_elt=NULL, *_elt;                                                   \
@@ -966,12 +966,12 @@ do {                                                                            
             if (_last_elt_hh != NULL) { _last_elt_hh->next = _elt; }             \
             if (dst == NULL) {                                                   \
               DECLTYPE_ASSIGN(dst,_elt);                                         \
-              HASH_MAKE_TABLE(hh_dst,dst);                                       \
+              HASH_MAKE_TABLE(hh_dst,dst,class);                                 \
             } else {                                                             \
               _dst_hh->tbl = (dst)->hh_dst.tbl;                                  \
             }                                                                    \
             HASH_TO_BKT(_dst_hh->hashv, _dst_hh->tbl->num_buckets, _dst_bkt);    \
-            HASH_ADD_TO_BKT(_dst_hh->tbl->buckets[_dst_bkt],_dst_hh);            \
+            HASH_ADD_TO_BKT(_dst_hh->tbl->buckets[_dst_bkt],_dst_hh,class);      \
             (dst)->hh_dst.tbl->num_items++;                                      \
             _last_elt = _elt;                                                    \
             _last_elt_hh = _dst_hh;                                              \

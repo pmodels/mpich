@@ -71,7 +71,7 @@ int MPIR_Group_create( int nproc, MPIR_Group **new_group_ptr )
     /* --END ERROR HANDLING-- */
     MPIR_Object_set_ref( *new_group_ptr, 1 );
     (*new_group_ptr)->lrank_to_lpid = 
-	(MPII_Group_pmap_t *)MPL_malloc( nproc * sizeof(MPII_Group_pmap_t) );
+	(MPII_Group_pmap_t *)MPL_malloc( nproc * sizeof(MPII_Group_pmap_t), MPL_MEM_GROUP );
     /* --BEGIN ERROR HANDLING-- */
     if (!(*new_group_ptr)->lrank_to_lpid) {
 	MPIR_Handle_obj_free( &MPIR_Group_mem, *new_group_ptr );
@@ -385,7 +385,7 @@ int MPIR_Group_check_subset( MPIR_Group *group_ptr, MPIR_Comm *comm_ptr )
     MPIR_Assert(group_ptr != NULL);
 
     MPIR_CHKLMEM_MALLOC(vmap,MPII_Group_pmap_t*,
-			vsize*sizeof(MPII_Group_pmap_t),mpi_errno, "" );
+			vsize*sizeof(MPII_Group_pmap_t),mpi_errno, "", MPL_MEM_GROUP );
     /* Initialize the vmap */
     for (i=0; i<vsize; i++) {
 	MPID_Comm_get_lpid(comm_ptr, i, &vmap[i].lpid, FALSE);

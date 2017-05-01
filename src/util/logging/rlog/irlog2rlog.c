@@ -144,7 +144,7 @@ ArrowNode *GetArrowNode(int rank)
 	pNode = pNode->pNext;
     }
 
-    pNode = (ArrowNode *)MPL_malloc(sizeof(ArrowNode));
+    pNode = (ArrowNode *)MPL_malloc(sizeof(ArrowNode), MPL_MEM_DEBUG);
     pNode->pEndList = NULL;
     pNode->pStartList = NULL;
     pNode->rank = rank;
@@ -228,7 +228,7 @@ void SaveArrow(RLOG_IARROW *pArrow)
 	pEnd = ExtractEndNode(pNode, pArrow->rank, pArrow->tag);
 	if (pEnd == NULL)
 	{
-	    pStart = (StartArrowStruct *)MPL_malloc(sizeof(StartArrowStruct));
+	    pStart = (StartArrowStruct *)MPL_malloc(sizeof(StartArrowStruct), MPL_MEM_DEBUG);
 	    pStart->src = pArrow->rank;
 	    pStart->tag = pArrow->tag;
 	    pStart->length = pArrow->length;
@@ -279,7 +279,7 @@ void SaveArrow(RLOG_IARROW *pArrow)
 	}
 	else
 	{
-	    pEnd = (EndArrowStruct *)MPL_malloc(sizeof(EndArrowStruct));
+	    pEnd = (EndArrowStruct *)MPL_malloc(sizeof(EndArrowStruct), MPL_MEM_DEBUG);
 	    pEnd->src = pArrow->remote;
 	    pEnd->tag = pArrow->tag;
 	    pEnd->timestamp = pArrow->timestamp;
@@ -314,7 +314,7 @@ RecursionStruct *GetLevel(int rank, int recursion)
 	pLevel = pLevel->next;
     }
 
-    pLevel = (RecursionStruct*)MPL_malloc(sizeof(RecursionStruct));
+    pLevel = (RecursionStruct*)MPL_malloc(sizeof(RecursionStruct), MPL_MEM_DEBUG);
     MPL_snprintf(pLevel->filename, 1024*sizeof(char), "irlog.%d.%d.tmp", rank, recursion);
     pLevel->fout = fopen(pLevel->filename, "w+b");
     pLevel->rank = rank;
@@ -352,7 +352,7 @@ void SaveState(RLOG_STATE *pState)
 	pIter = pIter->next;
     }
 
-    pIter = (RLOG_State_list*)MPL_malloc(sizeof(RLOG_State_list));
+    pIter = (RLOG_State_list*)MPL_malloc(sizeof(RLOG_State_list), MPL_MEM_DEBUG);
     memcpy(&pIter->state, pState, sizeof(RLOG_STATE));
     pIter->next = g_pList;
     g_pList = pIter;
@@ -388,7 +388,7 @@ void AppendFile(FILE *fout, FILE *fin)
     int num_read, num_written;
     char *buffer, *buf;
 
-    buffer = (char*)MPL_malloc(sizeof(char) * BUFFER_SIZE);
+    buffer = (char*)MPL_malloc(sizeof(char) * BUFFER_SIZE, MPL_MEM_DEBUG);
 
     total = ftell(fin);
     fseek(fin, 0L, SEEK_SET);
@@ -601,7 +601,7 @@ void GenerateNewArgv(int *pargc, char ***pargv, int n)
     size_t str_sz;
 
     length = (sizeof(char*) * (n+3)) +strlen((*pargv)[0]) + 1 + strlen((*pargv)[1]) + 1 + (15 * n);
-    buffer = (char*)MPL_malloc(length);
+    buffer = (char*)MPL_malloc(length, MPL_MEM_DEBUG);
 
     argc = n+2;
     argv = (char**)buffer;
@@ -670,7 +670,7 @@ int main(int argc, char *argv[])
     }
 
     /* read the arrows from all the files in order */
-    ppInput = (IRLOG_IOStruct**)MPL_malloc(nNumInputs * sizeof(IRLOG_IOStruct*));
+    ppInput = (IRLOG_IOStruct**)MPL_malloc(nNumInputs * sizeof(IRLOG_IOStruct*), MPL_MEM_DEBUG);
     for (i=0; i<nNumInputs; i++)
     {
 	ppInput[i] = IRLOG_CreateInputStruct(argv[i+2]);

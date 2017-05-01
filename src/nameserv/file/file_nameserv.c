@@ -71,7 +71,7 @@ int MPID_NS_Create( const MPIR_Info *info_ptr, MPID_NS_Handle *handle_ptr )
     struct stat st;
     int        err, ret;
 
-    *handle_ptr = (MPID_NS_Handle)MPL_malloc( sizeof(struct MPID_NS_Handle) );
+    *handle_ptr = (MPID_NS_Handle)MPL_malloc( sizeof(struct MPID_NS_Handle), MPL_MEM_PM );
     /* --BEGIN ERROR HANDLING-- */
     if (!*handle_ptr) {
 	err = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 );

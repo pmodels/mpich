@@ -228,7 +228,7 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
     MPID_nem_ofi_init_req(sreq);
     pkt_len = sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz + data_sz;
     if (sreq->dev.ext_hdr_sz > 0 && gl_data.iov_limit > 2) {
-      REQ_OFI(sreq)->real_hdr        = MPL_malloc(sizeof(MPIDI_CH3_Pkt_t)+sreq->dev.ext_hdr_sz);
+      REQ_OFI(sreq)->real_hdr        = MPL_malloc(sizeof(MPIDI_CH3_Pkt_t)+sreq->dev.ext_hdr_sz, MPL_MEM_BUFFER);
       MPIR_ERR_CHKANDJUMP1(REQ_OFI(sreq)->real_hdr == NULL, mpi_errno, MPI_ERR_OTHER,
                             "**nomem", "**nomem %s", "iSendContig extended header allocation");
       REQ_OFI(sreq)->iov[0].iov_base = REQ_OFI(sreq)->real_hdr;
@@ -243,7 +243,7 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
                   sreq->dev.ext_hdr_ptr, sreq->dev.ext_hdr_sz);
       }
     else if(sreq->dev.ext_hdr_sz == 0 && gl_data.iov_limit > 1) {
-        REQ_OFI(sreq)->real_hdr = MPL_malloc(sizeof(MPIDI_CH3_Pkt_t));
+        REQ_OFI(sreq)->real_hdr = MPL_malloc(sizeof(MPIDI_CH3_Pkt_t), MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP1(REQ_OFI(sreq)->real_hdr == NULL, mpi_errno, MPI_ERR_OTHER,
                              "**nomem", "**nomem %s", "iSendContig header allocation");
         MPIR_Memcpy(REQ_OFI(sreq)->real_hdr, hdr, hdr_sz);
@@ -254,7 +254,7 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
         REQ_OFI(sreq)->iov_count       = 2;
     }
     else {
-      pack_buffer = MPL_malloc(pkt_len);
+      pack_buffer = MPL_malloc(pkt_len, MPL_MEM_BUFFER);
       MPIR_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
                            "**nomem", "**nomem %s", "iSendContig pack buffer allocation");
       MPIR_Memcpy(pack_buffer, hdr, hdr_sz);
@@ -290,7 +290,7 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
     last = sreq->dev.segment_size;
     data_sz = sreq->dev.segment_size - sreq->dev.segment_first;
     pkt_len = sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz + data_sz;
-    pack_buffer = MPL_malloc(pkt_len);
+    pack_buffer = MPL_malloc(pkt_len, MPL_MEM_BUFFER);
     MPIR_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
                          "**nomem", "**nomem %s", "SendNonContig pack buffer allocation");
     MPIR_Memcpy(pack_buffer, hdr, hdr_sz);
@@ -327,7 +327,7 @@ int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
     sreq->dev.next = NULL;
     pkt_len = sizeof(MPIDI_CH3_Pkt_t) + data_sz;
     if(gl_data.iov_limit > 1) {
-      REQ_OFI(sreq)->real_hdr = MPL_malloc(sizeof(MPIDI_CH3_Pkt_t));
+      REQ_OFI(sreq)->real_hdr = MPL_malloc(sizeof(MPIDI_CH3_Pkt_t), MPL_MEM_BUFFER);
       MPIR_Memcpy(REQ_OFI(sreq)->real_hdr, hdr, hdr_sz);
       REQ_OFI(sreq)->iov[0].iov_base = REQ_OFI(sreq)->real_hdr;
       REQ_OFI(sreq)->iov[0].iov_len  = sizeof(MPIDI_CH3_Pkt_t);
@@ -336,7 +336,7 @@ int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
       REQ_OFI(sreq)->iov_count       = 2;
     }
     else {
-      pack_buffer = MPL_malloc(pkt_len);
+      pack_buffer = MPL_malloc(pkt_len, MPL_MEM_BUFFER);
       MPIR_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
                            "**nomem", "**nomem %s", "iStartContig pack buffer allocation");
       MPIR_Memcpy((void *) pack_buffer, hdr, hdr_sz);

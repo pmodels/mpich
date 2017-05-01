@@ -422,7 +422,7 @@ static int DLOOP_Dataloop_create_unique_type_struct(DLOOP_Count count,
     DLOOP_Offset *tmp_disps;
 
     /* count is an upper bound on number of type instances */
-    tmp_blklens = (DLOOP_Size *) DLOOP_Malloc(count * sizeof(DLOOP_Size));
+    tmp_blklens = (DLOOP_Size *) DLOOP_Malloc(count * sizeof(DLOOP_Size), MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens) {
 	/* TODO: ??? */
@@ -431,7 +431,7 @@ static int DLOOP_Dataloop_create_unique_type_struct(DLOOP_Count count,
     /* --END ERROR HANDLING-- */
 
     tmp_disps = (DLOOP_Offset *)
-	DLOOP_Malloc(count * sizeof(DLOOP_Offset));
+	DLOOP_Malloc(count * sizeof(DLOOP_Offset), MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_disps) {
 	DLOOP_Free(tmp_blklens);
@@ -482,7 +482,7 @@ static int DLOOP_Dataloop_create_basic_all_bytes_struct(
     MPI_Aint *tmp_disps;
 
     /* count is an upper bound on number of type instances */
-    tmp_blklens = (DLOOP_Size *) DLOOP_Malloc(count * sizeof(DLOOP_Size));
+    tmp_blklens = (DLOOP_Size *) DLOOP_Malloc(count * sizeof(DLOOP_Size), MPL_MEM_DATATYPE);
 
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens)
@@ -491,7 +491,7 @@ static int DLOOP_Dataloop_create_basic_all_bytes_struct(
     }
     /* --END ERROR HANDLING-- */
 
-    tmp_disps = (MPI_Aint *) DLOOP_Malloc(count * sizeof(MPI_Aint));
+    tmp_disps = (MPI_Aint *) DLOOP_Malloc(count * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
 
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_disps)
@@ -617,7 +617,7 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
 
     nr_blks += 2; /* safety measure */
 
-    tmp_blklens = (DLOOP_Size *) DLOOP_Malloc(nr_blks * sizeof(DLOOP_Size));
+    tmp_blklens = (DLOOP_Size *) DLOOP_Malloc(nr_blks * sizeof(DLOOP_Size), MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens) {
 	MPIR_Segment_free(segp);
@@ -626,7 +626,7 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
     /* --END ERROR HANDLING-- */
 
 
-    tmp_disps = (MPI_Aint *) DLOOP_Malloc(nr_blks * sizeof(MPI_Aint));
+    tmp_disps = (MPI_Aint *) DLOOP_Malloc(nr_blks * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_disps) {
 	DLOOP_Free(tmp_blklens);

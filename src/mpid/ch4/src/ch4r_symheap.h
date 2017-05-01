@@ -244,7 +244,7 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
             if (comm->rank == maxloc_result.loc) {
                 map_pointer = (uintptr_t) MPIDI_CH4R_generate_random_addr(mapsize);
                 baseP = MPL_mmap((void *) map_pointer, mapsize,
-                                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0);
+                                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0, MPL_MEM_RMA);
             }
 
             mpi_errno = MPIR_Bcast_impl(&map_pointer,
@@ -258,7 +258,7 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
 
                 if (rc) {
                     baseP = MPL_mmap((void *) map_pointer, mapsize,
-                                     PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0);
+                                     PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0, MPL_MEM_RMA);
                 }
                 else
                     baseP = (void *) -1ULL;
@@ -275,7 +275,7 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
                 goto fn_fail;
 
             if (result == 0 && baseP != (void *) -1ULL)
-                MPL_munmap(baseP, mapsize);
+                MPL_munmap(baseP, mapsize, MPL_MEM_RMA);
         }
     }
     else
@@ -285,7 +285,7 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
     if (iter == 0) {
         MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     "WARNING: Win_allocate:  Unable to allocate symmetric heap\n");
-        baseP = MPL_malloc(size);
+        baseP = MPL_malloc(size, MPL_MEM_RMA);
         MPIR_ERR_CHKANDJUMP((baseP == NULL), mpi_errno, MPI_ERR_BUFFER, "**bufnull");
         MPIDI_CH4U_WIN(win, mmap_sz) = -1ULL;
         MPIDI_CH4U_WIN(win, mmap_addr) = NULL;

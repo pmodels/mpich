@@ -42,7 +42,7 @@ MPIR_Dataloop *MPIR_Dataloop_init_contig(int count)
 {
     MPIR_Dataloop *ct;
 
-    ct = (MPIR_Dataloop *) MPL_malloc(sizeof(MPIR_Dataloop));
+    ct = (MPIR_Dataloop *) MPL_malloc(sizeof(MPIR_Dataloop), MPL_MEM_OTHER);
     ct->kind = MPID_DTYPE_CONTIG | DATALOOP_FINAL_MASK;
     ct->loop_params.c_t.count = count;
     ct->loop_params.c_t.dataloop = 0;
@@ -59,7 +59,7 @@ MPIR_Dataloop *MPIR_Dataloop_init_vector(int count, int blocksize, int stride)
 {
     MPIR_Dataloop *v;
 
-    v = (MPIR_Dataloop *) MPL_malloc(sizeof(MPIR_Dataloop));
+    v = (MPIR_Dataloop *) MPL_malloc(sizeof(MPIR_Dataloop), MPL_MEM_OTHER);
     v->kind = MPID_DTYPE_VECTOR | DATALOOP_FINAL_MASK;
     v->loop_params.v_t.count = count;
     v->loop_params.v_t.blocksize = blocksize;
@@ -80,11 +80,11 @@ MPIR_Dataloop *MPIR_Dataloop_init_blockindexed(int count, int blocksize, MPI_Ain
     MPI_Aint extent;
     int i;
 
-    bi = (MPIR_Dataloop *) MPL_malloc(sizeof(MPIR_Dataloop));
+    bi = (MPIR_Dataloop *) MPL_malloc(sizeof(MPIR_Dataloop), MPL_MEM_OTHER);
     bi->kind = MPID_DTYPE_BLOCKINDEXED | DATALOOP_FINAL_MASK;
     bi->loop_params.bi_t.count = count;
     bi->loop_params.bi_t.blocksize = blocksize;
-    bi->loop_params.bi_t.offset = (MPI_Aint *) MPL_malloc(sizeof(MPI_Aint) * count);
+    bi->loop_params.bi_t.offset = (MPI_Aint *) MPL_malloc(sizeof(MPI_Aint) * count, MPL_MEM_OTHER);
     for (i = 0; i < count; i++) {
         bi->loop_params.bi_t.offset[i] = offset[i];
         if (offset[i] + blocksize > extent)
@@ -106,11 +106,11 @@ MPIR_Dataloop *MPIR_Dataloop_init_indexed(int count, int *blocksize, MPI_Aint * 
     MPI_Aint extent = 0;
     int i;
 
-    it = (MPIR_Dataloop *) MPL_malloc(sizeof(MPIR_Dataloop));
+    it = (MPIR_Dataloop *) MPL_malloc(sizeof(MPIR_Dataloop), MPL_MEM_OTHER);
     it->kind = MPID_DTYPE_INDEXED | DATALOOP_FINAL_MASK;
     it->loop_params.i_t.count = count;
-    it->loop_params.i_t.blocksize = (int *) MPL_malloc(sizeof(int) * count);
-    it->loop_params.i_t.offset = (MPI_Aint *) MPL_malloc(sizeof(MPI_Aint) * count);
+    it->loop_params.i_t.blocksize = (int *) MPL_malloc(sizeof(int) * count, MPL_MEM_OTHER);
+    it->loop_params.i_t.offset = (MPI_Aint *) MPL_malloc(sizeof(MPI_Aint) * count, MPL_MEM_OTHER);
     for (i = 0; i < count; i++) {
         it->loop_params.i_t.offset[i] = offset[i];
         it->loop_params.i_t.blocksize[i] = blocksize[i];
@@ -140,14 +140,14 @@ int main(int argc, char **argv)
     MPI_Type_vector(count, 1, 7, MPI_INT, &vectype);
 
     /* Initialize the data */
-    src_buf = (char *) MPL_malloc((count - 1) * stride + blocksize);
+    src_buf = (char *) MPL_malloc((count - 1) * stride + blocksize, MPL_MEM_OTHER);
     for (i = 0; i < (count - 1) * stride + blocksize; i++)
         src_buf[i] = -i;
     for (i = 0; i < count; i++) {
         for (j = 0; j < blocksize; j++)
             src_buf[i * stride + j] = i * blocksize + j;
     }
-    dest_buf = (char *) MPL_malloc(count * blocksize);
+    dest_buf = (char *) MPL_malloc(count * blocksize, MPL_MEM_OTHER);
     for (i = 0; i < count * blocksize; i++) {
         dest_buf[i] = -i;
     }

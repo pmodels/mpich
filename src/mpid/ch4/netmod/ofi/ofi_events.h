@@ -209,7 +209,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry
                 LL_DELETE(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, list_ptr);
 
                 recv = list_ptr;
-                MPIDI_CH4U_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv);
+                MPIDI_CH4U_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv, MPL_MEM_COMM);
                 break;
             }
         }
@@ -220,11 +220,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry
 
         MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "CREATING HUGE POSTED ENTRY: (%d, %d, %llu)", comm_ptr->context_id, MPIDI_OFI_cqe_get_source(wc), (MPIDI_OFI_TAG_MASK & wc->tag)));
 
-        recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1);
+        recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP(recv == NULL, mpi_errno, MPI_ERR_OTHER, "**outofmemory");
-        MPIDI_CH4U_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv);
+        MPIDI_CH4U_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv, MPL_MEM_BUFFER);
 
-        list_ptr = (MPIDI_OFI_huge_recv_list_t *) MPL_calloc(sizeof(*list_ptr), 1);
+        list_ptr = (MPIDI_OFI_huge_recv_list_t *) MPL_calloc(sizeof(*list_ptr), 1, MPL_MEM_BUFFER);
         if (!list_ptr) MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         list_ptr->comm_id = comm_ptr->context_id;

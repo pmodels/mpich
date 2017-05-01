@@ -19,17 +19,47 @@ extern char *strdup(const char *);
 char *MPL_strdup(const char *str);
 #endif /* defined(MPL_USE_MEMORY_TRACING) || defined(MPL_HAVE_STRDUP) */
 
+typedef enum {
+    MPL_MEM_ADDRESS,        /* Address information */
+    MPL_MEM_OBJECT,         /* General MPI Objects */
+    MPL_MEM_COMM,           /* Communicators */
+    MPL_MEM_GROUP,          /* Groups */
+    MPL_MEM_STRINGS,        /* String buffers */
+    MPL_MEM_RMA,            /* RMA data transfers, windows, etc. */
+    MPL_MEM_BUFFER,         /* Internal buffers for data transfers */
+    MPL_MEM_SHM,            /* Shared memory windows, buffers, etc. */
+    MPL_MEM_THREAD,         /* Threading information, locks, etc. */
+    MPL_MEM_DYNAMIC,        /* Dynamic process related information */
+    MPL_MEM_IO,             /* MPI I/O related objects */
+    MPL_MEM_GREQ,           /* Generalized requests */
+    MPL_MEM_DATATYPE,       /* MPI datatypes and related structures */
+    MPL_MEM_MPIT,           /* MPI_T structures */
+    MPL_MEM_DEBUG,          /* Data for the debugging information */
+    MPL_MEM_PM,             /* Data for process managers */
+    MPL_MEM_OTHER,          /* Other small memory allocations */
+    MPL_MAX_MEMORY_CLASS
+} MPL_memory_class;
+
+typedef struct {
+    long max_allocated_mem;     /* The maximum amount of memory allocated at one time */
+    long curr_allocated_mem;    /* The current amount of memory allocated at one time */
+    long total_allocated_mem;   /* The total amount of memory allocated */
+    long num_allocations;       /* The total number of alloations */
+} MPL_memory_allocation_t;
+
 #ifdef MPL_USE_MEMORY_TRACING
+
 /*M
   MPL_malloc - Allocate memory
 
   Synopsis:
 .vb
-  void *MPL_malloc( size_t len )
+  void *MPL_malloc( size_t len, MPL_memory_allocation_t type )
 .ve
 
   Input Parameter:
 . len - Length of memory to allocate in bytes
+. type - The category of memory being allocated
 
   Return Value:
   Pointer to allocated memory, or null if memory could not be allocated.
@@ -49,7 +79,7 @@ char *MPL_strdup(const char *str);
   Module:
   Utility
   M*/
-#define MPL_malloc(a)    MPL_trmalloc((a),__LINE__,__FILE__)
+#define MPL_malloc(a,b)    MPL_trmalloc((a),(b),__LINE__,__FILE__)
 
 /*M
   MPL_calloc - Allocate memory that is initialized to zero.
@@ -62,6 +92,7 @@ char *MPL_strdup(const char *str);
   Input Parameters:
 + nelm - Number of elements to allocate
 - elsize - Size of each element.
+. type - The category of memory being allocated
 
   Notes:
   Like 'MPL_malloc' and 'MPL_free', this will often be implemented as a
@@ -70,7 +101,7 @@ char *MPL_strdup(const char *str);
   Module:
   Utility
   M*/
-#define MPL_calloc(a,b)    MPL_trcalloc((a),(b),__LINE__,__FILE__)
+#define MPL_calloc(a,b,c)    MPL_trcalloc((a),(b),(c),__LINE__,__FILE__)
 
 /*M
   MPL_free - Free memory
@@ -101,7 +132,7 @@ char *MPL_strdup(const char *str);
   M*/
 #define MPL_free(a)      MPL_trfree(a,__LINE__,__FILE__)
 
-#define MPL_realloc(a,b)    MPL_trrealloc((a),(b),__LINE__,__FILE__)
+#define MPL_realloc(a,b,c)    MPL_trrealloc((a),(b),(c),__LINE__,__FILE__)
 
 /*M
   MPL_mmap - Map memory
@@ -120,6 +151,7 @@ char *MPL_strdup(const char *str);
   through to the underlying file.
 . fd - The file backing the memory region
 . offset - Offset into the file
+. type - The category of memory being allocated
 
   Notes:
   This routine will often be implemented as the simple macro
@@ -136,7 +168,7 @@ char *MPL_strdup(const char *str);
   Module:
   Utility
   M*/
-#define MPL_mmap(a,b,c,d,e,f) MPL_trmmap((a),(b),(c),(d),(e),(f),__LINE__,__FILE__)
+#define MPL_mmap(a,b,c,d,e,f,g) MPL_trmmap((a),(b),(c),(d),(e),(f),(g),__LINE__,__FILE__)
 
 /*M
   MPL_munmap - Unmapmemory
@@ -165,16 +197,16 @@ char *MPL_strdup(const char *str);
   Module:
   Utility
   M*/
-#define MPL_munmap(a,b) MPL_trmunmap((a),(b),__LINE__,__FILE__)
+#define MPL_munmap(a,b,c) MPL_trmunmap((a),(b),(c),__LINE__,__FILE__)
 
 #else /* MPL_USE_MEMORY_TRACING */
 /* No memory tracing; just use native functions */
-#define MPL_malloc(a)    malloc((size_t)(a))
-#define MPL_calloc(a,b)  calloc((size_t)(a),(size_t)(b))
+#define MPL_malloc(a,b)    malloc((size_t)(a))
+#define MPL_calloc(a,b,c)  calloc((size_t)(a),(size_t)(b))
 #define MPL_free(a)      free((void *)(a))
-#define MPL_realloc(a,b)  realloc((void *)(a),(size_t)(b))
-#define MPL_mmap(a,b,c,d,e,f) mmap((void *)(a),(size_t)(b),(int)(c),(int)(d),(int)(e),(off_t)(f))
-#define MPL_munmap(a,b)  munmap((void *)(a),(size_t)(b))
+#define MPL_realloc(a,b,c)  realloc((void *)(a),(size_t)(b))
+#define MPL_mmap(a,b,c,d,e,f,g) mmap((void *)(a),(size_t)(b),(int)(c),(int)(d),(int)(e),(off_t)(f))
+#define MPL_munmap(a,b,c)  munmap((void *)(a),(size_t)(b))
 
 #endif /* MPL_USE_MEMORY_TRACING */
 
@@ -251,19 +283,20 @@ typedef union {
  */
 void MPL_trinit(void);
 void MPL_trconfig(int, int);
-void *MPL_trmalloc(size_t, int, const char[]);
+void *MPL_trmalloc(size_t, MPL_memory_class, int, const char[]);
 void MPL_trfree(void *, int, const char[]);
 int MPL_trvalid(const char[]);
 int MPL_trvalid2(const char[],int,const char[]);
-void *MPL_trcalloc(size_t, size_t, int, const char[]);
+void *MPL_trcalloc(size_t, size_t, MPL_memory_class, int, const char[]);
 #include <sys/types.h>
-void *MPL_trmmap(void *, size_t, int, int, int, off_t, int, const char[]);
-void MPL_trmunmap(void *, size_t, int, const char[]);
-void *MPL_trrealloc(void *, size_t, int, const char[]);
+void *MPL_trmmap(void *, size_t, int, int, int, off_t, MPL_memory_class, int, const char[]);
+void MPL_trmunmap(void *, size_t, MPL_memory_class, int, const char[]);
+void *MPL_trrealloc(void *, size_t, MPL_memory_class, int, const char[]);
 void *MPL_trstrdup(const char *, int, const char[]);
 
 /* Make sure that FILE is defined */
 #include <stdio.h>
 void MPL_trdump(FILE *, int);
+void MPL_trcategorydump(FILE *fp);
 
 #endif /* !defined(MPL_TRMEM_H_INCLUDED) */

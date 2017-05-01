@@ -41,7 +41,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
     struct MPLI_thread_info *thread_info;
     int err = MPL_THREAD_SUCCESS;
 
-    thread_info = (struct MPLI_thread_info *) MPL_malloc(sizeof(struct MPLI_thread_info));
+    thread_info = (struct MPLI_thread_info *) MPL_malloc(sizeof(struct MPLI_thread_info), MPL_MEM_THREAD);
     if (thread_info != NULL) {
         thread_info->func = func;
         thread_info->data = data;
@@ -239,12 +239,12 @@ void MPL_thread_cond_wait(MPL_thread_cond_t * cond, MPL_thread_mutex_t * mutex, 
         return;
     }
     if (cond->fifo_tail == NULL) {
-        cond->fifo_tail = (MPLI_win_thread_cond_fifo_t *) MPL_malloc(sizeof(MPLI_win_thread_cond_fifo_t));
+        cond->fifo_tail = (MPLI_win_thread_cond_fifo_t *) MPL_malloc(sizeof(MPLI_win_thread_cond_fifo_t), MPL_MEM_THREAD);
         cond->fifo_head = cond->fifo_tail;
     }
     else {
         cond->fifo_tail->next =
-            (MPLI_win_thread_cond_fifo_t *) MPL_malloc(sizeof(MPLI_win_thread_cond_fifo_t));
+            (MPLI_win_thread_cond_fifo_t *) MPL_malloc(sizeof(MPLI_win_thread_cond_fifo_t), MPL_MEM_THREAD);
         cond->fifo_tail = cond->fifo_tail->next;
     }
     if (cond->fifo_tail == NULL) {

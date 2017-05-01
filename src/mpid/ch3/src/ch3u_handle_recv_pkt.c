@@ -248,7 +248,7 @@ int MPIDI_CH3U_Receive_data_unexpected(MPIR_Request * rreq, void *buf, intptr_t 
        with flow control */
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"unexpected request allocated");
     
-    rreq->dev.tmpbuf = MPL_malloc(rreq->dev.recv_data_sz);
+    rreq->dev.tmpbuf = MPL_malloc(rreq->dev.recv_data_sz, MPL_MEM_BUFFER);
     if (!rreq->dev.tmpbuf) {
 	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
 			     rreq->dev.recv_data_sz);
@@ -383,7 +383,7 @@ int MPIDI_CH3U_Post_data_receive_unexpected(MPIR_Request * rreq)
        with flow control */
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"unexpected request allocated");
     
-    rreq->dev.tmpbuf = MPL_malloc(rreq->dev.recv_data_sz);
+    rreq->dev.tmpbuf = MPL_malloc(rreq->dev.recv_data_sz, MPL_MEM_BUFFER);
     if (!rreq->dev.tmpbuf) {
 	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
 			     rreq->dev.recv_data_sz);

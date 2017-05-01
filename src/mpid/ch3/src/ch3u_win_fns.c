@@ -58,12 +58,13 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
      * completion counters of all processes */
     MPIR_CHKPMEM_MALLOC((*win_ptr)->basic_info_table, MPIDI_Win_basic_info_t *,
                         comm_size * sizeof(MPIDI_Win_basic_info_t),
-                        mpi_errno, "(*win_ptr)->basic_info_table");
+                        mpi_errno, "(*win_ptr)->basic_info_table",
+                        MPL_MEM_RMA);
 
     /* get the addresses of the windows, window objects, and completion
      * counters of all processes.  allocate temp. buffer for communication */
     MPIR_CHKLMEM_MALLOC(tmp_buf, MPI_Aint *, 4 * comm_size * sizeof(MPI_Aint),
-                        mpi_errno, "tmp_buf");
+                        mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
     /* FIXME: This needs to be fixed for heterogeneous systems */
     /* FIXME: If we wanted to validate the transfer as within range at the
@@ -255,7 +256,7 @@ int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPIR_Info * inf
     MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH3U_WIN_ALLOCATE_NO_SHM);
 
     if (size > 0) {
-        MPIR_CHKPMEM_MALLOC(*base_pp, void *, size, mpi_errno, "(*win_ptr)->base");
+        MPIR_CHKPMEM_MALLOC(*base_pp, void *, size, mpi_errno, "(*win_ptr)->base", MPL_MEM_RMA);
         MPL_VG_MEM_INIT(*base_pp, size);
     }
     else if (size == 0) {

@@ -216,7 +216,7 @@ static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPIR_
 
     /* FIXME: We should use a pool allocator here */
     MPIR_CHKPMEM_MALLOC(tmp_ptr, MPIDI_SHM_Win_t *, sizeof(MPIDI_SHM_Win_t),
-                        mpi_errno, "SHM window entry");
+                        mpi_errno, "SHM window entry", MPL_MEM_SHM);
 
     tmp_ptr->next = NULL;
     tmp_ptr->win = win;

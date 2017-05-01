@@ -34,7 +34,7 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
 
     ucp_context_h ucp_context = MPIDI_UCX_global.context;
 
-    MPIDI_UCX_WIN(win).info_table = MPL_malloc(sizeof(MPIDI_UCX_win_info_t) * comm_ptr->local_size);
+    MPIDI_UCX_WIN(win).info_table = MPL_malloc(sizeof(MPIDI_UCX_win_info_t) * comm_ptr->local_size, MPL_MEM_OTHER);
 
     /* Only non-zero region maps to device. */
     rkey_size = 0;
@@ -68,7 +68,7 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
         MPIDI_UCX_CHK_STATUS(status);
     }
 
-    rkey_sizes = (int *) MPL_malloc(sizeof(int) * comm_ptr->local_size);
+    rkey_sizes = (int *) MPL_malloc(sizeof(int) * comm_ptr->local_size, MPL_MEM_OTHER);
     rkey_sizes[comm_ptr->rank] = (int) rkey_size;
     mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 1, MPI_INT,
                                     rkey_sizes, 1, MPI_INT, comm_ptr, &err);
@@ -76,7 +76,7 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    recv_disps = (int *) MPL_malloc(sizeof(int) * comm_ptr->local_size);
+    recv_disps = (int *) MPL_malloc(sizeof(int) * comm_ptr->local_size, MPL_MEM_OTHER);
 
 
     for (i = 0; i < comm_ptr->local_size; i++) {
@@ -84,7 +84,7 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
         cntr += rkey_sizes[i];
     }
 
-    rkey_recv_buff = MPL_malloc(cntr);
+    rkey_recv_buff = MPL_malloc(cntr, MPL_MEM_OTHER);
 
     /* allgather */
     mpi_errno = MPIR_Allgatherv_impl(rkey_buffer, rkey_size, MPI_BYTE,
@@ -114,7 +114,7 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
         else
             MPIDI_UCX_CHK_STATUS(status);
     }
-    share_data = MPL_malloc(comm_ptr->local_size * sizeof(struct _UCX_share));
+    share_data = MPL_malloc(comm_ptr->local_size * sizeof(struct _UCX_share), MPL_MEM_OTHER);
 
     share_data[comm_ptr->rank].disp = disp_unit;
     share_data[comm_ptr->rank].addr = (MPI_Aint) * base_ptr;

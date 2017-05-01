@@ -636,7 +636,7 @@ int MPID_nem_ptl_init_id(MPIDI_VC_t *vc)
 
     pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
     MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
-    MPIR_CHKLMEM_MALLOC(bc, char *, val_max_sz, mpi_errno, "bc");
+    MPIR_CHKLMEM_MALLOC(bc, char *, val_max_sz, mpi_errno, "bc", MPL_MEM_ADDRESS);
 
     mpi_errno = vc->pg->getConnInfo(vc->pg_rank, bc, val_max_sz, vc->pg);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

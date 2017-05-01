@@ -551,7 +551,7 @@ int MPIR_Grequest_progress_poke(int count,
     int made_progress = 0;
     MPIR_CHKLMEM_DECL(1);
 
-    MPIR_CHKLMEM_MALLOC(state_ptrs, void **, sizeof(void*) * count, mpi_errno, "state_ptrs");
+    MPIR_CHKLMEM_MALLOC(state_ptrs, void **, sizeof(void*) * count, mpi_errno, "state_ptrs", MPL_MEM_GREQ);
 
     /* TODO: Implement the class-wise completion optimization described in:
     Latham, Robert, et al. "Extending the MPI-2 generalized request interface."
@@ -601,7 +601,7 @@ int MPIR_Grequest_waitall(int count, MPIR_Request * const * request_ptrs)
     MPID_Progress_state progress_state;
     MPIR_CHKLMEM_DECL(1);
 
-    MPIR_CHKLMEM_MALLOC(state_ptrs, void *, sizeof(void*)*count, mpi_error, "state_ptrs");
+    MPIR_CHKLMEM_MALLOC(state_ptrs, void *, sizeof(void*)*count, mpi_error, "state_ptrs", MPL_MEM_GREQ);
     
         /* DISABLED CODE: The greq wait_fn function returns when ANY
            of the requests completes, rather than all.  Also, once a

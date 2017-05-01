@@ -113,7 +113,7 @@ int MPIR_Reduce_binomial (
     MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
     MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
-                        mpi_errno, "temporary buffer");
+                        mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
     
@@ -122,7 +122,7 @@ int MPIR_Reduce_binomial (
     if (rank != root) {
         MPIR_CHKLMEM_MALLOC(recvbuf, void *,
                             count*(MPL_MAX(extent,true_extent)), 
-                            mpi_errno, "receive buffer");
+                            mpi_errno, "receive buffer", MPL_MEM_BUFFER);
         recvbuf = (void *)((char*)recvbuf - true_lb);
     }
 
@@ -328,7 +328,7 @@ int MPIR_Reduce_redscat_gather (
     MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
     MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
-                        mpi_errno, "temporary buffer");
+                        mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
     
@@ -337,7 +337,7 @@ int MPIR_Reduce_redscat_gather (
     if (rank != root) {
         MPIR_CHKLMEM_MALLOC(recvbuf, void *,
                             count*(MPL_MAX(extent,true_extent)), 
-                            mpi_errno, "receive buffer");
+                            mpi_errno, "receive buffer", MPL_MEM_BUFFER);
         recvbuf = (void *)((char*)recvbuf - true_lb);
     }
 
@@ -420,8 +420,8 @@ int MPIR_Reduce_redscat_gather (
     /* We allocate these arrays on all processes, even if newrank=-1,
        because if root is one of the excluded processes, we will
        need them on the root later on below. */
-    MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts");
-    MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements");
+    MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements", MPL_MEM_BUFFER);
     
     if (newrank != -1) {
         for (i=0; i<pof2; i++)
@@ -777,7 +777,7 @@ int MPIR_Reduce_intra (
             MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
             MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
-                                mpi_errno, "temporary buffer");
+                                mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
             /* adjust for potential negative lower bound in datatype */
             tmp_buf = (void *)((char*)tmp_buf - true_lb);
         }
@@ -974,7 +974,7 @@ int MPIR_Reduce_inter (
 	     * inside the for loop */
 	    /* Should MPIR_CHKLMEM_MALLOC do this? */
 	    MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-	    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
+	    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
             /* adjust for potential negative lower bound in datatype */
             tmp_buf = (void *)((char*)tmp_buf - true_lb);
         }

@@ -131,7 +131,7 @@ MPIDI_CH4I_API(int, Win_flush_all, MPIR_Win *);
 MPIDI_CH4I_API(int, Get_accumulate, const void *, int, MPI_Datatype, void *, int, MPI_Datatype, int,
                MPI_Aint, int, MPI_Datatype, MPI_Op, MPIR_Win *);
 MPIDI_CH4I_API(int, Win_lock_all, int, MPIR_Win *);
-MPIDI_CH4I_API(void *, Alloc_mem, size_t, MPIR_Info *);
+MPIDI_CH4I_API(void *, Alloc_mem, size_t, MPIR_Info *, MPL_memory_class class);
 MPIDI_CH4I_API(int, Free_mem, void *);
 MPIDI_CH4I_API(int, Get_node_id, MPIR_Comm *, int rank, int *);
 MPIDI_CH4I_API(int, Get_max_node_id, MPIR_Comm *, int *);

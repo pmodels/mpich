@@ -81,7 +81,7 @@ TRACE_EXPORT int TRACE_Open( const char filespec[], TRACE_file *fp )
 	return TRACEINPUT_SUCCESS;
     }
 
-    *fp = (_trace_file*)MPL_malloc(sizeof(_trace_file));
+    *fp = (_trace_file*)MPL_malloc(sizeof(_trace_file), MPL_MEM_DEBUG);
     if (*fp == NULL)
 	return TRACEINPUT_FAIL;
 
@@ -96,15 +96,15 @@ TRACE_EXPORT int TRACE_Open( const char filespec[], TRACE_file *fp )
     (*fp)->bArrowAvail = (RLOG_GetNextArrow(pInput, &(*fp)->arrow) == 0);
     if (pInput->nNumRanks > 0)
     {
-	(*fp)->ppEvent = (RLOG_EVENT**)MPL_malloc(sizeof(RLOG_EVENT*) * pInput->nNumRanks);
-	(*fp)->ppEventAvail = (int**)MPL_malloc(sizeof(int*) * pInput->nNumRanks);
+	(*fp)->ppEvent = (RLOG_EVENT**)MPL_malloc(sizeof(RLOG_EVENT*) * pInput->nNumRanks, MPL_MEM_DEBUG);
+	(*fp)->ppEventAvail = (int**)MPL_malloc(sizeof(int*) * pInput->nNumRanks, MPL_MEM_DEBUG);
 
 	for (i=0; i<pInput->nNumRanks; i++)
 	{
 	    if (pInput->pNumEventRecursions[i] > 0)
 	    {
-		(*fp)->ppEvent[i] = (RLOG_EVENT*)MPL_malloc(sizeof(RLOG_EVENT) * pInput->pNumEventRecursions[i]);
-		(*fp)->ppEventAvail[i] = (int*)MPL_malloc(sizeof(int) * pInput->pNumEventRecursions[i]);
+		(*fp)->ppEvent[i] = (RLOG_EVENT*)MPL_malloc(sizeof(RLOG_EVENT) * pInput->pNumEventRecursions[i], MPL_MEM_DEBUG);
+		(*fp)->ppEventAvail[i] = (int*)MPL_malloc(sizeof(int) * pInput->pNumEventRecursions[i], MPL_MEM_DEBUG);
 	    }
 	    else
 	    {

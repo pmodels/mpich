@@ -233,7 +233,7 @@ int MPIR_Type_indexed(int count,
     new_dtp->is_contig = 0;
     if(old_is_contig)
     {
-	MPI_Aint *blklens = MPL_malloc(count *sizeof(MPI_Aint));
+	MPI_Aint *blklens = MPL_malloc(count *sizeof(MPI_Aint), MPL_MEM_DATATYPE);
 	for (i=0; i<count; i++)
 		blklens[i] = blocklength_array[i];
         contig_count = MPIR_Type_indexed_count_contig(count,
@@ -279,7 +279,7 @@ int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
     /* copy all integer values into a temporary buffer; this
      * includes the count, the blocklengths, and the displacements.
      */
-    MPIR_CHKLMEM_MALLOC(ints, int *, (2 * count + 1) * sizeof(int), mpi_errno, "contents integer array");
+    MPIR_CHKLMEM_MALLOC(ints, int *, (2 * count + 1) * sizeof(int), mpi_errno, "contents integer array", MPL_MEM_BUFFER);
 
     ints[0] = count;
 

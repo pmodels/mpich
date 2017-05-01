@@ -47,9 +47,9 @@ static int comm_split_filesystem_exhaustive(MPI_Comm comm, int key,
      * a headache for the file system at scale..  don't do this on a
      * large parallel file system! */
 
-    testdirname = MPL_malloc(PATH_MAX);
-    filename = MPL_malloc(PATH_MAX);
-    ranks = MPL_malloc(nprocs*sizeof(int));
+    testdirname = MPL_malloc(PATH_MAX, MPL_MEM_IO);
+    filename = MPL_malloc(PATH_MAX, MPL_MEM_IO);
+    ranks = MPL_malloc(nprocs*sizeof(int), MPL_MEM_IO);
 
     if (rank == 0) {
         /* same algorithim as shared file pointer name */
@@ -138,7 +138,7 @@ static int comm_split_filesystem_heuristic(MPI_Comm comm, int key,
     /* learn a bit about what groups were created: as a scalable
      * optimization we want to check a file's presence from a group
      * other than which created it */
-    all_ids = MPL_malloc(nprocs * sizeof(*all_ids));
+    all_ids = MPL_malloc(nprocs * sizeof(*all_ids), MPL_MEM_IO);
 
     mpi_errno = MPI_Gather(&id, 1, MPI_INT32_T, all_ids, 1, MPI_INT32_T, 0, comm);
 
@@ -178,7 +178,7 @@ static int comm_split_filesystem_heuristic(MPI_Comm comm, int key,
      * is a little odd in case we are creating and checking on the same
      * rank  */
 
-    filename = MPL_calloc(PATH_MAX, sizeof(char));
+    filename = MPL_calloc(PATH_MAX, sizeof(char), MPL_MEM_IO);
 
     if (rank == 0) {
         int r, pid;

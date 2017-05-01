@@ -47,6 +47,7 @@ enum TR_mem_type {
 
 typedef struct TRSPACE {
     enum TR_mem_type type;
+    MPL_memory_class class;
     size_t size;
     int id;
     int lineno;
@@ -101,10 +102,33 @@ static volatile size_t TRMaxMemAllow = 0;
 static int TR_is_threaded = 0;
 
 static int is_configured = 0;
+static int classes_initialized = 0;
 
 #if MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE
 
 static MPL_thread_mutex_t memalloc_mutex;
+
+static MPL_memory_allocation_t allocation_classes[MPL_MAX_MEMORY_CLASS];
+
+static const char *allocation_class_strings[] = {
+    "MPL_MEM_ADDRESS",
+    "MPL_MEM_OBJECT",
+    "MPL_MEM_COMM",
+    "MPL_MEM_GROUP",
+    "MPL_MEM_STRINGS",
+    "MPL_MEM_RMA",
+    "MPL_MEM_BUFFER",
+    "MPL_MEM_SHM",
+    "MPL_MEM_THREAD",
+    "MPL_MEM_DYNAMIC",
+    "MPL_MEM_IO",
+    "MPL_MEM_GREQ",
+    "MPL_MEM_DATATYPE",
+    "MPL_MEM_MPIT",
+    "MPL_MEM_DEBUG",
+    "MPL_MEM_PM",
+    "MPL_MEM_OTHER"
+};
 
 #define TR_THREAD_CS_ENTER                                              \
     do {                                                                \
@@ -173,6 +197,21 @@ static void addrToHex(void *addr, char string[MAX_ADDRESS_CHARS])
     string[1] = 'x';
 }
 
+static void init_classes() {
+    int i;
+
+    for (i = 0; i < MPL_MAX_MEMORY_CLASS; i++) {
+        allocation_classes[i] = (MPL_memory_allocation_t) {
+            .max_allocated_mem = 0,
+            .curr_allocated_mem = 0,
+            .total_allocated_mem = 0,
+            .num_allocations = 0
+        };
+    }
+
+    classes_initialized = 1;
+}
+
 /*+C
    MPL_trinit - Setup the space package.  Only needed for
    error messages and flags.
@@ -180,6 +219,7 @@ static void addrToHex(void *addr, char string[MAX_ADDRESS_CHARS])
 void MPL_trinit()
 {
     char *s;
+    int i;
 
     /* FIXME: We should use generalized parameter handling here
      * to allow use of the command line as well as environment
@@ -251,7 +291,7 @@ Input Parameters:
     double aligned pointer to requested storage, or null if not
     available.
  +*/
-static void *trmalloc(size_t a, int lineno, const char fname[])
+static void *trmalloc(size_t a, MPL_memory_class class, int lineno, const char fname[])
 {
     TRSPACE *head;
     char *new = NULL;
@@ -300,6 +340,7 @@ static void *trmalloc(size_t a, int lineno, const char fname[])
     head->next = TRhead[1];
     TRhead[1] = head;
     head->type = TR_MALLOC_TYPE;
+    head->class = class;
     head->prev = 0;
     head->size = nsize;
     head->id = TRid;
@@ -312,6 +353,16 @@ static void *trmalloc(size_t a, int lineno, const char fname[])
     /* Cast to (void*) to avoid false warning about alignment */
     nend = (unsigned long *) (void *) (new + nsize);
     nend[0] = COOKIE_VALUE;
+
+    if (!classes_initialized)
+        init_classes();
+
+    /* Add to the hash counters */
+    allocation_classes[class].curr_allocated_mem += nsize;
+    allocation_classes[class].total_allocated_mem += nsize;
+    allocation_classes[class].num_allocations++;
+    if (allocation_classes[class].curr_allocated_mem > allocation_classes[class].max_allocated_mem)
+        allocation_classes[class].max_allocated_mem = allocation_classes[class].curr_allocated_mem;
 
     allocated += nsize;
     if (allocated > TRMaxMem) {
@@ -347,12 +398,12 @@ static void *trmalloc(size_t a, int lineno, const char fname[])
     return (void *) new;
 }
 
-void *MPL_trmalloc(size_t a, int lineno, const char fname[])
+void *MPL_trmalloc(size_t a, MPL_memory_class class, int lineno, const char fname[])
 {
     void *retval;
 
     TR_THREAD_CS_ENTER;
-    retval = trmalloc(a, lineno, fname);
+    retval = trmalloc(a, class, lineno, fname);
     TR_THREAD_CS_EXIT;
 
     return retval;
@@ -463,6 +514,8 @@ static void trfree(void *a_ptr, int line, const char file[])
     if ((l = (int) strlen(file)) > TR_FNAME_LEN - 1)
         file += (l - (TR_FNAME_LEN - 1));
     MPL_strncpy(head->freed_fname, file, TR_FNAME_LEN);
+
+    allocation_classes[head->class].curr_allocated_mem -= head->size;
 
     allocated -= head->size;
     frags--;
@@ -722,22 +775,22 @@ Input Parameters:
     Double aligned pointer to requested storage, or null if not
     available.
  +*/
-static void *trcalloc(size_t nelem, size_t elsize, int lineno, const char fname[])
+static void *trcalloc(size_t nelem, size_t elsize, MPL_memory_class class, int lineno, const char fname[])
 {
     void *p;
 
-    p = trmalloc(nelem * elsize, lineno, fname);
+    p = trmalloc(nelem * elsize, class, lineno, fname);
     if (p) {
         memset(p, 0, nelem * elsize);
     }
     return p;
 }
 
-void *MPL_trcalloc(size_t nelem, size_t elsize, int lineno, const char fname[])
+void *MPL_trcalloc(size_t nelem, size_t elsize, MPL_memory_class class, int lineno, const char fname[])
 {
     void *retval;
     TR_THREAD_CS_ENTER;
-    retval = trcalloc(nelem, elsize, lineno, fname);
+    retval = trcalloc(nelem, elsize, class, lineno, fname);
     TR_THREAD_CS_EXIT;
     return retval;
 }
@@ -756,7 +809,7 @@ Input Parameters:
     available.  This implementation ALWAYS allocates new space and copies
     the contents into the new space.
  +*/
-static void *trrealloc(void *p, size_t size, int lineno, const char fname[])
+static void *trrealloc(void *p, size_t size, MPL_memory_class class, int lineno, const char fname[])
 {
     void *pnew;
     size_t nsize;
@@ -787,7 +840,7 @@ static void *trrealloc(void *p, size_t size, int lineno, const char fname[])
         return NULL;
     }
 
-    pnew = trmalloc(size, lineno, fname);
+    pnew = trmalloc(size, class, lineno, fname);
 
     if (p && pnew) {
         nsize = size;
@@ -808,16 +861,16 @@ static void *trrealloc(void *p, size_t size, int lineno, const char fname[])
     return pnew;
 }
 
-void *MPL_trrealloc(void *p, size_t size, int lineno, const char fname[])
+void *MPL_trrealloc(void *p, size_t size, MPL_memory_class class, int lineno, const char fname[])
 {
     void *retval;
     TR_THREAD_CS_ENTER;
-    retval = trrealloc(p, size, lineno, fname);
+    retval = trrealloc(p, size, class, lineno, fname);
     TR_THREAD_CS_EXIT;
     return retval;
 }
 
-static void *trmmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset, int lineno, const char fname[])
+static void *trmmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset, MPL_memory_class class, int lineno, const char fname[])
 {
     char *new = NULL;
 
@@ -829,28 +882,39 @@ static void *trmmap(void *addr, size_t length, int prot, int flags, int fd, off_
                 world_rank, (long) length, (long) length, new, fname, lineno);
     }
 
+    if (!classes_initialized)
+        init_classes();
+
+    allocation_classes[class].curr_allocated_mem += length;
+    allocation_classes[class].total_allocated_mem += length;
+    allocation_classes[class].num_allocations++;
+    if (allocation_classes[class].max_allocated_mem < allocation_classes[class].curr_allocated_mem)
+        allocation_classes[class].max_allocated_mem = allocation_classes[class].curr_allocated_mem;
+
   fn_exit:
     return (void *) new;
 }
 
-void *MPL_trmmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset, int lineno, const char fname[])
+void *MPL_trmmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset, MPL_memory_class class, int lineno, const char fname[])
 {
     void *retval;
     TR_THREAD_CS_ENTER;
-    retval = trmmap(addr, length, prot, flags, fd, offset, lineno, fname);
+    retval = trmmap(addr, length, prot, flags, fd, offset, class, lineno, fname);
     TR_THREAD_CS_EXIT;
     return retval;
 }
 
-static void trmunmap(void *addr, size_t length, int lineno, const char fname[])
+static void trmunmap(void *addr, size_t length, MPL_memory_class class, int lineno, const char fname[])
 {
+    allocation_classes[class].curr_allocated_mem -= length;
+
     munmap(addr, length);
 }
 
-void MPL_trmunmap(void *addr, size_t length, int lineno, const char fname[])
+void MPL_trmunmap(void *addr, size_t length, MPL_memory_class class, int lineno, const char fname[])
 {
     TR_THREAD_CS_ENTER;
-    trmunmap(addr, length, lineno, fname);
+    trmunmap(addr, length, class, lineno, fname);
     TR_THREAD_CS_EXIT;
 }
 
@@ -870,7 +934,7 @@ static void *trstrdup(const char *str, int lineno, const char fname[])
     void *p;
     size_t len = strlen(str) + 1;
 
-    p = trmalloc(len, lineno, fname);
+    p = trmalloc(len, MPL_MEM_STRINGS, lineno, fname);
     if (p) {
         memcpy(p, str, len);
     }
@@ -884,4 +948,24 @@ void *MPL_trstrdup(const char *str, int lineno, const char fname[])
     retval = trstrdup(str, lineno, fname);
     TR_THREAD_CS_EXIT;
     return retval;
+}
+
+void MPL_trcategorydump(FILE *fp)
+{
+    int i;
+
+    fprintf(fp, "%16s\t%16s\t%16s\t%16s\t%16s\n",
+            "CLASS",
+            "MAX ALLOCATED",
+            "CURR ALLOCATED",
+            "TOT ALLOCATIED",
+            "NUM ALLOCATIONS");
+    for (i = 0; i < MPL_MAX_MEMORY_CLASS; i++) {
+        fprintf(fp, "%16s\t%16ld\t%16ld\t%16ld\t%16ld\n",
+                allocation_class_strings[i],
+                allocation_classes[i].max_allocated_mem,
+                allocation_classes[i].curr_allocated_mem,
+                allocation_classes[i].total_allocated_mem,
+                allocation_classes[i].num_allocations);
+    }
 }

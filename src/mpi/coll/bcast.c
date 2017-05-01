@@ -180,7 +180,7 @@ int MPIR_Bcast_binomial(
 
     if (!is_contig || !is_homogeneous)
     {
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* TODO: Pipeline the packing and communication */
         position = 0;
@@ -538,7 +538,7 @@ int MPIR_Bcast_scatter_doubling_allgather(
     }
     else
     {
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* TODO: Pipeline the packing and communication */
         position = 0;
@@ -842,7 +842,7 @@ int MPIR_Bcast_scatter_ring_allgather(
     }
     else
     {
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* TODO: Pipeline the packing and communication */
         position = 0;

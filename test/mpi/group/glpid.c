@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     group.rank = 0;
     group.idx_of_first_lpid = -1;
     group.lrank_to_lpid = (MPII_Group_pmap_t *)
-        MPL_malloc(group.size * sizeof(MPII_Group_pmap_t));
+        MPL_malloc(group.size * sizeof(MPII_Group_pmap_t), MPL_MEM_OTHER);
     for (i = 0; i < group.size; i++) {
         group.lrank_to_lpid[i].lrank = i;
         group.lrank_to_lpid[i].lpid = group.size - i - 1;

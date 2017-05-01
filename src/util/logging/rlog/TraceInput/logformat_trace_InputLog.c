@@ -222,7 +222,7 @@ Java_logformat_trace_InputLog_getNextCategory( JNIEnv *env, jobject this )
     if ( legend_sz ) {
         legend_max  = legend_sz+1;
 	if (legend_max > ACHAR_LENGTH)
-	    legend_base = (char *) MPL_malloc( legend_max * sizeof( char ) );
+	    legend_base = (char *) MPL_malloc( legend_max * sizeof( char ), MPL_MEM_DEBUG );
 	else
 	    legend_base = slegend_base;
     }
@@ -233,7 +233,7 @@ Java_logformat_trace_InputLog_getNextCategory( JNIEnv *env, jobject this )
     if ( label_sz > 0 ) {
         label_max   = label_sz+1;
 	if (label_max > ACHAR_LENGTH)
-	    label_base  = (char *) MPL_malloc( label_max * sizeof( char ) );
+	    label_base  = (char *) MPL_malloc( label_max * sizeof( char ), MPL_MEM_DEBUG );
 	else
 	    label_base = slabel_base;
     }
@@ -244,7 +244,7 @@ Java_logformat_trace_InputLog_getNextCategory( JNIEnv *env, jobject this )
     if ( methods_sz > 0 ) {
         methods_max  = methods_sz;
 	if (methods_max > AINT_LENGTH)
-	    methods_base = (int *)  MPL_malloc( methods_max * sizeof( int ) );
+	    methods_base = (int *)  MPL_malloc( methods_max * sizeof( int ), MPL_MEM_DEBUG );
 	else
 	    methods_base = smethods_base;
     }
@@ -378,20 +378,20 @@ Java_logformat_trace_InputLog_getNextYCoordMap( JNIEnv *env, jobject this )
     }
 
     /* Prepare various arrays for C data */
-    title_name    = (char *) MPL_malloc( max_title_name * sizeof(char) );
-    column_names  = (char **) MPL_malloc( (ncolumns-1) * sizeof(char *) );
+    title_name    = (char *) MPL_malloc( max_title_name * sizeof(char), MPL_MEM_DEBUG );
+    column_names  = (char **) MPL_malloc( (ncolumns-1) * sizeof(char *), MPL_MEM_DEBUG );
     for ( icol = 0; icol < ncolumns-1; icol++ )
         column_names[ icol ] = (char *) MPL_malloc( max_column_name
                                               * sizeof(char) );
     coordmap_max  = nrows * ncolumns;
-    coordmap_base = (int *) MPL_malloc( coordmap_max * sizeof( int ) );
+    coordmap_base = (int *) MPL_malloc( coordmap_max * sizeof( int ), MPL_MEM_DEBUG );
     coordmap_sz   = 0;
     coordmap_pos  = 0;
 
    	methods_pos  = 0;
     if ( methods_sz > 0 ) {
         methods_max  = methods_sz;
-        methods_base = (int *) MPL_malloc( methods_max * sizeof( int ) );
+        methods_base = (int *) MPL_malloc( methods_max * sizeof( int ), MPL_MEM_DEBUG );
     }
     else
         methods_base = NULL;
@@ -539,19 +539,19 @@ Java_logformat_trace_InputLog_getNextPrimitive( JNIEnv *env, jobject this )
     tcoord_pos  = 0;
     tcoord_max  = tcoord_sz;
     if (tcoord_max > ADOUBLE_LENGTH)
-	tcoord_base = (double *) MPL_malloc( tcoord_max * sizeof( double ) );
+	tcoord_base = (double *) MPL_malloc( tcoord_max * sizeof( double ), MPL_MEM_DEBUG );
     else
 	tcoord_base = stcoord_base;
     ycoord_pos  = 0;
     ycoord_max  = ycoord_sz;
     if (ycoord_max > AINT_LENGTH)
-	ycoord_base = (int *)    MPL_malloc( ycoord_max * sizeof( int ) );
+	ycoord_base = (int *)    MPL_malloc( ycoord_max * sizeof( int ), MPL_MEM_DEBUG );
     else
 	ycoord_base = sycoord_base;
     info_pos    = 0;
     info_max    = info_sz;
     if (info_max > AINT_LENGTH)
-	info_base   = (char *)   MPL_malloc( info_max * sizeof( char ) );
+	info_base   = (char *)   MPL_malloc( info_max * sizeof( char ), MPL_MEM_DEBUG );
     else
 	info_base = sinfo_base;
     ierr = TRACE_Get_next_primitive( tracefile, &type_idx,
@@ -676,7 +676,7 @@ Java_logformat_trace_InputLog_getNextComposite( JNIEnv *env, jobject this )
     if ( cm_info_sz > 0 ) {
         cm_info_pos    = 0;
         cm_info_max    = cm_info_sz;
-        cm_info_base   = (char *)   MPL_malloc( cm_info_max * sizeof( char ) );
+        cm_info_base   = (char *)   MPL_malloc( cm_info_max * sizeof( char ), MPL_MEM_DEBUG );
         ierr = TRACE_Get_next_composite( tracefile, &cmplx_type_idx,
                                          &cm_info_sz, cm_info_base,
                                          &cm_info_pos, cm_info_max );

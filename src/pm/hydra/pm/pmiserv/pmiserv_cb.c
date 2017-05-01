@@ -471,7 +471,7 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
 
     /* This will be the control socket for this proxy */
     proxy->control_fd = fd;
-    HASH_ADD_INT(HYD_server_info.proxy_hash, control_fd, proxy);
+    HASH_ADD_INT(HYD_server_info.proxy_hash, control_fd, proxy, MPL_MEM_PM);
 
     /* Send out the executable information */
     status = send_exec_info(proxy);

@@ -85,16 +85,16 @@ int MPIR_Find_local_and_external(MPIR_Comm *comm, int *local_size_p, int *local_
     /* these two will be realloc'ed later to the appropriate size (currently unknown) */
     /* FIXME: realloc doesn't guarantee that the allocated area will be 
        shrunk - so using realloc is not an appropriate strategy. */
-    MPIR_CHKPMEM_MALLOC (external_ranks, int *, sizeof(int) * comm->remote_size, mpi_errno, "external_ranks");
-    MPIR_CHKPMEM_MALLOC (local_ranks, int *, sizeof(int) * comm->remote_size, mpi_errno, "local_ranks");
+    MPIR_CHKPMEM_MALLOC (external_ranks, int *, sizeof(int) * comm->remote_size, mpi_errno, "external_ranks", MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC (local_ranks, int *, sizeof(int) * comm->remote_size, mpi_errno, "local_ranks", MPL_MEM_COMM);
 
-    MPIR_CHKPMEM_MALLOC (internode_table, int *, sizeof(int) * comm->remote_size, mpi_errno, "internode_table");
-    MPIR_CHKPMEM_MALLOC (intranode_table, int *, sizeof(int) * comm->remote_size, mpi_errno, "intranode_table");
+    MPIR_CHKPMEM_MALLOC (internode_table, int *, sizeof(int) * comm->remote_size, mpi_errno, "internode_table", MPL_MEM_COMM);
+    MPIR_CHKPMEM_MALLOC (intranode_table, int *, sizeof(int) * comm->remote_size, mpi_errno, "intranode_table", MPL_MEM_COMM);
 
     mpi_errno = MPID_Get_max_node_id(comm, &max_node_id);
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
     MPIR_Assert(max_node_id >= 0);
-    MPIR_CHKLMEM_MALLOC (nodes, int *, sizeof(int) * (max_node_id + 1), mpi_errno, "nodes");
+    MPIR_CHKLMEM_MALLOC (nodes, int *, sizeof(int) * (max_node_id + 1), mpi_errno, "nodes", MPL_MEM_COMM);
 
     /* nodes maps node_id to rank in external_ranks of leader for that node */
     for (i = 0; i < (max_node_id + 1); ++i)
@@ -178,12 +178,12 @@ int MPIR_Find_local_and_external(MPIR_Comm *comm, int *local_size_p, int *local_
 
     *local_size_p = local_size;
     *local_rank_p = local_rank;
-    *local_ranks_p =  MPL_realloc (local_ranks, sizeof(int) * local_size);
+    *local_ranks_p =  MPL_realloc (local_ranks, sizeof(int) * local_size, MPL_MEM_COMM);
     MPIR_ERR_CHKANDJUMP (*local_ranks_p == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem2");
 
     *external_size_p = external_size;
     *external_rank_p = external_rank;
-    *external_ranks_p = MPL_realloc (external_ranks, sizeof(int) * external_size);
+    *external_ranks_p = MPL_realloc (external_ranks, sizeof(int) * external_size, MPL_MEM_COMM);
     MPIR_ERR_CHKANDJUMP (*external_ranks_p == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem2");
 
     /* no need to realloc */

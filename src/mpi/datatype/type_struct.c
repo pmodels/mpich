@@ -477,7 +477,7 @@ int MPIR_Type_struct_impl(int count, const int *array_of_blocklengths,
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 
-    MPIR_CHKLMEM_MALLOC(ints, int *, (count + 1) * sizeof(int), mpi_errno, "contents integer array");
+    MPIR_CHKLMEM_MALLOC(ints, int *, (count + 1) * sizeof(int), mpi_errno, "contents integer array", MPL_MEM_BUFFER);
 
     ints[0] = count;
     for (i=0; i < count; i++) {

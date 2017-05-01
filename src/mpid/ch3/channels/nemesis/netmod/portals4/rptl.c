@@ -87,7 +87,7 @@ static int find_target(ptl_process_t id, struct rptl_target **target)
 
     /* if the target does not already exist, create one */
     if (t == NULL) {
-        MPIR_CHKPMEM_MALLOC(t, struct rptl_target *, sizeof(struct rptl_target), mpi_errno, "rptl target");
+        MPIR_CHKPMEM_MALLOC(t, struct rptl_target *, sizeof(struct rptl_target), mpi_errno, "rptl target", MPL_MEM_ADDRESS);
         DL_APPEND(rptl_info.target_list, t);
 
         t->id = id;
@@ -608,12 +608,12 @@ static int stash_event(struct rptl_op *op, ptl_event_t event)
 
     if (event.type == PTL_EVENT_SEND) {
         MPIR_CHKPMEM_MALLOC(op->u.put.send, ptl_event_t *, sizeof(ptl_event_t), mpi_errno,
-                            "ptl event");
+                            "ptl event", MPL_MEM_OTHER);
         memcpy(op->u.put.send, &event, sizeof(ptl_event_t));
     }
     else {
         MPIR_CHKPMEM_MALLOC(op->u.put.ack, ptl_event_t *, sizeof(ptl_event_t), mpi_errno,
-                            "ptl event");
+                            "ptl event", MPL_MEM_OTHER);
         memcpy(op->u.put.ack, &event, sizeof(ptl_event_t));
     }
 

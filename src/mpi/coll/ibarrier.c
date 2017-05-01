@@ -125,7 +125,7 @@ int MPIR_Ibarrier_inter(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
        have reached the barrier. We do a 1-byte bcast because a 0-byte
        bcast will just return without doing anything. */
 
-    MPIR_SCHED_CHKPMEM_MALLOC(buf, char *, 1, mpi_errno, "bcast buf");
+    MPIR_SCHED_CHKPMEM_MALLOC(buf, char *, 1, mpi_errno, "bcast buf", MPL_MEM_BUFFER);
     buf[0] = 'D'; /* avoid valgrind warnings */
 
     /* first broadcast from left to right group, then from right to

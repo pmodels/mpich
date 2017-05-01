@@ -85,7 +85,7 @@ static inline void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
             /* FIXME: we have no way of passing the tag bits back in this case */
             ucp_request->req = (void *)UCS_ERR_MESSAGE_TRUNCATED;
         } else {
-            ucp_request->req = MPL_malloc(sizeof(ucp_tag_recv_info_t));
+            ucp_request->req = MPL_malloc(sizeof(ucp_tag_recv_info_t), MPL_MEM_BUFFER);
             memcpy(ucp_request->req, info, sizeof(ucp_tag_recv_info_t));
         }
     }

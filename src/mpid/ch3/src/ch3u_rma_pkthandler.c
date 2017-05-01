@@ -193,7 +193,7 @@ static int MPIDI_CH3_ExtPktHandler_Accumulate(MPIDI_CH3_Pkt_flags_t flags,
 
     if ((flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) && is_derived_dt) {
         (*ext_hdr_sz) = sizeof(MPIDI_CH3_Ext_pkt_accum_stream_derived_t);
-        (*ext_hdr_ptr) = MPL_malloc(sizeof(MPIDI_CH3_Ext_pkt_accum_stream_derived_t));
+        (*ext_hdr_ptr) = MPL_malloc(sizeof(MPIDI_CH3_Ext_pkt_accum_stream_derived_t), MPL_MEM_BUFFER);
         if ((*ext_hdr_ptr) == NULL) {
             MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
                                  "**nomem %s", "MPIDI_CH3_Ext_pkt_accum_stream_derived_t");
@@ -201,7 +201,7 @@ static int MPIDI_CH3_ExtPktHandler_Accumulate(MPIDI_CH3_Pkt_flags_t flags,
     }
     else if (flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
         (*ext_hdr_sz) = sizeof(MPIDI_CH3_Ext_pkt_accum_stream_t);
-        (*ext_hdr_ptr) = MPL_malloc(sizeof(MPIDI_CH3_Ext_pkt_accum_stream_t));
+        (*ext_hdr_ptr) = MPL_malloc(sizeof(MPIDI_CH3_Ext_pkt_accum_stream_t), MPL_MEM_BUFFER);
         if ((*ext_hdr_ptr) == NULL) {
             MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
                                  "**nomem %s", "MPIDI_CH3_Ext_pkt_accum_stream_t");
@@ -209,7 +209,7 @@ static int MPIDI_CH3_ExtPktHandler_Accumulate(MPIDI_CH3_Pkt_flags_t flags,
     }
     else if (is_derived_dt) {
         (*ext_hdr_sz) = sizeof(MPIDI_CH3_Ext_pkt_accum_derived_t);
-        (*ext_hdr_ptr) = MPL_malloc(sizeof(MPIDI_CH3_Ext_pkt_accum_derived_t));
+        (*ext_hdr_ptr) = MPL_malloc(sizeof(MPIDI_CH3_Ext_pkt_accum_derived_t), MPL_MEM_BUFFER);
         if ((*ext_hdr_ptr) == NULL) {
             MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
                                  "**nomem %s", "MPIDI_CH3_Ext_pkt_accum_derived_t");
@@ -361,7 +361,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
             /* allocate extended header in the request,
              * only including fixed-length variables defined in packet type. */
             req->dev.ext_hdr_sz = sizeof(MPIDI_CH3_Ext_pkt_put_derived_t);
-            req->dev.ext_hdr_ptr = MPL_malloc(req->dev.ext_hdr_sz);
+            req->dev.ext_hdr_ptr = MPL_malloc(req->dev.ext_hdr_sz, MPL_MEM_BUFFER);
             if (!req->dev.ext_hdr_ptr) {
                 MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                                      "MPIDI_CH3_Ext_pkt_put_derived_t");
@@ -369,7 +369,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
 
             /* put dataloop in a separate buffer to be reused in datatype.
              * It will be freed when free datatype. */
-            req->dev.dataloop = MPL_malloc(put_pkt->info.dataloop_size);
+            req->dev.dataloop = MPL_malloc(put_pkt->info.dataloop_size, MPL_MEM_BUFFER);
             if (!req->dev.dataloop) {
                 MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d",
                                      put_pkt->info.dataloop_size);
@@ -587,7 +587,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
         /* allocate extended header in the request,
          * only including fixed-length variables defined in packet type. */
         req->dev.ext_hdr_sz = sizeof(MPIDI_CH3_Ext_pkt_get_derived_t);
-        req->dev.ext_hdr_ptr = MPL_malloc(req->dev.ext_hdr_sz);
+        req->dev.ext_hdr_ptr = MPL_malloc(req->dev.ext_hdr_sz, MPL_MEM_BUFFER);
         if (!req->dev.ext_hdr_ptr) {
             MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                                  "MPIDI_CH3_Ext_pkt_get_derived_t");
@@ -595,7 +595,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
 
         /* put dataloop in a separate buffer to be reused in datatype.
          * It will be freed when free datatype. */
-        req->dev.dataloop = MPL_malloc(get_pkt->info.dataloop_size);
+        req->dev.dataloop = MPL_malloc(get_pkt->info.dataloop_size, MPL_MEM_BUFFER);
         if (!req->dev.dataloop) {
             MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d",
                                  get_pkt->info.dataloop_size);
@@ -798,7 +798,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void
 
             /* Put dataloop in a separate buffer to be reused in datatype.
              * It will be freed when free datatype. */
-            req->dev.dataloop = MPL_malloc(accum_pkt->info.dataloop_size);
+            req->dev.dataloop = MPL_malloc(accum_pkt->info.dataloop_size, MPL_MEM_BUFFER);
             if (!req->dev.dataloop) {
                 MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d",
                                      accum_pkt->info.dataloop_size);
@@ -1084,7 +1084,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
 
             /* Put dataloop in a separate buffer to be reused in datatype.
              * It will be freed when free datatype. */
-            req->dev.dataloop = MPL_malloc(get_accum_pkt->info.dataloop_size);
+            req->dev.dataloop = MPL_malloc(get_accum_pkt->info.dataloop_size, MPL_MEM_BUFFER);
             if (!req->dev.dataloop) {
                 MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d",
                                      get_accum_pkt->info.dataloop_size);
@@ -1459,7 +1459,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
 
             MPIR_Datatype_get_extent_macro(fop_pkt->datatype, extent);
 
-            req->dev.user_buf = MPL_malloc(extent);
+            req->dev.user_buf = MPL_malloc(extent, MPL_MEM_BUFFER);
             if (!req->dev.user_buf) {
                 MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d", extent);
             }

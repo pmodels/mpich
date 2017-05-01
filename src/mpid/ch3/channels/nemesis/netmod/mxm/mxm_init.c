@@ -292,7 +292,7 @@ int MPID_nem_mxm_vc_init(MPIDI_VC_t * vc)
             MPIR_ERR_POP(mpi_errno);
 #endif
 
-        business_card = (char *) MPL_malloc(val_max_sz);
+        business_card = (char *) MPL_malloc(val_max_sz, MPL_MEM_ADDRESS);
         mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, val_max_sz, vc->pg);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -423,7 +423,7 @@ static int _mxm_conf(void)
 #if MXM_API >= MXM_VERSION(3,0)
     _mxm_obj.runtime_version = MPL_strdup(mxm_get_version_string());
 #else
-    _mxm_obj.runtime_version = MPL_malloc(sizeof(MXM_VERNO_STRING) + 10);
+    _mxm_obj.runtime_version = MPL_malloc(sizeof(MXM_VERNO_STRING) + 10, MPL_MEM_STRINGS);
     snprintf(_mxm_obj.runtime_version, (sizeof(MXM_VERNO_STRING) + 9),
              "%ld.%ld", (cur_ver >> MXM_MAJOR_BIT) & 0xff, (cur_ver >> MXM_MINOR_BIT) & 0xff);
 #endif
@@ -493,7 +493,7 @@ static int _mxm_init(int rank, int size)
     _mxm_obj.mxm_rank = rank;
     _mxm_obj.mxm_np = size;
     _mxm_obj.endpoint =
-        (MPID_nem_mxm_ep_t *) MPL_malloc(_mxm_obj.mxm_np * sizeof(MPID_nem_mxm_ep_t));
+        (MPID_nem_mxm_ep_t *) MPL_malloc(_mxm_obj.mxm_np * sizeof(MPID_nem_mxm_ep_t), MPL_MEM_ADDRESS);
     memset(_mxm_obj.endpoint, 0, _mxm_obj.mxm_np * sizeof(MPID_nem_mxm_ep_t));
 
     list_init(&_mxm_obj.free_queue);
@@ -639,7 +639,7 @@ static int _mxm_add_comm(MPIR_Comm * comm, void *param)
     MPIR_CHKPMEM_DECL(1);
 
     MPIR_CHKPMEM_MALLOC(mq_h_v, mxm_mq_h *, sizeof(mxm_mq_h) * 2, mpi_errno,
-                        "mxm_mq_h_context_ptr");
+                        "mxm_mq_h_context_ptr", MPL_MEM_COMM);
 
     _dbg_mxm_output(6, "Add COMM comm %p (rank %d type %d context %d | %d size %d | %d) \n",
                     comm, comm->rank, comm->comm_kind,

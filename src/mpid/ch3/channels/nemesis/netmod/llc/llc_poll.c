@@ -264,7 +264,7 @@ int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPIR_Request *req)
         write_to_buf = (void *) ((char *) req->dev.user_buf + dt_true_lb);
     }
     else {
-        REQ_FIELD(req, pack_buf) = MPL_malloc(data_sz);
+        REQ_FIELD(req, pack_buf) = MPL_malloc(data_sz, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP(!REQ_FIELD(req, pack_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
         write_to_buf = REQ_FIELD(req, pack_buf);
     }

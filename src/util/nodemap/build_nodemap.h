@@ -86,9 +86,9 @@ static inline int MPIR_NODEMAP_publish_node_id(int sz, int myrank)
     pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
     MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
 
-    MPIR_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key");
+    MPIR_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key", MPL_MEM_ADDRESS);
 
-    MPIR_CHKLMEM_MALLOC(kvs_name, char *, 256, mpi_errno, "kvs_name");
+    MPIR_CHKLMEM_MALLOC(kvs_name, char *, 256, mpi_errno, "kvs_name", MPL_MEM_ADDRESS);
     pmi_errno = PMI_KVS_Get_my_name(kvs_name, 256);
     MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
     /* Put my hostname id */
@@ -197,7 +197,7 @@ static inline int MPIR_NODEMAP_parse_mapping(char *map_str,
         ++d;
     }
 
-    MPIR_CHKPMEM_MALLOC(*map, MPIR_NODEMAP_map_block_t *, sizeof(MPIR_NODEMAP_map_block_t) * num_blocks, mpi_errno, "map");
+    MPIR_CHKPMEM_MALLOC(*map, MPIR_NODEMAP_map_block_t *, sizeof(MPIR_NODEMAP_map_block_t) * num_blocks, mpi_errno, "map", MPL_MEM_ADDRESS);
 
     /* parse block descriptors */
     for (i = 0; i < num_blocks; ++i) {
@@ -429,13 +429,13 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
     /* Allocate space for pmi key and value */
     pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
     MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
-    MPIR_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key");
+    MPIR_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key", MPL_MEM_ADDRESS);
 
     pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
     MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
-    MPIR_CHKLMEM_MALLOC(value, char *, val_max_sz, mpi_errno, "value");
+    MPIR_CHKLMEM_MALLOC(value, char *, val_max_sz, mpi_errno, "value", MPL_MEM_ADDRESS);
 
-    MPIR_CHKLMEM_MALLOC(kvs_name, char *, 256, mpi_errno, "kvs_name");
+    MPIR_CHKLMEM_MALLOC(kvs_name, char *, 256, mpi_errno, "kvs_name", MPL_MEM_ADDRESS);
     pmi_errno = PMI_KVS_Get_my_name(kvs_name, 256);
     MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
     /* See if process manager supports PMI_process_mapping keyval */
@@ -461,8 +461,8 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
 
     /* Allocate temporary structures.  These would need to be persistent if
        we somehow were able to support dynamic processes via this method. */
-    MPIR_CHKLMEM_MALLOC(node_names, char **, sz * sizeof(char*), mpi_errno, "node_names");
-    MPIR_CHKLMEM_MALLOC(node_name_buf, char *, sz * key_max_sz * sizeof(char), mpi_errno, "node_name_buf");
+    MPIR_CHKLMEM_MALLOC(node_names, char **, sz * sizeof(char*), mpi_errno, "node_names", MPL_MEM_ADDRESS);
+    MPIR_CHKLMEM_MALLOC(node_name_buf, char *, sz * key_max_sz * sizeof(char), mpi_errno, "node_name_buf", MPL_MEM_ADDRESS);
 
     /* Gather hostnames */
     for (i = 0; i < sz; ++i)
@@ -480,7 +480,7 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
         {
             /* This is us, no need to perform a get */
             int ret;
-            char *hostname = (char*) MPL_malloc(sizeof(char) * MAX_HOSTNAME_LEN);
+            char *hostname = (char*) MPL_malloc(sizeof(char) * MAX_HOSTNAME_LEN, MPL_MEM_ADDRESS);
             ret = gethostname(hostname, MAX_HOSTNAME_LEN);
             MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock_gethost", "**sock_gethost %s %d", MPIR_Strerror(errno), errno);
             hostname[MAX_HOSTNAME_LEN-1] = '\0';

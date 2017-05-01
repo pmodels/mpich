@@ -227,7 +227,7 @@ static int MPIDI_CH3U_GetIPInterface( MPIDI_CH3I_Sock_ifaddr_t *ifaddr, int *fou
 	struct ifconf			ifconf;
 	int				rc;
 
-	buf_ptr = (char *) MPL_malloc(buf_len);
+	buf_ptr = (char *) MPL_malloc(buf_len, MPL_MEM_BUFFER);
 	if (buf_ptr == NULL) {
 	    fprintf( stderr, "Unable to allocate %d bytes\n", buf_len );
 	    return 1;

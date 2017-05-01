@@ -130,7 +130,7 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
             tmp_buf_size = 0;
 
         if (tmp_buf_size) {
-            MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+            MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
         }
 
         if (rank == root) {
@@ -465,7 +465,7 @@ int MPIR_Igather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
 
                 MPIR_Ensure_Aint_fits_in_pointer(sendcount*local_size*(MPL_MAX(extent, true_extent)));
                 MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, sendcount*local_size*(MPL_MAX(extent,true_extent)),
-                                          mpi_errno, "tmp_buf");
+                                          mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
                 /* adjust for potential negative lower bound in datatype */
                 tmp_buf = (void *)((char*)tmp_buf - true_lb);
             }

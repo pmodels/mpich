@@ -134,7 +134,7 @@ static inline void *MPIR_Handle_indirect_init(void *(**indirect)[],
     /* Create the table */
     if (!*indirect) {
         /* printf("Creating indirect table with %d pointers to blocks in it\n", indirect_num_blocks); */
-        *indirect = (void *) MPL_calloc(indirect_num_blocks, sizeof(void *));
+        *indirect = (void *) MPL_calloc(indirect_num_blocks, sizeof(void *), MPL_MEM_OBJECT);
         if (!*indirect) {
             return 0;
         }
@@ -149,7 +149,7 @@ static inline void *MPIR_Handle_indirect_init(void *(**indirect)[],
 
     /* Create the next block */
     /* printf("Creating indirect block number %d with %d objects in it\n", *indirect_size, indirect_num_indices); */
-    block_ptr = (void *) MPL_calloc(indirect_num_indices, obj_size);
+    block_ptr = (void *) MPL_calloc(indirect_num_indices, obj_size, MPL_MEM_OBJECT);
     if (!block_ptr) {
         return 0;
     }

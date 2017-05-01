@@ -78,7 +78,7 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr)
     }
 
     if (objmem->indirect_size > 0) {
-        nIndirect = (int *) MPL_calloc(objmem->indirect_size, sizeof(int));
+        nIndirect = (int *) MPL_calloc(objmem->indirect_size, sizeof(int), MPL_MEM_OBJECT);
     }
     /* Count the number of items in the avail list.  These include
      * all objects, whether direct or indirect allocation */

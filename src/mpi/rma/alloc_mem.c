@@ -90,7 +90,7 @@ int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
     /* ... body of routine ...  */
 
     MPIR_Ensure_Aint_fits_in_pointer(size);
-    ap = MPID_Alloc_mem(size, info_ptr);
+    ap = MPID_Alloc_mem(size, info_ptr, MPL_MEM_RMA);
 
     /* --BEGIN ERROR HANDLING-- */
     if (!ap)

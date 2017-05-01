@@ -52,7 +52,7 @@ int MPIR_Type_create_struct_impl(int count,
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 
-    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 1) * sizeof(int), mpi_errno, "content description");
+    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 1) * sizeof(int), mpi_errno, "content description", MPL_MEM_BUFFER);
 
     ints[0] = count;
     for (i=0; i < count; i++)

@@ -127,7 +127,7 @@ int MPIR_Ibcast_binomial(void *buffer, int count, MPI_Datatype datatype, int roo
         is_homogeneous = 0;
 #endif
     MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPIR_Ibcast_status *,
-                              sizeof(struct MPIR_Ibcast_status), mpi_errno, "MPI_Stauts");
+                              sizeof(struct MPIR_Ibcast_status), mpi_errno, "MPI_Stauts", MPL_MEM_BUFFER);
 
 
     /* MPI_Type_size() might not give the accurate size of the packed
@@ -148,7 +148,7 @@ int MPIR_Ibcast_binomial(void *buffer, int count, MPI_Datatype datatype, int roo
 
     if (!is_contig || !is_homogeneous)
     {
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
+        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* TODO: Pipeline the packing and communication */
         if (rank == root) {
@@ -416,7 +416,7 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype 
     }
 
     MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPIR_Ibcast_status*,
-                              sizeof(struct MPIR_Ibcast_status), mpi_errno, "MPI_Status");
+                              sizeof(struct MPIR_Ibcast_status), mpi_errno, "MPI_Status", MPL_MEM_BUFFER);
     is_homogeneous = 1;
 #ifdef MPID_HAS_HETERO
     if (comm_ptr->is_hetero)
@@ -436,7 +436,7 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype 
         tmp_buf = (char *)buffer + true_lb;
     }
     else {
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
+        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* TODO: Pipeline the packing and communication */
         if (rank == root) {
@@ -674,7 +674,7 @@ int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype dat
 #endif
     MPIR_Assert(is_homogeneous); /* we don't handle the hetero case yet */
     MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPIR_Ibcast_status*,
-                              sizeof(struct MPIR_Ibcast_status), mpi_errno, "MPI_Status");
+                              sizeof(struct MPIR_Ibcast_status), mpi_errno, "MPI_Status", MPL_MEM_BUFFER);
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
     status->n_bytes = nbytes;
@@ -686,7 +686,7 @@ int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype dat
         tmp_buf = (char *) buffer + true_lb;
     }
     else {
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
+        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* TODO: Pipeline the packing and communication */
         if (rank == root) {
@@ -782,7 +782,7 @@ int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MP
         MPID_Abort(comm_ptr, MPI_ERR_OTHER, 1, "SMP collectives are disabled!");
     MPIR_Assert(MPIR_Comm_is_node_aware(comm_ptr));
     MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPIR_Ibcast_status*,
-                              sizeof(struct MPIR_Ibcast_status), mpi_errno, "MPI_Status");
+                              sizeof(struct MPIR_Ibcast_status), mpi_errno, "MPI_Status", MPL_MEM_BUFFER);
 
     is_homogeneous = 1;
 #ifdef MPID_HAS_HETERO
