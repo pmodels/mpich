@@ -117,7 +117,7 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
     /* Convert MPI request handles to a request object pointers */
     if (incount > MPIR_REQUEST_PTR_ARRAY_SIZE)
     {
-	MPIR_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPIR_Request **, incount * sizeof(MPIR_Request *), mpi_errno, "request pointers");
+        MPIR_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPIR_Request **, incount * sizeof(MPIR_Request *), mpi_errno, "request pointers", MPL_MEM_OBJECT);
     }
 
     n_inactive = 0;

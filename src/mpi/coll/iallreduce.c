@@ -89,7 +89,7 @@ int MPIR_Iallreduce_redscat_allgather(const void *sendbuf, void *recvbuf, int co
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
     MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
 
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -153,8 +153,8 @@ int MPIR_Iallreduce_redscat_allgather(const void *sendbuf, void *recvbuf, int co
          * calculated directly during the loop, rather than requiring a less-scalable
          * "2*pof2"-sized memory allocation */
 
-        MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts");
-        MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements");
+        MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements", MPL_MEM_BUFFER);
 
         MPIR_Assert(count >= pof2); /* the cnts calculations assume this */
         for (i=0; i<(pof2-1); i++)
@@ -310,7 +310,7 @@ int MPIR_Iallreduce_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_D
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
     MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
 
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);

@@ -95,7 +95,7 @@ int MPIR_Ialltoallw_intra(const void *sendbuf, const int sendcounts[], const int
             MPIR_Datatype_get_extent_macro(recvtypes[i], recv_extent);
             max_size = MPL_MAX(max_size, recvcounts[i] * MPL_MAX(recv_extent, true_extent));
         }
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, max_size, mpi_errno, "Ialltoallw tmp_buf");
+        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, max_size, mpi_errno, "Ialltoallw tmp_buf", MPL_MEM_BUFFER);
 
         for (i = 0; i < comm_size; ++i) {
             /* start inner loop at i to avoid re-exchanging data */

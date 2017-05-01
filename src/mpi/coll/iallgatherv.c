@@ -67,7 +67,7 @@ int MPIR_Iallgatherv_rec_dbl(const void *sendbuf, int sendcount, MPI_Datatype se
         goto fn_exit;
 
     MPIR_Ensure_Aint_fits_in_pointer(total_count*(MPL_MAX(recvtype_true_extent, recvtype_extent)));
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, total_count*(MPL_MAX(recvtype_true_extent,recvtype_extent)), mpi_errno, "tmp_buf");
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, total_count*(MPL_MAX(recvtype_true_extent,recvtype_extent)), mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);
@@ -305,7 +305,7 @@ int MPIR_Iallgatherv_bruck(const void *sendbuf, int sendcount, MPI_Datatype send
     MPIR_Ensure_Aint_fits_in_pointer(total_count * MPL_MAX(recvtype_true_extent, recvtype_extent));
     recvbuf_extent = total_count * (MPL_MAX(recvtype_true_extent, recvtype_extent));
 
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf");
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);

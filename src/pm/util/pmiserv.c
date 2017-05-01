@@ -237,7 +237,7 @@ PMIProcess *PMISetupNewProcess( int fd, ProcessState *pState )
 {
     PMIProcess *pmiprocess;
 
-    pmiprocess = (PMIProcess *)MPL_malloc( sizeof(PMIProcess) );
+    pmiprocess = (PMIProcess *)MPL_malloc( sizeof(PMIProcess), MPL_MEM_PM );
     if (!pmiprocess) return 0;
     pmiprocess->fd           = fd;
     pmiprocess->nextChar     = pmiprocess->readBuf;
@@ -265,14 +265,13 @@ PMIProcess *PMISetupNewProcess( int fd, ProcessState *pState )
 int PMISetupNewGroup( int nProcess, PMIKVSpace *kvs )
 {
     PMIGroup *g;
-    curPMIGroup = (PMIGroup *)MPL_malloc( sizeof(PMIGroup) );
+    curPMIGroup = (PMIGroup *)MPL_malloc( sizeof(PMIGroup), MPL_MEM_PM );
     if (!curPMIGroup) return 1;
 
     curPMIGroup->nProcess   = nProcess;
     curPMIGroup->groupID    = pmimaster.nGroups++;
     curPMIGroup->nInBarrier = 0;
-    curPMIGroup->pmiProcess = (PMIProcess **)MPL_malloc(
-					 sizeof(PMIProcess*) * nProcess );
+    curPMIGroup->pmiProcess = (PMIProcess **)MPL_malloc( sizeof(PMIProcess*) * nProcess, MPL_MEM_PM );
     if (!curPMIGroup->pmiProcess) return 1;
     curPMIGroup->nextGroup  = 0;
     curNprocess             = 0;
@@ -456,7 +455,7 @@ static PMIKVSpace *fPMIKVSAllocate( void )
     static int kvsnum = 0;    /* Used to generate names */
 
     /* Create the space */
-    kvs = (PMIKVSpace *)MPL_malloc( sizeof(PMIKVSpace) );
+    kvs = (PMIKVSpace *)MPL_malloc( sizeof(PMIKVSpace), MPL_MEM_PM );
     if (!kvs) {
 	MPL_internal_error_printf( "too many kvs's\n" );
 	return 0;
@@ -544,7 +543,7 @@ static int fPMIKVSAddPair( PMIKVSpace *kvs,
 	pprev = &(p->nextPair);
 	p = p->nextPair;
     }
-    pair = (PMIKVPair *)MPL_malloc( sizeof(PMIKVPair) );
+    pair = (PMIKVPair *)MPL_malloc( sizeof(PMIKVPair), MPL_MEM_PM );
     if (!pair) {
 	return -1;
     }
@@ -1011,7 +1010,7 @@ static int fPMI_Handle_spawn( PMIProcess *pentry )
     DBG_PRINTFCOND(pmidebug,( "Entering fPMI_Handle_spawn\n" ));
 
     if (!pentry->spawnWorld) {
-	pWorld = (ProcessWorld *)MPL_malloc( sizeof(ProcessWorld) );
+	pWorld = (ProcessWorld *)MPL_malloc( sizeof(ProcessWorld), MPL_MEM_PM );
 	if (!pWorld) return 1;
 	
 	pentry->spawnWorld = pWorld;
@@ -1036,7 +1035,7 @@ static int fPMI_Handle_spawn( PMIProcess *pentry )
        commands */ 
 
     /* Create a new app */
-    app = (ProcessApp *)MPL_malloc( sizeof(ProcessApp) );
+    app = (ProcessApp *)MPL_malloc( sizeof(ProcessApp), MPL_MEM_PM );
     if (!app) return 1;
     app->myAppNum  = 0;
     app->exename   = 0;
@@ -1191,7 +1190,7 @@ static int fPMI_Handle_spawn( PMIProcess *pentry )
     }	
 
     if (app->nArgs > 0) {
-	app->args  = (const char **)MPL_malloc( app->nArgs * sizeof(char *) );
+	app->args  = (const char **)MPL_malloc( app->nArgs * sizeof(char *), MPL_MEM_PM );
 	for (i=0; i<app->nArgs; i++) {
 	    app->args[i] = args[i];
 	    args[i]      = 0;

@@ -132,7 +132,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
            receive data of max size (nbytes*comm_size)/2 */
         if (relative_rank && !(relative_rank % 2)) {
 	    tmp_buf_size = (nbytes*comm_size)/2;
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
         }
         
         /* if the root is not rank 0, we reorder the sendbuf in order of
@@ -142,7 +142,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
         if (rank == root) {
             if (root != 0) {
 		tmp_buf_size = nbytes*comm_size;
-                MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+                MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
                 if (recvbuf != MPI_IN_PLACE)
                     mpi_errno = MPIR_Localcopy(((char *) sendbuf + extent*sendcount*rank),
@@ -482,7 +482,7 @@ int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
 		MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
 						 sendcount*remote_size*extent);
 
-                MPIR_CHKLMEM_MALLOC(tmp_buf, void *, recvcount*local_size*(MPL_MAX(extent,true_extent)), mpi_errno, "tmp_buf");
+                MPIR_CHKLMEM_MALLOC(tmp_buf, void *, recvcount*local_size*(MPL_MAX(extent,true_extent)), mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
                 
                 /* adjust for potential negative lower bound in datatype */
                 tmp_buf = (void *)((char*)tmp_buf - true_lb);

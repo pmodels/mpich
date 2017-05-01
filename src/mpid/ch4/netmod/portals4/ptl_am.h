@@ -41,7 +41,7 @@ static inline int MPIDI_NM_am_isend(int rank,
 
     /* fast path: there's no data to be sent */
     if (count == 0) {
-        send_buf = MPL_malloc(am_hdr_sz);
+        send_buf = MPL_malloc(am_hdr_sz, MPL_MEM_BUFFER);
         MPIR_Memcpy(send_buf, am_hdr, am_hdr_sz);
         sreq->dev.ch4.am.netmod_am.portals4.pack_buffer = send_buf;
 
@@ -62,7 +62,7 @@ static inline int MPIDI_NM_am_isend(int rank,
         ptl_md_t md;
         ptl_iovec_t iovec[2];
 
-        send_buf = MPL_malloc(am_hdr_sz);
+        send_buf = MPL_malloc(am_hdr_sz, MPL_MEM_BUFFER);
         MPIR_Memcpy(send_buf, am_hdr, am_hdr_sz);
         sreq->dev.ch4.am.netmod_am.portals4.pack_buffer = send_buf;
 
@@ -86,7 +86,7 @@ static inline int MPIDI_NM_am_isend(int rank,
         MPIR_Segment *segment;
         MPI_Aint last;
 
-        send_buf = MPL_malloc(am_hdr_sz + data_sz);
+        send_buf = MPL_malloc(am_hdr_sz + data_sz, MPL_MEM_BUFFER);
         MPIR_Memcpy(send_buf, am_hdr, am_hdr_sz);
         segment = MPIR_Segment_alloc();
         MPIR_Segment_init(data, count, datatype, segment, 0);
@@ -158,7 +158,7 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
         ptl_md_t md;
         ptl_iovec_t iovec[2];
 
-        send_buf = MPL_malloc(am_hdr_sz);
+        send_buf = MPL_malloc(am_hdr_sz, MPL_MEM_BUFFER);
         MPIR_Memcpy(send_buf, am_hdr, am_hdr_sz);
         sreq->dev.ch4.am.netmod_am.portals4.pack_buffer = send_buf;
 
@@ -182,7 +182,7 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
         MPIR_Segment *segment;
         MPI_Aint last;
 
-        send_buf = MPL_malloc(am_hdr_sz + data_sz);
+        send_buf = MPL_malloc(am_hdr_sz + data_sz, MPL_MEM_BUFFER);
         MPIR_Memcpy(send_buf, am_hdr, am_hdr_sz);
         segment = MPIR_Segment_alloc();
         MPIR_Segment_init(data, count, datatype, segment, 0);
@@ -230,7 +230,7 @@ static inline int MPIDI_NM_am_send_hdr(int rank,
     /* create an internal request for the inject */
     inject_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPIDI_NM_am_request_init(inject_req);
-    send_buf = MPL_malloc(am_hdr_sz);
+    send_buf = MPL_malloc(am_hdr_sz, MPL_MEM_BUFFER);
     MPIR_Memcpy(send_buf, am_hdr, am_hdr_sz);
     inject_req->dev.ch4.am.netmod_am.portals4.pack_buffer = send_buf;
 
@@ -267,7 +267,7 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
     /* create an internal request for the inject */
     inject_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPIDI_NM_am_request_init(inject_req);
-    send_buf = MPL_malloc(am_hdr_sz);
+    send_buf = MPL_malloc(am_hdr_sz, MPL_MEM_BUFFER);
     MPIR_Memcpy(send_buf, am_hdr, am_hdr_sz);
     inject_req->dev.ch4.am.netmod_am.portals4.pack_buffer = send_buf;
 

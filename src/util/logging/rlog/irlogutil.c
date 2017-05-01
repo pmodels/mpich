@@ -58,7 +58,7 @@ IRLOG_IOStruct *IRLOG_CreateInputStruct(const char *filename)
     IRLOG_IOStruct *pInput;
 
     /* allocate an input structure */
-    pInput = (IRLOG_IOStruct*)MPL_malloc(sizeof(IRLOG_IOStruct));
+    pInput = (IRLOG_IOStruct*)MPL_malloc(sizeof(IRLOG_IOStruct), MPL_MEM_DEBUG);
     if (pInput == NULL)
     {
 	MPL_error_printf("malloc failed - %s\n", strerror(errno));
@@ -100,7 +100,7 @@ IRLOG_IOStruct *IRLOG_CreateOutputStruct(const char *filename)
     IRLOG_IOStruct *pOutput = NULL;
 
     /* allocate a data structure */
-    pOutput = (IRLOG_IOStruct*)MPL_malloc(sizeof(IRLOG_IOStruct));
+    pOutput = (IRLOG_IOStruct*)MPL_malloc(sizeof(IRLOG_IOStruct), MPL_MEM_DEBUG);
     if (pOutput == NULL)
     {
 	MPL_error_printf("malloc failed - %s\n", strerror(errno));

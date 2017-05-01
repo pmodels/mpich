@@ -44,7 +44,7 @@ int MPIE_ArgsCheckForEnv( int argc, char *argv[], ProcessWorld *pWorld,
 
     if ( strncmp( argv[0], "-env",  4) == 0) {
 	if (!*appEnv) {
-	    env = (EnvInfo *)MPL_malloc( sizeof(EnvInfo) );
+	    env = (EnvInfo *)MPL_malloc( sizeof(EnvInfo), MPL_MEM_PM );
 	    env->includeAll = 1;
 	    env->envPairs   = 0;
 	    env->envNames   = 0;
@@ -56,7 +56,7 @@ int MPIE_ArgsCheckForEnv( int argc, char *argv[], ProcessWorld *pWorld,
     }
     else if (strncmp( argv[0], "-genv", 5 ) == 0) {
 	if (!pWorld->genv) {
-	    env = (EnvInfo *)MPL_malloc( sizeof(EnvInfo) );
+	    env = (EnvInfo *)MPL_malloc( sizeof(EnvInfo), MPL_MEM_PM );
 	    env->includeAll = 1;
 	    env->envPairs   = 0;
 	    env->envNames   = 0;
@@ -77,7 +77,7 @@ int MPIE_ArgsCheckForEnv( int argc, char *argv[], ProcessWorld *pWorld,
 	if (!argv[1] || !argv[2]) {
 	    mpiexec_usage( "Missing arguments to -env or -genv" );
 	}
-	p             = (EnvData *)MPL_malloc( sizeof(EnvData) );
+	p             = (EnvData *)MPL_malloc( sizeof(EnvData), MPL_MEM_PM );
 	p->name       = (const char *)MPL_strdup( argv[1] );
 	p->value      = (const char *)MPL_strdup( argv[2] );
 	p->envvalue   = 0;
@@ -104,9 +104,9 @@ int MPIE_ArgsCheckForEnv( int argc, char *argv[], ProcessWorld *pWorld,
 	    while (*lPtr && *lPtr != ',') lPtr++;
             /* The length of any environment string will fit in an int */
 	    namelen       = (int)(lPtr - name);
-	    p             = (EnvData *)MPL_malloc( sizeof(EnvData) );
+	    p             = (EnvData *)MPL_malloc( sizeof(EnvData), MPL_MEM_PM );
 	    p->value      = 0;
-	    p->name       = (const char *)MPL_malloc( namelen + 1 );
+	    p->name       = (const char *)MPL_malloc( namelen + 1, MPL_MEM_PM );
 	    p->envvalue   = 0;
 	    for (i=0; i<namelen; i++) ((char *)p->name)[i] = name[i];
 	    ((char *)p->name)[namelen] = 0;
@@ -261,7 +261,7 @@ int MPIE_EnvInitData( EnvData *elist, int getValue )
 		value = "";
 	    }
 	    slen = strlen( elist->name ) + strlen(value) + 2;
-	    str  = (char *)MPL_malloc( slen );
+	    str  = (char *)MPL_malloc( slen, MPL_MEM_PM );
 	    if (!str) {
 		return 1;
 	    }
@@ -290,7 +290,7 @@ int MPIE_Putenv( ProcessWorld *pWorld, const char *env_string )
 
     /* FIXME: This should be getGenv (so allocation/init in one place) */
     if (!pWorld->genv) {
-	genv = (EnvInfo *)MPL_malloc( sizeof(EnvInfo) );
+	genv = (EnvInfo *)MPL_malloc( sizeof(EnvInfo), MPL_MEM_PM );
 	genv->includeAll = 1;
 	genv->envPairs   = 0;
 	genv->envNames   = 0;
@@ -298,7 +298,7 @@ int MPIE_Putenv( ProcessWorld *pWorld, const char *env_string )
     }
     genv           = pWorld->genv;
 
-    p              = (EnvData *)MPL_malloc( sizeof(EnvData) );
+    p              = (EnvData *)MPL_malloc( sizeof(EnvData), MPL_MEM_PM );
     if (!p) return 1;
     p->name        = 0;
     p->value       = 0;

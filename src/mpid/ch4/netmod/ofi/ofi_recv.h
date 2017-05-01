@@ -97,7 +97,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             DLOOP_Offset last = dt_ptr->size * count;
 
             size = o_size*num_contig + sizeof(*(MPIDI_OFI_REQUEST(rreq, noncontig.nopack)));
-            MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = (struct iovec *) MPL_malloc(size);
+            MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = (struct iovec *) MPL_malloc(size, MPL_MEM_BUFFER);
             memset(MPIDI_OFI_REQUEST(rreq, noncontig.nopack), 0, size);
 
             MPIR_Segment_init(buf, count, datatype, &seg, 0);
@@ -131,7 +131,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             }
 
             if (countp_huge >= 1 && huge) {
-                originv_huge = (struct iovec *) MPL_malloc(sizeof(struct iovec) * countp_huge);
+                originv_huge = (struct iovec *) MPL_malloc(sizeof(struct iovec) * countp_huge, MPL_MEM_BUFFER);
 
                 for (j = 0; j < num_contig; j++) {
                     l = 0;
@@ -190,7 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
   unpack:
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_PACK;
         MPIDI_OFI_REQUEST(rreq, noncontig.pack) =
-            (MPIDI_OFI_pack_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment));
+            (MPIDI_OFI_pack_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment), MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, noncontig.pack->pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
         recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack->pack_buffer);

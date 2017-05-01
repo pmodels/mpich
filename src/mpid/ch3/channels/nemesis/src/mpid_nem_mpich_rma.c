@@ -24,7 +24,7 @@ MPID_nem_mpich_alloc_win (void **buf, int len, MPID_nem_mpich_win_t **win)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_MPICH_ALLOC_WIN);
 
-    MPIR_CHKPMEM_MALLOC (*win, MPID_nem_mpich_win_t *, sizeof (MPID_nem_mpich_win_t), mpi_errno, "rma win object");
+    MPIR_CHKPMEM_MALLOC (*win, MPID_nem_mpich_win_t *, sizeof (MPID_nem_mpich_win_t), mpi_errno, "rma win object", MPL_MEM_RMA);
 
     mpi_errno = MPID_nem_allocate_shared_memory ((char **)buf, len, &(*win)->handle);
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
@@ -390,12 +390,12 @@ MPID_nem_mpich_deserialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t **w
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_MPICH_DESERIALIZE_WIN);
 
-    MPIR_CHKPMEM_MALLOC (*win, MPID_nem_mpich_win_t *, sizeof (MPID_nem_mpich_win_t), mpi_errno, "win object");
+    MPIR_CHKPMEM_MALLOC (*win, MPID_nem_mpich_win_t *, sizeof (MPID_nem_mpich_win_t), mpi_errno, "win object", MPL_MEM_RMA);
 
     str_errno = MPL_str_get_int_arg (b, WIN_HANLEN_KEY, &handle_len);
     MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
     MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
-    MPIR_CHKPMEM_MALLOC ((*win)->handle, char *, handle_len, mpi_errno, "window handle");
+    MPIR_CHKPMEM_MALLOC ((*win)->handle, char *, handle_len, mpi_errno, "window handle", MPL_MEM_RMA);
 
     str_errno = MPL_str_get_string_arg(b, WIN_HANDLE_KEY, (*win)->handle, handle_len);
     MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");

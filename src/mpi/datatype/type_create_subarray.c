@@ -301,7 +301,7 @@ int MPI_Type_create_subarray(int ndims,
      */
 
     /* Save contents */
-    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (3 * ndims + 2) * sizeof(int), mpi_errno, "content description");
+    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (3 * ndims + 2) * sizeof(int), mpi_errno, "content description", MPL_MEM_BUFFER);
 
     ints[0] = ndims;
     for (i=0; i < ndims; i++) {

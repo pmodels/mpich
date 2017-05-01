@@ -169,7 +169,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_add(MPIR
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_WIN_TARGET_ADD);
 
     MPIDI_CH4U_win_target_t *target_ptr = NULL;
-    target_ptr = (MPIDI_CH4U_win_target_t *) MPL_malloc(sizeof(MPIDI_CH4U_win_target_t));
+    target_ptr = (MPIDI_CH4U_win_target_t *) MPL_malloc(sizeof(MPIDI_CH4U_win_target_t), MPL_MEM_RMA);
     target_ptr->rank = rank;
     MPIR_cc_set(&target_ptr->local_cmpl_cnts, 0);
     MPIR_cc_set(&target_ptr->remote_cmpl_cnts, 0);
@@ -177,7 +177,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_add(MPIR
     target_ptr->sync.access_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
     target_ptr->sync.assert_mode = 0;
 
-    HASH_ADD(hash_handle, MPIDI_CH4U_WIN(win, targets), rank, sizeof(int), target_ptr);
+    HASH_ADD(hash_handle, MPIDI_CH4U_WIN(win, targets), rank, sizeof(int), target_ptr, MPL_MEM_RMA);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_WIN_TARGET_ADD);
     return target_ptr;
@@ -843,10 +843,10 @@ static inline void MPIDI_win_check_group_local_completed(MPIR_Win * win,
 #define FUNCNAME MPIDI_CH4U_map_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_create(void **out_map)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_create(void **out_map, MPL_memory_class class)
 {
     MPIDI_CH4U_map_t *map;
-    map = MPL_malloc(sizeof(MPIDI_CH4U_map_t));
+    map = MPL_malloc(sizeof(MPIDI_CH4U_map_t), class);
     MPIR_Assert(map != NULL);
     map->head = NULL;
     *out_map = map;
@@ -869,17 +869,17 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_destroy(void *in_map)
 #define FUNCNAME MPIDI_CH4U_map_set
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_set(void *in_map, uint64_t id, void *val)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_set(void *in_map, uint64_t id, void *val, MPL_memory_class class)
 {
     MPIDI_CH4U_map_t *map;
     MPIDI_CH4U_map_entry_t *map_entry;
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
     map = (MPIDI_CH4U_map_t *) in_map;
-    map_entry = MPL_malloc(sizeof(MPIDI_CH4U_map_entry_t));
+    map_entry = MPL_malloc(sizeof(MPIDI_CH4U_map_entry_t), class);
     MPIR_Assert(map_entry != NULL);
     map_entry->key = id;
     map_entry->value = val;
-    HASH_ADD(hh, map->head, key, sizeof(uint64_t), map_entry);
+    HASH_ADD(hh, map->head, key, sizeof(uint64_t), map_entry, class);
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
 }
 

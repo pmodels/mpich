@@ -245,7 +245,7 @@ static int reinit_pmi(void)
     
     MPL_free(MPIDI_Process.my_pg->id);
    
-    MPIDI_Process.my_pg->id = MPL_malloc(pg_id_sz + 1);
+    MPIDI_Process.my_pg->id = MPL_malloc(pg_id_sz + 1, MPL_MEM_ADDRESS);
     CHECK_ERR(MPIDI_Process.my_pg->id == NULL, "malloc failed");
 
     ret = PMI_KVS_Get_my_name(MPIDI_Process.my_pg->id, pg_id_sz);
@@ -257,7 +257,7 @@ static int reinit_pmi(void)
     
     MPL_free(MPIDI_Process.my_pg->connData);
    
-    MPIDI_Process.my_pg->connData = MPL_malloc(kvs_name_sz + 1);
+    MPIDI_Process.my_pg->connData = MPL_malloc(kvs_name_sz + 1, MPL_MEM_ADDRESS);
     CHECK_ERR(MPIDI_Process.my_pg->connData == NULL, "malloc failed");
 
     ret = PMI_KVS_Get_my_name(MPIDI_Process.my_pg->connData, kvs_name_sz);

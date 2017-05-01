@@ -107,7 +107,7 @@ static inline int MPIDI_do_put(const void *origin_addr,
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
-    dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec));
+    dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
     MPIR_Assert(dt_iov);
 
     last = data_sz;
@@ -248,7 +248,7 @@ static inline int MPIDI_do_get(void *origin_addr,
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
-    dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec));
+    dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
     MPIR_Assert(dt_iov);
 
     last = data_sz;
@@ -379,7 +379,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
-    dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec));
+    dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
     MPIR_Assert(dt_iov);
 
     last = data_sz;
@@ -542,7 +542,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
-    dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec));
+    dt_iov = (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
     MPIR_Assert(dt_iov);
 
     last = data_sz;
@@ -931,7 +931,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
     if (data_sz == 0)
         goto fn_exit;
 
-    p_data = MPL_malloc(data_sz * 2);
+    p_data = MPL_malloc(data_sz * 2, MPL_MEM_BUFFER);
     MPIR_Assert(p_data);
     MPIR_Memcpy(p_data, (char *) origin_addr, data_sz);
     MPIR_Memcpy((char *) p_data + data_sz, (char *) compare_addr, data_sz);

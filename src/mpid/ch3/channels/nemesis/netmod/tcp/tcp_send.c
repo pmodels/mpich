@@ -24,7 +24,7 @@ static struct {MPID_nem_tcp_send_q_element_t *top;} free_buffers = {0};
         if (S_EMPTY (free_buffers))                                                                                                     \
         {                                                                                                                               \
             MPIR_CHKPMEM_MALLOC (*(e), MPID_nem_tcp_send_q_element_t *, sizeof(MPID_nem_tcp_send_q_element_t),      \
-                                 mpi_errno, "send queue element");                                                                      \
+                                 mpi_errno, "send queue element", MPL_MEM_BUFFER);                                                      \
         }                                                                                                                               \
         else                                                                                                                            \
         {                                                                                                                               \
@@ -52,7 +52,7 @@ int MPID_nem_tcp_send_init(void)
         MPID_nem_tcp_send_q_element_t *e;
         
         MPIR_CHKPMEM_MALLOC (e, MPID_nem_tcp_send_q_element_t *,
-                             sizeof(MPID_nem_tcp_send_q_element_t), mpi_errno, "send queue element");
+                             sizeof(MPID_nem_tcp_send_q_element_t), mpi_errno, "send queue element", MPL_MEM_BUFFER);
         S_PUSH (&free_buffers, e);
     }
 

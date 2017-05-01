@@ -135,8 +135,8 @@ int MPIR_Alltoallv_intra(const void *sendbuf, const int *sendcounts, const int *
 
         MPIR_Datatype_get_extent_macro(sendtype, send_extent);
 
-        MPIR_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*bblock*sizeof(MPI_Status),  mpi_errno, "starray");
-        MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request**, 2*bblock*sizeof(MPIR_Request *), mpi_errno, "reqarray");
+        MPIR_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*bblock*sizeof(MPI_Status),  mpi_errno, "starray", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request**, 2*bblock*sizeof(MPIR_Request *), mpi_errno, "reqarray", MPL_MEM_BUFFER);
 
         /* post only bblock isends/irecvs at a time as suggested by Tony Ladd */
         for (ii=0; ii<comm_size; ii+=bblock) {

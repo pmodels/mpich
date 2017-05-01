@@ -250,7 +250,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* from KVS and store them in local  */
     /* table                             */
     /* --------------------------------- */
-    MPIR_CHKLMEM_MALLOC(addrs, char *, pg_p->size * gl_data.bound_addrlen, mpi_errno, "addrs");
+    MPIR_CHKLMEM_MALLOC(addrs, char *, pg_p->size * gl_data.bound_addrlen, mpi_errno, "addrs", MPL_MEM_ADDRESS);
 
     for (i = 0; i < pg_p->size; ++i) {
         MPL_snprintf(key, sizeof(key), "OFI-%d", i);
@@ -269,7 +269,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* The addressing mode is "map", so we must provide     */
     /* storage to store the per destination addresses       */
     /* ---------------------------------------------------- */
-    fi_addrs = MPL_malloc(pg_p->size * sizeof(fi_addr_t));
+    fi_addrs = MPL_malloc(pg_p->size * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
     FI_RC(fi_av_insert(gl_data.av, addrs, pg_p->size, fi_addrs, 0ULL, NULL), avmap);
 
     /* --------------------------------- */

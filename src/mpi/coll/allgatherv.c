@@ -148,7 +148,7 @@ int MPIR_Allgatherv_intra (
 
             MPIR_Ensure_Aint_fits_in_pointer(total_count *
                            (MPL_MAX(recvtype_true_extent, recvtype_extent)));
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, total_count*(MPL_MAX(recvtype_true_extent,recvtype_extent)), mpi_errno, "tmp_buf");
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, total_count*(MPL_MAX(recvtype_true_extent,recvtype_extent)), mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
             /* adjust for potential negative lower bound in datatype */
             tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);
@@ -344,7 +344,7 @@ int MPIR_Allgatherv_intra (
         else {
             /* heterogeneous. need to use temp. buffer. */
             MPIR_Pack_size_impl(total_count, recvtype, &tmp_buf_size);
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
             
             /* calculate the value of nbytes, the number of bytes in packed
                representation corresponding to a single recvtype. Since
@@ -541,7 +541,7 @@ int MPIR_Allgatherv_intra (
         recvbuf_extent = total_count *
             (MPL_MAX(recvtype_true_extent, recvtype_extent));
 
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf");
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
             
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);

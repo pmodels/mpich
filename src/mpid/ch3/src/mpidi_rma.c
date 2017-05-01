@@ -98,7 +98,7 @@ int MPIDI_RMA_init(void)
 
     MPIR_CHKPMEM_MALLOC(global_rma_op_pool_start, MPIDI_RMA_Op_t *,
                         sizeof(MPIDI_RMA_Op_t) * MPIR_CVAR_CH3_RMA_OP_GLOBAL_POOL_SIZE,
-                        mpi_errno, "RMA op pool");
+                        mpi_errno, "RMA op pool", MPL_MEM_RMA);
     for (i = 0; i < MPIR_CVAR_CH3_RMA_OP_GLOBAL_POOL_SIZE; i++) {
         global_rma_op_pool_start[i].pool_type = MPIDI_RMA_POOL_GLOBAL;
         DL_APPEND(global_rma_op_pool_head, &(global_rma_op_pool_start[i]));
@@ -106,7 +106,7 @@ int MPIDI_RMA_init(void)
 
     MPIR_CHKPMEM_MALLOC(global_rma_target_pool_start, MPIDI_RMA_Target_t *,
                         sizeof(MPIDI_RMA_Target_t) * MPIR_CVAR_CH3_RMA_TARGET_GLOBAL_POOL_SIZE,
-                        mpi_errno, "RMA target pool");
+                        mpi_errno, "RMA target pool", MPL_MEM_RMA);
     for (i = 0; i < MPIR_CVAR_CH3_RMA_TARGET_GLOBAL_POOL_SIZE; i++) {
         global_rma_target_pool_start[i].pool_type = MPIDI_RMA_POOL_GLOBAL;
         DL_APPEND(global_rma_target_pool_head, &(global_rma_target_pool_start[i]));

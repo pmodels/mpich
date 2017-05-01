@@ -129,7 +129,7 @@ void MPIDI_CH3U_Buffer_copy(
 	MPIR_Segment rseg;
 	intptr_t rfirst;
 
-	buf = MPL_malloc(MPIDI_COPY_BUFFER_SZ);
+	buf = MPL_malloc(MPIDI_COPY_BUFFER_SZ, MPL_MEM_BUFFER);
 	/* --BEGIN ERROR HANDLING-- */
 	if (buf == NULL)
 	{

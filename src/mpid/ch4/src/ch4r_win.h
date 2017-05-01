@@ -225,7 +225,7 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
     MPIR_cc_set(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), 0);
 
     MPIDI_CH4U_WIN(win, win_id) = MPIDI_CH4U_generate_win_id(comm_ptr);
-    MPIDI_CH4U_map_set(MPIDI_CH4_Global.win_map, MPIDI_CH4U_WIN(win, win_id), win);
+    MPIDI_CH4U_map_set(MPIDI_CH4_Global.win_map, MPIDI_CH4U_WIN(win, win_id), win, MPL_MEM_RMA);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH4R_WIN_INIT);
@@ -248,7 +248,7 @@ static inline int MPIDI_CH4I_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Grou
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_FILL_RANKS_IN_WIN_GRP);
     MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH4I_FILL_RANKS_IN_WIN_GRP);
 
-    ranks_in_grp = (int *) MPL_malloc(group_ptr->size * sizeof(int));
+    ranks_in_grp = (int *) MPL_malloc(group_ptr->size * sizeof(int), MPL_MEM_RMA);
     MPIR_Assert(ranks_in_grp);
     for (i = 0; i < group_ptr->size; i++)
         ranks_in_grp[i] = i;
@@ -333,7 +333,7 @@ static inline int MPIDI_CH4R_mpi_win_complete(MPIR_Win * win)
     msg.win_id = MPIDI_CH4U_WIN(win, win_id);
     msg.origin_rank = win->comm_ptr->rank;
 
-    ranks_in_win_grp = (int *) MPL_malloc(sizeof(int) * group->size);
+    ranks_in_win_grp = (int *) MPL_malloc(sizeof(int) * group->size, MPL_MEM_RMA);
     MPIR_Assert(ranks_in_win_grp);
 
     mpi_errno = MPIDI_CH4I_fill_ranks_in_win_grp(win, group, ranks_in_win_grp);
@@ -398,7 +398,7 @@ static inline int MPIDI_CH4R_mpi_win_post(MPIR_Group * group, int assert, MPIR_W
     msg.win_id = MPIDI_CH4U_WIN(win, win_id);
     msg.origin_rank = win->comm_ptr->rank;
 
-    ranks_in_win_grp = (int *) MPL_malloc(sizeof(int) * group->size);
+    ranks_in_win_grp = (int *) MPL_malloc(sizeof(int) * group->size, MPL_MEM_RMA);
     MPIR_Assert(ranks_in_win_grp);
 
     mpi_errno = MPIDI_CH4I_fill_ranks_in_win_grp(win, group, ranks_in_win_grp);
@@ -723,14 +723,14 @@ static inline int MPIDI_CH4R_win_finalize(MPIR_Win ** win_ptr)
 
     if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE && win->base) {
         if (MPIDI_CH4U_WIN(win, mmap_sz) > 0)
-            MPL_munmap(MPIDI_CH4U_WIN(win, mmap_addr), MPIDI_CH4U_WIN(win, mmap_sz));
+            MPL_munmap(MPIDI_CH4U_WIN(win, mmap_addr), MPIDI_CH4U_WIN(win, mmap_sz), MPL_MEM_RMA);
         else if (MPIDI_CH4U_WIN(win, mmap_sz) == -1)
             MPL_free(win->base);
     }
 
     if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         if (MPIDI_CH4U_WIN(win, mmap_addr))
-            MPL_munmap(MPIDI_CH4U_WIN(win, mmap_addr), MPIDI_CH4U_WIN(win, mmap_sz));
+            MPL_munmap(MPIDI_CH4U_WIN(win, mmap_addr), MPIDI_CH4U_WIN(win, mmap_sz), MPL_MEM_RMA);
         MPL_free(MPIDI_CH4U_WIN(win, sizes));
     }
 
@@ -903,7 +903,7 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
     MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
     MPIDI_CH4U_WIN(win, shared_table) =
         (MPIDI_CH4U_win_shared_info_t *) MPL_malloc(sizeof(MPIDI_CH4U_win_shared_info_t) *
-                                                    comm_ptr->local_size);
+                                                    comm_ptr->local_size, MPL_MEM_RMA);
     shared_table = MPIDI_CH4U_WIN(win, shared_table);
     shared_table[comm_ptr->rank].size = size;
     shared_table[comm_ptr->rank].disp_unit = disp_unit;
@@ -941,10 +941,10 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    shm_key = (char *) MPL_malloc(sizeof(char));
+    shm_key = (char *) MPL_malloc(sizeof(char), MPL_MEM_SHM);
     shm_key_size = snprintf(shm_key, 1, "/mpi-%s-%X-%" PRIx64,
                             MPIDI_CH4_Global.jobid, root_rank, MPIDI_CH4U_WIN(win, win_id));
-    shm_key = (char *) MPL_realloc(shm_key, shm_key_size);
+    shm_key = (char *) MPL_realloc(shm_key, shm_key_size, MPL_MEM_SHM);
     MPIR_Assert(shm_key);
     snprintf(shm_key, shm_key_size, "/mpi-%s-%X-%" PRIx64,
              MPIDI_CH4_Global.jobid, root_rank, MPIDI_CH4U_WIN(win, win_id));
@@ -1031,7 +1031,7 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
             goto fn_fail;
 
         if (anyfail && map_ptr != NULL && map_ptr != MAP_FAILED)
-            MPL_munmap(map_ptr, mapsize);
+            MPL_munmap(map_ptr, mapsize, MPL_MEM_RMA);
     }
 
     if (anyfail) {      /* Still fails after retry, report error. */

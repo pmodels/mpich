@@ -113,7 +113,7 @@ int MPID_nem_ptl_nm_init(void)
     overflow_me.min_free = PTL_MAX_EAGER;
 
     /* allocate all overflow space at once */
-    tmp_ptr = MPL_malloc(NUM_RECV_BUFS * BUFSIZE);
+    tmp_ptr = MPL_malloc(NUM_RECV_BUFS * BUFSIZE, MPL_MEM_BUFFER);
     expected_recv_ptr = tmp_ptr;
     expected_recv_idx = 0;
 
@@ -206,7 +206,7 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, intptr_t d
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_SEND_PKT);
     
-    sendbuf = MPL_malloc(sendbuf_sz);
+    sendbuf = MPL_malloc(sendbuf_sz, MPL_MEM_BUFFER);
     MPIR_Assert(sendbuf != NULL);
     MPIR_Memcpy(sendbuf, hdr_p, sizeof(MPIDI_CH3_Pkt_t));
     sendbuf_ptr = sendbuf + sizeof(MPIDI_CH3_Pkt_t);
@@ -272,7 +272,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr_p)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SEND_NONCONTIG_PKT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_SEND_NONCONTIG_PKT);
 
-    sendbuf = MPL_malloc(sendbuf_sz);
+    sendbuf = MPL_malloc(sendbuf_sz, MPL_MEM_BUFFER);
     MPIR_Assert(sendbuf != NULL);
     MPIR_Memcpy(sendbuf, hdr_p, sizeof(MPIDI_CH3_Pkt_t));
     sendbuf_ptr = sendbuf + sizeof(MPIDI_CH3_Pkt_t);
@@ -295,7 +295,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr_p)
 
         if (remaining) {  /* Post MEs for the remote gets */
             ptl_size_t *offset = (ptl_size_t *)sendbuf_ptr;
-            TMPBUF(sreq) = MPL_malloc(remaining);
+            TMPBUF(sreq) = MPL_malloc(remaining, MPL_MEM_BUFFER);
             *offset = (ptl_size_t)TMPBUF(sreq);
             first = last;
             last = sreq->dev.segment_size;
@@ -486,7 +486,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                 else {
                     MPIR_Request *req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
                     /* This request is actually complete; just needs to wait to enforce ordering */
-                    TMPBUF(req) = MPL_malloc(packet_sz);
+                    TMPBUF(req) = MPL_malloc(packet_sz, MPL_MEM_BUFFER);
                     MPIR_Assert(TMPBUF(req));
                     MPIR_Memcpy(TMPBUF(req), e->start, packet_sz);
                     REQ_PTL(req)->bytes_put = packet_sz;
@@ -506,7 +506,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                 MPIDI_CH3U_Request_decrement_cc(req, &incomplete);  /* We'll increment it below */
                 REQ_PTL(req)->event_handler = MPID_nem_ptl_nm_ctl_event_handler;
                 REQ_PTL(req)->bytes_put = packet_sz + remaining - sizeof(ptl_size_t);
-                TMPBUF(req) = MPL_malloc(REQ_PTL(req)->bytes_put);
+                TMPBUF(req) = MPL_malloc(REQ_PTL(req)->bytes_put, MPL_MEM_BUFFER);
                 MPIR_Assert(TMPBUF(req) != NULL);
                 MPIR_Memcpy(TMPBUF(req), e->start, packet_sz);
                 REQ_PTL(req)->recv_ptr = e->start;

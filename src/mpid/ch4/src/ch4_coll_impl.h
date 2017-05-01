@@ -431,7 +431,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_composition_alpha(const void *sendbuf,
         MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
         MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
-                            mpi_errno, "temporary buffer");
+                            mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - true_lb);
     }

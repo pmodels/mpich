@@ -278,12 +278,12 @@ static inline int MPIDI_OFI_conn_manager_init()
 
     MPIDI_Global.conn_mgr.conn_list =
         (MPIDI_OFI_conn_t *) MPL_mmap(NULL, MPIDI_Global.conn_mgr.mmapped_size,
-                                      PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+                                      PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0, MPL_MEM_ADDRESS);
     MPIR_ERR_CHKANDSTMT(MPIDI_Global.conn_mgr.conn_list == MAP_FAILED, mpi_errno,
                         MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
     MPIDI_Global.conn_mgr.free_conn_id =
-        (int *) MPL_malloc(MPIDI_Global.conn_mgr.max_n_conn * sizeof(int));
+        (int *) MPL_malloc(MPIDI_Global.conn_mgr.max_n_conn * sizeof(int), MPL_MEM_ADDRESS);
     MPIR_ERR_CHKANDSTMT(MPIDI_Global.conn_mgr.free_conn_id == NULL, mpi_errno,
                         MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
@@ -319,9 +319,9 @@ static inline int MPIDI_OFI_conn_manager_destroy()
     if (max_n_conn > 0) {
         /* try wait/close connections */
         req = (MPIDI_OFI_dynamic_process_request_t*)
-                MPL_malloc(max_n_conn * sizeof(MPIDI_OFI_dynamic_process_request_t));
-        conn = (fi_addr_t *) MPL_malloc(max_n_conn * sizeof(fi_addr_t));
-        close_msg = (int *) MPL_malloc(max_n_conn * sizeof(int));
+                MPL_malloc(max_n_conn * sizeof(MPIDI_OFI_dynamic_process_request_t), MPL_MEM_BUFFER);
+        conn = (fi_addr_t *) MPL_malloc(max_n_conn * sizeof(fi_addr_t), MPL_MEM_BUFFER);
+        close_msg = (int *) MPL_malloc(max_n_conn * sizeof(int), MPL_MEM_BUFFER);
 
         j = 0;
         for (i = 0; i < max_n_conn; ++i) {
@@ -363,7 +363,7 @@ static inline int MPIDI_OFI_conn_manager_destroy()
         MPL_free(close_msg);
     }
 
-    MPL_munmap((void *) MPIDI_Global.conn_mgr.conn_list, MPIDI_Global.conn_mgr.mmapped_size);
+    MPL_munmap((void *) MPIDI_Global.conn_mgr.conn_list, MPIDI_Global.conn_mgr.mmapped_size, MPL_MEM_ADDRESS);
     MPL_free(MPIDI_Global.conn_mgr.free_conn_id);
 
   fn_exit:
@@ -865,8 +865,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         }
         if (0 == num_local) MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|ch4_init");
 
-        MPIDU_shm_seg_alloc(size * MPIDI_Global.addrnamelen, (void **)&table);
-        MPIDU_shm_seg_commit(&memory, &barrier, num_local, local_rank, local_rank_0, rank);
+        MPIDU_shm_seg_alloc(size * MPIDI_Global.addrnamelen, (void **)&table, MPL_MEM_ADDRESS);
+        MPIDU_shm_seg_commit(&memory, &barrier, num_local, local_rank, local_rank_0, rank, MPL_MEM_ADDRESS);
 
         /* -------------------------------- */
         /* Create our address table from    */
@@ -898,7 +898,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         /* -------------------------------- */
         /* Table is constructed.  Map it    */
         /* -------------------------------- */
-        mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t));
+        mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
         MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, table, size, mapped_table, 0ULL, NULL), avmap);
 
         for (i = 0; i < size; i++) {
@@ -923,7 +923,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* -------------------------------- */
     /* Create the id to object maps     */
     /* -------------------------------- */
-    MPIDI_CH4U_map_create(&MPIDI_Global.win_map);
+    MPIDI_CH4U_map_create(&MPIDI_Global.win_map, MPL_MEM_RMA);
 
     /* ---------------------------------- */
     /* Initialize Active Message          */
@@ -948,7 +948,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                  FI_OPT_MIN_MULTI_RECV, &optlen, sizeof(optlen)), setopt);
 
         for (i = 0; i < MPIDI_OFI_NUM_AM_BUFFERS; i++) {
-            MPIDI_Global.am_bufs[i] = MPL_malloc(MPIDI_OFI_AM_BUFF_SZ);
+            MPIDI_Global.am_bufs[i] = MPL_malloc(MPIDI_OFI_AM_BUFF_SZ, MPL_MEM_BUFFER);
             MPIDI_Global.am_reqs[i].event_id = MPIDI_OFI_EVENT_AM_RECV;
             MPIDI_Global.am_reqs[i].index = i;
             MPIR_Assert(MPIDI_Global.am_bufs[i]);
@@ -1116,11 +1116,11 @@ static inline int MPIDI_NM_get_vni_attr(int vni)
     return MPIDI_VNI_TX | MPIDI_VNI_RX;
 }
 
-static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr, MPL_memory_class class)
 {
 
     void *ap;
-    ap = MPL_malloc(size);
+    ap = MPL_malloc(size, class);
     return ap;
 }
 
@@ -1158,12 +1158,10 @@ static inline int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upi
     MPIR_CHKPMEM_DECL(2);
     MPIR_CHKLMEM_DECL(1);
 
-    /* *local_upid_size = (size_t*) MPL_malloc(comm->local_size * sizeof(size_t)); */
     MPIR_CHKPMEM_MALLOC((*local_upid_size), size_t *, comm->local_size * sizeof(size_t),
-                        mpi_errno, "local_upid_size");
-    /* temp_buf = (char*) MPL_malloc(comm->local_size * MPIDI_Global.addrnamelen); */
+                        mpi_errno, "local_upid_size", MPL_MEM_ADDRESS);
     MPIR_CHKLMEM_MALLOC(temp_buf, char *, comm->local_size * MPIDI_Global.addrnamelen,
-                        mpi_errno, "temp_buf");
+                        mpi_errno, "temp_buf", MPL_MEM_BUFFER);
 
     for (i = 0; i < comm->local_size; i++) {
         (*local_upid_size)[i] = MPIDI_Global.addrnamelen;
@@ -1173,9 +1171,8 @@ static inline int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upi
         total_size += (*local_upid_size)[i];
     }
 
-    /* *local_upids = (char*) MPL_malloc(total_size * sizeof(char)); */
     MPIR_CHKPMEM_MALLOC((*local_upids), char *, total_size * sizeof(char),
-                        mpi_errno, "local_upids");
+                        mpi_errno, "local_upids", MPL_MEM_BUFFER);
     curr_ptr = (*local_upids);
     for (i = 0; i < comm->local_size; i++) {
         memcpy(curr_ptr, &temp_buf[i * MPIDI_Global.addrnamelen], (*local_upid_size)[i]);
@@ -1201,8 +1198,8 @@ static inline int MPIDI_NM_upids_to_lupids(int size,
     int n_new_procs = 0;
     int max_n_avts;
     char *curr_upid;
-    new_avt_procs = (int *) MPL_malloc(size * sizeof(int));
-    new_upids = (char **) MPL_malloc(size * sizeof(char *));
+    new_avt_procs = (int *) MPL_malloc(size * sizeof(int), MPL_MEM_ADDRESS);
+    new_upids = (char **) MPL_malloc(size * sizeof(char *), MPL_MEM_ADDRESS);
     max_n_avts = MPIDIU_get_max_n_avts();
 
     curr_upid = remote_upids;

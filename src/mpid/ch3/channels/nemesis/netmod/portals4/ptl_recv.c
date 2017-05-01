@@ -352,7 +352,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
     /* message won't fit in a single IOV, allocate buffer and unpack when received */
     /* FIXME: For now, allocate a single large buffer to hold entire message */
     MPIR_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, data_sz - PTL_LARGE_THRESHOLD,
-                        mpi_errno, "chunk_buffer");
+                        mpi_errno, "chunk_buffer", MPL_MEM_BUFFER);
     big_get(REQ_PTL(rreq)->chunk_buffer[0], data_sz - PTL_LARGE_THRESHOLD, vc, e->match_bits, rreq);
 
  fn_exit:
@@ -407,7 +407,7 @@ static int handler_recv_dequeue_unpack_large(const ptl_event_t *e)
     MPL_free(REQ_PTL(rreq)->chunk_buffer[0]);
 
     MPIR_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, rreq->dev.segment_size - rreq->dev.segment_first,
-                        mpi_errno, "chunk_buffer");
+                        mpi_errno, "chunk_buffer", MPL_MEM_BUFFER);
     big_get(REQ_PTL(rreq)->chunk_buffer[0], rreq->dev.segment_size - rreq->dev.segment_first, vc, e->match_bits, rreq);
 
  fn_exit:
@@ -509,7 +509,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPIR_Request *rreq)
                 /* IOV is not long enough to describe entire message: recv into
                    buffer and unpack later */
                 MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    IOV too long: using bounce buffer");
-                MPIR_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, data_sz, mpi_errno, "chunk_buffer");
+                MPIR_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, data_sz, mpi_errno, "chunk_buffer", MPL_MEM_BUFFER);
                 me.start = REQ_PTL(rreq)->chunk_buffer[0];
                 me.length = data_sz;
                 REQ_PTL(rreq)->event_handler = handler_recv_dequeue_unpack_complete;
@@ -548,7 +548,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPIR_Request *rreq)
                 /* IOV is not long enough to describe the first chunk: recv into
                    buffer and unpack later */
                 MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    IOV too long: using bounce buffer for first chunk");
-                MPIR_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, PTL_LARGE_THRESHOLD, mpi_errno, "chunk_buffer");
+                MPIR_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, PTL_LARGE_THRESHOLD, mpi_errno, "chunk_buffer", MPL_MEM_BUFFER);
                 me.start = REQ_PTL(rreq)->chunk_buffer[0];
                 me.length = PTL_LARGE_THRESHOLD;
                 REQ_PTL(rreq)->event_handler = handler_recv_dequeue_unpack_large;
@@ -766,7 +766,7 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPIR_Request *rreq, MPL_IOV s_c
             /* message won't fit in a single IOV, allocate buffer and unpack when received */
             /* FIXME: For now, allocate a single large buffer to hold entire message */
             MPIR_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, rreq->dev.segment_size - rreq->dev.segment_first,
-                                mpi_errno, "chunk_buffer");
+                                mpi_errno, "chunk_buffer", MPL_MEM_BUFFER);
             big_get(REQ_PTL(rreq)->chunk_buffer[0], rreq->dev.segment_size - rreq->dev.segment_first, vc, match_bits, rreq);
         }
     }

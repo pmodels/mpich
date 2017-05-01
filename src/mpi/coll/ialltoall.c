@@ -66,7 +66,7 @@ int MPIR_Ialltoall_inplace(const void *sendbuf, int sendcount, MPI_Datatype send
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     nbytes = recvtype_size * recvcount;
 
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
     for (i = 0; i < comm_size; ++i) {
         /* start inner loop at i to avoid re-exchanging data */
@@ -137,7 +137,7 @@ int MPIR_Ialltoall_bruck(const void *sendbuf, int sendcount, MPI_Datatype sendty
     /* allocate temporary buffer */
     /* must be same size as entire recvbuf for Phase 3 */
     nbytes = recvtype_size * recvcount * comm_size;
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
     /* Do Phase 1 of the algorithim. Shift the data blocks on process i
      * upwards by a distance of i blocks. Store the result in recvbuf. */
@@ -160,7 +160,7 @@ int MPIR_Ialltoall_bruck(const void *sendbuf, int sendcount, MPI_Datatype sendty
     /* allocate displacements array for indexed datatype used in
        communication */
 
-    MPIR_CHKLMEM_MALLOC(displs, int *, comm_size * sizeof(int), mpi_errno, "displs");
+    MPIR_CHKLMEM_MALLOC(displs, int *, comm_size * sizeof(int), mpi_errno, "displs", MPL_MEM_BUFFER);
 
     pof2 = 1;
     while (pof2 < comm_size) {
@@ -211,7 +211,7 @@ int MPIR_Ialltoall_bruck(const void *sendbuf, int sendcount, MPI_Datatype sendty
 
     recvbuf_extent = recvcount * comm_size * (MPL_MAX(recvtype_true_extent, recvtype_extent));
     /* not a leak, old tmp_buf value is still tracked by CHKPMEM macros */
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf");
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);
 

@@ -39,7 +39,7 @@ MPID_nem_mpich_init(void)
 
     MPID_nem_prefetched_cell = NULL;
 
-    MPIR_CHKPMEM_MALLOC (MPID_nem_recv_seqno, unsigned short *, sizeof(*MPID_nem_recv_seqno) * MPID_nem_mem_region.num_procs, mpi_errno, "recv seqno");
+    MPIR_CHKPMEM_MALLOC (MPID_nem_recv_seqno, unsigned short *, sizeof(*MPID_nem_recv_seqno) * MPID_nem_mem_region.num_procs, mpi_errno, "recv seqno", MPL_MEM_SHM);
 
     for (i = 0; i < MPID_nem_mem_region.num_procs; ++i)
     {
@@ -47,7 +47,7 @@ MPID_nem_mpich_init(void)
     }
 
     /* set up fbox queue */
-    MPIR_CHKPMEM_MALLOC (MPID_nem_fboxq_elem_list, MPID_nem_fboxq_elem_t *, MPID_nem_mem_region.num_local * sizeof(MPID_nem_fboxq_elem_t), mpi_errno, "fastbox element list");
+    MPIR_CHKPMEM_MALLOC (MPID_nem_fboxq_elem_list, MPID_nem_fboxq_elem_t *, MPID_nem_mem_region.num_local * sizeof(MPID_nem_fboxq_elem_t), mpi_errno, "fastbox element list", MPL_MEM_SHM);
 
     for (i = 0; i < MPID_nem_mem_region.num_local; ++i)
     {

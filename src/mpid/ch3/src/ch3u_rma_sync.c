@@ -557,8 +557,8 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
 
     /* Perform basic algorithm by calling reduce-scatter */
     if (!scalable_fence_enabled) {
-        MPIR_CHKLMEM_MALLOC(rma_target_marks, int *, comm_size * sizeof(int),
-                            mpi_errno, "rma_target_marks");
+      MPIR_CHKLMEM_MALLOC(rma_target_marks, int *, comm_size * sizeof(int),
+                            mpi_errno, "rma_target_marks", MPL_MEM_RMA);
         for (i = 0; i < comm_size; i++)
             rma_target_marks[i] = 0;
 
@@ -746,15 +746,15 @@ int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPIR_Win * win_ptr)
         rank = win_ptr->comm_ptr->rank;
 
         MPIR_CHKLMEM_MALLOC(post_ranks_in_win_grp, int *,
-                            post_grp_size * sizeof(int), mpi_errno, "post_ranks_in_win_grp");
+                            post_grp_size * sizeof(int), mpi_errno, "post_ranks_in_win_grp", MPL_MEM_RMA);
         mpi_errno = fill_ranks_in_win_grp(win_ptr, post_grp_ptr, post_ranks_in_win_grp);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_POP(mpi_errno);
 
         MPIR_CHKLMEM_MALLOC(req, MPI_Request *, post_grp_size * sizeof(MPI_Request),
-                            mpi_errno, "req");
+                            mpi_errno, "req", MPL_MEM_RMA);
         MPIR_CHKLMEM_MALLOC(status, MPI_Status *, post_grp_size * sizeof(MPI_Status),
-                            mpi_errno, "status");
+                            mpi_errno, "status", MPL_MEM_RMA);
 
         /* Send a 0-byte message to the source processes */
         for (i = 0; i < post_grp_size; i++) {
@@ -859,7 +859,8 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
 
     MPIR_CHKPMEM_MALLOC(win_ptr->start_ranks_in_win_grp, int *,
                         win_ptr->start_grp_size * sizeof(int),
-                        mpi_errno, "win_ptr->start_ranks_in_win_grp");
+                        mpi_errno, "win_ptr->start_ranks_in_win_grp",
+                        MPL_MEM_RMA);
 
     mpi_errno = fill_ranks_in_win_grp(win_ptr, group_ptr, win_ptr->start_ranks_in_win_grp);
     if (mpi_errno)
@@ -878,10 +879,10 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
         if (win_ptr->shm_allocated == TRUE) {
             int node_comm_size = comm_ptr->node_comm->local_size;
             MPIR_CHKLMEM_MALLOC(intra_start_req, MPI_Request *,
-                                node_comm_size * sizeof(MPI_Request), mpi_errno, "intra_start_req");
+                                node_comm_size * sizeof(MPI_Request), mpi_errno, "intra_start_req", MPL_MEM_RMA);
             MPIR_CHKLMEM_MALLOC(intra_start_status, MPI_Status *,
                                 node_comm_size * sizeof(MPI_Status),
-                                mpi_errno, "intra_start_status");
+                                mpi_errno, "intra_start_status", MPL_MEM_RMA);
         }
 
         intra_cnt = 0;

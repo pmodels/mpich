@@ -316,7 +316,7 @@ int MPIR_Allgather_intra (
             
             MPIR_Pack_size_impl(recvcount*comm_size, recvtype, &tmp_buf_size);
             
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void*, tmp_buf_size, mpi_errno, "tmp_buf");
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void*, tmp_buf_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
             
             /* calculate the value of nbytes, the number of bytes in packed
                representation that each process contributes. We can't simply divide
@@ -488,7 +488,7 @@ int MPIR_Allgather_intra (
         recvbuf_extent = recvcount * comm_size *
             (MPL_MAX(recvtype_true_extent, recvtype_extent));
 
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void*, recvbuf_extent, mpi_errno, "tmp_buf");
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void*, recvbuf_extent, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
             
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);
@@ -678,7 +678,7 @@ int MPIR_Allgather_inter (
         extent = MPL_MAX(send_extent, true_extent);
 
 	MPIR_Ensure_Aint_fits_in_pointer(extent * sendcount * local_size);
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void*, extent*sendcount*local_size, mpi_errno, "tmp_buf");
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void*, extent*sendcount*local_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - true_lb);

@@ -142,7 +142,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
         int lupid, i;
 
         MPL_DBG_MSG(MPIR_DBG_COMM,VERBOSE,"Intercomm_merge contextid fastpath");
-        lupids = (int*) MPL_malloc(new_size * sizeof(int));
+        lupids = (int*) MPL_malloc(new_size * sizeof(int),MPL_MEM_COMM);
 
         if (!local_high) {
             for (i = 0; i < comm_ptr->local_size; i++) {

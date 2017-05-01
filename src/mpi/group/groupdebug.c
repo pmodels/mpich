@@ -29,7 +29,7 @@ void MPITEST_Group_create( int nproc, int myrank, MPI_Group *new_group )
 	PMPI_Abort( MPI_COMM_WORLD, 1 );
     }
     MPIR_Object_set_ref( new_group_ptr, 1 );
-    new_group_ptr->lrank_to_lpid = (MPII_Group_pmap_t *)MPL_malloc( nproc * sizeof(MPII_Group_pmap_t) );
+    new_group_ptr->lrank_to_lpid = (MPII_Group_pmap_t *)MPL_malloc( nproc * sizeof(MPII_Group_pmap_t), MPL_MEM_DEBUG );
     if (!new_group_ptr->lrank_to_lpid) {
 	fprintf( stderr, "Could not create lrank map for new group\n" );
 	PMPI_Abort( MPI_COMM_WORLD, 1 );

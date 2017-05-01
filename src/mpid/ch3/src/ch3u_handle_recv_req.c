@@ -324,7 +324,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
     MPIDI_Request_set_type(resp_req, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP);
 
     MPIR_CHKPMEM_MALLOC(resp_req->dev.user_buf, void *, stream_data_len,
-                        mpi_errno, "GACC resp. buffer");
+                        mpi_errno, "GACC resp. buffer", MPL_MEM_BUFFER);
 
     /* NOTE: 'copy data + ACC' needs to be atomic */
 
@@ -464,7 +464,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     resp_req->dev.target_win_handle = rreq->dev.target_win_handle;
     resp_req->dev.flags = rreq->dev.flags;
 
-    MPIR_CHKPMEM_MALLOC(resp_req->dev.user_buf, void *, type_size, mpi_errno, "FOP resp. buffer");
+    MPIR_CHKPMEM_MALLOC(resp_req->dev.user_buf, void *, type_size, mpi_errno, "FOP resp. buffer", MPL_MEM_BUFFER);
 
     /* here we increment the Active Target counter to guarantee the GET-like
      * operation are completed when counter reaches zero. */
@@ -1463,7 +1463,7 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
     recv_count = MPL_MIN((total_len / type_size), (MPIDI_CH3U_SRBuf_size / type_extent));
     MPIR_Assert(recv_count > 0);
 
-    sreq->dev.user_buf = (void *) MPL_malloc(recv_count * type_size);
+    sreq->dev.user_buf = (void *) MPL_malloc(recv_count * type_size, MPL_MEM_BUFFER);
 
     MPIR_Datatype_is_contig(get_accum_pkt->datatype, &is_contig);
 
@@ -1600,7 +1600,7 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
         resp_req->dev.target_win_handle = win_ptr->handle;
         resp_req->dev.flags = fop_pkt->flags;
 
-        resp_req->dev.user_buf = (void *) MPL_malloc(type_size);
+        resp_req->dev.user_buf = (void *) MPL_malloc(type_size, MPL_MEM_BUFFER);
 
         /* here we increment the Active Target counter to guarantee the GET-like
          * operation are completed when counter reaches zero. */

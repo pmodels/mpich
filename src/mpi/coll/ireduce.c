@@ -73,7 +73,7 @@ int MPIR_Ireduce_binomial(const void *sendbuf, void *recvbuf, int count, MPI_Dat
     MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
     MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
-                        mpi_errno, "temporary buffer");
+                        mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
 
@@ -82,7 +82,7 @@ int MPIR_Ireduce_binomial(const void *sendbuf, void *recvbuf, int count, MPI_Dat
     if (rank != root) {
         MPIR_SCHED_CHKPMEM_MALLOC(recvbuf, void *,
                             count*(MPL_MAX(extent,true_extent)),
-                            mpi_errno, "receive buffer");
+                            mpi_errno, "receive buffer", MPL_MEM_BUFFER);
         recvbuf = (void *)((char*)recvbuf - true_lb);
     }
 
@@ -262,7 +262,7 @@ int MPIR_Ireduce_redscat_gather(const void *sendbuf, void *recvbuf, int count, M
     MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
     MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
-                              mpi_errno, "temporary buffer");
+                              mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
 
@@ -277,7 +277,7 @@ int MPIR_Ireduce_redscat_gather(const void *sendbuf, void *recvbuf, int count, M
        I have to allocate a temporary one */
     if (rank != root) {
         MPIR_SCHED_CHKPMEM_MALLOC(recvbuf, void *, count*(MPL_MAX(extent,true_extent)),
-                                  mpi_errno, "receive buffer");
+                                  mpi_errno, "receive buffer", MPL_MEM_BUFFER);
         recvbuf = (void *)((char*)recvbuf - true_lb);
     }
 
@@ -341,8 +341,8 @@ int MPIR_Ireduce_redscat_gather(const void *sendbuf, void *recvbuf, int count, M
     /* We allocate these arrays on all processes, even if newrank=-1,
        because if root is one of the excluded processes, we will
        need them on the root later on below. */
-    MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts");
-    MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements");
+    MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements", MPL_MEM_BUFFER);
 
     last_idx = send_idx = 0; /* suppress spurious compiler warnings */
 
@@ -614,7 +614,7 @@ int MPIR_Ireduce_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype
         MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
         MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
-                                  mpi_errno, "temporary buffer");
+                                  mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - true_lb);
     }
@@ -732,7 +732,7 @@ int MPIR_Ireduce_inter(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
              * inside the for loop */
             /* Should MPIR_SCHED_CHKPMEM_MALLOC do this? */
             MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-            MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
+            MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
             /* adjust for potential negative lower bound in datatype */
             tmp_buf = (void *)((char*)tmp_buf - true_lb);
         }

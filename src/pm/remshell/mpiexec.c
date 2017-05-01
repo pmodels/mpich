@@ -266,7 +266,7 @@ int mypostfork( void *predata, void *data, ProcessState *pState )
 	char rankStr[12];
 
 	/* Insert into app->args */
-        newargs = (const char **) MPL_malloc( (app->nArgs + 14 + 1) *
+        newargs = (const char **) MPL_malloc( (app->nArgs + 14 + 1, MPL_MEM_PM) *
 					  sizeof(char *) );
 	if (!pState->hostname) {
 	    MPL_error_printf( "No hostname avaliable for %s\n", app->exename );

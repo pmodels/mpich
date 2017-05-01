@@ -50,9 +50,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* MPICH modification: override these to change what malloc/free/realloc
  * routines are used by the utarray code */
-#define utarray_malloc_(x_)     MPL_malloc(x_)
+#define utarray_malloc_(x_,class_)     MPL_malloc(x_,class_)
 #define utarray_free_(x_)       MPL_free(x_)
-#define utarray_realloc_(x_,y_) MPL_realloc(x_,y_)
+#define utarray_realloc_(x_,y_,class_) MPL_realloc(x_,y_,class_)
 #define utarray_strdup_(x_)     MPL_strdup(x_)
 
 #ifndef utarray_oom
@@ -93,8 +93,8 @@ typedef struct {
   (a)->n=0;                                                                   \
 } while(0)
 
-#define utarray_new(a,_icd) do {                                              \
-  a=(UT_array*)utarray_malloc_(sizeof(UT_array));                             \
+#define utarray_new(a,_icd, class) do {                                       \
+  a=(UT_array*)utarray_malloc_(sizeof(UT_array), class);                      \
   if (a == NULL) utarray_oom();                                               \
   utarray_init(a,_icd);                                                       \
 } while(0)
@@ -104,18 +104,18 @@ typedef struct {
   utarray_free_(a);                                                           \
 } while(0)
 
-#define utarray_reserve(a,by) do {                                            \
+#define utarray_reserve(a,by,class) do {                                      \
   if (((a)->i+by) > ((a)->n)) {                                               \
     void * d_;                                                                \
     while(((a)->i+by) > ((a)->n)) { (a)->n = ((a)->n ? (2*(a)->n) : 8); }     \
-    d_=(char*)utarray_realloc_((a)->d, (a)->n*(a)->icd->sz);                  \
+    d_=(char*)utarray_realloc_((a)->d, (a)->n*(a)->icd->sz, class);           \
     if (d_ == NULL) utarray_oom();                                            \
     (a)->d = d_;                                                              \
   }                                                                           \
 } while(0)
 
-#define utarray_push_back(a,p) do {                                           \
-  utarray_reserve(a,1);                                                       \
+#define utarray_push_back(a,p,class) do {                                     \
+  utarray_reserve(a,1,class);                                                 \
   if ((a)->icd->copy) { (a)->icd->copy( _utarray_eltptr(a,(a)->i++), p); }    \
   else { memcpy(_utarray_eltptr(a,(a)->i++), p, (a)->icd->sz); };             \
 } while(0)
@@ -125,8 +125,8 @@ typedef struct {
   else { (a)->i--; }                                                          \
 } while(0)
 
-#define utarray_extend_back(a) do {                                           \
-  utarray_reserve(a,1);                                                       \
+#define utarray_extend_back(a,class) do {                                     \
+  utarray_reserve(a,1,class);                                                 \
   if ((a)->icd->init) { (a)->icd->init(_utarray_eltptr(a,(a)->i)); }          \
   else { memset(_utarray_eltptr(a,(a)->i),0,(a)->icd->sz); }                  \
   (a)->i++;                                                                   \
@@ -137,8 +137,8 @@ typedef struct {
 #define utarray_eltptr(a,j) ((((unsigned) j) < (a)->i) ? _utarray_eltptr(a,j) : NULL)
 #define _utarray_eltptr(a,j) ((char*)((a)->d + ((a)->icd->sz*(j) )))
 
-#define utarray_insert(a,p,j) do {                                            \
-  utarray_reserve(a,1);                                                       \
+#define utarray_insert(a,p,j,class) do {                                      \
+  utarray_reserve(a,1,class);                                                 \
   if (j > (a)->i) break;                                                      \
   if ((j) < (a)->i) {                                                         \
     memmove( _utarray_eltptr(a,(j)+1), _utarray_eltptr(a,j),                  \
@@ -149,10 +149,10 @@ typedef struct {
   (a)->i++;                                                                   \
 } while(0)
 
-#define utarray_inserta(a,w,j) do {                                           \
+#define utarray_inserta(a,w,j,class) do {                                     \
   if (utarray_len(w) == 0) break;                                             \
   if (j > (a)->i) break;                                                      \
-  utarray_reserve(a,utarray_len(w));                                          \
+  utarray_reserve(a,utarray_len(w),class);                                    \
   if ((j) < (a)->i) {                                                         \
     memmove(_utarray_eltptr(a,(j)+utarray_len(w)),                            \
             _utarray_eltptr(a,j),                                             \

@@ -26,7 +26,7 @@ int rptli_op_alloc(struct rptl_op **op, struct rptl_target *target)
 
     if (target->op_pool == NULL) {
         MPIR_CHKPMEM_MALLOC(op_segment, struct rptl_op_pool_segment *, sizeof(struct rptl_op_pool_segment),
-                            mpi_errno, "op pool segment");
+                            mpi_errno, "op pool segment", MPL_MEM_OTHER);
         DL_APPEND(target->op_segment_list, op_segment);
 
         for (i = 0; i < RPTL_OP_POOL_SEGMENT_COUNT; i++)

@@ -89,7 +89,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
     /* Convert MPI request handles to a request object pointers */
     if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
     {
-	MPIR_CHKLMEM_MALLOC(request_ptrs, MPIR_Request **, count * sizeof(MPIR_Request *), mpi_errno, "request pointers");
+        MPIR_CHKLMEM_MALLOC(request_ptrs, MPIR_Request **, count * sizeof(MPIR_Request *), mpi_errno, "request pointers", MPL_MEM_OBJECT);
     }
 
     n_greqs = 0;

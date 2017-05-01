@@ -214,7 +214,7 @@ static inline int MPIDI_OFI_handle_long_am_hdr(MPIDI_OFI_am_header_t * msg_hdr)
     MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info) = *lmt_msg;
     MPIDI_OFI_AMREQUEST_HDR(rreq, msg_hdr) = *msg_hdr;
     MPIDI_OFI_AMREQUEST_HDR(rreq, rreq_ptr) = (void *) rreq;
-    MPIDI_OFI_AMREQUEST_HDR(rreq, am_hdr) = MPL_malloc(msg_hdr->am_hdr_sz);
+    MPIDI_OFI_AMREQUEST_HDR(rreq, am_hdr) = MPL_malloc(msg_hdr->am_hdr_sz, MPL_MEM_BUFFER);
     MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) =
         ((msg_hdr->am_hdr_sz - 1) / MPIDI_Global.max_send) + 1;
     MPIDI_OFI_do_rdma_read(MPIDI_OFI_AMREQUEST_HDR(rreq, am_hdr), lmt_msg->am_hdr_src,

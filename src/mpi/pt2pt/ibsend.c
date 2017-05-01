@@ -108,7 +108,7 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
     MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
 
     /* FIXME: use the memory management macros */
-    ibinfo = (ibsend_req_info *)MPL_malloc( sizeof(ibsend_req_info) );
+    ibinfo = (ibsend_req_info *)MPL_malloc( sizeof(ibsend_req_info), MPL_MEM_BUFFER );
     ibinfo->req       = request_ptr;
     ibinfo->cancelled = 0;
     mpi_errno = MPIR_Grequest_start_impl( MPIR_Ibsend_query, MPIR_Ibsend_free,

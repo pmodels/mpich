@@ -123,7 +123,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *mypUniv,
        override the environment */
 
     /* Allocate the members of the ProcessUniverse structure */
-    mypUniv->worlds = (ProcessWorld*) MPL_malloc( sizeof(ProcessWorld) );
+    mypUniv->worlds = (ProcessWorld*) MPL_malloc( sizeof(ProcessWorld), MPL_MEM_PM );
     mypUniv->worlds->nApps     = 0;
     mypUniv->worlds->nProcess  = 0;
     mypUniv->worlds->nextWorld = 0;
@@ -273,7 +273,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *mypUniv,
 	    }
 	    
 	    /* Create a new app and add to the app list*/
-	    pApp = (ProcessApp*) MPL_malloc( sizeof(ProcessApp) );
+	    pApp = (ProcessApp*) MPL_malloc( sizeof(ProcessApp), MPL_MEM_PM );
 	    *nextAppPtr = pApp;
 	    nextAppPtr = &(pApp->nextApp);
 	    pApp->nextApp = 0;
@@ -584,7 +584,7 @@ int MPIE_ParseSoftspec( const char *str, ProcessSoftSpec *sspec )
 	p1++;
     }
     sspec->nelm   = nelm;
-    sspec->tuples = (int (*)[3]) MPL_malloc( nelm * sizeof(int [3]));
+    sspec->tuples = (int (*)[3]) MPL_malloc( nelm * sizeof(int [3]), MPL_MEM_PM);
 
     nelm = 0;
     while ( *p ) {

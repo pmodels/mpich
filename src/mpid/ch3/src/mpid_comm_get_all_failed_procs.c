@@ -18,7 +18,7 @@ static void group_to_bitarray(MPIR_Group *group, MPIR_Comm *orig_comm, int **bit
 
     /* Calculate the bitarray size in ints and allocate space */
     *bitarray_size = (orig_comm->local_size / (8 * sizeof(int)) + (orig_comm->local_size % (8 * sizeof(int)) ? 1 : 0));
-    *bitarray = (int *) MPL_malloc(sizeof(int) * *bitarray_size);
+    *bitarray = (int *) MPL_malloc(sizeof(int) * *bitarray_size, MPL_MEM_OTHER);
 
     /* If the group is empty, return an empty bitarray. */
     if (group == MPIR_Group_empty) {
@@ -27,8 +27,8 @@ static void group_to_bitarray(MPIR_Group *group, MPIR_Comm *orig_comm, int **bit
     }
 
     /* Get the ranks of group in orig_comm */
-    group_ranks = (int *) MPL_malloc(sizeof(int) * group->size);
-    comm_ranks = (int *) MPL_malloc(sizeof(int) * group->size);
+    group_ranks = (int *) MPL_malloc(sizeof(int) * group->size, MPL_MEM_OTHER);
+    comm_ranks = (int *) MPL_malloc(sizeof(int) * group->size, MPL_MEM_OTHER);
 
     for (i = 0; i < group->size; i++) group_ranks[i] = i;
     for (i = 0; i < *bitarray_size; i++) (*bitarray)[i] = 0;
@@ -58,14 +58,14 @@ static MPIR_Group *bitarray_to_group(MPIR_Comm *comm_ptr, int *bitarray)
     int i, found = 0;
 
     /* Create a utarray to make storing the ranks easier */
-    utarray_new(ranks_array, &ut_int_icd);
+    utarray_new(ranks_array, &ut_int_icd, MPL_MEM_OTHER);
 
     MPIR_Comm_group_impl(comm_ptr, &comm_group);
 
     /* Converts the bitarray into a utarray */
     for (i = 0; i < comm_ptr->local_size; i++) {
         if (bitarray[i / (sizeof(int) * 8)] & (0x1 << (i % (sizeof(int) * 8)))) {
-            utarray_push_back(ranks_array, &i);
+            utarray_push_back(ranks_array, &i, MPL_MEM_OTHER);
             found++;
         }
     }
@@ -109,7 +109,7 @@ int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPIR_Group **failed_grou
 
     /* Generate a bitarray based on the list of failed procs */
     group_to_bitarray(local_fail, comm_ptr, &bitarray, &bitarray_size);
-    remote_bitarray = MPL_malloc(sizeof(int) * bitarray_size);
+    remote_bitarray = MPL_malloc(sizeof(int) * bitarray_size, MPL_MEM_OTHER);
     if (local_fail != MPIR_Group_empty)
         MPIR_Group_release(local_fail);
 

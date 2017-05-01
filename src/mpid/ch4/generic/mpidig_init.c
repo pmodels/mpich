@@ -45,7 +45,7 @@ int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vnis)
 
     MPIDI_CH4_Global.comm_req_lists = (MPIDI_CH4U_comm_req_list_t *)
         MPL_calloc(MPIR_MAX_CONTEXT_MASK * MPIR_CONTEXT_INT_BITS,
-                   sizeof(MPIDI_CH4U_comm_req_list_t));
+                   sizeof(MPIDI_CH4U_comm_req_list_t), MPL_MEM_OTHER);
 #ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
     MPIDI_CH4_Global.posted_list = NULL;
     MPIDI_CH4_Global.unexp_list = NULL;
@@ -228,7 +228,7 @@ int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vnis)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    MPIDI_CH4U_map_create((void**)&(MPIDI_CH4_Global.win_map));
+    MPIDI_CH4U_map_create((void**)&(MPIDI_CH4_Global.win_map), MPL_MEM_RMA);
 
     mpi_errno = MPIDI_CH4R_RMA_Init_sync_pvars();
     if (mpi_errno)

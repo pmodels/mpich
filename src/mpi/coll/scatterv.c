@@ -84,8 +84,8 @@ int MPIR_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
          * this? */
         MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf + extent);
 
-        MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request **, comm_size * sizeof(MPIR_Request *), mpi_errno, "reqarray");
-        MPIR_CHKLMEM_MALLOC(starray, MPI_Status *, comm_size * sizeof(MPI_Status), mpi_errno, "starray");
+        MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request **, comm_size * sizeof(MPIR_Request *), mpi_errno, "reqarray", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(starray, MPI_Status *, comm_size * sizeof(MPI_Status), mpi_errno, "starray", MPL_MEM_BUFFER);
 
         reqs = 0;
         for (i = 0; i < comm_size; i++) {

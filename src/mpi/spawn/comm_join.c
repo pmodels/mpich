@@ -149,8 +149,8 @@ int MPI_Comm_join(int fd, MPI_Comm *intercomm)
 
     /* ... body of routine ...  */
     
-    MPIR_CHKLMEM_MALLOC(local_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "local port name");
-    MPIR_CHKLMEM_MALLOC(remote_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "remote port name");
+    MPIR_CHKLMEM_MALLOC(local_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "local port name", MPL_MEM_DYNAMIC);
+    MPIR_CHKLMEM_MALLOC(remote_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "remote port name", MPL_MEM_DYNAMIC);
 
     MPL_VG_MEM_INIT(local_port, MPI_MAX_PORT_NAME * sizeof(char));
     

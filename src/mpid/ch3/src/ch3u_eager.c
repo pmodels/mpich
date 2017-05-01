@@ -450,7 +450,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, v
 	    /* printf( "Allocating into tmp\n" ); fflush(stdout); */
 	    recv_data_sz = rreq->dev.recv_data_sz;
         MPIR_T_PVAR_LEVEL_INC(RECVQ, unexpected_recvq_buffer_size, recv_data_sz);
-	    rreq->dev.tmpbuf = MPL_malloc(recv_data_sz);
+	    rreq->dev.tmpbuf = MPL_malloc(recv_data_sz, MPL_MEM_BUFFER);
 	    if (!rreq->dev.tmpbuf) {
 		MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 	    }

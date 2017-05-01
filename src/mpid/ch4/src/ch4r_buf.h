@@ -34,14 +34,14 @@ static inline MPIU_buf_pool_t *MPIDI_create_buf_pool(int num, int size,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CREATE_BUF_POOL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CREATE_BUF_POOL);
 
-    buf_pool = (MPIU_buf_pool_t *) MPL_malloc(sizeof(*buf_pool));
+    buf_pool = (MPIU_buf_pool_t *) MPL_malloc(sizeof(*buf_pool), MPL_MEM_BUFFER);
     MPIR_Assert(buf_pool);
     MPID_Thread_mutex_create(&buf_pool->lock, &ret);
 
     buf_pool->size = size;
     buf_pool->num = num;
     buf_pool->next = NULL;
-    buf_pool->memory_region = MPL_malloc(num * (sizeof(MPIU_buf_t) + size));
+    buf_pool->memory_region = MPL_malloc(num * (sizeof(MPIU_buf_t) + size), MPL_MEM_BUFFER);
     MPIR_Assert(buf_pool->memory_region);
 
     curr = (MPIU_buf_t *) buf_pool->memory_region;

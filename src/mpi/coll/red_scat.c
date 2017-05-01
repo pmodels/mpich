@@ -96,8 +96,8 @@ static int MPIR_Reduce_scatter_noncomm(const void *sendbuf, void *recvbuf, const
     block_size = recvcounts[0];
     total_count = block_size * comm_size;
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf0, void *, true_extent * total_count, mpi_errno, "tmp_buf0");
-    MPIR_CHKLMEM_MALLOC(tmp_buf1, void *, true_extent * total_count, mpi_errno, "tmp_buf1");
+    MPIR_CHKLMEM_MALLOC(tmp_buf0, void *, true_extent * total_count, mpi_errno, "tmp_buf0", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tmp_buf1, void *, true_extent * total_count, mpi_errno, "tmp_buf1", MPL_MEM_BUFFER);
     /* adjust for potential negative lower bound in datatype */
     tmp_buf0 = (void *)((char*)tmp_buf0 - true_lb);
     tmp_buf1 = (void *)((char*)tmp_buf1 - true_lb);
@@ -286,7 +286,7 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
             is_commutative = 1;
     }
 
-    MPIR_CHKLMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps");
+    MPIR_CHKLMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
 
     total_count = 0;
     for (i=0; i<comm_size; i++) {
@@ -309,13 +309,13 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
         /* commutative and short. use recursive halving algorithm */
 
         /* allocate temp. buffer to receive incoming data */
-        MPIR_CHKLMEM_MALLOC(tmp_recvbuf, void *, total_count*(MPL_MAX(true_extent,extent)), mpi_errno, "tmp_recvbuf");
+        MPIR_CHKLMEM_MALLOC(tmp_recvbuf, void *, total_count*(MPL_MAX(true_extent,extent)), mpi_errno, "tmp_recvbuf", MPL_MEM_BUFFER);
         /* adjust for potential negative lower bound in datatype */
         tmp_recvbuf = (void *)((char*)tmp_recvbuf - true_lb);
             
         /* need to allocate another temporary buffer to accumulate
            results because recvbuf may not be big enough */
-        MPIR_CHKLMEM_MALLOC(tmp_results, void *, total_count*(MPL_MAX(true_extent,extent)), mpi_errno, "tmp_results");
+        MPIR_CHKLMEM_MALLOC(tmp_results, void *, total_count*(MPL_MAX(true_extent,extent)), mpi_errno, "tmp_results", MPL_MEM_BUFFER);
         /* adjust for potential negative lower bound in datatype */
         tmp_results = (void *)((char*)tmp_results - true_lb);
         
@@ -389,8 +389,8 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
                have their result calculated by the process to their
                right (rank+1). */
 
-            MPIR_CHKLMEM_MALLOC(newcnts, int *, pof2*sizeof(int), mpi_errno, "newcnts");
-            MPIR_CHKLMEM_MALLOC(newdisps, int *, pof2*sizeof(int), mpi_errno, "newdisps");
+            MPIR_CHKLMEM_MALLOC(newcnts, int *, pof2*sizeof(int), mpi_errno, "newcnts", MPL_MEM_BUFFER);
+            MPIR_CHKLMEM_MALLOC(newdisps, int *, pof2*sizeof(int), mpi_errno, "newdisps", MPL_MEM_BUFFER);
             
             for (i=0; i<pof2; i++) {
                 /* what does i map to in the old ranking? */
@@ -542,7 +542,7 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
         }
         
         /* allocate temporary buffer to store incoming data */
-        MPIR_CHKLMEM_MALLOC(tmp_recvbuf, void *, recvcounts[rank]*(MPL_MAX(true_extent,extent))+1, mpi_errno, "tmp_recvbuf");
+        MPIR_CHKLMEM_MALLOC(tmp_recvbuf, void *, recvcounts[rank]*(MPL_MAX(true_extent,extent))+1, mpi_errno, "tmp_recvbuf", MPL_MEM_BUFFER);
         /* adjust for potential negative lower bound in datatype */
         tmp_recvbuf = (void *)((char*)tmp_recvbuf - true_lb);
         
@@ -655,13 +655,13 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
             /* noncommutative and (non-pof2 or block irregular), use recursive doubling. */
 
             /* need to allocate temporary buffer to receive incoming data*/
-            MPIR_CHKLMEM_MALLOC(tmp_recvbuf, void *, total_count*(MPL_MAX(true_extent,extent)), mpi_errno, "tmp_recvbuf");
+            MPIR_CHKLMEM_MALLOC(tmp_recvbuf, void *, total_count*(MPL_MAX(true_extent,extent)), mpi_errno, "tmp_recvbuf", MPL_MEM_BUFFER);
             /* adjust for potential negative lower bound in datatype */
             tmp_recvbuf = (void *)((char*)tmp_recvbuf - true_lb);
 
             /* need to allocate another temporary buffer to accumulate
                results */
-            MPIR_CHKLMEM_MALLOC(tmp_results, void *, total_count*(MPL_MAX(true_extent,extent)), mpi_errno, "tmp_results");
+            MPIR_CHKLMEM_MALLOC(tmp_results, void *, total_count*(MPL_MAX(true_extent,extent)), mpi_errno, "tmp_results", MPL_MEM_BUFFER);
             /* adjust for potential negative lower bound in datatype */
             tmp_results = (void *)((char*)tmp_results - true_lb);
 
@@ -934,7 +934,7 @@ int MPIR_Reduce_scatter_inter(const void *sendbuf, void *recvbuf, const int recv
         /* In each group, rank 0 allocates a temp. buffer for the 
            reduce */
         
-        MPIR_CHKLMEM_MALLOC(disps, int *, local_size*sizeof(int), mpi_errno, "disps");
+        MPIR_CHKLMEM_MALLOC(disps, int *, local_size*sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
 
         total_count = 0;
         for (i=0; i<local_size; i++) {
@@ -945,7 +945,7 @@ int MPIR_Reduce_scatter_inter(const void *sendbuf, void *recvbuf, const int recv
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPIR_Datatype_get_extent_macro(datatype, extent);
 
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, total_count*(MPL_MAX(extent,true_extent)), mpi_errno, "tmp_buf");
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, total_count*(MPL_MAX(extent,true_extent)), mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - true_lb);

@@ -141,23 +141,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm *local_c
         pure_intracomm = map_info[3];
 
         MPIR_CHKPMEM_MALLOC((*remote_lupids), int*, (*remote_size) * sizeof(int),
-                            mpi_errno, "remote_lupids");
+                            mpi_errno, "remote_lupids", MPL_MEM_COMM);
         if (!pure_intracomm) {
             MPIR_CHKLMEM_MALLOC(_remote_upid_size, size_t*, (*remote_size) * sizeof(size_t),
-                                mpi_errno, "_remote_upid_size");
+                                mpi_errno, "_remote_upid_size", MPL_MEM_COMM);
             mpi_errno = MPIR_Bcast_intra(_remote_upid_size, *remote_size, MPI_UNSIGNED_LONG,
                                          local_leader, local_comm, &errflag);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_CHKLMEM_MALLOC(_remote_upids, char*, upid_recv_size * sizeof(char),
-                                mpi_errno, "_remote_upids");
+                                mpi_errno, "_remote_upids", MPL_MEM_COMM);
             mpi_errno = MPIR_Bcast_intra(_remote_upids, upid_recv_size, MPI_BYTE,
                                          local_leader, local_comm, &errflag);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_CHKLMEM_MALLOC(_remote_node_ids, int*,
                                 (*remote_size) * sizeof(int),
-                                mpi_errno, "_remote_node_ids");
+                                mpi_errno, "_remote_node_ids", MPL_MEM_COMM);
             mpi_errno =
                 MPIR_Bcast_intra(_remote_node_ids, (*remote_size) * sizeof(int), MPI_BYTE,
                                  local_leader, local_comm, &errflag);
@@ -196,7 +196,7 @@ static inline int MPIDIU_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ALLOC_LUT);
 
     new_lut = (MPIDI_rank_map_lut_t *) MPL_malloc(sizeof(MPIDI_rank_map_lut_t)
-                                                  + size * sizeof(MPIDI_lpid_t));
+                                                  + size * sizeof(MPIDI_lpid_t), MPL_MEM_ADDRESS);
     if (new_lut == NULL) {
         *lut = NULL;
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -250,7 +250,7 @@ static inline int MPIDIU_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_ALLOC_MLUT);
 
     new_mlut = (MPIDI_rank_map_mlut_t *) MPL_malloc(sizeof(MPIDI_rank_map_mlut_t)
-                                                    + size * sizeof(MPIDI_gpid_t));
+                                                    + size * sizeof(MPIDI_gpid_t), MPL_MEM_ADDRESS);
     if (new_mlut == NULL) {
         *mlut = NULL;
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");

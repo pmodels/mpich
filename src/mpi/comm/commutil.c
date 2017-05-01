@@ -261,7 +261,7 @@ static int init_default_collops(void)
     /* first initialize the intracomms */
     for (i = 0; i < MPIR_COMM_HIERARCHY_KIND__SIZE; ++i) {
         MPIR_CHKPMEM_CALLOC(ops, struct MPIR_Collops *, sizeof(struct MPIR_Collops), mpi_errno,
-                            "default intracomm collops");
+                            "default intracomm collops", MPL_MEM_COMM);
         ops->ref_count = 1;     /* force existence until finalize time */
 
         /* intracomm default defaults... */
@@ -324,7 +324,7 @@ static int init_default_collops(void)
     /* now the intercomm table */
     {
         MPIR_CHKPMEM_CALLOC(ops, struct MPIR_Collops *, sizeof(struct MPIR_Collops), mpi_errno,
-                            "default intercomm collops");
+                            "default intercomm collops", MPL_MEM_COMM);
         ops->ref_count = 1;     /* force existence until finalize time */
 
         /* intercomm defaults */
@@ -425,7 +425,7 @@ int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_MAP_TYPE__IRREGULAR);
 
-    MPIR_CHKPMEM_MALLOC(mapper, MPIR_Comm_map_t *, sizeof(MPIR_Comm_map_t), mpi_errno, "mapper");
+    MPIR_CHKPMEM_MALLOC(mapper, MPIR_Comm_map_t *, sizeof(MPIR_Comm_map_t), mpi_errno, "mapper", MPL_MEM_COMM);
 
     mapper->type = MPIR_COMM_MAP_TYPE__IRREGULAR;
     mapper->src_comm = src_comm;
@@ -438,7 +438,7 @@ int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
     }
     else {
         MPIR_CHKPMEM_MALLOC(mapper->src_mapping, int *,
-                            src_mapping_size * sizeof(int), mpi_errno, "mapper mapping");
+                            src_mapping_size * sizeof(int), mpi_errno, "mapper mapping", MPL_MEM_COMM);
         mapper->free_mapping = 1;
     }
 
@@ -471,7 +471,7 @@ int MPIR_Comm_map_dup(MPIR_Comm * newcomm, MPIR_Comm * src_comm, MPIR_Comm_map_d
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_MAP_TYPE__DUP);
 
-    MPIR_CHKPMEM_MALLOC(mapper, MPIR_Comm_map_t *, sizeof(MPIR_Comm_map_t), mpi_errno, "mapper");
+    MPIR_CHKPMEM_MALLOC(mapper, MPIR_Comm_map_t *, sizeof(MPIR_Comm_map_t), mpi_errno, "mapper", MPL_MEM_COMM);
 
     mapper->type = MPIR_COMM_MAP_TYPE__DUP;
     mapper->src_comm = src_comm;
@@ -1164,12 +1164,12 @@ int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *
         MPIR_Add_finalize(free_hint_handles, NULL, MPIR_FINALIZE_CALLBACK_PRIO - 1);
     }
 
-    hint_elt = MPL_malloc(sizeof(struct MPIR_Comm_hint_fn_elt));
+    hint_elt = MPL_malloc(sizeof(struct MPIR_Comm_hint_fn_elt), MPL_MEM_COMM);
     strncpy(hint_elt->name, hint_key, MPI_MAX_INFO_KEY);
     hint_elt->state = state;
     hint_elt->fn = fn;
 
-    HASH_ADD_STR(MPID_hint_fns, name, hint_elt);
+    HASH_ADD_STR(MPID_hint_fns, name, hint_elt, MPL_MEM_COMM);
 
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_REGISTER_HINT);
     return mpi_errno;
