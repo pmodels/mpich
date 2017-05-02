@@ -314,6 +314,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
         MPIDI_ACC_ORDER_WAR | MPIDI_ACC_ORDER_WAW;
     (*win_ptr)->info_args.accumulate_ops = MPIDI_ACC_OPS_SAME_OP_NO_OP;
     (*win_ptr)->info_args.same_size = 0;
+    (*win_ptr)->info_args.same_disp_unit = FALSE;
     (*win_ptr)->info_args.alloc_shared_noncontig = 0;
     (*win_ptr)->info_args.alloc_shm = FALSE;
 
