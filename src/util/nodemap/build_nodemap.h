@@ -251,7 +251,7 @@ fn_fail:
 static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
                                                          int sz,
                                                          MPID_Node_id_t *out_nodemap,
-                                                         MPID_Node_id_t *max_node_id,
+                                                         MPID_Node_id_t *out_max_node_id,
                                                          int *did_map)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -309,7 +309,7 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
         if (out_nodemap[i] + 1 > local_max_node_id)
             local_max_node_id = out_nodemap[i];
 
-    *max_node_id = local_max_node_id;
+    *out_max_node_id = local_max_node_id;
 
 fn_exit:
     MPL_free(mb);
@@ -345,7 +345,7 @@ fn_fail:
 static inline int MPIR_NODEMAP_build_nodemap(int sz,
                                              int myrank,
                                              MPID_Node_id_t *out_nodemap,
-                                             MPID_Node_id_t *out_sz)
+                                             MPID_Node_id_t *out_max_node_id)
 {
     static int g_max_node_id = -1;
     int mpi_errno = MPI_SUCCESS;
@@ -370,7 +370,7 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
 
     if (sz == 1) {
         out_nodemap[0] = 0;
-        *out_sz = 1;
+        *out_max_node_id = 0;
         goto fn_exit;
     }
 
@@ -395,7 +395,7 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
         for (i = 0; i < sz; ++i) {
             out_nodemap[i] = ++g_max_node_id;
         }
-        *out_sz = g_max_node_id;
+        *out_max_node_id = g_max_node_id;
         goto fn_exit;
     }
 
@@ -415,7 +415,7 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "PMI_process_mapping attribute not found");
         /* this code currently assumes pg is comm_world */
-        mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(process_mapping, sz, out_nodemap, out_sz, &did_map);
+        mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(process_mapping, sz, out_nodemap, out_max_node_id, &did_map);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKINTERNAL(!did_map, mpi_errno, "unable to populate node ids from PMI_process_mapping");
     }
@@ -445,8 +445,8 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
         if (pmi_errno == 0) {
             int did_map = 0;
             /* this code currently assumes pg is comm_world */
-            mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(value, sz, out_nodemap, out_sz, &did_map);
-            g_max_node_id = *out_sz;
+            mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(value, sz, out_nodemap, out_max_node_id, &did_map);
+            g_max_node_id = *out_max_node_id;
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             if (did_map) {
                 goto cliques;
@@ -525,9 +525,9 @@ cliques:
         for (i = 0; i < sz; ++i)
             if (i & 0x1)
                 out_nodemap[i] += g_max_node_id + 1;
-        g_max_node_id = (g_max_node_id + 1) * 2;
+        g_max_node_id = g_max_node_id * 2 + 1;
     }
-    *out_sz = g_max_node_id;
+    *out_max_node_id = g_max_node_id;
 #endif
 
 fn_exit:
