@@ -473,15 +473,20 @@ int MPID_Win_get_info(MPIR_Win * win, MPIR_Info ** info_used)
     {
 #define BUFSIZE 32
         char buf[BUFSIZE];
-        int c = 0;
-        if (win->info_args.accumulate_ordering & MPIDI_ACC_ORDER_RAR)
-            c += snprintf(buf + c, BUFSIZE - c, "%srar", (c > 0) ? "," : "");
-        if (win->info_args.accumulate_ordering & MPIDI_ACC_ORDER_RAW)
-            c += snprintf(buf + c, BUFSIZE - c, "%sraw", (c > 0) ? "," : "");
-        if (win->info_args.accumulate_ordering & MPIDI_ACC_ORDER_WAR)
-            c += snprintf(buf + c, BUFSIZE - c, "%swar", (c > 0) ? "," : "");
-        if (win->info_args.accumulate_ordering & MPIDI_ACC_ORDER_WAW)
-            c += snprintf(buf + c, BUFSIZE - c, "%swaw", (c > 0) ? "," : "");
+        if (win->info_args.accumulate_ordering == 0) {
+            strncpy(buf, "none", BUFSIZE);
+        }
+        else {
+            int c = 0;
+            if (win->info_args.accumulate_ordering & MPIDI_ACC_ORDER_RAR)
+                c += snprintf(buf + c, BUFSIZE - c, "%srar", (c > 0) ? "," : "");
+            if (win->info_args.accumulate_ordering & MPIDI_ACC_ORDER_RAW)
+                c += snprintf(buf + c, BUFSIZE - c, "%sraw", (c > 0) ? "," : "");
+            if (win->info_args.accumulate_ordering & MPIDI_ACC_ORDER_WAR)
+                c += snprintf(buf + c, BUFSIZE - c, "%swar", (c > 0) ? "," : "");
+            if (win->info_args.accumulate_ordering & MPIDI_ACC_ORDER_WAW)
+                c += snprintf(buf + c, BUFSIZE - c, "%swaw", (c > 0) ? "," : "");
+        }
 
         MPIR_Info_set_impl(*info_used, "accumulate_ordering", buf);
         if (mpi_errno != MPI_SUCCESS) {
