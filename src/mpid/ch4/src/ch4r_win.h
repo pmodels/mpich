@@ -79,9 +79,10 @@ static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
                 MPIDI_CH4U_WIN(win, info_args).accumulate_ordering = save_ordering;
         }
         else if (!strcmp(curr_ptr->key, "accumulate_ops")) {
-            /* the default setting is MPIDI_ACCU_SAME_OP_NO_OP */
             if (!strcmp(curr_ptr->value, "same_op"))
                 MPIDI_CH4U_WIN(win, info_args).accumulate_ops = MPIDI_CH4I_ACCU_SAME_OP;
+            else if (!strcmp(curr_ptr->value, "same_op_no_op"))
+                MPIDI_CH4U_WIN(win, info_args).accumulate_ops = MPIDI_CH4I_ACCU_SAME_OP_NO_OP;
         }
         else if (!strcmp(curr_ptr->key, "same_disp_unit")) {
             if (!strcmp(curr_ptr->value, "true"))
