@@ -215,6 +215,7 @@ typedef enum {
 typedef struct MPIDI_CH4U_win_info_args_t {
     int no_locks;
     int same_size;
+    int same_disp_unit;
     int accumulate_ordering;
     int alloc_shared_noncontig;
     MPIDI_CH4U_win_info_accumulate_ops accumulate_ops;
