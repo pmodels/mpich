@@ -396,6 +396,18 @@ int MPID_Win_set_info(MPID_Win * win, MPID_Info * info)
         }
 
         /********************************************************/
+        /******* check for info accumulate_ops         **********/
+        /********************************************************/
+        info_flag = 0;
+        MPIR_Info_get_impl(info, "accumulate_ops", MPI_MAX_INFO_VAL, info_value, &info_flag);
+        if (info_flag) {
+            if (!strncmp(info_value, "same_op", sizeof("same_op")))
+                win->info_args.accumulate_ops = MPIDI_ACC_OPS_SAME_OP;
+            if (!strncmp(info_value, "same_op_no_op", sizeof("same_op_no_op")))
+                win->info_args.accumulate_ops = MPIDI_ACC_OPS_SAME_OP_NO_OP;
+        }
+
+        /********************************************************/
         /******* check for info same_size              **********/
         /********************************************************/
         info_flag = 0;
@@ -481,7 +493,7 @@ int MPID_Win_get_info(MPID_Win * win, MPID_Info ** info_used)
 #undef BUFSIZE
     }
 
-    if (win->info_args.accumulate_ordering == MPIDI_ACC_OPS_SAME_OP)
+    if (win->info_args.accumulate_ops == MPIDI_ACC_OPS_SAME_OP)
         mpi_errno = MPIR_Info_set_impl(*info_used, "accumulate_ops", "same_op");
     else
         mpi_errno = MPIR_Info_set_impl(*info_used, "accumulate_ops", "same_op_no_op");
