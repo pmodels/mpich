@@ -340,12 +340,6 @@ int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
     /*************** check for info alloc_shm ***************/
     /********************************************************/
 
-    if (win->create_flavor == MPI_WIN_FLAVOR_CREATE)
-        win->info_args.alloc_shm = FALSE;
-    if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE ||
-        win->create_flavor == MPI_WIN_FLAVOR_SHARED)
-        win->info_args.alloc_shm = TRUE;
-
     if (info != NULL) {
         int info_flag = 0;
         char info_value[MPI_MAX_INFO_VAL + 1];
@@ -365,8 +359,6 @@ int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
     /******* check for info alloc_shared_noncontig **********/
     /********************************************************/
 
-    if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE)
-        win->info_args.alloc_shared_noncontig = 1;
     if (info != NULL) {
         int info_flag = 0;
         char info_value[MPI_MAX_INFO_VAL + 1];
