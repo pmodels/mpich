@@ -284,8 +284,11 @@ typedef struct MPIDI_CH4U_win_sync {
 } MPIDI_CH4U_win_sync_t;
 
 typedef struct MPIDI_CH4U_win_target {
-    MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
-    MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
+    /* NOTE: use volatile to avoid compiler optimization which keeps reading
+     * register value when no dependency or function pointer is found in fully
+     * inlined code. MPIR_cc_t does not include volatile for global lock. */
+    volatile MPIR_cc_t local_cmpl_cnts; /* increase at OP issuing, decrease at local completion */
+    volatile MPIR_cc_t remote_cmpl_cnts;        /* increase at OP issuing, decrease at remote completion */
     MPIDI_CH4U_win_target_sync_t sync;
 } MPIDI_CH4U_win_target_t;
 
@@ -295,8 +298,12 @@ typedef struct MPIDI_CH4U_win_t {
     int64_t mmap_sz;
 
     /* per-window OP completion for fence */
-    MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
-    MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
+
+    /* NOTE: use volatile to avoid compiler optimization which keeps reading
+     * register value when no dependency or function pointer is found in fully
+     * inlined code. MPIR_cc_t does not include volatile for global lock.*/
+    volatile MPIR_cc_t local_cmpl_cnts; /* increase at OP issuing, decrease at local completion */
+    volatile MPIR_cc_t remote_cmpl_cnts;        /* increase at OP issuing, decrease at remote completion */
 
     MPI_Aint *sizes;
     MPIDI_CH4U_win_sync_t sync;
