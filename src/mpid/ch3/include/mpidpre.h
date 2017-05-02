@@ -292,10 +292,10 @@ struct MPIDI_Win_info_args {
     int no_locks;               /* valid flavor = all */
     int accumulate_ordering;
     int accumulate_ops;
-    int same_size;              /* valid flavor = allocate */
-    int alloc_shared_noncontig; /* valid flavor = allocate shared */
-    int alloc_shm;              /* valid flavor = allocate */
+    int same_size;
     int same_disp_unit;
+    int alloc_shared_noncontig;
+    int alloc_shm;
 };
 
 struct MPIDI_RMA_op;            /* forward decl from mpidrma.h */

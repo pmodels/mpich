@@ -513,25 +513,22 @@ int MPID_Win_get_info(MPIR_Win * win, MPIR_Info ** info_used)
         MPIR_ERR_POP(mpi_errno);
     }
 
-    if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-        if (win->info_args.alloc_shared_noncontig)
-            mpi_errno = MPIR_Info_set_impl(*info_used, "alloc_shared_noncontig", "true");
-        else
-            mpi_errno = MPIR_Info_set_impl(*info_used, "alloc_shared_noncontig", "false");
+    if (win->info_args.alloc_shared_noncontig)
+        mpi_errno = MPIR_Info_set_impl(*info_used, "alloc_shared_noncontig", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_used, "alloc_shared_noncontig", "false");
 
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
     }
-    else if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE) {
-        if (win->info_args.same_size)
-            mpi_errno = MPIR_Info_set_impl(*info_used, "same_size", "true");
-        else
-            mpi_errno = MPIR_Info_set_impl(*info_used, "same_size", "false");
 
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
+    if (win->info_args.same_size)
+        mpi_errno = MPIR_Info_set_impl(*info_used, "same_size", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_used, "same_size", "false");
+
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
     }
 
     if (win->info_args.same_disp_unit)
