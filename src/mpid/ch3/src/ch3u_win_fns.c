@@ -372,13 +372,59 @@ int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
         }
     }
 
-    /********************************************************/
-    /******* check for info same_disp_unit         **********/
-    /********************************************************/
-
     if (info != NULL) {
         int info_flag = 0;
         char info_value[MPI_MAX_INFO_VAL + 1];
+
+        /********************************************************/
+        /******* check for info accumulate_ordering    **********/
+        /********************************************************/
+        info_flag = 0;
+        MPIR_Info_get_impl(info, "accumulate_ordering", MPI_MAX_INFO_VAL, info_value, &info_flag);
+        if (info_flag) {
+            if (!strncmp(info_value, "none", strlen("none"))) {
+                win->info_args.accumulate_ordering = 0;
+            }
+            else {
+                char *token, *save_ptr;
+                int new_ordering = 0;
+
+                token = (char *) strtok_r(info_value, ",", &save_ptr);
+                while (token) {
+                    if (!memcmp(token, "rar", 3))
+                        new_ordering |= MPIDI_ACC_ORDER_RAR;
+                    else if (!memcmp(token, "raw", 3))
+                        new_ordering |= MPIDI_ACC_ORDER_RAW;
+                    else if (!memcmp(token, "war", 3))
+                        new_ordering |= MPIDI_ACC_ORDER_WAR;
+                    else if (!memcmp(token, "waw", 3))
+                        new_ordering |= MPIDI_ACC_ORDER_WAW;
+                    else
+                        MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, goto fn_fail, "**info");
+
+                    token = (char *) strtok_r(NULL, ",", &save_ptr);
+                }
+
+                win->info_args.accumulate_ordering = new_ordering;
+            }
+        }
+
+        /********************************************************/
+        /******* check for info same_size              **********/
+        /********************************************************/
+        info_flag = 0;
+        MPIR_Info_get_impl(info, "same_size", MPI_MAX_INFO_VAL, info_value, &info_flag);
+        if (info_flag) {
+            if (!strncmp(info_value, "true", sizeof("true")))
+                win->info_args.same_size = TRUE;
+            if (!strncmp(info_value, "false", sizeof("false")))
+                win->info_args.same_size = FALSE;
+        }
+
+        /********************************************************/
+        /******* check for info same_disp_unit         **********/
+        /********************************************************/
+        info_flag = 0;
         MPIR_Info_get_impl(info, "same_disp_unit", MPI_MAX_INFO_VAL, info_value, &info_flag);
         if (info_flag) {
             if (!strncmp(info_value, "true", sizeof("true")))
