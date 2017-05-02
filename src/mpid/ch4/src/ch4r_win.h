@@ -83,7 +83,13 @@ static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
             if (!strcmp(curr_ptr->value, "same_op"))
                 MPIDI_CH4U_WIN(win, info_args).accumulate_ops = MPIDI_CH4I_ACCU_SAME_OP;
         }
-    next:
+        else if (!strcmp(curr_ptr->key, "same_disp_unit")) {
+            if (!strcmp(curr_ptr->value, "true"))
+                MPIDI_CH4U_WIN(win, info_args).same_disp_unit = 1;
+            else if (!strcmp(curr_ptr->value, "false"))
+                MPIDI_CH4U_WIN(win, info_args).same_disp_unit = 0;
+        }
+      next:
         curr_ptr = curr_ptr->next;
     }
 
@@ -151,6 +157,7 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
                                                           MPIDI_CH4I_ACCU_ORDER_WAW);
     MPIDI_CH4U_WIN(win, info_args).accumulate_ops = MPIDI_CH4I_ACCU_SAME_OP_NO_OP;
     MPIDI_CH4U_WIN(win, info_args).same_size = 0;
+    MPIDI_CH4U_WIN(win, info_args).same_disp_unit = 0;
     MPIDI_CH4U_WIN(win, info_args).alloc_shared_noncontig = 0;
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
@@ -580,6 +587,12 @@ static inline int MPIDI_CH4R_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_
 
         MPIR_Assert(mpi_errno == MPI_SUCCESS);
     }
+    if (MPIDI_CH4U_WIN(win, info_args).same_disp_unit)
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_disp_unit", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_disp_unit", "false");
+
+    MPIR_Assert(mpi_errno == MPI_SUCCESS);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_GET_INFO);
     return mpi_errno;
