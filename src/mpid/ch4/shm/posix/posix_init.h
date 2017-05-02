@@ -299,7 +299,7 @@ static inline int MPIDI_POSIX_get_node_id(MPIR_Comm * comm, int rank, MPID_Node_
 
 static inline int MPIDI_POSIX_get_max_node_id(MPIR_Comm * comm, MPID_Node_id_t * max_id_p)
 {
-    *max_id_p = (MPID_Node_id_t) 1;
+    *max_id_p = (MPID_Node_id_t) 0;
     return MPI_SUCCESS;
 }
 
