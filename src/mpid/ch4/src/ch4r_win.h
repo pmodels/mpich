@@ -89,6 +89,18 @@ static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
             else if (!strcmp(curr_ptr->value, "false"))
                 MPIDI_CH4U_WIN(win, info_args).same_disp_unit = 0;
         }
+        else if (!strcmp(curr_ptr->key, "same_size")) {
+            if (!strcmp(curr_ptr->value, "true"))
+                MPIDI_CH4U_WIN(win, info_args).same_size = 1;
+            else if (!strcmp(curr_ptr->value, "false"))
+                MPIDI_CH4U_WIN(win, info_args).same_size = 0;
+        }
+        else if (!strcmp(curr_ptr->key, "alloc_shared_noncontig")) {
+            if (!strcmp(curr_ptr->value, "true"))
+                MPIDI_CH4U_WIN(win, info_args).alloc_shared_noncontig = 1;
+            else if (!strcmp(curr_ptr->value, "false"))
+                MPIDI_CH4U_WIN(win, info_args).alloc_shared_noncontig = 0;
+        }
       next:
         curr_ptr = curr_ptr->next;
     }
@@ -571,22 +583,20 @@ static inline int MPIDI_CH4R_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_
 
     MPIR_Assert(mpi_errno == MPI_SUCCESS);
 
-    if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-        if (MPIDI_CH4U_WIN(win, info_args).alloc_shared_noncontig)
-            mpi_errno = MPIR_Info_set_impl(*info_p_p, "alloc_shared_noncontig", "true");
-        else
-            mpi_errno = MPIR_Info_set_impl(*info_p_p, "alloc_shared_noncontig", "false");
+    if (MPIDI_CH4U_WIN(win, info_args).alloc_shared_noncontig)
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "alloc_shared_noncontig", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "alloc_shared_noncontig", "false");
 
-        MPIR_Assert(mpi_errno == MPI_SUCCESS);
-    }
-    else if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE) {
-        if (MPIDI_CH4U_WIN(win, info_args).same_size)
-            mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_size", "true");
-        else
-            mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_size", "false");
+    MPIR_Assert(mpi_errno == MPI_SUCCESS);
 
-        MPIR_Assert(mpi_errno == MPI_SUCCESS);
-    }
+    if (MPIDI_CH4U_WIN(win, info_args).same_size)
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_size", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_size", "false");
+
+    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+
     if (MPIDI_CH4U_WIN(win, info_args).same_disp_unit)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_disp_unit", "true");
     else
