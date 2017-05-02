@@ -41,7 +41,7 @@ static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
         if (!strcmp(curr_ptr->key, "no_locks")) {
             if (!strcmp(curr_ptr->value, "true"))
                 MPIDI_CH4U_WIN(win, info_args).no_locks = 1;
-            else
+            else if (!strcmp(curr_ptr->value, "false"))
                 MPIDI_CH4U_WIN(win, info_args).no_locks = 0;
         }
         else if (!strcmp(curr_ptr->key, "accumulate_ordering")) {
