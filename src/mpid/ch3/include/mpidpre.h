@@ -295,6 +295,7 @@ struct MPIDI_Win_info_args {
     int same_size;              /* valid flavor = allocate */
     int alloc_shared_noncontig; /* valid flavor = allocate shared */
     int alloc_shm;              /* valid flavor = allocate */
+    int same_disp_unit;
 };
 
 struct MPIDI_RMA_op;            /* forward decl from mpidrma.h */

@@ -380,6 +380,23 @@ int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
         }
     }
 
+    /********************************************************/
+    /******* check for info same_disp_unit         **********/
+    /********************************************************/
+
+    if (info != NULL) {
+        int info_flag = 0;
+        char info_value[MPI_MAX_INFO_VAL + 1];
+        MPIR_Info_get_impl(info, "same_disp_unit", MPI_MAX_INFO_VAL, info_value, &info_flag);
+        if (info_flag) {
+            if (!strncmp(info_value, "true", sizeof("true")))
+                win->info_args.same_disp_unit = TRUE;
+            if (!strncmp(info_value, "false", sizeof("false")))
+                win->info_args.same_disp_unit = FALSE;
+        }
+    }
+
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_WIN_SET_INFO);
     return mpi_errno;
@@ -472,6 +489,14 @@ int MPID_Win_get_info(MPIR_Win * win, MPIR_Info ** info_used)
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
+    }
+
+    if (win->info_args.same_disp_unit)
+        mpi_errno = MPIR_Info_set_impl(*info_used, "same_disp_unit", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_used, "same_disp_unit", "false");
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
     }
 
   fn_exit:
