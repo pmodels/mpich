@@ -55,7 +55,6 @@ static inline int COLL_tree_dump(int tree_size, int root, int k)
     return 0;
 }
 
-
 static inline int
 COLL_sched_bcast_tree(void *buffer,
                  int count,
@@ -85,6 +84,32 @@ COLL_sched_bcast_tree(void *buffer,
         SCHED_FOREACHCHILDDO(TSP_send(buffer, count, &datatype->tsp_dt,
                                       j, tag,  &comm->tsp_comm,
                                       &s->tsp_sched, 1, &recv_id));
+    }
+    if (finalize) {
+        TSP_fence(&s->tsp_sched);
+        TSP_sched_commit(&s->tsp_sched);
+    }
+    return 0;
+}
+
+static inline int
+COLL_sched_bcast_tree_pipelined(void *buffer, int count, COLL_dt_t *datatype, int root, int tag,
+                                 COLL_comm_t *comm, int k, int segsize, COLL_sched_t *s, int finalize)
+{
+    int segment_size = (segsize==-1)?count:segsize;
+    int offset;
+
+    int is_contig;
+    size_t lb, extent, type_size;
+    TSP_dtinfo(&datatype->tsp_dt, &is_contig, &type_size, &extent, &lb);
+    /*NOTE: Make sure you are handling non-contiguous datatypes correctly 
+    * with pipelined broadcast, for example, buffer+offset if being calculated
+    * correctly */
+
+    for(offset=0; offset < count;){
+        int msgsize = (offset + segment_size < count) ? segment_size : count - offset ;
+        COLL_sched_bcast_tree((char*)buffer + offset*extent, msgsize, datatype, root, tag, comm, k, s, 0);
+        offset += msgsize;
     }
     if (finalize) {
         TSP_fence(&s->tsp_sched);

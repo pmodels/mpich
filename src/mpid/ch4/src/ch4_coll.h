@@ -126,6 +126,16 @@ cvars:
       description : >-
         K value for Knomial broadcast
 
+    - name        : MPIR_CVAR_BCAST_TREE_SEGSIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Segment size for tree based pipelined broadcast
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_cycle_algorithm(MPIR_Comm *comm_ptr, int pick[], int num) {
@@ -199,12 +209,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
         case 1:
             ret = MPIDI_COLL_MPICH_KARY_bcast(buffer, count,
                     &(MPIDI_COLL_DT(dt_ptr)->mpich_kary),
-                    root, &(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, MPIR_CVAR_BCAST_KARY_KVAL);
+                    root, &(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, MPIR_CVAR_BCAST_KARY_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
             break;
         case 2:
             ret = MPIDI_COLL_MPICH_KNOMIAL_bcast(buffer, count,
                     &(MPIDI_COLL_DT(dt_ptr)->mpich_knomial),
-                    root, &(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, MPIR_CVAR_BCAST_KNOMIAL_KVAL);
+                    root, &(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, MPIR_CVAR_BCAST_KNOMIAL_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
             break;
         case 3:
             ret = MPIDI_COLL_X_TREEBASIC_bcast(buffer, count,
@@ -217,14 +227,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
         case 5:
             ret = MPIDI_COLL_BMPICH_KARY_bcast(buffer, count,
                     &(MPIDI_COLL_DT(dt_ptr)->bmpich_kary),
-                    root, &(MPIDI_COLL_COMM(comm)->bmpich_kary), errflag, MPIR_CVAR_BCAST_KARY_KVAL);
+                    root, &(MPIDI_COLL_COMM(comm)->bmpich_kary), errflag, MPIR_CVAR_BCAST_KARY_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
             break;
         case 6:
             ret = MPIDI_COLL_BMPICH_KNOMIAL_bcast(buffer, count,
                     &(MPIDI_COLL_DT(dt_ptr)->bmpich_knomial),
-                    root, &(MPIDI_COLL_COMM(comm)->bmpich_knomial), errflag, MPIR_CVAR_BCAST_KNOMIAL_KVAL);
+                    root, &(MPIDI_COLL_COMM(comm)->bmpich_knomial), errflag, MPIR_CVAR_BCAST_KNOMIAL_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
             break;
-            
     }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BCAST);
     return ret;

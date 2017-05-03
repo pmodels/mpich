@@ -79,7 +79,7 @@ static inline int COLL_allreduce(const void *sendbuf,
 static inline int COLL_bcast(void *buffer,
                              int count,
                              COLL_dt_t * datatype,
-                             int root, COLL_comm_t * comm, int *errflag, int k)
+                             int root, COLL_comm_t * comm, int *errflag, int k, int segsize)
 {
     int rc = 0;
     COLL_args_t coll_args = {.algo=COLL_NAME, .tsp=TRANSPORT_NAME, .nargs=5,\
@@ -90,7 +90,7 @@ static inline int COLL_bcast(void *buffer,
         s = (COLL_sched_t*)MPL_malloc(sizeof(COLL_sched_t));
         int tag = (*comm->tree_comm.curTag)++;
         COLL_sched_init(s);
-        rc = COLL_sched_bcast_tree(buffer, count, datatype, root, tag, comm, k, s, 1);
+        rc = COLL_sched_bcast_tree_pipelined(buffer, count, datatype, root, tag, comm, k, segsize, s, 1);
         add_sched((coll_args_t)coll_args, (void*)s, COLL_sched_free);
     } else{
         if(0) fprintf(stderr, "schedule already exists\n");

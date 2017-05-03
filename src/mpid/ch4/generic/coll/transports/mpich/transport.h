@@ -44,22 +44,53 @@ static inline void TSP_record_request_completion(TSP_req_t *rp, TSP_sched_t *sch
 
 static inline void TSP_record_request_issue(TSP_req_t *rp, TSP_sched_t *sched){
     rp->state = TSP_STATE_ISSUED;
-
-    if(sched->issued_head==NULL){
+    
+    if(sched->issued_head == NULL){
         sched->issued_head = sched->last_issued = rp;
-        sched->issued_head->prev_issued = NULL;
-        if(0) fprintf(stderr, "setting last_issued\n");
+        sched->last_issued->next_issued = sched->req_iter;
+    }else if(sched->last_issued->next_issued==rp){
+        sched->last_issued = rp;
+    }
+    else{
+        sched->last_issued->next_issued = rp;
+        rp->next_issued = sched->req_iter;
+        sched->last_issued = rp;
+    }
+
+#if 0
+    if(sched->issued_head==NULL){/*this is the first issued task*/
+        sched->issued_head = sched->last_issued = rp;
         if(0) fprintf(stderr, "sched->last_issued->next_issued = %p\n", sched->last_issued->next_issued);
+        if(sched->req_iter)/*if this is reiteration over the issued list, point to the next task already issued*/
+            sched->last_issued->next_issued = sched->req_iter->next_issued;
+        else
+            sched->last_issued->next_issued=NULL;
+        
     }else if(sched->last_issued->next_issued == rp){
         sched->last_issued = rp;
     }else{
+        if(0)fprintf(stderr, "insert task in between\n");
+        /*insert the task between last_issued and last_issed->next_issued*/
         TSP_req_t *last_issued = sched->last_issued;
-        if(0)fprintf(stderr, "updating next_issued\n");
+        rp->next_issued = last_issued->next_issued;
         last_issued->next_issued = rp;
-        rp->prev_issued = last_issued;
         sched->last_issued = rp;
     }
     sched->req_iter = sched->last_issued;
+#endif
+    /*print issued task list*/
+    if(0){
+        TSP_req_t *req = sched->issued_head;
+        fprintf(stderr, "issued list: ");
+        while(req){
+            fprintf(stderr, "%d ", req->id);
+            req = req->next_issued;
+        }
+        if(sched->req_iter)
+            fprintf(stderr, ", req_iter: %d\n", sched->req_iter->id);
+        else
+            fprintf(stderr,"\n");
+    }
 }
 
 static inline int TSP_init()
@@ -101,8 +132,8 @@ static inline void reset_issued_list(TSP_sched_t *sched){
     
     for(i=0; i<nrequests; i++){
         sched->requests[i].next_issued = NULL;
-        sched->requests[i].prev_issued = NULL;
     }
+    sched->req_iter = NULL;
 }
 
 static inline void TSP_sched_init(TSP_sched_t *sched)
@@ -197,11 +228,12 @@ static inline void TSP_addref_dt(TSP_dt_t *dt,
     }
 }
 
-static inline void init_request(TSP_req_t *req){
-    req->state                 = TSP_STATE_INIT;
+static inline void init_request(TSP_req_t *req, int id){
+    req->state                       = TSP_STATE_INIT;
+    req->id                          = id;   
     req->num_unfinished_dependencies = 0;
-    req->invtcs.used = 0;
-    req->outvtcs.used = 0;
+    req->invtcs.used                 = 0;
+    req->outvtcs.used                = 0;
 }
 
 /*this vertex sets the incoming edges (inedges) to vtx
@@ -250,7 +282,7 @@ static inline int TSP_fence(TSP_sched_t *sched)
     if(0) fprintf(stderr, "TSP(mpich) : sched [fence] total=%ld \n", sched->total);
     TSP_req_t *req = &sched->requests[sched->total];
     req->kind = TSP_KIND_NOOP;
-    init_request(req);
+    init_request(req,sched->total);
     int *invtcs = (int*)MPL_malloc(sizeof(int)*sched->total);
     int i, n_invtcs=0;
     for(i=sched->total-1; i>=0; i--){
@@ -310,7 +342,7 @@ static inline int TSP_addref_dt_nb(TSP_dt_t    *dt,
     MPIR_Assert(sched->total < 32);
     req = &sched->requests[sched->total];
     req->kind                = TSP_KIND_ADDREF_DT;
-    init_request(req);
+    init_request(req,sched->total);
     TSP_add_vtx_dependencies(sched, sched->total, n_invtcs, invtcs);
     req->nbargs.addref_dt.dt = dt;
     req->nbargs.addref_dt.up = up;
@@ -329,7 +361,7 @@ static inline int TSP_addref_op_nb(TSP_op_t    *op,
     MPIR_Assert(sched->total < 32);
     req = &sched->requests[sched->total];
     req->kind                = TSP_KIND_ADDREF_OP;
-    init_request(req);
+    init_request(req,sched->total);
     TSP_add_vtx_dependencies(sched, sched->total, n_invtcs, invtcs);
     req->nbargs.addref_op.op = op;
     req->nbargs.addref_op.up = up;
@@ -355,7 +387,7 @@ static inline int TSP_send(const void  *buf,
     int vtx = sched->total;
     req = &sched->requests[vtx];
     req->kind                  = TSP_KIND_SEND;
-    init_request(req);
+    init_request(req,vtx);
     TSP_add_vtx_dependencies(sched, vtx, n_invtcs, invtcs);
     req->nbargs.sendrecv.buf   = (void *)buf;
     req->nbargs.sendrecv.count = count;
@@ -367,7 +399,7 @@ static inline int TSP_send(const void  *buf,
 
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [send]\n",vtx);
     sched->total++;
-    TSP_issue_request(vtx, req, sched);
+    //TSP_issue_request(vtx, req, sched);
     return vtx;
 }
 
@@ -387,7 +419,7 @@ static inline int TSP_send_accumulate(const void  *buf,
     int vtx = sched->total;
     req = &sched->requests[vtx];
     req->kind                  = TSP_KIND_SEND;
-    init_request(req);
+    init_request(req,vtx);
     TSP_add_vtx_dependencies(sched, vtx, n_invtcs, invtcs);
     req->nbargs.sendrecv.buf   = (void *)buf;
     req->nbargs.sendrecv.count = count;
@@ -399,7 +431,7 @@ static inline int TSP_send_accumulate(const void  *buf,
 
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [send_accumulate]\n",sched->total);
     sched->total++;
-    TSP_issue_request(vtx, req, sched);
+    //TSP_issue_request(vtx, req, sched);
     return vtx;
 }
 
@@ -418,7 +450,7 @@ static inline int TSP_recv(void        *buf,
     int vtx = sched->total;
     req = &sched->requests[vtx];
     req->kind                  = TSP_KIND_RECV;
-    init_request(req);
+    init_request(req,vtx);
     TSP_add_vtx_dependencies(sched, vtx, n_invtcs, invtcs);
     req->nbargs.sendrecv.buf   = buf;
     req->nbargs.sendrecv.count = count;
@@ -430,7 +462,7 @@ static inline int TSP_recv(void        *buf,
 
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [recv]\n",sched->total);
     sched->total++;
-    TSP_issue_request(vtx, req, sched);
+    //TSP_issue_request(vtx, req, sched);
     return vtx;
 }
 
@@ -489,7 +521,7 @@ static inline int TSP_recv_reduce(void        *buf,
     int vtx = sched->total;
     req = &sched->requests[vtx];
     req->kind                = TSP_KIND_RECV_REDUCE;
-    init_request(req);
+    init_request(req,vtx);
     TSP_add_vtx_dependencies(sched, vtx, n_invtcs, invtcs);
 
     TSP_dtinfo(datatype,&iscontig,&type_size,&out_extent,&lower_bound);
@@ -508,7 +540,7 @@ static inline int TSP_recv_reduce(void        *buf,
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [recv_reduce]\n",sched->total);
     
     sched->total++;
-    TSP_issue_request(vtx, req, sched);
+    //TSP_issue_request(vtx, req, sched);
     return vtx;
 }
 
@@ -574,7 +606,7 @@ static inline int TSP_dtcopy_nb(void        *tobuf,
     MPIR_Assert(sched->total < 32);
     req = &sched->requests[sched->total];
     req->kind   = TSP_KIND_DTCOPY;
-    init_request(req);
+    init_request(req,sched->total);
     TSP_add_vtx_dependencies(sched, sched->total, n_invtcs, invtcs);
 
     req->nbargs.dtcopy.tobuf      = tobuf;
@@ -620,7 +652,7 @@ static inline int TSP_free_mem_nb(void        *ptr,
     MPIR_Assert(sched->total < 32);
     req = &sched->requests[sched->total];
     req->kind                = TSP_KIND_FREE_MEM;
-    init_request(req);
+    init_request(req,sched->total);
     TSP_add_vtx_dependencies(sched, sched->total, n_invtcs, invtcs);
     req->nbargs.free_mem.ptr = ptr;
 
@@ -640,7 +672,7 @@ static inline void TSP_issue_request(int vtxid, TSP_req_t *rp, TSP_sched_t *sche
                            rp->nbargs.sendrecv.count,
                            rp->nbargs.sendrecv.dt->mpi_dt,
                            rp->nbargs.sendrecv.dest,
-                           rp->nbargs.sendrecv.tag,
+                           rp->nbargs.sendrecv.tag++,
                            rp->nbargs.sendrecv.comm->mpid_comm,
                            &rp->mpid_req[0],
                            &errflag);
@@ -655,7 +687,7 @@ static inline void TSP_issue_request(int vtxid, TSP_req_t *rp, TSP_sched_t *sche
                            rp->nbargs.sendrecv.count,
                            rp->nbargs.sendrecv.dt->mpi_dt,
                            rp->nbargs.sendrecv.dest,
-                           rp->nbargs.sendrecv.tag,
+                           rp->nbargs.sendrecv.tag++,
                            rp->nbargs.sendrecv.comm->mpid_comm,
                            &rp->mpid_req[0]);
                 TSP_record_request_issue(rp, sched);
@@ -673,6 +705,7 @@ static inline void TSP_issue_request(int vtxid, TSP_req_t *rp, TSP_sched_t *sche
             case TSP_KIND_ADDREF_OP:
                 TSP_addref_op(rp->nbargs.addref_op.op,
                               rp->nbargs.addref_op.up);
+
 
                 if(0) fprintf(stderr, "  --> MPICH transport (addref op) complete\n");
 
@@ -710,7 +743,7 @@ static inline void TSP_issue_request(int vtxid, TSP_req_t *rp, TSP_sched_t *sche
                            rp->nbargs.recv_reduce.count,
                            rp->nbargs.recv_reduce.datatype->mpi_dt,
                            rp->nbargs.recv_reduce.source,
-                           rp->nbargs.recv_reduce.tag,
+                           rp->nbargs.recv_reduce.tag++,
                            rp->nbargs.recv_reduce.comm->mpid_comm,
                            &rp->mpid_req[0]);
                 MPIR_Grequest_start_impl(TSP_queryfcn,
@@ -747,7 +780,7 @@ static inline int TSP_test(TSP_sched_t *sched)
     TSP_req_t *req, *rp;
     int i;
     req = &sched->requests[0];
-    if(0)fprintf(stderr, "in TSP_test, num_completed=%d, total=%d\n", sched->num_completed, sched->total);
+    //if(0)fprintf(stderr, "in TSP_test, num_completed=%d, total=%d\n", sched->num_completed, sched->total);
     /*if issued list is empty, generate it*/
     if(sched->issued_head == NULL){
         if(0) fprintf(stderr, "issued list is empty, issue ready requests\n");
@@ -763,6 +796,10 @@ static inline int TSP_test(TSP_sched_t *sched)
     if(sched->total == sched->num_completed){
         return 1;
     }
+        /*fprintf(stderr, "issued list: ");
+        TSP_req_t *tmp = sched->issued_head;
+        while(tmp){fprintf(stderr, "%d ", req->kind); tmp = tmp->next_issued;}
+        fprintf(stderr,"\n");*/
    
     assert(sched->issued_head != NULL);
     sched->req_iter = sched->issued_head;
@@ -770,6 +807,8 @@ static inline int TSP_test(TSP_sched_t *sched)
     /* Check for issued ops that have been completed */
     while(sched->req_iter!=NULL) {
         rp = sched->req_iter;
+        sched->req_iter = sched->req_iter->next_issued;
+
         if(rp->state == TSP_STATE_ISSUED) {
             MPI_Status     status;
             MPIR_Request  *mpid_req0 = rp->mpid_req[0];
@@ -824,12 +863,12 @@ static inline int TSP_test(TSP_sched_t *sched)
                     break;
             }
         }
-        sched->req_iter = sched->req_iter->next_issued;
+        //sched->req_iter = sched->req_iter->next_issued;
     }
     sched->last_issued->next_issued = NULL;
 
-
     if(0){
+
         if(sched->num_completed==sched->total) {
             if(0) fprintf(stderr, "  --> MPICH transport (test) complete:  sched->total=%ld\n",
                               sched->total);

@@ -126,10 +126,10 @@ typedef struct{
 
 typedef struct TSP_req_t {
     struct TSP_req_t* next_issued;
-    struct TSP_req_t* prev_issued;
     struct MPIR_Request *mpid_req[2];
     int        kind;
     int        state;
+    int        id; /*a unique id for this task*/
 
     TSP_IntArray invtcs;
     TSP_IntArray outvtcs;
