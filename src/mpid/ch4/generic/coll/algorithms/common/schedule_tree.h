@@ -97,7 +97,19 @@ COLL_sched_bcast_tree_pipelined(void *buffer, int count, COLL_dt_t *datatype, in
                                  COLL_comm_t *comm, int k, int segsize, COLL_sched_t *s, int finalize)
 {
     int segment_size = (segsize==-1)?count:segsize;
-    int offset;
+    /*NOTE: Change this so that the segsize is in bytes and then calculate its closest number of elements of type datatype*/
+    int num_chunks = (count+segment_size-1)/segment_size; /*ceil of count/segment_size*/
+    /*The message is divided into num_chunks*/
+    int chunk_size_floor = count/num_chunks; /*smaller of the chunk sizes obtained by integer division*/
+    int chunk_size_ceil; /*larger of the chunk size*/
+    if(count%num_chunks == 0)
+        chunk_size_ceil = chunk_size_floor;/*all chunk sizes are equal*/
+    else
+        chunk_size_ceil = chunk_size_floor+1;
+    int num_chunks_floor; /*number of chunks of size chunk_size_floor*/
+    num_chunks_floor = num_chunks*chunk_size_ceil - count;
+
+    int offset=0;
 
     int is_contig;
     size_t lb, extent, type_size;
@@ -105,9 +117,9 @@ COLL_sched_bcast_tree_pipelined(void *buffer, int count, COLL_dt_t *datatype, in
     /*NOTE: Make sure you are handling non-contiguous datatypes correctly 
     * with pipelined broadcast, for example, buffer+offset if being calculated
     * correctly */
-
-    for(offset=0; offset < count;){
-        int msgsize = (offset + segment_size < count) ? segment_size : count - offset ;
+    int i;
+    for(i=0; i<num_chunks; i++){
+        int msgsize = (i < num_chunks_floor) ? chunk_size_floor : chunk_size_ceil;
         COLL_sched_bcast_tree((char*)buffer + offset*extent, msgsize, datatype, root, tag, comm, k, s, 0);
         offset += msgsize;
     }
