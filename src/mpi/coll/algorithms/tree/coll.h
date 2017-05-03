@@ -68,10 +68,10 @@ static inline int COLL_bcast(void *buffer,
                              int root, COLL_comm_t * comm, int *errflag, int k, int segsize)
 {
     int rc = 0;
-    COLL_args_t coll_args = {.algo=COLL_NAME, .tsp=TRANSPORT_NAME, .nargs=5,\
-            .args={.bcast={.buf=buffer,.count=count,.dt_id=(int)datatype,.root=root,.comm_id=comm->id}}};
+    COLL_args_t coll_args = {.algo=COLL_NAME, .tsp=TRANSPORT_NAME, .nargs=7,\
+            .args={.bcast={.buf=buffer,.count=count,.dt_id=(int)datatype,.root=root,.comm_id=comm->id,.k=k,.segsize=segsize}}};
     COLL_sched_t *s = MPIC_get_sched((MPIC_coll_args_t)coll_args);
-    int *tag = comm->tree_comm.curTag;
+    int tag = (*comm->tree_comm.curTag)++;
     if(s==NULL){
         if(0) fprintf(stderr, "schedule does not exist\n");
         s = (COLL_sched_t*)MPL_malloc(sizeof(COLL_sched_t));
