@@ -70,6 +70,7 @@
 #define COLL_sched_allreduce_tree     COLL_NAMESPACE(sched_allreduce_tree)
 #define COLL_sched_bcast              COLL_NAMESPACE(sched_bcast)
 #define COLL_sched_bcast_tree         COLL_NAMESPACE(sched_bcast_tree)
+#define COLL_sched_bcast_tree_pipelined COLL_NAMESPACE(sched_bcast_tree_pipelined)
 #define COLL_sched_reduce_full        COLL_NAMESPACE(sched_reduce_full)
 #define COLL_sched_reduce_tree_full   COLL_NAMESPACE(sched_reduce_tree_full)
 #define COLL_sched_barrier            COLL_NAMESPACE(sched_barrier)
