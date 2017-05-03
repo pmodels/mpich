@@ -50,7 +50,7 @@ typedef struct{
     int nargs; /*number of arguments*/
     union{
         struct{
-            void *buf; int count; int dt_id; int root; int comm_id;
+            void *buf; int count; int dt_id; int root; int comm_id; int k; int segsize;
         }bcast;
         struct {
             void *sbuf; void* rbuf; int count; int dt_id; int op_id; int root; int comm_id;    
