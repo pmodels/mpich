@@ -28,6 +28,7 @@ static inline int MPIDI_am_isend(const void *buf, int count, MPI_Datatype dataty
     uint64_t match_bits;
     MPIDI_CH4U_hdr_t am_hdr;
     MPIDI_CH4U_ssend_req_msg_t ssend_req;
+    int is_local = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_AM_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_AM_ISEND);
@@ -36,13 +37,17 @@ static inline int MPIDI_am_isend(const void *buf, int count, MPI_Datatype dataty
         mpi_errno = MPI_SUCCESS;
         /* for blocking calls, we directly complete the request */
         if (!is_blocking) {
-            *request = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
+            *request = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2, is_local);
             MPID_Request_complete((*request));
         }
         goto fn_exit;
     }
 
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+    is_local = MPIDI_CH4_rank_is_local(rank, comm);
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2, is_local);
     MPIR_Assert(sreq);
 
     *request = sreq;
@@ -55,15 +60,15 @@ static inline int MPIDI_am_isend(const void *buf, int count, MPI_Datatype dataty
         ssend_req.sreq_ptr = (uint64_t) sreq;
         MPIR_cc_incr(sreq->cc_ptr, &c);
 
-        mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SSEND_REQ,
-                                      &ssend_req, sizeof(ssend_req),
-                                      buf, count, datatype, sreq, NULL);
+        mpi_errno = MPIDI_Generic_am(isend, is_local, rank, comm, MPIDI_CH4U_SSEND_REQ,
+                                     &ssend_req, sizeof(ssend_req),
+                                     buf, count, datatype, sreq, NULL);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
     else {
-        mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SEND,
-                                      &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq, NULL);
+        mpi_errno = MPIDI_Generic_am(isend, is_local, rank, comm, MPIDI_CH4U_SEND,
+                                     &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq, NULL);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -89,11 +94,12 @@ static inline int MPIDI_psend_init(const void *buf,
 {
     MPIR_Request *sreq;
     uint64_t match_bits;
+    int is_local = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PSEND_INIT);
 
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__PREQUEST_SEND, 2);
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__PREQUEST_SEND, 2, is_local);
     *request = sreq;
 
     MPIR_Comm_add_ref(comm);

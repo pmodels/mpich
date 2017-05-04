@@ -12,6 +12,7 @@
 #define MPIDIG_H_INCLUDED
 
 #include <mpidimpl.h>
+#include <mpidig_glue.h>
 
 #define MPIDI_AM_HANDLERS_MAX (64)
 

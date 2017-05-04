@@ -260,6 +260,7 @@ static inline int MPIDI_CH4R_mpi_win_start(MPIR_Group * group, int assert, MPIR_
 static inline int MPIDI_CH4R_mpi_win_complete(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    int is_local = 0;
     MPIDI_CH4U_win_cntrl_msg_t msg;
     int index, peer;
     MPIR_Group *group;
@@ -293,8 +294,11 @@ static inline int MPIDI_CH4R_mpi_win_complete(MPIR_Win * win)
 
     for (index = 0; index < group->size; ++index) {
         peer = ranks_in_win_grp[index];
-        mpi_errno = MPIDI_NM_am_send_hdr(peer, win->comm_ptr,
-                                         MPIDI_CH4U_WIN_COMPLETE, &msg, sizeof(msg), NULL);
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+        is_local = MPIDI_CH4_rank_is_local(peer, win->comm_ptr);
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+        mpi_errno = MPIDI_Generic_am(send_hdr, is_local, peer, win->comm_ptr,
+                                     MPIDI_CH4U_WIN_COMPLETE, &msg, sizeof(msg), NULL);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     }
@@ -318,6 +322,7 @@ static inline int MPIDI_CH4R_mpi_win_complete(MPIR_Win * win)
 static inline int MPIDI_CH4R_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    int is_local = 0;
     MPIDI_CH4U_win_cntrl_msg_t msg;
     int index, peer;
     int *ranks_in_win_grp;
@@ -346,8 +351,11 @@ static inline int MPIDI_CH4R_mpi_win_post(MPIR_Group * group, int assert, MPIR_W
 
     for (index = 0; index < group->size; ++index) {
         peer = ranks_in_win_grp[index];
-        mpi_errno = MPIDI_NM_am_send_hdr(peer, win->comm_ptr,
-                                         MPIDI_CH4U_WIN_POST, &msg, sizeof(msg), NULL);
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+        is_local = MPIDI_CH4_rank_is_local(peer, win->comm_ptr);
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+        mpi_errno = MPIDI_Generic_am(send_hdr, is_local, peer, win->comm_ptr,
+                                     MPIDI_CH4U_WIN_POST, &msg, sizeof(msg), NULL);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     }
@@ -431,6 +439,7 @@ static inline int MPIDI_CH4R_mpi_win_test(MPIR_Win * win, int *flag)
 static inline int MPIDI_CH4R_mpi_win_lock(int lock_type, int rank, int assert, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    int is_local = 0;
     unsigned locked;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_LOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_LOCK);
@@ -441,14 +450,18 @@ static inline int MPIDI_CH4R_mpi_win_lock(int lock_type, int rank, int assert, M
 
     MPIDI_CH4U_EPOCH_CHECK_TYPE(win, mpi_errno, goto fn_fail);
 
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+    is_local = MPIDI_CH4_rank_is_local(rank, win->comm_ptr);
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+
     MPIDI_CH4U_win_cntrl_msg_t msg;
     msg.win_id = MPIDI_CH4U_WIN(win, win_id);
     msg.origin_rank = win->comm_ptr->rank;
     msg.lock_type = lock_type;
 
     locked = slock->remote.locked + 1;
-    mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr,
-                                     MPIDI_CH4U_WIN_LOCK, &msg, sizeof(msg), NULL);
+    mpi_errno = MPIDI_Generic_am(send_hdr, is_local, rank, win->comm_ptr,
+                                 MPIDI_CH4U_WIN_LOCK, &msg, sizeof(msg), NULL);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     MPIDI_CH4R_PROGRESS_WHILE(slock->remote.locked != locked);
@@ -470,6 +483,7 @@ static inline int MPIDI_CH4R_mpi_win_lock(int lock_type, int rank, int assert, M
 static inline int MPIDI_CH4R_mpi_win_unlock(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    int is_local = 0;
     unsigned unlocked;
     MPIDI_CH4U_win_cntrl_msg_t msg;
 
@@ -477,6 +491,10 @@ static inline int MPIDI_CH4R_mpi_win_unlock(int rank, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_UNLOCK);
     if (rank == MPI_PROC_NULL)
         goto fn_exit0;
+
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+    is_local = MPIDI_CH4_rank_is_local(rank, win->comm_ptr);
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
 
     MPIDI_CH4U_EPOCH_ORIGIN_CHECK(win, MPIDI_CH4U_EPOTYPE_LOCK, mpi_errno, return mpi_errno);
 
@@ -488,8 +506,8 @@ static inline int MPIDI_CH4R_mpi_win_unlock(int rank, MPIR_Win * win)
     msg.origin_rank = win->comm_ptr->rank;
     unlocked = MPIDI_CH4U_WIN(win, sync).lock.remote.locked - 1;
 
-    mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr,
-                                     MPIDI_CH4U_WIN_UNLOCK, &msg, sizeof(msg), NULL);
+    mpi_errno = MPIDI_Generic_am(send_hdr, is_local, rank, win->comm_ptr,
+                                 MPIDI_CH4U_WIN_UNLOCK, &msg, sizeof(msg), NULL);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
@@ -1085,6 +1103,7 @@ static inline int MPIDI_CH4R_mpi_win_unlock_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_UNLOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_UNLOCK_ALL);
     int i;
+    int is_local;
     MPIDI_CH4U_win_lock_info *lockQ;
     int all_remote_completed = 0;
     MPIDI_CH4U_EPOCH_ORIGIN_CHECK(win, MPIDI_CH4U_EPOTYPE_LOCK_ALL, mpi_errno, goto fn_exit);
@@ -1109,8 +1128,12 @@ static inline int MPIDI_CH4R_mpi_win_unlock_all(MPIR_Win * win)
         lockQ[i].peer = i;
         lockQ[i].win = win;
 
-        mpi_errno = MPIDI_NM_am_send_hdr(i, win->comm_ptr,
-                                         MPIDI_CH4U_WIN_UNLOCKALL, &msg, sizeof(msg), NULL);
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+        is_local = MPIDI_CH4_rank_is_local(i, win->comm_ptr);
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+
+        mpi_errno = MPIDI_Generic_am(send_hdr, is_local, i, win->comm_ptr,
+                                     MPIDI_CH4U_WIN_UNLOCKALL, &msg, sizeof(msg), NULL);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
@@ -1251,6 +1274,7 @@ static inline int MPIDI_CH4R_mpi_win_lock_all(int assert, MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_CHECK_TYPE(win, mpi_errno, goto fn_fail);
 
+    int is_local = 0;
     int size;
     size = win->comm_ptr->local_size;
 
@@ -1275,8 +1299,12 @@ static inline int MPIDI_CH4R_mpi_win_lock_all(int assert, MPIR_Win * win)
         lockQ[i].win = win;
         lockQ[i].lock_type = MPI_LOCK_SHARED;
 
-        mpi_errno = MPIDI_NM_am_send_hdr(i, win->comm_ptr,
-                                         MPIDI_CH4U_WIN_LOCKALL, &msg, sizeof(msg), NULL);
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+        is_local = MPIDI_CH4_rank_is_local(i, win->comm_ptr);
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+
+        mpi_errno = MPIDI_Generic_am(send_hdr, is_local, i, win->comm_ptr,
+                                     MPIDI_CH4U_WIN_LOCKALL, &msg, sizeof(msg), NULL);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 

@@ -85,6 +85,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request * req)
 MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
 {
     int incomplete, notify_counter;
+    int is_local = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REQUEST_COMPLETE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REQUEST_COMPLETE);
@@ -101,7 +102,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
         if (MPIDI_CH4U_REQUEST(req, req)) {
             MPIDI_CH4R_release_buf(MPIDI_CH4U_REQUEST(req, req));
             MPIDI_CH4U_REQUEST(req, req) = NULL;
-            MPIDI_NM_am_request_finalize(req);
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+            is_local = MPIDI_CH4I_REQUEST(req, is_local);
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+            MPIDI_Generic_am(request_finalize, is_local, req);
         }
         MPIR_Request_free(req);
     }
