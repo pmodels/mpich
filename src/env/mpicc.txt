@@ -29,6 +29,8 @@
                 details
 .  \-echo      - Show exactly what this program is doing.
                 This option should normally not be used.
+.  \-static-mpi - Use a statically compile MPI library, but shared libraries
+                for all of the other dependencies.
 -  others     - are passed to the compiler or linker.  For example, '\-c'
                 causes files to be compiled, '\-g' selects compilation with
                 debugging on most systems, and '\-o name' causes linking
