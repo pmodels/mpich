@@ -11,7 +11,7 @@
 #include "pmiserv_pmi.h"
 #include "pmiserv_utils.h"
 
-static HYD_status cmd_response(int fd, int pid, const char *cmd)
+static HYD_status cmd_response(int fd, int pid, const char *cmd, int rank)
 {
     struct HYD_pmcd_hdr hdr;
     int sent, closed;
@@ -24,6 +24,7 @@ static HYD_status cmd_response(int fd, int pid, const char *cmd)
     hdr.pid = pid;
     hdr.pmi_version = 1;
     hdr.buflen = strlen(cmd);
+    hdr.rank = rank;
     status = HYDU_sock_write(fd, &hdr, sizeof(hdr), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send PMI_RESPONSE header to proxy\n");
     HYDU_ASSERT(!closed, status);
@@ -44,7 +45,7 @@ static HYD_status cmd_response(int fd, int pid, const char *cmd)
     goto fn_exit;
 }
 
-static HYD_status bcast_keyvals(int fd, int pid)
+static HYD_status bcast_keyvals(int fd, int pid, int rank)
 {
     int keyval_count, arg_count, i, j;
     char **tmp = NULL, *cmd;
@@ -96,8 +97,11 @@ static HYD_status bcast_keyvals(int fd, int pid)
 
                 pg_scratch->keyval_dist_count += (arg_count - 1);
                 for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {
-                    status = cmd_response(tproxy->control_fd, pid, cmd);
-                    HYDU_ERR_POP(status, "error writing PMI line\n");
+                    if (tproxy->node->pmi_level == 1 || tproxy->pg->pgid) {
+                        /* we do not support hierarchy for spawned processes yet */
+                        status = cmd_response(tproxy->control_fd, pid, cmd, rank);
+                        HYDU_ERR_POP(status, "error writing PMI line\n");
+                    }
                 }
                 MPL_free(cmd);
 
@@ -115,8 +119,11 @@ static HYD_status bcast_keyvals(int fd, int pid)
 
             pg_scratch->keyval_dist_count += (arg_count - 1);
             for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {
-                status = cmd_response(tproxy->control_fd, pid, cmd);
-                HYDU_ERR_POP(status, "error writing PMI line\n");
+                if (tproxy->node->pmi_level == 1 || tproxy->pg->pgid) {
+                    /* we do not support hierarchy for spawned processes yet */
+                    status = cmd_response(tproxy->control_fd, pid, cmd, rank);
+                    HYDU_ERR_POP(status, "error writing PMI line\n");
+                }
             }
             MPL_free(cmd);
         }
@@ -133,9 +140,10 @@ static HYD_status bcast_keyvals(int fd, int pid)
     goto fn_exit;
 }
 
-static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[], int rank)
 {
     struct HYD_proxy *proxy, *tproxy;
+    int num_barriers;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -144,14 +152,24 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
     HYDU_ASSERT(proxy, status);
 
     proxy->pg->barrier_count++;
-    if (proxy->pg->barrier_count == proxy->pg->proxy_count) {
+
+    if (HYD_server_info.user_global.branch_count != -1 && proxy->pg->proxy_count > HYD_server_info.user_global.branch_count && pgid == 0) {
+        num_barriers = HYD_server_info.user_global.branch_count;
+    } else {
+        num_barriers = proxy->pg->proxy_count;
+    }
+
+    if (proxy->pg->barrier_count == num_barriers) {
         proxy->pg->barrier_count = 0;
 
-        bcast_keyvals(fd, pid);
+        bcast_keyvals(fd, pid, rank);
 
         for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {
-            status = cmd_response(tproxy->control_fd, pid, "cmd=barrier_out\n");
-            HYDU_ERR_POP(status, "error writing PMI line\n");
+            if (tproxy->node->pmi_level == 1 || tproxy->pg->pgid) {
+                /* we do not support hierarchy for spawned processes yet */
+                status = cmd_response(tproxy->control_fd, pid, "cmd=barrier_out\n", rank);
+                HYDU_ERR_POP(status, "error writing PMI line\n");
+            }
         }
     }
 
@@ -163,7 +181,7 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_put(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_put(int fd, int pid, int pgid, char *args[], int rank)
 {
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
@@ -194,7 +212,7 @@ static HYD_status fn_put(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_get(int fd, int pid, int pgid, char *args[], int rank)
 {
     int i;
     struct HYD_proxy *proxy;
@@ -261,7 +279,7 @@ static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
 
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, cmd, rank);
     HYDU_ERR_POP(status, "error writing PMI line\n");
     MPL_free(cmd);
 
@@ -299,7 +317,7 @@ static void segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
     *num_segments = j + 1;
 }
 
-static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[], int rank)
 {
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
@@ -587,7 +605,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status = HYDT_bsci_launch_procs(proxy_stash.strlist, pg->proxy_list, HYD_FALSE, NULL);
+    status = HYDT_bsci_launch_procs(proxy_stash.strlist, pg->proxy_list, pg->user_node_list, HYD_FALSE, NULL);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     {
@@ -599,14 +617,14 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
         HYD_STRING_SPIT(stash, cmd, status);
 
-        status = cmd_response(fd, pid, cmd);
+        status = cmd_response(fd, pid, cmd, rank);
         HYDU_ERR_POP(status, "error writing PMI line\n");
         MPL_free(cmd);
     }
 
     /* Cache the pre-initialized keyvals on the new proxies */
     if (preput_num)
-        bcast_keyvals(fd, pid);
+        bcast_keyvals(fd, pid, rank);
 
   fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
@@ -620,7 +638,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_publish_name(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_publish_name(int fd, int pid, int pgid, char *args[], int rank)
 {
     struct HYD_string_stash stash;
     char *cmd, *val;
@@ -657,7 +675,7 @@ static HYD_status fn_publish_name(int fd, int pid, int pgid, char *args[])
 
     HYD_STRING_SPIT(stash, cmd, status);
 
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, cmd, rank);
     HYDU_ERR_POP(status, "send command failed\n");
     MPL_free(cmd);
 
@@ -676,7 +694,7 @@ static HYD_status fn_publish_name(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_unpublish_name(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_unpublish_name(int fd, int pid, int pgid, char *args[], int rank)
 {
     struct HYD_string_stash stash;
     char *cmd, *name;
@@ -707,7 +725,7 @@ static HYD_status fn_unpublish_name(int fd, int pid, int pgid, char *args[])
 
     HYD_STRING_SPIT(stash, cmd, status);
 
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, cmd, rank);
     HYDU_ERR_POP(status, "send command failed\n");
     MPL_free(cmd);
 
@@ -721,7 +739,7 @@ static HYD_status fn_unpublish_name(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_lookup_name(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_lookup_name(int fd, int pid, int pgid, char *args[], int rank)
 {
     struct HYD_string_stash stash;
     char *cmd, *name, *value = NULL;
@@ -753,7 +771,7 @@ static HYD_status fn_lookup_name(int fd, int pid, int pgid, char *args[])
 
     HYD_STRING_SPIT(stash, cmd, status);
 
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, cmd, rank);
     HYDU_ERR_POP(status, "send command failed\n");
     MPL_free(cmd);
 
@@ -769,7 +787,7 @@ static HYD_status fn_lookup_name(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_abort(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_abort(int fd, int pid, int pgid, char *args[], int rank)
 {
     int token_count;
     struct HYD_pmcd_token *tokens;
@@ -789,7 +807,7 @@ static HYD_status fn_abort(int fd, int pid, int pgid, char *args[])
 
   fn_exit:
     /* clean everything up and exit */
-    status = HYDT_bsci_wait_for_completion(0);
+    status = HYDT_bsci_wait_for_completion(0, NULL, NULL, NULL);
     exit(exitcode);
 
     /* never get here */

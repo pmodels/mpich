@@ -39,7 +39,7 @@ static struct cache_elem *cache_get = NULL, *hash_get = NULL;
 
 static int num_elems = 0;
 
-static HYD_status send_cmd_upstream(const char *start, int fd, int num_args, char *args[])
+static HYD_status send_cmd_upstream(const char *start, int fd, int num_args, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     int i, j, sent, closed;
     char **tmp, *buf;
@@ -67,20 +67,17 @@ static HYD_status send_cmd_upstream(const char *start, int fd, int num_args, cha
     HYDU_free_strlist(tmp);
     MPL_free(tmp);
 
-    HYD_pmcd_init_header(&hdr);
-    hdr.cmd = PMI_CMD;
-    hdr.pid = fd;
-    hdr.buflen = strlen(buf);
-    hdr.pmi_version = 1;
+    cmd_hdr->pmi_version = 1;
+    cmd_hdr->buflen = strlen(buf);
     status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
+        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, cmd_hdr, sizeof(*cmd_hdr), &sent, &closed,
                         HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
     HYDU_ASSERT(!closed, status);
 
     debug("forwarding command (%s) upstream\n", buf);
 
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed,
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, cmd_hdr->buflen, &sent, &closed,
                              HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
     HYDU_ASSERT(!closed, status);
@@ -123,6 +120,7 @@ static HYD_status cache_put_flush(int fd)
 {
     int i;
     HYD_status status = HYD_SUCCESS;
+    struct HYD_pmcd_hdr hdr;
 
     HYDU_FUNC_ENTER();
 
@@ -131,7 +129,14 @@ static HYD_status cache_put_flush(int fd)
 
     debug("flushing %d put command(s) out\n", cache_put.keyval_len);
 
-    status = send_cmd_upstream("cmd=put ", fd, cache_put.keyval_len, cache_put.keyval);
+    HYD_pmcd_init_header(&hdr);
+    hdr.cmd = PMI_CMD;
+    if (HYD_pmcd_pmip.user_global.branch_count != -1)
+        hdr.pid = HYD_pmcd_pmip.local.id;
+    else
+        hdr.pid = fd;
+
+    status = send_cmd_upstream("cmd=put ", fd, cache_put.keyval_len, cache_put.keyval, &hdr);
     HYDU_ERR_POP(status, "error sending command upstream\n");
 
     for (i = 0; i < cache_put.keyval_len; i++)
@@ -146,7 +151,7 @@ static HYD_status cache_put_flush(int fd)
     goto fn_exit;
 }
 
-static HYD_status fn_init(int fd, char *args[])
+static HYD_status fn_init(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     int pmi_version, pmi_subversion, i;
     char *tmp = NULL;
@@ -189,7 +194,7 @@ static HYD_status fn_init(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_initack(int fd, char *args[])
+static HYD_status fn_initack(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     int id, i;
     char *val, *cmd;
@@ -244,7 +249,7 @@ static HYD_status fn_initack(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get_maxes(int fd, char *args[])
+static HYD_status fn_get_maxes(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     struct HYD_string_stash stash;
     char *cmd;
@@ -275,7 +280,7 @@ static HYD_status fn_get_maxes(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get_appnum(int fd, char *args[])
+static HYD_status fn_get_appnum(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     int i, idx;
     struct HYD_exec *exec;
@@ -318,7 +323,7 @@ static HYD_status fn_get_appnum(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get_my_kvsname(int fd, char *args[])
+static HYD_status fn_get_my_kvsname(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     struct HYD_string_stash stash;
     char *cmd;
@@ -345,7 +350,7 @@ static HYD_status fn_get_my_kvsname(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get_usize(int fd, char *args[])
+static HYD_status fn_get_usize(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     struct HYD_string_stash stash;
     char *cmd;
@@ -379,7 +384,7 @@ static HYD_status fn_get_usize(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_get(int fd, char *args[])
+static HYD_status fn_get(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     struct HYD_string_stash stash;
     char *cmd, *key, *val;
@@ -426,7 +431,7 @@ static HYD_status fn_get(int fd, char *args[])
         }
         else {
             /* if we can't find the key locally, ask upstream */
-            status = send_cmd_upstream("cmd=get ", fd, token_count, args);
+            status = send_cmd_upstream("cmd=get ", fd, token_count, args, cmd_hdr);
             HYDU_ERR_POP(status, "error sending command upstream\n");
         }
     }
@@ -440,7 +445,7 @@ static HYD_status fn_get(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_put(int fd, char *args[])
+static HYD_status fn_put(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     struct HYD_string_stash stash;
     char *cmd;
@@ -487,10 +492,11 @@ static HYD_status fn_put(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_keyval_cache(int fd, char *args[])
+static HYD_status fn_keyval_cache(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     struct HYD_pmcd_token *tokens;
-    int token_count, i;
+    int token_count, i, j, sent, closed;
+    char **tmp = NULL, *cmd = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -515,7 +521,37 @@ static HYD_status fn_keyval_cache(int fd, char *args[])
     }
     num_elems += token_count;
 
+    if (HYD_pmcd_pmip.children.num > 0) {
+        /* allocate space for command (tokens + EOL + spaces + null) */
+        HYDU_MALLOC_OR_JUMP(tmp, char **, (2 * token_count + 3) * sizeof(char *), status);
+        j = 0;
+        tmp[j++] = MPL_strdup("cmd=keyval_cache ");
+        for (i = 0; i < token_count; i++) {
+            tmp[j++] = MPL_strdup(args[i]);
+            tmp[j++] = MPL_strdup(" ");
+        }
+        tmp[j++] = MPL_strdup("\n");
+        tmp[j] = NULL;
+
+        status = HYDU_str_alloc_and_join(tmp, &cmd);
+        HYDU_ERR_POP(status, "unable to join strings\n");
+        for(i = 0; i < HYD_pmcd_pmip.children.num; i++) {
+            status = HYDU_sock_write(HYD_pmcd_pmip.children.proxy_fd[i], cmd_hdr, sizeof(*cmd_hdr), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+            HYDU_ERR_POP(status, "unable to sent PMI header to proxy\n");
+            HYDU_ASSERT(!closed, status);
+
+            status = send_cmd_downstream(HYD_pmcd_pmip.children.proxy_fd[i], cmd);
+            HYDU_ERR_POP(status, "unable to send keyval_cache to proxy\n");
+        }
+    }
+
   fn_exit:
+    if (tmp) {
+        HYDU_free_strlist(tmp);
+        MPL_free(tmp);
+    }
+    if (cmd)
+        MPL_free(cmd);
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
@@ -524,7 +560,7 @@ static HYD_status fn_keyval_cache(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_barrier_in(int fd, char *args[])
+static HYD_status fn_barrier_in(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     static int barrier_count = 0;
     HYD_status status = HYD_SUCCESS;
@@ -532,12 +568,12 @@ static HYD_status fn_barrier_in(int fd, char *args[])
     HYDU_FUNC_ENTER();
 
     barrier_count++;
-    if (barrier_count == HYD_pmcd_pmip.local.proxy_process_count) {
+    if (barrier_count == HYD_pmcd_pmip.local.proxy_process_count + HYD_pmcd_pmip.children.num) {
         barrier_count = 0;
 
         cache_put_flush(fd);
 
-        status = send_cmd_upstream("cmd=barrier_in", fd, 0, args);
+        status = send_cmd_upstream("cmd=barrier_in", fd, 0, args, cmd_hdr);
         HYDU_ERR_POP(status, "error sending command upstream\n");
     }
 
@@ -549,15 +585,25 @@ static HYD_status fn_barrier_in(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_barrier_out(int fd, char *args[])
+static HYD_status fn_barrier_out(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     char *cmd;
-    int i;
+    int i, sent, closed;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
     cmd = MPL_strdup("cmd=barrier_out\n");
+
+    for( i = 0; i < HYD_pmcd_pmip.children.num; i++ ){
+        cmd_hdr->cmd = PMI_RESPONSE;
+        status = HYDU_sock_write(HYD_pmcd_pmip.children.proxy_fd[i], cmd_hdr, sizeof(*cmd_hdr), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
+        HYDU_ERR_POP(status, "unable to send PMI_RESPONSE header to proxy\n");
+        HYDU_ASSERT(!closed, status);
+
+        status = send_cmd_downstream(HYD_pmcd_pmip.children.proxy_fd[i], cmd);
+        HYDU_ERR_POP(status, "error sending PMI response\n");
+    }
 
     for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
         status = send_cmd_downstream(HYD_pmcd_pmip.downstream.pmi_fd[i], cmd);
@@ -574,7 +620,7 @@ static HYD_status fn_barrier_out(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_finalize(int fd, char *args[])
+static HYD_status fn_finalize(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     char *cmd;
     int i;

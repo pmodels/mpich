@@ -12,9 +12,31 @@ int HYD_bscu_fd_count = 0;
 int *HYD_bscu_pid_list = NULL;
 int HYD_bscu_pid_count = 0;
 
-HYD_status HYDT_bscu_wait_for_completion(int timeout)
+static void add_to_completed_list(int *count, int **completed_pids, int **completed_statuses, int pid, int exit_status) {
+    HYD_status status = HYD_SUCCESS;
+
+    *count = *count + 1;
+    if ((*count) == 1) {
+        HYDU_MALLOC_OR_JUMP(*completed_pids, int *, sizeof(int), status);
+        HYDU_MALLOC_OR_JUMP(*completed_statuses, int *, sizeof(int), status);
+    } else {
+        HYDU_REALLOC_OR_JUMP(*completed_pids, int *, (*count) * sizeof(int), status);
+        HYDU_REALLOC_OR_JUMP(*completed_statuses, int *, (*count) * sizeof(int), status);
+    }
+    (*completed_pids)[(*count)-1] = pid;
+    (*completed_statuses)[(*count)-1] = exit_status;
+
+  fn_exit:
+    return;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+HYD_status HYDT_bscu_wait_for_completion(int timeout, int *ncompleted, int **procs, int **exit_statuses)
 {
-    int pgid, pid, ret, count, i, time_elapsed, time_left;
+    int pgid, pid, ret, count, i, time_elapsed, time_left, found;
+    int completed_num = 0, *completed_pids = NULL, *completed_statuses = NULL;
     struct timeval start, now;
     HYD_status status = HYD_SUCCESS;
 
@@ -64,14 +86,17 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
                  * did, return an error. */
                 pid = waitpid(-1, &ret, WNOHANG);
                 if (pid > 0) {
+                    add_to_completed_list(&completed_num, &completed_pids, &completed_statuses, pid, ret);
+                    found = 0;
                     /* Find the pid and mark it as complete */
                     for (i = 0; i < HYD_bscu_pid_count; i++)
                         if (HYD_bscu_pid_list[i] == pid) {
                             HYD_bscu_pid_list[i] = -1;
+                            found = 1;
                             break;
                         }
 
-                    if (ret) {
+                    if (ret && found) {
                         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                             "one of the processes terminated badly; aborting\n");
                     }
@@ -100,6 +125,7 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
 
         pid = waitpid(-1, &ret, WNOHANG);
         if (pid > 0) {
+            add_to_completed_list(&completed_num, &completed_pids, &completed_statuses, pid, ret);
             /* Find the pid and mark it as complete */
             for (i = 0; i < HYD_bscu_pid_count; i++)
                 if (HYD_bscu_pid_list[i] == pid) {
@@ -119,6 +145,19 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
         MPL_free(HYD_bscu_fd_list);
         HYD_bscu_fd_list = NULL;
         HYD_bscu_fd_count = 0;
+    }
+
+    if (ncompleted)
+        *ncompleted = completed_num;
+
+    if (procs && completed_num) {
+        HYDU_MALLOC_OR_JUMP(*procs, int *, completed_num * sizeof(int), status);
+        memcpy(*procs, completed_pids, completed_num * sizeof(int));
+    }
+
+    if (exit_statuses && completed_num) {
+        HYDU_MALLOC_OR_JUMP(*exit_statuses, int *, completed_num * sizeof(int), status);
+        memcpy(*exit_statuses, completed_statuses, completed_num * sizeof(int));
     }
 
   fn_exit:

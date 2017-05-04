@@ -25,6 +25,7 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     user_global->enablex = -1;
     user_global->debug = -1;
     user_global->usize = HYD_USIZE_UNSET;
+    user_global->branch_count = -1;
 
     user_global->auto_cleanup = -1;
 
@@ -99,6 +100,7 @@ HYD_status HYDU_alloc_node(struct HYD_node **node)
     (*node)->node_id = -1;
     (*node)->user = NULL;
     (*node)->local_binding = NULL;
+    (*node)->pmi_level = 1;
     (*node)->next = NULL;
 
   fn_exit:

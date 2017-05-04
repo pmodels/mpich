@@ -11,7 +11,7 @@
 #include "topo.h"
 #include "pmi_v2_common.h"
 
-static HYD_status fn_info_getnodeattr(int fd, char *args[]);
+static HYD_status fn_info_getnodeattr(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr);
 
 static struct HYD_pmcd_pmi_v2_reqs *pending_reqs = NULL;
 
@@ -127,7 +127,7 @@ static HYD_status poke_progress(char *key)
             }
         }
         else {
-            status = fn_info_getnodeattr(req->fd, req->args);
+            status = fn_info_getnodeattr(req->fd, req->args, NULL);
             HYDU_ERR_POP(status, "getnodeattr returned error\n");
 
             /* Free the dequeued request */
@@ -148,7 +148,7 @@ static HYD_status poke_progress(char *key)
     goto fn_exit;
 }
 
-static HYD_status fn_fullinit(int fd, char *args[])
+static HYD_status fn_fullinit(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     int id, i;
     char *rank_str;
@@ -214,7 +214,7 @@ static HYD_status fn_fullinit(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_job_getid(int fd, char *args[])
+static HYD_status fn_job_getid(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     struct HYD_string_stash stash;
     char *cmd, *thrid;
@@ -255,7 +255,7 @@ static HYD_status fn_job_getid(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_info_putnodeattr(int fd, char *args[])
+static HYD_status fn_info_putnodeattr(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     struct HYD_string_stash stash;
     char *key, *val, *thrid, *cmd;
@@ -315,7 +315,7 @@ static HYD_status fn_info_putnodeattr(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_info_getnodeattr(int fd, char *args[])
+static HYD_status fn_info_getnodeattr(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     int found;
     struct HYD_pmcd_pmi_kvs_pair *run;
@@ -367,7 +367,7 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
     }
     else if (waitval && !strcmp(waitval, "TRUE")) {
         /* The client wants to wait for a response; queue up the request */
-        status = HYD_pmcd_pmi_v2_queue_req(fd, -1, -1, args, key, &pending_reqs);
+        status = HYD_pmcd_pmi_v2_queue_req(fd, -1, -1, -1, args, key, &pending_reqs);
         HYDU_ERR_POP(status, "unable to queue request\n");
 
         goto fn_exit;
@@ -399,7 +399,7 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_info_getjobattr(int fd, char *args[])
+static HYD_status fn_info_getjobattr(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     struct HYD_string_stash stash;
     char *cmd, *key, *thrid;
@@ -449,7 +449,7 @@ static HYD_status fn_info_getjobattr(int fd, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_finalize(int fd, char *args[])
+static HYD_status fn_finalize(int fd, char *args[], struct HYD_pmcd_hdr *cmd_hdr)
 {
     char *thrid;
     struct HYD_string_stash stash;

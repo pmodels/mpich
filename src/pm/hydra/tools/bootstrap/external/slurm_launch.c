@@ -59,8 +59,8 @@ static HYD_status proxy_list_to_node_str(struct HYD_proxy *proxy_list, char **no
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_list, int use_rmk,
-                                        int *control_fd)
+HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_list,
+                                        struct HYD_node *node_list, int use_rmk, int *control_fd)
 {
     int num_hosts, idx, i;
     int *pid, *fd_list;

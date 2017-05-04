@@ -11,6 +11,8 @@
 #include "topo.h"
 
 struct HYD_pmcd_pmip_s HYD_pmcd_pmip;
+struct HYD_pmi_ranks2fds *r2f_table = NULL;
+
 
 static HYD_status init_params(void)
 {
@@ -44,6 +46,7 @@ static HYD_status init_params(void)
 
     HYD_pmcd_pmip.local.id = -1;
     HYD_pmcd_pmip.local.pgid = -1;
+    HYD_pmcd_pmip.local.parent_id = -1;
     HYD_pmcd_pmip.local.iface_ip_env_name = NULL;
     HYD_pmcd_pmip.local.hostname = NULL;
     HYD_pmcd_pmip.local.spawner_kvsname = NULL;
@@ -54,6 +57,13 @@ static HYD_status init_params(void)
 
     HYD_pmcd_pmip.exec_list = NULL;
 
+    HYD_pmcd_pmip.children.num = 0;
+    HYD_pmcd_pmip.children.exited = NULL;
+    HYD_pmcd_pmip.children.proxy_id = NULL;
+    HYD_pmcd_pmip.children.proxy_fd = NULL;
+    HYD_pmcd_pmip.pid_to_fd = NULL;
+    HYD_pmcd_pmip.nodes_lists = NULL;
+
     status = HYD_pmcd_pmi_allocate_kvs(&HYD_pmcd_pmip.local.kvs, -1);
 
     return status;
@@ -62,6 +72,14 @@ static HYD_status init_params(void)
 static void cleanup_params(void)
 {
     int i;
+
+    if (HYD_pmcd_pmip.nodes_lists) {
+        for (i = 0; i < HYD_pmcd_pmip.user_global.branch_count; i++) {
+            if(HYD_pmcd_pmip.nodes_lists[i])
+                MPL_free(HYD_pmcd_pmip.nodes_lists[i]);
+        }
+        MPL_free(HYD_pmcd_pmip.nodes_lists);
+    }
 
     HYDU_finalize_user_global(&HYD_pmcd_pmip.user_global);
 
@@ -119,6 +137,8 @@ static void cleanup_params(void)
 
     HYD_pmcd_free_pmi_kvs_list(HYD_pmcd_pmip.local.kvs);
 
+    if (HYD_pmcd_pmip.pid_to_fd)
+        MPL_free(HYD_pmcd_pmip.pid_to_fd);
 
     /* Exec list */
     HYDU_free_exec_list(HYD_pmcd_pmip.exec_list);
@@ -196,31 +216,101 @@ int main(int argc, char **argv)
                                   HYD_POLLIN, NULL, HYD_pmcd_pmip_control_cmd_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
-    while (1) {
-        /* Wait for some event to occur */
+    /* set base path - required for launching child proxies */
+    if(HYD_pmcd_pmip.user_global.branch_count != -1) {
+        char *loc,*tmp[4],*post = MPL_strdup(argv[0]);
+        loc = strrchr(post, '/');
+        if(!loc) {
+           HYD_pmcd_pmip.base_path = NULL;
+           status = HYDU_find_in_path(argv[0], &HYD_pmcd_pmip.base_path);
+           HYDU_ERR_POP(status, "error while searching for executable in the user path\n");
+        }
+        else {
+            *(++loc) = 0;
+            if(post[0] != '/') {
+                tmp[0] = HYDU_getcwd();
+                tmp[1] = MPL_strdup("/");
+                tmp[2] = MPL_strdup(post);
+                tmp[3] = NULL;
+                status = HYDU_str_alloc_and_join(tmp, &HYD_pmcd_pmip.base_path);
+                HYDU_ERR_POP(status, "unable to join strings\n");
+                HYDU_free_strlist(tmp);
+            }
+            else {
+                HYD_pmcd_pmip.base_path = MPL_strdup(post);
+            }
+        }
+        MPL_free(post);
+    }
+
+    if (HYD_pmcd_pmip.user_global.branch_count != -1 &&
+        HYD_pmcd_pmip.local.id >= HYD_pmcd_pmip.user_global.branch_count && HYD_pmcd_pmip.local.pgid == 0) {
+        status = HYDU_send_procinfo_request();
+        HYDU_ERR_POP(status, "unable to send proc_info request\n");
+    }
+
+    if(HYD_pmcd_pmip.user_global.branch_count != -1) {
         status = HYDT_dmx_wait_for_event(-1);
         HYDU_ERR_POP(status, "demux engine error waiting for event\n");
+        if(HYD_pmcd_pmip.children.num > 0) {
+            status = HYD_pmci_wait_for_children_completion();
+            HYDU_ERR_POP(status, "error waiting for event children completion\n");
+            while (1) {
+                count = 0;
+                for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
+                    if (HYD_pmcd_pmip.downstream.out[i] != HYD_FD_CLOSED)
+                        count++;
+                    if (HYD_pmcd_pmip.downstream.err[i] != HYD_FD_CLOSED)
+                        count++;
 
-        /* Check to see if there's any open read socket left; if there
-         * are, we will just wait for more events. */
-        count = 0;
-        for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
-            if (HYD_pmcd_pmip.downstream.out[i] != HYD_FD_CLOSED)
-                count++;
-            if (HYD_pmcd_pmip.downstream.err[i] != HYD_FD_CLOSED)
-                count++;
+                    if (count)
+                        break;
+                }
+                if (!count)
+                    break;
 
-            if (count)
+                /* Wait for some event to occur */
+                status = HYDT_dmx_wait_for_event(-1);
+                HYDU_ERR_POP(status, "demux engine error waiting for event\n");
+            }
+        }
+    }
+
+    if(HYD_pmcd_pmip.children.num == 0) {
+        while (1) {
+            /* Wait for some event to occur */
+            status = HYDT_dmx_wait_for_event(-1);
+            HYDU_ERR_POP(status, "demux engine error waiting for event\n");
+
+            /* Check to see if there's any open read socket left; if there
+             * are, we will just wait for more events. */
+            count = 0;
+            for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
+                if (HYD_pmcd_pmip.downstream.out[i] != HYD_FD_CLOSED)
+                    count++;
+                if (HYD_pmcd_pmip.downstream.err[i] != HYD_FD_CLOSED)
+                    count++;
+
+                if (count)
+                    break;
+            }
+            if (!count)
                 break;
         }
-        if (!count)
-            break;
     }
 
     /* Now wait for the processes to finish */
     done = 0;
     while (1) {
         pid = waitpid(-1, &ret_status, 0);
+
+        /* Check if MPI processes have already exited, to ignore it */
+        if (pid < 0 && errno == ECHILD) {
+            for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++)
+                if (HYD_pmcd_pmip.downstream.exit_status[i] == -1)
+                    HYD_pmcd_pmip.downstream.exit_status[i] = 0;
+            break;
+        }
 
         /* Find the pid and mark it as complete. */
         if (pid > 0)
@@ -255,6 +345,22 @@ int main(int argc, char **argv)
     /* Send the exit status upstream */
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = EXIT_STATUS;
+
+    if(HYD_pmcd_pmip.downstream.forced_cleanup)
+        hdr.signum = SIGABRT; /* inform upper level that one of the processes aborted */
+
+    if(HYD_pmcd_pmip.user_global.branch_count != -1) {
+        hdr.pid = HYD_pmcd_pmip.local.id;
+        hdr.buflen = HYD_pmcd_pmip.local.proxy_process_count * sizeof(int);
+        /* hdr.rank will be used here to let upper level know to close this socket */
+        /* because all lower level pmi_proxies related this socket has already sent 'EXIT_STATUS' */
+        hdr.pmi_version = 1;
+        hdr.rank = 1;
+        for(i = 0; i < HYD_pmcd_pmip.children.num; i++)
+            if(HYD_pmcd_pmip.children.exited[i] != 1)
+                hdr.rank = 0;
+    }
+
     status =
         HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
                         HYDU_SOCK_COMM_MSGWAIT);
@@ -277,6 +383,8 @@ int main(int argc, char **argv)
 
     status = HYDT_bsci_finalize();
     HYDU_ERR_POP(status, "unable to finalize the bootstrap device\n");
+
+    HYDU_free_fd_list(&r2f_table);
 
     /* cleanup the params structure */
     cleanup_params();
