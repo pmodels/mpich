@@ -161,6 +161,7 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
         finfo->rx_attr->caps = 0ULL; /* RX capabilities not needed */
 
         finfo->ep_attr->tx_ctx_cnt = FI_SHARED_CONTEXT; /* Request a shared context */
+        finfo->ep_attr->rx_ctx_cnt = 0; /* We don't need RX contexts */
         MPIDI_OFI_CALL_RETURN(fi_endpoint(MPIDI_Global.domain,
                                           finfo, &MPIDI_OFI_WIN(win).ep, NULL), ret);
         if (ret < 0) {
