@@ -299,14 +299,13 @@ typedef struct {
     unsigned enable_rma:1;
     unsigned enable_atomics:1;
     unsigned enable_pt2pt_nopack:1;
+    unsigned enable_data_auto_progress:1;
+    unsigned enable_control_auto_progress:1;
 
     int max_endpoints;
     int max_endpoints_bits;
 
     int fetch_atomic_iovecs;
-
-    int enable_data_auto_progress;
-    int enable_control_auto_progress;
 
     int context_bits;
     int source_bits;
