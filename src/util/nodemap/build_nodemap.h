@@ -41,7 +41,20 @@ cvars:
       description : >-
         If true, odd procs on a node are seen as local to each other, and even
         procs on a node are seen as local to each other.  Used for debugging on
-        a single machine.
+        a single machine. Deprecated in favor of MPIR_CVAR_NUM_CLIQUES.
+
+    - name        : MPIR_CVAR_NUM_CLIQUES
+      category    : NODEMAP
+      alt-env     : MPIR_CVAR_NUM_CLIQUES
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Specify the number of cliques that should be used to partition procs on
+        a local node. Procs with the same clique number are seen as local to
+        each other. Used for debugging on a single machine.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -436,7 +449,7 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
             g_max_node_id = *out_sz;
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             if (did_map) {
-                goto odd_even_cliques;
+                goto cliques;
             }
             /* else fall through to O(N^2) PMI_KVS_Gets version */
         }
@@ -497,9 +510,15 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
         out_nodemap[i] = j;
     }
 
-odd_even_cliques:
-    if (odd_even_cliques)
-    {
+cliques:
+    if (MPIR_CVAR_NUM_CLIQUES > 1) {
+        for (i = 0; i < sz; ++i) {
+            if (i % MPIR_CVAR_NUM_CLIQUES) {
+                out_nodemap[i] += (g_max_node_id + 1) * (i % MPIR_CVAR_NUM_CLIQUES);
+            }
+        }
+        g_max_node_id = (g_max_node_id + 1) * MPIR_CVAR_NUM_CLIQUES - 1;
+    } else if (odd_even_cliques) {
         /* Create new processes for all odd numbered processes. This
            may leave nodes ids with no processes assigned to them, but
            I think this is OK */
