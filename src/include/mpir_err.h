@@ -146,7 +146,7 @@ void MPIR_Handle_fatal_error(struct MPIR_Comm *comm_ptr,
 
 #define MPIR_ERR_CLASS_MASK 0x0000007f
 #define MPIR_ERR_CLASS_SIZE 128
-#define MPIR_ERR_GET_CLASS(mpi_errno_) (mpi_errno_ & MPIR_ERR_CLASS_MASK)
+#define MPIR_ERR_GET_CLASS(mpi_errno_) ((MPIR_Errflag_t) (mpi_errno_ & MPIR_ERR_CLASS_MASK))
 
 
 /* ------------------------------------------------------------------------- */
