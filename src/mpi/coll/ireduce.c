@@ -929,5 +929,4 @@ fn_fail:
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
-    goto fn_exit;
 }
