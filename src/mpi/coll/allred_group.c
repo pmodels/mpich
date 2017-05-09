@@ -7,10 +7,6 @@
 #include "mpiimpl.h"
 #include "collutil.h"
 
-int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
-                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-                               MPIR_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
-
 /* Local utility macro: takes an two args and sets lvalue cr_ equal to the rank
  * in comm_ptr corresponding to rvalue gr_ */
 #define to_comm_rank(cr_, gr_)                                                                                \
