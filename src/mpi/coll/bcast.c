@@ -1466,7 +1466,7 @@ int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MP
 #define FUNCNAME MPIR_Bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-inline int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
