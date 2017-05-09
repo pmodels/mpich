@@ -51,7 +51,7 @@ static int  first_free_code  = 1;  /* code 0 is reserved */
 static const char empty_error_string[1] = { 0 };
 
 /* Forward reference */
-const char *MPIR_Err_get_dynerr_string( int code );
+static const char *get_dynerr_string( int code );
 
 /* This external allows this package to define the routine that converts
    dynamically assigned codes and classes to their corresponding strings. 
@@ -86,7 +86,7 @@ static void MPIR_Init_err_dyncodes( void )
     }
     /* Set the routine to provides access to the dynamically created
        error strings */
-    MPIR_Process.errcode_to_string = MPIR_Err_get_dynerr_string;
+    MPIR_Process.errcode_to_string = get_dynerr_string;
 
     /* Add a finalize handler to free any allocated space */
     MPIR_Add_finalize( MPIR_Dynerrcodes_finalize, (void*)0, 9 );
@@ -264,7 +264,7 @@ int MPIR_Err_add_code( int class )
 }
 
 /*
-  MPIR_Err_get_dynerr_string - Get the message string that corresponds to a
+  get_dynerr_string - Get the message string that corresponds to a
   dynamically created error class or code
 
 Input Parameters:
@@ -280,7 +280,7 @@ Input Parameters:
   This routine is used to implement 'MPI_ERROR_STRING'.  It is only called
   for dynamic error codes.  
   */
-const char *MPIR_Err_get_dynerr_string( int code )
+static const char *get_dynerr_string( int code )
 {
     int errcode, errclass;
     const char *errstr = 0;
