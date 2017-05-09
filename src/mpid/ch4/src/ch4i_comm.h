@@ -15,17 +15,20 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_map_size(MPIR_Comm_map_t map)
 {
+    int ret;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_MAP_SIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_MAP_SIZE);
 
     if (map.type == MPIR_COMM_MAP_TYPE__IRREGULAR)
-        return map.src_mapping_size;
+        ret = map.src_mapping_size;
     else if (map.dir == MPIR_COMM_MAP_DIR__L2L || map.dir == MPIR_COMM_MAP_DIR__L2R)
-        return map.src_comm->local_size;
+        ret = map.src_comm->local_size;
     else
-        return map.src_comm->remote_size;
+        ret = map.src_comm->remote_size;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_MAP_SIZE);
+    return ret;
 }
 
 /*
