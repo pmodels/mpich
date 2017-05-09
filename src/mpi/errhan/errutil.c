@@ -1872,8 +1872,8 @@ static int convertErrcodeToIndexes( int errcode, int *ring_idx, int *ring_id,
     
     /* Test on both the max_error_ring_loc and MAX_ERROR_RING to guard 
        against memory overwrites */
-    if (*ring_idx < 0 || *ring_idx >= MAX_ERROR_RING || 
-	*ring_idx > max_error_ring_loc) return 1;
+    if (*ring_idx < 0 || *ring_idx >= MAX_ERROR_RING || (unsigned int) *ring_idx > max_error_ring_loc)
+        return 1;
 
     return 0;
 }
@@ -1888,8 +1888,8 @@ static int checkErrcodeIsValid( int errcode )
     MPL_DBG_MSG_FMT(MPIR_DBG_ERRHAND, VERBOSE, (MPL_DBG_FDEST, "code=%#010x ring_idx=%d ring_id=%#010x generic_idx=%d",
                                         errcode, ring_idx, ring_id, generic_idx));
 
-    if (ring_idx < 0 || ring_idx >= MAX_ERROR_RING ||
-	ring_idx > max_error_ring_loc) return 1;
+    if (ring_idx < 0 || ring_idx >= MAX_ERROR_RING || (unsigned int) ring_idx > max_error_ring_loc)
+        return 1;
     if (ErrorRing[ring_idx].id != ring_id) return 2;
     /* It looks like the code uses a generic idx of -1 to indicate no
        generic message */

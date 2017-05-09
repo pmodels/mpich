@@ -123,7 +123,7 @@ static char *context_mask_to_str(void)
 static void context_mask_stats(int *free_ids, int *total_ids)
 {
     if (free_ids) {
-        int i, j;
+        unsigned int i, j;
         *free_ids = 0;
 
         /* if this ever needs to be fast, use a lookup table to do a per-nibble

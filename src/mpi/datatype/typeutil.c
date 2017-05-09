@@ -216,7 +216,7 @@ static int MPIR_Datatype_finalize(void *dummy ATTRIBUTE((unused)) )
 int MPIR_Datatype_builtin_fillin(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
+    unsigned int i;
     MPIR_Datatype *dptr;
     MPI_Datatype  d = MPI_DATATYPE_NULL;
     static int is_init = 0;
