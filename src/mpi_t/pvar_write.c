@@ -101,10 +101,6 @@ int MPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, const
     if (MPIR_T_pvar_is_readonly(handle)) {
         mpi_errno = MPI_T_ERR_PVAR_NO_WRITE;
         goto fn_fail;
-    } else {
-        /* We should never expose writable pvars */
-        mpi_errno = MPI_ERR_INTERN;
-        goto fn_fail;
     }
 
     mpi_errno = MPIR_T_pvar_write_impl(session, handle, buf);
