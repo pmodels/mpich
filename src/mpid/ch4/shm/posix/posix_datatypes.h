@@ -57,11 +57,11 @@
     unsigned short type;        /* currently used only with checkpointing */
 
 typedef struct MPIDI_POSIX_pkt_header {
-    MPIDI_POSIX_PKT_HEADER_FIELDS;
+    MPIDI_POSIX_PKT_HEADER_FIELDS
 } MPIDI_POSIX_pkt_header_t;
 
 typedef struct MPIDI_POSIX_pkt_mpich {
-    MPIDI_POSIX_PKT_HEADER_FIELDS;
+    MPIDI_POSIX_PKT_HEADER_FIELDS
     union {
         char payload[MPIDI_POSIX_DATA_LEN];
         double dummy;           /* align paylod to double */
