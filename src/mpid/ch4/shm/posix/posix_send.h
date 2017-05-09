@@ -79,7 +79,7 @@ static inline int MPIDI_POSIX_do_isend(const void *buf,
                     (MPL_DBG_FDEST,
                      "Enqueued to grank %d from %d (comm_kind %d) in recv %d,%d,%d\n",
                      MPIDI_CH4U_rank_to_lpid(rank, comm), MPIDI_POSIX_mem_region.rank,
-                     comm->comm_kind, comm->rank, tag, comm->context_id + context_offset));
+                     (int) comm->comm_kind, comm->rank, tag, comm->context_id + context_offset));
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_ISEND);
