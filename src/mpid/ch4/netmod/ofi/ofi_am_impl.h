@@ -288,7 +288,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
      * is not available here */
     index =
         MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(MPIR_Process.comm_world).rma_id_allocator);
-    MPIR_Assert((int) index < MPIDI_Global.max_huge_rmas);
+    MPIR_Assert(index < MPIDI_Global.max_huge_rmas);
     lmt_info->rma_key = MPIDI_OFI_ENABLE_MR_SCALABLE ? index << MPIDI_Global.huge_rma_shift : 0;
 
     MPIR_cc_incr(sreq->cc_ptr, &c);     /* send completion */
