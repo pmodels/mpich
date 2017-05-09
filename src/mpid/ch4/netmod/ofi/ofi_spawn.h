@@ -433,7 +433,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
 
         MPIDI_OFI_PROGRESS_WHILE(!req[1].done || !req[2].done);
         size_t disp = 0;
-        for (i = 0; i < req[0].source; i++)
+        for (i = 0; (uint64_t) i < req[0].source; i++)
             disp += (*remote_upid_size)[i];
         memcpy(conname, *remote_upids + disp, (*remote_upid_size)[req[0].source]);
         MPIR_CHKPMEM_COMMIT();
