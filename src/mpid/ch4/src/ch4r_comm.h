@@ -206,7 +206,7 @@ static inline int MPIDIU_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size)
     *lut = new_lut;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE,
-                    (MPL_DBG_FDEST, "alloc lut %p, size %ld, refcount=%d",
+                    (MPL_DBG_FDEST, "alloc lut %p, size %lu, refcount=%d",
                      new_lut, size * sizeof(MPIDI_lpid_t), MPIR_Object_get_ref(new_lut)));
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ALLOC_LUT);
@@ -260,7 +260,7 @@ static inline int MPIDIU_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size)
     *mlut = new_mlut;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE,
-                    (MPL_DBG_FDEST, "alloc mlut %p, size %ld, refcount=%d",
+                    (MPL_DBG_FDEST, "alloc mlut %p, size %lu, refcount=%d",
                      new_mlut, size * sizeof(MPIDI_gpid_t), MPIR_Object_get_ref(new_mlut)));
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_ALLOC_MLUT);
