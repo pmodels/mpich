@@ -563,32 +563,26 @@ static inline int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op
     case MPI_SUM:
         *fi_op = FI_SUM;
         goto fn_exit;
-        break;
 
     case MPI_PROD:
         *fi_op = FI_PROD;
         goto fn_exit;
-        break;
 
     case MPI_MAX:
         *fi_op = FI_MAX;
         goto fn_exit;
-        break;
 
     case MPI_MIN:
         *fi_op = FI_MIN;
         goto fn_exit;
-        break;
 
     case MPI_BAND:
         *fi_op = FI_BAND;
         goto fn_exit;
-        break;
 
     case MPI_BOR:
         *fi_op = FI_BOR;
         goto fn_exit;
-        break;
 
     case MPI_BXOR:
         *fi_op = FI_BXOR;
@@ -601,7 +595,6 @@ static inline int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op
 
         *fi_op = FI_LAND;
         goto fn_exit;
-        break;
 
     case MPI_LOR:
         if (isLONG_DOUBLE(dt))
@@ -609,7 +602,6 @@ static inline int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op
 
         *fi_op = FI_LOR;
         goto fn_exit;
-        break;
 
     case MPI_LXOR:
         if (isLONG_DOUBLE(dt))
@@ -617,29 +609,24 @@ static inline int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op
 
         *fi_op = FI_LXOR;
         goto fn_exit;
-        break;
 
     case MPI_REPLACE:{
             *fi_op = FI_ATOMIC_WRITE;
             goto fn_exit;
-            break;
         }
 
     case MPI_NO_OP:{
             *fi_op = FI_ATOMIC_READ;
             goto fn_exit;
-            break;
         }
 
     case MPI_OP_NULL:{
             *fi_op = FI_CSWAP;
             goto fn_exit;
-            break;
         }
 
     default:
         goto fn_fail;
-        break;
     }
 
   fn_exit:
