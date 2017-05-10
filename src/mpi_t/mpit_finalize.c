@@ -28,7 +28,7 @@ int MPI_T_finalize(void) __attribute__((weak,alias("PMPI_T_finalize")));
 
 static void MPIR_T_enum_env_finalize(void)
 {
-    int i, j;
+    unsigned int i, j;
     MPIR_T_enum_t *e;
     enum_item_t *item;
 
@@ -55,7 +55,7 @@ static void MPIR_T_enum_env_finalize(void)
 
 static void MPIR_T_cat_env_finalize(void)
 {
-    int i;
+    unsigned int i;
     cat_table_entry_t *cat;
 
     if (cat_table) {
@@ -91,7 +91,7 @@ static void MPIR_T_cat_env_finalize(void)
 
 static void MPIR_T_cvar_env_finalize(void)
 {
-    int i;
+    unsigned int i;
     cvar_table_entry_t *cvar;
 
     MPIR_T_cvar_finalize();
@@ -126,7 +126,7 @@ static void MPIR_T_cvar_env_finalize(void)
 
 static void MPIR_T_pvar_env_finalize(void)
 {
-    int i;
+    unsigned int i;
     pvar_table_entry_t *pvar;
 
     if (pvar_table) {
