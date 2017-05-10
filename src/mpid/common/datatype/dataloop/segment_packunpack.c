@@ -35,38 +35,6 @@ static void setPrint( void ) {
 #define DBG_SEGMENT(_a)
 #endif
 
-/* NOTE: bufp values are unused, ripe for removal */
-
-int PREPEND_PREFIX(Segment_contig_m2m)(DLOOP_Offset *blocks_p,
-				       DLOOP_Type el_type,
-				       DLOOP_Offset rel_off,
-				       void *bufp,
-				       void *v_paramp);
-int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
-				       DLOOP_Count count,
-				       DLOOP_Count blksz,
-				       DLOOP_Offset stride,
-				       DLOOP_Type el_type,
-				       DLOOP_Offset rel_off,
-				       void *bufp,
-				       void *v_paramp);
-int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
-				       DLOOP_Count count,
-				       DLOOP_Count blocklen,
-				       DLOOP_Offset *offsetarray,
-				       DLOOP_Type el_type,
-				       DLOOP_Offset rel_off,
-				       void *bufp,
-				       void *v_paramp);
-int PREPEND_PREFIX(Segment_index_m2m)(DLOOP_Offset *blocks_p,
-				      DLOOP_Count count,
-				      DLOOP_Count *blockarray,
-				      DLOOP_Offset *offsetarray,
-				      DLOOP_Type el_type,
-				      DLOOP_Offset rel_off,
-				      void *bufp,
-				      void *v_paramp);
-
 void PREPEND_PREFIX(Segment_pack)(DLOOP_Segment *segp,
 				  DLOOP_Offset   first,
 				  DLOOP_Offset  *lastp,
