@@ -311,7 +311,7 @@ void MPIR_T_CVAR_REGISTER_impl(
                 ((char *)(cvar->addr))[0] = '\0';
             } else {
                 /* Use greater (>), since count includes the terminating '\0', but strlen does not */
-                MPIR_Assert(count > strlen(defaultval.str));
+                MPIR_Assert((unsigned) count > strlen(defaultval.str));
                 strcpy(cvar->addr, defaultval.str);
             }
         }

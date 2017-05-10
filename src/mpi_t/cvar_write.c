@@ -33,7 +33,7 @@ int MPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf) __attribute__((w
 int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, const void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, count;
+    unsigned int i, count;
     void *addr;
     MPIR_T_cvar_handle_t *hnd = handle;
 
