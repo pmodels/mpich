@@ -241,21 +241,21 @@ enum {
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
-    struct fi_context context;  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     int index;
 } MPIDI_OFI_am_repost_request_t;
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
-    struct fi_context context;  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     MPIR_Request *signal_req;
 } MPIDI_OFI_ssendack_request_t;
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
-    struct fi_context context;  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     int done;
     uint32_t tag;
@@ -491,7 +491,7 @@ typedef struct {
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
-    struct fi_context context;  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     struct MPIDI_Iovec_array *next;
     union {
@@ -529,7 +529,7 @@ typedef struct {
 typedef struct MPIDI_OFI_win_request {
     MPIR_OBJECT_HEADER;
     char pad[MPIDI_REQUEST_HDR_SIZE - MPIDI_OFI_OBJECT_HEADER_SIZE];
-    struct fi_context context;  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     struct MPIDI_OFI_win_request *next;
     int target_rank;
@@ -538,14 +538,14 @@ typedef struct MPIDI_OFI_win_request {
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
-    struct fi_context context;  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     MPIR_Request *parent;       /* Parent request           */
 } MPIDI_OFI_chunk_request;
 
 typedef struct MPIDI_OFI_huge_recv {
     char pad[MPIDI_REQUEST_HDR_SIZE];
-    struct fi_context context;  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     int (*done_fn) (struct fi_cq_tagged_entry * wc, MPIR_Request * req);
     MPIDI_OFI_send_control_t remote_info;
