@@ -1528,7 +1528,7 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
     /* See man fi_getinfo for a list                                            */
     /* of all filters                                                           */
     /* mode:  Select capabilities that this netmod will support                 */
-    /*        FI_CONTEXT:  This netmod will pass in context into communication  */
+    /*        FI_CONTEXT(2):  This netmod will pass in context into communication */
     /*        to optimize storage locality between MPI requests and OFI opaque  */
     /*        data structures.                                                  */
     /*        FI_ASYNC_IOV:  MPICH will provide storage for iovecs on           */
@@ -1549,6 +1549,11 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
     /*           endpoint, so the netmod requires dynamic memory regions        */
     /* ------------------------------------------------------------------------ */
     hints->mode = FI_CONTEXT | FI_ASYNC_IOV;    /* We can handle contexts  */
+    if (FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION) >= FI_VERSION(1,5)) {
+#ifdef FI_CONTEXT2
+        hints->mode |= FI_CONTEXT2;
+#endif
+    }
     hints->caps = 0ULL;
 
     /* RMA interface is used in AM and in native modes,
