@@ -208,7 +208,7 @@ Input Parameters:
   MPI_Requests) and should not call any other routines in the common
   case.
 
-  Threading: The 'MPID_THREAD_CS_ENTER/EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX)' enables both
+  Threading: The 'MPID_THREAD_CS_ENTER/EXIT(POBJ/VNI, MPIR_THREAD_POBJ_HANDLE_MUTEX)' enables both
   finer-grain
   locking with a single global mutex and with a mutex specific for handles.
 
