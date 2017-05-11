@@ -186,7 +186,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 #if defined(MPICH_IS_THREADED)
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL || \
-    MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
+    MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ   || \
+    MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
 MPID_Thread_mutex_t MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX;
 #endif
 
@@ -196,6 +197,10 @@ MPID_Thread_mutex_t MPIR_THREAD_POBJ_MSGQ_MUTEX;
 MPID_Thread_mutex_t MPIR_THREAD_POBJ_COMPLETION_MUTEX;
 MPID_Thread_mutex_t MPIR_THREAD_POBJ_CTX_MUTEX;
 MPID_Thread_mutex_t MPIR_THREAD_POBJ_PMI_MUTEX;
+#endif
+
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+MPID_Thread_mutex_t MPIR_THREAD_POBJ_HANDLE_MUTEX;
 #endif
 
 /* These routine handle any thread initialization that my be required */
@@ -225,6 +230,12 @@ static int thread_cs_init(void)
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_CTX_MUTEX, &err);
     MPIR_Assert(err == 0);
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_PMI_MUTEX, &err);
+    MPIR_Assert(err == 0);
+
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+    MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
+    MPIR_Assert(err == 0);
+    MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
     MPIR_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE
@@ -275,6 +286,11 @@ int MPIR_Thread_CS_Finalize(void)
     MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_PMI_MUTEX, &err);
     MPIR_Assert(err == 0);
 
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
+    MPIR_Assert(err == 0);
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
+    MPIR_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE
 /* Updates to shared data and access to shared services is handled without
