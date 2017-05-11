@@ -139,7 +139,7 @@ COLL_sched_reduce_tree(const void *sendbuf,
                   COLL_op_t op,
                   int root,
                   int tag,
-                  COLL_comm_t * comm, int k, int is_commutative, COLL_sched_t * s, int finalize, int nbuffers)
+                  COLL_comm_t * comm, int k, int is_commutative, COLL_sched_t * s, int finalize, bool per_child_buffer)
 {
     COLL_tree_t myTree;
     int i, j, is_contig;
@@ -150,7 +150,9 @@ COLL_sched_reduce_tree(const void *sendbuf,
     COLL_tree_t *tree = &myTree;
     void *free_ptr0 = NULL;
     int is_inplace = TSP_isinplace((void *) sendbuf);
-    int  children   = 0;
+    int  num_children   = 0;
+    TSP_sched_t *sched = &s->tsp_sched;
+    TSP_comm_t *tsp_comm = &comm->tsp_comm;
 
     TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
     if (is_commutative)
@@ -158,78 +160,137 @@ COLL_sched_reduce_tree(const void *sendbuf,
     else
         /* We have to use knomial trees to get rank order */
         COLL_tree_knomial_init(rank, size, k, root, tree);
-
     /*calculate the number of children to allocate #children buffers */
-    SCHED_FOREACHCHILDDO(children++);
+    SCHED_FOREACHCHILDDO(num_children++);
 
     void *result_buf;
-    int rr_id[3];
-    int buf=0;
-    if (!is_inplace && tree->parent == -1){
-        rr_id[1] = TSP_dtcopy_nb(recvbuf, count, datatype, sendbuf, count, datatype,&s->tsp_sched,0,NULL);
+    bool is_root = tree->parent==-1;
+    bool is_leaf = (num_children==0);
+    bool is_intermediate = !is_root && !is_leaf; /*is an intermediate node in the tree*/
+
+    int dtcopy_id;
+    int nvtcs;
+    int *vtcs = TSP_allocate_mem(sizeof(int)*num_children);
+    int *reduce_id = TSP_allocate_mem(sizeof(int)*num_children);
+    int *recv_id = TSP_allocate_mem(sizeof(int)*num_children);
+    int child_count=0;
+
+    void *target_buf; /*data is accumulated in this buffer*/
+    if (is_root){
+        target_buf = recvbuf;
     }
-    else if(tree->parent != -1){
-        /* How about we just use recvbuf instead of result_buf for non root? Code could be simplied more */
-        result_buf = TSP_allocate_buffer(extent * count,&s->tsp_sched);
+    else if(is_intermediate){/*For intermediate vertex in tree, recv buffer can be invalid, 
+                               therefore, we need a buffer to accumulate reduced data */
+        result_buf = TSP_allocate_buffer(extent * count, sched);
         result_buf = (void *) ((char *) result_buf - lb);
-        rr_id[1] = TSP_dtcopy_nb(result_buf, count, datatype, sendbuf, count, datatype,&s->tsp_sched,0,NULL);
+        target_buf = result_buf;
     }
-    /*create #children buffers */
-    void *result_nbuf[children];
-    if(nbuffers!=1){ /* If using only one recv buffer, allocate memory here */
-        result_nbuf[0] = TSP_allocate_buffer(extent*count,&s->tsp_sched);
-        result_nbuf[0] = (void *)((char *)result_nbuf[0]-lb);
+    if(0) fprintf(stderr, "is_root: %d, is_inplace: %d, is_intermediate: %d, lb: %d\n", is_root, is_inplace, is_intermediate, lb);
+    if((is_root && !is_inplace) || (is_intermediate)){
+        if(0)fprintf(stderr, "scheduling data copy\n");
+        dtcopy_id = TSP_dtcopy_nb(target_buf, count, datatype, sendbuf, count, datatype,sched,0,NULL);
+    }
+    
+    if(0) fprintf(stderr, "Allocating buffer for receiving data\n");
+    /*allocate buffer space to receive data from children*/
+    void **childbuf;
+    childbuf = (void**)TSP_allocate_mem(sizeof(void*)*num_children);
+    if(num_children){
+        childbuf[0] = TSP_allocate_buffer(extent*count, sched);
+        childbuf[0] = (void*)((char*)childbuf[0]-lb);
     }
     for(i=0; i<tree->numRanges; i++){
-       for(j=tree->children[i].startRank; j<=tree->children[i].endRank; j++){
-        if(nbuffers==1){
-            /* Allocate nth buffer to receive data */
-            result_nbuf[buf] = TSP_allocate_buffer(extent*count,&s->tsp_sched);
-            result_nbuf[buf] = (void *)((char *)result_nbuf[buf]-lb);
-            rr_id[0] = TSP_recv(result_nbuf[buf],count,datatype,
-                                j,tag,&comm->tsp_comm,
-                                &s->tsp_sched,0,NULL);
+        for(j=tree->children[i].startRank; j<=tree->children[i].endRank; j++, child_count++){
+            if(child_count==0)
+                continue;/*memory is already allocated for the first child above*/
+            else{
+                if(per_child_buffer){
+                    childbuf[child_count] = TSP_allocate_buffer(extent*count, sched);
+                    childbuf[child_count] = (void*)((char*)childbuf[child_count]-lb);
+                }
+                else
+                    childbuf[child_count] = childbuf[0];
+            }
         }
-        else{
-            rr_id[0] = TSP_recv(result_nbuf[buf],count,datatype,
-                                j,tag,&comm->tsp_comm,
-                                &s->tsp_sched,j==tree->children[0].startRank?0:1,&rr_id[2]);
-        }
-        if (is_commutative) {
-             /* Either branch or one additional data copy */
-             if(tree->parent == -1)
-                 rr_id[2] = TSP_reduce_local(result_nbuf[buf],recvbuf,count,
-                                             datatype, op, &s->tsp_sched,is_inplace?1:2,rr_id);
-             else
-                 rr_id[2] = TSP_reduce_local(result_nbuf[buf],result_buf,count,
-                                              datatype,op, &s->tsp_sched,2,rr_id);
-        }
-        else{
-             /* non commutative case. Order of reduction matters. Knomia tree has to constructed differently for reduce for optimal performace. 
- *              If it is non commutative the tree is Knomial. Note: Works only when root is zero */
-             if(tree->parent == -1){
-                 rr_id[2] = TSP_reduce_local(recvbuf,result_nbuf[buf],count,
-                                             datatype,op, &s->tsp_sched,is_inplace?1:2,rr_id);
-                TSP_dtcopy_nb(recvbuf, count, datatype, result_nbuf[buf], count, datatype,&s->tsp_sched,1,&rr_id[2]);
-             }
-             else{
-                 rr_id[2] = TSP_reduce_local(result_buf,result_nbuf[buf],count,
-                                             datatype, op, &s->tsp_sched,2,rr_id);
-                TSP_dtcopy_nb(result_buf, count, datatype, result_nbuf[buf], count, datatype,&s->tsp_sched,1,&rr_id[2]);
-             }
-        }
-        if(nbuffers==1)
-             buf++;
     }
-   }
-    if(tree->parent!=-1){
-        /* send date to parent if you are a non root node */
-        TSP_send(result_buf, count, datatype,
-                                    tree->parent,
-                                    tag, &comm->tsp_comm, &s->tsp_sched,
-                                    1, (tree->numRanges == 0) ? &rr_id[1]:&rr_id[2]);
-    }
+    
+    if(0) fprintf(stderr, "Start receiving data\n");
+    child_count=0;
+    for(i=0; i<tree->numRanges; i++){
+       for(j=tree->children[i].startRank; j<=tree->children[i].endRank; j++,child_count++){
 
+            /*Setup the dependencies for posting the recv for child's data*/
+            if(per_child_buffer){/*no dependency, just post the receive*/
+                nvtcs = 0;
+            }else{
+                if(child_count==0)/*this is the first recv and therefore no dependency*/
+                    nvtcs=0;
+                else{
+                   /*wait for the previous reduce to complete, before posting the next receive*/
+                    vtcs[0] = reduce_id[child_count-1];
+                    nvtcs = 1;
+                }
+            }
+            if(0) fprintf(stderr, "Schedule receive from child %d\n", j);
+            if(0) fprintf(stderr, "Posting receive at address %p\n", childbuf[child_count]);
+            /*post the recv*/
+            recv_id[child_count] = TSP_recv(childbuf[child_count],count,datatype,
+                                            j,tag,tsp_comm, sched, nvtcs, vtcs);
+            
+            if(0) fprintf(stderr, "receive scheduled\n");
+            /*Reduction depends on the data copy to complete*/
+            nvtcs = 0;
+            if((is_root && !is_inplace) || is_intermediate){ //this is when data copy was done
+                nvtcs = 1; 
+                vtcs[0] = dtcopy_id;
+            }
+            if(0) fprintf(stderr, "added datacopy dependency (if applicable)\n");
+            /*reduction depends on the corresponding recv to complete*/
+            vtcs[nvtcs] = recv_id[child_count]; 
+            nvtcs+=1;
+            
+            if(0) fprintf(stderr, "schedule reduce\n");
+            if (is_commutative) {/*reduction order does not matter*/
+            }
+            else{
+                 /* non commutative case. Order of reduction matters. Knomia tree has to constructed differently for reduce for optimal performace. 
+     *              If it is non commutative the tree is Knomial and assumes that children are in increasing order. Note: Works only when root is zero */
+                /*wait for the previous reduce to complete*/
+                if(child_count!=0){
+                    vtcs[nvtcs] = reduce_id[child_count-1]; 
+                    nvtcs++;
+                }
+            }
+            reduce_id[child_count] = TSP_reduce_local(childbuf[child_count],target_buf, count,
+                                                       datatype,op, sched, nvtcs, vtcs);
+        }
+   }
+    
+    if(!is_root){
+        if(0) fprintf(stderr, "schedule send to parent %d\n", tree->parent);
+        if(is_leaf){
+            nvtcs=0; /*just send the data to parent*/
+            target_buf = sendbuf;
+        }
+        else if(is_commutative){//wait for all the reductions to complete
+            nvtcs = num_children;
+            for(i=0; i<num_children; i++)
+                vtcs[i] = reduce_id[i];
+        }else {/*Just wait for the last reduce to complete*/
+                nvtcs = 1;
+                vtcs[0] = reduce_id[num_children-1];
+        }
+    
+        /* send date to parent */
+        TSP_send(target_buf, count, datatype, tree->parent,
+                 tag, tsp_comm, sched, nvtcs, vtcs);
+    }
+    
+    if(0) fprintf(stderr, "completed schedule generation\n");
+    TSP_free_mem(childbuf);
+    TSP_free_mem(vtcs);
+    TSP_free_mem(recv_id);
+    TSP_free_mem(reduce_id);
     return 0;
 }
 
