@@ -14,7 +14,7 @@
 #include "ofi_am_impl.h"
 #include "ofi_am_events.h"
 
-static inline int MPIDI_OFI_progress_do_queue(void);
+static inline int MPIDI_OFI_progress_do_queue(int vni_idx);
 
 static inline void MPIDI_NM_am_request_init(MPIR_Request * req)
 {
