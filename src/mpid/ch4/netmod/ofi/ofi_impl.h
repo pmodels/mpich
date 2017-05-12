@@ -46,7 +46,7 @@
  */
 #define MPIDI_OFI_PROGRESS()                                      \
     do {                                                          \
-        mpi_errno = MPID_Progress_test();                        \
+        mpi_errno = MPIDI_NM_progress(0, 0);                      \
         if (mpi_errno!=MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);      \
         MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
@@ -113,7 +113,13 @@
                             "**eagain");                    \
         if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
             MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);     \
+        /* FIXME: by fixing the recursive locking interface to account
+         * for recursive locking in more than one lock (currently limited
+         * to one due to scalar TLS counter), this lock yielding
+         * operation can be avoided since we are inside a finite loop. */\
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);        \
         if (mpi_errno != MPI_SUCCESS)                                \
             MPIR_ERR_POP(mpi_errno);                                 \
         if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
@@ -140,7 +146,10 @@
                               __LINE__,                     \
                               FCNAME,                       \
                               fi_strerror(-_ret));          \
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);         \
         mpi_errno = MPIDI_OFI_retry_progress();                      \
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);        \
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);\
         if (mpi_errno != MPI_SUCCESS)                                \
             MPIR_ERR_POP(mpi_errno);                                 \
         MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);   \
