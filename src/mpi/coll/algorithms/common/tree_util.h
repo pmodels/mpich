@@ -133,14 +133,12 @@ static inline void COLL_tree_knomial_init(int rank, int nranks, int k, int root,
     else
         ct->parent = (parent + root) % nranks;
     int crank = lrank + 1;      /*cranks stands for child rank */
-    if (0)
-        fprintf(stderr, "parent of rank %d is %d, total ranks = %d (root=%d)\n", rank, ct->parent,
+    MPIC_DBG( "parent of rank %d is %d, total ranks = %d (root=%d)\n", rank, ct->parent,
                 nranks, root);
     for (i = time; i < maxtime; i++) {
         for (j = 1; j < k; j++) {
             if (crank < nranks) {
-                if (0)
-                    fprintf(stderr, "adding child %d to rank %d\n", (crank + root) % nranks, rank);
+                MPIC_DBG("adding child %d to rank %d\n", (crank + root) % nranks, rank);
                 COLL_tree_add_child(ct, (crank + root) % nranks);
             }
             crank += COLL_ipow(k, maxtime - i - 1);

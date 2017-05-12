@@ -34,24 +34,24 @@ static inline int COLL_tree_dump(int tree_size, int root, int k)
     int i;
     const char *name = "collective tree";
 
-    fprintf(stderr, "digraph \"%s%d\" {\n", name, k);
+    MPIC_DBG("digraph \"%s%d\" {\n", name, k);
 
     for (i = 0; i < tree_size; i++) {
         COLL_tree_t ct;
         COLL_tree_init(i, tree_size, k, root, &ct);
-        fprintf(stderr, "%d -> %d\n", ct.rank, ct.parent);
+        MPIC_DBG("%d -> %d\n", ct.rank, ct.parent);
         int j;
 
         for (j = 0; j < ct.numRanges; j++) {
             int k;
 
             for (k = ct.children[j].startRank; k <= ct.children[j].endRank; k++) {
-                fprintf(stderr, "%d -> %d\n", ct.rank, k);
+                MPIC_DBG("%d -> %d\n", ct.rank, k);
             }
         }
     }
 
-    fprintf(stderr, "}\n");
+    MPIC_DBG("}\n");
     return 0;
 }
 

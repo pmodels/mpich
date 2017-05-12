@@ -47,8 +47,7 @@ static inline void COLL_sched_reset(COLL_sched_t * s, int tag)
 
 static inline void COLL_sched_free(COLL_sched_t * s)
 {
-    if (0)
-        fprintf(stderr, "freeing sched buffers\n");
+    MPIC_DBG("freeing sched buffers\n");
     TSP_free_buffers(&s->tsp_sched);
     TSP_free_mem(s);
 }

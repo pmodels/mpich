@@ -30,6 +30,12 @@ struct MPIR_Op;
 #define MPIC_COMM(comm) (&((comm)->ch4_coll))
 #define MPIC_REQ(req) (&((req)->ch4_coll))
 
+#ifdef MPIC_DEBUG
+#define MPIC_DBG(...) MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,__VA_ARGS__))
+#else
+#define MPIC_DBG(...)
+#endif
+
 typedef struct COLL_queue_elem_t {
     TAILQ_ENTRY(COLL_queue_elem_t) list_data;
     int (*kick_fn) (struct COLL_queue_elem_t *);

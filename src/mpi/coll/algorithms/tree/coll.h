@@ -76,8 +76,7 @@ static inline int COLL_bcast(void *buffer,
     COLL_sched_t *s = MPIC_get_sched((MPIC_coll_args_t) coll_args);
     int tag = (*comm->tree_comm.curTag)++;
     if (s == NULL) {
-        if (0)
-            fprintf(stderr, "schedule does not exist\n");
+        MPIC_DBG("schedule does not exist\n");
         s = (COLL_sched_t *) MPL_malloc(sizeof(COLL_sched_t));
         COLL_sched_init(s, tag);
         rc = COLL_sched_bcast_tree_pipelined(buffer, count, datatype, root, tag, comm, k, segsize,
@@ -85,8 +84,7 @@ static inline int COLL_bcast(void *buffer,
         MPIC_add_sched((MPIC_coll_args_t) coll_args, (void *) s, COLL_sched_free);
     }
     else {
-        if (0)
-            fprintf(stderr, "schedule already exists\n");
+        MPIC_DBG("schedule already exists\n");
         COLL_sched_reset(s, tag);
     }
     COLL_sched_kick(s);

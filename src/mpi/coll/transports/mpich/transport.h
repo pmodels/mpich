@@ -20,16 +20,14 @@ static inline void MPIC_MPICH_decrement_num_unfinished_dependecies(MPIC_MPICH_re
 {
     /*for each outgoing vertex of request rp, decrement number of unfinished dependencies */
     MPIC_MPICH_IntArray *outvtcs = &rp->outvtcs;
-    if (0)
-        fprintf(stderr, "num outvtcs of %d = %d\n", rp->kind, outvtcs->used);
+    MPIC_DBG("num outvtcs of %d = %d\n", rp->kind, outvtcs->used);
     int i;
     for (i = 0; i < outvtcs->used; i++) {
         int num_unfinished_dependencies =
             --(sched->requests[outvtcs->array[i]].num_unfinished_dependencies);
         /*if all dependencies are complete, issue the op */
         if (num_unfinished_dependencies == 0) {
-            if (0)
-                fprintf(stderr, "issuing request number: %d\n", outvtcs->array[i]);
+            MPIC_DBG("issuing request number: %d\n", outvtcs->array[i]);
             MPIC_MPICH_issue_request(outvtcs->array[i], &sched->requests[outvtcs->array[i]], sched);
         }
     }
@@ -41,8 +39,7 @@ static inline void MPIC_MPICH_record_request_completion(MPIC_MPICH_req_t * rp,
     rp->state = MPIC_MPICH_STATE_COMPLETE;
     /*update the dependencies */
     sched->num_completed++;
-    if (0)
-        fprintf(stderr, "num completed vertices: %d\n", sched->num_completed);
+    MPIC_DBG("num completed vertices: %d\n", sched->num_completed);
     MPIC_MPICH_decrement_num_unfinished_dependecies(rp, sched);
 }
 
@@ -67,15 +64,15 @@ static inline void MPIC_MPICH_record_request_issue(MPIC_MPICH_req_t * rp,
     /*print issued task list */
     if (0) {
         MPIC_MPICH_req_t *req = sched->issued_head;
-        fprintf(stderr, "issued list: ");
+        MPIC_DBG("issued list: ");
         while (req) {
-            fprintf(stderr, "%d ", req->id);
+            MPIC_DBG("%d ", req->id);
             req = req->next_issued;
         }
         if (sched->req_iter)
-            fprintf(stderr, ", req_iter: %d\n", sched->req_iter->id);
+            MPIC_DBG( ", req_iter: %d\n", sched->req_iter->id);
         else
-            fprintf(stderr, "\n");
+            MPIC_DBG("\n");
     }
 }
 
@@ -221,8 +218,7 @@ static inline void MPIC_MPICH_add_vtx_dependencies(MPIC_MPICH_sched_t * sched, i
     int i;
     MPIC_MPICH_req_t *req = &sched->requests[vtx];
     MPIC_MPICH_IntArray *in = &req->invtcs;
-    if (0)
-        fprintf(stderr, "updating invtcs of vtx %d, kind %d, in->used %d, n_invtcs %d\n", vtx,
+    MPIC_DBG( "updating invtcs of vtx %d, kind %d, in->used %d, n_invtcs %d\n", vtx,
                 req->kind, in->used, n_invtcs);
     /*insert the incoming edges */
     assert(in->used + n_invtcs <= MPIC_MPICH_MAX_EDGES);
@@ -232,8 +228,7 @@ static inline void MPIC_MPICH_add_vtx_dependencies(MPIC_MPICH_sched_t * sched, i
     MPIC_MPICH_IntArray *outvtcs;
     /*update the outgoing edges of incoming vertices */
     for (i = 0; i < n_invtcs; i++) {
-        if (0)
-            fprintf(stderr, "invtx: %d\n", invtcs[i]);
+        MPIC_DBG( "invtx: %d\n", invtcs[i]);
         outvtcs = &sched->requests[invtcs[i]].outvtcs;
         assert(outvtcs->used + 1 <= MPIC_MPICH_MAX_EDGES);
         outvtcs->array[outvtcs->used++] = vtx;
@@ -260,8 +255,7 @@ static inline void MPIC_MPICH_add_vtx_dependencies(MPIC_MPICH_sched_t * sched, i
 from phase array to completely DAG based collectives*/
 static inline int MPIC_MPICH_fence(MPIC_MPICH_sched_t * sched)
 {
-    if (0)
-        fprintf(stderr, "TSP(mpich) : sched [fence] total=%ld \n", sched->total);
+    MPIC_DBG( "TSP(mpich) : sched [fence] total=%ld \n", sched->total);
     MPIC_MPICH_req_t *req = &sched->requests[sched->total];
     req->kind = MPIC_MPICH_KIND_NOOP;
     init_request(req, sched->total);
@@ -294,8 +288,7 @@ by the transport to add it as a dependency to any operations poster after it
 
 static inline int MPIC_MPICH_wait(MPIC_MPICH_sched_t * sched)
 {
-    if (0)
-        fprintf(stderr, "scheduling a wait\n");
+    MPIC_DBG("scheduling a wait\n");
     sched->last_wait = sched->total;
     return MPIC_MPICH_fence(sched);
 }
@@ -327,8 +320,7 @@ static inline int MPIC_MPICH_addref_dt_nb(MPIC_MPICH_dt_t dt,
     req->nbargs.addref_dt.dt = dt;
     req->nbargs.addref_dt.up = up;
 
-    if (0)
-        fprintf(stderr, "TSP(mpich) : sched [%ld] [addref_dt]\n", sched->total);
+    MPIC_DBG( "TSP(mpich) : sched [%ld] [addref_dt]\n", sched->total);
     return sched->total++;
 }
 
@@ -345,8 +337,7 @@ static inline int MPIC_MPICH_addref_op_nb(MPIC_MPICH_op_t op,
     req->nbargs.addref_op.op = op;
     req->nbargs.addref_op.up = up;
 
-    if (0)
-        fprintf(stderr, "TSP(mpich) : sched [%ld] [addref_op]\n", sched->total);
+    MPIC_DBG( "TSP(mpich) : sched [%ld] [addref_op]\n", sched->total);
     return sched->total++;
 }
 
@@ -375,8 +366,7 @@ static inline int MPIC_MPICH_send(const void *buf,
     req->nbargs.sendrecv.comm = comm;
     req->mpid_req[1] = NULL;
 
-    if (0)
-        fprintf(stderr, "TSP(mpich) : sched [%ld] [send]\n", vtx);
+    MPIC_DBG("TSP(mpich) : sched [%ld] [send]\n", vtx);
     sched->total++;
     //MPIC_MPICH_issue_request(vtx, req, sched);
     return vtx;
@@ -406,8 +396,7 @@ static inline int MPIC_MPICH_send_accumulate(const void *buf,
     req->nbargs.sendrecv.comm = comm;
     req->mpid_req[1] = NULL;
 
-    if (0)
-        fprintf(stderr, "TSP(mpich) : sched [%ld] [send_accumulate]\n", sched->total);
+    MPIC_DBG("TSP(mpich) : sched [%ld] [send_accumulate]\n", sched->total);
     sched->total++;
     //MPIC_MPICH_issue_request(vtx, req, sched);
     return vtx;
@@ -436,8 +425,7 @@ static inline int MPIC_MPICH_recv(void *buf,
     req->nbargs.sendrecv.comm = comm;
     req->mpid_req[1] = NULL;
 
-    if (0)
-        fprintf(stderr, "TSP(mpich) : sched [%ld] [recv]\n", sched->total);
+    MPIC_DBG("TSP(mpich) : sched [%ld] [recv]\n", sched->total);
     sched->total++;
     //MPIC_MPICH_issue_request(vtx, req, sched);
     return vtx;
@@ -457,8 +445,7 @@ static inline int MPIC_MPICH_queryfcn(void *data, MPI_Status * status)
             MPIR_Reduce_local_impl(rr->inbuf, rr->inoutbuf, rr->count, dt, op);
         }
         else {
-            if (0)
-                fprintf(stderr, "  --> MPICH transport (recv_reduce R) complete to %p\n",
+            MPIC_DBG("  --> MPICH transport (recv_reduce R) complete to %p\n",
                         rr->inoutbuf);
 
             MPIR_Reduce_local_impl(rr->inoutbuf, rr->inbuf, rr->count, dt, op);
@@ -510,8 +497,7 @@ static inline int MPIC_MPICH_recv_reduce(void *buf,
     req->nbargs.recv_reduce.done = 0;
     req->nbargs.recv_reduce.flags = flags;
 
-    if (0)
-        fprintf(stderr, "TSP(mpich) : sched [%ld] [recv_reduce]\n", sched->total);
+    MPIC_DBG("TSP(mpich) : sched [%ld] [recv_reduce]\n", sched->total);
 
     sched->total++;
     //MPIC_MPICH_issue_request(vtx, req, sched);
@@ -553,8 +539,7 @@ static inline int MPIC_MPICH_reduce_local(const void  *inbuf,
     req->nbargs.reduce_local.op       = operation;
     req->nbargs.reduce_local.flags    = flags;
 
-    if (0)
-        fprintf(stderr, "TSP(mpich) : sched [%ld] [reduce_local]\n", sched->total);
+    MPIC_DBG("TSP(mpich) : sched [%ld] [reduce_local]\n", sched->total);
     sched->total++;
     //TSP_issue_request(vtx, req, sched);
     return vtx;
@@ -593,8 +578,7 @@ static inline int MPIC_MPICH_dtcopy_nb(void *tobuf,
     req->nbargs.dtcopy.fromcount = fromcount;
     req->nbargs.dtcopy.fromtype = fromtype;
 
-    if (0)
-        fprintf(stderr, "TSP(mpich) : sched [%ld] [dt_copy]\n", sched->total);
+    MPIC_DBG("TSP(mpich) : sched [%ld] [dt_copy]\n", sched->total);
     sched->total++;
     //TSP_issue_request(vtx, req, sched);
     return vtx; //sched->total++;
@@ -635,8 +619,7 @@ static inline int MPIC_MPICH_free_mem_nb(void *ptr,
     MPIC_MPICH_add_vtx_dependencies(sched, sched->total, n_invtcs, invtcs);
     req->nbargs.free_mem.ptr = ptr;
 
-    if (0)
-        fprintf(stderr, "TSP(mpich) : sched [%ld] [free_mem]\n", sched->total);
+    MPIC_DBG("TSP(mpich) : sched [%ld] [free_mem]\n", sched->total);
     return sched->total++;
 }
 
@@ -644,12 +627,10 @@ static inline void MPIC_MPICH_issue_request(int vtxid, MPIC_MPICH_req_t * rp,
                                             MPIC_MPICH_sched_t * sched)
 {
     if (rp->state == MPIC_MPICH_STATE_INIT && rp->num_unfinished_dependencies == 0) {
-        if (0)
-            fprintf(stderr, "issuing request: %d\n", vtxid);
+        MPIC_DBG("issuing request: %d\n", vtxid);
         switch (rp->kind) {
         case MPIC_MPICH_KIND_SEND:{
-                if (0)
-                    fprintf(stderr, "  --> MPICH transport (isend) issued\n");
+                MPIC_DBG( "  --> MPICH transport (isend) issued\n");
 
                 MPIR_Errflag_t errflag = MPIR_ERR_NONE;
                 MPIC_Isend(rp->nbargs.sendrecv.buf,
@@ -663,8 +644,7 @@ static inline void MPIC_MPICH_issue_request(int vtxid, MPIC_MPICH_req_t * rp,
             break;
 
         case MPIC_MPICH_KIND_RECV:{
-                if (0)
-                    fprintf(stderr, "  --> MPICH transport (irecv) issued\n");
+                MPIC_DBG( "  --> MPICH transport (irecv) issued\n");
 
                 MPIC_Irecv(rp->nbargs.sendrecv.buf,
                            rp->nbargs.sendrecv.count,
@@ -678,8 +658,7 @@ static inline void MPIC_MPICH_issue_request(int vtxid, MPIC_MPICH_req_t * rp,
         case MPIC_MPICH_KIND_ADDREF_DT:
             MPIC_MPICH_addref_dt(rp->nbargs.addref_dt.dt, rp->nbargs.addref_dt.up);
 
-            if (0)
-                fprintf(stderr, "  --> MPICH transport (addref dt) complete\n");
+            MPIC_DBG("  --> MPICH transport (addref dt) complete\n");
             MPIC_MPICH_record_request_completion(rp, sched);
             break;
 
@@ -687,8 +666,7 @@ static inline void MPIC_MPICH_issue_request(int vtxid, MPIC_MPICH_req_t * rp,
             MPIC_MPICH_addref_op(rp->nbargs.addref_op.op, rp->nbargs.addref_op.up);
 
 
-            if (0)
-                fprintf(stderr, "  --> MPICH transport (addref op) complete\n");
+            MPIC_DBG("  --> MPICH transport (addref op) complete\n");
 
             MPIC_MPICH_record_request_completion(rp, sched);
             break;
@@ -700,23 +678,20 @@ static inline void MPIC_MPICH_issue_request(int vtxid, MPIC_MPICH_req_t * rp,
                               rp->nbargs.dtcopy.frombuf,
                               rp->nbargs.dtcopy.fromcount, rp->nbargs.dtcopy.fromtype);
 
-            if (0)
-                fprintf(stderr, "  --> MPICH transport (dtcopy) complete\n");
+            MPIC_DBG("  --> MPICH transport (dtcopy) complete\n");
             MPIC_MPICH_record_request_completion(rp, sched);
 
             break;
 
         case MPIC_MPICH_KIND_FREE_MEM:
-            if (0)
-                fprintf(stderr, "  --> MPICH transport (freemem) complete\n");
+            MPIC_DBG("  --> MPICH transport (freemem) complete\n");
 
             MPIC_MPICH_free_mem(rp->nbargs.free_mem.ptr);
             MPIC_MPICH_record_request_completion(rp, sched);
             break;
 
         case MPIC_MPICH_KIND_NOOP:
-            if (0)
-                fprintf(stderr, "  --> MPICH transport (noop) complete\n");
+            MPIC_DBG("  --> MPICH transport (noop) complete\n");
 
             MPIC_MPICH_record_request_completion(rp, sched);
             break;
@@ -730,8 +705,7 @@ static inline void MPIC_MPICH_issue_request(int vtxid, MPIC_MPICH_req_t * rp,
                 MPIR_Grequest_start_impl(MPIC_MPICH_queryfcn,
                                          NULL, NULL, &rp->nbargs.recv_reduce, &rp->mpid_req[1]);
 
-                if (0)
-                    fprintf(stderr, "  --> MPICH transport (recv_reduce) issued\n");
+                MPIC_DBG("  --> MPICH transport (recv_reduce) issued\n");
 
                 MPIC_MPICH_record_request_issue(rp, sched);
             }
@@ -777,13 +751,11 @@ static inline int MPIC_MPICH_test(MPIC_MPICH_sched_t * sched)
     req = &sched->requests[0];
     /*if issued list is empty, generate it */
     if (sched->issued_head == NULL) {
-        if (0)
-            fprintf(stderr, "issued list is empty, issue ready requests\n");
+        MPIC_DBG("issued list is empty, issue ready requests\n");
         if (sched->total > 0 && sched->num_completed != sched->total) {
             for (i = 0; i < sched->total; i++)
                 MPIC_MPICH_issue_request(i, &sched->requests[i], sched);
-            if (0)
-                fprintf(stderr, "completed traversal of requests\n");
+            MPIC_DBG("completed traversal of requests\n");
             return 0;
         }
         else
@@ -823,12 +795,12 @@ static inline int MPIC_MPICH_test(MPIC_MPICH_sched_t * sched)
                     rp->mpid_req[0] = NULL;
                 }
                 if (!rp->mpid_req[0]) {
-                    if (0) {
-                        fprintf(stderr, "  --> MPICH transport (kind=%d) complete\n", rp->kind);
-                        if (rp->nbargs.sendrecv.count >= 1)
-                            fprintf(stderr, "data send/recvd: %d\n",
-                                    *(int *) (rp->nbargs.sendrecv.buf));
-                    }
+#ifdef MPIC_DEBUG
+                    MPIC_DBG( "  --> MPICH transport (kind=%d) complete\n", rp->kind);
+                    if (rp->nbargs.sendrecv.count >= 1)
+                        MPIC_DBG( "data send/recvd: %d\n",
+                                *(int *) (rp->nbargs.sendrecv.buf));
+#endif
                     MPIC_MPICH_record_request_completion(rp, sched);
                 }
                 else
@@ -837,8 +809,7 @@ static inline int MPIC_MPICH_test(MPIC_MPICH_sched_t * sched)
             case MPIC_MPICH_KIND_RECV_REDUCE:
                 if (mpid_req0 && MPIR_Request_is_complete(mpid_req0)) {
                     MPIR_Request_free(mpid_req0);
-                    if (0)
-                        fprintf(stderr, "recv in recv_reduce completed\n");
+                    MPIC_DBG("recv in recv_reduce completed\n");
                     rp->mpid_req[0] = NULL;
                 }
 
@@ -848,12 +819,12 @@ static inline int MPIC_MPICH_test(MPIC_MPICH_sched_t * sched)
                 }
 
                 if (!rp->mpid_req[0] && !rp->mpid_req[1]) {
-                    if (0) {
-                        fprintf(stderr, "  --> MPICH transport (kind=%d) complete\n", rp->kind);
-                        if (rp->nbargs.sendrecv.count >= 1)
-                            fprintf(stderr, "data send/recvd: %d\n",
-                                    *(int *) (rp->nbargs.sendrecv.buf));
-                    }
+#ifdef MPIC_DEBUG
+                    MPIC_DBG("  --> MPICH transport (kind=%d) complete\n", rp->kind);
+                    if (rp->nbargs.sendrecv.count >= 1)
+                        MPIC_DBG("data send/recvd: %d\n",
+                                *(int *) (rp->nbargs.sendrecv.buf));
+#endif
                     MPIC_MPICH_record_request_completion(rp, sched);
                 }
                 else
@@ -868,14 +839,12 @@ static inline int MPIC_MPICH_test(MPIC_MPICH_sched_t * sched)
     }
     sched->last_issued->next_issued = NULL;
 
-    if (0) {
-
-        if (sched->num_completed == sched->total) {
-            if (0)
-                fprintf(stderr, "  --> MPICH transport (test) complete:  sched->total=%ld\n",
-                        sched->total);
-        }
+#ifdef MPIC_DEBUG
+    if (sched->num_completed == sched->total) {
+        MPIC_DBG("  --> MPICH transport (test) complete:  sched->total=%ld\n",
+                    sched->total);
     }
+#endif
     return sched->num_completed == sched->total;
 }
 

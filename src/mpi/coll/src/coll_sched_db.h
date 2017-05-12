@@ -63,8 +63,7 @@ static inline void MPIC_add_sched(MPIC_coll_args_t coll_args, void *sched,
                                   MPIC_sched_free_fn free_fn)
 {
     MPIC_sched_entry_t *s;
-    if (0)
-        fprintf(stderr, "adding sched to MPIC_sched_table\n");
+    MPIC_DBG("adding sched to MPIC_sched_table\n");
     MPL_HASH_FIND(hh, MPIC_sched_table, &coll_args, sizeof(coll_args), s);
     if (s == NULL) {
         s = (MPIC_sched_entry_t *) MPL_malloc(sizeof(MPIC_sched_entry_t));
@@ -87,16 +86,13 @@ static inline void *MPIC_get_sched(MPIC_coll_args_t coll_args)
 
 static inline void MPIC_delete_sched_table()
 {
-    if (0)
-        fprintf(stderr, "deleting collective schedules\n");
+    MPIC_DBG("deleting collective schedules\n");
     MPIC_sched_entry_t *current_sched, *tmp;
     //MPIR_Assert(MPIC_sched_table!=NULL);
     int num_users = MPL_HASH_COUNT(MPIC_sched_table);
-    if (0)
-        fprintf(stderr, "there are %d users\n", num_users);
+    MPIC_DBG( "there are %d users\n", num_users);
     MPL_HASH_ITER(hh, MPIC_sched_table, current_sched, tmp) {
-        if (0)
-            fprintf(stderr, "deleting a sched from MPIC_sched_table\n");
+        MPIC_DBG("deleting a sched from MPIC_sched_table\n");
         MPL_HASH_DEL(MPIC_sched_table, current_sched);  /* delete; MPIC_sched_table advances to next */
         current_sched->free_fn(current_sched->sched);   /*frees any memory associated with the schedule
                                                          * and then the schedule itself */
