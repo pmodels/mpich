@@ -48,41 +48,22 @@ typedef struct MPIC_progress_global_t {
 /* Generic datatypes */
 
 typedef struct {
-        int use_tag;
-        int issued_collectives;
-        MPIC_STUB_STUB_comm_t stub_stub;
-        MPIC_STUB_KARY_comm_t stub_kary;
-        MPIC_STUB_KNOMIAL_comm_t stub_knomial;
-        MPIC_STUB_RECEXCH_comm_t stub_recexch;
-        MPIC_STUB_DISSEM_comm_t stub_dissem;
-        MPIC_MPICH_STUB_comm_t mpich_stub;
-        MPIC_MPICH_KARY_comm_t mpich_kary;
-        MPIC_MPICH_KNOMIAL_comm_t mpich_knomial;
-        MPIC_MPICH_RECEXCH_comm_t mpich_recexch;
-        MPIC_MPICH_DISSEM_comm_t mpich_dissem;
-        MPIC_BMPICH_KARY_comm_t bmpich_kary;
-        MPIC_BMPICH_KNOMIAL_comm_t bmpich_knomial;
-        MPIC_X_TREEBASIC_comm_t x_treebasic;
+    int use_tag;
+    int issued_collectives;
+    MPIC_STUB_KARY_comm_t stub_kary;
+    MPIC_STUB_KNOMIAL_comm_t stub_knomial;
+    MPIC_MPICH_KARY_comm_t mpich_kary;
+    MPIC_MPICH_KNOMIAL_comm_t mpich_knomial;
 } MPIC_comm_t;
 
 typedef struct {
-        MPIC_STUB_global_t tsp_stub;
-        MPIC_MPICH_global_t tsp_mpich;
-        MPIC_BMPICH_global_t tsp_bmpich;
+    MPIC_STUB_global_t tsp_stub;
+    MPIC_MPICH_global_t tsp_mpich;
 
-        MPIC_STUB_STUB_global_t stub_stub;
-        MPIC_STUB_KARY_global_t stub_kary;
-        MPIC_STUB_KNOMIAL_global_t stub_knomial;
-        MPIC_STUB_RECEXCH_global_t stub_recexch;
-        MPIC_STUB_DISSEM_global_t stub_dissem;
-        MPIC_MPICH_STUB_global_t mpich_stub;
-        MPIC_MPICH_KARY_global_t mpich_kary;
-        MPIC_MPICH_KNOMIAL_global_t mpich_knomial;
-        MPIC_MPICH_RECEXCH_global_t mpich_recexch;
-        MPIC_MPICH_DISSEM_global_t mpich_dissem;
-        MPIC_X_TREEBASIC_global_t x_treebasic;
-        MPIC_BMPICH_KARY_global_t bmpich_kary;
-        MPIC_BMPICH_KNOMIAL_global_t bmpich_knomial;
+    MPIC_STUB_KARY_global_t stub_kary;
+    MPIC_STUB_KNOMIAL_global_t stub_knomial;
+    MPIC_MPICH_KARY_global_t mpich_kary;
+    MPIC_MPICH_KNOMIAL_global_t mpich_knomial;
 } MPIC_global_t;
 
 typedef struct {
@@ -95,18 +76,10 @@ typedef struct {
 extern MPIC_global_t MPIC_global_instance;
 
 typedef union {
-        MPIC_STUB_STUB_req_t stub_stub;
-        MPIC_STUB_KARY_req_t stub_kary;
-        MPIC_STUB_KNOMIAL_req_t stub_knomial;
-        MPIC_STUB_RECEXCH_req_t stub_recexch;
-        MPIC_STUB_DISSEM_req_t stub_dissem;
-        MPIC_MPICH_STUB_req_t mpich_stub;
-        MPIC_MPICH_KARY_req_t mpich_kary;
-        MPIC_MPICH_KNOMIAL_req_t mpich_knomial;
-        MPIC_MPICH_RECEXCH_req_t mpich_recexch;
-        MPIC_MPICH_DISSEM_req_t mpich_dissem;
-        MPIC_BMPICH_KARY_req_t bmpich_kary;
-        MPIC_BMPICH_KNOMIAL_req_t bmpich_knomial;
+    MPIC_STUB_KARY_req_t stub_kary;
+    MPIC_STUB_KNOMIAL_req_t stub_knomial;
+    MPIC_MPICH_KARY_req_t mpich_kary;
+    MPIC_MPICH_KNOMIAL_req_t mpich_knomial;
 } MPIC_req_t;
 
 

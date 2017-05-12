@@ -16,31 +16,13 @@
 
 #include "../transports/stub/transport.h"
 #include "../transports/mpich/transport.h"
-#include "../transports/bmpich/transport.h"
 
 #include "../transports/stub/api_def.h"
-#include "../algorithms/stub/post.h"
 #include "../algorithms/tree/kary_post.h"
 #include "../algorithms/tree/knomial_post.h"
-#include "../algorithms/recexch/post.h"
-#include "../algorithms/dissem/post.h"
 #include "../src/tsp_namespace_undef.h"
 
 #include "../transports/mpich/api_def.h"
-#include "../algorithms/stub/post.h"
-#include "../algorithms/tree/kary_post.h"
-#include "../algorithms/tree/knomial_post.h"
-#include "../algorithms/recexch/post.h"
-#include "../algorithms/dissem/post.h"
-#include "../src/tsp_namespace_undef.h"
-
-#define TRANSPORT_NAME X_
-#define TRANSPORT_NAME_LC x
-#include "../algorithms/treebasic/post.h"
-#undef TRANSPORT_NAME
-#undef TRANSPORT_NAME_LC
-
-#include "../transports/bmpich/api_def.h"
 #include "../algorithms/tree/kary_post.h"
 #include "../algorithms/tree/knomial_post.h"
 #include "../src/tsp_namespace_undef.h"

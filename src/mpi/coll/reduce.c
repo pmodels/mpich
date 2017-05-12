@@ -889,8 +889,6 @@ int MPIR_Reduce_intra (
                             valid_coll, 2) : MPIR_CVAR_USE_REDUCE;
     use_coll=1;
     switch(use_coll) {
-        case 0:
-            break;
         case 1:
             mpi_errno = MPIC_MPICH_KNOMIAL_reduce(sendbuf, recvbuf, count,
                                             datatype, op, root,
@@ -902,6 +900,8 @@ int MPIR_Reduce_intra (
                                             datatype, op, root,
                                             &(MPIC_COMM(comm_ptr)->mpich_kary), errflag, 2, 0);
             goto fn_exit;
+            break;
+        default:
             break;
     }
 #endif

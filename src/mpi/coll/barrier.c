@@ -23,6 +23,7 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : Enable SMP aware barrier.
+
     - name        : MPIR_CVAR_USE_BARRIER
       category    : COLLECTIVE
       type        : int
@@ -33,9 +34,8 @@ cvars:
       description : >-
         Controls barrier algorithm:
         0 - MPIR_barrier
-        1 - DISSEM_barrier
-        2 - KNOMIAL_barrier
-        3 - KARY_barrier
+        1 - KNOMIAL_barrier
+        2 - KARY_barrier
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -295,25 +295,21 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
 #ifdef HAVE_EXT_COLL
-        int valid_coll[] = {0,1,2,3};
+        int valid_coll[] = {1,2};
         int use_coll = (MPIR_CVAR_USE_BARRIER < 0)?
                             MPIR_Coll_cycle_algorithm(comm_ptr, valid_coll, 1) :
                             MPIR_CVAR_USE_BARRIER;
         switch(use_coll) {
-        case 0:
+        case 1:
+            mpi_errno = MPIC_MPICH_KARY_barrier(&(MPIC_COMM(comm_ptr)->mpich_kary), errflag, 2);
+            break;
+        case 2:
+            mpi_errno = MPIC_MPICH_KNOMIAL_barrier(&(MPIC_COMM(comm_ptr)->mpich_knomial), errflag, 2);
+            break;
+        default:
 #endif
             mpi_errno = MPIR_Barrier_intra( comm_ptr, errflag );
 #ifdef HAVE_EXT_COLL
-            break;
-        case 1:
-            mpi_errno = MPIC_MPICH_DISSEM_barrier( &(MPIC_COMM(comm_ptr)->mpich_dissem),
-                            errflag);
-            break;
-        case 2:
-            mpi_errno = MPIC_MPICH_KARY_barrier(&(MPIC_COMM(comm_ptr)->mpich_kary), errflag, 2);
-            break;
-        case 3:
-            mpi_errno = MPIC_MPICH_KNOMIAL_barrier(&(MPIC_COMM(comm_ptr)->mpich_knomial), errflag, 2);
             break;
         }
 #endif

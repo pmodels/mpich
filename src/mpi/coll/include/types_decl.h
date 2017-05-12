@@ -15,34 +15,16 @@
 
 #include "../transports/stub/transport_types.h"
 #include "../transports/mpich/transport_types.h"
-#include "../transports/bmpich/transport_types.h"
 
 #include "../transports/stub/api_def.h"
-#include "../algorithms/stub/pre.h"
 #include "../algorithms/tree/kary_pre.h"
 #include "../algorithms/tree/knomial_pre.h"
-#include "../algorithms/recexch/pre.h"
-#include "../algorithms/dissem/pre.h"
 #include "../src/tsp_namespace_undef.h"
 
 #include "../transports/mpich/api_def.h"
-#include "../algorithms/stub/pre.h"
-#include "../algorithms/tree/kary_pre.h"
-#include "../algorithms/tree/knomial_pre.h"
-#include "../algorithms/recexch/pre.h"
-#include "../algorithms/dissem/pre.h"
-#include "../src/tsp_namespace_undef.h"
-
-#include "../transports/bmpich/api_def.h"
 #include "../algorithms/tree/kary_pre.h"
 #include "../algorithms/tree/knomial_pre.h"
 #include "../src/tsp_namespace_undef.h"
-
-#define TRANSPORT_NAME X_
-#define TRANSPORT_NAME_LC x
-#include "../algorithms/treebasic/pre.h"
-#undef TRANSPORT_NAME
-#undef TRANSPORT_NAME_LC
 
 #undef GLOBAL_NAME
 #endif

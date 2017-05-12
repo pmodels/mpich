@@ -27,6 +27,4 @@ typedef struct MPIC_STUB_global_t {
     MPIC_STUB_dt_t control_dt;
 } MPIC_STUB_global_t;
 
-typedef  uint64_t MPIC_STUB_aint_t;
-
-
+typedef uint64_t MPIC_STUB_aint_t;

@@ -100,78 +100,50 @@ static inline void COLL_tree_knomial_init(int rank, int nranks, int k, int root,
     int basek, i, j;
     COLL_Assert(k >= 2);
 
-    /* Parent Calculation */
-    /*if (lrank <= 0)
-        ct->parent = -1;
-    else {
-        basek = COLL_ilog(k, nranks - 1);
-
-        for (i = 0; i < basek; i++) {
-            if (COLL_getdigit(k, lrank, i)) {
-                ct->parent = (COLL_setdigit(k, lrank, i, 0) + root) % nranks;
-                break;
-            }
-        }
-    }
-
-    if (lrank >= nranks)
-        return;*/
-
-    /* Children Calculation */
-    /*basek = COLL_ilog(k, nranks - 1);
-
-    for (j = 0; j < basek; j++) {
-        if (COLL_getdigit(k, lrank, j))
-            break;
-
-        for (i = 1; i < k; i++) {
-            int child = COLL_setdigit(k, lrank, j, i);
-            if (child < nranks)
-                COLL_tree_add_child(ct, (child + root) % nranks);
-        }
-    }*/
-
-    int maxtime = 0; /*maximum number of steps while generating the knomial tree*/
-    int tmp = nranks-1;
-    while(tmp){
+    int maxtime = 0;            /*maximum number of steps while generating the knomial tree */
+    int tmp = nranks - 1;
+    while (tmp) {
         maxtime++;
-        tmp/=k;
+        tmp /= k;
     }
-    
-    int time=0,_k;
-    int parent = -1; /*root has no parent*/
-    int current_rank = 0; /*start at root of the tree*/
-    int running_rank; /*used for calculation below*/
-    running_rank = current_rank +1; /*start with first child of the current_rank*/
-    while(true){
-        if(lrank == current_rank)/*desired rank found*/
+
+    int time = 0, _k;
+    int parent = -1;            /*root has no parent */
+    int current_rank = 0;       /*start at root of the tree */
+    int running_rank;           /*used for calculation below */
+    running_rank = current_rank + 1;    /*start with first child of the current_rank */
+    while (true) {
+        if (lrank == current_rank)      /*desired rank found */
             break;
-        for(j=1;j<k;j++){
-            if(lrank >= running_rank && lrank < running_rank+COLL_ipow(k,maxtime-time-1)){/*check if rank lies in this range*/
-                /*move to the corresponding subtree*/
+        for (j = 1; j < k; j++) {
+            if (lrank >= running_rank && lrank < running_rank + COLL_ipow(k, maxtime - time - 1)) {     /*check if rank lies in this range */
+                /*move to the corresponding subtree */
                 parent = current_rank;
                 current_rank = running_rank;
-                running_rank = current_rank+1;
+                running_rank = current_rank + 1;
                 break;
             }
             else
-                running_rank += COLL_ipow(k,maxtime-time-1);
+                running_rank += COLL_ipow(k, maxtime - time - 1);
         }
         time++;
     }
-    if(parent==-1)
-        ct->parent=-1;
-    else 
-        ct->parent=(parent+root)%nranks; 
-    int crank = lrank+1; /*cranks stands for child rank*/
-    if(0) fprintf(stderr, "parent of rank %d is %d, total ranks = %d (root=%d)\n", rank, ct->parent, nranks, root);
-    for(i=time; i<maxtime; i++){
-        for(j=1;j<k;j++){
-            if(crank < nranks){
-                if(0) fprintf(stderr, "adding child %d to rank %d\n", (crank+root)%nranks, rank);
-                 COLL_tree_add_child(ct, (crank+root)%nranks);
+    if (parent == -1)
+        ct->parent = -1;
+    else
+        ct->parent = (parent + root) % nranks;
+    int crank = lrank + 1;      /*cranks stands for child rank */
+    if (0)
+        fprintf(stderr, "parent of rank %d is %d, total ranks = %d (root=%d)\n", rank, ct->parent,
+                nranks, root);
+    for (i = time; i < maxtime; i++) {
+        for (j = 1; j < k; j++) {
+            if (crank < nranks) {
+                if (0)
+                    fprintf(stderr, "adding child %d to rank %d\n", (crank + root) % nranks, rank);
+                COLL_tree_add_child(ct, (crank + root) % nranks);
             }
-            crank += COLL_ipow(k,maxtime-i-1);
+            crank += COLL_ipow(k, maxtime - i - 1);
         }
     }
 }

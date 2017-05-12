@@ -6,9 +6,9 @@
 #endif
 
 #ifndef COLL_NAMESPACE
-#define COLL_NAMESPACE(fn)  COLL_NSCAT1(         \
-                            COLL_NSCAT1(         \
-                                COLL_NSCAT1(     \
+#define COLL_NAMESPACE(fn)  COLL_NSCAT1(\
+                            COLL_NSCAT1(\
+                                COLL_NSCAT1(\
                                 GLOBAL_NAME,     \
                                 TRANSPORT_NAME), \
                                 COLL_NAME),      \

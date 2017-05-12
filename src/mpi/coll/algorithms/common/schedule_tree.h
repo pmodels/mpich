@@ -57,9 +57,9 @@ static inline int COLL_tree_dump(int tree_size, int root, int k)
 
 static inline int
 COLL_sched_bcast_tree(void *buffer,
-                 int count,
-                 COLL_dt_t datatype,
-                 int root, int tag, COLL_comm_t * comm, int k, COLL_sched_t * s, int finalize)
+                      int count,
+                      COLL_dt_t datatype,
+                      int root, int tag, COLL_comm_t * comm, int k, COLL_sched_t * s, int finalize)
 {
     COLL_tree_t myTree;
     int i, j;
@@ -77,13 +77,12 @@ COLL_sched_bcast_tree(void *buffer,
     else {
         /* Receive from Parent */
         int recv_id = TSP_recv(buffer, count, datatype,
-                               tree->parent, tag,  &comm->tsp_comm,
+                               tree->parent, tag, &comm->tsp_comm,
                                &s->tsp_sched, 0, NULL);
 
         /* Send to all children */
         SCHED_FOREACHCHILDDO(TSP_send(buffer, count, datatype,
-                                      j, tag,  &comm->tsp_comm,
-                                      &s->tsp_sched, 1, &recv_id));
+                                      j, tag, &comm->tsp_comm, &s->tsp_sched, 1, &recv_id));
     }
     if (finalize) {
         TSP_fence(&s->tsp_sched);
@@ -94,34 +93,36 @@ COLL_sched_bcast_tree(void *buffer,
 
 static inline int
 COLL_sched_bcast_tree_pipelined(void *buffer, int count, COLL_dt_t datatype, int root, int tag,
-                                 COLL_comm_t *comm, int k, int segsize, COLL_sched_t *s, int finalize)
+                                COLL_comm_t * comm, int k, int segsize, COLL_sched_t * s,
+                                int finalize)
 {
-    int segment_size = (segsize==-1)?count:segsize;
-    /*NOTE: Change this so that the segsize is in bytes and then calculate its closest number of elements of type datatype*/
-    int num_chunks = (count+segment_size-1)/segment_size; /*ceil of count/segment_size*/
-    /*The message is divided into num_chunks*/
-    int chunk_size_floor = count/num_chunks; /*smaller of the chunk sizes obtained by integer division*/
-    int chunk_size_ceil; /*larger of the chunk size*/
-    if(count%num_chunks == 0)
-        chunk_size_ceil = chunk_size_floor;/*all chunk sizes are equal*/
+    int segment_size = (segsize == -1) ? count : segsize;
+    /*NOTE: Change this so that the segsize is in bytes and then calculate its closest number of elements of type datatype */
+    int num_chunks = (count + segment_size - 1) / segment_size; /*ceil of count/segment_size */
+    /*The message is divided into num_chunks */
+    int chunk_size_floor = count / num_chunks;  /*smaller of the chunk sizes obtained by integer division */
+    int chunk_size_ceil;        /*larger of the chunk size */
+    if (count % num_chunks == 0)
+        chunk_size_ceil = chunk_size_floor;     /*all chunk sizes are equal */
     else
-        chunk_size_ceil = chunk_size_floor+1;
-    int num_chunks_floor; /*number of chunks of size chunk_size_floor*/
-    num_chunks_floor = num_chunks*chunk_size_ceil - count;
+        chunk_size_ceil = chunk_size_floor + 1;
+    int num_chunks_floor;       /*number of chunks of size chunk_size_floor */
+    num_chunks_floor = num_chunks * chunk_size_ceil - count;
 
-    int offset=0;
+    int offset = 0;
 
     int is_contig;
     size_t lb, extent, type_size;
     TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
-    /*NOTE: Make sure you are handling non-contiguous datatypes correctly 
-    * with pipelined broadcast, for example, buffer+offset if being calculated
-    * correctly */
+    /*NOTE: Make sure you are handling non-contiguous datatypes correctly
+     * with pipelined broadcast, for example, buffer+offset if being calculated
+     * correctly */
     int i;
-    for(i=0; i<num_chunks; i++){
+    for (i = 0; i < num_chunks; i++) {
         //(*tag)++;
         int msgsize = (i < num_chunks_floor) ? chunk_size_floor : chunk_size_ceil;
-        COLL_sched_bcast_tree((char*)buffer + offset*extent, msgsize, datatype, root, tag, comm, k, s, 0);
+        COLL_sched_bcast_tree((char *) buffer + offset * extent, msgsize, datatype, root, tag, comm,
+                              k, s, 0);
         offset += msgsize;
     }
     if (finalize) {
@@ -133,13 +134,14 @@ COLL_sched_bcast_tree_pipelined(void *buffer, int count, COLL_dt_t datatype, int
 
 static inline int
 COLL_sched_reduce_tree(const void *sendbuf,
-                  void *recvbuf,
-                  int count,
-                  COLL_dt_t datatype,
-                  COLL_op_t op,
-                  int root,
-                  int tag,
-                  COLL_comm_t * comm, int k, int is_commutative, COLL_sched_t * s, int finalize, bool per_child_buffer)
+                       void *recvbuf,
+                       int count,
+                       COLL_dt_t datatype,
+                       COLL_op_t op,
+                       int root,
+                       int tag,
+                       COLL_comm_t * comm, int k, int is_commutative, COLL_sched_t * s,
+                       int finalize, int per_child_buffer)
 {
     COLL_tree_t myTree;
     int i, j, is_contig;
@@ -296,18 +298,19 @@ COLL_sched_reduce_tree(const void *sendbuf,
 
 static inline int
 COLL_sched_reduce_tree_full(const void *sendbuf,
-                       void *recvbuf,
-                       int count,
-                       COLL_dt_t datatype,
-                       COLL_op_t op,
-                       int root, int tag, COLL_comm_t * comm, int k, COLL_sched_t * s, int finalize, int nbuffers)
+                            void *recvbuf,
+                            int count,
+                            COLL_dt_t datatype,
+                            COLL_op_t op,
+                            int root, int tag, COLL_comm_t * comm, int k, COLL_sched_t * s,
+                            int finalize, int nbuffers)
 {
     int is_commutative, rc;
     TSP_opinfo(op, &is_commutative);
 
     if (root == 0 || is_commutative) {
         rc = COLL_sched_reduce_tree(sendbuf, recvbuf, count, datatype,
-                               op, root, tag, comm, k, is_commutative, s, finalize, nbuffers);
+                                    op, root, tag, comm, k, is_commutative, s, finalize, nbuffers);
     }
     else {
         COLL_tree_comm_t *mycomm = &comm->tree_comm;
@@ -328,7 +331,7 @@ COLL_sched_reduce_tree_full(const void *sendbuf,
         else
             sb = (void *) sendbuf;
         rc = COLL_sched_reduce_tree(sb, tmp_buf, count, datatype,
-                               op, 0, tag, comm, k, is_commutative, s, 0, nbuffers);
+                                    op, 0, tag, comm, k, is_commutative, s, 0, nbuffers);
         int fence_id = TSP_fence(&s->tsp_sched);
         int send_id;
         if (rank == 0) {
@@ -351,11 +354,11 @@ COLL_sched_reduce_tree_full(const void *sendbuf,
 
 static inline int
 COLL_sched_allreduce_tree(const void *sendbuf,
-                     void *recvbuf,
-                     int count,
-                     COLL_dt_t datatype,
-                     COLL_op_t op,
-                     int tag, COLL_comm_t * comm, int k, COLL_sched_t * s, int finalize)
+                          void *recvbuf,
+                          int count,
+                          COLL_dt_t datatype,
+                          COLL_op_t op,
+                          int tag, COLL_comm_t * comm, int k, COLL_sched_t * s, int finalize)
 {
     int is_commutative, is_inplace, is_contig;
     size_t lb, extent, type_size;
@@ -391,44 +394,36 @@ COLL_sched_allreduce_tree(const void *sendbuf,
 }
 
 
-static inline int
-COLL_sched_barrier_tree(int                 tag,
-                   COLL_comm_t        *comm,
-                   int                 k,
-                   COLL_sched_t *s)
+static inline int COLL_sched_barrier_tree(int tag, COLL_comm_t * comm, int k, COLL_sched_t * s)
 {
     int i, j;
-    COLL_tree_comm_t *mycomm    = &comm->tree_comm;
-    COLL_tree_t      *tree      = &mycomm->tree;
-    COLL_tree_t       myTree;
-    TSP_dt_t          dt        = TSP_global.control_dt;
+    COLL_tree_comm_t *mycomm = &comm->tree_comm;
+    COLL_tree_t *tree = &mycomm->tree;
+    COLL_tree_t myTree;
+    TSP_dt_t dt = TSP_global.control_dt;
 
-    if(k > 1 && 
-       k != COLL_TREE_RADIX_DEFAULT) {
+    if (k > 1 && k != COLL_TREE_RADIX_DEFAULT) {
         tree = &myTree;
-        COLL_tree_init(TSP_rank(&comm->tsp_comm),
-                       TSP_size(&comm->tsp_comm),
-                       k,
-                       0,
-                       tree);
+        COLL_tree_init(TSP_rank(&comm->tsp_comm), TSP_size(&comm->tsp_comm), k, 0, tree);
     }
     /* Receive from all children */
-    SCHED_FOREACHCHILDDO(TSP_recv(NULL,0,dt,j,tag,&comm->tsp_comm,
-			      &s->tsp_sched,0,NULL));
+    SCHED_FOREACHCHILDDO(TSP_recv(NULL, 0, dt, j, tag, &comm->tsp_comm, &s->tsp_sched, 0, NULL));
 
     int fid = TSP_fence(&s->tsp_sched);
-    
-    if(tree->parent == -1) {
-        SCHED_FOREACHCHILDDO(TSP_send(NULL,0,dt,j,tag,&comm->tsp_comm,
-                                      &s->tsp_sched,1,&fid));
-    } else {
+
+    if (tree->parent == -1) {
+        SCHED_FOREACHCHILDDO(TSP_send(NULL, 0, dt, j, tag, &comm->tsp_comm,
+                                      &s->tsp_sched, 1, &fid));
+    }
+    else {
         /* Send to Parent      */
-        TSP_send(NULL,0,dt,tree->parent,tag,&comm->tsp_comm,&s->tsp_sched,1,&fid);
+        TSP_send(NULL, 0, dt, tree->parent, tag, &comm->tsp_comm, &s->tsp_sched, 1, &fid);
         /* Receive from Parent */
-        int recv_id = TSP_recv(NULL,0,dt,tree->parent,tag,&comm->tsp_comm,&s->tsp_sched,0,NULL);
+        int recv_id =
+            TSP_recv(NULL, 0, dt, tree->parent, tag, &comm->tsp_comm, &s->tsp_sched, 0, NULL);
         /* Send to all children */
-        SCHED_FOREACHCHILDDO(TSP_send(NULL,0,dt,j,tag,&comm->tsp_comm,
-                                      &s->tsp_sched,1,&recv_id));
+        SCHED_FOREACHCHILDDO(TSP_send(NULL, 0, dt, j, tag, &comm->tsp_comm,
+                                      &s->tsp_sched, 1, &recv_id));
     }
     return 0;
 }

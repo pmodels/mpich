@@ -39,13 +39,16 @@ static inline void COLL_sched_init(COLL_sched_t * s, int tag)
     s->sched_started = 0;
 }
 
-static inline void COLL_sched_reset(COLL_sched_t *s, int tag){
+static inline void COLL_sched_reset(COLL_sched_t * s, int tag)
+{
     TSP_sched_reset(&s->tsp_sched, tag);
     s->sched_started = 0;
 }
 
-static inline void COLL_sched_free(COLL_sched_t *s){
-    if(0) fprintf(stderr,"freeing sched buffers\n");
+static inline void COLL_sched_free(COLL_sched_t * s)
+{
+    if (0)
+        fprintf(stderr, "freeing sched buffers\n");
     TSP_free_buffers(&s->tsp_sched);
     TSP_free_mem(s);
 }
@@ -60,7 +63,7 @@ static inline void COLL_sched_init_nb(COLL_sched_t ** sched, int tag, COLL_req_t
     TSP_sched_init(&(s->tsp_sched), tag);
     request->elem.kick_fn = COLL_kick;
     *sched = s;
-    
+
 }
 
 static inline void COLL_sched_kick(COLL_sched_t * s)

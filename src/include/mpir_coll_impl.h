@@ -9,8 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#if !defined(CH4_COLL_POST_H_INCLUDED)
-#define  CH4_COLL_POST_H_INCLUDED
+#if !defined(MPIR_COLL_IMPL_H_INCLUDED)
+#define  MPIR_COLL_IMPL_H_INCLUDED
 
 #include <sys/queue.h>
 
@@ -21,12 +21,13 @@ extern MPIC_global_t MPIC_global_instance;
 #define MPIC_NUM_ENTRIES (8)
 struct MPIR_Request;
 
-MPL_STATIC_INLINE_PREFIX int MPIR_Coll_cycle_algorithm(MPIR_Comm *comm_ptr,int pick[], int num) {
-    if(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+MPL_STATIC_INLINE_PREFIX int MPIR_Coll_cycle_algorithm(MPIR_Comm * comm_ptr, int pick[], int num)
+{
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
         return 0;
     int idx;
     MPIC_COMM(comm_ptr)->issued_collectives++;
-    idx = MPIC_COMM(comm_ptr)->issued_collectives%num;
+    idx = MPIC_COMM(comm_ptr)->issued_collectives % num;
     return pick[idx];
 }
 
@@ -34,8 +35,8 @@ static inline int MPIC_Progress(int n, void *cq[])
 {
     int i = 0;
     COLL_queue_elem_t *s = MPIC_progress_global.head.tqh_first;
-    for ( ; ((s != NULL) && (i < n)); s = s->list_data.tqe_next) {
-        if(s->kick_fn(s))
+    for (; ((s != NULL) && (i < n)); s = s->list_data.tqe_next) {
+        if (s->kick_fn(s))
             cq[i++] = (void *) s;
     }
     return i;
@@ -65,22 +66,15 @@ MPL_STATIC_INLINE_PREFIX int MPIC_comm_init(struct MPIR_Comm *comm)
     MPIC_COMM(comm)->issued_collectives = 0;
     rank = comm->rank;
     size = comm->local_size;
-    /*initialize communicators for ch4 collectives
-    * each communiactor is assigned a unique id 
-    */
-    MPIC_STUB_STUB_comm_init(&(MPIC_COMM(comm)->stub_stub), MPIC_comm_counter++, tag,  rank, size);
+    /* initialize communicators for collectives
+     * each communiactor is assigned a unique id
+     */
     MPIC_STUB_KARY_comm_init(&(MPIC_COMM(comm)->stub_kary), MPIC_comm_counter++, tag, rank, size);
-    MPIC_STUB_KNOMIAL_comm_init(&(MPIC_COMM(comm)->stub_knomial), MPIC_comm_counter++, tag,  rank, size);
-    MPIC_STUB_RECEXCH_comm_init(&(MPIC_COMM(comm)->stub_recexch), MPIC_comm_counter++, tag,  rank, size);
-    MPIC_STUB_DISSEM_comm_init(&(MPIC_COMM(comm)->stub_dissem), MPIC_comm_counter++, tag,  rank, size);
-    MPIC_MPICH_STUB_comm_init(&(MPIC_COMM(comm)->mpich_stub), MPIC_comm_counter++, tag, rank, size);
+    MPIC_STUB_KNOMIAL_comm_init(&(MPIC_COMM(comm)->stub_knomial), MPIC_comm_counter++, tag, rank,
+                                size);
     MPIC_MPICH_KARY_comm_init(&(MPIC_COMM(comm)->mpich_kary), MPIC_comm_counter++, tag, rank, size);
-    MPIC_MPICH_KNOMIAL_comm_init(&(MPIC_COMM(comm)->mpich_knomial), MPIC_comm_counter++, tag, rank, size);
-    MPIC_MPICH_RECEXCH_comm_init(&(MPIC_COMM(comm)->mpich_recexch), MPIC_comm_counter++, tag,  rank, size);
-    MPIC_MPICH_DISSEM_comm_init(&(MPIC_COMM(comm)->mpich_dissem), MPIC_comm_counter++, tag,  rank, size);
-    MPIC_BMPICH_KARY_comm_init(&(MPIC_COMM(comm)->bmpich_kary), MPIC_comm_counter++, tag, rank, size);
-    MPIC_BMPICH_KNOMIAL_comm_init(&(MPIC_COMM(comm)->bmpich_knomial), MPIC_comm_counter++, tag, rank, size);
-    MPIC_X_TREEBASIC_comm_init(&(MPIC_COMM(comm)->x_treebasic), MPIC_comm_counter++, tag, rank, size);
+    MPIC_MPICH_KNOMIAL_comm_init(&(MPIC_COMM(comm)->mpich_knomial), MPIC_comm_counter++, tag, rank,
+                                 size);
 
 #ifdef MPID_COLL_COMM_INIT_HOOK
     MPID_COLL_COMM_INIT_HOOK;
@@ -90,27 +84,16 @@ MPL_STATIC_INLINE_PREFIX int MPIC_comm_init(struct MPIR_Comm *comm)
 
 MPL_STATIC_INLINE_PREFIX int MPIC_comm_cleanup(struct MPIR_Comm *comm)
 {
-    /*cleanup netmod collective communicators*/
-#ifdef MPID_COLL_COMM_CLEANUP_HOOK 
+    /*cleanup netmod collective communicators */
+#ifdef MPID_COLL_COMM_CLEANUP_HOOK
     MPID_COLL_COMM_CLEANUP_HOOK;
 #endif
-    /*cleanup all ch4 collective communicators*/
-    MPIC_STUB_STUB_comm_cleanup(&(MPIC_COMM(comm)->stub_stub));
+    /*cleanup all collective communicators */
     MPIC_STUB_KARY_comm_cleanup(&(MPIC_COMM(comm)->stub_kary));
     MPIC_STUB_KNOMIAL_comm_cleanup(&(MPIC_COMM(comm)->stub_knomial));
-    MPIC_STUB_RECEXCH_comm_cleanup(&(MPIC_COMM(comm)->stub_recexch));
-    MPIC_STUB_DISSEM_comm_cleanup(&(MPIC_COMM(comm)->stub_dissem));
 
-    MPIC_MPICH_STUB_comm_cleanup(&(MPIC_COMM(comm)->mpich_stub));
     MPIC_MPICH_KARY_comm_cleanup(&(MPIC_COMM(comm)->mpich_kary));
     MPIC_MPICH_KNOMIAL_comm_cleanup(&(MPIC_COMM(comm)->mpich_knomial));
-    MPIC_MPICH_RECEXCH_comm_cleanup(&(MPIC_COMM(comm)->mpich_recexch));
-    MPIC_MPICH_DISSEM_comm_cleanup(&(MPIC_COMM(comm)->mpich_dissem));
-
-    MPIC_BMPICH_KARY_comm_cleanup(&(MPIC_COMM(comm)->bmpich_kary));
-    MPIC_BMPICH_KNOMIAL_comm_cleanup(&(MPIC_COMM(comm)->bmpich_knomial));
-
-    MPIC_X_TREEBASIC_comm_cleanup(&(MPIC_COMM(comm)->x_treebasic));
 
     return 0;
 }
@@ -122,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIC_comm_cleanup(struct MPIR_Comm *comm)
  * for datatypes or operations (e.g. UCX-netmod).*/
 MPL_STATIC_INLINE_PREFIX int MPIC_dt_init(MPIR_Datatype * dt)
 {
-    /*initialize ch4 collective datatypes*/
+    /*initialize collective datatypes */
 #ifdef MPID_COLL_DT_INIT_HOOK
     MPID_COLL_DT_INIT_HOOK;
 #endif
@@ -132,7 +115,7 @@ MPL_STATIC_INLINE_PREFIX int MPIC_dt_init(MPIR_Datatype * dt)
 
 MPL_STATIC_INLINE_PREFIX int MPIC_op_init(struct MPIR_Op *op)
 {
-    /*initialize ch4 collective operations*/
+    /*initialize collective operations */
 #ifdef MPID_COLL_OP_INIT_HOOK
     MPID_COLL_OP_INIT_HOOK;
 #endif
@@ -158,7 +141,7 @@ MPL_STATIC_INLINE_PREFIX int MPIC_init_builtin_dt()
     INIT_DT_BUILTIN(MPI_INT);
     INIT_DT_BUILTIN(MPI_UNSIGNED);
     INIT_DT_BUILTIN(MPI_LONG);
-    INIT_DT_BUILTIN(MPI_UNSIGNED_LONG);       /* 10 */
+    INIT_DT_BUILTIN(MPI_UNSIGNED_LONG); /* 10 */
 
     INIT_DT_BUILTIN(MPI_FLOAT);
     INIT_DT_BUILTIN(MPI_DOUBLE);
@@ -171,7 +154,7 @@ MPL_STATIC_INLINE_PREFIX int MPIC_init_builtin_dt()
     INIT_DT_BUILTIN(MPI_2INT);
 
     /* C99 types */
-    INIT_DT_BUILTIN(MPI_INT8_T);      /* 20 */
+    INIT_DT_BUILTIN(MPI_INT8_T);        /* 20 */
     INIT_DT_BUILTIN(MPI_INT16_T);
     INIT_DT_BUILTIN(MPI_INT32_T);
     INIT_DT_BUILTIN(MPI_INT64_T);
@@ -181,7 +164,7 @@ MPL_STATIC_INLINE_PREFIX int MPIC_init_builtin_dt()
     INIT_DT_BUILTIN(MPI_UINT64_T);
     INIT_DT_BUILTIN(MPI_C_BOOL);
     INIT_DT_BUILTIN(MPI_C_FLOAT_COMPLEX);
-    INIT_DT_BUILTIN(MPI_C_DOUBLE_COMPLEX);    /* 30 */
+    INIT_DT_BUILTIN(MPI_C_DOUBLE_COMPLEX);      /* 30 */
     INIT_DT_BUILTIN(MPI_C_LONG_DOUBLE_COMPLEX);
     /* address/offset/count types */
     INIT_DT_BUILTIN(MPI_AINT);
@@ -193,7 +176,7 @@ MPL_STATIC_INLINE_PREFIX int MPIC_init_builtin_dt()
     INIT_DT_BUILTIN(MPI_LOGICAL);
     INIT_DT_BUILTIN(MPI_REAL);
     INIT_DT_BUILTIN(MPI_DOUBLE_PRECISION);
-    INIT_DT_BUILTIN(MPI_INTEGER);     /* 40 */
+    INIT_DT_BUILTIN(MPI_INTEGER);       /* 40 */
     INIT_DT_BUILTIN(MPI_2INTEGER);
 #ifdef MPICH_DEFINE_2COMPLEX
     INIT_DT_BUILTIN(MPI_2COMPLEX);
@@ -205,7 +188,7 @@ MPL_STATIC_INLINE_PREFIX int MPIC_init_builtin_dt()
     INIT_DT_BUILTIN(MPI_REAL4);
     INIT_DT_BUILTIN(MPI_REAL8);
     INIT_DT_BUILTIN(MPI_REAL16);
-    INIT_DT_BUILTIN(MPI_COMPLEX8);    /* 50 */
+    INIT_DT_BUILTIN(MPI_COMPLEX8);      /* 50 */
     INIT_DT_BUILTIN(MPI_COMPLEX16);
     INIT_DT_BUILTIN(MPI_COMPLEX32);
     INIT_DT_BUILTIN(MPI_INTEGER1);
@@ -221,7 +204,7 @@ MPL_STATIC_INLINE_PREFIX int MPIC_init_builtin_dt()
     INIT_DT_BUILTIN(MPI_FLOAT_INT);
     INIT_DT_BUILTIN(MPI_DOUBLE_INT);
     INIT_DT_BUILTIN(MPI_LONG_INT);
-    INIT_DT_BUILTIN(MPI_SHORT_INT);   /* 60 */
+    INIT_DT_BUILTIN(MPI_SHORT_INT);     /* 60 */
     INIT_DT_BUILTIN(MPI_LONG_DOUBLE_INT);
 
 #undef INIT_DT_BUILTIN
@@ -246,22 +229,22 @@ MPL_STATIC_INLINE_PREFIX int MPIC_init_builtin_dt()
 MPL_STATIC_INLINE_PREFIX int MPIC_init_builtin_ops()
 {
     int i;
-    for( i = 0; i < MPIR_OP_N_BUILTIN; ++i) {
-        MPIR_Op_builtin[i].handle = MPI_MAX+i;
+    for (i = 0; i < MPIR_OP_N_BUILTIN; ++i) {
+        MPIR_Op_builtin[i].handle = MPI_MAX + i;
         MPIC_op_init(&MPIR_Op_builtin[i]);
     }
     return 0;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIC_Op_get_ptr(MPI_Op op, MPIR_Op **ptr)
+MPL_STATIC_INLINE_PREFIX int MPIC_Op_get_ptr(MPI_Op op, MPIR_Op ** ptr)
 {
-    if(HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN)
-    {
-        *ptr = &MPIR_Op_builtin[(op & 0xFF) -1];
-    } else {
+    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+        *ptr = &MPIR_Op_builtin[(op & 0xFF) - 1];
+    }
+    else {
         MPIR_Op *tmp;
-        MPIR_Op_get_ptr(op,tmp);
-        *ptr=tmp;
+        MPIR_Op_get_ptr(op, tmp);
+        *ptr = tmp;
     }
     return 0;
 }
@@ -269,24 +252,15 @@ MPL_STATIC_INLINE_PREFIX int MPIC_Op_get_ptr(MPI_Op op, MPIR_Op **ptr)
 MPL_STATIC_INLINE_PREFIX int MPIC_init()
 {
     MPIC_progress_global.progress_fn = MPID_Progress_test;
-    MPIC_comm_counter=0;
+    MPIC_comm_counter = 0;
     MPIC_sched_table = NULL;
     MPIC_STUB_init();
     MPIC_MPICH_init();
 
-    MPIC_STUB_STUB_init();
     MPIC_STUB_KARY_init();
     MPIC_STUB_KNOMIAL_init();
-    MPIC_STUB_RECEXCH_init();
-    MPIC_STUB_DISSEM_init();
-    MPIC_MPICH_STUB_init();
     MPIC_MPICH_KARY_init();
     MPIC_MPICH_KNOMIAL_init();
-    MPIC_MPICH_RECEXCH_init();
-    MPIC_MPICH_DISSEM_init();
-    MPIC_BMPICH_KARY_init();
-    MPIC_BMPICH_KNOMIAL_init();
-    MPIC_X_TREEBASIC_init();
 
 #ifdef MPIDI_NM_COLL_INIT_HOOK
     MPIDI_NM_COLL_INIT_HOOK;
@@ -301,4 +275,4 @@ MPL_STATIC_INLINE_PREFIX int MPIC_finalize()
     MPIC_delete_sched_table();
     return MPI_SUCCESS;
 }
-#endif /* CH4_COLL_POST_H_INCLUDED */
+#endif /* MPIR_COLL_IMPL_H_INCLUDED */
