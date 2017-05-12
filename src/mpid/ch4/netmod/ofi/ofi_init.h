@@ -14,7 +14,6 @@
 #include "ofi_impl.h"
 #include "mpir_cvars.h"
 #include "pmi.h"
-#include "mpidu_shm.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -736,107 +735,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                                      MPIDI_Global.av,
                                                      &MPIDI_Global.ep, 0));
 
-    if (do_av_insert) {
-        int local_rank, num_local = 0, local_rank_0 = -1;
-        MPIDU_shm_seg_t memory;
-        MPIDU_shm_barrier_t *barrier;
-        int start, end;
-
-        /* ---------------------------------- */
-        /* Get our endpoint name and publish  */
-        /* the socket to the KVS              */
-        /* ---------------------------------- */
-        MPIDI_Global.addrnamelen = FI_NAME_MAX;
-        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_Global.ep, MPIDI_Global.addrname,
-                                  &MPIDI_Global.addrnamelen), getname);
-        MPIR_Assert(MPIDI_Global.addrnamelen <= FI_NAME_MAX);
-
-        val = valS;
-        str_errno = MPL_STR_SUCCESS;
-        maxlen = MPIDI_KVSAPPSTRLEN;
-        memset(val, 0, maxlen);
-        MPIDI_OFI_STR_CALL(MPL_str_add_binary_arg
-                           (&val, &maxlen, "OFI", (char *) &MPIDI_Global.addrname,
-                            MPIDI_Global.addrnamelen), buscard_len);
-        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get_my_name(MPIDI_Global.kvsname, MPIDI_KVSAPPSTRLEN), pmi);
-
-        val = valS;
-        sprintf(keyS, "OFI-%d", rank);
-#ifdef USE_PMI2_API
-        MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Put(keyS, val), pmi);
-        MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Fence(), pmi);
-#else
-        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Put(MPIDI_Global.kvsname, keyS, val), pmi);
-        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Commit(MPIDI_Global.kvsname), pmi);
-#endif
-
-        for (i = 0; i < size; i++) {
-            if (MPIDI_CH4_rank_is_local(i, MPIR_Process.comm_world)) {
-                if (i == rank)
-                    local_rank = num_local;
-
-                if (local_rank_0 == -1)
-                    local_rank_0 = i;
-
-                num_local++;
-            }
-        }
-
-        MPIDU_shm_seg_alloc(size * MPIDI_Global.addrnamelen, (void **)&table);
-        MPIDU_shm_seg_commit(&memory, &barrier, num_local, local_rank, local_rank_0, rank);
-
-        /* -------------------------------- */
-        /* Create our address table from    */
-        /* encoded KVS values               */
-        /* -------------------------------- */
-        start = local_rank * (size / num_local);
-        end = start + (size / num_local);
-        if (local_rank == num_local - 1)
-            end += size % num_local;
-        for (i = start; i < end; i++) {
-            sprintf(keyS, "OFI-%d", i);
-#ifdef USE_PMI2_API
-            int vallen;
-            MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Get
-                                   (NULL, -1, keyS, valS, MPIDI_KVSAPPSTRLEN, &vallen), pmi);
-            MPIR_Assert(vallen > 0);
-#else
-            MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get
-                                   (MPIDI_Global.kvsname, keyS, valS, MPIDI_KVSAPPSTRLEN), pmi);
-#endif
-            MPIDI_OFI_STR_CALL(MPL_str_get_binary_arg
-                               (valS, "OFI", (char *) &table[i * MPIDI_Global.addrnamelen],
-                                MPIDI_Global.addrnamelen, &maxlen), buscard_len);
-        }
-        mpi_errno = MPIDU_shm_barrier(barrier, num_local);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-
-        /* -------------------------------- */
-        /* Table is constructed.  Map it    */
-        /* -------------------------------- */
-        mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t));
-        MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, table, size, mapped_table, 0ULL, NULL), avmap);
-
-        for (i = 0; i < size; i++) {
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
-#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
-#else
-#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
-#endif
-#endif
-        }
-        MPL_free(mapped_table);
-
-        mpi_errno = MPIDU_shm_barrier(barrier, num_local);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-        MPIDU_shm_seg_destroy(&memory, num_local);
-        PMI_Barrier();
-    }
-
     /* -------------------------------- */
     /* Create the id to object maps     */
     /* -------------------------------- */
@@ -892,6 +790,109 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     MPIR_Datatype_init_names();
     MPIDI_OFI_index_datatypes();
+
+    if (do_av_insert) {
+        int local_rank, num_local = 0, local_rank_0 = -1;
+        MPIDU_shm_seg_t memory;
+        MPIDU_shm_barrier_t *barrier;
+        int start, end;
+        int *node_roots;
+
+        MPIDI_Global.addrnamelen = FI_NAME_MAX;
+        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_Global.ep, MPIDI_Global.addrname,
+                                  &MPIDI_Global.addrnamelen), getname);
+        MPIR_Assert(MPIDI_Global.addrnamelen <= FI_NAME_MAX);
+
+        /* locality information for shm segment */
+        for (i = 0; i < size; i++) {
+            if (MPIDI_CH4_rank_is_local(i, MPIR_Process.comm_world)) {
+                if (i == rank)
+                    local_rank = num_local;
+
+                if (local_rank_0 == -1)
+                    local_rank_0 = i;
+
+                num_local++;
+            }
+        }
+
+        /* exchange connection information for node roots */
+        int num_nodes = MPIDI_CH4_Global.max_node_id + 1;
+        if (rank == local_rank_0) {
+            val = valS;
+            str_errno = MPL_STR_SUCCESS;
+            maxlen = MPIDI_KVSAPPSTRLEN;
+            memset(val, 0, maxlen);
+            MPIDI_OFI_STR_CALL(MPL_str_add_binary_arg
+                               (&val, &maxlen, "OFI", (char *) &MPIDI_Global.addrname,
+                                MPIDI_Global.addrnamelen), buscard_len);
+            MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get_my_name(MPIDI_Global.kvsname, MPIDI_KVSAPPSTRLEN), pmi);
+
+            val = valS;
+            sprintf(keyS, "OFI-%d", rank);
+#ifdef USE_PMI2_API
+            MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Put(keyS, val), pmi);
+            MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Fence(), pmi);
+#else
+            MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Put(MPIDI_Global.kvsname, keyS, val), pmi);
+            MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Commit(MPIDI_Global.kvsname), pmi);
+#endif
+            /* identify other node roots */
+            node_roots = MPL_malloc(sizeof(int) * num_nodes);
+            for (i = 0; i < num_nodes; i++)
+                node_roots[i] = -1;
+            for (i = 0; i < size; i++)
+                if (node_roots[MPIDI_CH4_Global.node_map[0][i]] == -1)
+                    node_roots[MPIDI_CH4_Global.node_map[0][i]] = i;
+        }
+
+        PMI_Barrier();
+
+        /* initialize address vector */
+        for (i = 0; i < size; i++) {
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = FI_ADDR_UNSPEC;
+#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+#else
+#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+#endif
+#endif
+        }
+
+        if (rank == local_rank_0) {
+            table = MPL_malloc(num_nodes * MPIDI_Global.addrnamelen);
+            mapped_table = MPL_malloc(num_nodes * sizeof(fi_addr_t));
+            for (i = 0; i < num_nodes; i++) {
+                sprintf(keyS, "OFI-%d", node_roots[i]);
+#ifdef USE_PMI2_API
+                int vallen;
+                MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Get
+                                       (NULL, -1, keyS, valS, MPIDI_KVSAPPSTRLEN, &vallen), pmi);
+                MPIR_Assert(vallen > 0);
+#else
+                MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get
+                                       (MPIDI_Global.kvsname, keyS, valS, MPIDI_KVSAPPSTRLEN), pmi);
+#endif
+                MPIDI_OFI_STR_CALL(MPL_str_get_binary_arg
+                                   (valS, "OFI", (char *) &table[i * MPIDI_Global.addrnamelen],
+                                    MPIDI_Global.addrnamelen, &maxlen), buscard_len);
+            }
+
+            MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, table, num_nodes, mapped_table, 0ULL, NULL), avmap);
+
+            for (i = 0; i < num_nodes; i++) {
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest = mapped_table[i];
+            }
+
+            MPL_free(node_roots);
+            MPL_free(table);
+            MPL_free(mapped_table);
+        }
+
+        PMI_Barrier();
+        /* all the node roots are now able to communicate */
+    }
 
     /* -------------------------------- */
     /* Initialize Dynamic Tasking       */
