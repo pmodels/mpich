@@ -38,7 +38,7 @@
  */
 #define MPIDI_OFI_PROGRESS()                                      \
     do {                                                          \
-        mpi_errno = MPID_Progress_test();                        \
+        mpi_errno = MPIDI_NM_progress(0, 0);                      \
         if (mpi_errno!=MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);      \
     } while (0)
 
