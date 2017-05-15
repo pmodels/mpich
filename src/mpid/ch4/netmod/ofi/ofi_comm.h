@@ -66,12 +66,32 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
             }
         }
 
-        /* FIXME: assumes all nodes have same number of ranks */
+        /* determine if we have uniform ppn */
+        int procs_per_node[MPIDI_CH4_Global.max_node_id + 1];
+        for (i = 0; i < MPIDI_CH4_Global.max_node_id + 1; i++)
+            procs_per_node[i] = 0;
+        for (i = 0; i < size; i++)
+            procs_per_node[MPIDI_CH4_Global.node_map[0][i]] += 1;
+        int uniform = 1;
+        for (i = 0; i < MPIDI_CH4_Global.max_node_id; i++) {
+            if (procs_per_node[i] != procs_per_node[i + 1]) {
+                uniform = 0;
+                break;
+            }
+        }
+        int offset = 0;
+        if (uniform) {
+            offset = MPIDI_CH4_Global.node_map[0][rank] * num_local;
+        } else {
+            for (i = 0; i < MPIDI_CH4_Global.node_map[0][rank]; i++)
+                offset += procs_per_node[i];
+        }
+
         MPIDU_shm_seg_alloc(size * sizeof(struct MPIDI_OFI_rank_addr), (void **)&table);
         MPIDU_shm_seg_commit(&memory, &barrier, num_local, local_rank, local_rank_0, rank);
 
         /* copy info */
-        local_table = &table[MPIDI_CH4_Global.node_map[0][rank] * num_local];
+        local_table = &table[offset];
         local_table[local_rank].rank = rank;
         memcpy(local_table[local_rank].addrname, MPIDI_Global.addrname, MPIDI_Global.addrnamelen);
 
@@ -79,8 +99,21 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
         if (rank == local_rank_0) {
             MPIR_Errflag_t errflag = MPIR_ERR_NONE;
             MPIR_Comm *allgather_comm = comm->node_roots_comm ? comm->node_roots_comm : comm;
-            MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, table, num_local * sizeof(struct MPIDI_OFI_rank_addr),
-                                MPI_BYTE, allgather_comm, &errflag);
+            if (uniform) {
+                MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, table, num_local * sizeof(struct MPIDI_OFI_rank_addr),
+                                    MPI_BYTE, allgather_comm, &errflag);
+            } else {
+                /* convert procs_per_node to recvcounts */
+                for (i = 0; i < MPIDI_CH4_Global.max_node_id + 1; i++)
+                    procs_per_node[i] *= MPIDI_Global.addrnamelen;
+                int displs[MPIDI_CH4_Global.max_node_id + 1];
+                for (i = 0; i < MPIDI_CH4_Global.max_node_id + 1; i++)
+                    displs[i] = 0;
+                for (i = 1; i < MPIDI_CH4_Global.max_node_id + 1; i++)
+                    displs[i] = displs[i - 1] + procs_per_node[i - 1];
+                MPIR_Allgatherv_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, table, procs_per_node, displs,
+                                     MPI_BYTE, allgather_comm, &errflag);
+            }
         }
         MPIDU_shm_barrier(barrier, num_local);
 
