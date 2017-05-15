@@ -42,7 +42,6 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
     /* if this is MPI_COMM_WORLD, finish bc exchange */
     if (comm == MPIR_Process.comm_world) {
         struct MPIDI_OFI_rank_addr {
-            int rank;
             char addrname[MPIDI_Global.addrnamelen];
         };
         MPIDU_shm_seg_t memory;
@@ -92,7 +91,6 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
 
         /* copy info */
         local_table = &table[offset];
-        local_table[local_rank].rank = rank;
         memcpy(local_table[local_rank].addrname, MPIDI_Global.addrname, MPIDI_Global.addrnamelen);
 
         MPIDU_shm_barrier(barrier, num_local);
@@ -118,11 +116,28 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
         MPIDU_shm_barrier(barrier, num_local);
 
         mapped_table = MPL_malloc(size * sizeof(fi_addr_t));
-        for (i = 0; i < size; i++) {
-            /* only insert new addresses */
-            if (MPIDI_OFI_AV(&MPIDIU_get_av(0, table[i].rank)).dest == FI_ADDR_UNSPEC) {
-                fi_av_insert(MPIDI_Global.av, table[i].addrname, 1, &mapped_table[i], 0ULL, NULL);
-                MPIDI_OFI_AV(&MPIDIU_get_av(0, table[i].rank)).dest = mapped_table[i];
+        if (MPII_Comm_is_node_consecutive(comm)) {
+            for (i = 0; i < size; i++) {
+                /* only insert new addresses */
+                if (MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest == FI_ADDR_UNSPEC) {
+                    fi_av_insert(MPIDI_Global.av, table[i].addrname, 1, &mapped_table[i], 0ULL, NULL);
+                    MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+                }
+            }
+        } else {
+            int ranks[size];
+            int j;
+            int curr = 0;
+            for (i = 0; i < MPIDI_CH4_Global.max_node_id + 1; i++)
+                for (j = 0; j < size; j++)
+                    if (MPIDI_CH4_Global.node_map[0][j] == i)
+                        ranks[curr++] = j;
+            for (i = 0; i < size; i++) {
+                /* only insert new addresses */
+                if (MPIDI_OFI_AV(&MPIDIU_get_av(0, ranks[i])).dest == FI_ADDR_UNSPEC) {
+                    fi_av_insert(MPIDI_Global.av, table[i].addrname, 1, &mapped_table[i], 0ULL, NULL);
+                    MPIDI_OFI_AV(&MPIDIU_get_av(0, ranks[i])).dest = mapped_table[i];
+                }
             }
         }
 
