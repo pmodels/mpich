@@ -291,7 +291,7 @@ AC_ARG_WITH(hydra-bstrap,
 	[AC_HELP_STRING([--with-hydra-bstrap=name],
 		[Bstrap Server (ssh,rsh,slurm,ll,lsf,sge,pbs)])],
 	[ hydra_bstrap=$withval ],
-	[ hydra_bstrap="ssh,slurm" ])
+	[ hydra_bstrap="ssh,slurm,rsh,ll,sge" ])
 AC_MSG_CHECKING(bstrap server)
 AC_MSG_RESULT($hydra_bstrap)
 hydra_bstrap_list="`echo $hydra_bstrap | sed -e 's/:/ /g' -e 's/,/ /g'`"
