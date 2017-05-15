@@ -1622,6 +1622,11 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
         hints->domain_attr->mr_mode = FI_MR_SCALABLE;
     else
         hints->domain_attr->mr_mode = FI_MR_BASIC;
+    if (FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION) >= FI_VERSION(1,5)) {
+#ifdef FI_RESTRICTED_COMP
+        hints->domain_attr->mode = FI_RESTRICTED_COMP;
+#endif
+    }
     hints->tx_attr->op_flags = FI_COMPLETION;
     /* direct RMA operations supported only with delivery complete mode,
      * else (AM mode) delivery complete is not required */
