@@ -462,7 +462,7 @@ static inline int MPIC_MPICH_queryfcn(
         MPI_Datatype dt = rr->datatype;
         MPI_Op       op = rr->op;
 
-        if(rr->flags==0 || rr->flags & MPIC_FLAG_REDUCE_L) {
+        if(rr->flags==-1 || rr->flags & MPIC_FLAG_REDUCE_L) {
             if(0) fprintf(stderr, "  --> MPICH transport (recv_reduce L) complete to %p\n",
                               rr->inoutbuf);
 
@@ -545,6 +545,7 @@ static inline int MPIC_MPICH_reduce_local(const void  *inbuf,
                                     int          count,
                                     MPIC_MPICH_dt_t    datatype,
                                     MPIC_MPICH_op_t    operation,
+                                    uint64_t     flags,
                                     MPIC_MPICH_sched_t *sched,
                                     int          n_invtcs,
                                     int         *invtcs)
@@ -562,6 +563,7 @@ static inline int MPIC_MPICH_reduce_local(const void  *inbuf,
     req->nbargs.reduce_local.count    = count;
     req->nbargs.reduce_local.dt       = datatype;
     req->nbargs.reduce_local.op       = operation;
+    req->nbargs.reduce_local.flags    = flags;
 
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [reduce_local]\n",sched->total);
     sched->total++;
@@ -754,13 +756,30 @@ static inline void MPIC_MPICH_issue_request(int vtxid, MPIC_MPICH_req_t *rp, MPI
             break;
 
             case MPIC_MPICH_KIND_REDUCE_LOCAL:
-                MPIR_Reduce_local_impl(rp->nbargs.reduce_local.inbuf,
-                                       rp->nbargs.reduce_local.inoutbuf,
-                                       rp->nbargs.reduce_local.count,
-                                       rp->nbargs.reduce_local.dt,
-                                       rp->nbargs.reduce_local.op);
+                  if(rp->nbargs.reduce_local.flags==-1 || rp->nbargs.reduce_local.flags & MPIC_FLAG_REDUCE_L) {
+                          printf("rp->nbargs.reduce_local.flags %d \n",rp->nbargs.reduce_local.flags);
+                          MPIR_Reduce_local_impl(rp->nbargs.reduce_local.inbuf,
+                                                 rp->nbargs.reduce_local.inoutbuf,
+                                                 rp->nbargs.reduce_local.count,
+                                                 rp->nbargs.reduce_local.dt,
+                                                 rp->nbargs.reduce_local.op);
+                          if(0) fprintf(stderr, "  --> MPICH transport (reduce local_L) complete\n");
+                   } else {
+                          printf("Right reduction rp->nbargs.reduce_local.flags %d \n",rp->nbargs.reduce_local.flags);
+                          MPIR_Reduce_local_impl(rp->nbargs.reduce_local.inoutbuf,
+                                                 rp->nbargs.reduce_local.inbuf,
+                                                 rp->nbargs.reduce_local.count,
+                                                 rp->nbargs.reduce_local.dt,
+                                                 rp->nbargs.reduce_local.op);
 
-                if(0) fprintf(stderr, "  --> MPICH transport (reduce local) complete\n");
+                          MPIR_Localcopy(rp->nbargs.reduce_local.inbuf,
+                                         rp->nbargs.reduce_local.count,
+                                         rp->nbargs.reduce_local.dt,
+                                         rp->nbargs.reduce_local.inoutbuf,
+                                         rp->nbargs.reduce_local.count,
+                                         rp->nbargs.reduce_local.dt);
+                          if(0) fprintf(stderr, "  --> MPICH transport (reduce local_R) complete\n");
+                   }
 
                 MPIC_MPICH_record_request_completion(rp, sched);
                 break;

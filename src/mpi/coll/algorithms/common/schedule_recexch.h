@@ -15,22 +15,6 @@
 #error "The tree template must be namespaced with COLL_NAMESPACE"
 #endif
 
-/*
-=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
-cvars:
-    - name        : MPIR_CVAR_ALLRED_RECEXCH_KVAL
-      category    : COLLECTIVE
-      type        : int
-      default     : 2
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        K value for allreduce with recursive koupling algorithm
-
-=== END_MPI_T_CVAR_INFO_BLOCK ===
-*/
 
 /*This function calculates the ranks to/from which the
 data is sent/recvd in various steps/phases of recursive koupling
@@ -176,7 +160,266 @@ int COLL_get_neighbors_recexch(int rank, int nranks, int *k_, int *step1_sendto,
 
     return 0;
 }
+static inline int
+COLL_sched_allreduce_recexch(const void         *sendbuf,
+                     void               *recvbuf,
+                     int                 count,
+                     COLL_dt_t          datatype,
+                     COLL_op_t          op,
+                     int                 tag,
+                     COLL_comm_t        *comm,
+                     int k,
+                     COLL_sched_t *s,
+                     int per_nbr_buffer,
+                     int finalize)
+{
 
+    int is_inplace,is_contig,i,j;
+    int dtcopy_id=-1;
+    TSP_sched_t *sched = &s->tsp_sched;
+    TSP_comm_t *tsp_comm = &comm->tsp_comm;
+    int nranks = TSP_size(tsp_comm);
+    int rank = TSP_rank(tsp_comm);
+
+    size_t type_size,extent,lb;
+    int is_commutative;
+
+    TSP_opinfo(op,&is_commutative);
+    TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
+
+    is_inplace = TSP_isinplace((void *)sendbuf);
+    /*if there is only 1 rank, copy data from sendbuf
+      to recvbuf and exit */
+    if(nranks == 1){
+         if(!is_inplace)
+             TSP_dtcopy_nb(recvbuf,count,datatype, \
+                             sendbuf,count,datatype,sched,0,NULL);
+         return 0;
+    }
+
+    int step1_sendto=-1;
+    int step2_nphases;
+    int step1_nrecvs;
+
+    /*COLL_get_neighbors_recexch function allocates memory
+    to these pointers */
+    int *step1_recvfrom;
+    int **step2_nbrs;
+    int p_of_k, T;
+    /*get the neighbors*/
+    COLL_get_neighbors_recexch(rank, nranks, &k, &step1_sendto, &step1_recvfrom, &step1_nrecvs, &step2_nbrs, &step2_nphases,&p_of_k,&T);
+    bool in_step2= (step1_sendto==-1);
+
+    void *tmp_buf = TSP_allocate_buffer(count*extent,sched);
+
+    if(!is_inplace && in_step2){/*copy the data to recvbuf but only if you are a rank participating in Step 2*/
+         dtcopy_id = TSP_dtcopy_nb(recvbuf,count,datatype, \
+                        sendbuf,count,datatype,sched,0,NULL);
+    }
+
+    if(0) fprintf(stderr,"After initial dt copy\n");
+    int* send_id = (int*)TSP_allocate_mem(sizeof(int)*k);/*to store send ids*/
+    int* reduce_id = (int*)TSP_allocate_mem(sizeof(int)*k);/*to store recv_reduce ids*/
+    /*Step 1*/
+    if(!in_step2){/*non-participating rank sends the data to a partcipating rank*/
+        void *buf_to_send;
+        if(is_inplace) buf_to_send = recvbuf;
+        else buf_to_send = sendbuf;
+        TSP_send(buf_to_send,count,datatype,step1_sendto,
+                                tag,tsp_comm,sched,0,NULL);
+    }
+    
+    void **step1_recvbuf = (void**)TSP_allocate_mem(sizeof(void*)*step1_nrecvs);
+    if(per_nbr_buffer!=1 && step1_nrecvs>0)
+           step1_recvbuf[0] = TSP_allocate_buffer(count*extent,sched);
+    int buf,recv_id;
+    int nvtcs;
+    for(i=0; i<step1_nrecvs; i++){/*participating rank gets data from non-partcipating ranks*/
+        buf = (per_nbr_buffer==1)?i:0;
+        int vtcs[2];
+        if(per_nbr_buffer==1)
+            step1_recvbuf[buf] = TSP_allocate_buffer(count*extent,sched);
+        /* recv dependencies */
+        if(i==0 || per_nbr_buffer==1)
+             nvtcs=0;
+        else{
+             nvtcs=1;
+             vtcs[0]=reduce_id[i-1];
+        }
+        recv_id = TSP_recv(step1_recvbuf[buf],count,datatype,
+                              step1_recvfrom[i],tag,tsp_comm,
+                             sched,nvtcs,vtcs);
+        /* reduce dependencies */
+        if(is_commutative){
+            if(!is_inplace){/*wait for the data to be copied to recvbuf*/
+                   nvtcs = 2; vtcs[0] = dtcopy_id; vtcs[1] = recv_id;
+            }
+            else{/*i have no dependency*/
+                   nvtcs = 1; vtcs[0] = recv_id;
+            }
+        }else{ //if not commutative
+            if(i==0 && is_inplace){ /*if data is inplace, no need to wait*/
+                     nvtcs = 1; vtcs[0] = recv_id;
+            }else{/*wait for datacopy to complete if i==0 else wait for previous recv_reduce*/
+                nvtcs=2;
+                if(i==0) vtcs[0]=dtcopy_id;
+                else  vtcs[0]=reduce_id[i-1];
+                vtcs[1]=recv_id;
+            }
+        }
+        reduce_id[i] = TSP_reduce_local(step1_recvbuf[buf],recvbuf,count,
+                                           datatype,op,TSP_FLAG_REDUCE_L,sched,nvtcs,vtcs);
+    }
+    int fence_id = TSP_fence(sched);
+
+    /*Step 2*/
+    int myidx, nbr, phase;
+    int *vtcs = TSP_allocate_mem(sizeof(int)*2*k); /*used for specifying graph dependencies*/
+    if(0) fprintf(stderr,"After step1");
+
+    void **nbr_buffer = (void**)TSP_allocate_mem(sizeof(void*)*step2_nphases*(k-1));
+    buf=0;
+    if(step2_nphases>0)
+         nbr_buffer[0] = TSP_allocate_buffer(count*extent,sched);
+    for(i=0; i<step2_nphases;i++){
+        for(j=0; j<(k-1);j++,buf++){
+             if(buf==0)
+                 continue;/*memory is already allocated for the first child above*/
+             else{
+                 if(per_nbr_buffer){
+                      nbr_buffer[buf] = TSP_allocate_buffer(count*extent,sched);
+                 }
+                 else
+                     nbr_buffer[buf] = nbr_buffer[0];
+             }
+         }
+     }
+    buf=0;
+    for(phase=0; phase<step2_nphases && step1_sendto==-1; phase++){
+        if(!is_commutative){/*sort the neighbor list so that receives can be posted in order*/
+            qsort(step2_nbrs[phase], k-1, sizeof(int), intcmpfn);
+        }
+        /*copy the data to a temporary buffer so that sends ands recvs
+        can be posted simultaneosly*/
+        if(phase==0){/*wait for Step 1 to complete*/
+            nvtcs=1; vtcs[0]=fence_id;
+        }else{
+            nvtcs = k-1;
+            for(i=0;i<k-1;i++) vtcs[i] = send_id[i];
+            if(is_commutative){/*wait for all the previous recv_reduce to complete*/
+                for(i=0;i<k-1;i++) vtcs[i+nvtcs] = reduce_id[i];
+                nvtcs += k-1;
+            }else{/*just wait for the last recv_reduce to complete as recv_reduce happen in order*/
+                vtcs[nvtcs] = reduce_id[k-2];
+                nvtcs += 1;/*wait for the previous sends to complete and the last recv_reduce*/
+            }
+        }
+        dtcopy_id = TSP_dtcopy_nb(tmp_buf,count,datatype,
+                                  recvbuf,count,datatype,sched,nvtcs,vtcs);
+        if(0) fprintf(stderr,"Step 1: data copy scheduled\n");
+        /*myidx is the index in the neighbors list such that
+        all neighbors before myidx have ranks less than my rank
+        and neighbors at and after myidx have rank greater than me.
+        This is useful only in the non-commutative case.*/
+        myidx = 0;
+        /*send data to all the neighbors*/
+        for(i=0; i<k-1; i++) {
+            nbr = step2_nbrs[phase][i];
+            send_id[i] = TSP_send(tmp_buf,count,datatype,
+                                     nbr,tag,tsp_comm,sched,1,&dtcopy_id);
+            if(rank > nbr){
+                 myidx = i+1;
+            }
+        }
+        int counter=0;
+        /*receive from the neighbors to the left. Need datacopy here*/
+        for(i=myidx-1; i>=0; i--,buf++) {
+            nbr = step2_nbrs[phase][i];
+            if(per_nbr_buffer==1 || counter==0)
+                nvtcs=0;
+            else{
+                nvtcs=1;
+                vtcs[0]=reduce_id[counter-1];
+            }
+            recv_id = TSP_recv(nbr_buffer[buf],count,datatype,nbr,
+                                        tag,tsp_comm,sched,nvtcs,vtcs);
+
+            nvtcs=2;
+            if(counter==0) vtcs[0] = dtcopy_id;
+            else vtcs[0] = (is_commutative)?dtcopy_id:reduce_id[counter-1];
+            vtcs[1] = recv_id;
+            reduce_id[counter++] = TSP_reduce_local(nbr_buffer[buf],recvbuf,count,
+                                             datatype,op, TSP_FLAG_REDUCE_L, sched,nvtcs,vtcs);
+
+        }
+
+        /*receive from the neighbors to the right*/
+        for(i=myidx; i<k-1; i++,buf++) {
+            nbr = step2_nbrs[phase][i];
+            if(per_nbr_buffer==1 || counter==0)
+                nvtcs=0;
+            else{
+                nvtcs=1;
+                vtcs[0]=reduce_id[counter-1];
+            }
+            recv_id = TSP_recv(nbr_buffer[buf],count,datatype,nbr,
+                                        tag,tsp_comm,sched,nvtcs,vtcs);
+
+            nvtcs=2;
+            if(counter==0) vtcs[0] = dtcopy_id;
+            else vtcs[0] = (is_commutative)?dtcopy_id:reduce_id[counter-1];
+            vtcs[1] = recv_id;
+            reduce_id[counter++] = TSP_reduce_local(nbr_buffer[buf],recvbuf,count,
+                                             datatype,op, TSP_FLAG_REDUCE_R, sched,nvtcs,vtcs);
+        }
+    }
+    if(0) fprintf(stderr,"After step2\n");
+
+    /*Step 3: This is reverse of Step 1. Ranks that participated in Step 2
+    send the data to non-partcipating ranks*/
+    if(step1_sendto != -1){
+        TSP_recv(recvbuf,count,datatype,step1_sendto,tag,tsp_comm,sched,0,NULL);
+        //TSP_free_mem(tmp_buf);
+    }
+    else{ /* free temporary buffer after it is used in last send */
+        //TSP_free_mem_nb(tmp_buf,sched,k-1,id+1);
+    }
+
+    for(i=0; i<step1_nrecvs; i++) {
+        if(is_commutative){ /* If commutative, wait for all the prev reduce calls to complete
+                                since they can happen in any order */
+              nvtcs=k-1;
+              for(i=0;i<k-1;i++) vtcs[i] = reduce_id[i];
+        }
+        else{ /* If non commutative, wait for the last reduce to complete, as they happen in order */
+              nvtcs=1;
+              vtcs[0]=reduce_id[k-2];
+        }
+        TSP_send(recvbuf,count,datatype,step1_recvfrom[i],
+                    tag,tsp_comm,sched,nvtcs,vtcs);
+    }
+
+    if(0) fprintf(stderr,"After step3\n");
+    /*free all allocated memory for storing nbrs*/
+    for(i=0;i<step2_nphases;i++)
+        TSP_free_mem(step2_nbrs[i]);
+    TSP_free_mem(step2_nbrs);
+    if(0) fprintf(stderr,"freed step2_nbrs\n");
+    TSP_free_mem(step1_recvfrom);
+
+    if(0) fprintf(stderr,"freed step1_recvfrom\n");
+
+    TSP_free_mem(send_id);
+    TSP_free_mem(reduce_id);
+    TSP_free_mem(vtcs);
+
+    if(finalize) {
+        TSP_sched_commit(sched);
+    }
+
+    return 0;
+}
+#if 0
 static inline int
 COLL_sched_allreduce_recexch(const void         *sendbuf,
                      void               *recvbuf,
@@ -370,3 +613,4 @@ COLL_sched_allreduce_recexch(const void         *sendbuf,
 
     return 0;
 }
+#endif

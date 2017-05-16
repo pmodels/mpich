@@ -366,6 +366,7 @@ static inline int MPIC_BMPICH_reduce_local(const void  *inbuf,
                                     int          count,
                                     MPIC_BMPICH_dt_t    datatype,
                                     MPIC_BMPICH_op_t    operation,
+                                    uint64_t     flags,
                                     MPIC_BMPICH_sched_t *sched,
                                     int          n_invtcs,
                                     int         *invtcs)
@@ -381,6 +382,7 @@ static inline int MPIC_BMPICH_reduce_local(const void  *inbuf,
     req->nbargs.reduce_local.count    = count;
     req->nbargs.reduce_local.dt       = datatype;
     req->nbargs.reduce_local.op       = operation;
+    req->nbargs.reduce_local.flags    = flags;
 
     if(0) fprintf(stderr, "TSP(mpich) : sched [%ld] [reduce_local]\n",sched->total);
     return vtx;
@@ -559,12 +561,29 @@ static inline void MPIC_BMPICH_issue_request(int vtxid, MPIC_BMPICH_req_t *rp, M
         break;
 
         case MPIC_BMPICH_KIND_REDUCE_LOCAL:
-            MPIR_Reduce_local_impl(rp->nbargs.reduce_local.inbuf,
-                                   rp->nbargs.reduce_local.inoutbuf,
-                                   rp->nbargs.reduce_local.count,
-                                   rp->nbargs.reduce_local.dt,
-                                   rp->nbargs.reduce_local.op);
-            if(0) fprintf(stderr, "  --> MPICH transport (reduce local) complete\n");
+                  if(rp->nbargs.reduce_local.flags==0 || rp->nbargs.reduce_local.flags & MPIC_FLAG_REDUCE_L) {
+                          MPIR_Reduce_local_impl(rp->nbargs.reduce_local.inbuf,
+                                                 rp->nbargs.reduce_local.inoutbuf,
+                                                 rp->nbargs.reduce_local.count,
+                                                 rp->nbargs.reduce_local.dt,
+                                                 rp->nbargs.reduce_local.op);
+                          if(1) fprintf(stderr, "  --> MPICH transport (reduce local_L) complete\n");
+                   } else {
+                          MPIR_Reduce_local_impl(rp->nbargs.reduce_local.inoutbuf,
+                                                 rp->nbargs.reduce_local.inbuf,
+                                                 rp->nbargs.reduce_local.count,
+                                                 rp->nbargs.reduce_local.dt,
+                                                 rp->nbargs.reduce_local.op);
+
+                          MPIR_Localcopy(rp->nbargs.reduce_local.inbuf,
+                                         rp->nbargs.reduce_local.count,
+                                         rp->nbargs.reduce_local.dt,
+                                         rp->nbargs.reduce_local.inoutbuf,
+                                         rp->nbargs.reduce_local.count,
+                                         rp->nbargs.reduce_local.dt);
+                          if(1) fprintf(stderr, "  --> MPICH transport (reduce local_R) complete\n");
+                   }
+
             break;
     }
 }

@@ -159,7 +159,7 @@ static inline int MPIC_STUB_size(MPIC_STUB_comm_t * comm_ptr)
 static inline int MPIC_STUB_reduce_local(const void *inbuf,
                                    void *inoutbuf,
                                    int count,
-                                   MPIC_STUB_dt_t datatype, MPIC_STUB_op_t operation, MPIC_STUB_sched_t * sched, int nvtcs, int *vtcs)
+                                   MPIC_STUB_dt_t datatype, MPIC_STUB_op_t operation,uint64_t flags, MPIC_STUB_sched_t * sched, int nvtcs, int *vtcs)
 {
     return 0;
 }

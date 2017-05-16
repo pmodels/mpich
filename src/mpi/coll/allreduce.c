@@ -69,7 +69,8 @@ cvars:
         0 - MPIR_allreduce
         1 - KNOMIAL_allreduce
         2 - KARY_allreduce
-        3 - RECEXCH_allreduce
+        3 - RECEXCH_allreduce_single_buffer
+        4 - RECEXCH_allreduce_multiple_buffers
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -345,10 +346,16 @@ int MPIR_Allreduce_intra (
                 case 3:
                     mpi_errno = MPIC_MPICH_RECEXCH_allreduce(sendbuf, recvbuf, count,
                                                     datatype, op,
-                                                    &(MPIC_COMM(comm_ptr)->mpich_recexch), errflag);
+                                                    &(MPIC_COMM(comm_ptr)->mpich_recexch), 0, errflag);
                     goto fn_exit;
                     break;
                 case 4:
+                    mpi_errno = MPIC_MPICH_RECEXCH_allreduce(sendbuf, recvbuf, count,
+                                                    datatype, op,
+                                                    &(MPIC_COMM(comm_ptr)->mpich_recexch), 1, errflag);
+                    goto fn_exit;
+                    break;
+                case 5:
                     mpi_errno = MPIC_MPICH_DISSEM_allreduce(sendbuf, recvbuf, count,
                                                     datatype, op,
                                                     &(MPIC_COMM(comm_ptr)->mpich_dissem), errflag);

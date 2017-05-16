@@ -84,6 +84,7 @@ typedef struct MPIC_MPICH_reduce_local_arg_t {
     int              count;
     MPIC_MPICH_dt_t  dt;
     MPIC_MPICH_op_t  op;
+    uint64_t           flags;
 } MPIC_MPICH_reduce_local_arg_t;
 
 typedef struct MPIC_MPICH_free_mem_arg_t {

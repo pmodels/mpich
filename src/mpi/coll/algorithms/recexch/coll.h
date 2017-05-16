@@ -25,6 +25,23 @@
 #error "The collectives template must be namespaced with COLL_NAMESPACE"
 #endif
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_ALLRED_RECEXCH_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        K value for allreduce with recursive koupling algorithm
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 static inline int COLL_init()
 {
     return 0;
@@ -52,10 +69,12 @@ static inline int COLL_allreduce(const void  *sendbuf,
                                  COLL_dt_t    datatype,
                                  COLL_op_t    op,
                                  COLL_comm_t *comm,
+                                 int per_nbr_buffer,
                                  int         *errflag)
 {
     int rc=0;
     /*Check if schedule already exists*/
+    int k=MPIR_CVAR_ALLRED_RECEXCH_KVAL;
     /*generate the key to search this schedule*/
     COLL_args_t coll_args = {.algo=COLL_NAME, .tsp=TRANSPORT_NAME, .nargs=6,\
             .args={.allreduce={.sbuf=sendbuf,.rbuf=recvbuf,.count=count,.dt_id=(int)datatype,.op_id=(int)op,.comm_id=comm->id}}};
@@ -68,7 +87,7 @@ static inline int COLL_allreduce(const void  *sendbuf,
 
         COLL_sched_init(s,tag);
         rc = COLL_sched_allreduce_recexch(sendbuf,recvbuf,count,
-                                          datatype,op,tag,comm,s,1);
+                                          datatype,op,tag,comm,k,s,per_nbr_buffer,1);
         MPIC_add_sched((MPIC_coll_args_t)coll_args, (void*)s, COLL_sched_free);
     }else{
         COLL_sched_reset(s, tag);

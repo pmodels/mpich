@@ -262,7 +262,7 @@ COLL_sched_reduce_tree(const void *sendbuf,
                 }
             }
             reduce_id[child_count] = TSP_reduce_local(childbuf[child_count],target_buf, count,
-                                                       datatype,op, sched, nvtcs, vtcs);
+                                                       datatype,op, TSP_FLAG_REDUCE_L,sched, nvtcs, vtcs);
         }
    }
     

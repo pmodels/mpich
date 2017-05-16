@@ -180,7 +180,7 @@ static inline int TSP_reduce_local(const void *inbuf,
                                    void *inoutbuf,
                                    int count,
                                    TSP_dt_t * datatype,
-                                   TSP_op_t * operation, TSP_sched_t * sched,int n_invtcs, int *invt)
+                                   TSP_op_t * operation, uint64_t flags, TSP_sched_t * sched,int n_invtcs, int *invt)
 {
     return 0;
 }

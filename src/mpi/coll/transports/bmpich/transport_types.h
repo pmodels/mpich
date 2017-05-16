@@ -83,6 +83,7 @@ typedef struct MPIC_BMPICH_reduce_local_arg_t {
     int              count;
     MPIC_BMPICH_dt_t dt;
     MPIC_BMPICH_op_t op;
+    uint64_t           flags;
 } MPIC_BMPICH_reduce_local_arg_t;
 
 typedef struct MPIC_BMPICH_free_mem_arg_t {
