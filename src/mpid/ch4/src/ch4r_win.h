@@ -874,7 +874,21 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
     if (total_size == 0)
         goto fn_zero;
 
-    sprintf(shm_key, "/mpi-%X-%" PRIx64, MPIDI_CH4_Global.jobid, MPIDI_CH4U_WIN(win, win_id));
+    /* Note that two distinct process groups may share the same context id,
+     * thus the window id may be duplicated on a node if windows are owned
+     * by distinct process groups. Therefore, we use [jobid + root_rank + win_id]
+     * as unique shm_key for window, where root_rank is the world rank of the
+     * first process in the group. */
+    int root_rank = 0;
+
+    if (comm_ptr->rank == 0)
+        root_rank = MPIR_Process.comm_world->rank;
+    mpi_errno = MPIR_Bcast_impl(&root_rank, 1, MPI_INT, 0, comm_ptr, &errflag);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    sprintf(shm_key, "/mpi-%X-%X-%" PRIx64, MPIDI_CH4_Global.jobid, root_rank,
+            MPIDI_CH4U_WIN(win, win_id));
 
     rc = shm_open(shm_key, O_CREAT | O_EXCL | O_RDWR, 0600);
     first = (rc != -1);
