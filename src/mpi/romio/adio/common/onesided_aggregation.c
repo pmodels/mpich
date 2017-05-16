@@ -739,7 +739,7 @@ printf("ADIOI_OneSidedWriteAggregation started on rank %d\n",myrank);
             targetAggsForMyDataLastOffLenIndex[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs] = blockIter;
 
           } // if (blockEnd >= fd_start[currentAggRankListIndex])
-        } // while (blockEnd >= fd_end[currentAggRankListIndex])
+        } // while (blockEnd > fd_end[currentAggRankListIndex])
       } // if (blockEnd > fd_end[currentAggRankListIndex])
 
       /* If we are still in the same file domain / target agg but have gone
@@ -1744,7 +1744,10 @@ printf("end_offsets[%d] is %ld st_offsets[%d] is %ld\n",j,end_offsets[j],j,st_of
 #endif
         ADIO_Offset amountToAdvanceSBOffsetForFD = 0;
         int additionalFDCounter = 0;
-        while (blockEnd >= fd_end[currentAggRankListIndex]) {
+        while (blockEnd > fd_end[currentAggRankListIndex]) {
+#ifdef onesidedtrace
+            printf("currentAggRankListIndex is now %d blockEnd %ld > fd_end[%d] %ld\n",currentAggRankListIndex,blockEnd,currentAggRankListIndex,fd_end[currentAggRankListIndex]);
+#endif
           ADIO_Offset thisAggBlockEnd = fd_end[currentAggRankListIndex];
           if (thisAggBlockEnd >= intraRoundCollBufsizeOffset) {
             while (thisAggBlockEnd >= intraRoundCollBufsizeOffset) {
@@ -1848,12 +1851,12 @@ printf("end_offsets[%d] is %ld st_offsets[%d] is %ld\n",j,end_offsets[j],j,st_of
 
 
 #ifdef onesidedtrace
-            printf("block extended beyond fd init settings numSourceAggs %d offset_list[%d] with value %ld past fd border %ld with len %ld\n",numSourceAggs,i,offset_list[blockIter],fd_start[currentAggRankListIndex],len_list[blockIter]);
+            printf("block extended beyond fd init settings numSourceAggs %d offset_list[%d] with value %ld past fd border %ld with len %ld\n",numSourceAggs,blockIter,offset_list[blockIter],fd_start[currentAggRankListIndex],len_list[blockIter]);
 #endif
             intraRoundCollBufsizeOffset = fd_start[currentAggRankListIndex] + coll_bufsize;
             sourceAggsForMyDataLastOffLenIndex[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs] = blockIter;
           } // if (blockEnd >= fd_start[currentAggRankListIndex])
-        } // while (blockEnd >= fd_end[currentAggRankListIndex])
+        } // while (blockEnd > fd_end[currentAggRankListIndex])
       } // if (blockEnd > fd_end[currentAggRankListIndex])
 
       /* If we are still in the same file domain / source agg but have gone past the coll_bufsize and need
