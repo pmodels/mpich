@@ -50,7 +50,7 @@ static inline int MPIC_progress_hook()
     coll_count = MPIC_Progress(MPIC_NUM_ENTRIES, coll_entries);
     for (i = 0; i < coll_count; i++) {
         MPIC_req_t *base = (MPIC_req_t *) coll_entries[i];
-        MPIR_Request *req = container_of(base, MPIR_Request, ch4_coll);
+        MPIR_Request *req = container_of(base, MPIR_Request, coll);
         MPID_Request_complete(req);
     }
     return mpi_errno;
@@ -223,7 +223,7 @@ MPL_STATIC_INLINE_PREFIX int MPIC_init_builtin_dt()
 #undef INIT_DT_BUILTIN
 #endif
 
-
+    return 0;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIC_init_builtin_ops()
@@ -252,8 +252,6 @@ MPL_STATIC_INLINE_PREFIX int MPIC_Op_get_ptr(MPI_Op op, MPIR_Op ** ptr)
 MPL_STATIC_INLINE_PREFIX int MPIC_init()
 {
     MPIC_progress_global.progress_fn = MPID_Progress_test;
-    MPIC_comm_counter = 0;
-    MPIC_sched_table = NULL;
     MPIC_STUB_init();
     MPIC_MPICH_init();
 
@@ -272,7 +270,6 @@ MPL_STATIC_INLINE_PREFIX int MPIC_init()
 
 MPL_STATIC_INLINE_PREFIX int MPIC_finalize()
 {
-    MPIC_delete_sched_table();
     return MPI_SUCCESS;
 }
 #endif /* MPIR_COLL_IMPL_H_INCLUDED */

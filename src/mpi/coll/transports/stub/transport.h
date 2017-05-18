@@ -26,32 +26,6 @@ static inline int MPIC_STUB_comm_cleanup(MPIC_STUB_comm_t * comm)
 }
 
 
-static inline int MPIC_STUB_sched_init(MPIC_STUB_sched_t * sched, int tag)
-{
-    return 0;
-}
-
-static inline int MPIC_STUB_sched_commit(MPIC_STUB_sched_t * sched)
-{
-    return 0;
-}
-
-static inline int MPIC_STUB_sched_start(MPIC_STUB_sched_t * sched)
-{
-    return 0;
-}
-
-static inline int MPIC_STUB_sched_finalize(MPIC_STUB_sched_t * sched)
-{
-    return 0;
-}
-
-static inline int MPIC_STUB_init_control_dt(MPIC_STUB_dt_t dt)
-{
-    return 0;
-}
-
-
 static inline void MPIC_STUB_opinfo(MPIC_STUB_op_t op, int *is_commutative)
 {
 }
@@ -69,11 +43,12 @@ static inline void MPIC_STUB_dtinfo(MPIC_STUB_dt_t dt,
 
 static inline int MPIC_STUB_fence(MPIC_STUB_sched_t * sched)
 {
-
+    return 0;
 }
 
 static inline int MPIC_STUB_wait(MPIC_STUB_sched_t * sched)
 {
+    return 0;
 }
 
 static inline void MPIC_STUB_addref_dt(MPIC_STUB_dt_t dt, int up)
@@ -192,16 +167,7 @@ static inline void *MPIC_STUB_allocate_mem(size_t size)
     return NULL;
 }
 
-static inline void *MPIC_STUB_allocate_buffer(size_t size, MPIC_STUB_sched_t * s)
-{
-    return NULL;
-}
-
 static inline void MPIC_STUB_free_mem(void *ptr)
-{
-}
-
-static inline void MPIC_STUB_free_buffers(MPIC_STUB_sched_t * s)
 {
 }
 
@@ -210,4 +176,40 @@ static inline int MPIC_STUB_free_mem_nb(void *ptr, MPIC_STUB_sched_t * sched, in
 {
     return 0;
 }
+
+static inline MPIC_STUB_sched_t * MPIC_STUB_sched_get(MPIC_STUB_comm_t * comm_ptr, void* key, int  key_len, int tag, int* is_new)
+{
+    *is_new = 1;
+    return NULL;
+}
+
+static inline void MPIC_STUB_sched_cache_store (MPIC_STUB_comm_t * comm_ptr, void* key, int  key_len, MPIC_STUB_sched_t* s)
+{
+}
+
+
+static inline void *MPIC_STUB_allocate_buffer(size_t size, MPIC_STUB_sched_t * s)
+{
+    return NULL;
+}
+
+static inline void MPIC_STUB_free_buffers(MPIC_STUB_sched_t * s)
+{
+}
+
+static inline int MPIC_STUB_sched_start(MPIC_STUB_sched_t * sched)
+{
+    return 0;
+}
+
+static inline int MPIC_STUB_sched_commit(MPIC_STUB_sched_t * sched)
+{
+    return 0;
+}
+
+static inline int MPIC_STUB_sched_finalize(MPIC_STUB_sched_t * sched)
+{
+    return 0;
+}
+
 #endif

@@ -301,10 +301,10 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
                             MPIR_CVAR_USE_BARRIER;
         switch(use_coll) {
         case 1:
-            mpi_errno = MPIC_MPICH_KARY_barrier(&(MPIC_COMM(comm_ptr)->mpich_kary), errflag, 2);
+            mpi_errno = MPIC_MPICH_KARY_barrier(&(MPIC_COMM(comm_ptr)->mpich_kary), (int*)errflag, 2);
             break;
         case 2:
-            mpi_errno = MPIC_MPICH_KNOMIAL_barrier(&(MPIC_COMM(comm_ptr)->mpich_knomial), errflag, 2);
+            mpi_errno = MPIC_MPICH_KNOMIAL_barrier(&(MPIC_COMM(comm_ptr)->mpich_knomial), (int*)errflag, 2);
             break;
         default:
 #endif

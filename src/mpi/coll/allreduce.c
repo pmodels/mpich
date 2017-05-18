@@ -69,11 +69,6 @@ cvars:
         0 - MPIR_allreduce
         1 - KNOMIAL_allreduce
         2 - KARY_allreduce
-<<<<<<< HEAD
-        3 - RECEXCH_allreduce_single_buffer
-        4 - RECEXCH_allreduce_multiple_buffers
-=======
->>>>>>> b9f04ef... Collectives framework: Code style cleanup and preparation for PR review
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -337,13 +332,13 @@ int MPIR_Allreduce_intra (
                 case 1:
                     mpi_errno = MPIC_MPICH_KNOMIAL_allreduce(sendbuf, recvbuf, count,
                                                     datatype, op,
-                                                    &(MPIC_COMM(comm_ptr)->mpich_knomial), errflag, 2);
+                                                    &(MPIC_COMM(comm_ptr)->mpich_knomial), (int*) errflag, 2);
                     goto fn_exit;
                     break;
                 case 2:
                     mpi_errno = MPIC_MPICH_KARY_allreduce(sendbuf, recvbuf, count,
                                                     datatype, op,
-                                                    &(MPIC_COMM(comm_ptr)->mpich_kary), errflag, 2);
+                                                    &(MPIC_COMM(comm_ptr)->mpich_kary),(int*) errflag, 2);
                     goto fn_exit;
                     break;
                 default:

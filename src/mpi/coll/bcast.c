@@ -1328,13 +1328,13 @@ int MPIR_Bcast_intra (
         case 1:
             mpi_errno = MPIC_MPICH_KARY_bcast(buffer, count,
                     datatype,
-                    root, &(MPIC_COMM(comm_ptr)->mpich_kary), errflag, MPIR_CVAR_BCAST_KARY_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
+                    root, &(MPIC_COMM(comm_ptr)->mpich_kary), (int*)errflag, MPIR_CVAR_BCAST_KARY_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
             goto fn_exit;
             break;
         case 2:
             mpi_errno = MPIC_MPICH_KNOMIAL_bcast(buffer, count,
                     datatype,
-                    root, &(MPIC_COMM(comm_ptr)->mpich_knomial), errflag, MPIR_CVAR_BCAST_KNOMIAL_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
+                    root, &(MPIC_COMM(comm_ptr)->mpich_knomial), (int*)errflag, MPIR_CVAR_BCAST_KNOMIAL_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
             goto fn_exit;
             break;
         default:

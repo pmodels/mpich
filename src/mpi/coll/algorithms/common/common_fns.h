@@ -31,68 +31,55 @@
     })
 
 #endif /* COLL_MACROS */
+
+/*FIXME: COLL_progress_global should be per-VNI */
 extern MPIC_progress_global_t MPIC_progress_global;
 
-static inline void COLL_sched_init(COLL_sched_t * s, int tag)
+static inline int COLL_kick(COLL_queue_elem_t * elem)
 {
-    TSP_sched_init(&(s->tsp_sched), tag);
-    s->sched_started = 0;
+    int done = 0;
+    TSP_sched_t *s = ((COLL_req_t *) elem)->phases;
+    done = TSP_test(s);
+
+    if (done) {
+        TAILQ_REMOVE(&COLL_progress_global.head, elem, list_data);
+        TSP_sched_finalize(s);
+        ((COLL_req_t *) elem)->phases = NULL;
+    }
+
+    return done;
 }
 
-static inline void COLL_sched_reset(COLL_sched_t * s, int tag)
-{
-    TSP_sched_reset(&s->tsp_sched, tag);
-    s->sched_started = 0;
-}
-
-static inline void COLL_sched_free(COLL_sched_t * s)
-{
-    MPIC_DBG("freeing sched buffers\n");
-    TSP_free_buffers(&s->tsp_sched);
-    TSP_free_mem(s);
-}
-
-static inline int COLL_kick(COLL_queue_elem_t * elem);
-static inline void COLL_sched_init_nb(COLL_sched_t ** sched, int tag, COLL_req_t * request)
-{
-    COLL_sched_t *s;
-    int size = sizeof(*s);
-    s = request->phases = (COLL_sched_t *) TSP_allocate_mem(size);
-    memset(s, 0, size);
-    TSP_sched_init(&(s->tsp_sched), tag);
-    request->elem.kick_fn = COLL_kick;
-    *sched = s;
-
-}
-
-static inline void COLL_sched_kick(COLL_sched_t * s)
+static inline void COLL_sched_kick(TSP_sched_t * s)
 {
     int rc = 0;
 
-    if (!s->sched_started) {
-        TSP_sched_start(&(s->tsp_sched));
-        s->sched_started = 1;
-    }
+    TSP_sched_start(s);
 
     while (!rc) {
-        rc = TSP_test(&(s->tsp_sched));
-
-        if (rc)
-            TSP_sched_finalize(&(s->tsp_sched));
-        else
+        rc = TSP_test(s);
+        if (!rc) {
             MPIC_progress_global.progress_fn();
+        }
     }
+    /* Mark sched as completed,
+     * release of schedule in case of disabled caching*/
+    TSP_sched_finalize(s);
 }
 
-static inline int COLL_sched_kick_nb(COLL_sched_t * s)
+static inline int COLL_sched_kick_nb(TSP_sched_t * s, COLL_req_t * request)
 {
     int rc;
 
-    if (!s->sched_started) {
-        TSP_sched_start(&(s->tsp_sched));
-        s->sched_started = 1;
-    }
+    TSP_sched_start(s);
+    /* Enqueue nonblocking collective. */
+    request->phases = s;
+    request->elem.kick_fn = COLL_kick;
 
-    rc = TSP_test(&(s->tsp_sched));
+    /*FIXME: COLL_progress_global should be per-VNI*/
+    TAILQ_INSERT_TAIL(&COLL_progress_global.head, &request->elem,list_data);
+
+    rc = TSP_test(s);
+
     return rc;
 }

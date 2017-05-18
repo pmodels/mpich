@@ -1,6 +1,7 @@
 #define TRANSPORT_NAME MPICH_
 #define TRANSPORT_NAME_LC mpich
 
+/* Transport types*/
 #define TSP_sched_t     MPIC_MPICH_sched_t
 #define TSP_aint_t      MPIC_MPICH_aint_t
 #define TSP_comm_t      MPIC_MPICH_comm_t
@@ -9,15 +10,10 @@
 #define TSP_op_t        MPIC_MPICH_op_t
 
 #define TSP_global      ((MPIC_global_instance.tsp_mpich))
-
+/*General transport API*/
 #define TSP_init             MPIC_MPICH_init
 #define TSP_comm_cleanup     MPIC_MPICH_comm_cleanup
 #define TSP_comm_init        MPIC_MPICH_comm_init
-#define TSP_sched_init       MPIC_MPICH_sched_init
-#define TSP_sched_reset      MPIC_MPICH_sched_reset
-#define TSP_sched_commit     MPIC_MPICH_sched_commit
-#define TSP_sched_start      MPIC_MPICH_sched_start
-#define TSP_sched_finalize   MPIC_MPICH_sched_finalize
 #define TSP_init_control_dt  MPIC_MPICH_init_control_dt
 #define TSP_fence            MPIC_MPICH_fence
 #define TSP_wait             MPIC_MPICH_wait
@@ -41,8 +37,19 @@
 #define TSP_allocate_mem     MPIC_MPICH_allocate_mem
 #define TSP_allocate_buffer  MPIC_MPICH_allocate_buffer
 #define TSP_free_mem         MPIC_MPICH_free_mem
-#define TSP_free_buffers     MPIC_MPICH_free_buffers
 #define TSP_free_mem_nb      MPIC_MPICH_free_mem_nb
+#define TSP_free_buffers     MPIC_MPICH_free_buffers
 
 #define TSP_FLAG_REDUCE_L    MPIC_FLAG_REDUCE_L
 #define TSP_FLAG_REDUCE_R    MPIC_FLAG_REDUCE_R
+
+/* Schedule API*/
+/* Create/load schedule, reset it in case of load */
+#define TSP_sched_get           MPIC_MPICH_sched_get
+/* Push schedule into cache, in case of implemented cache */
+#define TSP_sched_cache_store   MPIC_MPICH_sched_cache_store
+/*Mark schedule as ready for execution. */
+#define TSP_sched_start         MPIC_MPICH_sched_start
+/* Release schedule (destroy in case of disabled caching) */
+#define TSP_sched_finalize      MPIC_MPICH_sched_finalize
+#define TSP_sched_commit        MPIC_MPICH_sched_commit

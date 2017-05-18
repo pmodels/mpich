@@ -308,6 +308,7 @@ MPL_dbg_class MPIR_DBG_HANDLE;
 MPL_dbg_class MPIR_DBG_COMM;
 MPL_dbg_class MPIR_DBG_BSEND;
 MPL_dbg_class MPIR_DBG_ERRHAND;
+MPL_dbg_class MPIR_DBG_COLL;
 MPL_dbg_class MPIR_DBG_OTHER;
 MPL_dbg_class MPIR_DBG_REQUEST;
 

@@ -11,6 +11,7 @@
 #ifndef MPIC_SCHED_DB_H_INCLUDED
 #define MPIC_SCHED_DB_H_INCLUDED
 #include "mpl_uthash.h"
+
 /*enumerator for all the collective operations*/
 enum {
     BCAST = 0,
@@ -43,59 +44,48 @@ enum {
 
 typedef void (*MPIC_sched_free_fn) (void *);
 
-typedef union {
-    MPIC_MPICH_KARY_args_t mpich_kary;
-    MPIC_MPICH_KNOMIAL_args_t mpich_knomial;
-    MPIC_STUB_KARY_args_t stub_kary;
-    MPIC_STUB_KNOMIAL_args_t stub_knomial;
-} MPIC_coll_args_t;
-
 typedef struct sched_entry {
-    MPIC_coll_args_t coll_args; /*key */
     void *sched;                /*pointer to the schedule */
-    MPIC_sched_free_fn free_fn; /*function pointer for freeing the schedule */
     MPL_UT_hash_handle hh;      /*hash handle that makes this structure hashable */
+    int size;                   /*Storage for variable-len key*/
+    char arg[0];
 } MPIC_sched_entry_t;
 
-extern MPIC_sched_entry_t *MPIC_sched_table;    /*this is the hash table pointer */
 
-static inline void MPIC_add_sched(MPIC_coll_args_t coll_args, void *sched,
-                                  MPIC_sched_free_fn free_fn)
+static inline void MPIC_add_sched(MPIC_sched_entry_t** table, void * coll_args, int size,
+                                  void *sched)
 {
-    MPIC_sched_entry_t *s;
-    MPIC_DBG("adding sched to MPIC_sched_table\n");
-    MPL_HASH_FIND(hh, MPIC_sched_table, &coll_args, sizeof(coll_args), s);
+    MPIC_sched_entry_t *s=NULL;
+    MPL_HASH_FIND(hh, *table, coll_args, size, s);
     if (s == NULL) {
-        s = (MPIC_sched_entry_t *) MPL_malloc(sizeof(MPIC_sched_entry_t));
-        s->coll_args = coll_args;
-        MPL_HASH_ADD(hh, MPIC_sched_table, coll_args, sizeof(coll_args), s);
+        s = (MPIC_sched_entry_t *) MPL_calloc(sizeof(MPIC_sched_entry_t)+size, 1);
+        memcpy(s->arg, (char*)coll_args, size);
+        s->size = size;
+        s->sched = sched;
+        MPL_HASH_ADD_KEYPTR(hh, *table, coll_args, size, s);
     }
-    s->sched = sched;
-    s->free_fn = free_fn;
 }
 
-static inline void *MPIC_get_sched(MPIC_coll_args_t coll_args)
+static inline void *MPIC_get_sched(MPIC_sched_entry_t* table, void * coll_args, int size)
 {
     MPIC_sched_entry_t *s;
-    MPL_HASH_FIND(hh, MPIC_sched_table, &coll_args, sizeof(coll_args), s);
+    MPL_HASH_FIND(hh, table, coll_args, size, s);
     if (s)
         return s->sched;
     else
         return NULL;
 }
 
-static inline void MPIC_delete_sched_table()
+
+static inline void MPIC_delete_sched_table(MPIC_sched_entry_t* table, MPIC_sched_free_fn free_fn)
 {
-    MPIC_DBG("deleting collective schedules\n");
     MPIC_sched_entry_t *current_sched, *tmp;
-    //MPIR_Assert(MPIC_sched_table!=NULL);
-    int num_users = MPL_HASH_COUNT(MPIC_sched_table);
-    MPIC_DBG( "there are %d users\n", num_users);
-    MPL_HASH_ITER(hh, MPIC_sched_table, current_sched, tmp) {
-        MPIC_DBG("deleting a sched from MPIC_sched_table\n");
-        MPL_HASH_DEL(MPIC_sched_table, current_sched);  /* delete; MPIC_sched_table advances to next */
-        current_sched->free_fn(current_sched->sched);   /*frees any memory associated with the schedule
-                                                         * and then the schedule itself */
+    int num_users = MPL_HASH_COUNT(table);
+
+    MPL_HASH_ITER(hh, table, current_sched, tmp) {
+        MPL_HASH_DEL(table, current_sched);  /* delete; MPIC_sched_table advances to next */
+        free_fn(current_sched->sched);   /*frees any memory associated with the schedule
+                                          * and then the schedule itself */
         MPL_free(current_sched);
     }
 }

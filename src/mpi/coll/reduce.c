@@ -892,13 +892,13 @@ int MPIR_Reduce_intra (
         case 1:
             mpi_errno = MPIC_MPICH_KNOMIAL_reduce(sendbuf, recvbuf, count,
                                             datatype, op, root,
-                                            &(MPIC_COMM(comm_ptr)->mpich_knomial), errflag, 2, 1);
+                                            &(MPIC_COMM(comm_ptr)->mpich_knomial), (int*)errflag, 2, 1);
             goto fn_exit;
             break;
         case 2:
             mpi_errno = MPIC_MPICH_KARY_reduce(sendbuf, recvbuf, count,
                                             datatype, op, root,
-                                            &(MPIC_COMM(comm_ptr)->mpich_kary), errflag, 2, 0);
+                                            &(MPIC_COMM(comm_ptr)->mpich_kary), (int*)errflag, 2, 0);
             goto fn_exit;
             break;
         default:

@@ -22,16 +22,16 @@ struct MPIR_Op;
 #define COLL_queue_elem_t MPIC_queue_elem_t
 #define COLL_progress_global MPIC_progress_global
 
-#define MPIC_DT_DECL MPIC_dt_t ch4_coll;
-#define MPIC_OP_DECL MPIC_op_t ch4_coll;
-#define MPIC_COMM_DECL MPIC_comm_t ch4_coll;
-#define MPIC_REQ_DECL MPIC_req_t ch4_coll;
+#define MPIC_DT_DECL MPIC_dt_t coll;
+#define MPIC_OP_DECL MPIC_op_t coll;
+#define MPIC_COMM_DECL MPIC_comm_t coll;
+#define MPIC_REQ_DECL MPIC_req_t coll;
 
-#define MPIC_COMM(comm) (&((comm)->ch4_coll))
-#define MPIC_REQ(req) (&((req)->ch4_coll))
+#define MPIC_COMM(comm) (&((comm)->coll))
+#define MPIC_REQ(req) (&((req)->coll))
 
 #ifdef MPIC_DEBUG
-#define MPIC_DBG(...) MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,__VA_ARGS__))
+#define MPIC_DBG(...) do {MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,__VA_ARGS__));}while(0)
 #else
 #define MPIC_DBG(...)
 #endif
@@ -48,6 +48,7 @@ typedef struct MPIC_progress_global_t {
 } MPIC_progress_global_t;
 
 
+#include "../mpi/coll/src/coll_sched_db.h"
 /* Coll 'pre'-definitions */
 #include "../mpi/coll/include/types_decl.h"
 
@@ -89,6 +90,5 @@ typedef union {
 } MPIC_req_t;
 
 
-#include "../mpi/coll/src/coll_sched_db.h"
 
 #endif /* MPIDI_CH4_PRE_H_INCLUDED */

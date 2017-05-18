@@ -28,6 +28,7 @@ typedef MPI_Op MPIC_MPICH_op_t;
 
 typedef struct MPIC_MPICH_comm_t {
     struct MPIR_Comm *mpid_comm;
+    MPIC_sched_entry_t *sched_cache;
 } MPIC_MPICH_comm_t;
 
 typedef struct MPIC_MPICH_aint_t {
@@ -137,6 +138,7 @@ typedef struct MPIC_MPICH_req_t {
 
 typedef struct MPIC_MPICH_sched_t {
     int tag;
+    int sched_started;
     uint64_t total;
     uint64_t num_completed;
     uint64_t last_wait;         /*used by TSP_wait, to keep track of the last TSP_wait vtx id */

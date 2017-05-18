@@ -51,13 +51,31 @@ static inline int COLL_allreduce(const void *sendbuf,
                                  COLL_dt_t datatype,
                                  COLL_op_t op, COLL_comm_t * comm, int *errflag, int k)
 {
-    int rc;
-    COLL_sched_t s;
+
+    int rc = 0;
+    COLL_args_t coll_args = {.algo = COLL_NAME,.nargs = 5,
+        .args = {.allreduce =
+                 {.sbuf = (void*)sendbuf,
+                  .rbuf = recvbuf,
+                  .count = count,
+                  .dt_id = (int) datatype,
+                  .op_id = (int)op}}
+    };
+
+    int is_new = 0;
     int tag = (*comm->tree_comm.curTag)++;
 
-    COLL_sched_init(&s, tag);
-    rc = COLL_sched_allreduce_tree(sendbuf, recvbuf, count, datatype, op, tag, comm, k, &s, 1);
-    COLL_sched_kick(&s);
+    /*Allocate or load from cache schedule (depends of transport implementation).
+     * Reset scheduler if necessary. */
+    TSP_sched_t *s = TSP_sched_get( &comm->tsp_comm, (void*) &coll_args,
+            sizeof(COLL_args_t), tag, &is_new);
+    if (is_new) {
+        rc = COLL_sched_allreduce_tree(sendbuf, recvbuf, count,
+                    datatype, op, tag, comm, k, s, 1);
+        TSP_sched_cache_store(&comm->tsp_comm, (void*)&coll_args,
+                        sizeof(COLL_args_t), (void *) s);
+    }
+    COLL_sched_kick(s);
     return rc;
 }
 
@@ -68,28 +86,61 @@ static inline int COLL_bcast(void *buffer,
                              int root, COLL_comm_t * comm, int *errflag, int k, int segsize)
 {
     int rc = 0;
-    COLL_args_t coll_args = {.algo = COLL_NAME,.tsp = TRANSPORT_NAME,.nargs = 7,
+    COLL_args_t coll_args = {.algo = COLL_NAME,.nargs = 6,
         .args = {.bcast =
-                 {.buf = buffer,.count = count,.dt_id = (int) datatype,.root = root,.comm_id =
-                  comm->id,.k = k,.segsize = segsize}}
+                 {.buf = buffer,.count = count,.dt_id = (int) datatype,.root = root,
+                     .k = k,.segsize = segsize}}
     };
-    COLL_sched_t *s = MPIC_get_sched((MPIC_coll_args_t) coll_args);
+
+    int is_new = 0;
     int tag = (*comm->tree_comm.curTag)++;
-    if (s == NULL) {
+
+    /*Allocate or load from cache schedule (depends of transport implementation).
+     * Reset scheduler if necessary. */
+    TSP_sched_t *s = TSP_sched_get( &comm->tsp_comm, (void*) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+
+    if (is_new) {
         MPIC_DBG("schedule does not exist\n");
-        s = (COLL_sched_t *) MPL_malloc(sizeof(COLL_sched_t));
-        COLL_sched_init(s, tag);
+        /* Generate schedule in case it wasn't loaded from cache'*/
         rc = COLL_sched_bcast_tree_pipelined(buffer, count, datatype, root, tag, comm, k, segsize,
                                              s, 1);
-        MPIC_add_sched((MPIC_coll_args_t) coll_args, (void *) s, COLL_sched_free);
+        /* Push schedule to cache (do nothing incase it wasn't implemented in transport)*/
+        TSP_sched_cache_store(&comm->tsp_comm,  (void*)&coll_args, sizeof(COLL_args_t), (void *) s);
     }
-    else {
-        MPIC_DBG("schedule already exists\n");
-        COLL_sched_reset(s, tag);
-    }
+
     COLL_sched_kick(s);
     return rc;
 }
+
+static inline int COLL_ibcast(void *buffer,
+                             int count,
+                             COLL_dt_t datatype,
+                             int root, COLL_comm_t * comm, COLL_req_t *request, int k, int segsize)
+{
+    int rc = 0;
+    COLL_args_t coll_args = {.algo = COLL_NAME,.nargs = 6,
+        .args = {.bcast =
+                 {.buf = buffer,.count = count,.dt_id = (int) datatype,.root = root,
+                     .k = k,.segsize = segsize}}
+    };
+
+    int is_new = 0;
+    int tag = (*comm->tree_comm.curTag)++;
+
+    TSP_sched_t *s = TSP_sched_get( &comm->tsp_comm, (void*) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+
+    if (is_new) {
+        MPIC_DBG("schedule does not exist\n");
+        rc = COLL_sched_bcast_tree_pipelined(buffer, count, datatype, root, tag, comm, k, segsize,
+                                             s, 1);
+        TSP_sched_cache_store(&comm->tsp_comm, (void*)&coll_args, sizeof(COLL_args_t), (void *) s);
+    }
+
+    /* Enqueue schedule to NBC queue, and start it */
+    COLL_sched_kick_nb(s, request);
+    return rc;
+}
+
 
 
 static inline int COLL_reduce(const void *sendbuf,
@@ -99,39 +150,56 @@ static inline int COLL_reduce(const void *sendbuf,
                               COLL_op_t op, int root, COLL_comm_t * comm, int *errflag, int k,
                               int nbuffers)
 {
-    int rc;
-    COLL_sched_t s;
+    int rc = 0;
+    COLL_args_t coll_args = {.algo = COLL_NAME,.nargs = 6,
+        .args = {.reduce =
+                 {.sbuf = (void*)sendbuf,
+                  .rbuf = recvbuf,
+                  .count = count,
+                  .dt_id = (int) datatype,
+                  .op_id = (int)op,
+                  .root = root}}
+    };
+
+
+    int is_new = 0;
     int tag = (*comm->tree_comm.curTag)++;
-    COLL_sched_init(&s, tag);
-    rc = COLL_sched_reduce_tree_full(sendbuf, recvbuf, count, datatype, op, root, tag, comm, k, &s,
+
+    /*Allocate or load from cache schedule (depends of transport implementation).
+     * Reset scheduler if necessary. */
+    TSP_sched_t *s = TSP_sched_get( &comm->tsp_comm, (void*) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+
+    if (is_new)
+    {
+        rc = COLL_sched_reduce_tree_full(sendbuf, recvbuf, count,
+                                datatype, op, root, tag, comm, k, s,
                                      1, nbuffers);
-    COLL_sched_kick(&s);
+        TSP_sched_cache_store(&comm->tsp_comm, (void*)&coll_args, sizeof(COLL_args_t), (void *) s);
+    }
+    COLL_sched_kick(s);
     return rc;
 }
 
 static inline int COLL_barrier(COLL_comm_t * comm, int *errflag, int k)
 {
-    int rc;
-    COLL_sched_t s;
+    int rc = 0;
+    COLL_args_t coll_args = {.algo = COLL_NAME,.nargs = 1,
+        .args = {.barrier = {.k = k}}
+    };
+
+    int is_new = 0;
     int tag = (*comm->tree_comm.curTag)++;
-    COLL_sched_init(&s, tag);
-    rc = COLL_sched_barrier_tree(tag, comm, k, &s);
-    COLL_sched_kick(&s);
+
+    TSP_sched_t *s = TSP_sched_get( &comm->tsp_comm,
+                    (void*) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+
+    if (is_new) {
+        rc = COLL_sched_barrier_tree(tag, comm, k, s);
+        TSP_sched_cache_store(&comm->tsp_comm, (void*)&coll_args,
+                        sizeof(COLL_args_t), (void *) s);
+    }
+
+    COLL_sched_kick(s);
     return rc;
 }
 
-
-static inline int COLL_kick(COLL_queue_elem_t * elem)
-{
-    int done;
-    COLL_sched_t *s = ((COLL_req_t *) elem)->phases;
-    done = COLL_sched_kick_nb(s);
-
-    if (done) {
-        TAILQ_REMOVE(&COLL_progress_global.head, elem, list_data);
-        TSP_sched_finalize(&s->tsp_sched);
-        TSP_free_mem(s);
-    }
-
-    return done;
-}

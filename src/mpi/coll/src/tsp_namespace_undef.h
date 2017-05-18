@@ -19,12 +19,11 @@
 #undef TSP_comm_cleanup
 #undef TSP_dt_init
 #undef TSP_op_init
-#undef TSP_sched_init
-#undef TSP_sched_reset
 #undef TSP_sched_commit
 #undef TSP_sched_start
 #undef TSP_sched_finalize
-#undef TSP_init_control_dt
+#undef TSP_sched_get
+#undef TSP_sched_cache_store
 #undef TSP_fence
 #undef TSP_wait
 #undef TSP_opinfo
