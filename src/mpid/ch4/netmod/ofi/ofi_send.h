@@ -14,13 +14,6 @@
 #include "ofi_impl.h"
 #include <../mpi/pt2pt/bsendutil.h>
 
-#define MPIDI_OFI_SENDPARAMS const void *buf,int count,MPI_Datatype datatype, \
-    int rank,int tag,MPIR_Comm *comm,                               \
-    int context_offset, MPIDI_av_entry_t *addr, MPIR_Request **request
-
-#define MPIDI_OFI_SENDARGS buf,count,datatype,rank,tag, \
-                 comm,context_offset,addr,request
-
 #undef FUNCNAME
 #define FUNCNAME MPIDI_OFI_send_lightweight
 #undef FCNAME
@@ -88,7 +81,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
 #define FUNCNAME MPIDI_OFI_send_normal
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, MPI_Datatype datatype,
+                                                   int rank, int tag, MPIR_Comm *comm, int context_offset,
+                                                   MPIDI_av_entry_t *addr, MPIR_Request **request,
                                                    int dt_contig,
                                                    size_t data_sz,
                                                    MPIR_Datatype * dt_ptr,
@@ -251,7 +246,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
 #define FUNCNAME MPIDI_OFI_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(MPIDI_OFI_SENDPARAMS, int noreq, uint64_t syncflag)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, int count, MPI_Datatype datatype, int rank,
+                                            int tag, MPIR_Comm *comm, int context_offset, MPIDI_av_entry_t *addr,
+                                            MPIR_Request **request, int noreq, uint64_t syncflag)
 {
     int dt_contig, mpi_errno;
     size_t data_sz;
@@ -284,7 +281,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(MPIDI_OFI_SENDPARAMS, int noreq, uin
 #define FUNCNAME MPIDI_OFI_persistent_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_persistent_send(MPIDI_OFI_SENDPARAMS)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_persistent_send(const void *buf, int count, MPI_Datatype datatype, int rank,
+                                                       int tag, MPIR_Comm *comm, int context_offset, MPIDI_av_entry_t *addr,
+                                                       MPIR_Request **request)
 {
     MPIR_Request *sreq;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PERSISTENT_SEND);
@@ -319,7 +318,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_persistent_send(MPIDI_OFI_SENDPARAMS)
 #define FUNCNAME MPIDI_NM_mpi_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(MPIDI_OFI_SENDPARAMS)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, int count, MPI_Datatype datatype, int rank, int tag,
+                                               MPIR_Comm *comm, int context_offset, MPIDI_av_entry_t *addr,
+                                               MPIR_Request **request)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SEND);
@@ -330,7 +331,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(MPIDI_OFI_SENDPARAMS)
         goto fn_exit;
     }
 
-    mpi_errno = MPIDI_OFI_send(MPIDI_OFI_SENDARGS, 1, 0ULL);
+    mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
+                               context_offset, addr, request, 1, 0ULL);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SEND);
@@ -341,7 +343,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(MPIDI_OFI_SENDPARAMS)
 #define FUNCNAME MPIDI_NM_mpi_ssend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(MPIDI_OFI_SENDPARAMS)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, int count, MPI_Datatype datatype, int rank, int tag,
+                                                MPIR_Comm *comm, int context_offset, MPIDI_av_entry_t *addr,
+                                                MPIR_Request **request)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SSEND);
@@ -352,7 +356,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(MPIDI_OFI_SENDPARAMS)
         goto fn_exit;
     }
 
-    mpi_errno = MPIDI_OFI_send(MPIDI_OFI_SENDARGS, 0, MPIDI_OFI_SYNC_SEND);
+    mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
+                               context_offset, addr, request, 0,
+                               MPIDI_OFI_SYNC_SEND);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SSEND);
@@ -364,7 +370,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(MPIDI_OFI_SENDPARAMS)
 #define FUNCNAME MPIDI_NM_mpi_isend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(MPIDI_OFI_SENDPARAMS)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, int count, MPI_Datatype datatype, int rank, int tag,
+                                                MPIR_Comm *comm, int context_offset, MPIDI_av_entry_t *addr,
+                                                MPIR_Request **request)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ISEND);
@@ -375,7 +383,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(MPIDI_OFI_SENDPARAMS)
         goto fn_exit;
     }
 
-    mpi_errno = MPIDI_OFI_send(MPIDI_OFI_SENDARGS, 0, 0ULL);
+    mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
+                               context_offset, addr, request, 0, 0ULL);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ISEND);
@@ -386,7 +395,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(MPIDI_OFI_SENDPARAMS)
 #define FUNCNAME MPIDI_NM_mpi_issend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(MPIDI_OFI_SENDPARAMS)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, int count, MPI_Datatype datatype, int rank, int tag,
+                                                 MPIR_Comm *comm, int context_offset, MPIDI_av_entry_t *addr,
+                                                 MPIR_Request **request)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ISSEND);
@@ -397,7 +408,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(MPIDI_OFI_SENDPARAMS)
         goto fn_exit;
     }
 
-    mpi_errno = MPIDI_OFI_send(MPIDI_OFI_SENDARGS, 0, MPIDI_OFI_SYNC_SEND);
+    mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
+                               context_offset, addr, request, 0,
+                               MPIDI_OFI_SYNC_SEND);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ISSEND);
@@ -534,7 +547,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * req
 #define FUNCNAME MPIDI_NM_mpi_send_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send_init(MPIDI_OFI_SENDPARAMS)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send_init(const void *buf, int count, MPI_Datatype datatype, int rank,
+                                                    int tag, MPIR_Comm *comm, int context_offset,
+                                                    MPIDI_av_entry_t *addr, MPIR_Request **request)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SEND_INIT);
@@ -545,7 +560,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send_init(MPIDI_OFI_SENDPARAMS)
         goto fn_exit;
     }
 
-    mpi_errno = MPIDI_OFI_persistent_send(MPIDI_OFI_SENDARGS);
+    mpi_errno = MPIDI_OFI_persistent_send(buf, count, datatype, rank, tag,
+                                          comm, context_offset, addr, request);
     MPIDI_OFI_REQUEST((*request), util.persist.type) = MPIDI_PTYPE_SEND;
 
   fn_exit:
@@ -557,7 +573,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send_init(MPIDI_OFI_SENDPARAMS)
 #define FUNCNAME MPIDI_NM_mpi_ssend_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend_init(MPIDI_OFI_SENDPARAMS)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend_init(const void *buf, int count, MPI_Datatype datatype, int rank,
+                                                     int tag, MPIR_Comm *comm, int context_offset,
+                                                     MPIDI_av_entry_t *addr, MPIR_Request **request)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SSEND_INIT);
@@ -568,7 +586,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend_init(MPIDI_OFI_SENDPARAMS)
         goto fn_exit;
     }
 
-    mpi_errno = MPIDI_OFI_persistent_send(MPIDI_OFI_SENDARGS);
+    mpi_errno = MPIDI_OFI_persistent_send(buf, count, datatype, rank, tag,
+                                          comm, context_offset, addr, request);
     MPIDI_OFI_REQUEST((*request), util.persist.type) = MPIDI_PTYPE_SSEND;
 
   fn_exit:
@@ -580,7 +599,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend_init(MPIDI_OFI_SENDPARAMS)
 #define FUNCNAME MPIDI_NM_mpi_bsend_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bsend_init(MPIDI_OFI_SENDPARAMS)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bsend_init(const void *buf, int count, MPI_Datatype datatype, int rank,
+                                                     int tag, MPIR_Comm *comm, int context_offset,
+                                                     MPIDI_av_entry_t *addr, MPIR_Request **request)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BSEND_INIT);
@@ -591,7 +612,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bsend_init(MPIDI_OFI_SENDPARAMS)
         goto fn_exit;
     }
 
-    mpi_errno = MPIDI_OFI_persistent_send(MPIDI_OFI_SENDARGS);
+    mpi_errno = MPIDI_OFI_persistent_send(buf, count, datatype, rank, tag,
+                                          comm, context_offset, addr, request);
     MPIDI_OFI_REQUEST((*request), util.persist.type) = MPIDI_PTYPE_BSEND;
 
   fn_exit:
@@ -603,7 +625,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bsend_init(MPIDI_OFI_SENDPARAMS)
 #define FUNCNAME MPIDI_NM_mpi_rsend_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rsend_init(MPIDI_OFI_SENDPARAMS)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rsend_init(const void *buf, int count, MPI_Datatype datatype, int rank,
+                                                     int tag, MPIR_Comm *comm, int context_offset,
+                                                     MPIDI_av_entry_t *addr, MPIR_Request **request)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RSEND_INIT);
@@ -614,7 +638,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rsend_init(MPIDI_OFI_SENDPARAMS)
         goto fn_exit;
     }
 
-    mpi_errno = MPIDI_OFI_persistent_send(MPIDI_OFI_SENDARGS);
+    mpi_errno = MPIDI_OFI_persistent_send(buf, count, datatype, rank, tag,
+                                          comm, context_offset, addr, request);
     MPIDI_OFI_REQUEST((*request), util.persist.type) = MPIDI_PTYPE_SEND;
 
   fn_exit:
