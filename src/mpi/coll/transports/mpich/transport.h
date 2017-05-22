@@ -12,7 +12,6 @@
 #define MPICHTRANSPORT_H_INCLUDED
 
 
-
 static inline void *MPIC_MPICH_allocate_mem(size_t size)
 {
     return MPL_malloc(size);
@@ -20,6 +19,7 @@ static inline void *MPIC_MPICH_allocate_mem(size_t size)
 
 static inline void MPIC_MPICH_free_mem(void *ptr)
 {
+    MPIR_Assert(ptr!=NULL);
     MPL_free(ptr);
 }
 
@@ -170,17 +170,27 @@ static inline void MPIC_MPICH_free_buffers(MPIC_MPICH_sched_t * s)
         /*free the temporary memory allocated by recv_reduce call */
         if (s->requests[i].kind == MPIC_MPICH_KIND_RECV_REDUCE) {
             MPIC_MPICH_free_mem(s->requests[i].nbargs.recv_reduce.inbuf);
+            s->requests[i].nbargs.recv_reduce.inbuf = NULL;
         }
     }
     /*free temporary buffers */
     for (i = 0; i < s->nbufs; i++) {
         MPIC_MPICH_free_mem(s->buf[i]);
+        s->buf[i] = NULL;
     }
 }
 
 static inline void MPIC_MPICH_sched_destroy_fn(MPIC_MPICH_sched_t * s)
 {
     MPIC_MPICH_free_buffers(s);
+    int i;
+    for (i = 0; i < s->total; i++) {
+        /*Really deallocate memory marked for deallocation*/
+        if (s->requests[i].kind == MPIC_MPICH_KIND_FREE_MEM) {
+            MPIC_MPICH_free_mem(s->requests[i].nbargs.free_mem.ptr);
+            s->requests[i].nbargs.free_mem.ptr = NULL;
+        }
+    }
     MPL_free(s);
 }
 
@@ -206,7 +216,7 @@ static inline void MPIC_MPICH_sched_commit(MPIC_MPICH_sched_t * sched)
 
 static inline void MPIC_MPICH_sched_start(MPIC_MPICH_sched_t * sched)
 {
-
+    sched->sched_started = 1;
 }
 
 static inline void MPIC_MPICH_sched_finalize(MPIC_MPICH_sched_t * sched)
@@ -741,8 +751,11 @@ static inline void MPIC_MPICH_issue_request(int vtxid, MPIC_MPICH_req_t * rp,
 
         case MPIC_MPICH_KIND_FREE_MEM:
             MPIC_DBG("  --> MPICH transport (freemem) complete\n");
-
+            /* We are do not free memory really, it will be needed on the next schedule call */
+            /*
             MPIC_MPICH_free_mem(rp->nbargs.free_mem.ptr);
+            rp->nbargs.free_mem.ptr = NULL;
+            */
             MPIC_MPICH_record_request_completion(rp, sched);
             break;
 
