@@ -198,16 +198,16 @@ foreach $_ (@ARGV) {
                                            $MPIMinorVersion = $2; }
     elsif (/--?np=(\d+)/)   { $np_default = $1; }
     elsif (/--?maxnp=(\d+)/) { $np_max = $1; }
-    elsif (/--?ppn=(\d+)/)  { $ppnMax = $1; }
     elsif (/--?ppnarg=(.*)/) { $ppnArg = $1; }
+    elsif (/--?ppn=(\d+)/)  { $ppnMax = $1; }
     elsif (/--?timelimitarg=(.*)/) { $timelimitArg = $1; }
     elsif (/--?tests=(.*)/) { $listfiles = $1; }
     elsif (/--?srcdir=(.*)/) { $srcdir = $1; }
     elsif (/--?verbose/) { $verbose = 1; }
     elsif (/--?showprogress/) { $showProgress = 1; }
     elsif (/--?debug/) { $debug = 1; }
-    elsif (/--?batch/) { $batchRun = 1; }
     elsif (/--?batchdir=(.*)/) { $batrundir = $1; }
+    elsif (/--?batch/) { $batchRun = 1; }
     elsif (/--?timeoutarg=(.*)/) { $timeoutArgPattern = $1; }
     elsif (/--?xmlfile=(.*)/) {
 	$xmlfile   = $1;
