@@ -79,17 +79,6 @@ int MPID_nem_tcp_set_sockopts (int fd)
     ret = getsockopt (fd, IPPROTO_TCP, TCP_NODELAY, &option, &len);
     MPIR_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", MPIR_Strerror (errno), errno);
 
-    option = 128*1024;
-    len = sizeof(int);
-    ret = setsockopt (fd, SOL_SOCKET, SO_RCVBUF, &option, len);
-    MPIR_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", MPIR_Strerror (errno), errno);
-    ret = getsockopt (fd, SOL_SOCKET, SO_RCVBUF, &option, &len);
-    MPIR_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", MPIR_Strerror (errno), errno);
-    ret = setsockopt (fd, SOL_SOCKET, SO_SNDBUF, &option, len);
-    MPIR_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", MPIR_Strerror (errno), errno);
-    ret = getsockopt (fd, SOL_SOCKET, SO_SNDBUF, &option, &len);
-    MPIR_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", MPIR_Strerror (errno), errno);
-    
     flags = fcntl(fd, F_GETFL, 0);
     MPIR_ERR_CHKANDJUMP2 (flags == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", MPIR_Strerror (errno), errno);
     ret = fcntl(fd, F_SETFL, flags | SO_REUSEADDR);
