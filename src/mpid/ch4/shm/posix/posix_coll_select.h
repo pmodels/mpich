@@ -5,6 +5,10 @@
 #include "ch4_impl.h"
 #include "coll_algo_params.h"
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_Barrier_recursive_doubling(MPIR_Comm * comm_ptr,
+                                                                    MPIR_Errflag_t * errflag,
+                                                                    MPIDI_POSIX_coll_algo_container_t *
+                                                                    params_container) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_Bcast_binomial(void *buffer,
                                                         int count,
                                                         MPI_Datatype datatype,
@@ -50,6 +54,39 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_Reduce_binomial(const void *sendbuf, vo
                                                          MPIDI_POSIX_coll_algo_container_t *
                                                          params_container) MPL_STATIC_INLINE_SUFFIX;
 
+MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Barrier_select(MPIR_Comm * comm_ptr,
+                                                                                        MPIR_Errflag_t *
+                                                                                        errflag,
+                                                                                        MPIDI_POSIX_coll_algo_container_t
+                                                                                        *
+                                                                                        ch4_algo_parameters_container_in)
+{
+
+    (void)ch4_algo_parameters_container_in;
+
+    return (MPIDI_POSIX_coll_algo_container_t *)&POSIX_barrier_recursive_doubling_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_Barrier_call(MPIR_Comm * comm,
+                                                      MPIR_Errflag_t * errflag,
+                                                      MPIDI_POSIX_coll_algo_container_t *
+                                                      ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_POSIX_barrier_recursive_doubling_id:
+        mpi_errno =
+            MPIDI_POSIX_Barrier_recursive_doubling(comm, errflag,
+                                                   ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Barrier(comm, errflag);
+        break;
+    }
+
+    return mpi_errno;
+}
 
 MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Bcast_select(void *buffer,
                                                                                       int count,
@@ -64,12 +101,9 @@ MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Bcast_s
                                                                                       *
                                                                                       ch4_algo_parameters_container_in)
 {
-    int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
-    int comm_size;
-    int nbytes=0, nbytes_homogeneous=0;
+    int nbytes=0;
     int is_homogeneous;
-    MPI_Aint type_size, type_size_homogeneous;
+    MPI_Aint type_size;
 
     (void)ch4_algo_parameters_container_in;
 
@@ -148,7 +182,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Allredu
 {
     MPI_Aint type_size;
     int nbytes;
-    int i = 0;
     int pof2;
 
     (void)ch4_algo_parameters_container_in;
@@ -213,9 +246,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Reduce_
                                                                                        *
                                                                                        ch4_algo_parameters_container_in)
 {
-    int comm_size, is_commutative, type_size, pof2;
-    int nbytes = 0;
-    MPIR_Op *op_ptr;
+    int comm_size, type_size, pof2;
 
     (void)ch4_algo_parameters_container_in;
 

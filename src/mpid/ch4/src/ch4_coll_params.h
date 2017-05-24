@@ -2,6 +2,21 @@
 #define CH4_COLL_PARAMS_H_INCLUDED
 
 typedef enum {
+    MPIDI_CH4_barrier_composition_alpha_id,
+    MPIDI_CH4_barrier_composition_beta_id
+} MPIDI_CH4_barrier_id_t;
+
+typedef union {
+    struct MPIDI_CH4_barrier_alpha {
+        int intra_barrier;
+        int inter_barreir;
+    } ch4_barrier_alpha;
+    struct MPIDI_CH4_barrier_beta {
+        int barrier;
+    } ch4_barrier_beta;
+} MPIDI_CH4_barrier_params_t;
+
+typedef enum {
     MPIDI_CH4_bcast_composition_alpha_id,
     MPIDI_CH4_bcast_composition_beta_id,
     MPIDI_CH4_bcast_composition_gamma_id
@@ -58,11 +73,13 @@ typedef union {
     } ch4_allreduce_gamma;
 } MPIDI_CH4_allreduce_params_t;
 
+#define MPIDI_CH4_BARRIER_PARAMS_DECL MPIDI_CH4_barrier_params_t ch4_barrier_params;
 #define MPIDI_CH4_BCAST_PARAMS_DECL MPIDI_CH4_bcast_params_t ch4_bcast_params;
 #define MPIDI_CH4_REDUCE_PARAMS_DECL MPIDI_CH4_reduce_params_t ch4_reduce_params;
 #define MPIDI_CH4_ALLREDUCE_PARAMS_DECL MPIDI_CH4_allreduce_params_t ch4_allreduce_params;
 
 typedef union {
+    MPIDI_CH4_BARRIER_PARAMS_DECL;
     MPIDI_CH4_BCAST_PARAMS_DECL;
     MPIDI_CH4_REDUCE_PARAMS_DECL;
     MPIDI_CH4_ALLREDUCE_PARAMS_DECL;

@@ -272,7 +272,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_lock_all(int assert,
                                                         MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_barrier(MPIR_Comm * comm,
                                                    MPIR_Errflag_t *
-                                                   errflag) MPL_STATIC_INLINE_SUFFIX;
+                                                   errflag,
+                                                   void * algo_parameters_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
                                                  int root, MPIR_Comm * comm,
                                                  MPIR_Errflag_t * errflag,

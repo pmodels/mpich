@@ -264,6 +264,46 @@ int MPIR_Barrier_inter( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Barrier_recursive_doubling
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Barrier_recursive_doubling( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
+{
+    int size, rank, src, dst, mask, mpi_errno=MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
+
+    size = comm_ptr->local_size;
+    /* Trivial barriers return immediately */
+    if (size == 1) goto fn_exit;
+
+    rank = comm_ptr->rank;
+
+    mask = 0x1;
+    while (mask < size) {
+        dst = (rank + mask) % size;
+        src = (rank - mask + size) % size;
+        mpi_errno = MPIC_Sendrecv(NULL, 0, MPI_BYTE, dst,
+                                     MPIR_BARRIER_TAG, NULL, 0, MPI_BYTE,
+                                     src, MPIR_BARRIER_TAG, comm_ptr,
+                                     MPI_STATUS_IGNORE, errflag);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
+        mask <<= 1;
+    }
+
+ fn_exit:
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
+    else if (*errflag != MPIR_ERR_NONE)
+        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
+    return mpi_errno;
+}
+
 /* MPIR_Barrier performs an barrier using point-to-point messages.
    This is intended to be used by device-specific implementations of
    barrier.  In all other cases MPIR_Barrier_impl should be used. */
@@ -396,9 +436,17 @@ int MPI_Barrier( MPI_Comm comm )
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Barrier(comm_ptr, &errflag);
-    if (mpi_errno) goto fn_fail;
-    
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+      /* intracommunicator */
+      mpi_errno = MPID_Barrier(comm_ptr, &errflag);
+      if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    } 
+    else {
+      /* intercommunicator */
+      mpi_errno = MPIR_Barrier_inter(comm_ptr, &errflag);
+      if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    }
+
     /* ... end of body of routine ... */
 
   fn_exit:

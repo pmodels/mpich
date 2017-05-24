@@ -8,6 +8,27 @@ void * MPIDI_coll_get_next_container(void * container){
     return NULL;
 }
 
+const MPIDI_coll_algo_container_t CH4_barrier_composition_alpha_cnt =
+    {
+        .id = MPIDI_CH4_barrier_composition_alpha_id
+    };
+
+const MPIDI_coll_algo_container_t CH4_barrier_composition_beta_cnt =
+    {
+        .id = MPIDI_CH4_barrier_composition_beta_id
+    };
+const MPIDI_OFI_coll_algo_container_t OFI_barrier_recursive_doubling_cnt =
+    {
+        .id = MPIDI_OFI_barrier_recursive_doubling_id
+    };
+
+#ifdef MPIDI_BUILD_CH4_SHM
+const MPIDI_POSIX_coll_algo_container_t POSIX_barrier_recursive_doubling_cnt =
+    {
+        .id = MPIDI_POSIX_barrier_recursive_doubling_id
+    };
+#endif/* MPIDI_BUILD_CH4_SHM */
+
 const MPIDI_coll_algo_container_t CH4_bcast_composition_alpha_cnt =
     {
         .id = MPIDI_CH4_bcast_composition_alpha_id
@@ -102,25 +123,25 @@ const MPIDI_coll_algo_container_t CH4_allreduce_composition_beta_cnt =
 
 const MPIDI_coll_algo_container_t CH4_allreduce_composition_gamma_cnt =
     {
-        .id = MPIDI_CH4_allreduce_composition_gamma_id,
+        .id = MPIDI_CH4_allreduce_composition_gamma_id
     };
 const MPIDI_OFI_coll_algo_container_t OFI_allreduce_recursive_doubling_cnt =
     {
-        .id = MPIDI_OFI_allreduce_recursive_doubling_id,
+        .id = MPIDI_OFI_allreduce_recursive_doubling_id
     };
 
 const MPIDI_OFI_coll_algo_container_t OFI_allreduce_reduce_scatter_allgather_cnt =
     {
-        .id = MPIDI_OFI_allreduce_reduce_scatter_allgather_id,
+        .id = MPIDI_OFI_allreduce_reduce_scatter_allgather_id
     };
 #ifdef MPIDI_BUILD_CH4_SHM
 const MPIDI_POSIX_coll_algo_container_t POSIX_allreduce_recursive_doubling_cnt =
     {
-        .id = MPIDI_POSIX_allreduce_recursive_doubling_id,
+        .id = MPIDI_POSIX_allreduce_recursive_doubling_id
     };
 
 const MPIDI_POSIX_coll_algo_container_t POSIX_allreduce_reduce_scatter_allgather_cnt =
     {
-        .id = MPIDI_POSIX_allreduce_reduce_scatter_allgather_id,
+        .id = MPIDI_POSIX_allreduce_reduce_scatter_allgather_id
     };
 #endif/* MPIDI_BUILD_CH4_SHM */

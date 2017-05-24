@@ -738,8 +738,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_lock_all(int assert,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rank_is_local(int target,
                                                     MPIR_Comm * comm) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm,
-                                                  MPIR_Errflag_t *
-                                                  errflag) MPL_STATIC_INLINE_SUFFIX;
+                                                  MPIR_Errflag_t * errflag,
+                                                  void * algo_parameters_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
                                                 int root, MPIR_Comm * comm,
                                                 MPIR_Errflag_t * errflag,

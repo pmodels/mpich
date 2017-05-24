@@ -338,6 +338,7 @@ int MPIR_Barrier_impl( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Barrier( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Barrier_intra( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Barrier_inter( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
+int MPIR_Barrier_recursive_doubling( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Reduce_local_impl(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op);
 
 

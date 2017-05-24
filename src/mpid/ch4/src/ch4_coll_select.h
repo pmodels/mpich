@@ -21,6 +21,14 @@
 #include "../../mpi/coll/collutil.h"
 #include "coll_algo_params.h"
 
+/* SHM_Barrier and NM_Barrier */
+MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_composition_alpha(MPIR_Comm * comm, MPIR_Errflag_t * errflag,
+                                                             MPIDI_coll_algo_container_t *
+                                                             ch4_algo_parameters_container) MPL_STATIC_INLINE_SUFFIX;
+/* SHM_Barrier or NM_Barrier */
+MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_composition_beta(MPIR_Comm * comm, MPIR_Errflag_t * errflag,
+                                                            MPIDI_coll_algo_container_t *
+                                                            ch4_algo_parameters_container) MPL_STATIC_INLINE_SUFFIX;
 /* NM_Bcast and SHM_Bcast */
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_composition_alpha(void *buffer, int count, MPI_Datatype datatype,
                                                            int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag,
@@ -69,6 +77,42 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_composition_beta(const void *sendbuf, 
                                                            MPIDI_coll_algo_container_t *
                                                            ch4_algo_parameters_container) MPL_STATIC_INLINE_SUFFIX;
 
+MPL_STATIC_INLINE_PREFIX MPIDI_coll_algo_container_t * MPIDI_CH4_Barrier_select(MPIR_Comm * comm,
+                                                                                MPIR_Errflag_t *
+                                                                                errflag)
+{
+    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BARRIER &&
+        MPIR_Comm_is_node_aware(comm)) {
+        return (MPIDI_coll_algo_container_t *)&CH4_barrier_composition_alpha_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *)&CH4_barrier_composition_beta_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_Barrier_call(MPIR_Comm * comm,
+                                                    MPIR_Errflag_t * errflag,
+                                                    MPIDI_coll_algo_container_t *
+                                                    ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_CH4_barrier_composition_alpha_id:
+        mpi_errno =
+            MPIDI_Barrier_composition_alpha(comm, errflag, ch4_algo_parameters_container);
+        break;
+    case MPIDI_CH4_barrier_composition_beta_id:
+        mpi_errno =
+            MPIDI_Barrier_composition_beta(comm, errflag, ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Barrier(comm, errflag);
+        break;
+    }
+
+    return mpi_errno;
+}
+
 MPL_STATIC_INLINE_PREFIX MPIDI_coll_algo_container_t * MPIDI_CH4_Bcast_select(void *buffer,
                                                                               int count,
                                                                               MPI_Datatype datatype,
@@ -78,10 +122,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_coll_algo_container_t * MPIDI_CH4_Bcast_select(vo
                                                                               errflag)
 {
 
-    int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
-    int comm_size;
-    int nbytes=0, nbytes_homogeneous=0;
+    int nbytes=0;
     int is_homogeneous;
     MPI_Aint type_size, type_size_homogeneous;
 
@@ -161,17 +202,10 @@ MPL_STATIC_INLINE_PREFIX MPIDI_coll_algo_container_t * MPIDI_CH4_Allreduce_selec
 {
 #ifdef MPID_HAS_HETERO
   int is_homogeneous;
-  int rc;
 #endif
-  int comm_size, rank;
   MPI_Aint type_size;
-  int mpi_errno = MPI_SUCCESS;
-  int mpi_errno_ret = MPI_SUCCESS;
   int nbytes = 0;
-  int mask, dst, is_commutative, pof2, newrank, rem, newdst, i,
-      send_idx, recv_idx, last_idx, send_cnt, recv_cnt, *cnts, *disps; 
-  MPI_Aint true_extent, true_lb, extent;
-  void *tmp_buf;
+  int is_commutative;
 
   is_commutative = MPIR_Op_is_commutative(op);
 
@@ -244,9 +278,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_coll_algo_container_t * MPIDI_CH4_Reduce_select(c
                                                                                MPIR_Errflag_t *
                                                                                errflag)
 {
-    int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
-    int comm_size, is_commutative, type_size, pof2;
+    int is_commutative, type_size;
     int nbytes = 0;
     MPIR_Op *op_ptr;
 

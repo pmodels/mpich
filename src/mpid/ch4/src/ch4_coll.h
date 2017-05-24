@@ -19,15 +19,19 @@
 
 MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    int ret;
+    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BARRIER);
 
-    ret = MPIDI_NM_mpi_barrier(comm, errflag);
+    ch4_algo_parameters_container = MPIDI_CH4_Barrier_select(comm, errflag);
+
+    mpi_errno =
+        MPIDI_CH4_Barrier_call(comm, errflag, ch4_algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BARRIER);
-    return ret;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype datatype,
@@ -48,6 +52,100 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
 
     return mpi_errno;
 
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Barrier_composition_alpha
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_composition_alpha(MPIR_Comm * comm, MPIR_Errflag_t * errflag,
+                                                             MPIDI_coll_algo_container_t * 
+                                                             ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
+    void * barrier_node_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    void * barrier_roots_container = MPIDI_coll_get_next_container(barrier_node_container);
+    void * bcast_node_container = MPIDI_coll_get_next_container(barrier_roots_container);
+
+    /* do the intranode barrier on all nodes */
+    if (comm->node_comm != NULL)
+    {
+#ifdef MPIDI_BUILD_CH4_SHM
+        mpi_errno =
+            MPIDI_SHM_mpi_barrier(comm->node_comm, errflag, barrier_node_container);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+#else
+        mpi_errno =
+            MPIDI_NM_mpi_barrier(comm->node_comm, errflag, barrier_node_container);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+#endif/* MPIDI_BUILD_CH4_SHM */
+    }
+
+    /* do the barrier across roots of all nodes */
+    if (comm->node_roots_comm != NULL) {
+        mpi_errno =
+            MPIDI_NM_mpi_barrier(comm->node_roots_comm, errflag, barrier_roots_container);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    }
+
+    /* release the local processes on each node with a 1-byte
+       broadcast (0-byte broadcast just returns without doing
+       anything) */
+    if (comm->node_comm != NULL)
+    {
+        int i=0;
+#ifdef MPIDI_BUILD_CH4_SHM
+        mpi_errno =
+            MPIDI_SHM_mpi_bcast(&i, 1, MPI_BYTE, 0, comm->node_comm, errflag,
+                                bcast_node_container);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+#else
+        mpi_errno =
+            MPIDI_NM_mpi_bcast(&i, 1, MPI_BYTE, 0, comm->node_comm, errflag,
+                               bcast_node_container);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+#endif/* MPIDI_BUILD_CH4_SHM */
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Barrier_composition_beta
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_composition_beta(MPIR_Comm * comm, MPIR_Errflag_t * errflag,
+                                                            MPIDI_coll_algo_container_t * 
+                                                            ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void * barrier_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+#ifndef MPIDI_BUILD_CH4_SHM
+    mpi_errno =
+        MPIDI_NM_mpi_barrier(comm, errflag, barrier_container);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+#else
+    if(comm->is_single_node){
+      mpi_errno =
+          MPIDI_SHM_mpi_barrier(comm, errflag, barrier_container);
+      if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    }
+    else{
+      mpi_errno =
+          MPIDI_NM_mpi_barrier(comm, errflag, barrier_container);
+      if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    }
+#endif/*MPIDI_BUILD_CH4_SHM*/
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME

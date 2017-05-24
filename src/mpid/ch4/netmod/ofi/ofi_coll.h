@@ -21,15 +21,43 @@
 #define FUNCNAME MPIDI_NM_mpi_barrier
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                       void * ch4_algo_parameters_container_in)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BARRIER);
 
-    mpi_errno = MPIR_Barrier(comm_ptr, errflag);
+    MPIDI_OFI_coll_algo_container_t * nm_algo_parameters_container_out = NULL;
+
+    nm_algo_parameters_container_out =
+        MPIDI_OFI_Barrier_select(comm_ptr, errflag,
+                                 (MPIDI_OFI_coll_algo_container_t *)ch4_algo_parameters_container_in);
+    mpi_errno =
+        MPIDI_OFI_Barrier_call(comm_ptr, errflag,
+                               nm_algo_parameters_container_out);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_BARRIER);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_Barrier_recursive_doubling
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Barrier_recursive_doubling(MPIR_Comm * comm_ptr,
+                                                                  MPIR_Errflag_t * errflag,
+                                                                  MPIDI_OFI_coll_algo_container_t * 
+                                                                  params_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    (void)params_container;
+    mpi_errno = MPIR_Barrier_recursive_doubling(comm_ptr, errflag);
     return mpi_errno;
 }
 

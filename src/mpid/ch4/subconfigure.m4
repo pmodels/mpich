@@ -133,6 +133,12 @@ MPIDI_${net_upper}_dt_t ${net};"
         ch4_netmod_op_decl="${ch4_netmod_op_decl} \\
 MPIDI_${net_upper}_op_t ${net};"
     fi
+    if test -z "$ch4_netmod_barrier_params_decl" ; then
+        ch4_netmod_barrier_params_decl="MPIDI_${net_upper}_BARRIER_PARAMS_DECL;"
+    else
+        ch4_netmod_barrier_params_decl="${ch4_netmod_barrier_params_decl} \\
+MPIDI_${net_upper}_barrier_params_t ${net};"
+    fi
     if test -z "$ch4_netmod_bcast_params_decl" ; then
         ch4_netmod_bcast_params_decl="MPIDI_${net_upper}_BCAST_PARAMS_DECL;"
     else
@@ -189,6 +195,7 @@ AC_SUBST(ch4_netmod_dt_decl)
 AC_SUBST(ch4_netmod_win_decl)
 AC_SUBST(ch4_netmod_addr_decl)
 AC_SUBST(ch4_netmod_op_decl)
+AC_SUBST(ch4_netmod_barrier_params_decl)
 AC_SUBST(ch4_netmod_bcast_params_decl)
 AC_SUBST(ch4_netmod_reduce_params_decl)
 AC_SUBST(ch4_netmod_allreduce_params_decl)
@@ -201,6 +208,7 @@ AM_SUBST_NOTMAKE(ch4_netmod_dt_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_win_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_addr_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_op_decl)
+AM_SUBST_NOTMAKE(ch4_netmod_barrier_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_bcast_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_reduce_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_allreduce_params_decl)
@@ -357,6 +365,12 @@ MPIDI_${shm_upper}_request_t ${shm};"
         ch4_shm_comm_decl="${ch4_shm_comm_decl} \\
 MPIDI_${shm_upper}_comm_t ${shm};"
     fi
+    if test -z "$ch4_shm_barrier_params_decl" ; then
+        ch4_shm_barrier_params_decl="MPIDI_${shm_upper}_BARRIER_PARAMS_DECL;"
+    else
+        ch4_shm_barrier_params_decl="${ch4_shm_barrier_params_decl} \\
+MPIDI_${shm_upper}_barrier_params_t ${shm};"
+    fi
     if test -z "$ch4_shm_bcast_params_decl" ; then
         ch4_shm_bcast_params_decl="MPIDI_${shm_upper}_BCAST_PARAMS_DECL;"
     else
@@ -392,6 +406,7 @@ AC_SUBST(ch4_shm_pre_include)
 AC_SUBST(ch4_shm_coll_params_include)
 AC_SUBST(ch4_shm_request_decl)
 AC_SUBST(ch4_shm_comm_decl)
+AC_SUBST(ch4_shm_barrier_params_decl)
 AC_SUBST(ch4_shm_bcast_params_decl)
 AC_SUBST(ch4_shm_reduce_params_decl)
 AC_SUBST(ch4_shm_allreduce_params_decl)
@@ -399,6 +414,7 @@ AM_SUBST_NOTMAKE(ch4_shm_pre_include)
 AM_SUBST_NOTMAKE(ch4_shm_coll_params_include)
 AM_SUBST_NOTMAKE(ch4_shm_request_decl)
 AM_SUBST_NOTMAKE(ch4_shm_comm_decl)
+AM_SUBST_NOTMAKE(ch4_shm_barrier_params_decl)
 AM_SUBST_NOTMAKE(ch4_shm_bcast_params_decl)
 AM_SUBST_NOTMAKE(ch4_shm_reduce_params_decl)
 AM_SUBST_NOTMAKE(ch4_shm_allreduce_params_decl)
