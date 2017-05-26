@@ -21,9 +21,10 @@
 #undef TSP_op_init
 #undef TSP_sched_commit
 #undef TSP_sched_start
+#undef TSP_sched_start_nb
 #undef TSP_sched_finalize
-#undef TSP_sched_get
-#undef TSP_sched_cache_store
+#undef TSP_get_schedule
+#undef TSP_save_schedule
 #undef TSP_fence
 #undef TSP_wait
 #undef TSP_opinfo

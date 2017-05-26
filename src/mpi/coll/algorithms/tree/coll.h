@@ -67,12 +67,12 @@ static inline int COLL_allreduce(const void *sendbuf,
 
     /*Allocate or load from cache schedule (depends of transport implementation).
      * Reset scheduler if necessary. */
-    TSP_sched_t *s = TSP_sched_get( &comm->tsp_comm, (void*) &coll_args,
+    TSP_sched_t *s = TSP_get_schedule( &comm->tsp_comm, (void*) &coll_args,
             sizeof(COLL_args_t), tag, &is_new);
     if (is_new) {
         rc = COLL_sched_allreduce_tree(sendbuf, recvbuf, count,
                     datatype, op, tag, comm, k, s, 1);
-        TSP_sched_cache_store(&comm->tsp_comm, (void*)&coll_args,
+        TSP_save_schedule(&comm->tsp_comm, (void*)&coll_args,
                         sizeof(COLL_args_t), (void *) s);
     }
     COLL_sched_kick(s);
@@ -97,7 +97,7 @@ static inline int COLL_bcast(void *buffer,
 
     /*Allocate or load from cache schedule (depends of transport implementation).
      * Reset scheduler if necessary. */
-    TSP_sched_t *s = TSP_sched_get( &comm->tsp_comm, (void*) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+    TSP_sched_t *s = TSP_get_schedule( &comm->tsp_comm, (void*) &coll_args, sizeof(COLL_args_t), tag, &is_new);
 
     if (is_new) {
         MPIC_DBG("schedule does not exist\n");
@@ -105,7 +105,7 @@ static inline int COLL_bcast(void *buffer,
         rc = COLL_sched_bcast_tree_pipelined(buffer, count, datatype, root, tag, comm, k, segsize,
                                              s, 1);
         /* Push schedule to cache (do nothing incase it wasn't implemented in transport)*/
-        TSP_sched_cache_store(&comm->tsp_comm,  (void*)&coll_args, sizeof(COLL_args_t), (void *) s);
+        TSP_save_schedule(&comm->tsp_comm,  (void*)&coll_args, sizeof(COLL_args_t), (void *) s);
     }
 
     COLL_sched_kick(s);
@@ -127,13 +127,13 @@ static inline int COLL_ibcast(void *buffer,
     int is_new = 0;
     int tag = (*comm->tree_comm.curTag)++;
 
-    TSP_sched_t *s = TSP_sched_get( &comm->tsp_comm, (void*) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+    TSP_sched_t *s = TSP_get_schedule( &comm->tsp_comm, (void*) &coll_args, sizeof(COLL_args_t), tag, &is_new);
 
     if (is_new) {
         MPIC_DBG("schedule does not exist\n");
         rc = COLL_sched_bcast_tree_pipelined(buffer, count, datatype, root, tag, comm, k, segsize,
                                              s, 1);
-        TSP_sched_cache_store(&comm->tsp_comm, (void*)&coll_args, sizeof(COLL_args_t), (void *) s);
+        TSP_save_schedule(&comm->tsp_comm, (void*)&coll_args, sizeof(COLL_args_t), (void *) s);
     }
 
     /* Enqueue schedule to NBC queue, and start it */
@@ -167,14 +167,14 @@ static inline int COLL_reduce(const void *sendbuf,
 
     /*Allocate or load from cache schedule (depends of transport implementation).
      * Reset scheduler if necessary. */
-    TSP_sched_t *s = TSP_sched_get( &comm->tsp_comm, (void*) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+    TSP_sched_t *s = TSP_get_schedule( &comm->tsp_comm, (void*) &coll_args, sizeof(COLL_args_t), tag, &is_new);
 
     if (is_new)
     {
         rc = COLL_sched_reduce_tree_full(sendbuf, recvbuf, count,
                                 datatype, op, root, tag, comm, k, s,
                                      1, nbuffers);
-        TSP_sched_cache_store(&comm->tsp_comm, (void*)&coll_args, sizeof(COLL_args_t), (void *) s);
+        TSP_save_schedule(&comm->tsp_comm, (void*)&coll_args, sizeof(COLL_args_t), (void *) s);
     }
     COLL_sched_kick(s);
     return rc;
@@ -190,12 +190,12 @@ static inline int COLL_barrier(COLL_comm_t * comm, int *errflag, int k)
     int is_new = 0;
     int tag = (*comm->tree_comm.curTag)++;
 
-    TSP_sched_t *s = TSP_sched_get( &comm->tsp_comm,
+    TSP_sched_t *s = TSP_get_schedule( &comm->tsp_comm,
                     (void*) &coll_args, sizeof(COLL_args_t), tag, &is_new);
 
     if (is_new) {
         rc = COLL_sched_barrier_tree(tag, comm, k, s);
-        TSP_sched_cache_store(&comm->tsp_comm, (void*)&coll_args,
+        TSP_save_schedule(&comm->tsp_comm, (void*)&coll_args,
                         sizeof(COLL_args_t), (void *) s);
     }
 

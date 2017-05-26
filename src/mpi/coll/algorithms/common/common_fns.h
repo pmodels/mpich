@@ -38,13 +38,13 @@ extern MPIC_progress_global_t MPIC_progress_global;
 static inline int COLL_kick(COLL_queue_elem_t * elem)
 {
     int done = 0;
-    TSP_sched_t *s = ((COLL_req_t *) elem)->phases;
+    TSP_sched_t *s = (TSP_sched_t*)(((COLL_req_t *) elem)->sched);
     done = TSP_test(s);
 
     if (done) {
         TAILQ_REMOVE(&COLL_progress_global.head, elem, list_data);
         TSP_sched_finalize(s);
-        ((COLL_req_t *) elem)->phases = NULL;
+        ((COLL_req_t *) elem)->sched = NULL;
     }
 
     return done;
@@ -71,9 +71,9 @@ static inline int COLL_sched_kick_nb(TSP_sched_t * s, COLL_req_t * request)
 {
     int rc;
 
-    TSP_sched_start(s);
+    TSP_sched_start_nb(s);
     /* Enqueue nonblocking collective. */
-    request->phases = s;
+    request->sched = (void*)s;
     request->elem.kick_fn = COLL_kick;
 
     /*FIXME: COLL_progress_global should be per-VNI*/

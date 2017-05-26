@@ -45,11 +45,12 @@
 
 /* Schedule API*/
 /* Create/load schedule, reset it in case of load */
-#define TSP_sched_get           MPIC_MPICH_sched_get
+#define TSP_get_schedule           MPIC_MPICH_get_schedule
 /* Push schedule into cache, in case of implemented cache */
-#define TSP_sched_cache_store   MPIC_MPICH_sched_cache_store
+#define TSP_save_schedule   MPIC_MPICH_save_schedule
 /*Mark schedule as ready for execution. */
 #define TSP_sched_start         MPIC_MPICH_sched_start
+#define TSP_sched_start_nb      MPIC_MPICH_sched_start
 /* Release schedule (destroy in case of disabled caching) */
 #define TSP_sched_finalize      MPIC_MPICH_sched_finalize
 #define TSP_sched_commit        MPIC_MPICH_sched_commit

@@ -177,13 +177,13 @@ static inline int MPIC_STUB_free_mem_nb(void *ptr, MPIC_STUB_sched_t * sched, in
     return 0;
 }
 
-static inline MPIC_STUB_sched_t * MPIC_STUB_sched_get(MPIC_STUB_comm_t * comm_ptr, void* key, int  key_len, int tag, int* is_new)
+static inline MPIC_STUB_sched_t * MPIC_STUB_get_schedule(MPIC_STUB_comm_t * comm_ptr, void* key, int  key_len, int tag, int* is_new)
 {
     *is_new = 1;
     return NULL;
 }
 
-static inline void MPIC_STUB_sched_cache_store (MPIC_STUB_comm_t * comm_ptr, void* key, int  key_len, MPIC_STUB_sched_t* s)
+static inline void MPIC_STUB_save_schedule (MPIC_STUB_comm_t * comm_ptr, void* key, int  key_len, MPIC_STUB_sched_t* s)
 {
 }
 

@@ -32,10 +32,7 @@ typedef struct COLL_comm_t {
     COLL_tree_comm_t tree_comm;
 } COLL_comm_t;
 
-typedef struct COLL_req_t {
-    COLL_queue_elem_t elem;
-    TSP_sched_t *phases;
-} COLL_req_t;
+typedef MPIC_req_t COLL_req_t;
 
 typedef long int COLL_aint_t;
 

@@ -41,6 +41,11 @@ typedef struct COLL_queue_elem_t {
     int (*kick_fn) (struct COLL_queue_elem_t *);
 } COLL_queue_elem_t;
 
+typedef struct MPIC_req_t {
+    COLL_queue_elem_t elem;
+    void *sched;
+} MPIC_req_t;
+
 typedef struct MPIC_progress_global_t {
     TAILQ_HEAD(COLL_queue_t, COLL_queue_elem_t) head;
     int (*progress_fn) (void);
@@ -82,12 +87,6 @@ typedef struct {
 
 extern MPIC_global_t MPIC_global_instance;
 
-typedef union {
-    MPIC_STUB_KARY_req_t stub_kary;
-    MPIC_STUB_KNOMIAL_req_t stub_knomial;
-    MPIC_MPICH_KARY_req_t mpich_kary;
-    MPIC_MPICH_KNOMIAL_req_t mpich_knomial;
-} MPIC_req_t;
 
 
 

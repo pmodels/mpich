@@ -46,9 +46,10 @@
 #define TSP_FLAG_REDUCE_R    MPIC_FLAG_REDUCE_R
 
 /*Cache API*/
-#define TSP_sched_get           MPIC_STUB_sched_get
-#define TSP_sched_cache_store   MPIC_STUB_sched_cache_store
+#define TSP_get_schedule        MPIC_STUB_get_schedule
+#define TSP_save_schedule       MPIC_STUB_save_schedule
 #define TSP_sched_commit        MPIC_STUB_sched_commit
 #define TSP_sched_start         MPIC_STUB_sched_start
+#define TSP_sched_start_nb      MPIC_STUB_sched_start
 #define TSP_sched_finalize      MPIC_STUB_sched_finalize
 

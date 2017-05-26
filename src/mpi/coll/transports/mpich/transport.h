@@ -94,7 +94,7 @@ static inline int MPIC_MPICH_init()
     return 0;
 }
 
-static inline void MPIC_MPICH_sched_cache_store( MPIC_MPICH_comm_t *comm,
+static inline void MPIC_MPICH_save_schedule( MPIC_MPICH_comm_t *comm,
                                     void* key, int len, void* s)
 {
     MPIC_add_sched( &(comm->sched_cache), key, len, s);
@@ -145,7 +145,7 @@ static inline void MPIC_MPICH_sched_reset(MPIC_MPICH_sched_t * sched, int tag)
 
 
 
-static inline MPIC_MPICH_sched_t* MPIC_MPICH_sched_get(MPIC_MPICH_comm_t *comm,
+static inline MPIC_MPICH_sched_t* MPIC_MPICH_get_schedule(MPIC_MPICH_comm_t *comm,
             void* key, int len, int tag, int *is_new)
 {
     MPIC_MPICH_sched_t* s = MPIC_get_sched(comm->sched_cache, key, len);
@@ -171,6 +171,10 @@ static inline void MPIC_MPICH_free_buffers(MPIC_MPICH_sched_t * s)
         if (s->requests[i].kind == MPIC_MPICH_KIND_RECV_REDUCE) {
             MPIC_MPICH_free_mem(s->requests[i].nbargs.recv_reduce.inbuf);
             s->requests[i].nbargs.recv_reduce.inbuf = NULL;
+        } else if (s->requests[i].kind == MPIC_MPICH_KIND_FREE_MEM) {
+        /*Really deallocate memory marked for deallocation*/
+            MPIC_MPICH_free_mem(s->requests[i].nbargs.free_mem.ptr);
+            s->requests[i].nbargs.free_mem.ptr = NULL;
         }
     }
     /*free temporary buffers */
@@ -183,14 +187,6 @@ static inline void MPIC_MPICH_free_buffers(MPIC_MPICH_sched_t * s)
 static inline void MPIC_MPICH_sched_destroy_fn(MPIC_MPICH_sched_t * s)
 {
     MPIC_MPICH_free_buffers(s);
-    int i;
-    for (i = 0; i < s->total; i++) {
-        /*Really deallocate memory marked for deallocation*/
-        if (s->requests[i].kind == MPIC_MPICH_KIND_FREE_MEM) {
-            MPIC_MPICH_free_mem(s->requests[i].nbargs.free_mem.ptr);
-            s->requests[i].nbargs.free_mem.ptr = NULL;
-        }
-    }
     MPL_free(s);
 }
 
