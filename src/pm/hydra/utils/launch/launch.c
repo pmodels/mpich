@@ -11,8 +11,6 @@
 
 #include <pip.h>
 
-extern int pip_get_pid( int pipid, pid_t *pidp );
-
 static HYD_status HYDU_pip_envv(struct HYD_env *env_list, char ***envv_ptr)
 {
     struct HYD_env *env;
@@ -121,6 +119,7 @@ HYD_status HYDU_spawn_pip_tasks(char **client_arg, struct HYD_env * env_list,
 {
     static int pipid = 0;
     struct pip_task_fds *fds;
+    intptr_t pip_id;
     int tpid;
     int pip_err;
     HYD_status status = HYD_SUCCESS;
@@ -156,7 +155,10 @@ HYD_status HYDU_spawn_pip_tasks(char **client_arg, struct HYD_env * env_list,
                              (pip_spawnhook_t) HYDU_pip_after, (void *) fds)) != 0) {
         HYDU_ERR_SETANDJUMP(status, HYD_FAILURE, "pip_spawn(): %s\n", MPL_strerror(pip_err));
     }
-    pip_get_pid(pipid, &tpid);
+    /* AH makes pip_get_pid() obsolete, because pid is not always available */
+    /* depending on PiP execution mode. pip_get_id() returns thread or pid  */
+    pip_get_id(pipid, &pip_id);
+    tpid = (pid_t) pip_id;
     pipid++;
 
     if (out)

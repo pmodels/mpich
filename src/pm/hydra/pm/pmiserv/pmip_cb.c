@@ -509,7 +509,8 @@ static HYD_status launch_procs(void)
         int pip_err;
         if (!pip_initialized) {
             pip_initialized = 1;
-            if ((pip_err = pip_init(NULL, NULL, NULL, 0)) != 0) {
+            /* current implementation can run only with the PIP PROCESS mode*/
+            if ((pip_err = pip_init(NULL, NULL, NULL, PIP_MODE_PROCESS)) != 0) {
                 HYDU_ERR_SETANDJUMP(status, HYD_FAILURE, "pip_init(): %s\n", MPL_strerror(pip_err));
             }
         }
