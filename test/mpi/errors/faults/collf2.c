@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     MPI_Comm_free(&newcomm);
     MTest_Finalize(0);
 
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int ReportErr(int errcode, const char name[])

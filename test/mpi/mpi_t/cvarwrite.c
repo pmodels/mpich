@@ -101,5 +101,5 @@ int main(int argc, char *argv[])
 
     MPI_T_finalize();
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

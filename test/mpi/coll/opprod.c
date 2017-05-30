@@ -318,5 +318,5 @@ int main(int argc, char *argv[])
 #endif /* HAVE_LONG_LONG */
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

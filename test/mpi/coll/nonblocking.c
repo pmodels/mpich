@@ -12,6 +12,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 #define NUM_INTS (2)
 
@@ -205,5 +206,5 @@ int main(int argc, char **argv)
         free(types);
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

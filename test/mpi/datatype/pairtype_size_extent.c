@@ -10,6 +10,8 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
+#include "mpitest.h"
+#include "mpitest.h"
 
 static int verbose = 1;
 
@@ -132,7 +134,7 @@ int main(int argc, char *argv[])
     }
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int parse_args(int argc, char **argv)

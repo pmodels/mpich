@@ -53,7 +53,7 @@ int main(int argc, char **argv)
      * Type_create_darray is no larger than MPI_COMM_WORLD */
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 /* darray_2d_test1()

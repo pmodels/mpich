@@ -12,6 +12,7 @@
 #include <stdio.h>
 /* USE_STRICT_MPI may be defined in mpitestconf.h */
 #include "mpitestconf.h"
+#include "mpitest.h"
 
 /* assert-like macro that bumps the err count and emits a message */
 #define check(x_)                                                                 \
@@ -64,5 +65,5 @@ int main(int argc, char **argv)
     }
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

@@ -115,5 +115,5 @@ int main(int argc, char **argv)
     if (bases)
         free(bases);
 
-    return 0;
+    return MTestReturnValue(all_errors);
 }

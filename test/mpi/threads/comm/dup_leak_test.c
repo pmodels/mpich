@@ -84,7 +84,7 @@ int main(int argc, char **argv)
 
   fn_exit:
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
   fn_fail:
     errs = 1;
     goto fn_exit;

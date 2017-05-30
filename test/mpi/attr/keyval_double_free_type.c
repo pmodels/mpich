@@ -40,5 +40,5 @@ int main(int argc, char **argv)
     MPI_Type_free_keyval(&keyval_copy); /* third MPI_Type_free_keyval */
     MPI_Type_free(&type_dup);   /* fourth MPI_Type_free_keyval */
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

@@ -268,5 +268,5 @@ int main(int argc, char **argv)
         MPI_Free_mem(my_elems[my_elems_count - 1]);
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

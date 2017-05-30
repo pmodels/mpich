@@ -75,7 +75,7 @@ int c2ffile_(int *file)
 
     MPI_Group_free(&group);
     MPI_Group_free(&wgroup);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 /*

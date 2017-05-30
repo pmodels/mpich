@@ -294,5 +294,5 @@ int main(int argc, char *argv[])
     destroy_windows();
     MTest_Finalize(errors);
 
-    return 0;
+    return MTestReturnValue(all_errors);
 }

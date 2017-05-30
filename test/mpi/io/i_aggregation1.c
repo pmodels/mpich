@@ -285,5 +285,5 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(corrupt_blocks);
     free(prog);
-    exit(0);
+    return MTestReturnValue(corrupt_blocks);
 }

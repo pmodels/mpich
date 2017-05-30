@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 static int verbose = 0;
 
@@ -43,7 +44,7 @@ int main(int argc, char *argv[])
     errs += err;
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 /* tests with an hindexed type with all zero length blocks */

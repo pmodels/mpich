@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int BuildComm(MPI_Comm oldcomm, MPI_Group group, const char gname[])

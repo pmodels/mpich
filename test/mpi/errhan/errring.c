@@ -29,5 +29,5 @@ int main(int argc, char **argv)
     MPIR_Err_print_stack(stdout, err);
 
     MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

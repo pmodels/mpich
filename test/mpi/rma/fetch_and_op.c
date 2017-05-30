@@ -324,5 +324,5 @@ int main(int argc, char **argv)
     free(res_ptr);
     MTest_Finalize(errors);
 
-    return 0;
+    return MTestReturnValue(all_errors);
 }

@@ -27,7 +27,7 @@ MPI_Group_union
 
 int main(int argc, char **argv)
 {
-    int errs = 0, toterr;
+    int errs = 0;
     MPI_Group basegroup;
     MPI_Group g1, g2, g3, g4, g5, g6, g7, g8, g9, g10;
     MPI_Group g3a, g3b;
@@ -203,5 +203,5 @@ int main(int argc, char **argv)
     free(ranks);
     free(ranks_out);
     MTest_Finalize(errs);
-    return toterr;
+    return MTestReturnValue(errs);
 }

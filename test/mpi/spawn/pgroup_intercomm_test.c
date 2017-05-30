@@ -19,6 +19,7 @@
 #include <assert.h>
 
 #include <mpi.h>
+#include "mpitest.h"
 
 #define INTERCOMM_TAG 0
 
@@ -146,5 +147,5 @@ int main(int argc, char **argv)
     free(glist);
 
     MTest_Finalize(0);
-    return 0;
+    return MTestReturnValue(0);
 }

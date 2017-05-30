@@ -280,5 +280,5 @@ int main(int argc, char **argv)
         MTestFreeComm(&newcomm);
     }
     MTest_Finalize(toterrs);
-    return 0;
+    return MTestReturnValue(toterrs);
 }

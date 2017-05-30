@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     /* print message and exit */
     MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 /* this test allocates 1024 indexed datatypes with 1024 distinct blocks

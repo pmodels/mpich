@@ -173,5 +173,5 @@ int main(int argc, char *argv[])
     }
 
     IF_VERBOSE(("[%d] calling finalize\n", rank));
-    return 0;
+    return MTestReturnValue(errs);
 }

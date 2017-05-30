@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(toterrs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int ReportErr(int errcode, const char name[])

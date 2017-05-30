@@ -113,7 +113,7 @@ int main(int argc, char **argv)
     MPI_Info_free(&info);
 
     MTest_Finalize(nr_errors);
-    return (-nr_errors);
+    return MTestReturnValue(nr_errors);
 }
 
 static int parse_args(int argc, char **argv)

@@ -10,10 +10,11 @@
 
 #include <stdio.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 int main(int argc, char **argv)
 {
-    int errcode, errclass;
+    int errcode, errclass, errs = 0;
 
     MTest_Init(&argc, &argv);
 
@@ -26,5 +27,5 @@ int main(int argc, char **argv)
     }
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

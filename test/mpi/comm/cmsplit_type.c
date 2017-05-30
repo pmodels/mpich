@@ -8,6 +8,7 @@
 #include "mpitestconf.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 /* FIXME: This test only checks that the MPI_Comm_split_type routine
    doesn't fail.  It does not check for correct behavior */
@@ -190,5 +191,5 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

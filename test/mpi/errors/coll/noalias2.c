@@ -140,5 +140,5 @@ int main(int argc, char **argv)
         free(types);
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

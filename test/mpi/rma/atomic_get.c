@@ -17,6 +17,7 @@
 
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 #define LOOP 100
 #define DATA_SIZE 100
@@ -168,5 +169,5 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

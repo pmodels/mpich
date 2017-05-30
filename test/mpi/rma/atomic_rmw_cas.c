@@ -21,6 +21,7 @@
 
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 #define LOOP_SIZE 10000
 #define CHECK_TAG 123
@@ -127,5 +128,5 @@ int main(int argc, char *argv[])
 
   exit_test:
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

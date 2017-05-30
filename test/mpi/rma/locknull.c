@@ -60,5 +60,5 @@ int main(int argc, char *argv[])
      * remote, exclusive locks */
     MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

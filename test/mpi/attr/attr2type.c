@@ -7,6 +7,7 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 static int foo_keyval = MPI_KEYVAL_INVALID;
 
@@ -28,6 +29,7 @@ int main(int argc, char *argv[])
     int mpi_errno;
     MPI_Datatype type, duptype;
     int rank;
+    int errs = 0;
 
     MTest_Init(&argc, &argv);
 
@@ -50,7 +52,6 @@ int main(int argc, char *argv[])
     foo_finalize();
 
     if (rank == 0) {
-        int errs = 0;
         if (copy_called != 1) {
             printf("Copy called %d times; expected once\n", copy_called);
             errs++;
@@ -64,7 +65,7 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int foo_copy_attr_function(MPI_Datatype type,

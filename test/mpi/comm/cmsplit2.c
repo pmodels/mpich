@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 #define ERRLIMIT (10)
 
@@ -126,5 +127,5 @@ int main(int argc, char **argv)
         free(identity);
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
