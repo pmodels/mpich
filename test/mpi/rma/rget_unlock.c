@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 #define N_ELMS (128)
 #define BLOCKSIZE (1)
@@ -82,5 +83,5 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

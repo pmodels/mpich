@@ -6,6 +6,7 @@
 /* test case contributed by Lisandro Dalcin <dalcinl@gmail.com> */
 #include <mpi.h>
 #include <stdio.h>
+#include "mpitest.h"
 
 int main(int argc, char *argv[])
 {
@@ -21,5 +22,5 @@ int main(int argc, char *argv[])
     MPI_File_close(&fh);
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

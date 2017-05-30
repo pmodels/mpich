@@ -7,6 +7,7 @@
 #include <stdio.h>
 /* stdlib.h Needed for malloc declaration */
 #include <stdlib.h>
+#include "mpitest.h"
 
 int main(int argc, char **argv)
 {
@@ -14,6 +15,7 @@ int main(int argc, char **argv)
     int group_size;
     MPI_Group *group_array, world_group;
     char msg[MPI_MAX_ERROR_STRING];
+    int errs = 0;
 
     MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -37,6 +39,7 @@ int main(int argc, char **argv)
             MPI_Error_string(rc, msg, &len);
             fprintf(stderr, "%s\n", msg);
             n = i + 1;
+            errs++;
             break;
         } else {
             /* Check that the group was created (and that any errors were
@@ -45,6 +48,7 @@ int main(int argc, char **argv)
             if (group_size != size) {
                 fprintf(stderr, "Group number %d not correct (size = %d)\n", i, size);
                 n = i + 1;
+                errs++;
                 break;
             }
         }
@@ -56,6 +60,7 @@ int main(int argc, char **argv)
             fprintf(stderr, "Error when freeing group number %d\n", i);
             MPI_Error_string(rc, msg, &len);
             fprintf(stderr, "%s\n", msg);
+            errs++;
             break;
         }
     }
@@ -78,5 +83,5 @@ implementation\n");
     free(ranks);
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

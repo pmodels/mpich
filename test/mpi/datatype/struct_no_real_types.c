@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     errs += err;
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 /* no_real_types_test()

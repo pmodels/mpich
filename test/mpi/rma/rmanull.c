@@ -213,5 +213,5 @@ int main(int argc, char *argv[])
     free(buf);
     free(rmabuf);
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

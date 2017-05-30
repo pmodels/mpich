@@ -10,6 +10,7 @@
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 static int verbose = 0;
 
@@ -72,7 +73,7 @@ int main(int argc, char **argv)
 #endif
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 /* builtin_float_test()
@@ -272,7 +273,7 @@ int vector_of_vectors_test(void)
     MPI_Type_free(&inner_vector);
     MPI_Type_free(&outer_vector);
 
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 /* optimizable_vector_of_basics_test()
@@ -645,7 +646,7 @@ int indexed_of_vectors_test(void)
     MPI_Type_free(&inner_vector);
     MPI_Type_free(&outer_indexed);
 
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 

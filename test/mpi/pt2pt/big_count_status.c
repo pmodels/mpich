@@ -8,6 +8,7 @@
 #include <mpi.h>
 #include <assert.h>
 #include <stdio.h>
+#include "mpitest.h"
 
 int test_count(MPI_Count count)
 {
@@ -50,5 +51,5 @@ int main(int argc, char **argv)
     errs += test_count(0x7654321ff1234567);
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

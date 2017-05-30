@@ -6,6 +6,7 @@
 
 #include "mpi.h"
 #include "stdio.h"
+#include "mpitest.h"
 
 #define SIZE 100
 
@@ -146,5 +147,5 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

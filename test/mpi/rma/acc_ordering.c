@@ -269,5 +269,5 @@ int main(int argc, char **argv)
     MTest_Finalize(errs);
     free(data);
 
-    return errs != 0;
+    return MTestReturnValue(errs);
 }

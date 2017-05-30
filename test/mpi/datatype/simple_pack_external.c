@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     errs += err;
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 /* builtin_float_test()

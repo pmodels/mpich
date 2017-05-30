@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 #define X 64
 #define Y 8
@@ -60,5 +61,5 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

@@ -10,6 +10,7 @@
 
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 #define DATA_SIZE 25
 
@@ -77,5 +78,5 @@ int main(int argc, char *argv[])
     MPI_Free_mem(tar_buf);
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

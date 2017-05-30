@@ -10,6 +10,7 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
+#include "mpitest.h"
 
 static int verbose = 0;
 
@@ -34,7 +35,7 @@ int main(int argc, char *argv[])
     errs += err;
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int short_int_pack_test(void)

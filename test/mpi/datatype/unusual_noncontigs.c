@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 /*
    The default behavior of the test routines should be to briefly indicate
@@ -67,7 +68,7 @@ int main(int argc, char *argv[])
     errs += err;
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 /* test uses a struct type that describes data that is contiguous,

@@ -587,5 +587,5 @@ int main(int argc, char **argv)
   epilogue:
     MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

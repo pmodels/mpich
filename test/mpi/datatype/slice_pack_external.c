@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 static int verbose = 0;
 int a[100][100][100], e[9][9][9];
@@ -93,7 +94,7 @@ int main(int argc, char *argv[])
     MPI_Type_free(&threeslice);
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 /* parse_args()

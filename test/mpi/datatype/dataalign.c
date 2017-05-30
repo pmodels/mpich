@@ -98,5 +98,5 @@ int main(int argc, char *argv[])
     MPI_Type_free(&con);
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

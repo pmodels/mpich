@@ -64,7 +64,7 @@ int main(int argc, char **argv)
         fflush(stdout);
     }
 
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int delete_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)

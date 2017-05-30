@@ -20,7 +20,7 @@
 int main(int argc, char **argv)
 {
     int err = 0;
-    int toterr, size, rank, i, sumval;
+    int size, rank, i, sumval;
     int *sendbuf;
     int *recvbuf;
     MPI_Comm comm;
@@ -70,5 +70,5 @@ int main(int argc, char **argv)
 #endif
     MTest_Finalize(err);
 
-    return toterr;
+    return MTestReturnValue(err);
 }

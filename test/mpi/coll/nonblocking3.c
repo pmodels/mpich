@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include "mpitest.h"
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -821,5 +822,5 @@ int main(int argc, char **argv)
 
     MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

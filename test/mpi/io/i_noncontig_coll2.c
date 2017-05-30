@@ -326,7 +326,7 @@ int main(int argc, char **argv)
         free(filename);
     free(cb_config_string);
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 #define SEEDER(x,y,z) ((x)*1000000 + (y) + (x)*(z))

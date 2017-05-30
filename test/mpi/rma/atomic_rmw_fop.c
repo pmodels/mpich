@@ -15,6 +15,7 @@
 
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 #define AM_BUF_SIZE  10
 #define SHM_BUF_SIZE 1000
@@ -132,5 +133,5 @@ int main(int argc, char *argv[])
   exit_test:
 
     MTest_Finalize(errors);
-    return 0;
+    return MTestReturnValue(errors);
 }

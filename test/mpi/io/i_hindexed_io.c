@@ -109,5 +109,5 @@ int main(int argc, char **argv)
 
     free(data);
     free(verify);
-    return 0;
+    return MTestReturnValue(errs);
 }

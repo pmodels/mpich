@@ -15,6 +15,7 @@
 #include <limits.h>
 
 #include <mpi.h>
+#include "mpitest.h"
 
 #include <assert.h>
 static void verbose_abort(int errorcode)
@@ -176,5 +177,5 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

@@ -100,5 +100,5 @@ int main(int argc, char *argv[])
     /* The attributes on comm self and world were deleted by finalize
      * (see separate test) */
 
-    return 0;
+    return MTestReturnValue(errs);
 }

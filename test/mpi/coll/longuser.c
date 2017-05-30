@@ -6,6 +6,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 int add(double *, double *, int *, MPI_Datatype *);
 /*
@@ -65,5 +66,5 @@ int main(int argc, char **argv)
 
     MPI_Op_free(&op);
     MTest_Finalize(errcnt);
-    return 0;
+    return MTestReturnValue(errcnt);
 }

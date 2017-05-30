@@ -318,7 +318,7 @@ int cmpi1read(MPI_Comm comm, int key, void *expected, const char *msg)
         printf(" Error: expected %p but saw %p: %s\n", expected, attrval, msg);
         return 1;
     }
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int cmpi2read(MPI_Comm comm, int key, void *expected, const char *msg)
@@ -334,7 +334,7 @@ int cmpi2read(MPI_Comm comm, int key, void *expected, const char *msg)
         printf(" Error: expected %p but saw %p: %s\n", expected, attrval, msg);
         return 1;
     }
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int cmpi2readtype(MPI_Datatype dtype, int key, void *expected, const char *msg)
@@ -350,7 +350,7 @@ int cmpi2readtype(MPI_Datatype dtype, int key, void *expected, const char *msg)
         printf(" Error: expected %p but saw %p: %s\n", expected, attrval, msg);
         return 1;
     }
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int cmpi2readwin(MPI_Win win, int key, void *expected, const char *msg)
@@ -366,7 +366,7 @@ int cmpi2readwin(MPI_Win win, int key, void *expected, const char *msg)
         printf(" Error: expected %p but saw %p: %s\n", expected, attrval, msg);
         return 1;
     }
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 /* Set in Fortran (MPI-1), read in C */
