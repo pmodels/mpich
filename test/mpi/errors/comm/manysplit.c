@@ -50,5 +50,5 @@ int main(int argc, char *argv[])
     }
     /* If we complete, there are no errors */
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

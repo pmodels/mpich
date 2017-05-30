@@ -10,6 +10,7 @@
 #include <string.h>
 #endif
 #include "mpi.h"
+#include "mpitest.h"
 
 static int verbose = 0;
 
@@ -53,7 +54,7 @@ int main(int argc, char *argv[])
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int parse_args(int argc, char **argv)

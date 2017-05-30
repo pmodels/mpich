@@ -7,6 +7,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 /*
  * This test attempts to MPI_Isend with the destination being a dead process.
@@ -15,7 +16,7 @@
  */
 int main(int argc, char **argv)
 {
-    int rank, size, err, errclass;
+    int rank, size, err, errclass, toterrs = 0;
     char buf[100000];
     MPI_Request request;
 
@@ -34,8 +35,10 @@ int main(int argc, char **argv)
     if (rank == 0) {
         MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
         err = MPI_Isend(buf, 100000, MPI_CHAR, 1, 0, MPI_COMM_WORLD, &request);
-        if (err)
+        if (err) {
             fprintf(stderr, "MPI_Isend returned error\n");
+            toterrs++;
+        }
 
         err = MPI_Wait(&request, MPI_STATUS_IGNORE);
 #if defined (MPICH) && (MPICH_NUMVERSION >= 30100102)
@@ -43,6 +46,7 @@ int main(int argc, char **argv)
         if ((err) && (errclass != MPIX_ERR_PROC_FAILED)) {
             fprintf(stderr, "Wrong error code (%d) returned. Expected MPIX_ERR_PROC_FAILED\n",
                     errclass);
+            toterrs++;
         } else {
             printf(" No Errors\n");
             fflush(stdout);
@@ -55,5 +59,5 @@ int main(int argc, char **argv)
 
     MPI_Finalize();
 
-    return 0;
+    return MTestReturnValue(toterrs);
 }

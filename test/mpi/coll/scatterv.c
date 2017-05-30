@@ -180,5 +180,5 @@ int main(int argc, char **argv)
     MPI_Type_free(&block);
     MPI_Comm_free(&comm2d);
     MTest_Finalize(errs);
-    return errs;
+    return MTestReturnValue(errs);
 }

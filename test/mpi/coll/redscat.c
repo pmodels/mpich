@@ -52,5 +52,5 @@ int main(int argc, char **argv)
     free(recvcounts);
     MTest_Finalize(err);
 
-    return toterr;
+    return MTestReturnValue(err);
 }

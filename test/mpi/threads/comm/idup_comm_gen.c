@@ -149,5 +149,5 @@ int main(int argc, char **argv)
         toterrs += errs[i];
     }
     MTest_Finalize(toterrs);
-    return 0;
+    return MTestReturnValue(toterrs);
 }

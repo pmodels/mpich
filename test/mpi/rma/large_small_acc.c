@@ -12,6 +12,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdint.h>
+#include "mpitest.h"
 
 #define LOOP 5
 #define DATA_COUNT 8192
@@ -79,5 +80,5 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

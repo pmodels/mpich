@@ -7,6 +7,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 /*
  * This test attempts MPI_Recv with the source being a dead process. It should fail
@@ -16,7 +17,7 @@
  */
 int main(int argc, char **argv)
 {
-    int rank, size, err, errclass;
+    int rank, size, err, errclass, toterrs = 0;
     char buf[10];
 
     MPI_Init(&argc, &argv);
@@ -42,6 +43,7 @@ int main(int argc, char **argv)
         } else {
             fprintf(stderr, "Wrong error code (%d) returned. Expected MPIX_ERR_PROC_FAILED\n",
                     errclass);
+            toterrs++;
         }
 #else
         if (err) {
@@ -49,11 +51,12 @@ int main(int argc, char **argv)
             fflush(stdout);
         } else {
             fprintf(stderr, "Program reported MPI_SUCCESS, but an error code was expected.\n");
+            toterrs++;
         }
 #endif
     }
 
     MPI_Finalize();
 
-    return 0;
+    return MTestReturnValue(toterrs);
 }

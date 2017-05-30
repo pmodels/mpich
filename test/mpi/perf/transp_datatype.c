@@ -117,5 +117,5 @@ int main(int argc, char *argv[])
     MPI_Type_free(&xpose);
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

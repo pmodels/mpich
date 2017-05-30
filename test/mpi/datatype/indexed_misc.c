@@ -12,6 +12,7 @@
 #endif
 #include <assert.h>
 #include <limits.h>
+#include "mpitest.h"
 
 static int verbose = 1;
 
@@ -90,7 +91,7 @@ int main(int argc, char **argv)
     errs += err;
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int indexed_zeroblock_first_test(void)

@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 
     errs = test_communicators();
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int copy_fn(MPI_Comm oldcomm, int keyval, void *extra_state,

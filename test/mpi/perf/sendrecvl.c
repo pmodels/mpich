@@ -207,8 +207,8 @@ int main(int argc, char *argv[])
      * increases in bandwidth.  This test was created because of a
      * fall-off in performance noted in the ch3:sock device:channel */
 
+    int nPerfErrors = 0;
     if (wrank == 0) {
-        int nPerfErrors = 0;
         len = 1;
         for (k = 0; k < 20; k++) {
             double T0, T1, T2;
@@ -249,5 +249,5 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(nPerfErrors);
 
-    return 0;
+    return MTestReturnValue(nPerfErrors);
 }

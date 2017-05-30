@@ -18,6 +18,7 @@
 
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 #define OP_COUNT 10
 #define AM_BUF_NUM  10
@@ -261,5 +262,5 @@ int main(int argc, char *argv[])
 
   exit_test:
     MTest_Finalize(errors);
-    return 0;
+    return MTestReturnValue(errors);
 }

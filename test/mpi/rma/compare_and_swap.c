@@ -100,5 +100,5 @@ int main(int argc, char **argv)
     free(val_ptr);
     MTest_Finalize(errors);
 
-    return 0;
+    return MTestReturnValue(errors);
 }

@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 #define PUT_SIZE 1
 #define GET_SIZE 100000
@@ -130,5 +131,5 @@ int main(int argc, char **argv)
     MPI_Group_free(&comm_group);
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

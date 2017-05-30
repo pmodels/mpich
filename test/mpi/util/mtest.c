@@ -51,7 +51,7 @@ static void MTestResourceSummary(FILE *);
 static int dbgflag = 0;         /* Flag used for debugging */
 static int wrank = -1;          /* World rank */
 static int verbose = 0;         /* Message level (0 is none) */
-static int returnWithVal = 0;   /* Allow programs to return with a non-zero
+static int returnWithVal = 1;   /* Allow programs to return with a non-zero
                                  * if there was an error (may cause problems
                                  * with some runtime systems) */
 static int usageOutput = 0;     /* */

@@ -201,5 +201,5 @@ int main(int argc, char **argv)
     free(outbuf2);
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

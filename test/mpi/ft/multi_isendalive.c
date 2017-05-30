@@ -7,6 +7,7 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 /*
  * This test attempts communication between 2 running processes
@@ -15,7 +16,7 @@
  */
 int main(int argc, char **argv)
 {
-    int rank, size, errs;
+    int rank, size, errs, toterrs = 0;
     char buf[10];
     MPI_Request request;
 
@@ -37,6 +38,7 @@ int main(int argc, char **argv)
         errs = MPI_Issend("No Errors", 10, MPI_CHAR, 3, 0, MPI_COMM_WORLD, &request);
         errs += MPI_Wait(&request, MPI_STATUS_IGNORE);
         if (errs) {
+            toterrs += errs;
             fprintf(stderr, "An error occurred during the send operation\n");
         }
     }
@@ -45,6 +47,7 @@ int main(int argc, char **argv)
         errs = MPI_Irecv(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &request);
         errs += MPI_Wait(&request, MPI_STATUS_IGNORE);
         if (errs) {
+            toterrs += errs;
             fprintf(stderr, "An error occurred during the recv operation\n");
         }
     }
@@ -57,6 +60,7 @@ int main(int argc, char **argv)
         errs = MPI_Issend("No Errors", 10, MPI_CHAR, 2, 0, MPI_COMM_WORLD, &request);
         errs += MPI_Wait(&request, MPI_STATUS_IGNORE);
         if (errs) {
+            toterrs += errs;
             fprintf(stderr, "An error occurred during the send operation\n");
         }
     }
@@ -65,6 +69,7 @@ int main(int argc, char **argv)
         errs = MPI_Irecv(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &request);
         errs += MPI_Wait(&request, MPI_STATUS_IGNORE);
         if (errs) {
+            toterrs += errs;
             fprintf(stderr, "An error occurred during the recv operation\n");
         } else {
             printf(" %s\n", buf);
@@ -78,5 +83,5 @@ int main(int argc, char **argv)
 
     MPI_Finalize();
 
-    return 0;
+    return MTestReturnValue(toterrs);
 }

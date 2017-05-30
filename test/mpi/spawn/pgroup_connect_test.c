@@ -20,6 +20,7 @@
 #include <assert.h>
 
 #include <mpi.h>
+#include "mpitest.h"
 
 const int verbose = 0;
 
@@ -147,5 +148,5 @@ int main(int argc, char **argv)
 
     MTest_Finalize(0);
 
-    return 0;
+    return MTestReturnValue(0);
 }

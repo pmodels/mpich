@@ -128,5 +128,5 @@ int main(int argc, char *argv[])
     MPI_Type_free(&darray);
     MTest_Finalize(nerrors);
 
-    exit(total_errors);
+    MTestReturnValue(total_errors);
 }

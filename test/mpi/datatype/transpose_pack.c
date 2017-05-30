@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 
     free(buffer);
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 

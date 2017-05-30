@@ -189,5 +189,5 @@ int main(int argc, char **argv)
 #endif
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

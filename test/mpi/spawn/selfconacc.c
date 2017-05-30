@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     if (size < 2) {
         printf("Two processes needed.\n");
         MPI_Finalize();
-        return 0;
+        return 1;
     }
 
     if (rank == 0) {
@@ -140,5 +140,5 @@ int main(int argc, char *argv[])
     check_error(error, "MPI_Barrier");
 
     MTest_Finalize(0);
-    return 0;
+    return MTestReturnValue(0);
 }

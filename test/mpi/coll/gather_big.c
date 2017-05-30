@@ -80,5 +80,5 @@ int main(int argc, char *argv[])
     MTest_Finalize(errs);
 
     free(sendbuf);
-    return 0;
+    return MTestReturnValue(errs);
 }

@@ -10,6 +10,7 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
+#include "mpitest.h"
 
 #if !defined(USE_STRICT_MPI) && defined(MPICH)
 #define TEST_HINDEXED_BLOCK 1
@@ -52,7 +53,7 @@ int main(int argc, char **argv)
 #endif /*defined(TEST_HINDEXED_BLOCK) */
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 #if defined(TEST_HINDEXED_BLOCK)

@@ -6,6 +6,7 @@
 #include "mpi.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "mpitest.h"
 
 /* This example sends a vector and receives individual elements */
 
@@ -48,5 +49,5 @@ int main(int argc, char **argv)
     free(vecout);
     MPI_Type_free(&vec);
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

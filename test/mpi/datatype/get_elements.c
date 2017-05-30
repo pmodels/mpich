@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <assert.h>
+#include "mpitest.h"
 
 /* Tests MPI_Get_elements with a contiguous datatype that triggered a bug in
  * past versions of MPICH.  See ticket #1467 for more info. */
@@ -27,6 +28,7 @@ int main(int argc, char **argv)
     MPI_Datatype types[3];
     MPI_Datatype struct_type, contig;
     MPI_Status status;
+    int errs = 0;
 
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -78,5 +80,5 @@ int main(int argc, char **argv)
     }
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

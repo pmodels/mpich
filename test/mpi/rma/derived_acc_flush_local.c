@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "mpitest.h"
 
 #define DATA_SIZE 1000000
 #define COUNT 5000
@@ -123,5 +124,5 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

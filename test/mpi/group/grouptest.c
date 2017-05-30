@@ -7,6 +7,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 int main(int argc, char *argv[])
 {
@@ -166,5 +167,5 @@ int main(int argc, char *argv[])
     MPI_Group_free(&g1);
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }

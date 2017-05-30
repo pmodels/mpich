@@ -198,7 +198,7 @@ int main(int argc, char **argv)
     printf("Timer for hand vector pack (int) is %e\n", (r2 - r1) / 100);
 
     MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 /*

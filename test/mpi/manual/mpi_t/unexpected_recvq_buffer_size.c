@@ -161,5 +161,5 @@ int main(int argc, char *argv[])
     TRY(MPI_T_finalize());
     MPI_Finalize();
 
-    return 0;
+    return MTestReturnValue(found);
 }

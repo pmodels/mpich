@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 int main(int argc, char **argv)
 {
@@ -79,5 +80,5 @@ int main(int argc, char **argv)
 
     MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

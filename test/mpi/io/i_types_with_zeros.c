@@ -160,5 +160,5 @@ int main(int argc, char **argv)
     errs += test_indexed_with_zeros(filename, STRUCT);
 
     MTest_Finalize(errs);
-    return 0;
+    return MTestReturnValue(errs);
 }
