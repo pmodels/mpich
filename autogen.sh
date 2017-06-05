@@ -712,7 +712,7 @@ if [ $do_bindings = "yes" ] ; then
 	# Double precision vs. Real*8 option
 	rm -f src/binding/fortran/use_mpi/mpi_base.f90.orig
 	( cd src/binding/fortran/use_mpi && chmod a+x ./buildiface && ./buildiface )
-	( cd src/binding/fortran/use_mpi && ../mpif_h/buildiface -infile=cf90t.h -deffile=cf90tdefs)
+	( cd src/binding/fortran/use_mpi && ../mpif_h/buildiface -infile=cf90t.h -deffile=./cf90tdefs)
 	echo "done"
     fi
     if [ $build_f08 = "yes" ] ; then
