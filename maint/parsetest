@@ -1,6 +1,6 @@
 #! /usr/bin/env perl
 #
-require "maint/parse.sub";
+require "./maint/parse.sub";
 
 $debug = 1;
 while (<>) {
