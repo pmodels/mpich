@@ -22,8 +22,8 @@
 #include <rdma/fi_cm.h>
 #include <rdma/fi_errno.h>
 #include "ofi_capability_sets.h"
+#include <rdma/fi_trigger.h>
 
-/* Defines */
 
 #define MPIDI_OFI_MAX_AM_HDR_SIZE    128
 #define MPIDI_OFI_AM_HANDLER_ID_BITS   8
@@ -47,6 +47,7 @@ typedef struct {
     /* support for connection */
     int conn_id;
 } MPIDI_OFI_comm_t;
+
 enum {
     MPIDI_AMTYPE_SHORT_HDR = 0,
     MPIDI_AMTYPE_SHORT,
@@ -142,7 +143,6 @@ typedef struct {
 } MPIDI_OFI_dt_t;
 
 typedef struct {
-    int dummy;
 } MPIDI_OFI_op_t;
 
 struct MPIDI_OFI_win_request;

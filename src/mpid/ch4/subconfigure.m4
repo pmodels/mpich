@@ -345,6 +345,7 @@ if test "$ch4_shm_array_sz" = "1"  && test "$enable_ch4_shm_direct" = "yes" ;  t
 fi
 
 ])dnl end AM_COND_IF(BUILD_CH4,...)
+
 ])dnl end PREREQ
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[

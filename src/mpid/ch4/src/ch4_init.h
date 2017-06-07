@@ -321,7 +321,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 #endif
-
+    
     int i;
     int max_n_avts;
     max_n_avts = MPIDIU_get_max_n_avts();
@@ -661,7 +661,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Op_commit_hook(MPIR_Op * op)
     }
 #endif
 
-  fn_exit:
+fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OP_CREATE_HOOK);
     return mpi_errno;
   fn_fail:

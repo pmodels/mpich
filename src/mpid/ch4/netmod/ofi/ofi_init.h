@@ -13,6 +13,7 @@
 
 #include "ofi_impl.h"
 #include "mpir_cvars.h"
+#include "ofi_coll_impl.h"
 #include "pmi.h"
 #include "mpidu_shm.h"
 
@@ -358,6 +359,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     MPIDI_OFI_init_global_settings(MPIR_CVAR_OFI_USE_PROVIDER);
 
+    /* We want 3 64-bit cache lines for performance */
+    /*
+    CH4_COMPILE_TIME_ASSERT(sizeof(struct MPIR_Request) <= 192);
     CH4_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_chunk_request, context));
     CH4_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
@@ -375,7 +379,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_Devreq_t) >= sizeof(MPIDI_OFI_request_t));
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIR_Request) >= sizeof(MPIDI_OFI_win_request_t));
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIR_Context_id_t) * 8 >= MPIDI_OFI_AM_CONTEXT_ID_BITS);
-
+*/
     *tag_ub = (1ULL << MPIDI_OFI_TAG_BITS) - 1;
 
     MPID_Thread_mutex_create(&MPIDI_OFI_THREAD_UTIL_MUTEX, &thr_err);
@@ -907,6 +911,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIR_Assert(MPIR_Process.comm_parent != NULL);
         MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
     }
+
 
   fn_exit:
 
