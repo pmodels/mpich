@@ -250,7 +250,7 @@ static inline int MPIDI_OFI_dynproc_handshake(int root,
         while (req.done != MPIDI_OFI_PEEK_FOUND) {
             req.done = MPIDI_OFI_PEEK_START;
             MPIDI_OFI_CALL(fi_trecvmsg
-                           (MPIDI_OFI_EP_RX_TAG(0), &msg,
+                           (MPIDI_Global.ctx[0].rx, &msg,
                             FI_PEEK | FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0)), trecv);
             do {
                 mpi_errno = MPID_Progress_test();
@@ -273,7 +273,7 @@ static inline int MPIDI_OFI_dynproc_handshake(int root,
         req.done = 0;
         req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
 
-        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_EP_RX_TAG(0),
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_Global.ctx[0].rx,
                                       &buf,
                                       sizeof(int),
                                       NULL,
@@ -310,7 +310,7 @@ static inline int MPIDI_OFI_dynproc_handshake(int root,
 
         req.done = 0;
         req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-        mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(0),
+        mpi_errno = MPIDI_OFI_send_handler(MPIDI_Global.ctx[0].tx,
                                            &buf,
                                            sizeof(int),
                                            NULL,
@@ -383,7 +383,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
         while (req[0].done != MPIDI_OFI_PEEK_FOUND) {
             req[0].done = MPIDI_OFI_PEEK_START;
             MPIDI_OFI_CALL(fi_trecvmsg
-                           (MPIDI_OFI_EP_RX_TAG(0), &msg,
+                           (MPIDI_Global.ctx[0].rx, &msg,
                             FI_PEEK | FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0)), trecv);
             MPIDI_OFI_PROGRESS_WHILE(req[0].done == MPIDI_OFI_PEEK_START);
         }
@@ -402,7 +402,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
         req[2].done = 0;
         req[2].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
 
-        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_EP_RX_TAG(0),
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_Global.ctx[0].rx,
                                       *remote_upid_size,
                                       (*remote_size) * sizeof(size_t),
                                       NULL,
@@ -415,7 +415,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
         MPIR_CHKPMEM_MALLOC((*remote_upids), char*, remote_upid_recvsize,
                             mpi_errno, "remote_upids");
 
-        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_EP_RX_TAG(0),
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_Global.ctx[0].rx,
                                       *remote_upids,
                                       remote_upid_recvsize,
                                       NULL,
@@ -423,7 +423,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
                                       match_bits,
                                       mask_bits, &req[1].context), trecv, MPIDI_OFI_CALL_LOCK);
 
-        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_EP_RX_TAG(0),
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_Global.ctx[0].rx,
                                       *remote_node_ids,
                                       (*remote_size) * sizeof(MPID_Node_id_t),
                                       NULL,
@@ -468,7 +468,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
         req[1].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
         req[2].done = 0;
         req[2].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-        mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(0),
+        mpi_errno = MPIDI_OFI_send_handler(MPIDI_Global.ctx[0].tx,
                                            local_upid_size,
                                            local_size * sizeof(size_t),
                                            NULL,
@@ -485,7 +485,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
             MPIR_ERR_POP(mpi_errno);
         }
 
-        MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(0),
+        MPIDI_OFI_send_handler(MPIDI_Global.ctx[0].tx,
                                local_upids,
                                local_upid_sendsize,
                                NULL,
@@ -495,7 +495,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
                                (void *) &req[1].context,
                                MPIDI_OFI_DO_SEND,
                                MPIDI_OFI_CALL_LOCK);
-        MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(0),
+        MPIDI_OFI_send_handler(MPIDI_Global.ctx[0].tx,
                                local_node_ids,
                                local_size * sizeof(MPID_Node_id_t),
                                NULL,

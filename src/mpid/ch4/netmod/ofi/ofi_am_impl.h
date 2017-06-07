@@ -128,7 +128,7 @@ static inline int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * req)
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
-    MPIDI_OFI_CALL_RETRY_AM(fi_recvmsg(MPIDI_OFI_EP_RX_MSG(0),
+    MPIDI_OFI_CALL_RETRY_AM(fi_recvmsg(MPIDI_Global.ctx[0].rx,
                                        &MPIDI_Global.am_msg[am->index],
                                        FI_MULTI_RECV | FI_COMPLETION), FALSE /* lock */ , repost);
   fn_exit:
@@ -237,8 +237,8 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
     iov[1].iov_base = MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr);
     iov[1].iov_len = am_hdr_sz;
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
-    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_EP_TX_MSG(0), iov, NULL, 2,
-                                     MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_MSG),
+    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_Global.ctx[0].tx, iov, NULL, 2,
+                                     MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
@@ -330,8 +330,8 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     iov[2].iov_base = lmt_info;
     iov[2].iov_len = sizeof(*lmt_info);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
-    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_EP_TX_MSG(0), iov, NULL, 3,
-                                     MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_MSG),
+    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_Global.ctx[0].tx, iov, NULL, 3,
+                                     MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
@@ -383,8 +383,8 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
 
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
-    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_EP_TX_MSG(0), iov, NULL, 3,
-                                     MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_MSG),
+    MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_Global.ctx[0].tx, iov, NULL, 3,
+                                     MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
@@ -512,7 +512,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
     MPIDI_OFI_REQUEST(sreq, util.inject_buf) = ibuf;
     OPA_incr_int(&MPIDI_Global.am_inflight_inject_emus);
 
-    MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_OFI_EP_TX_MSG(0), ibuf, len,
+    MPIDI_OFI_CALL_RETRY_AM(fi_send(MPIDI_Global.ctx[0].tx, ibuf, len,
                                     NULL /* desc*/, addr, &(MPIDI_OFI_REQUEST(sreq, context))),
                                     need_lock, send);
   fn_exit:
@@ -552,8 +552,8 @@ static inline int MPIDI_OFI_do_inject(int rank,
     MPIR_Assert((uint64_t) comm->rank < (1ULL << MPIDI_OFI_AM_RANK_BITS));
 
     addr = use_comm_table ?
-        MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_MSG) :
-        MPIDI_OFI_to_phys(rank, MPIDI_OFI_API_MSG);
+        MPIDI_OFI_comm_to_phys(comm, rank) :
+        MPIDI_OFI_to_phys(rank);
 
     if (unlikely(am_hdr_sz + sizeof(msg_hdr) > MPIDI_Global.max_buffered_send)) {
         mpi_errno = MPIDI_OFI_do_emulated_inject(addr, &msg_hdr, am_hdr, am_hdr_sz, need_lock);
@@ -564,7 +564,7 @@ static inline int MPIDI_OFI_do_inject(int rank,
     memcpy(buff + sizeof(msg_hdr), am_hdr, am_hdr_sz);
     buff_len = sizeof(msg_hdr) + am_hdr_sz;
 
-    MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_OFI_EP_TX_MSG(0), buff, buff_len, addr),
+    MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_Global.ctx[0].tx, buff, buff_len, addr),
                             need_lock, inject);
 
   fn_exit:

@@ -168,14 +168,14 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
             .msg_iov = &iov,
             .desc = NULL,
             .iov_count = 1,
-            .addr = MPIDI_OFI_comm_to_phys(comm, src_rank, MPIDI_OFI_API_TAG),
+            .addr = MPIDI_OFI_comm_to_phys(comm, src_rank),
             .rma_iov = &rma_iov,
             .rma_iov_count = 1,
             .context = &am_req->context,
             .data = 0
         };
 
-        MPIDI_OFI_CALL_RETRY_AM(fi_readmsg(MPIDI_OFI_EP_TX_RMA(0),
+        MPIDI_OFI_CALL_RETRY_AM(fi_readmsg(MPIDI_Global.ctx[0].tx,
                                            &msg,
                                            FI_COMPLETION), FALSE /* no lock */ , read);
 
@@ -420,8 +420,8 @@ static inline int MPIDI_OFI_dispatch_ack(int rank,
     msg.hdr.data_sz = 0;
     msg.hdr.am_type = am_type;
     msg.pyld.sreq_ptr = sreq_ptr;
-    MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_OFI_EP_TX_MSG(0), &msg, sizeof(msg),
-                                      MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG)),
+    MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_Global.ctx[0].tx, &msg, sizeof(msg),
+                                      MPIDI_OFI_comm_to_phys(comm, rank)),
                             FALSE /* no lock */ , inject);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);
