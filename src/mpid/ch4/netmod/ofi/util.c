@@ -687,7 +687,7 @@ static MPI_Op mpi_ops[] = {
 #define _TBL MPIDI_Global.win_op_table[i][j]
 #define CHECK_ATOMIC(fcn,field1,field2)            \
   atomic_count = 0;                                \
-  ret = fcn(MPIDI_OFI_EP_TX_RMA(0),                          \
+  ret = fcn(MPIDI_Global.ctx[0].tx,                \
     fi_dt,                                 \
     fi_op,                                 \
             &atomic_count);                        \

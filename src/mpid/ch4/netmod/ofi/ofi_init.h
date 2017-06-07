@@ -315,7 +315,7 @@ static inline int MPIDI_OFI_conn_manager_destroy()
                 conn[j] = MPIDI_Global.conn_mgr.conn_list[i].dest;
                 req[j].done = 0;
                 req[j].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
-                MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_EP_RX_TAG(0),
+                MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_Global.ctx[0].rx,
                                               &close_msg[j],
                                               sizeof(int),
                                               NULL,
@@ -768,16 +768,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* ------------------------------------------------------------------------ */
 
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        /* Specify the number of TX/RX contexts we want
-
-           Currently, scalable endpoint contexts are created in a "bundle",
-           where each bundle consists of four TX contexts
-           (tagged, msg(untagged), rma-counter, rma-completion)
-           and three RX contexts (tagged, msg, rma.) */
-
-        int n_bundles = 1; /* Tentatively, we are creating only one bundle */
-        prov_use->ep_attr->tx_ctx_cnt = 4 * n_bundles;
-        prov_use->ep_attr->rx_ctx_cnt = 3 * n_bundles;
+        /* Specify the number of TX/RX contexts we want */
+        prov_use->ep_attr->tx_ctx_cnt = 1;
+        prov_use->ep_attr->rx_ctx_cnt = 1;
     }
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_create_endpoint(prov_use,
                                                      MPIDI_Global.domain,
@@ -911,7 +904,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_Global.cq_buff_head = MPIDI_Global.cq_buff_tail = 0;
         optlen = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE;
 
-        MPIDI_OFI_CALL(fi_setopt(&(MPIDI_OFI_EP_RX_MSG(0)->fid),
+        MPIDI_OFI_CALL(fi_setopt(&(MPIDI_Global.ctx[0].rx->fid),
                                  FI_OPT_ENDPOINT,
                                  FI_OPT_MIN_MULTI_RECV, &optlen, sizeof(optlen)), setopt);
 
@@ -927,7 +920,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             MPIDI_Global.am_msg[i].addr = FI_ADDR_UNSPEC;
             MPIDI_Global.am_msg[i].context = &MPIDI_Global.am_reqs[i].context;
             MPIDI_Global.am_msg[i].iov_count = 1;
-            MPIDI_OFI_CALL_RETRY(fi_recvmsg(MPIDI_OFI_EP_RX_MSG(0),
+            MPIDI_OFI_CALL_RETRY(fi_recvmsg(MPIDI_Global.ctx[0].rx,
                                             &MPIDI_Global.am_msg[i],
                                             FI_MULTI_RECV | FI_COMPLETION), prepost,
                                  MPIDI_OFI_CALL_LOCK);
@@ -1010,18 +1003,8 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     MPIR_Assert(OPA_load_int(&MPIDI_Global.am_inflight_inject_emus) == 0);
 
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        if (MPIDI_OFI_ENABLE_TAGGED)
-            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_TAG(0)), epclose);
-
-        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_RMA(0)), epclose);
-        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_MSG(0)), epclose);
-        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_CTR(0)), epclose);
-
-        if (MPIDI_OFI_ENABLE_TAGGED)
-            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_TAG(0)), epclose);
-
-        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_RMA(0)), epclose);
-        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_MSG(0)), epclose);
+        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_Global.ctx[0].tx), epclose);
+        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_Global.ctx[0].rx), epclose);
     }
 
     if (MPIDI_OFI_ENABLE_STX_RMA && MPIDI_Global.stx_ctx != NULL)
@@ -1263,113 +1246,50 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_CREATE_ENDPOINT);
 
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        int idx_off;
         MPIDI_OFI_CALL(fi_scalable_ep(domain, prov_use, ep, NULL), ep);
         MPIDI_OFI_CALL(fi_scalable_ep_bind(*ep, &av->fid, 0), bind);
 
-        idx_off = index * 4;
-        MPIDI_Global.ctx[index].ctx_offset = idx_off;
-
-        if (MPIDI_OFI_ENABLE_TAGGED) {
-            tx_attr = *prov_use->tx_attr;
-            tx_attr.caps = FI_TAGGED | FI_SEND;
-            tx_attr.op_flags = FI_COMPLETION | FI_INJECT_COMPLETE;
-            MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off, &tx_attr, &MPIDI_OFI_EP_TX_TAG(index), NULL),
-                           ep);
-            MPIDI_OFI_CALL(fi_ep_bind
-                           (MPIDI_OFI_EP_TX_TAG(index), &p2p_cq->fid,
-                            FI_SEND | FI_SELECTIVE_COMPLETION), bind);
-        }
-
         tx_attr = *prov_use->tx_attr;
-        tx_attr.caps = FI_RMA | FI_WRITE | FI_READ;
-        tx_attr.caps |= FI_ATOMICS;
         tx_attr.op_flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
-        MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off + 1, &tx_attr, &MPIDI_OFI_EP_TX_RMA(index), NULL),
-                       ep);
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_RMA(index), &rma_ctr->fid, FI_WRITE | FI_READ),
-                       bind);
-        MPIDI_OFI_CALL(fi_ep_bind
-                       (MPIDI_OFI_EP_TX_RMA(index), &p2p_cq->fid,
-                        FI_SEND | FI_SELECTIVE_COMPLETION), bind);
+        tx_attr.caps = 0;
 
-        tx_attr = *prov_use->tx_attr;
-        tx_attr.caps = FI_MSG|FI_SEND;
-        tx_attr.op_flags = FI_COMPLETION | FI_INJECT_COMPLETE;
-        MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off + 2, &tx_attr, &MPIDI_OFI_EP_TX_MSG(index), NULL),
-                       ep);
-        MPIDI_OFI_CALL(fi_ep_bind
-                       (MPIDI_OFI_EP_TX_MSG(index), &p2p_cq->fid,
-                        FI_SEND | FI_SELECTIVE_COMPLETION), bind);
+        if (MPIDI_OFI_ENABLE_TAGGED)
+            tx_attr.caps = FI_TAGGED | FI_SEND;
 
-        tx_attr = *prov_use->tx_attr;
-        tx_attr.caps = FI_RMA | FI_WRITE | FI_READ;
+        /* RMA */
+        tx_attr.caps |= FI_RMA | FI_WRITE | FI_READ;
         tx_attr.caps |= FI_ATOMICS;
-        tx_attr.op_flags = FI_DELIVERY_COMPLETE;
-        MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off + 3, &tx_attr, &MPIDI_OFI_EP_TX_CTR(index), NULL),
-                       ep);
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_CTR(index), &rma_ctr->fid, FI_WRITE | FI_READ),
+        /* MSG */
+        tx_attr.caps |= FI_MSG | FI_SEND;
+
+        MPIDI_OFI_CALL(fi_tx_context(*ep, index, &tx_attr, &MPIDI_Global.ctx[index].tx, NULL), ep);
+        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_Global.ctx[index].tx,
+                                  &p2p_cq->fid,
+                                  FI_SEND | FI_SELECTIVE_COMPLETION), bind);
+        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_Global.ctx[index].tx, &rma_ctr->fid, FI_WRITE | FI_READ),
                        bind);
-        /* We need to bind to the CQ if the progress mode is manual.
-         * Otherwise fi_cq_read would not make progress on this context and potentially leads to a deadlock. */
-        if (!MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS)
-            MPIDI_OFI_CALL(fi_ep_bind
-                           (MPIDI_OFI_EP_TX_CTR(index), &p2p_cq->fid,
-                            FI_SEND | FI_SELECTIVE_COMPLETION), bind);
-
-        if (MPIDI_OFI_ENABLE_TAGGED) {
-            rx_attr = *prov_use->rx_attr;
-            rx_attr.caps = FI_TAGGED | FI_RECV;
-
-            if (MPIDI_OFI_ENABLE_DATA)
-                rx_attr.caps |= FI_DIRECTED_RECV;
-
-            rx_attr.op_flags = 0;
-            MPIDI_OFI_CALL(fi_rx_context(*ep, idx_off, &rx_attr, &MPIDI_OFI_EP_RX_TAG(index), NULL),
-                           ep);
-            MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_TAG(index), &p2p_cq->fid, FI_RECV), bind);
-        }
 
         rx_attr = *prov_use->rx_attr;
-        rx_attr.caps = FI_RMA | FI_REMOTE_READ | FI_REMOTE_WRITE;
-        rx_attr.caps |= FI_ATOMICS;
-        rx_attr.op_flags = 0;
-        MPIDI_OFI_CALL(fi_rx_context(*ep, idx_off + 1, &rx_attr, &MPIDI_OFI_EP_RX_RMA(index), NULL),
-                       ep);
+        rx_attr.caps = 0;
+        rx_attr.op_flags = FI_MULTI_RECV;
 
-        /* Note:  This bind should cause the "passive target" rx context to never generate an event
-         * We need this bind for manual progress to ensure that progress is made on the
-         * rx_ctr or rma operations during completion queue reads */
-        if (!MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS)
-            MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_RMA(index), &p2p_cq->fid,
-                                      FI_SEND | FI_RECV | FI_SELECTIVE_COMPLETION), bind);
-
-        rx_attr = *prov_use->rx_attr;
-        rx_attr.caps = FI_MSG | FI_RECV;
-        rx_attr.caps |= FI_MULTI_RECV;
-
+        if (MPIDI_OFI_ENABLE_TAGGED)
+            rx_attr.caps |= FI_TAGGED | FI_RECV;
         if (MPIDI_OFI_ENABLE_DATA)
             rx_attr.caps |= FI_DIRECTED_RECV;
 
-        rx_attr.op_flags = FI_MULTI_RECV;
-        MPIDI_OFI_CALL(fi_rx_context(*ep, idx_off + 2, &rx_attr, &MPIDI_OFI_EP_RX_MSG(index), NULL),
-                       ep);
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_MSG(index), &p2p_cq->fid, FI_RECV), bind);
+        rx_attr.caps |= FI_RMA | FI_REMOTE_READ | FI_REMOTE_WRITE;
+        rx_attr.caps |= FI_ATOMICS;
+        rx_attr.caps |= FI_MSG | FI_RECV;
+        rx_attr.caps |= FI_MULTI_RECV;
+
+        MPIDI_OFI_CALL(fi_rx_context(*ep, index, &rx_attr, &MPIDI_Global.ctx[index].rx, NULL), ep);
+        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_Global.ctx[index].rx, &p2p_cq->fid, FI_RECV), bind);
 
         MPIDI_OFI_CALL(fi_enable(*ep), ep_enable);
 
-        if (MPIDI_OFI_ENABLE_TAGGED)
-            MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_TX_TAG(index)), ep_enable);
-
-        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_TX_RMA(index)), ep_enable);
-        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_TX_MSG(index)), ep_enable);
-        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_TX_CTR(index)), ep_enable);
-
-        if (MPIDI_OFI_ENABLE_TAGGED)
-            MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_RX_TAG(index)), ep_enable);
-
-        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_RX_RMA(index)), ep_enable);
-        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_RX_MSG(index)), ep_enable);
+        MPIDI_OFI_CALL(fi_enable(MPIDI_Global.ctx[index].tx), ep_enable);
+        MPIDI_OFI_CALL(fi_enable(MPIDI_Global.ctx[index].rx), ep_enable);
     }
     else {
         /* ---------------------------------------------------------- */
@@ -1385,13 +1305,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
 
         /* Copy the normal ep into the first entry for scalable endpoints to
          * allow compile macros to work */
-        MPIDI_Global.ctx[0].tx_tag =
-            MPIDI_Global.ctx[0].tx_rma =
-            MPIDI_Global.ctx[0].tx_msg =
-            MPIDI_Global.ctx[0].tx_ctr =
-            MPIDI_Global.ctx[0].rx_tag =
-            MPIDI_Global.ctx[0].rx_rma =
-            MPIDI_Global.ctx[0].rx_msg = *ep;
+        MPIDI_Global.ctx[0].tx = MPIDI_Global.ctx[0].rx = *ep;
     }
 
   fn_exit:
