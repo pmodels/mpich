@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
         MPI_Comm_rank(comm, &rank);
         MPI_Comm_size(comm, &size);
 
-        for (count = 1; count < 130000; count = count * 2) {
+        for (count = 1; count < 10; count = count * 2) { //130000
             sendbuf = (int *) malloc(count * sizeof(int));
             recvbuf = (int *) malloc(count * sizeof(int));
             for (root = 0; root < size; root++) {

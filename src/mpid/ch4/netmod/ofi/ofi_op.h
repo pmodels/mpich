@@ -31,5 +31,5 @@ static inline int MPIDI_NM_mpi_op_commit_hook(MPIR_Op * op_p)
     return 0;
 }
 
-
 #endif /* OFI_OP_H_INCLUDED */
+

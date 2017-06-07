@@ -9,6 +9,10 @@
 #include <mpidu_dataloop.h>
 #include <stdlib.h>
 #include <limits.h>
+#ifdef HAVE_EXT_COLL
+#include "mpir_coll_impl.h"
+#endif
+
 
 /* PAIRTYPE_SIZE_EXTENT - calculates size, extent, etc. for pairtype by
  * defining the appropriate C type.
@@ -212,6 +216,10 @@ int MPIDU_Type_create_pairtype(MPI_Datatype type,
         err =  MPID_Type_commit_hook(new_dtp);
     }
 #endif /* MPID_Type_commit_hook */
+
+#ifdef HAVE_EXT_COLL
+    MPIC_dt_init(new_dtp);
+#endif
 
     /* --BEGIN ERROR HANDLING-- */
     if (err) {

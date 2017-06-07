@@ -80,17 +80,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     else
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
 
-    if (!flags) /* Branch should compile out */
+    if(!flags)  /* Branch should compile out */
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_EP_RX_TAG(0),
                                       recv_buf,
                                       data_sz,
                                       NULL,
-                                      (MPI_ANY_SOURCE ==
-                                       rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_comm_to_phys(comm, rank,
-                                                                                       MPIDI_OFI_API_TAG),
-                                      match_bits, mask_bits,
-                                      (void *) &(MPIDI_OFI_REQUEST(rreq, context))), trecv,
-                             MPIDI_OFI_CALL_LOCK);
+                                      (MPI_ANY_SOURCE == rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_comm_to_phys(comm, rank,
+                                                                                                         MPIDI_OFI_API_TAG),
+                                      match_bits, mask_bits, (void *) &(MPIDI_OFI_REQUEST(rreq, context))), trecv, MPIDI_OFI_CALL_LOCK);
     else {
         MPIDI_OFI_REQUEST(rreq, util.iov).iov_base = recv_buf;
         MPIDI_OFI_REQUEST(rreq, util.iov).iov_len = data_sz;
@@ -104,8 +101,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         msg.data = 0;
         msg.addr = FI_ADDR_UNSPEC;
 
-        MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_EP_RX_TAG(0), &msg, flags), trecv,
-                             MPIDI_OFI_CALL_LOCK);
+        MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_EP_RX_TAG(0), &msg, flags), trecv, MPIDI_OFI_CALL_LOCK);
     }
 
   fn_exit:
@@ -223,7 +219,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
 
     mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, message->status.MPI_SOURCE,
                                    message->status.MPI_TAG, rreq->comm, 0,
-                                   &rreq, MPIDI_OFI_USE_EXISTING, FI_CLAIM | FI_COMPLETION);
+                                   &rreq, MPIDI_OFI_USE_EXISTING,
+                                   FI_CLAIM | FI_COMPLETION);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IMRECV);

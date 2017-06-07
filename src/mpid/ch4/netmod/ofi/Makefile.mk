@@ -19,4 +19,5 @@ errnames_txt_files += src/mpid/ch4/netmod/ofi/errnames.txt
 external_subdirs   += @ofisrcdir@
 pmpi_convenience_libs += @ofilib@
 
+
 endif

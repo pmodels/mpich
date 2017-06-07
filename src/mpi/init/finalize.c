@@ -7,6 +7,10 @@
 
 #include "mpiimpl.h"
 #include "mpi_init.h"
+#ifdef HAVE_EXT_COLL
+#include "mpir_coll_impl.h"
+#endif
+
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -232,6 +236,11 @@ int MPI_Finalize( void )
     /* FIXME: Should this also be a finalize callback? */
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIR_Debugger_set_aborting( (char *)0 );
+#endif
+
+#ifdef HAVE_EXT_COLL
+    mpi_errno = MPIC_finalize();
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 #endif
 
     mpi_errno = MPID_Finalize();

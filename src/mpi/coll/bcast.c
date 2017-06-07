@@ -7,6 +7,10 @@
 
 #include "mpiimpl.h"
 #include "collutil.h"
+#ifdef HAVE_EXT_COLL
+#include "mpir_coll_impl.h"
+#endif
+
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -92,6 +96,51 @@ cvars:
         Maximum message size for which SMP-aware broadcast is used.  A
         value of '0' uses SMP-aware broadcast for all message sizes.
         (See also: MPIR_CVAR_ENABLE_SMP_BCAST)
+
+    - name        : MPIR_CVAR_USE_BCAST
+      category    : COLLECTIVE
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Controls bcast algorithm:
+        0 - MPIR_bcast
+        1 - KARY_Bcast
+        2 - KNOMIAL_Bcast
+        3 - TREEBASIC_KARY_Bcast
+        4 - TREEBASIC_KNOMIAL_Bcast
+
+    - name        : MPIR_CVAR_BCAST_KARY_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        K value for Kary broadcast
+
+    - name        : MPIR_CVAR_BCAST_KNOMIAL_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        K value for Knomial broadcast
+
+    - name        : MPIR_CVAR_BCAST_TREE_SEGSIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+       Segment size for tree based pipelined broadcast
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -1269,6 +1318,52 @@ int MPIR_Bcast_intra (
     nbytes = type_size * count;
     if (nbytes == 0)
         goto fn_exit; /* nothing to do */
+
+#ifdef HAVE_EXT_COLL
+    int valid_coll[] = {1,2};
+    int use_coll = (MPIR_CVAR_USE_BCAST < 0) ?
+                MPIR_Coll_cycle_algorithm(comm_ptr, valid_coll, 2) : MPIR_CVAR_USE_BCAST;
+
+    switch(use_coll) {
+        case 0:
+            break;
+        case 1:
+            mpi_errno = MPIC_MPICH_KARY_bcast(buffer, count,
+                    datatype,
+                    root, &(MPIC_COMM(comm_ptr)->mpich_kary), errflag, MPIR_CVAR_BCAST_KARY_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
+            goto fn_exit;
+            break;
+        case 2:
+            mpi_errno = MPIC_MPICH_KNOMIAL_bcast(buffer, count,
+                    datatype,
+                    root, &(MPIC_COMM(comm_ptr)->mpich_knomial), errflag, MPIR_CVAR_BCAST_KNOMIAL_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
+            goto fn_exit;
+            break;
+        case 3:
+            mpi_errno = MPIC_X_TREEBASIC_bcast(buffer, count,
+                    datatype, root, &(MPIC_COMM(comm_ptr)->x_treebasic), errflag, 0);
+            goto fn_exit;
+            break;
+        case 4:
+            mpi_errno = MPIC_X_TREEBASIC_bcast(buffer, count,
+                    datatype, root, &(MPIC_COMM(comm_ptr)->x_treebasic), errflag, 1);
+            goto fn_exit;
+            break;
+        case 5:
+            mpi_errno = MPIC_BMPICH_KARY_bcast(buffer, count,
+                    datatype, root, 
+                    &(MPIC_COMM(comm_ptr)->bmpich_kary), errflag, MPIR_CVAR_BCAST_KARY_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
+            goto fn_exit;
+            break;
+        case 6:
+            mpi_errno = MPIC_BMPICH_KNOMIAL_bcast(buffer, count,
+                    datatype, root, 
+                    &(MPIC_COMM(comm_ptr)->bmpich_knomial), errflag, MPIR_CVAR_BCAST_KNOMIAL_KVAL,MPIR_CVAR_BCAST_TREE_SEGSIZE);
+            goto fn_exit;
+            break;
+    }
+#endif
+
 
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) || (comm_size < MPIR_CVAR_BCAST_MIN_PROCS))
     {
