@@ -37,7 +37,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     if (unlikely(MPI_ANY_SOURCE == source))
         remote_proc = FI_ADDR_UNSPEC;
     else
-        remote_proc = MPIDI_OFI_comm_to_phys(comm, source, MPIDI_OFI_API_TAG);
+        remote_proc = MPIDI_OFI_comm_to_phys(comm, source);
 
     if (message)
         MPIDI_OFI_REQUEST_CREATE(rreq, MPIR_REQUEST_KIND__MPROBE);
@@ -60,7 +60,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     msg.data = 0;
 
     MPIDI_OFI_CALL(fi_trecvmsg
-                   (MPIDI_OFI_EP_RX_TAG(0), &msg,
+                   (MPIDI_Global.ctx[0].rx, &msg,
                     peek_flags | FI_PEEK | FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0) ), trecvmsg);
     MPIDI_OFI_PROGRESS_WHILE(MPIDI_OFI_REQUEST(rreq, util_id) == MPIDI_OFI_PEEK_START);
 

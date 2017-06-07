@@ -307,25 +307,23 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
     }
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank, int ep_family)
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank)
 {
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, rank));
         int ep_num = MPIDI_OFI_av_to_ep(av);
-        int offset = MPIDI_Global.ctx[ep_num].ctx_offset;
-        int rx_idx = offset + ep_family;
+        int rx_idx = ep_num;
         return fi_rx_addr(MPIDI_OFI_AV_TO_PHYS(av), rx_idx, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
         return MPIDI_OFI_COMM_TO_PHYS(comm, rank);
     }
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_to_phys(int rank, int ep_family)
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_to_phys(int rank)
 {
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         int ep_num = 0;
-        int offset = MPIDI_Global.ctx[ep_num].ctx_offset;
-        int rx_idx = offset + ep_family;
+        int rx_idx = ep_num;
         return fi_rx_addr(MPIDI_OFI_TO_PHYS(0, rank), rx_idx, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
         return MPIDI_OFI_TO_PHYS(0, rank);
@@ -533,7 +531,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
         msg.ignore = context_id;
         msg.context = (void *) &req.context;
         msg.data = 0;
-        MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_EP_TX_TAG(0), &msg,
+        MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_Global.ctx[0].tx, &msg,
                                          FI_COMPLETION | FI_TRANSMIT_COMPLETE | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0)),
                              tsendmsg, MPIDI_OFI_CALL_LOCK);
         MPIDI_OFI_PROGRESS_WHILE(!req.done);

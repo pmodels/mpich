@@ -209,8 +209,8 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
       fallback_global:
 
         /* Fallback for the traditional global EP/counter model */
-        MPIDI_OFI_WIN(win).ep = MPIDI_OFI_EP_TX_RMA(0);
-        MPIDI_OFI_WIN(win).ep_nocmpl = MPIDI_OFI_EP_TX_CTR(0);
+        MPIDI_OFI_WIN(win).ep = MPIDI_Global.ctx[0].tx;
+        MPIDI_OFI_WIN(win).ep_nocmpl = MPIDI_Global.ctx[0].tx;
         MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_Global.rma_cmpl_cntr;
         MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_Global.rma_issued_cntr;
     }
@@ -746,9 +746,9 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
 
     MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator, window_instance);
     MPIDI_OFI_map_erase(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id);
-    if (MPIDI_OFI_WIN(win).ep_nocmpl != MPIDI_OFI_EP_TX_CTR(0))
+    if (MPIDI_OFI_WIN(win).ep_nocmpl != MPIDI_Global.ctx[0].tx)
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep_nocmpl->fid), epclose);
-    if (MPIDI_OFI_WIN(win).ep != MPIDI_OFI_EP_TX_RMA(0))
+    if (MPIDI_OFI_WIN(win).ep != MPIDI_Global.ctx[0].tx)
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
     if (MPIDI_OFI_WIN(win).cmpl_cntr != MPIDI_Global.rma_cmpl_cntr)
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntr->fid), cqclose);

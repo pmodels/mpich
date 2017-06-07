@@ -115,11 +115,6 @@
 #endif
 #define MPIDI_OFI_OP_SIZES 15
 
-#define MPIDI_OFI_API_TAG 0
-#define MPIDI_OFI_API_RMA 1
-#define MPIDI_OFI_API_MSG 2
-#define MPIDI_OFI_API_CTR 3
-
 #define MPIDI_OFI_THREAD_UTIL_MUTEX     MPIDI_Global.mutexes[0].m
 #define MPIDI_OFI_THREAD_PROGRESS_MUTEX MPIDI_Global.mutexes[1].m
 #define MPIDI_OFI_THREAD_FI_MUTEX       MPIDI_Global.mutexes[2].m
@@ -169,13 +164,6 @@ static inline int MPIDI_OFI_comm_to_ep(MPIR_Comm *comm_ptr, int rank)
 #endif
 #endif
 }
-#define MPIDI_OFI_EP_TX_TAG(x) MPIDI_Global.ctx[x].tx_tag
-#define MPIDI_OFI_EP_TX_RMA(x) MPIDI_Global.ctx[x].tx_rma
-#define MPIDI_OFI_EP_TX_MSG(x) MPIDI_Global.ctx[x].tx_msg
-#define MPIDI_OFI_EP_TX_CTR(x) MPIDI_Global.ctx[x].tx_ctr
-#define MPIDI_OFI_EP_RX_TAG(x) MPIDI_Global.ctx[x].rx_tag
-#define MPIDI_OFI_EP_RX_RMA(x) MPIDI_Global.ctx[x].rx_rma
-#define MPIDI_OFI_EP_RX_MSG(x) MPIDI_Global.ctx[x].rx_msg
 
 #define MPIDI_OFI_DO_SEND        0
 #define MPIDI_OFI_DO_INJECT      1
@@ -276,18 +264,8 @@ typedef struct {
 } MPIDI_OFI_atomic_valid_t;
 
 typedef struct {
-    struct fid_ep *tx_tag;
-    struct fid_ep *rx_tag;
-
-    struct fid_ep *tx_rma;
-    struct fid_ep *rx_rma;
-
-    struct fid_ep *tx_msg;
-    struct fid_ep *rx_msg;
-
-    struct fid_ep *tx_ctr;
-
-    int ctx_offset;
+    struct fid_ep *tx;
+    struct fid_ep *rx;
 } MPIDI_OFI_context_t;
 
 typedef union {
