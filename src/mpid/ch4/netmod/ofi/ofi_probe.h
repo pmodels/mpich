@@ -57,7 +57,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     msg.tag = match_bits;
     msg.ignore = mask_bits;
     msg.context = (void *) &(MPIDI_OFI_REQUEST(rreq, context));
-    msg.data = 0;
+    msg.data = source;
 
     MPIDI_OFI_CALL(fi_trecvmsg
                    (MPIDI_OFI_EP_RX_TAG(0), &msg,
