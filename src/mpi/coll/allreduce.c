@@ -194,7 +194,7 @@ int MPIR_Allreduce_intra (
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int nbytes = 0;
-    int mask, dst, is_commutative, pof2, newrank, rem, newdst, i;
+    int mask, dst, is_commutative, pof2, newrank, rem, newdst;
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf;
     int count_lhalf, count_rhalf, step, nsteps, wsize;
@@ -643,10 +643,12 @@ int MPIR_Allreduce_intra (
                                                        rcount[step], datatype, op);
 
                     /* Move the current window to the received message */
-                    rindex[step + 1] = rindex[step];
-                    sindex[step + 1] = rindex[step];
-                    wsize = rcount[step];
-                    step++;
+                    if (step + 1 < nsteps) {
+                        rindex[step + 1] = rindex[step];
+                        sindex[step + 1] = rindex[step];
+                        wsize = rcount[step];
+                        step++;
+                    }
                 }
             }
 
@@ -661,8 +663,8 @@ int MPIR_Allreduce_intra (
             if (newrank != -1) {
                 step = nsteps - 1; /* step = ilog2(p') - 1 */
 
-                for (int mask = pof2 >> 1; mask > 0; mask >>= 1) {
-                    int newdst = newrank ^ mask;
+                for (mask = pof2 >> 1; mask > 0; mask >>= 1) {
+                    newdst = newrank ^ mask;
                     /* find real rank of dest */
                     dst = (newdst < rem) ? newdst * 2 : newdst + rem;
 

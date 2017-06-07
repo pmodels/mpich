@@ -329,7 +329,7 @@ static int MPIR_Reduce_redscat_gather (
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int comm_size, rank, type_size ATTRIBUTE((unused)), pof2, rem, newrank;
-    int mask, i, j, dst, newdst, nsteps, step, wsize;
+    int mask, dst, newdst, nsteps, step, wsize;
     int newroot, newdst_tree_root, newroot_tree_root;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf;
@@ -575,10 +575,12 @@ static int MPIR_Reduce_redscat_gather (
                                                rcount[step], datatype, op);
 
             /* Move the current window to the received message */
-            rindex[step + 1] = rindex[step];
-            sindex[step + 1] = rindex[step];
-            wsize = rcount[step];
-            step++;
+            if (step + 1 < nsteps) {
+                rindex[step + 1] = rindex[step];
+                sindex[step + 1] = rindex[step];
+                wsize = rcount[step];
+                step++;
+            }
         }
     }
     /*
