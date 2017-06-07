@@ -184,4 +184,5 @@ typedef struct {
 #endif
 } MPIDI_OFI_addr_t;
 
+#include "ofi_coll_params.h"
 #endif /* OFI_PRE_H_INCLUDED */

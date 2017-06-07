@@ -23,5 +23,17 @@
 #define MPIDI_NM_WIN_DECL        @ch4_netmod_win_decl@
 #define MPIDI_NM_ADDR_DECL    @ch4_netmod_addr_decl@
 #define MPIDI_NM_OP_DECL         @ch4_netmod_op_decl@
+#define MPIDI_NM_BCAST_PARAMS_DECL  @ch4_netmod_bcast_params_decl@
+#define MPIDI_NM_REDUCE_PARAMS_DECL  @ch4_netmod_reduce_params_decl@
+#define MPIDI_NM_ALLREDUCE_PARAMS_DECL  @ch4_netmod_allreduce_params_decl@
+
+extern const MPIDI_OFI_coll_algo_container_t OFI_barrier_recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_bcast_binomial_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_bcast_scatter_doubling_allgather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_bcast_scatter_ring_allgather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_reduce_binomial_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_reduce_redscat_gather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_allreduce_recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_allreduce_reduce_scatter_allgather_cnt;
 
 #endif /* NETMODPRE_H_INCLUDED */
