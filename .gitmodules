@@ -13,3 +13,6 @@
 [submodule "benchmarks/osu-micro-benchmarks-5.1"]
 	path = benchmarks/osu-micro-benchmarks-5.1
 	url = https://github.com/pmodels/osu-micro-benchmarks-5.1.git
+[submodule "benchmarks/imb_2017"]
+	path = benchmarks/imb_2017
+	url = https://github.com/monicasee/imb_2017.git
