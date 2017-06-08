@@ -28,8 +28,6 @@
      : __FILE__                                 \
 )
 #define MPIDI_OFI_MAP_NOT_FOUND            ((void*)(-1UL))
-#define MPIDI_OFI_MAJOR_VERSION            1
-#define MPIDI_OFI_MINOR_VERSION            0
 #define MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE  (16 * 1024)
 #define MPIDI_OFI_NUM_AM_BUFFERS           (8)
 #define MPIDI_OFI_AM_BUFF_SZ               (1 * 1024 * 1024)
@@ -329,6 +327,8 @@ typedef struct {
     int context_bits;
     int source_bits;
     int tag_bits;
+    int major_version;
+    int minor_version;
 } MPIDI_OFI_capabilities_t;
 
 typedef struct {
