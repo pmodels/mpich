@@ -1,0 +1,40 @@
+MPI_HOME=${HOME}/git/mpich-pip/build-tcp-gnu-pip-mdfglibc/install
+MPICC=${MPI_HOME}/bin/mpicc
+CFLAGS=-g -O3 -Wall -DCHECK
+PAPI_CFLAGS=-DUSE_PAPI -I${HOME}/local/include
+PAPI_LDFLAGS=-L${HOME}/local/lib -Wl,-rpath -Wl,${HOME}/local/lib -lpapi
+PREFIX=${HOME}/workspace/halo/mpich-tcp-pip-mdfglibc
+
+OBJS= ${PREFIX}/ddt-vector-contig.c2v.single ${PREFIX}/ddt-vector-contig.v2c.single
+OBJS+= ${PREFIX}/ddt-vector-contig.c2v.single.papi ${PREFIX}/ddt-vector-contig.v2c.single.papi
+OBJS+= ${PREFIX}/ddt-3d-halo ${PREFIX}/ddt-3d-halo.info
+OBJS+= ${PREFIX}/ddt-3d-halo.info.prof_intra ${PREFIX}/ddt-3d-halo.info.prof_dim
+
+all: ${OBJS}
+
+${PREFIX}/ddt-vector-contig.c2v.single: ddt-vector-contig.c
+	${MPICC} ${CFLAGS} -o $@ -DSINGLE_EXCHANGE -DCONTIG_TO_VEC $<
+
+${PREFIX}/ddt-vector-contig.v2c.single: ddt-vector-contig.c
+	${MPICC} ${CFLAGS} -o $@ -DSINGLE_EXCHANGE $<
+
+${PREFIX}/ddt-vector-contig.c2v.single.papi: ddt-vector-contig.c
+	${MPICC} ${CFLAGS} -o $@ -DSINGLE_EXCHANGE -DCONTIG_TO_VEC -DUSE_PAPI ${PAPI_CFLAGS} ${PAPI_LDFLAGS} $<
+
+${PREFIX}/ddt-vector-contig.v2c.single.papi: ddt-vector-contig.c
+	${MPICC} ${CFLAGS} -o $@ -DSINGLE_EXCHANGE -DUSE_PAPI ${PAPI_CFLAGS} ${PAPI_LDFLAGS} $<
+
+${PREFIX}/ddt-3d-halo: ddt-3d-halo.c
+	${MPICC} ${CFLAGS} -o $@ $<
+
+${PREFIX}/ddt-3d-halo.info.prof_intra: ddt-3d-halo.c
+	${MPICC} ${CFLAGS} -o $@  -DSET_SYMM_INFO -DPROF_INTRA $<
+
+${PREFIX}/ddt-3d-halo.info.prof_dim: ddt-3d-halo.c
+	${MPICC} ${CFLAGS} -o $@  -DSET_SYMM_INFO -DPROF_DIM_TIME $<
+
+${PREFIX}/ddt-3d-halo.info: ddt-3d-halo.c
+	${MPICC} ${CFLAGS} -o $@ -DSET_SYMM_INFO $<
+
+clean:
+	rm -f ${OBJS}
