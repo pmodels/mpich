@@ -10,3 +10,6 @@
 [submodule "src/mpid/ch4/netmod/ucx/ucx"]
 	path = src/mpid/ch4/netmod/ucx/ucx
 	url = https://github.com/pmodels/ucx
+[submodule "benchmarks/osu-micro-benchmarks-5.1"]
+	path = benchmarks/osu-micro-benchmarks-5.1
+	url = https://github.com/pmodels/osu-micro-benchmarks-5.1.git
