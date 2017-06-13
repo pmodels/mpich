@@ -356,17 +356,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_INIT);
 
-    if (!MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
-        MPIDI_OFI_init_global_settings(MPIR_CVAR_OFI_USE_PROVIDER);
-    } else {
-        /* when runtime checks are enabled, and no provider name is set, then
-         * try to select the fastest provider which fit minimal requirements.
-         * to do this use "unknown" fake provider name to force initialization
-         * of global settings by default minimal values. We are assuming
-         * that libfabric returns available provider list sorted by performance
-         * (faster - first) */
-        MPIDI_OFI_init_global_settings(MPIR_CVAR_OFI_USE_PROVIDER ? MPIR_CVAR_OFI_USE_PROVIDER : "unknown");
-    }
+    MPIDI_OFI_init_global_settings(MPIR_CVAR_OFI_USE_PROVIDER);
 
     CH4_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_chunk_request, context));
@@ -435,10 +425,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                 continue;
             }
 
-            /* set global settings according to evaluated provider */
-            if(!MPIR_CVAR_OFI_USE_PROVIDER)
-                MPIDI_OFI_init_global_settings(prov_use->fabric_attr->prov_name);
-
             /* Check that this provider meets the minimum requirements for the user */
             if (MPIDI_OFI_ENABLE_DATA && ((0ULL == (prov_use->caps & FI_DIRECTED_RECV)) || (prov_use->domain_attr->cq_data_size < 4))) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support immediate data"));
@@ -484,11 +470,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
              * logic again and make sure to pick this provider again with the
              * hints included this time. */
             hints->caps = prov_use->caps;
-            if(!MPIR_CVAR_OFI_USE_PROVIDER) {
-                /* set provider name to hints to make more accurate selection */
-                provname = MPL_strdup(prov_use->fabric_attr->prov_name);
-                hints->fabric_attr->prov_name = provname;
-            }
             break;
         }
 
@@ -504,11 +485,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                  * logic again and make sure to pick this provider again with the
                  * hints included this time. */
                 hints->caps = prov_use->caps;
-                if(!MPIR_CVAR_OFI_USE_PROVIDER) {
-                    /* set provider name to hints to make more accurate selection */
-                    provname = MPL_strdup(prov_use->fabric_attr->prov_name);
-                    hints->fabric_attr->prov_name = provname;
-                }
             }
             if (prov)
                 fi_freeinfo(prov);
