@@ -40,7 +40,9 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .fetch_atomic_iovecs       = MPIDI_OFI_FETCH_ATOMIC_IOVECS_MINIMAL,
         .context_bits              = MPIDI_OFI_CONTEXT_BITS_MINIMAL,
         .source_bits               = MPIDI_OFI_SOURCE_BITS_MINIMAL,
-        .tag_bits                  = MPIDI_OFI_TAG_BITS_MINIMAL
+        .tag_bits                  = MPIDI_OFI_TAG_BITS_MINIMAL,
+        .major_version             = MPIDI_OFI_MAJOR_VERSION_MINIMAL,
+        .minor_version             = MPIDI_OFI_MINOR_VERSION_MINIMAL
     },
     { /* psm */
         .enable_data               = MPIDI_OFI_ENABLE_DATA_PSM,
@@ -59,7 +61,9 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .fetch_atomic_iovecs       = MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM,
         .context_bits              = MPIDI_OFI_CONTEXT_BITS_PSM,
         .source_bits               = MPIDI_OFI_SOURCE_BITS_PSM,
-        .tag_bits                  = MPIDI_OFI_TAG_BITS_PSM
+        .tag_bits                  = MPIDI_OFI_TAG_BITS_PSM,
+        .major_version             = MPIDI_OFI_MAJOR_VERSION_PSM,
+        .minor_version             = MPIDI_OFI_MINOR_VERSION_PSM
     },
     { /* psm2 */
         .enable_data               = MPIDI_OFI_ENABLE_DATA_PSM2,
@@ -78,7 +82,9 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .fetch_atomic_iovecs       = MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM2,
         .context_bits              = MPIDI_OFI_CONTEXT_BITS_PSM2,
         .source_bits               = MPIDI_OFI_SOURCE_BITS_PSM2,
-        .tag_bits                  = MPIDI_OFI_TAG_BITS_PSM2
+        .tag_bits                  = MPIDI_OFI_TAG_BITS_PSM2,
+        .major_version             = MPIDI_OFI_MAJOR_VERSION_PSM2,
+        .minor_version             = MPIDI_OFI_MINOR_VERSION_PSM2
     },
     { /* gni */
         .enable_data               = MPIDI_OFI_ENABLE_DATA_GNI,
@@ -97,7 +103,9 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .fetch_atomic_iovecs       = MPIDI_OFI_FETCH_ATOMIC_IOVECS_GNI,
         .context_bits              = MPIDI_OFI_CONTEXT_BITS_GNI,
         .source_bits               = MPIDI_OFI_SOURCE_BITS_GNI,
-        .tag_bits                  = MPIDI_OFI_TAG_BITS_GNI
+        .tag_bits                  = MPIDI_OFI_TAG_BITS_GNI,
+        .major_version             = MPIDI_OFI_MAJOR_VERSION_GNI,
+        .minor_version             = MPIDI_OFI_MINOR_VERSION_GNI
     },
     { /* sockets */
         .enable_data               = MPIDI_OFI_ENABLE_DATA_SOCKETS,
@@ -116,7 +124,9 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .fetch_atomic_iovecs       = MPIDI_OFI_FETCH_ATOMIC_IOVECS_SOCKETS,
         .context_bits              = MPIDI_OFI_CONTEXT_BITS_SOCKETS,
         .source_bits               = MPIDI_OFI_SOURCE_BITS_SOCKETS,
-        .tag_bits                  = MPIDI_OFI_TAG_BITS_SOCKETS
+        .tag_bits                  = MPIDI_OFI_TAG_BITS_SOCKETS,
+        .major_version             = MPIDI_OFI_MAJOR_VERSION_SOCKETS,
+        .minor_version             = MPIDI_OFI_MINOR_VERSION_SOCKETS
     },
     { /* bgq */
         .enable_data               = MPIDI_OFI_ENABLE_DATA_BGQ,
@@ -135,7 +145,9 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .fetch_atomic_iovecs       = MPIDI_OFI_FETCH_ATOMIC_IOVECS_BGQ,
         .context_bits              = MPIDI_OFI_CONTEXT_BITS_BGQ,
         .source_bits               = MPIDI_OFI_SOURCE_BITS_BGQ,
-        .tag_bits                  = MPIDI_OFI_TAG_BITS_BGQ
+        .tag_bits                  = MPIDI_OFI_TAG_BITS_BGQ,
+        .major_version             = MPIDI_OFI_MAJOR_VERSION_BGQ,
+        .minor_version             = MPIDI_OFI_MINOR_VERSION_BGQ
     },
     { /* verbs */
         .enable_data               = MPIDI_OFI_ENABLE_DATA_VERBS,
@@ -154,6 +166,8 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .fetch_atomic_iovecs       = MPIDI_OFI_FETCH_ATOMIC_IOVECS_VERBS,
         .context_bits              = MPIDI_OFI_CONTEXT_BITS_VERBS,
         .source_bits               = MPIDI_OFI_SOURCE_BITS_VERBS,
-        .tag_bits                  = MPIDI_OFI_TAG_BITS_VERBS
+        .tag_bits                  = MPIDI_OFI_TAG_BITS_VERBS,
+        .major_version             = MPIDI_OFI_MAJOR_VERSION_VERBS,
+        .minor_version             = MPIDI_OFI_MINOR_VERSION_VERBS
     }
 };

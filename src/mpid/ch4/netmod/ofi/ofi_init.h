@@ -196,6 +196,26 @@ cvars:
         tag. The default value is -1, indicating that no value is set and that
         the default will be defined in the ofi_types.h file.
 
+    - name        : MPIR_CVAR_CH4_OFI_MAJOR_VERSION
+      category    : CH4_OFI
+      type        : int
+      default     : 1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the major version of the OFI library. The default is 1.
+
+    - name        : MPIR_CVAR_CH4_OFI_MINOR_VERSION
+      category    : CH4_OFI
+      type        : int
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the major version of the OFI library. The default is 0.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -494,6 +514,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             /* could not find suitable provider. ok, let's try fallback mode */
             MPIDI_OFI_init_global_settings(prov_first->fabric_attr->prov_name);
             MPIDI_OFI_init_hints(hints);
+            fi_version = FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
             MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, hints, &prov), addrinfo);
             MPIDI_OFI_CHOOSE_PROVIDER(prov, &prov_use, "No suitable provider provider found");
 
@@ -517,6 +538,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         fi_freeinfo(prov_first);
     }
 
+    fi_version = FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
     MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, hints, &prov), addrinfo);
     MPIDI_OFI_CHOOSE_PROVIDER(prov, &prov_use, "No suitable provider provider found");
 
@@ -1488,6 +1510,10 @@ static inline int MPIDI_OFI_init_global_settings(char *prov_name)
                                                         prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].source_bits : MPIR_CVAR_CH4_OFI_RANK_BITS;
     MPIDI_Global.settings.tag_bits                  = MPIR_CVAR_CH4_OFI_TAG_BITS != 20 ? MPIR_CVAR_CH4_OFI_TAG_BITS :
                                                         prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].tag_bits : MPIR_CVAR_CH4_OFI_TAG_BITS;
+    MPIDI_Global.settings.major_version             = MPIR_CVAR_CH4_OFI_MAJOR_VERSION != 1 ? MPIR_CVAR_CH4_OFI_MAJOR_VERSION :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].major_version : MPIR_CVAR_CH4_OFI_MAJOR_VERSION;
+    MPIDI_Global.settings.minor_version             = MPIR_CVAR_CH4_OFI_MINOR_VERSION != 0 ? MPIR_CVAR_CH4_OFI_MINOR_VERSION :
+                                                        prov_name ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].minor_version : MPIR_CVAR_CH4_OFI_MINOR_VERSION;
     return MPI_SUCCESS;
 }
 
@@ -1589,6 +1615,9 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
         hints->domain_attr->mr_mode = FI_MR_SCALABLE;
     else
         hints->domain_attr->mr_mode = FI_MR_BASIC;
+    if (FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION) >= FI_VERSION(1,5)) {
+        hints->domain_attr->mode = FI_RESTRICTED_COMP;
+    }
     hints->tx_attr->op_flags = FI_COMPLETION;
     /* direct RMA operations supported only with delivery complete mode,
      * else (AM mode) delivery complete is not required */
