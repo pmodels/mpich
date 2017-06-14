@@ -77,6 +77,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
  * MPIDI_OFI_CONTEXT_BITS              The number of bits used for the context ID in an OFI message
  * MPIDI_OFI_SOURCE_BITS               The number of bits used for the source rank in an OFI message
  * MPIDI_OFI_TAG_BITS                  The number of bits used for the tag in an OFI message
+ * MPIDI_OFI_MAJOR_VERSION             The major API version of libfabric required
+ * MPIDI_OFI_MINOR_VERSION             The minor API version of libfabric required
+ * MPIDI_OFI_CONTEXT_STRUCTS           The number of fi_context structs needed for the provider
  */
 
 #define MPIDI_OFI_ENABLE_DATA_PSM               MPIDI_OFI_OFF
@@ -100,6 +103,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_CONTEXT_BITS_PSM              (16)
 #define MPIDI_OFI_SOURCE_BITS_PSM               (24)
 #define MPIDI_OFI_TAG_BITS_PSM                  (20)
+#define MPIDI_OFI_MAJOR_VERSION_PSM             1
+#define MPIDI_OFI_MINOR_VERSION_PSM             5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_PSM
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -123,6 +128,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_PSM
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_PSM
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_PSM
+#define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_PSM
+#define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_PSM
+#define MPIDI_OFI_CONTEXT_STRUCTS           1 /* Compile time configurable only */
 #endif
 
 #define MPIDI_OFI_ENABLE_DATA_PSM2               MPIDI_OFI_OFF
@@ -146,6 +154,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_CONTEXT_BITS_PSM2              (16)
 #define MPIDI_OFI_SOURCE_BITS_PSM2               (24)
 #define MPIDI_OFI_TAG_BITS_PSM2                  (20)
+#define MPIDI_OFI_MAJOR_VERSION_PSM2            1
+#define MPIDI_OFI_MINOR_VERSION_PSM2            5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_PSM2
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -169,6 +179,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_PSM2
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_PSM2
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_PSM2
+#define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_PSM2
+#define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_PSM2
+#define MPIDI_OFI_CONTEXT_STRUCTS           1 /* Compile time configurable only */
 #endif
 
 #define MPIDI_OFI_ENABLE_DATA_GNI               MPIDI_OFI_OFF
@@ -192,6 +205,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_CONTEXT_BITS_GNI              (16)
 #define MPIDI_OFI_SOURCE_BITS_GNI               (24)
 #define MPIDI_OFI_TAG_BITS_GNI                  (20)
+#define MPIDI_OFI_MAJOR_VERSION_GNI             1
+#define MPIDI_OFI_MINOR_VERSION_GNI             5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_GNI
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -215,6 +230,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_GNI
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_GNI
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_GNI
+#define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_GNI
+#define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_GNI
+#define MPIDI_OFI_CONTEXT_STRUCTS           1 /* Compile time configurable only */
 #endif
 
 #define MPIDI_OFI_ENABLE_DATA_SOCKETS               MPIDI_OFI_ON
@@ -238,6 +256,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_CONTEXT_BITS_SOCKETS              (16)
 #define MPIDI_OFI_SOURCE_BITS_SOCKETS               (0)
 #define MPIDI_OFI_TAG_BITS_SOCKETS                  (31)
+#define MPIDI_OFI_MAJOR_VERSION_SOCKETS         1
+#define MPIDI_OFI_MINOR_VERSION_SOCKETS         5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_SOCKETS
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -261,6 +281,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_SOCKETS
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_SOCKETS
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_SOCKETS
+#define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_SOCKETS
+#define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_SOCKETS
+#define MPIDI_OFI_CONTEXT_STRUCTS           1 /* Compile time configurable only */
 #endif
 
 #define MPIDI_OFI_ENABLE_DATA_BGQ               MPIDI_OFI_ON
@@ -284,6 +307,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_CONTEXT_BITS_BGQ              (16)
 #define MPIDI_OFI_SOURCE_BITS_BGQ               (0)
 #define MPIDI_OFI_TAG_BITS_BGQ                  (31)
+#define MPIDI_OFI_MAJOR_VERSION_BGQ             1
+#define MPIDI_OFI_MINOR_VERSION_BGQ             5
 
 #ifdef MPIDI_CH4_OFI_USE_SET_BGQ
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -307,6 +332,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_BGQ
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_BGQ
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_BGQ
+#define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_BGQ
+#define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_BGQ
+#define MPIDI_OFI_CONTEXT_STRUCTS           2 /* Compile time configurable only */
 #endif
 
 #define MPIDI_OFI_ENABLE_DATA_VERBS               MPIDI_OFI_OFF
@@ -330,6 +358,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_CONTEXT_BITS_VERBS              (16)
 #define MPIDI_OFI_SOURCE_BITS_VERBS               (24)
 #define MPIDI_OFI_TAG_BITS_VERBS                  (20)
+#define MPIDI_OFI_MAJOR_VERSION_VERBS             1
+#define MPIDI_OFI_MINOR_VERSION_VERBS             4
 
 #ifdef MPIDI_CH4_OFI_USE_SET_VERBS
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -353,6 +383,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_VERBS
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_VERBS
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_VERBS
+#define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_VERBS
+#define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_VERBS
+#define MPIDI_OFI_CONTEXT_STRUCTS           1 /* Compile time configurable only */
 #endif
 
 /* capability set for default provider (to request the minimal supported capability) */
@@ -377,6 +410,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_CONTEXT_BITS_MINIMAL              (16)
 #define MPIDI_OFI_SOURCE_BITS_MINIMAL               (24)
 #define MPIDI_OFI_TAG_BITS_MINIMAL                  (20)
+#define MPIDI_OFI_MAJOR_VERSION_MINIMAL             1
+#define MPIDI_OFI_MINOR_VERSION_MINIMAL             0
 
 #ifdef MPIDI_CH4_OFI_USE_SET_RUNTIME
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     1
@@ -397,6 +432,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_Global.settings.context_bits
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_Global.settings.source_bits
 #define MPIDI_OFI_TAG_BITS                  MPIDI_Global.settings.tag_bits
+#define MPIDI_OFI_MAJOR_VERSION             MPIDI_Global.settings.major_version
+#define MPIDI_OFI_MINOR_VERSION             MPIDI_Global.settings.minor_version
+#define MPIDI_OFI_CONTEXT_STRUCTS           2 /* Compile time configurable only */
 #endif
 
 #endif

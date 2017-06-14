@@ -105,8 +105,8 @@ typedef struct {
 } MPIDI_OFI_am_request_header_t;
 
 typedef struct {
-    struct fi_context context;  /* fixed field, do not move */
-    int event_id;               /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS ];  /* fixed field, do not move */
+    int event_id;                  /* fixed field, do not move */
     MPIDI_OFI_am_request_header_t *req_hdr;
 } MPIDI_OFI_am_request_t;
 
@@ -117,8 +117,8 @@ typedef struct MPIDI_OFI_noncontig_t {
 } MPIDI_OFI_noncontig_t;
 
 typedef struct {
-    struct fi_context context;  /* fixed field, do not move */
-    int event_id;               /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
+    int event_id;                  /* fixed field, do not move */
     int util_id;
     struct MPIR_Comm *util_comm;
     MPI_Datatype datatype;
