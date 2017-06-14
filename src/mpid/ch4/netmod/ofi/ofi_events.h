@@ -681,7 +681,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_ent
         goto fn_exit;
     }
     else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_RECV)) {
-        mpi_errno = MPIDI_OFI_am_recv_event(wc, req);
+        if (wc->flags & FI_RECV)
+            mpi_errno = MPIDI_OFI_am_recv_event(wc, req);
 
         if (unlikely((wc->flags & FI_MULTI_RECV) && !buffered))
             MPIDI_OFI_am_repost_event(wc, req);
