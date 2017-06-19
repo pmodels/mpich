@@ -8,9 +8,9 @@
 
 #include "dataloop.h"
 
-#define DLOOP_Type_footprint PREPEND_PREFIX(Type_footprint)
+#define DLOOP_Type_footprint MPIDU_Type_footprint
 
-typedef struct PREPEND_PREFIX(Type_footprint_s) {
+typedef struct MPIDU_Type_footprint_s {
     DLOOP_Offset size, extent;
 
     /* these are only needed for calculating footprint of types
@@ -22,7 +22,6 @@ typedef struct PREPEND_PREFIX(Type_footprint_s) {
     int has_sticky_ub;
 } DLOOP_Type_footprint;
 
-void PREPEND_PREFIX(Type_calc_footprint)(MPI_Datatype type,
-					 DLOOP_Type_footprint *tfp);
+void MPIDU_Type_calc_footprint(MPI_Datatype type, DLOOP_Type_footprint *tfp);
 
 #endif

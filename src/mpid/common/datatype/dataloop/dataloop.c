@@ -57,7 +57,7 @@
 Input/output Parameters:
 . dataloop - pointer to dataloop structure
 @*/
-void PREPEND_PREFIX(Dataloop_free)(DLOOP_Dataloop **dataloop)
+void MPIDU_Dataloop_free(DLOOP_Dataloop **dataloop)
 {
 
     if (*dataloop == NULL) return;
@@ -95,7 +95,7 @@ Input Parameters:
 - all pointers in the region are relative to the start of the data region
   the first dataloop in the array is the root of the tree
 @*/
-void PREPEND_PREFIX(Dataloop_copy)(void *dest,
+void MPIDU_Dataloop_copy(void *dest,
 				   void *src,
 				   DLOOP_Size size)
 {
@@ -117,7 +117,7 @@ void PREPEND_PREFIX(Dataloop_copy)(void *dest,
     ptrdiff = (DLOOP_Offset) ((char *) dest - (char *) src);
 
     /* traverse structure updating pointers */
-    PREPEND_PREFIX(Dataloop_update)(dest, ptrdiff);
+    MPIDU_Dataloop_update(dest, ptrdiff);
 
     return;
 }
@@ -133,7 +133,7 @@ Input Parameters:
   This function is used to recursively update all the pointers in a
   dataloop tree.
 @*/
-void PREPEND_PREFIX(Dataloop_update)(DLOOP_Dataloop *dataloop,
+void MPIDU_Dataloop_update(DLOOP_Dataloop *dataloop,
 				     DLOOP_Offset ptrdiff)
 {
     /* OPT: only declare these variables down in the Struct case */
@@ -162,7 +162,7 @@ void PREPEND_PREFIX(Dataloop_update)(DLOOP_Dataloop *dataloop,
 		    (DLOOP_Dataloop *) DLOOP_OFFSET_CAST_TO_VOID_PTR
 		    (DLOOP_VOID_PTR_CAST_TO_OFFSET (char *) dataloop->loop_params.cm_t.dataloop + ptrdiff);
 
-		PREPEND_PREFIX(Dataloop_update)(dataloop->loop_params.cm_t.dataloop, ptrdiff);
+		MPIDU_Dataloop_update(dataloop->loop_params.cm_t.dataloop, ptrdiff);
 	    }
 	    break;
 
@@ -184,7 +184,7 @@ void PREPEND_PREFIX(Dataloop_update)(DLOOP_Dataloop *dataloop,
 		    (DLOOP_Dataloop *) DLOOP_OFFSET_CAST_TO_VOID_PTR
 		    (DLOOP_VOID_PTR_CAST_TO_OFFSET (char *) dataloop->loop_params.bi_t.dataloop + ptrdiff);
 
-		PREPEND_PREFIX(Dataloop_update)(dataloop->loop_params.bi_t.dataloop, ptrdiff);
+		MPIDU_Dataloop_update(dataloop->loop_params.bi_t.dataloop, ptrdiff);
 	    }
 	    break;
 
@@ -214,7 +214,7 @@ void PREPEND_PREFIX(Dataloop_update)(DLOOP_Dataloop *dataloop,
 		    (DLOOP_Dataloop *) DLOOP_OFFSET_CAST_TO_VOID_PTR
 		    (DLOOP_VOID_PTR_CAST_TO_OFFSET (char *) dataloop->loop_params.i_t.dataloop + ptrdiff);
 
-		PREPEND_PREFIX(Dataloop_update)(dataloop->loop_params.i_t.dataloop, ptrdiff);
+		MPIDU_Dataloop_update(dataloop->loop_params.i_t.dataloop, ptrdiff);
 	    }
 	    break;
 
@@ -257,7 +257,7 @@ void PREPEND_PREFIX(Dataloop_update)(DLOOP_Dataloop *dataloop,
 	    }
 
 	    for (i=0; i < dataloop->loop_params.s_t.count; i++) {
-		PREPEND_PREFIX(Dataloop_update)(looparray[i], ptrdiff);
+		MPIDU_Dataloop_update(looparray[i], ptrdiff);
 	    }
 	    break;
 	default:
@@ -283,12 +283,12 @@ Input Parameters:
   The count parameter passed into this function will often be different
   from the count passed in at the MPI layer due to optimizations.
 @*/
-void PREPEND_PREFIX(Dataloop_alloc)(int kind,
+void MPIDU_Dataloop_alloc(int kind,
 				    DLOOP_Count count,
 				    DLOOP_Dataloop **new_loop_p,
 				    MPI_Aint *new_loop_sz_p)
 {
-    PREPEND_PREFIX(Dataloop_alloc_and_copy)(kind,
+    MPIDU_Dataloop_alloc_and_copy(kind,
 					    count,
 					    NULL,
 					    0,
@@ -314,7 +314,7 @@ Input Parameters:
   The count parameter passed into this function will often be different
   from the count passed in at the MPI layer.
 @*/
-void PREPEND_PREFIX(Dataloop_alloc_and_copy)(int kind,
+void MPIDU_Dataloop_alloc_and_copy(int kind,
 					     DLOOP_Count count,
 					     DLOOP_Dataloop *old_loop,
 					     DLOOP_Size old_loop_sz,
@@ -473,7 +473,7 @@ void PREPEND_PREFIX(Dataloop_alloc_and_copy)(int kind,
 
     pos = ((char *) new_loop) + (new_loop_sz - old_loop_sz);
     if (old_loop != NULL) {
-	PREPEND_PREFIX(Dataloop_copy)(pos, old_loop, old_loop_sz);
+	MPIDU_Dataloop_copy(pos, old_loop, old_loop_sz);
     }
 
     *new_loop_p    = new_loop;
@@ -504,7 +504,7 @@ Input Parameters:
   The caller is responsible for filling in the region pointed to by
   old_loop_p (count elements).
 @*/
-void PREPEND_PREFIX(Dataloop_struct_alloc)(DLOOP_Count count,
+void MPIDU_Dataloop_struct_alloc(DLOOP_Count count,
 					   DLOOP_Size old_loop_sz,
 					   int basic_ct,
 					   DLOOP_Dataloop **old_loop_p,
@@ -602,7 +602,7 @@ void PREPEND_PREFIX(Dataloop_struct_alloc)(DLOOP_Count count,
 
   Returns 0 on success, -1 on failure.
 @*/
-void PREPEND_PREFIX(Dataloop_dup)(DLOOP_Dataloop *old_loop,
+void MPIDU_Dataloop_dup(DLOOP_Dataloop *old_loop,
 				  DLOOP_Count old_loop_sz,
 				  DLOOP_Dataloop **new_loop_p)
 {
@@ -617,7 +617,7 @@ void PREPEND_PREFIX(Dataloop_dup)(DLOOP_Dataloop *old_loop,
 	return;
     }
 
-    PREPEND_PREFIX(Dataloop_copy)(new_loop, old_loop, old_loop_sz);
+    MPIDU_Dataloop_copy(new_loop, old_loop, old_loop_sz);
     *new_loop_p = new_loop;
     return;
 }
@@ -632,7 +632,7 @@ Input Parameters:
 
 @*/
 DLOOP_Offset
-PREPEND_PREFIX(Dataloop_stream_size)(struct DLOOP_Dataloop *dl_p,
+MPIDU_Dataloop_stream_size(struct DLOOP_Dataloop *dl_p,
 				     DLOOP_Offset (*sizefn)(DLOOP_Type el_type))
 {
     DLOOP_Offset tmp_sz, tmp_ct = 1;
@@ -647,7 +647,7 @@ PREPEND_PREFIX(Dataloop_stream_size)(struct DLOOP_Dataloop *dl_p,
             for (i = 0; i < dl_p->loop_params.s_t.count; i++)
             {
                 tmp_sz += (DLOOP_Offset)(dl_p->loop_params.s_t.blocksize_array[i]) *
-                    PREPEND_PREFIX(Dataloop_stream_size)(dl_p->loop_params.s_t.dataloop_array[i], sizefn);
+                    MPIDU_Dataloop_stream_size(dl_p->loop_params.s_t.dataloop_array[i], sizefn);
             }
             return tmp_sz * tmp_ct;
         }
@@ -717,7 +717,7 @@ Input Parameters:
 + dataloop - root of tree to dump
 - depth - starting depth; used to help keep up with where we are in the tree
 @*/
-void PREPEND_PREFIX(Dataloop_print)(struct DLOOP_Dataloop *dataloop,
+void MPIDU_Dataloop_print(struct DLOOP_Dataloop *dataloop,
 				    int depth)
 {
     int i;
@@ -736,7 +736,7 @@ void PREPEND_PREFIX(Dataloop_print)(struct DLOOP_Dataloop *dataloop,
 			     (int) dataloop->loop_params.c_t.count,
                              dataloop->loop_params.c_t.dataloop));
 	    if (!(dataloop->kind & DLOOP_FINAL_MASK))
-		PREPEND_PREFIX(Dataloop_print)(dataloop->loop_params.c_t.dataloop, depth+1);
+		MPIDU_Dataloop_print(dataloop->loop_params.c_t.dataloop, depth+1);
 	    break;
 	case DLOOP_KIND_VECTOR:
 	    MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPL_DBG_FDEST,"\tVECTOR: count=%d, blksz=%d, stride=" DLOOP_OFFSET_FMT_DEC_SPEC ", datatype=%p\n",
@@ -745,7 +745,7 @@ void PREPEND_PREFIX(Dataloop_print)(struct DLOOP_Dataloop *dataloop,
 			     (DLOOP_Offset) dataloop->loop_params.v_t.stride,
                              dataloop->loop_params.v_t.dataloop));
 	    if (!(dataloop->kind & DLOOP_FINAL_MASK))
-		PREPEND_PREFIX(Dataloop_print)(dataloop->loop_params.v_t.dataloop, depth+1);
+		MPIDU_Dataloop_print(dataloop->loop_params.v_t.dataloop, depth+1);
 	    break;
 	case DLOOP_KIND_BLOCKINDEXED:
 	    MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPL_DBG_FDEST,"\tBLOCKINDEXED: count=%d, blksz=%d, datatype=%p\n",
@@ -754,7 +754,7 @@ void PREPEND_PREFIX(Dataloop_print)(struct DLOOP_Dataloop *dataloop,
                              dataloop->loop_params.bi_t.dataloop));
 	    /* print out offsets later */
 	    if (!(dataloop->kind & DLOOP_FINAL_MASK))
-		PREPEND_PREFIX(Dataloop_print)(dataloop->loop_params.bi_t.dataloop, depth+1);
+		MPIDU_Dataloop_print(dataloop->loop_params.bi_t.dataloop, depth+1);
 	    break;
 	case DLOOP_KIND_INDEXED:
 	    MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPL_DBG_FDEST,"\tINDEXED: count=%d, datatype=%p\n",
@@ -762,7 +762,7 @@ void PREPEND_PREFIX(Dataloop_print)(struct DLOOP_Dataloop *dataloop,
                              dataloop->loop_params.i_t.dataloop));
 	    /* print out blocksizes and offsets later */
 	    if (!(dataloop->kind & DLOOP_FINAL_MASK))
-		PREPEND_PREFIX(Dataloop_print)(dataloop->loop_params.i_t.dataloop, depth+1);
+		MPIDU_Dataloop_print(dataloop->loop_params.i_t.dataloop, depth+1);
 	    break;
 	case DLOOP_KIND_STRUCT:
 	    MPL_DBG_MSG_D(MPIR_DBG_DATATYPE,VERBOSE,"\tSTRUCT: count=%d\n", (int) dataloop->loop_params.s_t.count);
@@ -778,7 +778,7 @@ void PREPEND_PREFIX(Dataloop_print)(struct DLOOP_Dataloop *dataloop,
 	    if (dataloop->kind & DLOOP_FINAL_MASK) break;
 
 	    for (i=0; i < dataloop->loop_params.s_t.count; i++) {
-		PREPEND_PREFIX(Dataloop_print)(dataloop->loop_params.s_t.dataloop_array[i],depth+1);
+		MPIDU_Dataloop_print(dataloop->loop_params.s_t.dataloop_array[i],depth+1);
 	    }
 	    break;
 	default:

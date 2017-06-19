@@ -11,11 +11,6 @@
 #include <mpi.h>
 #include <mpl.h>
 
-/* Note: this is where you define the prefix that will be prepended on
- * all externally visible generic dataloop and segment functions.
- */
-#define PREPEND_PREFIX(fn) MPIDU_ ## fn
-
 /* These following dataloop-specific types will be used throughout the DLOOP
  * instance:
  */
