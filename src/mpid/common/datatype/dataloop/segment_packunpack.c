@@ -35,12 +35,12 @@ static void setPrint( void ) {
 #define DBG_SEGMENT(_a)
 #endif
 
-void PREPEND_PREFIX(Segment_pack)(DLOOP_Segment *segp,
+void MPIDU_Segment_pack(DLOOP_Segment *segp,
 				  DLOOP_Offset   first,
 				  DLOOP_Offset  *lastp,
 				  void *streambuf)
 {
-    struct PREPEND_PREFIX(m2m_params) params; /* defined in dataloop_parts.h */
+    struct MPIDU_m2m_params params; /* defined in dataloop_parts.h */
 
     DBG_SEGMENT(printf( "Segment_pack...\n" ));
     /* experimenting with discarding buf value in the segment, keeping in
@@ -51,22 +51,22 @@ void PREPEND_PREFIX(Segment_pack)(DLOOP_Segment *segp,
     params.streambuf = streambuf;
     params.direction = DLOOP_M2M_FROM_USERBUF;
 
-    PREPEND_PREFIX(Segment_manipulate)(segp, first, lastp,
-				       PREPEND_PREFIX(Segment_contig_m2m),
-				       PREPEND_PREFIX(Segment_vector_m2m),
-				       PREPEND_PREFIX(Segment_blkidx_m2m),
-				       PREPEND_PREFIX(Segment_index_m2m),
+    MPIDU_Segment_manipulate(segp, first, lastp,
+				       MPIDU_Segment_contig_m2m,
+				       MPIDU_Segment_vector_m2m,
+				       MPIDU_Segment_blkidx_m2m,
+				       MPIDU_Segment_index_m2m,
 				       NULL, /* size fn */
 				       &params);
     return;
 }
 
-void PREPEND_PREFIX(Segment_unpack)(DLOOP_Segment *segp,
+void MPIDU_Segment_unpack(DLOOP_Segment *segp,
 				    DLOOP_Offset   first,
 				    DLOOP_Offset  *lastp,
 				    void *streambuf)
 {
-    struct PREPEND_PREFIX(m2m_params) params;
+    struct MPIDU_m2m_params params;
 
     DBG_SEGMENT(printf( "Segment_unpack...\n" ));
     /* experimenting with discarding buf value in the segment, keeping in
@@ -77,11 +77,11 @@ void PREPEND_PREFIX(Segment_unpack)(DLOOP_Segment *segp,
     params.streambuf = streambuf;
     params.direction = DLOOP_M2M_TO_USERBUF;
 
-    PREPEND_PREFIX(Segment_manipulate)(segp, first, lastp,
-				       PREPEND_PREFIX(Segment_contig_m2m),
-				       PREPEND_PREFIX(Segment_vector_m2m),
-				       PREPEND_PREFIX(Segment_blkidx_m2m),
-				       PREPEND_PREFIX(Segment_index_m2m),
+    MPIDU_Segment_manipulate(segp, first, lastp,
+				       MPIDU_Segment_contig_m2m,
+				       MPIDU_Segment_vector_m2m,
+				       MPIDU_Segment_blkidx_m2m,
+				       MPIDU_Segment_index_m2m,
 				       NULL, /* size fn */
 				       &params);
     return;
@@ -89,7 +89,7 @@ void PREPEND_PREFIX(Segment_unpack)(DLOOP_Segment *segp,
 
 /* PIECE FUNCTIONS BELOW */
 
-int PREPEND_PREFIX(Segment_contig_m2m)(DLOOP_Offset *blocks_p,
+int MPIDU_Segment_contig_m2m(DLOOP_Offset *blocks_p,
 				       DLOOP_Type el_type,
 				       DLOOP_Offset rel_off,
 				       void *bufp ATTRIBUTE((unused)),
@@ -97,7 +97,7 @@ int PREPEND_PREFIX(Segment_contig_m2m)(DLOOP_Offset *blocks_p,
 {
     DLOOP_Offset el_size; /* DLOOP_Count? */
     DLOOP_Offset size;
-    struct PREPEND_PREFIX(m2m_params) *paramp = v_paramp;
+    struct MPIDU_m2m_params *paramp = v_paramp;
 
     DLOOP_Handle_get_size_macro(el_type, el_size);
     size = *blocks_p * el_size;
@@ -140,7 +140,7 @@ int PREPEND_PREFIX(Segment_contig_m2m)(DLOOP_Offset *blocks_p,
  * Note: this is only called when the starting position is at the beginning
  * of a whole block in a vector type.
  */
-int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
+int MPIDU_Segment_vector_m2m(DLOOP_Offset *blocks_p,
 				       DLOOP_Count count ATTRIBUTE((unused)),
 				       DLOOP_Count blksz,
 				       DLOOP_Offset stride,
@@ -151,7 +151,7 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
 {
     DLOOP_Count i;
     DLOOP_Offset el_size, whole_count, blocks_left;
-    struct PREPEND_PREFIX(m2m_params) *paramp = v_paramp;
+    struct MPIDU_m2m_params *paramp = v_paramp;
     char *cbufp;
 
     /* Ensure that pointer increment fits in a pointer */
@@ -273,7 +273,7 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
 
 /* MPIDU_Segment_blkidx_m2m
  */
-int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
+int MPIDU_Segment_blkidx_m2m(DLOOP_Offset *blocks_p,
 				       DLOOP_Count count,
 				       DLOOP_Count blocklen,
 				       DLOOP_Offset *offsetarray,
@@ -286,7 +286,7 @@ int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
     DLOOP_Offset el_size;
     DLOOP_Offset blocks_left = *blocks_p;
     char *cbufp;
-    struct PREPEND_PREFIX(m2m_params) *paramp = v_paramp;
+    struct MPIDU_m2m_params *paramp = v_paramp;
 
     DLOOP_Handle_get_size_macro(el_type, el_size);
     DBG_SEGMENT( printf("blkidx m2m: elsize = %ld, count = %ld, blocklen = %ld,"
@@ -353,7 +353,7 @@ int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
 
 /* MPIDU_Segment_index_m2m
  */
-int PREPEND_PREFIX(Segment_index_m2m)(DLOOP_Offset *blocks_p,
+int MPIDU_Segment_index_m2m(DLOOP_Offset *blocks_p,
 				      DLOOP_Count count,
 				      DLOOP_Count *blockarray,
 				      DLOOP_Offset *offsetarray,
@@ -366,7 +366,7 @@ int PREPEND_PREFIX(Segment_index_m2m)(DLOOP_Offset *blocks_p,
     DLOOP_Offset el_size;
     DLOOP_Offset cur_block_sz, blocks_left = *blocks_p;
     char *cbufp;
-    struct PREPEND_PREFIX(m2m_params) *paramp = v_paramp;
+    struct MPIDU_m2m_params *paramp = v_paramp;
 
     DLOOP_Handle_get_size_macro(el_type, el_size);
     DBG_SEGMENT(printf( "index m2m: elsize = %d, count = %d\n", (int)el_size, (int)count ));

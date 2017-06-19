@@ -44,7 +44,7 @@ static int DLOOP_Leaf_index_count_block(DLOOP_Offset *blocks_p,
 					void *bufp,
 					void *v_paramp);
 
-struct PREPEND_PREFIX(contig_blocks_params) {
+struct MPIDU_contig_blocks_params {
     DLOOP_Count  count;
     DLOOP_Offset last_loc;
 };
@@ -53,12 +53,12 @@ struct PREPEND_PREFIX(contig_blocks_params) {
  *
  * Count number of contiguous regions in segment between first and last.
  */
-void PREPEND_PREFIX(Segment_count_contig_blocks)(DLOOP_Segment *segp,
+void MPIDU_Segment_count_contig_blocks(DLOOP_Segment *segp,
 						 DLOOP_Offset first,
 						 DLOOP_Offset *lastp,
 						 DLOOP_Count *countp)
 {
-    struct PREPEND_PREFIX(contig_blocks_params) params;
+    struct MPIDU_contig_blocks_params params;
 
     params.count    = 0;
     params.last_loc = 0;
@@ -67,7 +67,7 @@ void PREPEND_PREFIX(Segment_count_contig_blocks)(DLOOP_Segment *segp,
      * optimize the count by coalescing contiguous segments, while
      * functions using the count do not optimize in the same way
      * (e.g., flatten code) */
-    PREPEND_PREFIX(Segment_manipulate)(segp,
+    MPIDU_Segment_manipulate(segp,
 				       first,
 				       lastp,
 				       DLOOP_Leaf_contig_count_block,
@@ -95,7 +95,7 @@ static int DLOOP_Leaf_contig_count_block(DLOOP_Offset *blocks_p,
 					 void *v_paramp)
 {
     DLOOP_Offset size, el_size;
-    struct PREPEND_PREFIX(contig_blocks_params) *paramp = v_paramp;
+    struct MPIDU_contig_blocks_params *paramp = v_paramp;
 
     DLOOP_Assert(*blocks_p > 0);
 
@@ -146,7 +146,7 @@ static int DLOOP_Leaf_vector_count_block(DLOOP_Offset *blocks_p,
 {
     DLOOP_Count new_blk_count;
     DLOOP_Offset size, el_size;
-    struct PREPEND_PREFIX(contig_blocks_params) *paramp = v_paramp;
+    struct MPIDU_contig_blocks_params *paramp = v_paramp;
 
     DLOOP_Assert(count > 0 && blksz > 0 && *blocks_p > 0);
 
@@ -184,7 +184,7 @@ static int DLOOP_Leaf_blkidx_count_block(DLOOP_Offset *blocks_p,
 {
     DLOOP_Count i, new_blk_count;
     DLOOP_Offset size, el_size, last_loc;
-    struct PREPEND_PREFIX(contig_blocks_params) *paramp = v_paramp;
+    struct MPIDU_contig_blocks_params *paramp = v_paramp;
 
     DLOOP_Assert(count > 0 && blksz > 0 && *blocks_p > 0);
 
@@ -226,7 +226,7 @@ static int DLOOP_Leaf_index_count_block(DLOOP_Offset *blocks_p,
 {
     DLOOP_Count new_blk_count;
     DLOOP_Offset el_size, last_loc;
-    struct PREPEND_PREFIX(contig_blocks_params) *paramp = v_paramp;
+    struct MPIDU_contig_blocks_params *paramp = v_paramp;
 
     DLOOP_Assert(count > 0 && *blocks_p > 0);
 

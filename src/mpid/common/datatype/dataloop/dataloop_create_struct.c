@@ -7,10 +7,6 @@
 
 #include "./dataloop.h"
 
-#ifndef PREPEND_PREFIX
-#error "You must explicitly include a header that sets the PREPEND_PREFIX and includes dataloop_parts.h"
-#endif
-
 static int DLOOP_Dataloop_create_struct_memory_error(void);
 static int DLOOP_Dataloop_create_unique_type_struct(DLOOP_Count count,
 						    const int *blklens,
@@ -64,7 +60,7 @@ Output Parameters:
   or corrected in this code at this time.
 
 @*/
-int PREPEND_PREFIX(Dataloop_create_struct)(DLOOP_Count count,
+int MPIDU_Dataloop_create_struct(DLOOP_Count count,
 					   const int *blklens,
 					   const MPI_Aint *disps,
 					   const DLOOP_Type *oldtypes,
@@ -88,7 +84,7 @@ int PREPEND_PREFIX(Dataloop_create_struct)(DLOOP_Count count,
     /* if count is zero, handle with contig code, call it a int */
     if (count == 0)
     {
-	err = PREPEND_PREFIX(Dataloop_create_contiguous)(0,
+	err = MPIDU_Dataloop_create_contiguous(0,
 							 MPI_INT,
 							 dlp_p,
 							 dlsz_p,
@@ -153,7 +149,7 @@ int PREPEND_PREFIX(Dataloop_create_struct)(DLOOP_Count count,
      */
     if (nr_basics == 0 && nr_derived == 0)
     {
-	err = PREPEND_PREFIX(Dataloop_create_contiguous)(0,
+	err = MPIDU_Dataloop_create_contiguous(0,
 							 MPI_INT,
 							 dlp_p,
 							 dlsz_p,
@@ -175,7 +171,7 @@ int PREPEND_PREFIX(Dataloop_create_struct)(DLOOP_Count count,
     if (nr_basics + nr_derived == 1)
     {
 	/* type_pos is index to only real type in array */
-	err = PREPEND_PREFIX(Dataloop_create_blockindexed)
+	err = MPIDU_Dataloop_create_blockindexed
 	    (1, /* count */
 	     blklens[type_pos],
 	     &disps[type_pos],
@@ -291,7 +287,7 @@ int PREPEND_PREFIX(Dataloop_create_struct)(DLOOP_Count count,
 	new_loop_depth = old_loop_depth + 1;
     }
 
-    PREPEND_PREFIX(Dataloop_struct_alloc)((DLOOP_Count) nr_basics + nr_derived,
+    MPIDU_Dataloop_struct_alloc((DLOOP_Count) nr_basics + nr_derived,
 					  old_loop_sz,
 					  nr_basics,
 					  &curpos,
@@ -344,7 +340,7 @@ int PREPEND_PREFIX(Dataloop_create_struct)(DLOOP_Count count,
 	     * push the count (blklen) from the struct down into the
 	     * contig so we can process more at the leaf.
 	     */
-	    err = PREPEND_PREFIX(Dataloop_create_contiguous)(blklens[i],
+	    err = MPIDU_Dataloop_create_contiguous(blklens[i],
 							     oldtypes[i],
 							     &dummy_dlp,
 							     &dummy_sz,
@@ -361,7 +357,7 @@ int PREPEND_PREFIX(Dataloop_create_struct)(DLOOP_Count count,
 	    /* copy the new contig loop into place in the struct memory
 	     * region
 	     */
-	    PREPEND_PREFIX(Dataloop_copy)(curpos, dummy_dlp, dummy_sz);
+	    MPIDU_Dataloop_copy(curpos, dummy_dlp, dummy_sz);
 	    new_dlp->loop_params.s_t.dataloop_array[loop_idx] = curpos;
 	    curpos = (DLOOP_Dataloop *) ((char *) curpos + dummy_sz);
 
@@ -369,7 +365,7 @@ int PREPEND_PREFIX(Dataloop_create_struct)(DLOOP_Count count,
 	    new_dlp->loop_params.s_t.blocksize_array[loop_idx] = 1;
 	    new_dlp->loop_params.s_t.el_extent_array[loop_idx] =
 		((DLOOP_Offset) blklens[i]) * dummy_dlp->el_extent;
-	    PREPEND_PREFIX(Dataloop_free)(&dummy_dlp);
+	    MPIDU_Dataloop_free(&dummy_dlp);
 	}
 	else
 	{
@@ -380,7 +376,7 @@ int PREPEND_PREFIX(Dataloop_create_struct)(DLOOP_Count count,
 	    DLOOP_Handle_get_loopsize_macro(oldtypes[i], old_loop_sz, flag);
 	    DLOOP_Handle_get_extent_macro(oldtypes[i], old_extent);
 
-	    PREPEND_PREFIX(Dataloop_copy)(curpos, old_loop_ptr, old_loop_sz);
+	    MPIDU_Dataloop_copy(curpos, old_loop_ptr, old_loop_sz);
 	    new_dlp->loop_params.s_t.dataloop_array[loop_idx] = curpos;
 	    curpos = (DLOOP_Dataloop *) ((char *) curpos + old_loop_sz);
 
@@ -454,7 +450,7 @@ static int DLOOP_Dataloop_create_unique_type_struct(DLOOP_Count count,
 	}
     }
 
-    err = PREPEND_PREFIX(Dataloop_create_indexed)(cur_pos,
+    err = MPIDU_Dataloop_create_indexed(cur_pos,
 						  tmp_blklens,
 						  tmp_disps,
 						  1, /* disp in bytes */
@@ -517,7 +513,7 @@ static int DLOOP_Dataloop_create_basic_all_bytes_struct(
 	    cur_pos++;
 	}
     }
-    err = PREPEND_PREFIX(Dataloop_create_indexed)(cur_pos,
+    err = MPIDU_Dataloop_create_indexed(cur_pos,
 						  tmp_blklens,
 						  tmp_disps,
 						  1, /* disp in bytes */
@@ -553,7 +549,7 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
     int first_ind;
     DLOOP_Size last_ind;
 
-    segp = PREPEND_PREFIX(Segment_alloc)();
+    segp = MPIDU_Segment_alloc();
     /* --BEGIN ERROR HANDLING-- */
     if (!segp) {
 	return DLOOP_Dataloop_create_struct_memory_error();
@@ -584,7 +580,7 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
             /* if the derived type has some data to contribute,
              * add to flattened representation */
             if (sz > 0) {
-                err = PREPEND_PREFIX(Segment_init)(NULL,
+                err = MPIDU_Segment_init(NULL,
                                                    (DLOOP_Count) blklens[i],
                                                    oldtypes[i],
                                                    segp,
@@ -593,7 +589,7 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
 
                 bytes = SEGMENT_IGNORE_LAST;
 
-                PREPEND_PREFIX(Segment_count_contig_blocks)(segp,
+                MPIDU_Segment_count_contig_blocks(segp,
                                                             0,
                                                             &bytes,
                                                             &tmp_nr_blks);
@@ -608,8 +604,8 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
      * do: store a simple contig of zero ints and call it done.
      */
     if (nr_blks == 0) {
-	PREPEND_PREFIX(Segment_free)(segp);
-	err = PREPEND_PREFIX(Dataloop_create_contiguous)(0,
+	MPIDU_Segment_free(segp);
+	err = MPIDU_Dataloop_create_contiguous(0,
 							 MPI_INT,
 							 dlp_p,
 							 dlsz_p,
@@ -624,7 +620,7 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
     tmp_blklens = (DLOOP_Size *) DLOOP_Malloc(nr_blks * sizeof(DLOOP_Size));
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens) {
-	PREPEND_PREFIX(Segment_free)(segp);
+	MPIDU_Segment_free(segp);
 	return DLOOP_Dataloop_create_struct_memory_error();
     }
     /* --END ERROR HANDLING-- */
@@ -634,7 +630,7 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_disps) {
 	DLOOP_Free(tmp_blklens);
-	PREPEND_PREFIX(Segment_free)(segp);
+	MPIDU_Segment_free(segp);
 	return DLOOP_Dataloop_create_struct_memory_error();
     }
     /* --END ERROR HANDLING-- */
@@ -662,7 +658,7 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
 	    blklens[i] != 0 &&
 	    (is_basic || sz > 0))
 	{
-	    err = PREPEND_PREFIX(Segment_init)((char *) DLOOP_OFFSET_CAST_TO_VOID_PTR disps[i],
+	    err = MPIDU_Segment_init((char *) DLOOP_OFFSET_CAST_TO_VOID_PTR disps[i],
 					 (DLOOP_Count) blklens[i],
 					 oldtypes[i],
 					 segp,
@@ -671,7 +667,7 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
 
 	    last_ind = nr_blks - first_ind;
 	    bytes = SEGMENT_IGNORE_LAST;
-	    PREPEND_PREFIX(Segment_mpi_flatten)(segp,
+	    MPIDU_Segment_mpi_flatten(segp,
 						0,
 						&bytes,
 						&tmp_blklens[first_ind],
@@ -695,9 +691,9 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
     }
 #endif
 
-    PREPEND_PREFIX(Segment_free)(segp);
+    MPIDU_Segment_free(segp);
 
-    err = PREPEND_PREFIX(Dataloop_create_indexed)(nr_blks,
+    err = MPIDU_Dataloop_create_indexed(nr_blks,
 						  tmp_blklens,
 						  tmp_disps,
 						  1, /* disp in bytes */

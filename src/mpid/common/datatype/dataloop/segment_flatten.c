@@ -44,7 +44,7 @@ static int DLOOP_Leaf_index_mpi_flatten(DLOOP_Offset *blocks_p,
 					void *bufp,
 					void *v_paramp);
 
-struct PREPEND_PREFIX(mpi_flatten_params) {
+struct MPIDU_mpi_flatten_params {
     int       index;
     MPI_Aint  length;
     MPI_Aint  last_end;
@@ -70,14 +70,14 @@ struct PREPEND_PREFIX(mpi_flatten_params) {
  * lengthp - in/out parameter describing length of array (and afterwards
  *           the amount of the array that has actual data)
  */
-void PREPEND_PREFIX(Segment_mpi_flatten)(DLOOP_Segment *segp,
+void MPIDU_Segment_mpi_flatten(DLOOP_Segment *segp,
 					 DLOOP_Offset first,
 					 DLOOP_Offset *lastp,
 					 DLOOP_Size *blklens,
 					 MPI_Aint *disps,
 					 DLOOP_Size *lengthp)
 {
-    struct PREPEND_PREFIX(mpi_flatten_params) params;
+    struct MPIDU_mpi_flatten_params params;
 
     DLOOP_Assert(*lengthp > 0);
 
@@ -86,7 +86,7 @@ void PREPEND_PREFIX(Segment_mpi_flatten)(DLOOP_Segment *segp,
     params.blklens = blklens;
     params.disps   = disps;
 
-    PREPEND_PREFIX(Segment_manipulate)(segp,
+    MPIDU_Segment_manipulate(segp,
 				       first,
 				       lastp,
 				       DLOOP_Leaf_contig_mpi_flatten,
@@ -116,7 +116,7 @@ static int DLOOP_Leaf_contig_mpi_flatten(DLOOP_Offset *blocks_p,
     DLOOP_Offset size;
     DLOOP_Offset el_size;
     char *last_end = NULL;
-    struct PREPEND_PREFIX(mpi_flatten_params) *paramp = v_paramp;
+    struct MPIDU_mpi_flatten_params *paramp = v_paramp;
 
     DLOOP_Handle_get_size_macro(el_type, el_size);
     size = *blocks_p * el_size;
@@ -191,7 +191,7 @@ static int DLOOP_Leaf_vector_mpi_flatten(DLOOP_Offset *blocks_p,
     int i;
     DLOOP_Size size, blocks_left;
     DLOOP_Offset el_size;
-    struct PREPEND_PREFIX(mpi_flatten_params) *paramp = v_paramp;
+    struct MPIDU_mpi_flatten_params *paramp = v_paramp;
 
     DLOOP_Handle_get_size_macro(el_type, el_size);
     blocks_left = *blocks_p;
@@ -286,7 +286,7 @@ static int DLOOP_Leaf_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
     int i;
     DLOOP_Size blocks_left, size;
     DLOOP_Offset el_size;
-    struct PREPEND_PREFIX(mpi_flatten_params) *paramp = v_paramp;
+    struct MPIDU_mpi_flatten_params *paramp = v_paramp;
 
     DLOOP_Handle_get_size_macro(el_type, el_size);
     blocks_left = *blocks_p;
@@ -369,7 +369,7 @@ static int DLOOP_Leaf_index_mpi_flatten(DLOOP_Offset *blocks_p,
     int i;
     DLOOP_Size size, blocks_left;
     DLOOP_Offset el_size;
-    struct PREPEND_PREFIX(mpi_flatten_params) *paramp = v_paramp;
+    struct MPIDU_mpi_flatten_params *paramp = v_paramp;
 
     DLOOP_Handle_get_size_macro(el_type, el_size);
     blocks_left = *blocks_p;

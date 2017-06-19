@@ -9,10 +9,10 @@
 
 #include "dataloop.h"
 #undef FUNCNAME
-#define FUNCNAME PREPEND_PREFIX(Type_convert_subarray)
+#define FUNCNAME MPIDU_Type_convert_subarray
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int PREPEND_PREFIX(Type_convert_subarray)(int ndims,
+int MPIDU_Type_convert_subarray(int ndims,
 					  int *array_of_sizes,
 					  int *array_of_subsizes,
 					  int *array_of_starts,

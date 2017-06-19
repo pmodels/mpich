@@ -24,7 +24,7 @@
    Returns 0 on success, -1 on failure.
 
 @*/
-int PREPEND_PREFIX(Dataloop_create_vector)(DLOOP_Count icount,
+int MPIDU_Dataloop_create_vector(DLOOP_Count icount,
 					   DLOOP_Size iblocklength,
 					   MPI_Aint astride,
 					   int strideinbytes,
@@ -52,7 +52,7 @@ int PREPEND_PREFIX(Dataloop_create_vector)(DLOOP_Count icount,
     if (count == 0 || blocklength == 0)
     {
 
-	err = PREPEND_PREFIX(Dataloop_create_contiguous)(0,
+	err = MPIDU_Dataloop_create_contiguous(0,
 							 MPI_INT,
 							 dlp_p,
 							 dlsz_p,
@@ -66,7 +66,7 @@ int PREPEND_PREFIX(Dataloop_create_vector)(DLOOP_Count icount,
      * if count == 1, store as a contiguous rather than a vector dataloop.
      */
     if (count == 1) {
-	err = PREPEND_PREFIX(Dataloop_create_contiguous)(iblocklength,
+	err = MPIDU_Dataloop_create_contiguous(iblocklength,
 							 oldtype,
 							 dlp_p,
 							 dlsz_p,
@@ -97,7 +97,7 @@ int PREPEND_PREFIX(Dataloop_create_vector)(DLOOP_Count icount,
     if (is_builtin) {
 	DLOOP_Offset basic_sz = 0;
 
-	PREPEND_PREFIX(Dataloop_alloc)(DLOOP_KIND_VECTOR,
+	MPIDU_Dataloop_alloc(DLOOP_KIND_VECTOR,
 				       count,
 				       &new_dlp,
 				       &new_loop_sz);
@@ -136,7 +136,7 @@ int PREPEND_PREFIX(Dataloop_create_vector)(DLOOP_Count icount,
 	DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr, flag);
 	DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz, flag);
 
-	PREPEND_PREFIX(Dataloop_alloc_and_copy)(DLOOP_KIND_VECTOR,
+	MPIDU_Dataloop_alloc_and_copy(DLOOP_KIND_VECTOR,
 						count,
 						old_loop_ptr,
 						old_loop_sz,
