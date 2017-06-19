@@ -25,7 +25,7 @@
 .N Errors
 .N Returns 0 on success, -1 on failure.
 @*/
-int PREPEND_PREFIX(Dataloop_create_contiguous)(DLOOP_Count icount,
+int MPIDU_Dataloop_create_contiguous(DLOOP_Count icount,
 					       DLOOP_Type oldtype,
 					       DLOOP_Dataloop **dlp_p,
 					       DLOOP_Size *dlsz_p,
@@ -76,7 +76,7 @@ int PREPEND_PREFIX(Dataloop_create_contiguous)(DLOOP_Count icount,
     {
 	DLOOP_Offset basic_sz = 0;
 
-	PREPEND_PREFIX(Dataloop_alloc)(DLOOP_KIND_CONTIG,
+	MPIDU_Dataloop_alloc(DLOOP_KIND_CONTIG,
 				       count,
 				       &new_dlp,
 				       &new_loop_sz);
@@ -115,7 +115,7 @@ int PREPEND_PREFIX(Dataloop_create_contiguous)(DLOOP_Count icount,
 	if (apply_contig_coalescing)
 	{
 	    /* make a copy of the old loop and multiply the count */
-	    PREPEND_PREFIX(Dataloop_dup)(old_loop_ptr,
+	    MPIDU_Dataloop_dup(old_loop_ptr,
 					 old_loop_sz,
 					 &new_dlp);
 	    /* --BEGIN ERROR HANDLING-- */
@@ -130,7 +130,7 @@ int PREPEND_PREFIX(Dataloop_create_contiguous)(DLOOP_Count icount,
 	else
 	{
 	    /* allocate space for new loop including copy of old */
-	    PREPEND_PREFIX(Dataloop_alloc_and_copy)(DLOOP_KIND_CONTIG,
+	    MPIDU_Dataloop_alloc_and_copy(DLOOP_KIND_CONTIG,
 						    count,
 						    old_loop_ptr,
 						    old_loop_sz,

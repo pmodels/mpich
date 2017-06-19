@@ -20,10 +20,10 @@ static int MPIOI_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nproc
 
 
 #undef FUNCNAME
-#define FUNCNAME PREPEND_PREFIX(Type_convert_darray)
+#define FUNCNAME MPIDU_Type_convert_darray
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int PREPEND_PREFIX(Type_convert_darray)(int size,
+int MPIDU_Type_convert_darray(int size,
 					int rank,
 					int ndims,
 					int *array_of_gsizes,

@@ -36,7 +36,7 @@
    This same function could be used to create dataloops for any type
    that actually consists of two distinct elements.
 @*/
-int PREPEND_PREFIX(Dataloop_create_pairtype)(MPI_Datatype type,
+int MPIDU_Dataloop_create_pairtype(MPI_Datatype type,
 					     DLOOP_Dataloop **dlp_p,
 					     MPI_Aint *dlsz_p,
 					     int *dldepth_p,
@@ -63,7 +63,7 @@ int PREPEND_PREFIX(Dataloop_create_pairtype)(MPI_Datatype type,
     if (type == MPI_2INT)
 	PAIRTYPE_CONTENTS(MPI_INT, int, MPI_INT, int);
 
-    return PREPEND_PREFIX(Dataloop_create_struct)(2,
+    return MPIDU_Dataloop_create_struct(2,
 						  blocks,
 						  disps,
 						  types,

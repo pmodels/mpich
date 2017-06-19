@@ -36,7 +36,7 @@ static void DLOOP_Type_indexed_array_copy(DLOOP_Count count,
 .N Returns 0 on success, -1 on error.
 @*/
 
-int PREPEND_PREFIX(Dataloop_create_indexed)(DLOOP_Count icount,
+int MPIDU_Dataloop_create_indexed(DLOOP_Count icount,
 					    const DLOOP_Size *blocklength_array,
 					    const void *displacement_array,
 					    int dispinbytes,
@@ -62,7 +62,7 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(DLOOP_Count icount,
     /* if count is zero, handle with contig code, call it an int */
     if (count == 0)
     {
-	err = PREPEND_PREFIX(Dataloop_create_contiguous)(0,
+	err = MPIDU_Dataloop_create_contiguous(0,
 							 MPI_INT,
 							 dlp_p,
 							 dlsz_p,
@@ -95,7 +95,7 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(DLOOP_Count icount,
 	old_type_count += (DLOOP_Count) blocklength_array[i];
     }
 
-    contig_count = PREPEND_PREFIX(Type_indexed_count_contig)(count,
+    contig_count = MPIDU_Type_indexed_count_contig(count,
                                                              blocklength_array,
                                                              displacement_array,
                                                              dispinbytes,
@@ -104,7 +104,7 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(DLOOP_Count icount,
     /* if contig_count is zero (no data), handle with contig code */
     if (contig_count == 0)
     {
-	err = PREPEND_PREFIX(Dataloop_create_contiguous)(0,
+	err = MPIDU_Dataloop_create_contiguous(0,
 							 MPI_INT,
 							 dlp_p,
 							 dlsz_p,
@@ -122,7 +122,7 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(DLOOP_Count icount,
 	((!dispinbytes && ((int *) displacement_array)[first] == 0) ||
 	 (dispinbytes && ((MPI_Aint *) displacement_array)[first] == 0)))
     {
-	err = PREPEND_PREFIX(Dataloop_create_contiguous)(old_type_count,
+	err = MPIDU_Dataloop_create_contiguous(old_type_count,
 							 oldtype,
 							 dlp_p,
 							 dlsz_p,
@@ -144,7 +144,7 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(DLOOP_Count icount,
             disp_arr_tmp = &(((const MPI_Aint *)displacement_array)[first]);
         else
             disp_arr_tmp = &(((const int *)displacement_array)[first]);
-	err = PREPEND_PREFIX(Dataloop_create_blockindexed)(1,
+	err = MPIDU_Dataloop_create_blockindexed(1,
 							   old_type_count,
 							   disp_arr_tmp,
 							   dispinbytes,
@@ -178,7 +178,7 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(DLOOP_Count icount,
             disp_arr_tmp = &(((const MPI_Aint *)displacement_array)[first]);
         else
             disp_arr_tmp = &(((const int *)displacement_array)[first]);
-	err = PREPEND_PREFIX(Dataloop_create_blockindexed)(icount-first,
+	err = MPIDU_Dataloop_create_blockindexed(icount-first,
 							   blksz,
 							   disp_arr_tmp,
 							   dispinbytes,
@@ -203,7 +203,7 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(DLOOP_Count icount,
 
     if (is_builtin)
     {
-	PREPEND_PREFIX(Dataloop_alloc)(DLOOP_KIND_INDEXED,
+	MPIDU_Dataloop_alloc(DLOOP_KIND_INDEXED,
 				       count,
 				       &new_dlp,
 				       &new_loop_sz);
@@ -235,7 +235,7 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(DLOOP_Count icount,
 	DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr, flag);
 	DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz, flag);
 
-	PREPEND_PREFIX(Dataloop_alloc_and_copy)(DLOOP_KIND_INDEXED,
+	MPIDU_Dataloop_alloc_and_copy(DLOOP_KIND_INDEXED,
 						contig_count,
 						old_loop_ptr,
 						old_loop_sz,
@@ -385,7 +385,7 @@ static void DLOOP_Type_indexed_array_copy(DLOOP_Count count,
  *
  * Extent passed in is for the original type.
  */
-DLOOP_Count PREPEND_PREFIX(Type_indexed_count_contig)(DLOOP_Count count,
+DLOOP_Count MPIDU_Type_indexed_count_contig(DLOOP_Count count,
                                                       const DLOOP_Count *blocklength_array,
                                                       const void *displacement_array,
                                                       int dispinbytes,

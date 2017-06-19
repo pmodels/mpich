@@ -9,10 +9,6 @@
 #define DATALOOP_PARTS_H
 
 /* Check that all the appropriate defines are present */
-#ifndef PREPEND_PREFIX
-#error "PREPEND_PREFIX must be defined before dataloop_parts.h is included."
-#endif
-
 #ifndef DLOOP_Offset
 #error "DLOOP_Offset must be defined before dataloop_parts.h is included."
 #endif
@@ -38,15 +34,15 @@
 #endif
 
 /* Redefine all of the internal structures in terms of the prefix */
-#define DLOOP_Dataloop              PREPEND_PREFIX(Dataloop)
-#define DLOOP_Dataloop_contig       PREPEND_PREFIX(Dataloop_contig)
-#define DLOOP_Dataloop_vector       PREPEND_PREFIX(Dataloop_vector)
-#define DLOOP_Dataloop_blockindexed PREPEND_PREFIX(Dataloop_blockindexed)
-#define DLOOP_Dataloop_indexed      PREPEND_PREFIX(Dataloop_indexed)
-#define DLOOP_Dataloop_struct       PREPEND_PREFIX(Dataloop_struct)
-#define DLOOP_Dataloop_common       PREPEND_PREFIX(Dataloop_common)
-#define DLOOP_Segment               PREPEND_PREFIX(Segment)
-#define DLOOP_Dataloop_stackelm     PREPEND_PREFIX(Dataloop_stackelm)
+#define DLOOP_Dataloop              MPIDU_Dataloop
+#define DLOOP_Dataloop_contig       MPIDU_Dataloop_contig
+#define DLOOP_Dataloop_vector       MPIDU_Dataloop_vector
+#define DLOOP_Dataloop_blockindexed MPIDU_Dataloop_blockindexed
+#define DLOOP_Dataloop_indexed      MPIDU_Dataloop_indexed
+#define DLOOP_Dataloop_struct       MPIDU_Dataloop_struct
+#define DLOOP_Dataloop_common       MPIDU_Dataloop_common
+#define DLOOP_Segment               MPIDU_Segment
+#define DLOOP_Dataloop_stackelm     MPIDU_Dataloop_stackelm
 
 /* These flags are used at creation time to specify what types of
  * optimizations may be applied. They are also passed in at Segment_init
@@ -318,52 +314,52 @@ typedef struct DLOOP_Segment {
 } DLOOP_Segment;
 
 /* Dataloop functions (dataloop.c) */
-void PREPEND_PREFIX(Dataloop_copy)(void *dest,
+void MPIDU_Dataloop_copy(void *dest,
 				   void *src,
 				   DLOOP_Size size);
-void PREPEND_PREFIX(Dataloop_update)(DLOOP_Dataloop *dataloop,
+void MPIDU_Dataloop_update(DLOOP_Dataloop *dataloop,
 				     DLOOP_Offset ptrdiff);
 DLOOP_Offset
-PREPEND_PREFIX(Dataloop_stream_size)(DLOOP_Dataloop *dl_p,
+MPIDU_Dataloop_stream_size(DLOOP_Dataloop *dl_p,
 				     DLOOP_Offset (*sizefn)(DLOOP_Type el_type));
-void PREPEND_PREFIX(Dataloop_print)(DLOOP_Dataloop *dataloop,
+void MPIDU_Dataloop_print(DLOOP_Dataloop *dataloop,
 				    int depth);
 
-void PREPEND_PREFIX(Dataloop_alloc)(int kind,
+void MPIDU_Dataloop_alloc(int kind,
 				    DLOOP_Count count,
 				    DLOOP_Dataloop **new_loop_p,
 				    DLOOP_Size *new_loop_sz_p);
-void PREPEND_PREFIX(Dataloop_alloc_and_copy)(int kind,
+void MPIDU_Dataloop_alloc_and_copy(int kind,
 					     DLOOP_Count count,
 					     DLOOP_Dataloop *old_loop,
 					     DLOOP_Size old_loop_sz,
 					     DLOOP_Dataloop **new_loop_p,
 					     DLOOP_Size *new_loop_sz_p);
-void PREPEND_PREFIX(Dataloop_struct_alloc)(DLOOP_Count count,
+void MPIDU_Dataloop_struct_alloc(DLOOP_Count count,
 					   DLOOP_Size old_loop_sz,
 					   int basic_ct,
 					   DLOOP_Dataloop **old_loop_p,
 					   DLOOP_Dataloop **new_loop_p,
 					   DLOOP_Size *new_loop_sz_p);
-void PREPEND_PREFIX(Dataloop_dup)(DLOOP_Dataloop *old_loop,
+void MPIDU_Dataloop_dup(DLOOP_Dataloop *old_loop,
 				  DLOOP_Size old_loop_sz,
 				  DLOOP_Dataloop **new_loop_p);
 
-void PREPEND_PREFIX(Dataloop_free)(DLOOP_Dataloop **dataloop);
+void MPIDU_Dataloop_free(DLOOP_Dataloop **dataloop);
 
 /* Segment functions (segment.c) */
-DLOOP_Segment * PREPEND_PREFIX(Segment_alloc)(void);
+DLOOP_Segment * MPIDU_Segment_alloc(void);
 
-void PREPEND_PREFIX(Segment_free)(DLOOP_Segment *segp);
+void MPIDU_Segment_free(DLOOP_Segment *segp);
 
-int PREPEND_PREFIX(Segment_init)(const DLOOP_Buffer buf,
+int MPIDU_Segment_init(const DLOOP_Buffer buf,
 				 DLOOP_Count count,
 				 DLOOP_Handle handle,
 				 DLOOP_Segment *segp,
 				 int hetero);
 
 void
-PREPEND_PREFIX(Segment_manipulate)(DLOOP_Segment *segp,
+MPIDU_Segment_manipulate(DLOOP_Segment *segp,
 				   DLOOP_Offset first, 
 				   DLOOP_Offset *lastp, 
 				   int (*piecefn) (DLOOP_Offset *blocks_p,
@@ -399,11 +395,11 @@ PREPEND_PREFIX(Segment_manipulate)(DLOOP_Segment *segp,
 				   void *pieceparams);
 
 /* Common segment operations (segment_ops.c) */
-void PREPEND_PREFIX(Segment_count_contig_blocks)(DLOOP_Segment *segp,
+void MPIDU_Segment_count_contig_blocks(DLOOP_Segment *segp,
 						 DLOOP_Offset first,
 						 DLOOP_Offset *lastp,
 						 DLOOP_Count *countp);
-void PREPEND_PREFIX(Segment_mpi_flatten)(DLOOP_Segment *segp,
+void MPIDU_Segment_mpi_flatten(DLOOP_Segment *segp,
 					 DLOOP_Offset first,
 					 DLOOP_Offset *lastp,
 					 DLOOP_Size *blklens,
@@ -413,28 +409,28 @@ void PREPEND_PREFIX(Segment_mpi_flatten)(DLOOP_Segment *segp,
 #define DLOOP_M2M_TO_USERBUF   0
 #define DLOOP_M2M_FROM_USERBUF 1
 
-struct PREPEND_PREFIX(m2m_params) {
+struct MPIDU_m2m_params {
     int direction; /* M2M_TO_USERBUF or M2M_FROM_USERBUF */
     char *streambuf;
     char *userbuf;
 };
 
-void PREPEND_PREFIX(Segment_pack)(struct DLOOP_Segment *segp,
+void MPIDU_Segment_pack(struct DLOOP_Segment *segp,
 				  DLOOP_Offset   first,
 				  DLOOP_Offset  *lastp,
 				  void *streambuf);
-void PREPEND_PREFIX(Segment_unpack)(struct DLOOP_Segment *segp,
+void MPIDU_Segment_unpack(struct DLOOP_Segment *segp,
 				    DLOOP_Offset   first,
 				    DLOOP_Offset  *lastp,
 				    void *streambuf);
 
 /* Segment piece functions that are used in specific cases elsewhere */
-int PREPEND_PREFIX(Segment_contig_m2m)(DLOOP_Offset *blocks_p,
+int MPIDU_Segment_contig_m2m(DLOOP_Offset *blocks_p,
 				       DLOOP_Type el_type,
 				       DLOOP_Offset rel_off,
 				       void *bufp, /* unused */
 				       void *v_paramp);
-int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
+int MPIDU_Segment_vector_m2m(DLOOP_Offset *blocks_p,
 				       DLOOP_Count count, /* unused */
 				       DLOOP_Count blksz,
 				       DLOOP_Offset stride,
@@ -442,7 +438,7 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
 				       DLOOP_Offset rel_off,
 				       void *bufp, /* unused */
 				       void *v_paramp);
-int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
+int MPIDU_Segment_blkidx_m2m(DLOOP_Offset *blocks_p,
 				       DLOOP_Count count,
 				       DLOOP_Count blocklen,
 				       DLOOP_Offset *offsetarray,
@@ -450,7 +446,7 @@ int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
 				       DLOOP_Offset rel_off,
 				       void *bufp, /*unused */
 				       void *v_paramp);
-int PREPEND_PREFIX(Segment_index_m2m)(DLOOP_Offset *blocks_p,
+int MPIDU_Segment_index_m2m(DLOOP_Offset *blocks_p,
 				      DLOOP_Count count,
 				      DLOOP_Count *blockarray,
 				      DLOOP_Offset *offsetarray,

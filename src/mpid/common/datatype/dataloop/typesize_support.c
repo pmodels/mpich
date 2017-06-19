@@ -135,8 +135,7 @@ static int DLOOP_Structalign_llint_position(void);
 	}								\
     }
 
-void PREPEND_PREFIX(Type_calc_footprint)(MPI_Datatype type,
-					 DLOOP_Type_footprint *tfp)
+void MPIDU_Type_calc_footprint(MPI_Datatype type, DLOOP_Type_footprint *tfp)
 {
     int mpi_errno;
     int nr_ints, nr_aints, nr_types, combiner;
@@ -184,7 +183,7 @@ void PREPEND_PREFIX(Type_calc_footprint)(MPI_Datatype type,
     }
 
     /* get access to contents; need it immediately to check for zero count */
-    PREPEND_PREFIX(Type_access_contents)(type, &ints, &aints, &types);
+    MPIDU_Type_access_contents(type, &ints, &aints, &types);
 
     /* knock out all the zero count cases */
     if ((combiner == MPI_COMBINER_CONTIGUOUS ||
@@ -209,7 +208,7 @@ void PREPEND_PREFIX(Type_calc_footprint)(MPI_Datatype type,
     {
 	DLOOP_Type_footprint cfp;
 
-	PREPEND_PREFIX(Type_calc_footprint)(types[0], &cfp);
+	MPIDU_Type_calc_footprint(types[0], &cfp);
 	size    = cfp.size;
 	lb      = cfp.lb;
 	ub      = cfp.ub;
@@ -382,20 +381,20 @@ void PREPEND_PREFIX(Type_calc_footprint)(MPI_Datatype type,
 	    break;
 	case MPI_COMBINER_SUBARRAY:
 	    ndims = ints[0];
-	    PREPEND_PREFIX(Type_convert_subarray)(ndims,
+	    MPIDU_Type_convert_subarray(ndims,
 						  &ints[1] /* sizes */,
 						  &ints[1+ndims] /* subsz */,
 						  &ints[1+2*ndims] /* strts */,
 						  ints[1+3*ndims] /* order */,
 						  types[0],
 						  &tmptype);
-	    PREPEND_PREFIX(Type_calc_footprint)(tmptype, tfp);
+	    MPIDU_Type_calc_footprint(tmptype, tfp);
 	    MPIR_Type_free_impl(&tmptype);
 	    break;
 	case MPI_COMBINER_DARRAY:
 	    ndims = ints[2];
 
-	    PREPEND_PREFIX(Type_convert_darray)(ints[0] /* size */,
+	    MPIDU_Type_convert_darray(ints[0] /* size */,
 						ints[1] /* rank */,
 						ndims,
 						&ints[3] /* gsizes */,
@@ -406,7 +405,7 @@ void PREPEND_PREFIX(Type_calc_footprint)(MPI_Datatype type,
 						types[0],
 						&tmptype);
 
-	    PREPEND_PREFIX(Type_calc_footprint)(tmptype, tfp);
+	    MPIDU_Type_calc_footprint(tmptype, tfp);
 	    MPIR_Type_free_impl(&tmptype);
 	    break;
 	case MPI_COMBINER_F90_REAL:
@@ -418,7 +417,7 @@ void PREPEND_PREFIX(Type_calc_footprint)(MPI_Datatype type,
     }
 
  clean_exit:
-    PREPEND_PREFIX(Type_release_contents)(type, &ints, &aints, &types);
+    MPIDU_Type_release_contents(type, &ints, &aints, &types);
     return;
 }
 
@@ -462,7 +461,7 @@ static void DLOOP_Type_calc_footprint_struct(MPI_Datatype type,
 
 	/* opt: could just inline assignments for combiner == NAMED case */
 
-	PREPEND_PREFIX(Type_calc_footprint)(types[i], &cfp);
+	MPIDU_Type_calc_footprint(types[i], &cfp);
 	size      = cfp.size;
 	lb        = cfp.lb;
 	ub        = cfp.ub;

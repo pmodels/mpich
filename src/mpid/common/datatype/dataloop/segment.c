@@ -12,16 +12,12 @@
 
 #undef DLOOP_DEBUG_MANIPULATE
 
-#ifndef PREPEND_PREFIX
-#error "You must explicitly include a header that sets the PREPEND_PREFIX and includes dataloop_parts.h"
-#endif
-
 /* Notes on functions:
  *
  * There are a few different sets of functions here:
  * - DLOOP_Segment_manipulate() - uses a "piece" function to perform operations
  *   using segments (piece functions defined elsewhere)
- * - PREPEND_PREFIX functions - these define the externally visible interface
+ * - MPIDU functions - these define the externally visible interface
  *   to segment functionality
  */
 
@@ -46,7 +42,7 @@ static inline void DLOOP_Stackelm_load(struct DLOOP_Dataloop_stackelm *elmp,
  *   indicate HETEROGENEOUS.
  *
  */
-int PREPEND_PREFIX(Segment_init)(const DLOOP_Buffer buf,
+int MPIDU_Segment_init(const DLOOP_Buffer buf,
 				 DLOOP_Count count,
 				 DLOOP_Handle handle,
 				 struct DLOOP_Segment *segp,
@@ -221,7 +217,7 @@ int PREPEND_PREFIX(Segment_init)(const DLOOP_Buffer buf,
 /* Segment_alloc
  *
  */
-struct DLOOP_Segment * PREPEND_PREFIX(Segment_alloc)(void)
+struct DLOOP_Segment * MPIDU_Segment_alloc(void)
 {
     return (struct DLOOP_Segment *) DLOOP_Malloc(sizeof(struct DLOOP_Segment));
 }
@@ -231,7 +227,7 @@ struct DLOOP_Segment * PREPEND_PREFIX(Segment_alloc)(void)
  * Input Parameters:
  * segp - pointer to segment
  */
-void PREPEND_PREFIX(Segment_free)(struct DLOOP_Segment *segp)
+void MPIDU_Segment_free(struct DLOOP_Segment *segp)
 {
     DLOOP_Free(segp);
     return;
@@ -325,7 +321,7 @@ void PREPEND_PREFIX(Segment_free)(struct DLOOP_Segment *segp)
 #define DLOOP_STACKELM_STRUCT_DATALOOP(elmp_, curcount_) \
 (elmp_)->loop_p->loop_params.s_t.dataloop_array[(curcount_)]
 
-void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
+void MPIDU_Segment_manipulate(struct DLOOP_Segment *segp,
 					DLOOP_Offset first,
 					DLOOP_Offset *lastp,
 					int (*contigfn) (DLOOP_Offset *blocks_p,
@@ -392,7 +388,7 @@ void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
 	    /* use manipulate function with a NULL piecefn to advance
 	     * stream offset
 	     */
-	    PREPEND_PREFIX(Segment_manipulate)(segp,
+	    MPIDU_Segment_manipulate(segp,
 					       stream_off,
 					       &tmp_last,
 					       NULL, /* contig fn */
