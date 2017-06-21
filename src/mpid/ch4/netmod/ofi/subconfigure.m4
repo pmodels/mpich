@@ -24,6 +24,11 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     fi
     ])
     AM_CONDITIONAL([BUILD_CH4_NETMOD_OFI],[test "X$build_ch4_netmod_ofi" = "Xyes"])
+
+    if test "x${with_libfabric}" = "x" ; then
+        AC_DEFINE(FI_MAJOR_VERSION, 0, [If not using libfabric, define this macro to avoid compile errors])
+        AC_DEFINE(FI_MINOR_VERSION, 0, [If not using libfabric, define this macro to avoid compile errors])
+    fi
 ])dnl
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
