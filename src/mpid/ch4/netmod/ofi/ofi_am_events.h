@@ -43,9 +43,11 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     if (!rreq)
         goto fn_exit;
 
-    if ((!p_data || !data_sz) && target_cmpl_cb) {
-        MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-        target_cmpl_cb(rreq);
+    if (!p_data || !data_sz) {
+        if (target_cmpl_cb) {
+            MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
+            target_cmpl_cb(rreq);
+        }
         goto fn_exit;
     }
 
