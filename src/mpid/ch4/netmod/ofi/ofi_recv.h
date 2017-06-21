@@ -50,6 +50,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     else if (mode == MPIDI_OFI_USE_EXISTING) {
         rreq = *request;
         rreq->kind = MPIR_REQUEST_KIND__RECV;
+    } else {
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nullptr");
+        goto fn_fail;
     }
 
     *request = rreq;
