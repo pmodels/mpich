@@ -226,6 +226,9 @@ static inline int MPIDI_OFI_win_lock_advance(MPIR_Win * win)
             MPIDI_OFI_win_control_t info;
             info.type = MPIDI_OFI_CTRL_LOCKALLACK;
             mpi_errno = MPIDI_OFI_do_control_win(&info, lock->rank, win, 1, 0);
+
+            if (mpi_errno != MPI_SUCCESS)
+                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
         }
         else
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
