@@ -351,10 +351,11 @@ static inline void MPIDI_OFI_win_unlock_done_proc(const MPIDI_OFI_win_control_t 
 
 /* Translate the control message to get a huge message into a request to
  * actually perform the data transfer. */
-static inline void MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
+static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 {
     MPIDI_OFI_huge_recv_t *recv = NULL;
     MPIR_Comm *comm_ptr;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_GET_HUGE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_GET_HUGE);
 
@@ -391,6 +392,7 @@ static inline void MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 
         /* If this is unexpected, create a new tracker and put it in the unexpected list. */
         recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1);
+        if (!recv) MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         MPL_LL_APPEND(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, recv);
     }
@@ -403,6 +405,11 @@ static inline void MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_GET_HUGE);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
@@ -421,14 +428,14 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
     switch (control->type) {
     case MPIDI_OFI_CTRL_HUGEACK:{
             MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) buf;
-            MPIDI_OFI_dispatch_function(NULL, ctrlsend->ackreq, 0);
+            mpi_errno = MPIDI_OFI_dispatch_function(NULL, ctrlsend->ackreq, 0);
             goto fn_exit;
         }
         break;
 
     case MPIDI_OFI_CTRL_HUGE:{
             MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) buf;
-            MPIDI_OFI_get_huge(ctrlsend);
+            mpi_errno = MPIDI_OFI_get_huge(ctrlsend);
             goto fn_exit;
         }
         break;
