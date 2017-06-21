@@ -784,7 +784,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                                      &MPIDI_Global.ep, 0));
 
     if (do_av_insert) {
-        int local_rank, num_local = 0, local_rank_0 = -1;
+        int local_rank = -1, num_local = 0, local_rank_0 = -1;
         MPIDU_shm_seg_t memory;
         MPIDU_shm_barrier_t *barrier;
         int start, end;
