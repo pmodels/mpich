@@ -170,6 +170,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry *wc,
                                                        MPIR_Request * rreq)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_huge_recv_t *recv = NULL;
     MPIR_Comm *comm_ptr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_RECV_HUGE_EVENT);
@@ -214,6 +215,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry
         MPIDI_OFI_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv);
 
         list_ptr = (MPIDI_OFI_huge_recv_list_t *) MPL_calloc(sizeof(*list_ptr), 1);
+        if (!list_ptr) MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         list_ptr->comm_id = comm_ptr->context_id;
         list_ptr->rank = MPIDI_OFI_cqe_get_source(wc);
@@ -231,8 +233,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry
     recv->wc = *wc;
     MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_RECV_HUGE_EVENT);
     return MPI_SUCCESS;
+  fn_fail:
+    goto fn_exit;
 }
 
 
