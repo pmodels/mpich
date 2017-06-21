@@ -828,6 +828,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                 num_local++;
             }
         }
+        if (0 == num_local) MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|ch4_init");
 
         MPIDU_shm_seg_alloc(size * MPIDI_Global.addrnamelen, (void **)&table);
         MPIDU_shm_seg_commit(&memory, &barrier, num_local, local_rank, local_rank_0, rank);
