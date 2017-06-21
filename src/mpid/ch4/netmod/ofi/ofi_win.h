@@ -351,7 +351,7 @@ static inline int MPIDI_OFI_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group
                                                   int *ranks_in_win_grp)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, *ranks_in_grp;
+    int i, *ranks_in_grp = NULL;
     MPIR_Group *win_grp_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_FILL_RANKS_IN_WIN_GRP);
@@ -375,9 +375,9 @@ static inline int MPIDI_OFI_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
+  fn_exit:
     MPL_free(ranks_in_grp);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_OFI_FILL_RANKS_IN_WIN_GRP);
     return mpi_errno;
   fn_fail:
