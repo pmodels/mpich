@@ -478,8 +478,13 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
                                            (void *) &req[0].context,
                                            MPIDI_OFI_DO_SEND,
                                            MPIDI_OFI_CALL_LOCK);
-        if (mpi_errno)
+        if (mpi_errno) {
+            MPL_free(local_upid_size);
+            MPL_free(local_upids);
+            MPL_free(local_node_ids);
             MPIR_ERR_POP(mpi_errno);
+        }
+
         MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(0),
                                local_upids,
                                local_upid_sendsize,
