@@ -1045,7 +1045,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
 
   fn_zero:
 
-    baseP = (size == 0) ? NULL : (void *) ((char *) map_ptr + size_out);
+    baseP = (total_size == 0) ? NULL : (void *) ((char *) map_ptr + size_out);
     win->base = baseP;
     win->size = size;
     mpi_errno = MPIDI_OFI_win_allgather(win, baseP, disp_unit);
@@ -1056,7 +1056,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
     *(void **) base_ptr = (void *) win->base;
     mpi_errno = MPIR_Barrier_impl(comm_ptr, &errflag);
 
-    close(fd);
+    if (fd >= 0) close(fd);
 
     if (first)
         shm_unlink(shm_key);
