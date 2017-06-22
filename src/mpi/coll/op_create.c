@@ -6,6 +6,8 @@
  */
 
 #include "mpiimpl.h"
+#include "coll_impl.h"
+
 
 /* -- Begin Profiling Symbol Block for routine MPI_Op_create */
 #if defined(HAVE_PRAGMA_WEAK)

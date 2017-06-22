@@ -53,6 +53,9 @@ extern MPIC_global_t MPIC_global_instance;
 #include "../algorithms/tree/post.h"
 #include "../src/tsp_namespace_undef.h"
 
+/*Default Algorithms*/
+#include "mpic_default.h"
+
 #undef GLOBAL_NAME
 
 struct MPIR_Request;
