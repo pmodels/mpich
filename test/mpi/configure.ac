@@ -696,6 +696,11 @@ if test "$enable_large_tests" = "yes" -a $ac_cv_sizeof_void_p -ge 8; then
 fi
 AC_SUBST(largetest)
 
+# Extended collectives test
+source $srcdir/coll/test_ext_colls.sh
+AC_SUBST(ext_coll_tests)
+AM_SUBST_NOTMAKE(ext_coll_tests)
+
 
 # Only run the long double complex tests if that type is available
 if test "x$enable_long_double" = "xyes" && \
