@@ -28,5 +28,8 @@
 #include "../algorithms/tree/pre.h"
 #include "../src/tsp_namespace_undef.h"
 
+/* Default Algorithms */
+/* Nothing to be inclued */
+
 #undef GLOBAL_NAME
 #endif

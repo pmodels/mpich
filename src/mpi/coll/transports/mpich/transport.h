@@ -248,10 +248,10 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_dtinfo(MPIC_MPICH_dt_t dt,
 {
     MPI_Aint true_lb, extent, true_extent, type_size;
 
-    MPID_Datatype_get_size_macro(dt, type_size);
+    MPIR_Datatype_get_size_macro(dt, type_size);
     MPIR_Type_get_true_extent_impl(dt, &true_lb, &true_extent);
-    MPID_Datatype_get_extent_macro(dt, extent);
-    MPID_Datatype_is_contig(dt, iscontig);
+    MPIR_Datatype_get_extent_macro(dt, extent);
+    MPIR_Datatype_is_contig(dt, iscontig);
 
     *size = type_size;
     *out_extent = MPL_MAX(extent, true_extent);
@@ -264,12 +264,12 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_addref_dt(MPIC_MPICH_dt_t dt, int up)
     MPIR_Datatype *dt_ptr;
 
     if (HANDLE_GET_KIND(dt) != HANDLE_KIND_BUILTIN) {
-        MPID_Datatype_get_ptr(dt, dt_ptr);
+        MPIR_Datatype_get_ptr(dt, dt_ptr);
 
         if (up)
-            MPID_Datatype_add_ref(dt_ptr);
+            MPIR_Datatype_add_ref(dt_ptr);
         else
-            MPID_Datatype_release(dt_ptr);
+            MPIR_Datatype_release(dt_ptr);
     }
 }
 

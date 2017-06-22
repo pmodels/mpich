@@ -19,7 +19,7 @@
 #include "../shm/include/shm.h"
 #endif
 
-#include "../../mpi/coll/collutil.h"
+#include "../../mpi/coll/include/collutil.h"
 
 MPL_STATIC_INLINE_PREFIX
 MPIDI_coll_algo_container_t *MPIDI_CH4_Barrier_select(MPIR_Comm * comm,
