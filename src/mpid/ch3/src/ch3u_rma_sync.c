@@ -517,13 +517,13 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
             if (win_ptr->shm_allocated == TRUE) {
                 MPIR_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
 
-                mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
+                mpi_errno = MPID_Barrier(node_comm_ptr, &errflag);
                 if (mpi_errno != MPI_SUCCESS)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
             }
 
-            mpi_errno = MPIR_Ibarrier_impl(win_ptr->comm_ptr, &fence_sync_req);
+            mpi_errno = MPID_Ibarrier(win_ptr->comm_ptr, &fence_sync_req);
             if (mpi_errno != MPI_SUCCESS)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -572,7 +572,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
 
         win_ptr->at_completion_counter += comm_size;
 
-        mpi_errno = MPIR_Reduce_scatter_block_impl(MPI_IN_PLACE, rma_target_marks, 1,
+        mpi_errno = MPID_Reduce_scatter_block(MPI_IN_PLACE, rma_target_marks, 1,
                                                    MPI_INT, MPI_SUM, win_ptr->comm_ptr, &errflag);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_POP(mpi_errno);
@@ -620,7 +620,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
         MPIR_ERR_POP(mpi_errno);
 
     if (scalable_fence_enabled) {
-        mpi_errno = MPIR_Barrier_impl(win_ptr->comm_ptr, &errflag);
+        mpi_errno = MPID_Barrier(win_ptr->comm_ptr, &errflag);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -648,7 +648,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
             MPI_Request fence_sync_req;
 
             /* Prepare for the next possible epoch */
-            mpi_errno = MPIR_Ibarrier_impl(win_ptr->comm_ptr, &fence_sync_req);
+            mpi_errno = MPID_Ibarrier(win_ptr->comm_ptr, &fence_sync_req);
             if (mpi_errno != MPI_SUCCESS)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -677,7 +677,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
 
             if (win_ptr->shm_allocated == TRUE) {
                 MPIR_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
-                mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
+                mpi_errno = MPID_Barrier(node_comm_ptr, &errflag);
                 if (mpi_errno != MPI_SUCCESS)
                     MPIR_ERR_POP(mpi_errno);
                 MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");

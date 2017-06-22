@@ -178,7 +178,7 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
             MPIR_ERR_POP(mpi_errno);
     }
 
-    mpi_errno = MPIR_Barrier_impl((*win_ptr)->comm_ptr, &errflag);
+    mpi_errno = MPID_Barrier((*win_ptr)->comm_ptr, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
