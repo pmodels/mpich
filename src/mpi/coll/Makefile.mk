@@ -5,6 +5,8 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
+include $(top_srcdir)/src/mpi/coll/algorithms/Makefile.mk
+
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/coll/include/
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/coll/algorithms/common/
 # mpi_sources includes only the routines that are MPI function entry points
@@ -71,5 +73,5 @@ mpi_core_sources += \
     src/mpi/coll/nbcutil.c
 
 noinst_HEADERS +=                    \
-    src/mpi/coll/collutil.h			 \
+    src/mpi/coll/include/collutil.h  \
     src/mpi/coll/include/coll_impl.h
