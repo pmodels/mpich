@@ -1072,7 +1072,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
     }
 
     /* Now, broadcast the number of local pgs */
-    mpi_errno = MPIR_Bcast_impl( &n_local_pgs, 1, MPI_INT, root, comm_p, &errflag);
+    mpi_errno = MPID_Bcast( &n_local_pgs, 1, MPI_INT, root, comm_p, &errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
@@ -1092,8 +1092,8 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
 	    pg_str  = pg_list->str;
 	    len     = pg_list->lenStr;
 	    pg_list = pg_list->next;
-	}
-	mpi_errno = MPIR_Bcast_impl( &len, 1, MPI_INT, root, comm_p, &errflag);
+    }
+    mpi_errno = MPID_Bcast( &len, 1, MPI_INT, root, comm_p, &errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	if (rank != root) {
@@ -1103,7 +1103,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
                 goto fn_exit;
             }
 	}
-	mpi_errno = MPIR_Bcast_impl( pg_str, len, MPI_CHAR, root, comm_p, &errflag);
+    mpi_errno = MPID_Bcast( pg_str, len, MPI_CHAR, root, comm_p, &errflag);
         if (mpi_errno) {
             if (rank != root)
                 MPL_free( pg_str );
