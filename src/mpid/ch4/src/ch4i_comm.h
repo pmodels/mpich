@@ -8,6 +8,7 @@
 
 #include "ch4_types.h"
 #include "mpl_utlist.h"
+#include "ch4r_comm.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_map_size
