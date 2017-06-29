@@ -24,8 +24,10 @@ cvars:
       description : >-
         Controls reduce algorithm:
         0 - default reduce (old mpir algorithms)
-        1 - Knomial tree based reduce
-        2 - Kary tree based reduce
+        1 - Knomial tree based reduce (with only one buffer for receiving data)
+        2 - Knomial tree based reduce (with one buffer per child for receiving data)
+        3 - Kary tree based reduce (with only one buffer for receiving data)
+        4 - Kary tree based reduce (with one buffer per child for receiving data)
 
     - name        : MPIR_CVAR_REDUCE_TREE_KVAL
       category    : COLLECTIVE
@@ -41,8 +43,10 @@ cvars:
 
 enum {
     REDUCE_DEFAULT = 0,
-    REDUCE_TREE_KNOMIAL,
-    REDUCE_TREE_KARY
+    REDUCE_TREE_KNOMIAL_SINGLE_BUFFER,
+    REDUCE_TREE_KNOMIAL_BUFFER_PER_CHILD,
+    REDUCE_TREE_KARY_SINGLE_BUFFER,
+    REDUCE_TREE_KARY_BUFFER_PER_CHILD
 };
 
 /* -- Begin Profiling Symbol Block for routine MPI_Reduce */
@@ -81,7 +85,16 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
         case REDUCE_DEFAULT:
             mpi_errno = MPIC_DEFAULT_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
             break;
-        case REDUCE_TREE_KNOMIAL:
+        case REDUCE_TREE_KNOMIAL_SINGLE_BUFFER:
+            mpi_errno = MPIC_MPICH_TREE_reduce(sendbuf, recvbuf, count,
+                                               datatype, op, root,
+                                               &(MPIC_COMM(comm_ptr)->mpich_tree),
+                                               (int *) errflag, 0,
+                                               MPIR_CVAR_REDUCE_TREE_KVAL,
+                                               -1,
+                                               0);
+            break;
+        case REDUCE_TREE_KNOMIAL_BUFFER_PER_CHILD:
             mpi_errno = MPIC_MPICH_TREE_reduce(sendbuf, recvbuf, count,
                                                datatype, op, root,
                                                &(MPIC_COMM(comm_ptr)->mpich_tree),
@@ -90,7 +103,7 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
                                                -1,
                                                1);
             break;
-        case REDUCE_TREE_KARY:
+        case REDUCE_TREE_KARY_SINGLE_BUFFER:
             mpi_errno = MPIC_MPICH_TREE_reduce(sendbuf, recvbuf, count,
                                                datatype, op, root,
                                                &(MPIC_COMM(comm_ptr)->mpich_tree),
@@ -98,6 +111,15 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
                                                MPIR_CVAR_REDUCE_TREE_KVAL,
                                                -1,
                                                0);
+            break;
+        case REDUCE_TREE_KARY_BUFFER_PER_CHILD:
+            mpi_errno = MPIC_MPICH_TREE_reduce(sendbuf, recvbuf, count,
+                                               datatype, op, root,
+                                               &(MPIC_COMM(comm_ptr)->mpich_tree),
+                                               (int *) errflag, 1,
+                                               MPIR_CVAR_REDUCE_TREE_KVAL,
+                                               -1,
+                                               1);
             break;
         default:
             mpi_errno = MPIC_DEFAULT_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
