@@ -25,7 +25,8 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     ])
     AM_CONDITIONAL([BUILD_CH4_NETMOD_OFI],[test "X$build_ch4_netmod_ofi" = "Xyes"])
 
-    if test "x${with_libfabric}" = "x" ; then
+    dnl If we're not using libfabric at all (embedded or external), then these marcos need to be defined
+    if test "x${with_libfabric}" = "x" && test ! -f ${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/configure ; then
         AC_DEFINE(FI_MAJOR_VERSION, 0, [If not using libfabric, define this macro to avoid compile errors])
         AC_DEFINE(FI_MINOR_VERSION, 0, [If not using libfabric, define this macro to avoid compile errors])
     fi
