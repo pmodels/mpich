@@ -148,7 +148,7 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
     MPIDI_OFI_WIN(win).win_id = ((uint64_t) comm_ptr->context_id) | (window_instance << 32);
     MPIDI_CH4U_map_set(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id, win, MPL_MEM_RMA);
 
-    if (MPIDI_OFI_ENABLE_SHARED_CONTEXTS && MPIDI_Global.stx_ctx != NULL) {
+    if (MPIR_CVAR_CH4_OFI_ENABLE_PER_WIN_SYNC && MPIDI_Global.stx_ctx != NULL) {
         /* Activate per-window EP/counter */
         int ret;
 
