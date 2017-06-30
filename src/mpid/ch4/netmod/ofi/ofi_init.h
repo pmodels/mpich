@@ -242,6 +242,18 @@ cvars:
         If set to positive, this CVAR specifies the maximum number of CH4 VNIs
         that OFI netmod exposes.
 
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_PER_WIN_SYNC
+      category    : CH4_OFI
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If set to true, enables per-window synchronization in RMA.
+        This value is used when either of scalable endpoints or shared transmit
+        contexts is available. Otherwise this value will be ignored.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -796,7 +808,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* ------------------------------------------------------------------------ */
     /* Construct:  Shared TX Context for RMA                                    */
     /* ------------------------------------------------------------------------ */
-    if (MPIDI_OFI_ENABLE_SHARED_CONTEXTS) {
+    if (MPIR_CVAR_CH4_OFI_ENABLE_PER_WIN_SYNC && MPIDI_OFI_ENABLE_SHARED_CONTEXTS) {
         int ret;
         struct fi_tx_attr tx_attr;
         memset(&tx_attr, 0, sizeof(tx_attr));
@@ -809,7 +821,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                         "Failed to create shared TX context for RMA, "
                         "falling back to global EP/counter scheme");
             MPIDI_Global.stx_ctx = NULL;
-            MPIDI_Global.settings.enable_shared_contexts = 0;
         }
     }
 
