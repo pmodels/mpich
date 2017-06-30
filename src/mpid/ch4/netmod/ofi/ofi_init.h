@@ -65,7 +65,7 @@ cvars:
       description : >-
         If true, use OFI scalable endpoints.
 
-    - name        : MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS
       category    : CH4_OFI
       type        : int
       default     : -1
@@ -73,9 +73,10 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        If true, try to use OFI shared transmit contexts for RMA.
-        If they are unavailable, we'll fall back to not using them.
-        If false, we will never try to use OFI shared transmit contexts for RMA.
+        If set to false (zero), MPICH does not use OFI shared contexts.
+        If set to -1, it is determined by the OFI capability sets based on the provider.
+        Otherwise, MPICH tries to use OFI shared contexts. If they are unavailable,
+        it'll fall back to the mode without shared contexts.
 
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE
       category    : CH4_OFI
@@ -795,7 +796,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* ------------------------------------------------------------------------ */
     /* Construct:  Shared TX Context for RMA                                    */
     /* ------------------------------------------------------------------------ */
-    if (MPIDI_OFI_ENABLE_STX_RMA) {
+    if (MPIDI_OFI_ENABLE_SHARED_CONTEXTS) {
         int ret;
         struct fi_tx_attr tx_attr;
         memset(&tx_attr, 0, sizeof(tx_attr));
@@ -808,7 +809,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                         "Failed to create shared TX context for RMA, "
                         "falling back to global EP/counter scheme");
             MPIDI_Global.stx_ctx = NULL;
-            MPIDI_Global.settings.enable_stx_rma = 0;
+            MPIDI_Global.settings.enable_shared_contexts = 0;
         }
     }
 
@@ -1089,7 +1090,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         }
     }
 
-    if (MPIDI_OFI_ENABLE_STX_RMA && MPIDI_Global.stx_ctx != NULL)
+    if (MPIDI_OFI_ENABLE_SHARED_CONTEXTS && MPIDI_Global.stx_ctx != NULL)
         MPIDI_OFI_CALL(fi_close(&MPIDI_Global.stx_ctx->fid), stx_ctx_close);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.ep->fid), epclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.av->fid), avclose);
@@ -1439,7 +1440,8 @@ static inline int MPIDI_OFI_application_hints(int rank)
                     (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d",
                      MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_STX_RMA: %d", MPIDI_OFI_ENABLE_STX_RMA));
+                    (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_SHARED_CONTEXTS: %d",
+                     MPIDI_OFI_ENABLE_SHARED_CONTEXTS));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_MR_SCALABLE: %d",
                      MPIDI_OFI_ENABLE_MR_SCALABLE));
@@ -1476,7 +1478,7 @@ static inline int MPIDI_OFI_application_hints(int rank)
         fprintf(stdout, "MPIDI_OFI_ENABLE_AV_TABLE: %d\n", MPIDI_OFI_ENABLE_AV_TABLE);
         fprintf(stdout, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d\n",
                 MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_STX_RMA: %d\n", MPIDI_OFI_ENABLE_STX_RMA);
+        fprintf(stdout, "MPIDI_OFI_ENABLE_SHARED_CONTEXTS: %d\n", MPIDI_OFI_ENABLE_SHARED_CONTEXTS);
         fprintf(stdout, "MPIDI_OFI_ENABLE_MR_SCALABLE: %d\n", MPIDI_OFI_ENABLE_MR_SCALABLE);
         fprintf(stdout, "MPIDI_OFI_ENABLE_TAGGED: %d\n", MPIDI_OFI_ENABLE_TAGGED);
         fprintf(stdout, "MPIDI_OFI_ENABLE_AM: %d\n", MPIDI_OFI_ENABLE_AM);
@@ -1537,11 +1539,11 @@ static inline int MPIDI_OFI_init_global_settings(const char *prov_name)
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_scalable_endpoints :
         MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS;
     /* If the user doesn't care, then try to use them and fall back if necessary in the RMA init code */
-    MPIDI_Global.settings.enable_stx_rma =
-        MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA !=
-        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA : prov_name ?
-        MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_stx_rma :
-        MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA;
+    MPIDI_Global.settings.enable_shared_contexts =
+        MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS !=
+        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS : prov_name ?
+        MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_shared_contexts :
+        MPIR_CVAR_CH4_OFI_ENABLE_SHARED_CONTEXTS;
     MPIDI_Global.settings.enable_mr_scalable =
         MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE !=
         -1 ? MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE : prov_name ?

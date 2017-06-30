@@ -293,7 +293,7 @@ typedef struct {
     unsigned enable_data:1;
     unsigned enable_av_table:1;
     unsigned enable_scalable_endpoints:1;
-    unsigned enable_stx_rma:1;
+    unsigned enable_shared_contexts:1;
     unsigned enable_mr_scalable:1;
     unsigned enable_tagged:1;
     unsigned enable_am:1;
