@@ -158,6 +158,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t *memory, MPIDU_shm_barrier_t **barrier,
     MPIR_Assert(!ALLOCQ_EMPTY());
     MPIR_Assert(segment_len > 0);
 
+    memory->hnd = NULL;
+
     /* allocate an area to check if the segment was allocated symmetrically */
     mpi_errno = MPIDU_shm_seg_alloc(sizeof(asym_check_region), (void **) &asym_check_region_p);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -451,8 +453,10 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t *memory, MPIDU_shm_barrier_t **barrier,
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    MPL_shm_seg_remove(memory->hnd);
-    MPL_shm_hnd_finalize(&(memory->hnd));
+    if (memory->hnd) {
+        MPL_shm_seg_remove(memory->hnd);
+        MPL_shm_hnd_finalize(&(memory->hnd));
+    }
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
