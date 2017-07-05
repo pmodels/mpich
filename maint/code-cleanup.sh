@@ -49,9 +49,15 @@ indent_code()
         --else-endif-column1 \
         --start-left-side-of-comments \
         --break-after-boolean-operator \
-        --dont-cuddle-else \
         --comment-indentation1 \
         --no-tabs \
+        --blank-lines-after-procedures \
+        --leave-optional-blank-lines \
+        --braces-after-func-def-line \
+        --brace-indent0 \
+        --cuddle-do-while \
+        --no-space-after-function-call-names \
+        --dont-break-procedure-type \
         ${file}
 
     rm -f ${file}~
