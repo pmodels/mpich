@@ -385,6 +385,7 @@ COLL_sched_allreduce_dissem(const void *sendbuf,
     id[0] = (rrid == -1) ? dtcopy_id : rrid;
     if (inLower) {
         void *tmpbuf = TSP_allocate_buffer(extent * count, s);
+        void *tmp_recvbuf = TSP_allocate_buffer(extent * count, s);
         for (i = 0; i < dissemPhases; i++) {
             int shift = (1 << i);
             int to = (comm->rank + shift) % dissemRanks;

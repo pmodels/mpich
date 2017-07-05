@@ -49,4 +49,13 @@ typedef struct {
     int rcount;
     int rt_id;
 } alltoall_args_t;
+
+typedef struct {
+    void *sbuf;
+    int scount;
+    int st_id;
+    void *rbuf;
+    int rcount;
+    int rt_id;
+} allgather_args_t;
 #endif /* COLL_ARGS_GENERIC_H */

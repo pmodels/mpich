@@ -48,6 +48,25 @@ cvars:
         Controls barrier algorithm:
             K value for knomial tree based barrier
 
+    - name        : MPIR_CVAR_BARRIER_RECEXCH_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        K value for tree based allreduce
+
+    - name        : MPIR_CVAR_BARRIER_DISSEM_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        K value for tree based allreduce
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -55,7 +74,9 @@ enum {
     BARRIER_DEFAULT = 0,
     BARRIER_TREE_KNOMIAL_NONBLOCKING_TRANSPORT,
     BARRIER_TREE_KARY_NONBLOCING_TRANSPORT,
-    BARRIER_TREE_KNOMIAL_2_NONBLOCKING_TRANSPORT
+    BARRIER_TREE_KNOMIAL_2_NONBLOCKING_TRANSPORT,
+    BARRIER_RECEXCH,
+    BARRIER_DISSEM
 };
 
 /* -- Begin Profiling Symbol Block for routine MPI_Barrier */
@@ -100,6 +121,12 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
             break;
         case BARRIER_TREE_KNOMIAL_2_NONBLOCKING_TRANSPORT:
             mpi_errno = MPIC_MPICH_TREE_barrier(&(MPIC_COMM(comm_ptr)->mpich_tree), (int *) errflag, 2, MPIR_CVAR_BARRIER_KNOMIAL_KVAL);
+            break;
+        case BARRIER_RECEXCH:
+            mpi_errno = MPIC_MPICH_RECEXCH_barrier(&(MPIC_COMM(comm_ptr)->mpich_recexch), (int *) errflag, MPIR_CVAR_BARRIER_RECEXCH_KVAL);
+            break;
+        case BARRIER_DISSEM:
+            mpi_errno = MPIC_MPICH_DISSEM_barrier( &(MPIC_COMM(comm_ptr)->mpich_dissem), (int*)errflag);
             break;
         default:
             mpi_errno = MPIC_DEFAULT_Barrier( comm_ptr, errflag );

@@ -46,6 +46,7 @@ extern MPIC_global_t MPIC_global_instance;
 #include "../algorithms/tree/post.h"
 #include "../algorithms/ring/post.h"
 #include "../algorithms/dissem/post.h"
+#include "../algorithms/recexch/post.h"
 #include "../src/tsp_namespace_undef.h"
 
 
@@ -55,6 +56,7 @@ extern MPIC_global_t MPIC_global_instance;
 #include "../algorithms/tree/post.h"
 #include "../algorithms/ring/post.h"
 #include "../algorithms/dissem/post.h"
+#include "../algorithms/recexch/post.h"
 #include "../src/tsp_namespace_undef.h"
 
 /*Default Algorithms*/
@@ -101,10 +103,12 @@ MPL_STATIC_INLINE_PREFIX int MPIC_comm_init(struct MPIR_Comm *comm)
     MPIC_STUB_TREE_comm_init(&(MPIC_COMM(comm)->stub_tree), tag, rank, size);
     MPIC_STUB_RING_comm_init(&(MPIC_COMM(comm)->stub_ring), tag, rank, size);
     MPIC_STUB_DISSEM_comm_init(&(MPIC_COMM(comm)->stub_dissem), tag, rank, size);
+    MPIC_STUB_RECEXCH_comm_init(&(MPIC_COMM(comm)->stub_recexch),  tag, rank, size);
     MPIC_MPICH_STUB_comm_init(&(MPIC_COMM(comm)->mpich_stub), tag, rank, size);
     MPIC_MPICH_TREE_comm_init(&(MPIC_COMM(comm)->mpich_tree), tag, rank, size);
     MPIC_MPICH_RING_comm_init(&(MPIC_COMM(comm)->mpich_ring), tag, rank, size);
     MPIC_MPICH_DISSEM_comm_init(&(MPIC_COMM(comm)->mpich_dissem), tag, rank, size);
+    MPIC_MPICH_RECEXCH_comm_init(&(MPIC_COMM(comm)->mpich_recexch),  tag, rank, size);
 
     /*hook for device level collective communicator initialization */
 #ifdef MPID_COLL_COMM_INIT_HOOK
@@ -126,10 +130,12 @@ MPL_STATIC_INLINE_PREFIX int MPIC_comm_cleanup(struct MPIR_Comm *comm)
     MPIC_STUB_TREE_comm_cleanup(&(MPIC_COMM(comm)->stub_tree));
     MPIC_STUB_RING_comm_cleanup(&(MPIC_COMM(comm)->stub_ring));
     MPIC_STUB_DISSEM_comm_cleanup(&(MPIC_COMM(comm)->stub_dissem));
+    MPIC_STUB_RECEXCH_comm_cleanup(&(MPIC_COMM(comm)->stub_recexch));
     MPIC_MPICH_STUB_comm_cleanup(&(MPIC_COMM(comm)->mpich_stub));
     MPIC_MPICH_TREE_comm_cleanup(&(MPIC_COMM(comm)->mpich_tree));
     MPIC_MPICH_RING_comm_cleanup(&(MPIC_COMM(comm)->mpich_ring));
     MPIC_MPICH_DISSEM_comm_cleanup(&(MPIC_COMM(comm)->mpich_dissem));
+    MPIC_MPICH_RECEXCH_comm_cleanup(&(MPIC_COMM(comm)->mpich_recexch));
 
     return mpi_errno;
 }
@@ -147,10 +153,12 @@ MPL_STATIC_INLINE_PREFIX int MPIC_init()
     MPIC_STUB_TREE_init();
     MPIC_STUB_RING_init();
     MPIC_STUB_DISSEM_init();
+    MPIC_STUB_RECEXCH_init();
     MPIC_MPICH_STUB_init();
     MPIC_MPICH_TREE_init();
     MPIC_MPICH_RING_init();
     MPIC_MPICH_DISSEM_init();
+    MPIC_MPICH_RECEXCH_init();
 
 #ifdef MPIDI_NM_COLL_INIT_HOOK
     MPIDI_NM_COLL_INIT_HOOK;

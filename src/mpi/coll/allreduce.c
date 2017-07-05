@@ -26,13 +26,46 @@ cvars:
         1 - KNOMIAL_allreduce
         2 - KARY_allreduce
 
+    - name        : MPIR_CVAR_ALLRED_KARY_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        K value for kary tree allreduce
+
+    - name        : MPIR_CVAR_ALLRED_KNOMIAL_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        K value for knomial tree allreduce
+
+    - name        : MPIR_CVAR_ALLRED_RECEXCH_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        K value for allreduce with recursive koupling algorithm
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 enum {
     ALLREDUCE_DEFAULT = 0,
     ALLREDUCE_TREE_KNOMIAL,
-    ALLREDUCE_TREE_KARY
+    ALLREDUCE_TREE_KARY,
+    ALLREDUCE_RECEXCH_SINGLE_RECV_BUFFER,
+    ALLREDUCE_RECEXCH_RECV_BUFFER_PER_NBR,
+    ALLREDUCE_DISSEM
 };
 
 /* -- Begin Profiling Symbol Block for routine MPI_Allreduce */
@@ -92,11 +125,19 @@ int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
             break;
         case ALLREDUCE_TREE_KNOMIAL:
             mpi_errno = MPIC_MPICH_TREE_allreduce(sendbuf, recvbuf, count, datatype, op,
-                                            &(MPIC_COMM(comm_ptr)->mpich_tree), (int *) errflag, 0, 2);
+                                            &(MPIC_COMM(comm_ptr)->mpich_tree), (int *) errflag, 0, MPIR_CVAR_ALLRED_KNOMIAL_KVAL);
             break;
         case ALLREDUCE_TREE_KARY:
             mpi_errno = MPIC_MPICH_TREE_allreduce(sendbuf, recvbuf, count, datatype, op,
-                                            &(MPIC_COMM(comm_ptr)->mpich_tree), (int *) errflag, 1, 2);
+                                            &(MPIC_COMM(comm_ptr)->mpich_tree), (int *) errflag, 1, MPIR_CVAR_ALLRED_KARY_KVAL);
+            break;
+        case ALLREDUCE_RECEXCH_SINGLE_RECV_BUFFER:
+            mpi_errno = MPIC_MPICH_RECEXCH_allreduce(sendbuf, recvbuf, count, datatype, op,
+                                            &(MPIC_COMM(comm_ptr)->mpich_recexch), 0, MPIR_CVAR_ALLRED_RECEXCH_KVAL, (int*)errflag);
+            break;
+        case ALLREDUCE_RECEXCH_RECV_BUFFER_PER_NBR:
+            mpi_errno = MPIC_MPICH_RECEXCH_allreduce(sendbuf, recvbuf, count, datatype, op,
+                                            &(MPIC_COMM(comm_ptr)->mpich_recexch), 1, MPIR_CVAR_ALLRED_RECEXCH_KVAL, (int*)errflag);
             break;
         default:
             mpi_errno = MPIC_DEFAULT_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);

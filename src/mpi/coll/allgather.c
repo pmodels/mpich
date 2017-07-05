@@ -23,12 +23,26 @@ cvars:
       description : >-
         Controls allgather algorithm:
         0 - Default algorithm (old mpir allgather)
+        1 - Recursive exchange with distance increasing
+        2 - Recursive exchange with distance reducing
+
+    - name        : MPIR_CVAR_ALLGATHER_RECEXCH_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        K value for allgather with recursive koupling algorithm
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 enum {
    ALLGATHER_DEFAULT = 0,
+   ALLGATHER_RECEXCH_DIST_INCREASING,
+   ALLGATHER_RECEXCH_DIST_DECREASING
 };
 
 /* -- Begin Profiling Symbol Block for routine MPI_Allgather */
@@ -73,6 +87,14 @@ int MPIR_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             mpi_errno = MPIC_DEFAULT_Allgather(sendbuf,sendcount, sendtype,
                                                recvbuf, recvcount, recvtype,
                                                comm_ptr, errflag);
+            break;
+        case ALLGATHER_RECEXCH_DIST_INCREASING: /*distance increasing */
+            mpi_errno = MPIC_MPICH_RECEXCH_allgather(sendbuf,sendcount,sendtype,recvbuf,recvcount,recvtype,
+                                                       &(MPIC_COMM(comm_ptr)->mpich_recexch), MPIR_CVAR_ALLGATHER_RECEXCH_KVAL, 0, (int*)errflag);
+            break;
+        case ALLGATHER_RECEXCH_DIST_DECREASING: /*distance reducing */
+            mpi_errno = MPIC_MPICH_RECEXCH_allgather(sendbuf,sendcount,sendtype,recvbuf,recvcount,recvtype,
+                                                       &(MPIC_COMM(comm_ptr)->mpich_recexch), MPIR_CVAR_ALLGATHER_RECEXCH_KVAL, 1, (int*)errflag);
             break;
         default:
             mpi_errno = MPIC_DEFAULT_Allgather(sendbuf,sendcount, sendtype,

@@ -22,6 +22,7 @@
 #include "../algorithms/tree/pre.h"
 #include "../algorithms/ring/pre.h"
 #include "../algorithms/dissem/pre.h"
+#include "../algorithms/recexch/pre.h"
 #include "../src/tsp_namespace_undef.h"
 
 /* Algorithms with MPICH transport */
@@ -30,6 +31,7 @@
 #include "../algorithms/tree/pre.h"
 #include "../algorithms/ring/pre.h"
 #include "../algorithms/dissem/pre.h"
+#include "../algorithms/recexch/pre.h"
 #include "../src/tsp_namespace_undef.h"
 
 /* Default Algorithms */

@@ -61,11 +61,12 @@ typedef struct {
     MPIC_STUB_TREE_comm_t stub_tree;
     MPIC_STUB_RING_comm_t stub_ring;
     MPIC_STUB_DISSEM_comm_t stub_dissem;
+    MPIC_STUB_RECEXCH_comm_t stub_recexch;
     MPIC_MPICH_STUB_comm_t mpich_stub;
     MPIC_MPICH_TREE_comm_t mpich_tree;
     MPIC_MPICH_RING_comm_t mpich_ring;
     MPIC_MPICH_DISSEM_comm_t mpich_dissem;
-
+    MPIC_MPICH_RECEXCH_comm_t mpich_recexch;
 } MPIC_comm_t;
 
 /* global data for every algorithm communicator */
@@ -77,10 +78,12 @@ typedef struct {
     MPIC_STUB_TREE_global_t stub_tree;
     MPIC_STUB_RING_global_t stub_ring;
     MPIC_STUB_DISSEM_global_t stub_dissem;
+    MPIC_STUB_RECEXCH_global_t stub_recexch;
     MPIC_MPICH_STUB_global_t mpich_stub;
     MPIC_MPICH_TREE_global_t mpich_tree;
     MPIC_MPICH_RING_global_t mpich_ring;
     MPIC_MPICH_DISSEM_global_t mpich_dissem;
+    MPIC_MPICH_RECEXCH_global_t mpich_recexch;
 } MPIC_global_t;
 
 extern MPIC_global_t MPIC_global_instance;
