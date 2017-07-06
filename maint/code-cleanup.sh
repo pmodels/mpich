@@ -1,6 +1,6 @@
 #! /bin/bash
 
-if test ! -z "`which gindent`" ; then
+if hash gindent 2>/dev/null; then
 	indent=gindent
 else
 	indent=indent
