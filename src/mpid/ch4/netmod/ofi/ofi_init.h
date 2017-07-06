@@ -199,7 +199,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_MAJOR_VERSION
       category    : CH4_OFI
       type        : int
-      default     : FI_MAJOR_VERSION
+      default     : -1
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
@@ -211,7 +211,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_MINOR_VERSION
       category    : CH4_OFI
       type        : int
-      default     : FI_MINOR_VERSION
+      default     : -1
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
@@ -427,7 +427,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* Specify the version of OFI is coded to, the provider will select struct  */
     /* layouts that are compatible with this version.                           */
     /* ------------------------------------------------------------------------ */
-    fi_version = FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
+    if (MPIDI_OFI_MAJOR_VERSION != -1 && MPIDI_OFI_MINOR_VERSION != -1)
+        fi_version = FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
+    else
+        fi_version = FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION);
 
     MPIDI_OFI_init_hints(hints);
 
