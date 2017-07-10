@@ -193,10 +193,11 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
     INSTALL_COLL_WRAPPER(bcast, Bcast);
     INSTALL_COLL_WRAPPER(allreduce, Allreduce);
     INSTALL_COLL_WRAPPER(allgather, Allgather);
-    INSTALL_COLL_WRAPPER(ibarrier, Ibarrier_req);
-    INSTALL_COLL_WRAPPER(ibcast, Ibcast_req);
-    INSTALL_COLL_WRAPPER(iallreduce, Iallreduce_req);
-    INSTALL_COLL_WRAPPER(iallgather, Iallgather_req);
+
+    /* INSTALL_COLL_WRAPPER(ibarrier, Ibarrier_req); */
+    /* INSTALL_COLL_WRAPPER(ibcast, Ibcast_req); */
+    /* INSTALL_COLL_WRAPPER(iallreduce, Iallreduce_req); */
+    /* INSTALL_COLL_WRAPPER(iallgather, Iallgather_req); */
 
     comm_ptr->hcoll_priv.is_hcoll_init = 1;
   fn_exit:
