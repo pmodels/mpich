@@ -177,6 +177,8 @@ int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
     return rc;
 }
 
+#if 0
+
 #undef FUNCNAME
 #define FUNCNAME hcoll_Ibarrier_req
 #undef FCNAME
@@ -365,3 +367,4 @@ int hcoll_Iallreduce_req(const void *sendbuf, void *recvbuf, int count, MPI_Data
     }
     return rc;
 }
+#endif
