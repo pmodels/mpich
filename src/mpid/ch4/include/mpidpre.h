@@ -425,7 +425,9 @@ typedef struct {
 
 typedef struct {
     union {
-    MPIDI_NM_ADDR_DECL} netmod;
+        union {
+            MPIDI_NM_ADDR_DECL} netmod;
+    } addr;
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     MPIDI_locality_t is_local;
 #endif

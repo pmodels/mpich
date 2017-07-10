@@ -41,7 +41,7 @@ typedef struct {
     MPIR_Request *lw_send_req;
 } MPIDI_UCX_global_t;
 
-#define MPIDI_UCX_AV(av)     ((av)->netmod.ucx)
+#define MPIDI_UCX_AV(av)     ((av)->addr.netmod.ucx)
 
 extern MPIDI_UCX_global_t MPIDI_UCX_global;
 
