@@ -38,6 +38,7 @@ typedef struct {
     char kvsname[MPIDI_UCX_KVSAPPSTRLEN];
     char pname[MPI_MAX_PROCESSOR_NAME];
     int max_addr_len;
+    MPIR_Request *lw_send_req;
 } MPIDI_UCX_global_t;
 
 #define MPIDI_UCX_AV(av)     ((av)->netmod.ucx)

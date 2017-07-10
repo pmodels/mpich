@@ -101,8 +101,8 @@ static inline int MPIDI_UCX_send(const void *buf,
         ucp_request->req = req;
         MPIDI_UCX_REQ(req).a.ucp_request = ucp_request;
     } else if (have_request) {
-        req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
-        MPIR_cc_set(&req->cc, 0);
+        req = MPIDI_UCX_global.lw_send_req;
+        MPIR_Request_add_ref(req);
     }
     *request = req;
 

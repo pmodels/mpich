@@ -220,6 +220,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
 
+    MPIDI_UCX_global.lw_send_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+    MPIR_cc_set(&MPIDI_UCX_global.lw_send_req->cc, 0);
+
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_EXIT);
@@ -290,6 +293,8 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
 
     MPIDIG_finalize();
     PMI_Finalize();
+
+    MPIR_Request_free(MPIDI_UCX_global.lw_send_req);
 
   fn_exit:
     MPL_free(pending);
