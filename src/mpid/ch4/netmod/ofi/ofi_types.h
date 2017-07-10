@@ -395,6 +395,9 @@ typedef struct {
     /* Communication info for dynamic processes */
     MPIDI_OFI_conn_manager_t conn_mgr;
 
+    /* complete request used for lightweight sends */
+    MPIR_Request *lw_send_req;
+
     /* Capability settings */
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
     MPIDI_OFI_capabilities_t settings;

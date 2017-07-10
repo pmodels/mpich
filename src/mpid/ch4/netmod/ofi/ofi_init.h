@@ -937,6 +937,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_Datatype_init_names();
     MPIDI_OFI_index_datatypes();
 
+    MPIDI_Global.lw_send_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+    MPIR_cc_set(&MPIDI_Global.lw_send_req->cc, 0);
+
     /* -------------------------------- */
     /* Initialize Dynamic Tasking       */
     /* -------------------------------- */
@@ -1050,6 +1053,8 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_FI_MUTEX, &thr_err);
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_SPAWN_MUTEX, &thr_err);
+
+    MPIR_Request_free(MPIDI_Global.lw_send_req);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_FINALIZE);
