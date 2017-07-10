@@ -924,9 +924,15 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
     }
 
     if (comm_ptr->rank == 0) {
-        map_ptr = MPIDI_CH4R_generate_random_addr(mapsize);
-        map_ptr = mmap(map_ptr, mapsize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, fd, 0);
+        int map_flags = MAP_SHARED;
 
+        map_ptr = MPIDI_CH4R_generate_random_addr(mapsize);
+#ifdef USE_SYM_HEAP
+        if (MPIDI_CH4R_is_valid_mapaddr(map_ptr))
+            map_flags |= MAP_FIXED;     /* Set fixed only when generated a valid address.
+                                         * Otherwise we allow system to pick up one. */
+#endif
+        map_ptr = mmap(map_ptr, mapsize, PROT_READ | PROT_WRITE, map_flags, fd, 0);
         if (map_ptr == NULL || map_ptr == MAP_FAILED) {
             close(fd);
 
@@ -950,12 +956,19 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
 
+        int map_flags = MAP_SHARED;
+
+#ifdef USE_SYM_HEAP
         rc = MPIDI_CH4R_check_maprange_ok(map_ptr, mapsize);
         /* If we hit this assert, we need to iterate
          * trying more addresses
          */
         MPIR_Assert(rc == 1);
-        map_ptr = mmap(map_ptr, mapsize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, fd, 0);
+
+        map_flags |= MAP_FIXED; /* Set fixed only when symmetric heap is enabled and
+                                 * the address is locally valid. */
+#endif
+        map_ptr = mmap(map_ptr, mapsize, PROT_READ | PROT_WRITE, map_flags, fd, 0);
         MPIDI_CH4U_WIN(win, mmap_addr) = map_ptr;
         MPIDI_CH4U_WIN(win, mmap_sz) = mapsize;
 
