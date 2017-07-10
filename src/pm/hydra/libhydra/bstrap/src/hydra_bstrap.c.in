@@ -32,6 +32,7 @@ struct bstrap_control {
     int my_proxy_id;
     int total_downstreams;
     struct HYD_int_hash *fd_control_hash;
+    struct HYD_int_hash *real_proxy_id_hash;
     int current_downstreams;
 };
 
@@ -50,7 +51,7 @@ static HYD_status enqueue_control_fd(int fd_control, struct bstrap_control *bstr
 {
     struct HYDI_bstrap_cmd cmd;
     int recvd, closed;
-    struct HYD_int_hash *hash;
+    struct HYD_int_hash *hash, *real_proxy_hash;
     HYD_status status = HYD_SUCCESS;
 
     HYD_FUNC_ENTER();
@@ -63,9 +64,12 @@ static HYD_status enqueue_control_fd(int fd_control, struct bstrap_control *bstr
     /* the first command coming in should be the proxy ID */
     HYD_ASSERT(cmd.type == HYDI_BSTRAP_CMD__PROXY_ID, status);
 
+    MPL_HASH_FIND_INT(bstrap_control->real_proxy_id_hash, &cmd.u.proxy_id.id, real_proxy_hash);
+    HYD_ASSERT(real_proxy_hash->val < bstrap_control->total_downstreams, status);
+
     HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
     hash->key = fd_control;
-    hash->val = cmd.u.proxy_id.id - bstrap_control->my_proxy_id - 1;
+    hash->val = real_proxy_hash->val;
     MPL_HASH_ADD_INT(bstrap_control->fd_control_hash, key, hash);
 
     bstrap_control->current_downstreams++;
@@ -157,6 +161,7 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
     bstrap_control->my_proxy_id = my_proxy_id;
     bstrap_control->total_downstreams = (*num_downstream);
     bstrap_control->fd_control_hash = NULL;
+    bstrap_control->real_proxy_id_hash = NULL;
     bstrap_control->current_downstreams = 0;
 
     HYD_MALLOC(proxy_id, int *, (*num_downstream) * sizeof(int), status);
@@ -196,10 +201,16 @@ HYD_status HYD_bstrap_setup(const char *path, const char *launcher, const char *
     /* ok, all the groundwork has been set.  now loop over the set of
      * nodes that we need to launch on and get cracking */
     for (m = 0; m < bstrap_control->total_downstreams; m++) {
+        struct HYD_int_hash *proxy_hash = NULL;
         k = HYD_tree_start(num_nodes, m, tree_width);
 
         proxy_id[m] = my_proxy_id + k + 1;
         subtree_size = HYD_tree_size(num_nodes, m, tree_width);
+
+        HYD_MALLOC(proxy_hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
+        proxy_hash->key = proxy_id[m];
+        proxy_hash->val = m;
+        MPL_HASH_ADD_INT(bstrap_control->real_proxy_id_hash, key, proxy_hash);
 
         if (MPL_host_is_local(node_list[k].hostname)) {
             int sockpair[2];

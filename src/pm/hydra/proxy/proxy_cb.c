@@ -285,9 +285,12 @@ HYD_status proxy_downstream_control_cb(int fd, HYD_dmx_event_t events, void *use
         {
             int rel_proxy_id;
             int *contig_data;
+            struct HYD_int_hash *hash;
 
             /* Find the proxy id of the proxy sending the data */
-            rel_proxy_id = cmd.u.pids.proxy_id - proxy_params.root.proxy_id;
+            MPL_HASH_FIND_INT(proxy_params.immediate.proxy.fd_control_hash, &fd, hash);
+            rel_proxy_id = hash->val + 1;
+
             n_proxy_pids[rel_proxy_id] = cmd.data_len / (2 * sizeof(int));
 
             /* Read the data from the socket */
@@ -297,20 +300,24 @@ HYD_status proxy_downstream_control_cb(int fd, HYD_dmx_event_t events, void *use
 
             status =
                 HYD_sock_read(fd, contig_data, cmd.data_len, &recvd, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
+            HYD_ERR_POP(status, "error reading pids from downstream\n");
 
             memcpy(proxy_pids[rel_proxy_id], contig_data, cmd.data_len / 2);
             memcpy(proxy_pmi_ids[rel_proxy_id], &contig_data[n_proxy_pids[rel_proxy_id]], cmd.data_len / 2);
 
             /* Call the function to stitch it all together */
             proxy_send_pids_upstream();
+            break;
         }
     case MPX_CMD_TYPE__EXITCODE:
         {
             int rel_proxy_id;
             int *contig_data;
+            struct HYD_int_hash *hash;
 
             /* Find the proxy id of the proxy sending the data */
-            rel_proxy_id = cmd.u.pids.proxy_id - proxy_params.root.proxy_id;
+            MPL_HASH_FIND_INT(proxy_params.immediate.proxy.fd_control_hash, &fd, hash);
+            rel_proxy_id = hash->val + 1;
             n_proxy_exitcodes[rel_proxy_id] = cmd.data_len / (2 * sizeof(int));
 
             /* Read the data from the socket */
@@ -320,12 +327,14 @@ HYD_status proxy_downstream_control_cb(int fd, HYD_dmx_event_t events, void *use
 
             status =
                 HYD_sock_read(fd, contig_data, cmd.data_len, &recvd, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
+            HYD_ERR_POP(status, "error reading exitcodes from downstream\n");
 
             memcpy(exitcodes[rel_proxy_id], contig_data, cmd.data_len / 2);
             memcpy(exitcode_node_ids[rel_proxy_id], &contig_data[n_proxy_exitcodes[rel_proxy_id]], cmd.data_len / 2);
 
             /* Call the function to stitch it all together */
             proxy_send_exitcodes_upstream();
+            break;
         }
 
     default:

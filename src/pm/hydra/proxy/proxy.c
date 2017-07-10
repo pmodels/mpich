@@ -197,7 +197,8 @@ static HYD_status get_bstrap_params(void)
                 tmp = strtok((char *) str, ",");
             else
                 tmp = strtok(NULL, ",");
-            HYD_ASSERT(tmp, status);
+            if(!tmp)
+                break;
 
             HYD_MALLOC(hash, struct HYD_int_hash *, sizeof(struct HYD_int_hash), status);
             hash->key = atoi(tmp);
@@ -279,6 +280,11 @@ static HYD_status get_bstrap_params(void)
                    proxy_params.immediate.proxy.num_children * sizeof(int), status);
         HYD_MALLOC(proxy_params.immediate.proxy.kvcache_num_blocks, int *,
                    proxy_params.immediate.proxy.num_children * sizeof(int), status);
+        for (i = 0; i < proxy_params.immediate.proxy.num_children; i++) {
+            proxy_params.immediate.proxy.kvcache[i] = NULL;
+            proxy_params.immediate.proxy.kvcache_size[i] = 0;
+            proxy_params.immediate.proxy.kvcache_num_blocks[i] = 0;
+        }
     }
 
   fn_exit:
@@ -656,6 +662,8 @@ int main(int argc, char **argv)
     /* step 3: close all downstream stdin fds */
     MPL_HASH_ITER(hh, proxy_params.immediate.proxy.fd_stdin_hash, hash, tmp) {
         close(hash->key);
+        MPL_HASH_DEL(proxy_params.immediate.proxy.fd_stdin_hash, hash);
+        MPL_free(hash);
     }
 
     /* step 4: launch processes */
@@ -674,6 +682,13 @@ int main(int argc, char **argv)
         proxy_pmi_ids[0][i] = proxy_params.immediate.process.pmi_id[i];
     }
     proxy_send_pids_upstream();
+
+    HYD_MALLOC(n_proxy_exitcodes, int *, (1 + proxy_params.immediate.proxy.num_children) * sizeof(int), status);
+    n_proxy_exitcodes[0] = proxy_params.immediate.process.num_children;
+    HYD_MALLOC(exitcodes, int **, (1 + proxy_params.immediate.proxy.num_children) * sizeof(int *), status);
+    HYD_MALLOC(exitcodes[0], int *, (1 + proxy_params.immediate.process.num_children) * sizeof(int), status);
+    HYD_MALLOC(exitcode_node_ids, int **, (1 + proxy_params.immediate.proxy.num_children) * sizeof(int *), status);
+    HYD_MALLOC(exitcode_node_ids[0], int *, (1 + proxy_params.immediate.process.num_children) * sizeof(int), status);
 
     /* The launch is now complete: we wait for the processes to
      * complete their execution, in a five-step process: (1) wait for
@@ -712,10 +727,6 @@ int main(int argc, char **argv)
     }
 
     /* step 2: wait for MPI process to terminate */
-    HYD_MALLOC(exitcodes, int **, (1 + proxy_params.immediate.proxy.num_children) * sizeof(int *), status);
-    HYD_MALLOC(exitcodes[0], int *, (1 + proxy_params.immediate.process.num_children) * sizeof(int), status);
-    HYD_MALLOC(exitcode_node_ids, int **, (1 + proxy_params.immediate.proxy.num_children) * sizeof(int *), status);
-    HYD_MALLOC(exitcode_node_ids[0], int *, (1 + proxy_params.immediate.process.num_children) * sizeof(int), status);
     MPL_HASH_ITER(hh, proxy_params.immediate.process.pid_hash, hash, tmp) {
         waitpid(hash->key, &tmp_ret, 0);
         exitcodes[0][hash->val] = WEXITSTATUS(tmp_ret);
@@ -723,8 +734,6 @@ int main(int argc, char **argv)
         MPL_HASH_DEL(proxy_params.immediate.process.pid_hash, hash);
         MPL_free(hash);
     }
-    HYD_MALLOC(n_proxy_exitcodes, int *, (1 + proxy_params.immediate.proxy.num_children) * sizeof(int), status);
-    n_proxy_exitcodes[0] = proxy_params.immediate.process.num_children;
     proxy_send_exitcodes_upstream();
 
     /* step 3: wait for proxy stdout/stderr to close */
@@ -754,7 +763,7 @@ int main(int argc, char **argv)
     }
 
     /* step 4: wait for proxies to terminate */
-    MPL_HASH_ITER(hh, proxy_params.immediate.process.pid_hash, hash, tmp) {
+    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.pid_hash, hash, tmp) {
         int ret = 0;
 
         waitpid(hash->key, &ret, 0);
@@ -771,7 +780,7 @@ int main(int argc, char **argv)
             }
         }
 
-        MPL_HASH_DEL(proxy_params.immediate.process.pid_hash, hash);
+        MPL_HASH_DEL(proxy_params.immediate.proxy.pid_hash, hash);
     }
 
     /* step 5: deregister upstream fd and stdin */
@@ -782,6 +791,11 @@ int main(int argc, char **argv)
 
     status = HYD_dmx_deregister_fd(proxy_params.root.upstream_fd);
     HYD_ERR_POP(status, "error deregistering upstream fd\n");
+
+    MPL_HASH_ITER(hh, proxy_params.immediate.proxy.fd_control_hash, hash, tmp) {
+        MPL_HASH_DEL(proxy_params.immediate.proxy.fd_control_hash, hash);
+        MPL_free(hash);
+    }
 
     if (proxy_params.cwd)
         MPL_free(proxy_params.cwd);

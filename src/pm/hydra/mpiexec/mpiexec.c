@@ -545,25 +545,27 @@ static HYD_status control_cb(int fd, HYD_dmx_event_t events, void *userp)
     }
     else if (cmd.type == MPX_CMD_TYPE__KVCACHE_IN) {
         struct HYD_int_hash *hash;
+        int rel_proxy_id;
 
         MPL_HASH_FIND_INT(mpiexec_pg_hash, &cmd.u.kvcache.pgid, pg);
 
         MPL_HASH_FIND_INT(pg->downstream.fd_control_hash, &fd, hash);
-        HYD_ASSERT(hash->val < pg->num_downstream, status);
+        rel_proxy_id = hash->val;
+        HYD_ASSERT(rel_proxy_id < pg->num_downstream, status);
 
-        HYD_ASSERT(pg->downstream.kvcache[hash->val] == NULL, status);
-        HYD_ASSERT(pg->downstream.kvcache_size[hash->val] == 0, status);
-        HYD_ASSERT(pg->downstream.kvcache_num_blocks[hash->val] == 0, status);
+        HYD_ASSERT(pg->downstream.kvcache[rel_proxy_id] == NULL, status);
+        HYD_ASSERT(pg->downstream.kvcache_size[rel_proxy_id] == 0, status);
+        HYD_ASSERT(pg->downstream.kvcache_num_blocks[rel_proxy_id] == 0, status);
 
-        pg->downstream.kvcache_num_blocks[hash->val] = cmd.u.kvcache.num_blocks;
-        pg->downstream.kvcache_size[hash->val] = cmd.data_len;
+        pg->downstream.kvcache_num_blocks[rel_proxy_id] = cmd.u.kvcache.num_blocks;
+        pg->downstream.kvcache_size[rel_proxy_id] = cmd.data_len;
 
-        HYD_MALLOC(pg->downstream.kvcache[hash->val], char *,
-                   pg->downstream.kvcache_size[hash->val], status);
+        HYD_MALLOC(pg->downstream.kvcache[rel_proxy_id], char *,
+                   pg->downstream.kvcache_size[rel_proxy_id], status);
 
         status =
-            HYD_sock_read(fd, pg->downstream.kvcache[hash->val],
-                          pg->downstream.kvcache_size[hash->val], &recvd, &closed,
+            HYD_sock_read(fd, pg->downstream.kvcache[rel_proxy_id],
+                          pg->downstream.kvcache_size[rel_proxy_id], &recvd, &closed,
                           HYD_SOCK_COMM_TYPE__BLOCKING);
         HYD_ERR_POP(status, "error reading PMI command\n");
     }
@@ -623,33 +625,40 @@ static HYD_status control_cb(int fd, HYD_dmx_event_t events, void *userp)
         /* If we have all of the pids, post the list to the MPIR_PROCDESC struct so the debugger can find it */
         if (mpiexec_params.pid_ref_count == pg->num_downstream) {
             HYD_dbg_setup_procdesc(pg->total_proc_count, pg->exec_list, contig_pids, pg->node_count, pg->node_list);
-
             MPL_free(contig_pids);
         }
     }
     else if (cmd.type == MPX_CMD_TYPE__EXITCODE) {
         int *contig_data;
+        struct HYD_int_hash *hash;
+        int rel_proxy_id;
 
         MPL_HASH_FIND_INT(mpiexec_pg_hash, &cmd.u.exitcodes.pgid, pg);
+
+        MPL_HASH_FIND_INT(pg->downstream.fd_control_hash, &fd, hash);
+        rel_proxy_id = hash->val;
+        HYD_ASSERT(rel_proxy_id < pg->num_downstream, status);
+
         if (n_proxy_exitcodes == NULL)
             HYD_MALLOC(n_proxy_exitcodes, int *, pg->num_downstream * sizeof(int), status);
-        n_proxy_exitcodes[cmd.u.exitcodes.proxy_id] = cmd.data_len / (2 * sizeof(int));
+        n_proxy_exitcodes[rel_proxy_id] = cmd.data_len / (2 * sizeof(int));
 
         if (exitcodes == NULL)
             HYD_MALLOC(exitcodes, int **, pg->num_downstream * sizeof(int *), status);
-        HYD_MALLOC(exitcodes[cmd.u.exitcodes.proxy_id], int *, cmd.data_len / 2, status);
+        HYD_MALLOC(exitcodes[rel_proxy_id], int *, cmd.data_len / 2, status);
         if (exitcode_node_ids == NULL)
             HYD_MALLOC(exitcode_node_ids, int **, pg->num_downstream * sizeof(int *), status);
-        HYD_MALLOC(exitcode_node_ids[cmd.u.exitcodes.proxy_id], int *, cmd.data_len / 2, status);
+        HYD_MALLOC(exitcode_node_ids[rel_proxy_id], int *, cmd.data_len / 2, status);
 
         /* Read the data from the socket */
         HYD_MALLOC(contig_data, int *, cmd.data_len, status);
         status =
             HYD_sock_read(fd, contig_data, cmd.data_len, &recvd, &closed, HYD_SOCK_COMM_TYPE__BLOCKING);
+
+        memcpy(exitcodes[rel_proxy_id], contig_data, cmd.data_len / 2);
+        memcpy(exitcode_node_ids[rel_proxy_id], &contig_data[n_proxy_exitcodes[rel_proxy_id]], cmd.data_len / 2);
         MPL_free(contig_data);
 
-        memcpy(exitcodes[cmd.u.exitcodes.proxy_id], contig_data, cmd.data_len / 2);
-        memcpy(exitcode_node_ids[cmd.u.exitcodes.proxy_id], &contig_data[n_proxy_exitcodes[cmd.u.exitcodes.proxy_id]], cmd.data_len / 2);
     }
     else {
         HYD_ERR_SETANDJUMP(status, HYD_ERR_INTERNAL, "received unknown cmd %d\n", cmd.type);
