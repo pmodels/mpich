@@ -48,6 +48,15 @@ static inline size_t MPIDI_CH4R_get_mapsize(size_t size, size_t * psz)
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_CH4R_is_valid_mapaddr
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_CH4R_is_valid_mapaddr(void *start)
+{
+    return ((uintptr_t) start == -1ULL) ? 0 : 1;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_CH4R_check_maprange_ok
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
