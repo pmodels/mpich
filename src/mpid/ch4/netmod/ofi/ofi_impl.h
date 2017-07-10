@@ -217,8 +217,8 @@
 
 #define MPIDI_OFI_SEND_REQUEST_CREATE_LW(req)                   \
     do {                                                                \
-        (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);           \
-        MPIR_cc_set(&(req)->cc, 0);                                     \
+        (req) = MPIDI_Global.lw_send_req;                               \
+        MPIR_Request_add_ref((req));                                    \
     } while (0)
 
 #define MPIDI_OFI_SSEND_ACKREQUEST_CREATE(req)            \
