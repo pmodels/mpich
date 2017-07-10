@@ -147,16 +147,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
     int max_n_avts;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_CREATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_CREATE_HOOK);
-    mpi_errno = MPIDI_NM_mpi_comm_create_hook(comm);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
-#ifdef MPIDI_BUILD_CH4_SHM
-    mpi_errno = MPIDI_SHM_mpi_comm_create_hook(comm);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
-#endif
 
     /* comm_world and comm_self are already initialized */
     if (comm != MPIR_Process.comm_world && comm != MPIR_Process.comm_self) {
@@ -200,6 +190,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
             MPIDIU_avt_add_ref(MPIDI_COMM(comm, local_map).avtid);
         }
     }
+
+    mpi_errno = MPIDI_NM_mpi_comm_create_hook(comm);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#ifdef MPIDI_BUILD_CH4_SHM
+    mpi_errno = MPIDI_SHM_mpi_comm_create_hook(comm);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_CREATE_HOOK);
@@ -258,17 +259,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
         MPIDIU_avt_release_ref(MPIDI_COMM(comm, local_map).avtid);
     }
 
-    mpi_errno = MPIDI_NM_mpi_comm_free_hook(comm);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
-#ifdef MPIDI_BUILD_CH4_SHM
-    mpi_errno = MPIDI_SHM_mpi_comm_free_hook(comm);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
-#endif
-
     if (MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_LUT
         || MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_LUT_INTRA) {
         MPIDIU_release_lut(MPIDI_COMM(comm, map).irreg.lut.t);
@@ -283,6 +273,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
     if (MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_MLUT) {
         MPIDIU_release_mlut(MPIDI_COMM(comm, local_map).irreg.mlut.t);
     }
+
+    mpi_errno = MPIDI_NM_mpi_comm_free_hook(comm);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#ifdef MPIDI_BUILD_CH4_SHM
+    mpi_errno = MPIDI_SHM_mpi_comm_free_hook(comm);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#endif
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_FREE_HOOK);
     return mpi_errno;
