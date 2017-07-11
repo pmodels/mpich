@@ -100,6 +100,7 @@ MPIDI_NM_native_funcs_t MPIDI_NM_native_ucx_funcs = {
     .mpi_get_accumulate        = MPIDI_NM_mpi_get_accumulate,
     .mpi_win_lock_all          = MPIDI_NM_mpi_win_lock_all,
     .rank_is_local             = MPIDI_NM_rank_is_local,
+    .av_is_local               = MPIDI_NM_av_is_local,
     /* Collectives */
     .mpi_barrier               = MPIDI_NM_mpi_barrier,
     .mpi_bcast                 = MPIDI_NM_mpi_bcast,

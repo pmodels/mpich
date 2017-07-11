@@ -838,8 +838,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Commit(MPIDI_Global.kvsname), pmi);
 #endif
 
+        MPIDI_av_entry_t *av = NULL;
         for (i = 0; i < size; i++) {
-            if (MPIDI_CH4_rank_is_local(i, MPIR_Process.comm_world)) {
+            av = MPIDIU_comm_rank_to_av(MPIR_Process.comm_world, i);
+            if (MPIDI_av_is_local(av)) {
                 if (i == rank)
                     local_rank = num_local;
 

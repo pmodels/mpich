@@ -36,6 +36,7 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
     MPIDI_POSIX_cell_t(*cells_p)[MPIDI_POSIX_NUM_CELLS];
     MPIDI_POSIX_queue_t *recv_queues_p = NULL;
     MPIDI_POSIX_queue_t *free_queues_p = NULL;
+    MPIDI_av_entry_t *av = NULL;
     MPIR_CHKPMEM_DECL(9);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_INIT);
 
@@ -53,7 +54,8 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
                         "mem_region local ranks");
 
     for (i = 0; i < size; i++) {
-        if (MPIDI_CH4_rank_is_local(i, MPIR_Process.comm_world)) {
+        av = MPIDIU_comm_rank_to_av(MPIR_Process.comm_world, i);
+        if (MPIDI_av_is_local(av)) {
             if (i == rank) {
                 local_rank = num_local;
             }
