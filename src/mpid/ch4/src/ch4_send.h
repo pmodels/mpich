@@ -26,6 +26,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
                                         MPIR_Request ** request)
 {
     int mpi_errno;
+    MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEND);
 
@@ -38,11 +39,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
         goto fn_exit;
     }
 
+    av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, NULL, request);
 #else
     int r;
-    if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
+    if ((r = MPIDI_av_is_local(av)))
         mpi_errno =
             MPIDI_SHM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, request);
     else
@@ -74,6 +76,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
                                          MPIR_Request ** request)
 {
     int mpi_errno;
+    MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ISEND);
 
@@ -86,11 +89,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
         goto fn_exit;
     }
 
+    av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, NULL, request);
 #else
     int r;
-    if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
+    if ((r = MPIDI_av_is_local(av)))
         mpi_errno =
             MPIDI_SHM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, request);
     else
@@ -123,6 +127,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
                                          MPIR_Request ** request)
 {
     int mpi_errno;
+    MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RSEND);
 
@@ -135,11 +140,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
         goto fn_exit;
     }
 
+    av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, NULL, request);
 #else
     int r;
-    if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
+    if (r = MPIDI_av_is_local(av))
         mpi_errno =
             MPIDI_SHM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, request);
     else
@@ -172,6 +178,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
                                           MPIR_Request ** request)
 {
     int mpi_errno;
+    MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IRSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IRSEND);
 
@@ -184,11 +191,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
         goto fn_exit;
     }
 
+    av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, NULL, request);
 #else
     int r;
-    if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
+    if ((r = MPIDI_av_is_local(av)))
         mpi_errno =
             MPIDI_SHM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, request);
     else
@@ -220,6 +228,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend(const void *buf,
                                          MPIR_Request ** request)
 {
     int mpi_errno;
+    MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SSEND);
 
@@ -232,11 +241,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend(const void *buf,
         goto fn_exit;
     }
 
+    av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_ssend(buf, count, datatype, rank, tag, comm, context_offset, NULL, request);
 #else
     int r;
-    if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
+    if ((r = MPIDI_av_is_local(av)))
         mpi_errno =
             MPIDI_SHM_mpi_ssend(buf, count, datatype, rank, tag, comm, context_offset, request);
     else
@@ -268,6 +278,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Issend(const void *buf,
                                           MPIR_Request ** request)
 {
     int mpi_errno;
+    MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ISSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ISSEND);
 
@@ -280,11 +291,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Issend(const void *buf,
         goto fn_exit;
     }
 
+    av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, NULL, request);
 #else
     int r;
-    if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
+    if ((r = MPIDI_av_is_local(av)))
         mpi_errno =
             MPIDI_SHM_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, request);
     else
@@ -359,14 +371,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send_init(const void *buf,
                                              MPIR_Request ** request)
 {
     int mpi_errno;
+    MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEND_INIT);
+    av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno =
         MPIDI_NM_mpi_send_init(buf, count, datatype, rank, tag, comm, context_offset, NULL, request);
 #else
     int r;
-    if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
+    if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_send_init(buf, count, datatype, rank, tag,
                                             comm, context_offset, request);
     else
@@ -399,14 +413,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend_init(const void *buf,
                                               MPIR_Request ** request)
 {
     int mpi_errno;
+    MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SSEND_INIT);
+    av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno =
         MPIDI_NM_mpi_ssend_init(buf, count, datatype, rank, tag, comm, context_offset, NULL, request);
 #else
     int r;
-    if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
+    if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_ssend_init(buf, count, datatype, rank, tag,
                                              comm, context_offset, request);
     else
@@ -440,14 +456,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bsend_init(const void *buf,
                                               MPIR_Request ** request)
 {
     int mpi_errno;
+    MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BSEND_INIT);
+    av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno =
         MPIDI_NM_mpi_bsend_init(buf, count, datatype, rank, tag, comm, context_offset, NULL, request);
 #else
     int r;
-    if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
+    if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_bsend_init(buf, count, datatype, rank, tag,
                                              comm, context_offset, request);
     else
@@ -481,14 +499,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend_init(const void *buf,
                                               MPIR_Request ** request)
 {
     int mpi_errno;
+    MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RSEND_INIT);
+    av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno =
         MPIDI_NM_mpi_rsend_init(buf, count, datatype, rank, tag, comm, context_offset, NULL, request);
 #else
     int r;
-    if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
+    if ((r = MPIDI_av_is_local(av)))
         mpi_errno = MPIDI_SHM_mpi_rsend_init(buf, count, datatype, rank, tag,
                                              comm, context_offset, request);
     else

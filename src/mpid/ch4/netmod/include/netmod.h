@@ -179,6 +179,7 @@ typedef int (*MPIDI_NM_mpi_get_accumulate_t) (const void *origin_addr, int origi
                                               MPI_Op op, MPIR_Win * win, MPIDI_av_entry_t *addr);
 typedef int (*MPIDI_NM_mpi_win_lock_all_t) (int assert, MPIR_Win * win);
 typedef int (*MPIDI_NM_rank_is_local_t) (int target, MPIR_Comm * comm);
+typedef int (*MPIDI_NM_av_is_local_t) (MPIDI_av_entry_t *av);
 typedef int (*MPIDI_NM_mpi_barrier_t) (MPIR_Comm * comm, MPIR_Errflag_t * errflag);
 typedef int (*MPIDI_NM_mpi_bcast_t) (void *buffer, int count, MPI_Datatype datatype, int root,
                                      MPIR_Comm * comm, MPIR_Errflag_t * errflag);
@@ -429,6 +430,7 @@ typedef struct MPIDI_NM_native_funcs {
     MPIDI_NM_mpi_get_accumulate_t mpi_get_accumulate;
     MPIDI_NM_mpi_win_lock_all_t mpi_win_lock_all;
     MPIDI_NM_rank_is_local_t rank_is_local;
+    MPIDI_NM_av_is_local_t av_is_local;
     /* Collectives */
     MPIDI_NM_mpi_barrier_t mpi_barrier;
     MPIDI_NM_mpi_bcast_t mpi_bcast;
@@ -736,6 +738,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_lock_all(int assert,
                                                        MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rank_is_local(int target,
                                                     MPIR_Comm * comm) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_av_is_local(MPIDI_av_entry_t *av) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm,
                                                   MPIR_Errflag_t *
                                                   errflag) MPL_STATIC_INLINE_SUFFIX;
