@@ -473,8 +473,7 @@ static inline int MPIDI_CH4R_mpi_win_lock(int lock_type, int rank, int assert, M
     msg.lock_type = lock_type;
 
     locked = slock->locked + 1;
-    mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr,
-                                     MPIDI_CH4U_WIN_LOCK, &msg, sizeof(msg));
+    mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr, MPIDI_CH4U_WIN_LOCK, &msg, sizeof(msg));
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
@@ -529,8 +528,7 @@ static inline int MPIDI_CH4R_mpi_win_unlock(int rank, MPIR_Win * win)
     msg.origin_rank = win->comm_ptr->rank;
     unlocked = slock->locked - 1;
 
-    mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr,
-                                     MPIDI_CH4U_WIN_UNLOCK, &msg, sizeof(msg));
+    mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr, MPIDI_CH4U_WIN_UNLOCK, &msg, sizeof(msg));
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
@@ -889,8 +887,7 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
 
     shm_key = (char *) MPL_malloc(sizeof(char));
     shm_key_size = snprintf(shm_key, 1, "/mpi-%s-%X-%" PRIx64,
-                            MPIDI_CH4_Global.jobid, root_rank,
-                            MPIDI_CH4U_WIN(win, win_id));
+                            MPIDI_CH4_Global.jobid, root_rank, MPIDI_CH4U_WIN(win, win_id));
     shm_key = (char *) MPL_realloc(shm_key, shm_key_size);
     snprintf(shm_key, shm_key_size, "/mpi-%s-%X-%" PRIx64,
              MPIDI_CH4_Global.jobid, root_rank, MPIDI_CH4U_WIN(win, win_id));
