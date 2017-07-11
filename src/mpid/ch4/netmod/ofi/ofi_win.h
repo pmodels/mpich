@@ -580,7 +580,8 @@ static inline int MPIDI_NM_mpi_win_test(MPIR_Win * win, int *flag)
 #define FUNCNAME MPIDI_NM_mpi_win_lock
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPIR_Win * win, MPIDI_av_entry_t *addr)
+static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPIR_Win * win,
+                                        MPIDI_av_entry_t * addr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -631,7 +632,7 @@ static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPI
 #define FUNCNAME MPIDI_NM_mpi_win_unlock
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_entry_t *addr)
+static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_UNLOCK);
@@ -676,9 +677,9 @@ static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_ent
     MPIR_Assert(MPIDI_CH4U_WIN(win, sync).lock.count > 0);
     MPIDI_CH4U_WIN(win, sync).lock.count--;
 
-    /* Reset window epoch only when all per-target lock epochs are closed.*/
+    /* Reset window epoch only when all per-target lock epochs are closed. */
     if (MPIDI_CH4U_WIN(win, sync).lock.count == 0) {
-      MPIDI_CH4U_WIN(win, sync).access_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
+        MPIDI_CH4U_WIN(win, sync).access_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
     }
 
   fn_exit:
@@ -912,7 +913,8 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_ALLOCATE_SHARED);
 
     if (!MPIDI_OFI_ENABLE_RMA) {
-        mpi_errno = MPIDI_CH4R_mpi_win_allocate_shared(size, disp_unit, info_ptr, comm_ptr, base_ptr, win_ptr);
+        mpi_errno = MPIDI_CH4R_mpi_win_allocate_shared(size, disp_unit, info_ptr,
+                                                       comm_ptr, base_ptr, win_ptr);
         goto fn_exit;
     }
 
@@ -964,8 +966,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
 
     shm_key = (char *) MPL_malloc(sizeof(char));
     shm_key_size = snprintf(shm_key, 1, "/mpi-%s-%X-%" PRIx64,
-                            MPIDI_CH4_Global.jobid, root_rank,
-                            MPIDI_OFI_WIN(win).win_id);
+                            MPIDI_CH4_Global.jobid, root_rank, MPIDI_OFI_WIN(win).win_id);
     shm_key = (char *) MPL_realloc(shm_key, shm_key_size);
     snprintf(shm_key, shm_key_size, "/mpi-%s-%X-%" PRIx64,
              MPIDI_CH4_Global.jobid, root_rank, MPIDI_OFI_WIN(win).win_id);
@@ -1086,7 +1087,8 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
     *(void **) base_ptr = (void *) win->base;
     mpi_errno = MPIR_Barrier_impl(comm_ptr, &errflag);
 
-    if (fd >= 0) close(fd);
+    if (fd >= 0)
+        close(fd);
 
     if (first)
         shm_unlink(shm_key);
@@ -1223,7 +1225,7 @@ static inline int MPIDI_NM_mpi_win_allocate(MPI_Aint size,
 #define FUNCNAME MPIDI_NM_mpi_win_flush
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win, MPIDI_av_entry_t *addr)
+static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH);
@@ -1376,7 +1378,7 @@ static inline int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info,
 #define FUNCNAME MPIDI_NM_mpi_win_flush_local
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win, MPIDI_av_entry_t *addr)
+static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL);
