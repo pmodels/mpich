@@ -42,7 +42,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
             if (!flag)
                 mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, NULL, &flag, status);
         }
-        else if (MPIDI_CH4_av_is_local(av))
+        else if (MPIDI_CH4_av_is_local(av, comm))
             mpi_errno = MPIDI_SHM_mpi_iprobe(source, tag, comm, context_offset, &flag, status);
         else
             mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, NULL, &flag, status);
@@ -99,7 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
                     MPIDI_CH4I_REQUEST(*message, is_local) = 0;
             }
         }
-        else if (MPIDI_CH4_av_is_local(av)) {
+        else if (MPIDI_CH4_av_is_local(av, comm)) {
             mpi_errno =
                 MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, &flag, message, status);
             if (flag)
@@ -163,7 +163,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
             }
         }
     }
-    else if (MPIDI_CH4_av_is_local(av)) {
+    else if (MPIDI_CH4_av_is_local(av, comm)) {
         mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
         if (*flag)
             MPIDI_CH4I_REQUEST(*message, is_local) = 1;
@@ -218,7 +218,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
         if (!*flag)
             mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, NULL, flag, status);
     }
-    else if (MPIDI_CH4_av_is_local(av))
+    else if (MPIDI_CH4_av_is_local(av, comm))
         mpi_errno = MPIDI_SHM_mpi_iprobe(source, tag, comm, context_offset, flag, status);
     else
         mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, NULL, flag, status);

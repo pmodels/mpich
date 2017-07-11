@@ -816,7 +816,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_av_entry_t *av = NULL;
         for (i = 0; i < size; i++) {
             av = MPIDIU_comm_rank_to_av(MPIR_Process.comm_world, i);
-            if (MPIDI_CH4_av_is_local(av)) {
+            if (MPIDI_CH4_av_is_local(av, MPIR_Process.comm_world)) {
                 if (i == rank)
                     local_rank = num_local;
 

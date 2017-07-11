@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm)
 #define FUNCNAME MPIDI_CH4_av_is_local
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_av_is_local(MPIDI_av_entry_t *av)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_av_is_local(MPIDI_av_entry_t *av, MPIR_Comm *comm)
 {
    int ret;
 
@@ -49,9 +49,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_av_is_local(MPIDI_av_entry_t *av)
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     /* Ask the netmod for locality information. If it decided not to build it,
      * it will call back up to the CH4U function to get the infomration. */
-    ret = MPIDI_NM_av_is_local(av);
+    ret = MPIDI_NM_av_is_local(av, comm);
 #else
-    ret = MPIDI_CH4U_av_is_local(av);
+    ret = MPIDI_CH4U_av_is_local(av, comm);
 #endif
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4_AV_IS_LOCAL);
