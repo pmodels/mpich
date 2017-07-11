@@ -20,8 +20,6 @@
 
 #define UCP_PEER_NAME_MAX         HOST_NAME_MAX
 
-#define MPIDI_MAP_NOT_FOUND      ((void*)(-1UL))
-
 /* Active Message Stuff */
 #define MPIDI_UCX_NUM_AM_BUFFERS       (64)
 #define MPIDI_UCX_MAX_AM_EAGER_SZ      (16*1024)
