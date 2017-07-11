@@ -56,6 +56,17 @@ cvars:
         The default number of retries for allocating a symmetric heap in a process
         group. A retrying involves collective communication over the group.
 
+    - name        : MPIR_CVAR_CH4_SHM_SYMHEAP_RETRY
+      category    : CH4
+      type        : int
+      default     : 100
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_GROUP
+      description : >-
+        The default number of retries for allocating a symmetric heap in shared
+        memory. A retrying involves collective communication over the group in
+        the shared memory.
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
