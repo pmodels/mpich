@@ -11,12 +11,8 @@
 
 #include <ucp/api/ucp.h>
 
-#define HAVE_MPIDI_NM_type_commit_hook
-#define HAVE_MPIDI_NM_type_free_hook
-
 #define MPIDI_UCX_KVSAPPSTRLEN 4096
 
-//#define MPIDI_UCX_NAME_LEN             (512)
 typedef struct {
     void *req;
 } MPIDI_UCX_ucp_request_t;

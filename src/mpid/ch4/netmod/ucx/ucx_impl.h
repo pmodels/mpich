@@ -144,6 +144,4 @@ static inline int MPIDI_UCX_get_source(uint64_t match_bits)
 			  ucs_status_string(UCS_PTR_STATUS(_req)));	\
   } while (0)
 
-extern int MPIR_Datatype_init_names(void);
-
 #endif /* UCX_IMPL_H_INCLUDED */
