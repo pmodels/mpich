@@ -42,6 +42,7 @@ typedef struct {
 #define MPIDI_UCX_AV(av)     ((av)->netmod.ucx)
 
 extern MPIDI_UCX_global_t MPIDI_UCX_global;
+extern ucp_generic_dt_ops_t MPIDI_UCX_datatype_ops;
 
 /* UCX TAG Layout */
 
