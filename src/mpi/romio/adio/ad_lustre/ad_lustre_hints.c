@@ -23,11 +23,14 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     int myrank;
     static char myname[] = "ADIOI_LUSTRE_SETINFO";
 
+
+#ifdef LL_ADVISE_ON
     /* Set lock ahead default hints */
     fd->hints->fs_hints.lustre.lock_ahead_read = 0;
     fd->hints->fs_hints.lustre.lock_ahead_write = 0;
     fd->hints->fs_hints.lustre.lock_ahead_num_extents = 500;
     fd->hints->fs_hints.lustre.lock_ahead_flags = 0;
+#endif
 
     value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL + 1) * sizeof(char));
     if ((fd->info) == MPI_INFO_NULL) {
@@ -81,7 +84,7 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
                 ADIOI_Info_set(fd->info, "direct_write", "true");
                 fd->direct_write = 1;
             }
-
+#ifdef LL_LADVISE_ON
             /* Get lock ahead hints */
 
             ADIOI_Info_check_and_install_int(fd, users_info,
@@ -118,7 +121,10 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
                                                  &(fd->hints->fs_hints.lustre.lock_ahead_flags),
                                                  myname, error_code);
             }
+#endif
         }
+
+
 
         /* set striping information with ioctl */
         MPI_Comm_rank(fd->comm, &myrank);
