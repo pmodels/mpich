@@ -12,7 +12,7 @@
 #include "adio_extern.h"
 
 
-#ifdef LL_ADVISE_ON
+#ifdef HAVE_LUSTRE_LOCKAHEAD
 /* in ad_lustre_lock.c */
 void ADIOI_LUSTRE_lock_ahead_ioctl(ADIO_File fd,
                                    int avail_cb_nodes, ADIO_Offset next_offset, int *error_code);

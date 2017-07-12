@@ -15,7 +15,6 @@
    locking structures. */
 
 
-#ifdef LL_ADVISE_ON
 
 
 
@@ -404,6 +403,3 @@ void ADIOI_LUSTRE_lock_ahead_ioctl(ADIO_File fd, int avail_cb_nodes, ADIO_Offset
 
     return;
 }
-
-
-#endif

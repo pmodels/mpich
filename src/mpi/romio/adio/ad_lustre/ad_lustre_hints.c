@@ -24,7 +24,7 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     static char myname[] = "ADIOI_LUSTRE_SETINFO";
 
 
-#ifdef LL_ADVISE_ON
+#ifdef HAVE_LUSTRE_LOCKAHEAD
     /* Set lock ahead default hints */
     fd->hints->fs_hints.lustre.lock_ahead_read = 0;
     fd->hints->fs_hints.lustre.lock_ahead_write = 0;
@@ -84,7 +84,7 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
                 ADIOI_Info_set(fd->info, "direct_write", "true");
                 fd->direct_write = 1;
             }
-#ifdef LL_LADVISE_ON
+#ifdef HAVE_LUSTRE_LOCKAHEAD
             /* Get lock ahead hints */
 
             ADIOI_Info_check_and_install_int(fd, users_info,
