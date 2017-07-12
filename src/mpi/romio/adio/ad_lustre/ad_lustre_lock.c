@@ -14,39 +14,194 @@
 /* If necessary (older luster client headers) define the new
    locking structures. */
 
-#ifndef LL_IOC_LOCK_AHEAD
-/* Declaration for lustre request-only locking */
-#define LL_IOC_REQUEST_ONLY            _IO('f', 252)
-#endif
 
-#ifndef LL_IOC_LOCK_AHEAD
-/* Declarations for lustre lock ahead */
-#define LL_IOC_LOCK_AHEAD _IOWR('f', 251, struct llapi_lock_ahead_arg)
+#ifdef LL_ADVISE_ON
 
-typedef enum {
-    READ_USER = 1,
-    WRITE_USER,
-    MAX_USER,
-} lock_mode_user;
 
-struct llapi_lock_ahead_extent {
-    __u64 start;
-    __u64 end;
-    /* 0 on success, -ERRNO on error, 1 when a
-     * matching but non-identical lock is found, 2
-     * when a matching and identical lock is found */
-    __s32 result;
+
+
+//#define LOCK_AHEAD_DEBUG
+
+#ifndef LL_IOC_LADVISE
+#define LL_IOC_LADVISE                  _IOR('f', 250, struct llapi_lu_ladvise)
+
+enum lu_ladvise_type {
+    LU_LADVISE_INVALID = 0,
+    LU_LADVISE_WILLREAD = 1,
+    LU_LADVISE_DONTNEED = 2,
+    LU_LADVISE_LOCKNOEXPAND = 3,
+    LU_LADVISE_LOCKAHEAD = 4,
+    LU_LADVISE_MAX
 };
 
-/* lock ahead ioctl arguments */
-struct llapi_lock_ahead_arg {
-    __u32 lla_version;
-    __u32 lla_lock_mode;
-    __u32 lla_flags;
-    __u32 lla_extent_count;
-    struct llapi_lock_ahead_extent lla_extents[0];
+#define LU_LADVISE_NAMES {                                              \
+        [LU_LADVISE_WILLREAD]   = "willread",                           \
+        [LU_LADVISE_DONTNEED]   = "dontneed",                           \
+        [LU_LADVISE_LOCKNOEXPAND] = "locknoexpand",                     \
+        [LU_LADVISE_LOCKAHEAD] = "lockahead",                       \
+}
+
+/* This is the userspace argument for ladvise.  It is currently the same as
+ * what goes on the wire (struct lu_ladvise), but is defined separately as we
+ * may need info which is only used locally. */
+struct llapi_lu_ladvise {
+    __u16 lla_advice;           /* advice type */
+    __u16 lla_value1;           /* values for different advice types */
+    __u32 lla_value2;
+    __u64 lla_start;            /* first byte of extent for advice */
+    __u64 lla_end;              /* last byte of extent for advice */
+    __u32 lla_value3;
+    __u32 lla_value4;
+};
+enum ladvise_flag {
+    LF_ASYNC = 0x00000001,
+    LF_UNSET = 0x00000002,
+    /* For lock requests */
+    LF_NONBLOCK = 0x00000003,
+};
+
+#define LADVISE_MAGIC 0x1ADF1CE0
+/* Masks of valid flags for each advice */
+#define LF_LOCKNOEXPAND_MASK LF_UNSET
+#define LF_LOCKAHEAD_MASK LF_NONBLOCK
+/* Flags valid for all advices not explicitly specified */
+#define LF_DEFAULT_MASK LF_ASYNC
+/* All flags */
+#define LF_MASK (LF_ASYNC | LF_UNSET | LF_NONBLOCK)
+
+#define lla_lockahead_mode   lla_value1
+#define lla_peradvice_flags    lla_value2
+#define lla_lockahead_result lla_value3
+
+/* This is the userspace argument for ladvise, corresponds to ladvise_hdr which
+ * is used on the wire.  It is defined separately as we may need info which is
+ * only used locally. */
+struct llapi_ladvise_hdr {
+    __u32 lah_magic;            /* LADVISE_MAGIC */
+    __u32 lah_count;            /* number of advices */
+    __u64 lah_flags;            /* from enum ladvise_flag */
+    __u32 lah_value1;           /* unused */
+    __u32 lah_value2;           /* unused */
+    __u64 lah_value3;           /* unused */
+    struct llapi_lu_ladvise lah_advise[0];      /* advices in this header */
+};
+
+#define LAH_COUNT_MAX   (1024)
+
+enum lock_mode_user {
+    MODE_READ_USER = 1,
+    MODE_WRITE_USER,
+    MODE_MAX_USER,
+};
+
+#define LOCK_MODE_NAMES { \
+        [MODE_READ_USER]  = "READ",\
+        [MODE_WRITE_USER] = "WRITE"\
+}
+
+enum lockahead_results {
+    LLA_RESULT_SENT = 0,
+    LLA_RESULT_DIFFERENT,
+    LLA_RESULT_SAME,
 };
 #endif
+
+
+int llapi_ladvise_lock(ADIO_File fd, unsigned long long flags, int num_advise,
+                       ADIO_Offset * offset, int stripe_size, int num_extents,
+                       ADIO_Offset step_size)
+{
+    struct llapi_ladvise_hdr *ladvise_hdr;
+    int rc;
+    int i;
+    enum lock_mode_user mode;
+
+    if (num_advise < 1 || num_advise >= LAH_COUNT_MAX) {
+        errno = EINVAL;
+        /*llapi_error(LLAPI_MSG_ERROR, -EINVAL,
+         * "bad advice number %d", num_advise); */
+        return -1;
+    }
+
+    ladvise_hdr =
+        ADIOI_Malloc(sizeof(struct llapi_ladvise_hdr) +
+                     sizeof(struct llapi_lu_ladvise) * num_advise);
+
+    if (ladvise_hdr == NULL) {
+        errno = ENOMEM;
+        //llapi_error(LLAPI_MSG_ERROR, -ENOMEM, "not enough memory");
+        return -1;
+    }
+    ladvise_hdr->lah_magic = LADVISE_MAGIC;
+    ladvise_hdr->lah_count = num_advise;
+    ladvise_hdr->lah_flags = flags & LF_MASK;
+    ladvise_hdr->lah_value1 = 0;
+    ladvise_hdr->lah_value2 = 0;
+    ladvise_hdr->lah_value3 = 0;
+
+    if (fd->hints->fs_hints.lustre.lock_ahead_write)
+        mode = MODE_WRITE_USER;
+    else if (fd->hints->fs_hints.lustre.lock_ahead_read)        /* read only */
+        mode = MODE_READ_USER;
+    else
+        MPI_Abort(MPI_COMM_WORLD, 1);
+
+    for (i = 0; i < num_extents; ++i) {
+        ladvise_hdr->lah_advise[i].lla_advice = LU_LADVISE_LOCKAHEAD;
+        ladvise_hdr->lah_advise[i].lla_lockahead_mode = mode;
+        ladvise_hdr->lah_advise[i].lla_peradvice_flags = flags | LF_ASYNC;
+        ladvise_hdr->lah_advise[i].lla_start = *offset;
+        ladvise_hdr->lah_advise[i].lla_end = *offset + stripe_size - 1;;
+        ladvise_hdr->lah_advise[i].lla_value3 = 0;
+        ladvise_hdr->lah_advise[i].lla_value4 = 0;
+        ladvise_hdr->lah_advise[i].lla_lockahead_result = 0;
+        *offset += step_size;
+    }
+
+
+    rc = ioctl(fd->fd_sys, LL_IOC_LADVISE, ladvise_hdr);
+
+    if (rc < 0) {
+        ADIOI_Free(ladvise_hdr);
+        //llapi_error(LLAPI_MSG_ERROR, -errno, "cannot give advice");
+        return -1;
+    }
+
+
+    /* Simply save the new start/end extents, forget what we aleady had locked
+     * since lustre may reclaim it at any time. */
+    fd->hints->fs_hints.lustre.lock_ahead_start_extent = ladvise_hdr->lah_advise[0].lla_start;
+    fd->hints->fs_hints.lustre.lock_ahead_end_extent =
+        ladvise_hdr->lah_advise[num_extents - 1].lla_end;
+
+
+#ifdef LOCK_AHEAD_DEBUG
+    /* Print any per extent errors */
+    for (i = 0; i < num_extents; ++i) {
+        if (ladvise_hdr->lah_advise[i].lla_lockahead_result) {
+            fprintf(stderr, "%s(%d) "
+                    "lock ahead extent[%4.4d] {%ld,%ld} stripe {%lld,%lld} error %d\n",
+                    __func__, __LINE__,
+                    i,
+                    (long int) ladvise_hdr->lah_advise[i].lla_start,
+                    (long int) ladvise_hdr->lah_advise[i].lla_end,
+                    (long int) ladvise_hdr->lah_advise[i].lla_start / stripe_size,
+                    (long int) ladvise_hdr->lah_advise[i].lla_end / stripe_size,
+                    ladvise_hdr->lah_advise[i].lla_lockahead_result);
+        }
+    }
+
+#endif
+    ADIOI_Free(ladvise_hdr);
+
+    return 0;
+}
+
+
+
+
+
+
 
 /* Set lustre locks to only lock the requested byte range, do not
    extend any locks to 'infinity' which is the normal behavior.
@@ -54,9 +209,42 @@ struct llapi_lock_ahead_arg {
    want to auto-extend. */
 int ADIOI_LUSTRE_request_only_lock_ioctl(ADIO_File fd)
 {
-    int err;
+    int err = 0;
 
-    err = ioctl(fd->fd_sys, LL_IOC_REQUEST_ONLY);
+    struct llapi_ladvise_hdr *noexpand_hdr;
+    noexpand_hdr = ADIOI_Malloc(sizeof(struct llapi_ladvise_hdr) + sizeof(struct llapi_lu_ladvise));
+    if (!noexpand_hdr) {
+        err = -ENOMEM;
+        goto out;
+    }
+
+    noexpand_hdr->lah_magic = LADVISE_MAGIC;
+    noexpand_hdr->lah_count = 1;
+    noexpand_hdr->lah_flags = 0;
+    noexpand_hdr->lah_value1 = 0;
+    noexpand_hdr->lah_value2 = 0;
+    noexpand_hdr->lah_value3 = 0;
+    noexpand_hdr->lah_advise[0].lla_advice = LU_LADVISE_LOCKNOEXPAND;
+    noexpand_hdr->lah_advise[0].lla_peradvice_flags = 0;
+
+    noexpand_hdr->lah_advise[0].lla_value1 = 0;
+    noexpand_hdr->lah_advise[0].lla_start = 0;
+    noexpand_hdr->lah_advise[0].lla_end = 0;
+    noexpand_hdr->lah_advise[0].lla_value3 = 0;
+    noexpand_hdr->lah_advise[0].lla_value4 = 0;
+
+    int rc = ioctl(fd->fd_sys, LL_IOC_LADVISE, noexpand_hdr);
+    if (rc < 0) {
+        ADIOI_Free(noexpand_hdr);
+        //llapi_error(LLAPI_MSG_ERROR, -errno, "cannot give advice");
+        return -1;
+    }
+
+    ADIOI_Free(noexpand_hdr);
+
+
+  out:
+
     return err;
 }
 
@@ -81,7 +269,7 @@ int ADIOI_LUSTRE_clear_locks(ADIO_File fd)
 void ADIOI_LUSTRE_lock_ahead_ioctl(ADIO_File fd, int avail_cb_nodes, ADIO_Offset next_offset,
                                    int *error_code)
 {
-    struct llapi_lock_ahead_arg *arg;
+
     int err = 0, i;
     int num_extents = fd->hints->fs_hints.lustre.lock_ahead_num_extents;
     int flags = fd->hints->fs_hints.lustre.lock_ahead_flags;
@@ -177,49 +365,7 @@ void ADIOI_LUSTRE_lock_ahead_ioctl(ADIO_File fd, int avail_cb_nodes, ADIO_Offset
     } else      /* Have to assume we're writing to one of our stripes */
         offset = next_offset / stripe_size * stripe_size;       /* start of stripe */
 
-    arg =
-        ADIOI_Malloc(sizeof(struct llapi_lock_ahead_arg) +
-                     sizeof(struct llapi_lock_ahead_extent) * num_extents);
-    for (i = 0; i < num_extents; ++i) {
-        arg->lla_extents[i].start = offset;
-        arg->lla_extents[i].end = offset + stripe_size - 1;
-        arg->lla_extents[i].result = 0;
-        offset += step_size;
-    }
-
-    /* Simply save the new start/end extents, forget what we aleady had locked
-     * since lustre may reclaim it at any time. */
-    fd->hints->fs_hints.lustre.lock_ahead_start_extent = arg->lla_extents[0].start;
-    fd->hints->fs_hints.lustre.lock_ahead_end_extent = arg->lla_extents[num_extents - 1].end;
-
-    arg->lla_version = 1;
-    arg->lla_extent_count = num_extents;
-    arg->lla_flags = flags;
-
-    if (fd->hints->fs_hints.lustre.lock_ahead_write)    /* or read/write */
-        arg->lla_lock_mode = WRITE_USER;
-    else if (fd->hints->fs_hints.lustre.lock_ahead_read)        /* read only */
-        arg->lla_lock_mode = READ_USER;
-    else
-        MPI_Abort(MPI_COMM_WORLD, 1);
-
-    err = ioctl(fd->fd_sys, LL_IOC_LOCK_AHEAD, arg);
-
-#ifdef LOCK_AHEAD_DEBUG
-    /* Print any per extent errors */
-    for (i = 0; i < num_extents; ++i) {
-        if (arg->lla_extents[i].result) {
-            fprintf(stderr, "%s(%d) "
-                    "lock ahead extent[%4.4d] {%ld,%ld} stripe {%lld,%lld} errno %d\n",
-                    __func__, __LINE__,
-                    i,
-                    (long int) arg->lla_extents[i].start,
-                    (long int) arg->lla_extents[i].end,
-                    (long int) arg->lla_extents[i].start / stripe_size,
-                    (long int) arg->lla_extents[i].end / stripe_size, arg->lla_extents[i].result);
-        }
-    }
-#endif
+    err = llapi_ladvise_lock(fd, flags, num_extents, &offset, stripe_size, num_extents, step_size);
 
 
     if (err == -1) {    /* turn off lock ahead after a failure */
@@ -247,7 +393,7 @@ void ADIOI_LUSTRE_lock_ahead_ioctl(ADIO_File fd, int avail_cb_nodes, ADIO_Offset
 
         *error_code = ADIOI_Err_create_code("ADIOI_LUSTRE_lock_ahead_ioctl", fd->filename, errno);
         if (agg_idx == 0) {
-            fprintf(stderr, "%s: ioctl(LL_IOC_LOCK_AHEAD) \'%s\'\n", __func__, strerror(errno));
+            fprintf(stderr, "%s: ioctl(LL_IOC_LADVISE) \'%s\'\n", __func__, strerror(errno));
         }
         /* Note: it's too late to turn off 'request only' locking, which
          * could affect performance without also having 'lock ahead'.
@@ -255,6 +401,9 @@ void ADIOI_LUSTRE_lock_ahead_ioctl(ADIO_File fd, int avail_cb_nodes, ADIO_Offset
          * We expect lustre to support this (turning it off) later */
     }
 
-    ADIOI_Free(arg);
+
     return;
 }
+
+
+#endif

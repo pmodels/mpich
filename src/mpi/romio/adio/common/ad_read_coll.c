@@ -55,6 +55,8 @@ void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
    when the ioctl fails. */
 void ADIOI_LUSTRE_lock_ahead_ioctl(ADIO_File fd, int avail_cb_nodes, ADIO_Offset next_offset, int *error_code); /* ad_lustre_lock.c */
 /* Handle lock ahead.  If this read is outside our locked region, lock it now */
+/* The generic collective read code isn't reading the stripes quite how this lustre code (ad_lustre_lock.c) expects it. */
+/* There are some comments in the debug code in ad_lustre_lock.c. */
 #define ADIOI_LUSTRE_RD_LOCK_AHEAD(fd,cb_nodes,offset,error_code)                             \
 if ((fd->file_system == ADIO_LUSTRE) && (fd->hints->fs_hints.lustre.lock_ahead_read)) {        \
     if (offset > fd->hints->fs_hints.lustre.lock_ahead_end_extent) {                          \
