@@ -107,10 +107,26 @@ COLL_sched_bcast_tree(void *buffer, int count, COLL_dt_t datatype, int root, int
                            &comm->tsp_comm, sched, 0, NULL);
     }
 
-    /* Send to all the children */
+    int *children; int num_children=0;
+    /* calculate the total number of children to send the data to */
     SCHED_FOREACHCHILD {
-        TSP_send(buffer, count, datatype, j, tag, &comm->tsp_comm, sched,
+        num_children++;
+    }
+
+    if(num_children){
+        /*allocate space for storing children in an integer array*/
+        children = TSP_allocate_mem(sizeof(int)*num_children);
+
+        /* Record all the children */
+        num_children=0;
+        SCHED_FOREACHCHILD {
+            children[num_children++] = j;
+        }
+        /*Multicast data to the children*/
+        TSP_multicast(buffer, count, datatype, children, num_children, tag, &comm->tsp_comm, sched,
                             (tree->parent != -1) ? 1 : 0, &recv_id);
+
+        TSP_free_mem(children);
     }
 
     if (finalize) {
