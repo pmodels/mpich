@@ -84,6 +84,13 @@ MPL_STATIC_INLINE_PREFIX int MPIC_STUB_send(const void *buf, int count, MPIC_STU
     return 0;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIC_STUB_multicast(const void *buf, int count, MPIC_STUB_dt_t dt, int* destinations,
+                               int num_destinations, int tag, MPIC_STUB_comm_t * comm_ptr,
+                               MPIC_STUB_sched_t * sched, int n_invtcs, int *invtcs)
+{
+    return 0;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIC_STUB_send_accumulate(const void *buf, int count, MPIC_STUB_dt_t dt,
                                           MPIC_STUB_op_t op, int dest, int tag,
                                           MPIC_STUB_comm_t * comm_ptr, MPIC_STUB_sched_t * sched,

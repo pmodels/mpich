@@ -48,6 +48,7 @@
 #undef TSP_addref_op_nb
 #undef TSP_send
 #undef TSP_recv
+#undef TSP_multicast
 #undef TSP_recv_reduce
 #undef TSP_send_accumulate
 #undef TSP_test

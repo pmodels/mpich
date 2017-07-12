@@ -173,6 +173,9 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_sched_reset(MPIC_MPICH_sched_t * sched,
         /* recv_reduce tasks need to be set as not done */
         if (vtx->kind == MPIC_MPICH_KIND_RECV_REDUCE)
             vtx->nbargs.recv_reduce.done = 0;
+        /* reset progress of multicast operation */
+        if(vtx->kind == MPIC_MPICH_KIND_MULTICAST)
+            vtx->nbargs.multicast.last_complete = -1;
     }
     /* Reset issued vertex list to NULL.
      * **TODO: Check if this is really required as the vertex linked list
@@ -559,6 +562,41 @@ MPL_STATIC_INLINE_PREFIX int MPIC_MPICH_send(const void *buf,
     return vtx_id;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIC_MPICH_multicast(const void *buf,
+                                     int count,
+                                     MPIC_MPICH_dt_t dt,
+                                     int* destinations,
+                                     int num_destinations,
+                                     int tag,
+                                     MPIC_MPICH_comm_t * comm,
+                                     MPIC_MPICH_sched_t * sched, int n_invtcs, int *invtcs)
+{
+    /* assign a new vertex */
+    MPIC_MPICH_vtx_t *vtxp;
+    int vtx_id = MPIC_MPICH_get_new_vtx(sched, &vtxp);
+    sched->tag = tag;
+    vtxp->kind = MPIC_MPICH_KIND_MULTICAST;
+    MPIC_MPICH_init_vtx(sched, vtxp, vtx_id);
+    MPIC_MPICH_add_vtx_dependencies(sched, vtx_id, n_invtcs, invtcs);
+    /* store the arguments */
+    vtxp->nbargs.multicast.buf = (void *) buf;
+    vtxp->nbargs.multicast.count = count;
+    vtxp->nbargs.multicast.dt = dt;
+    vtxp->nbargs.multicast.num_destinations = num_destinations;
+    vtxp->nbargs.multicast.destinations = (int *) MPIC_MPICH_allocate_mem(sizeof(int)*num_destinations);
+    memcpy(vtxp->nbargs.multicast.destinations, destinations, sizeof(int)*num_destinations);
+
+    vtxp->nbargs.multicast.comm = comm;
+    vtxp->nbargs.multicast.mpir_req = (struct MPIR_Request**)MPIC_MPICH_allocate_mem(sizeof(struct MPIR_Request*)*num_destinations);
+    vtxp->nbargs.multicast.last_complete = -1;
+    /* set unused request pointers to NULL */
+    vtxp->mpid_req[0] = NULL;
+    vtxp->mpid_req[1] = NULL;
+
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"TSP(mpich) : sched [%d] [send]\n", vtx_id));
+    return vtx_id;
+}
+
 /* Transport function to schedule a send_accumulate task */
 MPL_STATIC_INLINE_PREFIX int MPIC_MPICH_send_accumulate(const void *buf,
                                            int count,
@@ -836,6 +874,7 @@ static inline void MPIC_MPICH_issue_vtx(int vtxid, MPIC_MPICH_vtx_t * vtxp,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIC_MPICH_ISSUE_VTX);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_MPICH_ISSUE_VTX);
 
+    int i;
     /* Check if the vertex has not already been issued and its incoming dependencies have completed */
     if (vtxp->state == MPIC_MPICH_STATE_INIT && vtxp->num_unfinished_dependencies == 0) {
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Issuing vertex %d\n", vtxid));
@@ -868,7 +907,21 @@ static inline void MPIC_MPICH_issue_vtx(int vtxid, MPIC_MPICH_vtx_t * vtxp,
                 MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"  --> MPICH transport (irecv) issued\n"));
             }
             break;
-
+        case MPIC_MPICH_KIND_MULTICAST:{
+                MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+                /* issue task */
+                for (i=0; i<vtxp->nbargs.multicast.num_destinations; i++)
+                    MPIC_Isend(vtxp->nbargs.multicast.buf,
+                               vtxp->nbargs.multicast.count,
+                               vtxp->nbargs.multicast.dt,
+                               vtxp->nbargs.multicast.destinations[i],
+                               sched->tag,
+                               vtxp->nbargs.multicast.comm->mpid_comm, &vtxp->nbargs.multicast.mpir_req[i], &errflag);
+                /* record vertex issue */
+                MPIC_MPICH_record_vtx_issue(vtxp, sched);
+                MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"  --> MPICH transport (multicast) issued, tag = %d\n", sched->tag));
+            }
+            break;
         case MPIC_MPICH_KIND_ADDREF_DT:
             MPIC_MPICH_addref_dt(vtxp->nbargs.addref_dt.dt, vtxp->nbargs.addref_dt.up);
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"  --> MPICH transport (addref dt) complete\n"));
@@ -1046,7 +1099,23 @@ MPL_STATIC_INLINE_PREFIX int MPIC_MPICH_test(MPIC_MPICH_sched_t * sched)
                 } else
                     MPIC_MPICH_record_vtx_issue(vtxp, sched);   /* record it again as issued */
                 break;
-
+            case MPIC_MPICH_KIND_MULTICAST:
+                for (i=vtxp->nbargs.multicast.last_complete+1; i<vtxp->nbargs.multicast.num_destinations; i++) {
+                    if(MPIR_Request_is_complete(vtxp->nbargs.multicast.mpir_req[i])){
+                        MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"  --> MPICH transport multicast task %d complete\n", i));
+                        MPIR_Request_free(vtxp->nbargs.multicast.mpir_req[i]);
+                        vtxp->nbargs.multicast.mpir_req[i] = NULL;
+                        vtxp->nbargs.multicast.last_complete = i;
+                    }
+                    else /* we are only checking in sequence, hence break out at the first incomplete send */
+                        break;
+                }
+                /* if all the sends have completed, mark this vertex as complete */
+                if (i==vtxp->nbargs.multicast.num_destinations)
+                    MPIC_MPICH_record_vtx_completion(vtxp, sched);
+                else
+                    MPIC_MPICH_record_vtx_issue(vtxp, sched);
+                break;
             case MPIC_MPICH_KIND_RECV_REDUCE:
                 /* check for recv completion */
                 if (mpid_req0 && MPIR_Request_is_complete(mpid_req0)) {
@@ -1109,6 +1178,11 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_free_buffers(MPIC_MPICH_sched_t * sched
         if (sched->vtcs[i].kind == MPIC_MPICH_KIND_FREE_MEM) {
             MPIC_MPICH_free_mem(sched->vtcs[i].nbargs.free_mem.ptr);
             sched->vtcs[i].nbargs.free_mem.ptr = NULL;
+        }
+
+        if(sched->vtcs[i].kind == MPIC_MPICH_KIND_MULTICAST){
+            MPIC_MPICH_free_mem(sched->vtcs[i].nbargs.multicast.mpir_req);
+            MPIC_MPICH_free_mem(sched->vtcs[i].nbargs.multicast.destinations);
         }
     }
     /* free temporary buffers allocated using MPIC_MPICH_allocate_buffer call */
