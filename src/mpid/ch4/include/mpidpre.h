@@ -444,8 +444,20 @@ typedef struct {
 extern MPIDI_av_table_t **MPIDI_av_table;
 extern MPIDI_av_table_t *MPIDI_av_table0;
 
+typedef struct {
+    int key;
+    MPIDI_av_entry_t *value;
+    MPL_UT_hash_handle hh;
+} MPIDI_av_hashentry_t;
+
+typedef struct {
+    MPIDI_av_hashentry_t *head;
+} MPIDI_av_hashtable_t;
+
+extern MPIDI_av_table_t *MPIDI_alt_avt;
+extern MPIDI_av_hashtable_t *MPIDI_alt_avt_map;
+
 #define MPIDIU_get_av_table(avtid) (MPIDI_av_table[(avtid)])
-#define MPIDIU_get_av(avtid, lpid) (MPIDI_av_table[(avtid)]->table[(lpid)])
 
 #define MPIDIU_get_node_map(avtid)   (MPIDI_CH4_Global.node_map[(avtid)])
 

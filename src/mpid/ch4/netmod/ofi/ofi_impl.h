@@ -27,7 +27,7 @@
 #define MPIDI_OFI_COMM_TO_PHYS(comm,rank)                       \
     MPIDI_OFI_AV(MPIDIU_comm_rank_to_av((comm), (rank))).dest
 #define MPIDI_OFI_TO_PHYS(avtid, lpid)                                 \
-    MPIDI_OFI_AV(&MPIDIU_get_av((avtid), (lpid))).dest
+    MPIDI_OFI_AV(MPIDIU_get_av((avtid), (lpid))).dest
 
 #define MPIDI_OFI_WIN(win)     ((win)->dev.netmod.ofi)
 /*
