@@ -45,8 +45,6 @@
 #define FORT_END_LEN(a)       , int a
 #endif
 
-/* #define LL_ADVISE_ON 1 */
-
 
 #ifdef HAVE_FORTRAN_API
 #ifdef FORTRAN_EXPORTS

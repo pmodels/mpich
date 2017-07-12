@@ -884,12 +884,28 @@ fi
 #
 # Verify presence of lustre/lustre_user.h
 #
+lustre_lockahead="no"
 if test -n "$file_system_lustre"; then
     AC_CHECK_HEADERS(lustre/lustre_user.h,
         AC_DEFINE(ROMIO_LUSTRE,1,[Define for ROMIO with LUSTRE]),
         AC_MSG_ERROR([LUSTRE support requested but cannot find lustre/lustre_user.h header file])                                        
     )
+    AC_COMPILE_IFELSE([
+        AC_LANG_SOURCE([
+#include <lustre/lustre_user.h>
+#include <sys/ioctl.h>
+        int main(int argc, char **argv) {
+            int fd, rc;
+            struct ladvise_hdr *ladvise_hdr;
+            rc = ioctl(fd, LL_IOC_LADVISE, &ladvise_hdr);
+            return 0; }
+        ])],
+        lustre_lockahead="yes"
+	AC_DEFINE(HAVE_LUSTRE_LOCKAHEAD, 1, [Define if LUSTRE_LOCKAHEAD is enabled.]) )
 fi
+
+# Add conditional compilation of Lustre lockahead sources
+AM_CONDITIONAL([LUSTRE_LOCKAHEAD],[test "$lustre_lockahead" = "yes"])
 
 if test -n "$file_system_xfs"; then
     AC_DEFINE(ROMIO_XFS,1,[Define for ROMIO with XFS])
