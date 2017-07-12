@@ -38,4 +38,8 @@ typedef struct {
     int dummy;
 } MPIDI_POSIX_comm_t;
 
+typedef struct {
+    MPI_Aint grank;
+} MPIDI_POSIX_addr_t;
+
 #endif /* POSIX_PRE_H_INCLUDED */

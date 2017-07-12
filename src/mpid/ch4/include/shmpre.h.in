@@ -17,4 +17,5 @@
 
 #define MPIDI_SHM_REQUEST_DECL       @ch4_shm_request_decl@
 #define MPIDI_SHM_COMM_DECL          @ch4_shm_comm_decl@
+#define MPIDI_SHM_ADDR_DECL          @ch4_shm_addr_decl@
 #endif /* SHMPRE_H_INCLUDED */

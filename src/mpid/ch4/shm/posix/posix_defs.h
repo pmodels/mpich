@@ -36,7 +36,7 @@ extern char MPIDI_POSIX_hostname[MPIDI_POSIX_MAX_HOSTNAME_LEN];
 #define MPIDI_POSIX_POLL_OUT     1
 
 #define MPIDI_POSIX_ASYMM_NULL_VAL    64
-typedef MPI_Aint MPIDI_POSIX_addr_t;
+
 extern char *MPIDI_POSIX_asym_base_addr;
 
 #define MPIDI_POSIX_REL_NULL (0x0)
@@ -50,13 +50,13 @@ extern char *MPIDI_POSIX_asym_base_addr;
 static inline MPIDI_POSIX_cell_ptr_t MPIDI_POSIX_REL_TO_ABS(MPIDI_POSIX_cell_rel_ptr_t r)
 {
     return (MPIDI_POSIX_cell_ptr_t) ((char *) OPA_load_ptr(&r.p) +
-                                     (MPIDI_POSIX_addr_t) MPIDI_POSIX_asym_base_addr);
+                                     (MPI_Aint) MPIDI_POSIX_asym_base_addr);
 }
 
 static inline MPIDI_POSIX_cell_rel_ptr_t MPIDI_POSIX_ABS_TO_REL(MPIDI_POSIX_cell_ptr_t a)
 {
     MPIDI_POSIX_cell_rel_ptr_t ret;
-    OPA_store_ptr(&ret.p, (char *) a - (MPIDI_POSIX_addr_t) MPIDI_POSIX_asym_base_addr);
+    OPA_store_ptr(&ret.p, (char *) a - (MPI_Aint) MPIDI_POSIX_asym_base_addr);
     return ret;
 }
 

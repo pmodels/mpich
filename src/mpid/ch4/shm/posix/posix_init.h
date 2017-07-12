@@ -59,6 +59,7 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
             if (i == rank) {
                 local_rank = num_local;
             }
+            MPIDI_POSIX_AV_TO_GRANK(av) = i;
 
             local_procs[num_local] = i;
             local_ranks[i] = num_local;
