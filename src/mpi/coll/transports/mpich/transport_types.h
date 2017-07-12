@@ -51,6 +51,23 @@ typedef struct MPIC_MPICH_sendrecv_arg_t {
     struct MPIC_MPICH_comm_t *comm;
 } MPIC_MPICH_sendrecv_arg_t;
 
+typedef struct {
+   void *buf;
+   int count;
+   MPIC_MPICH_dt_t dt;
+   /*array of ranks to send the data to*/
+   int *destinations;
+   int num_destinations;
+   struct MPIC_MPICH_comm_t *comm;
+
+   /*some data structures to keep track of the progress*/
+   /*request array*/
+   struct MPIR_Request **mpir_req;
+   /*last send that has completed*/
+   int last_complete;
+
+} MPIC_MPICH_multicast_arg_t;
+
 /* Data structure to store recv_reduce arguments */
 typedef struct MPIC_MPICH_recv_reduce_arg_t {
     void *inbuf;
@@ -108,6 +125,7 @@ typedef struct MPIC_MPICH_free_mem_arg_t {
 typedef enum MPIC_MPICH_TASK_KIND {
     MPIC_MPICH_KIND_SEND,
     MPIC_MPICH_KIND_RECV,
+    MPIC_MPICH_KIND_MULTICAST,
     MPIC_MPICH_KIND_ADDREF_DT,
     MPIC_MPICH_KIND_ADDREF_OP,
     MPIC_MPICH_KIND_DTCOPY,
@@ -165,6 +183,7 @@ typedef struct MPIC_MPICH_vtx_t {
     /* Union to store task arguments depending on the task type */
     union {
         MPIC_MPICH_sendrecv_arg_t sendrecv;
+        MPIC_MPICH_multicast_arg_t multicast;
         MPIC_MPICH_addref_dt_arg_t addref_dt;
         MPIC_MPICH_addref_op_arg_t addref_op;
         MPIC_MPICH_dtcopy_arg_t dtcopy;

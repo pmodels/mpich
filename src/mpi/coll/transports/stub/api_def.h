@@ -37,6 +37,7 @@
 #define TSP_addref_op_nb        MPIC_STUB_addref_op_nb
 #define TSP_send                MPIC_STUB_send
 #define TSP_recv                MPIC_STUB_recv
+#define TSP_multicast           MPIC_STUB_multicast
 #define TSP_recv_reduce         MPIC_STUB_recv_reduce
 #define TSP_send_accumulate     MPIC_STUB_send_accumulate
 #define TSP_test                MPIC_STUB_test

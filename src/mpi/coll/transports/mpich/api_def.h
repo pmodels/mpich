@@ -48,6 +48,7 @@
 #define TSP_addref_op_nb     MPIC_MPICH_addref_op_nb
 #define TSP_send             MPIC_MPICH_send
 #define TSP_recv             MPIC_MPICH_recv
+#define TSP_multicast        MPIC_MPICH_multicast
 #define TSP_recv_reduce      MPIC_MPICH_recv_reduce
 #define TSP_send_accumulate  MPIC_MPICH_send_accumulate
 #define TSP_test             MPIC_MPICH_test
