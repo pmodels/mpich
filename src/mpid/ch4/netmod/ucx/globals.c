@@ -9,6 +9,7 @@
 #include <mpidimpl.h>
 #include "ucx_impl.h"
 #include "ucx_types.h"
+#include "ucx_datatype.h"
 
 MPIDI_UCX_global_t MPIDI_UCX_global = { 0 };
 
