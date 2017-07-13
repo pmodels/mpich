@@ -40,7 +40,9 @@
 #define MPIR_REDUCE_SCATTER_BLOCK_TAG 28
 #define MPIR_SHRINK_TAG               29
 #define MPIR_AGREE_TAG                30
-#define MPIR_FIRST_NBC_TAG            31
+#define MPIR_FIRST_HCOLL_TAG          31
+#define MPIR_LAST_HCOLL_TAG           (MPIR_FIRST_HCOLL_TAG + 255)
+#define MPIR_FIRST_NBC_TAG            (MPIR_LAST_HCOLL_TAG + 1)
 
 /* These macros must be used carefully. These macros will not work with
  * negative tags. By definition, users are not to use negative tags and the
