@@ -71,7 +71,7 @@ int MPIDI_CH3I_Comm_init(void)
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 #if defined HAVE_LIBHCOLL
-    if (MPIR_CVAR_CH3_ENABLE_HCOLL) {
+    {
         int r;
 
         /* check if the user is not trying to override the multicast
