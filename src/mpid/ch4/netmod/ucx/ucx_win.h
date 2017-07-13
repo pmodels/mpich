@@ -33,6 +33,7 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
     size_t size;
 
     ucp_mem_map_params_t mem_map_params;
+    ucp_mem_attr_t mem_attr;
 
     if (length == 0)
         size = 1024;
@@ -53,11 +54,21 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
      mem_map_params.length = size;
      mem_map_params.flags = 0 ;
 
+    if (*base_ptr == NULL)
+        mem_map_params.flags |= UCP_MEM_MAP_ALLOCATE;
+
     status = ucp_mem_map(MPIDI_UCX_global.context, &mem_map_params , &mem_h);
     MPIDI_UCX_CHK_STATUS(status);
 
-   if (length > 0)
-        *base_ptr = mem_map_params.address;
+    /* query allocated address. */
+    mem_attr.field_mask = UCP_MEM_ATTR_FIELD_ADDRESS | UCP_MEM_ATTR_FIELD_LENGTH;
+    status = ucp_mem_query(mem_h, &mem_attr);
+    MPIDI_UCX_CHK_STATUS(status);
+
+    if (length > 0) {
+        *base_ptr = mem_attr.address;
+        MPIR_Assert(mem_attr.length >= length);
+    }
 
     MPIDI_UCX_WIN(win).mem_h = mem_h;
 
