@@ -6,11 +6,28 @@
 
 #include "hcoll.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_ENABLE_HCOLL
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Enable hcoll collective support.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 static int hcoll_initialized = 0;
 static int hcoll_comm_world_initialized = 0;
 static int hcoll_progress_hook_id = 0;
 
-int hcoll_enable = 1;
+int hcoll_enable = -1;
 int hcoll_enable_barrier = 1;
 int hcoll_enable_bcast = 1;
 int hcoll_enable_allgather = 1;
@@ -73,11 +90,9 @@ int hcoll_initialize(void)
     char *envar;
     hcoll_init_opts_t *init_opts;
     mpi_errno = MPI_SUCCESS;
-    envar = getenv("HCOLL_ENABLE");
-    if (NULL != envar) {
-        hcoll_enable = atoi(envar);
-    }
-    if (0 == hcoll_enable) {
+
+    hcoll_enable = MPIR_CVAR_ENABLE_HCOLL | MPIR_CVAR_CH3_ENABLE_HCOLL;
+    if (0 >= hcoll_enable) {
         goto fn_exit;
     }
 
@@ -148,13 +163,15 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
     int num_ranks;
     int context_destroyed;
     mpi_errno = MPI_SUCCESS;
+
+    if (0 == hcoll_enable) {
+        goto fn_exit;
+    }
+
     if (0 == hcoll_initialized) {
         mpi_errno = hcoll_initialize();
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-    }
-    if (0 == hcoll_enable) {
-        goto fn_exit;
     }
     if (MPIR_Process.comm_world == comm_ptr) {
         hcoll_comm_world_initialized = 1;
@@ -215,7 +232,7 @@ int hcoll_comm_destroy(MPIR_Comm * comm_ptr, void *param)
 {
     int mpi_errno;
     int context_destroyed;
-    if (0 == hcoll_enable) {
+    if (0 >= hcoll_enable) {
         goto fn_exit;
     }
     mpi_errno = MPI_SUCCESS;
