@@ -26,6 +26,8 @@ int world_comm_destroying = 0;
 MPL_dbg_class MPIR_DBG_HCOLL;
 #endif /* MPL_USE_DBG_LOGGING */
 
+void hcoll_rte_fns_setup(void);
+
 #undef FUNCNAME
 #define FUNCNAME hcoll_destroy
 #undef FCNAME
