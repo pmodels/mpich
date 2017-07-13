@@ -181,7 +181,9 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
         goto fn_exit;
     }
     num_ranks = comm_ptr->local_size;
-    if ((MPIR_COMM_KIND__INTRACOMM != comm_ptr->comm_kind) || (2 > num_ranks)) {
+    if ((MPIR_COMM_KIND__INTRACOMM != comm_ptr->comm_kind) || (2 > num_ranks)
+        || comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS
+        || comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
         comm_ptr->hcoll_priv.is_hcoll_init = 0;
         goto fn_exit;
     }
