@@ -71,6 +71,7 @@ int hcoll_initialize(void)
 {
     int mpi_errno;
     char *envar;
+    hcoll_init_opts_t *init_opts;
     mpi_errno = MPI_SUCCESS;
     envar = getenv("HCOLL_ENABLE");
     if (NULL != envar) {
@@ -85,18 +86,18 @@ int hcoll_initialize(void)
 #endif /* MPL_USE_DBG_LOGGING */
 
     hcoll_rte_fns_setup();
-    /*set INT_MAX/2 as tag_base here by the moment.
-     * Need to think more about it.
-     * The tag space should be positive, from > ~30 to MPI_TAG_UB value.
-     * It looks reasonable to set MPI_TAG_UB as base but it doesn't work for ofacm tags
-     * (probably due to wrong conversions from uint to int). That's why I set INT_MAX/2 instead of MPI_TAG_UB.
-     * BUT: it won't work for collectives whose sequence number reaches INT_MAX/2 number. In that case tags become negative.
-     * Moreover, it even won't work than 0 < (INT_MAX/2 - sequence number) < 30 because it can interleave with internal mpich coll tags.
-     */
-    hcoll_set_runtime_tag_offset(INT_MAX / 2, MPI_TAG_UB);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-    mpi_errno = hcoll_init();
+
+    hcoll_read_init_opts(&init_opts);
+    init_opts->base_tag = MPIR_FIRST_HCOLL_TAG;
+    init_opts->max_tag  = MPIR_LAST_HCOLL_TAG;
+
+#if defined MPICH_IS_THREADED
+    init_opts->enable_thread_support = MPIR_ThreadInfo.isThreaded;
+#else
+    init_opts->enable_thread_support = 0;
+#endif
+
+    mpi_errno = hcoll_init_with_opts(&init_opts);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
