@@ -6,7 +6,6 @@
 
 #include "hcoll.h"
 #include "hcoll/api/hcoll_dte.h"
-#include <assert.h>
 
 static int recv_nb(dte_data_representation_t data,
                    uint32_t count,
@@ -60,7 +59,7 @@ static void progress(void)
          * error codes.  The progress function pointer right now
          * expects that the function returns void. */
         ret = hcoll_do_progress(&made_progress);
-        assert(ret == MPI_SUCCESS);
+        MPIR_Assert(ret == MPI_SUCCESS);
     }
 }
 
