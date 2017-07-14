@@ -813,7 +813,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_error(int vni_idx, ssize_t ret)
 
     switch (ret) {
     case -FI_EAVAIL:
-        fi_cq_readerr(MPIDI_Global.p2p_cq, &e, 0);
+        fi_cq_readerr(MPIDI_Global.ctx[vni_idx].cq, &e, 0);
 
         switch (e.err) {
         case FI_ETRUNC:

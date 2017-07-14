@@ -152,7 +152,7 @@ static inline int MPIDI_OFI_progress_do_queue(int vni_idx)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
 
-    ret = fi_cq_read(MPIDI_Global.p2p_cq, &cq_entry, 1);
+    ret = fi_cq_read(MPIDI_Global.ctx[vni_idx].cq, &cq_entry, 1);
 
     if (unlikely(ret == -FI_EAGAIN))
         goto fn_exit;
