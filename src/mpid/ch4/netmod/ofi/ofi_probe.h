@@ -21,6 +21,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
                                       int tag,
                                       MPIR_Comm * comm,
                                       int context_offset,
+                                      MPIDI_av_entry_t *addr,
                                       int *flag,
                                       MPI_Status * status,
                                       MPIR_Request ** message, uint64_t peek_flags)
@@ -37,7 +38,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     if (unlikely(MPI_ANY_SOURCE == source))
         remote_proc = FI_ADDR_UNSPEC;
     else
-        remote_proc = MPIDI_OFI_comm_to_phys(comm, source);
+        remote_proc = MPIDI_OFI_av_to_phys(addr);
 
     if (message)
         MPIDI_OFI_REQUEST_CREATE(rreq, MPIR_REQUEST_KIND__MPROBE);
@@ -115,7 +116,7 @@ static inline int MPIDI_NM_mpi_improbe(int source,
     }
 
     /* Set flags for mprobe peek, when ready */
-    mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset,
+    mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr,
                                     flag, status, message, FI_CLAIM | FI_COMPLETION);
 
     if (*flag && *message) {
@@ -146,7 +147,7 @@ static inline int MPIDI_NM_mpi_iprobe(int source,
         goto fn_exit;
     }
 
-    mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, flag, status, NULL, 0ULL);
+    mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr, flag, status, NULL, 0ULL);
 
 fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IPROBE);
