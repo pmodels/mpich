@@ -266,6 +266,7 @@ typedef struct {
 typedef struct {
     struct fid_ep *tx;
     struct fid_ep *rx;
+    struct fid_cq *cq;
 } MPIDI_OFI_context_t;
 
 typedef union {
@@ -354,6 +355,7 @@ typedef struct {
     int context_shift;
     size_t iov_limit;
     size_t rma_iov_limit;
+    int max_ch4_vnis;
 
     /* Mutexex and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[4];
