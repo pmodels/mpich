@@ -189,10 +189,17 @@ static inline int MPIDI_NM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Wi
 
 static inline int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
 {
-
+    int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucp_status;
     ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
-    return MPIDI_CH4R_mpi_win_complete(win);
+    MPIDI_UCX_CHK_STATUS(ucp_status);
+
+    mpi_errno = MPIDI_CH4R_mpi_win_complete(win);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static inline int MPIDI_NM_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
