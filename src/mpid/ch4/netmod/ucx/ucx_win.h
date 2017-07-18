@@ -45,19 +45,18 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
 
     MPIDI_UCX_WIN(win).info_table = MPL_malloc(sizeof(MPIDI_UCX_win_info_t) * comm_ptr->local_size);
     mem_map_params.field_mask = UCP_MEM_MAP_PARAM_FIELD_ADDRESS |
-                                UCP_MEM_MAP_PARAM_FIELD_LENGTH|
-                                UCP_MEM_MAP_PARAM_FIELD_FLAGS;
+        UCP_MEM_MAP_PARAM_FIELD_LENGTH | UCP_MEM_MAP_PARAM_FIELD_FLAGS;
     if (length == 0)
         mem_map_params.address = &ucx_dummy_buffer;
     else
         mem_map_params.address = *base_ptr;
-     mem_map_params.length = size;
-     mem_map_params.flags = 0 ;
+    mem_map_params.length = size;
+    mem_map_params.flags = 0;
 
     if (*base_ptr == NULL)
         mem_map_params.flags |= UCP_MEM_MAP_ALLOCATE;
 
-    status = ucp_mem_map(MPIDI_UCX_global.context, &mem_map_params , &mem_h);
+    status = ucp_mem_map(MPIDI_UCX_global.context, &mem_map_params, &mem_h);
     MPIDI_UCX_CHK_STATUS(status);
 
     /* query allocated address. */
@@ -103,9 +102,9 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-/* If we use the shared memory support in UCX, we have to distinguish between local
-    and remote windows (at least now). If win_create is used, the key cannot be unpackt -
-    then we need our fallback-solution */
+    /* If we use the shared memory support in UCX, we have to distinguish between local
+     * and remote windows (at least now). If win_create is used, the key cannot be unpackt -
+     * then we need our fallback-solution */
 
     for (i = 0; i < comm_ptr->local_size; i++) {
         status = ucp_ep_rkey_unpack(MPIDI_UCX_COMM_TO_EP(comm_ptr, i),
@@ -120,7 +119,7 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
     share_data = MPL_malloc(comm_ptr->local_size * sizeof(struct _UCX_share));
 
     share_data[comm_ptr->rank].disp = disp_unit;
-    share_data[comm_ptr->rank].addr = (MPI_Aint) *base_ptr;
+    share_data[comm_ptr->rank].addr = (MPI_Aint) * base_ptr;
 
     mpi_errno =
         MPIR_Allgather(MPI_IN_PLACE, sizeof(struct _UCX_share), MPI_BYTE, share_data,
@@ -217,13 +216,13 @@ static inline int MPIDI_NM_mpi_win_test(MPIR_Win * win, int *flag)
 }
 
 static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert,
-                                        MPIR_Win * win, MPIDI_av_entry_t *addr)
+                                        MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     return MPIDI_CH4R_mpi_win_lock(lock_type, rank, assert, win);
 }
 
 
-static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_entry_t *addr)
+static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -284,7 +283,7 @@ static inline int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
     int mpi_errno;
     ucs_status_t ucp_status;
     /*keep this for now to fence all none-natice operations */
-/* make sure all local and remote operations are completed */
+    /* make sure all local and remote operations are completed */
     ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
 
 
@@ -409,8 +408,7 @@ static inline int MPIDI_NM_mpi_win_allocate(MPI_Aint length,
 
 }
 
-static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win,
-                                         MPIDI_av_entry_t *addr)
+static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
 
     int mpi_errno;
@@ -479,7 +477,7 @@ static inline int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * 
     return MPIDI_CH4R_mpi_win_create_dynamic(info, comm, win);
 }
 
-static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win, MPIDI_av_entry_t *addr)
+static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucp_status;
@@ -514,7 +512,7 @@ static inline int MPIDI_NM_mpi_win_sync(MPIR_Win * win)
 static inline int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
 {
 
-/*maybe we just flush all eps here? More efficient for smaller communicators...*/
+    /*maybe we just flush all eps here? More efficient for smaller communicators...*/
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucp_status;
     mpi_errno = MPIDI_CH4R_mpi_win_flush_all(win);
