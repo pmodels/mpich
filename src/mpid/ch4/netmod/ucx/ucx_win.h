@@ -228,11 +228,15 @@ static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_ent
 
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucp_status;
-    ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
-    /* make sure all operations are completed  */
-    ucp_status = ucp_ep_flush(ep);
 
-    MPIDI_UCX_CHK_STATUS(ucp_status);
+    if (rank != MPI_PROC_NULL) {
+        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
+        /* make sure all operations are completed  */
+        ucp_status = ucp_ep_flush(ep);
+
+        MPIDI_UCX_CHK_STATUS(ucp_status);
+    }
+
     mpi_errno = MPIDI_CH4R_mpi_win_unlock(rank, win);
 
   fn_exit:
@@ -412,13 +416,15 @@ static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win,
     int mpi_errno;
     ucs_status_t ucp_status;
 
-    ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
-
     mpi_errno = MPIDI_CH4R_mpi_win_flush(rank, win);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-/* only flush the endpoint */
-    ucp_status = ucp_ep_flush(ep);
+
+    if (rank != MPI_PROC_NULL) {
+        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
+        /* only flush the endpoint */
+        ucp_status = ucp_ep_flush(ep);
+    }
 
     MPIDI_UCX_CHK_STATUS(ucp_status);
 
@@ -478,17 +484,19 @@ static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win, MPIDI_a
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucp_status;
     mpi_errno = MPIDI_CH4R_mpi_win_flush_local(rank, win);
-
-    ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    /* currently, UCP does not support local flush, so we have to call
-     * a global flush. This is not good for performance - but OK for now */
 
-    if (MPIDI_UCX_WIN(win).need_local_flush == 1) {
-        ucp_status = ucp_ep_flush(ep);
-        MPIDI_UCX_CHK_STATUS(ucp_status);
-        MPIDI_UCX_WIN(win).need_local_flush = 0;
+    if (rank != MPI_PROC_NULL) {
+        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
+        /* currently, UCP does not support local flush, so we have to call
+         * a global flush. This is not good for performance - but OK for now */
+
+        if (MPIDI_UCX_WIN(win).need_local_flush == 1) {
+            ucp_status = ucp_ep_flush(ep);
+            MPIDI_UCX_CHK_STATUS(ucp_status);
+            MPIDI_UCX_WIN(win).need_local_flush = 0;
+        }
     }
 
   fn_exit:
