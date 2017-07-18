@@ -15,8 +15,6 @@ struct _UCX_share {
     MPI_Aint addr;
 };
 
-char ucx_dummy_buffer[4096];
-
 static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
                                           uint32_t disp_unit, void **base_ptr)
 {
@@ -26,55 +24,49 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
     ucs_status_t status;
     ucp_mem_h mem_h;
     int cntr = 0;
-    size_t rkey_size;
+    size_t rkey_size = 0;
     int *rkey_sizes, *recv_disps, i;
-    char *rkey_buffer, *rkey_recv_buff = NULL;
+    char *rkey_buffer = NULL, *rkey_recv_buff = NULL;
     struct _UCX_share *share_data;
-    size_t size;
-
     ucp_mem_map_params_t mem_map_params;
     ucp_mem_attr_t mem_attr;
-
-    if (length == 0)
-        size = 1024;
-    else
-        size = length;
     MPIR_Comm *comm_ptr = win->comm_ptr;
 
     ucp_context_h ucp_context = MPIDI_UCX_global.context;
 
     MPIDI_UCX_WIN(win).info_table = MPL_malloc(sizeof(MPIDI_UCX_win_info_t) * comm_ptr->local_size);
-    mem_map_params.field_mask = UCP_MEM_MAP_PARAM_FIELD_ADDRESS |
-        UCP_MEM_MAP_PARAM_FIELD_LENGTH | UCP_MEM_MAP_PARAM_FIELD_FLAGS;
-    if (length == 0)
-        mem_map_params.address = &ucx_dummy_buffer;
-    else
-        mem_map_params.address = *base_ptr;
-    mem_map_params.length = size;
-    mem_map_params.flags = 0;
 
-    if (*base_ptr == NULL)
-        mem_map_params.flags |= UCP_MEM_MAP_ALLOCATE;
-
-    status = ucp_mem_map(MPIDI_UCX_global.context, &mem_map_params, &mem_h);
-    MPIDI_UCX_CHK_STATUS(status);
-
-    /* query allocated address. */
-    mem_attr.field_mask = UCP_MEM_ATTR_FIELD_ADDRESS | UCP_MEM_ATTR_FIELD_LENGTH;
-    status = ucp_mem_query(mem_h, &mem_attr);
-    MPIDI_UCX_CHK_STATUS(status);
-
+    /* Only non-zero region maps to device. */
+    rkey_size = 0;
     if (length > 0) {
+        mem_map_params.field_mask = UCP_MEM_MAP_PARAM_FIELD_ADDRESS |
+            UCP_MEM_MAP_PARAM_FIELD_LENGTH | UCP_MEM_MAP_PARAM_FIELD_FLAGS;
+
+        mem_map_params.address = *base_ptr;
+        mem_map_params.length = length;
+        mem_map_params.flags = 0;
+
+        if (*base_ptr == NULL)
+            mem_map_params.flags |= UCP_MEM_MAP_ALLOCATE;
+
+        status = ucp_mem_map(MPIDI_UCX_global.context, &mem_map_params, &mem_h);
+        MPIDI_UCX_CHK_STATUS(status);
+
+        /* query allocated address. */
+        mem_attr.field_mask = UCP_MEM_ATTR_FIELD_ADDRESS | UCP_MEM_ATTR_FIELD_LENGTH;
+        status = ucp_mem_query(mem_h, &mem_attr);
+        MPIDI_UCX_CHK_STATUS(status);
+
         *base_ptr = mem_attr.address;
         MPIR_Assert(mem_attr.length >= length);
+
+        MPIDI_UCX_WIN(win).mem_h = mem_h;
+
+        /* pack the key */
+        status = ucp_rkey_pack(ucp_context, mem_h, (void **) &rkey_buffer, &rkey_size);
+
+        MPIDI_UCX_CHK_STATUS(status);
     }
-
-    MPIDI_UCX_WIN(win).mem_h = mem_h;
-
-    /* pack the key */
-    status = ucp_rkey_pack(ucp_context, mem_h, (void **) &rkey_buffer, &rkey_size);
-
-    MPIDI_UCX_CHK_STATUS(status);
 
     rkey_sizes = (int *) MPL_malloc(sizeof(int) * comm_ptr->local_size);
     rkey_sizes[comm_ptr->rank] = (int) rkey_size;
@@ -107,6 +99,12 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
      * then we need our fallback-solution */
 
     for (i = 0; i < comm_ptr->local_size; i++) {
+        /* Skip zero-size remote region. */
+        if (rkey_sizes[i] == 0) {
+            MPIDI_UCX_WIN_INFO(win, i).rkey = NULL;
+            continue;
+        }
+
         status = ucp_ep_rkey_unpack(MPIDI_UCX_COMM_TO_EP(comm_ptr, i),
                                     &rkey_recv_buff[recv_disps[i]],
                                     &(MPIDI_UCX_WIN_INFO(win, i).rkey));
@@ -264,7 +262,8 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
     if (win->create_flavor != MPI_WIN_FLAVOR_SHARED && win->create_flavor != MPI_WIN_FLAVOR_DYNAMIC) {
-        ucp_mem_unmap(MPIDI_UCX_global.context, MPIDI_UCX_WIN(win).mem_h);
+        if (win->size > 0)
+            ucp_mem_unmap(MPIDI_UCX_global.context, MPIDI_UCX_WIN(win).mem_h);
         MPL_free(MPIDI_UCX_WIN(win).info_table);
     }
     if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE)
