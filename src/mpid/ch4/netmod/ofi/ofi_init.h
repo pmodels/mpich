@@ -1106,7 +1106,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.ep->fid), epclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.av->fid), avclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.p2p_cq->fid), cqclose);
-    MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_cmpl_cntr->fid), cqclose);
+    MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_cmpl_cntr->fid), cntrclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.domain->fid), domainclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.fabric->fid), fabricclose);
 
