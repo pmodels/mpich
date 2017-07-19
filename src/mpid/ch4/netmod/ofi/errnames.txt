@@ -31,6 +31,8 @@
 **ofid_epclose %s %d %s %s:OFI endpoint close failed (%s:%d:%s:%s)
 **ofid_cqclose:OFI cq close failed
 **ofid_cqclose %s %d %s %s:OFI cq close failed (%s:%d:%s:%s)
+**ofid_cntrclose:OFI counter close failed
+**ofid_cntrclose %s %d %s %s:OFI counter close failed (%s:%d:%s:%s)
 **ofid_epsync:OFI synchronization failed
 **ofid_epsync %s %d %s %s:OFI endpoint synchronization failed (%s:%d:%s:%s)
 **ofid_alias:OFI cq alias failed
