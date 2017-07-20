@@ -55,6 +55,7 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
         high_port = *port;
     }
 
+ setup_socket:
     *listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (*listen_fd < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "cannot open socket (%s)\n",
@@ -92,8 +93,15 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
     if (*port > high_port)
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "no port to bind\n");
 
-    if (listen(*listen_fd, SOMAXCONN) < 0)
-        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "listen error (%s)\n", MPL_strerror(errno));
+    if (listen(*listen_fd, SOMAXCONN) < 0) {
+        if (errno == EADDRINUSE) {
+            /* We need to close the socket and rebind to a new port */
+            close(*listen_fd);
+            goto setup_socket;
+        } else {
+            HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "listen error (%s)\n", MPL_strerror(errno));
+        }
+    }
 
     /* We asked for any port, so we need to find out which port we
      * actually got. */
