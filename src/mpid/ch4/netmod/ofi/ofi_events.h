@@ -130,8 +130,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
         }
     }
     else if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && (event_id == MPIDI_OFI_EVENT_RECV_NOPACK) && (MPIDI_OFI_REQUEST(rreq, noncontig.nopack))) {
-            last = count;
-            MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
+        MPI_Count elements;
+
+        /* Check to see if there are any bytes that don't fit into the datatype basic elements */
+        MPIR_Get_elements_x_impl(((MPI_Count *) &count), MPIDI_OFI_REQUEST(rreq, datatype), &elements);
+        if (count)
+            MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
+
+        MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
     }
 
     dtype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, datatype));
