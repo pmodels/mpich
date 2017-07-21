@@ -84,6 +84,7 @@ int MPI_Type_extent(MPI_Datatype datatype, MPI_Aint *extent)
             /* Validate datatype_ptr */
             MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
             if (mpi_errno) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(extent, "extent", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }

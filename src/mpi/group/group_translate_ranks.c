@@ -193,6 +193,7 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
 		    }
 		}
 	    }
+	    MPIR_ERRTEST_ARGNULL(ranks2, "ranks2", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
