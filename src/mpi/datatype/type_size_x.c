@@ -98,6 +98,7 @@ int MPI_Type_size_x(MPI_Datatype datatype, MPI_Count *size)
 
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(size, "size", mpi_errno);
         }
         MPID_END_ERROR_CHECKS
     }

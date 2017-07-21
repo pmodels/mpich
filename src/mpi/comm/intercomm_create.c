@@ -261,6 +261,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 		    MPIR_ERRTEST_COMM(peer_comm, mpi_errno);
 		}
 	    }
+           MPIR_ERRTEST_ARGNULL(newintercomm, "newintercomm", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -303,6 +304,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 		    MPIR_ERR_SET(mpi_errno,MPI_ERR_RANK,"**ranksdistinct");
 		}
 		if (mpi_errno) goto fn_fail;
+               MPIR_ERRTEST_ARGNULL(newintercomm, "newintercomm", mpi_errno);
 	    }
 	    MPID_END_ERROR_CHECKS;
 	}

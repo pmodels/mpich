@@ -106,6 +106,8 @@ int MPI_Type_get_true_extent_x(MPI_Datatype datatype, MPI_Count *true_lb, MPI_Co
 
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(true_lb, "true_lb", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(true_extent, "true_extent", mpi_errno);
         }
         MPID_END_ERROR_CHECKS
     }

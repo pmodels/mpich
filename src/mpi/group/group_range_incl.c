@@ -168,6 +168,7 @@ int MPI_Group_range_incl(MPI_Group group, int n, int ranges[][3],
 							   ranges, n );
 	    }
             if (mpi_errno) goto fn_fail;
+	     MPIR_ERRTEST_ARGNULL(newgroup, "newgroup", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
