@@ -9,15 +9,5 @@
 #include <mpidimpl.h>
 #include "ucx_impl.h"
 #include "ucx_types.h"
-#include "ucx_datatype.h"
 
 MPIDI_UCX_global_t MPIDI_UCX_global = { 0 };
-
-ucp_generic_dt_ops_t MPIDI_UCX_datatype_ops = {
-    .start_pack = MPIDI_UCX_Start_pack,
-    .start_unpack = MPIDI_UCX_Start_unpack,
-    .packed_size = MPIDI_UCX_Packed_size,
-    .pack = MPIDI_UCX_Pack,
-    .unpack = MPIDI_UCX_Unpack,
-    .finish = MPIDI_UCX_Finish_pack
-};
