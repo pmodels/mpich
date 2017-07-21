@@ -415,7 +415,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     while (rc == MPIDI_OFI_IOV_EAGAIN) {
         originv = &req->noncontig->buf.iov.put_get.originv[cur_o];
         targetv = &req->noncontig->buf.iov.put_get.targetv[cur_t];
-        omax = MPIDI_Global.iov_limit;
+        omax = MPIDI_Global.tx_iov_limit;
         tmax = MPIDI_Global.rma_iov_limit;
         rc = MPIDI_OFI_merge_iov_list(&req->noncontig->iovs, originv,
                                       omax, targetv, tmax, &oout, &tout);
@@ -575,7 +575,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     while (rc == MPIDI_OFI_IOV_EAGAIN) {
         originv = &req->noncontig->buf.iov.put_get.originv[cur_o];
         targetv = &req->noncontig->buf.iov.put_get.targetv[cur_t];
-        omax = MPIDI_Global.iov_limit;
+        omax = MPIDI_Global.tx_iov_limit;
         tmax = MPIDI_Global.rma_iov_limit;
         rc = MPIDI_OFI_merge_iov_list(&req->noncontig->iovs, originv,
                                       omax, targetv, tmax, &oout, &tout);
@@ -983,7 +983,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     while (rc == MPIDI_OFI_IOV_EAGAIN) {
         originv = &req->noncontig->buf.iov.accumulate.originv[cur_o];
         targetv = &req->noncontig->buf.iov.accumulate.targetv[cur_t];
-        omax = MPIDI_Global.iov_limit;
+        omax = MPIDI_Global.tx_iov_limit;
         tmax = MPIDI_Global.rma_iov_limit;
         rc = MPIDI_OFI_merge_iov_list(&req->noncontig->iovs, (struct iovec *) originv, omax,
                                       (struct fi_rma_iov *) targetv, tmax, &oout, &tout);
@@ -1135,7 +1135,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         originv = &req->noncontig->buf.iov.get_accumulate.originv[cur_o];
         targetv = &req->noncontig->buf.iov.get_accumulate.targetv[cur_t];
         resultv = &req->noncontig->buf.iov.get_accumulate.resultv[cur_r];
-        omax = rmax = MPIDI_Global.iov_limit;
+        omax = rmax = MPIDI_Global.tx_iov_limit;
         tmax = MPIDI_OFI_FETCH_ATOMIC_IOVECS < 0 ? MPIDI_Global.rma_iov_limit : MPIDI_OFI_FETCH_ATOMIC_IOVECS;
 
         if (op != MPI_NO_OP)

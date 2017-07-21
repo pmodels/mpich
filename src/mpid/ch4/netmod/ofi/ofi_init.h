@@ -617,7 +617,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIDI_Global.max_buffered_write = prov_use->tx_attr->inject_size;
     MPIDI_Global.max_send = prov_use->ep_attr->max_msg_size;
     MPIDI_Global.max_write = prov_use->ep_attr->max_msg_size;
-    MPIDI_Global.iov_limit = MIN(prov_use->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_Global.tx_iov_limit = MIN(prov_use->tx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
+    MPIDI_Global.rx_iov_limit = MIN(prov_use->rx_attr->iov_limit, MPIDI_OFI_IOV_MAX);
     MPIDI_Global.rma_iov_limit = MIN(prov_use->tx_attr->rma_iov_limit, MPIDI_OFI_IOV_MAX);
     MPIDI_Global.max_mr_key_size = prov_use->domain_attr->mr_key_size;
 
