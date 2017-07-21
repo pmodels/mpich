@@ -121,13 +121,20 @@ static inline int MPIDI_NM_mpi_type_commit_hook(MPIR_Datatype * datatype_p)
     ucs_status_t status;
     int is_contig;
 
-
     datatype_p->dev.netmod.ucx.ucp_datatype = -1;
     MPID_Datatype_is_contig(datatype_p->handle, &is_contig);
 
     if (!is_contig) {
 
-        status = ucp_dt_create_generic(&MPIDI_UCX_datatype_ops, datatype_p, &ucp_datatype);
+        ucp_generic_dt_ops_t dt_ops = {
+            .start_pack = MPIDI_UCX_Start_pack,
+            .start_unpack = MPIDI_UCX_Start_unpack,
+            .packed_size = MPIDI_UCX_Packed_size,
+            .pack = MPIDI_UCX_Pack,
+            .unpack = MPIDI_UCX_Unpack,
+            .finish = MPIDI_UCX_Finish_pack
+        };
+        status = ucp_dt_create_generic(&dt_ops, datatype_p, &ucp_datatype);
         MPIR_Assertp(status == UCS_OK);
         datatype_p->dev.netmod.ucx.ucp_datatype = ucp_datatype;
 
