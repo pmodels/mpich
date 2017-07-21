@@ -20,12 +20,14 @@
 #include "../transports/stub/api_def.h"
 #include "../algorithms/stub/pre.h"
 #include "../algorithms/tree/pre.h"
+#include "../algorithms/ring/pre.h"
 #include "../src/tsp_namespace_undef.h"
 
 /* Algorithms with MPICH transport */
 #include "../transports/mpich/api_def.h"
 #include "../algorithms/stub/pre.h"
 #include "../algorithms/tree/pre.h"
+#include "../algorithms/ring/pre.h"
 #include "../src/tsp_namespace_undef.h"
 
 /* Default Algorithms */

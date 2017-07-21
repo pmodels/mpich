@@ -27,12 +27,14 @@ cvars:
      description : >-
        Controls alltoall algorithm:
        0 - Default Algorithm (old MPIR Alltoall)
+       1 - Ring algorithm
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 enum {
-    ALLTOALL_DEFAULT = 0
+    ALLTOALL_DEFAULT = 0,
+    ALLTOALL_RING
 };
 
 /* -- Begin Profiling Symbol Block for routine MPI_Alltoall */
@@ -72,6 +74,10 @@ int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         case ALLTOALL_DEFAULT:
             mpi_errno = MPIC_DEFAULT_Alltoall(sendbuf, sendcount, sendtype, recvbuf,
                                               recvcount, recvtype, comm_ptr, errflag);
+            break;
+        case ALLTOALL_RING:
+            mpi_errno = MPIC_MPICH_RING_alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                                    &(MPIC_COMM(comm_ptr)->mpich_ring), (int*)errflag);
             break;
         default:
             mpi_errno = MPIC_DEFAULT_Alltoall(sendbuf, sendcount, sendtype, recvbuf,
