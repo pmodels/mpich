@@ -85,6 +85,7 @@ int MPI_Group_rank(MPI_Group group, int *rank)
             MPIR_Group_valid_ptr( group_ptr, mpi_errno );
 	    /* If group_ptr is not value, it will be reset to null */
             if (mpi_errno) goto fn_fail;
+	     MPIR_ERRTEST_ARGNULL(rank, "rank", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }

@@ -87,6 +87,7 @@ int MPI_Comm_size( MPI_Comm comm, int *size )
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
 	    /* If comm_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(size, "size", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
