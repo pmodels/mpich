@@ -136,7 +136,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
 
     if (!dt_contig) {
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK) {
-            size_t omax = MPIDI_Global.iov_limit;
+            size_t omax = MPIDI_Global.tx_iov_limit;
 
             countp = MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(sreq, datatype), INT64_MAX);
             size_t o_size = sizeof(struct iovec);

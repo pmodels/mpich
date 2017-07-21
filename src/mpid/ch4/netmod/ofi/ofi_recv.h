@@ -71,7 +71,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     if (!dt_contig) {
         if (MPIDI_OFI_ENABLE_PT2PT_NOPACK) {
             size_t max_pipe = INT64_MAX;
-            size_t omax = MPIDI_Global.iov_limit;
+            size_t omax = MPIDI_Global.rx_iov_limit;
             size_t countp = MPIDI_OFI_count_iov(count, datatype, max_pipe);
             size_t o_size = sizeof(struct iovec);
             unsigned map_size;
