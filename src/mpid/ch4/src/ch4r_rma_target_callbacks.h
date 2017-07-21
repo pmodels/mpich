@@ -19,6 +19,219 @@
  * functions are named with suffix "_target_msg_cb", and all handler completion
  * function are named with suffix "_target_cmpl_cb". */
 
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_winlock_getlocallock ATTRIBUTE((unused));
+
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_put ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_put_ack ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_ack ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_cas ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_cas_ack ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc_ack ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_ack ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_win_ctrl ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_put_iov ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_put_iov_ack ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_put_data ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc_iov ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_iov ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc_iov_ack ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_iov_ack ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc_data ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_data ATTRIBUTE((unused));
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4_RMA_Init_targetcb_pvars
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_CH4R_RMA_Init_targetcb_pvars(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    /* rma_targetcb_put */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_put,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for Put (in seconds)");
+
+    /* rma_targetcb_put_ack */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_put_ack,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for Put ACK (in seconds)");
+
+    /* rma_targetcb_get */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_get,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for Get (in seconds)");
+
+    /* rma_targetcb_get_ack */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_get_ack,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for Get ACK (in seconds)");
+
+    /* rma_targetcb_cas */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_cas,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for Compare-and-swap (in seconds)");
+
+    /* rma_targetcb_cas_ack */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_cas_ack,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for Compare-and-swap ACK (in seconds)");
+
+    /* rma_targetcb_acc */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_acc,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for Accumulate (in seconds)");
+
+    /* rma_targetcb_get_acc */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_get_acc,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for Get-Accumulate (in seconds)");
+
+    /* rma_targetcb_acc_ack */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_acc_ack,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for Accumulate ACK (in seconds)");
+
+    /* rma_targetcb_get_acc_ack */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_get_acc_ack,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for Get-Accumulate ACK (in seconds)");
+
+    /* rma_targetcb_win_ctrl */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_win_ctrl,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for WIN CTRL (in seconds)");
+
+    /* rma_targetcb_put_iov */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_put_iov,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for PUT IOV (in seconds)");
+
+    /* rma_targetcb_put_iov_ack */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_put_iov_ack,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for PUT IOV ACK (in seconds)");
+
+    /* rma_targetcb_put_data */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_put_data,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for PUT DATA (in seconds)");
+
+    /* rma_targetcb_acc_iov */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_acc_iov,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for ACC IOV (in seconds)");
+
+    /* rma_targetcb_get_acc_iov */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_get_acc_iov,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for GET ACC IOV (in seconds)");
+
+    /* rma_targetcb_acc_iov_ack */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_acc_iov_ack,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for ACC IOV ACK (in seconds)");
+
+    /* rma_targetcb_get_acc_iov_ack */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_get_acc_iov_ack,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for GET ACC IOV ACK (in seconds)");
+
+    /* rma_targetcb_acc_data */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_acc_data,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for ACC DATA (in seconds)");
+
+    /* rma_targetcb_get_acc_data */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_targetcb_get_acc_data,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "RMA:TARGETCB for GET ACC DATA (in seconds)");
+
+    return mpi_errno;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_ack_put
 #undef FCNAME
@@ -203,6 +416,7 @@ static inline void MPIDI_win_lock_req_proc(int handler_id,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_WIN_LOCK_REQ_PROC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_LOCK_REQ_PROC);
 
+    MPIR_T_PVAR_TIMER_START(RMA, rma_winlock_getlocallock);
     struct MPIDI_CH4U_win_lock *lock = (struct MPIDI_CH4U_win_lock *)
         MPL_calloc(1, sizeof(struct MPIDI_CH4U_win_lock));
 
@@ -220,6 +434,7 @@ static inline void MPIDI_win_lock_req_proc(int handler_id,
     lock_recvd_q->tail = lock;
 
     MPIDI_win_lock_advance(win);
+    MPIR_T_PVAR_TIMER_END(RMA, rma_winlock_getlocallock);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_WIN_LOCK_REQ_PROC);
     return;
 }
@@ -1086,6 +1301,7 @@ static inline int MPIDI_put_ack_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PUT_ACK_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PUT_ACK_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_put_ack);
 
     preq = (MPIR_Request *) msg_hdr->preq_ptr;
     win = MPIDI_CH4U_REQUEST(preq, req->preq.win_ptr);
@@ -1103,6 +1319,7 @@ static inline int MPIDI_put_ack_target_msg_cb(int handler_id, void *am_hdr,
     if (target_cmpl_cb)
         *target_cmpl_cb = NULL;
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_put_ack);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PUT_ACK_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -1124,6 +1341,7 @@ static inline int MPIDI_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ACC_ACK_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ACC_ACK_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_acc_ack);
 
     areq = (MPIR_Request *) msg_hdr->req_ptr;
     win = MPIDI_CH4U_REQUEST(areq, req->areq.win_ptr);
@@ -1141,6 +1359,7 @@ static inline int MPIDI_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
     if (target_cmpl_cb)
         *target_cmpl_cb = NULL;
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_acc_ack);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ACC_ACK_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -1167,6 +1386,7 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACC_ACK_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACC_ACK_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get_acc_ack);
 
     areq = (MPIR_Request *) msg_hdr->req_ptr;
 
@@ -1213,6 +1433,7 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
     *target_cmpl_cb = MPIDI_get_acc_ack_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(areq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc_ack);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACC_ACK_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -1234,6 +1455,7 @@ static inline int MPIDI_cswap_ack_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CSWAP_ACK_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CSWAP_ACK_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_cas_ack);
 
     creq = (MPIR_Request *) msg_hdr->req_ptr;
     MPIDI_Datatype_check_size(MPIDI_CH4U_REQUEST(creq, req->creq.datatype), 1, data_sz);
@@ -1245,6 +1467,7 @@ static inline int MPIDI_cswap_ack_target_msg_cb(int handler_id, void *am_hdr,
     *target_cmpl_cb = MPIDI_cswap_ack_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(creq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_cas_ack);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CSWAP_ACK_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -1266,6 +1489,7 @@ static inline int MPIDI_win_ctrl_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_WIN_CTRL_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_CTRL_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_win_ctrl);
 
     MPL_HASH_FIND(dev.ch4u.hash_handle, MPIDI_CH4_Global.win_hash,
                   &msg_hdr->win_id, sizeof(uint64_t), win);
@@ -1312,6 +1536,7 @@ static inline int MPIDI_win_ctrl_target_msg_cb(int handler_id, void *am_hdr,
     if (target_cmpl_cb)
         *target_cmpl_cb = NULL;
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_win_ctrl);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_WIN_CTRL_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -1342,6 +1567,7 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_CH4U_put_msg_t *msg_hdr = (MPIDI_CH4U_put_msg_t *) am_hdr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PUT_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PUT_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_put);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
@@ -1413,6 +1639,7 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
     }
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_put);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PUT_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -1436,6 +1663,7 @@ static inline int MPIDI_put_iov_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_CH4U_put_msg_t *msg_hdr = (MPIDI_CH4U_put_msg_t *) am_hdr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PUT_IOV_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PUT_IOV_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_put_iov);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
@@ -1465,6 +1693,7 @@ static inline int MPIDI_put_iov_target_msg_cb(int handler_id, void *am_hdr,
     *data = dt_iov;
     *p_data_sz = msg_hdr->n_iov * sizeof(struct iovec);
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_put_iov);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PUT_IOV_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -1488,6 +1717,7 @@ static inline int MPIDI_put_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PUT_IOV_ACK_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PUT_IOV_ACK_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_put_iov_ack);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
@@ -1511,6 +1741,7 @@ static inline int MPIDI_put_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
     *req = NULL;
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_put_iov_ack);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PUT_IOV_ACK_TARGET_MSG_CB);
     return mpi_errno;
   fn_fail:
@@ -1536,6 +1767,7 @@ static inline int MPIDI_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ACC_IOV_ACK_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ACC_IOV_ACK_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_acc_iov_ack);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
@@ -1559,6 +1791,7 @@ static inline int MPIDI_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
     *req = NULL;
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_acc_iov_ack);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ACC_IOV_ACK_TARGET_MSG_CB);
     return mpi_errno;
   fn_fail:
@@ -1584,6 +1817,7 @@ static inline int MPIDI_get_acc_iov_ack_target_msg_cb(int handler_id, void *am_h
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACC_IOV_ACK_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACC_IOV_ACK_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get_acc_iov_ack);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
@@ -1607,6 +1841,7 @@ static inline int MPIDI_get_acc_iov_ack_target_msg_cb(int handler_id, void *am_h
     *req = NULL;
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc_iov_ack);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACC_IOV_ACK_TARGET_MSG_CB);
     return mpi_errno;
   fn_fail:
@@ -1634,6 +1869,7 @@ static inline int MPIDI_put_data_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PUT_DATA_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PUT_DATA_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_put_data);
 
     rreq = (MPIR_Request *) msg_hdr->preq_ptr;
     win = MPIDI_CH4U_REQUEST(rreq, req->preq.win_ptr);
@@ -1650,6 +1886,7 @@ static inline int MPIDI_put_data_target_msg_cb(int handler_id, void *am_hdr,
     *req = rreq;
     *target_cmpl_cb = MPIDI_put_target_cmpl_cb;
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_put_data);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PUT_DATA_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -1671,6 +1908,7 @@ static inline int MPIDI_acc_data_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ACC_DATA_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ACC_DATA_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_acc_data);
 
     rreq = (MPIR_Request *) msg_hdr->preq_ptr;
     MPIDI_handle_acc_data(data, p_data_sz, is_contig, rreq);
@@ -1678,6 +1916,7 @@ static inline int MPIDI_acc_data_target_msg_cb(int handler_id, void *am_hdr,
     *req = rreq;
     *target_cmpl_cb = MPIDI_acc_target_cmpl_cb;
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_acc_data);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ACC_DATA_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -1699,6 +1938,7 @@ static inline int MPIDI_get_acc_data_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACC_DATA_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACC_DATA_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get_acc_data);
 
     rreq = (MPIR_Request *) msg_hdr->preq_ptr;
     MPIDI_handle_acc_data(data, p_data_sz, is_contig, rreq);
@@ -1706,6 +1946,7 @@ static inline int MPIDI_get_acc_data_target_msg_cb(int handler_id, void *am_hdr,
     *req = rreq;
     *target_cmpl_cb = MPIDI_get_acc_target_cmpl_cb;
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc_data);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACC_DATA_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -1734,6 +1975,7 @@ static inline int MPIDI_cswap_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_CH4U_cswap_req_msg_t *msg_hdr = (MPIDI_CH4U_cswap_req_msg_t *) am_hdr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CSWAP_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CSWAP_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_cas);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
@@ -1766,6 +2008,7 @@ static inline int MPIDI_cswap_target_msg_cb(int handler_id, void *am_hdr,
     *data = p_data;
     MPIDI_CH4U_REQUEST(*req, req->creq.data) = p_data;
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_cas);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CSWAP_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -1794,6 +2037,7 @@ static inline int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_CH4U_acc_req_msg_t *msg_hdr = (MPIDI_CH4U_acc_req_msg_t *) am_hdr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ACC_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ACC_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_acc);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
@@ -1850,6 +2094,7 @@ static inline int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_CH4U_REQUEST(rreq, req->areq.dt_iov) = dt_iov;
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_acc);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ACC_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -1870,6 +2115,7 @@ static inline int MPIDI_get_acc_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACC_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACC_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get_acc);
 
     /* the same handling processing as ACC except the completion handler function. */
     mpi_errno =
@@ -1878,6 +2124,7 @@ static inline int MPIDI_get_acc_target_msg_cb(int handler_id, void *am_hdr,
 
     *target_cmpl_cb = MPIDI_get_acc_target_cmpl_cb;
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACC_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -1903,6 +2150,7 @@ static inline int MPIDI_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_CH4U_acc_req_msg_t *msg_hdr = (MPIDI_CH4U_acc_req_msg_t *) am_hdr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ACC_IOV_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ACC_IOV_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_acc_iov);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
@@ -1940,6 +2188,7 @@ static inline int MPIDI_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
     *target_cmpl_cb = MPIDI_acc_iov_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_acc_iov);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ACC_IOV_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -1959,6 +2208,7 @@ static inline int MPIDI_get_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACC_IOV_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACC_IOV_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get_acc_iov);
 
     /* the same handling processing as ACC except the completion handler function. */
     mpi_errno = MPIDI_acc_iov_target_msg_cb(handler_id, am_hdr, data,
@@ -1966,6 +2216,7 @@ static inline int MPIDI_get_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
 
     *target_cmpl_cb = MPIDI_get_acc_iov_target_cmpl_cb;
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_acc_iov);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACC_IOV_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -1991,6 +2242,7 @@ static inline int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
@@ -2025,6 +2277,7 @@ static inline int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
         MPIDI_CH4U_REQUEST(rreq, req->greq.dt_iov) = iov;
     }
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_TARGET_MSG_CB);
     return mpi_errno;
 }
@@ -2052,6 +2305,7 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_CH4U_get_ack_msg_t *msg_hdr = (MPIDI_CH4U_get_ack_msg_t *) am_hdr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACK_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACK_TARGET_MSG_CB);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get_ack);
 
     greq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(greq);
@@ -2103,6 +2357,7 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
         MPL_free(segment_ptr);
     }
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_ack);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACK_TARGET_MSG_CB);
     return mpi_errno;
 }

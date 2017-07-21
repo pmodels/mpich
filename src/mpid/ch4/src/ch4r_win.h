@@ -20,6 +20,47 @@
 #include <sys/mman.h>
 #endif /* HAVE_SYS_MMAN_H */
 
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_winlock_getlocallock ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_amhdr_set ATTRIBUTE((unused));
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4_RMA_Init_sync_pvars
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_CH4R_RMA_Init_sync_pvars(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    /* rma_winlock_getlocallock */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_winlock_getlocallock,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "WIN_LOCK:Get local lock (in seconds)");
+
+    /* rma_wincreate_allgather */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_wincreate_allgather,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "WIN_CREATE:Allgather (in seconds)");
+
+    /* rma_amhdr_set */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+            MPI_DOUBLE,
+            rma_amhdr_set,
+            MPI_T_VERBOSITY_MPIDEV_DETAIL,
+            MPI_T_BIND_NO_OBJECT,
+            MPIR_T_PVAR_FLAG_READONLY,
+            "RMA", "Set fields in AM Handler (in seconds)");
+
+    return mpi_errno;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH4R_mpi_win_set_info
 #undef FCNAME
@@ -846,6 +887,7 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
                                     MPI_WIN_FLAVOR_SHARED, MPI_WIN_UNIFIED);
 
     win = *win_ptr;
+    MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
     MPIDI_CH4U_WIN(win, shared_table) =
         (MPIDI_CH4U_win_shared_info_t *) MPL_malloc(sizeof(MPIDI_CH4U_win_shared_info_t) *
                                                     comm_ptr->local_size);
@@ -859,6 +901,7 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
                                     shared_table,
                                     sizeof(MPIDI_CH4U_win_shared_info_t),
                                     MPI_BYTE, comm_ptr, &errflag);
+    MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
