@@ -1516,7 +1516,7 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
     /*           We expect to register all memory up front for use with this    */
     /*           endpoint, so the netmod requires dynamic memory regions        */
     /* ------------------------------------------------------------------------ */
-    hints->mode = FI_CONTEXT | FI_ASYNC_IOV;    /* We can handle contexts  */
+    hints->mode = FI_CONTEXT | FI_ASYNC_IOV | FI_RX_CQ_DATA; /* We can handle contexts  */
     if (FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION) >= FI_VERSION(1,5)) {
 #ifdef FI_CONTEXT2
         hints->mode |= FI_CONTEXT2;
