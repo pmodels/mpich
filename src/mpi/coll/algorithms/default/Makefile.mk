@@ -23,4 +23,9 @@ mpi_core_sources +=                     				\
     src/mpi/coll/algorithms/default/gatherv.c    	   	\
     src/mpi/coll/algorithms/default/red_scat_block.c   	\
     src/mpi/coll/algorithms/default/red_scat.c  	 	\
-    src/mpi/coll/algorithms/default/reduce.c
+    src/mpi/coll/algorithms/default/reduce.c   			\
+    src/mpi/coll/algorithms/default/scatter.c  			\
+    src/mpi/coll/algorithms/default/scatterv.c			\
+    src/mpi/coll/algorithms/default/scan.c				\
+    src/mpi/coll/algorithms/default/exscan.c
+
