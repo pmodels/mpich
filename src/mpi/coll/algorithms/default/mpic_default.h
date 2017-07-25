@@ -79,4 +79,12 @@ int MPIC_DEFAULT_Reduce_intra(const void *sendbuf, void *recvbuf, int count, MPI
 int MPIC_DEFAULT_Reduce_inter(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
 int MPIC_DEFAULT_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
 
+/* Scatter functions */
+int MPIC_DEFAULT_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
+int MPIC_DEFAULT_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
+int MPIC_DEFAULT_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
+
+/*Scatterv functions */
+int MPIC_DEFAULT_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
+
 #endif /* MPIC_DEFAULT_H_INCLUDED */
