@@ -115,6 +115,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
             MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV_NOPACK;
 
+            MPIDI_OFI_ASSERT_IOVEC_ALIGN(originv);
             msg.msg_iov = originv;
             msg.desc = NULL;
             msg.iov_count = oout;
@@ -164,10 +165,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                                       (void *) &(MPIDI_OFI_REQUEST(rreq, context))), trecv,
                              MPIDI_OFI_CALL_LOCK);
     else {
-        MPIDI_OFI_REQUEST(rreq, util.iov).iov_base = recv_buf;
-        MPIDI_OFI_REQUEST(rreq, util.iov).iov_len = data_sz;
+        MPIDI_OFI_request_util_iov(rreq)->iov_base = recv_buf;
+        MPIDI_OFI_request_util_iov(rreq)->iov_len = data_sz;
 
-        msg.msg_iov = &MPIDI_OFI_REQUEST(rreq, util.iov);
+        MPIDI_OFI_ASSERT_IOVEC_ALIGN(&MPIDI_OFI_REQUEST(rreq, util.iov));
+        msg.msg_iov = MPIDI_OFI_request_util_iov(rreq);
         msg.desc = NULL;
         msg.iov_count = 1;
         msg.tag = match_bits;
