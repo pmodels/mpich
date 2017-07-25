@@ -135,7 +135,11 @@ typedef struct {
             int count;
             void *buf;
         } persist;
-        struct iovec iov;
+#if defined (MPL_HAVE_VAR_ATTRIBUTE_ALIGNED)
+        struct iovec iov MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
+#else
+        char iov_store[sizeof(struct iovec) + MPIDI_OFI_IOVEC_ALIGN - 1];
+#endif
         void *inject_buf;       /* Internal buffer for inject emulation */
     } util;
 } MPIDI_OFI_request_t;

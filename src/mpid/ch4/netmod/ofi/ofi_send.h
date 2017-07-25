@@ -176,6 +176,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
                 goto pack;
             }
 
+            MPIDI_OFI_ASSERT_IOVEC_ALIGN(originv);
             msg.msg_iov = originv;
             msg.desc = NULL;
             msg.iov_count = oout;
