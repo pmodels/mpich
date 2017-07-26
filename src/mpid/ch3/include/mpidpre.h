@@ -385,7 +385,7 @@ typedef struct MPIDI_Request {
     struct MPIDU_Segment *segment_ptr;
     intptr_t segment_first;
     intptr_t segment_size;
-
+    intptr_t orig_segment_first;
     /* Pointer to datatype for reference counting purposes */
     struct MPIDU_Datatype* datatype_ptr;
 
