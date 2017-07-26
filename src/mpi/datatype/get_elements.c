@@ -58,7 +58,7 @@ Output Parameters:
 int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *count)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Count count_x;
+    MPI_Count count_x, byte_count;
 
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_ELEMENTS);
 
@@ -104,7 +104,8 @@ int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *count
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Get_elements_x_impl(status, datatype, &count_x);
+    byte_count = MPIR_STATUS_GET_COUNT(*status);
+    mpi_errno = MPIR_Get_elements_x_impl(&byte_count, datatype, &count_x);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* clip the value if it cannot be correctly returned to the user */

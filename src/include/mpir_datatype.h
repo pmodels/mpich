@@ -624,7 +624,7 @@ int MPII_Type_zerolen(MPI_Datatype *newtype);
      (type == MPI_LONG_INT) || (type == MPI_SHORT_INT) || \
      (type == MPI_LONG_DOUBLE_INT))
 
-int MPIR_Get_elements_x_impl(const MPI_Status *status, MPI_Datatype datatype, MPI_Count *elements);
+int MPIR_Get_elements_x_impl(MPI_Count *bytes, MPI_Datatype datatype, MPI_Count *elements);
 int MPIR_Status_set_elements_x_impl(MPI_Status *status, MPI_Datatype datatype, MPI_Count count);
 void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count *lb, MPI_Count *extent);
 void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count *true_lb, MPI_Count *true_extent);
