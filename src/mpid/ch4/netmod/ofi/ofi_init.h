@@ -1625,6 +1625,10 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
     hints->rx_attr->op_flags = FI_COMPLETION;
     hints->rx_attr->total_buffered_recv = 0;    /* FI_RM_ENABLED ensures buffering of unexpected messages */
     hints->ep_attr->type = FI_EP_RDM;
+    hints->ep_attr->mem_tag_format = MPIDI_OFI_SOURCE_BITS ?
+        /*     PROTOCOL         |  CONTEXT  |        SOURCE         |       TAG          */
+        MPIDI_OFI_PROTOCOL_MASK |     0     | MPIDI_OFI_SOURCE_MASK |        0           /* With source bits */ :
+        MPIDI_OFI_PROTOCOL_MASK |     0     |          0            | MPIDI_OFI_TAG_MASK /* No source bits */   ;
 
     return MPI_SUCCESS;
 }
