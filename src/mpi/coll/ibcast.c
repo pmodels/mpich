@@ -461,6 +461,8 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype 
     curr_size = MPL_MIN(scatter_size, (nbytes - (relative_rank * scatter_size)));
     if (curr_size < 0)
         curr_size = 0;
+    /* curr_size bytes already inplace */
+    status->curr_bytes = curr_size;
 
     /* initialize because the compiler can't tell that it is always initialized when used */
     incoming_count = -1;
@@ -646,7 +648,7 @@ int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype dat
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank;
     int is_contig, is_homogeneous ATTRIBUTE((unused)), type_size, nbytes;
-    int scatter_size;
+    int scatter_size, curr_size;
     int i, j, jnext, left, right;
     MPI_Aint true_extent, true_lb;
     void *tmp_buf = NULL;
@@ -703,6 +705,14 @@ int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype dat
 
     /* this is the block size used for the scatter operation */
     scatter_size = (nbytes + comm_size - 1) / comm_size; /* ceiling division */
+
+    /* curr_size is the amount of data that this process now has stored in
+     * buffer at byte offset (rank*scatter_size) */
+    curr_size = MPL_MIN(scatter_size, (nbytes - (rank * scatter_size)));
+    if (curr_size < 0)
+        curr_size = 0;
+    /* curr_size bytes already inplace */
+    status->curr_bytes = curr_size;
 
     /* long-message allgather or medium-size but non-power-of-two. use ring algorithm. */
 
