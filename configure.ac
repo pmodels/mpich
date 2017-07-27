@@ -2772,6 +2772,7 @@ AC_SUBST(VISIBILITY_CFLAGS)
 if test "$NEEDSPLIB" = "yes" ; then
     VISIBILITY_CFLAGS=""
 fi
+AX_GCC_VAR_ATTRIBUTE(aligned)
 
 # We need to check for the endianess in order to implement the
 # "external32" representations.  This defines "WORDS_BIGENDIAN when
