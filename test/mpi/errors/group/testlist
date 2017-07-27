@@ -1,1 +1,9 @@
 gerr 1
+group_difference_test 1
+group_intersection_test 1
+group_range_excl_test 1
+group_range_incl_test 1
+group_rank_test 1
+group_size_test 1
+group_translate_ranks_test 1
+group_union_test 1

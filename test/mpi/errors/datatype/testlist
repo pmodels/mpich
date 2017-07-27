@@ -1,1 +1,11 @@
 getcnterr 1
+type_contiguous_test 1
+type_create_resized_test 1
+type_extent_test 1
+type_get_extent_test 1
+type_get_true_extent_test 1
+type_get_true_extent_x_test 1
+type_lb_test 1
+type_ub_test 1
+type_size_x_test 1
+type_vector_test 1
