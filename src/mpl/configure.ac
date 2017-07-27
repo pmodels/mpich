@@ -837,12 +837,6 @@ if test "$ac_cv_func_strncmp" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <string.h>],strncmp)
 fi
 
-# Check for putenv
-AC_CHECK_FUNCS(putenv)
-if test "$ac_cv_func_putenv" = "yes" ; then
-    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
-fi
-
 # Check for strerror
 AC_CHECK_FUNCS(strerror)
 if test "$ac_cv_func_strerror" = "yes" ; then
@@ -860,6 +854,16 @@ AC_CHECK_LIB(backtrace, backtrace_create_state)
 AC_CHECK_LIB(unwind, unw_backtrace)
 
 AC_CHECK_DECLS([backtrace_create_state, backtrace_print])
+
+AC_CHECK_HEADERS(ifaddrs.h arpa/inet.h)
+AC_CHECK_FUNCS(inet_ntop)
+AC_TRY_LINK([
+	#include <stdio.h>
+	#include <sys/types.h>
+	#include <ifaddrs.h>
+	],
+	[return getifaddrs(NULL);],
+	[AC_DEFINE([HAVE_GETIFADDRS],1,[Define to '1' if getifaddrs is present and usable])])
 
 dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE

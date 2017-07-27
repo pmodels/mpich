@@ -294,7 +294,7 @@ static int restore_env(pid_t parent_pid, int rank)
         /* remove newline */
         if (var_val[len-1] == '\n')
             var_val[len-1] = '\0';
-        ret = MPL_putenv(MPL_strdup(var_val));
+        ret = putenv(MPL_strdup(var_val));
         CHECK_ERR(ret != 0, MPIR_Strerror (errno));
     }
 

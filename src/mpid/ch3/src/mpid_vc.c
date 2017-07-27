@@ -449,7 +449,7 @@ static inline int MPIDI_LPID_GetAllInComm(MPIR_Comm *comm_ptr, int local_size,
 #define FUNCNAME MPIDI_CheckDisjointLpids
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CheckDisjointLpids(int lpids1[], int n1, int lpids2[], int n2)
+static int MPIDI_CheckDisjointLpids(int lpids1[], int n1, int lpids2[], int n2)
 {
     int i, mask_size, idx, bit, maxlpid = -1;
     int mpi_errno = MPI_SUCCESS;

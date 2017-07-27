@@ -96,7 +96,6 @@ localdefs
 mpe_*.conf
 mpich*pgrs.html
 mpid_config.h.in
-mpiexec
 old
 old*_pngs
 stamp-h1

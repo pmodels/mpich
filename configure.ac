@@ -4580,6 +4580,13 @@ if test "$ac_cv_func_vsnprintf" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdio.h>
 #include <stdarg.h>],vsnprintf)
 fi
+
+# Check for putenv
+AC_CHECK_FUNCS(putenv)
+if test "$ac_cv_func_putenv" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
+fi
+
 # We would like to use strerror in the file namepublisher; it is also used
 # in MPIR_Strerror (whose implementation is broken if strerror is not found)
 AC_CHECK_FUNCS(strerror strncasecmp)

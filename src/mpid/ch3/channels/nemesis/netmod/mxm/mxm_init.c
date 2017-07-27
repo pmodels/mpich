@@ -140,7 +140,7 @@ int MPID_nem_mxm_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* check if the user is not trying to override the tls setting
      * before resetting it */
     if (getenv("MXM_TLS") == NULL) {
-        r = MPL_putenv("MXM_TLS=rc,dc,ud");
+        r = putenv("MXM_TLS=rc,dc,ud");
         MPIR_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**putenv");
     }
 
@@ -152,7 +152,7 @@ int MPID_nem_mxm_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
      * when this issue is resolved.  */
     if (MPIR_CVAR_NEMESIS_MXM_HUGEPAGE == 0) {
         if (getenv("MXM_MEM_ALLOC") == NULL) {
-            r = MPL_putenv("MXM_MEM_ALLOC=mmap,libc,sysv");
+            r = putenv("MXM_MEM_ALLOC=mmap,libc,sysv");
             MPIR_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**putenv");
         }
     }

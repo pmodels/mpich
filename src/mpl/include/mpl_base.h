@@ -44,6 +44,14 @@
 #include <inttypes.h>
 #endif /* MPL_HAVE_INTTYPES_H */
 
+#if defined MPL_HAVE_IFADDRS_H
+#include <ifaddrs.h>
+#endif /* MPL_HAVE_IFADDRS_H */
+
+#if defined MPL_HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif /* MPL_HAVE_ARPA_INET_H */
+
 #if !defined ATTRIBUTE
 #  if defined MPL_HAVE_GCC_ATTRIBUTE
 #    define ATTRIBUTE(a_) __attribute__(a_)
