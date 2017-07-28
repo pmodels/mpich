@@ -391,6 +391,7 @@ typedef struct MPIDI_Request {
     struct MPID_Segment *segment_ptr;
     MPIDI_msg_sz_t segment_first;
     MPIDI_msg_sz_t segment_size;
+    MPIDI_msg_sz_t orig_segment_first;
 
     /* Pointer to datatype for reference counting purposes */
     struct MPID_Datatype * datatype_ptr;
