@@ -863,6 +863,7 @@ AC_CHECK_DECLS([backtrace_create_state, backtrace_print])
 
 dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
+AX_GCC_VAR_ATTRIBUTE(aligned)
 
 dnl Final output
 AC_CONFIG_FILES([Makefile localdefs include/mpl_timer.h])
