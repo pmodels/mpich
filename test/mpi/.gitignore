@@ -273,6 +273,7 @@
 /datatype/blockindexed-misc
 /datatype/blockindexed-zero-count
 /datatype/bsend1
+/datatype/concurrent_irecv
 /datatype/contents
 /datatype/contig-zero-count
 /datatype/contigstruct
