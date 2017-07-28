@@ -20,6 +20,7 @@ EXTRA_DIST = testlist.in
 noinst_PROGRAMS =           \
     blockindexed-misc       \
     blockindexed-zero-count \
+    concurrent_irecv        \
     contents                \
     contig-zero-count       \
     contigstruct            \
