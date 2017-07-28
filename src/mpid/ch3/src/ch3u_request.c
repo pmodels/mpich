@@ -20,6 +20,7 @@
 
 /* Max depth of recursive calls of MPID_Request_complete */
 #define REQUEST_CB_DEPTH 2
+#define MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET (-1)
 
 /* See the comments above about request creation.  Some routines will
    use macros in mpidimpl.h *instead* of this routine */
@@ -57,6 +58,7 @@ void MPID_Request_create_hook(MPIR_Request *req)
     req->dev.ext_hdr_sz        = 0;
     req->dev.rma_target_ptr    = NULL;
     req->dev.request_handle    = MPI_REQUEST_NULL;
+    req->dev.orig_segment_first = MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET;
 
     req->dev.request_completed_cb  = NULL;
 #ifdef MPIDI_CH3_REQUEST_INIT
@@ -183,7 +185,6 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
     return mpi_errno;
 }
 
-#define MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET (-1)
 
 /*
  * MPIDI_CH3U_Request_load_recv_iov()
@@ -200,14 +201,13 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 {
     MPI_Aint last;
-    static intptr_t orig_segment_first = MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_REQUEST_LOAD_RECV_IOV);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_REQUEST_LOAD_RECV_IOV);
 
-    if (orig_segment_first == MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET) {
-        orig_segment_first = rreq->dev.segment_first;
+    if (rreq->dev.orig_segment_first == MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET) {
+        rreq->dev.orig_segment_first = rreq->dev.segment_first;
     }
 
     if (rreq->dev.segment_first < rreq->dev.segment_size)
@@ -242,15 +242,15 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	    rreq->dev.iov[0].MPL_IOV_LEN = data_sz;
             rreq->dev.iov_offset = 0;
 	    rreq->dev.iov_count = 1;
-	    MPIR_Assert(rreq->dev.segment_first - orig_segment_first + data_sz +
+	    MPIR_Assert(rreq->dev.segment_first - rreq->dev.orig_segment_first + data_sz +
 			rreq->dev.tmpbuf_off <= rreq->dev.recv_data_sz);
-	    if (rreq->dev.segment_first - orig_segment_first + data_sz + rreq->dev.tmpbuf_off ==
+	    if (rreq->dev.segment_first - rreq->dev.orig_segment_first + data_sz + rreq->dev.tmpbuf_off ==
 		rreq->dev.recv_data_sz)
 	    {
 		MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 		  "updating rreq to read the remaining data into the SRBuf");
 		rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_UnpackSRBufComplete;
-                orig_segment_first = MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET;
+                rreq->dev.orig_segment_first = MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET;
 	    }
 	    else
 	    {
@@ -299,13 +299,13 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
         }
 	/* --END ERROR HANDLING-- */
 
-	if (last == rreq->dev.recv_data_sz + orig_segment_first)
+	if (last == rreq->dev.recv_data_sz + rreq->dev.orig_segment_first)
 	{
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
      "updating rreq to read the remaining data directly into the user buffer");
 	    /* Eventually, use OnFinal for this instead */
 	    rreq->dev.OnDataAvail = rreq->dev.OnFinal;
-            orig_segment_first = MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET;
+            rreq->dev.orig_segment_first = MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET;
 	}
 	else if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RECV ||
                  MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_GET_ACCUM_RECV ||
@@ -377,7 +377,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	    MPIR_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_RECV);
 	    /* Eventually, use OnFinal for this instead */
 	    rreq->dev.OnDataAvail = rreq->dev.OnFinal;
-            orig_segment_first = MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET;
+            rreq->dev.orig_segment_first = MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET;
 	}
 	else
 	{
