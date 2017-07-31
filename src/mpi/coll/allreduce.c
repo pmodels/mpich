@@ -327,6 +327,9 @@ int MPIR_Allreduce_intra (
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
 
+        if (comm_size == 1)
+            goto fn_exit;
+
         MPID_Datatype_get_size_macro(datatype, type_size);
 
         /* Find nearest power-of-two less than or equal to comm_size */

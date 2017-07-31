@@ -361,6 +361,14 @@ static int MPIR_Reduce_redscat_gather (
     /* should be buf+{this}? */
     MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
+    if (comm_size == 1) {
+        if (sendbuf != MPI_IN_PLACE) {
+            mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf,
+                                       count, datatype);
+        }
+        goto fn_exit;
+    }
+
     MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
                         mpi_errno, "temporary buffer");
     /* adjust for potential negative lower bound in datatype */
