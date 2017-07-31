@@ -302,9 +302,12 @@ static inline int MPIDI_NM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Wi
     MPIDI_CH4U_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, goto fn_fail);
 
     MPIR_Group_add_ref(group);
+    if (assert & MPI_MODE_NOCHECK) {
+        goto no_check;
+    }
 
     MPIDI_OFI_PROGRESS_WHILE(group->size != (int) MPIDI_CH4U_WIN(win, sync).pw.count);
-
+  no_check:
     MPIDI_CH4U_WIN(win, sync).pw.count = 0;
 
     MPIR_ERR_CHKANDJUMP((MPIDI_CH4U_WIN(win, sync).sc.group != NULL),
@@ -461,6 +464,9 @@ static inline int MPIDI_NM_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win
 
     MPIDI_CH4U_WIN(win, sync).pw.group = group;
     MPIR_Assert(group != NULL);
+    if (assert & MPI_MODE_NOCHECK) {
+        goto no_check;
+    }
 
     msg.type = MPIDI_OFI_CTRL_POST;
 
@@ -471,7 +477,7 @@ static inline int MPIDI_NM_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     }
-
+  no_check:
     MPIDI_CH4U_WIN(win, sync).exposure_epoch_type = MPIDI_CH4U_EPOTYPE_POST;
 
   fn_exit:
@@ -586,6 +592,11 @@ static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPI
     MPIDI_CH4U_win_target_sync_lock_t *slock = &target_ptr->sync.lock;
     MPIR_Assert(slock->locked == 0);
 
+    if (assert & MPI_MODE_NOCHECK) {
+        target_ptr->sync.assert_mode |= MPI_MODE_NOCHECK;
+        slock->locked = 1;
+        goto no_check;
+    }
     MPIDI_OFI_win_control_t msg;
 
     msg.type = MPIDI_OFI_CTRL_LOCKREQ;
@@ -597,6 +608,7 @@ static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPI
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
     MPIDI_OFI_PROGRESS_WHILE(!slock->locked);
+  no_check:
     target_ptr->sync.access_epoch_type = MPIDI_CH4U_EPOTYPE_LOCK;
 
   fn_exit0:
@@ -645,6 +657,10 @@ static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_ent
     /* network completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
 
+    if (target_ptr->sync.assert_mode & MPI_MODE_NOCHECK) {
+        target_ptr->sync.lock.locked = 0;
+        goto no_check;
+    }
     MPIDI_OFI_win_control_t msg;
     msg.type = MPIDI_OFI_CTRL_UNLOCK;
     mpi_errno = MPIDI_OFI_do_control_win(&msg, rank, win, 1, 1);
@@ -653,7 +669,9 @@ static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_ent
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
     MPIDI_OFI_PROGRESS_WHILE(slock->locked);
+  no_check:
     target_ptr->sync.access_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
+    target_ptr->sync.assert_mode = 0;
 
   fn_exit0:
     MPIR_Assert(MPIDI_CH4U_WIN(win, sync).lock.count > 0);
@@ -1290,6 +1308,10 @@ static inline int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
     MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush_all(win));
     /* network completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
+    if (MPIDI_CH4U_WIN(win, sync).assert_mode & MPI_MODE_NOCHECK) {
+        MPIDI_CH4U_WIN(win, sync).lockall.allLocked = 0;
+        goto no_check;
+    }
 
     for (i = 0; i < win->comm_ptr->local_size; i++) {
         MPIDI_OFI_win_control_t msg;
@@ -1302,8 +1324,9 @@ static inline int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
     }
 
     MPIDI_OFI_PROGRESS_WHILE(MPIDI_CH4U_WIN(win, sync).lockall.allLocked);
-
+  no_check:
     MPIDI_CH4U_WIN(win, sync).access_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
+    MPIDI_CH4U_WIN(win, sync).assert_mode = 0;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_UNLOCK_ALL);
@@ -1467,6 +1490,11 @@ static inline int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * win)
 
     int size;
     size = win->comm_ptr->local_size;
+    if (assert & MPI_MODE_NOCHECK) {
+        MPIDI_CH4U_WIN(win, sync).assert_mode |= MPI_MODE_NOCHECK;
+        MPIDI_CH4U_WIN(win, sync).lockall.allLocked = size;
+        goto no_check;
+    }
 
     int i;
 
@@ -1482,7 +1510,7 @@ static inline int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * win)
     }
 
     MPIDI_OFI_PROGRESS_WHILE(size != (int) MPIDI_CH4U_WIN(win, sync).lockall.allLocked);
-
+  no_check:
     MPIDI_CH4U_WIN(win, sync).access_epoch_type = MPIDI_CH4U_EPOTYPE_LOCK_ALL;
 
   fn_exit:
