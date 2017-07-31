@@ -148,7 +148,7 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
     window_instance =
         MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator);
     MPIDI_OFI_WIN(win).win_id = ((uint64_t) comm_ptr->context_id) | (window_instance << 32);
-    MPIDI_OFI_map_set(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id, win);
+    MPIDI_CH4U_map_set(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id, win);
 
     if (MPIDI_OFI_ENABLE_STX_RMA && MPIDI_Global.stx_ctx != NULL) {
         /* Activate per-window EP/counter */
@@ -464,7 +464,7 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
     window_instance = (uint32_t) (MPIDI_OFI_WIN(win).win_id >> 32);
 
     MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator, window_instance);
-    MPIDI_OFI_map_erase(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id);
+    MPIDI_CH4U_map_erase(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id);
     if (MPIDI_OFI_WIN(win).ep != MPIDI_Global.ctx[0].tx)
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
     if (MPIDI_OFI_WIN(win).cmpl_cntr != MPIDI_Global.rma_cmpl_cntr)

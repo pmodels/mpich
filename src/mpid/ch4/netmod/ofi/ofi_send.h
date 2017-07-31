@@ -316,7 +316,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
                                         NULL), mr_reg); /* In:  context             */
 
         /* Create map to the memory region */
-        MPIDI_OFI_map_set(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle, huge_send_mr);
+        MPIDI_CH4U_map_set(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle, huge_send_mr);
 
         if (!MPIDI_OFI_ENABLE_MR_SCALABLE) {
             /* MR_BASIC */
