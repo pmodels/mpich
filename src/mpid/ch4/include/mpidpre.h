@@ -264,12 +264,16 @@ typedef struct MPIDI_CH4U_win_sync_pscw {
 typedef struct MPIDI_CH4U_win_target_sync {
     int access_epoch_type;      /* NONE, LOCK. */
     MPIDI_CH4U_win_target_sync_lock_t lock;
+    uint32_t assert_mode;       /* bit-vector OR of zero or more of the following integer constant:
+                                 * MPI_MODE_NOCHECK, MPI_MODE_NOSTORE, MPI_MODE_NOPUT, MPI_MODE_NOPRECEDE, MPI_MODE_NOSUCCEED. */
 } MPIDI_CH4U_win_target_sync_t;
 
 typedef struct MPIDI_CH4U_win_sync {
     int access_epoch_type;      /* NONE, FENCE, LOCKALL, START,
                                  * LOCK (refer to target_sync). */
     int exposure_epoch_type;    /* NONE, FENCE, POST. */
+    uint32_t assert_mode;       /* bit-vector OR of zero or more of the following integer constant:
+                                 * MPI_MODE_NOCHECK, MPI_MODE_NOSTORE, MPI_MODE_NOPUT, MPI_MODE_NOPRECEDE, MPI_MODE_NOSUCCEED. */
 
     /* access epochs */
     /* TODO: Can we put access epochs in union,
