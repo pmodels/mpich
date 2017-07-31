@@ -268,11 +268,6 @@ int MPIDI_OFI_progress_test_no_inline(void);
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               void **data, size_t * data_sz, int *is_contig,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
-void MPIDI_OFI_map_create(void **map);
-void MPIDI_OFI_map_destroy(void *map);
-void MPIDI_OFI_map_set(void *_map, uint64_t id, void *val);
-void MPIDI_OFI_map_erase(void *_map, uint64_t id);
-void *MPIDI_OFI_map_lookup(void *_map, uint64_t id);
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(void);
 void MPIDI_OFI_index_allocator_create(void **_indexmap, int start);
