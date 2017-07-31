@@ -209,7 +209,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry
                 MPL_LL_DELETE(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, list_ptr);
 
                 recv = list_ptr;
-                MPIDI_OFI_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv);
+                MPIDI_CH4U_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv);
                 break;
             }
         }
@@ -222,7 +222,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry
 
         recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1);
         MPIR_ERR_CHKANDJUMP(recv == NULL, mpi_errno, MPI_ERR_OTHER, "**outofmemory");
-        MPIDI_OFI_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv);
+        MPIDI_CH4U_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv);
 
         list_ptr = (MPIDI_OFI_huge_recv_list_t *) MPL_calloc(sizeof(*list_ptr), 1);
         if (!list_ptr) MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -302,15 +302,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
         comm = MPIDI_OFI_REQUEST(sreq, util_comm);
 
         /* Look for the memory region using the sreq handle */
-        ptr = MPIDI_OFI_map_lookup(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
-        MPIR_Assert(ptr != MPIDI_OFI_MAP_NOT_FOUND);
+        ptr = MPIDI_CH4U_map_lookup(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
+        MPIR_Assert(ptr != MPIDI_CH4U_MAP_NOT_FOUND);
 
         huge_send_mr = (struct fid_mr *) ptr;
 
         /* Send a cleanup message to the receivier and clean up local
          * resources. */
         /* Clean up the local counter */
-        MPIDI_OFI_map_erase(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
+        MPIDI_CH4U_map_erase(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
 
         /* Clean up the memory region */
         key = fi_mr_key(huge_send_mr);
@@ -390,7 +390,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
                                    (&ctrl, NULL, 0, recv->remote_info.origin_rank, recv->comm_ptr,
                                     recv->remote_info.ackreq, FALSE));
 
-            MPIDI_OFI_map_erase(MPIDI_OFI_COMM(recv->comm_ptr).huge_recv_counters, recv->localreq->handle);
+            MPIDI_CH4U_map_erase(MPIDI_OFI_COMM(recv->comm_ptr).huge_recv_counters, recv->localreq->handle);
             MPL_free(recv);
 
             goto fn_exit;
