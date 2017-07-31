@@ -228,7 +228,7 @@ int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vnis)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    MPIDI_CH4_Global.win_hash = NULL;
+    MPIDI_CH4U_map_create((void**)&(MPIDI_CH4_Global.win_map));
 
     mpi_errno = MPIDI_CH4R_RMA_Init_sync_pvars();
     if (mpi_errno)
@@ -257,7 +257,7 @@ void MPIDIG_finalize(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_FINALIZE);
 
     MPIDI_CH4_Global.is_ch4u_initialized = 0;
-    MPL_HASH_CLEAR(dev.ch4u.hash_handle, MPIDI_CH4_Global.win_hash);
+    MPIDI_CH4U_map_destroy(MPIDI_CH4_Global.win_map);
     MPIDI_CH4R_destroy_buf_pool(MPIDI_CH4_Global.buf_pool);
     MPL_free(MPIDI_CH4_Global.comm_req_lists);
 

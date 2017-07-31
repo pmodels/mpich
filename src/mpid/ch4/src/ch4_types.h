@@ -280,8 +280,8 @@ typedef struct MPIDI_CH4_Global_t {
     OPA_int_t active_progress_hooks;
     MPIR_Commops MPIR_Comm_fns_store;
     progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
-    MPIR_Win *win_hash;
     MPID_Thread_mutex_t m[3];
+    MPIDI_CH4U_map_t *win_map;
     char *jobid;
 #ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
     MPIDI_CH4U_rreq_t *posted_list;
