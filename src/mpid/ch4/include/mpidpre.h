@@ -309,8 +309,6 @@ typedef struct MPIDI_CH4U_win_t {
 
     /* per-target structure for sync and OP completion. */
     MPIDI_CH4U_win_target_t *targets;
-
-    MPL_UT_hash_handle hash_handle;
 } MPIDI_CH4U_win_t;
 
 typedef struct {
