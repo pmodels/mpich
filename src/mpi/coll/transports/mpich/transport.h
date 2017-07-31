@@ -388,9 +388,14 @@ MPL_STATIC_INLINE_PREFIX int MPIC_MPICH_get_new_vtx(MPIC_MPICH_sched_t * sched, 
         sched->vtcs = MPIC_MPICH_allocate_mem(sizeof(MPIC_MPICH_vtx_t) * sched->max_vtcs);
         /* copy vertices from old array to new array */
         memcpy(sched->vtcs, old_vtcs, sizeof(MPIC_MPICH_vtx_t) * old_size);
-        /* copy incoming/outgoing vertices from old array to new array */
         int i;
         for (i = 0; i < old_size; i++) {
+            /* Reset pointer to point to new memory location in case of recv_reduce */
+            MPIC_MPICH_vtx_t *vtxp = &sched->vtcs[i];
+            if(vtxp->kind == MPIC_MPICH_KIND_RECV_REDUCE){
+               vtxp->nbargs.recv_reduce.vtxp = vtxp;
+            }
+            /*copy incoming/outgoing vertices from old array to new array */
             MPIC_MPICH_allocate_vtx(&sched->vtcs[i], old_vtcs[i].invtcs.size,
                                     old_vtcs[i].outvtcs.size);
             /* used values get copied in the memcpy above */
