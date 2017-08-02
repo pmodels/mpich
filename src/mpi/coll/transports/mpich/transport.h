@@ -1055,9 +1055,23 @@ static inline void MPIC_MPICH_issue_vtx(int vtxid, MPIC_MPICH_vtx_t * vtxp,
                            vtxp->nbargs.sendrecv.dest,
                            sched->tag,
                            vtxp->nbargs.sendrecv.comm->mpid_comm, &vtxp->mpid_req[0], &errflag);
-                /* record vertex issue */
-                MPIC_MPICH_record_vtx_issue(vtxp, sched);
-                MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"  --> MPICH transport (isend) issued, tag = %d\n", sched->tag));
+
+                if (MPIR_Request_is_complete(vtxp->mpid_req[0])) {
+                    MPIR_Request_free(vtxp->mpid_req[0]);
+                    vtxp->mpid_req[0] = NULL;
+
+                    #ifdef MPIC_DEBUG
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"  --> MPICH transport (kind=%d) complete\n", vtxp->kind));
+                    if (vtxp->nbargs.sendrecv.count >= 1)
+                        MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"data sent/recvd: %d\n", *(int *) (vtxp->nbargs.sendrecv.buf)));
+                    #endif
+
+                    /* record vertex completion */
+                    MPIC_MPICH_record_vtx_completion(vtxp, sched);
+                } else {/* record vertex issue */
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"  --> MPICH transport (isend) issued, tag = %d\n", sched->tag));
+                    MPIC_MPICH_record_vtx_issue(vtxp, sched);
+                }
             }
             break;
 
@@ -1068,9 +1082,23 @@ static inline void MPIC_MPICH_issue_vtx(int vtxid, MPIC_MPICH_vtx_t * vtxp,
                            vtxp->nbargs.sendrecv.dt,
                            vtxp->nbargs.sendrecv.dest,
                            sched->tag, vtxp->nbargs.sendrecv.comm->mpid_comm, &vtxp->mpid_req[0]);
-                /* record vertex issue */
-                MPIC_MPICH_record_vtx_issue(vtxp, sched);
-                MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"  --> MPICH transport (irecv) issued\n"));
+
+                if (MPIR_Request_is_complete(vtxp->mpid_req[0])) {
+                    MPIR_Request_free(vtxp->mpid_req[0]);
+                    vtxp->mpid_req[0] = NULL;
+
+                    #ifdef MPIC_DEBUG
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"  --> MPICH transport (kind=%d) complete\n", vtxp->kind));
+                    if (vtxp->nbargs.sendrecv.count >= 1)
+                        MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"data sent/recvd: %d\n", *(int *) (vtxp->nbargs.sendrecv.buf)));
+                    #endif
+
+                    /* record vertex completion */
+                    MPIC_MPICH_record_vtx_completion(vtxp, sched);
+                } else {/* record vertex issue */
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"  --> MPICH transport (irecv) issued\n"));
+                    MPIC_MPICH_record_vtx_issue(vtxp, sched);   /*record it again as issued */
+                }
             }
             break;
         case MPIC_MPICH_KIND_MULTICAST:{
