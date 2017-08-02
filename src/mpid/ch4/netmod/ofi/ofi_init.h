@@ -720,7 +720,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* vector attribute structure.                                              */
     /* ------------------------------------------------------------------------ */
     char av_name[128];
-    snprintf(av_name, 127, "FI_NAMED_AV_%d\n", appnum);
+    MPL_snprintf(av_name, sizeof(av_name), "FI_NAMED_AV_%d\n", appnum);
     av_attr.name = av_name;
     av_attr.flags = FI_READ;
     av_attr.map_addr = 0;
@@ -841,7 +841,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get_my_name(MPIDI_Global.kvsname, MPIDI_KVSAPPSTRLEN), pmi);
 
         val = valS;
-        sprintf(keyS, "OFI-%d", rank);
+        MPL_snprintf(keyS, sizeof(keyS), "OFI-%d", rank);
 #ifdef USE_PMI2_API
         MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Put(keyS, val), pmi);
         MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Fence(), pmi);
@@ -877,7 +877,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         if (local_rank == num_local - 1)
             end += size % num_local;
         for (i = start; i < end; i++) {
-            sprintf(keyS, "OFI-%d", i);
+            MPL_snprintf(keyS, sizeof(keyS), "OFI-%d", i);
 #ifdef USE_PMI2_API
             int vallen;
             MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Get

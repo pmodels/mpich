@@ -22,6 +22,7 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
     struct lov_user_md *lum = NULL;
     char *value;
     ADIO_Offset str_factor = -1, str_unit=0, start_iodev=-1;
+    size_t value_sz = (MPI_MAX_INFO_VAL+1)*sizeof(char);
 
 #if defined(MPICH) || !defined(PRINT_ERR_MSG)
     static char myname[] = "ADIOI_LUSTRE_OPEN";
@@ -56,7 +57,7 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
 	    MAX_LOV_UUID_COUNT * sizeof(struct lov_user_ost_data);
     lum = (struct lov_user_md *)ADIOI_Calloc(1,lumlen);
 
-     value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL+1)*sizeof(char));
+    value = (char *) ADIOI_Malloc(value_sz);
     /* we already validated in LUSTRE_SetInfo that these are going to be the same */
     if (fd->info != MPI_INFO_NULL) {
 	/* striping information */
@@ -132,15 +133,15 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
     if (!err) {
 
 	fd->hints->striping_unit = lum->lmm_stripe_size;
-	sprintf(value, "%d", lum->lmm_stripe_size);
+	MPL_snprintf(value, value_sz, "%d", lum->lmm_stripe_size);
 	ADIOI_Info_set(fd->info, "striping_unit", value);
 
 	fd->hints->striping_factor = lum->lmm_stripe_count;
-	sprintf(value, "%d", lum->lmm_stripe_count);
+	MPL_snprintf(value, value_sz, "%d", lum->lmm_stripe_count);
 	ADIOI_Info_set(fd->info, "striping_factor", value);
 
 	fd->hints->start_iodevice = lum->lmm_stripe_offset;
-	sprintf(value, "%d", lum->lmm_stripe_offset);
+	MPL_snprintf(value, value_sz, "%d", lum->lmm_stripe_offset);
 	ADIOI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
 
     }
