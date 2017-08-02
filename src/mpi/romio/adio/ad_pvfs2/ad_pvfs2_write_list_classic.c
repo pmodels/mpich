@@ -239,7 +239,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
     /* already know that file is noncontiguous from above */
     /* noncontiguous in file */
     /* filetype already flattened in ADIO_Open */
-    flat_flie = ADIOI_Flatten_and_find(fd->filetype);
+    flat_file = ADIOI_Flatten_and_find(fd->filetype);
 
     disp = fd->disp;
     initial_off = offset;
@@ -440,12 +440,12 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
                     file_offsets[k] = disp +
                         ((ADIO_Offset) n_filetypes) * filetype_extent + flat_file->indices[j];
                     if (k == (extra_blks - 1)) {
-                        file_lengths[k] = bufsize - (int32_t) mem_lengths
+                        file_lengths[k] = bufsize - (int32_t) mem_length
                             - mem_offset + (int32_t) buf;
                     } else
                         file_lengths[k] = flat_file->blocklens[j];
                 }       /* if (i || k) */
-                mem_lengths += file_lengths[k];
+                mem_length += file_lengths[k];
                 if (j < (flat_file->count - 1))
                     j++;
                 else {
