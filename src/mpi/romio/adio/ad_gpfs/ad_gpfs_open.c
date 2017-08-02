@@ -12,6 +12,8 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
+#define _GNU_SOURCE
+
 #include "ad_gpfs.h"
 #include "ad_gpfs_tuning.h"
 
