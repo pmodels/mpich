@@ -144,7 +144,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPL_str_add_binary_arg(&buscard, &val_sz_left, "PTI", (char *) &MPIDI_PTL_global.pt,
                                sizeof(MPIDI_PTL_global.pt));
 
-    sprintf(keyS, "PTL-%d", rank);
+    MPL_snprintf(keyS, key_max_sz*sizeof(char), "PTL-%d", rank);
     buscard = valS;
     ret = PMI_KVS_Put(MPIDI_PTL_global.kvsname, keyS, buscard);
     ret = PMI_KVS_Commit(MPIDI_PTL_global.kvsname);
@@ -153,7 +153,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* get and store business cards in address table */
     MPIDI_PTL_global.addr_table = MPL_malloc(size * sizeof(MPIDI_PTL_addr_t));
     for (i = 0; i < size; i++) {
-        sprintf(keyS, "PTL-%d", i);
+        MPL_snprintf(keyS, key_max_sz*sizeof(char), "PTL-%d", i);
         ret = PMI_KVS_Get(MPIDI_PTL_global.kvsname, keyS, valS, val_max_sz);
         MPL_str_get_binary_arg(valS, "NID",
                                (char *) &MPIDI_PTL_global.addr_table[i].process.phys.nid,

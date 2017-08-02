@@ -912,7 +912,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 
 	if (flag) {
 	    char round[50];
-	    sprintf(round, "two-phase-round=%d", m);
+	    MPL_snprintf(round, sizeof(round), "two-phase-round=%d", m);
 	    setenv("LIBIOLOG_EXTRA_INFO", round, 1);
       ADIOI_Assert(size == (int)size);
 	    if (gpfsmpio_pthreadio == 1) {

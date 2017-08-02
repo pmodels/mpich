@@ -239,7 +239,7 @@ int main(int argc, char **argv)
     MPI_Info_set(info, "cb_buffer_size", "8388608");
 
     /* number of processes that actually perform I/O in collective I/O */
-    sprintf(value, "%d", nprocs/2);
+    MPL_snprintf(value, sizeof(value), "%d", nprocs/2);
     MPI_Info_set(info, "cb_nodes", value);
 
     /* buffer size for data sieving in independent reads */
@@ -258,11 +258,11 @@ int main(int argc, char **argv)
        accepted only if 0 < value < default_striping_factor; 
        ignored otherwise */
     if (default_striping_factor - 1 > 0) {
-        sprintf(value, "%d", default_striping_factor-1);
+        MPL_snprintf(value, sizeof(value), "%d", default_striping_factor-1);
         MPI_Info_set(info, "striping_factor", value);
     }
     else {
-        sprintf(value, "%d", default_striping_factor);
+        MPL_snprintf(value, sizeof(value), "%d", default_striping_factor);
         MPI_Info_set(info, "striping_factor", value);
     }
 
@@ -277,7 +277,7 @@ int main(int argc, char **argv)
     /* the I/O device number from which to start striping the file.
        accepted only if 0 <= value < default_striping_factor; 
        ignored otherwise */
-    sprintf(value, "%d", default_striping_factor-2);
+    MPL_snprintf(value, sizeof(value), "%d", default_striping_factor-2);
     MPI_Info_set(info, "start_iodevice", value);
 
 

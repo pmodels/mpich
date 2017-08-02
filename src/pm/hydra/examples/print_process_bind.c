@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     MPI_Get_processor_name(processor_name, &namelen);
 
     char shell_cmd[100];
-    sprintf(shell_cmd, "cat /proc/%d/stat | awk '{print $39}'", getpid());
+    MPL_snprintf(shell_cmd, sizeof(shell_cmd), "cat /proc/%d/stat | awk '{print $39}'", getpid());
 
     if (rank == 0) {
         printf("----------------------\n");
