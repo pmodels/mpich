@@ -132,7 +132,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     val = valS;
     /* I first commit my worker-address size */
     maxlen = val_max_sz;
-    sprintf(keyS, "Ksize-%d", rank);
+    MPL_snprintf(keyS, key_max_sz*sizeof(char), "Ksize-%d", rank);
     MPL_str_add_int_arg(&val, (int *) &maxlen, "K", string_addr_len);
     val = valS;
     pmi_errno = PMI_KVS_Put(MPIDI_UCX_global.kvsname, keyS, val);
@@ -144,7 +144,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     if (string_addr_len < val_max_sz) {
         val = string_addr;
-        sprintf(keyS, "UCX-%d", rank);
+        MPL_snprintf(keyS, key_max_sz*sizeof(char), "UCX-%d", rank);
         pmi_errno = PMI_KVS_Put(MPIDI_UCX_global.kvsname, keyS, val);
         MPIDI_UCX_PMI_ERROR(pmi_errno);
         pmi_errno = PMI_KVS_Commit(MPIDI_UCX_global.kvsname);
@@ -153,9 +153,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         p = 0;
         while (p < string_addr_len) {
             val = valS;
-            MPL_snprintf(val, val_max_sz, "%s", string_addr + p);
+            MPL_snprintf(val, val_max_sz*sizeof(char), "%s", string_addr + p);
             val = valS;
-            sprintf(keyS, "UCX-%d-%d", rank, p);
+            MPL_snprintf(keyS, key_max_sz*sizeof(char),"UCX-%d-%d", rank, p);
             pmi_errno = PMI_KVS_Put(MPIDI_UCX_global.kvsname, keyS, val);
             MPIDI_UCX_PMI_ERROR(pmi_errno);
             pmi_errno = PMI_KVS_Commit(MPIDI_UCX_global.kvsname);
@@ -177,13 +177,13 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     for (i = 0; i < size; i++) {
         /*first get the size */
-        sprintf(keyS, "Ksize-%d", i);
+        MPL_snprintf(keyS, key_max_sz*sizeof(char), "Ksize-%d", i);
         pmi_errno = PMI_KVS_Get(MPIDI_UCX_global.kvsname, keyS, val, val_max_sz);
         str_errno = MPL_str_get_int_arg(val, "K", &string_addr_len);
 
         if (string_addr_len < val_max_sz) {
             val = string_addr;
-            sprintf(keyS, "UCX-%d", i);
+            MPL_snprintf(keyS, key_max_sz*sizeof(char), "UCX-%d", i);
             pmi_errno = PMI_KVS_Get(MPIDI_UCX_global.kvsname, keyS, val, val_max_sz);
             MPIDI_UCX_PMI_ERROR(pmi_errno);
             str_errno = MPL_str_get_binary_arg(string_addr, "U", remote_addr,
@@ -196,7 +196,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             p = 0;
             while (p < string_addr_len) {
                 val = string_addr + p;
-                sprintf(keyS, "UCX-%d-%d", i, p);
+                MPL_snprintf(keyS, key_max_sz*sizeof(char), "UCX-%d-%d", i, p);
                 pmi_errno = PMI_KVS_Get(MPIDI_UCX_global.kvsname, keyS, val, val_max_sz);
                 p += val_max_sz - 1;
             }
@@ -373,13 +373,13 @@ static inline int MPIDI_NMI_allocate_address_table()
 
     for (i = 0; i < size; i++) {
         /*first get the size */
-        sprintf(keyS, "Ksize-%d", i);
+        MPL_snprintf(keyS, key_max_sz*sizeof(char), "Ksize-%d", i);
         pmi_errno = PMI_KVS_Get(MPIDI_UCX_global.kvsname, keyS, val, val_max_sz);
         MPIDI_UCX_PMI_ERROR(pmi_errno);
         str_errno = MPL_str_get_int_arg(val, "K", &string_addr_len);
         if (string_addr_len < val_max_sz) {
             val = string_addr;
-            sprintf(keyS, "UCX-%d", i);
+            MPL_snprintf(keyS, key_max_sz*sizeof(char), "UCX-%d", i);
             pmi_errno = PMI_KVS_Get(MPIDI_UCX_global.kvsname, keyS, val, val_max_sz);
             MPIDI_UCX_PMI_ERROR(pmi_errno);
             str_errno =
@@ -392,7 +392,7 @@ static inline int MPIDI_NMI_allocate_address_table()
             p = 0;
             while (p < string_addr_len) {
                 val = string_addr + p;
-                sprintf(keyS, "UCX-%d-%d", i, p);
+                MPL_snprintf(keyS, sizeof(keyS), "UCX-%d-%d", i, p);
                 pmi_errno = PMI_KVS_Get(MPIDI_UCX_global.kvsname, keyS, val, val_max_sz);
                 MPIDI_UCX_PMI_ERROR(pmi_errno);
                 p += val_max_sz - 1;
@@ -425,7 +425,7 @@ static inline int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upi
     temp_buf = (char *) MPL_malloc(comm->local_size * len);
 
     for (i = 0; i < comm->local_size; i++) {
-        sprintf(keyS, "UCX-%d", i);
+        MPL_snprintf(keyS, MPIDI_UCX_KVSAPPSTRLEN*sizeof(char), "UCX-%d", i);
         PMI_KVS_Get(MPIDI_UCX_global.kvsname, keyS, valS, MPIDI_UCX_KVSAPPSTRLEN);
         // MPIDI_UCX_PMI_ERROR(pmi_errno, pmi_commit);
         MPL_str_get_binary_arg(valS, "UCX", &temp_buf[len * i],
