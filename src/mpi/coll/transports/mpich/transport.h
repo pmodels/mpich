@@ -473,11 +473,11 @@ MPL_STATIC_INLINE_PREFIX int MPIC_MPICH_wait(MPIC_MPICH_sched_t * sched)
     int wait_id;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Scheduling a TSP_wait\n"));
-    sched->last_wait = sched->total;
     /* wait operation is an extension to fence, so we can resuse the fence call */
     wait_id = MPIC_MPICH_fence(sched);
     /* change the vertex kind from FENCE to WAIT */
     sched->vtcs[wait_id].kind = MPIC_MPICH_KIND_WAIT;
+    sched->last_wait = wait_id;
     return wait_id;
 }
 
