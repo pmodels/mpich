@@ -6,6 +6,14 @@
  */
 
 #include "adio.h"
+#include "adio_extern.h"
+
+#ifdef ROMIO_DAOS
+#include <daos_types.h>
+#include <daos_api.h>
+#include <crt_util/common.h>
+daos_handle_t daos_pool_oh;
+#endif /* ROMIO_DAOS */
 
 ADIOI_Datarep *ADIOI_Datarep_head = NULL;
     /* list of datareps registered by the user */
@@ -46,8 +54,67 @@ static void my_consensus(void *invec, void *inoutvec, int *len, MPI_Datatype *da
     return;
 }
 
+#ifdef ROMIO_DAOS
+/* MSC - Make a generic DAOS function instead */
+static daos_rank_list_t *
+daos_rank_list_parse(const char *str, const char *sep)
+{
+    daos_rank_t	       *buf;
+    int			cap = 8;
+    daos_rank_list_t   *ranks = NULL;
+    char	       *s;
+    char	       *p;
+    int			n = 0;
+
+    buf = ADIOI_Malloc(sizeof(*buf) * cap);
+    if (buf == NULL)
+        goto out;
+    s = strdup(str);
+    if (s == NULL)
+        goto out_buf;
+
+    while ((s = strtok_r(s, sep, &p)) != NULL) {
+        if (n == cap) {
+            daos_rank_t    *buf_new;
+            int		cap_new;
+
+            /* Double the buffer. */
+            cap_new = cap * 2;
+            buf_new = ADIOI_Malloc(sizeof(*buf_new) * cap_new);
+            if (buf_new == NULL)
+                goto out_s;
+            memcpy(buf_new, buf, sizeof(*buf_new) * n);
+            free(buf);
+            buf = buf_new;
+            cap = cap_new;
+        }
+        buf[n] = atoi(s);
+        n++;
+        s = NULL;
+    }
+
+    ranks = crt_rank_list_alloc(n);
+    if (ranks == NULL)
+        goto out_s;
+    memcpy(ranks->rl_ranks, buf, sizeof(*buf) * n);
+
+out_s:
+    free(s);
+out_buf:
+    free(buf);
+out:
+    return ranks;
+}
+#endif /* ROMIO_DAOS */
+
 void ADIO_Init(int *argc, char ***argv, int *error_code)
 {
+    int comm_world_rank;
+    int comm_world_size;
+
+    MPI_Comm_rank( MPI_COMM_WORLD, &comm_world_rank );
+    MPI_Comm_size( MPI_COMM_WORLD, &comm_world_size );
+
 #if defined(ROMIO_XFS) || defined(ROMIO_LUSTRE)
     char *c;
 #endif
@@ -70,6 +137,57 @@ void ADIO_Init(int *argc, char ***argv, int *error_code)
     else ADIOI_Direct_write = 0;
 #endif
 
+#ifdef ROMIO_DAOS
+    char *uuid_str = NULL;
+    char *svcl_str = NULL;
+    char *group = NULL;
+    uuid_t pool_uuid;
+    daos_pool_info_t pool_info;
+    daos_rank_list_t *svcl = NULL;
+    int rc;
+
+    rc = daos_init();
+    if (rc) {
+        printf("daos_init() failed with %d\n", rc);
+        return;
+    }
+
+    uuid_str = getenv ("DAOS_POOL");
+    if (uuid_str != NULL) {
+        if (uuid_parse(uuid_str, pool_uuid) < 0) {
+            printf("Failed to parse pool UUID env\n");
+            return;
+        }
+    }
+    printf("POOL UUID = %s\n", uuid_str);
+
+    svcl_str = getenv ("DAOS_SVCL");
+    if (svcl_str != NULL) {
+        svcl = daos_rank_list_parse(svcl_str, ":");
+        if (svcl == NULL) {
+            printf("Failed to parse SVC list env\n");
+            return;
+        }
+    }
+    printf("SVC LIST = %s\n", svcl_str);
+
+    group = getenv ("DAOS_GROUP");
+    if (group != NULL)
+        printf("GROUP = %s\n", group);
+
+    if (comm_world_rank == 0) {
+        rc = daos_pool_connect(pool_uuid, group, svcl, DAOS_PC_RW, &daos_pool_oh,
+                               &pool_info, NULL);
+        if (rc < 0)
+            printf("Failed to connect to pool (%d)\n", rc);
+    }
+
+    if (comm_world_size > 1) {
+        MPI_Bcast(&pool_info, sizeof(pool_info), MPI_CHAR, 0, MPI_COMM_WORLD);
+        handle_share(&daos_pool_oh, HANDLE_POOL, comm_world_rank, daos_pool_oh,
+                     MPI_COMM_WORLD);
+    }
+#endif /* ROMIO_DAOS */
 
 #ifdef ADIOI_MPE_LOGGING
     {
@@ -90,9 +208,6 @@ void ADIO_Init(int *argc, char ***argv, int *error_code)
 	MPE_Log_get_state_eventIDs( &ADIOI_MPE_stat_a, &ADIOI_MPE_stat_b);
 	MPE_Log_get_state_eventIDs( &ADIOI_MPE_iread_a, &ADIOI_MPE_iread_b);
 	MPE_Log_get_state_eventIDs( &ADIOI_MPE_iwrite_a, &ADIOI_MPE_iwrite_b);
-
-        int  comm_world_rank;
-        MPI_Comm_rank( MPI_COMM_WORLD, &comm_world_rank );
 
         if ( comm_world_rank == 0 ) {
             MPE_Describe_state( ADIOI_MPE_open_a, ADIOI_MPE_open_b,

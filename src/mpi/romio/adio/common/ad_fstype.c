@@ -551,6 +551,9 @@ static void ADIO_FileSysType_prefix(const char *filename, int *fstype, int *erro
     else if (!strncmp(filename, "gpfs:", 5) || !strncmp(filename, "GPFS:", 5)) {
 	*fstype = ADIO_GPFS;
     }
+    else if (!strncmp(filename, "daos:", 5) || !strncmp(filename, "DAOS:", 5)) {
+	*fstype = ADIO_DAOS;
+    }
     else {
 	*fstype = 0;
         /* --BEGIN ERROR HANDLING-- */
@@ -678,6 +681,16 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
 	}
     }
 
+    if (file_system == ADIO_DAOS) {
+#ifndef ROMIO_DAOS
+	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+					   myname, __LINE__, MPI_ERR_IO,
+					   "**iofstypeunsupported", 0);
+	return;
+#else
+	*ops = &ADIO_DAOS_operations;
+#endif
+    }
     /* verify that we support this file system type and set ops pointer */
     if (file_system == ADIO_UFS) {
 #ifndef ROMIO_UFS

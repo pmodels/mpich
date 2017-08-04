@@ -285,7 +285,8 @@ typedef struct {
 #define ADIO_PVFS2               160   /* PVFS2: 2nd generation PVFS */
 #define ADIO_PANFS               161   /* Panasas FS */
 #define ADIO_LUSTRE              163   /* Lustre */
-#define ADIO_GPFS                  168
+#define ADIO_GPFS                168
+#define ADIO_DAOS                169
 
 #define ADIO_SEEK_SET            SEEK_SET
 #define ADIO_SEEK_CUR            SEEK_CUR

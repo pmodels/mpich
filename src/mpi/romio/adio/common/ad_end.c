@@ -38,6 +38,10 @@ void ADIO_End(int *error_code)
 
     MPI_Op_free(&ADIO_same_amode);
 
+#ifdef ROMIO_DAOS
+    daos_fini();
+#endif
+
     *error_code = MPI_SUCCESS;
 }
 

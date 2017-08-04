@@ -185,7 +185,7 @@ dnl An m4 macro for use with m4_foreach_w and friends.  You should modify this
 dnl list if you want to add a known file system.  The list is just whitespace
 dnl separated, so you can use newlines and tabs as well.
 m4_define([known_filesystems_m4_w],
-          [nfs ufs pvfs2 testfs xfs panfs lustre gpfs])dnl
+          [daos nfs ufs pvfs2 testfs xfs panfs lustre gpfs])dnl
 dnl
 dnl An m4 macro for use with m4_foreach and friends.  Expands to a quoted list of
 dnl quoted elements.  A bit easier to use without unintended expansion than the
@@ -222,6 +222,7 @@ AC_ARG_WITH(file-system,[
 --with-file-system=name - Build with support for the named file systems],,)
 AC_ARG_WITH(pvfs2,[
 --with-pvfs2=path - Path to installation of PVFS (version 2)],,)
+AC_ARG_WITH(daos,[--with-daos=path - Path to installation of DAOS],,)
 AC_ARG_WITH(mpi-impl,[
 --with-mpi-impl=name - Specify MPI implementation to build ROMIO for],,)
 dnl
@@ -957,6 +958,17 @@ if test -n "$file_system_pvfs2"; then
        )
 fi
 
+#
+# Verify presence of daos_api.h
+#
+if test -n "$file_system_daos"; then
+    CPPFLAGS="$CPPFLAGS $CFLAGS"
+    AC_CHECK_HEADERS(daos_types.h,
+	AC_DEFINE(ROMIO_DAOS,1,[Define for ROMIO with DAOS])
+	AC_DEFINE(HAVE_DAOS_LIB, 1, [Define if DAOS available.]),
+        AC_MSG_ERROR([DAOS support requested but cannot find daos_types.h header file])
+    )
+fi
 
 AS_IF([test -n "$file_system_gpfs"],
     [SYSDEP_INC=-I${prefix}/include], [SYSDEP_INC=])

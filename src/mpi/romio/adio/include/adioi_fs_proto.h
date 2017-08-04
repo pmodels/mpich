@@ -9,6 +9,7 @@
 #ifndef ADIO_PROTO
 #define ADIO_PROTO
 
+#include <assert.h>
 #ifdef ROMIO_NFS
 extern struct ADIOI_Fns_struct ADIO_NFS_operations;
 /* prototypes are in adio/ad_nfs/ad_nfs.h */
@@ -47,6 +48,68 @@ extern struct ADIOI_Fns_struct ADIO_TESTFS_operations;
 #ifdef ROMIO_GPFS
 extern struct ADIOI_Fns_struct ADIO_GPFS_operations;
 /* prototypes are in adio/ad_gpfs/ad_gpfs.h */
+#endif
+
+#ifdef ROMIO_DAOS
+/* prototypes are in adio/ad_daos/ad_daos.h */
+extern struct ADIOI_Fns_struct ADIO_DAOS_operations;
+
+enum {
+	HANDLE_POOL,
+	HANDLE_CO
+};
+
+static inline void
+handle_share(daos_handle_t *hdl, int type, int rank, daos_handle_t poh,
+             MPI_Comm comm)
+{
+	daos_iov_t	ghdl = { NULL, 0, 0 };
+	int		rc;
+
+	if (rank == 0) {
+		/** fetch size of global handle */
+		if (type == HANDLE_POOL)
+			rc = daos_pool_local2global(*hdl, &ghdl);
+		else
+			rc = daos_cont_local2global(*hdl, &ghdl);
+		assert(rc == 0);
+	}
+
+	/** broadcast size of global handle to all peers */
+	rc = MPI_Bcast(&ghdl.iov_buf_len, 1, MPI_UINT64_T, 0, comm);
+	assert(rc == MPI_SUCCESS);
+
+	/** allocate buffer for global pool handle */
+	ghdl.iov_buf = malloc(ghdl.iov_buf_len);
+	ghdl.iov_len = ghdl.iov_buf_len;
+
+	if (rank == 0) {
+		/** generate actual global handle to share with peer tasks */
+		if (type == HANDLE_POOL)
+			rc = daos_pool_local2global(*hdl, &ghdl);
+		else
+			rc = daos_cont_local2global(*hdl, &ghdl);
+		assert(rc == 0);
+	}
+
+	/** broadcast global handle to all peers */
+	rc = MPI_Bcast(ghdl.iov_buf, ghdl.iov_len, MPI_BYTE, 0, comm);
+	assert(rc == MPI_SUCCESS);
+
+	if (rank != 0) {
+		/** unpack global handle */
+		if (type == HANDLE_POOL) {
+			/* NB: Only pool_global2local are different */
+			rc = daos_pool_global2local(ghdl, hdl);
+		} else {
+			rc = daos_cont_global2local(poh, ghdl, hdl);
+		}
+		assert(rc == 0);
+	}
+
+	free(ghdl.iov_buf);
+	MPI_Barrier(comm);
+}
 #endif
 
 #endif
