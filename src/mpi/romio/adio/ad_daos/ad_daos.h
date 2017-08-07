@@ -10,20 +10,6 @@
 
 #include "adio.h"
 
-/* MSC - Generalized requests extensions just to be able to compile.. can't
- * support async now since ompi doesn't have those extensions */
-typedef int MPIX_Grequest_class;
-typedef int (MPIX_Grequest_poll_function)(void *, MPI_Status *);
-typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
-int PMPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
-                                MPI_Grequest_free_function *free_fn,
-                                MPI_Grequest_cancel_function *cancel_fn,
-                                MPIX_Grequest_poll_function *poll_fn,
-                                MPIX_Grequest_wait_function *wait_fn,
-                                MPIX_Grequest_class *greq_class);
-int PMPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class, 
-                                  void *extra_state, MPI_Request *request);
-
 struct ADIO_DAOS_cont {
     /** container uuid */
     uuid_t		uuid;

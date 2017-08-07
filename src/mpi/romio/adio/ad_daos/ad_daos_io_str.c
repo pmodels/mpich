@@ -4,7 +4,7 @@
 
 #include "ad_daos.h"
 #include "adio_extern.h"
-//#include <assert.h>
+#include <assert.h>
 
 enum {
     DAOS_WRITE,
@@ -41,7 +41,6 @@ int ADIOI_DAOS_StridedListIO(ADIO_File fd, void *buf, int count,
     int num_etypes_in_filetype = -1, num_filetypes = -1;
     int etypes_in_filetype = -1, size_in_filetype = -1;
     int bytes_into_filetype = 0;
-    MPI_Offset total_bytes_accessed = 0;
     
     /* parameters for offset-length pairs arrays */
     int64_t buf_off_arr[MAX_OL_COUNT];
@@ -132,6 +131,7 @@ int ADIOI_DAOS_StridedListIO(ADIO_File fd, void *buf, int count,
     if (file_ptr_type == ADIO_INDIVIDUAL)
     {
 	int flag = 0;
+
 	/* Should have already been flattened in ADIO_Open*/
 	num_filetypes = -1;
 	while (!flag)
@@ -161,10 +161,11 @@ int ADIOI_DAOS_StridedListIO(ADIO_File fd, void *buf, int count,
 	    }
 	}
 	/* Impossible that we don't find it in this datatype */
-	//assert(i != flat_file_p->count);
+	assert(i != flat_file_p->count);
     }
     else
-    { 
+    {
+        printf("bytes_into_filetype = %d ftype size = %d\n", bytes_into_filetype, filetype_size);
 	num_filetypes = (int) (offset / num_etypes_in_filetype);
 	etypes_in_filetype = (int) (offset % num_etypes_in_filetype);
 	size_in_filetype = etypes_in_filetype * etype_size;
@@ -243,8 +244,8 @@ int ADIOI_DAOS_StridedListIO(ADIO_File fd, void *buf, int count,
 		       file_len_arr,
 		       &file_ol_count);
 
-	//assert(buf_ol_count <= MAX_OL_COUNT);
-	//assert(file_ol_count <= MAX_OL_COUNT);
+	assert(buf_ol_count <= MAX_OL_COUNT);
+	assert(file_ol_count <= MAX_OL_COUNT);
 #ifdef DEBUG_LIST2
 	print_buf_file_ol_pairs(buf_off_arr,
 				buf_len_arr,
@@ -255,20 +256,7 @@ int ADIOI_DAOS_StridedListIO(ADIO_File fd, void *buf, int count,
 				buf,
 				rw_type);
 #endif
-#ifdef DEBUG_LIST2
-	do {
-	    int y, z;
-	    fprintf(stderr, "ad_daos_io_list.c::\n");
-	    for (y = 0; y < buf_ol_count; y++)
-	    {
-		for (z = 0; z < buf_len_arr[y]; z++)
-		{
-		    fprintf(stderr, "buf[%d][%d]=%c\n",
-			    y, z, ((char *) buf + buf_off_arr[y])[z]);
-		}
-	    }
-	} while (0);
-#endif
+
         /* Create DAOS SGL */
         daos_sg_list_t sgl;
         daos_iov_t iovs[MAX_OL_COUNT];
@@ -285,7 +273,7 @@ int ADIOI_DAOS_StridedListIO(ADIO_File fd, void *buf, int count,
         for (i = 0; i < file_ol_count; i++) {
             rg[i].rg_len = file_len_arr[i];
             rg[i].rg_idx = file_off_arr[i];
-            printf("%d: off %llu len %zu\n", i, file_off_arr[i], file_len_arr[i]);
+            printf("%d: off %lld len %zu\n", i, file_off_arr[i], file_len_arr[i]);
         }
         ranges.arr_rgs = rg;
 
@@ -327,7 +315,7 @@ int ADIOI_DAOS_StridedListIO(ADIO_File fd, void *buf, int count,
 error_state:
 #ifdef HAVE_STATUS_SET_BYTES
     /* TODO: why the cast? */
-    MPIR_Status_set_bytes(status, datatype, total_bytes_accessed);
+    MPIR_Status_set_bytes(status, datatype, io_size);
 /* This is a temporary way of filling in status. The right way is to
    keep track of how much data was actually written by ADIOI_BUFFERED_WRITE. */
 #endif
