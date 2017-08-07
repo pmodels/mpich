@@ -546,7 +546,7 @@ fn_fail:
 void MPIDI_PG_IdToNum( MPIDI_PG_t *pg, int *id )
 {
     const char *p = (const char *)pg->id;
-    int pgid = 0;
+    unsigned int pgid = 0;
 
     while (*p) {
         pgid += *p++;
