@@ -52,7 +52,7 @@ static inline int MPIDI_POSIX_do_irecv(void *buf,
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     MPIDI_POSIX_ENVELOPE_SET(MPIDI_POSIX_REQUEST(rreq), rank, tag,
-                             comm->context_id + context_offset);
+                             comm->recvcontext_id + context_offset);
     rreq->comm = comm;
     MPIR_Comm_add_ref(comm);
     MPIDI_POSIX_REQUEST(rreq)->user_buf = (char *) buf + dt_true_lb;
@@ -82,7 +82,7 @@ static inline int MPIDI_POSIX_do_irecv(void *buf,
                     (MPL_DBG_FDEST,
                      "Enqueued from grank %d to %d (comm_kind %d) in recv %d,%d,%d\n",
                      MPIDI_CH4U_rank_to_lpid(rank, comm), MPIDI_POSIX_mem_region.rank,
-                     comm->comm_kind, rank, tag, comm->context_id + context_offset));
+                     comm->comm_kind, rank, tag, comm->recvcontext_id + context_offset));
     *request = rreq;
 
   fn_exit:
@@ -141,7 +141,7 @@ static inline int MPIDI_POSIX_mpi_recv_init(void *buf,
     rreq->comm = comm;
     MPIR_Comm_add_ref(comm);
     MPIDI_POSIX_ENVELOPE_SET(MPIDI_POSIX_REQUEST(rreq), rank, tag,
-                             comm->context_id + context_offset);
+                             comm->recvcontext_id + context_offset);
     MPIDI_POSIX_REQUEST(rreq)->user_buf = (char *) buf;
     MPIDI_POSIX_REQUEST(rreq)->user_count = count;
     MPIDI_POSIX_REQUEST(rreq)->datatype = datatype;

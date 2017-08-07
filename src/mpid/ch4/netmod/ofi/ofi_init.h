@@ -726,17 +726,17 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         /* directly references the mapped fi_addr_t array instead               */
         mapped_table = (fi_addr_t *) av_attr.map_addr;
         for (i = 0; i < size; i++) {
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+            MPIDI_OFI_AV(MPIDIU_get_av(0, i)).dest = mapped_table[i];
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+            MPIDI_OFI_AV(MPIDIU_get_av(0, i)).ep_idx = 0;
 #else
 #if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+            MPIDI_OFI_AV(MPIDIU_get_av(0, i)).ep_idx = 0;
 #endif
 #endif
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                             (MPL_DBG_FDEST, " grank mapped to: rank=%d, av=%p, dest=%lu",
-                             i, (void*)&MPIDIU_get_av(0, i), mapped_table[i]));
+                             i, (void*)MPIDIU_get_av(0, i), mapped_table[i]));
         }
         mapped_table = NULL;
     }
@@ -838,8 +838,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Commit(MPIDI_Global.kvsname), pmi);
 #endif
 
+        MPIDI_av_entry_t *av = NULL;
         for (i = 0; i < size; i++) {
-            if (MPIDI_CH4_rank_is_local(i, MPIR_Process.comm_world)) {
+            av = MPIDIU_comm_rank_to_av(MPIR_Process.comm_world, i);
+            if (MPIDI_CH4_av_is_local(av)) {
                 if (i == rank)
                     local_rank = num_local;
 
@@ -850,6 +852,17 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             }
         }
         if (0 == num_local) MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|ch4_init");
+
+        /* initial the hash mapping for the alt AVT */
+        MPIDIU_alloc_alt_avt(num_local);
+        int grank, lrank;
+        for (grank = 0; grank < size; grank++) {
+            av = MPIDIU_comm_rank_to_av(MPIR_Process.comm_world, grank);
+            if (MPIDI_CH4_av_is_local(av)) {
+                MPIDIU_alt_avt_set(grank, &MPIDI_alt_avt->table[lrank]);
+                lrank++;
+            }
+        }
 
         MPIDU_shm_seg_alloc(size * MPIDI_Global.addrnamelen, (void **)&table);
         MPIDU_shm_seg_commit(&memory, &barrier, num_local, local_rank, local_rank_0, rank);
@@ -888,12 +901,12 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, table, size, mapped_table, 0ULL, NULL), avmap);
 
         for (i = 0; i < size; i++) {
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+            MPIDI_OFI_AV(MPIDIU_get_av(0, i)).dest = mapped_table[i];
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+            MPIDI_OFI_AV(MPIDIU_get_av(0, i)).ep_idx = 0;
 #else
 #if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+            MPIDI_OFI_AV(MPIDIU_get_av(0, i)).ep_idx = 0;
 #endif
 #endif
         }
@@ -1026,6 +1039,8 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     MPIDI_Global.max_buffered_send = 0;
     MPIDI_OFI_MPI_CALL_POP(MPIR_Allreduce_impl(&barrier[0], &barrier[1], 1, MPI_INT,
                                                MPI_SUM, MPIR_Process.comm_world, &errflag));
+
+    MPIDIU_destroy_alt_avt();
 
     /* Progress until we drain all inflight injection emulation requests */
     while (OPA_load_int(&MPIDI_Global.am_inflight_inject_emus) > 0)
@@ -1231,18 +1246,18 @@ static inline int MPIDI_NM_upids_to_lupids(int size,
             MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, new_upids[i],
                                         1,
                                         (fi_addr_t *) &
-                                        MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
+                                        MPIDI_OFI_AV(MPIDIU_get_av(avtid, i)).dest, 0ULL,
                                         NULL), avmap);
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
-            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).ep_idx = 0;
+            MPIDI_OFI_AV(MPIDIU_get_av(avtid, i)).ep_idx = 0;
 #else
 #if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
-            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).ep_idx = 0;
+            MPIDI_OFI_AV(MPIDIU_get_av(avtid, i)).ep_idx = 0;
 #endif
 #endif
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP,VERBOSE,
                             (MPL_DBG_FDEST, "\tupids to lupids avtid %d lpid %d mapped to %lu",
-                             avtid, i, MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest));
+                             avtid, i, MPIDI_OFI_AV(MPIDIU_get_av(avtid, i)).dest));
             /* highest bit is marked as 1 to indicate this is a new process */
             (*remote_lupids)[new_avt_procs[i]] = MPIDIU_LUPID_CREATE(avtid, i);
             MPIDIU_LUPID_SET_NEW_AVT_MARK((*remote_lupids)[i]);

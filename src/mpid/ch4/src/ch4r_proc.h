@@ -216,11 +216,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rank_is_local(int rank, MPIR_Comm * comm
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_RANK_IS_LOCAL);
 
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        ret = 0;
-    } else {
-        ret = MPIDIU_comm_rank_to_av(comm, rank)->is_local;
-    }
+    ret = MPIDIU_comm_rank_to_av(comm, rank)->is_local;
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " is_local=%d, rank=%d", ret, rank));
 #endif
@@ -229,6 +225,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rank_is_local(int rank, MPIR_Comm * comm
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_av_is_local(MPIDI_av_entry_t *av)
+{
+    int ret = 0;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_AV_IS_LOCAL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_AV_IS_LOCAL);
+
+#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
+    ret = av->is_local;
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
+                    (MPL_DBG_FDEST, " is_local=%d, av=%p", ret, (void*)av));
+#endif
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_AV_IS_LOCAL);
+    return ret;
+}
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rank_to_lpid(int rank, MPIR_Comm * comm)
 {
@@ -565,6 +576,98 @@ static inline int MPIDIU_build_nodemap_avtid(int myrank, MPIR_Comm * comm, int s
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_BUILD_NODEMAP_AVTID);
     return ret;
+}
+
+static inline int MPIDIU_alloc_alt_avt(int size)
+{
+    int ret = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_ALLOC_ALT_AVT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_ALLOC_ALT_AVT);
+
+    MPIR_Assert(size > 0);
+    MPIDI_alt_avt = (MPIDI_av_table_t*) MPL_malloc(sizeof(MPIDI_av_table_t)
+                                                   + size * sizeof(MPIDI_av_entry_t));
+    MPIDI_alt_avt->size = size;
+    MPIDI_alt_avt_map = (MPIDI_av_hashtable_t*) MPL_malloc(sizeof(MPIDI_av_hashtable_t));
+
+    MPIDI_alt_avt_map->head = NULL;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_ALLOC_ALT_AVT);
+    return ret;
+}
+
+static inline int MPIDIU_destroy_alt_avt()
+{
+    int ret = MPI_SUCCESS;
+    MPIDI_av_hashentry_t *curr, *tmp;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_DESTROY_ALT_AVT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_DESTROY_ALT_AVT);
+
+    MPL_HASH_ITER(hh, MPIDI_alt_avt_map->head, curr, tmp) {
+        MPL_HASH_DEL(MPIDI_alt_avt_map->head,  curr);
+        MPL_free(curr);
+    }
+
+    MPL_HASH_CLEAR(hh, MPIDI_alt_avt_map->head);
+    MPL_free(MPIDI_alt_avt_map);
+    MPIDI_alt_avt_map = NULL;
+    MPL_free(MPIDI_alt_avt);
+    MPIDI_alt_avt = NULL;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_DESTROY_ALT_AVT);
+    return ret;
+}
+
+static inline int MPIDIU_alt_avt_set(int key, MPIDI_av_entry_t *value)
+{
+    int ret = MPI_SUCCESS;
+    MPIDI_av_hashentry_t *entry;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_ALT_AVT_SET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_ALT_AVT_SET);
+
+    entry = (MPIDI_av_hashentry_t*) MPL_malloc(sizeof(MPIDI_av_hashentry_t));
+    MPIR_Assert(entry != NULL);
+    entry->key = key;
+    entry->value = value;
+    MPL_HASH_ADD_INT(MPIDI_alt_avt_map->head, key, entry);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_ALT_AVT_SET);
+    return ret;
+}
+
+static inline MPIDI_av_entry_t* MPIDIU_alt_avt_get(int key)
+{
+    MPIDI_av_entry_t *ret = NULL;
+    MPIDI_av_hashentry_t *entry;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_ALT_AVT_GET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_ALT_AVT_GET);
+
+    MPL_HASH_FIND_INT(MPIDI_alt_avt_map->head, &key, entry);
+    if (entry != NULL)
+        ret = entry->value;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_ALT_AVT_GET);
+    return ret;
+}
+
+static inline MPIDI_av_entry_t* MPIDIU_get_av(int avtid, int lpid)
+{
+    MPIDI_av_entry_t *av = NULL;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_GET_AV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_GET_AV);
+
+    av = &MPIDI_av_table[avtid]->table[lpid];
+    if (MPIDI_CH4_av_is_local(av)) {
+        av = MPIDIU_alt_avt_get(lpid);
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_GET_AV);
+    return av;
 }
 
 #endif /* CH4R_PROC_H_INCLUDED */

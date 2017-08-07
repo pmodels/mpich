@@ -27,6 +27,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
                                         MPIR_Request ** request)
 {
     int mpi_errno;
+    MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV);
 
@@ -41,6 +42,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
         goto fn_exit;
     }
 
+    av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno =
         MPIDI_NM_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, NULL, status, request);
@@ -78,7 +80,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
     }
     else {
         int r;
-        if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
+        if ((r = MPIDI_CH4_av_is_local(av)))
             mpi_errno =
                 MPIDI_SHM_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status,
                                    request);
@@ -116,9 +118,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
                                              MPIR_Request ** request)
 {
     int mpi_errno;
+    MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RECV_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV_INIT);
 
+    av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno =
         MPIDI_NM_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, NULL, request);
@@ -146,7 +150,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
     }
     else {
         int r;
-        if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
+        if ((r = MPIDI_CH4_av_is_local(av)))
             mpi_errno = MPIDI_SHM_mpi_recv_init(buf, count, datatype, rank, tag,
                                                 comm, context_offset, request);
         else
@@ -268,6 +272,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
                                          MPIR_Request ** request)
 {
     int mpi_errno;
+    MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IRECV);
 
@@ -282,6 +287,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
         goto fn_exit;
     }
 
+    av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, NULL, request);
 #else
@@ -309,7 +315,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
     }
     else {
         int r;
-        if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
+        if ((r = MPIDI_CH4_av_is_local(av)))
             mpi_errno =
                 MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
         else

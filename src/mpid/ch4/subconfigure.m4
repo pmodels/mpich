@@ -320,6 +320,12 @@ MPIDI_${shm_upper}_request_t ${shm};"
 MPIDI_${shm_upper}_comm_t ${shm};"
     fi
 
+    if test -z "$ch4_shm_addr_decl" ; then
+        ch4_shm_addr_decl="MPIDI_${shm_upper}_addr_t ${shm};"
+    else
+        ch4_shm_addr_decl="${ch4_shm_addr_decl} \\
+MPIDI_${shm_upper}_addr_t ${shm};"
+    fi
 
     shm_index=`expr $shm_index + 1`
 done
@@ -336,9 +342,11 @@ AC_SUBST(ch4_shm_strings)
 AC_SUBST(ch4_shm_pre_include)
 AC_SUBST(ch4_shm_request_decl)
 AC_SUBST(ch4_shm_comm_decl)
+AC_SUBST(ch4_shm_addr_decl)
 AM_SUBST_NOTMAKE(ch4_shm_pre_include)
 AM_SUBST_NOTMAKE(ch4_shm_request_decl)
 AM_SUBST_NOTMAKE(ch4_shm_comm_decl)
+AM_SUBST_NOTMAKE(ch4_shm_addr_decl)
 
 if test "$ch4_shm_array_sz" = "1"  && test "$enable_ch4_shm_direct" = "yes" ;  then
    PAC_APPEND_FLAG([-DSHM_DIRECT=__shm_direct_${ch4_shm}__], [CPPFLAGS])

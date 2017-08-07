@@ -169,6 +169,9 @@ extern MPIDI_POSIX_request_queue_t MPIDI_POSIX_sendq;
 extern MPIDI_POSIX_request_queue_t MPIDI_POSIX_recvq_unexpected;
 extern MPIDI_POSIX_request_queue_t MPIDI_POSIX_recvq_posted;
 
-
+#define MPIDI_POSIX_AV(av) ((av)->addr.shm.posix)
+#define MPIDI_POSIX_COMM_RANK_TO_GRANK(comm,rank) \
+    MPIDI_POSIX_AV(MPIDIU_comm_rank_to_av((comm), (rank))).grank
+#define MPIDI_POSIX_AV_TO_GRANK(av) MPIDI_POSIX_AV((av)).grank
 
 #endif /* POSIX_IMPL_H_INCLUDED */
