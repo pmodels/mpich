@@ -59,6 +59,7 @@
 #define MPIR_ERR_NO_TESTFS 36
 #define MPIR_ERR_NO_LUSTRE 37
 #define MPIR_ERR_NO_GPFS 38
+#define MPIR_ERR_NO_IM 39
 
 /* MPI_ERR_COMM */
 #ifndef MPIR_ERR_COMM_NULL
