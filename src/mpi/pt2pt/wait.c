@@ -186,7 +186,7 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
     /* save copy of comm because request will be freed */
     if (request_ptr)
         comm_ptr = request_ptr->comm;
-    mpi_errno = MPIR_Wait_impl(request, status);
+    mpi_errno = MPID_Wait(request, status);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */
