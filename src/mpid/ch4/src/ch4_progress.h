@@ -239,5 +239,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_deactivate(int id)
 #define MPID_Testall MPIR_Testall_impl
 #define MPID_Testany MPIR_Testany_impl
 #define MPID_Testsome MPIR_Testsome_impl
+#define MPID_Wait MPIR_Wait_impl
+#define MPID_Waitall MPIR_Waitall_impl
+#define MPID_Waitany MPIR_Waitany_impl
+#define MPID_Waitsome MPIR_Waitsome_impl
 
 #endif /* CH4_PROGRESS_H_INCLUDED */

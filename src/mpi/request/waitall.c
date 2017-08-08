@@ -375,7 +375,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
     }
 
     /* Make progress and wait for completion */
-    mpi_errno = MPIR_Waitall_impl(count, request_ptrs, array_of_statuses);
+    mpi_errno = MPID_Waitall(count, request_ptrs, array_of_statuses);
     switch (mpi_errno) {
         case MPI_SUCCESS:
             break;
