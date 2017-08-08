@@ -251,7 +251,7 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
         goto fn_exit;
     }
 
-    mpi_errno = MPIR_Waitsome_impl(incount, request_ptrs, outcount, array_of_indices, array_of_statuses);
+    mpi_errno = MPID_Waitsome(incount, request_ptrs, outcount, array_of_indices, array_of_statuses);
     if (mpi_errno != MPI_SUCCESS)
     {
 	/* --BEGIN ERROR HANDLING-- */

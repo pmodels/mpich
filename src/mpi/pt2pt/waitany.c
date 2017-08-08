@@ -214,7 +214,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx,
     }
 
     for (;;) {
-        mpi_errno = MPIR_Waitany_impl(count - off, request_ptrs + off, indx, status);
+        mpi_errno = MPID_Waitany(count - off, request_ptrs + off, indx, status);
         if (mpi_errno)
             goto fn_fail;
 
