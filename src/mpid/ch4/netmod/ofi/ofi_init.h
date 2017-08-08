@@ -778,9 +778,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     MPIDI_Global.max_ch4_vnis = 1;
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        MPIDI_Global.max_ch4_vnis = prov_use->domain_attr->tx_ctx_cnt;
-        if (MPIR_CVAR_CH4_OFI_MAX_VNIS > 0 && MPIDI_Global.max_ch4_vnis > MPIR_CVAR_CH4_OFI_MAX_VNIS)
-            MPIDI_Global.max_ch4_vnis = MPIR_CVAR_CH4_OFI_MAX_VNIS;
+        int max_by_prov = MPL_MIN(prov_use->domain_attr->tx_ctx_cnt,
+                                  prov_use->domain_attr->rx_ctx_cnt);
+        if (MPIR_CVAR_CH4_OFI_MAX_VNIS > 0)
+            MPIDI_Global.max_ch4_vnis = MPL_MIN(MPIR_CVAR_CH4_OFI_MAX_VNIS, max_by_prov);
         if (MPIDI_Global.max_ch4_vnis < 1) {
             MPIR_ERR_SETFATALANDJUMP4(mpi_errno,
                                       MPI_ERR_OTHER,
