@@ -180,6 +180,10 @@ static inline int MPID_Progress_test(void)
 /*
  * Device level MPI wait/test functions
  */
+#define MPID_Wait MPIR_Wait_impl
+#define MPID_Waitall MPIR_Waitall_imp
+#define MPID_Waitany MPIR_Waitany_impl
+#define MPID_Waitsome MPIR_Waitsome_impl
 #define MPID_Test MPIR_Test_impl
 #define MPID_Testall MPIR_Testall_impl
 #define MPID_Testany MPIR_Testany_impl
