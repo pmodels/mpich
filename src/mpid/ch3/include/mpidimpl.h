@@ -254,7 +254,7 @@ extern MPIDI_Process_t MPIDI_Process;
 
 #  define MPIDI_Request_tls_alloc(req_) \
     do { \
-	(req_) = MPIR_Handle_obj_alloc(&MPIR_Request_mem); \
+	(req_) = MPIR_Handle_obj_alloc(MPIR_Request_mem_ptr()); \
         MPL_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL,VERBOSE,		\
 	       "allocated request, handle=0x%08x", req_);\
     } while (0)
