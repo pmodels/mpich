@@ -1322,7 +1322,6 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
 
         rx_attr = *prov_use->rx_attr;
         rx_attr.caps = 0;
-        rx_attr.op_flags = FI_MULTI_RECV;
 
         if (MPIDI_OFI_ENABLE_TAGGED)
             rx_attr.caps |= FI_TAGGED | FI_RECV;
