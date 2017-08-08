@@ -174,6 +174,11 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPIR_Comm * comm_ptr,
 #define MPID_Progress_test()                 MPIDI_CH3_Progress_test()
 #define MPID_Progress_poke()		     MPIDI_CH3_Progress_poke()
 
+/*
+ * Device level MPI wait/test functions
+ */
+#define MPID_Wait MPIR_Wait_impl
+
 /* Dynamic process support */
 int MPIDI_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
                              MPIDI_Gpid local_gpids[], int *singlePG );
