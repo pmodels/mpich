@@ -439,7 +439,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * req
                                            MPIDI_OFI_REQUEST(preq,util.persist.tag),
                                            preq->comm,
                                            MPIDI_OFI_REQUEST(preq,util_id) - preq->comm->recvcontext_id,
-                                           NULL,
+                                           MPIDIU_comm_rank_to_av(preq->comm,
+                                                                  MPIDI_OFI_REQUEST(preq,util.persist.rank)),
                                            &preq->u.persist.real_request);
             break;
 #else
@@ -464,7 +465,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * req
                                            MPIDI_OFI_REQUEST(preq,util.persist.tag),
                                            preq->comm,
                                            MPIDI_OFI_REQUEST(preq,util_id) - preq->comm->context_id,
-                                           NULL,
+                                           MPIDIU_comm_rank_to_av(preq->comm,
+                                                                  MPIDI_OFI_REQUEST(preq,util.persist.rank)),
                                            &preq->u.persist.real_request);
             break;
 #else
