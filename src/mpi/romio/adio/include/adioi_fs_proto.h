@@ -49,4 +49,9 @@ extern struct ADIOI_Fns_struct ADIO_GPFS_operations;
 /* prototypes are in adio/ad_gpfs/ad_gpfs.h */
 #endif
 
+#ifdef ROMIO_IME
+/* prototypes are in adio/ad_im/ad_im.h */
+extern struct ADIOI_Fns_struct ADIO_IME_operations;
+#endif
+
 #endif
