@@ -53,7 +53,7 @@ int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status)
         if (unlikely(MPIR_CVAR_ENABLE_FT &&
                     MPID_Request_is_anysource(request_ptr) &&
                     !MPID_Comm_AS_enabled(request_ptr->comm))) {
-            mpi_errno = MPIR_Test_impl(request, &active_flag, status);
+            mpi_errno = MPID_Test(request_ptr, &active_flag, status);
             goto fn_exit;
         }
 

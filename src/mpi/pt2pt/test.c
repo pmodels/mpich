@@ -29,22 +29,12 @@ int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status) __attribute__(
 #define FUNCNAME MPIR_Test_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status)
+int MPIR_Test_impl(MPIR_Request *request_ptr, int *flag, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
     int active_flag;
-    MPIR_Request *request_ptr = NULL;
 
-    /* If this is a null request handle, then return an empty status */
-    if (*request == MPI_REQUEST_NULL) {
-	MPIR_Status_set_empty(status);
-	*flag = TRUE;
-	goto fn_exit;
-    }
-    
     *flag = FALSE;
-
-    MPIR_Request_get_ptr( *request, request_ptr );
 
     /* If the request is already completed AND we want to avoid calling
      the progress engine, we could make the call to MPID_Progress_test
@@ -61,11 +51,7 @@ int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status)
     }
 
     if (MPIR_Request_is_complete(request_ptr)) {
-	mpi_errno = MPIR_Request_complete(request, request_ptr, status,
-					  &active_flag);
 	*flag = TRUE;
-	if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* Fall through to the exit */
     } else if (unlikely(
                 MPIR_CVAR_ENABLE_FT &&
                 MPID_Request_is_anysource(request_ptr) &&
@@ -154,11 +140,23 @@ int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status)
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
+    /* If this is a null request handle, then return an empty status */
+    if (*request == MPI_REQUEST_NULL) {
+	MPIR_Status_set_empty(status);
+	*flag = TRUE;
+	goto fn_exit;
+    }
+    
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Test_impl(request, flag, status);
+    mpi_errno = MPID_Test(request_ptr, flag, status);
     if (mpi_errno) goto fn_fail;
     
+    if (MPIR_Request_is_complete(request_ptr)) {
+	mpi_errno = MPIR_Request_complete(request, request_ptr, status,
+					  flag);
+	if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    }
     /* ... end of body of routine ... */
     
   fn_exit:

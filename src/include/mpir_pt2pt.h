@@ -10,8 +10,8 @@
 
 int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                      MPIR_Comm *comm_ptr, MPI_Request *request);
-int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status);
-int MPIR_Testall_impl(int count, MPI_Request array_of_requests[], int *flag,
+int MPIR_Test_impl(MPIR_Request *request_ptr, int *flag, MPI_Status *status);
+int MPIR_Testall_impl(int count, MPIR_Request *array_of_request_ptrs[], int *flag,
                       MPI_Status array_of_statuses[]);
 int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status);
 int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
