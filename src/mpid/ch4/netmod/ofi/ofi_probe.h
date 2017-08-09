@@ -40,7 +40,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
         remote_proc = MPIDI_OFI_comm_to_phys(comm, source);
 
     if (message)
-        MPIDI_OFI_REQUEST_CREATE(rreq, MPIR_REQUEST_KIND__MPROBE);
+        rreq = MPIR_Request_create(MPIR_REQUEST_KIND__MPROBE);
     else
         rreq = &r;
 
@@ -69,7 +69,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
         *flag = 0;
 
         if (message)
-            MPIR_Handle_obj_free(&MPIR_Request_mem, rreq);
+            MPIR_Request_free(rreq);
 
         goto fn_exit;
         break;
@@ -78,8 +78,10 @@ static inline int MPIDI_OFI_do_iprobe(int source,
         MPIR_Request_extract_status(rreq, status);
         *flag = 1;
 
-        if (message)
+        if (message) {
+            MPIR_Request_add_ref(rreq);
             *message = rreq;
+        }
 
         break;
 
