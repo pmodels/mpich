@@ -159,11 +159,16 @@ extern MPIR_Object_alloc_t MPIR_Request_mem;
 /* Preallocated request objects */
 extern MPIR_Request MPIR_Request_direct[];
 
+static inline MPIR_Object_alloc_t *MPIR_Request_mem_ptr()
+{
+    return &MPIR_Request_mem;
+}
+
 static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 {
     MPIR_Request *req;
 
-    req = MPIR_Handle_obj_alloc(&MPIR_Request_mem);
+    req = MPIR_Handle_obj_alloc(MPIR_Request_mem_ptr());
     if (req != NULL) {
 	MPL_DBG_MSG_P(MPIR_DBG_REQUEST,VERBOSE,
                       "allocated request, handle=0x%08x", req->handle);
@@ -271,7 +276,7 @@ static inline void MPIR_Request_free(MPIR_Request *req)
 
         MPID_Request_destroy_hook(req);
 
-        MPIR_Handle_obj_free(&MPIR_Request_mem, req);
+        MPIR_Handle_obj_free(MPIR_Request_mem_ptr(), req);
     }
 }
 

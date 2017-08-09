@@ -43,7 +43,7 @@
     } while (0)
 
 #define MPIDI_OFI_ssendack_request_t_tls_free(req) \
-  MPIR_Handle_obj_free(&MPIR_Request_mem, (req))
+  MPIR_Handle_obj_free(MPIR_Request_mem_ptr(), (req))
 
 #define MPIDI_OFI_ssendack_request_t_alloc_and_init(req)        \
     do {                                                                \
@@ -311,7 +311,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
         MPIDI_OFI_win_datatype_unmap(&req->noncontig->origin_dt);
         MPIDI_OFI_win_datatype_unmap(&req->noncontig->result_dt);
         MPL_free(req->noncontig);
-        MPIR_Handle_obj_free(&MPIR_Request_mem, (req));
+        MPIR_Handle_obj_free(MPIR_Request_mem_ptr(), (req));
     }
 }
 

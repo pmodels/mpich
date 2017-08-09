@@ -70,7 +70,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
         *flag = 0;
 
         if (message)
-            MPIR_Handle_obj_free(&MPIR_Request_mem, rreq);
+            MPIR_Handle_obj_free(MPIR_Request_mem_ptr(), rreq);
 
         goto fn_exit;
         break;
