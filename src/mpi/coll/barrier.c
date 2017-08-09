@@ -397,7 +397,7 @@ int MPI_Barrier( MPI_Comm comm )
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Barrier(comm_ptr, &errflag);
-    if (mpi_errno) goto fn_fail;
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     /* ... end of body of routine ... */
 
