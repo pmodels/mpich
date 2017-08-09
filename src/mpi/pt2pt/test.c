@@ -32,7 +32,6 @@ int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status) __attribute__(
 int MPIR_Test_impl(MPIR_Request *request_ptr, int *flag, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
-    int active_flag;
 
     *flag = FALSE;
 
@@ -98,6 +97,7 @@ Output Parameters:
 int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
+    int active_flag;
     MPIR_Request *request_ptr = NULL;
    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TEST);
 
@@ -154,7 +154,7 @@ int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status)
     
     if (MPIR_Request_is_complete(request_ptr)) {
 	mpi_errno = MPIR_Request_complete(request, request_ptr, status,
-					  flag);
+					  &active_flag);
 	if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     /* ... end of body of routine ... */
