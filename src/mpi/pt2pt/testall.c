@@ -35,11 +35,9 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 #define FUNCNAME MPIR_Testall_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Testall_impl(int count, MPI_Request array_of_requests[], int *flag,
+int MPIR_Testall_impl(int count, MPIR_Request *request_ptrs[], int *flag,
                       MPI_Status array_of_statuses[])
 {
-    MPIR_Request * request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
-    MPIR_Request ** request_ptrs = request_ptr_array;
     MPI_Status * status_ptr;
     int i;
     int n_completed;
@@ -47,39 +45,6 @@ int MPIR_Testall_impl(int count, MPI_Request array_of_requests[], int *flag,
     int rc;
     int proc_failure = FALSE;
     int mpi_errno = MPI_SUCCESS;
-    MPIR_CHKLMEM_DECL(1);
-
-    /* Convert MPI request handles to a request object pointers */
-    if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
-    {
-        MPIR_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPIR_Request **,
-                count * sizeof(MPIR_Request *), mpi_errno, "request pointers");
-    }
-
-    n_completed = 0;
-    for (i = 0; i < count; i++)
-    {
-        if (array_of_requests[i] != MPI_REQUEST_NULL)
-        {
-            MPIR_Request_get_ptr(array_of_requests[i], request_ptrs[i]);
-            /* Validate object pointers if error checking is enabled */
-#           ifdef HAVE_ERROR_CHECKING
-            {
-                MPID_BEGIN_ERROR_CHECKS;
-                {
-                    MPIR_Request_valid_ptr( request_ptrs[i], mpi_errno );
-                    if (mpi_errno) goto fn_fail;
-                }
-                MPID_END_ERROR_CHECKS;
-            }
-#           endif
-        }
-        else
-        {
-            request_ptrs[i] = NULL;
-            n_completed += 1;
-        }
-    }
 
     mpi_errno = MPID_Progress_test();
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
@@ -119,64 +84,9 @@ int MPIR_Testall_impl(int count, MPI_Request array_of_requests[], int *flag,
         }
     }
 
-    if (n_completed == count || mpi_errno == MPI_ERR_IN_STATUS)
-    {
-        n_completed = 0;
-        for (i = 0; i < count; i++)
-        {
-            if (request_ptrs[i] != NULL)
-            {
-                if (MPIR_Request_is_complete(request_ptrs[i]))
-                {
-                    n_completed ++;
-                    status_ptr = (array_of_statuses != MPI_STATUSES_IGNORE) ? &array_of_statuses[i] : MPI_STATUS_IGNORE;
-                    rc = MPIR_Request_complete(&array_of_requests[i], request_ptrs[i], status_ptr, &active_flag);
-                    if (mpi_errno == MPI_ERR_IN_STATUS && status_ptr != MPI_STATUS_IGNORE)
-                    {
-                        if (active_flag)
-                        {
-                            status_ptr->MPI_ERROR = rc;
-                        }
-                        else
-                        {
-                            status_ptr->MPI_ERROR = MPI_SUCCESS;
-                        }
-                    }
-                }
-                else
-                {
-                    if (mpi_errno == MPI_ERR_IN_STATUS && array_of_statuses != MPI_STATUSES_IGNORE)
-                    {
-                        if (!proc_failure)
-                            array_of_statuses[i].MPI_ERROR = MPI_ERR_PENDING;
-                        else
-                            array_of_statuses[i].MPI_ERROR = MPIX_ERR_PROC_FAILED_PENDING;
-                    }
-                }
-            }
-            else
-            {
-                n_completed ++;
-                if (array_of_statuses != MPI_STATUSES_IGNORE)
-                {
-                    MPIR_Status_set_empty(&array_of_statuses[i]);
-                    if (mpi_errno == MPI_ERR_IN_STATUS)
-                    {
-                        array_of_statuses[i].MPI_ERROR = MPI_SUCCESS;
-                    }
-                }
-            }
-        }
-    }
-
     *flag = (n_completed == count) ? TRUE : FALSE;
 
  fn_exit:
-    if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
-    {
-        MPIR_CHKLMEM_FREEALL();
-    }
-
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -233,6 +143,13 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 		MPI_Status array_of_statuses[])
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Request * request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
+    MPIR_Request ** request_ptrs = request_ptr_array;
+    MPI_Status * status_ptr;
+    int i;
+    int n_completed;
+    int active_flag;
+    int rc;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TESTALL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -265,13 +182,102 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
+    MPIR_CHKLMEM_DECL(1);
 
-    mpi_errno = MPIR_Testall_impl(count, array_of_requests, flag, array_of_statuses);
+    /* Convert MPI request handles to a request object pointers */
+    if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
+    {
+        MPIR_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPIR_Request **,
+                count * sizeof(MPIR_Request *), mpi_errno, "request pointers");
+    }
+
+    n_completed = 0;
+    for (i = 0; i < count; i++)
+    {
+        if (array_of_requests[i] != MPI_REQUEST_NULL)
+        {
+            MPIR_Request_get_ptr(array_of_requests[i], request_ptrs[i]);
+            /* Validate object pointers if error checking is enabled */
+#           ifdef HAVE_ERROR_CHECKING
+            {
+                MPID_BEGIN_ERROR_CHECKS;
+                {
+                    MPIR_Request_valid_ptr( request_ptrs[i], mpi_errno );
+                    if (mpi_errno) goto fn_fail;
+                }
+                MPID_END_ERROR_CHECKS;
+            }
+#           endif
+        }
+        else
+        {
+            request_ptrs[i] = NULL;
+            n_completed += 1;
+        }
+    }
+
+    mpi_errno = MPID_Testall(count, request_ptrs, flag, array_of_statuses);
+    if (*flag || mpi_errno == MPI_ERR_IN_STATUS)
+    {
+        n_completed = 0;
+        for (i = 0; i < count; i++)
+        {
+            if (request_ptrs[i] != NULL)
+            {
+                if (MPIR_Request_is_complete(request_ptrs[i]))
+                {
+                    n_completed ++;
+                    status_ptr = (array_of_statuses != MPI_STATUSES_IGNORE) ? &array_of_statuses[i] : MPI_STATUS_IGNORE;
+                    rc = MPIR_Request_complete(&array_of_requests[i], request_ptrs[i], status_ptr, &active_flag);
+                    if (mpi_errno == MPI_ERR_IN_STATUS && status_ptr != MPI_STATUS_IGNORE)
+                    {
+                        if (active_flag)
+                        {
+                            status_ptr->MPI_ERROR = rc;
+                        }
+                        else
+                        {
+                            status_ptr->MPI_ERROR = MPI_SUCCESS;
+                        }
+                    }
+                }
+                else
+                {
+                    if (mpi_errno == MPI_ERR_IN_STATUS && array_of_statuses != MPI_STATUSES_IGNORE)
+                    {
+                        if (mpi_errno != MPI_ERR_IN_STATUS)
+                            array_of_statuses[i].MPI_ERROR = MPI_ERR_PENDING;
+                        else
+                            array_of_statuses[i].MPI_ERROR = MPIX_ERR_PROC_FAILED_PENDING;
+                    }
+                }
+            }
+            else
+            {
+                n_completed ++;
+                if (array_of_statuses != MPI_STATUSES_IGNORE)
+                {
+                    MPIR_Status_set_empty(&array_of_statuses[i]);
+                    if (mpi_errno == MPI_ERR_IN_STATUS)
+                    {
+                        array_of_statuses[i].MPI_ERROR = MPI_SUCCESS;
+                    }
+                }
+            }
+        }
+    }
+
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+
+    *flag = (n_completed == count) ? TRUE : FALSE;
 
     /* ... end of body of routine ... */
     
   fn_exit:
+    if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
+    {
+        MPIR_CHKLMEM_FREEALL();
+    }
     
     MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_TESTALL);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
