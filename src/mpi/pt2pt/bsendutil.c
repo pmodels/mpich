@@ -180,9 +180,12 @@ int MPIR_Bsend_detach( void *bufferp, int *size )
 	MPII_Bsend_data_t *p = BsendBuffer.active;
 
 	while (p) {
-	    MPI_Request r = p->request->handle;
-	    mpi_errno = MPIR_Wait_impl( &r, MPI_STATUS_IGNORE );
-	    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPI_Request r = p->request->handle;
+            int active_flag;
+            mpi_errno = MPIR_Wait_impl( p->request, MPI_STATUS_IGNORE );
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+            MPIR_Request_complete(&r, p->request, MPI_STATUS_IGNORE, &active_flag);
 	    p = p->next;
 	}
     }
