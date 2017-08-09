@@ -214,3 +214,22 @@ if test "$program_suffix" != "NONE" ; then
     $2="$$2$program_suffix"
 fi
 ])
+
+dnl This is a modification of a similar function in the hwloc source that does
+dnl a quick check of whether a macro is defined or not
+dnl
+dnl PAC_IFDEF_IFELSE(symbol, action-if-defined, action-if-not-defined)
+AC_DEFUN([PAC_IFDEF_IFELSE], [
+    AC_COMPILE_IFELSE([
+#ifndef $1
+#error "symbol $1 not defined"
+choke me
+#endif], [$2], [$3])])
+
+dnl PAC_IF_IFELSE(symbol, action-if-defined, action-if-not-defined)
+AC_DEFUN([PAC_IF_IFELSE], [
+    AC_COMPILE_IFELSE([
+#if !( $1 )
+#error "symbol $1 not defined"
+choke me
+#endif], [$2], [$3])])

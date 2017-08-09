@@ -5,6 +5,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#ifdef MPIDI_ENABLE_INTERNAL_OPENMP
+#include <omp.h>
+#endif
+
 #ifndef VECCPY_H
 #define VECCPY_H
 
@@ -50,7 +54,98 @@
     } \
 }
 
-#define MPIDI_COPY_FROM_VEC_ALIGNED(src,dest,stride,type,nelms,count) \
+#ifdef MPIDI_ENABLE_INTERNAL_OPENMP
+#define MPIDI_COPY_FROM_VEC_ALIGNED(src,dest,stride,type,nelms,count) MPIDI_COPY_FROM_VEC_ALIGNED_OMP(src,dest,stride,type,nelms,count)
+#else
+#define MPIDI_COPY_FROM_VEC_ALIGNED(src,dest,stride,type,nelms,count) MPIDI_COPY_FROM_VEC_ALIGNED_SERIAL(src,dest,stride,type,nelms,count)
+#endif
+                                                                   \
+#define MPIDI_COPY_FROM_VEC_ALIGNED_OMP(src,dest,stride,type,nelms,count) \
+{                                                                   \
+    type * l_src = (type *) src, * l_dest = (type *) dest;          \
+    type * tmp_src = l_src;                                         \
+    int i, j_iter;                                                  \
+    register int k;                                                 \
+    register unsigned long _i, j, total_count = count*nelms;        \
+    const DLOOP_Offset l_stride = stride;                           \
+                                                                    \
+    DLOOP_Assert(stride <= INT_MAX);                                \
+    DLOOP_Assert(total_count <= INT_MAX);                           \
+    DLOOP_Assert(nelms <= INT_MAX);                                 \
+    char value[64];                                                 \
+    int flag;                                                       \
+                                                                    \
+    if(MPIR_Process.comm_world->info!=NULL)                         \
+        MPIR_Info_get_impl(MPIR_Process.comm_world->info, "Parallel_pack", 64, value, &flag);\
+                                                                    \
+    /*Check if the MPI_INFO key is set to "true" to enable parallel packing*/\
+    if (flag && !strcmp(value, "true")) {                           \
+        /*Check if packing is called from OpenMP parallel region or not*/\
+        if(!omp_in_parallel()) {                                    \
+            /*When call is not made from parallel region, it is safe to use omp parallel for*/\
+            _Pragma("omp parallel for private(j_iter)")             \
+            for(i=0; i<count; i++) {                                \
+                type *tmp_src = l_src + i*l_stride;                 \
+                type *tmp_dest = l_dest + i*nelms;                  \
+                for (j_iter=0; j_iter<nelms; j_iter++)              \
+                    tmp_dest[j_iter] = tmp_src[j_iter];             \
+            }                                                       \
+        }                                                           \
+        else {                                                      \
+            /*When call is made from parallel region, create OMP tasks*/\
+            int num_tasks = omp_get_max_threads();                  \
+            int task_id;                                            \
+            int tsk_brk_point = count-(count/num_tasks)*num_tasks;  \
+            int tsks_left = num_tasks-tsk_brk_point;                \
+            int count1 = tsk_brk_point * ((count/num_tasks)+1);     \
+            int count2 = count-count1;                              \
+            _Pragma("omp single nowait")                            \
+            {                                                       \
+                for (task_id=0; task_id<tsk_brk_point; task_id++) { \
+                    int begin = task_id*count1/tsk_brk_point;       \
+                    int end = (task_id+1)*count1/tsk_brk_point;     \
+                                                                    \
+                    _Pragma("omp task firstprivate(begin,end)")     \
+                    {                                               \
+                        int i, j_iter;                              \
+                        type * tmp_src;                             \
+                        type * tmp_dest;                            \
+                        for(i=begin; i<end; i++) {                  \
+                            tmp_src = l_src+i*l_stride;             \
+                            tmp_dest = l_dest + i*nelms;            \
+                            for (j_iter=0; j_iter<nelms; j_iter++)  \
+                                tmp_dest[j_iter] = tmp_src[j_iter]; \
+                        }                                           \
+                    }                                               \
+                }                                                   \
+                for (task_id=0; task_id<tsks_left; task_id++) {     \
+                    int begin = task_id*count2/tsks_left;           \
+                    int end = (task_id+1)*count2/tsks_left;         \
+                                                                    \
+                    _Pragma("omp task firstprivate(begin,end)")     \
+                    {                                               \
+                        int i, j_iter;                              \
+                        type * tmp_src;                             \
+                        type * tmp_dest;                            \
+                        for (i=begin; i<end; i++) {                 \
+                            tmp_src = l_src + (i+count1)*l_stride;  \
+                            tmp_dest = l_dest + (i+count1)*nelms;   \
+                            for (j_iter=0; j_iter<nelms; j_iter++)  \
+                                tmp_dest[j_iter] = tmp_src[j_iter]; \
+                        }                                           \
+                    }                                               \
+                }                                                   \
+            }                                                       \
+            _Pragma("omp taskwait")                                 \
+        }                                                           \
+    }                                                               \
+    else{                                                           \
+    /*Falls back to original code if MPI_INFO key is not set*/      \
+    MPIDI_COPY_FROM_VEC_ALIGNED_SERIAL(src,dest,stride,type,nelms,count)\
+    }                                                               \
+}
+
+#define MPIDI_COPY_FROM_VEC_ALIGNED_SERIAL(src,dest,stride,type,nelms,count) \
 {								\
     type * l_src = (type *) src, * l_dest = (type *) dest;	\
     type * tmp_src = l_src;                                     \
