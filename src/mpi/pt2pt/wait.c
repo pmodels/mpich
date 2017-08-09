@@ -28,20 +28,10 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status) __attribute__((weak,alias
 #define FUNCNAME MPIR_Wait_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status)
+int MPIR_Wait_impl(MPIR_Request *request_ptr, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
     int active_flag;
-    MPIR_Request *request_ptr = NULL;
-
-    /* If this is a null request handle, then return an empty status */
-    if (*request == MPI_REQUEST_NULL)
-    {
-	MPIR_Status_set_empty(status);
-	goto fn_exit;
-    }
-
-    MPIR_Request_get_ptr(*request, request_ptr);
 
     if (!MPIR_Request_is_complete(request_ptr))
     {
@@ -95,9 +85,6 @@ int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status)
 	}
 	MPID_Progress_end(&progress_state);
     }
-
-    mpi_errno = MPIR_Request_complete(request, request_ptr, status, &active_flag);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
  fn_exit:
     return mpi_errno;
@@ -138,6 +125,7 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
     MPIR_Request * request_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm * comm_ptr = NULL;
+    int active_flag;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WAIT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -186,8 +174,10 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
     /* save copy of comm because request will be freed */
     if (request_ptr)
         comm_ptr = request_ptr->comm;
-    mpi_errno = MPID_Wait(request, status);
+    mpi_errno = MPID_Wait(request_ptr, status);
     if (mpi_errno) goto fn_fail;
+    mpi_errno = MPIR_Request_complete(request, request_ptr, status, &active_flag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
     

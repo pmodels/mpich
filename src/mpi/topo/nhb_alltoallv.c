@@ -37,11 +37,17 @@ int MPIR_Neighbor_alltoallv_default(const void *sendbuf, const int sendcounts[],
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Request req;
+    MPIR_Request *req_ptr;
+    int active_flag;
 
     /* just call the nonblocking version and wait on it */
     mpi_errno = MPID_Ineighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, &req);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Wait_impl(&req, MPI_STATUS_IGNORE);
+    MPIR_Assert(req != MPI_REQUEST_NULL);
+    MPIR_Request_get_ptr(req, req_ptr);
+    mpi_errno = MPIR_Wait_impl(req_ptr, MPI_STATUS_IGNORE);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Request_complete(&req, req_ptr, MPI_STATUS_IGNORE, &active_flag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
