@@ -38,12 +38,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 int MPIR_Testall_impl(int count, MPIR_Request *request_ptrs[], int *flag,
                       MPI_Status array_of_statuses[])
 {
-    MPI_Status * status_ptr;
     int i;
-    int n_completed;
-    int active_flag;
-    int rc;
-    int proc_failure = FALSE;
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPID_Progress_test();
@@ -59,32 +54,7 @@ int MPIR_Testall_impl(int count, MPIR_Request *request_ptrs[], int *flag,
                     &(array_of_statuses[i]));
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
-        if (request_ptrs[i] != NULL)
-        {
-            if (MPIR_Request_is_complete(request_ptrs[i]))
-            {
-                n_completed++;
-                rc = MPIR_Request_get_error(request_ptrs[i]);
-                if (rc != MPI_SUCCESS)
-                {
-                    if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(rc) || MPIX_ERR_PROC_FAILED_PENDING == MPIR_ERR_GET_CLASS(rc))
-                        proc_failure = TRUE;
-                    mpi_errno = MPI_ERR_IN_STATUS;
-                }
-            } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                        MPID_Request_is_anysource(request_ptrs[i]) &&
-                        !MPID_Comm_AS_enabled(request_ptrs[i]->comm)))
-            {
-                mpi_errno = MPI_ERR_IN_STATUS;
-                MPIR_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
-                status_ptr = (array_of_statuses != MPI_STATUSES_IGNORE) ? &array_of_statuses[i] : MPI_STATUS_IGNORE;
-                if (status_ptr != MPI_STATUS_IGNORE) status_ptr->MPI_ERROR = rc;
-                proc_failure = TRUE;
-            }
-        }
     }
-
-    *flag = (n_completed == count) ? TRUE : FALSE;
 
  fn_exit:
     return mpi_errno;
@@ -142,7 +112,6 @@ program to unexecpectedly terminate or produce incorrect results.
 int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag, 
 		MPI_Status array_of_statuses[])
 {
-    int mpi_errno = MPI_SUCCESS;
     MPIR_Request * request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPIR_Request ** request_ptrs = request_ptr_array;
     MPI_Status * status_ptr;
@@ -150,6 +119,8 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
     int n_completed;
     int active_flag;
     int rc;
+    int proc_failure = FALSE;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TESTALL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -217,7 +188,36 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
     }
 
     mpi_errno = MPID_Testall(count, request_ptrs, flag, array_of_statuses);
-    if (*flag || mpi_errno == MPI_ERR_IN_STATUS)
+    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+
+    for (i = 0; i < count; i++)
+    {
+        if (request_ptrs[i] != NULL)
+        {
+            if (MPIR_Request_is_complete(request_ptrs[i]))
+            {
+                n_completed++;
+                rc = MPIR_Request_get_error(request_ptrs[i]);
+                if (rc != MPI_SUCCESS)
+                {
+                    if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(rc) || MPIX_ERR_PROC_FAILED_PENDING == MPIR_ERR_GET_CLASS(rc))
+                        proc_failure = TRUE;
+                    mpi_errno = MPI_ERR_IN_STATUS;
+                }
+            } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
+                        MPID_Request_is_anysource(request_ptrs[i]) &&
+                        !MPID_Comm_AS_enabled(request_ptrs[i]->comm)))
+            {
+                mpi_errno = MPI_ERR_IN_STATUS;
+                MPIR_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+                status_ptr = (array_of_statuses != MPI_STATUSES_IGNORE) ? &array_of_statuses[i] : MPI_STATUS_IGNORE;
+                if (status_ptr != MPI_STATUS_IGNORE) status_ptr->MPI_ERROR = rc;
+                proc_failure = TRUE;
+            }
+        }
+    }
+
+    if (n_completed == count || mpi_errno == MPI_ERR_IN_STATUS)
     {
         n_completed = 0;
         for (i = 0; i < count; i++)
@@ -245,7 +245,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
                 {
                     if (mpi_errno == MPI_ERR_IN_STATUS && array_of_statuses != MPI_STATUSES_IGNORE)
                     {
-                        if (mpi_errno != MPI_ERR_IN_STATUS)
+                        if (!proc_failure)
                             array_of_statuses[i].MPI_ERROR = MPI_ERR_PENDING;
                         else
                             array_of_statuses[i].MPI_ERROR = MPIX_ERR_PROC_FAILED_PENDING;
@@ -266,8 +266,6 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
             }
         }
     }
-
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     *flag = (n_completed == count) ? TRUE : FALSE;
 

@@ -51,14 +51,8 @@ int MPIR_Test_impl(MPIR_Request *request_ptr, int *flag, MPI_Status *status)
 
     if (MPIR_Request_is_complete(request_ptr)) {
 	*flag = TRUE;
-    } else if (unlikely(
-                MPIR_CVAR_ENABLE_FT &&
-                MPID_Request_is_anysource(request_ptr) &&
-                !MPID_Comm_AS_enabled(request_ptr->comm))) {
-        MPIR_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
-        if (status != MPI_STATUS_IGNORE) status->MPI_ERROR = mpi_errno;
-        goto fn_fail;
     }
+
  fn_exit:
     return mpi_errno;
  fn_fail:
@@ -155,7 +149,16 @@ int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status)
     if (MPIR_Request_is_complete(request_ptr)) {
 	mpi_errno = MPIR_Request_complete(request, request_ptr, status,
 					  &active_flag);
+	*flag = TRUE;
 	if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+	/* Fall through to the exit */
+    } else if (unlikely(
+                MPIR_CVAR_ENABLE_FT &&
+                MPID_Request_is_anysource(request_ptr) &&
+                !MPID_Comm_AS_enabled(request_ptr->comm))) {
+        MPIR_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+        if (status != MPI_STATUS_IGNORE) status->MPI_ERROR = mpi_errno;
+        goto fn_fail;
     }
     /* ... end of body of routine ... */
     
