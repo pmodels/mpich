@@ -167,7 +167,7 @@ MPIDI_coll_algo_container_t *MPIDI_CH4_Bcast_select(void *buffer,
     int nbytes = 0;
     MPI_Aint type_size;
 
-    MPID_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         return (MPIDI_coll_algo_container_t *) &CH4_bcast_intercomm_cnt;
@@ -245,7 +245,7 @@ MPIDI_coll_algo_container_t *MPIDI_CH4_Allreduce_select(const void *sendbuf,
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_ALLREDUCE) {
         /* is the op commutative? We do SMP optimizations only if it is. */
-        MPID_Datatype_get_size_macro(datatype, type_size);
+        MPIR_Datatype_get_size_macro(datatype, type_size);
         nbytes = MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE ? type_size * count : 0;
         if (MPIR_Comm_is_node_aware(comm) && is_commutative &&
             nbytes <= MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE) {
@@ -311,7 +311,7 @@ MPIDI_coll_algo_container_t *MPIDI_CH4_Reduce_select(const void *sendbuf,
             is_commutative = (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE) ? 0 : 1;
         }
 
-        MPID_Datatype_get_size_macro(datatype, type_size);
+        MPIR_Datatype_get_size_macro(datatype, type_size);
         nbytes = MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE ? type_size * count : 0;
         if (MPIR_Comm_is_node_aware(comm) && is_commutative &&
             nbytes <= MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE) {

@@ -3,30 +3,42 @@
 
 #include "../src/ch4_coll_params.h"
 #include "coll_tuning_types.h"
+/* *INDENT-OFF* */
+@ch4_netmod_coll_params_include@
+@ch4_shm_coll_params_include@
+/* *INDENT-ON* */
 
 #define MPIDI_CH4_COLL_AUTO_SELECT (-1)
 
 typedef union MPIDI_barrier_algo_params {
     /* *INDENT-OFF* */
     MPIDI_CH4_BARRIER_PARAMS_DECL;
+    @ch4_netmod_barrier_params_decl@
+    @ch4_shm_barrier_params_decl@
     /* *INDENT-ON* */
 } MPIDI_BARRIER_ALGO_params_t;
 
 typedef union MPIDI_bcast_algo_params {
     /* *INDENT-OFF* */
     MPIDI_CH4_BCAST_PARAMS_DECL;
+    @ch4_netmod_bcast_params_decl@
+    @ch4_shm_bcast_params_decl@
     /* *INDENT-ON* */
 } MPIDI_BCAST_ALGO_params_t;
 
 typedef union MPIDI_reduce_algo_params {
     /* *INDENT-OFF* */
     MPIDI_CH4_REDUCE_PARAMS_DECL;
+    @ch4_netmod_reduce_params_decl@
+    @ch4_shm_reduce_params_decl@
     /* *INDENT-ON* */
 } MPIDI_REDUCE_ALGO_params_t;
 
 typedef union MPIDI_allreduce_algo_params {
     /* *INDENT-OFF* */
     MPIDI_CH4_ALLREDUCE_PARAMS_DECL;
+    @ch4_netmod_allreduce_params_decl@
+    @ch4_shm_allreduce_params_decl@
     /* *INDENT-ON* */
 } MPIDI_ALLREDUCE_ALGO_params_t;
 
