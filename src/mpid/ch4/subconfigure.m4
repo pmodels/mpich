@@ -392,10 +392,12 @@ AC_CONFIG_FILES([
 src/mpid/ch4/src/mpid_ch4_net_array.c
 src/mpid/ch4/include/netmodpre.h
 src/mpid/ch4/include/shmpre.h
+src/mpid/ch4/include/coll_algo_params.h
 ])
 ])dnl end AM_COND_IF(BUILD_CH4,...)
 
 AM_CONDITIONAL([BUILD_CH4_SHM],[test "$ch4_shm_level" = "yes" -o "$ch4_shm_level" = "exclusive"])
+AM_CONDITIONAL([BUILD_CH4_COLL_TUNING],[test -e "$srcdir/src/mpid/ch4/src/ch4_coll_globals.c"])
 
 ])dnl end _BODY
 
