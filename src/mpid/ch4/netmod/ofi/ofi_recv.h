@@ -40,7 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_Datatype *dt_ptr;
     struct fi_msg_tagged msg;
     char *recv_buf;
-    struct iovec *originv = NULL;
+    struct iovec *originv = NULL, *originv_huge = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IRECV);
@@ -75,8 +75,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             size_t countp = MPIDI_OFI_count_iov(count, datatype, max_pipe);
             size_t o_size = sizeof(struct iovec);
             unsigned map_size;
-            int num_contig, size;
-
+            int num_contig, size, j = 0, k = 0, huge = 0, length = 0;
+            size_t l = 0;
+            size_t countp_huge = 0;
             size_t oout = 0;
             size_t cur_o = 0;
             MPIR_Segment seg;
@@ -108,6 +109,62 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
             if (oout > omax) {
                 MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
                 goto unpack;
+            }
+
+            /* check if the length of any iovec in the current iovec array exceeds the huge message threshold
+             * and calculate the total number of iovecs */
+            for (j = 0; j < num_contig; j++) {
+                if (originv[j].iov_len > MPIDI_Global.max_send) {
+                    huge = 1;
+                    countp_huge += originv[j].iov_len / MPIDI_Global.max_send;
+                    if (originv[j].iov_len % MPIDI_Global.max_send) {
+                        countp_huge++;
+                    }
+                } else {
+                    countp_huge++;
+                }
+            }
+
+            if (countp_huge > omax && huge) {
+                MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
+                goto unpack;
+            }
+
+            if (countp_huge >= 1 && huge) {
+                originv_huge = (struct iovec *) MPL_malloc(sizeof(struct iovec) * countp_huge);
+
+                for (j = 0; j < num_contig; j++) {
+                    l = 0;
+                    if (originv[j].iov_len > MPIDI_Global.max_send) {
+                        while (l < originv[j].iov_len) {
+                            length = originv[j].iov_len - l;
+                            if (length > MPIDI_Global.max_send)
+                                length = MPIDI_Global.max_send;
+                            originv_huge[k].iov_base = originv[j].iov_base + l;
+                            originv_huge[k].iov_len = length;
+                            k++;
+                            l += length;
+                        }
+
+                    } else {
+                        originv_huge[k].iov_base = originv[j].iov_base;
+                        originv_huge[k].iov_len = originv[j].iov_len;
+                        k++;
+                    }
+                }
+            }
+
+            if (huge && k > omax) {
+                MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
+                MPL_free(originv_huge);
+                goto unpack;
+            }
+
+            if (huge) {
+                MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
+                MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = originv_huge;
+                originv = &(MPIDI_OFI_REQUEST(rreq, noncontig.nopack[cur_o]));
+                oout = k;
             }
 
             MPIDI_OFI_REQUEST(rreq, util_comm) = comm;
