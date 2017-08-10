@@ -86,11 +86,25 @@ for net in $ch4_netmods ; do
         ch4_nets_strings="$ch4_nets_strings, \"$net\""
     fi
 
+    if test -z "$ch4_netmod_coll_globals_default" ; then
+        ch4_netmod_coll_globals_default="#include \"../netmod/${net}/${net}_coll_globals_default.c\""
+    else
+        ch4_netmod_coll_globals_default="${ch4_netmod_coll_globals_default}
+#include \"../netmod/${net}/${net}_coll_globals_default.c\""
+    fi
+
     if test -z "$ch4_netmod_pre_include" ; then
         ch4_netmod_pre_include="#include \"../netmod/${net}/${net}_pre.h\""
     else
         ch4_netmod_pre_include="${ch4_netmod_pre_include}
 #include \"../netmod/${net}/${net}_pre.h\""
+    fi
+
+    if test -z "$ch4_netmod_coll_params_include" ; then
+        ch4_netmod_coll_params_include="#include \"../netmod/${net}/${net}_coll_params.h\""
+    else
+        ch4_netmod_coll_params_include="${ch4_netmod_coll_params_include}
+#include \"../netmod/${net}/${net}_coll_params.h\""
     fi
 
     net_upper=`echo ${net} | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
@@ -126,7 +140,30 @@ MPIDI_${net_upper}_dt_t ${net};"
         ch4_netmod_op_decl="${ch4_netmod_op_decl} \\
 MPIDI_${net_upper}_op_t ${net};"
     fi
-
+    if test -z "$ch4_netmod_barrier_params_decl" ; then
+        ch4_netmod_barrier_params_decl="MPIDI_${net_upper}_BARRIER_PARAMS_DECL;"
+    else
+        ch4_netmod_barrier_params_decl="${ch4_netmod_barrier_params_decl} \\
+MPIDI_${net_upper}_barrier_params_t ${net};"
+    fi
+    if test -z "$ch4_netmod_bcast_params_decl" ; then
+        ch4_netmod_bcast_params_decl="MPIDI_${net_upper}_BCAST_PARAMS_DECL;"
+    else
+        ch4_netmod_bcast_params_decl="${ch4_netmod_bcast_params_decl} \\
+MPIDI_${net_upper}_bcast_params_t ${net};"
+    fi
+    if test -z "$ch4_netmod_reduce_params_decl" ; then
+        ch4_netmod_reduce_params_decl="MPIDI_${net_upper}_REDUCE_PARAMS_DECL;"
+    else
+        ch4_netmod_reduce_params_decl="${ch4_netmod_reduce_params_decl} \\
+MPIDI_${net_upper}_reduce_params_t ${net};"
+    fi
+    if test -z "$ch4_netmod_allreduce_params_decl" ; then
+        ch4_netmod_allreduce_params_decl="MPIDI_${net_upper}_ALLREDUCE_PARAMS_DECL;"
+    else
+        ch4_netmod_allreduce_params_decl="${ch4_netmod_allreduce_params_decl} \\
+MPIDI_${net_upper}_allreduce_params_t ${net};"
+    fi
     if test -z "$ch4_netmod_win_decl" ; then
         ch4_netmod_win_decl="MPIDI_${net_upper}_win_t ${net};"
     else
@@ -157,6 +194,8 @@ AC_SUBST(ch4_nets_func_array)
 AC_SUBST(ch4_nets_native_func_array)
 AC_SUBST(ch4_nets_strings)
 AC_SUBST(ch4_netmod_pre_include)
+AC_SUBST(ch4_netmod_coll_globals_default)
+AC_SUBST(ch4_netmod_coll_params_include)
 AC_SUBST(ch4_netmod_amrequest_decl)
 AC_SUBST(ch4_netmod_request_decl)
 AC_SUBST(ch4_netmod_comm_decl)
@@ -164,7 +203,13 @@ AC_SUBST(ch4_netmod_dt_decl)
 AC_SUBST(ch4_netmod_win_decl)
 AC_SUBST(ch4_netmod_addr_decl)
 AC_SUBST(ch4_netmod_op_decl)
+AC_SUBST(ch4_netmod_barrier_params_decl)
+AC_SUBST(ch4_netmod_bcast_params_decl)
+AC_SUBST(ch4_netmod_reduce_params_decl)
+AC_SUBST(ch4_netmod_allreduce_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_pre_include)
+AM_SUBST_NOTMAKE(ch4_netmod_coll_globals_default)
+AM_SUBST_NOTMAKE(ch4_netmod_coll_params_include)
 AM_SUBST_NOTMAKE(ch4_netmod_amrequest_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_request_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_comm_decl)
@@ -172,6 +217,10 @@ AM_SUBST_NOTMAKE(ch4_netmod_dt_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_win_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_addr_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_op_decl)
+AM_SUBST_NOTMAKE(ch4_netmod_barrier_params_decl)
+AM_SUBST_NOTMAKE(ch4_netmod_bcast_params_decl)
+AM_SUBST_NOTMAKE(ch4_netmod_reduce_params_decl)
+AM_SUBST_NOTMAKE(ch4_netmod_allreduce_params_decl)
 
 AC_ARG_ENABLE(ch4-netmod-direct,
     [--enable-ch4-netmod-direct
@@ -298,11 +347,24 @@ for shm in $ch4_shm ; do
         ch4_shm_strings="$ch4_shm_strings, \"$shm\""
     fi
 
+    if test -z "$ch4_shm_coll_globals_default" ; then
+        ch4_shm_coll_globals_default="#include \"../shm/${shm}/${shm}_coll_globals_default.c\""
+    else
+        ch4_shm_coll_globals_default="${ch4_shm_coll_globals_default}
+#include \"../shm/${shm}/${shm}_coll_globals_default.c\""
+    fi
+
     if test -z "$ch4_shm_pre_include" ; then
         ch4_shm_pre_include="#include \"../shm/${shm}/${shm}_pre.h\""
     else
         ch4_shm_pre_include="${ch4_shm_pre_include}
 #include \"../shm/${shm}/${shm}_pre.h\""
+    fi
+    if test -z "$ch4_shm_coll_params_include" ; then
+        ch4_shm_coll_params_include="#include \"../shm/${shm}/${shm}_coll_params.h\""
+    else
+        ch4_shm_coll_params_include="${ch4_shm_coll_params_include}
+#include \"../shm/${shm}/${shm}_coll_params.h\""
     fi
 
     shm_upper=`echo ${shm} | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
@@ -319,7 +381,30 @@ MPIDI_${shm_upper}_request_t ${shm};"
         ch4_shm_comm_decl="${ch4_shm_comm_decl} \\
 MPIDI_${shm_upper}_comm_t ${shm};"
     fi
-
+    if test -z "$ch4_shm_barrier_params_decl" ; then
+        ch4_shm_barrier_params_decl="MPIDI_${shm_upper}_BARRIER_PARAMS_DECL;"
+    else
+        ch4_shm_barrier_params_decl="${ch4_shm_barrier_params_decl} \\
+MPIDI_${shm_upper}_barrier_params_t ${shm};"
+    fi
+    if test -z "$ch4_shm_bcast_params_decl" ; then
+        ch4_shm_bcast_params_decl="MPIDI_${shm_upper}_BCAST_PARAMS_DECL;"
+    else
+        ch4_shm_bcast_params_decl="${ch4_shm_bcast_params_decl} \\
+MPIDI_${shm_upper}_bcast_params_t ${shm};"
+    fi
+    if test -z "$ch4_shm_reduce_params_decl" ; then
+        ch4_shm_reduce_params_decl="MPIDI_${shm_upper}_REDUCE_PARAMS_DECL;"
+    else
+        ch4_shm_reduce_params_decl="${ch4_shm_reduce_params_decl} \\
+MPIDI_${shm_upper}_reduce_params_t ${shm};"
+    fi
+    if test -z "$ch4_shm_allreduce_params_decl" ; then
+        ch4_shm_allreduce_params_decl="MPIDI_${shm_upper}_ALLREDUCE_PARAMS_DECL;"
+    else
+        ch4_shm_allreduce_params_decl="${ch4_shm_allreduce_params_decl} \\
+MPIDI_${shm_upper}_allreduce_params_t ${shm};"
+    fi
 
     shm_index=`expr $shm_index + 1`
 done
@@ -334,11 +419,23 @@ AC_SUBST(ch4_shm_func_array)
 AC_SUBST(ch4_shm_native_func_array)
 AC_SUBST(ch4_shm_strings)
 AC_SUBST(ch4_shm_pre_include)
+AC_SUBST(ch4_shm_coll_globals_default)
+AC_SUBST(ch4_shm_coll_params_include)
 AC_SUBST(ch4_shm_request_decl)
 AC_SUBST(ch4_shm_comm_decl)
+AC_SUBST(ch4_shm_barrier_params_decl)
+AC_SUBST(ch4_shm_bcast_params_decl)
+AC_SUBST(ch4_shm_reduce_params_decl)
+AC_SUBST(ch4_shm_allreduce_params_decl)
 AM_SUBST_NOTMAKE(ch4_shm_pre_include)
+AM_SUBST_NOTMAKE(ch4_shm_coll_globals_default)
+AM_SUBST_NOTMAKE(ch4_shm_coll_params_include)
 AM_SUBST_NOTMAKE(ch4_shm_request_decl)
 AM_SUBST_NOTMAKE(ch4_shm_comm_decl)
+AM_SUBST_NOTMAKE(ch4_shm_barrier_params_decl)
+AM_SUBST_NOTMAKE(ch4_shm_bcast_params_decl)
+AM_SUBST_NOTMAKE(ch4_shm_reduce_params_decl)
+AM_SUBST_NOTMAKE(ch4_shm_allreduce_params_decl)
 
 if test "$ch4_shm_array_sz" = "1"  && test "$enable_ch4_shm_direct" = "yes" ;  then
    PAC_APPEND_FLAG([-DSHM_DIRECT=__shm_direct_${ch4_shm}__], [CPPFLAGS])
@@ -392,10 +489,13 @@ AC_CONFIG_FILES([
 src/mpid/ch4/src/mpid_ch4_net_array.c
 src/mpid/ch4/include/netmodpre.h
 src/mpid/ch4/include/shmpre.h
+src/mpid/ch4/include/coll_algo_params.h
+src/mpid/ch4/src/ch4_coll_globals_default.c
 ])
 ])dnl end AM_COND_IF(BUILD_CH4,...)
 
 AM_CONDITIONAL([BUILD_CH4_SHM],[test "$ch4_shm_level" = "yes" -o "$ch4_shm_level" = "exclusive"])
+AM_CONDITIONAL([BUILD_CH4_COLL_TUNING],[test -e "$srcdir/src/mpid/ch4/src/ch4_coll_globals.c"])
 
 ])dnl end _BODY
 
