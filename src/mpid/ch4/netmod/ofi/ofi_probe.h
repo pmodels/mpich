@@ -31,6 +31,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     uint64_t match_bits, mask_bits;
     MPIR_Request r, *rreq;      /* don't need to init request, output only */
     struct fi_msg_tagged msg;
+    int ofi_err;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IPROBE);
@@ -60,9 +61,16 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     msg.context = (void *) &(MPIDI_OFI_REQUEST(rreq, context));
     msg.data = 0;
 
-    MPIDI_OFI_CALL(fi_trecvmsg
-                   (MPIDI_Global.ctx[0].rx, &msg,
-                    peek_flags | FI_PEEK | FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0) ), trecvmsg);
+    MPIDI_OFI_CALL_RETURN(fi_trecvmsg(MPIDI_Global.ctx[0].rx, &msg,
+                   peek_flags | FI_PEEK | FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0)), ofi_err);
+    if (ofi_err == -FI_ENOMSG) {
+        *flag = 0;
+        if (message)
+            MPIR_Request_free(rreq);
+        goto fn_exit;
+    }
+
+    MPIDI_OFI_CALL(ofi_err, trecvmsg);
     MPIDI_OFI_PROGRESS_WHILE(MPIDI_OFI_REQUEST(rreq, util_id) == MPIDI_OFI_PEEK_START);
 
     switch (MPIDI_OFI_REQUEST(rreq, util_id)) {
