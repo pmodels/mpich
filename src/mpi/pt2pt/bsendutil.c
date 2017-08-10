@@ -493,6 +493,11 @@ static int MPIR_Bsend_check_active( void )
 	}
 	if (flag) {
 	    /* We're done.  Remove this segment */
+        if (MPIR_Request_is_complete(active->request)) {
+            mpi_errno = MPIR_Request_complete(NULL, active->request, MPI_STATUS_IGNORE,
+                              &flag);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        }
 	    MPL_DBG_MSG_P(MPIR_DBG_BSEND,TYPICAL,"Removing segment %p", active);
 	    MPIR_Bsend_free_segment( active );
 	}
