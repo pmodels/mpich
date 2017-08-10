@@ -2,6 +2,13 @@
 #include <mpidimpl.h>
 #include "ch4_impl.h"
  
+/* container traverse function to be implemented  */
+/* e.g. return ((void *) ((char *)container)  sizeof(MPIDI_COLL_ALGO_params_t)); */
+void *MPIDI_coll_get_next_container(void *container)
+{
+    return NULL;
+}
+
 /* Barrier default containers initialization*/
 const MPIDI_coll_algo_container_t CH4_barrier_composition_alpha_cnt =
     {

@@ -42,4 +42,6 @@ typedef union MPIDI_coll_algo_params {
     MPIDI_ALLREDUCE_PARAMS_DECL;
 } MPIDI_COLL_ALGO_params_t;
 
+void *MPIDI_coll_get_next_container(void *container);
+
 #endif /* COLL_ALGO_PARAMS_H_INCLUDED */
