@@ -18,7 +18,8 @@
 #define FUNCNAME MPIDI_STUBSHM_mpi_barrier
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_STUBSHM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+static inline int MPIDI_STUBSHM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                            MPIDI_coll_algo_container_t * algo_parameters_ctr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_BARRIER);
@@ -34,7 +35,8 @@ static inline int MPIDI_STUBSHM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
-                                      int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                          int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                          MPIDI_coll_algo_container_t * algo_parameters_ctr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_BCAST);
@@ -50,8 +52,9 @@ static inline int MPIDI_STUBSHM_mpi_bcast(void *buffer, int count, MPI_Datatype 
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_allreduce(const void *sendbuf, void *recvbuf, int count,
-                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                          MPIR_Errflag_t * errflag)
+                                              MPI_Datatype datatype, MPI_Op op,
+                                              MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                              MPIDI_coll_algo_container_t * algo_parameters_ctr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_ALLREDUCE);
@@ -228,8 +231,9 @@ static inline int MPIDI_STUBSHM_mpi_alltoallw(const void *sendbuf, const int sen
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_reduce(const void *sendbuf, void *recvbuf, int count,
-                                       MPI_Datatype datatype, MPI_Op op, int root,
-                                       MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                           MPI_Datatype datatype, MPI_Op op, int root,
+                                           MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                           MPIDI_coll_algo_container_t * algo_parameters_ctr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_REDUCE);
