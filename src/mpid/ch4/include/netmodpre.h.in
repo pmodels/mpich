@@ -23,5 +23,8 @@
 #define MPIDI_NM_WIN_DECL        @ch4_netmod_win_decl@
 #define MPIDI_NM_ADDR_DECL    @ch4_netmod_addr_decl@
 #define MPIDI_NM_OP_DECL         @ch4_netmod_op_decl@
+#define MPIDI_NM_BCAST_PARAMS_DECL  @ch4_netmod_bcast_params_decl@
+#define MPIDI_NM_REDUCE_PARAMS_DECL  @ch4_netmod_reduce_params_decl@
+#define MPIDI_NM_ALLREDUCE_PARAMS_DECL  @ch4_netmod_allreduce_params_decl@
 
 #endif /* NETMODPRE_H_INCLUDED */

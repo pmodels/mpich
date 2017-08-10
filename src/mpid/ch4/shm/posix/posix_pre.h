@@ -38,4 +38,6 @@ typedef struct {
     int dummy;
 } MPIDI_POSIX_comm_t;
 
+#include "posix_coll_params.h"
+#include "posix_coll_containers.h"
 #endif /* POSIX_PRE_H_INCLUDED */
