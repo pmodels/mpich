@@ -47,7 +47,8 @@ int MPIR_Neighbor_allgatherv_default(const void *sendbuf, int sendcount, MPI_Dat
                                                comm_ptr, &req);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIR_Assert(req != MPI_REQUEST_NULL);
-    mpi_errno = MPIR_Wait_impl(req, MPI_STATUS_IGNORE);
+    MPIR_Request_get_ptr(req, req_ptr);
+    mpi_errno = MPIR_Wait_impl(req_ptr, MPI_STATUS_IGNORE);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Request_complete(&req, req_ptr, MPI_STATUS_IGNORE, &active_flag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
