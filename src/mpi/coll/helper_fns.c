@@ -731,8 +731,6 @@ int MPIC_Waitall(int numreq, MPIR_Request *requests[], MPI_Status statuses[], MP
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPI_Request request_ptr_array[MPIC_REQUEST_PTR_ARRAY_SIZE];
-    MPI_Request *request_ptrs = request_ptr_array;
     MPI_Status status_static_array[MPIC_REQUEST_PTR_ARRAY_SIZE];
     MPI_Status *status_array = statuses;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIC_WAITALL);
@@ -747,7 +745,6 @@ int MPIC_Waitall(int numreq, MPIR_Request *requests[], MPI_Status statuses[], MP
     }
 
     if (numreq > MPIC_REQUEST_PTR_ARRAY_SIZE) {
-        MPIR_CHKLMEM_MALLOC(request_ptrs, MPI_Request *, numreq * sizeof(MPI_Request), mpi_errno, "request pointers");
         MPIR_CHKLMEM_MALLOC(status_array, MPI_Status *, numreq * sizeof(MPI_Status), mpi_errno, "status objects");
     }
 
@@ -757,12 +754,14 @@ int MPIC_Waitall(int numreq, MPIR_Request *requests[], MPI_Status statuses[], MP
         tag fields here. */
         status_array[i].MPI_TAG = 0;
         status_array[i].MPI_SOURCE = MPI_PROC_NULL;
-
-        /* Convert the MPIR_Request objects to MPI_Request objects */
-        request_ptrs[i] = requests[i]->handle;
     }
 
-    mpi_errno = MPIR_Waitall_impl(numreq, request_ptrs, status_array);
+    mpi_errno = MPIR_Waitall_impl(numreq, requests, status_array);
+    if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
+        goto fn_fail;
+    mpi_errno = MPIR_Waitall_post(numreq, NULL, requests, status_array);
+    if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
+        goto fn_fail;
 
     /* The errflag value here is for all requests, not just a single one.  If
      * in the future, this function is used for multiple collectives at a
