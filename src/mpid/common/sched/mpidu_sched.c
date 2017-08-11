@@ -18,6 +18,54 @@
 #define dprintf(...) do {} while (0)
 #endif
 
+static const char *entry_to_str(enum MPIDU_Sched_entry_type type)
+{
+    switch (type) {
+    case MPIDU_SCHED_ENTRY_SEND:
+        return "SEND";
+    case MPIDU_SCHED_ENTRY_RECV:
+        return "RECV";
+    case MPIDU_SCHED_ENTRY_REDUCE:
+        return "REDUCE";
+    case MPIDU_SCHED_ENTRY_COPY:
+        return "COPY";
+    case MPIDU_SCHED_ENTRY_NOP:
+        return "NOP";
+    case MPIDU_SCHED_ENTRY_CB:
+        return "CB";
+    default:
+        return "(out of range)";
+    }
+}
+
+/* utility function for debugging, dumps the given schedule object to fh */
+static void sched_dump(struct MPIDU_Sched *s, FILE * fh)
+{
+    int i;
+    dprintf(fh, "--------------------------------\n");
+    dprintf(fh, "s=%p\n", s);
+    if (s) {
+        dprintf(fh, "s->size=%zd\n", s->size);
+        dprintf(fh, "s->idx=%zd\n", s->idx);
+        dprintf(fh, "s->num_entries=%d\n", s->num_entries);
+        dprintf(fh, "s->tag=%d\n", s->tag);
+        dprintf(fh, "s->req=%p\n", s->req);
+        dprintf(fh, "s->entries=%p\n", s->entries);
+        for (i = 0; i < s->num_entries; ++i) {
+            dprintf(fh, "&s->entries[%d]=%p\n", i, &s->entries[i]);
+            dprintf(fh, "s->entries[%d].type=%s\n", i, entry_to_str(s->entries[i].type));
+            dprintf(fh, "s->entries[%d].status=%d\n", i, s->entries[i].status);
+            dprintf(fh, "s->entries[%d].is_barrier=%s\n", i,
+                    (s->entries[i].is_barrier ? "TRUE" : "FALSE"));
+        }
+    }
+    dprintf(fh, "--------------------------------\n");
+    /*
+     * dprintf(fh, "s->next=%p\n", s->next);
+     * dprintf(fh, "s->prev=%p\n", s->prev);
+     */
+}
+
 /* helper macros to improve code readability */
 /* we pessimistically assume that MPI_DATATYPE_NULL may be passed as a "valid" type
  * for send/recv when MPI_PROC_NULL is the destination/src */
@@ -45,9 +93,6 @@
         }                                                          \
     } while (0)
 #endif
-
-/* TODO move to a header somewhere? */
-void MPIDU_Sched_dump(struct MPIDU_Sched *s, FILE * fh);
 
 struct MPIDU_Sched_state {
     struct MPIDU_Sched *head;
@@ -444,7 +489,7 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
     MPL_DL_APPEND(all_schedules.head, s);
 
     MPL_DBG_MSG_P(MPIR_DBG_COMM, TYPICAL, "started schedule s=%p\n", s);
-    MPIDU_Sched_dump(s, stderr);
+    sched_dump(s, stderr);
 
   fn_exit:
     return mpi_errno;
@@ -879,7 +924,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
         *made_progress = FALSE;
 
     MPL_DL_FOREACH_SAFE(state->head, s, tmp) {
-        /*MPIDU_Sched_dump(s, stderr); */
+        /*sched_dump(s, stderr); */
 
         for (i = s->idx; i < s->num_entries; ++i) {
             struct MPIDU_Sched_entry *e = &s->entries[i];
@@ -1000,57 +1045,4 @@ int MPIDU_Sched_progress(int *made_progress)
     }
 
     return mpi_errno;
-}
-
-static const char *entry_to_str(enum MPIDU_Sched_entry_type type) ATTRIBUTE((unused, used));
-static const char *entry_to_str(enum MPIDU_Sched_entry_type type)
-{
-    switch (type) {
-    case MPIDU_SCHED_ENTRY_SEND:
-        return "SEND";
-    case MPIDU_SCHED_ENTRY_RECV:
-        return "RECV";
-    case MPIDU_SCHED_ENTRY_REDUCE:
-        return "REDUCE";
-    case MPIDU_SCHED_ENTRY_COPY:
-        return "COPY";
-    case MPIDU_SCHED_ENTRY_NOP:
-        return "NOP";
-    case MPIDU_SCHED_ENTRY_CB:
-        return "CB";
-    default:
-        return "(out of range)";
-    }
-}
-
-/* utility function for debugging, dumps the given schedule object to fh */
-#undef FUNCNAME
-#define FUNCNAME MPIDU_Sched_dump
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIDU_Sched_dump(struct MPIDU_Sched *s, FILE * fh)
-{
-    int i;
-    dprintf(fh, "--------------------------------\n");
-    dprintf(fh, "s=%p\n", s);
-    if (s) {
-        dprintf(fh, "s->size=%zd\n", s->size);
-        dprintf(fh, "s->idx=%zd\n", s->idx);
-        dprintf(fh, "s->num_entries=%d\n", s->num_entries);
-        dprintf(fh, "s->tag=%d\n", s->tag);
-        dprintf(fh, "s->req=%p\n", s->req);
-        dprintf(fh, "s->entries=%p\n", s->entries);
-        for (i = 0; i < s->num_entries; ++i) {
-            dprintf(fh, "&s->entries[%d]=%p\n", i, &s->entries[i]);
-            dprintf(fh, "s->entries[%d].type=%s\n", i, entry_to_str(s->entries[i].type));
-            dprintf(fh, "s->entries[%d].status=%d\n", i, s->entries[i].status);
-            dprintf(fh, "s->entries[%d].is_barrier=%s\n", i,
-                    (s->entries[i].is_barrier ? "TRUE" : "FALSE"));
-        }
-    }
-    dprintf(fh, "--------------------------------\n");
-    /*
-     * dprintf(fh, "s->next=%p\n", s->next);
-     * dprintf(fh, "s->prev=%p\n", s->prev);
-     */
 }
