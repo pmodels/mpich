@@ -47,8 +47,7 @@
 #endif
 
 /* TODO move to a header somewhere? */
-void MPIDU_Sched_dump(struct MPIDU_Sched *s);
-void MPIDU_Sched_dump_fh(struct MPIDU_Sched *s, FILE * fh);
+void MPIDU_Sched_dump(struct MPIDU_Sched *s, FILE * fh);
 
 struct MPIDU_Sched_state {
     struct MPIDU_Sched *head;
@@ -445,7 +444,7 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
     MPL_DL_APPEND(all_schedules.head, s);
 
     MPL_DBG_MSG_P(MPIR_DBG_COMM, TYPICAL, "started schedule s=%p\n", s);
-    MPIDU_Sched_dump(s);
+    MPIDU_Sched_dump(s, stderr);
 
   fn_exit:
     return mpi_errno;
@@ -880,7 +879,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
         *made_progress = FALSE;
 
     MPL_DL_FOREACH_SAFE(state->head, s, tmp) {
-        /*MPIDU_Sched_dump(s); */
+        /*MPIDU_Sched_dump(s, stderr); */
 
         for (i = s->idx; i < s->num_entries; ++i) {
             struct MPIDU_Sched_entry *e = &s->entries[i];
@@ -1026,10 +1025,10 @@ static const char *entry_to_str(enum MPIDU_Sched_entry_type type)
 
 /* utility function for debugging, dumps the given schedule object to fh */
 #undef FUNCNAME
-#define FUNCNAME MPIDU_Sched_dump_fh
+#define FUNCNAME MPIDU_Sched_dump
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIDU_Sched_dump_fh(struct MPIDU_Sched *s, FILE * fh)
+void MPIDU_Sched_dump(struct MPIDU_Sched *s, FILE * fh)
 {
     int i;
     dprintf(fh, "--------------------------------\n");
@@ -1054,14 +1053,4 @@ void MPIDU_Sched_dump_fh(struct MPIDU_Sched *s, FILE * fh)
      * dprintf(fh, "s->next=%p\n", s->next);
      * dprintf(fh, "s->prev=%p\n", s->prev);
      */
-}
-
-/* utility function for debugging, dumps the given schedule object to stderr */
-#undef FUNCNAME
-#define FUNCNAME MPIDU_Sched_dump
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIDU_Sched_dump(struct MPIDU_Sched *s)
-{
-    MPIDU_Sched_dump_fh(s, stderr);
 }
