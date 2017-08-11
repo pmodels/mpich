@@ -178,6 +178,7 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPIR_Comm * comm_ptr,
  * Device level MPI wait/test functions
  */
 #define MPID_Wait MPIR_Wait_impl
+#define MPID_Waitall MPIR_Waitall_impl
 #define MPID_Test MPIR_Test_impl
 #define MPID_Testall MPIR_Testall_impl
 #define MPID_Testany MPIR_Testany_impl
