@@ -775,6 +775,7 @@
 /f90/ext/testlist
 /f90/ext/testlist.in
 /f90/f90types/createf90types
+/f90/ft/
 /f90/info/
 /f90/info/Makefile.sm
 /f90/info/infotest
