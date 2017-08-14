@@ -279,7 +279,7 @@ sub ReadInterfaceForDefinitions {
         }
 
         # Use \S instead of [^\s].  See the comment above
-        if (/^\s*#\s*define\s+(MPI[X]*_[A-Za-z_0-9]*)\s+(\S+)(.*)/) {
+        if (/^\s*#\s*define\s+(MPI[CHX]*_[A-Za-z_0-9]*)\s+(\S+)(.*)/) {
             my $name      = $1;
             my $val       = $2;
             my $remainder = $3;
@@ -602,6 +602,12 @@ $mpidef{MPI_INTEGER_KIND} = "c_int";
 print $constants_fh "\n! F08 specific constants\n";
 print $constants_fh "logical, parameter :: MPI_SUBARRAYS_SUPPORTED          = .true.\n";
 print $constants_fh "logical, parameter :: MPI_ASYNC_PROTECTS_NONBLOCKING   = .true.\n";
+
+# MPIX
+&print_param("integer", "MPICH_ERR_FIRST_MPIX");
+foreach my $mpix (grep(/^MPIX_/, keys(%mpidef))) {
+    &print_param("integer", $mpix);
+}
 
 print $constants_fh "\n";
 foreach $key (qw(ADDRESS_KIND OFFSET_KIND COUNT_KIND INTEGER_KIND)) {

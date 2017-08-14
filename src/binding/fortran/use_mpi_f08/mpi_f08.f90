@@ -1361,6 +1361,16 @@ interface MPI_Iscatterv
     end subroutine MPI_Iscatterv_f08ts
 end interface MPI_Iscatterv
 
+interface MPIX_Comm_agree
+    subroutine MPIX_Comm_agree_f08(comm, flag, ierror)
+        use :: mpi_f08_types, only : MPI_Comm
+        implicit none
+        type(MPI_Comm), intent(in) :: comm
+        integer, intent(inout) :: flag
+        integer, optional, intent(out) :: ierror
+    end subroutine MPIX_Comm_agree_f08
+end interface MPIX_Comm_agree
+
 interface MPI_Comm_compare
     subroutine MPI_Comm_compare_f08(comm1,comm2,result, ierror)
         use :: mpi_f08_types, only : MPI_Comm
@@ -1451,6 +1461,25 @@ interface MPI_Comm_idup
         integer, optional, intent(out) :: ierror
     end subroutine MPI_Comm_idup_f08
 end interface MPI_Comm_idup
+
+interface MPIX_Comm_failure_ack
+    subroutine MPIX_Comm_failure_ack_f08(comm, ierror)
+        use :: mpi_f08_types, only : MPI_Comm
+        implicit none
+        type(MPI_Comm), intent(in) :: comm
+        integer, optional, intent(out) :: ierror
+    end subroutine MPIX_Comm_failure_ack_f08
+end interface MPIX_Comm_failure_ack
+
+interface MPIX_Comm_failure_get_acked
+    subroutine MPIX_Comm_failure_get_acked_f08(comm, failedgrp, ierror)
+        use :: mpi_f08_types, only : MPI_Comm, MPI_Group
+        implicit none
+        type(MPI_Comm), intent(in) :: comm
+        type(MPI_Group), intent(out) :: failedgrp
+        integer, optional, intent(out) :: ierror
+    end subroutine MPIX_Comm_failure_get_acked_f08
+end interface MPIX_Comm_failure_get_acked
 
 interface MPI_Comm_free
     subroutine MPI_Comm_free_f08(comm, ierror)
@@ -1544,6 +1573,15 @@ interface MPI_Comm_remote_size
     end subroutine MPI_Comm_remote_size_f08
 end interface MPI_Comm_remote_size
 
+interface MPIX_Comm_revoke
+    subroutine MPIX_Comm_revoke_f08(comm, ierror)
+        use :: mpi_f08_types, only : MPI_Comm
+        implicit none
+        type(MPI_Comm), intent(in) :: comm
+        integer, optional, intent(out) :: ierror
+    end subroutine MPIX_Comm_revoke_f08
+end interface MPIX_Comm_revoke
+
 interface MPI_Comm_set_attr
     subroutine MPI_Comm_set_attr_f08(comm, comm_keyval, attribute_val, ierror)
         use :: mpi_f08_types, only : MPI_Comm
@@ -1575,6 +1613,16 @@ interface MPI_Comm_set_name
         integer, optional, intent(out) :: ierror
     end subroutine MPI_Comm_set_name_f08
 end interface MPI_Comm_set_name
+
+interface MPIX_Comm_shrink
+    subroutine MPIX_Comm_shrink_f08(comm, newcomm, ierror)
+        use :: mpi_f08_types, only : MPI_Comm
+        implicit none
+        type(MPI_Comm), intent(in) :: comm
+        type(MPI_Comm), intent(out) :: newcomm
+        integer, optional, intent(out) :: ierror
+    end subroutine MPIX_Comm_shrink_f08
+end interface MPIX_Comm_shrink
 
 interface MPI_Comm_size
     subroutine MPI_Comm_size_f08(comm, size, ierror)

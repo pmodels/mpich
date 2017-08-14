@@ -1,0 +1,31 @@
+!   -*- Mode: Fortran; -*-
+!
+!   See COPYRIGHT in top-level directory.
+!
+subroutine MPIX_Comm_failure_get_acked_f08(comm, failedgrp, ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Comm, MPI_Group
+    use :: mpi_c_interface, only : c_Comm, c_Group
+    use :: mpi_c_interface, only : MPIR_Comm_failure_get_acked_c
+
+    implicit none
+
+    type(MPI_Comm), intent(in) :: comm
+    type(MPI_Group), intent(out) :: failedgrp
+    integer, optional, intent(out) :: ierror
+
+    integer(c_Comm) :: comm_c
+    integer(c_Group) :: failedgrp_c
+    integer(c_int) :: ierror_c
+
+    if (c_int == kind(0)) then
+        ierror_c = MPIR_Comm_failure_get_acked_c(comm%MPI_VAL, failedgrp%MPI_VAL)
+    else
+        comm_c = comm%MPI_VAL
+        ierror_c = MPIR_Comm_failure_get_acked_c(comm_c, failedgrp_c)
+        failedgrp%MPI_VAL = failedgrp_c
+    end if
+
+    if (present(ierror)) ierror = ierror_c
+
+end subroutine MPIX_Comm_failure_get_acked_f08

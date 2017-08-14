@@ -32,7 +32,7 @@ $gDebug = 0;
 
 $prototype_file = "../../../include/mpi.h.in";
 $is_MPI = 1;
-$buildMPIX = 0;
+$buildMPIX = 1;
 $routine_prefix = "MPI_";
 $routine_pattern = "[A-Z][a-z0-9_]*";
 $out_prefix="MPI_";
@@ -390,6 +390,7 @@ foreach $routine (keys(%mpi_routines)) {
     $ucname = uc($routine);
     my @argtypes = split(/,/, $mpi_routines{$routine}[0]);
     my @argnames = split(/,/, $mpi_routines{$routine}[1]);
+    my $experimental = $mpi_routines{$routine}[2];
 
     print "Trying to bind $routine\n" if $gDebug;
     # Check for a routine to skip
@@ -413,14 +414,15 @@ foreach $routine (keys(%mpi_routines)) {
         next;
     }
 
-    print MPIBASEFD "      SUBROUTINE $out_prefix$ucname";
+    my $prefix = $experimental ? "MPIX_" : $out_prefix;
+    print MPIBASEFD "      SUBROUTINE $prefix$ucname";
     &PrintArgBrace(MPIBASEFD,
-        length("      SUBROUTINE $out_prefix$ucname"),
+        length("      SUBROUTINE $prefix$ucname"),
         length("      SUBROUTINE  "),
         $line_limit,
         @argnames);
     &PrintArgDecls( $routine, 0, "" );
-    print MPIBASEFD "      END SUBROUTINE $out_prefix$ucname\n\n";
+    print MPIBASEFD "      END SUBROUTINE $prefix$ucname\n\n";
 }
 
 # Add special routines (e.g., the ones with unusual arguments)

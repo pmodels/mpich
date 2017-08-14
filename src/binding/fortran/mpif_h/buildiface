@@ -3993,6 +3993,12 @@ if ($write_mpif) {
 	print MPIFFD "       LOGICAL MPI_$f08feature\n";
 	print MPIFFD "       PARAMETER(MPI_$f08feature=.FALSE.)\n";
     }
+    #
+    # MPIX
+    &print_mpif_int( "MPICH_ERR_FIRST_MPIX" );
+    foreach my $mpix (grep(/^MPIX_/, keys(%mpidef))) {
+	    &print_mpif_int( $mpix );
+    }
     # 
     # Finally, the special symbols
     print MPIFFD "       INTEGER MPI_BOTTOM, MPI_IN_PLACE, MPI_UNWEIGHTED\n";
@@ -5010,7 +5016,7 @@ sub ReadInterfaceForDefinitions {
 	}
 
 	# Use \S instead of [^\s].  See the comment above
-	if (/^\s*#\s*define\s+(MPI[X]*_[A-Za-z_0-9]*)\s+(\S+)(.*)/) {
+	if (/^\s*#\s*define\s+(MPI[CHX]*_[A-Za-z_0-9]*)\s+(\S+)(.*)/) {
 	    my $name      = $1;
 	    my $val       = $2;
 	    my $remainder = $3;

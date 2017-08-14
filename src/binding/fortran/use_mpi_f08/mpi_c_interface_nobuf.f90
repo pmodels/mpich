@@ -2539,5 +2539,53 @@ function  MPIR_Aint_diff_c(addr1, addr2) &
     integer(MPI_ADDRESS_KIND) :: res
 end function MPIR_Aint_diff_c
 
+function  MPIR_Comm_agree_c(comm, flag) &
+    bind(C, name="PMPIX_Comm_agree") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Comm
+    implicit none
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_int), intent(inout) :: flag
+    integer(c_int) :: ierror
+end function MPIR_Comm_agree_c
+
+function  MPIR_Comm_failure_ack_c(comm) &
+    bind(C, name="PMPIX_Comm_failure_ack") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Comm
+    implicit none
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_int) :: ierror
+end function MPIR_Comm_failure_ack_c
+
+function MPIR_Comm_failure_get_acked_c(comm, failedgrp) &
+    bind(C, name="PMPIX_Comm_failure_get_acked") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Comm, c_Group
+    implicit none
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Group), intent(out) :: failedgrp
+    integer(c_int) :: ierror
+end function MPIR_Comm_failure_get_acked_c
+
+function  MPIR_Comm_revoke_c(comm) &
+    bind(C, name="PMPIX_Comm_revoke") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Comm
+    implicit none
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_int) :: ierror
+end function MPIR_Comm_revoke_c
+
+function MPIR_Comm_shrink_c(comm, newcomm) &
+    bind(C, name="PMPIX_Comm_shrink") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Comm
+    implicit none
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Comm), intent(out) :: newcomm
+    integer(c_int) :: ierror
+end function MPIR_Comm_shrink_c
+
 end interface
 end module mpi_c_interface_nobuf
