@@ -11,12 +11,22 @@
  * be a real tunable parameter. */
 #define MPIDU_SCHED_INITIAL_ENTRIES (16)
 
-#if 0
-#define dprintf fprintf
-#else
-/* FIXME this requires VA_ARGS macros */
-#define dprintf(...) do {} while (0)
-#endif
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_COLL_SCHED_DUMP
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Print schedule data for nonblocking collective operations.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
 
 static const char *entry_to_str(enum MPIDU_Sched_entry_type type)
 {
@@ -42,27 +52,28 @@ static const char *entry_to_str(enum MPIDU_Sched_entry_type type)
 static void sched_dump(struct MPIDU_Sched *s, FILE * fh)
 {
     int i;
-    dprintf(fh, "--------------------------------\n");
-    dprintf(fh, "s=%p\n", s);
+
+    fprintf(fh, "--------------------------------\n");
+    fprintf(fh, "s=%p\n", s);
     if (s) {
-        dprintf(fh, "s->size=%zd\n", s->size);
-        dprintf(fh, "s->idx=%zd\n", s->idx);
-        dprintf(fh, "s->num_entries=%d\n", s->num_entries);
-        dprintf(fh, "s->tag=%d\n", s->tag);
-        dprintf(fh, "s->req=%p\n", s->req);
-        dprintf(fh, "s->entries=%p\n", s->entries);
+        fprintf(fh, "s->size=%zd\n", s->size);
+        fprintf(fh, "s->idx=%zd\n", s->idx);
+        fprintf(fh, "s->num_entries=%d\n", s->num_entries);
+        fprintf(fh, "s->tag=%d\n", s->tag);
+        fprintf(fh, "s->req=%p\n", s->req);
+        fprintf(fh, "s->entries=%p\n", s->entries);
         for (i = 0; i < s->num_entries; ++i) {
-            dprintf(fh, "&s->entries[%d]=%p\n", i, &s->entries[i]);
-            dprintf(fh, "s->entries[%d].type=%s\n", i, entry_to_str(s->entries[i].type));
-            dprintf(fh, "s->entries[%d].status=%d\n", i, s->entries[i].status);
-            dprintf(fh, "s->entries[%d].is_barrier=%s\n", i,
+            fprintf(fh, "&s->entries[%d]=%p\n", i, &s->entries[i]);
+            fprintf(fh, "s->entries[%d].type=%s\n", i, entry_to_str(s->entries[i].type));
+            fprintf(fh, "s->entries[%d].status=%d\n", i, s->entries[i].status);
+            fprintf(fh, "s->entries[%d].is_barrier=%s\n", i,
                     (s->entries[i].is_barrier ? "TRUE" : "FALSE"));
         }
     }
-    dprintf(fh, "--------------------------------\n");
+    fprintf(fh, "--------------------------------\n");
     /*
-     * dprintf(fh, "s->next=%p\n", s->next);
-     * dprintf(fh, "s->prev=%p\n", s->prev);
+     * fprintf(fh, "s->next=%p\n", s->next);
+     * fprintf(fh, "s->prev=%p\n", s->prev);
      */
 }
 
@@ -489,7 +500,8 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
     MPL_DL_APPEND(all_schedules.head, s);
 
     MPL_DBG_MSG_P(MPIR_DBG_COMM, TYPICAL, "started schedule s=%p\n", s);
-    sched_dump(s, stderr);
+    if (MPIR_CVAR_COLL_SCHED_DUMP)
+        sched_dump(s, stderr);
 
   fn_exit:
     return mpi_errno;
@@ -924,7 +936,8 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
         *made_progress = FALSE;
 
     MPL_DL_FOREACH_SAFE(state->head, s, tmp) {
-        /*sched_dump(s, stderr); */
+        if (MPIR_CVAR_COLL_SCHED_DUMP)
+	    sched_dump(s, stderr);
 
         for (i = s->idx; i < s->num_entries; ++i) {
             struct MPIDU_Sched_entry *e = &s->entries[i];
