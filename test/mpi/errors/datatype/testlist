@@ -1,4 +1,4 @@
-getcnterr 1 
+getcnterr 1 xfail=ticket2697
 type_contiguous_nullarg 1
 type_extent_nullarg 1
 type_get_extent_nullarg 1
