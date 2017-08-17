@@ -76,7 +76,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 #define FUNCNAME MPIR_Reduce_binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIR_Reduce_binomial ( 
+int MPIR_Reduce_binomial ( 
     const void *sendbuf,
     void *recvbuf,
     int count,
@@ -282,7 +282,7 @@ fn_fail:
 #define FUNCNAME MPIR_Reduce_redscat_gather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIR_Reduce_redscat_gather ( 
+int MPIR_Reduce_redscat_gather ( 
     const void *sendbuf,
     void *recvbuf,
     int count,
