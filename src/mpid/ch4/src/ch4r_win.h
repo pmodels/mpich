@@ -937,7 +937,7 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
 
     if (comm_ptr->rank == 0)
         root_rank = MPIR_Process.comm_world->rank;
-    mpi_errno = MPIR_Bcast_impl(&root_rank, 1, MPI_INT, 0, comm_ptr, &errflag);
+    mpi_errno = MPIR_Bcast(&root_rank, 1, MPI_INT, 0, comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
@@ -1025,8 +1025,7 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
 
         /* If any local process fails to sync range or mmap, then try more
          * addresses on rank 0. */
-        mpi_errno = MPIR_Allreduce_impl(&map_fail,
-                                        &anyfail, 1, MPI_UNSIGNED, MPI_BOR, comm_ptr, &errflag);
+        mpi_errno = MPIR_Allreduce(&map_fail, &anyfail, 1, MPI_UNSIGNED, MPI_BOR, comm_ptr, &errflag);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
 

@@ -30,7 +30,7 @@ int MPI_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype se
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_allgatherv_impl
+#define FUNCNAME MPIR_Ineighbor_allgatherv_default
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_allgatherv_default(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
@@ -82,10 +82,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_allgatherv_impl
+#define FUNCNAME MPIR_Ineighbor_allgatherv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
@@ -98,11 +98,9 @@ int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datat
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Ineighbor_allgatherv != NULL);
-    mpi_errno = comm_ptr->coll_fns->Ineighbor_allgatherv(sendbuf, sendcount, sendtype,
-                                                         recvbuf, recvcounts, displs, recvtype,
-                                                         comm_ptr, s);
+    mpi_errno = MPIR_Ineighbor_allgatherv_default(sendbuf, sendcount, sendtype,
+                                                  recvbuf, recvcounts, displs, recvtype,
+                                                  comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);

@@ -679,8 +679,8 @@ int MPIC_DEFAULT_Allgather_inter(const void *sendbuf,
         /* bcast to right */
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-            mpi_errno = MPIR_Bcast_inter(tmp_buf, sendcount * local_size,
-                                         sendtype, root, comm_ptr, errflag);
+            mpi_errno = MPIR_Bcast(tmp_buf, sendcount * local_size,
+                                   sendtype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -692,8 +692,8 @@ int MPIC_DEFAULT_Allgather_inter(const void *sendbuf,
         /* receive bcast from right */
         if (recvcount != 0) {
             root = 0;
-            mpi_errno = MPIR_Bcast_inter(recvbuf, recvcount * remote_size,
-                                         recvtype, root, comm_ptr, errflag);
+            mpi_errno = MPIR_Bcast(recvbuf, recvcount * remote_size,
+                                   recvtype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -705,8 +705,8 @@ int MPIC_DEFAULT_Allgather_inter(const void *sendbuf,
         /* receive bcast from left */
         if (recvcount != 0) {
             root = 0;
-            mpi_errno = MPIR_Bcast_inter(recvbuf, recvcount * remote_size,
-                                         recvtype, root, comm_ptr, errflag);
+            mpi_errno = MPIR_Bcast(recvbuf, recvcount * remote_size,
+                                   recvtype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -718,8 +718,8 @@ int MPIC_DEFAULT_Allgather_inter(const void *sendbuf,
         /* bcast to left */
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-            mpi_errno = MPIR_Bcast_inter(tmp_buf, sendcount * local_size,
-                                         sendtype, root, comm_ptr, errflag);
+            mpi_errno = MPIR_Bcast(tmp_buf, sendcount * local_size,
+                                   sendtype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

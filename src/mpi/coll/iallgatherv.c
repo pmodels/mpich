@@ -622,36 +622,34 @@ int MPIR_Iallgatherv_inter(const void *sendbuf, int sendcount, MPI_Datatype send
     remote_size = comm_ptr->remote_size;
     rank = comm_ptr->rank;
 
-    MPIR_Assert(comm_ptr->coll_fns && comm_ptr->coll_fns->Igatherv_sched);
-
     /* first do an intercommunicator gatherv from left to right group,
        then from right to left group */
     if (comm_ptr->is_low_group) {
         /* gatherv from right group */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = comm_ptr->coll_fns->Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf,
-                                                 recvcounts, displs, recvtype, root,
-                                                 comm_ptr, s);
+        mpi_errno = MPIR_Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf,
+                                        recvcounts, displs, recvtype, root,
+                                        comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         /* gatherv to right group */
         root = 0;
-        mpi_errno = comm_ptr->coll_fns->Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf,
-                                                 recvcounts, displs, recvtype, root,
-                                                 comm_ptr, s);
+        mpi_errno = MPIR_Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf,
+                                        recvcounts, displs, recvtype, root,
+                                        comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
         /* gatherv to left group  */
         root = 0;
-        mpi_errno = comm_ptr->coll_fns->Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf,
-                                                 recvcounts, displs, recvtype, root,
-                                                 comm_ptr, s);
+        mpi_errno = MPIR_Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf,
+                                        recvcounts, displs, recvtype, root,
+                                        comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         /* gatherv from left group */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = comm_ptr->coll_fns->Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf,
-                                                 recvcounts, displs, recvtype, root,
-                                                 comm_ptr, s);
+        mpi_errno = MPIR_Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf,
+                                        recvcounts, displs, recvtype, root,
+                                        comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
@@ -667,7 +665,6 @@ int MPIR_Iallgatherv_inter(const void *sendbuf, int sendcount, MPI_Datatype send
     }
 
     newcomm_ptr = comm_ptr->local_comm;
-    MPIR_Assert(newcomm_ptr->coll_fns && newcomm_ptr->coll_fns->Ibcast_sched);
 
     mpi_errno = MPIR_Type_indexed_impl(remote_size, recvcounts, displs, recvtype, &newtype);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -675,7 +672,7 @@ int MPIR_Iallgatherv_inter(const void *sendbuf, int sendcount, MPI_Datatype send
     mpi_errno = MPIR_Type_commit_impl(&newtype);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = newcomm_ptr->coll_fns->Ibcast_sched(recvbuf, 1, newtype, 0, newcomm_ptr, s);
+    mpi_errno = MPIR_Ibcast_sched(recvbuf, 1, newtype, 0, newcomm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIR_Type_free_impl(&newtype);
@@ -687,12 +684,30 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv_impl
+#define FUNCNAME MPIR_Iallgatherv_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                          void *recvbuf, const int recvcounts[], const int displs[],
-                          MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Iallgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                           void *recvbuf, const int recvcounts[], const int displs[],
+                           MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        mpi_errno = MPIR_Iallgatherv_intra(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm_ptr, s);
+    } else {
+        mpi_errno = MPIR_Iallgatherv_inter(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm_ptr, s);
+    }
+
+    return mpi_errno;
+}
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iallgatherv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                     void *recvbuf, const int recvcounts[], const int displs[],
+                     MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *reqp = NULL;
@@ -706,9 +721,7 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Iallgatherv_sched != NULL);
-    mpi_errno = comm_ptr->coll_fns->Iallgatherv_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm_ptr, s);
+    mpi_errno = MPIR_Iallgatherv_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);

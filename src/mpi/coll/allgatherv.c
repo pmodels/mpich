@@ -49,58 +49,6 @@ int MPI_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, vo
 #undef MPI_Allgatherv
 #define MPI_Allgatherv PMPI_Allgatherv
 
-
-/* not declared static because a machine-specific function may call this one 
-   in some cases */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Allgatherv_intra
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgatherv_intra ( 
-    const void *sendbuf,
-    int sendcount,
-    MPI_Datatype sendtype,
-    void *recvbuf,
-    const int *recvcounts,
-    const int *displs,
-    MPI_Datatype recvtype,
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag )
-{
-    int mpi_errno =  MPI_SUCCESS;
-    mpi_errno = MPIR_Allgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm_ptr, errflag);
-
-    return mpi_errno;
-}
-
-
-
-/* not declared static because a machine-specific function may call this one in some cases */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Allgatherv_inter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgatherv_inter ( 
-    const void *sendbuf,
-    int sendcount,
-    MPI_Datatype sendtype,
-    void *recvbuf,
-    const int *recvcounts,
-    const int *displs,
-    MPI_Datatype recvtype,
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag )
-{
-    int mpi_errno =  MPI_SUCCESS;
-    mpi_errno = MPIR_Allgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm_ptr, errflag);
-    return mpi_errno;
-}
-
-
-/* MPIR_Allgatherv performs an allgatherv using point-to-point
-   messages.  This is intended to be used by device-specific
-   implementations of allgatherv.  In all other cases
-   MPIR_Allgatherv_impl should be used. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allgatherv
 #undef FCNAME
@@ -126,41 +74,6 @@ int MPIR_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     return mpi_errno;
 }
-
-/* MPIR_Allgatherv_impl should be called by any internal component
-   that would otherwise call MPI_Allgatherv.  This differs from
-   MPIR_Allgatherv in that this is SMP aware and will call the
-   coll_fns version if it exists.  This is a replacement for
-   NMPI_Allgatherv. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Allgatherv_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                         void *recvbuf, const int *recvcounts, const int *displs,
-                         MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-        
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Allgatherv != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Allgatherv(sendbuf, sendcount, sendtype,
-                                                   recvbuf, recvcounts, displs, recvtype, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Allgatherv(sendbuf, sendcount, sendtype,
-                                    recvbuf, recvcounts, displs, recvtype, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
- fn_exit:
-    return mpi_errno;
- fn_fail:
-
-    goto fn_exit;
-}
-
 
 #endif
 

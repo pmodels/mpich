@@ -51,43 +51,6 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[
 #define MPI_Reduce_scatter PMPI_Reduce_scatter
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_intra
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-
-/* not declared static because a machine-specific function may call this one in some cases */
-int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recvcounts[],
-                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-    mpi_errno = MPIR_Reduce_scatter (sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
-
-    return mpi_errno;
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_inter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-
-/* not declared static because a machine-specific function may call this one in some cases */
-int MPIR_Reduce_scatter_inter(const void *sendbuf, void *recvbuf, const int recvcounts[],
-                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-                              MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-    mpi_errno = MPIR_Reduce_scatter (sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
-
-    return mpi_errno;
-}
-
-
-/* MPIR_Reduce_Scatter performs an reduce_scatter using point-to-point
-   messages.  This is intended to be used by device-specific
-   implementations of reduce_scatter.  In all other cases
-   MPIR_Reduce_Scatter_impl should be used. */
-#undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_scatter
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -106,38 +69,6 @@ int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts
             break;
     }
     return mpi_errno;
-}
-
-/* MPIR_Reduce_Scatter_impl should be called by any internal component
-   that would otherwise call MPI_Reduce_Scatter.  This differs from
-   MPIR_Reduce_Scatter in that this will call the coll_fns version if
-   it exists.  This function replaces NMPI_Reduce_Scatter. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recvcounts[],
-                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-        
-    if (comm_ptr->coll_fns != NULL && 
-	comm_ptr->coll_fns->Reduce_scatter != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Reduce_scatter(sendbuf, recvbuf, recvcounts,
-                                                       datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Reduce_scatter(sendbuf, recvbuf, recvcounts,
-                                        datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 #endif

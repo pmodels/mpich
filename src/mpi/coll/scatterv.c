@@ -46,9 +46,6 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 */
 
 /* not declared static because it is called in intercomm. reduce_scatter */
-/* MPIR_Scatterv performs an scatterv using point-to-point messages.
-   This is intended to be used by device-specific implementations of
-   scatterv.  In all other cases MPIR_Scatterv_impl should be used. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scatterv
 #undef FCNAME
@@ -148,40 +145,6 @@ fn_exit:
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     return mpi_errno;
 fn_fail:
-    goto fn_exit;
-}
-
-/* MPIR_Scatterv_impl should be called by any internal component that
-   would otherwise call MPI_Scatterv.  This differs from MPIR_Scatterv
-   in that this will call the coll_fns version if it exists.  This
-   function replaces NMPI_Scatterv. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scatterv_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts, const int *displs,
-                       MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                       int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-        
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Scatter != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Scatterv(sendbuf, sendcounts, displs,
-                                                 sendtype, recvbuf, recvcount,
-                                                 recvtype, root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Scatterv(sendbuf, sendcounts, displs, sendtype,
-                                  recvbuf, recvcount, recvtype,
-                                  root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
- fn_exit:
-    return mpi_errno;
- fn_fail:
     goto fn_exit;
 }
 
