@@ -14,8 +14,6 @@
 static int barrier (MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 static int alloc_barrier_vars (MPIR_Comm *comm, MPID_nem_barrier_vars_t **vars);
 
-UT_array *coll_fns_array = NULL;
-
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_comm_create
 #undef FCNAME
@@ -34,41 +32,7 @@ int MPIDI_CH3I_comm_create(MPIR_Comm *comm, void *param)
     
     /* set up intranode barrier iff this is an intranode communicator */
     if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
-        MPIR_Collops *cf, **cf_p;
         comm->dev.ch.barrier_vars = NULL;
-
-        /* We can't use a static coll_fns override table for our collectives
-           because we store a pointer to the previous coll_fns in our coll_fns
-           table and different communicators can potentially have different
-           coll_fns.  In the worst case, we may need one coll_fns table for each
-           communicator, in practice, however, we don't expect to need more than
-           a few.
-
-           Warning if you are copying this code: This code is not tested well
-           for the case where multiple coll_fns are needed because we don't
-           currently have a use case for it.
-        */
-        cf_p = NULL;
-        while ( (cf_p = (MPIR_Collops **)utarray_next(coll_fns_array, cf_p)) ) {
-            /* we can reuse a coll_fns table if the prev_coll_fns pointer is
-               the same as the coll_fns of this communicator */
-            if ((*cf_p)->prev_coll_fns == comm->coll_fns) {
-                comm->coll_fns = *cf_p;
-                ++comm->coll_fns->ref_count;
-                goto fn_exit;
-            }
-        }
-
-        /* allocate and init new coll_fns table */
-        MPIR_CHKPMEM_MALLOC(cf, MPIR_Collops *, sizeof(*cf), mpi_errno, "cf");
-        *cf = *comm->coll_fns;
-        cf->ref_count = 1;
-        cf->Barrier = barrier;
-        cf->prev_coll_fns = comm->coll_fns;
-        utarray_push_back(coll_fns_array, &cf);
-        
-        /* replace coll_fns table */
-        comm->coll_fns = cf;
     }
     
  fn_exit:
@@ -97,18 +61,6 @@ int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param)
 #endif
     
     if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
-        MPIR_Collops *cf = comm->coll_fns;
-
-        /* replace previous coll_fns table */
-        comm->coll_fns = cf->prev_coll_fns;
-
-        /* free coll_fns if it's no longer used */
-        --cf->ref_count;
-        if (cf->ref_count == 0) {
-            utarray_erase(coll_fns_array, utarray_eltidx(coll_fns_array, cf), 1);
-            MPL_free(cf);
-        }
-            
         if (comm->dev.ch.barrier_vars && OPA_fetch_and_decr_int(&comm->dev.ch.barrier_vars->usage_cnt) == 1) {
             OPA_write_barrier();
             OPA_store_int(&comm->dev.ch.barrier_vars->context_id, NULL_CONTEXT_ID);
@@ -180,19 +132,8 @@ static int barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 
         if (comm_ptr->dev.ch.barrier_vars == NULL) {
             /* no barrier_vars left -- revert to default barrier. */
-            /* FIXME: need a better solution here.  e.g., allocate
-               some barrier_vars on the first barrier for the life of
-               the communicator (as is the case now), others must be
-               allocated for each barrier, then released.  If we run
-               out of barrier_vars after that, then use msg_barrier.
-            */
-            if (comm_ptr->coll_fns->prev_coll_fns->Barrier != NULL) {
-                mpi_errno = comm_ptr->coll_fns->prev_coll_fns->Barrier(comm_ptr, errflag);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            } else {
-                mpi_errno = MPIR_Barrier_intra(comm_ptr, errflag);
-                if (mpi_errno) MPIR_ERR_POP (mpi_errno);
-            }
+            mpi_errno = MPIR_Barrier(comm_ptr, errflag);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             goto fn_exit;
         }
     }
@@ -258,8 +199,6 @@ static int nem_coll_finalize(void *param ATTRIBUTE((unused)))
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NEM_COLL_FINALIZE);
 
-    utarray_free(coll_fns_array);
-
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NEM_COLL_FINALIZE);
     return mpi_errno;
@@ -279,7 +218,6 @@ int MPID_nem_coll_init(void)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_COLL_INIT);
 
-    utarray_new(coll_fns_array, &ut_ptr_icd);
     MPIR_Add_finalize(nem_coll_finalize, NULL, MPIR_FINALIZE_CALLBACK_PRIO-1);
     
  fn_exit:

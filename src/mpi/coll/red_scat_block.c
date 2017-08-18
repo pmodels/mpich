@@ -55,54 +55,6 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
 #undef MPI_Reduce_scatter_block
 #define MPI_Reduce_scatter_block PMPI_Reduce_scatter_block
 
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_intra
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-
-/* not declared static because a machine-specific function may call this one in some cases */
-int MPIR_Reduce_scatter_block_intra ( 
-    const void *sendbuf, 
-    void *recvbuf, 
-    int recvcount, 
-    MPI_Datatype datatype, 
-    MPI_Op op, 
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag )
-{
-    int mpi_errno = MPI_SUCCESS;
-    mpi_errno = MPIR_Reduce_scatter_block (sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
-
-    return mpi_errno;
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_inter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-
-/* not declared static because a machine-specific function may call this one in some cases */
-int MPIR_Reduce_scatter_block_inter ( 
-    const void *sendbuf, 
-    void *recvbuf, 
-    int recvcount, 
-    MPI_Datatype datatype, 
-    MPI_Op op, 
-    MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
-{
-    int mpi_errno = MPI_SUCCESS;
-    mpi_errno = MPIR_Reduce_scatter_block (sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
-
-    return mpi_errno;
-}
-
-
-/* MPIR_Reduce_scatter_block performs a red_scat_block using
-   point-to-point messages.  This is intended to be used by
-   device-specific implementations of red_scat_block.  In all other
-   cases MPIR_Reduce_scatter_block_impl should be used. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_scatter_block
 #undef FCNAME
@@ -124,45 +76,6 @@ int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
     }
     return mpi_errno;
 }
-
-/* MPIR_Reduce_scatter_block_impl should be called by any internal
-   component that would otherwise call MPI_Reduce_scatter_block.  This
-   differs from MPIR_Reduce_scatter_block in that this will call the
-   coll_fns version if it exists.  This is a replacement for
-   NMPI_Reduce_scatter_block. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf, 
-                                   int recvcount, MPI_Datatype datatype,
-                                   MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-        
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Reduce_scatter_block != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-            /* intracommunicator */
-            mpi_errno = MPIR_Reduce_scatter_block_intra(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        } else {
-            /* intercommunicator */
-            mpi_errno = MPIR_Reduce_scatter_block_inter(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        }
-    }
-
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
 
 #endif
 

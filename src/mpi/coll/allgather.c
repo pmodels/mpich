@@ -51,52 +51,6 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, voi
 #undef MPI_Allgather
 #define MPI_Allgather PMPI_Allgather
 
-/* not declared static because a machine-specific function may call this 
-   one in some cases */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Allgather_intra
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgather_intra ( 
-    const void *sendbuf,
-    int sendcount,
-    MPI_Datatype sendtype,
-    void *recvbuf,
-    int recvcount,
-    MPI_Datatype recvtype,
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag )
-{
-    int mpi_errno =  MPI_SUCCESS;
-    mpi_errno = MPIR_Allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
-    return mpi_errno;
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_Allgather_inter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-
-/* not declared static because a machine-specific function may call this one 
-   in some cases */
-int MPIR_Allgather_inter ( 
-    const void *sendbuf,
-    int sendcount,
-    MPI_Datatype sendtype,
-    void *recvbuf,
-    int recvcount,
-    MPI_Datatype recvtype,
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag)
-{
-    int mpi_errno =  MPI_SUCCESS;
-    mpi_errno = MPIR_Allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
-
-    return mpi_errno;
-}
-
-
 /* MPIR_Allgather performs an allgather using point-to-point messages.
    This is intended to be used by device-specific implementations of
    allgather.  In all other cases MPIR_Allgather_impl should be
@@ -127,41 +81,6 @@ int MPIR_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             break;
     }
     return mpi_errno;
-}
-
-/* MPIR_Allgather_impl should be called by any internal component that
-   would otherwise call MPI_Allgather.  This differs from
-   MPIR_Allgather in that this will call the coll_fns version if it
-   exists.  This function replaces NMPI_Allgather. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Allgather_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                        MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Allgather != NULL)
-    {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Allgather(sendbuf, sendcount, sendtype,
-                                                  recvbuf, recvcount, recvtype,
-                                                  comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Allgather(sendbuf, sendcount, sendtype,
-                                   recvbuf, recvcount, recvtype,
-                                   comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
-fn_exit:
-    return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 #endif

@@ -553,8 +553,7 @@ int MPIR_Iallreduce_inter(const void *sendbuf, void *recvbuf, int count, MPI_Dat
     }
     lcomm_ptr = comm_ptr->local_comm;
 
-    MPIR_Assert(lcomm_ptr->coll_fns && lcomm_ptr->coll_fns->Ibcast_sched);
-    mpi_errno = lcomm_ptr->coll_fns->Ibcast_sched(recvbuf, count, datatype, 0, lcomm_ptr, s);
+    mpi_errno = MPIR_Ibcast_sched(recvbuf, count, datatype, 0, lcomm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
@@ -597,15 +596,13 @@ int MPIR_Iallreduce_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datat
         /* take care of the MPI_IN_PLACE case. For reduce,
            MPI_IN_PLACE is specified only on the root;
            for allreduce it is specified on all processes. */
-        MPIR_Assert(nc->coll_fns && nc->coll_fns->Ireduce_sched);
-
         if ((sendbuf == MPI_IN_PLACE) && (comm_ptr->node_comm->rank != 0)) {
             /* IN_PLACE and not root of reduce. Data supplied to this
                allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
-            mpi_errno = nc->coll_fns->Ireduce_sched(recvbuf, NULL, count, datatype, op, 0, nc, s);
+            mpi_errno = MPIR_Ireduce_sched(recvbuf, NULL, count, datatype, op, 0, nc, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         } else {
-            mpi_errno = nc->coll_fns->Ireduce_sched(sendbuf, recvbuf, count, datatype, op, 0, nc, s);
+            mpi_errno = MPIR_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, 0, nc, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         MPIR_SCHED_BARRIER(s);
@@ -621,16 +618,14 @@ int MPIR_Iallreduce_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datat
 
     /* now do an IN_PLACE allreduce among the local roots of all nodes */
     if (nrc != NULL) {
-        MPIR_Assert(nrc->coll_fns && nrc->coll_fns->Iallreduce_sched);
-        mpi_errno = nrc->coll_fns->Iallreduce_sched(MPI_IN_PLACE, recvbuf, count, datatype, op, nrc, s);
+        mpi_errno = MPIR_Iallreduce_sched(MPI_IN_PLACE, recvbuf, count, datatype, op, nrc, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 
     /* now broadcast the result among local processes */
     if (comm_ptr->node_comm != NULL) {
-        MPIR_Assert(nc->coll_fns && nc->coll_fns->Ibcast_sched);
-        mpi_errno = nc->coll_fns->Ibcast_sched(recvbuf, count, datatype, 0, nc, s);
+        mpi_errno = MPIR_Ibcast_sched(recvbuf, count, datatype, 0, nc, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
@@ -641,12 +636,31 @@ fn_fail:
     goto fn_exit;
 }
 
-
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_impl
+#define FUNCNAME MPIR_Iallreduce_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
+            mpi_errno = MPIR_Iallreduce_SMP(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        } else {
+            mpi_errno = MPIR_Iallreduce_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        }
+    } else {
+        mpi_errno = MPIR_Iallreduce_inter(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+    }
+
+    return mpi_errno;
+}
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iallreduce
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *reqp = NULL;
@@ -660,9 +674,7 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Data
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Iallreduce_sched != NULL);
-    mpi_errno = comm_ptr->coll_fns->Iallreduce_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+    mpi_errno = MPIR_Iallreduce_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);

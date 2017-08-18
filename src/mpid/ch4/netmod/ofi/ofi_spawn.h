@@ -574,7 +574,7 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
                                                 timeout, port_id, &conn, comm_ptr);
         if (mpi_errno == MPI_ERR_PORT || mpi_errno == MPI_SUCCESS) {
             root_errno = mpi_errno;
-            mpi_errno = MPIR_Bcast_intra(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
+            mpi_errno = MPIR_Bcast(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
             if (mpi_errno != MPI_SUCCESS)
                 MPIR_ERR_POP(mpi_errno);
             if (root_errno != MPI_SUCCESS) {
@@ -600,7 +600,7 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
     }
 
     if (rank != root) {
-        mpi_errno = MPIR_Bcast_intra(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPIR_Bcast(&root_errno, 1, MPI_INT, root, comm_ptr, &errflag);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_POP(mpi_errno);
         if (root_errno != MPI_SUCCESS) {
@@ -634,7 +634,7 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
                                                      MPIDI_OFI_DYNPROC_CONNECTED_CHILD);
         MPIDI_OFI_COMM(*newcomm).conn_id = conn_id;
     }
-    MPIDI_OFI_MPI_CALL_POP(MPIR_Barrier_intra(comm_ptr, &errflag));
+    MPIDI_OFI_MPI_CALL_POP(MPIR_Barrier(comm_ptr, &errflag));
   fn_exit:
     if (rank == root) {
         MPIR_CHKLMEM_FREEALL();
@@ -812,7 +812,7 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
                                                      MPIDI_OFI_DYNPROC_CONNECTED_PARENT);
         MPIDI_OFI_COMM(*newcomm).conn_id = conn_id;
     }
-    MPIDI_OFI_MPI_CALL_POP(MPIR_Barrier_intra(comm_ptr, &errflag));
+    MPIDI_OFI_MPI_CALL_POP(MPIR_Barrier(comm_ptr, &errflag));
   fn_exit:
     if (rank == root) {
         MPIR_CHKLMEM_FREEALL();

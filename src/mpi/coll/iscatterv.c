@@ -47,12 +47,12 @@ int MPI_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[
 */
 /* this routine handles both intracomms and intercomms */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatterv
+#define FUNCNAME MPIR_Iscatterv_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[],
-                   MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                   int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iscatterv_sched(const void *sendbuf, const int sendcounts[], const int displs[],
+                         MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                         int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
@@ -113,12 +113,12 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatterv_impl
+#define FUNCNAME MPIR_Iscatterv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int displs[],
-                        MPI_Datatype sendtype, void *recvbuf, int recvcount,
-                        MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[],
+                   MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                   MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *reqp = NULL;
@@ -132,8 +132,7 @@ int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int d
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIR_Assert(comm_ptr->coll_fns->Iscatterv_sched != NULL);
-    mpi_errno = comm_ptr->coll_fns->Iscatterv_sched(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+    mpi_errno = MPIR_Iscatterv_sched(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);

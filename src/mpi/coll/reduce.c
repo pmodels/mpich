@@ -69,55 +69,6 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 #undef MPI_Reduce
 #define MPI_Reduce PMPI_Reduce
 
-/* not declared static because a machine-specific function may call this one 
-   in some cases */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_intra
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_intra ( 
-    const void *sendbuf,
-    void *recvbuf,
-    int count,
-    MPI_Datatype datatype,
-    MPI_Op op,
-    int root,
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag )
-{
-    int mpi_errno = MPI_SUCCESS;
-    mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
-
-    return mpi_errno;
-}
-
-
-
-/* Needed in intercommunicator allreduce */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_inter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_inter ( 
-    const void *sendbuf,
-    void *recvbuf,
-    int count,
-    MPI_Datatype datatype,
-    MPI_Op op,
-    int root,
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag )
-{
-    int mpi_errno = MPI_SUCCESS;
-    mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
-
-    return mpi_errno;
-}
-
-/* MPIR_Reduce performs an reduce using point-to-point messages.
-   This is intended to be used by device-specific implementations of
-   reduce.  In all other cases MPIR_Reduce_impl should be
-   used. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce
 #undef FCNAME
@@ -180,46 +131,6 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
  fn_fail:
     goto fn_exit;
 }
-
-/* MPIR_Reduce_impl should be called by any internal component that
-   would otherwise call MPI_Reduce.  This differs from
-   MPIR_Reduce in that this will call the coll_fns version if it
-   exists.  This function replaces NMPI_Reduce. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                     MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-        
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Reduce != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Reduce(sendbuf, recvbuf, count,
-                                               datatype, op, root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-            /* intracommunicator */
-            mpi_errno = MPIR_Reduce_intra(sendbuf, recvbuf, count, datatype,
-                                          op, root, comm_ptr, errflag);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	} else {
-            /* intercommunicator */
-            mpi_errno = MPIR_Reduce_inter(sendbuf, recvbuf, count, datatype,
-                                          op, root, comm_ptr, errflag);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        }
-    }
-
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
 
 #endif
 
