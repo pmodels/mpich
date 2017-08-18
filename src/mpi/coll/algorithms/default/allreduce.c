@@ -62,30 +62,6 @@ cvars:
 */
 
 #undef FUNCNAME
-#define FUNCNAME allreduce_intra_or_coll_fn
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int allreduce_intra_or_coll_fn(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
-                                             MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Allreduce != NULL) {
-    /* --BEGIN USEREXTENSION-- */
-    mpi_errno = comm_ptr->coll_fns->Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    /* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-#undef FUNCNAME
 #define FUNCNAME MPIC_DEFAULT_Allreduce_recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -559,30 +535,54 @@ int MPIC_DEFAULT_Allreduce_intra (
     is_commutative = MPIR_Op_is_commutative(op);
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_ALLREDUCE) {
-    /* is the op commutative? We do SMP optimizations only if it is. */
-    MPIR_Datatype_get_size_macro(datatype, type_size);
-    nbytes = MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE ? type_size*count : 0;
-    if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative &&
-        nbytes <= MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE) {
-        /* on each node, do a reduce to the local root */
-        if (comm_ptr->node_comm != NULL) {
-            /* take care of the MPI_IN_PLACE case. For reduce,
-               MPI_IN_PLACE is specified only on the root;
-               for allreduce it is specified on all processes. */
+        /* is the op commutative? We do SMP optimizations only if it is. */
+        MPIR_Datatype_get_size_macro(datatype, type_size);
+        nbytes = MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE ? type_size * count : 0;
+        if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative &&
+            nbytes <= MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE) {
+            /* on each node, do a reduce to the local root */
+            if (comm_ptr->node_comm != NULL) {
+                /* take care of the MPI_IN_PLACE case. For reduce,
+                 * MPI_IN_PLACE is specified only on the root;
+                 * for allreduce it is specified on all processes. */
 
-            if ((sendbuf == MPI_IN_PLACE) && (comm_ptr->node_comm->rank != 0)) {
-                /* IN_PLACE and not root of reduce. Data supplied to this
-                   allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
+                if ((sendbuf == MPI_IN_PLACE) && (comm_ptr->node_comm->rank != 0)) {
+                    /* IN_PLACE and not root of reduce. Data supplied to this
+                     * allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
 
-                mpi_errno = MPID_Reduce(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm, errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                    mpi_errno =
+                        MPID_Reduce(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm,
+                                    errflag);
+                    if (mpi_errno) {
+                        /* for communication errors, just record the error but continue */
+                        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                    }
+                } else {
+                    mpi_errno =
+                        MPID_Reduce(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm,
+                                    errflag);
+                    if (mpi_errno) {
+                        /* for communication errors, just record the error but continue */
+                        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                    }
                 }
             } else {
-                mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm, errflag);
+                /* only one process on the node. copy sendbuf to recvbuf */
+                if (sendbuf != MPI_IN_PLACE) {
+                    mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
+                }
+            }
+
+            /* now do an IN_PLACE allreduce among the local roots of all nodes */
+            if (comm_ptr->node_roots_comm != NULL) {
+                mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, recvbuf, count, datatype, op,
+                                           comm_ptr->node_roots_comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -590,38 +590,19 @@ int MPIC_DEFAULT_Allreduce_intra (
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
             }
-        } else {
-            /* only one process on the node. copy sendbuf to recvbuf */
-            if (sendbuf != MPI_IN_PLACE) {
-                mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            }
-        }
 
-        /* now do an IN_PLACE allreduce among the local roots of all nodes */
-        if (comm_ptr->node_roots_comm != NULL) {
-            mpi_errno = allreduce_intra_or_coll_fn(MPI_IN_PLACE, recvbuf, count, datatype, op, comm_ptr->node_roots_comm,
-                                                   errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+            /* now broadcast the result among local processes */
+            if (comm_ptr->node_comm != NULL) {
+                mpi_errno = MPID_Bcast(recvbuf, count, datatype, 0, comm_ptr->node_comm, errflag);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
             }
+            goto fn_exit;
         }
-
-        /* now broadcast the result among local processes */
-        if (comm_ptr->node_comm != NULL) {
-            mpi_errno = MPID_Bcast(recvbuf, count, datatype, 0, comm_ptr->node_comm, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
-        }
-        goto fn_exit;
-    }
     }
 
 #ifdef MPID_HAS_HETERO
@@ -732,7 +713,7 @@ int MPIC_DEFAULT_Allreduce_inter(const void *sendbuf,
     newcomm_ptr = comm_ptr->local_comm;
 
     /* Do a local reduce on this intracommunicator */
-    mpi_errno = MPIR_Reduce_intra(sendbuf, tmp_buf, count, datatype, op, 0, newcomm_ptr, errflag);
+    mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype, op, 0, newcomm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

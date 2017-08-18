@@ -555,10 +555,6 @@ int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     goto fn_exit;
 }
 
-
-/* MPIR_Scatter performs an scatter using point-to-point messages.
-   This is intended to be used by device-specific implementations of
-   scatter.  In all other cases MPIR_Scatter_impl should be used. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scatter
 #undef FCNAME
@@ -590,38 +586,6 @@ int MPIR_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     goto fn_exit;
 }
 
-/* MPIR_Scatter_impl should be called by any internal component that
-   would otherwise call MPI_Scatter.  This differs from MPIR_Scatter
-   in that this will call the coll_fns version if it exists.  This
-   function replaces NMPI_Scatter. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scatter_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scatter_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                      int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Scatter != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Scatter(sendbuf, sendcount, sendtype,
-                                                recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Scatter(sendbuf, sendcount, sendtype,
-                                 recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    
- fn_exit:
-    return mpi_errno;
- fn_fail:
-
-    goto fn_exit;
-}
 #endif
 
 #undef FUNCNAME

@@ -77,9 +77,6 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 
 /* not declared static because a machine-specific function may call this 
    one in some cases */
-/* MPIR_Exscan performs an exscan using point-to-point messages.  This
-   is intended to be used by device-specific implementations of
-   exscan.  In all other cases MPIR_Exscan_impl should be used. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Exscan
 #undef FCNAME
@@ -236,37 +233,6 @@ fn_exit:
 fn_fail:
     goto fn_exit;
 }
-
-
-/* MPIR_Exscan_impl should be called by any internal component that
-   would otherwise call MPI_Exscan.  This differs from MPIR_Exscan in
-   that this will call the coll_fns version if it exists.  This
-   function replaces NMPI_Exscan. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Exscan_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Exscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Exscan != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-	mpi_errno = MPIR_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
-        
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
 
 #endif
 

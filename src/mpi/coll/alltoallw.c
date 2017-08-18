@@ -49,33 +49,6 @@ int MPI_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispls
 #undef MPI_Alltoallw
 #define MPI_Alltoallw PMPI_Alltoallw
 
-/* not declared static because a machine-specific function may call this one in some cases */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallw_intra
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int sdispls[],
-                         const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                         const int rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm *comm_ptr,
-                         MPIR_Errflag_t *errflag)
-{
-    return MPI_ERR_OTHER;
-}
-
-
-/* not declared static because a machine-specific function may call this one in some cases */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallw_inter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoallw_inter(const void *sendbuf, const int sendcounts[], const int sdispls[],
-                         const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                         const int rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm *comm_ptr,
-                         MPIR_Errflag_t *errflag)
-{
-    return MPI_ERR_OTHER;
-}
-
 #undef FUNCNAME
 #define FUNCNAME MPIR_Alltoallw
 #undef FCNAME
@@ -103,38 +76,6 @@ int MPIR_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 
     return mpi_errno;
 }
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallw_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoallw_impl(const void *sendbuf, const int sendcounts[], const int sdispls[],
-                        const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                        const int rdispls[], const MPI_Datatype recvtypes[],
-                        MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-        
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Alltoallw != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Alltoallw(sendbuf, sendcounts, sdispls,
-                                                  sendtypes, recvbuf, recvcounts,
-                                                  rdispls, recvtypes, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Alltoallw(sendbuf, sendcounts, sdispls,
-                                   sendtypes, recvbuf, recvcounts,
-                                   rdispls, recvtypes, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
 
 #endif
 

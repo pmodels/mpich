@@ -88,7 +88,6 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->attributes = NULL;
     comm_p->remote_group = NULL;
     comm_p->local_group = NULL;
-    comm_p->coll_fns = NULL;
     comm_p->topo_fns = NULL;
     comm_p->name[0] = '\0';
     comm_p->info = NULL;
@@ -203,7 +202,6 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
 
     /* TODO More advanced version: if the group is available, dup it by
      * increasing the reference count instead of recreating it later */
-    /* FIXME  : No coll_fns functions for the collectives */
     /* FIXME  : No local functions for the topology routines */
 
     intercomm_ptr->local_comm = localcomm_ptr;
@@ -217,200 +215,6 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_SETUP_INTERCOMM_LOCALCOMM);
 
     return mpi_errno;
-}
-
-/* holds default collop "vtables" for _intracomms_, where
- * default[hierarchy_kind] is the pointer to the collop struct for that
- * hierarchy kind */
-static struct MPIR_Collops *default_collops[MPIR_COMM_HIERARCHY_KIND__SIZE] = { NULL };
-
-/* default for intercomms */
-static struct MPIR_Collops *ic_default_collops = NULL;
-
-#undef FUNCNAME
-#define FUNCNAME cleanup_default_collops
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static int cleanup_default_collops(void *unused)
-{
-    int i;
-    for (i = 0; i < MPIR_COMM_HIERARCHY_KIND__SIZE; ++i) {
-        if (default_collops[i]) {
-            MPIR_Assert(default_collops[i]->ref_count >= 1);
-            if (--default_collops[i]->ref_count == 0)
-                MPL_free(default_collops[i]);
-            default_collops[i] = NULL;
-        }
-    }
-    if (ic_default_collops) {
-        MPIR_Assert(ic_default_collops->ref_count >= 1);
-        if (--ic_default_collops->ref_count == 0)
-            MPL_free(ic_default_collops);
-    }
-    return MPI_SUCCESS;
-}
-
-#undef FUNCNAME
-#define FUNCNAME init_default_collops
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static int init_default_collops(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int i;
-    struct MPIR_Collops *ops = NULL;
-    MPIR_CHKPMEM_DECL(MPIR_COMM_HIERARCHY_KIND__SIZE + 1);
-
-    /* first initialize the intracomms */
-    for (i = 0; i < MPIR_COMM_HIERARCHY_KIND__SIZE; ++i) {
-        MPIR_CHKPMEM_CALLOC(ops, struct MPIR_Collops *, sizeof(struct MPIR_Collops), mpi_errno,
-                            "default intracomm collops");
-        ops->ref_count = 1;     /* force existence until finalize time */
-
-        /* intracomm default defaults... */
-        ops->Ibcast_sched = &MPIR_Ibcast_intra;
-        ops->Ibarrier_sched = &MPIR_Ibarrier_intra;
-        ops->Ireduce_sched = &MPIR_Ireduce_intra;
-        ops->Ialltoall_sched = &MPIR_Ialltoall_intra;
-        ops->Ialltoallv_sched = &MPIR_Ialltoallv_intra;
-        ops->Ialltoallw_sched = &MPIR_Ialltoallw_intra;
-        ops->Iallreduce_sched = &MPIR_Iallreduce_intra;
-        ops->Igather_sched = &MPIR_Igather_intra;
-        ops->Igatherv_sched = &MPIR_Igatherv;
-        ops->Iscatter_sched = &MPIR_Iscatter_intra;
-        ops->Iscatterv_sched = &MPIR_Iscatterv;
-        ops->Ireduce_scatter_sched = &MPIR_Ireduce_scatter_intra;
-        ops->Ireduce_scatter_block_sched = &MPIR_Ireduce_scatter_block_intra;
-        ops->Iallgather_sched = &MPIR_Iallgather_intra;
-        ops->Iallgatherv_sched = &MPIR_Iallgatherv_intra;
-        ops->Iscan_sched = &MPIR_Iscan_rec_dbl;
-        ops->Iexscan_sched = &MPIR_Iexscan;
-        ops->Neighbor_allgather = &MPIR_Neighbor_allgather_default;
-        ops->Neighbor_allgatherv = &MPIR_Neighbor_allgatherv_default;
-        ops->Neighbor_alltoall = &MPIR_Neighbor_alltoall_default;
-        ops->Neighbor_alltoallv = &MPIR_Neighbor_alltoallv_default;
-        ops->Neighbor_alltoallw = &MPIR_Neighbor_alltoallw_default;
-        ops->Ineighbor_allgather = &MPIR_Ineighbor_allgather_default;
-        ops->Ineighbor_allgatherv = &MPIR_Ineighbor_allgatherv_default;
-        ops->Ineighbor_alltoall = &MPIR_Ineighbor_alltoall_default;
-        ops->Ineighbor_alltoallv = &MPIR_Ineighbor_alltoallv_default;
-        ops->Ineighbor_alltoallw = &MPIR_Ineighbor_alltoallw_default;
-
-        /* override defaults, such as for SMP */
-        switch (i) {
-        case MPIR_COMM_HIERARCHY_KIND__FLAT:
-            break;
-        case MPIR_COMM_HIERARCHY_KIND__PARENT:
-            ops->Ibcast_sched = &MPIR_Ibcast_SMP;
-            ops->Iscan_sched = &MPIR_Iscan_SMP;
-            ops->Iallreduce_sched = &MPIR_Iallreduce_SMP;
-            ops->Ireduce_sched = &MPIR_Ireduce_SMP;
-            break;
-        case MPIR_COMM_HIERARCHY_KIND__NODE:
-            break;
-        case MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS:
-            break;
-
-            /* --BEGIN ERROR HANDLING-- */
-        default:
-            MPIR_Assertp(FALSE);
-            break;
-            /* --END ERROR HANDLING-- */
-        }
-
-        /* this is a default table, it's not overriding another table */
-        ops->prev_coll_fns = NULL;
-
-        default_collops[i] = ops;
-    }
-
-    /* now the intercomm table */
-    {
-        MPIR_CHKPMEM_CALLOC(ops, struct MPIR_Collops *, sizeof(struct MPIR_Collops), mpi_errno,
-                            "default intercomm collops");
-        ops->ref_count = 1;     /* force existence until finalize time */
-
-        /* intercomm defaults */
-        ops->Ibcast_sched = &MPIR_Ibcast_inter;
-        ops->Ibarrier_sched = &MPIR_Ibarrier_inter;
-        ops->Ireduce_sched = &MPIR_Ireduce_inter;
-        ops->Ialltoall_sched = &MPIR_Ialltoall_inter;
-        ops->Ialltoallv_sched = &MPIR_Ialltoallv_inter;
-        ops->Ialltoallw_sched = &MPIR_Ialltoallw_inter;
-        ops->Iallreduce_sched = &MPIR_Iallreduce_inter;
-        ops->Igather_sched = &MPIR_Igather_inter;
-        ops->Igatherv_sched = &MPIR_Igatherv;
-        ops->Iscatter_sched = &MPIR_Iscatter_inter;
-        ops->Iscatterv_sched = &MPIR_Iscatterv;
-        ops->Ireduce_scatter_sched = &MPIR_Ireduce_scatter_inter;
-        ops->Ireduce_scatter_block_sched = &MPIR_Ireduce_scatter_block_inter;
-        ops->Iallgather_sched = &MPIR_Iallgather_inter;
-        ops->Iallgatherv_sched = &MPIR_Iallgatherv_inter;
-        /* scan and exscan are not valid for intercommunicators, leave them NULL */
-        /* Ineighbor_all* routines are not valid for intercommunicators, leave
-         * them NULL */
-
-        /* this is a default table, it's not overriding another table */
-        ops->prev_coll_fns = NULL;
-
-        ic_default_collops = ops;
-    }
-
-
-    /* run after MPID_Finalize to permit collective usage during finalize */
-    MPIR_Add_finalize(cleanup_default_collops, NULL, MPIR_FINALIZE_CALLBACK_PRIO - 1);
-
-    MPIR_CHKPMEM_COMMIT();
-  fn_exit:
-    return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    MPIR_CHKPMEM_REAP();
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
-}
-
-/* Initializes the coll_fns field of comm to a sensible default.  It may re-use
- * an existing structure, so any override by a lower level should _not_ change
- * any of the fields but replace the coll_fns object instead.
- *
- * NOTE: for now we only initialize nonblocking collective routines, since the
- * blocking collectives all contain fallback logic that correctly handles NULL
- * override functions. */
-#undef FUNCNAME
-#define FUNCNAME set_collops
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static int set_collops(MPIR_Comm * comm)
-{
-    int mpi_errno = MPI_SUCCESS;
-    static int initialized = FALSE;
-
-    if (comm->coll_fns != NULL)
-        goto fn_exit;
-
-    if (unlikely(!initialized)) {
-        mpi_errno = init_default_collops();
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-
-        initialized = TRUE;
-    }
-
-    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        /* FIXME MT what protects access to this structure and ic_default_collops? */
-        comm->coll_fns = default_collops[comm->hierarchy_kind];
-    }
-    else {      /* intercomm */
-        comm->coll_fns = ic_default_collops;
-    }
-
-    comm->coll_fns->ref_count++;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -544,10 +348,6 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     MPIR_Assert(comm->node_comm == NULL);
     MPIR_Assert(comm->node_roots_comm == NULL);
 
-    mpi_errno = set_collops(comm);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
     /* Notify device of communicator creation */
     mpi_errno = MPID_Comm_create_hook(comm);
     if (mpi_errno)
@@ -625,10 +425,6 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             MPIR_Comm_map_irregular(comm->node_comm, comm, local_procs,
                                     num_local, MPIR_COMM_MAP_DIR__L2L, NULL);
 
-            mpi_errno = set_collops(comm->node_comm);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
-
             /* Notify device of communicator creation */
             mpi_errno = MPID_Comm_create_hook(comm->node_comm);
             if (mpi_errno)
@@ -664,10 +460,6 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
             MPIR_Comm_map_irregular(comm->node_roots_comm, comm,
                                     external_procs, num_external, MPIR_COMM_MAP_DIR__L2L, NULL);
-
-            mpi_errno = set_collops(comm->node_roots_comm);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
 
             /* Notify device of communicator creation */
             mpi_errno = MPID_Comm_create_hook(comm->node_roots_comm);
@@ -844,8 +636,6 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
     }
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 
-    /* FIXME do we want to copy coll_fns here? */
-
     mpi_errno = MPIR_Comm_commit(newcomm_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -925,8 +715,6 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
     }
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 
-    /* FIXME do we want to copy coll_fns here? */
-
     /* Start with no attributes on this communicator */
     newcomm_ptr->attributes = 0;
     *outcomm_ptr = newcomm_ptr;
@@ -995,14 +783,6 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
         /* Free info hints */
         if (comm_ptr->info != NULL) {
             MPIR_Info_free(comm_ptr->info);
-        }
-
-        /* release our reference to the collops structure, comes after the
-         * destroy_hook to allow the device to manage these vtables in a custom
-         * fashion */
-        if (comm_ptr->coll_fns && --comm_ptr->coll_fns->ref_count == 0) {
-            MPL_free(comm_ptr->coll_fns);
-            comm_ptr->coll_fns = NULL;
         }
 
         if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM && comm_ptr->local_comm)

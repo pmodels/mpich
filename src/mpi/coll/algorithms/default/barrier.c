@@ -213,7 +213,7 @@ int MPIC_DEFAULT_Barrier_inter(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
     newcomm_ptr = comm_ptr->local_comm;
 
     /* do a barrier on the local intracommunicator */
-    mpi_errno = MPIR_Barrier_intra(newcomm_ptr, errflag);
+    mpi_errno = MPIR_Barrier(newcomm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -231,7 +231,7 @@ int MPIC_DEFAULT_Barrier_inter(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
     if (comm_ptr->is_low_group) {
         /* bcast to right */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Bcast_inter(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -241,7 +241,7 @@ int MPIC_DEFAULT_Barrier_inter(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 
         /* receive bcast from right */
         root = 0;
-        mpi_errno = MPIR_Bcast_inter(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -251,7 +251,7 @@ int MPIC_DEFAULT_Barrier_inter(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
     } else {
         /* receive bcast from left */
         root = 0;
-        mpi_errno = MPIR_Bcast_inter(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -261,7 +261,7 @@ int MPIC_DEFAULT_Barrier_inter(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 
         /* bcast to left */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Bcast_inter(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Bcast(&i, 1, MPI_BYTE, root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

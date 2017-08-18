@@ -48,42 +48,6 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *
 #define MPI_Gather PMPI_Gather
 
 /* not declared static because it is called in intercomm. allgather */
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_Gather_intra
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
-                      int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
-                      MPIR_Errflag_t *errflag)
-{
-    int mpi_errno =  MPI_SUCCESS;
-    mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-
-    return mpi_errno;
-}
-
-
-
-/* not declared static because a machine-specific function may call this one in some cases */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Gather_inter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
-                      int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
-                      MPIR_Errflag_t *errflag)
-{
-    int mpi_errno =  MPI_SUCCESS;
-    mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-
-    return mpi_errno;
-}
-
-
-/* MPIR_Gather performs an gather using point-to-point messages.  This
-   is intended to be used by device-specific implementations of
-   gather.  In all other cases MPIR_Gather_impl should be used. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Gather
 #undef FCNAME
@@ -107,41 +71,6 @@ int MPIR_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     }
     return mpi_errno;
 }
-
-/* MPIR_Gather_impl should be called by any internal component that
-   would otherwise call MPI_Gather.  This differs from MPIR_Gather in
-   that this will call the coll_fns version if it exists.  This
-   function replaces NMPI_Gather. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Gather_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                     int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-        
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Gather != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Gather(sendbuf, sendcount,
-                                               sendtype, recvbuf, recvcount,
-                                               recvtype, root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype,
-                                recvbuf, recvcount, recvtype, root,
-                                comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
 
 #endif
 
