@@ -12,6 +12,7 @@ spaconacc 1
 spaconacc2 1
 selfconacc 2
 spaiccreate 2
+spaiccreate2 2
 taskmaster 1 timeLimit=600
 taskmaster 2 timeLimit=600
 join 2
