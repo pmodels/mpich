@@ -115,12 +115,12 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
           "added receive request to unexpected queue; attaching send request");
 	    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
 	    {
-		MPIDU_Datatype_get_ptr(datatype, sreq->dev.datatype_ptr);
-		MPIDU_Datatype_add_ref(sreq->dev.datatype_ptr);
+		MPIR_Datatype_get_ptr(datatype, sreq->dev.datatype_ptr);
+		MPIR_Datatype_add_ref(sreq->dev.datatype_ptr);
 	    }
 	    rreq->dev.partner_request = sreq;
 	    rreq->dev.sender_req_id = sreq->handle;
-	    MPIDU_Datatype_get_size_macro(datatype, dt_sz);
+	    MPIR_Datatype_get_size_macro(datatype, dt_sz);
 	    MPIR_STATUS_SET_COUNT(rreq->status, count * dt_sz);
 	}
 	else

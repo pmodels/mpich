@@ -1,6 +1,7 @@
 attr
 coll
 comm
+datatype
 group
 pt2pt
 topo

@@ -62,7 +62,7 @@ static inline int MPIDI_UCX_send(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_SEND);
 
-    ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
+    ep = MPIDI_UCX_AV_TO_EP(addr);
     ucx_tag = MPIDI_UCX_init_tag(comm->context_id + context_offset, comm->rank, tag);
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
@@ -73,7 +73,7 @@ static inline int MPIDI_UCX_send(const void *buf,
                                                                  ucp_dt_make_contig(1),
                                                                  ucx_tag, &MPIDI_UCX_send_cmpl_cb);
         } else {
-            MPIDU_Datatype_add_ref(dt_ptr);
+            MPIR_Datatype_add_ref(dt_ptr);
             ucp_request =
                 (MPIDI_UCX_ucp_request_t *) ucp_tag_send_sync_nb(ep, buf, count,
                                                                  dt_ptr->dev.netmod.ucx.ucp_datatype,
@@ -86,7 +86,7 @@ static inline int MPIDI_UCX_send(const void *buf,
                                                             ucp_dt_make_contig(1), ucx_tag,
                                                             &MPIDI_UCX_send_cmpl_cb);
         } else {
-            MPIDU_Datatype_add_ref(dt_ptr);
+            MPIR_Datatype_add_ref(dt_ptr);
             ucp_request =
                 (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, buf, count,
                                                             dt_ptr->dev.netmod.ucx.ucp_datatype, ucx_tag,

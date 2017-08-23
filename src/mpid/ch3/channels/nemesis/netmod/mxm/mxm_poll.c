@@ -18,7 +18,7 @@ static void _mxm_recv_completion_cb(void *context);
 static int _mxm_irecv(MPID_nem_mxm_ep_t * ep, MPID_nem_mxm_req_area * req, int id, mxm_mq_h mxm_mq,
                       mxm_tag_t mxm_tag);
 static int _mxm_process_rdtype(MPIR_Request ** rreq_p, MPI_Datatype datatype,
-                               MPIDU_Datatype* dt_ptr, intptr_t data_sz, const void *buf,
+                               MPIR_Datatype* dt_ptr, intptr_t data_sz, const void *buf,
                                int count, mxm_req_buffer_t ** iov_buf, int *iov_count);
 
 #undef FUNCNAME
@@ -158,7 +158,7 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPIR_Request * rreq)
     intptr_t data_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;
-    MPIDU_Datatype*dt_ptr;
+    MPIR_Datatype*dt_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_MXM_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_MXM_RECV);
@@ -234,7 +234,7 @@ static int _mxm_handle_rreq(MPIR_Request * req)
     int dt_contig;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     intptr_t userbuf_sz;
-    MPIDU_Datatype*dt_ptr;
+    MPIR_Datatype*dt_ptr;
     intptr_t data_sz;
     MPID_nem_mxm_vc_area *vc_area ATTRIBUTE((unused)) = NULL;
     MPID_nem_mxm_req_area *req_area = NULL;
@@ -290,7 +290,7 @@ static int _mxm_handle_rreq(MPIR_Request * req)
 
         if (req->dev.tmpbuf != NULL) {
             last = req->dev.recv_data_sz;
-            MPIDU_Segment_unpack(req->dev.segment_ptr, 0, &last, req->dev.tmpbuf);
+            MPIR_Segment_unpack(req->dev.segment_ptr, 0, &last, req->dev.tmpbuf);
             tmp_buf = req->dev.tmpbuf;
         }
         else {
@@ -311,7 +311,7 @@ static int _mxm_handle_rreq(MPIR_Request * req)
                     iov[index].MPL_IOV_LEN = iov_buf[index].length;
                 }
 
-                MPIDU_Segment_unpack_vector(req->dev.segment_ptr, req->dev.segment_first, &last, iov,
+                MPIR_Segment_unpack_vector(req->dev.segment_ptr, req->dev.segment_first, &last, iov,
                                            &n_iov);
                 MPL_free(iov);
             }
@@ -437,7 +437,7 @@ static int _mxm_irecv(MPID_nem_mxm_ep_t * ep, MPID_nem_mxm_req_area * req, int i
 
 
 static int _mxm_process_rdtype(MPIR_Request ** rreq_p, MPI_Datatype datatype,
-                               MPIDU_Datatype* dt_ptr, intptr_t data_sz, const void *buf,
+                               MPIR_Datatype* dt_ptr, intptr_t data_sz, const void *buf,
                                int count, mxm_req_buffer_t ** iov_buf, int *iov_count)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -448,23 +448,23 @@ static int _mxm_process_rdtype(MPIR_Request ** rreq_p, MPI_Datatype datatype,
     int index;
 
     if (rreq->dev.segment_ptr == NULL) {
-        rreq->dev.segment_ptr = MPIDU_Segment_alloc();
+        rreq->dev.segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
-                             "**nomem %s", "MPIDU_Segment_alloc");
+                             "**nomem %s", "MPIR_Segment_alloc");
     }
-    MPIDU_Segment_init(buf, count, datatype, rreq->dev.segment_ptr, 0);
+    MPIR_Segment_init(buf, count, datatype, rreq->dev.segment_ptr, 0);
     rreq->dev.segment_first = 0;
     rreq->dev.segment_size = data_sz;
 
     last = rreq->dev.segment_size;
-    MPIDU_Segment_count_contig_blocks(rreq->dev.segment_ptr, rreq->dev.segment_first, &last,
+    MPIR_Segment_count_contig_blocks(rreq->dev.segment_ptr, rreq->dev.segment_first, &last,
                                      (MPI_Aint *) & n_iov);
     MPIR_Assert(n_iov > 0);
     iov = MPL_malloc(n_iov * sizeof(*iov));
     MPIR_Assert(iov);
 
     last = rreq->dev.segment_size;
-    MPIDU_Segment_unpack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, iov, &n_iov);
+    MPIR_Segment_unpack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, iov, &n_iov);
     MPIR_Assert(last == rreq->dev.segment_size);
 
 #if defined(MXM_DEBUG) && (MXM_DEBUG > 0)

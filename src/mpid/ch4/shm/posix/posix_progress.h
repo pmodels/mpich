@@ -144,13 +144,13 @@ static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
                 if (MPIDI_POSIX_REQUEST(req)->segment_ptr) {
                     /* non-contig */
                     size_t last = MPIDI_POSIX_REQUEST(req)->segment_first + data_sz;
-                    MPID_Segment_unpack(MPIDI_POSIX_REQUEST(req)->segment_ptr,
+                    MPIR_Segment_unpack(MPIDI_POSIX_REQUEST(req)->segment_ptr,
                                         MPIDI_POSIX_REQUEST(req)->segment_first,
                                         (MPI_Aint *) & last, send_buffer);
                     if (last != MPIDI_POSIX_REQUEST(req)->segment_first + data_sz)
                         req->status.MPI_ERROR = MPI_ERR_TYPE;
                     if (type == MPIDI_POSIX_TYPEEAGER)
-                        MPID_Segment_free(MPIDI_POSIX_REQUEST(req)->segment_ptr);
+                        MPIR_Segment_free(MPIDI_POSIX_REQUEST(req)->segment_ptr);
                     else
                         MPIDI_POSIX_REQUEST(req)->segment_first = last;
                 }
@@ -307,11 +307,11 @@ static inline int MPIDI_POSIX_progress_send(int blocking, int *completion_count)
                 /* eager message */
                 if (MPIDI_POSIX_REQUEST(sreq)->segment_ptr) {
                     /* non-contig */
-                    MPID_Segment_pack(MPIDI_POSIX_REQUEST(sreq)->segment_ptr,
+                    MPIR_Segment_pack(MPIDI_POSIX_REQUEST(sreq)->segment_ptr,
                                       MPIDI_POSIX_REQUEST(sreq)->segment_first,
                                       (MPI_Aint *) & MPIDI_POSIX_REQUEST(sreq)->segment_size,
                                       recv_buffer);
-                    MPID_Segment_free(MPIDI_POSIX_REQUEST(sreq)->segment_ptr);
+                    MPIR_Segment_free(MPIDI_POSIX_REQUEST(sreq)->segment_ptr);
                 }
                 else {
                     /* contig */
@@ -339,7 +339,7 @@ static inline int MPIDI_POSIX_progress_send(int blocking, int *completion_count)
                 /* non-contig */
                 size_t last =
                     MPIDI_POSIX_REQUEST(sreq)->segment_first + MPIDI_POSIX_EAGER_THRESHOLD;
-                MPID_Segment_pack(MPIDI_POSIX_REQUEST(sreq)->segment_ptr,
+                MPIR_Segment_pack(MPIDI_POSIX_REQUEST(sreq)->segment_ptr,
                                   MPIDI_POSIX_REQUEST(sreq)->segment_first, (MPI_Aint *) & last,
                                   recv_buffer);
                 MPIDI_POSIX_REQUEST(sreq)->segment_first = last;

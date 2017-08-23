@@ -5,6 +5,8 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
+include $(top_srcdir)/src/mpi/datatype/dataloop/Makefile.mk
+
 # for datatype.h, which is included by some other dirs
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/datatype
 
@@ -15,7 +17,8 @@ mpi_sources +=                                   \
     src/mpi/datatype/get_elements.c              \
     src/mpi/datatype/get_elements_x.c            \
     src/mpi/datatype/pack.c                      \
-    src/mpi/datatype/unpack.c                    \
+    src/mpi/datatype/pack_external.c             \
+    src/mpi/datatype/pack_external_size.c        \
     src/mpi/datatype/pack_size.c                 \
     src/mpi/datatype/status_set_elements.c       \
     src/mpi/datatype/status_set_elements_x.c     \
@@ -45,20 +48,26 @@ mpi_sources +=                                   \
     src/mpi/datatype/type_create_struct.c        \
     src/mpi/datatype/type_create_hindexed.c      \
     src/mpi/datatype/type_create_hvector.c       \
-    src/mpi/datatype/pack_external.c             \
-    src/mpi/datatype/pack_external_size.c        \
-    src/mpi/datatype/unpack_external.c           \
     src/mpi/datatype/type_create_indexed_block.c \
     src/mpi/datatype/type_create_hindexed_block.c \
     src/mpi/datatype/type_create_resized.c       \
     src/mpi/datatype/type_create_darray.c        \
-    src/mpi/datatype/type_create_subarray.c
+    src/mpi/datatype/type_create_subarray.c      \
+    src/mpi/datatype/unpack.c                    \
+    src/mpi/datatype/unpack_external.c
 
 ## what's the scoop here with win_sources?
 ##    src/mpi/datatype/register_datarep.c
 
-noinst_HEADERS += src/mpi/datatype/datatype.h
+noinst_HEADERS += src/mpi/datatype/datatype.h    \
+                  src/mpi/datatype/veccpy.h
 
-mpi_core_sources +=              \
-    src/mpi/datatype/typeutil.c
+mpi_core_sources +=                              \
+    src/mpi/datatype/typeutil.c                  \
+    src/mpi/datatype/ext32_datatype.c            \
+    src/mpi/datatype/looputil.c                  \
+    src/mpi/datatype/type_blockindexed.c         \
+    src/mpi/datatype/type_create_pairtype.c      \
+    src/mpi/datatype/type_debug.c                \
+    src/mpi/datatype/type_flatten.c
 

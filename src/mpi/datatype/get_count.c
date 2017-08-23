@@ -32,7 +32,7 @@ void MPIR_Get_count_impl(const MPI_Status *status, MPI_Datatype datatype, int *c
 {
     MPI_Count size;
 
-    MPID_Datatype_get_size_macro(datatype, size);
+    MPIR_Datatype_get_size_macro(datatype, size);
     MPIR_Assert(size >= 0 && MPIR_STATUS_GET_COUNT(*status) >= 0);
     if (size != 0) {
         /* MPI-3 says return MPI_UNDEFINED if too large for an int */
@@ -109,7 +109,7 @@ int MPI_Get_count( const MPI_Status *status, MPI_Datatype datatype, int *count )
 
             /* Validate datatype_ptr */
 	    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-		MPID_Datatype_get_ptr(datatype, datatype_ptr);
+		MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 		MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno) goto fn_fail;
 		/* Q: Must the type be committed to be used with this function? */

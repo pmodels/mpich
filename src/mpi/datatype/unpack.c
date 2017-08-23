@@ -35,7 +35,7 @@ int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint *position,
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint first, last;
-    MPID_Segment *segp;
+    MPIR_Segment *segp;
     int contig;
     MPI_Aint dt_true_lb;
     MPI_Aint data_sz;
@@ -47,11 +47,11 @@ int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint *position,
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
         contig     = TRUE;
         dt_true_lb = 0;
-        data_sz    = outcount * MPID_Datatype_get_basic_size(datatype);
+        data_sz    = outcount * MPIR_Datatype_get_basic_size(datatype);
     } else {
         MPIR_Datatype *dt_ptr;
-        MPID_Datatype_get_ptr(datatype, dt_ptr);
-	contig     = dt_ptr->is_contig;
+        MPIR_Datatype_get_ptr(datatype, dt_ptr);
+        MPIR_Datatype_is_contig(datatype, &contig);
         dt_true_lb = dt_ptr->true_lb;
         data_sz    = outcount * dt_ptr->size;
     }
@@ -64,13 +64,13 @@ int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint *position,
     
 
     /* non-contig case */
-    segp = MPID_Segment_alloc();
-    MPIR_ERR_CHKANDJUMP1(segp == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
-    mpi_errno = MPID_Segment_init(outbuf, outcount, datatype, segp, 0);
+    segp = MPIR_Segment_alloc();
+    MPIR_ERR_CHKANDJUMP1(segp == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
+    mpi_errno = MPIR_Segment_init(outbuf, outcount, datatype, segp, 0);
     MPIR_Assert(mpi_errno == MPI_SUCCESS);
 
     /* NOTE: the use of buffer values and positions in MPI_Unpack and in
-     * MPID_Segment_unpack are quite different.  See code or docs or something.
+     * MPIR_Segment_unpack are quite different.  See code or docs or something.
      */
     first = 0;
     last  = SEGMENT_IGNORE_LAST;
@@ -79,7 +79,7 @@ int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint *position,
     MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT inbuf) +
 				     (MPI_Aint) *position);
 
-    MPID_Segment_unpack(segp,
+    MPIR_Segment_unpack(segp,
 			first,
 			&last,
 			(void *) ((char *) inbuf + *position));
@@ -89,7 +89,7 @@ int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint *position,
 
     *position = (int)((MPI_Aint)*position + last);
 
-    MPID_Segment_free(segp);
+    MPIR_Segment_free(segp);
 
 
  fn_exit:
@@ -185,9 +185,9 @@ int MPI_Unpack(const void *inbuf, int insize, int *position,
 		HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
 		MPIR_Datatype *datatype_ptr = NULL;
 
-		MPID_Datatype_get_ptr(datatype, datatype_ptr);
+		MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 		MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-		MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+		MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
 	    }
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }

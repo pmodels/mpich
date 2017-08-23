@@ -32,7 +32,7 @@ static inline int MPIDI_do_put(const void *origin_addr,
     uint64_t offset;
     size_t data_sz;
     MPI_Aint last, num_iov;
-    MPID_Segment *segment_ptr;
+    MPIR_Segment *segment_ptr;
     struct iovec *dt_iov, am_iov[2];
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_DO_PUT);
@@ -94,12 +94,12 @@ static inline int MPIDI_do_put(const void *origin_addr,
         goto fn_exit;
     }
 
-    segment_ptr = MPIDU_Segment_alloc();
+    segment_ptr = MPIR_Segment_alloc();
     MPIR_Assert(segment_ptr);
 
-    MPIDU_Segment_init(NULL, target_count, target_datatype, segment_ptr, 0);
+    MPIR_Segment_init(NULL, target_count, target_datatype, segment_ptr, 0);
     last = data_sz;
-    MPIDU_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+    MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
@@ -107,7 +107,7 @@ static inline int MPIDI_do_put(const void *origin_addr,
     MPIR_Assert(dt_iov);
 
     last = data_sz;
-    MPIDU_Segment_pack_vector(segment_ptr, 0, &last, dt_iov, &n_iov);
+    MPIR_Segment_pack_vector(segment_ptr, 0, &last, dt_iov, &n_iov);
     MPIR_Assert(last == (MPI_Aint) data_sz);
     MPL_free(segment_ptr);
 
@@ -167,7 +167,7 @@ static inline int MPIDI_do_get(void *origin_addr,
     MPIDI_CH4U_get_req_msg_t am_hdr;
     size_t data_sz;
     MPI_Aint last, num_iov;
-    MPID_Segment *segment_ptr;
+    MPIR_Segment *segment_ptr;
     struct iovec *dt_iov;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_DO_GET);
@@ -232,12 +232,12 @@ static inline int MPIDI_do_get(void *origin_addr,
         goto fn_exit;
     }
 
-    segment_ptr = MPIDU_Segment_alloc();
+    segment_ptr = MPIR_Segment_alloc();
     MPIR_Assert(segment_ptr);
 
-    MPIDU_Segment_init(NULL, target_count, target_datatype, segment_ptr, 0);
+    MPIR_Segment_init(NULL, target_count, target_datatype, segment_ptr, 0);
     last = data_sz;
-    MPIDU_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+    MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
@@ -245,7 +245,7 @@ static inline int MPIDI_do_get(void *origin_addr,
     MPIR_Assert(dt_iov);
 
     last = data_sz;
-    MPIDU_Segment_pack_vector(segment_ptr, 0, &last, dt_iov, &n_iov);
+    MPIR_Segment_pack_vector(segment_ptr, 0, &last, dt_iov, &n_iov);
     MPIR_Assert(last == (MPI_Aint) data_sz);
     MPL_free(segment_ptr);
 
@@ -287,7 +287,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     MPIDI_CH4U_acc_req_msg_t am_hdr;
     uint64_t data_sz, target_data_sz;
     MPI_Aint last, num_iov;
-    MPID_Segment *segment_ptr;
+    MPIR_Segment *segment_ptr;
     struct iovec *dt_iov, am_iov[2];
     MPIR_Datatype *dt_ptr;
 
@@ -324,7 +324,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     }
     else {
         am_hdr.origin_datatype = (dt_ptr) ? dt_ptr->basic_type : MPI_DATATYPE_NULL;
-        MPID_Datatype_get_size_macro(am_hdr.origin_datatype, basic_type_size);
+        MPIR_Datatype_get_size_macro(am_hdr.origin_datatype, basic_type_size);
         am_hdr.origin_count = (basic_type_size > 0) ? data_sz / basic_type_size : 0;
     }
 
@@ -359,13 +359,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     am_hdr.target_datatype = dt_ptr->basic_type;
     am_hdr.target_count = dt_ptr->n_builtin_elements;
 
-    segment_ptr = MPIDU_Segment_alloc();
+    segment_ptr = MPIR_Segment_alloc();
     MPIR_Assert(segment_ptr);
 
 
-    MPIDU_Segment_init(NULL, target_count, target_datatype, segment_ptr, 0);
+    MPIR_Segment_init(NULL, target_count, target_datatype, segment_ptr, 0);
     last = data_sz;
-    MPIDU_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+    MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
@@ -373,7 +373,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     MPIR_Assert(dt_iov);
 
     last = data_sz;
-    MPIDU_Segment_pack_vector(segment_ptr, 0, &last, dt_iov, &n_iov);
+    MPIR_Segment_pack_vector(segment_ptr, 0, &last, dt_iov, &n_iov);
     MPIR_Assert(last == (MPI_Aint) data_sz);
     MPL_free(segment_ptr);
 
@@ -437,7 +437,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     MPIDI_CH4U_get_acc_req_msg_t am_hdr;
     uint64_t data_sz, result_data_sz, target_data_sz;
     MPI_Aint last, num_iov;
-    MPID_Segment *segment_ptr;
+    MPIR_Segment *segment_ptr;
     struct iovec *dt_iov, am_iov[2];
     MPIR_Datatype *dt_ptr;
 
@@ -482,7 +482,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     }
     else {
         am_hdr.origin_datatype = (dt_ptr) ? dt_ptr->basic_type : MPI_DATATYPE_NULL;
-        MPID_Datatype_get_size_macro(am_hdr.origin_datatype, basic_type_size);
+        MPIR_Datatype_get_size_macro(am_hdr.origin_datatype, basic_type_size);
         am_hdr.origin_count = (basic_type_size > 0) ? data_sz / basic_type_size : 0;
     }
 
@@ -519,13 +519,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     am_hdr.target_datatype = dt_ptr->basic_type;
     am_hdr.target_count = dt_ptr->n_builtin_elements;
 
-    segment_ptr = MPIDU_Segment_alloc();
+    segment_ptr = MPIR_Segment_alloc();
     MPIR_Assert(segment_ptr);
 
 
-    MPIDU_Segment_init(NULL, target_count, target_datatype, segment_ptr, 0);
+    MPIR_Segment_init(NULL, target_count, target_datatype, segment_ptr, 0);
     last = data_sz;
-    MPIDU_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+    MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
     n_iov = (int) num_iov;
     MPIR_Assert(n_iov > 0);
     am_hdr.n_iov = n_iov;
@@ -533,7 +533,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     MPIR_Assert(dt_iov);
 
     last = data_sz;
-    MPIDU_Segment_pack_vector(segment_ptr, 0, &last, dt_iov, &n_iov);
+    MPIR_Segment_pack_vector(segment_ptr, 0, &last, dt_iov, &n_iov);
     MPIR_Assert(last == (MPI_Aint) data_sz);
     MPL_free(segment_ptr);
 

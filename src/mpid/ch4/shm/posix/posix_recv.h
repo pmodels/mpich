@@ -52,7 +52,7 @@ static inline int MPIDI_POSIX_do_irecv(void *buf,
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     MPIDI_POSIX_ENVELOPE_SET(MPIDI_POSIX_REQUEST(rreq), rank, tag,
-                             comm->context_id + context_offset);
+                             comm->recvcontext_id + context_offset);
     rreq->comm = comm;
     MPIR_Comm_add_ref(comm);
     MPIDI_POSIX_REQUEST(rreq)->user_buf = (char *) buf + dt_true_lb;
@@ -65,10 +65,10 @@ static inline int MPIDI_POSIX_do_irecv(void *buf,
     MPIR_STATUS_SET_COUNT(rreq->status, 0);
 
     if (!dt_contig) {
-        MPIDI_POSIX_REQUEST(rreq)->segment_ptr = MPID_Segment_alloc();
+        MPIDI_POSIX_REQUEST(rreq)->segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1((MPIDI_POSIX_REQUEST(rreq)->segment_ptr == NULL), mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
-        MPID_Segment_init((char *) buf, MPIDI_POSIX_REQUEST(rreq)->user_count,
+                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
+        MPIR_Segment_init((char *) buf, MPIDI_POSIX_REQUEST(rreq)->user_count,
                           MPIDI_POSIX_REQUEST(rreq)->datatype,
                           MPIDI_POSIX_REQUEST(rreq)->segment_ptr, 0);
         MPIDI_POSIX_REQUEST(rreq)->segment_first = 0;
@@ -82,7 +82,7 @@ static inline int MPIDI_POSIX_do_irecv(void *buf,
                     (MPL_DBG_FDEST,
                      "Enqueued from grank %d to %d (comm_kind %d) in recv %d,%d,%d\n",
                      MPIDI_CH4U_rank_to_lpid(rank, comm), MPIDI_POSIX_mem_region.rank,
-                     comm->comm_kind, rank, tag, comm->context_id + context_offset));
+                     comm->comm_kind, rank, tag, comm->recvcontext_id + context_offset));
     *request = rreq;
 
   fn_exit:
@@ -141,7 +141,7 @@ static inline int MPIDI_POSIX_mpi_recv_init(void *buf,
     rreq->comm = comm;
     MPIR_Comm_add_ref(comm);
     MPIDI_POSIX_ENVELOPE_SET(MPIDI_POSIX_REQUEST(rreq), rank, tag,
-                             comm->context_id + context_offset);
+                             comm->recvcontext_id + context_offset);
     MPIDI_POSIX_REQUEST(rreq)->user_buf = (char *) buf;
     MPIDI_POSIX_REQUEST(rreq)->user_count = count;
     MPIDI_POSIX_REQUEST(rreq)->datatype = datatype;
@@ -193,10 +193,10 @@ static inline int MPIDI_POSIX_mpi_imrecv(void *buf,
     MPIR_STATUS_SET_COUNT(rreq->status, 0);
 
     if (!dt_contig) {
-        MPIDI_POSIX_REQUEST(rreq)->segment_ptr = MPID_Segment_alloc();
+        MPIDI_POSIX_REQUEST(rreq)->segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1((MPIDI_POSIX_REQUEST(rreq)->segment_ptr == NULL), mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
-        MPID_Segment_init((char *) buf, MPIDI_POSIX_REQUEST(rreq)->user_count,
+                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
+        MPIR_Segment_init((char *) buf, MPIDI_POSIX_REQUEST(rreq)->user_count,
                           MPIDI_POSIX_REQUEST(rreq)->datatype,
                           MPIDI_POSIX_REQUEST(rreq)->segment_ptr, 0);
         MPIDI_POSIX_REQUEST(rreq)->segment_first = 0;
@@ -238,10 +238,10 @@ static inline int MPIDI_POSIX_mpi_imrecv(void *buf,
             if (MPIDI_POSIX_REQUEST(rreq)->segment_ptr) {
                 /* non-contig */
                 size_t last = MPIDI_POSIX_REQUEST(rreq)->segment_first + data_sz;
-                MPID_Segment_unpack(MPIDI_POSIX_REQUEST(rreq)->segment_ptr,
+                MPIR_Segment_unpack(MPIDI_POSIX_REQUEST(rreq)->segment_ptr,
                                     MPIDI_POSIX_REQUEST(rreq)->segment_first, (MPI_Aint *) & last,
                                     send_buffer);
-                MPID_Segment_free(MPIDI_POSIX_REQUEST(rreq)->segment_ptr);
+                MPIR_Segment_free(MPIDI_POSIX_REQUEST(rreq)->segment_ptr);
             }
             else
                 /* contig */
@@ -260,7 +260,7 @@ static inline int MPIDI_POSIX_mpi_imrecv(void *buf,
                 /* non-contig */
                 size_t last =
                     MPIDI_POSIX_REQUEST(rreq)->segment_first + MPIDI_POSIX_EAGER_THRESHOLD;
-                MPID_Segment_unpack(MPIDI_POSIX_REQUEST(rreq)->segment_ptr,
+                MPIR_Segment_unpack(MPIDI_POSIX_REQUEST(rreq)->segment_ptr,
                                     MPIDI_POSIX_REQUEST(rreq)->segment_first, (MPI_Aint *) & last,
                                     send_buffer);
                 MPIDI_POSIX_REQUEST(rreq)->segment_first = last;

@@ -107,7 +107,7 @@ static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
                  * Note that RMA messages should be included.
                  * Exclude eager-short by requiring req->comm != 0. */
                 int is_contig;
-                MPIDU_Datatype_is_contig(sreq->dev.datatype, &is_contig);
+                MPIR_Datatype_is_contig(sreq->dev.datatype, &is_contig);
                 if (!is_contig && REQ_FIELD(sreq, pack_buf)) {
                     dprintf("llc_send_handler,non-contiguous,free pack_buf\n");
                     MPL_free(REQ_FIELD(sreq, pack_buf));
@@ -236,7 +236,7 @@ int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPIR_Request *req)
     int mpi_errno = MPI_SUCCESS, llc_errno;
     int dt_contig;
     intptr_t data_sz;
-    MPIDU_Datatype*dt_ptr;
+    MPIR_Datatype*dt_ptr;
     MPI_Aint dt_true_lb;
     int i;
 

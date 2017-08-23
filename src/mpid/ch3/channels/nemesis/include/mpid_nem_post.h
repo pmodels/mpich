@@ -96,8 +96,8 @@ int MPID_nem_mpich_send_header(void* buf, int size, struct MPIDI_VC *vc, int *ag
 int MPID_nem_mpich_sendv(MPL_IOV **iov, int *n_iov, struct MPIDI_VC *vc, int *again);
 int MPID_nem_mpich_sendv_header(MPL_IOV **iov, int *n_iov, void *ext_header,
                                 intptr_t ext_header_sz, struct MPIDI_VC *vc, int *again);
-void MPID_nem_mpich_send_seg(MPIDU_Segment segment, intptr_t *segment_first, intptr_t segment_sz, struct MPIDI_VC *vc, int *again);
-void MPID_nem_mpich_send_seg_header(MPIDU_Segment segment, intptr_t *segment_first, intptr_t segment_size,
+void MPID_nem_mpich_send_seg(MPIR_Segment segment, intptr_t *segment_first, intptr_t segment_sz, struct MPIDI_VC *vc, int *again);
+void MPID_nem_mpich_send_seg_header(MPIR_Segment segment, intptr_t *segment_first, intptr_t segment_size,
                                     void *header, intptr_t header_sz, void *ext_header,
                                     intptr_t ext_header_sz, struct MPIDI_VC *vc, int *again);
 int MPID_nem_mpich_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress);

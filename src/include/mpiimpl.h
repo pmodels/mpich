@@ -149,8 +149,7 @@ struct MPIR_Comm;
 typedef struct MPIR_Comm MPIR_Comm;
 
 struct MPIR_Datatype;
-/* FIXME: waiting for Wes' patch revert to fix this */
-/* typedef struct MPIR_Datatype MPIR_Datatype; */
+typedef struct MPIR_Datatype MPIR_Datatype;
 
 struct MPIR_Win;
 typedef struct MPIR_Win MPIR_Win;
@@ -219,9 +218,10 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_coll.h"
 #include "mpir_func.h"
 #include "mpir_err.h"
-#include "mpir_datatype.h"
 #include "mpir_nbc.h"
 #include "mpir_process.h"
+#include "mpir_dataloop.h"
+#include "mpir_datatype.h"
 #include "mpir_cvars.h"
 #include "mpir_misc_post.h"
 #include "mpit.h"

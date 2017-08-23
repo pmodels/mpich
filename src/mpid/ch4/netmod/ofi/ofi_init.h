@@ -838,8 +838,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Commit(MPIDI_Global.kvsname), pmi);
 #endif
 
+        MPIDI_av_entry_t *av = NULL;
         for (i = 0; i < size; i++) {
-            if (MPIDI_CH4_rank_is_local(i, MPIR_Process.comm_world)) {
+            av = MPIDIU_comm_rank_to_av(MPIR_Process.comm_world, i);
+            if (MPIDI_av_is_local(av)) {
                 if (i == rank)
                     local_rank = num_local;
 
@@ -1320,7 +1322,6 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
 
         rx_attr = *prov_use->rx_attr;
         rx_attr.caps = 0;
-        rx_attr.op_flags = FI_MULTI_RECV;
 
         if (MPIDI_OFI_ENABLE_TAGGED)
             rx_attr.caps |= FI_TAGGED | FI_RECV;

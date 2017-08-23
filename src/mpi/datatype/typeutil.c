@@ -175,7 +175,7 @@ int MPIR_Datatype_init(void)
         /* this is a redundant alternative to the previous statement */
         MPIR_Assert((void *) ptr == (void *) (MPIR_Datatype_direct + HANDLE_INDEX(mpi_pairtypes[i])));
 
-        mpi_errno = MPID_Type_create_pairtype(mpi_pairtypes[i], (MPIR_Datatype *) ptr);
+        mpi_errno = MPIR_Type_create_pairtype(mpi_pairtypes[i], (MPIR_Datatype *) ptr);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
@@ -197,8 +197,8 @@ static int MPIR_Datatype_finalize(void *dummy ATTRIBUTE((unused)) )
 
     for (i=0; mpi_pairtypes[i] != (MPI_Datatype) -1; i++) {
 	if (mpi_pairtypes[i] != MPI_DATATYPE_NULL) {
-	    MPID_Datatype_get_ptr(mpi_pairtypes[i], dptr);
-	    MPID_Datatype_release(dptr);
+	    MPIR_Datatype_get_ptr(mpi_pairtypes[i], dptr);
+	    MPIR_Datatype_release(dptr);
 	    mpi_pairtypes[i] = MPI_DATATYPE_NULL;
 	}
     }
@@ -241,7 +241,7 @@ int MPIR_Datatype_builtin_fillin(void)
 	       disabled at configure time.  skip those cases. */
 	    if (d == MPI_DATATYPE_NULL) continue;
 	    
-	    MPID_Datatype_get_ptr(d,dptr);
+	    MPIR_Datatype_get_ptr(d,dptr);
 	    /* --BEGIN ERROR HANDLING-- */
 	    if (dptr < MPIR_Datatype_builtin ||
 		dptr > MPIR_Datatype_builtin + MPIR_DATATYPE_N_BUILTIN)
@@ -260,7 +260,7 @@ int MPIR_Datatype_builtin_fillin(void)
 	    dptr->is_permanent = 1;
 	    dptr->is_contig	   = 1;
 	    MPIR_Object_set_ref( dptr, 1 );
-	    MPID_Datatype_get_size_macro(mpi_dtypes[i], dptr->size);
+	    MPIR_Datatype_get_size_macro(mpi_dtypes[i], dptr->size);
 	    dptr->extent	   = dptr->size;
 	    dptr->ub	   = dptr->size;
 	    dptr->true_ub	   = dptr->size;
@@ -284,12 +284,10 @@ int MPIR_Datatype_builtin_fillin(void)
 /* This will eventually be removed once ROMIO knows more about MPICH */
 void MPIR_Datatype_iscontig(MPI_Datatype datatype, int *flag)
 {
-    MPIR_Datatype *datatype_ptr;
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
         *flag = 1;
     else  {
-        MPID_Datatype_get_ptr(datatype, datatype_ptr);
-        *flag = datatype_ptr->is_contig;
+        MPIR_Datatype_is_contig(datatype, flag);
     }
 }
 
@@ -323,3 +321,170 @@ void MPII_Datatype_attr_finalize( void )
     }
 }
 
+/*@
+  MPII_Type_zerolen - create an empty datatype
+ 
+Input Parameters:
+. none
+
+Output Parameters:
+. newtype - handle of new contiguous datatype
+
+  Return Value:
+  MPI_SUCCESS on success, MPI error code on failure.
+@*/
+
+int MPII_Type_zerolen(MPI_Datatype *newtype)
+{
+    int mpi_errno;
+    MPIR_Datatype *new_dtp;
+
+    /* allocate new datatype object and handle */
+    new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
+    /* --BEGIN ERROR HANDLING-- */
+    if (!new_dtp)
+    {
+	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+					 "MPII_Type_zerolen",
+					 __LINE__, MPI_ERR_OTHER,
+					 "**nomem", 0);
+	return mpi_errno;
+    }
+    /* --END ERROR HANDLING-- */
+
+    /* handle is filled in by MPIR_Handle_obj_alloc() */
+    MPIR_Object_set_ref(new_dtp, 1);
+    new_dtp->is_permanent = 0;
+    new_dtp->is_committed = 0;
+    new_dtp->attributes   = NULL;
+    new_dtp->cache_id     = 0;
+    new_dtp->name[0]      = 0;
+    new_dtp->contents     = NULL;
+
+    new_dtp->dataloop       = NULL;
+    new_dtp->dataloop_size  = -1;
+    new_dtp->dataloop_depth = -1;
+    new_dtp->hetero_dloop       = NULL;
+    new_dtp->hetero_dloop_size  = -1;
+    new_dtp->hetero_dloop_depth = -1;
+    
+    new_dtp->size          = 0;
+    new_dtp->has_sticky_ub = 0;
+    new_dtp->has_sticky_lb = 0;
+    new_dtp->lb            = 0;
+    new_dtp->ub            = 0;
+    new_dtp->true_lb       = 0;
+    new_dtp->true_ub       = 0;
+    new_dtp->extent        = 0;
+    
+    new_dtp->alignsize     = 0;
+    new_dtp->builtin_element_size  = 0;
+    new_dtp->basic_type        = 0;
+    new_dtp->n_builtin_elements    = 0;
+    new_dtp->is_contig     = 1;
+
+    *newtype = new_dtp->handle;
+    return MPI_SUCCESS;
+}
+
+void MPII_Datatype_get_contents_ints(MPIR_Datatype_contents *cp,
+				      int *user_ints)
+{
+    char *ptr;
+    int align_sz = 8, epsilon;
+    int struct_sz, types_sz;
+
+#ifdef HAVE_MAX_STRUCT_ALIGNMENT
+    if (align_sz > HAVE_MAX_STRUCT_ALIGNMENT) {
+	align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
+    }
+#endif
+
+    struct_sz = sizeof(MPIR_Datatype_contents);
+    types_sz  = cp->nr_types * sizeof(MPI_Datatype);
+
+    /* pad the struct, types, and ints before we allocate.
+     *
+     * note: it's not necessary that we pad the aints,
+     *       because they are last in the region.
+     */
+    if ((epsilon = struct_sz % align_sz)) {
+	struct_sz += align_sz - epsilon;
+    }
+    if ((epsilon = types_sz % align_sz)) {
+	types_sz += align_sz - epsilon;
+    }
+
+    ptr = ((char *) cp) + struct_sz + types_sz;
+    MPIR_Memcpy(user_ints, ptr, cp->nr_ints * sizeof(int));
+
+    return;
+}
+
+void MPII_Datatype_get_contents_aints(MPIR_Datatype_contents *cp,
+				       MPI_Aint *user_aints)
+{
+    char *ptr;
+    int align_sz = 8, epsilon;
+    int struct_sz, ints_sz, types_sz;
+
+#ifdef HAVE_MAX_STRUCT_ALIGNMENT
+    if (align_sz > HAVE_MAX_STRUCT_ALIGNMENT) {
+	align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
+    }
+#endif
+
+    struct_sz = sizeof(MPIR_Datatype_contents);
+    types_sz  = cp->nr_types * sizeof(MPI_Datatype);
+    ints_sz   = cp->nr_ints * sizeof(int);
+
+    /* pad the struct, types, and ints before we allocate.
+     *
+     * note: it's not necessary that we pad the aints,
+     *       because they are last in the region.
+     */
+    if ((epsilon = struct_sz % align_sz)) {
+	struct_sz += align_sz - epsilon;
+    }
+    if ((epsilon = types_sz % align_sz)) {
+	types_sz += align_sz - epsilon;
+    }
+    if ((epsilon = ints_sz % align_sz)) {
+	ints_sz += align_sz - epsilon;
+    }
+
+    ptr = ((char *) cp) + struct_sz + types_sz + ints_sz;
+    MPIR_Memcpy(user_aints, ptr, cp->nr_aints * sizeof(MPI_Aint));
+
+    return;
+}
+
+void MPII_Datatype_get_contents_types(MPIR_Datatype_contents *cp,
+				       MPI_Datatype *user_types)
+{
+    char *ptr;
+    int align_sz = 8, epsilon;
+    int struct_sz;
+
+#ifdef HAVE_MAX_STRUCT_ALIGNMENT
+    if (align_sz > HAVE_MAX_STRUCT_ALIGNMENT) {
+	align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
+    }
+#endif
+
+    struct_sz = sizeof(MPIR_Datatype_contents);
+
+    /* pad the struct, types, and ints before we allocate.
+     *
+     * note: it's not necessary that we pad the aints,
+     *       because they are last in the region.
+     */
+    if ((epsilon = struct_sz % align_sz)) {
+	struct_sz += align_sz - epsilon;
+    }
+
+    ptr = ((char *) cp) + struct_sz;
+    MPIR_Memcpy(user_types, ptr, cp->nr_types * sizeof(MPI_Datatype));
+
+    return;
+}

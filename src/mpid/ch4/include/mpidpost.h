@@ -11,7 +11,7 @@
 #ifndef MPIDPOST_H_INCLUDED
 #define MPIDPOST_H_INCLUDED
 
-#include "mpidu_datatype.h"
+#include "mpir_datatype.h"
 #include "mpidch4.h"
 
 MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(MPIR_Request * req)

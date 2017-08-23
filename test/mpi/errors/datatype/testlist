@@ -1,1 +1,10 @@
-getcnterr 1
+getcnterr 1 xfail=ticket2697
+type_contiguous_nullarg 1
+type_extent_nullarg 1
+type_get_extent_nullarg 1
+type_get_true_extent_nullarg 1
+type_get_true_extent_x_nullarg 1
+type_lb_nullarg 1
+type_ub_nullarg 1
+type_size_x_nullarg 1
+type_vector_nullarg 1

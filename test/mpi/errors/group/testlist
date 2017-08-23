@@ -1,1 +1,9 @@
 gerr 1
+group_difference_nullarg 1
+group_intersection_nullarg 1
+group_range_excl_nullarg 1
+group_range_incl_nullarg 1
+group_rank_nullarg 1
+group_size_nullarg 1
+group_translate_ranks_nullarg 1
+group_union_nullarg 1

@@ -206,7 +206,7 @@ int MPIR_Allreduce_intra (
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_ALLREDUCE) {
     /* is the op commutative? We do SMP optimizations only if it is. */
-    MPID_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE ? type_size*count : 0;
     if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative &&
         nbytes <= MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE) {
@@ -310,7 +310,7 @@ int MPIR_Allreduce_intra (
 
         /* need to allocate temporary buffer to store incoming data*/
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-        MPID_Datatype_get_extent_macro(datatype, extent);
+        MPIR_Datatype_get_extent_macro(datatype, extent);
 
         MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
         MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
@@ -325,7 +325,7 @@ int MPIR_Allreduce_intra (
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
 
-        MPID_Datatype_get_size_macro(datatype, type_size);
+        MPIR_Datatype_get_size_macro(datatype, type_size);
 
         /* find nearest power-of-two less than or equal to comm_size */
         pof2 = 1;
@@ -634,7 +634,7 @@ int MPIR_Allreduce_inter (
 
     if (comm_ptr->rank == 0) {
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-        MPID_Datatype_get_extent_macro(datatype, extent);
+        MPIR_Datatype_get_extent_macro(datatype, extent);
         /* I think this is the worse case, so we can avoid an assert()
          * inside the for loop */
         /* Should MPIR_CHKLMEM_MALLOC do this? */
@@ -844,10 +844,10 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
 	    MPIR_ERRTEST_OP(op, mpi_errno);
 	    
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-                MPID_Datatype_get_ptr(datatype, datatype_ptr);
+                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr( datatype_ptr, mpi_errno );
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-                MPID_Datatype_committed_ptr( datatype_ptr, mpi_errno );
+                MPIR_Datatype_committed_ptr( datatype_ptr, mpi_errno );
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 

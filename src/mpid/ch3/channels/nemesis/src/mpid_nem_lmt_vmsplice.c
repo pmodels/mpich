@@ -93,7 +93,7 @@ static int populate_iov_from_req(MPIR_Request *req)
     int dt_contig;
     MPI_Aint dt_true_lb;
     intptr_t data_sz;
-    MPIDU_Datatype* dt_ptr;
+    MPIR_Datatype* dt_ptr;
 
     /* find out contig/noncontig, size, and lb for the datatype */
     MPIDI_Datatype_get_info(req->dev.user_count, req->dev.datatype,
@@ -113,11 +113,11 @@ static int populate_iov_from_req(MPIR_Request *req)
         req->dev.iov_offset = 0;
 
         /* XXX DJG FIXME where is this segment freed? */
-        req->dev.segment_ptr = MPIDU_Segment_alloc();
+        req->dev.segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1((req->dev.segment_ptr == NULL), mpi_errno,
                              MPI_ERR_OTHER, "**nomem",
-                             "**nomem %s", "MPIDU_Segment_alloc");
-        MPIDU_Segment_init(req->dev.user_buf, req->dev.user_count,
+                             "**nomem %s", "MPIR_Segment_alloc");
+        MPIR_Segment_init(req->dev.user_buf, req->dev.user_count,
                           req->dev.datatype, req->dev.segment_ptr, 0);
         req->dev.segment_first = 0;
         req->dev.segment_size = data_sz;
