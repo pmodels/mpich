@@ -11,7 +11,6 @@
 #ifdef ROMIO_DAOS
 #include <daos_types.h>
 #include <daos_api.h>
-#include <crt_util/common.h>
 daos_handle_t daos_pool_oh;
 #endif /* ROMIO_DAOS */
 

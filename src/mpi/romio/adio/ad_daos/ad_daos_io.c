@@ -36,6 +36,9 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     MPI_Type_size_x(datatype, &datatype_size);
     len = (ADIO_Offset)datatype_size * (ADIO_Offset)count;
 
+    if (len == 0)
+        goto done;
+
     if (file_ptr_type == ADIO_INDIVIDUAL) {
 	offset = fd->fp_ind;
     }
@@ -55,9 +58,9 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
 #endif
 #if 1
-    printf("CONTIG I/O OP %d\n",flag);
-    printf("Offset: %llu\n", offset);
-    printf("Size: %zu\n", len);
+    fprintf(stderr, "CONTIG I/O OP %d\n",flag);
+    fprintf(stderr, "Offset: %llu\n", offset);
+    fprintf(stderr, "Size: %zu\n", len);
 #endif
 
     if (request) {
@@ -111,6 +114,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
 
     fd->fp_sys_posn = offset + len;
 
+done:
 #ifdef HAVE_STATUS_SET_BYTES
     if (status)
         MPIR_Status_set_bytes(status, datatype, len);

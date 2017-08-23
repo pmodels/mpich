@@ -26,7 +26,7 @@ struct ADIOI_Fns_struct ADIO_DAOS_operations = {
     ADIOI_FAKE_IOComplete, /* WriteComplete */
     ADIOI_GEN_IreadStrided, /* IreadStrided */
     ADIOI_GEN_IwriteStrided, /* IwriteStrided */
-    ADIOI_GEN_Flush, /* Flush */
+    ADIOI_DAOS_Flush, /* Flush */
     ADIOI_DAOS_Resize, /* Resize */
     ADIOI_DAOS_Delete, /* Delete */
     ADIOI_DAOS_Feature, /* Features */

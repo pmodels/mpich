@@ -311,7 +311,11 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
     cont->amode = amode;
     /* Hash file name to create uuid */
     duuid_hash128(fd->filename, &cont->uuid);
-
+    {
+        char uuid_str[37];
+        uuid_unparse(cont->uuid, uuid_str);
+        fprintf(stderr, "File Open %s %s\n", fd->filename, uuid_str);
+    }
     /* MSC - hardcode to 1MB for now, check for info hint later. */
     cont->stripe_size = 1048576;
 
@@ -320,9 +324,6 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
     cont->oid.mid = 0;
     cont->oid.hi = 0;
     daos_obj_id_generate(&cont->oid, DAOS_OC_REPL_MAX_RW);
-
-    /* MSC - set to 0 for now.. do hold later */
-    cont->epoch = 0;
 
     fd->fs_ptr = cont;
     if (rank == 0)
@@ -334,10 +335,10 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
     if (*error_code != MPI_SUCCESS)
         goto err_free;
 
-    if (mpi_size > 1)
+    if (mpi_size > 1) {
         handle_share(&cont->coh, HANDLE_CO, rank, daos_pool_oh, comm);
-
-    MPI_Bcast(&cont->epoch, 1, MPI_UINT64_T, 0, comm);
+        MPI_Bcast(&cont->epoch, 1, MPI_UINT64_T, 0, comm);
+    }
 
     /* open array on other ranks */
     if (rank != 0) {
@@ -359,7 +360,7 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
             goto err_free;
         }
     }
-    MPI_Barrier(comm);
+
     fd->is_open = 1;
 
 #ifdef ADIOI_MPE_LOGGING
@@ -373,6 +374,45 @@ err_free:
     return;
 }
 
+void ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
+{
+    int err;
+    static char myname[] = "ADIOI_GEN_FLUSH";
+
+    /* the deferred-open optimization may mean that a file has not been opened
+     * on this processor */
+    if (fd->is_open > 0) {
+        struct ADIO_DAOS_cont *cont = fd->fs_ptr;
+        int rank, rc;
+
+        if (cont->amode == DAOS_COO_RW) {
+            MPI_Barrier(fd->comm);
+
+            MPI_Comm_rank(fd->comm, &rank);
+            if (rank == 0) {
+                rc = daos_epoch_commit(cont->coh, cont->epoch, NULL, NULL);
+                if(rc == 0)
+                    rc = daos_epoch_hold(cont->coh, &cont->epoch, NULL, NULL);
+            }
+
+            MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
+
+            if (rc != 0) {
+                *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                                   MPIR_ERR_RECOVERABLE,
+                                                   myname, __LINE__,
+                                                   ADIOI_DAOS_error_convert(rc),
+                                                   "Epoch Commit failed", 0);
+                return;
+            }
+
+            MPI_Bcast(&cont->epoch, 1, MPI_UINT64_T, 0, fd->comm);
+        }
+    }
+
+    *error_code = MPI_SUCCESS;
+}
+
 void ADIOI_DAOS_Delete(const char *filename, int *error_code)
 {
     int ret;
@@ -381,6 +421,12 @@ void ADIOI_DAOS_Delete(const char *filename, int *error_code)
 
     /* Hash file name to container uuid */
     duuid_hash128(filename, &uuid);
+
+    {
+        char uuid_str[37];
+        uuid_unparse(uuid, uuid_str);
+        fprintf(stderr, "File Delete %s %s\n", filename, uuid_str);
+    }
 
     ret = daos_cont_destroy(daos_pool_oh, uuid, 1, NULL);
     if (ret != 0) {
