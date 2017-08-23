@@ -50,7 +50,7 @@ typedef struct MPIDI_POSIX_eager_fbox_control {
     int *local_ranks;
     int *local_procs;
 
-    int last_polled_rank;
+    int next_poll_local_rank;
 
 } MPIDI_POSIX_eager_fbox_control_t;
 
