@@ -7,7 +7,6 @@
 
 #include "mpiimpl.h"
 
-static int DLOOP_Dataloop_create_struct_memory_error(void);
 static int DLOOP_Dataloop_create_unique_type_struct(DLOOP_Count count,
 						    const int *blklens,
 						    const MPI_Aint *disps,
@@ -296,7 +295,7 @@ int MPIR_Dataloop_create_struct(DLOOP_Count count,
     /* --BEGIN ERROR HANDLING-- */
     if (!new_dlp)
     {
-	return DLOOP_Dataloop_create_struct_memory_error();
+	return -1;
     }
     /* --END ERROR HANDLING-- */
 
@@ -397,13 +396,6 @@ int MPIR_Dataloop_create_struct(DLOOP_Count count,
     return 0;
 }
 
-/* --BEGIN ERROR HANDLING-- */
-static int DLOOP_Dataloop_create_struct_memory_error(void)
-{
-    return -1;
-}
-/* --END ERROR HANDLING-- */
-
 static int DLOOP_Dataloop_create_unique_type_struct(DLOOP_Count count,
 						    const int *blklens,
 						    const MPI_Aint *disps,
@@ -426,7 +418,7 @@ static int DLOOP_Dataloop_create_unique_type_struct(DLOOP_Count count,
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens) {
 	/* TODO: ??? */
-	return DLOOP_Dataloop_create_struct_memory_error();
+	return -1;
     }
     /* --END ERROR HANDLING-- */
 
@@ -436,7 +428,7 @@ static int DLOOP_Dataloop_create_unique_type_struct(DLOOP_Count count,
     if (!tmp_disps) {
 	DLOOP_Free(tmp_blklens);
 	/* TODO: ??? */
-	return DLOOP_Dataloop_create_struct_memory_error();
+	return -1;
     }
     /* --END ERROR HANDLING-- */
 
@@ -487,7 +479,7 @@ static int DLOOP_Dataloop_create_basic_all_bytes_struct(
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens)
     {
-	return DLOOP_Dataloop_create_struct_memory_error();
+	return -1;
     }
     /* --END ERROR HANDLING-- */
 
@@ -497,7 +489,7 @@ static int DLOOP_Dataloop_create_basic_all_bytes_struct(
     if (!tmp_disps)
     {
 	DLOOP_Free(tmp_blklens);
-	return DLOOP_Dataloop_create_struct_memory_error();
+	return -1;
     }
     /* --END ERROR HANDLING-- */
 
@@ -552,7 +544,7 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
     segp = MPIR_Segment_alloc();
     /* --BEGIN ERROR HANDLING-- */
     if (!segp) {
-	return DLOOP_Dataloop_create_struct_memory_error();
+	return -1;
     }
     /* --END ERROR HANDLING-- */
 
@@ -621,7 +613,7 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
     /* --BEGIN ERROR HANDLING-- */
     if (!tmp_blklens) {
 	MPIR_Segment_free(segp);
-	return DLOOP_Dataloop_create_struct_memory_error();
+	return -1;
     }
     /* --END ERROR HANDLING-- */
 
@@ -631,7 +623,7 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
     if (!tmp_disps) {
 	DLOOP_Free(tmp_blklens);
 	MPIR_Segment_free(segp);
-	return DLOOP_Dataloop_create_struct_memory_error();
+	return -1;
     }
     /* --END ERROR HANDLING-- */
 
