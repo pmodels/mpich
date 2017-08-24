@@ -579,7 +579,7 @@ if test -z "$FC" ; then
    FC=f90
 fi
 KINDVAL=""
-if $FC -o conftest$EXEEXT conftest.$ac_f90ext >/dev/null 2>&1 ; then
+if $FC -o conftest$EXEEXT conftest.$ac_f90ext $FCFLAGS >/dev/null 2>&1 ; then
     ./conftest$EXEEXT >/dev/null 2>&1
     if test -s conftest.out ; then 
         KINDVAL=`cat conftest.out`
@@ -702,7 +702,7 @@ if test -z "$FC" ; then
    FC=f90
 fi
 KINDVAL=""
-if $FC -o kind$EXEEXT kind.f >/dev/null 2>&1 ; then
+if $FC -o kind$EXEEXT kind.f $FCFLAGS >/dev/null 2>&1 ; then
     ./kind >/dev/null 2>&1
     if test -s k.out ; then 
         KINDVAL=`cat k.out`
