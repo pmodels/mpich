@@ -123,12 +123,4 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_completed_hook(int grank)
 {
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_anysource_posted_hook()
-{
-}
-
-MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_anysource_completed_hook()
-{
-}
-
 #endif /* POSIX_EAGER_FBOX_RECV_H_INCLUDED */

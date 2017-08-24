@@ -16,7 +16,7 @@
 #include "../../posix_types.h"
 #include "posix_eager_direct.h"
 
-MPIDI_POSIX_eager_funcs_t MPIDI_POSIX_eager_fbox_funcs = {
+MPIDI_POSIX_eager_funcs_t MPIDI_POSIX_eager_iqueue_funcs = {
     MPIDI_POSIX_eager_init,
     MPIDI_POSIX_eager_finalize,
 

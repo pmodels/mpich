@@ -32,9 +32,7 @@ MPIDI_POSIX_eager_funcs_t MPIDI_POSIX_eager_stub_funcs = {
     MPIDI_POSIX_eager_recv_commit,
 
     MPIDI_POSIX_eager_recv_posted_hook,
-    MPIDI_POSIX_eager_recv_completed_hook,
-    MPIDI_POSIX_eager_anysource_posted_hook,
-    MPIDI_POSIX_eager_anysource_completed_hook
+    MPIDI_POSIX_eager_recv_completed_hook
 };
 
 #endif /* POSIX_EAGER_DIRECT */

@@ -47,16 +47,4 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_completed_hook(int grank)
     return;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_anysource_posted_hook()
-{
-    MPIR_Assert(0);
-    return;
-}
-
-MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_anysource_completed_hook()
-{
-    MPIR_Assert(0);
-    return;
-}
-
 #endif /* POSIX_EAGER_STUB_RX_H_INCLUDED */
