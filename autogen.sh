@@ -589,7 +589,7 @@ fi
 ########################################################################
 
 echo_n "Checking for UNIX find... "
-find . -name 'configure.ac' > /dev/null 2>&1
+find ./maint -name 'configure.ac' > /dev/null 2>&1
 if [ $? = 0 ] ; then
     echo "done"
 else
@@ -603,17 +603,17 @@ fi
 ########################################################################
 
 echo_n "Checking if xargs rm -rf works... "
-if [ -d "`find . -name __random_dir__`" ] ; then
+if [ -d "`find ./maint -name __random_dir__`" ] ; then
     error "found a directory named __random_dir__"
     exit 1
 else
-    mkdir __random_dir__
-    find . -name __random_dir__ | xargs rm -rf > /dev/null 2>&1
+    mkdir ./maint/__random_dir__
+    find ./maint -name __random_dir__ | xargs rm -rf > /dev/null 2>&1
     if [ $? = 0 ] ; then
 	echo "yes"
     else
 	echo "no (error)"
-	rm -rf __random_dir__
+	rm -rf ./maint/__random_dir__
 	exit 1
     fi
 fi
