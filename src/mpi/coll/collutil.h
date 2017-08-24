@@ -7,6 +7,18 @@
 #ifndef COLLUTIL_H_INCLUDED
 #define COLLUTIL_H_INCLUDED
 
+/* Returns nearest thr nearest power of two of a number*/
+static inline int MPIU_pof2(int number)
+{
+    int pof2 = 1;
+
+    while(pof2 <= number)
+        pof2 <<= 1;
+    pof2 >>= 1;
+
+    return pof2;
+}
+
 /* Returns non-zero if val is a power of two.  If ceil_pof2 is non-NULL, it sets
    *ceil_pof2 to the power of two that is just larger than or equal to val.
    That is, it rounds up to the nearest power of two. */

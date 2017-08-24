@@ -17,4 +17,8 @@
 
 #define MPIDI_SHM_REQUEST_DECL       @ch4_shm_request_decl@
 #define MPIDI_SHM_COMM_DECL          @ch4_shm_comm_decl@
+#define MPIDI_SHM_BCAST_PARAMS_DECL  @ch4_shm_bcast_params_decl@
+#define MPIDI_SHM_REDUCE_PARAMS_DECL  @ch4_shm_reduce_params_decl@
+#define MPIDI_SHM_ALLREDUCE_PARAMS_DECL  @ch4_shm_allreduce_params_decl@
+
 #endif /* SHMPRE_H_INCLUDED */
