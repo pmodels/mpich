@@ -662,7 +662,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_repost_event(struct fi_cq_tagged_entry
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc,
                                                          MPIR_Request * req, int buffered)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
 
     if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_SEND)) {
         mpi_errno = MPIDI_OFI_send_event(wc, req);
