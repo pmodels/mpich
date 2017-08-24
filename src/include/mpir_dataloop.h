@@ -677,7 +677,6 @@ void MPIR_Segment_unpack_external32(struct DLOOP_Segment *segp,
 #define MPIR_DATALOOP_HOMOGENEOUS   DLOOP_DATALOOP_HOMOGENEOUS
 #define MPIR_DATALOOP_ALL_BYTES     DLOOP_DATALOOP_ALL_BYTES
 
-DLOOP_Count DLOOP_Stackelm_blocksize(struct DLOOP_Dataloop_stackelm *elmp);
 DLOOP_Offset DLOOP_Stackelm_offset(struct DLOOP_Dataloop_stackelm *elmp);
 void DLOOP_Stackelm_load(struct DLOOP_Dataloop_stackelm *elmp,
                          struct DLOOP_Dataloop *dlp,
