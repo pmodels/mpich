@@ -50,6 +50,16 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
         return;
     }
 
+    if (fd->access_mode & ADIO_DELETE_ON_CLOSE) {
+        int err;
+
+	MPI_Barrier(fd->comm);
+	if (rank == 0) {
+            ADIOI_DAOS_Delete(fd->filename, &err);
+	}
+	MPI_Barrier(fd->comm);
+    }
+
     ADIOI_Free(fd->fs_ptr);
     fd->fs_ptr = NULL;
 

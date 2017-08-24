@@ -29,6 +29,22 @@ struct ADIO_DAOS_cont {
     daos_epoch_t	epoch;
 };
 
+struct ADIO_DAOS_req {
+    MPI_Request req;
+    MPI_Offset nbytes;
+    daos_event_t daos_event;
+    daos_array_ranges_t ranges;
+    daos_range_t rg;
+    daos_sg_list_t sgl;
+    daos_iov_t iov;
+    daos_range_t *rgs;
+    daos_iov_t *iovs;
+};
+
+int ADIOI_DAOS_aio_free_fn(void *extra_state);
+int ADIOI_DAOS_aio_poll_fn(void *extra_state, MPI_Status *status);
+int ADIOI_DAOS_aio_wait_fn(int count, void ** array_of_states,
+                           double timeout, MPI_Status *status);
 int ADIOI_DAOS_error_convert(int error);
 
 void ADIOI_DAOS_Open(ADIO_File fd, int *error_code);
@@ -65,4 +81,12 @@ void ADIOI_DAOS_WriteStrided(ADIO_File fd, const void *buf, int count,
                              MPI_Datatype datatype, int file_ptr_type,
                              ADIO_Offset offset, ADIO_Status *status,
                              int *error_code);
+void ADIOI_DAOS_IreadStrided(ADIO_File fd, void *buf, int count, 
+                             MPI_Datatype datatype, int file_ptr_type,
+                             ADIO_Offset offset, ADIO_Request *request,
+                             int *error_code);
+void ADIOI_DAOS_IwriteStrided(ADIO_File fd, const void *buf, int count,
+                              MPI_Datatype datatype, int file_ptr_type,
+                              ADIO_Offset offset, MPI_Request *request,
+                              int *error_code);
 #endif

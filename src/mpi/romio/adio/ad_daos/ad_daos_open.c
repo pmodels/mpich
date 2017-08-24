@@ -281,11 +281,6 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
 
     MPI_Comm_size(comm, &mpi_size);
 
-    if (access_mode & ADIO_WRONLY) {
-	*error_code = ADIOI_Err_create_code(myname, fd->filename, errno);
-        return;
-    }
-
     amode = 0;
     if (access_mode & ADIO_RDONLY)
 	amode = DAOS_COO_RO;        

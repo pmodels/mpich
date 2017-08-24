@@ -6,8 +6,14 @@
 #include "adio_extern.h"
 #include <assert.h>
 
+#include "../../mpi-io/mpioimpl.h"
+#include "../../mpi-io/mpioprof.h"
+#include "mpiu_greq.h"
+
 //#define DEBUG_LIST
 //#define DEBUG_LIST2
+#define COALESCE_REGIONS
+#define MAX_OL_COUNT 64
 
 enum {
     DAOS_WRITE,
@@ -29,12 +35,10 @@ static void print_buf_file_ol_pairs(int64_t buf_off_arr[],
                                     void *buf,
                                     int rw_type);
 
-#define COALESCE_REGIONS  /* TODO: would we ever want to *not* coalesce? */
-#define MAX_OL_COUNT 64
 int ADIOI_DAOS_StridedListIO(ADIO_File fd, void *buf, int count,
-			      MPI_Datatype datatype, int file_ptr_type,
-			      ADIO_Offset offset, ADIO_Status *status,
-			      int *error_code, int rw_type)
+                             MPI_Datatype datatype, int file_ptr_type,
+                             ADIO_Offset offset, ADIO_Status *status,
+                             MPI_Request *request, int rw_type, int *error_code)
 {
     /* list I/O parameters */
     int i = -1, ret = -1;
@@ -64,6 +68,7 @@ int ADIOI_DAOS_StridedListIO(ADIO_File fd, void *buf, int count,
     int buftype_is_contig = -1, filetype_is_contig = -1;
 
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
+    struct ADIO_DAOS_req *aio_req;
     static char myname[] = "ADIOI_DAOS_STRIDED_LISTIO";
 
     MPI_Type_size_x(fd->filetype, &filetype_size);
@@ -75,6 +80,11 @@ int ADIOI_DAOS_StridedListIO(ADIO_File fd, void *buf, int count,
     MPI_Type_size_x(datatype, &buftype_size);
     MPI_Type_extent(datatype, &buftype_extent);
     io_size = buftype_size*count;
+
+    if (request) {
+        aio_req = (struct ADIO_DAOS_req*)ADIOI_Calloc(sizeof(struct ADIO_DAOS_req), 1);
+        daos_event_init(&aio_req->daos_event, DAOS_HDL_INVAL, NULL);
+    }
 
     /* Flatten the memory datatype
      * (file datatype has already been flattened in ADIO open
@@ -93,7 +103,7 @@ int ADIOI_DAOS_StridedListIO(ADIO_File fd, void *buf, int count,
 	    (sizeof(ADIOI_Flatlist_node));
 	flat_buf_p->blocklens = (ADIO_Offset*)ADIOI_Malloc(sizeof(ADIO_Offset));
 	flat_buf_p->indices = 
-		(ADIO_Offset *) ADIOI_Malloc(sizeof(ADIO_Offset));
+            (ADIO_Offset *) ADIOI_Malloc(sizeof(ADIO_Offset));
 	/* For the buffer, we can optimize the buftype, this is not 
 	 * possible with the filetype since it is tiled */
 	buftype_size = buftype_size*count;
@@ -173,6 +183,7 @@ int ADIOI_DAOS_StridedListIO(ADIO_File fd, void *buf, int count,
 	size_in_filetype = etypes_in_filetype * etype_size;
 
 	tmp_filetype_size = 0;
+        bytes_into_filetype = offset * filetype_size;
 	for (i=0; i<flat_file_p->count; i++) {
 	    tmp_filetype_size += flat_file_p->blocklens[i];
 	    if (tmp_filetype_size > size_in_filetype) 
@@ -270,31 +281,48 @@ int ADIOI_DAOS_StridedListIO(ADIO_File fd, void *buf, int count,
 				rw_type);
 #endif
 
+        daos_sg_list_t *sgl, loc_sgl;
+        daos_iov_t *iovs, loc_iovs[MAX_OL_COUNT];
+        daos_array_ranges_t *ranges, loc_ranges;
+        daos_range_t *rgs, loc_rgs[MAX_OL_COUNT];
+
+        if (request) {
+            ranges = &aio_req->ranges;
+            aio_req->rgs = malloc(sizeof(daos_range_t) * MAX_OL_COUNT);
+            rgs = aio_req->rgs;
+
+            sgl = &aio_req->sgl;
+            aio_req->iovs = malloc(sizeof(daos_iov_t) * MAX_OL_COUNT);
+            iovs = aio_req->iovs;
+        }
+        else {
+            ranges = &loc_ranges;
+            rgs = loc_rgs;
+            sgl = &loc_sgl;
+            iovs = loc_iovs;
+        }
+
         /* Create DAOS SGL */
-        daos_sg_list_t sgl;
-        daos_iov_t iovs[MAX_OL_COUNT];
-        sgl.sg_nr.num = buf_ol_count;
-        sgl.sg_nr.num_out = 0;
+        sgl->sg_nr.num = buf_ol_count;
+        sgl->sg_nr.num_out = 0;
         for (i = 0; i < buf_ol_count; i++)
             daos_iov_set(&iovs[i], (char *) buf + buf_off_arr[i], buf_len_arr[i]);
-        sgl.sg_iovs = iovs;
+        sgl->sg_iovs = iovs;
 
         /* Create DAOS Array ranges */
-        daos_array_ranges_t ranges;
-        daos_range_t rg[MAX_OL_COUNT];
-        ranges.arr_nr = file_ol_count;
+        ranges->arr_nr = file_ol_count;
         for (i = 0; i < file_ol_count; i++) {
-            rg[i].rg_len = file_len_arr[i];
-            rg[i].rg_idx = file_off_arr[i];
+            rgs[i].rg_len = file_len_arr[i];
+            rgs[i].rg_idx = file_off_arr[i];
             fprintf(stderr, "%d: off %lld len %zu\n", i, file_off_arr[i], file_len_arr[i]);
         }
-        ranges.arr_rgs = rg;
+        ranges->arr_rgs = rgs;
 
 	/* Run list I/O operation */
 	if (rw_type == DAOS_WRITE)
 	{
-            ret = daos_array_write(cont->oh, cont->epoch, &ranges, &sgl,
-                                   NULL, NULL);
+            ret = daos_array_write(cont->oh, cont->epoch, ranges, sgl, NULL,
+                                   (request ? &aio_req->daos_event : NULL));
             if (ret != 0) {
                 printf("daos_array_write() failed with %d\n", ret);
                 *error_code = MPIO_Err_create_code(MPI_SUCCESS,
@@ -306,8 +334,8 @@ int ADIOI_DAOS_StridedListIO(ADIO_File fd, void *buf, int count,
                 return;
             }
 	} else {
-            ret = daos_array_read(cont->oh, cont->epoch, &ranges, &sgl,
-                                  NULL, NULL);
+            ret = daos_array_read(cont->oh, cont->epoch, ranges, sgl, NULL,
+                                  (request ? &aio_req->daos_event : NULL));
             if (ret != 0) {
                 printf("daos_array_read() failed with %d\n", ret);
                 *error_code = MPIO_Err_create_code(MPI_SUCCESS,
@@ -323,15 +351,26 @@ int ADIOI_DAOS_StridedListIO(ADIO_File fd, void *buf, int count,
 
     if (file_ptr_type == ADIO_INDIVIDUAL) 
 	fd->fp_ind += io_size;
+
+    if (request) {
+        if (ADIOI_DAOS_greq_class == 0) {
+            MPIX_Grequest_class_create(ADIOI_GEN_aio_query_fn,
+                                       ADIOI_DAOS_aio_free_fn, MPIU_Greq_cancel_fn,
+                                       ADIOI_DAOS_aio_poll_fn, ADIOI_DAOS_aio_wait_fn,
+                                       &ADIOI_DAOS_greq_class);
+        }
+        MPIX_Grequest_class_allocate(ADIOI_DAOS_greq_class, aio_req, request);
+        memcpy(&(aio_req->req), request, sizeof(MPI_Request));
+    }
+
     *error_code = MPI_SUCCESS;
 
 error_state:
 #ifdef HAVE_STATUS_SET_BYTES
-    /* TODO: why the cast? */
-    MPIR_Status_set_bytes(status, datatype, io_size);
-/* This is a temporary way of filling in status. The right way is to
-   keep track of how much data was actually written by ADIOI_BUFFERED_WRITE. */
+    if (status)
+        MPIR_Status_set_bytes(status, datatype, io_size);
 #endif
+
     if (buftype_is_contig != 0)
     {
 	ADIOI_Free(flat_buf_p->blocklens);
@@ -671,7 +710,7 @@ void ADIOI_DAOS_ReadStrided(ADIO_File fd, void *buf, int count,
                             int *error_code)
 {
     ADIOI_DAOS_StridedListIO(fd, buf, count, datatype, file_ptr_type,
-                             offset, status, error_code, DAOS_READ);
+                             offset, status, NULL, DAOS_READ, error_code);
     return;
 }
 
@@ -681,13 +720,29 @@ void ADIOI_DAOS_WriteStrided(ADIO_File fd, const void *buf, int count,
                              int *error_code)
 {
     ADIOI_DAOS_StridedListIO(fd, (void *)buf, count, datatype, file_ptr_type,
-                             offset, status, error_code, DAOS_WRITE);
+                             offset, status, NULL, DAOS_WRITE, error_code);
     return;
 }
 
+void ADIOI_DAOS_IreadStrided(ADIO_File fd, void *buf, int count, 
+                             MPI_Datatype datatype, int file_ptr_type,
+                             ADIO_Offset offset, ADIO_Request *request,
+                             int *error_code)
+{
+    ADIOI_DAOS_StridedListIO(fd, buf, count, datatype, file_ptr_type,
+                             offset, NULL, request, DAOS_READ, error_code);
+    return;
+}
 
-
-
+void ADIOI_DAOS_IwriteStrided(ADIO_File fd, const void *buf, int count,
+                              MPI_Datatype datatype, int file_ptr_type,
+                              ADIO_Offset offset, MPI_Request *request,
+                              int *error_code)
+{
+    ADIOI_DAOS_StridedListIO(fd, (void *)buf, count, datatype, file_ptr_type,
+                             offset, NULL, request, DAOS_WRITE, error_code);
+    return;
+}
 
 
 #if 0
