@@ -13,9 +13,9 @@
 #ifndef POSIX_EAGER_DIRECT
 #ifndef POSIX_EAGER_DISABLE_INLINES
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int local_rank, int size, int local_rank_0)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
 {
-    return MPIDI_POSIX_eager_func->init(rank, local_rank, size, local_rank);
+    return MPIDI_POSIX_eager_func->init(rank, size);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()

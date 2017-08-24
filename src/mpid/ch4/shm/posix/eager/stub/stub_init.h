@@ -13,7 +13,7 @@
 
 #include "stub_impl.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int grank, int size)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
