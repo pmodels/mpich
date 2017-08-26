@@ -22,7 +22,7 @@ static void group_to_bitarray(MPIR_Group *group, MPIR_Comm *orig_comm, int **bit
 
     /* If the group is empty, return an empty bitarray. */
     if (group == MPIR_Group_empty) {
-        for (i = 0; i < *bitarray_size; i++) *bitarray[i] = 0;
+        for (i = 0; i < *bitarray_size; i++) (*bitarray)[i] = 0;
         return;
     }
 
@@ -31,7 +31,7 @@ static void group_to_bitarray(MPIR_Group *group, MPIR_Comm *orig_comm, int **bit
     comm_ranks = (int *) MPL_malloc(sizeof(int) * group->size);
 
     for (i = 0; i < group->size; i++) group_ranks[i] = i;
-    for (i = 0; i < *bitarray_size; i++) *bitarray[i] = 0;
+    for (i = 0; i < *bitarray_size; i++) (*bitarray)[i] = 0;
 
     MPIR_Group_translate_ranks_impl(group, group->size, group_ranks,
                                     orig_comm->local_group, comm_ranks);
@@ -42,7 +42,7 @@ static void group_to_bitarray(MPIR_Group *group, MPIR_Comm *orig_comm, int **bit
         if (comm_ranks[i] == MPI_UNDEFINED) continue;
         index = comm_ranks[i] / (sizeof(int) * 8);
         mask = 0x1 << comm_ranks[i] % (sizeof(int) * 8);
-        *bitarray[index] |= mask;
+        (*bitarray)[index] |= mask;
     }
 
     MPL_free(group_ranks);
