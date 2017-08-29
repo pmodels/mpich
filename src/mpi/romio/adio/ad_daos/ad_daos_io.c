@@ -70,11 +70,8 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
 #ifdef ADIOI_MPE_LOGGING
     MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
 #endif
-#if 1
-    fprintf(stderr, "CONTIG I/O OP %d\n",flag);
-    fprintf(stderr, "Offset: %llu\n", offset);
-    fprintf(stderr, "Size: %zu\n", len);
-#endif
+
+    fprintf(stderr, "CONTIG IO OP %d, Off %llu, Len %zu\n", flag, offset, len);
 
     if (flag == DAOS_WRITE) {
         ret = daos_array_write(cont->oh, cont->epoch, ranges, sgl, NULL,

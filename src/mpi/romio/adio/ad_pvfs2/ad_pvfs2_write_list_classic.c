@@ -236,7 +236,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
     /* noncontiguous in file */
 
 /* filetype already flattened in ADIO_Open */
-    flat_flie = ADIOI_Flatten_and_find(fd->filetype);
+    flat_file = ADIOI_Flatten_and_find(fd->filetype);
 
     disp = fd->disp;
     initial_off = offset;

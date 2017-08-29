@@ -204,6 +204,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     }
 
     if (cont->amode == DAOS_COO_RW) {
+        cont->epoch = 0;
         rc = daos_epoch_hold(cont->coh, &cont->epoch, NULL, NULL);
         if (rc != 0) {
             printf("daos_epoch_hold failed (%d)\n", rc);
@@ -371,19 +372,16 @@ err_free:
 
 void ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
 {
-    int err;
+    int rank, rc, err;
+    struct ADIO_DAOS_cont *cont = fd->fs_ptr;
     static char myname[] = "ADIOI_GEN_FLUSH";
 
-    /* the deferred-open optimization may mean that a file has not been opened
-     * on this processor */
-    if (fd->is_open > 0) {
-        struct ADIO_DAOS_cont *cont = fd->fs_ptr;
-        int rank, rc;
+    MPI_Comm_rank(fd->comm, &rank);
 
+    if (fd->is_open > 0) {
         if (cont->amode == DAOS_COO_RW) {
             MPI_Barrier(fd->comm);
 
-            MPI_Comm_rank(fd->comm, &rank);
             if (rank == 0) {
                 rc = daos_epoch_commit(cont->coh, cont->epoch, NULL, NULL);
                 if(rc == 0)
@@ -401,6 +399,24 @@ void ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
                 return;
             }
 
+            MPI_Bcast(&cont->epoch, 1, MPI_UINT64_T, 0, fd->comm);
+        } else {
+            if (rank == 0) {
+                daos_epoch_state_t state;
+
+                rc = daos_epoch_query(cont->coh, &state, NULL);
+                MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
+                cont->epoch = state.es_ghce;
+            }
+
+            if (rc != 0) {
+                    *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                                       MPIR_ERR_RECOVERABLE,
+                                                       myname, __LINE__,
+                                                       ADIOI_DAOS_error_convert(rc),
+                                                       "Epoch Hold Failed", 0);
+                    return;
+            }
             MPI_Bcast(&cont->epoch, 1, MPI_UINT64_T, 0, fd->comm);
         }
     }

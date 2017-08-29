@@ -104,11 +104,12 @@ int MPIOI_File_read(MPI_File fh,
     MPIO_CHECK_COUNT_SIZE(adio_fh, count, datatype_size, myname, error_code);
     /* --END ERROR HANDLING-- */
 
+#ifdef HAVE_STATUS_SET_BYTES
+    MPIR_Status_set_bytes(status, datatype, 0);
+#endif
+
     if (count*datatype_size == 0)
     {
-#ifdef HAVE_STATUS_SET_BYTES
-       MPIR_Status_set_bytes(status, datatype, 0);
-#endif
 	error_code = MPI_SUCCESS;
 	goto fn_exit;
     }
