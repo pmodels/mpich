@@ -191,20 +191,6 @@ AM_COND_IF([BUILD_CH3_SOCK],[
 AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:sock])
 # code that formerly lived in configure.ac
 
-# FIXME this must be namespaced now that we've flattened things
-#
-# ABIVERSION is needed when a separate sock dll library is built
-if test "X$ABIVERSION" = "X" ; then
-   if test "X$libmpi_so_version" != X ; then
-      ABIVERSION="$libmpi_so_version"
-   else
-      # Note that an install of a sock-dll will fail if the ABI version is not
-      # available
-      AC_MSG_WARN([Unable to set the ABIVERSION])
-   fi
-fi
-AC_SUBST(ABIVERSION)
-
 dnl AC_CHECK_HEADER(net/if.h) fails on Solaris; extra header files needed
 AC_TRY_COMPILE([
 #include <sys/types.h>
