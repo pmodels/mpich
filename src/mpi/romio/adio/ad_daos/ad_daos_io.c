@@ -32,17 +32,25 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     MPI_Type_size_x(datatype, &datatype_size);
     len = (ADIO_Offset)datatype_size * (ADIO_Offset)count;
 
-    if (len == 0)
-        goto done;
-
     if (request) {
         aio_req = (struct ADIO_DAOS_req*)ADIOI_Calloc(sizeof(struct ADIO_DAOS_req), 1);
         daos_event_init(&aio_req->daos_event, DAOS_HDL_INVAL, NULL);
-
+        fprintf(stderr, "INIT REQ %p\n", aio_req);
         ranges = &aio_req->ranges;
         rg = &aio_req->rg;
         sgl = &aio_req->sgl;
         iov = &aio_req->iov;
+
+        if (ADIOI_DAOS_greq_class == 0) {
+            MPIX_Grequest_class_create(ADIOI_GEN_aio_query_fn,
+                                       ADIOI_DAOS_aio_free_fn, MPIU_Greq_cancel_fn,
+                                       ADIOI_DAOS_aio_poll_fn, ADIOI_DAOS_aio_wait_fn,
+                                       &ADIOI_DAOS_greq_class);
+        }
+        MPIX_Grequest_class_allocate(ADIOI_DAOS_greq_class, aio_req, request);
+        memcpy(&(aio_req->req), request, sizeof(MPI_Request));
+
+        aio_req->nbytes = len;
     }
     else {
         ranges = &loc_ranges;
@@ -50,6 +58,9 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
         sgl = &loc_sgl;
         iov = &loc_iov;
     }
+
+    if (len == 0)
+        goto done;
 
     if (file_ptr_type == ADIO_INDIVIDUAL) {
 	offset = fd->fp_ind;
@@ -98,19 +109,6 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
                                                "Error in daos_array_read", 0);
             return;
         }
-    }
-
-    if (request) {
-        if (ADIOI_DAOS_greq_class == 0) {
-            MPIX_Grequest_class_create(ADIOI_GEN_aio_query_fn,
-                                       ADIOI_DAOS_aio_free_fn, MPIU_Greq_cancel_fn,
-                                       ADIOI_DAOS_aio_poll_fn, ADIOI_DAOS_aio_wait_fn,
-                                       &ADIOI_DAOS_greq_class);
-        }
-        MPIX_Grequest_class_allocate(ADIOI_DAOS_greq_class, aio_req, request);
-        memcpy(&(aio_req->req), request, sizeof(MPI_Request));
-
-        aio_req->nbytes = len;
     }
 
 #ifdef ADIOI_MPE_LOGGING
@@ -195,14 +193,15 @@ int ADIOI_DAOS_aio_poll_fn(void *extra_state, MPI_Status *status)
     struct ADIO_DAOS_req *aio_req = (struct ADIO_DAOS_req *)extra_state;;
     int ret;
     bool flag;
-
-    ret = daos_event_test(&aio_req->daos_event, DAOS_EQ_NOWAIT, &flag);
+    /* MSC - MPICH hangs if we just test with NOWAIT.. */
+    ret = daos_event_test(&aio_req->daos_event, DAOS_EQ_WAIT, &flag);
     if (ret != 0)
         return MPI_UNDEFINED;
 
-    if (flag) {
+    if (flag)
 	MPI_Grequest_complete(aio_req->req);
-    }
+    else
+        return MPI_UNDEFINED;
 
     return MPI_SUCCESS;
 }
@@ -213,22 +212,25 @@ int ADIOI_DAOS_aio_wait_fn(int count, void ** array_of_states,
 {
 
     struct ADIO_DAOS_req **aio_reqlist;
-    int i, ret;
+    int i, nr_complete, ret;
 
     aio_reqlist = (struct ADIO_DAOS_req **)array_of_states;
 
-    /** MSC - need to figure our exact symantics of the wait call */
-    for (i = 0; i < count; i++) {
-        bool flag;
+    nr_complete = 0;
+    while(nr_complete < count) {
+        for (i = 0; i < count; i++) {
+            bool flag;
 
-        ret = daos_event_test(&aio_reqlist[i]->daos_event,
-                              (timeout > 0) ? (int64_t)timeout : DAOS_EQ_WAIT, &flag);
-        if (ret != 0)
-            return MPI_UNDEFINED;
+            ret = daos_event_test(&aio_reqlist[i]->daos_event,
+                                  (timeout > 0) ? (int64_t)timeout : DAOS_EQ_WAIT, &flag);
+            if (ret != 0)
+                return MPI_UNDEFINED;
 
-        if (flag)
-            MPI_Grequest_complete(aio_reqlist[i]->req);
+            if (flag) {
+                MPI_Grequest_complete(aio_reqlist[i]->req);
+                nr_complete++;
+            }
+        }
     }
-
     return MPI_SUCCESS; /* TODO: no idea how to deal with errors */
 }

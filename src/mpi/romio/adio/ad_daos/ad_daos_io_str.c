@@ -792,20 +792,15 @@ ADIOI_DAOS_StridedListIO2(ADIO_File fd, const void *buf, int count,
     struct ADIO_DAOS_req *aio_req;
     static char myname[] = "ADIOI_DAOS_WRITESTRIDED";
 
+    int mpi_rank;
+    MPI_Comm_rank(fd->comm, &mpi_rank);
+
     *error_code = MPI_SUCCESS;
 
     ADIOI_Datatype_iscontig(datatype, &buftype_is_contig);
     ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
 
     MPI_Type_size_x(fd->filetype, &filetype_size);
-    if (filetype_size == 0) {
-#ifdef HAVE_STATUS_SET_BYTES
-	MPIR_Status_set_bytes(status, datatype, 0);
-#endif
-	*error_code = MPI_SUCCESS; 
-	return;
-    }
-
 
 #if 0
     /* the HDF5 tests showed a bug in this list processing code (see many many
@@ -824,13 +819,7 @@ ADIOI_DAOS_StridedListIO2(ADIO_File fd, const void *buf, int count,
     etype_size = fd->etype_size;
     
     bufsize = buftype_size * count;
-    if (bufsize == 0) {
-#ifdef HAVE_STATUS_SET_BYTES
-	MPIR_Status_set_bytes(status, datatype, 0);
-#endif
-	*error_code = MPI_SUCCESS; 
-	return;
-    }
+
 
     daos_sg_list_t *sgl, loc_sgl;
     daos_iov_t *iovs;
@@ -842,10 +831,38 @@ ADIOI_DAOS_StridedListIO2(ADIO_File fd, const void *buf, int count,
         daos_event_init(&aio_req->daos_event, DAOS_HDL_INVAL, NULL);
         ranges = &aio_req->ranges;
         sgl = &aio_req->sgl;
+
+        if (ADIOI_DAOS_greq_class == 0) {
+            MPIX_Grequest_class_create(ADIOI_GEN_aio_query_fn,
+                                       ADIOI_DAOS_aio_free_fn, MPIU_Greq_cancel_fn,
+                                       ADIOI_DAOS_aio_poll_fn, ADIOI_DAOS_aio_wait_fn,
+                                       &ADIOI_DAOS_greq_class);
+        }
+        MPIX_Grequest_class_allocate(ADIOI_DAOS_greq_class, aio_req, request);
+        memcpy(&(aio_req->req), request, sizeof(MPI_Request));
+        aio_req->nbytes = 0;
     }
     else {
         ranges = &loc_ranges;
         sgl = &loc_sgl;
+    }
+
+    if (filetype_size == 0) {
+#ifdef HAVE_STATUS_SET_BYTES
+        if (status)
+            MPIR_Status_set_bytes(status, datatype, 0);
+#endif
+	*error_code = MPI_SUCCESS; 
+	return;
+    }
+
+    if (bufsize == 0) {
+#ifdef HAVE_STATUS_SET_BYTES
+        if (status)
+            MPIR_Status_set_bytes(status, datatype, 0);
+#endif
+	*error_code = MPI_SUCCESS; 
+	return;
     }
 
     /* Create Memory SGL */
@@ -862,6 +879,10 @@ ADIOI_DAOS_StridedListIO2(ADIO_File fd, const void *buf, int count,
             for (i=0; i<flat_buf->count; i++) {
                 int64_t tmp_off;
 
+                if(flat_buf->blocklens[i] == 0) {
+                    mem_list_count --;
+                    continue;
+                }
                 tmp_off = ((size_t)buf + j*buftype_extent + flat_buf->indices[i]);
                 file_length += flat_buf->blocklens[i];
                 daos_iov_set(&iovs[k++], (char *) tmp_off, flat_buf->blocklens[i]);
@@ -891,7 +912,10 @@ ADIOI_DAOS_StridedListIO2(ADIO_File fd, const void *buf, int count,
         rgs = (daos_range_t *)ADIOI_Malloc(sizeof(daos_range_t));
         rgs->rg_idx = off;
         rgs->rg_len = bufsize;
-        fprintf(stderr, "Single : off %lld len %zu\n", rgs->rg_idx, rgs->rg_len);
+        fprintf(stderr, "(%d) Single : off %lld len %zu\n", mpi_rank, rgs->rg_idx, rgs->rg_len);
+
+        if (request)
+            aio_req->nbytes = bufsize;
     }
     else {
         flat_file = ADIOI_Flatten_and_find(fd->filetype);
@@ -946,11 +970,79 @@ ADIOI_DAOS_StridedListIO2(ADIO_File fd, const void *buf, int count,
         st_fwr_size = fwr_size;
         st_n_filetypes = n_filetypes;
 
+
+#if 0
+        ADIO_Offset userbuf_off;
+        ADIO_Offset off;
+        i = 0;
+        j = st_index;
+	off = start_off;
+        fwr_size = MPL_MIN(st_fwr_size, bufsize);        
+        userbuf_off = 0;
+        total_blks_to_write = 0;
+	while (userbuf_off < bufsize) {
+	    userbuf_off += fwr_size;
+
+	    if (j < (flat_file->count - 1))
+                j++;
+	    else {
+		j = 0;
+		n_filetypes++;
+	    }
+
+	    off = disp + flat_file->indices[j] + 
+                n_filetypes*(ADIO_Offset)filetype_extent;
+	    fwr_size = MPL_MIN(flat_file->blocklens[j],
+                                   bufsize-(unsigned)userbuf_off);
+            total_blks_to_write ++;
+	}
+
+        userbuf_off = 0;
+        j = st_index;
+        off = start_off;
+        n_filetypes = st_n_filetypes;
+        fwr_size = MPL_MIN(st_fwr_size, bufsize);
+        n_write_lists = total_blks_to_write;
+        rgs = (daos_range_t *)ADIOI_Malloc(sizeof(daos_range_t) * n_write_lists);
+
+        while (userbuf_off < bufsize) {
+            if (fwr_size) { 
+                rgs[i].rg_idx = off;
+                rgs[i].rg_len = fwr_size;
+                if(request)
+                    aio_req->nbytes += rgs[i].rg_len;
+                fprintf(stderr, "(%d) %d: off %lld len %zu\n", mpi_rank, i, rgs[i].rg_idx, rgs[i].rg_len);
+                i++;
+            }
+            userbuf_off += fwr_size;
+
+            if (off + fwr_size < disp + flat_file->indices[j] +
+                flat_file->blocklens[j] + n_filetypes*(ADIO_Offset)filetype_extent) {
+                off += fwr_size;
+            }
+            /* did not reach end of contiguous block in filetype.
+             * no more I/O needed. off is incremented by fwr_size.
+             */
+            else {
+                if (j < (flat_file->count - 1)) j++;
+                else {
+                    j = 0;
+                    n_filetypes++;
+                }
+                off = disp + flat_file->indices[j] + 
+                    n_filetypes*(ADIO_Offset)filetype_extent;
+                fwr_size = MPL_MIN(flat_file->blocklens[j], 
+                                       bufsize-(unsigned)userbuf_off);
+            }
+        }
+    }
+#endif
+
         i = 0;
         j = st_index;
         f_data_wrote = MPL_MIN(st_fwr_size, bufsize);        
         n_filetypes = st_n_filetypes;
-    
+
         /* determine how many blocks in file to write */
         total_blks_to_write = 1;
         if (j < (flat_file->count - 1)) j++;
@@ -964,7 +1056,10 @@ ADIOI_DAOS_StridedListIO2(ADIO_File fd, const void *buf, int count,
             if(flat_file->blocklens[j])
                 total_blks_to_write++;
             if (j<(flat_file->count-1)) j++;
-            else j = 0; 
+            else {
+                j = 0;
+                n_filetypes++;
+            }
         }
 	    
         j = st_index;
@@ -977,16 +1072,23 @@ ADIOI_DAOS_StridedListIO2(ADIO_File fd, const void *buf, int count,
             if(!i) {
                 rgs[i].rg_idx = start_off;
                 rgs[i].rg_len = MPL_MIN(f_data_wrote, st_fwr_size);
+                if(request)
+                    aio_req->nbytes += rgs[i].rg_len;
             }
             else {
-                rgs[i].rg_idx = disp + 
-                    ((ADIO_Offset)n_filetypes)*filetype_extent
-                    + flat_file->indices[j];
-                rgs[i].rg_len = flat_file->blocklens[j];
-                if (flat_file->blocklens[j] == 0)
+                if (flat_file->blocklens[j]) {
+                    rgs[i].rg_idx = disp + 
+                        ((ADIO_Offset)n_filetypes)*filetype_extent
+                        + flat_file->indices[j];
+                    rgs[i].rg_len = flat_file->blocklens[j];
+                    fprintf(stderr, "(%d) %d: off %lld len %zu\n", mpi_rank, i, rgs[i].rg_idx, rgs[i].rg_len);
+                    if(request)
+                        aio_req->nbytes += rgs[i].rg_len;
+                }
+                else
                     i--;
             }
-            fprintf(stderr, "%d: off %lld len %zu\n", i, rgs[i].rg_idx, rgs[i].rg_len);
+
             if (j<(flat_file->count - 1)) j++;
             else {
                 j = 0;
@@ -1039,7 +1141,8 @@ ADIOI_DAOS_StridedListIO2(ADIO_File fd, const void *buf, int count,
     fd->fp_sys_posn = -1;   /* clear this. */
 
 #ifdef HAVE_STATUS_SET_BYTES
-    MPIR_Status_set_bytes(status, datatype, bufsize);
+    if (status)
+        MPIR_Status_set_bytes(status, datatype, bufsize);
 #endif
 
     if (!request) {

@@ -133,7 +133,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
     ADIO_Offset new_bwr_size, new_fwr_size, st_fwr_size, fwr_size=0, bwr_size, req_len;
     static char myname[] = "ADIOI_GEN_WriteStrided";
 
-    if (fd->hints->ds_write == ADIOI_HINT_DISABLE) {
+    if (1 || fd->hints->ds_write == ADIOI_HINT_DISABLE) {
     	/* if user has disabled data sieving on reads, use naive
 	 * approach instead.
 	 */

@@ -52,6 +52,8 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
     ADIOI_Assert((buftype_size * count) == ((ADIO_Offset)(unsigned)buftype_size * (ADIO_Offset)count));
     bufsize = buftype_size * count;
 
+    int mpi_rank;
+    MPI_Comm_rank(fd->comm, &mpi_rank);
     /* contiguous in buftype and filetype is handled elsewhere */
 
     if (!buftype_is_contig && filetype_is_contig) {
@@ -81,7 +83,7 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
 		              flat_buf->indices[b_index];
 		req_off = off;
 		req_len = flat_buf->blocklens[b_index];
-
+                fprintf(stderr, "CONT off %lld, len %zu\n", req_off, req_len);
     ADIOI_Assert(req_len == (int) req_len);
     ADIOI_Assert((((ADIO_Offset)(uintptr_t)buf) + userbuf_off) == (ADIO_Offset)(uintptr_t)((uintptr_t)buf + userbuf_off));
 		ADIO_WriteContig(fd, 
@@ -240,7 +242,7 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
                        fwr_size = 0. save system call in such cases */ 
 		    req_off = off;
 		    req_len = fwr_size;
-
+                    fprintf(stderr, "NONCONT 1 off %lld, len %zu\n", req_off, req_len);
         ADIOI_Assert(req_len == (int) req_len);
         ADIOI_Assert((((ADIO_Offset)(uintptr_t)buf) + userbuf_off) == (ADIO_Offset)(uintptr_t)((uintptr_t)buf + userbuf_off));
 		    ADIO_WriteContig(fd, 
@@ -304,7 +306,7 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
 		    req_off = off;
 		    req_len = size;
 		    userbuf_off = i_offset;
-
+                    fprintf(stderr, "(%d) NONCONT 2 off %lld, len %zu\n", mpi_rank, req_off, req_len);
         ADIOI_Assert(req_len == (int) req_len);
         ADIOI_Assert((((ADIO_Offset)(uintptr_t)buf) + userbuf_off) == (ADIO_Offset)(uintptr_t)((uintptr_t)buf + userbuf_off));
 		    ADIO_WriteContig(fd, 
