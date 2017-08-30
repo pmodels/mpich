@@ -7,6 +7,8 @@
 
 #include "mpiimpl.h"
 #include "mpi_init.h"
+#include "coll_impl.h"
+
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -233,6 +235,9 @@ int MPI_Finalize( void )
 #ifdef HAVE_DEBUGGER_SUPPORT
     MPIR_Debugger_set_aborting( (char *)0 );
 #endif
+
+    mpi_errno = MPIC_finalize();
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPID_Finalize();
     if (mpi_errno) {

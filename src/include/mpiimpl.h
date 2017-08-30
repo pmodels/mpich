@@ -183,7 +183,6 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_contextid.h"
 #include "mpir_status.h"
 #include "mpir_debugger.h"
-#include "mpir_op.h"
 #include "mpir_topo.h"
 #include "mpir_tags.h"
 #include "mpir_pt2pt.h"
@@ -197,6 +196,7 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpii_f77interface.h"
 #endif
 
+#include "coll_types.h"
 
 /*****************************************************************************/
 /********************** PART 4: DEVICE PRE DECLARATION ***********************/
@@ -214,6 +214,7 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_group.h"
 #include "mpir_comm.h"
 #include "mpir_request.h"
+#include "mpir_op.h"
 #include "mpir_win.h"
 #include "mpir_coll.h"
 #include "mpir_func.h"
