@@ -713,7 +713,6 @@ int MPID_Win_sync(MPIR_Win *win);
 void MPID_Progress_start(MPID_Progress_state * state);
 int MPID_Progress_wait(MPID_Progress_state * state);
 void MPID_Progress_end(MPID_Progress_state * stae);
-int MPID_Progress_test(void);
 int MPID_Progress_poke(void);
 
 int MPID_Get_processor_name( char *name, int namelen, int *resultlen);
