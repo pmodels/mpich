@@ -35,7 +35,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     if (request) {
         aio_req = (struct ADIO_DAOS_req*)ADIOI_Calloc(sizeof(struct ADIO_DAOS_req), 1);
         daos_event_init(&aio_req->daos_event, DAOS_HDL_INVAL, NULL);
-        fprintf(stderr, "INIT REQ %p\n", aio_req);
+
         ranges = &aio_req->ranges;
         rg = &aio_req->rg;
         sgl = &aio_req->sgl;
@@ -82,7 +82,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
 #endif
 
-    fprintf(stderr, "CONTIG IO OP %d, Off %llu, Len %zu\n", flag, offset, len);
+    fprintf(stderr, "CONTIG IO Epoch %lld OP %d, Off %llu, Len %zu\n", cont->epoch, flag, offset, len);
 
     if (flag == DAOS_WRITE) {
         ret = daos_array_write(cont->oh, cont->epoch, ranges, sgl, NULL,
@@ -128,9 +128,6 @@ done:
 #endif
 
     *error_code = MPI_SUCCESS;
-#ifdef AGGREGATION_PROFILE
-    MPE_Log_event (5037, 0, NULL);
-#endif
 }
 
 void ADIOI_DAOS_ReadContig(ADIO_File fd, void *buf, int count,

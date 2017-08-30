@@ -391,6 +391,7 @@ void ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
             MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
 
             if (rc != 0) {
+                fprintf(stderr, "Epoch Commit/Hold Failed\n");
                 *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                    MPIR_ERR_RECOVERABLE,
                                                    myname, __LINE__,
@@ -405,17 +406,19 @@ void ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
                 daos_epoch_state_t state;
 
                 rc = daos_epoch_query(cont->coh, &state, NULL);
-                MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
                 cont->epoch = state.es_ghce;
             }
 
+            MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
+
             if (rc != 0) {
-                    *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                                       MPIR_ERR_RECOVERABLE,
-                                                       myname, __LINE__,
-                                                       ADIOI_DAOS_error_convert(rc),
-                                                       "Epoch Hold Failed", 0);
-                    return;
+                fprintf(stderr, "Epoch Query Failed\n");
+                *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                                   MPIR_ERR_RECOVERABLE,
+                                                   myname, __LINE__,
+                                                   ADIOI_DAOS_error_convert(rc),
+                                                   "Epoch Query Failed", 0);
+                return;
             }
             MPI_Bcast(&cont->epoch, 1, MPI_UINT64_T, 0, fd->comm);
         }

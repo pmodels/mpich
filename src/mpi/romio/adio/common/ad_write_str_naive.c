@@ -289,6 +289,11 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
 
 	    flat_buf = ADIOI_Flatten_and_find(buftype);
 
+            int i;
+            for(i=0 ; i<flat_buf->count ; i++)
+                fprintf(stderr, "MM: %d: off %lld, len %zu\n", i,
+                        flat_buf->indices[i], flat_buf->blocklens[i]);
+
 	    b_index = buf_count = 0;
 	    i_offset = flat_buf->indices[0];
 	    f_index = st_index;

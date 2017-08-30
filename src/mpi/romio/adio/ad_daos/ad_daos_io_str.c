@@ -874,15 +874,26 @@ ADIOI_DAOS_StridedListIO2(ADIO_File fd, const void *buf, int count,
 
         iovs = (daos_iov_t *)ADIOI_Malloc(mem_list_count * sizeof(daos_iov_t));
         k = 0;
-
+#if 0
+        if(mpi_rank == 0) {
+            for(i=0 ; i<flat_buf->count ; i++) {
+                fprintf(stderr, "(%d) MM: %d: off %lld, len %zu\n", mpi_rank, i,
+                        flat_buf->indices[i], flat_buf->blocklens[i]);
+            }
+            fprintf(stderr, "Count = %d NUM NEN lists = %d\n", count, mem_list_count);
+            fprintf(stderr, "BUFSIZE = %zu\n", bufsize);
+        }
+#endif
         for (j=0; j<count; j++) {
             for (i=0; i<flat_buf->count; i++) {
-                int64_t tmp_off;
+                ADIO_Offset tmp_off;
 
-                if(flat_buf->blocklens[i] == 0) {
-                    mem_list_count --;
+                if (flat_buf->blocklens[i] == 0) {
                     continue;
                 }
+                if (file_length + flat_buf->blocklens[i] > bufsize)
+                    break;
+
                 tmp_off = ((size_t)buf + j*buftype_extent + flat_buf->indices[i]);
                 file_length += flat_buf->blocklens[i];
                 daos_iov_set(&iovs[k++], (char *) tmp_off, flat_buf->blocklens[i]);
@@ -891,13 +902,13 @@ ADIOI_DAOS_StridedListIO2(ADIO_File fd, const void *buf, int count,
         }
     }
     else {
-        mem_list_count = 1;
+        k = 1;
         iovs = (daos_iov_t *)ADIOI_Malloc(sizeof(daos_iov_t));
         file_length = bufsize;
         daos_iov_set(iovs, buf, bufsize);
         //fprintf(stderr, "(MEM SINGLE) off %lld len %zu\n", buf, bufsize);
     }
-    sgl->sg_nr.num = mem_list_count;
+    sgl->sg_nr.num = k;
     sgl->sg_nr.num_out = 0;
     sgl->sg_iovs = iovs;
 
@@ -1068,12 +1079,20 @@ ADIOI_DAOS_StridedListIO2(ADIO_File fd, const void *buf, int count,
 
         rgs = (daos_range_t *)ADIOI_Malloc(sizeof(daos_range_t) * n_write_lists);
 
+#if 0
+        for(i=0 ; i<flat_file->count ; i++)
+            fprintf(stderr, "(%d) FF: %d: off %lld, len %zu\n", mpi_rank, i,
+                    flat_file->indices[i], flat_file->blocklens[i]);
+        fprintf(stderr, "NUM IO lists = %d\n", n_write_lists);
+#endif
+
         for (i=0; i<n_write_lists; i++) {
             if(!i) {
                 rgs[i].rg_idx = start_off;
                 rgs[i].rg_len = MPL_MIN(f_data_wrote, st_fwr_size);
                 if(request)
                     aio_req->nbytes += rgs[i].rg_len;
+                fprintf(stderr, "(%d) %d: off %lld len %zu\n", mpi_rank, i, rgs[i].rg_idx, rgs[i].rg_len);
             }
             else {
                 if (flat_file->blocklens[j]) {
