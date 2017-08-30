@@ -11,6 +11,9 @@
 #include "utlist.h"
 #include "uthash.h"
 
+#include "coll_impl.h"
+
+
 /* This is the utility file for comm that contains the basic comm items
    and storage management */
 #ifndef MPID_COMM_PREALLOC
@@ -550,6 +553,11 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+    /* Create collectives-specific infrastructure */
+    mpi_errno = MPIC_comm_init(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
     MPIR_Comm_map_free(comm);
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
@@ -627,6 +635,11 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
                 MPIR_ERR_POP(mpi_errno);
             /* don't call MPIR_Comm_commit here */
 
+            /* Create collectives-specific infrastructure */
+            mpi_errno = MPIC_comm_init(comm->node_comm);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+
             MPIR_Comm_map_free(comm->node_comm);
         }
 
@@ -661,6 +674,11 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             /* don't call MPIR_Comm_commit here */
+
+            /* Create collectives-specific infrastructure */
+            mpi_errno = MPIC_comm_init(comm->node_roots_comm);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
 
             MPIR_Comm_map_free(comm->node_roots_comm);
         }
@@ -962,6 +980,11 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
          * from the parent, mark that fact */
         if (MPIR_Process.comm_parent == comm_ptr)
             MPIR_Process.comm_parent = NULL;
+
+        /* Cleanup collectives-specific infrastructure */
+        mpi_errno = MPIC_comm_cleanup(comm_ptr);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
         /* Notify the device that the communicator is about to be
          * destroyed */
