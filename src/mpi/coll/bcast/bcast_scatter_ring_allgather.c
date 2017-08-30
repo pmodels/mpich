@@ -6,7 +6,7 @@
  */
 
 #include "mpiimpl.h"
-#include "../collutil.h"
+#include "collutil.h"
 
 
 /* FIXME it would be nice if we could refactor things to minimize

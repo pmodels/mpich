@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "../collutil.h"
+#include "collutil.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Iscan_SMP_sched

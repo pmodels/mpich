@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "../collutil.h"
+#include "collutil.h"
 #include "ibcast.h"
 
 /* This routine purely handles the hierarchical version of bcast, and does not

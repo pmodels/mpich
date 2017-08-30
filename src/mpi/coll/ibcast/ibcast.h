@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "../collutil.h"
+#include "collutil.h"
 
 
 struct MPII_Ibcast_status{

@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "../collutil.h"
+#include "collutil.h"
 
 /* implements the naive intracomm allreduce, that is, reduce followed by bcast */
 #undef FUNCNAME

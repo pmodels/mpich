@@ -6,12 +6,35 @@
  */
 
 #include "mpiimpl.h"
-#include "../collutil.h"
+#include "collutil.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
+    - name        : MPIR_CVAR_USE_BCAST
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select bcast algorithm
+        0 - MPIR_Bcast_intra
+        1 - MPIR_MPICH_TREE_Bcast with knomial trees
+        2 - MPIR_MPICH_TREE_Bcast with kary trees
+
+    - name        : MPIR_CVAR_BCAST_TREE_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for tree based bcast - MPIR_MPICH_TREE_Bcast 
+
     - name        : MPIR_CVAR_BCAST_MIN_PROCS
       category    : COLLECTIVE
       type        : int
@@ -95,6 +118,12 @@ cvars:
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
+
+enum {
+    MPIR_BCAST_INTRA=0,
+    MPIR_MPICH_TREE_BCAST_KNOMIAL,
+    MPIR_MPICH_TREE_BCAST_KARY
+};
 
 /* -- Begin Profiling Symbol Block for routine MPI_Bcast */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -581,8 +610,27 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        mpi_errno = MPIR_Bcast_intra( buffer, count, datatype, root, comm_ptr, errflag );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        int use_coll = MPIR_CVAR_USE_BCAST;
+        switch (use_coll) {
+            case MPIR_BCAST_INTRA:
+                mpi_errno = MPIR_Bcast_intra( buffer, count, datatype, root, comm_ptr, errflag );
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                break;
+            case MPIR_MPICH_TREE_BCAST_KNOMIAL:
+                mpi_errno = MPIC_MPICH_TREE_bcast (buffer, count, datatype, root, 
+                        &(MPIC_COMM(comm_ptr)->mpich_tree), (int*) errflag, 0, MPIR_CVAR_BCAST_TREE_KVAL, -1);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                break;
+            case MPIR_MPICH_TREE_BCAST_KARY:
+                mpi_errno = MPIC_MPICH_TREE_bcast (buffer, count, datatype, root, 
+                        &(MPIC_COMM(comm_ptr)->mpich_tree), (int*) errflag, 1, MPIR_CVAR_BCAST_TREE_KVAL, -1);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                break;
+            default:
+                mpi_errno = MPIR_Bcast_intra( buffer, count, datatype, root, comm_ptr, errflag );
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                break;
+        }
         
     } else {
         /* intercommunicator */

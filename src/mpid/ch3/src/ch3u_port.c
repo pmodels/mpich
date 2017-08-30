@@ -6,7 +6,7 @@
 
 #include "mpidi_ch3_impl.h"
 #include "mpid_port.h"
-
+#include "coll_impl.h"
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -569,6 +569,9 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
 
     /* FIXME: Why do we do a dup here? */
     MPIDI_VCR_Dup(vc_ptr, &tmp_comm->dev.vcrt->vcr_table[0]);
+
+    /* Set all collectives communicator data to NULL */
+    MPIC_comm_init_null(tmp_comm);
 
     /* Even though this is a tmp comm and we don't call
        MPI_Comm_commit, we still need to call the creation hook

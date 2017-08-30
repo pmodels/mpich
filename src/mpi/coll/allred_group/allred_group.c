@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "../collutil.h"
+#include "collutil.h"
 
 /* Local utility macro: takes an two args and sets lvalue cr_ equal to the rank
  * in comm_ptr corresponding to rvalue gr_ */

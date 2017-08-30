@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "../collutil.h"
+#include "collutil.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allreduce_reduce_scatter_allgather

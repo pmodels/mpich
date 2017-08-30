@@ -19,12 +19,35 @@
 #include "../shm/include/shm.h"
 #endif
 
-#include "../../mpi/coll/collutil.h"
+#include "../../mpi/coll/include/collutil.h"
+
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_TEST_MPIR_COLLECTIVES
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This variable forces the device to always call MPIR collectives.
+        This is intended to be used mainly for testing MPIR collectives.
+        Set it to 1 to always call MPIR collectives
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
 
 MPL_STATIC_INLINE_PREFIX
 MPIDI_coll_algo_container_t *MPIDI_CH4_Barrier_select(MPIR_Comm * comm,
                                                       MPIR_Errflag_t * errflag)
 {
+    /* call default MPIR barrier for now, until CH4 colls are more mature */
+    if(MPIR_CVAR_TEST_MPIR_COLLECTIVES)
+        return (MPIDI_coll_algo_container_t *) &CH4_barrier_default_cnt;
+
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         return (MPIDI_coll_algo_container_t *) &CH4_barrier_intercomm_cnt;
     }
@@ -71,6 +94,10 @@ MPIDI_coll_algo_container_t *MPIDI_CH4_Bcast_select(void *buffer,
 {
     int nbytes = 0;
     MPI_Aint type_size;
+
+    /* call default MPIR bcast for now, until CH4 colls are more mature */
+    if(MPIR_CVAR_TEST_MPIR_COLLECTIVES)
+        return (MPIDI_coll_algo_container_t *) &CH4_bcast_default_cnt;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
@@ -143,6 +170,10 @@ MPIDI_coll_algo_container_t *MPIDI_CH4_Allreduce_select(const void *sendbuf,
     int nbytes = 0;
     int is_commutative;
 
+    /* call default MPIR allreduce for now, until CH4 colls are more mature */
+    if(MPIR_CVAR_TEST_MPIR_COLLECTIVES)
+        return (MPIDI_coll_algo_container_t *) &CH4_allreduce_default_cnt;
+
     is_commutative = MPIR_Op_is_commutative(op);
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         return (MPIDI_coll_algo_container_t *) &CH4_allreduce_intercomm_cnt;
@@ -203,6 +234,10 @@ MPIDI_coll_algo_container_t *MPIDI_CH4_Reduce_select(const void *sendbuf,
     int is_commutative, type_size;
     int nbytes = 0;
     MPIR_Op *op_ptr;
+
+    /* call default MPIR reduce for now, until CH4 colls are more mature */
+    if(MPIR_CVAR_TEST_MPIR_COLLECTIVES)
+        return (MPIDI_coll_algo_container_t *) &CH4_reduce_default_cnt;
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         return (MPIDI_coll_algo_container_t *) &CH4_reduce_intercomm_cnt;

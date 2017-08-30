@@ -41,6 +41,8 @@ include $(top_srcdir)/src/mpi/coll/iscan/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/iscatter/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/iscatterv/Makefile.mk
 
+AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/coll/include/
+AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/coll/algorithms/common/
 # mpi_sources includes only the routines that are MPI function entry points
 # The code for the MPI operations (e.g., MPI_SUM) is not included in 
 # mpi_sources
@@ -70,6 +72,6 @@ mpi_core_sources += \
     src/mpi/coll/op/opreplace.c      \
     src/mpi/coll/nbcutil.c
 
-noinst_HEADERS +=           \
-    src/mpi/coll/collutil.h
-
+noinst_HEADERS +=                    \
+    src/mpi/coll/include/collutil.h  \
+    src/mpi/coll/include/coll_impl.h
