@@ -180,7 +180,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     if (fd->access_mode & ADIO_CREATE) {
         rc = daos_cont_create(daos_pool_oh, cont->uuid, NULL);
         if (rc != 0) {
-            printf("failed to create container (%d)\n", rc);
+            PRINT_MSG(stderr, "failed to create container (%d)\n", rc);
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                MPIR_ERR_RECOVERABLE,
                                                myname, __LINE__,
@@ -194,7 +194,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     rc = daos_cont_open(daos_pool_oh, cont->uuid, cont->amode, &cont->coh,
                         NULL, NULL);
     if (rc != 0) {
-        printf("failed to open container (%d)\n", rc);
+        PRINT_MSG(stderr, "failed to open container (%d)\n", rc);
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                            MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__,
@@ -207,7 +207,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
         cont->epoch = 0;
         rc = daos_epoch_hold(cont->coh, &cont->epoch, NULL, NULL);
         if (rc != 0) {
-            printf("daos_epoch_hold failed (%d)\n", rc);
+            PRINT_MSG(stderr, "daos_epoch_hold failed (%d)\n", rc);
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                MPIR_ERR_RECOVERABLE,
                                                myname, __LINE__,
@@ -221,7 +221,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 
         rc = daos_epoch_query(cont->coh, &state, NULL);
         if (rc != 0) {
-            printf("daos_epoch_query failed (%d)\n", rc);
+            PRINT_MSG(stderr, "daos_epoch_query failed (%d)\n", rc);
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                MPIR_ERR_RECOVERABLE,
                                                myname, __LINE__,
@@ -239,7 +239,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
         rc = daos_array_open(cont->coh, cont->oid, cont->epoch, DAOS_OO_RW,
                              &elem_size, &cont->stripe_size, &cont->oh, NULL);
         if (rc != 0) {
-            printf("daos_array_open() failed (%d)\n", rc);
+            PRINT_MSG(stderr, "daos_array_open() failed (%d)\n", rc);
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                MPIR_ERR_RECOVERABLE,
                                                myname, __LINE__,
@@ -254,7 +254,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     rc = daos_array_create(cont->coh, cont->oid, cont->epoch, 1,
                            cont->stripe_size, &cont->oh, NULL);
     if (rc != 0) {
-        printf("daos_array_create() failed (%d)\n", rc);
+        PRINT_MSG(stderr, "daos_array_create() failed (%d)\n", rc);
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                            MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__,
@@ -290,7 +290,7 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
 
     cont = (struct ADIO_DAOS_cont *)ADIOI_Malloc(sizeof(struct ADIO_DAOS_cont));
     if (cont == NULL) {
-        printf("mem alloc failed.\n");
+        PRINT_MSG(stderr, "mem alloc failed.\n");
 	*error_code = MPIO_Err_create_code(MPI_SUCCESS,
 					   MPIR_ERR_RECOVERABLE,
 					   myname, __LINE__,
@@ -391,7 +391,7 @@ void ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
             MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
 
             if (rc != 0) {
-                fprintf(stderr, "Epoch Commit/Hold Failed\n");
+                PRINT_MSG(stderr, "Epoch Commit/Hold Failed\n");
                 *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                    MPIR_ERR_RECOVERABLE,
                                                    myname, __LINE__,
@@ -412,7 +412,7 @@ void ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
             MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
 
             if (rc != 0) {
-                fprintf(stderr, "Epoch Query Failed\n");
+                PRINT_MSG(stderr, "Epoch Query Failed\n");
                 *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                    MPIR_ERR_RECOVERABLE,
                                                    myname, __LINE__,
@@ -444,7 +444,7 @@ void ADIOI_DAOS_Delete(const char *filename, int *error_code)
 
     ret = daos_cont_destroy(daos_pool_oh, uuid, 1, NULL);
     if (ret != 0) {
-        printf("failed to destroy container (%d)\n", ret);
+        PRINT_MSG(stderr, "failed to destroy container (%d)\n", ret);
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                            MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__,

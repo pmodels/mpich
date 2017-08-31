@@ -19,6 +19,7 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
         MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
 
         if (rc != 0) {
+            PRINT_MSG(stderr, "daos_epoch_commit() failed (%d)\n", rc);
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                MPIR_ERR_RECOVERABLE,
                                                myname, __LINE__,
@@ -30,7 +31,7 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
 
     rc = daos_array_close(cont->oh, NULL);
     if (rc != 0) {
-        printf("daos_array_close() failed (%d)\n", rc);
+        PRINT_MSG(stderr, "daos_array_close() failed (%d)\n", rc);
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                            MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__,
@@ -41,7 +42,7 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
 
     rc = daos_cont_close(cont->coh, NULL);
     if (rc != 0) {
-        printf("daos_cont_close() failed (%d)\n", rc);
+        PRINT_MSG(stderr, "daos_cont_close() failed (%d)\n", rc);
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                            MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__,

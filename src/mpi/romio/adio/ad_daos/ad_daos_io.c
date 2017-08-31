@@ -71,7 +71,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     sgl->sg_nr.num_out = 0;
     daos_iov_set(iov, buf, len);
     sgl->sg_iovs = iov;
-
+    //fprintf(stderr, "MEM : off %lld len %zu\n", buf, len);
     /** set array location */
     ranges->arr_nr = 1;
     rg->rg_len = len;
@@ -88,7 +88,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
         ret = daos_array_write(cont->oh, cont->epoch, ranges, sgl, NULL,
                                (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
-            printf("daos_array_write() failed with %d\n", ret);
+            PRINT_MSG(stderr, "daos_array_write() failed with %d\n", ret);
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                MPIR_ERR_RECOVERABLE,
                                                myname, __LINE__,
@@ -101,7 +101,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
         ret = daos_array_read(cont->oh, cont->epoch, ranges, sgl, NULL,
                               (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
-            printf("daos_array_read() failed with %d\n", ret);
+            PRINT_MSG(stderr, "daos_array_read() failed with %d\n", ret);
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                MPIR_ERR_RECOVERABLE,
                                                myname, __LINE__,
