@@ -715,9 +715,12 @@ int MPIR_Allreduce_reduce_scatter_allgather(
       MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts");
       MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements");
 
-      for (i=0; i<(pof2-1); i++)
+      for (i=0; i<pof2; i++)
           cnts[i] = count/pof2;
-      cnts[pof2-1] = count - (count/pof2)*(pof2-1);
+      if ((count % pof2) > 0) {
+          for (i=0; i<(count % pof2); i++)
+              cnts[i] += 1;
+      }
 
       disps[0] = 0;
       for (i=1; i<pof2; i++)
