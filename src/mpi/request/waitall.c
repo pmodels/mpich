@@ -82,10 +82,8 @@ int MPIR_Waitall_impl(int count, MPIR_Request *request_ptrs[],
 
     n_greqs = 0;
     n_completed = 0;
-    for (i = 0; i < count; i++)
-    {
-        if (request_ptrs[i] != NULL)
-	{
+    for (i = 0; i < count; i++) {
+        if (request_ptrs[i] != NULL) {
             if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST)
                 ++n_greqs;
 
@@ -98,17 +96,14 @@ int MPIR_Waitall_impl(int count, MPIR_Request *request_ptrs[],
                         !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
                 disabled_anysource = TRUE;
             }
-	}
-	else
-	{
-	    n_completed += 1;
-	}
+        }
+        else {
+            n_completed += 1;
+        }
     }
-    
+
     if (n_completed == count)
-    {
-	goto fn_exit;
-    }
+        goto fn_exit;
 
     if (unlikely(disabled_anysource)) {
         mpi_errno = MPID_Testall(count, request_ptrs, &disabled_anysource, array_of_statuses);
@@ -118,12 +113,11 @@ int MPIR_Waitall_impl(int count, MPIR_Request *request_ptrs[],
     /* Grequest_waitall may run the progress engine - thus, we don't 
        invoke progress_start until after running Grequest_waitall */
     /* first, complete any generalized requests */
-    if (n_greqs)
-    {
+    if (n_greqs) {
         mpi_errno = MPIR_Grequest_waitall(count, request_ptrs);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
-    
+
     MPID_Progress_start(&progress_state);
 
     for (i = 0; i < count; i++)
@@ -134,13 +128,12 @@ int MPIR_Waitall_impl(int count, MPIR_Request *request_ptrs[],
                 array_of_statuses[i].MPI_ERROR = MPI_SUCCESS;
             continue;
         }
-        
+
         /* wait for ith request to complete */
-        while (!MPIR_Request_is_complete(request_ptrs[i]))
-        {
+        while (!MPIR_Request_is_complete(request_ptrs[i])) {
             /* generalized requests should already be finished */
             MPIR_Assert(request_ptrs[i]->kind != MPIR_REQUEST_KIND__GREQUEST);
-            
+
             mpi_errno = MPID_Progress_wait(&progress_state);
             if (mpi_errno != MPI_SUCCESS) {
                 /* --BEGIN ERROR HANDLING-- */
@@ -198,8 +191,7 @@ int MPIR_Waitall_post(int count, MPI_Request array_of_requests[],
             continue;
         }
 
-        if (MPIR_Request_is_complete(request_ptrs[i]))
-        {
+        if (MPIR_Request_is_complete(request_ptrs[i])) {
             int active_flag;
             /* complete the request and check the status */
             status_ptr = (ignoring_statuses) ? MPI_STATUS_IGNORE : &array_of_statuses[i];
@@ -207,14 +199,11 @@ int MPIR_Waitall_post(int count, MPI_Request array_of_requests[],
             rc = MPIR_Request_complete(req_hndl_ptr, request_ptrs[i], status_ptr, &active_flag);
         }
 
-        if (rc == MPI_SUCCESS)
-        {
+        if (rc == MPI_SUCCESS) {
             request_ptrs[i] = NULL;
             if (!ignoring_statuses)
                 status_ptr->MPI_ERROR = MPI_SUCCESS;
-        }
-        else
-        {
+        } else {
             int proc_failure = FALSE;
 
             /* req completed with an error */
@@ -223,29 +212,22 @@ int MPIR_Waitall_post(int count, MPI_Request array_of_requests[],
             if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(rc))
                 proc_failure = TRUE;
 
-            if (!ignoring_statuses)
-            {
-                /* set the error code for this request */
-                status_ptr->MPI_ERROR = rc;
+            if (ignoring_statuses)
+                break;
 
-                /* set the error codes for the rest of the uncompleted requests to PENDING */
-                for (j = i+1; j < count; ++j)
-                {
-                    if (!ignoring_statuses)
-                    {
-                        if (request_ptrs[j] == NULL)
-                        {
-                            /* either the user specified MPI_REQUEST_NULL, or this is a completed greq */
-                            array_of_statuses[j].MPI_ERROR = MPI_SUCCESS;
-                        }
-                        else
-                        {
-                            if (!proc_failure)
-                                array_of_statuses[j].MPI_ERROR = MPI_ERR_PENDING;
-                            else
-                                array_of_statuses[j].MPI_ERROR = MPIX_ERR_PROC_FAILED_PENDING;
-                        }
-                    }
+            /* set the error code for this request */
+            status_ptr->MPI_ERROR = rc;
+
+            /* set the error codes for the rest of the uncompleted requests to PENDING */
+            for (j = i+1; j < count; ++j) {
+                if (request_ptrs[j] == NULL) {
+                    /* either the user specified MPI_REQUEST_NULL, or this is a completed greq */
+                    array_of_statuses[j].MPI_ERROR = MPI_SUCCESS;
+                } else {
+                    if (!proc_failure)
+                        array_of_statuses[j].MPI_ERROR = MPI_ERR_PENDING;
+                    else
+                        array_of_statuses[j].MPI_ERROR = MPIX_ERR_PROC_FAILED_PENDING;
                 }
             }
             break;
@@ -295,8 +277,8 @@ program to unexecpectedly terminate or produce incorrect results.
 .N MPI_ERR_ARG
 .N MPI_ERR_IN_STATUS
 @*/
-int MPI_Waitall(int count, MPI_Request array_of_requests[], 
-		MPI_Status array_of_statuses[])
+int MPI_Waitall(int count, MPI_Request array_of_requests[],
+                MPI_Status array_of_statuses[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request * request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
@@ -308,7 +290,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WAITALL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_PT2PT_ENTER(MPID_STATE_MPI_WAITALL);
 
@@ -324,19 +306,19 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_COUNT(count, mpi_errno);
+            MPIR_ERRTEST_COUNT(count, mpi_errno);
 
-	    if (count != 0) {
-		MPIR_ERRTEST_ARGNULL(array_of_requests, "array_of_requests", mpi_errno);
-		/* NOTE: MPI_STATUSES_IGNORE != NULL */
-	    
-		MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);
-	    }
+            if (count != 0) {
+                MPIR_ERRTEST_ARGNULL(array_of_requests, "array_of_requests", mpi_errno);
+                /* NOTE: MPI_STATUSES_IGNORE != NULL */
 
-	    for (i = 0; i < count; i++) {
-		MPIR_ERRTEST_ARRAYREQUEST_OR_NULL(array_of_requests[i], i, mpi_errno);
-	    }
-	}
+                MPIR_ERRTEST_ARGNULL(array_of_statuses, "array_of_statuses", mpi_errno);
+            }
+
+            for (i = 0; i < count; i++) {
+                MPIR_ERRTEST_ARRAYREQUEST_OR_NULL(array_of_requests[i], i, mpi_errno);
+            }
+        }
         MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
@@ -358,7 +340,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
         {
             MPID_BEGIN_ERROR_CHECKS;
             {
-                MPIR_Request_valid_ptr( request_ptrs[i], mpi_errno );
+                MPIR_Request_valid_ptr(request_ptrs[i], mpi_errno);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 MPIR_ERR_CHKANDJUMP1((request_ptrs[i]->kind == MPIR_REQUEST_KIND__MPROBE),
                                      mpi_errno, MPI_ERR_ARG, "**msgnotreq", "**msgnotreq %d", i);
@@ -410,7 +392,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
         goto fn_fail;
 
     /* ... end of body of routine ... */
-    
+
  fn_exit:
     if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
         MPIR_CHKLMEM_FREEALL();
@@ -423,11 +405,11 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
     mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-				     FCNAME, __LINE__, MPI_ERR_OTHER,
-				     "**mpi_waitall",
-				     "**mpi_waitall %d %p %p",
-				     count, array_of_requests,
-				     array_of_statuses);
+                                     FCNAME, __LINE__, MPI_ERR_OTHER,
+                                     "**mpi_waitall",
+                                     "**mpi_waitall %d %p %p",
+                                     count, array_of_requests,
+                                     array_of_statuses);
 #endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
