@@ -2562,9 +2562,6 @@ AC_SUBST(XARGS_NODATA_OPT)
 AC_PROG_INSTALL
 PAC_PROG_CHECK_INSTALL_WORKS
 #
-# On Mac OS/X, install breaks libraries unless used with the -p switch
-dnl FIXME not necessary now that we are using libtool
-dnl PAC_PROG_INSTALL_BREAKS_LIBS
 # We also need mkdir -p.
 PAC_PROG_MKDIR_P
 PAC_PROG_MAKE
