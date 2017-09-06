@@ -145,7 +145,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
     mpi_errno = MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, av, request);
 #else
     int r;
-    if (r = MPIDI_av_is_local(av))
+    if ((r = MPIDI_av_is_local(av)))
         mpi_errno =
             MPIDI_SHM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, request);
     else

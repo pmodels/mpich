@@ -76,7 +76,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 #define FUNCNAME MPIR_Reduce_binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIR_Reduce_binomial ( 
+int MPIR_Reduce_binomial ( 
     const void *sendbuf,
     void *recvbuf,
     int count,
@@ -282,7 +282,7 @@ fn_fail:
 #define FUNCNAME MPIR_Reduce_redscat_gather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIR_Reduce_redscat_gather ( 
+int MPIR_Reduce_redscat_gather ( 
     const void *sendbuf,
     void *recvbuf,
     int count,
@@ -424,9 +424,12 @@ static int MPIR_Reduce_redscat_gather (
     MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements");
     
     if (newrank != -1) {
-        for (i=0; i<(pof2-1); i++) 
+        for (i=0; i<pof2; i++)
             cnts[i] = count/pof2;
-        cnts[pof2-1] = count - (count/pof2)*(pof2-1);
+        if ((count % pof2) > 0) {
+            for (i=0; i<(count % pof2); i++)
+                cnts[i] += 1;
+        }
         
         disps[0] = 0;
         for (i=1; i<pof2; i++)
@@ -507,9 +510,12 @@ static int MPIR_Reduce_redscat_gather (
         if (root % 2 != 0) {
             if (rank == root) {    /* recv */
                 /* initialize the arrays that weren't initialized */
-                for (i=0; i<(pof2-1); i++) 
+                for (i=0; i<pof2; i++)
                     cnts[i] = count/pof2;
-                cnts[pof2-1] = count - (count/pof2)*(pof2-1);
+                if ((count % pof2) > 0) {
+                    for (i=0; i<(count % pof2); i++)
+                        cnts[i] +=1;
+                }
                 
                 disps[0] = 0;
                 for (i=1; i<pof2; i++)
@@ -1246,7 +1252,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, &errflag);
-    if (mpi_errno) goto fn_fail;
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     /* ... end of body of routine ... */
     

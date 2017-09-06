@@ -19,3 +19,4 @@ agree 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=Te
 agree_shrink 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
 revoke_shrink 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket2198
 nbccoll 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket2237
+failure_ack 3 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket2237

@@ -1,0 +1,128 @@
+#include "coll_algo_params.h"
+#include <mpidimpl.h>
+#include "ch4_impl.h"
+
+/* container traverse function to be implemented  */
+/* e.g. return ((void *) ((char *)container) + sizeof(MPIDI_COLL_ALGO_params_t)); */
+void *MPIDI_coll_get_next_container(void *container)
+{
+    return NULL;
+}
+
+/* Barrier default composition containers initialization*/
+const MPIDI_coll_algo_container_t CH4_barrier_composition_alpha_cnt =
+    {
+        .id = MPIDI_CH4_barrier_composition_alpha_id,
+        .params.ch4_barrier_params.ch4_barrier_alpha =
+            {
+                .node_barrier = -1,
+                .roots_barrier = -1,
+                .node_bcast = -1
+            }
+    };
+
+const MPIDI_coll_algo_container_t CH4_barrier_composition_beta_cnt =
+    {
+        .id = MPIDI_CH4_barrier_composition_beta_id,
+        .params.ch4_barrier_params.ch4_barrier_beta =
+            {
+                .barrier = -1
+            }
+    };
+
+const MPIDI_coll_algo_container_t CH4_barrier_intercomm_cnt =
+    {
+        .id = MPIDI_CH4_barrier_intercomm_id
+    };
+
+/* Bcast default composition containers initialization*/
+const MPIDI_coll_algo_container_t CH4_bcast_composition_alpha_cnt =
+    {
+        .id = MPIDI_CH4_bcast_composition_alpha_id,
+        .params.ch4_bcast_params.ch4_bcast_alpha =
+            {
+                .roots_bcast = -1,
+                .node_bcast = -1
+            }
+    };
+
+const MPIDI_coll_algo_container_t CH4_bcast_composition_beta_cnt =
+    {
+        .id = MPIDI_CH4_bcast_composition_beta_id,
+        .params.ch4_bcast_params.ch4_bcast_beta =
+            {
+                .node_bcast_first = -1,
+                .roots_bcast = -1,
+                .node_bcast_second = -1
+            }
+    };
+
+const MPIDI_coll_algo_container_t CH4_bcast_composition_gamma_cnt =
+    {
+       .id = MPIDI_CH4_bcast_composition_gamma_id,
+       .params.ch4_bcast_params.ch4_bcast_gamma =
+            {
+                .bcast = -1,
+            }
+    };
+
+const MPIDI_coll_algo_container_t CH4_bcast_intercomm_cnt =
+    {
+        .id = MPIDI_CH4_bcast_intercomm_id
+    };
+
+/* Reduce default composition containers initialization*/
+const MPIDI_coll_algo_container_t CH4_reduce_composition_alpha_cnt =
+    {
+        .id = MPIDI_CH4_reduce_composition_alpha_id,
+        .params.ch4_reduce_params.ch4_reduce_alpha =
+            {
+                .roots_reduce = -1,
+                .node_reduce = -1
+            }
+   };
+
+const MPIDI_coll_algo_container_t CH4_reduce_composition_beta_cnt =
+    {
+        .id = MPIDI_CH4_reduce_composition_beta_id,
+        .params.ch4_reduce_params.ch4_reduce_beta =
+            {
+                .reduce = -1
+            }
+};
+
+const MPIDI_coll_algo_container_t CH4_reduce_intercomm_cnt =
+    {
+        .id = MPIDI_CH4_reduce_intercomm_id
+    };
+
+/* Allreduce default composition containers initialization*/
+const MPIDI_coll_algo_container_t CH4_allreduce_intercomm_cnt =
+    {
+        .id = MPIDI_CH4_allreduce_intercomm_id
+    };
+
+const MPIDI_coll_algo_container_t CH4_allreduce_composition_alpha_cnt =
+    {
+        .id = MPIDI_CH4_allreduce_composition_alpha_id,
+        .params.ch4_allreduce_params.ch4_allreduce_alpha =
+            {
+                .node_reduce = -1,
+                .roots_allreduce = -1,
+                .node_bcast = -1
+            }
+    };
+
+const MPIDI_coll_algo_container_t CH4_allreduce_composition_beta_cnt =
+    {
+        .id = MPIDI_CH4_allreduce_composition_beta_id,
+        .params.ch4_allreduce_params.ch4_allreduce_beta =
+            {
+                .allreduce = -1
+            }
+    };
+
+/* *INDENT-OFF* */
+@ch4_netmod_coll_globals_default@
+@ch4_shm_coll_globals_default@
+/* *INDENT-ON* */

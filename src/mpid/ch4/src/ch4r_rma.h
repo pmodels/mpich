@@ -13,6 +13,8 @@
 
 #include "ch4_impl.h"
 
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_amhdr_set ATTRIBUTE((unused));
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_do_put
 #undef FCNAME
@@ -69,6 +71,7 @@ static inline int MPIDI_do_put(const void *origin_addr,
     MPIDI_CH4U_REQUEST(sreq, req->preq.win_ptr) = win;
 
     MPIR_cc_incr(sreq->cc_ptr, &c);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.src_rank = win->comm_ptr->rank;
     am_hdr.target_disp = target_disp;
     am_hdr.count = target_count;
@@ -83,6 +86,7 @@ static inline int MPIDI_do_put(const void *origin_addr,
 
     if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.n_iov = 0;
+        MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
         MPIDI_CH4U_REQUEST(sreq, req->preq.dt_iov) = NULL;
 
         /* FIXIME: we need to choose between NM and SHM */
@@ -115,6 +119,7 @@ static inline int MPIDI_do_put(const void *origin_addr,
     am_iov[0].iov_len = sizeof(am_hdr);
     am_iov[1].iov_base = dt_iov;
     am_iov[1].iov_len = sizeof(struct iovec) * am_hdr.n_iov;
+    MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
     MPIDI_CH4U_REQUEST(sreq, req->preq.dt_iov) = dt_iov;
 
@@ -208,6 +213,7 @@ static inline int MPIDI_do_get(void *origin_addr,
     MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
 
     MPIR_cc_incr(sreq->cc_ptr, &c);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.target_disp = target_disp;
     am_hdr.count = target_count;
     am_hdr.datatype = target_datatype;
@@ -221,6 +227,7 @@ static inline int MPIDI_do_get(void *origin_addr,
 
     if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.n_iov = 0;
+        MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
         MPIDI_CH4U_REQUEST(sreq, req->greq.dt_iov) = NULL;
 
         /* FIXIME: we need to choose between NM and SHM */
@@ -248,6 +255,7 @@ static inline int MPIDI_do_get(void *origin_addr,
     MPIR_Segment_pack_vector(segment_ptr, 0, &last, dt_iov, &n_iov);
     MPIR_Assert(last == (MPI_Aint) data_sz);
     MPL_free(segment_ptr);
+    MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
     MPIDI_CH4U_REQUEST(sreq, req->greq.dt_iov) = dt_iov;
     /* FIXIME: we need to choose between NM and SHM */
@@ -316,6 +324,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     MPIDI_CH4U_REQUEST(sreq, req->areq.win_ptr) = win;
     MPIR_cc_incr(sreq->cc_ptr, &c);
 
+    MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.req_ptr = (uint64_t) sreq;
     am_hdr.origin_count = origin_count;
 
@@ -343,6 +352,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     MPIDI_CH4U_REQUEST(sreq, req->areq.data_sz) = data_sz;
     if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.n_iov = 0;
+        MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
         MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = NULL;
 
         /* FIXIME: we need to choose between NM and SHM */
@@ -381,6 +391,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     am_iov[0].iov_len = sizeof(am_hdr);
     am_iov[1].iov_base = dt_iov;
     am_iov[1].iov_len = sizeof(struct iovec) * am_hdr.n_iov;
+    MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
     MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = dt_iov;
 
     /* FIXIME: MPIDI_NM_am_hdr_max_sz should be removed */
@@ -474,6 +485,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     MPIR_cc_incr(sreq->cc_ptr, &c);
 
     /* TODO: have common routine for accumulate/get_accumulate */
+    MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.req_ptr = (uint64_t) sreq;
     am_hdr.origin_count = origin_count;
 
@@ -503,6 +515,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     MPIDI_CH4U_REQUEST(sreq, req->areq.data_sz) = data_sz;
     if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.n_iov = 0;
+        MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
         MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = NULL;
 
         /* FIXIME: we need to choose between NM and SHM */
@@ -541,6 +554,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     am_iov[0].iov_len = sizeof(am_hdr);
     am_iov[1].iov_base = dt_iov;
     am_iov[1].iov_len = sizeof(struct iovec) * am_hdr.n_iov;
+    MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
     MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = dt_iov;
 
     /* FIXIME: MPIDI_NM_am_hdr_max_sz should be removed */
@@ -933,11 +947,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
     MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
     MPIR_cc_incr(sreq->cc_ptr, &c);
 
+    MPIR_T_PVAR_TIMER_START(RMA, rma_amhdr_set);
     am_hdr.target_disp = target_disp;
     am_hdr.datatype = datatype;
     am_hdr.req_ptr = (uint64_t) sreq;
     am_hdr.win_id = MPIDI_CH4U_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
+    MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
     MPIDI_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
 

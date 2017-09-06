@@ -251,6 +251,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIR_Datatype_init();
     MPIR_Group_init();
 
+    /* setup receive queue statistics */
+    mpi_errno = MPIDI_CH4U_Recvq_init();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     int i;
     for (i = 0; i < MPIR_Process.comm_world->local_size; i++) {

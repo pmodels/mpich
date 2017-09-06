@@ -13,44 +13,60 @@
 
 #include "ch4_impl.h"
 #include "ch4r_proc.h"
+#include "ch4_coll_select.h"
 
 MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    int ret;
+    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BARRIER);
 
-    ret = MPIDI_NM_mpi_barrier(comm, errflag);
+    ch4_algo_parameters_container = MPIDI_CH4_Barrier_select(comm, errflag);
+
+    mpi_errno =
+        MPIDI_CH4_Barrier_call(comm, errflag, ch4_algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BARRIER);
-    return ret;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype datatype,
-                                         int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
+                                        int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    int ret;
+    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BCAST);
 
-    ret = MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm, errflag);
+    ch4_algo_parameters_container = MPIDI_CH4_Bcast_select(buffer, count, datatype, root, comm, errflag);
+
+    mpi_errno =
+        MPIDI_CH4_Bcast_call(buffer, count, datatype, root, comm, errflag, ch4_algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BCAST);
-    return ret;
+
+    return mpi_errno;
+
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, int count,
                                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                              MPIR_Errflag_t * errflag)
 {
-    int ret;
+    int ret = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLREDUCE);
 
-    ret = MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Allreduce_select(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+
+    ret = MPIDI_CH4_Allreduce_call(sendbuf, recvbuf, count, datatype, op, comm, errflag,
+                                   ch4_algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLREDUCE);
     return ret;
@@ -214,15 +230,20 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const int sendc
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
-                                          int count, MPI_Datatype datatype, MPI_Op op,
-                                          int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                         int count, MPI_Datatype datatype, MPI_Op op,
+                                         int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
-    int ret;
+    int ret = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE);
 
-    ret = MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+
+    ret = MPIDI_CH4_Reduce_call(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag,
+                                ch4_algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REDUCE);
     return ret;

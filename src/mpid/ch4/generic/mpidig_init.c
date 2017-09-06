@@ -230,6 +230,14 @@ int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vnis)
 
     MPIDI_CH4_Global.win_hash = NULL;
 
+    mpi_errno = MPIDI_CH4R_RMA_Init_sync_pvars();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIDI_CH4R_RMA_Init_targetcb_pvars();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
     MPIDI_CH4_Global.is_ch4u_initialized = 1;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_INIT);
 
