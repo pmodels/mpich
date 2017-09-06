@@ -190,7 +190,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
                 tmp_off = ((size_t)buf + j*buftype_extent + flat_buf->indices[i]);
                 file_length += flat_buf->blocklens[i];
                 daos_iov_set(&iovs[k++], (char *) tmp_off, flat_buf->blocklens[i]);
-                fprintf(stderr, "(MEM) %d: off %lld len %zu\n", k, tmp_off, flat_buf->blocklens[i]);
+                //fprintf(stderr, "(MEM) %d: off %lld len %zu\n", k, tmp_off, flat_buf->blocklens[i]);
             }
         }
     }
@@ -216,7 +216,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
         rgs = (daos_range_t *)ADIOI_Malloc(sizeof(daos_range_t));
         rgs->rg_idx = off;
         rgs->rg_len = bufsize;
-        //fprintf(stderr, "(%d) Single : off %lld len %zu\n", mpi_rank, rgs->rg_idx, rgs->rg_len);
+        fprintf(stderr, "(%d) Single : off %lld len %zu\n", mpi_rank, rgs->rg_idx, rgs->rg_len);
 
         if (request)
             aio_req->nbytes = bufsize;
