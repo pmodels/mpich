@@ -47,12 +47,17 @@ typedef union MPIDI_allreduce_algo_params {
 #define MPIDI_REDUCE_PARAMS_DECL MPIDI_REDUCE_ALGO_params_t reduce_params;
 #define MPIDI_ALLREDUCE_PARAMS_DECL MPIDI_ALLREDUCE_ALGO_params_t allreduce_params;
 
-typedef union MPIDI_coll_algo_params {
+typedef union MPIDI_coll_algo_generic_params {
     MPIDI_BARRIER_PARAMS_DECL;
     MPIDI_BCAST_PARAMS_DECL;
     MPIDI_REDUCE_PARAMS_DECL;
     MPIDI_ALLREDUCE_PARAMS_DECL;
-} MPIDI_COLL_ALGO_params_t;
+} MPIDI_coll_algo_generic_params_t;
+
+typedef struct MPIDI_coll_algo_generic_container {
+    int id;
+    MPIDI_coll_algo_generic_params_t params;
+} MPIDI_coll_algo_generic_container_t;
 
 void *MPIDI_coll_get_next_container(void *container);
 

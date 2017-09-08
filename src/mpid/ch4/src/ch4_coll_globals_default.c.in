@@ -3,7 +3,7 @@
 #include "ch4_impl.h"
 
 /* container traverse function to be implemented  */
-/* e.g. return ((void *) ((char *)container) + sizeof(MPIDI_COLL_ALGO_params_t)); */
+/* e.g. return ((void *) ((char *)container) + sizeof(MPIDI_coll_algo_generic_container_t)); */
 void *MPIDI_coll_get_next_container(void *container)
 {
     return NULL;
