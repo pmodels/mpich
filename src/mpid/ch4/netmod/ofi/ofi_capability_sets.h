@@ -69,19 +69,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
  * MPIDI_OFI_ENABLE_RMA                Use FI_RMA interfaces
  * MPIDI_OFI_ENABLE_ATOMICS            Use FI_ATOMICS interfaces
  * MPIDI_OFI_FETCH_ATOMIC_IOVECS       The maximum number of iovecs that can be used for fetch_atomic operations
- * MPIDI_OFI_IOVEC_ALIGN               Required alignment for iovecs
  * MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS Use a progress thread for normal data messages
  * MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS Use a progress thread for control messages
- * MPIDI_OFI_CONTEXT_MASK_CAPSET       The bitmask used to extract the context ID from the match_bits in an OFI message
- * MPIDI_OFI_SOURCE_MASK_CAPSET        The bitmask used to extract the source rank from the match_bits in an OFI message
- * MPIDI_OFI_TAG_MASK_CAPSET           The bitmask used to extract the tag from the match_bits in an OFI message
  * MPIDI_OFI_CONTEXT_BITS              The number of bits used for the context ID in an OFI message
  * MPIDI_OFI_SOURCE_BITS               The number of bits used for the source rank in an OFI message
  * MPIDI_OFI_TAG_BITS                  The number of bits used for the tag in an OFI message
- *
- * === Compile time only ===
  * MPIDI_OFI_MAJOR_VERSION             The major API version of libfabric required
  * MPIDI_OFI_MINOR_VERSION             The minor API version of libfabric required
+ *
+ * === Compile time only ===
+ * MPIDI_OFI_IOVEC_ALIGN               Required alignment for iovecs
+ * The first three values an optimization to avoid calculating this value every time they are needed.
+ * They can be calculated from the bits above.
+ * MPIDI_OFI_CONTEXT_MASK_CAPSET       The bitmask used to extract the context ID from the match_bits in an OFI message
+ * MPIDI_OFI_SOURCE_MASK_CAPSET        The bitmask used to extract the source rank from the match_bits in an OFI message
+ * MPIDI_OFI_TAG_MASK_CAPSET           The bitmask used to extract the tag from the match_bits in an OFI message
  * MPIDI_OFI_CONTEXT_STRUCTS           The number of fi_context structs needed for the provider
  */
 
@@ -97,14 +99,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA_PSM                MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_ATOMICS_PSM            MPIDI_OFI_ENABLE_RMA_PSM
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM       1
-#define MPIDI_OFI_IOVEC_ALIGN_PSM               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_PSM MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_PSM  MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_PSM       MPIDI_OFI_ON
-#define MPIDI_OFI_CONTEXT_MASK_PSM              (0x0FFFF00000000000ULL)
-#define MPIDI_OFI_SOURCE_MASK_PSM               (0x00000FFFFFF00000ULL) /* PSM does not support immediate data
-                                                                         * so this field needs to be available */
-#define MPIDI_OFI_TAG_MASK_PSM                  (0x00000000000FFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS_PSM              (16)
 #define MPIDI_OFI_SOURCE_BITS_PSM               (24)
 #define MPIDI_OFI_TAG_BITS_PSM                  (20)
@@ -125,13 +122,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_PSM
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_ENABLE_ATOMICS_PSM
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM
-#define MPIDI_OFI_IOVEC_ALIGN               MPIDI_OFI_IOVEC_ALIGN_PSM
+#define MPIDI_OFI_IOVEC_ALIGN               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_PSM
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_PSM
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_PSM
-#define MPIDI_OFI_CONTEXT_MASK_CAPSET       MPIDI_OFI_CONTEXT_MASK_PSM
-#define MPIDI_OFI_SOURCE_MASK_CAPSET        MPIDI_OFI_SOURCE_MASK_PSM
-#define MPIDI_OFI_TAG_MASK_CAPSET           MPIDI_OFI_TAG_MASK_PSM
+#define MPIDI_OFI_CONTEXT_MASK_CAPSET       (0x0FFFF00000000000ULL)
+#define MPIDI_OFI_SOURCE_MASK_CAPSET        (0x00000FFFFFF00000ULL) /* PSM does not support immediate data
+                                                                     * so this field needs to be available */
+#define MPIDI_OFI_TAG_MASK_CAPSET           (0x00000000000FFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_PSM
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_PSM
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_PSM
@@ -152,14 +150,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA_PSM2                MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_ATOMICS_PSM2            MPIDI_OFI_ENABLE_RMA_PSM2
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM2       1
-#define MPIDI_OFI_IOVEC_ALIGN_PSM2               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_PSM2 MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_PSM2  MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_PSM2       MPIDI_OFI_ON
-#define MPIDI_OFI_CONTEXT_MASK_PSM2              (0x0FFFF00000000000ULL)
-#define MPIDI_OFI_SOURCE_MASK_PSM2               (0x00000FFFFFF00000ULL) /* PSM2 does not support immediate data
-                                                                          * so this field needs to be available */
-#define MPIDI_OFI_TAG_MASK_PSM2                  (0x00000000000FFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS_PSM2              (16)
 #define MPIDI_OFI_SOURCE_BITS_PSM2               (24)
 #define MPIDI_OFI_TAG_BITS_PSM2                  (20)
@@ -180,13 +173,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_PSM2
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_ENABLE_ATOMICS_PSM2
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM2
-#define MPIDI_OFI_IOVEC_ALIGN               MPIDI_OFI_IOVEC_ALIGN_PSM2
+#define MPIDI_OFI_IOVEC_ALIGN               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_PSM2
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_PSM2
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_PSM2
-#define MPIDI_OFI_CONTEXT_MASK_CAPSET       MPIDI_OFI_CONTEXT_MASK_PSM2
-#define MPIDI_OFI_SOURCE_MASK_CAPSET        MPIDI_OFI_SOURCE_MASK_PSM2
-#define MPIDI_OFI_TAG_MASK_CAPSET           MPIDI_OFI_TAG_MASK_PSM2
+#define MPIDI_OFI_CONTEXT_MASK_CAPSET       (0x0FFFF00000000000ULL)
+#define MPIDI_OFI_SOURCE_MASK_CAPSET        (0x00000FFFFFF00000ULL) /* PSM2 does not support immediate data
+                                                                     * so this field needs to be available */
+#define MPIDI_OFI_TAG_MASK_CAPSET           (0x00000000000FFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_PSM2
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_PSM2
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_PSM2
@@ -207,14 +201,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA_GNI                MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_ATOMICS_GNI            MPIDI_OFI_ENABLE_RMA_GNI
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS_GNI       1
-#define MPIDI_OFI_IOVEC_ALIGN_GNI               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_GNI MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_GNI  MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_GNI       MPIDI_OFI_ON
-#define MPIDI_OFI_CONTEXT_MASK_GNI              (0x0FFFF00000000000ULL)
-#define MPIDI_OFI_SOURCE_MASK_GNI               (0x00000FFFFFF00000ULL) /* GNI does not support immediate data
-                                                                         * so this field needs to be available */
-#define MPIDI_OFI_TAG_MASK_GNI                  (0x00000000000FFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS_GNI              (16)
 #define MPIDI_OFI_SOURCE_BITS_GNI               (24)
 #define MPIDI_OFI_TAG_BITS_GNI                  (20)
@@ -235,13 +224,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_GNI
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_ENABLE_ATOMICS_GNI
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_GNI
-#define MPIDI_OFI_IOVEC_ALIGN               MPIDI_OFI_IOVEC_ALIGN_GNI
+#define MPIDI_OFI_IOVEC_ALIGN               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_GNI
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_GNI
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_GNI
-#define MPIDI_OFI_CONTEXT_MASK_CAPSET       MPIDI_OFI_CONTEXT_MASK_GNI
-#define MPIDI_OFI_SOURCE_MASK_CAPSET        MPIDI_OFI_SOURCE_MASK_GNI
-#define MPIDI_OFI_TAG_MASK_CAPSET           MPIDI_OFI_TAG_MASK_GNI
+#define MPIDI_OFI_CONTEXT_MASK_CAPSET       (0x0FFFF00000000000ULL)
+#define MPIDI_OFI_SOURCE_MASK_CAPSET        (0x00000FFFFFF00000ULL) /* GNI does not support immediate data
+                                                                     * so this field needs to be available */
+#define MPIDI_OFI_TAG_MASK_CAPSET           (0x00000000000FFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_GNI
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_GNI
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_GNI
@@ -262,14 +252,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA_SOCKETS                MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_ATOMICS_SOCKETS            MPIDI_OFI_ENABLE_RMA_SOCKETS
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS_SOCKETS       1
-#define MPIDI_OFI_IOVEC_ALIGN_SOCKETS               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_SOCKETS MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_SOCKETS  MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_SOCKETS       MPIDI_OFI_ON
-#define MPIDI_OFI_CONTEXT_MASK_SOCKETS              (0x0000FFFF00000000ULL)
-#define MPIDI_OFI_SOURCE_MASK_SOCKETS               (0x0000000000000000ULL) /* Sockets does support immediate data
-                                                                             * so this field is zeroed */
-#define MPIDI_OFI_TAG_MASK_SOCKETS                  (0x000000007FFFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS_SOCKETS              (16)
 #define MPIDI_OFI_SOURCE_BITS_SOCKETS               (0)
 #define MPIDI_OFI_TAG_BITS_SOCKETS                  (31)
@@ -290,13 +275,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_SOCKETS
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_ENABLE_ATOMICS_SOCKETS
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_SOCKETS
-#define MPIDI_OFI_IOVEC_ALIGN               MPIDI_OFI_IOVEC_ALIGN_SOCKETS
+#define MPIDI_OFI_IOVEC_ALIGN               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_SOCKETS
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_SOCKETS
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_SOCKETS
-#define MPIDI_OFI_CONTEXT_MASK_CAPSET       MPIDI_OFI_CONTEXT_MASK_SOCKETS
-#define MPIDI_OFI_SOURCE_MASK_CAPSET        MPIDI_OFI_SOURCE_MASK_SOCKETS
-#define MPIDI_OFI_TAG_MASK_CAPSET           MPIDI_OFI_TAG_MASK_SOCKETS
+#define MPIDI_OFI_CONTEXT_MASK_CAPSET       (0x0000FFFF00000000ULL)
+#define MPIDI_OFI_SOURCE_MASK_CAPSET        (0x0000000000000000ULL) /* Sockets does support immediate data
+                                                                     * so this field is zeroed */
+#define MPIDI_OFI_TAG_MASK_CAPSET           (0x000000007FFFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_SOCKETS
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_SOCKETS
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_SOCKETS
@@ -317,14 +303,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA_BGQ                MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_ATOMICS_BGQ            MPIDI_OFI_ENABLE_RMA_BGQ
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS_BGQ       1
-#define MPIDI_OFI_IOVEC_ALIGN_BGQ               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_BGQ MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_BGQ  MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_BGQ       MPIDI_OFI_ON
-#define MPIDI_OFI_CONTEXT_MASK_BGQ              (0x0000FFFF00000000ULL)
-#define MPIDI_OFI_SOURCE_MASK_BGQ               (0x0000000000000000ULL) /* BGQ does support immediate data
-                                                                         * so this field is zeroed */
-#define MPIDI_OFI_TAG_MASK_BGQ                  (0x000000007FFFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS_BGQ              (16)
 #define MPIDI_OFI_SOURCE_BITS_BGQ               (0)
 #define MPIDI_OFI_TAG_BITS_BGQ                  (31)
@@ -345,13 +326,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_BGQ
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_ENABLE_ATOMICS_BGQ
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_BGQ
-#define MPIDI_OFI_IOVEC_ALIGN               MPIDI_OFI_IOVEC_ALIGN_BGQ
+#define MPIDI_OFI_IOVEC_ALIGN               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_BGQ
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_BGQ
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_BGQ
-#define MPIDI_OFI_CONTEXT_MASK_CAPSET       MPIDI_OFI_CONTEXT_MASK_BGQ
-#define MPIDI_OFI_SOURCE_MASK_CAPSET        MPIDI_OFI_SOURCE_MASK_BGQ
-#define MPIDI_OFI_TAG_MASK_CAPSET           MPIDI_OFI_TAG_MASK_BGQ
+#define MPIDI_OFI_CONTEXT_MASK_CAPSET       (0x0000FFFF00000000ULL)
+#define MPIDI_OFI_SOURCE_MASK_CAPSET        (0x0000000000000000ULL) /* BGQ does support immediate data
+                                                                       so this field is zeroed */
+#define MPIDI_OFI_TAG_MASK_CAPSET           (0x000000007FFFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_BGQ
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_BGQ
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_BGQ
@@ -372,14 +354,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_MAX_ENDPOINTS_VERBS             MPIDI_OFI_MAX_ENDPOINTS_REGULAR
 #define MPIDI_OFI_MAX_ENDPOINTS_BITS_VERBS        MPIDI_OFI_MAX_ENDPOINTS_BITS_REGULAR
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS_VERBS       1
-#define MPIDI_OFI_IOVEC_ALIGN_VERBS               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_VERBS   MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_VERBS    MPIDI_OFI_OFF
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_VERBS       MPIDI_OFI_ON
-#define MPIDI_OFI_CONTEXT_MASK_VERBS              (0x0FFFF00000000000ULL)
-#define MPIDI_OFI_SOURCE_MASK_VERBS               (0x00000FFFFFF00000ULL) /* Verbs does not support immediate data
-                                                                           * so this field needs to be available */
-#define MPIDI_OFI_TAG_MASK_VERBS                  (0x00000000000FFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS_VERBS              (16)
 #define MPIDI_OFI_SOURCE_BITS_VERBS               (24)
 #define MPIDI_OFI_TAG_BITS_VERBS                  (20)
@@ -400,13 +377,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_VERBS
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_ENABLE_ATOMICS_VERBS
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_VERBS
-#define MPIDI_OFI_IOVEC_ALIGN               MPIDI_OFI_IOVEC_ALIGN_VERBS
+#define MPIDI_OFI_IOVEC_ALIGN               (1)
 #define MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_VERBS
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_VERBS
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_VERBS
-#define MPIDI_OFI_CONTEXT_MASK_CAPSET       MPIDI_OFI_CONTEXT_MASK_VERBS
-#define MPIDI_OFI_SOURCE_MASK_CAPSET        MPIDI_OFI_SOURCE_MASK_VERBS
-#define MPIDI_OFI_TAG_MASK_CAPSET           MPIDI_OFI_TAG_MASK_VERBS
+#define MPIDI_OFI_CONTEXT_MASK_CAPSET       (0x0FFFF00000000000ULL)
+#define MPIDI_OFI_SOURCE_MASK_CAPSET        (0x00000FFFFFF00000ULL) /* Verbs does not support immediate data
+                                                                       so this field needs to be available */
+#define MPIDI_OFI_TAG_MASK_CAPSET           (0x00000000000FFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_VERBS
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_VERBS
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_VERBS
