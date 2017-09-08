@@ -205,17 +205,6 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
         comm_ptr->hcoll_priv.is_hcoll_init = 0;
         MPIR_ERR_POP(mpi_errno);
     }
-    comm_ptr->hcoll_priv.hcoll_origin_coll_fns = comm_ptr->coll_fns;
-    comm_ptr->coll_fns = (MPIR_Collops *) MPL_malloc(sizeof(MPIR_Collops), MPL_MEM_COMM);
-    memset(comm_ptr->coll_fns, 0, sizeof(MPIR_Collops));
-    if (comm_ptr->hcoll_priv.hcoll_origin_coll_fns != 0) {
-        memcpy(comm_ptr->coll_fns, comm_ptr->hcoll_priv.hcoll_origin_coll_fns,
-               sizeof(MPIR_Collops));
-    }
-    INSTALL_COLL_WRAPPER(barrier, Barrier);
-    INSTALL_COLL_WRAPPER(bcast, Bcast);
-    INSTALL_COLL_WRAPPER(allreduce, Allreduce);
-    INSTALL_COLL_WRAPPER(allgather, Allgather);
 
     comm_ptr->hcoll_priv.is_hcoll_init = 1;
   fn_exit:
@@ -246,10 +235,6 @@ int hcoll_comm_destroy(MPIR_Comm * comm_ptr, void *param)
 
     context_destroyed = 0;
     if ((NULL != comm_ptr) && (0 != comm_ptr->hcoll_priv.is_hcoll_init)) {
-        if (NULL != comm_ptr->coll_fns) {
-            MPL_free(comm_ptr->coll_fns);
-        }
-        comm_ptr->coll_fns = comm_ptr->hcoll_priv.hcoll_origin_coll_fns;
         hcoll_destroy_context(comm_ptr->hcoll_priv.hcoll_context,
                               (rte_grp_handle_t) comm_ptr, &context_destroyed);
         comm_ptr->hcoll_priv.is_hcoll_init = 0;
