@@ -188,7 +188,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     *flag = FALSE;
     *indx = MPI_UNDEFINED;
     
-    mpi_errno = MPIR_Testany_impl(count, request_ptrs, flag, indx, status);
+    mpi_errno = MPID_Testany(count, request_ptrs, flag, indx, status);
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
     {
