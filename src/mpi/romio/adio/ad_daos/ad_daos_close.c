@@ -9,6 +9,12 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
     static char myname[] = "ADIOI_DAOS_CLOSE";
     int rc;
 
+    {
+        char uuid_str[37];
+        uuid_unparse(cont->uuid, uuid_str);
+        fprintf(stderr, "File Close %s %s\n", fd->filename, uuid_str);
+    }
+
     if (cont->amode == DAOS_COO_RW) {
         MPI_Barrier(fd->comm);
 

@@ -12,6 +12,7 @@ romio_other_sources += \
     adio/ad_daos/ad_daos_common.c \
     adio/ad_daos/ad_daos_fcntl.c \
     adio/ad_daos/ad_daos_features.c \
+    adio/ad_daos/ad_daos_hints.c \
     adio/ad_daos/ad_daos_io.c \
     adio/ad_daos/ad_daos_io_str.c \
     adio/ad_daos/ad_daos_open.c \

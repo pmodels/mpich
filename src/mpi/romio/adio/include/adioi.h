@@ -52,28 +52,33 @@ struct ADIOI_Hints_struct {
     char *cb_config_list;
     int *ranklist;
     union {
-	    struct {
-		    int listio_read;
-		    int listio_write;
-	    } pvfs;
-	    struct {
-		    int debugmask;
-		    int posix_read;
-		    int posix_write;
-		    int listio_read;
-		    int listio_write;
-		    int dtype_read;
-		    int dtype_write;
-	    } pvfs2;
-            struct {
-                    int co_ratio;
-                    int coll_threshold;
-                    int ds_in_coll;
-            } lustre;
-		struct {
-			unsigned read_chunk_sz; /* chunk size for direct reads */
-			unsigned write_chunk_sz; /* chunk size for direct writes */
-		} xfs;
+        struct {
+            int block_size;
+            int grp_size;
+            int block_nr;
+        } daos;
+        struct {
+            int listio_read;
+            int listio_write;
+        } pvfs;
+        struct {
+            int debugmask;
+            int posix_read;
+            int posix_write;
+            int listio_read;
+            int listio_write;
+            int dtype_read;
+            int dtype_write;
+        } pvfs2;
+        struct {
+            int co_ratio;
+            int coll_threshold;
+            int ds_in_coll;
+        } lustre;
+        struct {
+            unsigned read_chunk_sz; /* chunk size for direct reads */
+            unsigned write_chunk_sz; /* chunk size for direct writes */
+        } xfs;
 	struct {
 	    int *bridgelist; /* list of all bride ranks */
 	    int *bridgelistnum; /* each entry here is the number of aggregators
@@ -82,7 +87,6 @@ struct ADIOI_Hints_struct {
 	    int numbridges; /* total number of bridges */
 	} bg;
     } fs_hints;
-
 };
 
 typedef struct ADIOI_Datarep {

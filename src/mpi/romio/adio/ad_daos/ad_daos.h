@@ -26,7 +26,11 @@ struct ADIO_DAOS_cont {
     /** Array OH for the MPI file */
     daos_handle_t	oh;
     /** data to store in a dkey block */
-    daos_size_t		stripe_size;
+    daos_size_t		block_size;
+    /** number of dkeys in a group */
+    daos_size_t		grp_size;
+    /** number of blocks per dkey */
+    daos_size_t		block_nr;
     /** file open mode */
     unsigned int	amode;
     /** Event queue to store all async requests on file */
@@ -63,6 +67,7 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code);
 void ADIOI_DAOS_Delete(const char *filename, int *error_code);
 void ADIOI_DAOS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct,
                       int *error_code);
+void ADIOI_DAOS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code);
 void ADIOI_DAOS_ReadContig(ADIO_File fd, void *buf, int count,
 			   MPI_Datatype datatype, int file_ptr_type,
 			   ADIO_Offset offset, ADIO_Status *status,

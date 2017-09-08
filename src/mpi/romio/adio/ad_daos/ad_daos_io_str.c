@@ -216,7 +216,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
         rgs = (daos_range_t *)ADIOI_Malloc(sizeof(daos_range_t));
         rgs->rg_idx = off;
         rgs->rg_len = bufsize;
-        //fprintf(stderr, "(%d) Single : off %lld len %zu\n", mpi_rank, rgs->rg_idx, rgs->rg_len);
+        fprintf(stderr, "(%d) Single : off %lld len %zu\n", mpi_rank, rgs->rg_idx, rgs->rg_len);
 
         if (request)
             aio_req->nbytes = bufsize;
@@ -317,7 +317,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
                 rgs[i].rg_len = MPL_MIN(f_data_wrote, st_fwr_size);
                 if(request)
                     aio_req->nbytes += rgs[i].rg_len;
-                //fprintf(stderr, "(%d) %d: off %lld len %zu\n", mpi_rank, i, rgs[i].rg_idx, rgs[i].rg_len);
+                fprintf(stderr, "(%d) %d: off %lld len %zu\n", mpi_rank, i, rgs[i].rg_idx, rgs[i].rg_len);
             }
             else {
                 if (flat_file->blocklens[j]) {
@@ -325,7 +325,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
                         ((ADIO_Offset)n_filetypes)*filetype_extent
                         + flat_file->indices[j];
                     rgs[i].rg_len = flat_file->blocklens[j];
-                    //fprintf(stderr, "(%d) %d: off %lld len %zu\n", mpi_rank, i, rgs[i].rg_idx, rgs[i].rg_len);
+                    fprintf(stderr, "(%d) %d: off %lld len %zu\n", mpi_rank, i, rgs[i].rg_idx, rgs[i].rg_len);
                     if(request)
                         aio_req->nbytes += rgs[i].rg_len;
                 }

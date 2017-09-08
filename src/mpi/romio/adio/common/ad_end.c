@@ -7,12 +7,12 @@
 #include "adio.h"
 #include "adio_extern.h"
 
+extern daos_handle_t daos_pool_oh;
+
 void ADIO_End(int *error_code)
 {
     ADIOI_Datarep *datarep, *datarep_next;
     
-/*    FPRINTF(stderr, "reached end\n"); */
-
     /* if a default errhandler was set on MPI_FILE_NULL then we need to ensure
      * that our reference to that errhandler is released */
     PMPI_File_set_errhandler(MPI_FILE_NULL, MPI_ERRORS_RETURN);
@@ -53,6 +53,12 @@ int ADIOI_End_call(MPI_Comm comm, int keyval, void *attribute_val, void
 		  *extra_state)
 {
     int error_code;
+    int comm_world_rank;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &comm_world_rank);
+    if (comm_world_rank == 0)
+        daos_pool_disconnect(daos_pool_oh, NULL);
+    daos_fini();
 
     MPL_UNREFERENCED_ARG(comm);
     MPL_UNREFERENCED_ARG(attribute_val);

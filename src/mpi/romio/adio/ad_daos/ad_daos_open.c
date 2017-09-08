@@ -97,7 +97,7 @@ duuid_mult128(uint64_t x_lo, uint64_t x_hi, uint64_t y_lo, uint64_t y_hi,
 
 /* Implementation of the FNV hash algorithm */
 static void
-duuid_hash128(const char *name, void *hash)
+duuid_hash128(const char *name, void *hash, uint64_t *hi, uint64_t *lo)
 {
     const uint8_t *name_p = (const uint8_t *)name;
     uint8_t *hash_p = (uint8_t *)hash;
@@ -150,6 +150,11 @@ duuid_hash128(const char *name, void *hash)
      * little endian and big endian systems */
     UINT64ENCODE(hash_p, hash_lo)
     UINT64ENCODE(hash_p, hash_hi)
+
+    if (hi)
+        *hi = hash_hi;
+    if (lo)
+        *lo = hash_lo;
 
     return;
 } /* end duuid_hash128() */
@@ -237,7 +242,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
         daos_size_t elem_size;
 
         rc = daos_array_open(cont->coh, cont->oid, cont->epoch, DAOS_OO_RW,
-                             &elem_size, &cont->stripe_size, &cont->oh, NULL);
+                             &elem_size, &cont->block_size, &cont->oh, NULL);
         if (rc != 0) {
             PRINT_MSG(stderr, "daos_array_open() failed (%d)\n", rc);
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
@@ -252,7 +257,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 
     /* Create a DAOS byte array for the file */
     rc = daos_array_create(cont->coh, cont->oid, cont->epoch, 1,
-                           cont->stripe_size, &cont->oh, NULL);
+                           cont->block_size, &cont->oh, NULL);
     if (rc != 0) {
         PRINT_MSG(stderr, "daos_array_create() failed (%d)\n", rc);
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
@@ -305,21 +310,27 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
     fd->access_mode = access_mode;
 
     cont->amode = amode;
-    /* Hash file name to create uuid */
-    duuid_hash128(fd->filename, &cont->uuid);
+
+    cont->oid.hi = 0;
+    /* Hash file name to create uuid and obj id*/
+    duuid_hash128(fd->filename, &cont->uuid, &cont->oid.mid, &cont->oid.lo);
     {
         char uuid_str[37];
         uuid_unparse(cont->uuid, uuid_str);
         fprintf(stderr, "File Open %s %s\n", fd->filename, uuid_str);
+        fprintf(stderr, "OID %" PRIx64".%" PRIx64".%" PRIx64"\n",
+                cont->oid.hi , cont->oid.mid, cont->oid.lo);
     }
-    /* MSC - hardcode to 1MB for now, check for info hint later. */
-    cont->stripe_size = 1048576;
-
-    /* MSC - make OID = 0 for now; hash file name to oid later. */
-    cont->oid.lo = 0;
-    cont->oid.mid = 0;
-    cont->oid.hi = 0;
+    /* MSC - add hint for object class */
     daos_obj_id_generate(&cont->oid, DAOS_OC_REPL_MAX_RW);
+
+    fprintf(stderr, "block_size %d, grp_size %d, block_nr %d\n",
+            fd->hints->fs_hints.daos.block_size,
+            fd->hints->fs_hints.daos.grp_size,
+            fd->hints->fs_hints.daos.block_nr);
+    cont->block_size = fd->hints->fs_hints.daos.block_size;
+    cont->grp_size = fd->hints->fs_hints.daos.grp_size;
+    cont->block_nr = fd->hints->fs_hints.daos.block_nr;
 
     fd->fs_ptr = cont;
     if (rank == 0)
@@ -339,10 +350,10 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
     /* open array on other ranks */
     if (rank != 0) {
         daos_size_t elem_size;
-        daos_size_t stripe_size;
+        daos_size_t block_size;
 
         rc = daos_array_open(cont->coh, cont->oid, cont->epoch, DAOS_OO_RW,
-                             &elem_size, &stripe_size, &cont->oh, NULL);
+                             &elem_size, &block_size, &cont->oh, NULL);
         if (rc != 0) {
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                MPIR_ERR_RECOVERABLE,
@@ -351,7 +362,7 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
                                                "Array Open Failed", 0);
             goto err_free;
         }
-        if (elem_size != 1 || stripe_size != cont->stripe_size) {
+        if (elem_size != 1 || block_size != cont->block_size) {
             *error_code = MPI_UNDEFINED;
             goto err_free;
         }
@@ -366,7 +377,7 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
     return;
 
 err_free:
-    free(cont);
+    ADIOI_Free(cont);
     return;
 }
 
@@ -434,7 +445,7 @@ void ADIOI_DAOS_Delete(const char *filename, int *error_code)
     static char myname[] = "ADIOI_DAOS_DELETE";
 
     /* Hash file name to container uuid */
-    duuid_hash128(filename, &uuid);
+    duuid_hash128(filename, &uuid, NULL, NULL);
 
     {
         char uuid_str[37];

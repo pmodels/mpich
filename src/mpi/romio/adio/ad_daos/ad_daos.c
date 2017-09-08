@@ -14,7 +14,7 @@ struct ADIOI_Fns_struct ADIO_DAOS_operations = {
     ADIOI_DAOS_WriteStrided, /* WriteStridedColl */
     ADIOI_GEN_SeekIndividual, /* SeekIndividual */
     ADIOI_DAOS_Fcntl, /* Fcntl */
-    ADIOI_GEN_SetInfo, /* SetInfo */
+    ADIOI_DAOS_SetInfo, /* SetInfo */
     ADIOI_DAOS_ReadStrided, /* ReadStrided */
     ADIOI_DAOS_WriteStrided, /* WriteStrided */
     ADIOI_DAOS_Close, /* Close */

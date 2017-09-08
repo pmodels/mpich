@@ -82,7 +82,7 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
 #endif
 
-    //fprintf(stderr, "CONTIG IO Epoch %lld OP %d, Off %llu, Len %zu\n", cont->epoch, flag, offset, len);
+    fprintf(stderr, "CONTIG IO Epoch %lld OP %d, Off %llu, Len %zu\n", cont->epoch, flag, offset, len);
 
     if (flag == DAOS_WRITE) {
         ret = daos_array_write(cont->oh, cont->epoch, ranges, sgl, NULL,
