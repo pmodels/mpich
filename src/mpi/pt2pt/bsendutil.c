@@ -489,7 +489,7 @@ static int MPIR_Bsend_check_active(void)
             flag = 0;
             /* XXX DJG FIXME-MT should we be checking this? */
             if (MPIR_Object_get_ref(active->request) == 1) {
-                mpi_errno = MPIR_Test_impl(active->request, &flag, MPI_STATUS_IGNORE);
+                mpi_errno = MPID_Test(active->request, &flag, MPI_STATUS_IGNORE);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
             } else {
@@ -503,7 +503,7 @@ static int MPIR_Bsend_check_active(void)
                     MPIR_ERR_POP(mpi_errno);
             }
         } else {
-            mpi_errno = MPIR_Test_impl(active->request, &flag, MPI_STATUS_IGNORE);
+            mpi_errno = MPID_Test(active->request, &flag, MPI_STATUS_IGNORE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }

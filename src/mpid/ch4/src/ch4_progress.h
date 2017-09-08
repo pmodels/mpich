@@ -234,4 +234,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_deactivate(int id)
     return mpi_errno;
 }
 
+/* Device level wait/test implementations */
+#define MPID_Test MPIR_Test_impl
+#define MPID_Testall MPIR_Testall_impl
+#define MPID_Testany MPIR_Testany_impl
+#define MPID_Testsome MPIR_Testsome_impl
+
 #endif /* CH4_PROGRESS_H_INCLUDED */
