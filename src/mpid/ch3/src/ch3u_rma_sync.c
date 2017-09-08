@@ -733,7 +733,7 @@ int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPIR_Win * win_ptr)
     win_ptr->at_completion_counter += post_grp_ptr->size;
 
     if ((assert & MPI_MODE_NOCHECK) == 0) {
-        MPI_Request *req;
+        MPIR_Request **req_ptrs;
         MPI_Status *status;
         int i, post_grp_size, dst, rank;
         MPIR_Comm *win_comm_ptr;
@@ -751,8 +751,8 @@ int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPIR_Win * win_ptr)
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_POP(mpi_errno);
 
-        MPIR_CHKLMEM_MALLOC(req, MPI_Request *, post_grp_size * sizeof(MPI_Request),
-                            mpi_errno, "req");
+        MPIR_CHKLMEM_MALLOC(req_ptrs, MPIR_Request **, post_grp_size * sizeof(MPIR_Request *),
+                            mpi_errno, "req_ptrs");
         MPIR_CHKLMEM_MALLOC(status, MPI_Status *, post_grp_size * sizeof(MPI_Status),
                             mpi_errno, "status");
 
@@ -761,19 +761,20 @@ int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPIR_Win * win_ptr)
             dst = post_ranks_in_win_grp[i];
 
             if (dst != rank) {
-                MPIR_Request *req_ptr;
                 mpi_errno = MPID_Isend(&i, 0, MPI_INT, dst, SYNC_POST_TAG, win_comm_ptr,
-                                       MPIR_CONTEXT_INTRA_PT2PT, &req_ptr);
+                                       MPIR_CONTEXT_INTRA_PT2PT, &req_ptrs[i]);
                 if (mpi_errno != MPI_SUCCESS)
                     MPIR_ERR_POP(mpi_errno);
-                req[i] = req_ptr->handle;
             }
             else {
-                req[i] = MPI_REQUEST_NULL;
+                req_ptrs[i] = NULL;
             }
         }
 
-        mpi_errno = MPIR_Waitall_impl(post_grp_size, req, status);
+        mpi_errno = MPIR_Waitall_impl(post_grp_size, req_ptrs, status);
+        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
+            MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPIR_Waitall_post(post_grp_size, NULL, req_ptrs, status);
         if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
             MPIR_ERR_POP(mpi_errno);
 
@@ -867,7 +868,7 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
 
     if ((assert & MPI_MODE_NOCHECK) == 0) {
         int i, intra_cnt;
-        MPI_Request *intra_start_req = NULL;
+        MPIR_Request **intra_start_req = NULL;
         MPI_Status *intra_start_status = NULL;
         MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
         int rank = comm_ptr->rank;
@@ -877,8 +878,8 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
         /* post IRECVs */
         if (win_ptr->shm_allocated == TRUE) {
             int node_comm_size = comm_ptr->node_comm->local_size;
-            MPIR_CHKLMEM_MALLOC(intra_start_req, MPI_Request *,
-                                node_comm_size * sizeof(MPI_Request), mpi_errno, "intra_start_req");
+            MPIR_CHKLMEM_MALLOC(intra_start_req, MPIR_Request **,
+                                node_comm_size * sizeof(MPIR_Request *), mpi_errno, "intra_start_req");
             MPIR_CHKLMEM_MALLOC(intra_start_status, MPI_Status *,
                                 node_comm_size * sizeof(MPI_Status),
                                 mpi_errno, "intra_start_status");
@@ -900,7 +901,7 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
                     MPIR_ERR_POP(mpi_errno);
 
                 if (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) {
-                    intra_start_req[intra_cnt++] = req_ptr->handle;
+                    intra_start_req[intra_cnt++] = req_ptr;
                 }
                 else {
                     if (!MPIR_Request_is_complete(req_ptr)) {
@@ -919,6 +920,10 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
             mpi_errno = MPIR_Waitall_impl(intra_cnt, intra_start_req, intra_start_status);
             if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
                 MPIR_ERR_POP(mpi_errno);
+            mpi_errno = MPIR_Waitall_post(intra_cnt, NULL, intra_start_req, intra_start_status);
+            if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
+                MPIR_ERR_POP(mpi_errno);
+
             /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno == MPI_ERR_IN_STATUS) {
                 for (i = 0; i < intra_cnt; i++) {
