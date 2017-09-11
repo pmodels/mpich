@@ -127,7 +127,7 @@ static int barrier_smp_intra(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Barrier_intra( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
-    int size, rank, src, dst, mask, mpi_errno=MPI_SUCCESS;
+    int size, mpi_errno=MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
 
     size = comm_ptr->local_size;
