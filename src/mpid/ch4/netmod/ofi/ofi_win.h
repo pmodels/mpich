@@ -184,33 +184,15 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
                         FI_READ | FI_WRITE), bind);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.av->fid, 0), bind);
 
-        MPIDI_OFI_CALL_RETURN(fi_endpoint(MPIDI_Global.domain,
-                                          finfo, &MPIDI_OFI_WIN(win).ep_nocmpl, NULL), ret);
         fi_freeinfo(finfo);
-        if (ret < 0) {
-            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        "Failed to create an EP alias, "
-                        "falling back to global EP/counter scheme");
-            MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
-            MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntr->fid), epclose);
-            goto fallback_global;
-        }
-
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep_nocmpl,
-                                  &MPIDI_Global.stx_ctx->fid, 0), bind);
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep_nocmpl,
-                                  &MPIDI_OFI_WIN(win).cmpl_cntr->fid, FI_READ | FI_WRITE), bind);
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep_nocmpl, &MPIDI_Global.av->fid, 0), bind);
 
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_WIN(win).ep), ep_enable);
-        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_WIN(win).ep_nocmpl), ep_enable);
     }
     else {
       fallback_global:
 
         /* Fallback for the traditional global EP/counter model */
         MPIDI_OFI_WIN(win).ep = MPIDI_Global.ctx[0].tx;
-        MPIDI_OFI_WIN(win).ep_nocmpl = MPIDI_Global.ctx[0].tx;
         MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_Global.rma_cmpl_cntr;
         MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_Global.rma_issued_cntr;
     }
@@ -747,8 +729,6 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
 
     MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator, window_instance);
     MPIDI_OFI_map_erase(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id);
-    if (MPIDI_OFI_WIN(win).ep_nocmpl != MPIDI_Global.ctx[0].tx)
-        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep_nocmpl->fid), epclose);
     if (MPIDI_OFI_WIN(win).ep != MPIDI_Global.ctx[0].tx)
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
     if (MPIDI_OFI_WIN(win).cmpl_cntr != MPIDI_Global.rma_cmpl_cntr)
