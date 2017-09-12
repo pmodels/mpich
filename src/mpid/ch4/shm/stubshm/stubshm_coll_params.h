@@ -53,10 +53,10 @@ typedef union {
     } STUBSHM_allreduce_empty_parameters;
 } MPIDI_STUBSHM_allreduce_params_t;
 
-#define MPIDI_STUBSHM_BARRIER_PARAMS_DECL MPIDI_STUBSHM_barrier_params_t stubshm_barrier_params;
-#define MPIDI_STUBSHM_BCAST_PARAMS_DECL MPIDI_STUBSHM_bcast_params_t stubshm_bcast_params;
-#define MPIDI_STUBSHM_REDUCE_PARAMS_DECL MPIDI_STUBSHM_reduce_params_t stubshm_reduce_params;
-#define MPIDI_STUBSHM_ALLREDUCE_PARAMS_DECL MPIDI_STUBSHM_allreduce_params_t stubshm_allreduce_params;
+#define MPIDI_STUBSHM_BARRIER_PARAMS_DECL MPIDI_STUBSHM_barrier_params_t stubshm_barrier_params
+#define MPIDI_STUBSHM_BCAST_PARAMS_DECL MPIDI_STUBSHM_bcast_params_t stubshm_bcast_params
+#define MPIDI_STUBSHM_REDUCE_PARAMS_DECL MPIDI_STUBSHM_reduce_params_t stubshm_reduce_params
+#define MPIDI_STUBSHM_ALLREDUCE_PARAMS_DECL MPIDI_STUBSHM_allreduce_params_t stubshm_allreduce_params
 
 typedef union {
     MPIDI_STUBSHM_BARRIER_PARAMS_DECL;

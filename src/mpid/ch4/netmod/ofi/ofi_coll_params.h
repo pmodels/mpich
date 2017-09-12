@@ -53,10 +53,10 @@ typedef union {
     } ofi_reduce_empty_parameters;
 } MPIDI_OFI_reduce_params_t;
 
-#define MPIDI_OFI_BARRIER_PARAMS_DECL MPIDI_OFI_barrier_params_t ofi_barrier_params;
-#define MPIDI_OFI_BCAST_PARAMS_DECL MPIDI_OFI_bcast_params_t ofi_bcast_params;
-#define MPIDI_OFI_REDUCE_PARAMS_DECL MPIDI_OFI_reduce_params_t ofi_reduce_params;
-#define MPIDI_OFI_ALLREDUCE_PARAMS_DECL MPIDI_OFI_allreduce_params_t ofi_allreduce_params;
+#define MPIDI_OFI_BARRIER_PARAMS_DECL MPIDI_OFI_barrier_params_t ofi_barrier_params
+#define MPIDI_OFI_BCAST_PARAMS_DECL MPIDI_OFI_bcast_params_t ofi_bcast_params
+#define MPIDI_OFI_REDUCE_PARAMS_DECL MPIDI_OFI_reduce_params_t ofi_reduce_params
+#define MPIDI_OFI_ALLREDUCE_PARAMS_DECL MPIDI_OFI_allreduce_params_t ofi_allreduce_params
 
 typedef union {
     MPIDI_OFI_BARRIER_PARAMS_DECL;
