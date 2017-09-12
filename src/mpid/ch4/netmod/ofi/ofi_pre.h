@@ -169,7 +169,6 @@ typedef struct {
     struct fid_mr *mr;
     uint64_t mr_key;
     struct fid_ep *ep;          /* EP with counter & completion */
-    struct fid_ep *ep_nocmpl;   /* EP with counter only (no completion) */
     uint64_t *issued_cntr;
     uint64_t issued_cntr_v;     /* main body of an issued counter,
                                  * if we are to use per-window counter */
