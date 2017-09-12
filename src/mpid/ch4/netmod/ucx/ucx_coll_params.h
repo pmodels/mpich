@@ -53,10 +53,10 @@ typedef union {
     } UCX_reduce_empty_parameters;
 } MPIDI_UCX_reduce_params_t;
 
-#define MPIDI_UCX_BARRIER_PARAMS_DECL MPIDI_UCX_barrier_params_t ucx_barrier_params;
-#define MPIDI_UCX_BCAST_PARAMS_DECL MPIDI_UCX_bcast_params_t ucx_bcast_params;
-#define MPIDI_UCX_REDUCE_PARAMS_DECL MPIDI_UCX_reduce_params_t ucx_reduce_params;
-#define MPIDI_UCX_ALLREDUCE_PARAMS_DECL MPIDI_UCX_allreduce_params_t ucx_allreduce_params;
+#define MPIDI_UCX_BARRIER_PARAMS_DECL MPIDI_UCX_barrier_params_t ucx_barrier_params
+#define MPIDI_UCX_BCAST_PARAMS_DECL MPIDI_UCX_bcast_params_t ucx_bcast_params
+#define MPIDI_UCX_REDUCE_PARAMS_DECL MPIDI_UCX_reduce_params_t ucx_reduce_params
+#define MPIDI_UCX_ALLREDUCE_PARAMS_DECL MPIDI_UCX_allreduce_params_t ucx_allreduce_params
 
 typedef union {
     MPIDI_UCX_BARRIER_PARAMS_DECL;
