@@ -1125,6 +1125,7 @@ static int PMII_singinit(void)
 
     /* Create a socket on which to allow an mpiexec to connect back to
        us */
+    memset(&sin, 0, sizeof(sin));
     sin.sin_family	= AF_INET;
     sin.sin_addr.s_addr	= INADDR_ANY;
     sin.sin_port	= htons(0);    /* anonymous port */
