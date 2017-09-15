@@ -27,6 +27,17 @@ cvars:
         If true, list any memory that was allocated by MPICH and that
         remains allocated when MPI_Finalize completes.
 
+    - name        : MPIR_CVAR_MEM_CATEGORY_INFORMATION
+      category    : DEVELOPER
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, print a summary of memory allocation by category. The category
+        definitions are found in mpl_trmem.h.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -277,6 +288,8 @@ int MPI_Finalize( void )
 	       ignore, if desired, memory leaks in the MPID_Init call */
 	    MPL_trdump( (void *)0, -1 );
 	}
+        if (MPIR_CVAR_MEM_CATEGORY_INFORMATION)
+            MPL_trcategorydump(stderr);
     }
 #endif
 
