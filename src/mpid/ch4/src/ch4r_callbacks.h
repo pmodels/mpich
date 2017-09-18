@@ -82,7 +82,7 @@ static inline void MPIDI_progress_cmpl_list(void)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS, in_use;
     MPIR_Comm *root_comm;
     MPIR_Request *match_req = NULL;
     uint64_t msg_tag;
@@ -184,7 +184,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
 
     dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(match_req, datatype));
     MPL_free(MPIDI_CH4U_REQUEST(rreq, buffer));
-    MPIR_Object_release_ref(rreq, &c);
+    MPIR_Object_release_ref(rreq, &in_use);
     MPID_Request_complete(rreq);
     MPID_Request_complete(match_req);
   fn_exit:

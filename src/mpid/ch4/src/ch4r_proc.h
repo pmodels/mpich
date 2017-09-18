@@ -494,15 +494,15 @@ static inline int MPIDIU_avt_add_ref(int avtid)
 
 static inline int MPIDIU_avt_release_ref(int avtid)
 {
-    int count;
+    int in_use;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AVT_RELEASE_REF);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_AVT_RELEASE_REF);
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, " decr avtid=%d", avtid));
-    MPIR_Object_release_ref(MPIDIU_get_av_table(avtid), &count);
-    if (count == 0) {
+    MPIR_Object_release_ref(MPIDIU_get_av_table(avtid), &in_use);
+    if (!in_use) {
         MPIDIU_free_avt(avtid);
         MPIDIU_free_globals_for_avtid(avtid);
     }
