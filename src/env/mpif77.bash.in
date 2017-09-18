@@ -107,6 +107,12 @@ for arg in "$@" ; do
     -static)
     interlib_deps=no
     ;;
+    -static-mpi)
+    interlib_deps=no
+    addarg=no
+    STATIC_PRELIB=-Wl,-Bstatic
+    STATIC_POSTLIB=-Wl,-Bdynamic
+    ;;
     -echo)
     addarg=no
     set -x
@@ -295,7 +301,7 @@ if [ "$linking" = yes ] ; then
         $Show $F77 $PROFILE_INCPATHS ${final_fflags} ${final_ldflags} "${allargs[@]}" -I$includedir
         rc=$?
     else
-        $Show $F77 $PROFILE_INCPATHS ${final_fflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $f77libs $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @F77_OTHER_LIBS@
+        $Show $F77 $PROFILE_INCPATHS ${final_fflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $f77libs $PROFILE_PRELIB $PROFILE_FOO $rpath_flags $STATIC_PRELIB -l@MPILIBNAME@ @LPMPILIBNAME@ $STATIC_POSTLIB $PROFILE_POSTLIB ${final_libs} @F77_OTHER_LIBS@
         rc=$?
     fi
 else

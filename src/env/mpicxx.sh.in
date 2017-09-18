@@ -100,6 +100,12 @@ for arg in "$@" ; do
     -static)
     interlib_deps=no
     ;;
+    -static-mpi)
+    interlib_deps=no
+    addarg=no
+    STATIC_PRELIB=-Wl,-Bstatic
+    STATIC_POSTLIB=-Wl,-Bdynamic
+    ;;
     -echo)
     addarg=no
     set -x
@@ -202,7 +208,7 @@ fi
 # options (if any)
 cxxlibs=
 if [ "@MPICXXLIBNAME@" != "@MPILIBNAME@" ] ; then
-    cxxlibs="-l@MPICXXLIBNAME@"
+    cxxlibs="$STATIC_PRELIB -l@MPICXXLIBNAME@ $STATIC_POSTLIB"
 fi
 
 PROFILE_FOO=
@@ -252,7 +258,7 @@ if [ "$linking" = yes ] ; then
         $Show $CXX ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} ${final_ldflags} $allargs -I$includedir
         rc=$?
     else
-        $Show $CXX ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} ${final_ldflags} $allargs -I$includedir -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs}
+        $Show $CXX ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} ${final_ldflags} $allargs -I$includedir -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO $rpath_flags $STATIC_PRELIB -l@MPILIBNAME@ @LPMPILIBNAME@ $STATIC_POSTLIB $PROFILE_POSTLIB ${final_libs}
         rc=$?
     fi
 else
