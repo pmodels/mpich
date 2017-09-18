@@ -481,7 +481,7 @@ AC_TYPE_OFF_T
 # Header files
 # Find the CPP before the header check
 AC_PROG_CPP
-AC_CHECK_HEADERS([unistd.h fcntl.h malloc.h stddef.h sys/types.h limits.h time.h])
+AC_CHECK_HEADERS([unistd.h fcntl.h malloc.h stddef.h sys/types.h limits.h time.h dirent.h])
 AC_CHECK_HEADERS(mpix.h,,,[#include <mpi.h>])
 #
 
