@@ -302,11 +302,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_datatype_unmap(MPIDI_OFI_win_datatyp
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * req)
 {
-    int count;
+    int in_use;
     MPIR_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);
-    MPIR_Object_release_ref(req, &count);
-    MPIR_Assert(count >= 0);
-    if (count == 0) {
+    MPIR_Object_release_ref(req, &in_use);
+    MPIR_Assert(in_use >= 0);
+    if (!in_use) {
         MPIDI_OFI_win_datatype_unmap(&req->noncontig->target_dt);
         MPIDI_OFI_win_datatype_unmap(&req->noncontig->origin_dt);
         MPIDI_OFI_win_datatype_unmap(&req->noncontig->result_dt);
