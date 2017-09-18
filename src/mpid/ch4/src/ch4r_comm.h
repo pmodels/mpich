@@ -222,14 +222,14 @@ static inline int MPIDIU_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size)
 static inline int MPIDIU_release_lut(MPIDI_rank_map_lut_t * lut)
 {
     int mpi_errno = MPI_SUCCESS;
-    int count = 0;
+    int in_use = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_RELEASE_LUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_RELEASE_LUT);
 
-    MPIR_Object_release_ref(lut, &count);
+    MPIR_Object_release_ref(lut, &in_use);
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "dec ref to lut %p", lut));
-    if (count == 0) {
+    if (!in_use) {
         MPL_free(lut);
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "free lut %p", lut));
     }
@@ -276,14 +276,14 @@ static inline int MPIDIU_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size)
 static inline int MPIDIU_release_mlut(MPIDI_rank_map_mlut_t * mlut)
 {
     int mpi_errno = MPI_SUCCESS;
-    int count = 0;
+    int in_use = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_RELEASE_MLUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_RELEASE_MLUT);
 
-    MPIR_Object_release_ref(mlut, &count);
+    MPIR_Object_release_ref(mlut, &in_use);
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "dec ref to mlut %p", mlut));
-    if (count == 0) {
+    if (!in_use) {
         MPL_free(mlut);
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "free mlut %p", mlut));
     }
