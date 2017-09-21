@@ -140,7 +140,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                             length = originv[j].iov_len - l;
                             if (length > MPIDI_Global.max_send)
                                 length = MPIDI_Global.max_send;
-                            originv_huge[k].iov_base = originv[j].iov_base + l;
+                            originv_huge[k].iov_base = (char *) originv[j].iov_base + l;
                             originv_huge[k].iov_len = length;
                             k++;
                             l += length;
@@ -225,7 +225,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIDI_OFI_request_util_iov(rreq)->iov_base = recv_buf;
         MPIDI_OFI_request_util_iov(rreq)->iov_len = data_sz;
 
-        MPIDI_OFI_ASSERT_IOVEC_ALIGN(&MPIDI_OFI_REQUEST(rreq, util.iov));
+        MPIDI_OFI_ASSERT_IOVEC_ALIGN(MPIDI_OFI_request_util_iov(rreq));
         msg.msg_iov = MPIDI_OFI_request_util_iov(rreq);
         msg.desc = NULL;
         msg.iov_count = 1;
