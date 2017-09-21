@@ -207,7 +207,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
                             length = originv[j].iov_len - l;
                             if (length > MPIDI_Global.max_send)
                                 length = MPIDI_Global.max_send;
-                            originv_huge[k].iov_base = originv[j].iov_base + l;
+                            originv_huge[k].iov_base = (char *) originv[j].iov_base + l;
                             originv_huge[k].iov_len = length;
                             k++;
                             l += length;
