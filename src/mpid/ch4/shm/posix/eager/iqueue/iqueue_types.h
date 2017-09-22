@@ -32,9 +32,10 @@ struct MPIDI_POSIX_EAGER_IQUEUE_cell {
     MPIDI_POSIX_am_header_t am_header;
 };
 
-typedef struct {
+typedef union {
     /* head of inverted queue of cells */
-    __declspec(align(MPIDU_SHM_CACHE_LINE_LEN)) volatile uintptr_t head;
+    volatile uintptr_t head;
+    uint8_t pad[MPIDU_SHM_CACHE_LINE_LEN];
 } MPIDI_POSIX_EAGER_IQUEUE_terminal_t;
 
 typedef struct MPIDI_POSIX_EAGER_IQUEUE_transport {

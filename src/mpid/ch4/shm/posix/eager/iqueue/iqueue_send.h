@@ -13,8 +13,8 @@
 
 #include "iqueue_impl.h"
 
-MPIDI_POSIX_EAGER_IQUEUE_cell_t* MPIDI_POSIX_EAGER_IQUEUE_new_cell(
-    MPIDI_POSIX_EAGER_IQUEUE_transport_t* transport)
+MPL_STATIC_INLINE_PREFIX MPIDI_POSIX_EAGER_IQUEUE_cell_t*
+MPIDI_POSIX_EAGER_IQUEUE_new_cell(MPIDI_POSIX_EAGER_IQUEUE_transport_t* transport)
 {
     int i;
     for (i = 0; i < transport->num_cells; i++) {
