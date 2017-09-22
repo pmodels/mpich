@@ -88,8 +88,8 @@
 
 #define MPIDI_OFI_UPDATE_IOV_STATE2(var1,var2,var3)                               \
   do {                                                                  \
-    if (*var2## _iovs_nout>=var2## _max_iovs) return MPIDI_OFI_IOV_EAGAIN;   \
-    if (*var3## _iovs_nout>=var3## _max_iovs) return MPIDI_OFI_IOV_EAGAIN;   \
+    if (*var2## _iovs_nout > var2## _max_iovs) return MPIDI_OFI_IOV_EAGAIN;   \
+    if (*var3## _iovs_nout > var3## _max_iovs) return MPIDI_OFI_IOV_EAGAIN;   \
     ((struct iovec*)(&var1## _iov[var1## _idx]))->iov_len += len;            \
     var2## _idx++;                                                      \
     (*var2## _iovs_nout)++;                                             \
