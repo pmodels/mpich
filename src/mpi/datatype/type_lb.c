@@ -35,7 +35,7 @@ void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint *displacement)
 	*displacement = 0;
     } else {
         MPIR_Datatype *datatype_ptr = NULL;
-        MPID_Datatype_get_ptr(datatype, datatype_ptr);
+        MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 	*displacement = datatype_ptr->lb;
     }
 }
@@ -96,11 +96,12 @@ int MPI_Type_lb(MPI_Datatype datatype, MPI_Aint *displacement)
             MPIR_Datatype *datatype_ptr = NULL;
 
             /* Convert MPI object handles to object pointers */
-            MPID_Datatype_get_ptr(datatype, datatype_ptr);
+            MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
             /* Validate datatype_ptr */
             MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
             if (mpi_errno) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(displacement, "displacement", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }

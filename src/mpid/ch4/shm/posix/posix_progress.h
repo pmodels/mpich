@@ -103,6 +103,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int blocking)
 
                 MPIDI_POSIX_eager_recv_commit(&transaction);
 
+                MPIDI_POSIX_EAGER_RECV_COMPLETED_HOOK(rreq);
+
                 goto fn_exit;
             }
 

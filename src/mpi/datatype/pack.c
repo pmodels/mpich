@@ -39,7 +39,7 @@ int MPIR_Pack_impl(const void *inbuf,
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint first, last;
-    MPID_Segment *segp;
+    MPIR_Segment *segp;
     int contig;
     MPI_Aint dt_true_lb;
     MPI_Aint data_sz;
@@ -52,11 +52,11 @@ int MPIR_Pack_impl(const void *inbuf,
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
         contig     = TRUE;
         dt_true_lb = 0;
-        data_sz    = incount * MPID_Datatype_get_basic_size(datatype);
+        data_sz    = incount * MPIR_Datatype_get_basic_size(datatype);
     } else {
         MPIR_Datatype *dt_ptr;
-        MPID_Datatype_get_ptr(datatype, dt_ptr);
-	contig     = dt_ptr->is_contig;
+        MPIR_Datatype_get_ptr(datatype, dt_ptr);
+        MPIR_Datatype_is_contig(datatype, &contig);
         dt_true_lb = dt_ptr->true_lb;
         data_sz    = incount * dt_ptr->size;
     }
@@ -72,14 +72,14 @@ int MPIR_Pack_impl(const void *inbuf,
     
     /* TODO: CHECK RETURN VALUES?? */
     /* TODO: SHOULD THIS ALL BE IN A MPID_PACK??? */
-    segp = MPID_Segment_alloc();
-    MPIR_ERR_CHKANDJUMP1(segp == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment");
+    segp = MPIR_Segment_alloc();
+    MPIR_ERR_CHKANDJUMP1(segp == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment");
     
-    mpi_errno = MPID_Segment_init(inbuf, incount, datatype, segp, 0);
+    mpi_errno = MPIR_Segment_init(inbuf, incount, datatype, segp, 0);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* NOTE: the use of buffer values and positions in MPI_Pack and in
-     * MPID_Segment_pack are quite different.  See code or docs or something.
+     * MPIR_Segment_pack are quite different.  See code or docs or something.
      */
     first = 0;
     last  = SEGMENT_IGNORE_LAST;
@@ -88,7 +88,7 @@ int MPIR_Pack_impl(const void *inbuf,
     MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT outbuf) +
 				     (MPI_Aint) *position);
 
-    MPID_Segment_pack(segp,
+    MPIR_Segment_pack(segp,
 		      first,
 		      &last,
 		      (void *) ((char *) outbuf + *position));
@@ -98,7 +98,7 @@ int MPIR_Pack_impl(const void *inbuf,
 
     *position = (int)((MPI_Aint)*position + last);
 
-    MPID_Segment_free(segp);
+    MPIR_Segment_free(segp);
         
  fn_exit:
     return mpi_errno;
@@ -199,10 +199,10 @@ int MPI_Pack(const void *inbuf,
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
 
-                MPID_Datatype_get_ptr(datatype, datatype_ptr);
+                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-                MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+                MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
         }
@@ -216,7 +216,7 @@ int MPI_Pack(const void *inbuf,
 
 	MPID_BEGIN_ERROR_CHECKS;
 	/* Verify that there is space in the buffer to pack the type */
-	MPID_Datatype_get_size_macro(datatype, tmp_sz);
+	MPIR_Datatype_get_size_macro(datatype, tmp_sz);
 
 	if (tmp_sz * incount > outsize - *position) {
 	    if (*position < 0) {

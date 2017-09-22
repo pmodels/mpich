@@ -43,9 +43,11 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     if (!rreq)
         goto fn_exit;
 
-    if ((!p_data || !data_sz) && target_cmpl_cb) {
-        MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-        target_cmpl_cb(rreq);
+    if (!p_data || !data_sz) {
+        if (target_cmpl_cb) {
+            MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
+            target_cmpl_cb(rreq);
+        }
         goto fn_exit;
     }
 
@@ -166,14 +168,14 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
             .msg_iov = &iov,
             .desc = NULL,
             .iov_count = 1,
-            .addr = MPIDI_OFI_comm_to_phys(comm, src_rank, MPIDI_OFI_API_TAG),
+            .addr = MPIDI_OFI_comm_to_phys(comm, src_rank),
             .rma_iov = &rma_iov,
             .rma_iov_count = 1,
             .context = &am_req->context,
             .data = 0
         };
 
-        MPIDI_OFI_CALL_RETRY_AM(fi_readmsg(MPIDI_OFI_EP_TX_RMA(0),
+        MPIDI_OFI_CALL_RETRY_AM(fi_readmsg(MPIDI_Global.ctx[0].tx,
                                            &msg,
                                            FI_COMPLETION), FALSE /* no lock */ , read);
 
@@ -403,7 +405,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_dispatch_ack(int rank,
                                          int context_id,
-                                         uint64_t sreq_ptr, int am_type, void *netmod_context)
+                                         uint64_t sreq_ptr, int am_type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_ack_msg_t msg;
@@ -418,8 +420,8 @@ static inline int MPIDI_OFI_dispatch_ack(int rank,
     msg.hdr.data_sz = 0;
     msg.hdr.am_type = am_type;
     msg.pyld.sreq_ptr = sreq_ptr;
-    MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_OFI_EP_TX_MSG(0), &msg, sizeof(msg),
-                                      MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG)),
+    MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_Global.ctx[0].tx, &msg, sizeof(msg),
+                                      MPIDI_OFI_comm_to_phys(comm, rank)),
                             FALSE /* no lock */ , inject);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);

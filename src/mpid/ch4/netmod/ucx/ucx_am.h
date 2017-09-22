@@ -62,8 +62,7 @@ static inline int MPIDI_NM_am_isend(int rank,
                                     size_t am_hdr_sz,
                                     const void *data,
                                     MPI_Count count,
-                                    MPI_Datatype datatype, MPIR_Request * sreq,
-                                    void *netmod_context)
+                                    MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
@@ -94,7 +93,7 @@ static inline int MPIDI_NM_am_isend(int rank,
         MPIDI_CH4U_REQUEST(sreq, req->lreq).msg_tag = lreq_hdr.hdr.msg_tag;
         MPIDI_CH4U_REQUEST(sreq, rank) = rank;
         mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDI_CH4U_SEND_LONG_REQ,
-                                         &lreq_hdr, sizeof(lreq_hdr), NULL);
+                                         &lreq_hdr, sizeof(lreq_hdr));
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
@@ -116,20 +115,20 @@ static inline int MPIDI_NM_am_isend(int rank,
     }
     else {
         size_t segment_first;
-        struct MPIDU_Segment *segment_ptr;
-        segment_ptr = MPIDU_Segment_alloc();
+        struct MPIR_Segment *segment_ptr;
+        segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIDU_Segment_alloc");
-        MPIDU_Segment_init(data, count, datatype, segment_ptr, 0);
+                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIR_Segment_alloc");
+        MPIR_Segment_init(data, count, datatype, segment_ptr, 0);
         segment_first = 0;
         last = data_sz;
         send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr));
 
         MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
         MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
-        MPIDU_Segment_pack(segment_ptr, segment_first, &last,
+        MPIR_Segment_pack(segment_ptr, segment_first, &last,
                            send_buf + am_hdr_sz + sizeof(ucx_hdr));
-        MPIDU_Segment_free(segment_ptr);
+        MPIR_Segment_free(segment_ptr);
     }
 
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
@@ -171,7 +170,7 @@ static inline int MPIDI_NM_am_isendv(int rank,
                                      const void *data,
                                      MPI_Count count,
                                      MPI_Datatype datatype,
-                                     MPIR_Request * sreq, void *netmod_context)
+                                     MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t am_hdr_sz = 0, i;
@@ -212,16 +211,16 @@ static inline int MPIDI_NM_am_isendv(int rank,
         MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), (char *) data + dt_true_lb, data_sz);
     } else {
         size_t segment_first;
-        struct MPIDU_Segment *segment_ptr;
-        segment_ptr = MPIDU_Segment_alloc();
+        struct MPIR_Segment *segment_ptr;
+        segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIDU_Segment_alloc");
-        MPIDU_Segment_init(data, count, datatype, segment_ptr, 0);
+                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
+        MPIR_Segment_init(data, count, datatype, segment_ptr, 0);
         segment_first = 0;
         last = data_sz;
-        MPIDU_Segment_pack(segment_ptr, segment_first, &last,
+        MPIR_Segment_pack(segment_ptr, segment_first, &last,
                            send_buf + sizeof(ucx_hdr) + am_hdr_sz);
-        MPIDU_Segment_free(segment_ptr);
+        MPIR_Segment_free(segment_ptr);
     }
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
                                                               data_sz + am_hdr_sz + sizeof(ucx_hdr),
@@ -297,17 +296,17 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
         MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), (char *) data + dt_true_lb, data_sz);
     } else {
         size_t segment_first;
-        struct MPIDU_Segment *segment_ptr;
+        struct MPIR_Segment *segment_ptr;
         MPI_Aint last;
-        segment_ptr = MPIDU_Segment_alloc();
+        segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIDU_Segment_alloc");
-        MPIDU_Segment_init(data, count, datatype, segment_ptr, 0);
+                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
+        MPIR_Segment_init(data, count, datatype, segment_ptr, 0);
         segment_first = 0;
         last = data_sz;
-        MPIDU_Segment_pack(segment_ptr, segment_first, &last,
+        MPIR_Segment_pack(segment_ptr, segment_first, &last,
                            send_buf + am_hdr_sz + sizeof(ucx_hdr));
-        MPIDU_Segment_free(segment_ptr);
+        MPIR_Segment_free(segment_ptr);
     }
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
                                                               data_sz + am_hdr_sz +
@@ -352,7 +351,7 @@ static inline size_t MPIDI_NM_am_hdr_max_sz(void)
 static inline int MPIDI_NM_am_send_hdr(int rank,
                                        MPIR_Comm * comm,
                                        int handler_id,
-                                       const void *am_hdr, size_t am_hdr_sz, void *netmod_context)
+                                       const void *am_hdr, size_t am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;

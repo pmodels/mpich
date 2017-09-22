@@ -4,11 +4,11 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-
 #include "mpioimpl.h"
 #include "adio_extern.h"
+
+#include <stdarg.h>
+#include <stdio.h>
 
 /* Default error handling implementation.
  *

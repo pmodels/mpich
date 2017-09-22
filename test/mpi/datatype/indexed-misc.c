@@ -355,7 +355,7 @@ int indexed_contig_leading_zero_test(void)
     /* -------------------------------------------------------------------- */
     /* A more rigorous test of the indexed type.  Use a hard-to-optimize struct
      * type to force a more complicated datatype processing path
-     * (MPID_Segment_manipulate in MPICH) */
+     * (MPIR_Segment_manipulate in MPICH) */
     len[0] = 1;
     len[1] = 1;
     adisp[0] = 0;
@@ -446,7 +446,7 @@ int indexed_contig_leading_zero_test(void)
     /* -------------------------------------------------------------------- */
     /* A more rigorous test of the hindexed type.  Use a hard-to-optimize struct
      * type to force a more complicated datatype processing path
-     * (MPID_Segment_manipulate in MPICH) */
+     * (MPIR_Segment_manipulate in MPICH) */
     len[0] = 1;
     len[1] = 1;
     adisp[0] = 0;

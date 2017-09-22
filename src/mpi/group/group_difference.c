@@ -175,6 +175,7 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup
             MPIR_Group_valid_ptr( group_ptr2, mpi_errno );
 	    /* If either group_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(newgroup, "newgroup", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }

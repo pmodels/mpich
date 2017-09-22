@@ -75,7 +75,7 @@ int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
     type->p        = p;
 
     /* Create a contiguous type from one instance of the named type */
-    mpi_errno = MPID_Type_contiguous( 1, old, &type->d );
+    mpi_errno = MPIR_Type_contiguous( 1, old, &type->d );
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Initialize the contents data */
@@ -98,8 +98,8 @@ int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
 	    break;
 	}
 
-	MPID_Datatype_get_ptr( type->d, new_dtp );
-	mpi_errno = MPID_Datatype_set_contents(new_dtp, combiner,
+	MPIR_Datatype_get_ptr( type->d, new_dtp );
+	mpi_errno = MPIR_Datatype_set_contents(new_dtp, combiner,
 					       nvals, 0, 0, vals,
 					       NULL, NULL );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -111,18 +111,18 @@ int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
         {
             MPI_Datatype old_basic = MPI_DATATYPE_NULL;
             MPI_Datatype new_basic = MPI_DATATYPE_NULL;
-            /* we used MPID_Type_contiguous and then stomped it's contents
+            /* we used MPIR_Type_contiguous and then stomped it's contents
              * information, so make sure that the basic_type is usable by
-             * MPID_Type_commit */
-            MPID_Datatype_get_basic_type(old, old_basic);
-            MPID_Datatype_get_basic_type(new_dtp->handle, new_basic);
+             * MPIR_Type_commit */
+            MPIR_Datatype_get_basic_type(old, old_basic);
+            MPIR_Datatype_get_basic_type(new_dtp->handle, new_basic);
             MPIR_Assert(new_basic == old_basic);
         }
 #endif
 
         /* the MPI Standard requires that these types are pre-committed
          * (MPI-2.2, sec 16.2.5, pg 492) */
-        mpi_errno = MPID_Type_commit(&type->d);
+        mpi_errno = MPIR_Type_commit(&type->d);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
@@ -187,7 +187,7 @@ static int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
     int mpi_errno;
 
     /* Create a contiguous type from one instance of the named type */
-    mpi_errno = MPID_Type_contiguous( 1, old, new_ptr );
+    mpi_errno = MPIR_Type_contiguous( 1, old, new_ptr );
 
     /* Initialize the contents data */
     if (mpi_errno == MPI_SUCCESS) {
@@ -209,8 +209,8 @@ static int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
 	    break;
 	}
 
-	MPID_Datatype_get_ptr(*new_ptr, new_dtp);
-	mpi_errno = MPID_Datatype_set_contents(new_dtp,
+	MPIR_Datatype_get_ptr(*new_ptr, new_dtp);
+	mpi_errno = MPIR_Datatype_set_contents(new_dtp,
 					       combiner,
 					       nvals,
 					       0,

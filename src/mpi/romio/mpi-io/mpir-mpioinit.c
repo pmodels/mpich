@@ -3,8 +3,8 @@
  *  (C) 2009 UChicago/Argonne LLC
  *      See COPYRIGHT in top-level directory.
  */
-#include <string.h>
 #include "mpioimpl.h"
+#include <string.h>
 
 #ifdef HAVE_WEAK_SYMBOLS
 /* Include mapping from MPI->PMPI */

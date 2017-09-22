@@ -2,7 +2,7 @@
 # (Tested with -w; 10/5/04)
 # 
 # Find the parse.sub routine.
-my $maintdir = "maint";
+my $maintdir = "./maint";
 my $rootdir  = ".";
 if ( ! -s "maint/parse.sub" ) {
     my $program = $0;

@@ -37,8 +37,13 @@
 
 #define MPIDI_CH4I_MAP_NOT_FOUND      ((void*)(-1UL))
 
-#define MAX_NETMOD_CONTEXTS 8
 #define MAX_PROGRESS_HOOKS 4
+
+/* VNI attributes */
+enum {
+    MPIDI_VNI_TX = 0x1, /* Can send */
+    MPIDI_VNI_RX = 0x2, /* Can receive */
+};
 
 #define MPIDI_CH4I_BUF_POOL_NUM (1024)
 #define MPIDI_CH4I_BUF_POOL_SZ (256)
@@ -244,6 +249,7 @@ typedef struct MPIU_buf_t {
 } MPIU_buf_t;
 
 typedef struct {
+    int mmapped_size;
     int max_n_avts;
     int n_avts;
     int next_avtid;
@@ -257,7 +263,6 @@ typedef struct MPIDI_CH4_Global_t {
     int pname_len;
     char pname[MPI_MAX_PROCESSOR_NAME];
     int is_initialized;
-    int allocated_max_n_avts;
     MPIDI_CH4_avt_manager avt_mgr;
     int is_ch4u_initialized;
     MPID_Node_id_t **node_map, max_node_id;
@@ -267,7 +272,7 @@ typedef struct MPIDI_CH4_Global_t {
     progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
     MPID_Thread_mutex_t m[2];
     MPIR_Win *win_hash;
-    int jobid;
+    char *jobid;
 #ifndef MPIDI_CH4U_USE_PER_COMM_QUEUE
     MPIDI_CH4U_rreq_t *posted_list;
     MPIDI_CH4U_rreq_t *unexp_list;
@@ -275,7 +280,6 @@ typedef struct MPIDI_CH4_Global_t {
     MPIDI_CH4U_req_ext_t *cmpl_list;
     OPA_int_t exp_seq_no;
     OPA_int_t nxt_seq_no;
-    void *netmod_context[8];
     MPIU_buf_pool_t *buf_pool;
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_CH4_Global;

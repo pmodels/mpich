@@ -30,6 +30,46 @@
 #include <stdint.h>
 #endif /* HAVE_STDINT_H */
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH4_RANDOM_ADDR_RETRY
+      category    : CH4
+      type        : int
+      default     : 100
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_GROUP
+      description : >-
+        The default number of retries for generating a random address. A retrying
+        involves only local operations.
+
+    - name        : MPIR_CVAR_CH4_SYMHEAP_RETRY
+      category    : CH4
+      type        : int
+      default     : 100
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_GROUP
+      description : >-
+        The default number of retries for allocating a symmetric heap in a process
+        group. A retrying involves collective communication over the group.
+
+    - name        : MPIR_CVAR_CH4_SHM_SYMHEAP_RETRY
+      category    : CH4
+      type        : int
+      default     : 100
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_GROUP
+      description : >-
+        The default number of retries for allocating a symmetric heap in shared
+        memory. A retrying involves collective communication over the group in
+        the shared memory.
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH4R_get_mapsize
 #undef FCNAME
@@ -45,6 +85,15 @@ static inline size_t MPIDI_CH4R_get_mapsize(size_t size, size_t * psz)
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_GET_MAPSIZE);
     return mapsize;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4R_is_valid_mapaddr
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_CH4R_is_valid_mapaddr(void *start)
+{
+    return ((uintptr_t) start == -1ULL) ? 0 : 1;
 }
 
 #undef FUNCNAME
@@ -100,7 +149,7 @@ static inline void *MPIDI_CH4R_generate_random_addr(size_t size)
     uint64_t random_unsigned;
     size_t mapsize = MPIDI_CH4R_get_mapsize(size, &page_sz);
     struct timeval ts;
-    int iter = 100;
+    int iter = MPIR_CVAR_CH4_RANDOM_ADDR_RETRY;
     int32_t rh, rl;
     struct random_data rbuf;
 #endif
@@ -153,7 +202,7 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
                                                 MPIR_Comm * comm, void **base, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    int iter = 100;
+    int iter = MPIR_CVAR_CH4_SYMHEAP_RETRY;
     void *baseP = NULL;
     size_t mapsize = 0;
 #ifdef USE_SYM_HEAP

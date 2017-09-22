@@ -31,7 +31,7 @@ static void dequeue_req(const ptl_event_t *e)
     rreq->status.MPI_SOURCE = NPTL_MATCH_GET_RANK(e->match_bits);
     rreq->status.MPI_TAG = NPTL_MATCH_GET_TAG(e->match_bits);
 
-    MPIDU_Datatype_get_size_macro(rreq->dev.datatype, r_len);
+    MPIR_Datatype_get_size_macro(rreq->dev.datatype, r_len);
     r_len *= rreq->dev.user_count;
 
     s_len = NPTL_HEADER_GET_LENGTH(e->hdr_data);
@@ -94,7 +94,7 @@ static int handler_recv_dequeue_complete(const ptl_event_t *e)
     MPI_Aint last;
     MPI_Aint dt_true_lb;
     intptr_t data_sz;
-    MPIDU_Datatype*dt_ptr ATTRIBUTE((unused));
+    MPIR_Datatype*dt_ptr ATTRIBUTE((unused));
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_HANDLER_RECV_DEQUEUE_COMPLETE);
 
@@ -114,7 +114,7 @@ static int handler_recv_dequeue_complete(const ptl_event_t *e)
             MPIR_Memcpy((char *)rreq->dev.user_buf + dt_true_lb, e->start, e->mlength);
         } else {
             last = e->mlength;
-            MPIDU_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, e->start);
+            MPIR_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, e->start);
             if (last != e->mlength)
                 MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
         }
@@ -124,8 +124,8 @@ static int handler_recv_dequeue_complete(const ptl_event_t *e)
            are a multiple of a single basic element. Currently, we do not detect
            mismatches with datatypes constructed of more than one basic type */
         MPI_Datatype dt_basic_type;
-        MPIDU_Datatype_get_basic_type(rreq->dev.datatype, dt_basic_type);
-        if (dt_basic_type != MPI_DATATYPE_NULL && (e->mlength % MPIDU_Datatype_get_basic_size(dt_basic_type)) != 0)
+        MPIR_Datatype_get_basic_type(rreq->dev.datatype, dt_basic_type);
+        if (dt_basic_type != MPI_DATATYPE_NULL && (e->mlength % MPIR_Datatype_get_basic_size(dt_basic_type)) != 0)
             MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
     }
     
@@ -160,7 +160,7 @@ static int handler_recv_big_get(const ptl_event_t *e)
         /* if we used a temporary buffer, unpack the data */
         if (REQ_PTL(rreq)->chunk_buffer[0]) {
             last = rreq->dev.segment_size;
-            MPIDU_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, REQ_PTL(rreq)->chunk_buffer[0]);
+            MPIR_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, REQ_PTL(rreq)->chunk_buffer[0]);
             MPIR_Assert(last == rreq->dev.segment_size);
         }
         mpi_errno = handler_recv_complete(e);
@@ -230,7 +230,7 @@ static int handler_recv_unpack_complete(const ptl_event_t *e)
         buf = REQ_PTL(rreq)->chunk_buffer[0];
 
     last = rreq->dev.segment_first + e->mlength;
-    MPIDU_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, buf);
+    MPIR_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, buf);
     MPIR_Assert(last == rreq->dev.segment_first + e->mlength);
     
     mpi_errno = handler_recv_complete(e);
@@ -279,7 +279,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
     int ret;
     int dt_contig;
     intptr_t data_sz;
-    MPIDU_Datatype*dt_ptr;
+    MPIR_Datatype*dt_ptr;
     MPI_Aint dt_true_lb;
     MPI_Aint last;
     MPIR_CHKPMEM_DECL(1);
@@ -302,7 +302,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
             MPIR_Memcpy((char *)rreq->dev.user_buf + dt_true_lb, e->start, e->mlength);
         } else {
             last = e->mlength;
-            MPIDU_Segment_unpack(rreq->dev.segment_ptr, 0, &last, e->start);
+            MPIR_Segment_unpack(rreq->dev.segment_ptr, 0, &last, e->start);
             MPIR_Assert(last == e->mlength);
             rreq->dev.segment_first = e->mlength;
         }
@@ -328,7 +328,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
     
     last = rreq->dev.segment_size;
     rreq->dev.iov_count = MPL_IOV_LIMIT;
-    MPIDU_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov, &rreq->dev.iov_count);
+    MPIR_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov, &rreq->dev.iov_count);
 
     if (last == rreq->dev.segment_size && rreq->dev.segment_size <= MPIDI_nem_ptl_ni_limits.max_msg_size + PTL_LARGE_THRESHOLD) {
         /* Rest of message fits in one IOV */
@@ -401,7 +401,7 @@ static int handler_recv_dequeue_unpack_large(const ptl_event_t *e)
 
     MPIR_Assert(e->mlength == PTL_LARGE_THRESHOLD);
     last = PTL_LARGE_THRESHOLD;
-    MPIDU_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, buf);
+    MPIR_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, buf);
     MPIR_Assert(last == PTL_LARGE_THRESHOLD);
     rreq->dev.segment_first += PTL_LARGE_THRESHOLD;
     MPL_free(REQ_PTL(rreq)->chunk_buffer[0]);
@@ -431,7 +431,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPIR_Request *rreq)
     ptl_me_t me;
     int dt_contig;
     intptr_t data_sz;
-    MPIDU_Datatype*dt_ptr;
+    MPIR_Datatype*dt_ptr;
     MPI_Aint dt_true_lb;
     MPI_Aint last;
     ptl_process_t id_any;
@@ -488,15 +488,15 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPIR_Request *rreq)
         } else {
             /* small noncontig */
             MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Small noncontig message");
-            rreq->dev.segment_ptr = MPIDU_Segment_alloc();
-            MPIR_ERR_CHKANDJUMP1(rreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIDU_Segment_alloc");
-            MPIDU_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype, rreq->dev.segment_ptr, 0);
+            rreq->dev.segment_ptr = MPIR_Segment_alloc();
+            MPIR_ERR_CHKANDJUMP1(rreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
+            MPIR_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype, rreq->dev.segment_ptr, 0);
             rreq->dev.segment_first = 0;
             rreq->dev.segment_size = data_sz;
 
             last = rreq->dev.segment_size;
             rreq->dev.iov_count = MPL_IOV_LIMIT;
-            MPIDU_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov, &rreq->dev.iov_count);
+            MPIR_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov, &rreq->dev.iov_count);
 
             if (last == rreq->dev.segment_size) {
                 /* entire message fits in IOV */
@@ -526,15 +526,15 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPIR_Request *rreq)
         } else {
             /* large noncontig */
             MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Large noncontig message");
-            rreq->dev.segment_ptr = MPIDU_Segment_alloc();
-            MPIR_ERR_CHKANDJUMP1(rreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIDU_Segment_alloc");
-            MPIDU_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype, rreq->dev.segment_ptr, 0);
+            rreq->dev.segment_ptr = MPIR_Segment_alloc();
+            MPIR_ERR_CHKANDJUMP1(rreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
+            MPIR_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype, rreq->dev.segment_ptr, 0);
             rreq->dev.segment_first = 0;
             rreq->dev.segment_size = data_sz;
 
             last = PTL_LARGE_THRESHOLD;
             rreq->dev.iov_count = MPL_IOV_LIMIT;
-            MPIDU_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov, &rreq->dev.iov_count);
+            MPIR_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov, &rreq->dev.iov_count);
 
             if (last == PTL_LARGE_THRESHOLD) {
                 /* first chunk fits in IOV */
@@ -694,7 +694,7 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPIR_Request *rreq, MPL_IOV s_c
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
     intptr_t data_sz;
-    MPIDU_Datatype*dt_ptr;
+    MPIR_Datatype*dt_ptr;
     MPI_Aint dt_true_lb;
     ptl_match_bits_t match_bits;
     int was_incomplete;
@@ -728,20 +728,20 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPIR_Request *rreq, MPL_IOV s_c
     else {
         MPI_Aint last;
 
-        rreq->dev.segment_ptr = MPIDU_Segment_alloc();
+        rreq->dev.segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(rreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem",
-                             "**nomem %s", "MPIDU_Segment_alloc");
-        MPIDU_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype,
+                             "**nomem %s", "MPIR_Segment_alloc");
+        MPIR_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype,
                           rreq->dev.segment_ptr, 0);
         rreq->dev.segment_first = 0;
         rreq->dev.segment_size = data_sz;
         last = PTL_LARGE_THRESHOLD;
-        MPIDU_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.tmpbuf);
+        MPIR_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.tmpbuf);
         MPIR_Assert(last == PTL_LARGE_THRESHOLD);
         rreq->dev.segment_first = PTL_LARGE_THRESHOLD;
         last = rreq->dev.segment_size;
         rreq->dev.iov_count = MPL_IOV_LIMIT;
-        MPIDU_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov,
+        MPIR_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov,
                                  &rreq->dev.iov_count);
         if (last == rreq->dev.segment_size && last <= MPIDI_nem_ptl_ni_limits.max_msg_size + PTL_LARGE_THRESHOLD) {
             /* Rest of message fits in one IOV */

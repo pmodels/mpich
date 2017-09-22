@@ -28,6 +28,8 @@ char *MPIDI_DBG_parent_str = "?";
 #include "pmi.h"
 #endif
 
+#include "datatype.h"
+
 int MPIDI_Use_pmi2_api = 0;
 
 static int init_pg( int *argc_p, char ***argv_p,
@@ -114,6 +116,11 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
+
+    /* Call any and all MPID_Init type functions */
+    MPIR_Err_init();
+    MPIR_Datatype_init();
+    MPIR_Group_init();
 
     /* initialization routine for ch3u_comm.c */
     mpi_errno = MPIDI_CH3I_Comm_init();

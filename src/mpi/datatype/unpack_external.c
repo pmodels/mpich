@@ -69,7 +69,7 @@ int MPI_Unpack_external(const char datarep[],
     static const char FCNAME[] = "MPI_Unpack_external";
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint first, last;
-    MPID_Segment *segp;
+    MPIR_Segment *segp;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_UNPACK_EXTERNAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -93,9 +93,9 @@ int MPI_Unpack_external(const char datarep[],
 	    if (datatype != MPI_DATATYPE_NULL && HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
 		MPIR_Datatype *datatype_ptr = NULL;
 
-		MPID_Datatype_get_ptr(datatype, datatype_ptr);
+		MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 		MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-		MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+		MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
 	    }
 		
 	    /* If datatye_ptr is not valid, it will be reset to null */
@@ -110,13 +110,13 @@ int MPI_Unpack_external(const char datarep[],
 	goto fn_exit;
     }
 
-    segp = MPID_Segment_alloc();
-    MPIR_ERR_CHKANDJUMP1((segp == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
-    mpi_errno = MPID_Segment_init(outbuf, outcount, datatype, segp, 1);
+    segp = MPIR_Segment_alloc();
+    MPIR_ERR_CHKANDJUMP1((segp == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
+    mpi_errno = MPIR_Segment_init(outbuf, outcount, datatype, segp, 1);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* NOTE: buffer values and positions in MPI_Unpack_external are used very
-     * differently from use in MPID_Segment_unpack_external...
+     * differently from use in MPIR_Segment_unpack_external...
      */
     first = 0;
     last  = SEGMENT_IGNORE_LAST;
@@ -124,14 +124,14 @@ int MPI_Unpack_external(const char datarep[],
     /* Ensure that pointer increment fits in a pointer */
     MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT inbuf) + *position);
 
-    MPID_Segment_unpack_external32(segp,
+    MPIR_Segment_unpack_external32(segp,
 				   first,
 				   &last,
 				   (void *) ((char *) inbuf + *position));
 
     *position += last;
 
-    MPID_Segment_free(segp);
+    MPIR_Segment_free(segp);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

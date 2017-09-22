@@ -46,7 +46,7 @@ $pattern = '\.[chi](pp){0,1}$';
 $exceptionsFile = "estates.txt";
 
 # Load in the routines to extract strings from files
-$maintdir = "maint";
+$maintdir = "./maint";
 require "$maintdir/extractstrings";
 
 # These are "states" that are internal to a function, but still 

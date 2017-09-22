@@ -27,10 +27,10 @@ static inline int MPID_nem_mpich_test_recv (MPID_nem_cell_ptr_t *cell, int *in_f
 static inline int MPID_nem_mpich_blocking_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox, int completions);
 static inline int MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout);
 static inline int MPID_nem_mpich_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc);
-static inline void MPID_nem_mpich_send_seg_header (MPIDU_Segment *segment, intptr_t *segment_first,
+static inline void MPID_nem_mpich_send_seg_header (MPIR_Segment *segment, intptr_t *segment_first,
                                                    intptr_t segment_size, void *header, intptr_t header_sz,
                                                    void *ext_header, intptr_t ext_header_sz, MPIDI_VC_t *vc, int *again);
-static inline void MPID_nem_mpich_send_seg (MPIDU_Segment *segment, intptr_t *segment_first, intptr_t segment_size,
+static inline void MPID_nem_mpich_send_seg (MPIR_Segment *segment, intptr_t *segment_first, intptr_t segment_size,
                                                     MPIDI_VC_t *vc, int *again);
 
 
@@ -484,7 +484,7 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void
-MPID_nem_mpich_send_seg_header (MPIDU_Segment *segment, intptr_t *segment_first, intptr_t segment_size,
+MPID_nem_mpich_send_seg_header (MPIR_Segment *segment, intptr_t *segment_first, intptr_t segment_size,
                                 void *header, intptr_t header_sz, void *ext_header, intptr_t ext_header_sz,
                                 MPIDI_VC_t *vc, int *again)
 {
@@ -532,7 +532,7 @@ MPID_nem_mpich_send_seg_header (MPIDU_Segment *segment, intptr_t *segment_first,
             
             /* copy data */
             last = segment_size;
-            MPIDU_Segment_pack(segment, *segment_first, &last, (char *)pbox->cell.pkt.p.payload + sizeof(MPIDI_CH3_Pkt_t));
+            MPIR_Segment_pack(segment, *segment_first, &last, (char *)pbox->cell.pkt.p.payload + sizeof(MPIDI_CH3_Pkt_t));
             MPIR_Assert(last == segment_size);
 
             OPA_store_release_int(&pbox->flag.value, 1);
@@ -590,7 +590,7 @@ MPID_nem_mpich_send_seg_header (MPIDU_Segment *segment, intptr_t *segment_first,
     else
         last = *segment_first + MPID_NEM_MPICH_DATA_LEN - buf_offset;
 
-    MPIDU_Segment_pack(segment, *segment_first, &last, (char *)el->pkt.p.payload + buf_offset);
+    MPIR_Segment_pack(segment, *segment_first, &last, (char *)el->pkt.p.payload + buf_offset);
     datalen = buf_offset + last - *segment_first;
     *segment_first = last;
     
@@ -630,7 +630,7 @@ MPID_nem_mpich_send_seg_header (MPIDU_Segment *segment, intptr_t *segment_first,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void
-MPID_nem_mpich_send_seg (MPIDU_Segment *segment, intptr_t *segment_first, intptr_t segment_size, MPIDI_VC_t *vc, int *again)
+MPID_nem_mpich_send_seg (MPIR_Segment *segment, intptr_t *segment_first, intptr_t segment_size, MPIDI_VC_t *vc, int *again)
 {
     MPID_nem_cell_ptr_t el;
     intptr_t datalen;
@@ -673,7 +673,7 @@ MPID_nem_mpich_send_seg (MPIDU_Segment *segment, intptr_t *segment_first, intptr
     else
         last = *segment_first + MPID_NEM_MPICH_DATA_LEN;
     
-    MPIDU_Segment_pack(segment, *segment_first, &last, (char *)el->pkt.p.payload);
+    MPIR_Segment_pack(segment, *segment_first, &last, (char *)el->pkt.p.payload);
     datalen = last - *segment_first;
     *segment_first = last;
     

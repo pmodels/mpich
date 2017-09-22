@@ -35,7 +35,7 @@ static inline int MPIDI_STUBSHM_do_progress_send(int blocking, int *completion_c
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_progress(int blocking)
+static inline int MPIDI_STUBSHM_progress(int vni, int blocking)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_PROGRESS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_PROGRESS);

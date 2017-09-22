@@ -26,7 +26,7 @@ MPIDI_POSIX_am_isend(int rank,
                      const void *am_hdr,
                      size_t am_hdr_sz,
                      const void *data,
-                     MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq, void *shm_context)
+                     MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -61,14 +61,14 @@ MPIDI_POSIX_am_isend(int rank,
     if (unlikely(!dt_contig)) {
         size_t segment_first;
         MPI_Aint last;
-        struct MPIDU_Segment *segment_ptr = NULL;
+        struct MPIR_Segment *segment_ptr = NULL;
 
-        segment_ptr = MPIDU_Segment_alloc();
+        segment_ptr = MPIR_Segment_alloc();
 
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIDU_Segment_alloc");
+                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIR_Segment_alloc");
 
-        MPIDU_Segment_init(data, count, datatype, segment_ptr, 0);
+        MPIR_Segment_init(data, count, datatype, segment_ptr, 0);
 
         segment_first = 0;
         last = data_sz;
@@ -88,9 +88,9 @@ MPIDI_POSIX_am_isend(int rank,
         MPIR_ERR_CHKANDJUMP1(MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
 
-        MPIDU_Segment_pack(segment_ptr, segment_first, &last,
+        MPIR_Segment_pack(segment_ptr, segment_first, &last,
                            MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer));
-        MPIDU_Segment_free(segment_ptr);
+        MPIR_Segment_free(segment_ptr);
 
         send_buf = (uint8_t *) curr_sreq_hdr->pack_buffer;
     }
@@ -216,8 +216,7 @@ MPIDI_POSIX_am_isendv(int rank,
                       struct iovec *am_hdr,
                       size_t iov_len,
                       const void *data,
-                      MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq,
-                      void *shm_context)
+                      MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -251,7 +250,7 @@ MPIDI_POSIX_am_isendv(int rank,
     }
 
     mpi_errno = MPIDI_POSIX_am_isend(rank, comm, handler_id, am_hdr_buf, am_hdr_sz,
-                                     data, count, datatype, sreq, shm_context);
+                                     data, count, datatype, sreq);
 
     if (is_allocated)
         MPL_free(am_hdr_buf);
@@ -284,7 +283,7 @@ MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t context_id,
     mpi_errno = MPIDI_POSIX_am_isend(src_rank,
                                      MPIDI_CH4U_context_id_to_comm(context_id),
                                      handler_id,
-                                     am_hdr, am_hdr_sz, data, count, datatype, sreq, NULL);
+                                     am_hdr, am_hdr_sz, data, count, datatype, sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_AM_ISEND_REPLY);
 
@@ -315,7 +314,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_hdr_max_sz(void)
 MPL_STATIC_INLINE_PREFIX int
 MPIDI_POSIX_am_send_hdr(int rank,
                         MPIR_Comm * comm,
-                        int handler_id, const void *am_hdr, size_t am_hdr_sz, void *shm_context)
+                        int handler_id, const void *am_hdr, size_t am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -364,7 +363,7 @@ MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t context_id,
 
     mpi_errno = MPIDI_POSIX_am_send_hdr(src_rank,
                                         MPIDI_CH4U_context_id_to_comm(context_id),
-                                        handler_id, am_hdr, am_hdr_sz, NULL);
+                                        handler_id, am_hdr, am_hdr_sz);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_POSIX_SEND_AM_HDR_REPLY);
 

@@ -27,8 +27,105 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype *newtype) __attribute__((wea
 
 #endif
 
+/*@
+  MPIR_Type_dup - create a copy of a datatype
+
+Input Parameters:
+- oldtype - handle of original datatype
+
+Output Parameters:
+. newtype - handle of newly created copy of datatype
+
+  Return Value:
+  0 on success, MPI error code on failure.
+@*/
 #undef FUNCNAME
-#define FUNCNAME MPI_Type_dup
+#define FUNCNAME MPIR_Type_dup
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Type_dup(MPI_Datatype oldtype,
+                  MPI_Datatype *newtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Datatype *new_dtp = 0, *old_dtp;
+
+    if (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN) {
+        /* create a new type and commit it. */
+        mpi_errno = MPIR_Type_contiguous(1, oldtype, newtype);
+        if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
+    }
+    else {
+        /* allocate new datatype object and handle */
+        new_dtp = (MPIR_Datatype *) MPIR_Handle_obj_alloc(&MPIR_Datatype_mem);
+        if (!new_dtp) {
+            /* --BEGIN ERROR HANDLING-- */
+            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                             "MPIR_Type_dup", __LINE__, MPI_ERR_OTHER,
+                                             "**nomem", 0);
+            goto fn_fail;
+            /* --END ERROR HANDLING-- */
+        }
+
+        MPIR_Datatype_get_ptr(oldtype, old_dtp);
+
+        /* fill in datatype */
+        MPIR_Object_set_ref(new_dtp, 1);
+        /* new_dtp->handle is filled in by MPIR_Handle_obj_alloc() */
+        new_dtp->is_contig     = old_dtp->is_contig;
+        new_dtp->size          = old_dtp->size;
+        new_dtp->extent        = old_dtp->extent;
+        new_dtp->ub            = old_dtp->ub;
+        new_dtp->lb            = old_dtp->lb;
+        new_dtp->true_ub       = old_dtp->true_ub;
+        new_dtp->true_lb       = old_dtp->true_lb;
+        new_dtp->alignsize     = old_dtp->alignsize;
+        new_dtp->has_sticky_ub = old_dtp->has_sticky_ub;
+        new_dtp->has_sticky_lb = old_dtp->has_sticky_lb;
+        new_dtp->is_permanent  = old_dtp->is_permanent;
+        new_dtp->is_committed  = old_dtp->is_committed;
+
+        new_dtp->attributes    = NULL; /* Attributes are copied in the
+                                        top-level MPI_Type_dup routine */
+        new_dtp->cache_id      = -1;   /* ??? */
+        new_dtp->name[0]       = 0;    /* The Object name is not copied on
+                                          a dup */
+        new_dtp->n_builtin_elements    = old_dtp->n_builtin_elements;
+        new_dtp->builtin_element_size  = old_dtp->builtin_element_size;
+        new_dtp->basic_type        = old_dtp->basic_type;
+
+        new_dtp->dataloop       = NULL;
+        new_dtp->dataloop_size  = old_dtp->dataloop_size;
+        new_dtp->dataloop_depth = old_dtp->dataloop_depth;
+        new_dtp->hetero_dloop       = NULL;
+        new_dtp->hetero_dloop_size  = old_dtp->hetero_dloop_size;
+        new_dtp->hetero_dloop_depth = old_dtp->hetero_dloop_depth;
+        *newtype = new_dtp->handle;
+
+        if (old_dtp->is_committed) {
+            MPIR_Assert(old_dtp->dataloop != NULL);
+            MPIR_Dataloop_dup(old_dtp->dataloop,
+                              old_dtp->dataloop_size,
+                              &new_dtp->dataloop);
+            if (old_dtp->hetero_dloop != NULL) {
+                /* at this time MPI_COMPLEX doesn't have this loop...
+                 * -- RBR, 02/01/2007
+                 */
+                MPIR_Dataloop_dup(old_dtp->hetero_dloop,
+                                  old_dtp->hetero_dloop_size,
+                                  &new_dtp->hetero_dloop);
+            }
+
+#ifdef MPID_Type_commit_hook
+            MPID_Type_commit_hook(new_dtp);
+#endif /* MPID_Type_commit_hook */
+      }
+    }
+
+    MPL_DBG_MSG_D(MPIR_DBG_DATATYPE,VERBOSE, "dup type %x created.", *newtype);
+
+ fn_fail:
+    return mpi_errno;
+}
 
 /*@
    MPI_Type_dup - Duplicate a datatype
@@ -47,9 +144,12 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_TYPE
 @*/
+#undef FUNCNAME
+#define FUNCNAME MPI_Type_dup
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype *newtype)
 {
-    static const char FCNAME[] = "MPI_Type_dup";
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
     MPIR_Datatype *datatype_ptr = NULL;
@@ -73,7 +173,7 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype *newtype)
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Datatype_get_ptr( oldtype, datatype_ptr );
+    MPIR_Datatype_get_ptr( oldtype, datatype_ptr );
     
     /* Convert MPI object handles to object pointers */
 #   ifdef HAVE_ERROR_CHECKING
@@ -91,12 +191,12 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype *newtype)
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPID_Type_dup(oldtype, &new_handle);
+    mpi_errno = MPIR_Type_dup(oldtype, &new_handle);
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    MPID_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPID_Datatype_set_contents(new_dtp,
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp,
 				           MPI_COMBINER_DUP,
 				           0, /* ints */
 				           0, /* aints */
@@ -105,7 +205,7 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype *newtype)
 				           NULL,
 				           &oldtype);
 
-    mpi_errno = MPID_Type_commit(&new_handle);
+    mpi_errno = MPIR_Type_commit(&new_handle);
     if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
 
     /* Copy attributes, executing the attribute copy functions */
@@ -122,7 +222,7 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype *newtype)
 	    &new_dtp->attributes );
 	if (mpi_errno)
 	{
-            MPID_Datatype_release(new_dtp);
+            MPIR_Datatype_release(new_dtp);
 	    goto fn_fail;
 	}
     }

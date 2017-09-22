@@ -37,8 +37,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     MPIR_CHKPMEM_DECL(5);
 
     MPIDI_POSIX_eager_fbox_control_global.num_seg = 1;
-    //MPIDI_POSIX_eager_fbox_control_global.my_grank = rank;
-    MPIDI_POSIX_eager_fbox_control_global.last_polled_rank = 0;
+    MPIDI_POSIX_eager_fbox_control_global.next_poll_local_rank = 0;
 
     MPIR_CHKPMEM_MALLOC(local_procs, int *, size * sizeof(int), mpi_errno,
                         "local process index array");
@@ -64,7 +63,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
     MPIDI_POSIX_eager_fbox_control_global.local_procs = local_procs;
 
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_eager_fbox_control_global.seg,
-                        MPIDU_shm_seg_info_ptr_t,
+                        MPIDU_shm_seg_info_t*,
                         MPIDI_POSIX_eager_fbox_control_global.num_seg *
                         sizeof(MPIDU_shm_seg_info_t), mpi_errno, "mem_region segments");
 

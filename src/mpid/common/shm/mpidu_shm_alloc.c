@@ -38,7 +38,7 @@ typedef struct alloc_elem {
 
 static struct { alloc_elem_t *head, *tail; } allocq = {0};
 
-static int check_alloc(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t barrier,
+static int check_alloc(MPIDU_shm_seg_t *memory, MPIDU_shm_barrier_t *barrier,
                        int num_local, int local_rank);
 
 #define ALLOCQ_HEAD() GENERIC_Q_HEAD(allocq)
@@ -49,6 +49,8 @@ static int check_alloc(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t barri
 #define ROUND_UP_8(x) (((x) + (size_t)7) & ~(size_t)7) /* rounds up to multiple of 8 */
 
 static size_t segment_len = 0;
+
+static int num_segments = 0;
 
 typedef struct asym_check_region 
 {
@@ -127,7 +129,7 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr_p)
 #define FUNCNAME MPIDU_shm_seg_commit
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *barrier,
+int MPIDU_shm_seg_commit(MPIDU_shm_seg_t *memory, MPIDU_shm_barrier_t **barrier,
                      int num_local, int local_rank, int local_procs_0, int rank)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -218,6 +220,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
+        MPIR_CHKLMEM_MALLOC(key, char *, PMI2_MAX_KEYLEN, mpi_errno, "key");
+        MPL_snprintf(key, PMI2_MAX_KEYLEN, "sharedFilename-%d", num_segments);
 
         if (local_rank == 0) {
             mpi_errno = MPL_shm_seg_create_and_attach(memory->hnd, memory->segment_len, &(memory->base_addr), 0);
@@ -244,7 +248,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
              * serializing operation with our peers on the local node this
              * ensures that these initializations have occurred before any peer
              * attempts to use the resources. */
-            mpi_errno = PMI2_Info_PutNodeAttr("sharedFilename", serialized_hnd);
+            mpi_errno = PMI2_Info_PutNodeAttr(key, serialized_hnd);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         } else {
             int found = FALSE;
@@ -253,7 +257,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
             MPIR_CHKLMEM_MALLOC(val, char *, PMI2_MAX_VALLEN, mpi_errno, "val");
 
             /* get name of shared file */
-            mpi_errno = PMI2_Info_GetNodeAttr("sharedFilename", val, PMI2_MAX_VALLEN, &found, TRUE);
+            mpi_errno = PMI2_Info_GetNodeAttr(key, val, PMI2_MAX_VALLEN, &found, TRUE);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "nodeattr not found");
 
@@ -337,7 +341,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
 
             /* post name of shared file */
             MPIR_Assert(local_procs_0 == rank);
-            MPL_snprintf(key, key_max_sz, "sharedFilename[%i]", rank);
+            MPL_snprintf(key, key_max_sz, "sharedFilename[%i]-%i", rank, num_segments);
 
             mpi_errno = MPL_shm_hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
             if (mpi_errno != MPI_SUCCESS) MPIR_ERR_POP (mpi_errno);
@@ -367,7 +371,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
             MPIR_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
 
             /* get name of shared file */
-            MPL_snprintf(key, key_max_sz, "sharedFilename[%i]", local_procs_0);
+            MPL_snprintf(key, key_max_sz, "sharedFilename[%i]-%i", local_procs_0, num_segments);
             pmi_errno = PMI_KVS_Get(kvs_name, key, val, val_max_sz);
             MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                  "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
@@ -401,6 +405,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
         memory->symmetrical = 0 ;
     }
 #endif
+    num_segments++;
+
     /* assign sections of the shared memory segment to their pointers */
 
     start_addr = current_addr;
@@ -457,7 +463,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
 #define FUNCNAME MPIDU_shm_seg_destroy
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_shm_seg_destroy(MPIDU_shm_seg_ptr_t memory, int num_local)
+int MPIDU_shm_seg_destroy(MPIDU_shm_seg_t *memory, int num_local)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_SEG_DESTROY);
@@ -488,7 +494,7 @@ int MPIDU_shm_seg_destroy(MPIDU_shm_seg_ptr_t memory, int num_local)
 #define FUNCNAME check_alloc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int check_alloc(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t barrier,
+static int check_alloc(MPIDU_shm_seg_t *memory, MPIDU_shm_barrier_t *barrier,
                        int num_local, int local_rank)
 {
     int mpi_errno = MPI_SUCCESS;

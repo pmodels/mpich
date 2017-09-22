@@ -7,3 +7,11 @@ too_many_icomms 4 strict=FALSE
 too_many_comms2 4 strict=FALSE
 too_many_comms3 4 strict=FALSE
 too_many_icomms2 4 strict=FALSE
+comm_create_nullarg 1
+comm_create_group_nullarg 1
+comm_get_info_nullarg 1
+comm_group_nullarg 1
+comm_size_nullarg 1
+comm_split_nullarg 1
+comm_split_type_nullarg 1
+intercomm_create_nullarg 1

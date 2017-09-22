@@ -636,6 +636,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             comm->node_roots_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
             comm->node_roots_comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS;
             comm->node_roots_comm->local_comm = NULL;
+            MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Create node_roots_comm=%p\n", comm->node_roots_comm);
 
             comm->node_roots_comm->local_size = num_external;
             comm->node_roots_comm->remote_size = num_external;

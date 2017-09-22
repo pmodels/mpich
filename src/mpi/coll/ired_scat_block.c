@@ -53,7 +53,7 @@ int MPIR_Ireduce_scatter_block_rec_hlv(const void *sendbuf, void *recvbuf, int r
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    MPID_Datatype_get_extent_macro(datatype, extent);
+    MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     MPIR_Assert(MPIR_Op_is_commutative(op));
@@ -70,7 +70,7 @@ int MPIR_Ireduce_scatter_block_rec_hlv(const void *sendbuf, void *recvbuf, int r
         goto fn_exit;
     }
 
-    MPID_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* allocate temp. buffer to receive incoming data */
     MPIR_SCHED_CHKPMEM_MALLOC(tmp_recvbuf, void *, total_count*(MPL_MAX(true_extent,extent)), mpi_errno, "tmp_recvbuf");
@@ -271,7 +271,7 @@ int MPIR_Ireduce_scatter_block_pairwise(const void *sendbuf, void *recvbuf, int 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    MPID_Datatype_get_extent_macro(datatype, extent);
+    MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     is_commutative = MPIR_Op_is_commutative(op);
@@ -410,7 +410,7 @@ int MPIR_Ireduce_scatter_block_rec_dbl(const void *sendbuf, void *recvbuf, int r
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    MPID_Datatype_get_extent_macro(datatype, extent);
+    MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     is_commutative = MPIR_Op_is_commutative(op);
 
@@ -426,7 +426,7 @@ int MPIR_Ireduce_scatter_block_rec_dbl(const void *sendbuf, void *recvbuf, int r
         goto fn_exit;
     }
 
-    MPID_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* total_count*extent eventually gets malloced. it isn't added to
      * a user-passed in buffer */
@@ -781,7 +781,7 @@ int MPIR_Ireduce_scatter_block_intra(const void *sendbuf, void *recvbuf, int rec
     if (total_count == 0) {
         goto fn_exit;
     }
-    MPID_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = total_count * type_size;
 
     /* select an appropriate algorithm based on commutivity and message size */
@@ -840,7 +840,7 @@ int MPIR_Ireduce_scatter_block_inter(const void *sendbuf, void *recvbuf, int rec
         /* In each group, rank 0 allocates a temp. buffer for the
            reduce */
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-        MPID_Datatype_get_extent_macro(datatype, extent);
+        MPIR_Datatype_get_extent_macro(datatype, extent);
 
         MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, total_count*(MPL_MAX(extent,true_extent)), mpi_errno, "tmp_buf");
 
@@ -1006,10 +1006,10 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
-                MPID_Datatype_get_ptr(datatype, datatype_ptr);
+                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-                MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+                MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 
@@ -1057,5 +1057,4 @@ fn_fail:
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
-    goto fn_exit;
 }

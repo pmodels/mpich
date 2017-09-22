@@ -112,7 +112,7 @@ PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
     stride = orig_extent;
     if (order == MPI_ORDER_FORTRAN) {
 	if (dim == 0) {
-	    mpi_errno = MPID_Type_contiguous(mysize,
+	    mpi_errno = MPIR_Type_contiguous(mysize,
 					     type_old,
 					     type_new);
 	    /* --BEGIN ERROR HANDLING-- */
@@ -125,7 +125,7 @@ PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
 	}
 	else {
 	    for (i=0; i<dim; i++) stride *= (MPI_Aint)(array_of_gsizes[i]);
-	    mpi_errno = MPID_Type_vector(mysize,
+	    mpi_errno = MPIR_Type_vector(mysize,
 					 1,
 					 stride,
 					 1, /* stride in bytes */
@@ -142,7 +142,7 @@ PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
     }
     else {
 	if (dim == ndims-1) {
-	    mpi_errno = MPID_Type_contiguous(mysize,
+	    mpi_errno = MPIR_Type_contiguous(mysize,
 					     type_old,
 					     type_new);
 	    /* --BEGIN ERROR HANDLING-- */
@@ -155,7 +155,7 @@ PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
 	}
 	else {
 	    for (i=ndims-1; i>dim; i--) stride *= (MPI_Aint)(array_of_gsizes[i]);
-	    mpi_errno = MPID_Type_vector(mysize,
+	    mpi_errno = MPIR_Type_vector(mysize,
 					 1,
 					 stride,
 					 1, /* stride in bytes */
@@ -234,7 +234,7 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
 	for (i=0; i<dim; i++) stride *= (MPI_Aint)(array_of_gsizes[i]);
     else for (i=ndims-1; i>dim; i--) stride *= (MPI_Aint)(array_of_gsizes[i]);
 
-    mpi_errno = MPID_Type_vector(count,
+    mpi_errno = MPIR_Type_vector(count,
 				 blksize,
 				 stride,
 				 1, /* stride in bytes */
@@ -259,7 +259,7 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
 	blklens[0] = 1;
 	blklens[1] = rem;
 
-	mpi_errno = MPID_Type_struct(2,
+	mpi_errno = MPIR_Type_struct(2,
 				     blklens,
 				     disps,
 				     types,
@@ -290,7 +290,7 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
    of the datatype (disps[1]) and type_create_resized to set lb to 0 (disps[0])
    and extent to disps[2], which makes ub = disps[2].
  */
-        mpi_errno = MPID_Type_blockindexed(1, 1, &disps[1],
+        mpi_errno = MPIR_Type_blockindexed(1, 1, &disps[1],
                                            1, /* 1 means disp is in bytes */
                                            *type_new, &type_indexed);
 
@@ -302,7 +302,7 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
 	}
 	/* --END ERROR HANDLING-- */
 
-        mpi_errno = MPID_Type_create_resized(type_indexed, 0, disps[2], &type_tmp);
+        mpi_errno = MPIR_Type_create_resized(type_indexed, 0, disps[2], &type_tmp);
 
         MPIR_Type_free_impl(&type_indexed);
         MPIR_Type_free_impl(type_new);
@@ -407,8 +407,8 @@ int MPI_Type_create_darray(int size,
 #   endif
 
     /* Convert MPI object handles to object pointers */
-    MPID_Datatype_get_ptr(oldtype, datatype_ptr);
-    MPID_Datatype_get_extent_macro(oldtype, orig_extent);
+    MPIR_Datatype_get_ptr(oldtype, datatype_ptr);
+    MPIR_Datatype_get_extent_macro(oldtype, orig_extent);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -684,7 +684,7 @@ int MPI_Type_create_darray(int size,
    of the datatype (disps[1]) and type_create_resized to set lb to 0 (disps[0])
    and extent to disps[2], which makes ub = disps[2].
  */
-    mpi_errno = MPID_Type_blockindexed(1, 1, &disps[1],
+    mpi_errno = MPIR_Type_blockindexed(1, 1, &disps[1],
                                        1, /* 1 means disp is in bytes */
                                        type_new, &tmp_type);
 
@@ -692,7 +692,7 @@ int MPI_Type_create_darray(int size,
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     /* --END ERROR HANDLING-- */
 
-    mpi_errno = MPID_Type_create_resized(tmp_type, 0, disps[2], &new_handle);
+    mpi_errno = MPIR_Type_create_resized(tmp_type, 0, disps[2], &new_handle);
 
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
@@ -726,8 +726,8 @@ int MPI_Type_create_darray(int size,
 	ints[i + 3*ndims + 3] = array_of_psizes[i];
     }
     ints[4*ndims + 3] = order;
-    MPID_Datatype_get_ptr(new_handle, datatype_ptr);
-    mpi_errno = MPID_Datatype_set_contents(datatype_ptr,
+    MPIR_Datatype_get_ptr(new_handle, datatype_ptr);
+    mpi_errno = MPIR_Datatype_set_contents(datatype_ptr,
 					   MPI_COMBINER_DARRAY,
 					   4*ndims + 4,
 					   0,

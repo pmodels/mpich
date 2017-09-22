@@ -41,7 +41,20 @@ cvars:
       description : >-
         If true, odd procs on a node are seen as local to each other, and even
         procs on a node are seen as local to each other.  Used for debugging on
-        a single machine.
+        a single machine. Deprecated in favor of MPIR_CVAR_NUM_CLIQUES.
+
+    - name        : MPIR_CVAR_NUM_CLIQUES
+      category    : NODEMAP
+      alt-env     : MPIR_CVAR_NUM_CLIQUES
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Specify the number of cliques that should be used to partition procs on
+        a local node. Procs with the same clique number are seen as local to
+        each other. Used for debugging on a single machine.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -238,7 +251,7 @@ fn_fail:
 static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
                                                          int sz,
                                                          MPID_Node_id_t *out_nodemap,
-                                                         MPID_Node_id_t *max_node_id,
+                                                         MPID_Node_id_t *out_max_node_id,
                                                          int *did_map)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -296,7 +309,7 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
         if (out_nodemap[i] + 1 > local_max_node_id)
             local_max_node_id = out_nodemap[i];
 
-    *max_node_id = local_max_node_id;
+    *out_max_node_id = local_max_node_id;
 
 fn_exit:
     MPL_free(mb);
@@ -332,7 +345,7 @@ fn_fail:
 static inline int MPIR_NODEMAP_build_nodemap(int sz,
                                              int myrank,
                                              MPID_Node_id_t *out_nodemap,
-                                             MPID_Node_id_t *out_sz)
+                                             MPID_Node_id_t *out_max_node_id)
 {
     static int g_max_node_id = -1;
     int mpi_errno = MPI_SUCCESS;
@@ -356,8 +369,8 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
     MPL_env2int("PMI_SUBVERSION", &pmi_subversion);
 
     if (sz == 1) {
-        out_nodemap[0] = ++g_max_node_id;
-        *out_sz = g_max_node_id;
+        out_nodemap[0] = 0;
+        *out_max_node_id = 0;
         goto fn_exit;
     }
 
@@ -382,7 +395,7 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
         for (i = 0; i < sz; ++i) {
             out_nodemap[i] = ++g_max_node_id;
         }
-        *out_sz = g_max_node_id;
+        *out_max_node_id = g_max_node_id;
         goto fn_exit;
     }
 
@@ -402,7 +415,7 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "PMI_process_mapping attribute not found");
         /* this code currently assumes pg is comm_world */
-        mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(process_mapping, sz, out_nodemap, out_sz, &did_map);
+        mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(process_mapping, sz, out_nodemap, out_max_node_id, &did_map);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKINTERNAL(!did_map, mpi_errno, "unable to populate node ids from PMI_process_mapping");
     }
@@ -432,11 +445,11 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
         if (pmi_errno == 0) {
             int did_map = 0;
             /* this code currently assumes pg is comm_world */
-            mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(value, sz, out_nodemap, out_sz, &did_map);
-            g_max_node_id = *out_sz;
+            mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(value, sz, out_nodemap, out_max_node_id, &did_map);
+            g_max_node_id = *out_max_node_id;
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             if (did_map) {
-                goto odd_even_cliques;
+                goto cliques;
             }
             /* else fall through to O(N^2) PMI_KVS_Gets version */
         }
@@ -497,18 +510,24 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
         out_nodemap[i] = j;
     }
 
-odd_even_cliques:
-    if (odd_even_cliques)
-    {
+cliques:
+    if (MPIR_CVAR_NUM_CLIQUES > 1) {
+        for (i = 0; i < sz; ++i) {
+            if (i % MPIR_CVAR_NUM_CLIQUES) {
+                out_nodemap[i] += (g_max_node_id + 1) * (i % MPIR_CVAR_NUM_CLIQUES);
+            }
+        }
+        g_max_node_id = (g_max_node_id + 1) * MPIR_CVAR_NUM_CLIQUES - 1;
+    } else if (odd_even_cliques) {
         /* Create new processes for all odd numbered processes. This
            may leave nodes ids with no processes assigned to them, but
            I think this is OK */
         for (i = 0; i < sz; ++i)
             if (i & 0x1)
                 out_nodemap[i] += g_max_node_id + 1;
-        g_max_node_id = (g_max_node_id + 1) * 2;
+        g_max_node_id = g_max_node_id * 2 + 1;
     }
-    *out_sz = g_max_node_id;
+    *out_max_node_id = g_max_node_id;
 #endif
 
 fn_exit:

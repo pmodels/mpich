@@ -40,3 +40,5 @@
 **pmi_get_clique_ranks %d:PMI_Get_clique_ranks returned %d
 **pmi_invalid_clique_size:PMI_Get_clique_ranks returned an invalid size
 **pmi_invalid_clique_size %d:PMI_Get_clique_ranks returned an invalid size %d
+**pmi_job_getid:PMI2_Job_GetId failed
+**pmi_job_getid %d:PMI2_Job_GetId returned %d

@@ -78,7 +78,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
     int i, j;
     int n_completed;
     int active_flag;
-    int rc;
+    int rc = MPI_SUCCESS;
     int n_greqs;
     int proc_failure = FALSE;
     int disabled_anysource = FALSE;

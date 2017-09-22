@@ -38,6 +38,9 @@ struct HYD_server_info_s {
     /* Process groups */
     struct HYD_pg pg_list;
 
+    /* Hash for fast proxy lookup */
+    struct HYD_proxy *proxy_hash;
+
     /* Cleanup */
     int cmd_pipe[2];
 

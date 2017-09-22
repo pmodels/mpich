@@ -90,6 +90,7 @@ int MPI_Comm_remote_size(MPI_Comm comm, int *size)
 						  "**commnotinter", 0 );
 	    }
             if (mpi_errno) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(size, "size", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }

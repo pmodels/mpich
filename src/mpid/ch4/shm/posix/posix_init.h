@@ -59,7 +59,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_choose_posix_eager(void)
 #define FUNCNAME MPIDI_POSIX_mpi_init_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_init_hook(int rank, int size)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_provided)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -75,6 +75,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_init_hook(int rank, int size)
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_INIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_INIT_HOOK);
+
+    *n_vnis_provided = 1;
 
     MPIDI_POSIX_global.postponed_queue = NULL;
 
@@ -128,6 +130,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_finalize_hook(void)
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_get_vni_attr(int vni)
+{
+    MPIR_Assert(0 <= vni && vni < 1);
+    return MPIDI_VNI_TX | MPIDI_VNI_RX;
+}
+
 MPL_STATIC_INLINE_PREFIX void *MPIDI_POSIX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
     MPIR_Assert(0);
@@ -157,7 +165,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_get_node_id(MPIR_Comm * comm, int rank,
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_get_max_node_id(MPIR_Comm * comm,
                                                          MPID_Node_id_t * max_id_p)
 {
-    *max_id_p = (MPID_Node_id_t) 1;
+    *max_id_p = (MPID_Node_id_t) 0;
     return MPI_SUCCESS;
 }
 

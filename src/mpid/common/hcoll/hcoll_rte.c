@@ -6,7 +6,6 @@
 
 #include "hcoll.h"
 #include "hcoll/api/hcoll_dte.h"
-#include <assert.h>
 
 static int recv_nb(dte_data_representation_t data,
                    uint32_t count,
@@ -29,8 +28,6 @@ static int ec_handle_compare(rte_ec_handle_t handle_1,
 static int get_ec_handles(int num_ec,
                           int *ec_indexes, rte_grp_handle_t, rte_ec_handle_t * ec_handles);
 
-static int get_my_ec(rte_grp_handle_t, rte_ec_handle_t * ec_handle);
-
 static int group_size(rte_grp_handle_t group);
 static int my_rank(rte_grp_handle_t grp_h);
 static int ec_on_local_node(rte_ec_handle_t ec, rte_grp_handle_t group);
@@ -52,6 +49,7 @@ static int world_rank(rte_grp_handle_t grp_h, rte_ec_handle_t ec);
 static void progress(void)
 {
     int ret;
+    int made_progress;
 
     if (0 == world_comm_destroying) {
         MPID_Progress_test();
@@ -60,8 +58,8 @@ static void progress(void)
         /* FIXME: The hcoll library needs to be updated to return
          * error codes.  The progress function pointer right now
          * expects that the function returns void. */
-        ret = hcoll_do_progress();
-        assert(ret == MPI_SUCCESS);
+        ret = hcoll_do_progress(&made_progress);
+        MPIR_Assert(ret == MPI_SUCCESS);
     }
 }
 
@@ -99,21 +97,6 @@ void hcoll_rte_fns_setup(void)
     init_module_fns();
 }
 
-/* This function converts dte_general_representation data into regular iovec array which is
-  used in rml
-  */
-static inline int count_total_dte_repeat_entries(struct dte_data_representation_t *data)
-{
-    unsigned int i;
-
-    struct dte_generalized_iovec_t *dte_iovec = data->rep.general_rep->data_representation.data;
-    int total_entries_number = 0;
-    for (i = 0; i < dte_iovec->repeat_count; i++) {
-        total_entries_number += dte_iovec->repeat[i].n_elements;
-    }
-    return total_entries_number;
-}
-
 #undef FUNCNAME
 #define FUNCNAME recv_nb
 #undef FCNAME
@@ -128,53 +111,25 @@ static int recv_nb(struct dte_data_representation_t data,
     MPI_Datatype dtype;
     MPIR_Request *request;
     MPIR_Comm *comm;
-    int context_offset;
     size_t size;
     mpi_errno = MPI_SUCCESS;
-    context_offset = MPIR_CONTEXT_INTRA_COLL;
     comm = (MPIR_Comm *) grp_h;
     if (!ec_h.handle) {
         MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**hcoll_wrong_arg",
                              "**hcoll_wrong_arg %p %d", ec_h.handle, ec_h.rank);
     }
 
-    if (HCOL_DTE_IS_INLINE(data)) {
-        if (!buffer && !HCOL_DTE_IS_ZERO(data)) {
-            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**null_buff_ptr");
-        }
-        size = (size_t) data.rep.in_line_rep.data_handle.in_line.packed_size * count / 8;
-        dtype = MPI_CHAR;
-        mpi_errno = MPID_Irecv(buffer, size, dtype, ec_h.rank, tag, comm, context_offset, &request);
-        req->data = (void *) request;
-        req->status = HCOLRTE_REQUEST_ACTIVE;
+    MPIR_Assert(HCOL_DTE_IS_INLINE(data));
+    if (!buffer && !HCOL_DTE_IS_ZERO(data)) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**null_buff_ptr");
     }
-    else {
-        int total_entries_number;
-        int i;
-        unsigned int j;
-        void *buf;
-        uint64_t len;
-        int repeat_count;
-        struct dte_struct_t *repeat;
-        if (NULL != buffer) {
-            /* We have a full data description & buffer pointer simultaneously.
-             * It is ambiguous. Throw a warning since the user might have made a
-             * mistake with data reps */
-            MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "Warning: buffer_pointer != NULL for NON-inline data "
-                         "representation: buffer_pointer is ignored");
-        }
-        total_entries_number = count_total_dte_repeat_entries(&data);
-        repeat = data.rep.general_rep->data_representation.data->repeat;
-        repeat_count = data.rep.general_rep->data_representation.data->repeat_count;
-        for (i = 0; i < repeat_count; i++) {
-            for (j = 0; j < repeat[i].n_elements; j++) {
-                char *repeat_unit = (char *) &repeat[i];
-                buf = (void *) (repeat_unit + repeat[i].elements[j].base_offset);
-                len = repeat[i].elements[j].packed_size;
-                recv_nb(DTE_BYTE, len, buf, ec_h, grp_h, tag, req);
-            }
-        }
-    }
+    size = (size_t) data.rep.in_line_rep.data_handle.in_line.packed_size * count / 8;
+    dtype = MPI_CHAR;
+    request = NULL;
+    mpi_errno = MPIC_Irecv(buffer, size, dtype, ec_h.rank, tag, comm, &request);
+    MPIR_Assert(request);
+    req->data = (void *) request;
+    req->status = HCOLRTE_REQUEST_ACTIVE;
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -195,53 +150,26 @@ static int send_nb(dte_data_representation_t data,
     MPI_Datatype dtype;
     MPIR_Request *request;
     MPIR_Comm *comm;
-    int context_offset;
     size_t size;
     mpi_errno = MPI_SUCCESS;
-    context_offset = MPIR_CONTEXT_INTRA_COLL;
     comm = (MPIR_Comm *) grp_h;
     if (!ec_h.handle) {
         MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**hcoll_wrong_arg",
                              "**hcoll_wrong_arg %p %d", ec_h.handle, ec_h.rank);
     }
 
-    if (HCOL_DTE_IS_INLINE(data)) {
-        if (!buffer && !HCOL_DTE_IS_ZERO(data)) {
-            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**null_buff_ptr");
-        }
-        size = (size_t) data.rep.in_line_rep.data_handle.in_line.packed_size * count / 8;
-        dtype = MPI_CHAR;
-        mpi_errno = MPID_Isend(buffer, size, dtype, ec_h.rank, tag, comm, context_offset, &request);
-        req->data = (void *) request;
-        req->status = HCOLRTE_REQUEST_ACTIVE;
+    MPIR_Assert(HCOL_DTE_IS_INLINE(data));
+    if (!buffer && !HCOL_DTE_IS_ZERO(data)) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**null_buff_ptr");
     }
-    else {
-        int total_entries_number;
-        int i;
-        unsigned int j;
-        void *buf;
-        uint64_t len;
-        int repeat_count;
-        struct dte_struct_t *repeat;
-        if (NULL != buffer) {
-            /* We have a full data description & buffer pointer simultaneously.
-             * It is ambiguous. Throw a warning since the user might have made a
-             * mistake with data reps */
-            MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "Warning: buffer_pointer != NULL for NON-inline data "
-                         "representation: buffer_pointer is ignored");
-        }
-        total_entries_number = count_total_dte_repeat_entries(&data);
-        repeat = data.rep.general_rep->data_representation.data->repeat;
-        repeat_count = data.rep.general_rep->data_representation.data->repeat_count;
-        for (i = 0; i < repeat_count; i++) {
-            for (j = 0; j < repeat[i].n_elements; j++) {
-                char *repeat_unit = (char *) &repeat[i];
-                buf = (void *) (repeat_unit + repeat[i].elements[j].base_offset);
-                len = repeat[i].elements[j].packed_size;
-                send_nb(DTE_BYTE, len, buf, ec_h, grp_h, tag, req);
-            }
-        }
-    }
+    size = (size_t) data.rep.in_line_rep.data_handle.in_line.packed_size * count / 8;
+    dtype = MPI_CHAR;
+    request = NULL;
+    MPIR_Errflag_t err = MPIR_ERR_NONE;
+    mpi_errno = MPIC_Isend(buffer, size, dtype, ec_h.rank, tag, comm, &request, &err);
+    MPIR_Assert(request);
+    req->data = (void *) request;
+    req->status = HCOLRTE_REQUEST_ACTIVE;
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -294,25 +222,14 @@ static int get_ec_handles(int num_ec,
     comm = (MPIR_Comm *) grp_h;
     for (i = 0; i < num_ec; i++) {
         ec_handles[i].rank = ec_indexes[i];
-        ec_handles[i].handle = (void *) (comm->vcrt->vcr_table[ec_indexes[i]]);
+#ifdef MPIDCH4_H_INCLUDED
+        ec_handles[i].handle = (void *) (MPIDIU_comm_rank_to_av(comm, ec_indexes[i]));
+#else
+        ec_handles[i].handle = (void *) (comm->dev.vcrt->vcr_table[ec_indexes[i]]);
+#endif
     }
     return HCOLL_SUCCESS;
 }
-
-#undef FUNCNAME
-#define FUNCNAME get_my_ec
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static int get_my_ec(rte_grp_handle_t grp_h, rte_ec_handle_t * ec_handle)
-{
-    MPIR_Comm *comm;
-    comm = (MPIR_Comm *) grp_h;
-    int my_rank = MPIR_Comm_rank(comm);
-    ec_handle->handle = (void *) (comm->vcrt->vcr_table[my_rank]);
-    ec_handle->rank = my_rank;
-    return HCOLL_SUCCESS;
-}
-
 
 #undef FUNCNAME
 #define FUNCNAME group_size
@@ -387,6 +304,7 @@ static void *get_coll_handle(void)
 {
     MPIR_Request *req;
     req = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
+    MPIR_Request_add_ref(req);
     return (void *) req;
 }
 
@@ -435,5 +353,10 @@ static void coll_handle_complete(void *handle)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int world_rank(rte_grp_handle_t grp_h, rte_ec_handle_t ec)
 {
-    return (MPIR_Process.comm_world->rank);
+#ifdef MPIDCH4_H_INCLUDED
+    return MPIDI_CH4U_rank_to_lpid(ec.rank,
+                                   (MPIR_Comm *) grp_h);
+#else
+    return ((struct MPIDI_VC *)ec.handle)->pg_rank;
+#endif
 }

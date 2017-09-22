@@ -13,9 +13,9 @@
 #ifndef POSIX_EAGER_DIRECT
 #ifndef POSIX_EAGER_DISABLE_INLINES
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int local_rank, int size, int local_rank_0)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
 {
-    return MPIDI_POSIX_eager_func->init(rank, local_rank, size, local_rank);
+    return MPIDI_POSIX_eager_func->init(rank, size);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
@@ -80,27 +80,20 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_recv_completed_hook(int grank)
     return MPIDI_POSIX_eager_func->recv_completed_hook(grank);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_anysource_posted_hook()
-{
-    return MPIDI_POSIX_eager_func->anysource_posted_hook();
-}
-
-MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_eager_anysource_completed_hook()
-{
-    return MPIDI_POSIX_eager_func->anysource_completed_hook();
-}
-
 #endif /* POSIX_EAGER_DISABLE_INLINES  */
 
 #else /* POSIX_EAGER_DIRECT */
 
 #define __posix_eager_direct_stub__  0
 #define __posix_eager_direct_fbox__  1
+#define __posix_eager_direct_iqueue__  2
 
 #if POSIX_EAGER_DIRECT==__posix_eager_direct_stub__
 #include "../stub/posix_eager_direct.h"
 #elif POSIX_EAGER_DIRECT==__posix_eager_direct_fbox__
 #include "../fbox/posix_eager_direct.h"
+#elif POSIX_EAGER_DIRECT==__posix_eager_direct_iqueue__
+#include "../iqueue/posix_eager_direct.h"
 #else
 #error "No direct posix eager included"
 #endif

@@ -147,7 +147,7 @@ int MPI_Type_create_subarray(int ndims,
                 goto fn_fail;
 	    }
 
-	    MPID_Datatype_get_extent_macro(oldtype, extent);
+	    MPIR_Datatype_get_extent_macro(oldtype, extent);
 
 	    /* check if MPI_Aint is large enough for size of global array.
 	       if not, complain. */
@@ -169,7 +169,7 @@ int MPI_Type_create_subarray(int ndims,
             }
 
             /* Get handles to MPI objects. */
-            MPID_Datatype_get_ptr(oldtype, datatype_ptr);
+            MPIR_Datatype_get_ptr(oldtype, datatype_ptr);
 
             /* Validate datatype_ptr */
             MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
@@ -185,15 +185,15 @@ int MPI_Type_create_subarray(int ndims,
     /* TODO: CHECK THE ERROR RETURNS FROM ALL THESE!!! */
 
     /* TODO: GRAB EXTENT WITH A MACRO OR SOMETHING FASTER */
-    MPID_Datatype_get_extent_macro(oldtype, extent);
+    MPIR_Datatype_get_extent_macro(oldtype, extent);
 
     if (order == MPI_ORDER_FORTRAN) {
 	if (ndims == 1)
-	    mpi_errno = MPID_Type_contiguous(array_of_subsizes[0],
+	    mpi_errno = MPIR_Type_contiguous(array_of_subsizes[0],
 					     oldtype,
 					     &tmp1);
 	else {
-	    mpi_errno = MPID_Type_vector(array_of_subsizes[1],
+	    mpi_errno = MPIR_Type_vector(array_of_subsizes[1],
 					 array_of_subsizes[0],
 					 (MPI_Aint)(array_of_sizes[0]),
 					 0, /* stride in types */
@@ -204,7 +204,7 @@ int MPI_Type_create_subarray(int ndims,
 	    size = ((MPI_Aint)(array_of_sizes[0])) * extent;
 	    for (i=2; i<ndims; i++) {
 		size *= (MPI_Aint)(array_of_sizes[i-1]);
-		mpi_errno = MPID_Type_vector(array_of_subsizes[i],
+		mpi_errno = MPIR_Type_vector(array_of_subsizes[i],
 					     1,
 					     size,
 					     1, /* stride in bytes */
@@ -230,14 +230,14 @@ int MPI_Type_create_subarray(int ndims,
     else /* MPI_ORDER_C */ {
 	/* dimension ndims-1 changes fastest */
 	if (ndims == 1) {
-	    mpi_errno = MPID_Type_contiguous(array_of_subsizes[0],
+	    mpi_errno = MPIR_Type_contiguous(array_of_subsizes[0],
 					     oldtype,
 					     &tmp1);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 	}
 	else {
-	    mpi_errno = MPID_Type_vector(array_of_subsizes[ndims-2],
+	    mpi_errno = MPIR_Type_vector(array_of_subsizes[ndims-2],
 					 array_of_subsizes[ndims-1],
 					 (MPI_Aint)(array_of_sizes[ndims-1]),
 					 0, /* stride in types */
@@ -248,7 +248,7 @@ int MPI_Type_create_subarray(int ndims,
 	    size = (MPI_Aint)(array_of_sizes[ndims-1]) * extent;
 	    for (i=ndims-3; i>=0; i--) {
 		size *= (MPI_Aint)(array_of_sizes[i+1]);
-		mpi_errno = MPID_Type_vector(array_of_subsizes[i],
+		mpi_errno = MPIR_Type_vector(array_of_subsizes[i],
 					     1,    /* blocklen */
 					     size, /* stride */
 					     1,    /* stride in bytes */
@@ -284,12 +284,12 @@ int MPI_Type_create_subarray(int ndims,
    and extent to disps[2], which makes ub = disps[2].
  */
 
-    mpi_errno = MPID_Type_blockindexed(1, 1, &disps[1],
+    mpi_errno = MPIR_Type_blockindexed(1, 1, &disps[1],
                                        1, /* 1 means disp is in bytes */
                                        tmp1, &tmp2);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_Type_create_resized(tmp2, 0, disps[2], &new_handle);
+    mpi_errno = MPIR_Type_create_resized(tmp2, 0, disps[2], &new_handle);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIR_Type_free_impl(&tmp1);
@@ -315,8 +315,8 @@ int MPI_Type_create_subarray(int ndims,
     }
     ints[3*ndims + 1] = order;
 
-    MPID_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPID_Datatype_set_contents(new_dtp,
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp,
 					   MPI_COMBINER_SUBARRAY,
 					   3 * ndims + 2, /* ints */
 					   0, /* aints */

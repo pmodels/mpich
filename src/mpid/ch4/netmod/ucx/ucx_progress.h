@@ -103,7 +103,7 @@ static inline void MPIDI_UCX_Handle_am_recv(void *request, ucs_status_t status,
 #define FUNCNAME MPIDI_NM_progress
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_progress(void *netmod_context, int blocking)
+static inline int MPIDI_NM_progress(int vni, int blocking)
 {
     int mpi_errno = MPI_SUCCESS;
     ucp_tag_recv_info_t info;
@@ -135,8 +135,6 @@ static inline int MPIDI_NM_progress(void *netmod_context, int blocking)
     }
 
     ucp_worker_progress(MPIDI_UCX_global.worker);
-
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_THREAD_WORKER_MUTEX);
 
   fn_exit:
     return mpi_errno;

@@ -26,6 +26,7 @@ struct HYD_pmcd_pmi_kvs_pair {
 struct HYD_pmcd_pmi_kvs {
     char kvsname[PMI_MAXKVSLEN];        /* Name of this kvs */
     struct HYD_pmcd_pmi_kvs_pair *key_pair;
+    struct HYD_pmcd_pmi_kvs_pair *tail;
 };
 
 struct HYD_pmcd_hdr {

@@ -178,7 +178,8 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm *newcomm)
 	    "**mpi_comm_dup %C %p", comm, newcomm);
     }
 #   endif
-    *newcomm = MPI_COMM_NULL;
+    if (newcomm)
+        *newcomm = MPI_COMM_NULL;
     mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
     goto fn_exit;
     /* --END ERROR HANDLING-- */

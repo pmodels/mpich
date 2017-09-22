@@ -14,11 +14,13 @@
 
 #include <mpidimpl.h>
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size,
+                                                     int *n_vnis_provided) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_finalize_hook(void) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int blocking) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_vni_attr(int vni) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vni, int blocking) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_connect(const char *port_name, MPIR_Info * info,
-                                                        int root, MPIR_Comm * comm,
+                                                        int root, int timeout, MPIR_Comm * comm,
                                                         MPIR_Comm **
                                                         newcomm_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_disconnect(MPIR_Comm *
@@ -32,18 +34,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_accept(const char *port_name, MP
                                                        MPIR_Comm **
                                                        newcomm_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
-                                                   const void *am_hdr, size_t am_hdr_sz,
-                                                   void *shm_context) MPL_STATIC_INLINE_SUFFIX;
+                                                   const void *am_hdr,
+                                                   size_t am_hdr_sz) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend(int rank, MPIR_Comm * comm, int handler_id,
                                                 const void *am_hdr, size_t am_hdr_sz,
                                                 const void *data, MPI_Count count,
-                                                MPI_Datatype datatype, MPIR_Request * sreq,
-                                                void *shm_context) MPL_STATIC_INLINE_SUFFIX;
+                                                MPI_Datatype datatype,
+                                                MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isendv(int rank, MPIR_Comm * comm, int handler_id,
                                                  struct iovec *am_hdrs, size_t iov_len,
                                                  const void *data, MPI_Count count,
-                                                 MPI_Datatype datatype, MPIR_Request * sreq,
-                                                 void *shm_context) MPL_STATIC_INLINE_SUFFIX;
+                                                 MPI_Datatype datatype,
+                                                 MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr_reply(MPIR_Context_id_t context_id, int src_rank,
                                                          int handler_id, const void *am_hdr,
                                                          size_t am_hdr_sz) MPL_STATIC_INLINE_SUFFIX;
@@ -83,11 +85,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_finalize(MPIR_Request *
                                                             req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_send(const void *buf, int count, MPI_Datatype datatype,
                                                 int rank, int tag, MPIR_Comm * comm,
-                                                int context_offset,
+                                                int context_offset, MPIDI_av_entry_t *addr,
                                                 MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ssend(const void *buf, int count,
                                                  MPI_Datatype datatype, int rank, int tag,
                                                  MPIR_Comm * comm, int context_offset,
+                                                 MPIDI_av_entry_t *addr,
                                                  MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_startall(int count,
                                                     MPIR_Request *
@@ -115,10 +118,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_bsend_init(const void *buf, int count
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, int count, MPI_Datatype datatype,
                                                  int rank, int tag, MPIR_Comm * comm,
                                                  int context_offset,
+                                                 MPIDI_av_entry_t *addr,
                                                  MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_issend(const void *buf, int count, MPI_Datatype datatype,
                                                   int rank, int tag, MPIR_Comm * comm,
                                                   int context_offset,
+                                                  MPIDI_av_entry_t *addr,
                                                   MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_cancel_send(MPIR_Request *
                                                        sreq) MPL_STATIC_INLINE_SUFFIX;

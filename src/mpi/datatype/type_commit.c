@@ -25,6 +25,67 @@ int MPI_Type_commit(MPI_Datatype *datatype) __attribute__((weak,alias("PMPI_Type
 #undef MPI_Type_commit
 #define MPI_Type_commit PMPI_Type_commit
 
+/*@
+  MPIR_Type_commit
+
+Input Parameters:
+. datatype_p - pointer to MPI datatype
+
+Output Parameters:
+
+  Return Value:
+  0 on success, -1 on failure.
+@*/
+int MPIR_Type_commit(MPI_Datatype *datatype_p)
+{
+    int           mpi_errno=MPI_SUCCESS;
+    MPIR_Datatype *datatype_ptr;
+
+    MPIR_Assert(HANDLE_GET_KIND(*datatype_p) != HANDLE_KIND_BUILTIN);
+
+    MPIR_Datatype_get_ptr(*datatype_p, datatype_ptr);
+
+    if (datatype_ptr->is_committed == 0) {
+       datatype_ptr->is_committed = 1;
+
+#ifdef MPID_NEEDS_DLOOP_ALL_BYTES
+        /* If MPID implementation needs use to reduce everything to
+           a byte stream, do that. */
+        MPIR_Dataloop_create(*datatype_p,
+                             &datatype_ptr->dataloop,
+                             &datatype_ptr->dataloop_size,
+                             &datatype_ptr->dataloop_depth,
+                             MPIDU_DATALOOP_ALL_BYTES);
+#else
+        MPIR_Dataloop_create(*datatype_p,
+                             &datatype_ptr->dataloop,
+                             &datatype_ptr->dataloop_size,
+                             &datatype_ptr->dataloop_depth,
+                             MPIR_DATALOOP_HOMOGENEOUS);
+#endif
+
+        /* create heterogeneous dataloop */
+        MPIR_Dataloop_create(*datatype_p,
+                             &datatype_ptr->hetero_dloop,
+                             &datatype_ptr->hetero_dloop_size,
+                             &datatype_ptr->hetero_dloop_depth,
+                             MPIR_DATALOOP_HETEROGENEOUS);
+
+        MPL_DBG_MSG_D(MPIR_DBG_DATATYPE,TERSE,"# contig blocks = %d\n",
+                       (int) datatype_ptr->max_contig_blocks);
+
+#if 0
+        MPII_Dataloop_dot_printf(datatype_ptr->dataloop, 0, 1);
+#endif
+
+#ifdef MPID_Type_commit_hook
+       MPID_Type_commit_hook(datatype_ptr);
+#endif /* MPID_Type_commit_hook */
+
+    }
+    return mpi_errno;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_commit_impl
 #undef FCNAME
@@ -42,7 +103,7 @@ int MPIR_Type_commit_impl(MPI_Datatype *datatype)
 	*datatype == MPI_SHORT_INT ||
 	*datatype == MPI_LONG_DOUBLE_INT) goto fn_exit;
 
-    mpi_errno = MPID_Type_commit(datatype);
+    mpi_errno = MPIR_Type_commit(datatype);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
  fn_exit:
@@ -101,7 +162,7 @@ int MPI_Type_commit(MPI_Datatype *datatype)
             MPIR_Datatype *datatype_ptr = NULL;
 
             /* Convert MPI object handles to object pointers */
-            MPID_Datatype_get_ptr( *datatype, datatype_ptr );
+            MPIR_Datatype_get_ptr( *datatype, datatype_ptr );
 
             /* Validate datatype_ptr */
             MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);

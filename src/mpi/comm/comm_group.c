@@ -142,6 +142,7 @@ int MPI_Comm_group(MPI_Comm comm, MPI_Group *group)
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
             /* If comm_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(group, "group", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }

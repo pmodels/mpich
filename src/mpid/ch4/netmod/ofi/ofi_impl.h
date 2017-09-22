@@ -23,7 +23,7 @@
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 #define MPIDI_OFI_COMM_TO_INDEX(comm,rank) \
     MPIDIU_comm_rank_to_pid(comm, rank, NULL, NULL)
-#define MPIDI_OFI_AV_TO_PHYS(av) ((av)->dest)
+#define MPIDI_OFI_AV_TO_PHYS(av) (MPIDI_OFI_AV(av).dest)
 #define MPIDI_OFI_COMM_TO_PHYS(comm,rank)                       \
     MPIDI_OFI_AV(MPIDIU_comm_rank_to_av((comm), (rank))).dest
 #define MPIDI_OFI_TO_PHYS(avtid, lpid)                                 \
@@ -215,11 +215,19 @@
         MPIR_Request_add_ref((req));                                \
     } while (0)
 
+#ifndef HAVE_DEBUGGER_SUPPORT
+#define MPIDI_OFI_SEND_REQUEST_CREATE_LW(req)                   \
+    do {                                                                \
+        (req) = MPIDI_Global.lw_send_req;                               \
+        MPIR_Request_add_ref((req));                                    \
+    } while (0)
+#else
 #define MPIDI_OFI_SEND_REQUEST_CREATE_LW(req)                   \
     do {                                                                \
         (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);           \
         MPIR_cc_set(&(req)->cc, 0);                                     \
     } while (0)
+#endif
 
 #define MPIDI_OFI_SSEND_ACKREQUEST_CREATE(req)            \
     do {                                                          \
@@ -255,7 +263,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
 }
 
 /* Externs:  see util.c for definition */
-int MPIDI_OFI_handle_cq_error_util(ssize_t ret);
+int MPIDI_OFI_handle_cq_error_util(int ep_idx, ssize_t ret);
 int MPIDI_OFI_progress_test_no_inline(void);
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               void **data, size_t * data_sz, int *is_contig,
@@ -307,25 +315,34 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
     }
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank, int ep_family)
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank)
 {
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, rank));
-        int ep_num = MPIDI_OFI_AV_TO_EP(av);
-        int offset = MPIDI_Global.ctx[ep_num].ctx_offset;
-        int rx_idx = offset + ep_family;
-        return fi_rx_addr(MPIDI_OFI_AV_TO_PHYS(av), rx_idx, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        int ep_num = MPIDI_OFI_av_to_ep(av);
+        int rx_idx = ep_num;
+        return fi_rx_addr(av->dest, rx_idx, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
         return MPIDI_OFI_COMM_TO_PHYS(comm, rank);
     }
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_to_phys(int rank, int ep_family)
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t *av)
+{
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+        int ep_num = MPIDI_OFI_av_to_ep(&MPIDI_OFI_AV(av));
+        return fi_rx_addr(MPIDI_OFI_AV_TO_PHYS(av), ep_num, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+    }
+    else {
+        return MPIDI_OFI_AV_TO_PHYS(av);
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_to_phys(int rank)
 {
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         int ep_num = 0;
-        int offset = MPIDI_Global.ctx[ep_num].ctx_offset;
-        int rx_idx = offset + ep_family;
+        int rx_idx = ep_num;
         return fi_rx_addr(MPIDI_OFI_TO_PHYS(0, rank), rx_idx, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
         return MPIDI_OFI_TO_PHYS(0, rank);
@@ -344,11 +361,11 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t conte
     match_bits = contextid;
 
     if (!MPIDI_OFI_ENABLE_DATA) {
-        match_bits = (match_bits << MPIDI_OFI_SOURCE_SHIFT);
+        match_bits = (match_bits << MPIDI_OFI_SOURCE_BITS);
         match_bits |= source;
     }
 
-    match_bits = (match_bits << MPIDI_OFI_TAG_SHIFT);
+    match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
     match_bits |= (MPIDI_OFI_TAG_MASK & tag) | type;
     return match_bits;
 }
@@ -363,19 +380,19 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_recvtag(uint64_t * mask_bits,
     match_bits = contextid;
 
     if (!MPIDI_OFI_ENABLE_DATA) {
-        match_bits = (match_bits << MPIDI_OFI_SOURCE_SHIFT);
+        match_bits = (match_bits << MPIDI_OFI_SOURCE_BITS);
 
         if (MPI_ANY_SOURCE == source) {
-            match_bits = (match_bits << MPIDI_OFI_TAG_SHIFT);
+            match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
             *mask_bits |= MPIDI_OFI_SOURCE_MASK;
         }
         else {
             match_bits |= source;
-            match_bits = (match_bits << MPIDI_OFI_TAG_SHIFT);
+            match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
         }
     }
     else {
-        match_bits = (match_bits << MPIDI_OFI_TAG_SHIFT);
+        match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
     }
 
     if (MPI_ANY_TAG == tag)
@@ -393,7 +410,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_init_get_tag(uint64_t match_bits)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_init_get_source(uint64_t match_bits)
 {
-    return ((int) ((match_bits & MPIDI_OFI_SOURCE_MASK) >> MPIDI_OFI_TAG_SHIFT));
+    return ((int) ((match_bits & MPIDI_OFI_SOURCE_MASK) >> MPIDI_OFI_TAG_BITS));
 }
 
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_OFI_context_to_request(void *context)
@@ -430,6 +447,132 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const voi
     }
 
   fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn,
+                                                                int rank,
+                                                                int state)
+{
+    int conn_id = -1;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INSERT_CONN);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INSERT_CONN);
+
+    /* We've run out of space in the connection table. Allocate more. */
+    if (MPIDI_Global.conn_mgr.next_conn_id == -1) {
+        int old_max, new_max, i;
+        old_max = MPIDI_Global.conn_mgr.max_n_conn;
+        new_max = old_max + 1;
+        MPIDI_Global.conn_mgr.free_conn_id =
+            (int *) MPL_realloc(MPIDI_Global.conn_mgr.free_conn_id, new_max * sizeof(int));
+        for (i = old_max; i < new_max - 1; ++i) {
+            MPIDI_Global.conn_mgr.free_conn_id[i] = i + 1;
+        }
+        MPIDI_Global.conn_mgr.free_conn_id[new_max - 1] = -1;
+        MPIDI_Global.conn_mgr.max_n_conn = new_max;
+        MPIDI_Global.conn_mgr.next_conn_id = old_max;
+    }
+
+    conn_id = MPIDI_Global.conn_mgr.next_conn_id;
+    MPIDI_Global.conn_mgr.next_conn_id = MPIDI_Global.conn_mgr.free_conn_id[conn_id];
+    MPIDI_Global.conn_mgr.free_conn_id[conn_id] = -1;
+    MPIDI_Global.conn_mgr.n_conn++;
+
+    MPIR_Assert(MPIDI_Global.conn_mgr.n_conn <= MPIDI_Global.conn_mgr.max_n_conn);
+
+    MPIDI_Global.conn_mgr.conn_list[conn_id].dest = conn;
+    MPIDI_Global.conn_mgr.conn_list[conn_id].rank = rank;
+    MPIDI_Global.conn_mgr.conn_list[conn_id].state = state;
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, " new_conn_id=%d for conn=%lu rank=%d state=%d",
+                     conn_id, conn, rank,
+                     MPIDI_Global.conn_mgr.conn_list[conn_id].state));
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INSERT_CONN);
+    return conn_id;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_remove_conn(int conn_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_REMOVE_CONN);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_REMOVE_CONN);
+
+    MPIR_Assert(MPIDI_Global.conn_mgr.n_conn > 0);
+    MPIDI_Global.conn_mgr.free_conn_id[conn_id] = MPIDI_Global.conn_mgr.next_conn_id;
+    MPIDI_Global.conn_mgr.next_conn_id = conn_id;
+    MPIDI_Global.conn_mgr.n_conn--;
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, " free_conn_id=%d", conn_id));
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONN_MANAGER_REMOVE_CONN);
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Context_id_t context_id = 0xF000;
+    MPIDI_OFI_dynamic_process_request_t req;
+    uint64_t match_bits = 0;
+    int close_msg = 0xcccccccc;
+    int rank = MPIDI_Global.conn_mgr.conn_list[conn_id].rank;
+    struct fi_msg_tagged msg;
+    struct iovec msg_iov;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DYNPROC_SEND_DISCONNECT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DYNPROC_SEND_DISCONNECT);
+
+    if (MPIDI_Global.conn_mgr.conn_list[conn_id].state == MPIDI_OFI_DYNPROC_CONNECTED_CHILD) {
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        (MPL_DBG_FDEST, " send disconnect msg conn_id=%d from child side",
+                         conn_id));
+        match_bits = MPIDI_OFI_init_sendtag(context_id,
+                                            rank,
+                                            1, MPIDI_OFI_DYNPROC_SEND);
+
+        /* fi_av_map here is not quite right for some providers */
+        /* we need to get this connection from the sockname     */
+        req.done = 0;
+        req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
+        msg_iov.iov_base = &close_msg;
+        msg_iov.iov_len = sizeof(close_msg);
+        msg.msg_iov = &msg_iov;
+        msg.desc = NULL;
+        msg.iov_count = 0;
+        msg.addr = MPIDI_Global.conn_mgr.conn_list[conn_id].dest;
+        msg.tag = match_bits;
+        msg.ignore = context_id;
+        msg.context = (void *) &req.context;
+        msg.data = 0;
+        MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_Global.ctx[0].tx, &msg,
+                                         FI_COMPLETION | FI_TRANSMIT_COMPLETE | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0)),
+                             tsendmsg, MPIDI_OFI_CALL_LOCK);
+        MPIDI_OFI_PROGRESS_WHILE(!req.done);
+    }
+
+    switch (MPIDI_Global.conn_mgr.conn_list[conn_id].state) {
+    case MPIDI_OFI_DYNPROC_CONNECTED_CHILD:
+        MPIDI_Global.conn_mgr.conn_list[conn_id].state = MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_CHILD;
+        break;
+    case MPIDI_OFI_DYNPROC_CONNECTED_PARENT:
+        MPIDI_Global.conn_mgr.conn_list[conn_id].state = MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_PARENT;
+        break;
+    default:
+        break;
+    }
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, " local_disconnected conn_id=%d state=%d",
+                     conn_id, MPIDI_Global.conn_mgr.conn_list[conn_id].state));
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DYNPROC_SEND_DISCONNECT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

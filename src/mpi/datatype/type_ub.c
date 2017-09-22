@@ -76,7 +76,7 @@ int MPI_Type_ub(MPI_Datatype datatype, MPI_Aint *displacement)
 #   endif
 
     /* Convert MPI object handles to object pointers */
-    MPID_Datatype_get_ptr(datatype, datatype_ptr);
+    MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -86,6 +86,7 @@ int MPI_Type_ub(MPI_Datatype datatype, MPI_Aint *displacement)
             /* Validate datatype_ptr */
             MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
             if (mpi_errno) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(displacement, "displacement", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -94,7 +95,7 @@ int MPI_Type_ub(MPI_Datatype datatype, MPI_Aint *displacement)
     /* ... body of routine ...  */
 
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
-	*displacement = MPID_Datatype_get_basic_size(datatype);
+	*displacement = MPIR_Datatype_get_basic_size(datatype);
     else
 	*displacement = datatype_ptr->ub;
 

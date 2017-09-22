@@ -5,11 +5,11 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
+#include "heap-sort.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "heap-sort.h"
 
 #define NOEXP2
 

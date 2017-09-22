@@ -7,10 +7,6 @@
 #include "mpiimpl.h"
 #include "collutil.h"
 
-int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
-                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-                               MPIR_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
-
 /* Local utility macro: takes an two args and sets lvalue cr_ equal to the rank
  * in comm_ptr corresponding to rvalue gr_ */
 #define to_comm_rank(cr_, gr_)                                                                                \
@@ -56,7 +52,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
 
     /* need to allocate temporary buffer to store incoming data*/
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-    MPID_Datatype_get_extent_macro(datatype, extent);
+    MPIR_Datatype_get_extent_macro(datatype, extent);
 
     MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
     MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
@@ -71,7 +67,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
-    MPID_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* find nearest power-of-two less than or equal to comm_size */
     pof2 = 1;

@@ -509,7 +509,7 @@ static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, 
         mpi_errno = vc->ch.lmt_handle_cookie(vc, req, cookie);
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        *buflen = sizeof(MPIDI_CH3_Pkt_t);
+        *buflen = 0;
         *rreqp = NULL;
     }
 
@@ -533,7 +533,7 @@ static int do_cts(MPIDI_VC_t *vc, MPIR_Request *rreq, int *complete)
     intptr_t data_sz;
     int dt_contig ATTRIBUTE((unused));
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPIDU_Datatype* dt_ptr;
+    MPIR_Datatype* dt_ptr;
     MPL_IOV s_cookie;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DO_CTS);
 

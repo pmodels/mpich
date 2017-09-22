@@ -98,6 +98,9 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
 
         /* If local_high and remote_high are the same, then order is arbitrary.
            we use the is_low_group in the intercomm in this case. */
+        MPL_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE,
+                        (MPL_DBG_FDEST, "local_high=%d remote_high=%d is_low_group=%d",
+                         local_high, remote_high, comm_ptr->is_low_group));
         if (local_high == remote_high) {
             local_high = !(comm_ptr->is_low_group);
         }

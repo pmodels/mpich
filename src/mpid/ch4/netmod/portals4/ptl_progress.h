@@ -84,7 +84,7 @@ static inline int MPIDI_PTL_am_handler(ptl_event_t * e)
     return mpi_errno;
 }
 
-static inline int MPIDI_NM_progress(void *netmod_context, int blocking)
+static inline int MPIDI_NM_progress(int vni, int blocking)
 {
     ptl_event_t e;
     unsigned int which;

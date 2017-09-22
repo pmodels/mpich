@@ -62,8 +62,8 @@ int MPIR_Ialltoall_inplace(const void *sendbuf, int sendcount, MPI_Datatype send
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
-    MPID_Datatype_get_size_macro(recvtype, recvtype_size);
-    MPID_Datatype_get_extent_macro(recvtype, recvtype_extent);
+    MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
+    MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     nbytes = recvtype_size * recvcount;
 
     MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
@@ -130,9 +130,9 @@ int MPIR_Ialltoall_bruck(const void *sendbuf, int sendcount, MPI_Datatype sendty
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    MPID_Datatype_get_extent_macro(sendtype, sendtype_extent);
-    MPID_Datatype_get_size_macro(recvtype, recvtype_size);
-    MPID_Datatype_get_extent_macro(recvtype, recvtype_extent);
+    MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
+    MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
+    MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     /* allocate temporary buffer */
     /* must be same size as entire recvbuf for Phase 3 */
@@ -184,7 +184,7 @@ int MPIR_Ialltoall_bruck(const void *sendbuf, int sendcount, MPI_Datatype sendty
 
         mpi_errno = MPIR_Type_commit_impl(&newtype);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPID_Datatype_get_size_macro(newtype, newtype_size);
+        MPIR_Datatype_get_size_macro(newtype, newtype_size);
 
         /* we will usually copy much less than nbytes */
         mpi_errno = MPIR_Sched_copy(recvbuf, 1, newtype, tmp_buf, newtype_size, MPI_BYTE, s);
@@ -267,8 +267,8 @@ int MPIR_Ialltoall_perm_sr(const void *sendbuf, int sendcount, MPI_Datatype send
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    MPID_Datatype_get_extent_macro(sendtype, sendtype_extent);
-    MPID_Datatype_get_extent_macro(recvtype, recvtype_extent);
+    MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
+    MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     bblock = MPIR_CVAR_ALLTOALL_THROTTLE;
     if (bblock == 0) bblock = comm_size;
@@ -320,8 +320,8 @@ int MPIR_Ialltoall_pairwise(const void *sendbuf, int sendcount, MPI_Datatype sen
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    MPID_Datatype_get_extent_macro(sendtype, sendtype_extent);
-    MPID_Datatype_get_extent_macro(recvtype, recvtype_extent);
+    MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
+    MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     /* Make local copy first */
     mpi_errno = MPIR_Sched_copy(((char *)sendbuf + rank*sendcount*sendtype_extent),
@@ -414,7 +414,7 @@ int MPIR_Ialltoall_intra(const void *sendbuf, int sendcount, MPI_Datatype sendty
 
     comm_size = comm_ptr->local_size;
 
-    MPID_Datatype_get_size_macro(sendtype, sendtype_size);
+    MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
     nbytes = sendtype_size * sendcount;
 
     if (sendbuf == MPI_IN_PLACE) {
@@ -475,8 +475,8 @@ int MPIR_Ialltoall_inter(const void *sendbuf, int sendcount, MPI_Datatype sendty
     rank = comm_ptr->rank;
 
     /* Get extent of send and recv types */
-    MPID_Datatype_get_extent_macro(sendtype, sendtype_extent);
-    MPID_Datatype_get_extent_macro(recvtype, recvtype_extent);
+    MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
+    MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     /* Do the pairwise exchanges */
     max_size = MPL_MAX(local_size, remote_size);
@@ -619,19 +619,19 @@ int MPI_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
             if (sendbuf != MPI_IN_PLACE && HANDLE_GET_KIND(sendtype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *sendtype_ptr = NULL;
-                MPID_Datatype_get_ptr(sendtype, sendtype_ptr);
+                MPIR_Datatype_get_ptr(sendtype, sendtype_ptr);
                 MPIR_Datatype_valid_ptr(sendtype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-                MPID_Datatype_committed_ptr(sendtype_ptr, mpi_errno);
+                MPIR_Datatype_committed_ptr(sendtype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 
             if (HANDLE_GET_KIND(recvtype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *recvtype_ptr = NULL;
-                MPID_Datatype_get_ptr(recvtype, recvtype_ptr);
+                MPIR_Datatype_get_ptr(recvtype, recvtype_ptr);
                 MPIR_Datatype_valid_ptr(recvtype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-                MPID_Datatype_committed_ptr(recvtype_ptr, mpi_errno);
+                MPIR_Datatype_committed_ptr(recvtype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 
@@ -673,5 +673,4 @@ fn_fail:
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
-    goto fn_exit;
 }

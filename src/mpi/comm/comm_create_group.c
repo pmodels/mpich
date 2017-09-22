@@ -194,6 +194,7 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
             /* Check the group ptr */
             MPIR_Group_valid_ptr( group_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(newcomm, "newcomm", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }

@@ -11,33 +11,16 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 	    fi
         done
 
-        AC_ARG_WITH(ch4-netmod-ofi-args,
-        [  --with-ch4-netmod-ofi-args=arg1:arg2:arg3
-        CH4 OFI netmod arguments:
-                direct-provider    - USE OFI FI_DIRECT to compile in a single OFI direct provider
-                ],
-                [ofi_netmod_args=$withval],
-                [ofi_netmod_args=])
+        AC_ARG_WITH(ch4-ofi-direct-provider,
+            [  --with-ch4-ofi-direct-provider=provider
+                provider - Build OFI with FABRIC_DIRECT mode using the specified provider
+                           Provider value does not matter if not building an embedded OFI library
+            ],
+            [ofi_direct_provider=$withval],
+            [ofi_direct_provider=])
 
-dnl Parse the device arguments
-    SAVE_IFS=$IFS
-    IFS=':'
-    args_array=$ofi_netmod_args
-    do_direct_provider=false
-    echo "Parsing Arguments for OFI Netmod"
-    for arg in $args_array; do
-    case ${arg} in
-      direct-provider)
-              do_direct_provider=true
-              echo " ---> CH4::OFI Direct OFI Provider requested : $arg"
-              ;;
-    esac
-    done
-    IFS=$SAVE_IFS
-
-    if [test "$do_direct_provider" = "true"]; then
+    if [test "x$ofi_direct_provider" != "x"]; then
        AC_MSG_NOTICE([Enabling OFI netmod direct provider])
-       PAC_APPEND_FLAG([-DFABRIC_DIRECT],[CPPFLAGS])
     fi
     ])
     AM_CONDITIONAL([BUILD_CH4_NETMOD_OFI],[test "X$build_ch4_netmod_ofi" = "Xyes"])
@@ -210,9 +193,9 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             prov_config+=" --enable-rxd=${enable_rxd}"
         fi
 
-        if test "x${netmod_args}" != "x" && test "${do_direct_provider}" = "true" ; then
-            prov_config+=" --enable-direct=${netmod_args}"
-            AC_MSG_NOTICE([Enabling direct embedded provider: ${netmod_args}])
+        if test "x${ofi_direct_provider}" != "x" ; then
+            prov_config+=" --enable-direct=${ofi_direct_provider}"
+            AC_MSG_NOTICE([Enabling direct embedded provider: ${ofi_direct_provider}])
         fi
 
         ofi_subdir_args+=" $prov_config"
@@ -224,13 +207,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric/include], [CPPFLAGS])
         PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/include], [CPPFLAGS])
 
-        if test "$do_direct_provider" = "true" ; then
-            if test "x${enable_direct}" != "x" && test "${enable_direct}" != "no" ; then
-                PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric/prov/${enable_direct}/include], [CPPFLAGS])
-                PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/prov/${enable_direct}/include], [CPPFLAGS])
-            else
-                AC_MSG_ERROR([Enabled direct OFI provider but didn't specify which one])
-            fi
+        if test "x$ofi_direct_provider" != "x" ; then
+            PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
+            PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
+            PAC_APPEND_FLAG([-DFABRIC_DIRECT],[CPPFLAGS])
         fi
 
         ofisrcdir="${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric"

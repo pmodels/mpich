@@ -211,7 +211,7 @@ MPI_Accumulate
   Q: On the target side, we don't want to have to unpack the segment
   into a temporary buffer first.  We would like to do the data
   conversion and accumulation directly from the segment that will be
-  received.  Does this make it impossible to use the MPID_Segment API?
+  received.  Does this make it impossible to use the MPIR_Segment API?
 
 ------------------------------------------------------------------------
 

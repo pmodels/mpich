@@ -847,6 +847,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
     }
     /* In the case of failure, the new communicator was half created.
      * So we need to clean the memory allocated for it. */
+    MPII_COMML_FORGET(st->new_comm);
     MPIR_Comm_map_free(st->new_comm);
     MPIR_Handle_obj_free(&MPIR_Comm_mem, st->new_comm);
     MPL_free(st);

@@ -20,8 +20,6 @@
 
 #define UCP_PEER_NAME_MAX         HOST_NAME_MAX
 
-#define MPIDI_MAP_NOT_FOUND      ((void*)(-1UL))
-
 /* Active Message Stuff */
 #define MPIDI_UCX_NUM_AM_BUFFERS       (64)
 #define MPIDI_UCX_MAX_AM_EAGER_SZ      (16*1024)
@@ -38,11 +36,13 @@ typedef struct {
     char kvsname[MPIDI_UCX_KVSAPPSTRLEN];
     char pname[MPI_MAX_PROCESSOR_NAME];
     int max_addr_len;
+    MPIR_Request *lw_send_req;
 } MPIDI_UCX_global_t;
 
 #define MPIDI_UCX_AV(av)     ((av)->netmod.ucx)
 
 extern MPIDI_UCX_global_t MPIDI_UCX_global;
+extern ucp_generic_dt_ops_t MPIDI_UCX_datatype_ops;
 
 /* UCX TAG Layout */
 

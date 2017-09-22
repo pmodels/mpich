@@ -19,7 +19,7 @@
 #define FUNCNAME MPIDI_NM_progress
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(void *netmod_context, int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vni, int blocking)
 {
     int mpi_errno;
     struct fi_cq_tagged_entry wc[MPIDI_OFI_NUM_CQ_ENTRIES];
@@ -32,14 +32,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(void *netmod_context, int blockin
     if (unlikely(MPIDI_OFI_get_buffered(wc, 1)))
         mpi_errno = MPIDI_OFI_handle_cq_entries(wc, 1, 1);
     else if (likely(1)) {
-        ret = fi_cq_read(MPIDI_Global.p2p_cq, (void *) wc, MPIDI_OFI_NUM_CQ_ENTRIES);
+        ret = fi_cq_read(MPIDI_Global.ctx[vni].cq, (void *) wc, MPIDI_OFI_NUM_CQ_ENTRIES);
 
         if (likely(ret > 0))
             mpi_errno = MPIDI_OFI_handle_cq_entries(wc, ret, 0);
         else if (ret == -FI_EAGAIN)
             mpi_errno = MPI_SUCCESS;
         else
-            mpi_errno = MPIDI_OFI_handle_cq_error(ret);
+            mpi_errno = MPIDI_OFI_handle_cq_error(vni, ret);
     }
 
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);

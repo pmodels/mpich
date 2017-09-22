@@ -24,7 +24,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int *tag_ub,
                                          MPIR_Comm * comm_world,
                                          MPIR_Comm * comm_self,
-                                         int spawned, int num_contexts, void **netmod_contexts)
+                                         int spawned,
+                                         int *n_vnis_provided)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno;
     int str_errno = MPL_STR_SUCCESS;
@@ -55,6 +56,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT);
 
+    *n_vnis_provided = 1;
+
     ucx_status = ucp_config_read(NULL, NULL, &config);
     MPIDI_UCX_CHK_STATUS(ucx_status);
 
@@ -64,6 +67,13 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     ucp_params.request_size = sizeof(MPIDI_UCX_ucp_request_t);
     ucp_params.request_init = MPIDI_UCX_Request_init_callback;
     ucp_params.request_cleanup = NULL;
+    ucp_params.estimated_num_eps = size;
+
+    ucp_params.field_mask = UCP_PARAM_FIELD_FEATURES|
+		            UCP_PARAM_FIELD_REQUEST_SIZE|
+			    UCP_PARAM_FIELD_ESTIMATED_NUM_EPS|
+			    UCP_PARAM_FIELD_REQUEST_INIT; 
+
     ucx_status = ucp_init(&ucp_params, config, &MPIDI_UCX_global.context);
     MPIDI_UCX_CHK_STATUS(ucx_status);
     ucp_config_release(config);
@@ -208,10 +218,12 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_UCX_CHK_STATUS(ucx_status);
     }
 
-    MPIDIG_init(comm_world, comm_self, num_contexts, netmod_contexts);
+    MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
 
-    mpi_errno = MPIR_Datatype_init_names();
-    MPIDI_UCX_MPI_ERROR(mpi_errno);
+#ifndef HAVE_DEBUGGER_SUPPORT
+    MPIDI_UCX_global.lw_send_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+    MPIR_cc_set(&MPIDI_UCX_global.lw_send_req->cc, 0);
+#endif
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
@@ -284,12 +296,22 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     MPIDIG_finalize();
     PMI_Finalize();
 
+#ifndef HAVE_DEBUGGER_SUPPORT
+    MPIR_Request_free(MPIDI_UCX_global.lw_send_req);
+#endif
+
   fn_exit:
     MPL_free(pending);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 
+}
+
+static inline int MPIDI_NM_get_vni_attr(int vni)
+{
+    MPIR_Assert(0 <= vni && vni < 1);
+    return MPIDI_VNI_TX | MPIDI_VNI_RX;
 }
 
 static inline int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,

@@ -15,7 +15,7 @@
 #include <sys/types.h>
 #endif
 
-#include "mpidu_dataloop.h"
+#include "mpir_dataloop.h"
 #include "mpid_thread.h"
 #include "mpid_sched.h"
 #include "mpid_timers_fallback.h"
@@ -28,7 +28,6 @@ typedef struct {
     MPIDI_NM_DT_DECL} netmod;
 } MPIDI_Devdt_t;
 #define MPID_DEV_DATATYPE_DECL   MPIDI_Devdt_t   dev;
-#include "mpid_datatype_fallback.h"
 
 typedef int MPID_Progress_state;
 
@@ -217,6 +216,7 @@ typedef enum {
 typedef struct MPIDI_CH4U_win_info_args_t {
     int no_locks;
     int same_size;
+    int same_disp_unit;
     int accumulate_ordering;
     int alloc_shared_noncontig;
     MPIDI_CH4U_win_info_accumulate_ops accumulate_ops;
@@ -229,45 +229,65 @@ struct MPIDI_CH4U_win_lock {
     uint16_t type;
 };
 
-struct MPIDI_CH4U_win_queue {
+typedef struct MPIDI_CH4U_win_lock_recvd {
     struct MPIDI_CH4U_win_lock *head;
     struct MPIDI_CH4U_win_lock *tail;
-};
+    int type;                   /* current lock's type */
+    unsigned count;             /* count of granted locks (not received) */
+} MPIDI_CH4U_win_lock_recvd_t;
 
-typedef struct MPIDI_CH4U_win_lock_info {
-    unsigned peer;
-    int lock_type;
-    struct MPIR_Win *win;
-    volatile unsigned done;
-} MPIDI_CH4U_win_lock_info;
+typedef struct MPIDI_CH4U_win_target_sync_lock {
+    /* NOTE: use volatile to avoid compiler optimization which keeps reading
+     * register value when no dependency or function pointer is found in fully
+     * inlined code.*/
+    volatile unsigned locked;   /* locked == 0 or 1 */
+} MPIDI_CH4U_win_target_sync_lock_t;
 
 typedef struct MPIDI_CH4U_win_sync_lock {
-    struct {
-        volatile unsigned locked;
-        volatile unsigned allLocked;
-    } remote;
-    struct {
-        struct MPIDI_CH4U_win_queue requested;
-        int type;
-        unsigned count;
-    } local;
-} MPIDI_CH4U_win_sync_lock;
+    unsigned count;             /* count of lock epochs on the window */
+} MPIDI_CH4U_win_sync_lock_t;
+
+typedef struct MPIDI_CH4U_win_sync_lockall {
+    /* NOTE: use volatile to avoid compiler optimization which keeps reading
+     * register value when no dependency or function pointer is found in fully
+     * inlined code.*/
+    volatile unsigned allLocked;        /* 0 <= allLocked < size */
+} MPIDI_CH4U_win_sync_lockall_t;
 
 typedef struct MPIDI_CH4U_win_sync_pscw {
     struct MPIR_Group *group;
+    /* NOTE: use volatile to avoid compiler optimization which keeps reading
+     * register value when no dependency or function pointer is found in fully
+     * inlined code.*/
     volatile unsigned count;
-} MPIDI_CH4U_win_sync_pscw;
+} MPIDI_CH4U_win_sync_pscw_t;
 
-typedef struct MPIDI_CH4U_win_sync_t {
-    volatile int origin_epoch_type;
-    volatile int target_epoch_type;
-    MPIDI_CH4U_win_sync_pscw sc, pw;
-    MPIDI_CH4U_win_sync_lock lock;
+typedef struct MPIDI_CH4U_win_target_sync {
+    int access_epoch_type;      /* NONE, LOCK. */
+    MPIDI_CH4U_win_target_sync_lock_t lock;
+} MPIDI_CH4U_win_target_sync_t;
+
+typedef struct MPIDI_CH4U_win_sync {
+    int access_epoch_type;      /* NONE, FENCE, LOCKALL, START,
+                                 * LOCK (refer to target_sync). */
+    int exposure_epoch_type;    /* NONE, FENCE, POST. */
+
+    /* access epochs */
+    /* TODO: Can we put access epochs in union,
+     * since no concurrent epochs is allowed ? */
+    MPIDI_CH4U_win_sync_pscw_t sc;
+    MPIDI_CH4U_win_sync_lockall_t lockall;
+    MPIDI_CH4U_win_sync_lock_t lock;
+
+    /* exposure epochs */
+    MPIDI_CH4U_win_sync_pscw_t pw;
+    MPIDI_CH4U_win_lock_recvd_t lock_recvd;
 } MPIDI_CH4U_win_sync_t;
 
 typedef struct MPIDI_CH4U_win_target {
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
+    MPIDI_CH4U_win_target_sync_t sync;
 } MPIDI_CH4U_win_target_t;
 
 typedef struct MPIDI_CH4U_win_t {
@@ -280,7 +300,6 @@ typedef struct MPIDI_CH4U_win_t {
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
 
     MPI_Aint *sizes;
-    MPIDI_CH4U_win_lock_info *lockQ;
     MPIDI_CH4U_win_sync_t sync;
     MPIDI_CH4U_win_info_args_t info_args;
     MPIDI_CH4U_win_shared_info_t *shared_table;
@@ -393,7 +412,7 @@ typedef struct MPIDI_Devcomm_t {
 
 
 #define MPID_USE_NODE_IDS
-typedef uint16_t MPID_Node_id_t;
+typedef int16_t MPID_Node_id_t;
 
 typedef struct {
     union {
@@ -436,19 +455,24 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 #define MPID_Comm_create_hook   MPIDI_Comm_create_hook
 #define MPID_Comm_free_hook     MPIDI_Comm_free_hook
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_Type_commit_hook(MPIR_Datatype * type);
+MPL_STATIC_INLINE_PREFIX int MPIDI_Type_free_hook(MPIR_Datatype * type);
+
 #define MPID_Type_commit_hook   MPIDI_Type_commit_hook
 #define MPID_Type_free_hook     MPIDI_Type_free_hook
 
 #define MPID_Op_commit_hook     MPIDI_Op_commit_hook
 #define MPID_Op_free_hook       MPIDI_Op_free_hook
 
-/* operation for (avtid, lpid) to/from "lpid64" */
-/* hard code limit on number of live comm worlds. This should be fixed by future
- * LUPID patch */
-#define MPIDIU_AVTID_BITS                    (8)
-#define MPIDIU_LPID_BITS                     (24)
-#define MPIDIU_LPID_MASK                     (0x00FFFFFFU)
-#define MPIDIU_AVTID_MASK                    (0xFF000000U)
+/*
+ * operation for (avtid, lpid) to/from "lupid"
+ * 1 bit is reserved for "new_avt_mark". It will be cleared before accessing
+ * the avtid and lpid. Therefore, the avtid mask does have that bit set to 0
+ */
+#define MPIDIU_AVTID_BITS                    (7)
+#define MPIDIU_LPID_BITS                     (8 * sizeof(int) - (MPIDIU_AVTID_BITS + 1))
+#define MPIDIU_LPID_MASK                     (0xFFFFFFFFU >> (MPIDIU_AVTID_BITS + 1))
+#define MPIDIU_AVTID_MASK                    (~MPIDIU_LPID_MASK)
 #define MPIDIU_NEW_AVT_MARK                  (0x80000000U)
 #define MPIDIU_LUPID_CREATE(avtid, lpid)      (((avtid) << MPIDIU_LPID_BITS) | (lpid))
 #define MPIDIU_LUPID_GET_AVTID(lupid)          ((((lupid) & MPIDIU_AVTID_MASK) >> MPIDIU_LPID_BITS))

@@ -109,7 +109,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     intptr_t data_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;
-    MPIDU_Datatype*dt_ptr;
+    MPIR_Datatype*dt_ptr;
     MPIR_Request *sreq = NULL;
     ptl_me_t me;
     int initial_iov_count, remaining_iov_count;
@@ -161,15 +161,15 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         
         /* noncontig data */
         MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Small noncontig message");
-        sreq->dev.segment_ptr = MPIDU_Segment_alloc();
-        MPIR_ERR_CHKANDJUMP1(sreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIDU_Segment_alloc");
-        MPIDU_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
+        sreq->dev.segment_ptr = MPIR_Segment_alloc();
+        MPIR_ERR_CHKANDJUMP1(sreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
+        MPIR_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
         sreq->dev.segment_first = 0;
         sreq->dev.segment_size = data_sz;
 
         last = sreq->dev.segment_size;
         sreq->dev.iov_count = MPL_IOV_LIMIT;
-        MPIDU_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, sreq->dev.iov, &sreq->dev.iov_count);
+        MPIR_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, sreq->dev.iov, &sreq->dev.iov_count);
 
         if (last == sreq->dev.segment_size) {
             /* IOV is able to describe entire message */
@@ -194,10 +194,10 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         /* IOV is not long enough to describe entire message */
         MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    IOV too long: using bounce buffer");
         MPIR_CHKPMEM_MALLOC(REQ_PTL(sreq)->chunk_buffer[0], void *, data_sz, mpi_errno, "chunk_buffer");
-        MPIDU_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
+        MPIR_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
         sreq->dev.segment_first = 0;
         last = data_sz;
-        MPIDU_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, REQ_PTL(sreq)->chunk_buffer[0]);
+        MPIR_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, REQ_PTL(sreq)->chunk_buffer[0]);
         MPIR_Assert(last == sreq->dev.segment_size);
         REQ_PTL(sreq)->event_handler = handler_send;
         ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(sreq)->chunk_buffer[0], data_sz, PTL_NO_ACK_REQ,
@@ -226,15 +226,15 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     
     /* Large noncontig data */
     MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Large noncontig message");
-    sreq->dev.segment_ptr = MPIDU_Segment_alloc();
-    MPIR_ERR_CHKANDJUMP1(sreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIDU_Segment_alloc");
-    MPIDU_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
+    sreq->dev.segment_ptr = MPIR_Segment_alloc();
+    MPIR_ERR_CHKANDJUMP1(sreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
+    MPIR_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
     sreq->dev.segment_first = 0;
     sreq->dev.segment_size = data_sz;
 
     last = PTL_LARGE_THRESHOLD;
     sreq->dev.iov_count = MPL_IOV_LIMIT;
-    MPIDU_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, sreq->dev.iov, &sreq->dev.iov_count);
+    MPIR_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, sreq->dev.iov, &sreq->dev.iov_count);
 
     initial_iov_count = sreq->dev.iov_count;
     sreq->dev.segment_first = last;
@@ -247,7 +247,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
             sreq->dev.iov_count = MPL_IOV_LIMIT - sreq->dev.iov_count;
             last = sreq->dev.segment_size;
                     
-            MPIDU_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last,
+            MPIR_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last,
                                      &sreq->dev.iov[initial_iov_count], &sreq->dev.iov_count);
             remaining_iov_count = sreq->dev.iov_count;
 
@@ -304,7 +304,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     MPIR_CHKPMEM_MALLOC(REQ_PTL(sreq)->chunk_buffer[0], void *, data_sz, mpi_errno, "tmpbuf");
 
     last = data_sz;
-    MPIDU_Segment_pack(sreq->dev.segment_ptr, 0, &last, REQ_PTL(sreq)->chunk_buffer[0]);
+    MPIR_Segment_pack(sreq->dev.segment_ptr, 0, &last, REQ_PTL(sreq)->chunk_buffer[0]);
     MPIR_Assert(last == data_sz);
 
     big_meappend((char *)REQ_PTL(sreq)->chunk_buffer[0] + PTL_LARGE_THRESHOLD, data_sz - PTL_LARGE_THRESHOLD, vc,

@@ -15,8 +15,6 @@ struct _UCX_share {
     MPI_Aint addr;
 };
 
-char ucx_dummy_buffer[4096];
-
 static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
                                           uint32_t disp_unit, void **base_ptr)
 {
@@ -26,45 +24,49 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
     ucs_status_t status;
     ucp_mem_h mem_h;
     int cntr = 0;
-    size_t rkey_size;
+    size_t rkey_size = 0;
     int *rkey_sizes, *recv_disps, i;
-    char *rkey_buffer, *rkey_recv_buff = NULL;
+    char *rkey_buffer = NULL, *rkey_recv_buff = NULL;
     struct _UCX_share *share_data;
-    size_t size;
-
     ucp_mem_map_params_t mem_map_params;
-
-    if (length == 0)
-        size = 1024;
-    else
-        size = length;
+    ucp_mem_attr_t mem_attr;
     MPIR_Comm *comm_ptr = win->comm_ptr;
 
     ucp_context_h ucp_context = MPIDI_UCX_global.context;
 
     MPIDI_UCX_WIN(win).info_table = MPL_malloc(sizeof(MPIDI_UCX_win_info_t) * comm_ptr->local_size);
-    mem_map_params.field_mask = UCP_MEM_MAP_PARAM_FIELD_ADDRESS |
-                                UCP_MEM_MAP_PARAM_FIELD_LENGTH|
-                                UCP_MEM_MAP_PARAM_FIELD_FLAGS;
-    if (length == 0)
-        mem_map_params.address = &ucx_dummy_buffer;
-    else
+
+    /* Only non-zero region maps to device. */
+    rkey_size = 0;
+    if (length > 0) {
+        mem_map_params.field_mask = UCP_MEM_MAP_PARAM_FIELD_ADDRESS |
+            UCP_MEM_MAP_PARAM_FIELD_LENGTH | UCP_MEM_MAP_PARAM_FIELD_FLAGS;
+
         mem_map_params.address = *base_ptr;
-     mem_map_params.length = size;
-     mem_map_params.flags = 0 ;
+        mem_map_params.length = length;
+        mem_map_params.flags = 0;
 
-    status = ucp_mem_map(MPIDI_UCX_global.context, &mem_map_params , &mem_h);
-    MPIDI_UCX_CHK_STATUS(status);
+        if (*base_ptr == NULL)
+            mem_map_params.flags |= UCP_MEM_MAP_ALLOCATE;
 
-   if (length > 0)
-        *base_ptr = mem_map_params.address;
+        status = ucp_mem_map(MPIDI_UCX_global.context, &mem_map_params, &mem_h);
+        MPIDI_UCX_CHK_STATUS(status);
 
-    MPIDI_UCX_WIN(win).mem_h = mem_h;
+        /* query allocated address. */
+        mem_attr.field_mask = UCP_MEM_ATTR_FIELD_ADDRESS | UCP_MEM_ATTR_FIELD_LENGTH;
+        status = ucp_mem_query(mem_h, &mem_attr);
+        MPIDI_UCX_CHK_STATUS(status);
 
-    /* pack the key */
-    status = ucp_rkey_pack(ucp_context, mem_h, (void **) &rkey_buffer, &rkey_size);
+        *base_ptr = mem_attr.address;
+        MPIR_Assert(mem_attr.length >= length);
 
-    MPIDI_UCX_CHK_STATUS(status);
+        MPIDI_UCX_WIN(win).mem_h = mem_h;
+
+        /* pack the key */
+        status = ucp_rkey_pack(ucp_context, mem_h, (void **) &rkey_buffer, &rkey_size);
+
+        MPIDI_UCX_CHK_STATUS(status);
+    }
 
     rkey_sizes = (int *) MPL_malloc(sizeof(int) * comm_ptr->local_size);
     rkey_sizes[comm_ptr->rank] = (int) rkey_size;
@@ -92,11 +94,17 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-/* If we use the shared memory support in UCX, we have to distinguish between local
-    and remote windows (at least now). If win_create is used, the key cannot be unpackt -
-    then we need our fallback-solution */
+    /* If we use the shared memory support in UCX, we have to distinguish between local
+     * and remote windows (at least now). If win_create is used, the key cannot be unpackt -
+     * then we need our fallback-solution */
 
     for (i = 0; i < comm_ptr->local_size; i++) {
+        /* Skip zero-size remote region. */
+        if (rkey_sizes[i] == 0) {
+            MPIDI_UCX_WIN_INFO(win, i).rkey = NULL;
+            continue;
+        }
+
         status = ucp_ep_rkey_unpack(MPIDI_UCX_COMM_TO_EP(comm_ptr, i),
                                     &rkey_recv_buff[recv_disps[i]],
                                     &(MPIDI_UCX_WIN_INFO(win, i).rkey));
@@ -109,7 +117,7 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
     share_data = MPL_malloc(comm_ptr->local_size * sizeof(struct _UCX_share));
 
     share_data[comm_ptr->rank].disp = disp_unit;
-    share_data[comm_ptr->rank].addr = (MPI_Aint) *base_ptr;
+    share_data[comm_ptr->rank].addr = (MPI_Aint) * base_ptr;
 
     mpi_errno =
         MPIR_Allgather(MPI_IN_PLACE, sizeof(struct _UCX_share), MPI_BYTE, share_data,
@@ -181,10 +189,17 @@ static inline int MPIDI_NM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Wi
 
 static inline int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
 {
-
+    int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucp_status;
     ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
-    return MPIDI_CH4R_mpi_win_complete(win);
+    MPIDI_UCX_CHK_STATUS(ucp_status);
+
+    mpi_errno = MPIDI_CH4R_mpi_win_complete(win);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static inline int MPIDI_NM_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
@@ -205,22 +220,27 @@ static inline int MPIDI_NM_mpi_win_test(MPIR_Win * win, int *flag)
     return MPIDI_CH4R_mpi_win_test(win, flag);
 }
 
-static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert,
+                                        MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     return MPIDI_CH4R_mpi_win_lock(lock_type, rank, assert, win);
 }
 
 
-static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
 
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucp_status;
-    ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
-    /* make sure all operations are completed  */
-    ucp_status = ucp_ep_flush(ep);
 
-    MPIDI_UCX_CHK_STATUS(ucp_status);
+    if (rank != MPI_PROC_NULL) {
+        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
+        /* make sure all operations are completed  */
+        ucp_status = ucp_ep_flush(ep);
+
+        MPIDI_UCX_CHK_STATUS(ucp_status);
+    }
+
     mpi_errno = MPIDI_CH4R_mpi_win_unlock(rank, win);
 
   fn_exit:
@@ -241,12 +261,16 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Win *win = *win_ptr;
-    MPIDI_CH4U_EPOCH_FREE_CHECK(win, mpi_errno, return mpi_errno);
+
+    MPIDI_CH4U_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
+    MPIDI_CH4U_EXPOSURE_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
+
     mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
     if (win->create_flavor != MPI_WIN_FLAVOR_SHARED && win->create_flavor != MPI_WIN_FLAVOR_DYNAMIC) {
-        ucp_mem_unmap(MPIDI_UCX_global.context, MPIDI_UCX_WIN(win).mem_h);
+        if (win->size > 0)
+            ucp_mem_unmap(MPIDI_UCX_global.context, MPIDI_UCX_WIN(win).mem_h);
         MPL_free(MPIDI_UCX_WIN(win).info_table);
     }
     if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE)
@@ -265,7 +289,7 @@ static inline int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
     int mpi_errno;
     ucs_status_t ucp_status;
     /*keep this for now to fence all none-natice operations */
-/* make sure all local and remote operations are completed */
+    /* make sure all local and remote operations are completed */
     ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
 
 
@@ -390,19 +414,21 @@ static inline int MPIDI_NM_mpi_win_allocate(MPI_Aint length,
 
 }
 
-static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
 
     int mpi_errno;
     ucs_status_t ucp_status;
 
-    ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
-
     mpi_errno = MPIDI_CH4R_mpi_win_flush(rank, win);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-/* only flush the endpoint */
-    ucp_status = ucp_ep_flush(ep);
+
+    if (rank != MPI_PROC_NULL) {
+        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
+        /* only flush the endpoint */
+        ucp_status = ucp_ep_flush(ep);
+    }
 
     MPIDI_UCX_CHK_STATUS(ucp_status);
 
@@ -457,22 +483,24 @@ static inline int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * 
     return MPIDI_CH4R_mpi_win_create_dynamic(info, comm, win);
 }
 
-static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucp_status;
     mpi_errno = MPIDI_CH4R_mpi_win_flush_local(rank, win);
-
-    ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    /* currently, UCP does not support local flush, so we have to call
-     * a global flush. This is not good for performance - but OK for now */
 
-    if (MPIDI_UCX_WIN(win).need_local_flush == 1) {
-        ucp_status = ucp_ep_flush(ep);
-        MPIDI_UCX_CHK_STATUS(ucp_status);
-        MPIDI_UCX_WIN(win).need_local_flush = 0;
+    if (rank != MPI_PROC_NULL) {
+        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
+        /* currently, UCP does not support local flush, so we have to call
+         * a global flush. This is not good for performance - but OK for now */
+
+        if (MPIDI_UCX_WIN(win).need_local_flush == 1) {
+            ucp_status = ucp_ep_flush(ep);
+            MPIDI_UCX_CHK_STATUS(ucp_status);
+            MPIDI_UCX_WIN(win).need_local_flush = 0;
+        }
     }
 
   fn_exit:
@@ -490,7 +518,7 @@ static inline int MPIDI_NM_mpi_win_sync(MPIR_Win * win)
 static inline int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
 {
 
-/*maybe we just flush all eps here? More efficient for smaller communicators...*/
+    /*maybe we just flush all eps here? More efficient for smaller communicators...*/
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucp_status;
     mpi_errno = MPIDI_CH4R_mpi_win_flush_all(win);

@@ -27,6 +27,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                                                 int tag,
                                                 MPIR_Comm * comm,
                                                 int context_offset,
+                                                MPIDI_av_entry_t *addr,
                                                 MPIR_Request ** request, int mode, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -42,11 +43,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IRECV);
 
-    if (mode == MPIDI_OFI_ON_HEAP)      /* Branch should compile out */
+    if (mode == MPIDI_OFI_ON_HEAP) {    /* Branch should compile out */
         MPIDI_OFI_REQUEST_CREATE(rreq, MPIR_REQUEST_KIND__RECV);
+        /* Need to set the source to UNDEFINED for anysource matching */
+        rreq->status.MPI_SOURCE = MPI_UNDEFINED;
+    }
     else if (mode == MPIDI_OFI_USE_EXISTING) {
         rreq = *request;
         rreq->kind = MPIR_REQUEST_KIND__RECV;
+    } else {
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nullptr");
+        goto fn_fail;
     }
 
     *request = rreq;
@@ -61,11 +68,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     if (!dt_contig) {
         MPIDI_OFI_REQUEST(rreq, noncontig) =
-            (MPIDI_OFI_noncontig_t *) MPL_malloc(data_sz + sizeof(MPID_Segment));
+            (MPIDI_OFI_noncontig_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment));
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, noncontig->pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
         recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig->pack_buffer);
-        MPID_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(rreq, noncontig->segment), 0);
+        MPIR_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(rreq, noncontig->segment), 0);
     }
     else
         MPIDI_OFI_REQUEST(rreq, noncontig) = NULL;
@@ -81,13 +88,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_RECV;
 
     if (!flags) /* Branch should compile out */
-        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_EP_RX_TAG(0),
+        MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_Global.ctx[0].rx,
                                       recv_buf,
                                       data_sz,
                                       NULL,
                                       (MPI_ANY_SOURCE ==
-                                       rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_comm_to_phys(comm, rank,
-                                                                                       MPIDI_OFI_API_TAG),
+                                       rank) ? FI_ADDR_UNSPEC : MPIDI_OFI_av_to_phys(addr),
                                       match_bits, mask_bits,
                                       (void *) &(MPIDI_OFI_REQUEST(rreq, context))), trecv,
                              MPIDI_OFI_CALL_LOCK);
@@ -104,7 +110,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
         msg.data = 0;
         msg.addr = FI_ADDR_UNSPEC;
 
-        MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_OFI_EP_RX_TAG(0), &msg, flags), trecv,
+        MPIDI_OFI_CALL_RETRY(fi_trecvmsg(MPIDI_Global.ctx[0].rx, &msg, flags), trecv,
                              MPIDI_OFI_CALL_LOCK);
     }
 
@@ -126,7 +132,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
                                                int rank,
                                                int tag,
                                                MPIR_Comm * comm,
-                                               int context_offset,
+                                               int context_offset, MPIDI_av_entry_t *addr,
                                                MPI_Status * status, MPIR_Request ** request)
 {
     int mpi_errno;
@@ -139,7 +145,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
     }
 
     mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, rank, tag, comm,
-                                   context_offset, request, MPIDI_OFI_ON_HEAP, 0ULL);
+                                   context_offset, addr, request, MPIDI_OFI_ON_HEAP, 0ULL);
 
 fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RECV);
@@ -156,7 +162,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
                                                     int rank,
                                                     int tag,
                                                     MPIR_Comm * comm,
-                                                    int context_offset, MPIR_Request ** request)
+                                                    int context_offset, MPIDI_av_entry_t *addr, MPIR_Request ** request)
 {
     MPIR_Request *rreq;
     int mpi_errno = MPI_SUCCESS;
@@ -189,8 +195,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
 
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
         MPIR_Datatype *dt_ptr;
-        MPID_Datatype_get_ptr(datatype, dt_ptr);
-        MPID_Datatype_add_ref(dt_ptr);
+        MPIR_Datatype_get_ptr(datatype, dt_ptr);
+        MPIR_Datatype_add_ref(dt_ptr);
     }
 
   fn_exit:
@@ -209,6 +215,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
+    MPIDI_av_entry_t *av;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IMRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IMRECV);
 
@@ -221,8 +228,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
 
     *rreqp = rreq = message;
 
+    av = MPIDIU_comm_rank_to_av(rreq->comm, message->status.MPI_SOURCE);
     mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, message->status.MPI_SOURCE,
-                                   message->status.MPI_TAG, rreq->comm, 0,
+                                   message->status.MPI_TAG, rreq->comm, 0, av,
                                    &rreq, MPIDI_OFI_USE_EXISTING, FI_CLAIM | FI_COMPLETION);
 
   fn_exit:
@@ -239,7 +247,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
                                                 MPI_Datatype datatype,
                                                 int rank,
                                                 int tag,
-                                                MPIR_Comm * comm, int context_offset,
+                                                MPIR_Comm * comm, int context_offset, MPIDI_av_entry_t *addr,
                                                 MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -252,7 +260,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
     }
 
     mpi_errno = MPIDI_OFI_do_irecv(buf, count, datatype, rank, tag, comm,
-                                   context_offset, request, MPIDI_OFI_ON_HEAP, 0ULL);
+                                   context_offset, addr, request, MPIDI_OFI_ON_HEAP, 0ULL);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IRECV);
@@ -276,17 +284,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
         goto fn_exit;
     }
 
-#ifndef MPIDI_BUILD_CH4_SHM
-    MPIDI_OFI_PROGRESS();
-#endif /* MPIDI_BUILD_CH4_SHM */
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
-    ret = fi_cancel((fid_t) MPIDI_OFI_EP_RX_TAG(0), &(MPIDI_OFI_REQUEST(rreq, context)));
+    ret = fi_cancel((fid_t) MPIDI_Global.ctx[0].rx, &(MPIDI_OFI_REQUEST(rreq, context)));
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
 
     if (ret == 0) {
         while ((!MPIR_STATUS_GET_CANCEL_BIT(rreq->status)) && (!MPIR_cc_is_complete(&rreq->cc))) {
+            /* The cancel is local and must complete, so only poll this device (not global progress) */
             if ((mpi_errno =
-                 MPIDI_NM_progress(&MPIDI_OFI_REQUEST(rreq, context), 0)) != MPI_SUCCESS)
+                 MPIDI_NM_progress(0, 0)) != MPI_SUCCESS)
                 goto fn_exit;
         }
 

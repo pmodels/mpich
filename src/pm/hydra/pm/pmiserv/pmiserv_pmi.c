@@ -14,15 +14,11 @@ struct HYD_pmcd_pmi_publish *HYD_pmcd_pmi_publish_list = NULL;
 
 struct HYD_proxy *HYD_pmcd_pmi_find_proxy(int fd)
 {
-    struct HYD_pg *pg;
     struct HYD_proxy *proxy;
 
-    for (pg = &HYD_server_info.pg_list; pg; pg = pg->next)
-        for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
-            if (proxy->control_fd == fd)
-                return proxy;
+    MPL_HASH_FIND_INT(HYD_server_info.proxy_hash, &fd, proxy);
 
-    return NULL;
+    return proxy;
 }
 
 HYD_status HYD_pmcd_pmi_finalize(void)

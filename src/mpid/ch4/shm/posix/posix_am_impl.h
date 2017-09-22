@@ -24,6 +24,8 @@ static inline void MPIDI_POSIX_am_clear_request(MPIR_Request * sreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_POSIX_AM_CLEAR_REQ);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_POSIX_AM_CLEAR_REQ);
 
+    MPIDI_POSIX_EAGER_RECV_COMPLETED_HOOK(sreq);
+
     req_hdr = MPIDI_POSIX_AMREQUEST(sreq, req_hdr);
 
     if (!req_hdr)

@@ -8,11 +8,11 @@
 #ifndef AD_TESTFS_INCLUDE
 #define AD_TESTFS_INCLUDE
 
+#include "adio.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <fcntl.h>
-#include "adio.h"
 
 void ADIOI_TESTFS_Open(ADIO_File fd, int *error_code);
 void ADIOI_TESTFS_Close(ADIO_File fd, int *error_code);

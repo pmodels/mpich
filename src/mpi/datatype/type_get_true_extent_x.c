@@ -34,11 +34,11 @@ void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count *true_lb,
 {
     MPIR_Datatype *datatype_ptr = NULL;
 
-    MPID_Datatype_get_ptr(datatype, datatype_ptr);
+    MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
         *true_lb     = 0;
-        *true_extent = MPID_Datatype_get_basic_size(datatype);
+        *true_extent = MPIR_Datatype_get_basic_size(datatype);
     }
     else {
         *true_lb     = datatype_ptr->true_lb;
@@ -100,12 +100,14 @@ int MPI_Type_get_true_extent_x(MPI_Datatype datatype, MPI_Count *true_lb, MPI_Co
         {
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
-                MPID_Datatype_get_ptr(datatype, datatype_ptr);
+                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
             }
 
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(true_lb, "true_lb", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(true_extent, "true_extent", mpi_errno);
         }
         MPID_END_ERROR_CHECKS
     }

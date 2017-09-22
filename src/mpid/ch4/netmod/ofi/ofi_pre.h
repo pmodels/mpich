@@ -44,6 +44,8 @@ typedef struct {
     void *huge_recv_counters;
     void *win_id_allocator;
     void *rma_id_allocator;
+    /* support for connection */
+    int conn_id;
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_SHORT_HDR = 0,
@@ -103,19 +105,19 @@ typedef struct {
 } MPIDI_OFI_am_request_header_t;
 
 typedef struct {
-    struct fi_context context;  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     MPIDI_OFI_am_request_header_t *req_hdr;
 } MPIDI_OFI_am_request_t;
 
 
 typedef struct MPIDI_OFI_noncontig_t {
-    struct MPIDU_Segment segment;
+    struct MPIR_Segment segment;
     char pack_buffer[0];
 } MPIDI_OFI_noncontig_t;
 
 typedef struct {
-    struct fi_context context;  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     int util_id;
     struct MPIR_Comm *util_comm;
@@ -148,11 +150,12 @@ struct MPIDI_OFI_win_request;
 /* Stores per-rank information for RMA */
 typedef struct {
     int32_t disp_unit;
-#ifndef USE_OFI_MR_SCALABLE
     /* For MR_BASIC mode we need to store an MR key and a base address of the target window */
+    /* TODO - Ideally, we'd like to not have these fields compiled in if not
+     * using MR_BASIC. In practice, doing so makes the code very complex
+     * elsewhere for very little payoff. */
     uint64_t mr_key;
     uintptr_t base;
-#endif
 } MPIDI_OFI_win_targetinfo_t;
 
 typedef struct {
@@ -171,8 +174,13 @@ typedef struct {
 
 typedef struct {
     fi_addr_t dest;
-#if defined MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS || defined MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
     unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
+#else /* This is necessary for older GCC compilers that don't properly detect
+       * elif statements */
+#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
+    unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
+#endif
 #endif
 } MPIDI_OFI_addr_t;
 

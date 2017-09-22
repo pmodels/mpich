@@ -119,7 +119,7 @@ int MPIR_Ibcast_binomial(void *buffer, int count, MPI_Datatype datatype, int roo
         goto fn_exit;
     }
 
-    MPID_Datatype_is_contig(datatype, &is_contig);
+    MPIR_Datatype_is_contig(datatype, &is_contig);
 
     is_homogeneous = 1;
 #ifdef MPID_HAS_HETERO
@@ -138,7 +138,7 @@ int MPIR_Ibcast_binomial(void *buffer, int count, MPI_Datatype datatype, int roo
      * possible, and MPI_Pack_size() in other places.
      */
     if (is_homogeneous)
-        MPID_Datatype_get_size_macro(datatype, type_size);
+        MPIR_Datatype_get_size_macro(datatype, type_size);
     else
         MPIR_Pack_size_impl(1, datatype, &type_size);
 
@@ -395,7 +395,6 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype 
     int type_size, j, k, i, tmp_mask, is_contig, is_homogeneous ATTRIBUTE((unused));
     int relative_dst, dst_tree_root, my_tree_root, send_offset;
     int recv_offset, tree_root, nprocs_completed, offset;
-    MPIR_Datatype *dtp;
     MPI_Aint true_extent, true_lb;
     void *tmp_buf;
     struct MPIR_Ibcast_status *status;
@@ -413,8 +412,7 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype 
         is_contig = 1;
     }
     else {
-        MPID_Datatype_get_ptr(datatype, dtp);
-        is_contig = dtp->is_contig;
+        MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
     MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPIR_Ibcast_status*,
@@ -426,7 +424,7 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype 
 #endif
     MPIR_Assert(is_homogeneous); /* we don't handle the hetero case right now */
 
-    MPID_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     nbytes = type_size * count;
     status->n_bytes = nbytes;
@@ -461,6 +459,8 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype 
     curr_size = MPL_MIN(scatter_size, (nbytes - (relative_rank * scatter_size)));
     if (curr_size < 0)
         curr_size = 0;
+    /* curr_size bytes already inplace */
+    status->curr_bytes = curr_size;
 
     /* initialize because the compiler can't tell that it is always initialized when used */
     incoming_count = -1;
@@ -646,11 +646,10 @@ int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype dat
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank;
     int is_contig, is_homogeneous ATTRIBUTE((unused)), type_size, nbytes;
-    int scatter_size;
+    int scatter_size, curr_size;
     int i, j, jnext, left, right;
     MPI_Aint true_extent, true_lb;
     void *tmp_buf = NULL;
-    MPIR_Datatype *dtp = NULL;
 
     struct MPIR_Ibcast_status *status;
     MPIR_SCHED_CHKPMEM_DECL(4);
@@ -665,8 +664,7 @@ int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype dat
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
         is_contig = 1;
     else {
-        MPID_Datatype_get_ptr(datatype, dtp);
-        is_contig = dtp->is_contig;
+        MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
     is_homogeneous = 1;
@@ -677,7 +675,7 @@ int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype dat
     MPIR_Assert(is_homogeneous); /* we don't handle the hetero case yet */
     MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPIR_Ibcast_status*,
                               sizeof(struct MPIR_Ibcast_status), mpi_errno, "MPI_Status");
-    MPID_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
     status->n_bytes = nbytes;
     status->curr_bytes = 0;
@@ -703,6 +701,14 @@ int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype dat
 
     /* this is the block size used for the scatter operation */
     scatter_size = (nbytes + comm_size - 1) / comm_size; /* ceiling division */
+
+    /* curr_size is the amount of data that this process now has stored in
+     * buffer at byte offset (rank*scatter_size) */
+    curr_size = MPL_MIN(scatter_size, (nbytes - (rank * scatter_size)));
+    if (curr_size < 0)
+        curr_size = 0;
+    /* curr_size bytes already inplace */
+    status->curr_bytes = curr_size;
 
     /* long-message allgather or medium-size but non-power-of-two. use ring algorithm. */
 
@@ -802,7 +808,7 @@ int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MP
      * possible, and MPI_Pack_size() in other places.
      */
     if (is_homogeneous)
-        MPID_Datatype_get_size_macro(datatype, type_size);
+        MPIR_Datatype_get_size_macro(datatype, type_size);
     else
         MPIR_Pack_size_impl(1, datatype, &type_size);
 
@@ -877,7 +883,7 @@ int MPIR_Ibcast_intra(void *buffer, int count, MPI_Datatype datatype, int root, 
     MPIR_Assert(is_homogeneous); /* we don't handle the hetero case right now */
 
     comm_size = comm_ptr->local_size;
-    MPID_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
 
     /* simplistic implementation for now */
@@ -1057,10 +1063,10 @@ int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Com
 
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
-                MPID_Datatype_get_ptr(datatype, datatype_ptr);
+                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-                MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+                MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 
@@ -1095,5 +1101,4 @@ fn_fail:
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
-    goto fn_exit;
 }

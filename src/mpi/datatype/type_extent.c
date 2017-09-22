@@ -79,11 +79,12 @@ int MPI_Type_extent(MPI_Datatype datatype, MPI_Aint *extent)
             MPIR_Datatype *datatype_ptr = NULL;
 
             /* Convert MPI object handles to object pointers */
-            MPID_Datatype_get_ptr(datatype, datatype_ptr);
+            MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
             /* Validate datatype_ptr */
             MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
             if (mpi_errno) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(extent, "extent", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -91,7 +92,7 @@ int MPI_Type_extent(MPI_Datatype datatype, MPI_Aint *extent)
 
     /* ... body of routine ...  */
 
-    MPID_Datatype_get_extent_macro(datatype, *extent);
+    MPIR_Datatype_get_extent_macro(datatype, *extent);
 
     /* ... end of body of routine ... */
 

@@ -7,6 +7,49 @@
 
 #include "adio.h"
 
+static const char * flock_cmd_to_string(int cmd)
+{
+    switch (cmd) {
+#ifdef F_GETLK64
+	case F_GETLK64:
+	    return "F_GETLK64";
+#else
+	case F_GETLK:
+	    return "F_GETLK";
+#endif
+#ifdef F_SETLK64
+	case F_SETLK64:
+	    return "F_SETLK64";
+#else
+	case F_SETLK:
+	    return "F_SETLK";
+#endif
+#ifdef F_SETLKW64
+	case F_SETLKW64:
+	    return "F_SETLKW64";
+#else
+	case F_SETLKW:
+	    return "F_SETLKW";
+#endif
+	default:
+	    return "UNEXPECTED";
+    }
+}
+
+static const char * flock_type_to_string(int type)
+{
+    switch(type) {
+	case F_RDLCK:
+	    return "F_RDLCK";
+	case F_WRLCK:
+	    return "F_WRLCK";
+	case F_UNLCK:
+	    return "F_UNLOCK";
+	default:
+	    return "UNEXPECTED";
+    }
+}
+
 #ifdef ROMIO_NTFS
 /* This assumes that lock will always remain in the common directory and 
  * that the ntfs directory will always be called ad_ntfs. */
@@ -133,14 +176,10 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
           {
             fprintf(stderr, "File locking failed in ADIOI_Set_lock(fd %#X,cmd %s/%#X,type %s/%#X,whence %#X) with return value %#X and errno %#X.  Retry (%d).\n",                    
                     fd,
-                    ((cmd == F_GETLK   )? "F_GETLK" :
-                    ((cmd == F_SETLK   )? "F_SETLK" :
-                    ((cmd == F_SETLKW  )? "F_SETLKW" : "UNEXPECTED"))),
-                    cmd, 
-                    ((type == F_RDLCK   )? "F_RDLCK" :
-                    ((type == F_WRLCK   )? "F_WRLCK" :
-                    ((type == F_UNLCK   )? "F_UNLOCK" : "UNEXPECTED"))),
-                    type, 
+                    flock_cmd_to_string(cmd),
+                    cmd,
+                    flock_type_to_string(type),
+                    type,
                     whence, err, errno, err_count);
           perror("ADIOI_Set_lock:");
           fprintf(stderr,"ADIOI_Set_lock:offset %#llx, length %#llx\n",(unsigned long long)offset, (unsigned long long)len);
@@ -157,14 +196,10 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
                   "- If the file system is NFS, you need to use NFS version 3, ensure that the lockd daemon is running on all the machines, and mount the directory with the 'noac' option (no attribute caching).\n"
                   "- If the file system is LUSTRE, ensure that the directory is mounted with the 'flock' option.\n",
           fd,
-          ((cmd == F_GETLK   )? "F_GETLK" :
-          ((cmd == F_SETLK   )? "F_SETLK" :
-          ((cmd == F_SETLKW  )? "F_SETLKW" : "UNEXPECTED"))),
-          cmd, 
-          ((type == F_RDLCK   )? "F_RDLCK" :
-          ((type == F_WRLCK   )? "F_WRLCK" :
-          ((type == F_UNLCK   )? "F_UNLOCK" : "UNEXPECTED"))),
-          type, 
+          flock_cmd_to_string(cmd),
+          cmd,
+          flock_type_to_string(type),
+          type,
           whence, err, errno);
   perror("ADIOI_Set_lock:");
   FPRINTF(stderr,"ADIOI_Set_lock:offset %llu, length %llu\n",(unsigned long long)offset, (unsigned long long)len);
@@ -179,13 +214,16 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
 }
 #endif
 
-#if defined(ROMIO_XFS)
 int ADIOI_Set_lock64(FDTYPE fd, int cmd, int type, ADIO_Offset offset,
                      int whence,
 	             ADIO_Offset len) 
 {
     int err, error_code;
+#ifdef _LARGEFILE64_SOURCE
     struct flock64 lock;
+#else
+    struct flock lock;
+#endif
 
     if (len == 0) return MPI_SUCCESS;
 
@@ -202,17 +240,10 @@ int ADIOI_Set_lock64(FDTYPE fd, int cmd, int type, ADIO_Offset offset,
 	FPRINTF(stderr, "File locking failed in ADIOI_Set_lock64(fd %X,cmd %s/%X,type %s/%X,whence %X) with return value %X and errno %X.\n"
                   "If the file system is NFS, you need to use NFS version 3, ensure that the lockd daemon is running on all the machines, and mount the directory with the 'noac' option (no attribute caching).\n",
           fd,
-          ((cmd == F_GETLK   )? "F_GETLK" :
-          ((cmd == F_SETLK   )? "F_SETLK" :
-          ((cmd == F_SETLKW  )? "F_SETLKW" :
-          ((cmd == F_GETLK64 )? "F_GETLK64" :
-          ((cmd == F_SETLK64 )? "F_SETLK64" :
-          ((cmd == F_SETLKW64)? "F_SETLKW64" : "UNEXPECTED")))))),
-          cmd, 
-          ((type == F_RDLCK   )? "F_RDLCK" :
-          ((type == F_WRLCK   )? "F_WRLCK" :
-          ((type == F_UNLCK   )? "F_UNLOCK" : "UNEXPECTED"))),
-          type, 
+          flock_cmd_to_string(cmd),
+          cmd,
+          flock_type_to_string(type),
+          type,
           whence, err, errno);
   perror("ADIOI_Set_lock64:");
   FPRINTF(stderr,"ADIOI_Set_lock:offset %llu, length %llu\n",(unsigned long long)offset, (unsigned long long)len);
@@ -222,4 +253,3 @@ int ADIOI_Set_lock64(FDTYPE fd, int cmd, int type, ADIO_Offset offset,
     error_code = (err == 0) ? MPI_SUCCESS : MPI_ERR_UNKNOWN;
     return error_code;
 }
-#endif

@@ -146,23 +146,22 @@ static inline int MPIDI_ack_get_acc(MPIR_Request * rreq)
 static inline int MPIDI_win_lock_advance(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct MPIDI_CH4U_win_sync_lock *slock = &MPIDI_CH4U_WIN(win, sync).lock;
-    struct MPIDI_CH4U_win_queue *q = &slock->local.requested;
+    MPIDI_CH4U_win_lock_recvd_t *lock_recvd_q = &MPIDI_CH4U_WIN(win, sync).lock_recvd;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_WIN_LOCK_ADVANCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_LOCK_ADVANCE);
 
-    if ((q->head != NULL) && ((slock->local.count == 0) ||
-                              ((slock->local.type == MPI_LOCK_SHARED) &&
-                               (q->head->type == MPI_LOCK_SHARED)))) {
-        struct MPIDI_CH4U_win_lock *lock = q->head;
-        q->head = lock->next;
+    if ((lock_recvd_q->head != NULL) && ((lock_recvd_q->count == 0) ||
+                                         ((lock_recvd_q->type == MPI_LOCK_SHARED) &&
+                                          (lock_recvd_q->head->type == MPI_LOCK_SHARED)))) {
+        struct MPIDI_CH4U_win_lock *lock = lock_recvd_q->head;
+        lock_recvd_q->head = lock->next;
 
-        if (q->head == NULL)
-            q->tail = NULL;
+        if (lock_recvd_q->head == NULL)
+            lock_recvd_q->tail = NULL;
 
-        ++slock->local.count;
-        slock->local.type = lock->type;
+        ++lock_recvd_q->count;
+        lock_recvd_q->type = lock->type;
 
         MPIDI_CH4U_win_cntrl_msg_t msg;
         int handler_id;
@@ -210,15 +209,15 @@ static inline void MPIDI_win_lock_req_proc(int handler_id,
     lock->mtype = handler_id;
     lock->rank = info->origin_rank;
     lock->type = info->lock_type;
-    struct MPIDI_CH4U_win_queue *q = &MPIDI_CH4U_WIN(win, sync).lock.local.requested;
-    MPIR_Assert((q->head != NULL) ^ (q->tail == NULL));
+    MPIDI_CH4U_win_lock_recvd_t *lock_recvd_q = &MPIDI_CH4U_WIN(win, sync).lock_recvd;
+    MPIR_Assert((lock_recvd_q->head != NULL) ^ (lock_recvd_q->tail == NULL));
 
-    if (q->tail == NULL)
-        q->head = lock;
+    if (lock_recvd_q->tail == NULL)
+        lock_recvd_q->head = lock;
     else
-        q->tail->next = lock;
+        lock_recvd_q->tail->next = lock;
 
-    q->tail = lock;
+    lock_recvd_q->tail = lock;
 
     MPIDI_win_lock_advance(win);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_WIN_LOCK_REQ_PROC);
@@ -235,10 +234,18 @@ static inline void MPIDI_win_lock_ack_proc(int handler_id,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_WIN_LOCK_ACK_PROC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_LOCK_ACK_PROC);
 
-    if (handler_id == MPIDI_CH4U_WIN_LOCK_ACK)
-        MPIDI_CH4U_WIN(win, sync).lock.remote.locked += 1;
-    else if (handler_id == MPIDI_CH4U_WIN_LOCKALL_ACK)
-        MPIDI_CH4U_WIN(win, sync).lock.remote.allLocked += 1;
+    if (handler_id == MPIDI_CH4U_WIN_LOCK_ACK) {
+        MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
+
+        MPIR_Assert((int) target_ptr->sync.lock.locked == 0);
+        target_ptr->sync.lock.locked = 1;
+    }
+    else if (handler_id == MPIDI_CH4U_WIN_LOCKALL_ACK) {
+        MPIDI_CH4U_WIN(win, sync).lockall.allLocked += 1;
+    }
+    else {
+        MPIR_Assert(0);
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_WIN_LOCK_ACK_PROC);
 }
@@ -254,8 +261,9 @@ static inline void MPIDI_win_unlock_proc(const MPIDI_CH4U_win_cntrl_msg_t * info
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_WIN_UNLOCK_PROC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_UNLOCK_PROC);
 
-    --MPIDI_CH4U_WIN(win, sync).lock.local.count;
-    MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lock.local.count >= 0);
+    /* NOTE: origin blocking waits in lock or lockall call till lock granted. */
+    --MPIDI_CH4U_WIN(win, sync).lock_recvd.count;
+    MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lock_recvd.count >= 0);
     MPIDI_win_lock_advance(win);
 
     MPIDI_CH4U_win_cntrl_msg_t msg;
@@ -312,12 +320,15 @@ static inline void MPIDI_win_unlock_done(const MPIDI_CH4U_win_cntrl_msg_t * info
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_WIN_UNLOCK_DONE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_UNLOCK_DONE);
 
-    if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK) {
-        MPIDI_CH4U_WIN(win, sync).lock.remote.locked--;
+    if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK) {
+        MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
+
+        MPIR_Assert((int) target_ptr->sync.lock.locked == 1);
+        target_ptr->sync.lock.locked = 0;
     }
-    else if (MPIDI_CH4U_WIN(win, sync).origin_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK_ALL) {
-        MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lock.remote.allLocked > 0);
-        MPIDI_CH4U_WIN(win, sync).lock.remote.allLocked -= 1;
+    else if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK_ALL) {
+        MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lockall.allLocked > 0);
+        MPIDI_CH4U_WIN(win, sync).lockall.allLocked -= 1;
     }
     else {
         MPIR_Assert(0);
@@ -350,8 +361,8 @@ static inline int MPIDI_do_accumulate_op(void *source_buf, int source_count,
 
     if (is_empty_source == FALSE) {
         MPIR_Assert(MPIR_DATATYPE_IS_PREDEFINED(source_dtp));
-        MPID_Datatype_get_size_macro(source_dtp, source_dtp_size);
-        MPID_Datatype_get_extent_macro(source_dtp, source_dtp_extent);
+        MPIR_Datatype_get_size_macro(source_dtp, source_dtp_size);
+        MPIR_Datatype_get_extent_macro(source_dtp, source_dtp_extent);
     }
 
     if (HANDLE_GET_KIND(acc_op) == HANDLE_KIND_BUILTIN) {
@@ -386,7 +397,7 @@ static inline int MPIDI_do_accumulate_op(void *source_buf, int source_count,
     }
     else {
         /* derived datatype */
-        MPID_Segment *segp;
+        MPIR_Segment *segp;
         DLOOP_VECTOR *dloop_vec;
         MPI_Aint first, last;
         int vec_len, i, count;
@@ -397,7 +408,7 @@ static inline int MPIDI_do_accumulate_op(void *source_buf, int source_count,
         void *curr_loc;
         int accumulated_count;
 
-        segp = MPIDU_Segment_alloc();
+        segp = MPIR_Segment_alloc();
         /* --BEGIN ERROR HANDLING-- */
         if (!segp) {
             mpi_errno =
@@ -406,11 +417,11 @@ static inline int MPIDI_do_accumulate_op(void *source_buf, int source_count,
             goto fn_exit;
         }
         /* --END ERROR HANDLING-- */
-        MPIDU_Segment_init(NULL, target_count, target_dtp, segp, 0);
+        MPIR_Segment_init(NULL, target_count, target_dtp, segp, 0);
         first = stream_offset;
         last = first + source_count * source_dtp_size;
 
-        MPID_Datatype_get_ptr(target_dtp, dtp);
+        MPIR_Datatype_get_ptr(target_dtp, dtp);
         vec_len = dtp->max_contig_blocks * target_count + 1;
         /* +1 needed because Rob says so */
         dloop_vec = (DLOOP_VECTOR *)
@@ -424,7 +435,7 @@ static inline int MPIDI_do_accumulate_op(void *source_buf, int source_count,
         }
         /* --END ERROR HANDLING-- */
 
-        MPIDU_Segment_pack_vector(segp, first, &last, dloop_vec, &vec_len);
+        MPIR_Segment_pack_vector(segp, first, &last, dloop_vec, &vec_len);
 
         type = dtp->basic_type;
         MPIR_Assert(type != MPI_DATATYPE_NULL);
@@ -465,7 +476,7 @@ static inline int MPIDI_do_accumulate_op(void *source_buf, int source_count,
             accumulated_count += count;
         }
 
-        MPIDU_Segment_free(segp);
+        MPIR_Segment_free(segp);
         MPL_free(dloop_vec);
     }
 
@@ -489,7 +500,7 @@ static inline int MPIDI_handle_acc_cmpl(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_HANDLE_ACC_CMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_HANDLE_ACC_CMPL);
 
-    MPID_Datatype_get_size_macro(MPIDI_CH4U_REQUEST(rreq, req->areq.target_datatype), basic_sz);
+    MPIR_Datatype_get_size_macro(MPIDI_CH4U_REQUEST(rreq, req->areq.target_datatype), basic_sz);
     data_sz = MPIDI_CH4U_REQUEST(rreq, req->areq.data_sz);
 
     /* MPIDI_CS_ENTER(); */
@@ -562,7 +573,7 @@ static inline int MPIDI_handle_get_acc_cmpl(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_HANDLE_GET_ACC_CMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_HANDLE_GET_ACC_CMPL);
 
-    MPID_Datatype_get_size_macro(MPIDI_CH4U_REQUEST(rreq, req->areq.target_datatype), basic_sz);
+    MPIR_Datatype_get_size_macro(MPIDI_CH4U_REQUEST(rreq, req->areq.target_datatype), basic_sz);
     data_sz = MPIDI_CH4U_REQUEST(rreq, req->areq.data_sz);
 
     /* MPIDI_CS_ENTER(); */
@@ -1152,7 +1163,7 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
     int dt_contig, n_iov;
     MPI_Aint dt_true_lb, last, num_iov;
     MPIR_Datatype *dt_ptr;
-    MPID_Segment *segment_ptr;
+    MPIR_Segment *segment_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACC_ACK_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACC_ACK_TARGET_MSG_CB);
@@ -1173,15 +1184,15 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
         *data = (char *) MPIDI_CH4U_REQUEST(areq, req->areq.result_addr) + dt_true_lb;
     }
     else {
-        segment_ptr = MPIDU_Segment_alloc();
+        segment_ptr = MPIR_Segment_alloc();
         MPIR_Assert(segment_ptr);
 
-        MPIDU_Segment_init(MPIDI_CH4U_REQUEST(areq, req->areq.result_addr),
+        MPIR_Segment_init(MPIDI_CH4U_REQUEST(areq, req->areq.result_addr),
                            MPIDI_CH4U_REQUEST(areq, req->areq.result_count),
                            MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype), segment_ptr, 0);
 
         last = data_sz;
-        MPIDU_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+        MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
         n_iov = (int) num_iov;
         MPIR_Assert(n_iov > 0);
         MPIDI_CH4U_REQUEST(areq, req->iov) =
@@ -1189,7 +1200,7 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
         MPIR_Assert(MPIDI_CH4U_REQUEST(areq, req->iov));
 
         last = data_sz;
-        MPIDU_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(areq, req->iov),
+        MPIR_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(areq, req->iov),
                                   &n_iov);
         MPIR_Assert(last == (MPI_Aint) data_sz);
         *data = MPIDI_CH4U_REQUEST(areq, req->iov);
@@ -1326,7 +1337,7 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
     int dt_contig, n_iov;
     MPI_Aint dt_true_lb, last, num_iov;
     MPIR_Datatype *dt_ptr;
-    MPID_Segment *segment_ptr;
+    MPIR_Segment *segment_ptr;
     MPIR_Win *win;
     MPIDI_CH4U_put_msg_t *msg_hdr = (MPIDI_CH4U_put_msg_t *) am_hdr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PUT_TARGET_MSG_CB);
@@ -1378,13 +1389,13 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
         *data = (char *) (offset + base + dt_true_lb);
     }
     else {
-        segment_ptr = MPIDU_Segment_alloc();
+        segment_ptr = MPIR_Segment_alloc();
         MPIR_Assert(segment_ptr);
 
-        MPIDU_Segment_init((void *) (offset + base), msg_hdr->count, msg_hdr->datatype,
+        MPIR_Segment_init((void *) (offset + base), msg_hdr->count, msg_hdr->datatype,
                            segment_ptr, 0);
         last = data_sz;
-        MPIDU_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+        MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
         n_iov = (int) num_iov;
         MPIR_Assert(n_iov > 0);
         MPIDI_CH4U_REQUEST(rreq, req->iov) =
@@ -1392,7 +1403,7 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
         MPIR_Assert(MPIDI_CH4U_REQUEST(rreq, req->iov));
 
         last = data_sz;
-        MPIDU_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov),
+        MPIR_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov),
                                   &n_iov);
         MPIR_Assert(last == (MPI_Aint) data_sz);
         *data = MPIDI_CH4U_REQUEST(rreq, req->iov);
@@ -2036,7 +2047,7 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
     int dt_contig, n_iov;
     MPI_Aint dt_true_lb, last, num_iov;
     MPIR_Datatype *dt_ptr;
-    MPID_Segment *segment_ptr;
+    MPIR_Segment *segment_ptr;
 
     MPIDI_CH4U_get_ack_msg_t *msg_hdr = (MPIDI_CH4U_get_ack_msg_t *) am_hdr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACK_TARGET_MSG_CB);
@@ -2068,14 +2079,14 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
         *data = (char *) (MPIDI_CH4U_REQUEST(rreq, req->greq.addr) + dt_true_lb);
     }
     else {
-        segment_ptr = MPIDU_Segment_alloc();
+        segment_ptr = MPIR_Segment_alloc();
         MPIR_Assert(segment_ptr);
 
-        MPIDU_Segment_init((void *) MPIDI_CH4U_REQUEST(rreq, req->greq.addr),
+        MPIR_Segment_init((void *) MPIDI_CH4U_REQUEST(rreq, req->greq.addr),
                            MPIDI_CH4U_REQUEST(rreq, req->greq.count),
                            MPIDI_CH4U_REQUEST(rreq, req->greq.datatype), segment_ptr, 0);
         last = data_sz;
-        MPIDU_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
+        MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
         n_iov = (int) num_iov;
         MPIR_Assert(n_iov > 0);
         MPIDI_CH4U_REQUEST(rreq, req->iov) =
@@ -2083,7 +2094,7 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
         MPIR_Assert(MPIDI_CH4U_REQUEST(rreq, req->iov));
 
         last = data_sz;
-        MPIDU_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov),
+        MPIR_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov),
                                   &n_iov);
         MPIR_Assert(last == (MPI_Aint) data_sz);
         *data = MPIDI_CH4U_REQUEST(rreq, req->iov);

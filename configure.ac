@@ -1239,7 +1239,7 @@ AC_SUBST([opalib])
 
 if test "$with_openpa_prefix" = "embedded" ; then
     if test -e "${use_top_srcdir}/src/openpa" ; then
-        opasrcdir="${master_top_builddir}/src/openpa"
+        opasrcdir="src/openpa"
         opalib="src/openpa/src/lib${OPALIBNAME}.la"
         PAC_APPEND_FLAG([-I${use_top_srcdir}/src/openpa/src],[CPPFLAGS])
         PAC_APPEND_FLAG([-I${master_top_builddir}/src/openpa/src],[CPPFLAGS])
@@ -4739,6 +4739,11 @@ AC_DEFINE_UNQUOTED([MPIR_AINT_MAX],[$MPIR_AINT_MAX],[limits.h _MAX constant for 
 # If sizeof(mpi_aint) = sizeof(int), set this value
 if test "$ac_cv_sizeof_int" = "$aint_size" ; then
     AC_DEFINE(SIZEOF_INT_IS_AINT,1,[define if sizeof(int) = sizeof(MPI_Aint)])
+fi
+
+# If sizeof(mpi_aint) = sizeof(int), set this value
+if test "$ac_cv_sizeof_void_p" = "$aint_size" ; then
+    AC_DEFINE(SIZEOF_PTR_IS_AINT,1,[define if sizeof(void *) = sizeof(MPI_Aint)])
 fi
 
 # ----------------------------------------------------------------------------

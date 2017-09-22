@@ -237,6 +237,7 @@ int MPID_Abort(struct MPIR_Comm *comm, int mpi_errno, int exit_code, const char 
  * function to query locality. This function will determine whether to call the
  * netmod or CH4U locality functions. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm);
+MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t *av);
 
 /* Include netmod prototypes */
 #include <netmod.h>

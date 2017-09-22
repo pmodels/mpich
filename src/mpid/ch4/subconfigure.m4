@@ -380,19 +380,8 @@ if test "$enable_ch4r_per_comm_msg_queue" = "yes" ; then
         [Define if CH4U will use per-communicator message queues])
 fi
 
-PAC_ARG_SHARED_MEMORY
-
-AC_CONFIG_FILES([
-src/mpid/ch4/src/mpid_ch4_net_array.c
-src/mpid/ch4/include/netmodpre.h
-src/mpid/ch4/include/shmpre.h
-])
-PAC_ARG_SHARED_MEMORY
-])dnl end AM_COND_IF(BUILD_CH4,...)
-
-AM_CONDITIONAL([BUILD_CH4_SHM],[test "$ch4_shm_level" = "yes" -o "$ch4_shm_level" = "exclusive"])
-
 AC_CHECK_HEADERS(sys/mman.h sys/stat.h fcntl.h)
+AC_CHECK_FUNC(mmap, [], [AC_MSG_ERROR(mmap is required to build CH4)])
 
 gl_FUNC_RANDOM_R
 if test "$HAVE_RANDOM_R" = "1" -a "$HAVE_STRUCT_RANDOM_DATA" = "1" ; then
@@ -402,6 +391,20 @@ else
     AC_MSG_NOTICE([Using a non-symmetric heap])
 fi
 
+AC_CHECK_FUNCS(gethostname)
+if test "$ac_cv_func_gethostname" = "yes" ; then
+    # Do we need to declare gethostname?
+    PAC_FUNC_NEEDS_DECL([#include <unistd.h>],gethostname)
+fi
+
+AC_CONFIG_FILES([
+src/mpid/ch4/src/mpid_ch4_net_array.c
+src/mpid/ch4/include/netmodpre.h
+src/mpid/ch4/include/shmpre.h
+])
+])dnl end AM_COND_IF(BUILD_CH4,...)
+
+AM_CONDITIONAL([BUILD_CH4_SHM],[test "$ch4_shm_level" = "yes" -o "$ch4_shm_level" = "exclusive"])
 
 ])dnl end _BODY
 

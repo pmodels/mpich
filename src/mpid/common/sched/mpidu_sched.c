@@ -11,12 +11,71 @@
  * be a real tunable parameter. */
 #define MPIDU_SCHED_INITIAL_ENTRIES (16)
 
-#if 0
-#define dprintf fprintf
-#else
-/* FIXME this requires VA_ARGS macros */
-#define dprintf(...) do {} while (0)
-#endif
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_COLL_SCHED_DUMP
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Print schedule data for nonblocking collective operations.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
+static const char *entry_to_str(enum MPIDU_Sched_entry_type type)
+{
+    switch (type) {
+    case MPIDU_SCHED_ENTRY_SEND:
+        return "SEND";
+    case MPIDU_SCHED_ENTRY_RECV:
+        return "RECV";
+    case MPIDU_SCHED_ENTRY_REDUCE:
+        return "REDUCE";
+    case MPIDU_SCHED_ENTRY_COPY:
+        return "COPY";
+    case MPIDU_SCHED_ENTRY_NOP:
+        return "NOP";
+    case MPIDU_SCHED_ENTRY_CB:
+        return "CB";
+    default:
+        return "(out of range)";
+    }
+}
+
+/* utility function for debugging, dumps the given schedule object to fh */
+static void sched_dump(struct MPIDU_Sched *s, FILE * fh)
+{
+    int i;
+
+    fprintf(fh, "--------------------------------\n");
+    fprintf(fh, "s=%p\n", s);
+    if (s) {
+        fprintf(fh, "s->size=%zd\n", s->size);
+        fprintf(fh, "s->idx=%zd\n", s->idx);
+        fprintf(fh, "s->num_entries=%d\n", s->num_entries);
+        fprintf(fh, "s->tag=%d\n", s->tag);
+        fprintf(fh, "s->req=%p\n", s->req);
+        fprintf(fh, "s->entries=%p\n", s->entries);
+        for (i = 0; i < s->num_entries; ++i) {
+            fprintf(fh, "&s->entries[%d]=%p\n", i, &s->entries[i]);
+            fprintf(fh, "s->entries[%d].type=%s\n", i, entry_to_str(s->entries[i].type));
+            fprintf(fh, "s->entries[%d].status=%d\n", i, s->entries[i].status);
+            fprintf(fh, "s->entries[%d].is_barrier=%s\n", i,
+                    (s->entries[i].is_barrier ? "TRUE" : "FALSE"));
+        }
+    }
+    fprintf(fh, "--------------------------------\n");
+    /*
+     * fprintf(fh, "s->next=%p\n", s->next);
+     * fprintf(fh, "s->prev=%p\n", s->prev);
+     */
+}
 
 /* helper macros to improve code readability */
 /* we pessimistically assume that MPI_DATATYPE_NULL may be passed as a "valid" type
@@ -28,8 +87,8 @@
             HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)   \
         {                                                          \
             MPIR_Datatype *dtp_ = NULL;                            \
-            MPID_Datatype_get_ptr((datatype_), dtp_);              \
-            MPID_Datatype_add_ref(dtp_);                           \
+            MPIR_Datatype_get_ptr((datatype_), dtp_);              \
+            MPIR_Datatype_add_ref(dtp_);                           \
         }                                                          \
     } while (0)
 #endif
@@ -40,15 +99,11 @@
             HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)   \
         {                                                          \
             MPIR_Datatype *dtp_ = NULL;                            \
-            MPID_Datatype_get_ptr((datatype_), dtp_);              \
-            MPID_Datatype_release(dtp_);                           \
+            MPIR_Datatype_get_ptr((datatype_), dtp_);              \
+            MPIR_Datatype_release(dtp_);                           \
         }                                                          \
     } while (0)
 #endif
-
-/* TODO move to a header somewhere? */
-void MPIDU_Sched_dump(struct MPIDU_Sched *s);
-void MPIDU_Sched_dump_fh(struct MPIDU_Sched *s, FILE * fh);
 
 struct MPIDU_Sched_state {
     struct MPIDU_Sched *head;
@@ -445,7 +500,8 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
     MPL_DL_APPEND(all_schedules.head, s);
 
     MPL_DBG_MSG_P(MPIR_DBG_COMM, TYPICAL, "started schedule s=%p\n", s);
-    MPIDU_Sched_dump(s);
+    if (MPIR_CVAR_COLL_SCHED_DUMP)
+        sched_dump(s, stderr);
 
   fn_exit:
     return mpi_errno;
@@ -766,8 +822,8 @@ int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
 #if defined(HAVE_ERROR_CHECKING) && !defined(NDEBUG)
     {
         MPI_Aint intype_size, outtype_size;
-        MPID_Datatype_get_size_macro(intype, intype_size);
-        MPID_Datatype_get_size_macro(outtype, outtype_size);
+        MPIR_Datatype_get_size_macro(intype, intype_size);
+        MPIR_Datatype_get_size_macro(outtype, outtype_size);
         if (incount * intype_size > outcount * outtype_size) {
             MPL_error_printf("truncation: intype=%#x, intype_size=" MPI_AINT_FMT_DEC_SPEC ", incount=" MPI_AINT_FMT_DEC_SPEC ", outtype=%#x, outtype_size=" MPI_AINT_FMT_DEC_SPEC " outcount=" MPI_AINT_FMT_DEC_SPEC "\n",
                               intype, intype_size,
@@ -880,7 +936,8 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
         *made_progress = FALSE;
 
     MPL_DL_FOREACH_SAFE(state->head, s, tmp) {
-        /*MPIDU_Sched_dump(s); */
+        if (MPIR_CVAR_COLL_SCHED_DUMP)
+	    sched_dump(s, stderr);
 
         for (i = s->idx; i < s->num_entries; ++i) {
             struct MPIDU_Sched_entry *e = &s->entries[i];
@@ -1001,67 +1058,4 @@ int MPIDU_Sched_progress(int *made_progress)
     }
 
     return mpi_errno;
-}
-
-static const char *entry_to_str(enum MPIDU_Sched_entry_type type) ATTRIBUTE((unused, used));
-static const char *entry_to_str(enum MPIDU_Sched_entry_type type)
-{
-    switch (type) {
-    case MPIDU_SCHED_ENTRY_SEND:
-        return "SEND";
-    case MPIDU_SCHED_ENTRY_RECV:
-        return "RECV";
-    case MPIDU_SCHED_ENTRY_REDUCE:
-        return "REDUCE";
-    case MPIDU_SCHED_ENTRY_COPY:
-        return "COPY";
-    case MPIDU_SCHED_ENTRY_NOP:
-        return "NOP";
-    case MPIDU_SCHED_ENTRY_CB:
-        return "CB";
-    default:
-        return "(out of range)";
-    }
-}
-
-/* utility function for debugging, dumps the given schedule object to fh */
-#undef FUNCNAME
-#define FUNCNAME MPIDU_Sched_dump_fh
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIDU_Sched_dump_fh(struct MPIDU_Sched *s, FILE * fh)
-{
-    int i;
-    dprintf(fh, "--------------------------------\n");
-    dprintf(fh, "s=%p\n", s);
-    if (s) {
-        dprintf(fh, "s->size=%zd\n", s->size);
-        dprintf(fh, "s->idx=%zd\n", s->idx);
-        dprintf(fh, "s->num_entries=%d\n", s->num_entries);
-        dprintf(fh, "s->tag=%d\n", s->tag);
-        dprintf(fh, "s->req=%p\n", s->req);
-        dprintf(fh, "s->entries=%p\n", s->entries);
-        for (i = 0; i < s->num_entries; ++i) {
-            dprintf(fh, "&s->entries[%d]=%p\n", i, &s->entries[i]);
-            dprintf(fh, "s->entries[%d].type=%s\n", i, entry_to_str(s->entries[i].type));
-            dprintf(fh, "s->entries[%d].status=%d\n", i, s->entries[i].status);
-            dprintf(fh, "s->entries[%d].is_barrier=%s\n", i,
-                    (s->entries[i].is_barrier ? "TRUE" : "FALSE"));
-        }
-    }
-    dprintf(fh, "--------------------------------\n");
-    /*
-     * dprintf(fh, "s->next=%p\n", s->next);
-     * dprintf(fh, "s->prev=%p\n", s->prev);
-     */
-}
-
-/* utility function for debugging, dumps the given schedule object to stderr */
-#undef FUNCNAME
-#define FUNCNAME MPIDU_Sched_dump
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIDU_Sched_dump(struct MPIDU_Sched *s)
-{
-    MPIDU_Sched_dump_fh(s, stderr);
 }

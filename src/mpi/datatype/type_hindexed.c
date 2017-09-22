@@ -114,7 +114,7 @@ int MPI_Type_hindexed(int count,
 	    }
 
             if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
-                MPID_Datatype_get_ptr( oldtype, datatype_ptr );
+                MPIR_Datatype_get_ptr( oldtype, datatype_ptr );
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
@@ -131,7 +131,7 @@ int MPI_Type_hindexed(int count,
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPID_Type_indexed(count,
+    mpi_errno = MPIR_Type_indexed(count,
 				  array_of_blocklengths,
 				  array_of_displacements,
 				  1, /* displacements in bytes */
@@ -148,8 +148,8 @@ int MPI_Type_hindexed(int count,
 	ints[i+1] = array_of_blocklengths[i];
     }
 
-    MPID_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPID_Datatype_set_contents(new_dtp,
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp,
 				           MPI_COMBINER_HINDEXED,
 				           count+1, /* ints */
 				           count, /* aints (displs) */
