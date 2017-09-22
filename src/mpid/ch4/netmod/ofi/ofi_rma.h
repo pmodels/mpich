@@ -1160,7 +1160,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
         originv = &req->noncontig->buf.iov.get_accumulate.originv[cur_o];
         targetv = &req->noncontig->buf.iov.get_accumulate.targetv[cur_t];
         resultv = &req->noncontig->buf.iov.get_accumulate.resultv[cur_r];
-        omax = rmax = MPIDI_Global.tx_iov_limit;
+        omax = rmax = MPIDI_OFI_FETCH_ATOMIC_IOVECS < 0 ? MPIDI_Global.rma_iov_limit : MPIDI_OFI_FETCH_ATOMIC_IOVECS;
         tmax = MPIDI_OFI_FETCH_ATOMIC_IOVECS < 0 ? MPIDI_Global.rma_iov_limit : MPIDI_OFI_FETCH_ATOMIC_IOVECS;
 
         if (op != MPI_NO_OP)
