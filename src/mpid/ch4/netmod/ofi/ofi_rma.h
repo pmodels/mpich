@@ -434,7 +434,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     while (rc == MPIDI_OFI_IOV_EAGAIN) {
         originv = &req->noncontig->buf.iov.put_get.originv[cur_o];
         targetv = &req->noncontig->buf.iov.put_get.targetv[cur_t];
-        omax = MPIDI_Global.tx_iov_limit;
+        omax = MPIDI_Global.rma_iov_limit;
         tmax = MPIDI_Global.rma_iov_limit;
         rc = MPIDI_OFI_merge_iov_list(&req->noncontig->iovs, originv,
                                       omax, targetv, tmax, &oout, &tout);
@@ -595,7 +595,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     while (rc == MPIDI_OFI_IOV_EAGAIN) {
         originv = &req->noncontig->buf.iov.put_get.originv[cur_o];
         targetv = &req->noncontig->buf.iov.put_get.targetv[cur_t];
-        omax = MPIDI_Global.tx_iov_limit;
+        omax = MPIDI_Global.rma_iov_limit;
         tmax = MPIDI_Global.rma_iov_limit;
         rc = MPIDI_OFI_merge_iov_list(&req->noncontig->iovs, originv,
                                       omax, targetv, tmax, &oout, &tout);
@@ -1007,7 +1007,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     while (rc == MPIDI_OFI_IOV_EAGAIN) {
         originv = &req->noncontig->buf.iov.accumulate.originv[cur_o];
         targetv = &req->noncontig->buf.iov.accumulate.targetv[cur_t];
-        omax = MPIDI_Global.tx_iov_limit;
+        omax = MPIDI_Global.rma_iov_limit;
         tmax = MPIDI_Global.rma_iov_limit;
         rc = MPIDI_OFI_merge_iov_list(&req->noncontig->iovs, (struct iovec *) originv, omax,
                                       (struct fi_rma_iov *) targetv, tmax, &oout, &tout);
