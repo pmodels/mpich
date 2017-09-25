@@ -746,7 +746,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 #endif
 #endif
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                            (MPL_DBG_FDEST, " grank mapped to: rank=%d, av=%p, dest=%lu",
+                            (MPL_DBG_FDEST, " grank mapped to: rank=%d, av=%p, dest=%" PRIu64,
                              i, (void*)&MPIDIU_get_av(0, i), mapped_table[i]));
         }
         mapped_table = NULL;
@@ -1256,7 +1256,7 @@ static inline int MPIDI_NM_upids_to_lupids(int size,
 #endif
 #endif
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP,VERBOSE,
-                            (MPL_DBG_FDEST, "\tupids to lupids avtid %d lpid %d mapped to %lu",
+                            (MPL_DBG_FDEST, "\tupids to lupids avtid %d lpid %d mapped to %" PRIu64,
                              avtid, i, MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest));
             /* highest bit is marked as 1 to indicate this is a new process */
             (*remote_lupids)[new_avt_procs[i]] = MPIDIU_LUPID_CREATE(avtid, i);
@@ -1445,7 +1445,7 @@ static inline int MPIDI_OFI_application_hints(int rank)
         fprintf(stdout, "MAXIMUM SUPPORTED RANKS: %ld\n", (long int) 1 << MPIDI_OFI_MAX_RANK_BITS);
 
         /* Discover the tag_ub */
-        fprintf(stdout, "MAXIMUM TAG: %" PRIu64 "\n", 1UL << MPIDI_OFI_TAG_BITS);
+        fprintf(stdout, "MAXIMUM TAG: %lu\n", 1UL << MPIDI_OFI_TAG_BITS);
         fprintf(stdout, "======================================\n");
     }
 

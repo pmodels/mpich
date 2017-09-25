@@ -487,7 +487,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn,
     MPIDI_Global.conn_mgr.conn_list[conn_id].state = state;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, " new_conn_id=%d for conn=%lu rank=%d state=%d",
+                    (MPL_DBG_FDEST, " new_conn_id=%d for conn=%" PRIu64 " rank=%d state=%d",
                      conn_id, conn, rank,
                      MPIDI_Global.conn_mgr.conn_list[conn_id].state));
 
