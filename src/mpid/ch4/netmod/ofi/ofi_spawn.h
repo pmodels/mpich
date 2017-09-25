@@ -243,7 +243,7 @@ static inline int MPIDI_OFI_dynproc_handshake(int root,
         msg.data = 0;
 
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,
-                        (MPL_DBG_FDEST, "connecting port_id %d, conn %lu, waiting for MPIDI_OFI_dynproc_handshake",
+                        (MPL_DBG_FDEST, "connecting port_id %d, conn %" PRIu64 ", waiting for MPIDI_OFI_dynproc_handshake",
                          port_id, *conn));
         time_gap = 0.0;
         MPID_Wtime(&time_sta);
@@ -263,7 +263,7 @@ static inline int MPIDI_OFI_dynproc_handshake(int root,
             if ((int) time_gap >= timeout) {
                 /* connection is timed out */
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,
-                                (MPL_DBG_FDEST, "connection to port_id %d, conn %lu ack timed out",
+                                (MPL_DBG_FDEST, "connection to port_id %d, conn %" PRIu64 " ack timed out",
                                  port_id, *conn));
                 mpi_errno = MPI_ERR_PORT;
                 goto fn_fail;
@@ -293,7 +293,7 @@ static inline int MPIDI_OFI_dynproc_handshake(int root,
         if ((int) time_gap >= timeout) {
             /* connection is mismatched */
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,
-                            (MPL_DBG_FDEST, "connection to port_id %d, conn %lu ack mismatched",
+                            (MPL_DBG_FDEST, "connection to port_id %d, conn %" PRIu64 " ack mismatched",
                              port_id, *conn));
             mpi_errno = MPI_ERR_PORT;
             goto fn_fail;
