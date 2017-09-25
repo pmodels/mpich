@@ -180,12 +180,12 @@ typedef int (*MPIDI_NM_mpi_get_accumulate_t) (const void *origin_addr, int origi
 typedef int (*MPIDI_NM_mpi_win_lock_all_t) (int assert, MPIR_Win * win);
 typedef int (*MPIDI_NM_rank_is_local_t) (int target, MPIR_Comm * comm);
 typedef int (*MPIDI_NM_av_is_local_t) (MPIDI_av_entry_t *av);
-typedef int (*MPIDI_NM_mpi_barrier_t) (MPIR_Comm * comm, MPIR_Errflag_t * errflag);
+typedef int (*MPIDI_NM_mpi_barrier_t) (MPIR_Comm * comm, MPIR_Errflag_t * errflag, void * algo_parameters_ptr);
 typedef int (*MPIDI_NM_mpi_bcast_t) (void *buffer, int count, MPI_Datatype datatype, int root,
-                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag);
+                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag, void * algo_parameters_ptr);
 typedef int (*MPIDI_NM_mpi_allreduce_t) (const void *sendbuf, void *recvbuf, int count,
                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                         MPIR_Errflag_t * errflag);
+                                         MPIR_Errflag_t * errflag, void * algo_parameters_ptr);
 typedef int (*MPIDI_NM_mpi_allgather_t) (const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                          MPIR_Comm * comm, MPIR_Errflag_t * errflag);
@@ -222,7 +222,7 @@ typedef int (*MPIDI_NM_mpi_alltoallw_t) (const void *sendbuf, const int *sendcou
                                          MPIR_Errflag_t * errflag);
 typedef int (*MPIDI_NM_mpi_reduce_t) (const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
-                                      MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
+                                      MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag, void * algo_parameters_ptr);
 typedef int (*MPIDI_NM_mpi_reduce_scatter_t) (const void *sendbuf, void *recvbuf,
                                               const int *recvcounts, MPI_Datatype datatype,
                                               MPI_Op op, MPIR_Comm * comm_ptr,
