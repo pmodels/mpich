@@ -331,6 +331,28 @@ HYD_status HYDU_sock_set_nonblock(int fd)
     goto fn_exit;
 }
 
+HYD_status HYDU_sock_set_block(int fd)
+{
+    int flags;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    if ((flags = fcntl(fd, F_GETFL, 0)) == -1)
+        flags = 0;
+#if defined O_NONBLOCK
+    if (fcntl(fd, F_SETFL, flags & ~O_NONBLOCK) < 0)
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "fcntl failed on %d\n", fd);
+#endif /* O_NONBLOCK */
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static HYD_status alloc_fwd_hash(struct fwd_hash **fwd_hash, int in, int out)
 {
     HYD_status status = HYD_SUCCESS;

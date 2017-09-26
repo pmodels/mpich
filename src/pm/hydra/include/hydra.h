@@ -601,6 +601,7 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *recvd, int *closed
 HYD_status HYDU_sock_write(int fd, const void *buf, int maxlen, int *sent, int *closed,
                            enum HYDU_sock_comm_flag flag);
 HYD_status HYDU_sock_set_nonblock(int fd);
+HYD_status HYDU_sock_set_block(int fd);
 HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed);
 void HYDU_sock_finalize(void);
 HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip);
