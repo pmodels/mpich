@@ -16,6 +16,7 @@
 MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     MPIDI_NM_mpi_init_hook,
     MPIDI_NM_mpi_finalize_hook,
+    MPIDI_NM_get_vni_attr,
     MPIDI_NM_progress,
     MPIDI_NM_mpi_comm_connect,
     MPIDI_NM_mpi_comm_disconnect,
@@ -95,6 +96,7 @@ MPIDI_NM_native_funcs_t MPIDI_NM_native_stubnm_funcs = {
     MPIDI_NM_mpi_get_accumulate,
     MPIDI_NM_mpi_win_lock_all,
     MPIDI_NM_rank_is_local,
+    MPIDI_NM_av_is_local,
     MPIDI_NM_mpi_barrier,
     MPIDI_NM_mpi_bcast,
     MPIDI_NM_mpi_allreduce,
