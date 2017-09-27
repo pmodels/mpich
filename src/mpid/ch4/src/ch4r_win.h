@@ -661,7 +661,7 @@ static inline int MPIDI_CH4R_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_
             strncpy(buf, "none", BUFSIZE);
         }
 
-        MPIR_Info_set_impl(*info_p_p, "accumulate_ordering", buf);
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_ordering", buf);
         MPIR_Assert(mpi_errno == MPI_SUCCESS);
 #undef BUFSIZE
     }
