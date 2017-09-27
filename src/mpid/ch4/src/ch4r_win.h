@@ -256,7 +256,7 @@ static inline int MPIDI_CH4I_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Grou
                                                    int *ranks_in_win_grp)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, *ranks_in_grp;
+    int i, *ranks_in_grp = NULL;
     MPIR_Group *win_grp_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_FILL_RANKS_IN_WIN_GRP);
@@ -280,9 +280,9 @@ static inline int MPIDI_CH4I_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Grou
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
+  fn_exit:
     MPL_free(ranks_in_grp);
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH4I_FILL_RANKS_IN_WIN_GRP);
     return mpi_errno;
   fn_fail:
@@ -333,7 +333,7 @@ static inline int MPIDI_CH4R_mpi_win_complete(MPIR_Win * win)
     MPIDI_CH4U_win_cntrl_msg_t msg;
     int index, peer;
     MPIR_Group *group;
-    int *ranks_in_win_grp;
+    int *ranks_in_win_grp = NULL;
     int all_local_completed = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_COMPLETE);
@@ -369,12 +369,13 @@ static inline int MPIDI_CH4R_mpi_win_complete(MPIR_Win * win)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     }
 
-    MPL_free(ranks_in_win_grp);
     MPIDI_CH4U_WIN(win, sync).access_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
     MPIR_Group_release(MPIDI_CH4U_WIN(win, sync).sc.group);
     MPIDI_CH4U_WIN(win, sync).sc.group = NULL;
 
   fn_exit:
+    MPL_free(ranks_in_win_grp);
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_COMPLETE);
     return mpi_errno;
   fn_fail:
@@ -390,7 +391,7 @@ static inline int MPIDI_CH4R_mpi_win_post(MPIR_Group * group, int assert, MPIR_W
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH4U_win_cntrl_msg_t msg;
     int index, peer;
-    int *ranks_in_win_grp;
+    int *ranks_in_win_grp = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_POST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_POST);
@@ -425,10 +426,11 @@ static inline int MPIDI_CH4R_mpi_win_post(MPIR_Group * group, int assert, MPIR_W
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     }
 
-    MPL_free(ranks_in_win_grp);
   no_check:
     MPIDI_CH4U_WIN(win, sync).exposure_epoch_type = MPIDI_CH4U_EPOTYPE_POST;
   fn_exit:
+    MPL_free(ranks_in_win_grp);
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_POST);
     return mpi_errno;
   fn_fail:
