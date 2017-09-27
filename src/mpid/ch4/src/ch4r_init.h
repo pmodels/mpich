@@ -93,7 +93,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_destroy_comm(MPIR_Comm * comm)
     MPIR_Assert(is_localcomm <= 1);
     MPIR_Assert(MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] != NULL);
 
-    if (MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[subcomm_type]) {
+    if (MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type]) {
         MPIR_Assert(MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type]->dev.
                     ch4.ch4u.posted_list == NULL);
         MPIR_Assert(MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type]->dev.
