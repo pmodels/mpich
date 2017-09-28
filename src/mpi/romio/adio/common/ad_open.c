@@ -176,6 +176,16 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
 
     ADIOI_OpenColl(fd, rank, access_mode, error_code);
 
+    /* deferred open consideration: if an independent process lied about
+     * "no_indep_rw" and opens the file later (example: HDF5 uses independent
+     * i/o for metadata), that deferred open will use the access_mode provided
+     * by the user.  CREATE|EXCL only makes sense here -- exclusive access in
+     * the deferred open case is going to fail and surprise the user.  Turn off
+     * the excl amode bit. Save user's ammode for MPI_FILE_GET_AMODE */
+    fd->orig_access_mode = access_mode;
+    if (fd->access_mode & ADIO_EXCL) fd->access_mode ^= ADIO_EXCL;
+
+
     /* for debugging, it can be helpful to see the hints selected. Some file
      * systes set up the hints in the open call (e.g. lustre) */
     p = getenv("ROMIO_PRINT_HINTS");
