@@ -48,7 +48,7 @@ int MPI_File_get_amode(MPI_File fh, int *amode)
     MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
     /* --END ERROR HANDLING-- */
 
-    *amode = adio_fh->access_mode;
+    *amode = adio_fh->orig_access_mode;
 
 fn_exit:
     return error_code;
