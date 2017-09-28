@@ -135,7 +135,7 @@ static inline int MPIDI_NM_am_isend(int rank,
                                                               data_sz + am_hdr_sz + sizeof(ucx_hdr),
                                                               ucp_dt_make_contig(1), ucx_tag,
                                                               &MPIDI_UCX_am_isend_callback);
-    MPIDI_CH4_UCX_REQUEST(ucp_request);
+    MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     /* send is done. free all resources and complete the request */
     if (ucp_request == NULL) {
@@ -226,7 +226,7 @@ static inline int MPIDI_NM_am_isendv(int rank,
                                                               data_sz + am_hdr_sz + sizeof(ucx_hdr),
                                                               ucp_dt_make_contig(1), ucx_tag,
                                                               &MPIDI_UCX_am_isend_callback);
-    MPIDI_CH4_UCX_REQUEST(ucp_request);
+    MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     /* send is done. free all resources and complete the request */
     if (ucp_request == NULL) {
@@ -313,7 +313,7 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
                                                               sizeof(ucx_hdr),
                                                               ucp_dt_make_contig(1), ucx_tag,
                                                               &MPIDI_UCX_am_isend_callback);
-    MPIDI_CH4_UCX_REQUEST(ucp_request);
+    MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     /* send is done. free all resources and complete the request */
     if (ucp_request == NULL) {
@@ -379,7 +379,7 @@ static inline int MPIDI_NM_am_send_hdr(int rank,
                                                               am_hdr_sz + sizeof(ucx_hdr),
                                                               ucp_dt_make_contig(1), ucx_tag,
                                                               &MPIDI_UCX_am_send_callback);
-    MPIDI_CH4_UCX_REQUEST(ucp_request);
+    MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     if (ucp_request == NULL) {
         /* inject is done */
@@ -426,7 +426,7 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
                                                               am_hdr_sz + sizeof(ucx_hdr),
                                                               ucp_dt_make_contig(1), ucx_tag,
                                                               &MPIDI_UCX_am_send_callback);
-    MPIDI_CH4_UCX_REQUEST(ucp_request);
+    MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     if (ucp_request == NULL) {
         /* inject is done */

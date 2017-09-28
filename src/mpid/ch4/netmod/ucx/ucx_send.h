@@ -93,7 +93,7 @@ static inline int MPIDI_UCX_send(const void *buf,
                                                             &MPIDI_UCX_send_cmpl_cb);
         }
     }
-    MPIDI_CH4_UCX_REQUEST(ucp_request);
+    MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     if (ucp_request) {
         req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
