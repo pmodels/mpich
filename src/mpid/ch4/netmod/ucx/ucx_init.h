@@ -253,7 +253,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
 
     for (i = 0;  i< comm->local_size; i++) {
         ucp_request = ucp_disconnect_nb(MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
-        MPIDI_CH4_UCX_REQUEST(ucp_request);
+        MPIDI_UCX_CHK_REQUEST(ucp_request);
         if(ucp_request != UCS_OK) {
             pending[p] = ucp_request;
             p++;

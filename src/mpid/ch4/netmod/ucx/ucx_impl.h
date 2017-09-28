@@ -132,7 +132,7 @@ static inline int MPIDI_UCX_get_source(uint64_t match_bits)
 
 
 
-#define MPIDI_CH4_UCX_REQUEST(_req)				\
+#define MPIDI_UCX_CHK_REQUEST(_req)				\
   do {									\
    MPIR_ERR_CHKANDJUMP4(UCS_PTR_IS_ERR(_req),				\
 			  mpi_errno,					\

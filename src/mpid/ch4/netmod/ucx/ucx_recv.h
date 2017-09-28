@@ -138,7 +138,7 @@ static inline int MPIDI_UCX_recv(void *buf,
                                                        ucp_tag, tag_mask,
                                                        &MPIDI_UCX_recv_cmpl_cb);
     }
-    MPIDI_CH4_UCX_REQUEST(ucp_request);
+    MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     if (ucp_request->req) {
         req = ucp_request->req;
@@ -189,7 +189,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                            MPIDI_UCX_REQ(message).a.message_handler,
                                                            &MPIDI_UCX_mrecv_cmpl_cb);
     }
-    MPIDI_CH4_UCX_REQUEST(ucp_request);
+    MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     if (ucp_request->req) {
         if (unlikely((ucs_status_t)ucp_request->req == UCS_ERR_MESSAGE_TRUNCATED)) {
