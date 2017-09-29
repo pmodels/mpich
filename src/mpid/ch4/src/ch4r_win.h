@@ -646,7 +646,7 @@ static inline int MPIDI_CH4R_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_
         CH4_COMPILE_TIME_ASSERT(BUFSIZE >= 16); /* maximum: strlen("rar,raw,war,waw") + 1 */
 
         if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAR)
-            c += snprintf(buf + c, BUFSIZE - c, "%srar", (c > 0) ? "," : "");
+            c += snprintf(buf, BUFSIZE, "rar");
 
         if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW)
             c += snprintf(buf + c, BUFSIZE - c, "%sraw", (c > 0) ? "," : "");
@@ -1312,10 +1312,6 @@ static inline int MPIDI_CH4R_mpi_win_create_dynamic(MPIR_Info * info,
 
     win = *win_ptr;
     win->base = MPI_BOTTOM;
-
-
-    if (rc != MPI_SUCCESS)
-        goto fn_fail;
 
     mpi_errno = MPIR_Barrier_impl(comm, &errflag);
 
