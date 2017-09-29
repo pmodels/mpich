@@ -211,8 +211,10 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx,
             goto fn_progress_end_fail;
         }
 
-	mpi_errno = MPID_Progress_wait(&progress_state);
+	mpi_errno = MPID_Progress_test();
 	if (mpi_errno != MPI_SUCCESS) goto fn_progress_end_fail;
+    /* Avoid blocking other threads since I am inside an infinite loop */
+    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
   break_l1:
     MPID_Progress_end(&progress_state);
