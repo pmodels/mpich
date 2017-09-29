@@ -547,38 +547,20 @@ int MPIR_Grequest_progress_poke(int count,
 {
     MPIX_Grequest_wait_function *wait_fn = NULL;
     void ** state_ptrs;
-    int i, j, n_classes, n_native, n_greq;
+    int i, j, n_greq;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
 
     MPIR_CHKLMEM_MALLOC(state_ptrs, void **, sizeof(void*) * count, mpi_errno, "state_ptrs");
 
-    /* This somewhat messy for-loop computes how many requests are native
-     * requests and how many are generalized requests, and how many generalized
-     * request classes those grequests are members of */
-    for (i=0, j=0, n_classes=1, n_native=0, n_greq=0; i< count; i++)
-    {
-	if (request_ptrs[i] == NULL || MPIR_Request_is_complete(request_ptrs[i])) continue;
-	if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST)
-	{
-	    n_greq += 1;
-	    wait_fn = request_ptrs[i]->u.ureq.greq_fns->wait_fn;
-	    state_ptrs[j] = request_ptrs[i]->u.ureq.greq_fns->grequest_extra_state;
-	    j++;
-	    if (i+1 < count) {
-	        if (request_ptrs[i+1] == NULL ||
-			(request_ptrs[i]->u.ureq.greq_fns->greq_class !=
-				request_ptrs[i+1]->u.ureq.greq_fns->greq_class) )
-	            n_classes += 1;
-	    }
-	} else {
-	    n_native += 1;
-	}
-    }
+    /* TODO: Implement the class-wise completion optimization described in:
+    Latham, Robert, et al. "Extending the MPI-2 generalized request interface."
+    PVM/MPI 4757 (2007): 223-232.
+    This was implemented previously using a class counter and doing a class-wise completion
+    with wait_fn, but it made progress_poke potentially blocking and might hang, especially
+    in multithreading environments. This optimization would be benificial but needs to be
+    implemented correctly.*/
 
-    if (j > 0 && n_classes == 1 && wait_fn != NULL) {
-        mpi_errno = (wait_fn)(j, state_ptrs, 0, NULL);
-    } else {
 	for (i = 0; i< count; i++ )
 	{
 	    if (request_ptrs[i] != NULL && 
@@ -590,7 +572,6 @@ int MPIR_Grequest_progress_poke(int count,
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    }
 	}
-    }
 fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
