@@ -73,7 +73,7 @@ static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_SET_INFO);
 
     MPIR_Info *curr_ptr;
-    char *value, *token, *savePtr;
+    char *value, *token, *savePtr = NULL;
     int save_ordering;
 
     curr_ptr = info->next;
