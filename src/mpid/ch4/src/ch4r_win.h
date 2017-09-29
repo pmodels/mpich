@@ -1064,7 +1064,7 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
 
   fn_zero:
 
-    baseP = (size == 0) ? NULL : (void *) ((char *) map_ptr + size_out);
+    baseP = (total_size == 0) ? NULL : (void *) ((char *) map_ptr + size_out);
     win->base = baseP;
     win->size = size;
 
