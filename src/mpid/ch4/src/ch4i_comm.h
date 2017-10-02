@@ -314,7 +314,6 @@ static inline int MPIDI_src_mlut_to_mlut(MPIDI_rank_map_t * src,
         dest->size = total_mapper_size;
     }
 
-    dest->mode = MPIDI_RANK_MAP_MLUT;
     dest->mode = src->mode;
     dest->irreg.mlut.t = mlut;
     dest->irreg.mlut.gpid = mlut->gpid;
