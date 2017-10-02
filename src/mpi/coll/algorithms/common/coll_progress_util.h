@@ -13,18 +13,6 @@
 #error "The template must be namespaced with COLL_NAMESPACE"
 #endif
 
-#ifndef COLL_SCHED_MACROS
-#define COLL_SCHED_MACROS
-
-/*Macros to iterate over children list in a tree*/
-#define SCHED_FOREACHCHILD                      \
-    for(i=0; i<tree->numRanges; i++)            \
-        for(j=tree->children[i].startRank;      \
-            j<=tree->children[i].endRank;       \
-            j++)                                \
-
-#endif /* COLL_MACROS */
-
 /*FIXME: MPIC_progress_global should be per-VNI */
 extern MPIC_progress_global_t MPIC_progress_global;
 

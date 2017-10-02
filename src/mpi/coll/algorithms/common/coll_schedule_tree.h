@@ -42,6 +42,13 @@ MPL_STATIC_INLINE_PREFIX int COLL_tree_init(int rank, int nranks, int tree_type,
 }
 
 #undef FUNCNAME
+#define FUNCNAME COLL_tree_free
+/* Free any memory associate with COLL_tree_t */
+MPIC_INLINE int COLL_tree_free (COLL_tree_t *tree) {
+    MPL_free (tree->children);
+}
+
+#undef FUNCNAME
 #define FUNCNAME COLL_tree_dump
 /* Utility routine to print a tree */
 MPL_STATIC_INLINE_PREFIX int COLL_tree_dump(int tree_size, int root, int tree_type, int k)
@@ -63,15 +70,15 @@ MPL_STATIC_INLINE_PREFIX int COLL_tree_dump(int tree_size, int root, int tree_ty
 
         MPIR_Assert(str_len <= 950);
         str_len += sprintf(str_out+str_len, "{");
-        for (j = 0; j < ct.numRanges; j++) {
-            int k;
-            for (k = ct.children[j].startRank; k <= ct.children[j].endRank; k++) {
-                MPIR_Assert(str_len <= 950);
-                str_len += sprintf(str_out+str_len, "%d, ", k);
-            }
+        for (j = 0; j < ct.num_children; j++) {
+            int k = ct.children[j];
+            MPIR_Assert(str_len <= 950);
+            str_len += sprintf(str_out+str_len, "%d, ", k);
         }
         MPIR_Assert(str_len <= 950);
         str_len += sprintf(str_out+str_len, "}\n");
+
+        COLL_tree_free (&ct);
     }
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,str_out));
 
@@ -107,32 +114,20 @@ COLL_sched_bcast_tree(void *buffer, int count, COLL_dt_t datatype, int root, int
                            &comm->tsp_comm, sched, 0, NULL);
     }
 
-    int *children; int num_children=0;
-    /* calculate the total number of children to send the data to */
-    SCHED_FOREACHCHILD {
-        num_children++;
-    }
+    int num_children = tree->num_children;
 
     if(num_children){
-        /*allocate space for storing children in an integer array*/
-        children = TSP_allocate_mem(sizeof(int)*num_children);
-
-        /* Record all the children */
-        num_children=0;
-        SCHED_FOREACHCHILD {
-            children[num_children++] = j;
-        }
         /*Multicast data to the children*/
-        TSP_multicast(buffer, count, datatype, children, num_children, tag, &comm->tsp_comm, sched,
+        TSP_multicast(buffer, count, datatype, tree->children, num_children, tag, &comm->tsp_comm, sched,
                             (tree->parent != -1) ? 1 : 0, &recv_id);
-
-        TSP_free_mem(children);
     }
 
     if (finalize) {
         TSP_fence(sched);
         TSP_sched_commit(sched);
     }
+
+    COLL_tree_free (tree);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_BCAST_TREE);
 
@@ -247,16 +242,14 @@ COLL_sched_reduce_tree(const void *sendbuf,
     is_inplace = TSP_isinplace((void *) sendbuf);
 
     /* calculate the number of children to allocate #children buffers */
-    SCHED_FOREACHCHILD {
-        num_children++;
-    }
+    num_children = tree->num_children;
 
     is_root = (tree->parent == -1);         /* whether this rank is the root of the tree */
     is_leaf = (num_children == 0);          /* whether this ranks is a leaf vertex in the tree */
     is_intermediate = !is_root && !is_leaf; /* is an intermediate vertex in the tree */
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"num_ranks: %d, is_root: %d, is_inplace: %d, is_intermediate: %d, lb: %zd\n",
-                size, is_root, is_inplace, is_intermediate, lb));
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"num_children: %d, num_ranks: %d, is_root: %d, is_inplace: %d, is_intermediate: %d, lb: %zd\n",
+                num_children, size, is_root, is_inplace, is_intermediate, lb));
 
     /* variables to store task ids */
     vtcs = TSP_allocate_mem(sizeof(int) * (num_children + 1));
@@ -291,41 +284,39 @@ COLL_sched_reduce_tree(const void *sendbuf,
         childbuf[0] = (void *) ((char *) childbuf[0] - lb);
     }
     /* allocate/assign buffer for all the children */
-    for (i = 0; i < tree->numRanges; i++) {
-        for (j = tree->children[i].startRank; j <= tree->children[i].endRank; j++, child_count++) {
-            if (child_count == 0)
-                continue;       /* memory is already allocated for the first child above */
-            else {
-                if (per_child_buffer) { /* different buffer per child */
-                    childbuf[child_count] = TSP_allocate_buffer(extent * count, sched);
-                    childbuf[child_count] = (void *) ((char *) childbuf[child_count] - lb);
-                } else  /* same buffer for every child */
-                    childbuf[child_count] = childbuf[0];
-            }
+    for (i = 0; i < tree->num_children; i++) {
+        j = tree->children[i];
+        if (i == 0)
+            continue; /* memory is already allocated for the first child above */
+        else {
+            if (per_child_buffer) { /* different buffer per child */
+                childbuf[i] = TSP_allocate_buffer(extent * count, sched);
+                childbuf[i] = (void *) ((char *) childbuf[i] - lb);
+            } else  /* same buffer for every child */
+                childbuf[i] = childbuf[0];
         }
     }
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Start receiving data\n"));
     child_count = 0;
-    for (i = 0; i < tree->numRanges; i++) {
-        for (j = tree->children[i].startRank; j <= tree->children[i].endRank; j++, child_count++) {
-
+    for (i = 0; i < tree->num_children; i++) {
+            j = tree->children[i];
             /* Setup the dependencies for posting the recv for child's data */
             if (per_child_buffer) { /* no dependency, just post the receive */
                 nvtcs = 0;
             } else {
-                if (child_count == 0) /* this is the first recv and therefore no dependency */
+                if (i == 0) /* this is the first recv and therefore no dependency */
                     nvtcs = 0;
                 else {
                     /* wait for the previous reduce to complete, before posting the next receive */
-                    vtcs[0] = reduce_id[child_count - 1];
+                    vtcs[0] = reduce_id[i - 1];
                     nvtcs = 1;
                 }
             }
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Schedule receive from child %d\n", j));
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Posting receive at address %p\n", childbuf[child_count]));
+            MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Posting receive at address %p\n", childbuf[i]));
             /* post the recv */
-            recv_id[child_count] = TSP_recv(childbuf[child_count], count, datatype,
+            recv_id[i] = TSP_recv(childbuf[i], count, datatype,
                                             j, tag, tsp_comm, sched, nvtcs, vtcs);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"receive scheduled\n"));
@@ -338,12 +329,12 @@ COLL_sched_reduce_tree(const void *sendbuf,
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"added datacopy dependency (if applicable)\n"));
             /* reduction depends on the corresponding recv to complete */
-            vtcs[nvtcs] = recv_id[child_count];
+            vtcs[nvtcs] = recv_id[i];
             nvtcs += 1;
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"schedule reduce\n"));
             if (is_commutative) {       /* reduction order does not matter */
-                reduce_id[child_count] = TSP_reduce_local(childbuf[child_count], target_buf, count,
+                reduce_id[i] = TSP_reduce_local(childbuf[i], target_buf, count,
                                                           datatype, op, TSP_FLAG_REDUCE_L, sched,
                                                           nvtcs, vtcs);
             } else {
@@ -351,15 +342,14 @@ COLL_sched_reduce_tree(const void *sendbuf,
                  * In bcast, leftmost subtree is the largest while it should be the opposite in case of reduce */
 
                 /* wait for the previous reduce to complete */
-                if (child_count != 0) {
-                    vtcs[nvtcs] = reduce_id[child_count - 1];
+                if (i != 0) {
+                    vtcs[nvtcs] = reduce_id[i - 1];
                     nvtcs++;
                 }
-                reduce_id[child_count] = TSP_reduce_local(childbuf[child_count], target_buf, count,
+                reduce_id[i] = TSP_reduce_local(childbuf[i], target_buf, count,
                                                           datatype, op, TSP_FLAG_REDUCE_R, sched,
                                                           nvtcs, vtcs);
             }
-        }
     }
 
     if (!is_root) {
@@ -385,6 +375,7 @@ COLL_sched_reduce_tree(const void *sendbuf,
     TSP_free_mem(vtcs);
     TSP_free_mem(recv_id);
     TSP_free_mem(reduce_id);
+    COLL_tree_free (tree);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_REDUCE_TREE);
 
@@ -574,25 +565,22 @@ MPL_STATIC_INLINE_PREFIX int COLL_sched_barrier_tree(int tag, COLL_comm_t * comm
     int mpi_errno = MPI_SUCCESS;
     int i, j;
     COLL_tree_comm_t *mycomm = &comm->tree_comm;
-    COLL_tree_t *tree = &mycomm->tree;
     COLL_tree_t myTree;
+    COLL_tree_t *tree = &myTree;
     TSP_dt_t dt = TSP_global.control_dt;
 
-    if (k > 1 && k != COLL_TREE_RADIX_DEFAULT) {        /* if tree not already initialized during communicator creation */
-        tree = &myTree;
-        COLL_tree_init(TSP_rank(&comm->tsp_comm), TSP_size(&comm->tsp_comm), tree_type, k, 0, tree);
-    }
+    COLL_tree_init(TSP_rank(&comm->tsp_comm), TSP_size(&comm->tsp_comm), tree_type, k, 0, tree);
 
     /* Receive from all children */
-    SCHED_FOREACHCHILD {
-        TSP_recv(NULL, 0, dt, j, tag, &comm->tsp_comm, s, 0, NULL);
+    for(i=0; i< tree->num_children; i++) {
+        TSP_recv(NULL, 0, dt, tree->children[i], tag, &comm->tsp_comm, s, 0, NULL);
     }
 
     int fid = TSP_fence(s);
 
     if (tree->parent == -1) {
-        SCHED_FOREACHCHILD {
-            TSP_send(NULL, 0, dt, j, tag, &comm->tsp_comm, s, 1, &fid);
+        for(i=0; i< tree->num_children; i++) {
+            TSP_send(NULL, 0, dt, tree->children[i], tag, &comm->tsp_comm, s, 1, &fid);
         }
     } else {
         int recv_id;
@@ -602,10 +590,12 @@ MPL_STATIC_INLINE_PREFIX int COLL_sched_barrier_tree(int tag, COLL_comm_t * comm
         /* Receive from Parent */
         recv_id = TSP_recv(NULL, 0, dt, tree->parent, tag, &comm->tsp_comm, s, 0, NULL);
         /* Send to all children */
-        SCHED_FOREACHCHILD {
-            TSP_send(NULL, 0, dt, j, tag, &comm->tsp_comm, s, 1, &recv_id);
+        for(i=0; i< tree->num_children; i++) {
+            TSP_send(NULL, 0, dt, tree->children[i], tag, &comm->tsp_comm, s, 1, &recv_id);
         }
     }
+
+    COLL_tree_free (tree);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_BARRIER_TREE);
 
