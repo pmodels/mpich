@@ -203,8 +203,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_spawn_multiple(int count,
             MPIR_ERR_POP(mpi_errno);
     }
     else {
-        if ((pmi_errno == PMI_SUCCESS) && (errcodes[0] != 0))
-            MPIR_Comm_create(intercomm);
+        if ((pmi_errno == PMI_SUCCESS) && (errcodes[0] != 0)) {
+            mpi_errno = MPIR_Comm_create(intercomm);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+        }
     }
 
     if (comm_ptr->rank == root) {
