@@ -24,7 +24,7 @@
     {                                                                   \
         (status_).count_lo = ((int) count_);                            \
         (status_).count_hi_and_cancelled &= 1;                          \
-        (status_).count_hi_and_cancelled |= (int) ((MPIR_Ucount) count_ >> (8 * SIZEOF_INT) << 1); \
+        (status_).count_hi_and_cancelled |= (int) (((MPIR_Ucount) count_) >> (8 * SIZEOF_INT) << 1); \
     }
 
 #define MPIR_STATUS_GET_COUNT(status_)                                  \
