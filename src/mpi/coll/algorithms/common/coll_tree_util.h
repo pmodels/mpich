@@ -66,6 +66,15 @@ MPL_STATIC_INLINE_PREFIX void COLL_tree_add_child(COLL_tree_t * t, int rank)
 }
 
 /* Function to generate kary tree information for rank 'rank' and store it in COLL_tree_t data structure */
+/*     4 ranks                                                8 ranks
+ *       0                                                      0
+ *     /  \                                                 /       \
+ *    1   2                                                1         2
+ *    |                                                  /   \     /   \
+ *    3                                                 3     4   5     6
+ *                                                      |
+ *                                                      7
+ */
 MPL_STATIC_INLINE_PREFIX void COLL_tree_kary_init(int rank, int nranks, int k, int root, COLL_tree_t * ct)
 {
     int lrank, child;
@@ -95,7 +104,16 @@ MPL_STATIC_INLINE_PREFIX void COLL_tree_kary_init(int rank, int nranks, int k, i
 }
 
 /* Function to generate knomial tree information for rank 'rank' and store it in COLL_tree_t data structure */
-MPL_STATIC_INLINE_PREFIX void COLL_tree_knomial_init(int rank, int nranks, int k, int root, COLL_tree_t * ct)
+/*     4 ranks                                                8 ranks
+ *       0                                                      0
+ *     /  \                                                 /   |   \
+ *    1   3                                               1     5    7
+ *    |                                                 /   \   |
+ *    2                                                2     4  6
+ *                                                     |
+ *                                                     3
+ */
+MPL_STATIC_INLINE_PREFIX void COLL_tree_knomial_1_init(int rank, int nranks, int k, int root, COLL_tree_t * ct)
 {
     int lrank, i, j, maxtime, tmp, time, parent, current_rank, running_rank, crank;
 
@@ -159,4 +177,72 @@ MPL_STATIC_INLINE_PREFIX void COLL_tree_knomial_init(int rank, int nranks, int k
             crank += COLL_ipow(k, maxtime - i - 1);
         }
     }
+}
+
+/* Function to generate knomial tree information optimized for bcast for rank 'rank' and store it in COLL_tree_t data structure */
+/*     4 ranks                                               8 ranks
+ *       0                                                      0
+ *     /  \                                                 /   |   \
+ *    2    1                                              4     2    1
+ *    |                                                 /   \   |
+ *    3                                                6     5  3
+ *                                                     |
+ *                                                     7
+ */
+MPL_STATIC_INLINE_PREFIX void COLL_tree_knomial_2_init(int rank, int nranks, int k, int root, COLL_tree_t * ct)
+{
+    int lrank, i, j, basek;
+
+    ct->rank = rank;
+    ct->nranks = nranks;
+    ct->num_children = 0;
+    ct->parent = -1;
+
+    if (nranks <= 0)
+        return;
+
+    lrank = (rank + (nranks - root)) % nranks;
+    MPIC_Assert(k >= 2);
+    /* Parent Calculation */
+    if (lrank <= 0)
+        ct->parent = -1;
+    else {
+        basek = COLL_ilog(k, nranks - 1);
+
+        for (i = 0; i < basek; i++) {
+            if (COLL_getdigit(k, lrank, i)) {
+                ct->parent = (COLL_setdigit(k, lrank, i, 0) + root) % nranks;
+                break;
+            }
+        }
+    }
+
+    if (lrank >= nranks)
+        return;
+
+    /* Children Calculation */
+    basek = COLL_ilog(k, nranks - 1);
+    int * flip_bit = (int*) MPL_calloc(basek,sizeof(int));
+    ct->children = (int*) MPL_malloc(sizeof(int)*basek*(k-1));
+    ct->max_children = basek*(k-1);
+
+    for (j = 0 ; j < basek ; j++) {
+        if (COLL_getdigit(k, lrank, j)){
+            break;
+        }
+        flip_bit[j] = 1;
+    }
+    for (j = basek-1 ; j >= 0  ; j--) {
+        if(flip_bit[j] == 1) {
+            for (i = k-1 ; i >= 1 ; i--) {
+                int child = COLL_setdigit(k, lrank, j, i);
+                MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"child %d i %d basek %d j %d \n", child, i,basek,j));
+                if (child < nranks)
+                    COLL_tree_add_child(ct, (child + root) % nranks);
+            }
+        }
+    }
+    MPL_free(flip_bit);
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"parent of rank %d is %d, total ranks = %d (root=%d)\n", rank, ct->parent,
+             nranks, root));
 }
