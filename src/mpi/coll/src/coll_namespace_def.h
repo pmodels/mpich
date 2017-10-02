@@ -47,6 +47,7 @@
 
 /* Tree schedule utility API */
 #define COLL_tree_init         COLL_NAMESPACE(tree_init)
+#define COLL_tree_free         COLL_NAMESPACE(tree_free)
 #define COLL_tree_dump         COLL_NAMESPACE(tree_dump)
 #define COLL_tree_kary         COLL_NAMESPACE(tree_kary)
 #define COLL_tree_knomial      COLL_NAMESPACE(tree_knomial)

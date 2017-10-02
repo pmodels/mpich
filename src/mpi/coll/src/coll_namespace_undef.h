@@ -34,6 +34,7 @@
 
 /* Tree API */
 #undef COLL_tree_init
+#undef COLL_tree_free
 #undef COLL_tree_dump
 #undef COLL_tree_kary
 #undef COLL_tree_knomial

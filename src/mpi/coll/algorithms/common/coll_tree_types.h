@@ -9,15 +9,11 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-typedef struct COLL_child_range_t {
-    int startRank;
-    int endRank;
-} COLL_child_range_t;
-
 typedef struct COLL_tree_t {
     int rank;
     int nranks;
     int parent;
-    int numRanges;
-    COLL_child_range_t children[COLL_MAX_TREE_BREADTH];
+    int num_children;
+    int max_children;
+    int *children;
 } COLL_tree_t;
