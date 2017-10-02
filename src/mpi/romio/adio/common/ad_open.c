@@ -203,7 +203,7 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
         }
 	ADIOI_Free(fd->filename);
 	ADIOI_Free(fd->hints->ranklist);
-	ADIOI_Free(fd->hints->cb_config_list);
+	if ( fd->hints->cb_config_list != NULL ) ADIOI_Free(fd->hints->cb_config_list);
 	ADIOI_Free(fd->hints);
 	if (fd->info != MPI_INFO_NULL) MPI_Info_free(&(fd->info));
 	ADIOI_Free(fd->io_buf);
