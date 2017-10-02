@@ -27,13 +27,15 @@ MPL_STATIC_INLINE_PREFIX int COLL_tree_init(int rank, int nranks, int tree_type,
 
     int mpi_errno = MPI_SUCCESS;
 
-    if (tree_type == 0) /* knomial tree */
-        COLL_tree_knomial_init(rank, nranks, k, root, ct);
+    if (tree_type == 0) /* knomial_1 tree */
+        COLL_tree_knomial_1_init(rank, nranks, k, root, ct);
     else if (tree_type == 1) /* kary tree */
         COLL_tree_kary_init(rank, nranks, k, root, ct);
+    else if (tree_type == 2) /* knomial_2 tree */
+        COLL_tree_knomial_2_init(rank, nranks, k, root, ct);
     else {
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"tree_type %d not defined, initializing knomial tree\n", tree_type));
-        COLL_tree_knomial_init(rank, nranks, k, root, ct);
+        COLL_tree_knomial_1_init(rank, nranks, k, root, ct);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_TREE_INIT);
@@ -44,7 +46,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_tree_init(int rank, int nranks, int tree_type,
 #undef FUNCNAME
 #define FUNCNAME COLL_tree_free
 /* Free any memory associate with COLL_tree_t */
-MPIC_INLINE int COLL_tree_free (COLL_tree_t *tree) {
+MPL_STATIC_INLINE_PREFIX int COLL_tree_free (COLL_tree_t *tree) {
     MPL_free (tree->children);
 }
 
@@ -234,7 +236,7 @@ COLL_sched_reduce_tree(const void *sendbuf,
         COLL_tree_init(rank, size, tree_type, k, root, tree);
     else
         /* We have to use knomial trees to get rank order */
-        COLL_tree_knomial_init(rank, size, k, root, tree);
+        COLL_tree_knomial_1_init(rank, size, k, root, tree);
 
     /* get dataype information */
     TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);

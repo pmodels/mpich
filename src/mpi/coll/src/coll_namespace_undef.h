@@ -39,7 +39,8 @@
 #undef COLL_tree_kary
 #undef COLL_tree_knomial
 #undef COLL_tree_kary_init
-#undef COLL_tree_knomial_init
+#undef COLL_tree_knomial_1_init
+#undef COLL_tree_knomial_2_init
 #undef COLL_ilog
 #undef COLL_ipow
 #undef COLL_getdigit
