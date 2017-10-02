@@ -73,6 +73,7 @@ static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
 
     message_sz = MPIDI_CH4U_REQUEST(rreq, count);
     MPIR_Datatype_get_size_macro(datatype, dt_sz);
+    MPIR_ERR_CHKANDJUMP(dt_sz == 0, mpi_errno, MPI_ERR_OTHER, "**dtype");
 
     if (message_sz > count * dt_sz) {
         rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;

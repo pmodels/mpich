@@ -716,6 +716,7 @@ static inline int MPIDI_handle_acc_cmpl(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_HANDLE_ACC_CMPL);
 
     MPIR_Datatype_get_size_macro(MPIDI_CH4U_REQUEST(rreq, req->areq.target_datatype), basic_sz);
+    MPIR_ERR_CHKANDJUMP(basic_sz == 0, mpi_errno, MPI_ERR_OTHER, "**dtype");
     data_sz = MPIDI_CH4U_REQUEST(rreq, req->areq.data_sz);
 
     /* MPIDI_CS_ENTER(); */
