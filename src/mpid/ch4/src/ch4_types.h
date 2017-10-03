@@ -239,7 +239,7 @@ typedef struct MPIU_buf_pool_t {
     void *memory_region;
     struct MPIU_buf_pool_t *next;
     struct MPIU_buf_t *head;
-    pthread_mutex_t lock;
+    MPID_Thread_mutex_t lock;
 } MPIU_buf_pool_t;
 
 typedef struct MPIU_buf_t {
