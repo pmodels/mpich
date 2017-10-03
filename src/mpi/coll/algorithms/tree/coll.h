@@ -237,7 +237,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_reduce(const void *sendbuf,
         /* generate the schedule */
         mpi_errno =
             COLL_sched_reduce_tree_full_pipelined(sendbuf, recvbuf, count, datatype, op, root, tag,
-                                                  comm, tree_type, k, s, segsize, 0, nbuffers);
+                                                  comm, tree_type, k, s, segsize, 1, nbuffers);
         /* save the schedule */
         TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, sizeof(COLL_args_t), (void *) s);
     }
