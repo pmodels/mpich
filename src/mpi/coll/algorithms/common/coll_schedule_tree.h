@@ -478,7 +478,7 @@ COLL_sched_reduce_tree_full_pipelined(const void *sendbuf, void *recvbuf, int co
 
         const char *send_buf = (is_inplace) ? sendbuf : (char *) sendbuf + offset * extent;     /* if it is in_place send_buf should remain MPI_INPLACE */
         COLL_sched_reduce_tree_full(send_buf, (char *) recvbuf + offset * extent, msgsize, datatype,
-                                    op, root, tag, comm, tree_type, k, sched, 1, nbuffers);
+                                    op, root, tag, comm, tree_type, k, sched, 0, nbuffers);
 
         offset += msgsize;
     }
