@@ -27,7 +27,7 @@
 static inline MPIU_buf_pool_t *MPIDI_create_buf_pool(int num, int size,
                                                      MPIU_buf_pool_t * parent_pool)
 {
-    int i;
+    int i, ret;
     MPIU_buf_pool_t *buf_pool;
     MPIU_buf_t *curr, *next;
 
@@ -36,7 +36,7 @@ static inline MPIU_buf_pool_t *MPIDI_create_buf_pool(int num, int size,
 
     buf_pool = (MPIU_buf_pool_t *) MPL_malloc(sizeof(*buf_pool));
     MPIR_Assert(buf_pool);
-    pthread_mutex_init(&buf_pool->lock, NULL);
+    MPID_Thread_mutex_create(&buf_pool->lock, &ret);
 
     buf_pool->size = size;
     buf_pool->num = num;
@@ -120,9 +120,9 @@ static inline void *MPIDI_CH4R_get_buf(MPIU_buf_pool_t * pool)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_GET_BUF);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_GET_BUF);
 
-    pthread_mutex_lock(&pool->lock);
+    MPID_THREAD_CS_ENTER(POBJ, pool->lock);
     buf = MPIDI_CH4R_get_buf_safe(pool);
-    pthread_mutex_unlock(&pool->lock);
+    MPID_THREAD_CS_EXIT(POBJ, pool->lock);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_GET_BUF);
     return buf;
@@ -148,10 +148,10 @@ static inline void MPIDI_CH4R_release_buf(void *buf)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_RELEASE_BUF);
 
     curr_buf = MPL_container_of(buf, MPIU_buf_t, data);
-    pthread_mutex_lock(&curr_buf->pool->lock);
+    MPID_THREAD_CS_ENTER(POBJ, &curr_buf->pool->lock);
     curr_buf->next = curr_buf->pool->head;
     curr_buf->pool->head = curr_buf;
-    pthread_mutex_unlock(&curr_buf->pool->lock);
+    MPID_THREAD_CS_EXIT(POBJ, &curr_buf->pool->lock);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_RELEASE_BUF);
 }
@@ -159,12 +159,15 @@ static inline void MPIDI_CH4R_release_buf(void *buf)
 
 static inline void MPIDI_CH4R_destroy_buf_pool(MPIU_buf_pool_t * pool)
 {
+    int ret;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_DESTROY_BUF_POOL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_DESTROY_BUF_POOL);
 
     if (pool->next)
         MPIDI_CH4R_destroy_buf_pool(pool->next);
 
+    MPID_Thread_mutex_destroy(&pool->lock, &ret);
     MPL_free(pool->memory_region);
     MPL_free(pool);
 
