@@ -1253,7 +1253,7 @@ if test "$with_openpa_prefix" = "embedded" ; then
                                      for more info.])],
                     [],[with_atomic_primitives=not_specified])
         # no need for libtool versioning when embedding OPA
-        opa_subdir_args="--disable-versioning"
+        opa_subdir_args="--disable-versioning --enable-embedded"
         if test "$with_atomic_primitives" = "not_specified" ; then
             PAC_APPEND_FLAG([--with-atomic-primitives=auto_allow_emulation], [opa_subdir_args])
         fi
