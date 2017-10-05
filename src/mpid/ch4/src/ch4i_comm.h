@@ -1058,7 +1058,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
 
 #ifdef MPL_USE_DBG_LOGGING
     int rank_;
-    int avtid_, lpid_;
+    int avtid_, lpid_ = -1;
     if (comm->remote_size < 16) {
         for (rank_ = 0; rank_ < comm->remote_size; ++rank_) {
             MPIDIU_comm_rank_to_pid(comm, rank_, &lpid_, &avtid_);
