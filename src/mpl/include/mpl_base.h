@@ -89,6 +89,13 @@
 
 #define MPL_MAX(a,b)    (((a) > (b)) ? (a) : (b))
 #define MPL_MIN(a,b)    (((a) < (b)) ? (a) : (b))
+#define MPL_SWAP(x,y) do \
+{   MPIR_Assert (sizeof(x) == sizeof(y)); \
+    unsigned char swap_temp[(signed)sizeof(x)]; \
+    memcpy(swap_temp,&y,sizeof(x)); \
+    memcpy(&y,&x,       sizeof(x)); \
+    memcpy(&x,swap_temp,sizeof(x)); \
+} while(0)
 
 /* Use this macro for each parameter to a function that is not referenced in
    the body of the function */
