@@ -222,9 +222,51 @@ MPL_STATIC_INLINE_PREFIX MPIC_MPICH_sched_t *MPIC_MPICH_get_schedule(MPIC_MPICH_
     return sched;
 }
 
+/* Internal transport function to add list of integers to an integer array (MPIC_MPICH_int_array)*/
+MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_add_elems_int_array(MPIC_MPICH_int_array * in, int n_elems, int *elems)
+{
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"In add_elems_int_array, in->used: %d, in->size: %d\n", in->used, in->size));
+    if (in->used + n_elems > in->size) {        /* not sufficient memory */
+        int *old_array = in->array;
+        int old_array_size = in->size;
+
+        MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST, "Increasing size of the int_array\n"));
+
+        in->size = MPL_MAX(2 * in->size, in->used + n_elems);
+        /* reallocate array */
+        in->array = (int *) MPIC_MPICH_allocate_mem(sizeof(int) * in->size);
+        /* copy old elements */
+        memcpy(in->array, old_array, sizeof(int) * in->used);
+        /* free old array */
+        if (old_array_size) MPIC_MPICH_free_mem(old_array);
+    }
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Adding %d elems to int_array\n", n_elems));
+    /* add new elements */
+    memcpy(in->array + in->used, elems, sizeof(int) * n_elems);
+    in->used += n_elems;
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST, "Done adding %d elems to int_array\n", n_elems));
+}
+
 /* Transport function to tell that the schedule generation is now complete */
 MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_sched_commit(MPIC_MPICH_sched_t * sched)
 {
+    int i,j;
+    MPIC_MPICH_vtx_t *vtcs = sched->vtcs;
+
+    /* Collect a list of vertices with no incoming edges */
+    /* We will make two copies of this list as one of them will be reordered
+     * later by the MPIC_MPICH_reorder_tasks function and we will use the
+     * other copy to rearrang the vtcs in the sched->vtcs array */
+    MPIC_MPICH_int_array *start_vtcs = &sched->start_vtcs;
+    start_vtcs->size=0; start_vtcs->used=0;
+
+    for (i=0; i<sched->total; i++) {
+        MPIC_MPICH_vtx_t *vtx = &vtcs[i];
+        if (vtx->invtcs.used == 0) { /*if no incoming edge, this is a start vtx */
+            MPIC_MPICH_add_elems_int_array (start_vtcs, 1, &i);
+        }
+    }
+
 #ifdef MPIC_DEBUG
     MPIC_MPICH_print_schedule (sched);
 #endif
@@ -326,30 +368,6 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_free_vtx(MPIC_MPICH_vtx_t * vtx)
 {
     MPIC_MPICH_free_mem(vtx->invtcs.array);
     MPIC_MPICH_free_mem(vtx->outvtcs.array);
-}
-
-/* Internal transport function to add list of integers to an integer array (MPIC_MPICH_int_array)*/
-MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_add_elems_int_array(MPIC_MPICH_int_array * in, int n_elems, int *elems)
-{
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"In add_elems_int_array, in->used: %d, in->size: %d\n", in->used, in->size));
-    if (in->used + n_elems > in->size) {        /* not sufficient memory */
-        int *old_array = in->array;
-
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Increasing size of the int_array\n"));
-
-        in->size = MPL_MAX(2 * in->size, in->used + n_elems);
-        /* reallocate array */
-        in->array = (int *) MPIC_MPICH_allocate_mem(sizeof(int) * in->size);
-        /* copy old elements */
-        memcpy(in->array, old_array, sizeof(int) * in->used);
-        /* free old array */
-        MPIC_MPICH_free_mem(old_array);
-    }
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Adding %d elems to int_array\n", n_elems));
-    /* add new elements */
-    memcpy(in->array + in->used, elems, sizeof(int) * n_elems);
-    in->used += n_elems;
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Done adding %d elems to int_array\n", n_elems));
 }
 
 /* Internal transport function to add incoming vertices of a vertex.
@@ -1072,9 +1090,12 @@ MPL_STATIC_INLINE_PREFIX int MPIC_MPICH_test(MPIC_MPICH_sched_t * sched)
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"issued list is empty, issue ready vtcs\n"));
         if (sched->total > 0 && sched->num_completed != sched->total) {
             /* Go over all the vertices and issue ready vertices */
-            for (i = 0; i < sched->total; i++)
-                MPIC_MPICH_issue_vtx(i, &sched->vtcs[i], sched);
-            MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"completed traversal of vtcs, sched->total: %d, sched->num_completed: %d\n",
+            int vtx_idx;
+            for (i = 0; i < sched->start_vtcs.used; i++){
+                vtx_idx = sched->start_vtcs.array[i];
+                MPIC_MPICH_issue_vtx(vtx_idx, &sched->vtcs[vtx_idx], sched);
+            }
+            MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"issued tasks from start_vtcs, sched->total: %d, sched->num_completed: %d\n",
                      sched->total, sched->num_completed));
             return 0;
         } else
@@ -1222,6 +1243,11 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_free_buffers(MPIC_MPICH_sched_t * sched
         /* up to sched->total because we init vertices only when we need them */
         MPIC_MPICH_free_vtx(&sched->vtcs[i]);
     }
+
+    /* free start_vtcs array */
+    if(sched->start_vtcs.size!=0)
+        MPIC_MPICH_free_mem(sched->start_vtcs.array);
+
     /* free the list of vertices */
     MPIC_MPICH_free_mem(sched->vtcs);
 }

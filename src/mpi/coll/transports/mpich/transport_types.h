@@ -205,6 +205,12 @@ typedef struct MPIC_MPICH_sched_t {
     int tag;
     /* Array of vertices */
     MPIC_MPICH_vtx_t *vtcs;
+
+    /* Indices of vertices that have no incoming edge. Find and store them
+     * so that you do not have to traverse the whole vtcs array whenever the
+     * schedule begins execution */
+    MPIC_MPICH_int_array start_vtcs;
+
     /* Total number of vertices */
     int total;
     /* Of the total vertices, number of vertices that have completed
