@@ -305,7 +305,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    int avtid = 0, lpid;
+    int avtid = 0, lpid = -1;
     int local_avtid = 0, remote_avtid = 0;
     int local_size_send = 0, remote_size_recv = 0;
     int cts_tag = 0;
