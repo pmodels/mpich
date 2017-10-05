@@ -431,11 +431,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
     return mpi_errno;
-
-#ifndef MPIDI_BUILD_CH4_SHM
-  fn_fail:
-    goto fn_exit;
-#endif
 }
 
 #endif /* OFI_RECV_H_INCLUDED */
