@@ -161,6 +161,7 @@ int MPIDI_OFI_index_allocator_alloc(void *indexmap)
             allocator->num_ints += allocator->chunk_size;
             allocator->bitmask = MPL_realloc(allocator->bitmask,
                                              sizeof(uint64_t) * allocator->num_ints);
+            MPIR_Assert(allocator->bitmask);
             memset(&allocator->bitmask[i + 1], 0xFF, sizeof(uint64_t) * allocator->chunk_size);
         }
     }
