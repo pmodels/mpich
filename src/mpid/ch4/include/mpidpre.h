@@ -291,6 +291,8 @@ typedef struct MPIDI_CH4U_win_target {
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
     MPIDI_CH4U_win_target_sync_t sync;
+    int rank;
+    MPL_UT_hash_handle hash_handle;
 } MPIDI_CH4U_win_target_t;
 
 typedef struct MPIDI_CH4U_win_t {
@@ -319,7 +321,6 @@ typedef struct {
 
 #define MPIDI_CH4U_WIN(win,field)        (((win)->dev.ch4u).field)
 #define MPIDI_CH4U_WINFO(win,rank) (MPIDI_CH4U_win_info_t*) &(MPIDI_CH4U_WIN(win, info_table)[rank])
-#define MPIDI_CH4U_WIN_TARGET(win,rank,field) ((((win)->dev.ch4u).targets)[rank].field)
 
 typedef unsigned MPIDI_locality_t;
 
