@@ -412,14 +412,6 @@ typedef struct {
 typedef struct {
     uint32_t index;
 } MPIDI_OFI_datatype_t;
-/* These control structures have to be the same size */
-typedef struct {
-    int16_t type;
-    int16_t lock_type;
-    int origin_rank;
-    uint64_t win_id;
-    int dummy[8];
-} MPIDI_OFI_win_control_t;
 
 typedef struct {
     int16_t type;
