@@ -306,8 +306,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIR_Process.attrs.wtime_is_global = 1;
     MPIR_Process.attrs.io = MPI_ANY_SOURCE;
 
-    MPIR_Comm_commit(MPIR_Process.comm_self);
-    MPIR_Comm_commit(MPIR_Process.comm_world);
+    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_self);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* -------------------------------- */
     /* Return MPICH Parameters          */
