@@ -190,6 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
+    MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
 
     /* ---------------------------------- */
     /* Initialize MPI_COMM_SELF           */
@@ -383,6 +384,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
 
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
+    MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_FINALIZE);
     return mpi_errno;
