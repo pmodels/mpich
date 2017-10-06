@@ -450,7 +450,8 @@ static inline void MPIDI_win_lock_ack_proc(int handler_id,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_LOCK_ACK_PROC);
 
     if (handler_id == MPIDI_CH4U_WIN_LOCK_ACK) {
-        MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
+        MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, info->origin_rank);
+        MPIR_Assert(target_ptr);
 
         MPIR_Assert((int) target_ptr->sync.lock.locked == 0);
         target_ptr->sync.lock.locked = 1;
@@ -536,7 +537,8 @@ static inline void MPIDI_win_unlock_done(const MPIDI_CH4U_win_cntrl_msg_t * info
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_UNLOCK_DONE);
 
     if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK) {
-        MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
+        MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, info->origin_rank);
+        MPIR_Assert(target_ptr);
 
         MPIR_Assert((int) target_ptr->sync.lock.locked == 1);
         target_ptr->sync.lock.locked = 0;
