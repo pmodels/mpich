@@ -733,4 +733,87 @@ static inline void MPIDI_win_check_group_local_completed(MPIR_Win * win,
     }
 }
 
+/* Map function interfaces in CH4 level */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4U_map_create
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_create(void **out_map)
+{
+    MPIDI_CH4U_map_t *map;
+    map = MPL_malloc(sizeof(MPIDI_CH4U_map_t));
+    MPIR_Assert(map != NULL);
+    map->head = NULL;
+    *out_map = map;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4U_map_destroy
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_destroy(void *in_map)
+{
+    MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    MPIDI_CH4U_map_t *map = in_map;
+    MPL_HASH_CLEAR(hh, map->head);
+    MPL_free(map);
+    MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4U_map_set
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_set(void *in_map, uint64_t id, void *val)
+{
+    MPIDI_CH4U_map_t *map;
+    MPIDI_CH4U_map_entry_t *map_entry;
+    MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    map = (MPIDI_CH4U_map_t *) in_map;
+    map_entry = MPL_malloc(sizeof(MPIDI_CH4U_map_entry_t));
+    MPIR_Assert(map_entry != NULL);
+    map_entry->key = id;
+    map_entry->value = val;
+    MPL_HASH_ADD(hh, map->head, key, sizeof(uint64_t), map_entry);
+    MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4U_map_erase
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_erase(void *in_map, uint64_t id)
+{
+    MPIDI_CH4U_map_t *map;
+    MPIDI_CH4U_map_entry_t *map_entry;
+    MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    map = (MPIDI_CH4U_map_t *) in_map;
+    MPL_HASH_FIND(hh, map->head, &id, sizeof(uint64_t), map_entry);
+    MPIR_Assert(map_entry != NULL);
+    MPL_HASH_DELETE(hh, map->head, map_entry);
+    MPL_free(map_entry);
+    MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4U_map_lookup
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_map_lookup(void *in_map, uint64_t id)
+{
+    void *rc;
+    MPIDI_CH4U_map_t *map;
+    MPIDI_CH4U_map_entry_t *map_entry;
+
+    MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    map = (MPIDI_CH4U_map_t *) in_map;
+    MPL_HASH_FIND(hh, map->head, &id, sizeof(uint64_t), map_entry);
+    if (map_entry == NULL)
+        rc = MPIDI_CH4U_MAP_NOT_FOUND;
+    else
+        rc = map_entry->value;
+    MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    return rc;
+}
+
 #endif /* CH4_IMPL_H_INCLUDED */
