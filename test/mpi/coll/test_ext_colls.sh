@@ -50,5 +50,8 @@ for algo_id in ${algo_ids}; do
             ext_coll_tests+="allred6 4 ${env}"
             ext_coll_tests+="allred6 7 ${env}"
 done
+#Alltoall ring algorithm test
+ext_coll_tests+="alltoall1 8 MPIR_CVAR_USE_ALLTOALL=1 ${testing_env}"
+
 # Add more tests
 export ext_coll_tests

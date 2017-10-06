@@ -100,8 +100,8 @@ COLL_sched_alltoall_ring(const void     * sendbuf,
                     sendbuf+rank*sendcount*sendtype_extent, recvbuf+rank*recvcount*recvtype_extent));
 
         TSP_dtinfo(sendtype, &is_contig, &sendtype_size, &sendtype_extent, &sendtype_lb);
-        dtcopy_id = TSP_dtcopy_nb((char*)recvbuf+rank*recvcount*recvtype_extent, recvcount, recvtype,
-                                    (char*)sendbuf+rank*sendcount*sendtype_extent, sendcount, sendtype, sched, 0, NULL);
+        TSP_dtcopy_nb((char*)recvbuf+rank*recvcount*recvtype_extent, recvcount, recvtype,
+                            (char*)sendbuf+rank*sendcount*sendtype_extent, sendcount, sendtype, sched, 0, NULL);
     }
 
 
