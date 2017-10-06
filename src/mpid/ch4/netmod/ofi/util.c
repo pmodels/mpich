@@ -193,163 +193,6 @@ void MPIDI_OFI_index_allocator_destroy(void *indexmap)
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_win_lock_advance
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_win_lock_advance(MPIR_Win * win)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH4U_win_lock_recvd_t *lock_recvd_q = &MPIDI_CH4U_WIN(win, sync).lock_recvd;
-
-    if ((lock_recvd_q->head != NULL) && ((lock_recvd_q->count == 0) ||
-         ((lock_recvd_q->type == MPI_LOCK_SHARED) &&
-                 (lock_recvd_q->head->type == MPI_LOCK_SHARED)))) {
-        struct MPIDI_CH4U_win_lock *lock = lock_recvd_q->head;
-        lock_recvd_q->head = lock->next;
-
-        if (lock_recvd_q->head == NULL)
-            lock_recvd_q->tail = NULL;
-
-        ++lock_recvd_q->count;
-        lock_recvd_q->type = lock->type;
-
-        if (lock->mtype == MPIDI_OFI_REQUEST_LOCK) {
-            MPIDI_OFI_win_control_t info;
-            info.type = MPIDI_OFI_CTRL_LOCKACK;
-            mpi_errno = MPIDI_OFI_do_control_win(&info, lock->rank, win, 1, 0);
-
-            if (mpi_errno != MPI_SUCCESS)
-                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-
-        }
-        else if (lock->mtype == MPIDI_OFI_REQUEST_LOCKALL) {
-            MPIDI_OFI_win_control_t info;
-            info.type = MPIDI_OFI_CTRL_LOCKALLACK;
-            mpi_errno = MPIDI_OFI_do_control_win(&info, lock->rank, win, 1, 0);
-
-            if (mpi_errno != MPI_SUCCESS)
-                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-        }
-        else
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-
-        MPL_free(lock);
-        mpi_errno = MPIDI_OFI_win_lock_advance(win);
-
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static inline int MPIDI_OFI_win_lock_request_proc(const MPIDI_OFI_win_control_t * info,
-                                                  MPIR_Win * win, unsigned peer)
-{
-    int mpi_errno;
-    struct MPIDI_CH4U_win_lock *lock =
-        (struct MPIDI_CH4U_win_lock *) MPL_calloc(1, sizeof(struct MPIDI_CH4U_win_lock));
-
-    if (info->type == MPIDI_OFI_CTRL_LOCKREQ)
-        lock->mtype = MPIDI_OFI_REQUEST_LOCK;
-    else if (info->type == MPIDI_OFI_CTRL_LOCKALLREQ)
-        lock->mtype = MPIDI_OFI_REQUEST_LOCKALL;
-
-    lock->rank = info->origin_rank;
-    lock->type = info->lock_type;
-    MPIDI_CH4U_win_lock_recvd_t *lock_recvd_q = &MPIDI_CH4U_WIN(win, sync).lock_recvd;
-    MPIR_Assert((lock_recvd_q->head != NULL) ^ (lock_recvd_q->tail == NULL));
-
-    if (lock_recvd_q->tail == NULL)
-        lock_recvd_q->head = lock;
-    else
-        lock_recvd_q->tail->next = lock;
-
-    lock_recvd_q->tail = lock;
-
-    mpi_errno = MPIDI_OFI_win_lock_advance(win);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static inline void MPIDI_OFI_win_lock_ack_proc(const MPIDI_OFI_win_control_t * info,
-                                               MPIR_Win * win, unsigned peer)
-{
-    if (info->type == MPIDI_OFI_CTRL_LOCKACK) {
-        MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
-
-        MPIR_Assert((int ) target_ptr->sync.lock.locked == 0);
-        target_ptr->sync.lock.locked = 1;
-    }
-    else if (info->type == MPIDI_OFI_CTRL_LOCKALLACK)
-        MPIDI_CH4U_WIN(win, sync).lockall.allLocked += 1;
-}
-
-
-static inline int MPIDI_OFI_win_unlock_proc(const MPIDI_OFI_win_control_t * info,
-                                            MPIR_Win * win, unsigned peer)
-{
-    int mpi_errno;
-
-    /* NOTE: origin blocking waits in lock or lockall call till lock granted.*/
-    --MPIDI_CH4U_WIN(win, sync).lock_recvd.count;
-    MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lock_recvd.count >= 0);
-    mpi_errno = MPIDI_OFI_win_lock_advance(win);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-
-    MPIDI_OFI_win_control_t new_info;
-    new_info.type = MPIDI_OFI_CTRL_UNLOCKACK;
-    mpi_errno = MPIDI_OFI_do_control_win(&new_info, peer, win, 1, 0);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static inline void MPIDI_OFI_win_complete_proc(const MPIDI_OFI_win_control_t * info,
-                                               MPIR_Win * win, unsigned peer)
-{
-    ++MPIDI_CH4U_WIN(win, sync).sc.count;
-}
-
-static inline void MPIDI_OFI_win_post_proc(const MPIDI_OFI_win_control_t * info,
-                                           MPIR_Win * win, unsigned peer)
-{
-    ++MPIDI_CH4U_WIN(win, sync).pw.count;
-}
-
-
-static inline void MPIDI_OFI_win_unlock_done_proc(const MPIDI_OFI_win_control_t * info,
-                                                  MPIR_Win * win, unsigned peer)
-{
-    if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK) {
-        MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
-
-        MPIR_Assert((int ) target_ptr->sync.lock.locked == 1);
-        target_ptr->sync.lock.locked = 0;
-    }
-    else if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK_ALL) {
-        MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lockall.allLocked > 0);
-        MPIDI_CH4U_WIN(win, sync).lockall.allLocked -= 1;
-    }
-    else {
-        MPIR_Assert(0);
-    }
-
-}
-
 /* Translate the control message to get a huge message into a request to
  * actually perform the data transfer. */
 static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
@@ -419,65 +262,26 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               int *is_contig,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
 {
-    int senderrank;
     int mpi_errno = MPI_SUCCESS;
-    void *buf = am_hdr;
-    MPIDI_OFI_win_control_t *control = (MPIDI_OFI_win_control_t *) buf;
+    MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) am_hdr;
     *req = NULL;
     *target_cmpl_cb = NULL;
 
-    switch (control->type) {
+    switch (ctrlsend->type) {
     case MPIDI_OFI_CTRL_HUGEACK:{
-            MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) buf;
             mpi_errno = MPIDI_OFI_dispatch_function(NULL, ctrlsend->ackreq, 0);
             goto fn_exit;
         }
         break;
 
     case MPIDI_OFI_CTRL_HUGE:{
-            MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) buf;
             mpi_errno = MPIDI_OFI_get_huge(ctrlsend);
             goto fn_exit;
         }
         break;
-    }
 
-    MPIR_Win *win;
-    senderrank = control->origin_rank;
-    win = (MPIR_Win *) MPIDI_OFI_map_lookup(MPIDI_Global.win_map, control->win_id);
-    MPIR_Assert(win != MPIDI_OFI_MAP_NOT_FOUND);
-
-    switch (control->type) {
-    case MPIDI_OFI_CTRL_LOCKREQ:
-    case MPIDI_OFI_CTRL_LOCKALLREQ:
-        mpi_errno = MPIDI_OFI_win_lock_request_proc(control, win, senderrank);
-        break;
-
-    case MPIDI_OFI_CTRL_LOCKACK:
-    case MPIDI_OFI_CTRL_LOCKALLACK:
-        MPIDI_OFI_win_lock_ack_proc(control, win, senderrank);
-        break;
-
-    case MPIDI_OFI_CTRL_UNLOCK:
-    case MPIDI_OFI_CTRL_UNLOCKALL:
-        mpi_errno = MPIDI_OFI_win_unlock_proc(control, win, senderrank);
-        break;
-
-    case MPIDI_OFI_CTRL_UNLOCKACK:
-    case MPIDI_OFI_CTRL_UNLOCKALLACK:
-        MPIDI_OFI_win_unlock_done_proc(control, win, senderrank);
-        break;
-
-    case MPIDI_OFI_CTRL_COMPLETE:
-        MPIDI_OFI_win_complete_proc(control, win, senderrank);
-        break;
-
-    case MPIDI_OFI_CTRL_POST:
-        MPIDI_OFI_win_post_proc(control, win, senderrank);
-        break;
-
-    default:
-        fprintf(stderr, "Bad control type: 0x%08x  %d\n", control->type, control->type);
+     default:
+        fprintf(stderr, "Bad control type: 0x%08x  %d\n", ctrlsend->type, ctrlsend->type);
         MPIR_Assert(0);
     }
 
