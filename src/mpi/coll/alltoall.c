@@ -26,14 +26,28 @@ cvars:
      scope       : MPI_T_SCOPE_ALL_EQ
      description : >-
        Controls alltoall algorithm:
-       0 - Default Algorithm (old MPIR Alltoall)
-       1 - Ring algorithm
+       0 - Default algorithm (old MPIR Alltoall)
+       1 - Brucks algorithm (one send/recv buffer for all the phases)
+       2 - Brucks algorithm (one send/recv buffer for every phase)
+       3 - Ring algorithm
+
+   - name        : MPIR_CVAR_ALLTOALL_BRUCKS_KVAL
+     category    : COLLECTIVE
+     type        : int
+     default     : 2
+     class       : device
+     verbosity   : MPI_T_VERBOSITY_USER_BASIC
+     scope       : MPI_T_SCOPE_ALL_EQ
+     description : >-
+        Radix k for Brucks AlltoAll algorithm
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 enum {
     ALLTOALL_DEFAULT = 0,
+    ALLTOALL_BRUCKS_SINGLE_BUFFER,
+    ALLTOALL_BRUCKS_BUFFER_PER_PHASE,
     ALLTOALL_RING
 };
 
@@ -74,6 +88,14 @@ int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         case ALLTOALL_DEFAULT:
             mpi_errno = MPIC_DEFAULT_Alltoall(sendbuf, sendcount, sendtype, recvbuf,
                                               recvcount, recvtype, comm_ptr, errflag);
+            break;
+        case ALLTOALL_BRUCKS_SINGLE_BUFFER:
+            mpi_errno = MPIC_MPICH_DISSEM_alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                                    &(MPIC_COMM(comm_ptr)->mpich_dissem), (int*)errflag, MPIR_CVAR_ALLTOALL_BRUCKS_KVAL,0);
+            break;
+        case ALLTOALL_BRUCKS_BUFFER_PER_PHASE:
+            mpi_errno = MPIC_MPICH_DISSEM_alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                                    &(MPIC_COMM(comm_ptr)->mpich_dissem), (int*)errflag, MPIR_CVAR_ALLTOALL_BRUCKS_KVAL,1);
             break;
         case ALLTOALL_RING:
             mpi_errno = MPIC_MPICH_RING_alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
