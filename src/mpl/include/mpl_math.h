@@ -1,0 +1,31 @@
+/*
+ *  (C) 2006 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ *
+ *  Portions of this code were written by Intel Corporation.
+ *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
+ *  to Argonne National Laboratory subject to Software Grant and Corporate
+ *  Contributor License Agreement dated February 8, 2012.
+ */
+
+#if !defined(MPL_MATH_H_INCLUDED)
+#define MPL_MATH_H_INCLUDED
+
+#include "mplconfig.h"
+
+/* *INDENT-ON* */
+#if defined(__cplusplus)
+extern "C" {
+#endif
+/* *INDENT-OFF* */
+
+/* Calculates a^b, where a a and b are integers */
+int MPL_ipow(int a, int b);
+
+/* *INDENT-ON* */
+#if defined(__cplusplus)
+}
+#endif
+/* *INDENT-OFF* */
+
+#endif /* !defined(MPL_MATH_H_INCLUDED) */
