@@ -736,7 +736,7 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
 
     if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_free(win_ptr);
-        goto fn_fail;
+        goto fn_exit;
     }
 
     MPIDI_CH4U_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
