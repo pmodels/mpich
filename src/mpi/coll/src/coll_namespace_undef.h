@@ -85,7 +85,7 @@
 #undef COLL_sched_alltoall_scattered
 #undef COLL_sched_alltoall_pairwise
 #undef COLL_sched_alltoall_ring
-#undef COLL_sched_alltoall_undef
+#undef COLL_sched_alltoall_brucks
 #undef COLL_sched_alltoallv_scattered
 #undef COLL_sched_allgather_ring
 #undef COLL_sched_alltoall
