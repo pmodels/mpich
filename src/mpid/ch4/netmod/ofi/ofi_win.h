@@ -156,8 +156,8 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
 
         finfo = fi_dupinfo(MPIDI_Global.prov_use);
         MPIR_Assert(finfo);
-        finfo->caps = FI_RMA | FI_WRITE | FI_READ;
-        finfo->tx_attr->caps = FI_RMA | FI_WRITE | FI_READ;
+        finfo->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
+        finfo->tx_attr->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
         finfo->rx_attr->caps = 0ULL; /* RX capabilities not needed */
 
         finfo->ep_attr->tx_ctx_cnt = FI_SHARED_CONTEXT; /* Request a shared context */
