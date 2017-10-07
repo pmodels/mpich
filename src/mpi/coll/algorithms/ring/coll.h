@@ -16,6 +16,7 @@
 
 #include "coll_schedule_ring.h"
 #include "coll_progress_util.h"
+#include "coll_args_generic.h"
 
 MPL_STATIC_INLINE_PREFIX int COLL_init()
 {
@@ -51,16 +52,17 @@ MPL_STATIC_INLINE_PREFIX int COLL_alltoall(const void     *sendbuf,
     int mpi_errno = MPI_SUCCESS;
 
     /*generate the key for searching the schedule database */
-    COLL_args_t coll_args = {
-        .nargs = 6,
-        .args = {.alltoall = {.sbuf = (void *) sendbuf,
-                            .scount = sendcount,
-                            .st_id = (int) sendtype,
-                            .rbuf = recvbuf,
-                            .rcount = recvcount,
-                            .rt_id = (int) recvtype,
-                            }}
-    };
+    COLL_args_t coll_args = {.coll_op = ALLTOALL,
+                            .args = {.alltoall = {.alltoall = {.sbuf = (void *) sendbuf,
+                                                               .scount = sendcount,
+                                                               .st_id = (int) sendtype,
+                                                               .rbuf = recvbuf,
+                                                               .rcount = recvcount,
+                                                               .rt_id = (int) recvtype
+                                                              }
+                                                }
+                                    }
+                            };
 
     int is_new = 0;
     int tag = (*comm->curTag)++;
@@ -68,15 +70,16 @@ MPL_STATIC_INLINE_PREFIX int COLL_alltoall(const void     *sendbuf,
     /* Check with the transport if schedule already exisits
      * If it exists, reset and return the schedule else
      * return a new empty schedule*/
+    int key_size = COLL_get_key_size (&coll_args);
     TSP_sched_t *s =
-        TSP_get_schedule(&comm->tsp_comm, (void *) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+        TSP_get_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, tag, &is_new);
 
     if (is_new) {       /*schedule is new */
         /*generate the schedule */
         mpi_errno =
             COLL_sched_alltoall_ring(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, tag, comm, s, 1);
         /*save the schedule */
-        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, sizeof(COLL_args_t), (void *) s);
+        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, (void *) s);
     }
 
     /*execute the schedule */

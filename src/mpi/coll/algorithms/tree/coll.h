@@ -17,6 +17,7 @@
 
 #include "coll_progress_util.h"
 #include "coll_schedule_tree.h"
+#include "coll_args_generic.h"
 
 /* Initialize collective algorithm */
 MPL_STATIC_INLINE_PREFIX int COLL_init()
@@ -65,15 +66,17 @@ MPL_STATIC_INLINE_PREFIX int COLL_allreduce(const void *sendbuf,
     int mpi_errno = MPI_SUCCESS;
     /* generate key for searching the schedule database */
     COLL_args_t coll_args = {.coll_op = ALLREDUCE,
-        .nargs = 10,
-        .args = {.allreduce = {.sbuf = (void *) sendbuf,
-                               .rbuf = recvbuf,
-                               .count = count,
-                               .dt_id = (int) datatype,
-                               .op_id = (int) op,
-                               .tree_type = tree_type,
-                               .k = k, .pad1=0, .pad2=0, .pad3=0}}
-    };
+                             .args = {.allreduce = {.allreduce = 
+                                                      {.sbuf = (void *) sendbuf,
+                                                       .rbuf = recvbuf,
+                                                       .count = count,
+                                                       .dt_id = (int) datatype,
+                                                       .op_id = (int) op
+                                                      },
+                                                    .tree_type = tree_type,
+                                                    .k = k}
+                                    }
+                            };
 
     int is_new = 0;
     int tag = (*comm->tree_comm.curTag)++;
@@ -82,8 +85,9 @@ MPL_STATIC_INLINE_PREFIX int COLL_allreduce(const void *sendbuf,
     /* Check with the transport if schedule already exisits
      * If it exists, reset and return the schedule else
      * return a new empty schedule */
+    int key_size = COLL_get_key_size (&coll_args);
     TSP_sched_t *s = TSP_get_schedule(&comm->tsp_comm, (void *) &coll_args,
-                                      sizeof(COLL_args_t), tag, &is_new);
+                                      key_size, tag, &is_new);
 
     if (is_new) {       /* schedule does not exist, needs to be generated */
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Schedule does not exist\n"));
@@ -91,7 +95,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_allreduce(const void *sendbuf,
         mpi_errno = COLL_sched_allreduce_tree(sendbuf, recvbuf, count,
                                               datatype, op, tag, comm, tree_type, k, s, 1);
         /* save the schedule */
-        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, sizeof(COLL_args_t), (void *) s);
+        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, (void *) s);
     }
     /* execute the schedule */
     COLL_sched_wait(s);
@@ -116,15 +120,17 @@ MPL_STATIC_INLINE_PREFIX int COLL_bcast_get_tree_schedule(void *buffer, int coun
 
     /* generate key for searching the schedule database */
     COLL_args_t coll_args = {.coll_op = BCAST,
-        .nargs = 7,
-        .args = {.bcast = {.buf = buffer,
-                           .count = count,
-                           .dt_id = (int) datatype,
-                           .root = root,
-                           .tree_type = tree_type,
-                           .k = k,
-                           .segsize = segsize}}
-    };
+                             .args = {.bcast = {.bcast = 
+                                                 {.buf = buffer,
+                                                  .count = count,
+                                                  .dt_id = (int) datatype,
+                                                  .root = root
+                                                 },
+                                                .tree_type = tree_type,
+                                                .k = k,
+                                                .segsize = segsize}
+                                    }
+                            };
 
     int is_new = 0;
     int tag = (*comm->tree_comm.curTag)++;
@@ -132,8 +138,9 @@ MPL_STATIC_INLINE_PREFIX int COLL_bcast_get_tree_schedule(void *buffer, int coun
     /* Check with the transport if schedule already exisits
      * If it exists, reset and return the schedule else
      * return a new empty schedule */
+    int key_size = COLL_get_key_size (&coll_args);
     *sched =
-        TSP_get_schedule(&comm->tsp_comm, (void *) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+        TSP_get_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, tag, &is_new);
 
     if (is_new) {
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Schedule does not exist\n"));
@@ -141,8 +148,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_bcast_get_tree_schedule(void *buffer, int coun
         mpi_errno = COLL_sched_bcast_tree_pipelined(buffer, count, datatype, root, tag, comm,
                                                     tree_type, k, segsize, *sched, 1);
         /* store the schedule (it is optional for the transport to store the schedule */
-        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, sizeof(COLL_args_t),
-                          (void *) *sched);
+        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, (void *) *sched);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_BCAST_GET_TREE_SCHEDULE);
@@ -212,18 +218,21 @@ MPL_STATIC_INLINE_PREFIX int COLL_reduce(const void *sendbuf,
     int mpi_errno = MPI_SUCCESS;
     /* generate the key for searching the schedule database */
     COLL_args_t coll_args = {.coll_op = REDUCE,
-        .nargs = 10,
-        .args = {.reduce = {.sbuf = (void *) sendbuf,
-                            .rbuf = recvbuf,
-                            .count = count,
-                            .dt_id = (int) datatype,
-                            .op_id = (int) op,
-                            .tree_type = tree_type,
-                            .k = k,
-                            .segsize = segsize,
-                            .nbuffers = nbuffers,
-                            .root = root}}
-    };
+                             .args = {.reduce = {.reduce = 
+                                                    {.sbuf = (void *) sendbuf,
+                                                     .rbuf = recvbuf,
+                                                     .count = count,
+                                                     .dt_id = (int) datatype,
+                                                     .op_id = (int) op,
+                                                     .root = root
+                                                    },
+                                                 .tree_type = tree_type,
+                                                 .k = k,
+                                                 .segsize = segsize,
+                                                 .nbuffers = nbuffers
+                                                }
+                                    }
+                            };
 
 
     int is_new = 0;
@@ -232,8 +241,9 @@ MPL_STATIC_INLINE_PREFIX int COLL_reduce(const void *sendbuf,
     /* Check with the transport if schedule already exisits
      * If it exists, reset and return the schedule else
      * return a new empty schedule */
+    int key_size = COLL_get_key_size (&coll_args);
     TSP_sched_t *s =
-        TSP_get_schedule(&comm->tsp_comm, (void *) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+        TSP_get_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, tag, &is_new);
 
     if (is_new) {       /* schedule is new */
         /* generate the schedule */
@@ -241,7 +251,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_reduce(const void *sendbuf,
             COLL_sched_reduce_tree_full_pipelined(sendbuf, recvbuf, count, datatype, op, root, tag,
                                                   comm, tree_type, k, s, segsize, 1, nbuffers);
         /* save the schedule */
-        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, sizeof(COLL_args_t), (void *) s);
+        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, (void *) s);
     }
 
     /* execute the schedule */
@@ -262,9 +272,12 @@ MPL_STATIC_INLINE_PREFIX int COLL_barrier(COLL_comm_t * comm, int *errflag, int 
     int mpi_errno = MPI_SUCCESS;
     /* generate the key for the schedule */
     COLL_args_t coll_args = {.coll_op = BARRIER,
-        .nargs = 2,
-        .args = {.barrier = {.tree_type = tree_type,.k = k}}
-    };
+                             .args = {.barrier = {
+                                        .barrier = {},
+                                        .tree_type = tree_type,
+                                        .k = k}
+                                     }
+                            };
 
     int is_new = 0;
     int tag = (*comm->tree_comm.curTag)++;
@@ -272,15 +285,16 @@ MPL_STATIC_INLINE_PREFIX int COLL_barrier(COLL_comm_t * comm, int *errflag, int 
     /* Check with the transport if schedule already exisits
      * If it exists, reset and return the schedule else
      * return a new empty schedule */
+    int key_size = COLL_get_key_size (&coll_args);
     TSP_sched_t *s = TSP_get_schedule(&comm->tsp_comm,
-                                      (void *) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+                                      (void *) &coll_args, key_size, tag, &is_new);
 
     if (is_new) {
         /* generate the schedule */
         mpi_errno = COLL_sched_barrier_tree(tag, comm, tree_type, k, s);
 
         /* save the schedule */
-        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, sizeof(COLL_args_t), (void *) s);
+        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, (void *) s);
     }
 
     /* execute the schedule */
