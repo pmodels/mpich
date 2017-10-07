@@ -92,6 +92,7 @@
 #undef COLL_sched_allgather_ring
 #undef COLL_sched_alltoall
 #undef COLL_brucks_pup
+#undef COLL_get_key_size
 
 /* Collective API */
 #undef COLL_kick_nb

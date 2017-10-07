@@ -10,6 +10,7 @@
  */
 
 #include "coll_tree_types.h" /* from the ../common directory */
+#include "coll_args_generic_types.h"
 
 typedef struct COLL_global_t {
 } COLL_global_t;
@@ -33,44 +34,42 @@ typedef MPIC_req_t COLL_req_t;
 typedef long int COLL_aint_t;
 
 typedef struct {
-    int coll_op;  /* collective operation - bcast, reduce, etc. */
-    int nargs;    /* number of arguments */
-    union { /* TODO: apply padding as in allreduce to other struct's also */
+    int coll_op;
+    union {
         struct {
-            void *buf;
-            int count;
-            int dt_id;
-            int root;
+            bcast_args_t bcast;
             int tree_type;
             int k;
             int segsize;
         } bcast;
         struct {
-            void *sbuf;
-            void *rbuf;
-            int count;
-            int dt_id;
-            int op_id;
-            int root;
+            reduce_args_t reduce;
             int nbuffers;
             int tree_type;
             int k;
             int segsize;
         } reduce;
         struct {
-            void *sbuf;
-            void *rbuf;
-            int count;
-            int dt_id;
-            int op_id;
+            allreduce_args_t allreduce;
             int tree_type;
             int k;
-            int pad1,pad2,pad3;/*padding to ensure that all
-                                 space in the key is set*/
         } allreduce;
         struct {
+            barrier_args_t barrier;
             int tree_type;
             int k;
         } barrier;
+        struct {} scatter;
+        struct {} gather;
+        struct {} allgather;
+        struct {} alltoall;
+        struct {} alltoallv;
+        struct {} alltoallw;
+        struct {} reducescatter;
+        struct {} scan;
+        struct {} exscan;
+        struct {} gatherv;
+        struct {} allgatherv;
+        struct {} scatterv;
     } args;
 } COLL_args_t;    /* structure used as key for schedule database */

@@ -17,6 +17,7 @@
 
 #include "coll_schedule_dissem.h"
 #include "coll_progress_util.h"
+#include "coll_args_generic.h"
 
 /*Initializa/setup the algorithm*/
 MPL_STATIC_INLINE_PREFIX int COLL_init()
@@ -45,19 +46,23 @@ MPL_STATIC_INLINE_PREFIX int COLL_comm_cleanup(COLL_comm_t * comm)
 MPL_STATIC_INLINE_PREFIX int COLL_barrier(COLL_comm_t * comm, int *errflag)
 {
     int rc = 0;
-    COLL_args_t coll_args = {.nargs = 1,
-        .args = {.barrier = {.k = 0}}
-    };
+    COLL_args_t coll_args = {.coll_op = BARRIER,
+                             .args = {.barrier = {.barrier = {},
+                                                  .k = 0
+                                                 }
+                                     }
+                            };
 
     int is_new = 0;
     int tag = (*comm->curTag)++;
 
+    int key_size = COLL_get_key_size (&coll_args);
     TSP_sched_t *s = TSP_get_schedule(&comm->tsp_comm,
-                                      (void *) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+                                      (void *) &coll_args, key_size, tag, &is_new);
 
     if (is_new) {
         rc = COLL_sched_barrier_dissem(tag, comm, s);
-        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, sizeof(COLL_args_t), (void *) s);
+        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, (void *) s);
     }
 
     COLL_sched_wait(s);
@@ -67,19 +72,23 @@ MPL_STATIC_INLINE_PREFIX int COLL_barrier(COLL_comm_t * comm, int *errflag)
 MPL_STATIC_INLINE_PREFIX int COLL_ibarrier(COLL_comm_t * comm, COLL_req_t * request)
 {
     int rc = 0;
-    COLL_args_t coll_args = {.nargs = 1,
-        .args = {.barrier = {.k = 0}}
-    };
+    COLL_args_t coll_args = {.coll_op = BARRIER,
+                             .args = {.barrier = {.barrier = {},
+                                                  .k = 0
+                                                 }
+                                     }
+                            };
 
     int is_new = 0;
     int tag = (*comm->curTag)++;
 
+    int key_size = COLL_get_key_size (&coll_args);
     TSP_sched_t *s = TSP_get_schedule(&comm->tsp_comm,
-                                      (void *) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+                                      (void *) &coll_args, key_size, tag, &is_new);
 
     if (is_new) {
         rc = COLL_sched_barrier_dissem(tag, comm, s);
-        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, sizeof(COLL_args_t), (void *) s);
+        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, (void *) s);
     }
 
     COLL_kick_sched_nb(s, request);
@@ -94,27 +103,31 @@ MPL_STATIC_INLINE_PREFIX int COLL_alltoall(const void *sendbuf,
                               COLL_dt_t recvtype, COLL_comm_t * comm, int *errflag, int k, bool buffer_per_phase)
 {
     int rc = 0;
-    COLL_args_t coll_args = {.nargs = 8,
-        .args = {.alltoall = {.sbuf = (void *) sendbuf,
-                              .scount = sendcount,
-                              .stype = (int) sendtype,
-                              .rbuf = (void *) recvbuf,
-                              .rcount = recvcount,
-                              .rtype = (int) recvtype,
-                              .k = k,
-                              .buffer_per_phase = buffer_per_phase}}
-    };
+    COLL_args_t coll_args = {.coll_op = ALLTOALL,
+                            .args = {.alltoall = {.alltoall = {.sbuf = (void *) sendbuf,
+                                                               .scount = sendcount,
+                                                               .st_id = (int) sendtype,
+                                                               .rbuf = recvbuf,
+                                                               .rcount = recvcount,
+                                                               .rt_id = (int) recvtype
+                                                              },
+                                                  .k = k,
+                                                  .buffer_per_phase = buffer_per_phase
+                                                }
+                                    }
+                            };
 
     int is_new = 0;
     int tag = (*comm->curTag)++;
 
+    int key_size = COLL_get_key_size (&coll_args);
     TSP_sched_t *s = TSP_get_schedule(&comm->tsp_comm,
-                                      (void *) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+                                      (void *) &coll_args, key_size, tag, &is_new);
 
     if (is_new) {
         rc = COLL_sched_alltoall_brucks(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype, comm, tag, s, k, buffer_per_phase);
-        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, sizeof(COLL_args_t), (void *) s);
+        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, (void *) s);
     }
 
     COLL_sched_wait(s);
@@ -126,29 +139,35 @@ MPL_STATIC_INLINE_PREFIX int COLL_ialltoall(const void *sendbuf,
                                COLL_dt_t sendtype,
                                void *recvbuf,
                                int recvcount,
-                               COLL_dt_t recvtype, COLL_comm_t * comm, COLL_req_t * request, int k)
+                               COLL_dt_t recvtype, COLL_comm_t * comm, COLL_req_t * request, int k, int buffer_per_phase)
 {
     int rc = 0;
-    COLL_args_t coll_args = {.nargs = 6,
-        .args = {.alltoall = {.sbuf = (void *) sendbuf,
-                              .scount = sendcount,
-                              .stype = (int) sendtype,
-                              .rbuf = (void *) recvbuf,
-                              .rcount = recvcount,
-                              .rtype = (int) recvtype}}
-    };
+    COLL_args_t coll_args = {.coll_op = ALLTOALL,
+                            .args = {.alltoall = {.alltoall = {.sbuf = (void *) sendbuf,
+                                                               .scount = sendcount,
+                                                               .st_id = (int) sendtype,
+                                                               .rbuf = recvbuf,
+                                                               .rcount = recvcount,
+                                                               .rt_id = (int) recvtype
+                                                              },
+                                                  .k = k,
+                                                  .buffer_per_phase = buffer_per_phase
+                                                }
+                                    }
+                            };
 
     int is_new = 0;
     int tag = (*comm->curTag)++;
 
+    int key_size = COLL_get_key_size (&coll_args);
     TSP_sched_t *s = TSP_get_schedule(&comm->tsp_comm,
-                                      (void *) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+                                      (void *) &coll_args, key_size, tag, &is_new);
 
     if (is_new) {
 
         rc = COLL_sched_alltoall_brucks(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype, comm, tag, s, k, 0);
-        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, sizeof(COLL_args_t), (void *) s);
+        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, (void *) s);
     }
 
     COLL_kick_sched_nb(s, request);
@@ -168,13 +187,16 @@ MPL_STATIC_INLINE_PREFIX int COLL_allreduce(const void *sendbuf,
     int is_new = 0;
     int tag = (*comm->curTag)++;
 
-    COLL_args_t coll_args = {.nargs = 5,
-        .args = {.allreduce = {.sbuf = (void *) sendbuf,
-                               .rbuf = recvbuf,
-                               .count = count,
-                               .dt_id = (int) datatype,
-                               .op_id = (int) op}}
-    };
+    COLL_args_t coll_args = {.coll_op = ALLREDUCE,
+                             .args = {.allreduce = {.allreduce = {.sbuf = (void *) sendbuf,
+                                                                  .rbuf = recvbuf,
+                                                                  .count = count,
+                                                                  .dt_id = (int) datatype,
+                                                                  .op_id = (int) op
+                                                                }
+                                                    }
+                                    }
+                            };
 
     is_inplace = TSP_isinplace((void *) sendbuf);       /*is it in place collective operation */
     TSP_opinfo(op, &is_commutative);    /*check whether reduction operation is commutative */
@@ -183,9 +205,9 @@ MPL_STATIC_INLINE_PREFIX int COLL_allreduce(const void *sendbuf,
     if (!is_commutative)
         return -1;      /*this implementatation currently does not handle non-commutative operations */
 
-
+    int key_size = COLL_get_key_size (&coll_args);
     TSP_sched_t *s = TSP_get_schedule(&comm->tsp_comm,
-                                      (void *) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+                                      (void *) &coll_args, key_size, tag, &is_new);
 
     if (is_new) {
         if (is_inplace) {       /*allocate temporary buffer for receiving data */
@@ -201,7 +223,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_allreduce(const void *sendbuf,
             TSP_dtcopy_nb(recvbuf, count, datatype, tmp_buf, count, datatype, s, 1, &fenceid);
         }
 
-        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, sizeof(COLL_args_t), (void *) s);
+        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, (void *) s);
     }
 
     COLL_sched_wait(s);
@@ -220,13 +242,16 @@ MPL_STATIC_INLINE_PREFIX int COLL_iallreduce(const void *sendbuf,
     void *sbuf = (void *) sendbuf;
     void *tmp_buf;
 
-    COLL_args_t coll_args = {.nargs = 5,
-        .args = {.allreduce = {.sbuf = (void *) sendbuf,
-                               .rbuf = recvbuf,
-                               .count = count,
-                               .dt_id = (int) datatype,
-                               .op_id = (int) op}}
-    };
+    COLL_args_t coll_args = {.coll_op = ALLREDUCE,
+                             .args = {.allreduce = {.allreduce = {.sbuf = (void *) sendbuf,
+                                                                  .rbuf = recvbuf,
+                                                                  .count = count,
+                                                                  .dt_id = (int) datatype,
+                                                                  .op_id = (int) op
+                                                                }
+                                                    }
+                                    }
+                            };
 
     is_inplace = TSP_isinplace((void *) sendbuf);       /*is it in place collective operation */
     TSP_opinfo(op, &is_commutative);    /*check whether reduction operation is commutative */
@@ -239,9 +264,9 @@ MPL_STATIC_INLINE_PREFIX int COLL_iallreduce(const void *sendbuf,
     if (!is_commutative)
         return -1;      /*this implementatation currently does not handle non-commutative operations */
 
-
+    int key_size = COLL_get_key_size (&coll_args);
     TSP_sched_t *s = TSP_get_schedule(&comm->tsp_comm,
-                                      (void *) &coll_args, sizeof(COLL_args_t), tag, &is_new);
+                                      (void *) &coll_args, key_size, tag, &is_new);
 
     if (is_new) {
         if (is_inplace) {       /*allocate temporary buffer for receiving data */
@@ -256,7 +281,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_iallreduce(const void *sendbuf,
             TSP_dtcopy_nb(recvbuf, count, datatype, tmp_buf, count, datatype, s, 1, &fenceid);
         }
 
-        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, sizeof(COLL_args_t), (void *) s);
+        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, (void *) s);
     }
 
     COLL_kick_sched_nb(s, request);

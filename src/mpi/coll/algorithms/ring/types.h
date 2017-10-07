@@ -8,6 +8,9 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
+
+#include "coll_args_generic_types.h"
+
 typedef TSP_dt_t COLL_dt_t;
 typedef TSP_op_t COLL_op_t;
 
@@ -24,16 +27,34 @@ typedef MPIC_req_t COLL_req_t;
  typedef struct COLL_global_t {
  } COLL_global_t;
 
- typedef struct {
-     int nargs;                  /*number of arguments */
-     union {
-         struct {
-             void *sbuf;
-             int scount;
-             int st_id;
-             void *rbuf;
-             int rcount;
-             int rt_id;
-         } alltoall;
-     } args;
- } COLL_args_t;
+typedef struct {
+    int coll_op;
+    union {
+        struct {
+            bcast_args_t bcast;
+        } bcast;
+        struct {
+            reduce_args_t reduce;
+        } reduce;
+        struct {
+            allreduce_args_t allreduce;
+        } allreduce;
+        struct {
+            barrier_args_t barrier;
+        } barrier;
+        struct {} scatter;
+        struct {} gather;
+        struct {} allgather;
+        struct {
+            alltoall_args_t alltoall;
+        } alltoall;
+        struct {} alltoallv;
+        struct {} alltoallw;
+        struct {} reducescatter;
+        struct {} scan;
+        struct {} exscan;
+        struct {} gatherv;
+        struct {} allgatherv;
+        struct {} scatterv;
+    } args;
+} COLL_args_t;    /* structure used as key for schedule database */

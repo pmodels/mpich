@@ -9,6 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
+#include "coll_args_generic_types.h"
+
 typedef struct COLL_global_t {
 } COLL_global_t;
 
@@ -31,41 +33,36 @@ typedef struct COLL_comm_t {
 typedef MPIC_req_t COLL_req_t;
 
 typedef struct {
-    int nargs;                  /*number of arguments */
+    int coll_op;
     union {
         struct {
-            void *buf;
-            int count;
-            int dt_id;
-            int root;
+            bcast_args_t bcast;
         } bcast;
         struct {
-            void *sbuf;
-            void *rbuf;
-            int count;
-            int dt_id;
-            int op_id;
-            int root;
+            reduce_args_t reduce;
         } reduce;
         struct {
-            void *sbuf;
-            void *rbuf;
-            int count;
-            int dt_id;
-            int op_id;
+            allreduce_args_t allreduce;
         } allreduce;
         struct {
+            barrier_args_t barrier;
             int k;
         } barrier;
+        struct {} scatter;
+        struct {} gather;
+        struct {} allgather;
         struct {
-            void *sbuf;
-            int scount;
-            int stype;
-            void *rbuf;
-            int rcount;
-            int rtype;
+            alltoall_args_t alltoall;
             int k;
             bool buffer_per_phase;
         } alltoall;
+        struct {} alltoallv;
+        struct {} alltoallw;
+        struct {} reducescatter;
+        struct {} scan;
+        struct {} exscan;
+        struct {} gatherv;
+        struct {} allgatherv;
+        struct {} scatterv;
     } args;
-} COLL_args_t;
+} COLL_args_t;    /* structure used as key for schedule database */

@@ -109,6 +109,7 @@
 #define COLL_sched_allgather_ring       COLL_NAMESPACE(sched_allgather_ring)
 #define COLL_sched_alltoall             COLL_NAMESPACE(sched_alltoall)
 #define COLL_brucks_pup                 COLL_NAMESPACE(brucks_pup)
+#define COLL_get_key_size               COLL_NAMESPACE(get_key_size)
 
 /* Collective API */
 #define COLL_kick_nb               COLL_NAMESPACE(kick_nb)
