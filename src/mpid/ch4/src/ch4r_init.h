@@ -150,4 +150,42 @@ static inline int MPIDIU_update_node_map(int avtid, int size, MPID_Node_id_t nod
     return MPI_SUCCESS;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDIU_md_stride_globals_init
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDIU_md_stride_globals_init()
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_MD_STRIDE_GLOBALS_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_MD_STRIDE_GLOBALS_INIT);
+    MPIDI_md_stride_params = (int*) MPL_malloc(3 * MPIDI_MD_STRIDE_DIM_MAX
+                                               * sizeof(int));
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_MD_STRIDE_GLOBALS_INIT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDIU_md_stride_globals_destroy
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDIU_md_stride_globals_destroy()
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_MD_STRIDE_GLOBALS_DESTROY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_MD_STRIDE_GLOBALS_DESTROY);
+    MPL_free(MPIDI_md_stride_params);
+    MPIDI_md_stride_params = NULL;
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_MD_STRIDE_GLOBALS_DESTROY);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #endif /* CH4R_INIT_H_INCLUDED */
