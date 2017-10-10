@@ -168,6 +168,7 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win = (MPIR_Win *) MPIR_Handle_obj_alloc(&MPIR_Win_mem);
     MPIDI_CH4U_win_target_t *targets = NULL;
+    MPIR_Comm *win_comm_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_WIN_INIT);
     MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH4R_WIN_INIT);
@@ -176,8 +177,12 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
     *win_ptr = win;
 
     memset(&win->dev.ch4u, 0, sizeof(MPIDI_CH4U_win_t));
-    win->comm_ptr = comm_ptr;
-    MPIR_Comm_add_ref(comm_ptr);
+
+    /* Duplicate the original communicator here to avoid having collisions
+     * between internal collectives */
+    mpi_errno = MPIR_Comm_dup_impl(comm_ptr, &win_comm_ptr);
+    if (MPI_SUCCESS != mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     MPIDI_CH4U_WIN(win, targets) = targets;
 
@@ -190,7 +195,7 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
     win->copyCreateFlavor = (MPIR_Win_flavor_t) 0;
     win->copyModel = (MPIR_Win_model_t) 0;
     win->attributes = NULL;
-    win->comm_ptr = comm_ptr;
+    win->comm_ptr = win_comm_ptr;
     win->copyDispUnit = 0;
     win->copySize = 0;
     MPIDI_CH4U_WIN(win, shared_table) = NULL;
@@ -838,7 +843,7 @@ static inline int MPIDI_CH4R_mpi_win_create(void *base,
     win = *win_ptr;
     win->base = base;
 
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &errflag);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
