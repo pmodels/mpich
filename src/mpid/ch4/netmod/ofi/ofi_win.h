@@ -1085,7 +1085,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
     mpi_errno = MPIDI_OFI_win_allgather(win, baseP, disp_unit);
 
     if (mpi_errno != MPI_SUCCESS)
-        return mpi_errno;
+        MPIR_ERR_POP(mpi_errno);
 
     *(void **) base_ptr = (void *) win->base;
     mpi_errno = MPIR_Barrier_impl(comm_ptr, &errflag);
