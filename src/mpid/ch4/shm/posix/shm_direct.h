@@ -16,6 +16,7 @@
 #include "posix_recv.h"
 #include "posix_request.h"
 #include "posix_send.h"
+#include "posix_startall.h"
 #include "posix_win.h"
 #include "posix_rma.h"
 #include "posix_am.h"
