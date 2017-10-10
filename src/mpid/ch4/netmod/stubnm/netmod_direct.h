@@ -16,6 +16,7 @@
 #include "stubnm_recv.h"
 #include "stubnm_request.h"
 #include "stubnm_send.h"
+#include "stubnm_startall.h"
 #include "stubnm_win.h"
 #include "stubnm_rma.h"
 #include "stubnm_am.h"

@@ -17,6 +17,7 @@
 #include "ptl_recv.h"
 #include "ptl_request.h"
 #include "ptl_send.h"
+#include "ptl_startall.h"
 #include "ptl_win.h"
 #include "ptl_rma.h"
 #include "ptl_am.h"

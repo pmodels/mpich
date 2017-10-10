@@ -33,11 +33,6 @@ static inline int MPIDI_NM_mpi_ssend(const void *buf,
     return MPIDIG_mpi_ssend(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
-static inline int MPIDI_NM_mpi_startall(int count, MPIR_Request * requests[])
-{
-    return MPIDIG_mpi_startall(count, requests);
-}
-
 static inline int MPIDI_NM_mpi_send_init(const void *buf,
                                          int count,
                                          MPI_Datatype datatype,
