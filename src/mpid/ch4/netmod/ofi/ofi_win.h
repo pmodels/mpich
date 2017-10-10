@@ -545,7 +545,7 @@ static inline int MPIDI_NM_mpi_win_create(void *base,
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &errflag);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
