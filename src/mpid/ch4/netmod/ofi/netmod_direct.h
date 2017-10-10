@@ -27,5 +27,6 @@
 #include "ofi_win.h"
 #include "ofi_rma.h"
 #include "ofi_spawn.h"
+#include "ofi_startall.h"
 
 #endif /* NETMOD_DIRECT_H_INCLUDED */

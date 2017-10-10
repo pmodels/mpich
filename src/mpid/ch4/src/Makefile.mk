@@ -17,6 +17,7 @@ noinst_HEADERS += src/mpid/ch4/src/ch4_comm.h     \
                   src/mpid/ch4/src/ch4_progress.h \
                   src/mpid/ch4/src/ch4_request.h  \
                   src/mpid/ch4/src/ch4_send.h     \
+                  src/mpid/ch4/src/ch4_startall.h \
                   src/mpid/ch4/src/ch4_types.h    \
                   src/mpid/ch4/src/ch4_impl.h     \
                   src/mpid/ch4/src/ch4_probe.h    \

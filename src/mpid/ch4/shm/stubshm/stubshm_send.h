@@ -64,17 +64,6 @@ static inline int MPIDI_STUBSHM_mpi_ssend(const void *buf,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_mpi_startall(int count, MPIR_Request * requests[])
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_STARTALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_STARTALL);
-
-    MPIR_Assert(0);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_STARTALL);
-    return MPI_SUCCESS;
-}
-
 static inline int MPIDI_STUBSHM_mpi_send_init(const void *buf,
                                           int count,
                                           MPI_Datatype datatype,

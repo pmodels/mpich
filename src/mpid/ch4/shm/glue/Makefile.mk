@@ -16,4 +16,5 @@ noinst_HEADERS += src/mpid/ch4/shm/glue/shm_impl.h  \
 		src/mpid/ch4/shm/glue/shm_mem.h     \
 		src/mpid/ch4/shm/glue/shm_misc.h    \
 		src/mpid/ch4/shm/glue/shm_p2p.h     \
+        src/mpid/ch4/shm/glue/shm_startall.h\
 		src/mpid/ch4/shm/glue/shm_rma.h
