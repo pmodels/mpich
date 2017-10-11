@@ -126,7 +126,8 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl)(struct MPIDI_VC *vc,
     if (status != MPI_STATUS_IGNORE)
         *status = rreq->status;
 
-    MPIR_Request_add_ref(rreq);
+    if (rreq_ptr)
+        MPIR_Request_add_ref(rreq);
     *flag = 1;
     END_FUNC_RC(FCNAME);
 }
