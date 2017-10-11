@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
- * Copyright © 2010-2016 Inria.  All rights reserved.
+ * Copyright © 2010-2017 Inria.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -120,6 +120,7 @@ extern "C" {
 #define HWLOC_TOPOLOGY_FLAG_IO_BRIDGES HWLOC_NAME_CAPS(TOPOLOGY_FLAG_IO_BRIDGES)
 #define HWLOC_TOPOLOGY_FLAG_WHOLE_IO HWLOC_NAME_CAPS(TOPOLOGY_FLAG_WHOLE_IO)
 #define HWLOC_TOPOLOGY_FLAG_ICACHES HWLOC_NAME_CAPS(TOPOLOGY_FLAG_ICACHES)
+#define HWLOC_TOPOLOGY_FLAG_THISSYSTEM_ALLOWED_RESOURCES HWLOC_NAME_CAPS(TOPOLOGY_FLAG_THISSYSTEM_ALLOWED_RESOURCES)
 
 #define hwloc_topology_set_flags HWLOC_NAME(topology_set_flags)
 #define hwloc_topology_set_fsroot HWLOC_NAME(topology_set_fsroot)
@@ -645,8 +646,8 @@ extern "C" {
 
 /* private/solaris-chiptype.h */
 
-#define hwloc_solaris_get_chip_type HWLOC_NAME(solaris_get_chip_type)
-#define hwloc_solaris_get_chip_model HWLOC_NAME(solaris_get_chip_model)
+#define hwloc_solaris_chip_info_s HWLOC_NAME(solaris_chip_info_s)
+#define hwloc_solaris_get_chip_info HWLOC_NAME(solaris_get_chip_info)
 
 #endif /* HWLOC_SYM_TRANSFORM */
 
