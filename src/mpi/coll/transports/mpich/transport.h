@@ -28,6 +28,24 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_free_mem(void *ptr)
     MPL_free(ptr);
 }
 
+/*Internal function to print the schedule */
+MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_print_schedule (MPIC_MPICH_sched_t *sched) {
+  int i, j;
+  MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Collective schedule - \n"));
+  /* for every vertex in the schedule */
+  for (i=0; i<sched->total; i++) {
+    MPIC_MPICH_vtx_t *vtx = &sched->vtcs[i];
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"%d(%d) -> ", vtx->id, vtx->kind));
+    int num_outvtcs = vtx->outvtcs.used;
+    /* print every outgoing vertex */
+    for (j=0; j<num_outvtcs; j++) {
+      int out_vtx_id = vtx->outvtcs.array[j];
+      MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"%d(%d), ", sched->vtcs[out_vtx_id].id, sched->vtcs[out_vtx_id].kind));
+    }
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"\n"));
+  }
+}
+
 /* Internal transport function. This function is called whenever a vertex completes its execution.
  * It notifies the outgoing vertices of the completed vertex about its completion by decrementing
  * the number of their number of unfinished dependencies */
@@ -207,6 +225,9 @@ MPL_STATIC_INLINE_PREFIX MPIC_MPICH_sched_t *MPIC_MPICH_get_schedule(MPIC_MPICH_
 /* Transport function to tell that the schedule generation is now complete */
 MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_sched_commit(MPIC_MPICH_sched_t * sched)
 {
+#ifdef MPIC_DEBUG
+    MPIC_MPICH_print_schedule (sched);
+#endif
 }
 
 /* Transport function to tell that the schedule can now be freed
