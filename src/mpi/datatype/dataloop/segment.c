@@ -12,6 +12,46 @@
 
 #undef DLOOP_DEBUG_MANIPULATE
 
+/* stackelm_blocksize - returns block size for stackelm based on current
+ * count in stackelm.
+ *
+ * NOTE: loop_p, orig_count, and curcount members of stackelm MUST be correct
+ * before this is called!
+ *
+ */
+static DLOOP_Count stackelm_blocksize(struct DLOOP_Dataloop_stackelm *elmp)
+{
+    struct DLOOP_Dataloop *dlp = elmp->loop_p;
+
+    switch(dlp->kind & DLOOP_KIND_MASK) {
+	case DLOOP_KIND_CONTIG:
+	    /* NOTE: we're dropping the count into the
+	     * blksize field for contigs, as described
+	     * in the init call.
+	     */
+	    return dlp->loop_params.c_t.count;
+	    break;
+	case DLOOP_KIND_VECTOR:
+	    return dlp->loop_params.v_t.blocksize;
+	    break;
+	case DLOOP_KIND_BLOCKINDEXED:
+	    return dlp->loop_params.bi_t.blocksize;
+	    break;
+	case DLOOP_KIND_INDEXED:
+	    return dlp->loop_params.i_t.blocksize_array[elmp->orig_count - elmp->curcount];
+	    break;
+	case DLOOP_KIND_STRUCT:
+	    return dlp->loop_params.s_t.blocksize_array[elmp->orig_count - elmp->curcount];
+	    break;
+	default:
+	    /* --BEGIN ERROR HANDLING-- */
+	    DLOOP_Assert(0);
+	    break;
+	    /* --END ERROR HANDLING-- */
+    }
+    return -1;
+}
+
 /* Notes on functions:
  *
  * There are a few different sets of functions here:
@@ -66,7 +106,7 @@
     segp->cur_sp         = 0; 					\
     cur_elmp             = &(segp->stackelm[0]);		\
     cur_elmp->curcount   = cur_elmp->orig_count;		\
-    cur_elmp->orig_block = DLOOP_Stackelm_blocksize(cur_elmp);	\
+    cur_elmp->orig_block = stackelm_blocksize(cur_elmp);	\
     cur_elmp->curblock   = cur_elmp->orig_block;		\
     cur_elmp->curoffset  = cur_elmp->orig_offset +              \
                            DLOOP_Stackelm_offset(cur_elmp);     \
@@ -659,46 +699,6 @@ void MPIR_Segment_manipulate(struct DLOOP_Segment *segp,
     return;
 }
 
-/* DLOOP_Stackelm_blocksize - returns block size for stackelm based on current
- * count in stackelm.
- *
- * NOTE: loop_p, orig_count, and curcount members of stackelm MUST be correct
- * before this is called!
- *
- */
-DLOOP_Count DLOOP_Stackelm_blocksize(struct DLOOP_Dataloop_stackelm *elmp)
-{
-    struct DLOOP_Dataloop *dlp = elmp->loop_p;
-
-    switch(dlp->kind & DLOOP_KIND_MASK) {
-	case DLOOP_KIND_CONTIG:
-	    /* NOTE: we're dropping the count into the
-	     * blksize field for contigs, as described
-	     * in the init call.
-	     */
-	    return dlp->loop_params.c_t.count;
-	    break;
-	case DLOOP_KIND_VECTOR:
-	    return dlp->loop_params.v_t.blocksize;
-	    break;
-	case DLOOP_KIND_BLOCKINDEXED:
-	    return dlp->loop_params.bi_t.blocksize;
-	    break;
-	case DLOOP_KIND_INDEXED:
-	    return dlp->loop_params.i_t.blocksize_array[elmp->orig_count - elmp->curcount];
-	    break;
-	case DLOOP_KIND_STRUCT:
-	    return dlp->loop_params.s_t.blocksize_array[elmp->orig_count - elmp->curcount];
-	    break;
-	default:
-	    /* --BEGIN ERROR HANDLING-- */
-	    DLOOP_Assert(0);
-	    break;
-	    /* --END ERROR HANDLING-- */
-    }
-    return -1;
-}
-
 /* DLOOP_Stackelm_offset - returns starting offset (displacement) for stackelm
  * based on current count in stackelm.
  *
@@ -761,10 +761,10 @@ void DLOOP_Stackelm_load(struct DLOOP_Dataloop_stackelm *elmp,
 	elmp->may_require_reloading = 0;
     }
 
-    /* required by DLOOP_Stackelm_blocksize */
+    /* required by stackelm_blocksize */
     elmp->curcount = elmp->orig_count;
 
-    elmp->orig_block = DLOOP_Stackelm_blocksize(elmp);
+    elmp->orig_block = stackelm_blocksize(elmp);
     /* TODO: GO AHEAD AND FILL IN CURBLOCK? */
 }
 
