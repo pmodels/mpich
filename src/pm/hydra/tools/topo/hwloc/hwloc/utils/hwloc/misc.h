@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2016 Inria.  All rights reserved.
+ * Copyright © 2009-2017 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -210,33 +210,47 @@ hwloc_utils_enable_input_format(struct hwloc_topology *topology,
 static __hwloc_inline void
 hwloc_utils_print_distance_matrix(FILE *output, hwloc_topology_t topology, hwloc_obj_t root, unsigned nbobjs, unsigned reldepth, float *matrix, int logical)
 {
-  hwloc_obj_t objj, obji;
-  unsigned i, j;
+  hwloc_obj_t *objs, obj;
+  unsigned i, j, depth;
+
+  /* get objets */
+  objs = malloc(nbobjs * sizeof(*objs));
+  depth = root->depth + reldepth;
+  i = 0;
+  obj = NULL;
+  while ((obj = hwloc_get_next_obj_by_depth(topology, depth, obj)) != NULL) {
+    hwloc_obj_t myparent = obj->parent;
+    while (myparent->depth > root->depth)
+      myparent = myparent->parent;
+    if (myparent == root) {
+      assert(i < nbobjs);
+      objs[i++] = obj;
+    }
+  }
 
   /* column header */
   fprintf(output, "  index");
-  for(j=0, objj=NULL; j<nbobjs; j++) {
-    objj = hwloc_get_next_obj_inside_cpuset_by_depth(topology, root->cpuset, root->depth+reldepth, objj);
+  for(j=0; j<nbobjs; j++) {
     fprintf(output, " % 5d",
-	    (int) (logical ? objj->logical_index : objj->os_index));
+	    (int) (logical ? objs[j]->logical_index : objs[j]->os_index));
   }
   fprintf(output, "\n");
 
   /* each line */
-  for(i=0, obji=NULL; i<nbobjs; i++) {
-    obji = hwloc_get_next_obj_inside_cpuset_by_depth(topology, root->cpuset, root->depth+reldepth, obji);
+  for(i=0, obj=NULL; i<nbobjs; i++) {
     /* row header */
     fprintf(output, "  % 5d",
-	    (int) (logical ? obji->logical_index : obji->os_index));
+	    (int) (logical ? objs[i]->logical_index : objs[i]->os_index));
 
     /* row values */
-    for(j=0, objj=NULL; j<nbobjs; j++) {
-      objj = hwloc_get_next_obj_inside_cpuset_by_depth(topology, root->cpuset, root->depth+reldepth, objj);
+    for(j=0; j<nbobjs; j++) {
       for(j=0; j<nbobjs; j++)
 	fprintf(output, " %2.3f", matrix[i*nbobjs+j]);
       fprintf(output, "\n");
     }
   }
+
+  free(objs);
 }
 
 static __hwloc_inline hwloc_pid_t
@@ -270,20 +284,20 @@ hwloc_lstopo_show_summary(FILE *output, hwloc_topology_t topology)
     nbobjs = hwloc_get_nbobjs_by_depth (topology, depth);
     fprintf(output, "%*s", (int) depth, "");
     hwloc_obj_type_snprintf(type, sizeof(type), obj, 1);
-    fprintf (output,"depth %u:\t%u %s (type #%u)\n",
-	     depth, nbobjs, type, obj->type);
+    fprintf (output,"depth %u:\t%u %s (type #%d)\n",
+	     depth, nbobjs, type, (int) obj->type);
   }
   nbobjs = hwloc_get_nbobjs_by_depth (topology, HWLOC_TYPE_DEPTH_BRIDGE);
   if (nbobjs)
-    fprintf (output, "Special depth %d:\t%u %s (type #%u)\n",
+    fprintf (output, "Special depth %d:\t%u %s (type #%d)\n",
 	     HWLOC_TYPE_DEPTH_BRIDGE, nbobjs, "Bridge", HWLOC_OBJ_BRIDGE);
   nbobjs = hwloc_get_nbobjs_by_depth (topology, HWLOC_TYPE_DEPTH_PCI_DEVICE);
   if (nbobjs)
-    fprintf (output, "Special depth %d:\t%u %s (type #%u)\n",
+    fprintf (output, "Special depth %d:\t%u %s (type #%d)\n",
 	     HWLOC_TYPE_DEPTH_PCI_DEVICE, nbobjs, "PCI Device", HWLOC_OBJ_PCI_DEVICE);
   nbobjs = hwloc_get_nbobjs_by_depth (topology, HWLOC_TYPE_DEPTH_OS_DEVICE);
   if (nbobjs)
-    fprintf (output, "Special depth %d:\t%u %s (type #%u)\n",
+    fprintf (output, "Special depth %d:\t%u %s (type #%d)\n",
 	     HWLOC_TYPE_DEPTH_OS_DEVICE, nbobjs, "OS Device", HWLOC_OBJ_OS_DEVICE);
 }
 

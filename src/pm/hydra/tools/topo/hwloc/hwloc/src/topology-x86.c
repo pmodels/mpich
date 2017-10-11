@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010-2016 Inria.  All rights reserved.
+ * Copyright © 2010-2017 Inria.  All rights reserved.
  * Copyright © 2010-2013 Université Bordeaux
  * Copyright © 2010-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -126,7 +126,7 @@ static void fill_amd_cache(struct procinfo *infos, unsigned level, int type, uns
   cache->size = size;
   cache->sets = 0;
 
-  hwloc_debug("cache L%u t%u linesize %u ways %u size %luKB\n", cache->level, cache->nbthreads_sharing, cache->linesize, cache->ways, cache->size >> 10);
+  hwloc_debug("cache L%u t%u linesize %u ways %d size %luKB\n", cache->level, cache->nbthreads_sharing, cache->linesize, cache->ways, cache->size >> 10);
 }
 
 /* Fetch information from the processor itself thanks to cpuid and store it in
@@ -183,8 +183,9 @@ static void look_proc(struct hwloc_backend *backend, struct procinfo *infos, uns
   }
   infos->cpustepping = eax & 0xf;
 
-  if (cpuid_type == intel && infos->cpufamilynumber == 0x6 && infos->cpumodelnumber == 0x57)
-    data->is_knl = 1;
+  if (cpuid_type == intel && infos->cpufamilynumber == 0x6 &&
+      (infos->cpumodelnumber == 0x57 || infos->cpumodelnumber == 0x85))
+    data->is_knl = 1; /* KNM is the same as KNL */
 
   /* Get cpu vendor string from cpuid 0x00 */
   memset(regs, 0, sizeof(regs));
@@ -245,19 +246,37 @@ static void look_proc(struct hwloc_backend *backend, struct procinfo *infos, uns
    * (AMD topology extension)
    */
   if (cpuid_type != intel && has_topoext(features)) {
-    unsigned apic_id, node_id, nodes_per_proc, unit_id, cores_per_unit;
+    unsigned apic_id, node_id, nodes_per_proc;
 
     eax = 0x8000001e;
     hwloc_x86_cpuid(&eax, &ebx, &ecx, &edx);
     infos->apicid = apic_id = eax;
-    infos->nodeid = node_id = ecx & 0xff;
-    nodes_per_proc = ((ecx >> 8) & 7) + 1;
-    if (nodes_per_proc > 2) {
-      hwloc_debug("warning: undefined value %d, assuming it means %d\n", nodes_per_proc, nodes_per_proc);
+
+    if (infos->cpufamilynumber == 0x16) {
+      /* ecx is reserved */
+      node_id = 0;
+      nodes_per_proc = 1;
+    } else {
+      node_id = ecx & 0xff;
+      nodes_per_proc = ((ecx >> 8) & 7) + 1;
     }
-    infos->unitid = unit_id = ebx & 0xff;
-    cores_per_unit = ((ebx >> 8) & 3) + 1;
-    hwloc_debug("x2APIC %08x, %d nodes, node %d, %d cores in unit %d\n", apic_id, nodes_per_proc, node_id, cores_per_unit, unit_id);
+    infos->nodeid = node_id;
+    if ((infos->cpufamilynumber == 0x15 && nodes_per_proc > 2)
+	|| (infos->cpufamilynumber == 0x17 && nodes_per_proc > 4)) {
+      hwloc_debug("warning: undefined nodes_per_proc value %u, assuming it means %u\n", nodes_per_proc, nodes_per_proc);
+    }
+
+    if (infos->cpufamilynumber <= 0x16) { /* topoext appeared in 0x15 and compute-units were only used in 0x15 and 0x16 */
+      unsigned unit_id, cores_per_unit;
+      infos->unitid = unit_id = ebx & 0xff;
+      cores_per_unit = ((ebx >> 8) & 0xff) + 1;
+      hwloc_debug("topoext %08x, %u nodes, node %u, %u cores in unit %u\n", apic_id, nodes_per_proc, node_id, cores_per_unit, unit_id);
+    } else {
+      unsigned core_id, threads_per_core;
+      infos->coreid = core_id = ebx & 0xff;
+      threads_per_core = ((ebx >> 8) & 0xff) + 1;
+      hwloc_debug("topoext %08x, %u nodes, node %u, %u threads in core %u\n", apic_id, nodes_per_proc, node_id, threads_per_core, core_id);
+    }
 
     for (cachenum = 0; ; cachenum++) {
       unsigned type;
@@ -302,7 +321,7 @@ static void look_proc(struct hwloc_backend *backend, struct procinfo *infos, uns
       cache->size = linesize * linepart * ways * sets;
       cache->inclusive = edx & 0x2;
 
-      hwloc_debug("cache %u type %u L%u t%u c%u linesize %lu linepart %lu ways %lu sets %lu, size %uKB\n", cachenum, cache->type, cache->level, cache->nbthreads_sharing, infos->max_nbcores, linesize, linepart, ways, sets, cache->size >> 10);
+      hwloc_debug("cache %u type %u L%u t%u c%u linesize %lu linepart %lu ways %lu sets %lu, size %luKB\n", cachenum, cache->type, cache->level, cache->nbthreads_sharing, infos->max_nbcores, linesize, linepart, ways, sets, cache->size >> 10);
 
       cache++;
     }
@@ -399,7 +418,7 @@ static void look_proc(struct hwloc_backend *backend, struct procinfo *infos, uns
       cache->size = linesize * linepart * ways * sets;
       cache->inclusive = edx & 0x2;
 
-      hwloc_debug("cache %u type %u L%u t%u c%u linesize %lu linepart %lu ways %lu sets %lu, size %uKB\n", cachenum, cache->type, cache->level, cache->nbthreads_sharing, infos->max_nbcores, linesize, linepart, ways, sets, cache->size >> 10);
+      hwloc_debug("cache %u type %u L%u t%u c%u linesize %lu linepart %lu ways %lu sets %lu, size %luKB\n", cachenum, cache->type, cache->level, cache->nbthreads_sharing, infos->max_nbcores, linesize, linepart, ways, sets, cache->size >> 10);
 
       cache++;
     }
@@ -431,7 +450,7 @@ static void look_proc(struct hwloc_backend *backend, struct procinfo *infos, uns
 	apic_type = (ecx & 0xff00) >> 8;
 	apic_id = edx;
 	id = (apic_id >> apic_shift) & ((1 << (apic_nextshift - apic_shift)) - 1);
-	hwloc_debug("x2APIC %08x %d: nextshift %d num %2d type %d id %2d\n", apic_id, level, apic_nextshift, apic_number, apic_type, id);
+	hwloc_debug("x2APIC %08x %u: nextshift %u num %2u type %u id %2u\n", apic_id, level, apic_nextshift, apic_number, apic_type, id);
 	infos->apicid = apic_id;
 	infos->otherids[level] = UINT_MAX;
 	switch (apic_type) {
@@ -442,7 +461,7 @@ static void look_proc(struct hwloc_backend *backend, struct procinfo *infos, uns
 	  infos->coreid = id;
 	  break;
 	default:
-	  hwloc_debug("x2APIC %d: unknown type %d\n", level, apic_type);
+	  hwloc_debug("x2APIC %u: unknown type %u\n", level, apic_type);
 	  infos->otherids[level] = apic_id >> apic_shift;
 	  break;
 	}
@@ -450,14 +469,14 @@ static void look_proc(struct hwloc_backend *backend, struct procinfo *infos, uns
       }
       infos->apicid = apic_id;
       infos->packageid = apic_id >> apic_shift;
-      hwloc_debug("x2APIC remainder: %d\n", infos->packageid);
+      hwloc_debug("x2APIC remainder: %u\n", infos->packageid);
       hwloc_debug("this is thread %u of core %u\n", infos->threadid, infos->coreid);
     }
   }
 
   /* Now that we have all info, compute cacheids and apply quirks */
   for (cachenum = 0; cachenum < infos->numcaches; cachenum++) {
-    struct cacheinfo *cache = &infos->cache[cachenum];
+    cache = &infos->cache[cachenum];
 
     /* default cacheid value */
     cache->cacheid = infos->apicid / cache->nbthreads_sharing;
@@ -720,7 +739,7 @@ static int summarize(struct hwloc_backend *backend, struct procinfo *infos, int 
 	  unknown_obj->attr->group.depth = topology->next_group_depth + level;
 	  if (next_group_depth <= topology->next_group_depth + level)
 	    next_group_depth = topology->next_group_depth + level + 1;
-	  hwloc_debug_2args_bitmap("os unknown%d %u has cpuset %s\n",
+	  hwloc_debug_2args_bitmap("os unknown%u %u has cpuset %s\n",
 	      level, unknownid, unknown_cpuset);
 	  hwloc_insert_object_by_cpuset(topology, unknown_obj);
 	}
@@ -736,6 +755,7 @@ static int summarize(struct hwloc_backend *backend, struct procinfo *infos, int 
     hwloc_bitmap_copy(remaining_cpuset, complete_cpuset);
     while ((i = hwloc_bitmap_first(remaining_cpuset)) != (unsigned) -1) {
       unsigned packageid = infos[i].packageid;
+      unsigned nodeid = infos[i].nodeid;
       unsigned coreid = infos[i].coreid;
 
       if (coreid == (unsigned) -1) {
@@ -750,7 +770,7 @@ static int summarize(struct hwloc_backend *backend, struct procinfo *infos, int 
 	  continue;
 	}
 
-        if (infos[j].packageid == packageid && infos[j].coreid == coreid) {
+        if (infos[j].packageid == packageid && infos[j].nodeid == nodeid && infos[j].coreid == coreid) {
           hwloc_bitmap_set(core_cpuset, j);
           hwloc_bitmap_clr(remaining_cpuset, j);
         }
@@ -765,7 +785,6 @@ static int summarize(struct hwloc_backend *backend, struct procinfo *infos, int 
 
   /* Look for PUs */
   if (fulldiscovery) {
-    unsigned i;
     hwloc_debug("%s", "\n\n * CPU cpusets *\n\n");
     for (i=0; i<nbprocs; i++)
       if(infos[i].present) { /* Only add present PU. We don't know if others actually exist */
@@ -902,9 +921,9 @@ look_procs(struct hwloc_backend *backend, struct procinfo *infos, int fulldiscov
 
   for (i = 0; i < nbprocs; i++) {
     hwloc_bitmap_only(set, i);
-    hwloc_debug("binding to CPU%d\n", i);
+    hwloc_debug("binding to CPU%u\n", i);
     if (set_cpubind(topology, set, HWLOC_CPUBIND_STRICT)) {
-      hwloc_debug("could not bind to CPU%d: %s\n", i, strerror(errno));
+      hwloc_debug("could not bind to CPU%u: %s\n", i, strerror(errno));
       continue;
     }
     look_proc(backend, &infos[i], highest_cpuid, highest_ext_cpuid, features, cpuid_type);

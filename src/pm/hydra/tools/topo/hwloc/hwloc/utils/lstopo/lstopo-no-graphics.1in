@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.\" Copyright © 2009-2016 Inria.  All rights reserved.
+.\" Copyright © 2009-2017 Inria.  All rights reserved.
 .\" Copyright © 2009-2010 Université of Bordeaux
 .\" Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 .\" See COPYING in top-level directory.
@@ -123,6 +123,11 @@ Do not show Instruction caches, only Data and Unified caches are displayed.
 \fB\-\-whole\-system\fR
 Do not consider administration limitations.
 .TP
+\fB\-\-flags\fR <flags>
+Enforce topology flags.
+The default is \fB0\fR.
+These flags are passed to \fIhwloc_topology_set_flags()\fR.
+.TP
 \fB\-\-merge\fR
 Do not show levels that do not have a hierarchical impact.
 This calls hwloc_topology_ignore_all_keep_structure().
@@ -205,6 +210,28 @@ Rectangular graphical layout with nearly 4/3 ratio.
 If a comma-separated list of types is given, the layout only
 applies to the corresponding containers.
 Ignored for bridges since their children are always vertically aligned.
+.TP
+\fB\-\-no-index\fR, \fB\-\-no-index=<type1,...>\fR
+Do not show object indexes in the graphical output.
+If a comma-separated list of types is given, indexes are only
+disabled for the given object.
+.TP
+\fB\-\-index\fR, \fB\-\-index=<type1,...>\fR
+Show object indexes in the graphical output (default).
+If a comma-separated list of types is given, indexes are only
+enabled for the given object.
+.TP
+\fB\-\-no-attrs\fR, \fB\-\-no-attrs=<type1,...>\fR
+Do not show object attributes (such as memory size, cache size, PCI link speed, etc.)
+in the graphical output.
+If a comma-separated list of types is given, attributes are only
+disabled for the given object.
+.TP
+\fB\-\-attrs\fR, \fB\-\-attrs=<type1,...>\fR
+Show object attributes (such as memory size, cache size, PCI link speed, etc.)
+in the graphical output (default).
+If a comma-separated list of types is given, attributes are only
+enabled for the given object.
 .TP
 \fB\-\-no\-legend\fR
 Remove the text legend at the bottom.

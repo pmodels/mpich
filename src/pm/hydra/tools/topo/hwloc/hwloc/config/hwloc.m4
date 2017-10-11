@@ -1,7 +1,7 @@
 dnl -*- Autoconf -*-
 dnl
-dnl Copyright © 2009-2016 Inria.  All rights reserved.
-dnl Copyright © 2009-2012, 2015-2016 Université Bordeaux
+dnl Copyright © 2009-2017 Inria.  All rights reserved.
+dnl Copyright © 2009-2012, 2015-2017 Université Bordeaux
 dnl Copyright © 2004-2005 The Trustees of Indiana University and Indiana
 dnl                         University Research and Technology
 dnl                         Corporation.  All rights reserved.
@@ -9,7 +9,7 @@ dnl Copyright © 2004-2012 The Regents of the University of California.
 dnl                         All rights reserved.
 dnl Copyright © 2004-2008 High Performance Computing Center Stuttgart,
 dnl                         University of Stuttgart.  All rights reserved.
-dnl Copyright © 2006-2016 Cisco Systems, Inc.  All rights reserved.
+dnl Copyright © 2006-2017 Cisco Systems, Inc.  All rights reserved.
 dnl Copyright © 2012  Blue Brain Project, BBP/EPFL. All rights reserved.
 dnl Copyright © 2012       Oracle and/or its affiliates.  All rights reserved.
 dnl See COPYING in top-level directory.
@@ -263,7 +263,8 @@ EOF])
         AC_MSG_WARN([***********************************************************])
         AC_MSG_WARN([*** hwloc does not support this system.])
         AC_MSG_WARN([*** hwloc will *attempt* to build (but it may not work).])
-        AC_MSG_WARN([*** hwloc run-time results may be reduced to showing just one processor.])
+        AC_MSG_WARN([*** hwloc run-time results may be reduced to showing just one processor,])
+        AC_MSG_WARN([*** and binding will likely not be supported.])
         AC_MSG_WARN([*** You have been warned.])
         AC_MSG_WARN([*** Pausing to give you time to read this message...])
         AC_MSG_WARN([***********************************************************])
@@ -412,9 +413,11 @@ EOF])
     ])
 
     AC_CHECK_HEADERS([sys/lgrp_user.h], [
-      AC_CHECK_LIB([lgrp], [lgrp_latency_cookie],
+      AC_CHECK_LIB([lgrp], [lgrp_init],
                    [HWLOC_LIBS="-llgrp $HWLOC_LIBS"
-                    AC_DEFINE([HAVE_LIBLGRP], 1, [Define to 1 if we have -llgrp])])
+                    AC_DEFINE([HAVE_LIBLGRP], 1, [Define to 1 if we have -llgrp])
+                    AC_CHECK_DECLS([lgrp_latency_cookie],,,[[#include <sys/lgrp_user.h>]])
+      ])
     ])
     AC_CHECK_HEADERS([kstat.h], [
       AC_CHECK_LIB([kstat], [main],
@@ -535,6 +538,13 @@ EOF])
     if test "x$hwloc_thread_t" != "x" ; then
       AC_DEFINE_UNQUOTED(hwloc_thread_t, $hwloc_thread_t, [Define this to the thread ID type])
     fi
+
+    AC_CHECK_DECLS([sched_getcpu],,[:],[[
+      #ifndef _GNU_SOURCE
+      # define _GNU_SOURCE
+      #endif
+      #include <sched.h>
+    ]])
 
     _HWLOC_CHECK_DECL([sched_setaffinity], [
       AC_DEFINE([HWLOC_HAVE_SCHED_SETAFFINITY], [1], [Define to 1 if glibc provides a prototype of sched_setaffinity()])
@@ -663,7 +673,8 @@ EOF])
       AC_DEFINE([HWLOC_HAVE_CLZL], [1], [Define to 1 if you have the `clzl' function.])
     ])
 
-    AC_CHECK_FUNCS([openat], [hwloc_have_openat=yes])
+    AS_IF([test "$hwloc_c_vendor" != "android"], [AC_CHECK_FUNCS([openat], [hwloc_have_openat=yes])])
+
 
     AC_CHECK_HEADERS([malloc.h])
     AC_CHECK_FUNCS([getpagesize memalign posix_memalign])
@@ -762,6 +773,10 @@ EOF])
       hwloc_pci_happy=yes
       HWLOC_PKG_CHECK_MODULES([PCIACCESS], [pciaccess], [pci_slot_match_iterator_create], [pciaccess.h], [:], [hwloc_pci_happy=no])
 
+      # Only add the REQUIRES if we got pciaccess through pkg-config.
+      # Otherwise we don't know if pciaccess.pc is installed
+      AS_IF([test "$hwloc_pci_happy" = "yes"], [HWLOC_PCIACCESS_REQUIRES=pciaccess])
+
       # Just for giggles, if we didn't find a pciaccess pkg-config,
       # just try looking for its header file and library.
       AS_IF([test "$hwloc_pci_happy" != "yes"],
@@ -773,8 +788,7 @@ EOF])
          ])
 
       AS_IF([test "$hwloc_pci_happy" = "yes"],
-         [HWLOC_PCIACCESS_REQUIRES=pciaccess
-          hwloc_pci_lib=pciaccess
+         [hwloc_pci_lib=pciaccess
           hwloc_components="$hwloc_components pci"
           hwloc_pci_component_maybeplugin=1])
     fi
@@ -948,6 +962,8 @@ EOF])
             AC_DEFINE([HWLOC_HAVE_GL], [1], [Define to 1 if you have the GL module components.])
 	    HWLOC_GL_LIBS="-lXNVCtrl -lXext -lX11"
 	    AC_SUBST(HWLOC_GL_LIBS)
+	    # FIXME we actually don't know if xext.pc and x11.pc are installed
+	    # since we didn't look for Xext and X11 using pkg-config
 	    HWLOC_GL_REQUIRES="xext x11"
             hwloc_have_gl=yes
 	    hwloc_components="$hwloc_components gl"
@@ -1306,8 +1322,8 @@ AC_DEFUN([_HWLOC_CHECK_DECL], [
     AC_MSG_CHECKING([whether function $1 has a complete prototype])
     AC_REQUIRE([AC_PROG_CC])
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
-         [AC_INCLUDES_DEFAULT([$4])]
-         [$1(1,2,3,4,5,6,7,8,9,10);],
+         [AC_INCLUDES_DEFAULT([$4])],
+         [$1(1,2,3,4,5,6,7,8,9,10);]
       )],
       [AC_MSG_RESULT([no])
        $3],

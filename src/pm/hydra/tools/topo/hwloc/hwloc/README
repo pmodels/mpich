@@ -16,10 +16,10 @@ locality on modern computing platforms.
 hwloc supports the following operating systems:
 
   * Linux (including old kernels not having sysfs topology information, with
- knowledge of cpusets, offline CPUs, ScaleMP vSMP and Kerrighed support) on
- all supported hardware, including Intel Xeon Phi (KNL and KNC, either
+ knowledge of cpusets, ScaleMP vSMP and Kerrighed support, etc.) on all
+ supported hardware, including Intel Xeon Phi (KNL and KNC, either
  standalone or as a coprocessor) and NumaScale NumaConnect.
-  * Solaris
+  * Solaris (with support for processor sets and logical domains)
   * AIX
   * Darwin / OS X
   * FreeBSD and its variants (such as kFreeBSD/GNU)
@@ -53,8 +53,8 @@ on "fake" topologies:
 
 hwloc can display the topology in a human-readable format, either in graphical
 mode (X11), or by exporting in one of several different formats, including:
-plain text, PDF, PNG, and FIG (see CLI Examples below). Note that some of the
-export formats require additional support libraries.
+plain text, PDF, PNG, and FIG (see Command-line Examples below). Note that some
+of the export formats require additional support libraries.
 
 hwloc offers a programming interface for manipulating topologies and objects.
 It also brings a powerful CPU bitmap API that is used to describe topology

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2015 Inria.  All rights reserved.
+ * Copyright © 2009-2017 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -449,7 +449,8 @@ hwloc_win_set_thisthread_membind(hwloc_topology_t topology, hwloc_const_nodeset_
 
   cpuset = hwloc_bitmap_alloc();
   hwloc_cpuset_from_nodeset(topology, cpuset, nodeset);
-  ret = hwloc_win_set_thisthread_cpubind(topology, cpuset, flags & HWLOC_MEMBIND_STRICT?HWLOC_CPUBIND_STRICT:0);
+  ret = hwloc_win_set_thisthread_cpubind(topology, cpuset,
+					 (flags & HWLOC_MEMBIND_STRICT) ? HWLOC_CPUBIND_STRICT : 0);
   hwloc_bitmap_free(cpuset);
   return ret;
 }
@@ -546,7 +547,8 @@ hwloc_win_set_proc_membind(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_con
 
   cpuset = hwloc_bitmap_alloc();
   hwloc_cpuset_from_nodeset(topology, cpuset, nodeset);
-  ret = hwloc_win_set_proc_cpubind(topology, pid, cpuset, flags & HWLOC_MEMBIND_STRICT?HWLOC_CPUBIND_STRICT:0);
+  ret = hwloc_win_set_proc_cpubind(topology, pid, cpuset,
+				   (flags & HWLOC_MEMBIND_STRICT) ? HWLOC_CPUBIND_STRICT : 0);
   hwloc_bitmap_free(cpuset);
   return ret;
 }
@@ -595,7 +597,8 @@ hwloc_win_get_proc_membind(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_nod
 {
   int ret;
   hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
-  ret = hwloc_win_get_proc_cpubind(topology, pid, cpuset, flags & HWLOC_MEMBIND_STRICT?HWLOC_CPUBIND_STRICT:0);
+  ret = hwloc_win_get_proc_cpubind(topology, pid, cpuset,
+				   (flags & HWLOC_MEMBIND_STRICT) ? HWLOC_CPUBIND_STRICT : 0);
   if (!ret) {
     *policy = HWLOC_MEMBIND_BIND;
     hwloc_cpuset_to_nodeset(topology, cpuset, nodeset);
@@ -816,7 +819,7 @@ hwloc_look_windows(struct hwloc_backend *backend)
 	      memset(obj->memory.page_types, 0, 2 * sizeof(*obj->memory.page_types));
 	      obj->memory.page_types_len = 1;
 	      obj->memory.page_types[0].size = SystemInfo.dwPageSize;
-#ifdef HAVE__SC_LARGE_PAGESIZE
+#if HAVE_DECL__SC_LARGE_PAGESIZE
 	      obj->memory.page_types_len++;
 	      obj->memory.page_types[1].size = sysconf(_SC_LARGE_PAGESIZE);
 #endif
@@ -961,7 +964,7 @@ hwloc_look_windows(struct hwloc_backend *backend)
 	      memset(obj->memory.page_types, 0, 2 * sizeof(*obj->memory.page_types));
 	      obj->memory.page_types_len = 1;
 	      obj->memory.page_types[0].size = SystemInfo.dwPageSize;
-#ifdef HAVE__SC_LARGE_PAGESIZE
+#if HAVE_DECL__SC_LARGE_PAGESIZE
 	      obj->memory.page_types_len++;
 	      obj->memory.page_types[1].size = sysconf(_SC_LARGE_PAGESIZE);
 #endif
