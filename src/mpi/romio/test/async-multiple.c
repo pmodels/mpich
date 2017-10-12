@@ -35,7 +35,6 @@ int main(int argc, char **argv)
     MPI_Status status[NR_NBOPS];
     MPI_Request request[NR_NBOPS];
     int errcode = 0;
-    size_t filename_sz;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -55,7 +54,6 @@ int main(int argc, char **argv)
 	argv++;
 	len = strlen(*argv);
 	filename = (char *) malloc(len+10);
-	filename_sz = sizeof(char)*(len+10);
 	strcpy(filename, *argv);
 	MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	MPI_Bcast(filename, len+10, MPI_CHAR, 0, MPI_COMM_WORLD);
@@ -63,7 +61,6 @@ int main(int argc, char **argv)
     else {
 	MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	filename = (char *) malloc(len+10);
-	filename_sz = sizeof(char)*(len+10);
 	MPI_Bcast(filename, len+10, MPI_CHAR, 0, MPI_COMM_WORLD);
     }
 
@@ -75,7 +72,7 @@ int main(int argc, char **argv)
     /* each process opens a separate file called filename.'myrank' */
     tmp = (char *) malloc(len+10);
     strcpy(tmp, filename);
-    MPL_snprintf(filename, filename_sz, "%s.%d", tmp, rank);
+    sprintf(filename, "%s.%d", tmp, rank);
 
     errcode = MPI_File_open(MPI_COMM_SELF, filename, 
 		    MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
