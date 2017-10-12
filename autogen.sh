@@ -323,10 +323,6 @@ done
 ## Check for the location of autotools
 ########################################################################
 
-if [ -z "$autotoolsdir" ] ; then
-    autotoolsdir=$MPICH_AUTOTOOLS_DIR
-fi
-
 if [ -n "$autotoolsdir" ] ; then
     if [ -x $autotoolsdir/autoconf -a -x $autotoolsdir/autoheader ] ; then
         autoconf=$autotoolsdir/autoconf
