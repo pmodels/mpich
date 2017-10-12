@@ -28,6 +28,7 @@ information on bug fixes and new releases.
 10. Multiple Fortran compiler support
 11. ABI Compatibility
 12. Capability Sets
+13. Threads
 
 
 -------------------------------------------------------------------------
@@ -925,3 +926,19 @@ the environment variable:
 
 A full list of capability set configuration variables can be found in the
 environment variables README.envvar.
+
+-------------------------------------------------------------------------
+
+13. Threads
+===========
+
+MPICH supports multiple threading packages.  The default is posix
+threads (pthreads), but solaris threads, windows threads and argobots
+are also supported.
+
+To configure mpich to work with argobots threads, use the following
+configure options:
+
+    --with-thread-package=argobots \
+        CFLAGS="-I<path_to_argobots/include>" \
+        LDFLAGS="-L<path_to_argobots/lib>"
