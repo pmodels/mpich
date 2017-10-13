@@ -309,6 +309,9 @@ int MPIR_Comm_remote_group_impl(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr);
 int MPIR_Comm_group_failed_impl(MPIR_Comm *comm, MPIR_Group **failed_group_ptr);
 int MPIR_Comm_remote_group_failed_impl(MPIR_Comm *comm, MPIR_Group **failed_group_ptr);
 int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **newcomm_ptr);
+int MPIR_Comm_split_type_shmem_node(MPIR_Comm *comm_ptr, int key, MPIR_Comm **newcomm_ptr);
+int MPIR_Comm_split_type(MPIR_Comm *comm_ptr, int split_type, int key, MPIR_Info *info_ptr,
+                         MPIR_Comm **newcomm_ptr);
 int MPIR_Comm_split_type_impl(MPIR_Comm *comm_ptr, int split_type, int key, MPIR_Info *info_ptr,
                               MPIR_Comm **newcomm_ptr);
 int MPIR_Comm_set_attr_impl(MPIR_Comm *comm_ptr, int comm_keyval, void *attribute_val,

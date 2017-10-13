@@ -30,6 +30,13 @@ static int split_type(MPIR_Comm * comm_ptr, int stype, int key,
     MPIDI_Rank_t nid;
     int mpi_errno = MPI_SUCCESS;
 
+    if (stype != MPI_COMM_TYPE_SHARED) {
+        /* we don't know how to handle other split types; hand it back
+         * to the upper layer */
+        mpi_errno = MPIR_Comm_split_type(comm_ptr, stype, key, info_ptr, newcomm_ptr);
+        goto fn_exit;
+    }
+
     if (MPIDI_CH3I_Shm_supported()) {
         mpi_errno = MPID_Get_node_id(comm_ptr, comm_ptr->rank, &id);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
