@@ -1290,6 +1290,26 @@ else
 fi
 
 
+# Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
+# and -lp$MPILIBNAME.
+NEEDSPLIB=yes
+if test $enable_weak_symbols = yes ; then
+    # Turn off weak symbols if they aren't available
+    PAC_PROG_C_WEAK_SYMBOLS(,enable_weak_symbols=no)
+fi
+if test $enable_weak_symbols = "yes" ; then
+    AC_DEFINE(USE_WEAK_SYMBOLS,1,[Define if weak symbols should be used])
+    NEEDSPLIB=no
+    # Check for the ability to support multiple weak symbols
+    if test "$pac_cv_prog_c_weak_symbols" = "pragma weak" ; then
+       PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS(AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined]))
+    fi
+fi
+export NEEDSPLIB
+
+AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "$NEEDSPLIB" = "yes"])
+
+
 # ----------------------------------------------------------------------------
 # HWLOC
 # ----------------------------------------------------------------------------
@@ -1329,6 +1349,10 @@ if test "$with_hwloc_prefix" = "embedded" ; then
       CFLAGS="$HWLOC_EMBEDDED_CFLAGS $CFLAGS"
       CPPFLAGS="$HWLOC_EMBEDDED_CPPFLAGS $CPPFLAGS"
       LIBS="$HWLOC_EMBEDDED_LIBS $LIBS"
+      # disable visibility if building profiling library
+      if test "$NEEDSPLIB" != "yes" ; then
+         CFLAGS="$HWLOC_EMBEDDED_VISIBILITY_CFLAGS $CFLAGS"
+      fi
       hwlocsrcdir="src/hwloc"
       hwloclib="src/hwloc/src/libhwloc_embedded.la"
    fi
@@ -1832,25 +1856,6 @@ if test -n "$MPI_DEFAULT_COPTS" ; then
         CFLAGS="$CFLAGS $MPI_DEFAULT_COPTS"
     fi
 fi
-
-# Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
-# and -lp$MPILIBNAME.
-NEEDSPLIB=yes
-if test $enable_weak_symbols = yes ; then
-    # Turn off weak symbols if they aren't available
-    PAC_PROG_C_WEAK_SYMBOLS(,enable_weak_symbols=no)
-fi
-if test $enable_weak_symbols = "yes" ; then
-    AC_DEFINE(USE_WEAK_SYMBOLS,1,[Define if weak symbols should be used])
-    NEEDSPLIB=no
-    # Check for the ability to support multiple weak symbols
-    if test "$pac_cv_prog_c_weak_symbols" = "pragma weak" ; then
-       PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS(AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined]))
-    fi
-fi
-export NEEDSPLIB
-
-AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "$NEEDSPLIB" = "yes"])
 
 # ---------------------------------------------------------------------------
 # determine rpath and other shared library flags for CC
