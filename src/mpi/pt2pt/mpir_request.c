@@ -545,9 +545,8 @@ int MPIR_Grequest_progress_poke(int count,
 		MPIR_Request **request_ptrs,
 		MPI_Status array_of_statuses[] )
 {
-    MPIX_Grequest_wait_function *wait_fn = NULL;
     void ** state_ptrs;
-    int i, j, n_greq;
+    int i;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
 
