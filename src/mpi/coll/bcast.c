@@ -47,6 +47,16 @@ cvars:
       description : >-
         K value for Knomial broadcast
 
+    - name        : MPIR_CVAR_BCAST_TREE_SEGSIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Segment size (in bytes) for pipelining in tree based bcast algorithms
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -98,21 +108,21 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
                                               &(MPIC_COMM(comm_ptr)->mpich_tree),
                                               (int *) errflag, 0,
                                               MPIR_CVAR_BCAST_KNOMIAL_KVAL,
-                                              -1);
+                                              MPIR_CVAR_BCAST_TREE_SEGSIZE);
             break;
         case BCAST_TREE_KARY_NONBLOCKING:
             mpi_errno = MPIC_MPICH_TREE_bcast(buffer, count, datatype, root,
                                               &(MPIC_COMM(comm_ptr)->mpich_tree),
                                               (int *) errflag, 1,
                                               MPIR_CVAR_BCAST_KARY_KVAL,
-                                              -1);
+                                              MPIR_CVAR_BCAST_TREE_SEGSIZE);
             break;
         case BCAST_TREE_KNOMIAL_2_NONBLOCKING:
             mpi_errno = MPIC_MPICH_TREE_bcast(buffer, count, datatype, root,
                                               &(MPIC_COMM(comm_ptr)->mpich_tree),
                                               (int *) errflag, 2,
                                               MPIR_CVAR_BCAST_KNOMIAL_KVAL,
-                                              -1);
+                                              MPIR_CVAR_BCAST_TREE_SEGSIZE);
             break;
         default:
             mpi_errno = MPIC_DEFAULT_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
