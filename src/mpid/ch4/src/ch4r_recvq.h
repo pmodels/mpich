@@ -16,12 +16,12 @@
 #include "mpl_utlist.h"
 #include "ch4_impl.h"
 
-static unsigned PVAR_LEVEL_posted_recvq_length ATTRIBUTE((unused));
-static unsigned PVAR_LEVEL_unexpected_recvq_length ATTRIBUTE((unused));
-static unsigned long long PVAR_COUNTER_posted_recvq_match_attempts ATTRIBUTE((unused));
-static unsigned long long PVAR_COUNTER_unexpected_recvq_match_attempts ATTRIBUTE((unused));
-static MPIR_T_pvar_timer_t PVAR_TIMER_time_failed_matching_postedq ATTRIBUTE((unused));
-static MPIR_T_pvar_timer_t PVAR_TIMER_time_matching_unexpectedq ATTRIBUTE((unused));
+extern unsigned PVAR_LEVEL_posted_recvq_length ATTRIBUTE((unused));
+extern unsigned PVAR_LEVEL_unexpected_recvq_length ATTRIBUTE((unused));
+extern unsigned long long PVAR_COUNTER_posted_recvq_match_attempts ATTRIBUTE((unused));
+extern unsigned long long PVAR_COUNTER_unexpected_recvq_match_attempts ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_time_failed_matching_postedq ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_time_matching_unexpectedq ATTRIBUTE((unused));
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH4U_Recvq_init
