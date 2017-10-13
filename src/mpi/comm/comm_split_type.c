@@ -27,21 +27,43 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
 #define MPI_Comm_split_type PMPI_Comm_split_type
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_impl
+#define FUNCNAME MPIR_Comm_split_type_shmem_node
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
-                              MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
+int MPIR_Comm_split_type_shmem_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* Only MPI_COMM_TYPE_SHARED, MPI_UNDEFINED, and
-     * NEIGHBORHOOD are supported */
-    MPIR_Assert(split_type == MPI_COMM_TYPE_SHARED ||
-                split_type == MPI_UNDEFINED ||
-                split_type == MPIX_COMM_TYPE_NEIGHBORHOOD);
+    /* The default implementation is to either pass MPI_UNDEFINED or
+     * the local rank as the color (in which case a dup of
+     * MPI_COMM_SELF is returned) */
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, comm_ptr->rank, key, newcomm_ptr);
 
-    if (split_type == MPIX_COMM_TYPE_NEIGHBORHOOD) {
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_split_type
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Comm_split_type(MPIR_Comm * comm_ptr, int split_type, int key,
+                         MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (split_type == MPI_COMM_TYPE_SHARED) {
+        mpi_errno = MPIR_Comm_split_type_shmem_node(comm_ptr, key, newcomm_ptr);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
+    else if (split_type == MPIX_COMM_TYPE_NEIGHBORHOOD) {
 	int flag;
 	char hintval[MPI_MAX_INFO_VAL+1];
 
@@ -59,6 +81,9 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
 
 	    mpi_errno = MPIR_Comm_split_filesystem(comm_ptr->handle, key,
                                                    hintval, &dummycomm);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+
 	    MPIR_Comm_get_ptr(dummycomm, dummycomm_ptr);
 	    *newcomm_ptr = dummycomm_ptr;
 
@@ -67,27 +92,49 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
 	    /* fall through to the "not supported" case if ROMIO was not
 	     * enabled for some reason */
 	}
-	/* we don't work with other hints yet, but if we did (e.g.
-	 * nbhd_network, nbhd_partition), we'd do so here */
 
 	/* In the mean time, the user passed in COMM_TYPE_NEIGHBORHOOD
 	 * but did not give us an info we know how to work with.
 	 * Throw up our hands and treat it like UNDEFINED.  This will
 	 * result in MPI_COMM_NULL being returned to the user. */
-	split_type = MPI_UNDEFINED;
-    }
-
-    if (MPIR_Comm_fns == NULL || MPIR_Comm_fns->split_type == NULL) {
-        int color = (split_type == MPI_COMM_TYPE_SHARED) ? comm_ptr->rank : MPI_UNDEFINED;
-
-        /* The default implementation is to either pass MPI_UNDEFINED
-         * or the local rank as the color (in which case a dup of
-         * MPI_COMM_SELF is returned) */
-        mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+        mpi_errno = MPIR_Comm_split_impl(comm_ptr, MPI_UNDEFINED, key, newcomm_ptr);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
     }
     else {
+        mpi_errno = MPIR_Comm_split_impl(comm_ptr, MPI_UNDEFINED, key, newcomm_ptr);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_split_type_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
+                              MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Only MPI_COMM_TYPE_SHARED, MPI_UNDEFINED, and
+     * NEIGHBORHOOD are supported */
+    MPIR_Assert(split_type == MPI_COMM_TYPE_SHARED ||
+                split_type == MPI_UNDEFINED ||
+                split_type == MPIX_COMM_TYPE_NEIGHBORHOOD);
+
+    if (MPIR_Comm_fns != NULL && MPIR_Comm_fns->split_type != NULL) {
         mpi_errno =
             MPIR_Comm_fns->split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
+    }
+    else {
+        mpi_errno = MPIR_Comm_split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
     }
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
