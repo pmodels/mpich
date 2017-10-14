@@ -443,13 +443,13 @@ static inline int MPIDI_LPID_GetAllInComm(MPIR_Comm *comm_ptr, int local_size,
 #ifdef HAVE_ERROR_CHECKING
 #define N_STATIC_LPID32 128
 /*@
-  MPIDI_CheckDisjointLpids - Exchange address mapping for intercomm creation.
+  check_disjoint_lpids - Exchange address mapping for intercomm creation.
  @*/
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CheckDisjointLpids
+#define FUNCNAME check_disjoint_lpids
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CheckDisjointLpids(int lpids1[], int n1, int lpids2[], int n2)
+static int check_disjoint_lpids(int lpids1[], int n1, int lpids2[], int n2)
 {
     int i, mask_size, idx, bit, maxlpid = -1;
     int mpi_errno = MPI_SUCCESS;
@@ -585,7 +585,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
             {
                 /* Now that we have both the local and remote processes,
                    check for any overlap */
-                mpi_errno = MPIDI_CheckDisjointLpids( local_lpids, local_size, *remote_lpids, *remote_size );
+                mpi_errno = check_disjoint_lpids( local_lpids, local_size, *remote_lpids, *remote_size );
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             }
             MPID_END_ERROR_CHECKS;
