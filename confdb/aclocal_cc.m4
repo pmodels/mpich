@@ -648,6 +648,9 @@ if test "$enable_strict_done" != "yes" ; then
             2008) PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=200809L],[pac_cc_strict_flags]) ;;
             *)    AC_MSG_ERROR([internal error, unexpected POSIX version: '$enable_posix']) ;;
        esac
+       if test "$enable_posix" != "no" ; then
+           AS_CASE([$host],[*-*-darwin*], [PAC_APPEND_FLAG([-D_DARWIN_C_SOURCE],[pac_cc_strict_flags])])
+       fi
     fi
 
     # See if the above options work with the compiler
