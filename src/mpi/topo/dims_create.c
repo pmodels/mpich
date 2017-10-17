@@ -65,6 +65,14 @@ typedef struct Factors {
 PMPI_LOCAL int MPIR_Dims_create_init(void);
 PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[]);
 
+/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
+   the MPI routines.  You can use USE_WEAK_SYMBOLS to see if MPICH is
+   using weak symbols to implement the MPI routines. */
+
+#ifndef MPICH_MPI_FROM_PMPI
+#undef MPI_Dims_create
+#define MPI_Dims_create PMPI_Dims_create
+
 PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_getdivs;
 PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_sort;
 PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_fact;
@@ -75,14 +83,6 @@ PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_bal;
 PMPI_LOCAL unsigned long long PVAR_COUNTER_dims_npruned;
 PMPI_LOCAL unsigned long long PVAR_COUNTER_dims_ndivmade;
 PMPI_LOCAL unsigned long long PVAR_COUNTER_dims_optbalcalls;
-
-/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
-   the MPI routines.  You can use USE_WEAK_SYMBOLS to see if MPICH is
-   using weak symbols to implement the MPI routines. */
-
-#ifndef MPICH_MPI_FROM_PMPI
-#undef MPI_Dims_create
-#define MPI_Dims_create PMPI_Dims_create
 
 /* MPI_Dims_create and PMPI_Dims_create must see the same variable for this
    one-time initialization flag.  If this file must be compiled twice,
