@@ -1,5 +1,6 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 
+#include <libgen.h>
 #include "ad_daos.h"
 
 extern daos_handle_t daos_pool_oh;
@@ -159,6 +160,48 @@ duuid_hash128(const char *name, void *hash, uint64_t *hi, uint64_t *lo)
     return;
 } /* end duuid_hash128() */
 
+static void
+parse_filename(const char *path, char **_obj_name, char **_cont_name)
+{
+    char *f1 = strdup(path);
+    char *f2 = strdup(path);
+    char *fname = basename(f1);
+    char *cont_name = dirname(f2);
+    
+    if (cont_name[0] == '.' || cont_name[0] != '/') {
+        char cwd[1024];
+
+        getcwd(cwd, 1024);
+        fprintf(stderr, "CWD = %s\n", cwd);
+
+        if (strcmp(cont_name, ".") == 0) {
+            cont_name = strdup(cwd);
+        }
+        else {
+            char *new_dir = calloc(strlen(cwd) + strlen(cont_name) + 1,
+                                   sizeof(char));
+
+            strcpy(new_dir, cwd);
+            if (cont_name[0] == '.')
+                strcat(new_dir, &cont_name[1]);
+            else {
+                strcat(new_dir, "/");
+                strcat(new_dir, cont_name);
+            }
+            cont_name = new_dir;
+        }
+        *_cont_name = cont_name;
+    }
+    else {
+        *_cont_name = strdup(cont_name);
+    }
+   
+    *_obj_name = strdup(fname);
+
+    free(f1);
+    free(f2);
+}
+
 void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 {
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
@@ -167,47 +210,28 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 
     *error_code = MPI_SUCCESS;
 
-    /* check & Fail if container exists */
-    if (fd->access_mode & ADIO_EXCL) {
-        rc = daos_cont_open(daos_pool_oh, cont->uuid, DAOS_COO_RO, &cont->coh,
-                            NULL, NULL);
-        if (rc == 0) {
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                               MPIR_ERR_RECOVERABLE,
-                                               myname, __LINE__,
-                                               ADIOI_DAOS_error_convert(rc),
-                                               "File Exists", 0);
-            goto err_cont;
-        }
-    }
-
-    /* Create DAOS container */
-    if (fd->access_mode & ADIO_CREATE) {
-        rc = daos_cont_create(daos_pool_oh, cont->uuid, NULL);
-        if (rc != 0) {
-            PRINT_MSG(stderr, "failed to create container (%d)\n", rc);
-            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                               MPIR_ERR_RECOVERABLE,
-                                               myname, __LINE__,
-                                               ADIOI_DAOS_error_convert(rc),
-                                               "Container Create Failed", 0);
-            goto out;
-        }
-    }
-
-    /* Open DAOS Container */
+    /* Try to open the DAOS container first (the parent directory) */
     rc = daos_cont_open(daos_pool_oh, cont->uuid, cont->amode, &cont->coh,
                         NULL, NULL);
+    /* If it fails with NOEXIST we can create it then reopen if create mode */
+    if (rc == -DER_NONEXIST && (fd->access_mode & ADIO_CREATE)) {
+        rc = daos_cont_create(daos_pool_oh, cont->uuid, NULL);
+        if (rc == 0)
+            rc = daos_cont_open(daos_pool_oh, cont->uuid, cont->amode, &cont->coh,
+                                NULL, NULL);
+    }
+
     if (rc != 0) {
-        PRINT_MSG(stderr, "failed to open container (%d)\n", rc);
+        PRINT_MSG(stderr, "failed to open/create DAOS container (%d)\n", rc);
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                            MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__,
                                            ADIOI_DAOS_error_convert(rc),
-                                           "Container Open Failed", 0);
+                                           "Container Create Failed", 0);
         goto out;
     }
 
+    /* if RW mode, do an epoch hold, otherwise just query HCE for read */
     if (cont->amode == DAOS_COO_RW) {
         cont->epoch = 0;
         rc = daos_epoch_hold(cont->coh, &cont->epoch, NULL, NULL);
@@ -237,8 +261,36 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
         cont->epoch = state.es_hce;
     }
 
-    /* open array if not create mode */
-    if (!(fd->access_mode & ADIO_CREATE)) {
+    /* check & Fail if object exists for EXCL mode */
+    if (fd->access_mode & ADIO_EXCL) {
+        daos_size_t elem_size;
+
+        rc = daos_array_open(cont->coh, cont->oid, cont->epoch, DAOS_OO_RW,
+                             &elem_size, &cont->block_size, &cont->oh, NULL);
+        if (rc == 0) {
+            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                               MPIR_ERR_RECOVERABLE,
+                                               myname, __LINE__,
+                                               ADIOI_DAOS_error_convert(rc),
+                                               "File (DAOS ARRAY) Exists", 0);
+            goto err_array;
+        }
+    }
+
+    /* Create a DAOS byte array for the file */
+    if (fd->access_mode & ADIO_CREATE) {
+        rc = daos_array_create(cont->coh, cont->oid, cont->epoch, 1,
+                               cont->block_size, &cont->oh, NULL);
+        if (rc != 0) {
+            PRINT_MSG(stderr, "daos_array_create() failed (%d)\n", rc);
+            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                               MPIR_ERR_RECOVERABLE,
+                                               myname, __LINE__,
+                                               ADIOI_DAOS_error_convert(rc),
+                                               "Array Create Failed", 0);
+            goto err_cont;
+        }
+    } else {
         daos_size_t elem_size;
 
         rc = daos_array_open(cont->coh, cont->oid, cont->epoch, DAOS_OO_RW,
@@ -252,24 +304,17 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
                                                "Array Create Failed", 0);
             goto err_cont;
         }
-        return;
-    }
 
-    /* Create a DAOS byte array for the file */
-    rc = daos_array_create(cont->coh, cont->oid, cont->epoch, 1,
-                           cont->block_size, &cont->oh, NULL);
-    if (rc != 0) {
-        PRINT_MSG(stderr, "daos_array_create() failed (%d)\n", rc);
-        *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                           MPIR_ERR_RECOVERABLE,
-                                           myname, __LINE__,
-                                           ADIOI_DAOS_error_convert(rc),
-                                           "Array Create Failed", 0);
-        goto err_cont;
+        if (elem_size != 1) {
+            PRINT_MSG(stderr, "invalid DAOS array object\n");
+            goto err_array;
+        }
     }
 
 out:
     return;
+err_array:
+    daos_array_close(cont->oh, NULL);
 err_cont:
     daos_cont_close(cont->coh, NULL);
     goto out;
@@ -308,29 +353,32 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
     MPE_Log_event( ADIOI_MPE_open_a, 0, NULL );
 #endif
     fd->access_mode = access_mode;
-
     cont->amode = amode;
 
+    parse_filename(fd->filename, &cont->obj_name, &cont->cont_name);
+
+    /* Hash container name to create uuid */
+    duuid_hash128(cont->cont_name, &cont->uuid, &cont->oid.mid, &cont->oid.lo);
+
+    /* Hash object name to create obj id */
+    uuid_t tmp_uuid;
     cont->oid.hi = 0;
-    /* Hash file name to create uuid and obj id*/
-    duuid_hash128(fd->filename, &cont->uuid, &cont->oid.mid, &cont->oid.lo);
+    duuid_hash128(cont->obj_name, &tmp_uuid, &cont->oid.mid, &cont->oid.lo);
     {
         char uuid_str[37];
         uuid_unparse(cont->uuid, uuid_str);
-        fprintf(stderr, "File Open %s %s\n", fd->filename, uuid_str);
-        fprintf(stderr, "OID %" PRIx64".%" PRIx64".%" PRIx64"\n",
-                cont->oid.hi , cont->oid.mid, cont->oid.lo);
+
+        fprintf(stderr, "Container Open %s %s\n", cont->cont_name, uuid_str);
+        fprintf(stderr, "File %s OID %" PRIx64".%" PRIx64".%" PRIx64"\n",
+                cont->obj_name, cont->oid.hi , cont->oid.mid, cont->oid.lo);
     }
+
     /* MSC - add hint for object class */
     daos_obj_id_generate(&cont->oid, DAOS_OC_REPL_MAX_RW);
 
-    fprintf(stderr, "block_size %d, grp_size %d, block_nr %d\n",
-            fd->hints->fs_hints.daos.block_size,
-            fd->hints->fs_hints.daos.grp_size,
-            fd->hints->fs_hints.daos.block_nr);
+    fprintf(stderr, "block_size  = %d\n", fd->hints->fs_hints.daos.block_size);
+
     cont->block_size = fd->hints->fs_hints.daos.block_size;
-    cont->grp_size = fd->hints->fs_hints.daos.grp_size;
-    cont->block_nr = fd->hints->fs_hints.daos.block_nr;
 
     fd->fs_ptr = cont;
     if (rank == 0)
@@ -442,15 +490,19 @@ void ADIOI_DAOS_Delete(const char *filename, int *error_code)
 {
     int ret;
     uuid_t uuid;
+    char *obj_name, *cont_name;
     static char myname[] = "ADIOI_DAOS_DELETE";
 
-    /* Hash file name to container uuid */
-    duuid_hash128(filename, &uuid, NULL, NULL);
+    parse_filename(filename, &obj_name, &cont_name);
+    /* Hash container name to container uuid */
+    duuid_hash128(cont_name, &uuid, NULL, NULL);
 
+    /* MSC for now, just destory the container. need to just punch the object
+     * when punch is available */
     {
         char uuid_str[37];
         uuid_unparse(uuid, uuid_str);
-        fprintf(stderr, "File Delete %s %s\n", filename, uuid_str);
+        fprintf(stderr, "File Delete %s %s\n", cont_name, uuid_str);
     }
 
     ret = daos_cont_destroy(daos_pool_oh, uuid, 1, NULL);
@@ -465,5 +517,8 @@ void ADIOI_DAOS_Delete(const char *filename, int *error_code)
     }
 
     *error_code = MPI_SUCCESS;
+    free(obj_name);
+    free(cont_name);
+
     return;
 }

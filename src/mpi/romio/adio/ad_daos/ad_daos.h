@@ -19,6 +19,10 @@
 struct ADIO_DAOS_cont {
     /** container uuid */
     uuid_t		uuid;
+    /** Container name (Path to the file opened) */
+    char		*cont_name;
+    /** Object name (File name) */
+    char		*obj_name;
     /** container daos OH */
     daos_handle_t	coh;
     /** Array Object ID for the MPI file */
@@ -27,10 +31,6 @@ struct ADIO_DAOS_cont {
     daos_handle_t	oh;
     /** data to store in a dkey block */
     daos_size_t		block_size;
-    /** number of dkeys in a group */
-    daos_size_t		grp_size;
-    /** number of blocks per dkey */
-    daos_size_t		block_nr;
     /** file open mode */
     unsigned int	amode;
     /** Event queue to store all async requests on file */
