@@ -566,7 +566,7 @@ Input Parameters:
 + sendbuf - starting address of the send buffer (choice)
 . sendcount - number of elements in send buffer (non-negative integer)
 . sendtype - data type of send buffer elements (handle)
-. recvcount - number of elements in receive buffer (significant only at root) (non-negative integer)
+. recvcount - number of elements for any single receive (non-negative integer, significant only at root)
 . recvtype - data type of receive buffer elements (significant only at root) (handle)
 . root - rank of receiving process (integer)
 - comm - communicator (handle)
