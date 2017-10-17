@@ -1384,25 +1384,30 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_free_buffers(MPIC_MPICH_sched_t * sched
             MPIC_MPICH_free_mem(sched->vtcs[i].nbargs.multicast.destinations);
         }
     }
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"free'd any buffer memory associated with vertices\n"));
     /* free temporary buffers allocated using MPIC_MPICH_allocate_buffer call */
     for (i = 0; i < sched->buf_array.used; i++) {
         MPIC_MPICH_free_mem(sched->buf_array.array[i]);
     }
     if(sched->buf_array.size!=0)
         MPIC_MPICH_free_mem(sched->buf_array.array);
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"free'd buf_array\n"));
 
     /* free each vtx and then the list of vtcs */
     for (i = 0; i < sched->total; i++) {
         /* up to sched->total because we init vertices only when we need them */
         MPIC_MPICH_free_vtx(&sched->vtcs[i]);
     }
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"free'd all vertices individually\n"));
 
     /* free start_vtcs array */
     if(sched->start_vtcs.size!=0)
         MPIC_MPICH_free_mem(sched->start_vtcs.array);
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"free'd start_vtcs array\n"));
 
     /* free the list of vertices */
     MPIC_MPICH_free_mem(sched->vtcs);
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"free'd vtx array\n"));
 }
 
 /* Internal transport function to destroy all memory associated with a schedule */
