@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
         MPI_Comm_free(&comm);
     }
 
-#ifdef MPIX_COMM_TYPE_NEIGHBORHOOD
+#if defined(MPIX_COMM_TYPE_NEIGHBORHOOD) && defined(HAVE_MPI_IO)
     /* the MPICH-specific MPIX_COMM_TYPE_NEIGHBORHOOD*/
     /* test #1: expected behavior -- user provided a directory, and we
      * determine which processes share access to it */
