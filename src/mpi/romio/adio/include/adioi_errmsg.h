@@ -58,6 +58,7 @@ MPI_ERR_IO
     MPIR_ERR_NO_TESTFS "ROMIO has not been configured to use the TESTFS file system"
     MPIR_ERR_DEFERRED "independent IO attempted even though no_indep_rw hint given"
     MPIR_ERR_NO_GPFS "ROMIO has not been configured to use the GPFS file system"
+    MPIR_ERR_NO_IME "ROMIO has not been configured to use the IME burst buffer"
 
 MPI_ERR_COMM
     MPIR_ERR_COMM_NULL (null communicator. from MPICH)
