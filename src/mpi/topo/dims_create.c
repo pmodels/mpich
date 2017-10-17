@@ -69,7 +69,6 @@ PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_getdivs;
 PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_sort;
 PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_fact;
 PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_basefact;
-PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_getdivs;
 PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_div;
 PMPI_LOCAL MPIR_T_pvar_timer_t PVAR_TIMER_dims_bal;
 
