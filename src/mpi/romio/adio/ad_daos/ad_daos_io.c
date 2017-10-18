@@ -170,15 +170,11 @@ int ADIOI_DAOS_aio_free_fn(void *extra_state)
 {
     struct ADIO_DAOS_req *aio_req = (struct ADIO_DAOS_req *)extra_state;
 
-    if (aio_req->rgs) {
-        free(aio_req->rgs);
-        aio_req->rgs = NULL;
-    }
+    if(aio_req->iovs)
+        ADIOI_Free(aio_req->iovs);
 
-    if (aio_req->iovs) {
-        free(aio_req->iovs);
-        aio_req->iovs = NULL;
-    }
+    if(aio_req->rgs)
+        ADIOI_Free(aio_req->rgs);
 
     ADIOI_Free(aio_req);
 

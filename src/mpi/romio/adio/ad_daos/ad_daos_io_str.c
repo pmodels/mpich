@@ -166,6 +166,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
 	mem_list_count = count*flat_buf->count;
 
         iovs = (daos_iov_t *)ADIOI_Malloc(mem_list_count * sizeof(daos_iov_t));
+
         k = 0;
 #if 0
         if(mpi_rank == 0) {
@@ -204,6 +205,8 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
     sgl->sg_nr.num = k;
     sgl->sg_nr.num_out = 0;
     sgl->sg_iovs = iovs;
+    if (request)
+        aio_req->iovs = iovs;
 
     if (filetype_is_contig) {
         n_write_lists = 1;
@@ -344,6 +347,8 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
     /** set array location */
     ranges->arr_nr = n_write_lists;
     ranges->arr_rgs = rgs;
+    if (request)
+        aio_req->rgs = rgs;
 
     if (rw_type == DAOS_WRITE) {
         ret = daos_array_write(cont->oh, cont->epoch, ranges, sgl, NULL,
