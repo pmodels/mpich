@@ -291,7 +291,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_barrier(COLL_comm_t * comm, int *errflag, int 
 
     if (is_new) {
         /* generate the schedule */
-        mpi_errno = COLL_sched_barrier_tree(tag, comm, tree_type, k, s);
+        mpi_errno = COLL_sched_barrier_tree(tag, comm, tree_type, k, s, 1);
 
         /* save the schedule */
         TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, (void *) s);
