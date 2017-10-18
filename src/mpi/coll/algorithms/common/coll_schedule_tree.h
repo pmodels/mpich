@@ -550,7 +550,7 @@ COLL_sched_allreduce_tree(const void *sendbuf, void *recvbuf, int count, COLL_dt
 #define FUNCNAME COLL_sched_barrier_tree
 /* routine to schedule a tree based barrier */
 MPL_STATIC_INLINE_PREFIX int COLL_sched_barrier_tree(int tag, COLL_comm_t * comm, int tree_type, int k,
-                                        TSP_sched_t * s)
+                                        TSP_sched_t * s, int finalize)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_BARRIER_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_SCHED_BARRIER_TREE);
@@ -586,6 +586,9 @@ MPL_STATIC_INLINE_PREFIX int COLL_sched_barrier_tree(int tag, COLL_comm_t * comm
             TSP_send(NULL, 0, dt, tree->children[i], tag, &comm->tsp_comm, s, 1, &recv_id);
         }
     }
+
+    if(finalize)
+        TSP_sched_commit(s);
 
     COLL_tree_free (tree);
 
