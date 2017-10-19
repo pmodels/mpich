@@ -125,7 +125,7 @@ if test "$pac_cv_have___typeof" = "yes" ; then
 fi
 
 dnl Check if the necessary headers are available
-AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h sys/types.h sys/uio.h execinfo.h backtrace.h libunwind.h unistd.h errno.h windows.h)
+AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h sys/types.h sys/uio.h execinfo.h unistd.h errno.h windows.h)
 
 # A C99 compliant compiler should have inttypes.h for fixed-size int types
 AC_CHECK_HEADERS(inttypes.h stdint.h)
@@ -856,10 +856,45 @@ if test "$ac_cv_func_usleep" = "yes" ; then
 fi
 
 AC_CHECK_FUNCS(backtrace_symbols)
-AC_CHECK_LIB(backtrace, backtrace_create_state)
-AC_CHECK_LIB(unwind, unw_backtrace)
 
-AC_CHECK_DECLS([backtrace_create_state, backtrace_print])
+# Check for libbacktrace support
+PAC_PUSH_FLAG([LIBS])
+LIBS="-lbacktrace"
+AC_LINK_IFELSE([
+    AC_LANG_PROGRAM([
+#include <backtrace.h>
+],[
+backtrace_create_state(0, 0, 0, 0);
+backtrace_print(0, 0, 0);
+])],
+    [ac_cv_lib_backtrace=yes],
+    [ac_cv_lib_backtrace=no]
+)
+PAC_POP_FLAG([LIBS])
+
+if test "$ac_cv_lib_backtrace" = "yes" ; then
+    AC_DEFINE([HAVE_LIBBACKTRACE],[1],[Define to 1 if you have the backtrace header (backtrace.h) and library (-lbacktrace)])
+    PAC_PREPEND_FLAG([-lbacktrace],[LIBS])
+fi
+
+# Check for libunwind support
+PAC_PUSH_FLAG([LIBS])
+LIBS="-lunwind"
+AC_LINK_IFELSE([
+    AC_LANG_PROGRAM([
+#include<libunwind.h>
+],[
+unw_backtrace(0, 0);
+])],
+    [ac_cv_lib_libunwind=yes],
+    [ac_cv_lib_libunwind=no]
+)
+PAC_POP_FLAG([LIBS])
+
+if test "$ac_cv_lib_libunwind" = "yes" ; then
+    AC_DEFINE([HAVE_LIBUNWIND],[1],[Define to 1 if you have the libunwind header (libunwind.h) and library (-lunwind)])
+    PAC_PREPEND_FLAG([-lunwind],[LIBS])
+fi
 
 dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
