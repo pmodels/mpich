@@ -22,10 +22,31 @@ cvars:
       description : >-
         Controls barrier algorithm:
         0 - Default barrier (old mpir barrier)
-        2 - Knomial tree based barrier with non-blocking transport
-        3 - Kary tree based barrier with non-blocking transport
-        4 - Knomial tree based barrier with blocking transport
-        5 - Kary tree based barrier with blocking transport
+        1 - knomial tree based barrier with non-blocking transport
+        2 - Kary tree based barrier with non-blocking transport
+        3 - knomial_2 tree based barrier with non-blocking transport
+
+    - name        : MPIR_CVAR_BARRIER_KARY_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Controls barrier algorithm:
+            K value for kary tree based barrier
+
+    - name        : MPIR_CVAR_BARRIER_KNOMIAL_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Controls barrier algorithm:
+            K value for knomial tree based barrier
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -34,8 +55,7 @@ enum {
     BARRIER_DEFAULT = 0,
     BARRIER_TREE_KNOMIAL_NONBLOCKING_TRANSPORT,
     BARRIER_TREE_KARY_NONBLOCING_TRANSPORT,
-    BARRIER_TREE_KNOMIAL_BLOCKING_TRANSPORT,
-    BARRIER_TREE_KARY_BLOCKING_TRANSPORT
+    BARRIER_TREE_KNOMIAL_2_NONBLOCKING_TRANSPORT
 };
 
 /* -- Begin Profiling Symbol Block for routine MPI_Barrier */
@@ -73,10 +93,13 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
             mpi_errno = MPIC_DEFAULT_Barrier( comm_ptr, errflag );
             break;
         case BARRIER_TREE_KNOMIAL_NONBLOCKING_TRANSPORT:
-            mpi_errno = MPIC_MPICH_TREE_barrier(&(MPIC_COMM(comm_ptr)->mpich_tree), (int *) errflag, 0, 2);
+            mpi_errno = MPIC_MPICH_TREE_barrier(&(MPIC_COMM(comm_ptr)->mpich_tree), (int *) errflag, 0, MPIR_CVAR_BARRIER_KNOMIAL_KVAL);
             break;
         case BARRIER_TREE_KARY_NONBLOCING_TRANSPORT:
-            mpi_errno = MPIC_MPICH_TREE_barrier(&(MPIC_COMM(comm_ptr)->mpich_tree), (int *) errflag, 1, 2);
+            mpi_errno = MPIC_MPICH_TREE_barrier(&(MPIC_COMM(comm_ptr)->mpich_tree), (int *) errflag, 1, MPIR_CVAR_BARRIER_KARY_KVAL);
+            break;
+        case BARRIER_TREE_KNOMIAL_2_NONBLOCKING_TRANSPORT:
+            mpi_errno = MPIC_MPICH_TREE_barrier(&(MPIC_COMM(comm_ptr)->mpich_tree), (int *) errflag, 2, MPIR_CVAR_BARRIER_KNOMIAL_KVAL);
             break;
         default:
             mpi_errno = MPIC_DEFAULT_Barrier( comm_ptr, errflag );
