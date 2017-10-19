@@ -276,6 +276,13 @@ static inline
             return MPIDI_OFI_IOV_EAGAIN;
         }
 
+        /* IOV count is initialized as 1. Limit check should be done before update.
+         * Otherwise check doesn't work correctly for max_iovs = 1. */
+        if ((*origin_iovs_nout >= origin_max_iovs) || (*target_iovs_nout >= target_max_iovs)) {
+            iov_state->buf_limit_left = iov_state->buf_limit;
+            return MPIDI_OFI_IOV_EAGAIN;
+        }
+
         if (target_last_addr + last_len == target_addr) {
             MPIDI_OFI_UPDATE_IOV_STATE1(target, origin);
         }
@@ -283,11 +290,6 @@ static inline
             MPIDI_OFI_UPDATE_IOV_STATE1(origin, target);
         }
         else {
-            if ((*origin_iovs_nout >= origin_max_iovs) || (*target_iovs_nout >= target_max_iovs)) {
-                iov_state->buf_limit_left = iov_state->buf_limit;
-                return MPIDI_OFI_IOV_EAGAIN;
-            }
-
             MPIDI_OFI_UPDATE_IOV(target);
             MPIDI_OFI_UPDATE_IOV(origin);
             MPIDI_OFI_next_iovec_state(iov_state, &origin_addr, &target_addr, &len);
@@ -299,6 +301,8 @@ static inline
         iov_state->buf_limit_left -= len;
         if (iov_state->buf_limit_left == 0) {
             iov_state->buf_limit_left = iov_state->buf_limit;
+            MPIR_Assert(*origin_iovs_nout <= origin_max_iovs);
+            MPIR_Assert(*target_iovs_nout <= target_max_iovs);
             return MPIDI_OFI_IOV_EAGAIN;
         }
     }
@@ -346,6 +350,14 @@ static inline
             return MPIDI_OFI_IOV_EAGAIN;
         }
 
+        /* IOV count is initialized as 1. Limit check should be done before update.
+         * Otherwise check doesn't work correctly for max_iovs = 1. */
+        if ((*origin_iovs_nout >= origin_max_iovs) || (*target_iovs_nout >= target_max_iovs) ||
+            (*result_iovs_nout >= result_max_iovs)) {
+            iov_state->buf_limit_left = iov_state->buf_limit;
+            return MPIDI_OFI_IOV_EAGAIN;
+        }
+
         if (target_last_addr + last_len == target_addr) {
             MPIDI_OFI_UPDATE_IOV_STATE2(target, origin, result);
         }
@@ -356,12 +368,6 @@ static inline
             MPIDI_OFI_UPDATE_IOV_STATE2(result, target, origin);
         }
         else {
-            if ((*origin_iovs_nout >= origin_max_iovs) || (*target_iovs_nout >= target_max_iovs) ||
-                (*result_iovs_nout >= result_max_iovs)) {
-                iov_state->buf_limit_left = iov_state->buf_limit;
-                return MPIDI_OFI_IOV_EAGAIN;
-            }
-
             MPIDI_OFI_UPDATE_IOV(target);
             MPIDI_OFI_UPDATE_IOV(origin);
             MPIDI_OFI_UPDATE_IOV(result);
@@ -375,6 +381,9 @@ static inline
         iov_state->buf_limit_left -= len;
         if (iov_state->buf_limit_left == 0) {
             iov_state->buf_limit_left = iov_state->buf_limit;
+            MPIR_Assert(*origin_iovs_nout <= origin_max_iovs);
+            MPIR_Assert(*target_iovs_nout <= target_max_iovs);
+            MPIR_Assert(*result_iovs_nout <= result_max_iovs);
             return MPIDI_OFI_IOV_EAGAIN;
         }
 
