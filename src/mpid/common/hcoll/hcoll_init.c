@@ -37,7 +37,6 @@ int hcoll_enable_ibarrier = 1;
 int hcoll_enable_ibcast = 1;
 int hcoll_enable_iallgather = 1;
 int hcoll_enable_iallreduce = 1;
-int hcoll_comm_attr_keyval = MPI_KEYVAL_INVALID;
 int world_comm_destroying = 0;
 
 #if defined(MPL_USE_DBG_LOGGING)
@@ -60,16 +59,6 @@ int hcoll_destroy(void *param ATTRIBUTE((unused)))
     }
     hcoll_initialized = 0;
     return 0;
-}
-
-static int hcoll_comm_attr_del_fn(MPI_Comm comm, int keyval, void *attr_val, void *extra_data)
-{
-    int mpi_errno;
-    if (MPI_COMM_WORLD == comm) {
-        world_comm_destroying = 1;
-    }
-    mpi_errno = hcoll_group_destroy_notify(attr_val);
-    return mpi_errno;
 }
 
 #define CHECK_ENABLE_ENV_VARS(nameEnv, name) \
@@ -126,12 +115,6 @@ int hcoll_initialize(void)
         MPID_Progress_activate_hook(hcoll_progress_hook_id);
     }
     MPIR_Add_finalize(hcoll_destroy, 0, 0);
-
-    mpi_errno =
-        MPIR_Comm_create_keyval_impl(MPI_NULL_COPY_FN, hcoll_comm_attr_del_fn,
-                                     &hcoll_comm_attr_keyval, NULL);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
 
     CHECK_ENABLE_ENV_VARS(BARRIER, barrier);
     CHECK_ENABLE_ENV_VARS(BCAST, bcast);
@@ -195,16 +178,6 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
         MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "Couldn't create hcoll context.");
         goto fn_fail;
     }
-    mpi_errno =
-        MPIR_Comm_set_attr_impl(comm_ptr, hcoll_comm_attr_keyval,
-                                (void *) (comm_ptr->hcoll_priv.hcoll_context), MPIR_ATTR_PTR);
-    if (mpi_errno) {
-        hcoll_destroy_context(comm_ptr->hcoll_priv.hcoll_context,
-                              (rte_grp_handle_t) comm_ptr, &context_destroyed);
-        MPIR_Assert(context_destroyed);
-        comm_ptr->hcoll_priv.is_hcoll_init = 0;
-        MPIR_ERR_POP(mpi_errno);
-    }
 
     comm_ptr->hcoll_priv.is_hcoll_init = 1;
   fn_exit:
@@ -226,12 +199,8 @@ int hcoll_comm_destroy(MPIR_Comm * comm_ptr, void *param)
     }
     mpi_errno = MPI_SUCCESS;
 
-    if (comm_ptr == MPIR_Process.comm_world) {
-        if (MPI_KEYVAL_INVALID != hcoll_comm_attr_keyval) {
-            MPIR_Comm_free_keyval_impl(hcoll_comm_attr_keyval);
-            hcoll_comm_attr_keyval = MPI_KEYVAL_INVALID;
-        }
-    }
+    if (comm_ptr->handle == MPI_COMM_WORLD)
+        world_comm_destroying = 1;
 
     context_destroyed = 0;
     if ((NULL != comm_ptr) && (0 != comm_ptr->hcoll_priv.is_hcoll_init)) {
