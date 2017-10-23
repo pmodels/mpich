@@ -492,6 +492,14 @@ AC_ARG_WITH(logging,
 	AC_HELP_STRING([--with-logging=name], [Specify the logging library for MPICH]),
 	[if test -z "$withval" ; then with_logging=rlog ; fi],with_logging=none)
 
+AC_ARG_WITH(pmix, 
+    AC_HELP_STRING([--with-pmix=lib], [Use pmix instead of pmi. Be carefull by using an external pmix
+                                        library, if my not fit the pmix server. 
+                                        If no pmix library is specified, the embedded
+                                        version will be used. By using this argument, all other
+                                        'pmi' arguments are ignored for now]), 
+    [], with_pmix="no")
+
 AC_ARG_ENABLE(threads,
 [  --enable-threads=level - Control the level of thread support in the 
                            MPICH implementation.  The following levels
@@ -1619,7 +1627,37 @@ if test "$with_pm" != "no" ; then
 else
     pm_names=""
 fi
-#
+
+#if we use PMIx, we currently don't implement any process manager.
+#we have to use an external
+pmixsrcdir=""
+AC_SUBST([pmixsrcdir])
+pmixlibdir=""
+AC_SUBST([pmixlibdir])
+pmixlib=""
+AC_SUBST([pmixlib])
+
+if test "$with_pmix" != "no"; then
+    pm_names=""
+    with_pmi="no"
+    if test "$with_pmix" = "yes" ; then
+        pmix_subdir_args="--disable-dstore"
+        PAC_CONFIG_SUBDIR_ARGS([src/pmi/pmix],[$pmix_subdir_args],[],[AC_MSG_ERROR(PMIX configure failed)])
+        PAC_APPEND_FLAG([-I${master_top_builddir}/src/pmi/pmix/include], [CPPFLAGS])
+        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/pmi/pmix/include], [CPPFLAGS])
+        pmixsrcdir="src/pmi/pmix"
+        pmixlib="src/pmi/pmix/src/libpmix.la"
+    else
+    # The user specified an already-installed PMIx; just sanity check, don't
+    # subconfigure it
+        AS_IF([test -s "${with_pmix}/include/pmi.h"],
+             [:],[AC_MSG_ERROR([the PMIx installation in "${with_pmix}" appears broken])])
+        PAC_APPEND_FLAG([-I${with_pmix}/include],[CPPFLAGS])
+        PAC_PREPEND_FLAG([-lpmix],[WRAPPER_LIBS])
+        PAC_APPEND_FLAG([-L${with_pmix}/lib],[WRAPPER_LDFLAGS])
+        pmixlibdir="-L${with_pmix}/lib"
+    fi
+fi
 hasError=no
 # We need to be careful about PM's that have either conflicting 
 # requirements (e.g., different PMI implementations) or different
