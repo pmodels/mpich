@@ -108,7 +108,7 @@ interface MPI_Irecv
     subroutine MPI_Irecv_f08ts(buf, count, datatype, source, tag, comm, request, ierror)
         use :: mpi_f08_types, only : MPI_Datatype, MPI_Comm, MPI_Request
         implicit none
-        type(*), dimension(..), asynchronous :: buf
+        type(*), dimension(..) :: buf
         integer, intent(in) :: count, source, tag
         type(MPI_Datatype), intent(in) :: datatype
         type(MPI_Comm), intent(in) :: comm
@@ -134,7 +134,7 @@ interface MPI_Isend
     subroutine MPI_Isend_f08ts(buf, count, datatype, dest, tag, comm, request, ierror)
         use :: mpi_f08_types, only : MPI_Datatype, MPI_Comm, MPI_Request
         implicit none
-        type(*), dimension(..), intent(in), asynchronous :: buf
+        type(*), dimension(..), intent(in) :: buf
         integer, intent(in) :: count, dest, tag
         type(MPI_Datatype), intent(in) :: datatype
         type(MPI_Comm), intent(in) :: comm
