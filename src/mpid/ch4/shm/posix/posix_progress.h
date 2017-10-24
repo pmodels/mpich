@@ -86,12 +86,18 @@ static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
                 if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)) {
                     MPIDI_CH4R_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req),
                                                  MPIDI_CH4R_SHM, &continue_matching);
-                    MPIR_Request_free(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
 
-                    /* Decouple requests */
-                    MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req))
-                        = NULL;
-                    MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req) = NULL;
+                    /* The request might have been freed during
+                     * MPIDI_CH4R_anysource_matched. Double check that it still
+                     * exists. */
+                    if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)) {
+                        MPIR_Request_free(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
+
+                        /* Decouple requests */
+                        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req))
+                            = NULL;
+                        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req) = NULL;
+                    }
 
                     if (continue_matching)
                         break;
