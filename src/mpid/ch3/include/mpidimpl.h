@@ -689,7 +689,7 @@ typedef struct MPIDI_VC
     int lpid;
 
     /* The node id of this process, used for topologically aware collectives. */
-    MPID_Node_id_t node_id;
+    int node_id;
 
     /* port name tag */ 
     int port_name_tag; /* added to handle dynamic process mgmt */

@@ -876,7 +876,7 @@ int MPIDI_VC_Init( MPIDI_VC_t *vc, MPIDI_PG_t *pg, int rank )
 /* ----------------------------------------------------------------------- */
 /* Routines to vend topology information. */
 
-static MPID_Node_id_t g_max_node_id = -1;
+static int g_max_node_id = -1;
 char MPIU_hostname[MAX_HOSTNAME_LEN] = "_UNKNOWN_"; /* '_' is an illegal char for a hostname so */
                                                     /* this will never match */
 
@@ -884,7 +884,7 @@ char MPIU_hostname[MAX_HOSTNAME_LEN] = "_UNKNOWN_"; /* '_' is an illegal char fo
 #define FUNCNAME MPID_Get_node_id
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Get_node_id(MPIR_Comm *comm, int rank, MPID_Node_id_t *id_p)
+int MPID_Get_node_id(MPIR_Comm *comm, int rank, int *id_p)
 {
     *id_p = comm->dev.vcrt->vcr_table[rank]->node_id;
     return MPI_SUCCESS;
@@ -896,7 +896,7 @@ int MPID_Get_node_id(MPIR_Comm *comm, int rank, MPID_Node_id_t *id_p)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* Providing a comm argument permits optimization, but this function is always
    allowed to return the max for the universe. */
-int MPID_Get_max_node_id(MPIR_Comm *comm, MPID_Node_id_t *max_id_p)
+int MPID_Get_max_node_id(MPIR_Comm *comm, int *max_id_p)
 {
     /* easiest way to implement this is to track it at PG create/destroy time */
     *max_id_p = g_max_node_id;
@@ -912,8 +912,8 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPID_Node_id_t *out_nodemap;
-    out_nodemap = (MPID_Node_id_t *) MPL_malloc(pg->size * sizeof(MPID_Node_id_t));
+    int *out_nodemap;
+    out_nodemap = (int *) MPL_malloc(pg->size * sizeof(int));
 
     mpi_errno = MPIR_NODEMAP_build_nodemap(pg->size, our_pg_rank, out_nodemap, &g_max_node_id);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

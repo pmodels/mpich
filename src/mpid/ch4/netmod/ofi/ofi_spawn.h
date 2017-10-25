@@ -344,7 +344,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
                                                  int *remote_size,
                                                  size_t **remote_upid_size,
                                                  char **remote_upids,
-                                                 MPID_Node_id_t **remote_node_ids)
+                                                 int **remote_node_ids)
 {
     int i, mpi_errno = MPI_SUCCESS;
 
@@ -392,8 +392,8 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
         *out_root = req[0].tag;
         MPIR_CHKPMEM_MALLOC((*remote_upid_size), size_t*,
                             (*remote_size) * sizeof(size_t), mpi_errno, "remote_upid_size");
-        MPIR_CHKPMEM_MALLOC((*remote_node_ids), MPID_Node_id_t*,
-                            (*remote_size) * sizeof(MPID_Node_id_t), mpi_errno, "remote_node_ids");
+        MPIR_CHKPMEM_MALLOC((*remote_node_ids), int*,
+                            (*remote_size) * sizeof(int), mpi_errno, "remote_node_ids");
 
         req[0].done = 0;
         req[0].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
@@ -425,7 +425,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
 
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_Global.ctx[0].rx,
                                       *remote_node_ids,
-                                      (*remote_size) * sizeof(MPID_Node_id_t),
+                                      (*remote_size) * sizeof(int),
                                       NULL,
                                       FI_ADDR_UNSPEC,
                                       match_bits,
@@ -446,12 +446,12 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
         size_t *local_upid_size = NULL;
         size_t local_upid_sendsize = 0;
         char *local_upids = NULL;
-        MPID_Node_id_t *local_node_ids = NULL;
+        int *local_node_ids = NULL;
 
         /* Step 1: get local upids (with size) and node ids for sending */
         MPIDI_NM_get_local_upids(comm_ptr, &local_upid_size, &local_upids);
         for (i = 0; i < local_size; i++) local_upid_sendsize += local_upid_size[i];
-        local_node_ids = (MPID_Node_id_t*) MPL_malloc(local_size * sizeof(MPID_Node_id_t));
+        local_node_ids = (int*) MPL_malloc(local_size * sizeof(int));
         for (i = 0; i < comm_ptr->local_size; i++)
             MPIDI_CH4U_get_node_id(comm_ptr, i, &local_node_ids[i]);
 
@@ -497,7 +497,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
                                MPIDI_OFI_CALL_LOCK);
         MPIDI_OFI_send_handler(MPIDI_Global.ctx[0].tx,
                                local_node_ids,
-                               local_size * sizeof(MPID_Node_id_t),
+                               local_size * sizeof(int),
                                NULL,
                                comm_ptr->rank,
                                *conn,
@@ -540,7 +540,7 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
     size_t *remote_upid_size;
     char *remote_upids = NULL;
     int *remote_lupids = NULL;
-    MPID_Node_id_t *remote_node_ids = NULL;
+    int *remote_node_ids = NULL;
     int is_low_group = -1;
     int parent_root = -1;
     int rank = comm_ptr->rank;
@@ -739,7 +739,7 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
     size_t *remote_upid_size;
     char *remote_upids = NULL;
     int *remote_lupids = NULL;
-    MPID_Node_id_t *remote_node_ids = NULL;
+    int *remote_node_ids = NULL;
     int child_root = -1;
     int is_low_group = -1;
     int conn_id;

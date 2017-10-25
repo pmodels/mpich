@@ -260,7 +260,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rank_to_lpid(int rank, MPIR_Comm * comm)
     return ret;
 }
 
-static inline int MPIDI_CH4U_get_node_id(MPIR_Comm * comm, int rank, MPID_Node_id_t * id_p)
+static inline int MPIDI_CH4U_get_node_id(MPIR_Comm * comm, int rank, int * id_p)
 {
     int mpi_errno = MPI_SUCCESS;
     int avtid = 0, lpid = 0;
@@ -275,7 +275,7 @@ static inline int MPIDI_CH4U_get_node_id(MPIR_Comm * comm, int rank, MPID_Node_i
     return mpi_errno;
 }
 
-static inline int MPIDI_CH4U_get_max_node_id(MPIR_Comm * comm, MPID_Node_id_t * max_id_p)
+static inline int MPIDI_CH4U_get_max_node_id(MPIR_Comm * comm, int * max_id_p)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -295,7 +295,7 @@ static inline int MPIDI_CH4U_get_max_node_id(MPIR_Comm * comm, MPID_Node_id_t * 
 static inline int MPIDI_CH4U_build_nodemap(int myrank,
                                            MPIR_Comm * comm,
                                            int sz,
-                                           MPID_Node_id_t * out_nodemap, MPID_Node_id_t * sz_out)
+                                           int * out_nodemap, int * sz_out)
 {
     int ret;
 
@@ -354,12 +354,12 @@ static inline int MPIDIU_get_avt_size(int avtid)
 static inline int MPIDIU_alloc_globals_for_avtid(int avtid)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Node_id_t *new_node_map = NULL;
+    int *new_node_map = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_ALLOC_GLOBALS_FOR_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_ALLOC_GLOBALS_FOR_AVTID);
 
     new_node_map =
-        (MPID_Node_id_t *) MPL_malloc(MPIDI_av_table[avtid]->size * sizeof(MPID_Node_id_t));
+        (int *) MPL_malloc(MPIDI_av_table[avtid]->size * sizeof(int));
     MPIR_ERR_CHKANDJUMP(new_node_map == NULL, mpi_errno, MPI_ERR_NO_MEM, "**nomem");
     MPIDI_CH4_Global.node_map[avtid] = new_node_map;
 
@@ -529,7 +529,7 @@ static inline int MPIDIU_avt_init()
     MPIR_ERR_CHKANDSTMT(MPIDI_av_table == MAP_FAILED, mpi_errno, MPI_ERR_NO_MEM,
                         goto fn_fail, "**nomem");
 
-    MPIDI_CH4_Global.node_map = (MPID_Node_id_t **)
+    MPIDI_CH4_Global.node_map = (int **)
                                 mmap(NULL, MPIDI_CH4_Global.avt_mgr.mmapped_size,
                                      PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
     MPIR_ERR_CHKANDSTMT(MPIDI_CH4_Global.node_map == MAP_FAILED, mpi_errno,

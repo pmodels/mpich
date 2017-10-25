@@ -71,9 +71,9 @@ int MPIR_Find_local_and_external(MPIR_Comm *comm, int *local_size_p, int *local_
     int *internode_table;
     int *intranode_table;
     int i;
-    MPID_Node_id_t max_node_id;
-    MPID_Node_id_t node_id;
-    MPID_Node_id_t my_node_id;
+    int max_node_id;
+    int node_id;
+    int my_node_id;
     MPIR_CHKLMEM_DECL(1);
     MPIR_CHKPMEM_DECL(4);
 
