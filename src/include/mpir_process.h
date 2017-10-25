@@ -8,6 +8,10 @@
 #ifndef MPIR_PROCESS_H_INCLUDED
 #define MPIR_PROCESS_H_INCLUDED
 
+#ifdef HAVE_HWLOC
+#include "hwloc.h"
+#endif
+
 /* Per process data */
 typedef struct PreDefined_attrs {
     int appnum;          /* Application number provided by mpiexec (MPI-2) */
@@ -33,6 +37,12 @@ typedef struct MPIR_Process_t {
     PreDefined_attrs  attrs;            /* Predefined attribute values */
     int               tagged_coll_mask; /* Tag space mask for tagged collectives */
 
+#ifdef HAVE_HWLOC
+    hwloc_topology_t topology; /* HWLOC topology */
+    hwloc_cpuset_t bindset; /* process binding */
+    int bindset_is_valid; /* Flag to indicate if the bind set of the process is valid:
+                           * 0 if invalid, 1 if valid */
+#endif
     /* The topology routines dimsCreate is independent of any communicator.
        If this pointer is null, the default routine is used */
     int (*dimsCreate)( int, int, int *);
