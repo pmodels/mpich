@@ -677,7 +677,7 @@ static int get_local_procs(MPIDI_PG_t *pg, int our_pg_rank, int *num_local_p,
     int *procs;
     int i;
     int num_local = 0;
-    MPID_Node_id_t our_node_id;
+    int our_node_id;
     MPIR_CHKPMEM_DECL(1);
 
     MPIR_Assert(our_pg_rank < pg->size);

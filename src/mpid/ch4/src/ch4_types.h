@@ -275,7 +275,7 @@ typedef struct MPIDI_CH4_Global_t {
     int is_initialized;
     MPIDI_CH4_avt_manager avt_mgr;
     int is_ch4u_initialized;
-    MPID_Node_id_t **node_map, max_node_id;
+    int **node_map, max_node_id;
     MPIDI_CH4U_comm_req_list_t *comm_req_lists;
     OPA_int_t active_progress_hooks;
     MPIR_Commops MPIR_Comm_fns_store;

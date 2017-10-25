@@ -119,7 +119,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_split_type(MPIR_Comm * comm_ptr,
 {
     int mpi_errno = MPI_SUCCESS;
     int idx;
-    MPID_Node_id_t node_id;
+    int node_id;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_SPLIT_TYPE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_SPLIT_TYPE);
@@ -312,7 +312,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int pure_intracomm = 0;
     int local_size = 0;
-    MPID_Node_id_t *local_node_ids = NULL, *remote_node_ids = NULL;
+    int *local_node_ids = NULL, *remote_node_ids = NULL;
     int *local_lupids = NULL;
     size_t *local_upid_size = NULL, *remote_upid_size = NULL;
     int upid_send_size = 0, upid_recv_size = 0;
@@ -407,17 +407,17 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
-            MPIR_CHKLMEM_MALLOC(local_node_ids, MPID_Node_id_t *,
-                                local_size * sizeof(MPID_Node_id_t), mpi_errno, "local_node_ids");
-            MPIR_CHKLMEM_MALLOC(remote_node_ids, MPID_Node_id_t *,
-                                (*remote_size) * sizeof(MPID_Node_id_t),
+            MPIR_CHKLMEM_MALLOC(local_node_ids, int *,
+                                local_size * sizeof(int), mpi_errno, "local_node_ids");
+            MPIR_CHKLMEM_MALLOC(remote_node_ids, int *,
+                                (*remote_size) * sizeof(int),
                                 mpi_errno, "remote_node_ids");
             for (i = 0; i < local_size; i++) {
                 MPIDI_CH4U_get_node_id(local_comm, i, &local_node_ids[i]);
             }
-            mpi_errno = MPIC_Sendrecv(local_node_ids, local_size * sizeof(MPID_Node_id_t), MPI_BYTE,
+            mpi_errno = MPIC_Sendrecv(local_node_ids, local_size * sizeof(int), MPI_BYTE,
                                       remote_leader, cts_tag,
-                                      remote_node_ids, (*remote_size) * sizeof(MPID_Node_id_t),
+                                      remote_node_ids, (*remote_size) * sizeof(int),
                                       MPI_BYTE, remote_leader, cts_tag, peer_comm,
                                       MPI_STATUS_IGNORE, &errflag);
             if (mpi_errno)

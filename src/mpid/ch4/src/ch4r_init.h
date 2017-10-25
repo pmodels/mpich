@@ -138,7 +138,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_free_mem(void *ptr)
 #define FUNCNAME MPIDIU_update_node_map
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDIU_update_node_map(int avtid, int size, MPID_Node_id_t node_map[])
+static inline int MPIDIU_update_node_map(int avtid, int size, int node_map[])
 {
     int i;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_UPDATE_NODE_MAP);

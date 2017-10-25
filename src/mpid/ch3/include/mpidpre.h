@@ -78,7 +78,6 @@ typedef int32_t MPIDI_Rank_t;
 /* Indicates that this device is topology aware and implements the
    MPID_Get_node_id function (and friends). */
 #define MPID_USE_NODE_IDS
-typedef MPIDI_Rank_t MPID_Node_id_t;
 
 
 /* For the typical communication system for which the ch3 channel is
@@ -730,9 +729,8 @@ int MPID_Free_mem( void *ptr );
 /* Prototypes and definitions for the node ID code.  This is used to support
    hierarchical collectives in a (mostly) device-independent way. */
 #if defined(MPID_USE_NODE_IDS)
-/* MPID_Node_id_t is a signed integer type defined by the device in mpidpre.h. */
-int MPID_Get_node_id(MPIR_Comm *comm, int rank, MPID_Node_id_t *id_p);
-int MPID_Get_max_node_id(MPIR_Comm *comm, MPID_Node_id_t *max_id_p);
+int MPID_Get_node_id(MPIR_Comm *comm, int rank, int *id_p);
+int MPID_Get_max_node_id(MPIR_Comm *comm, int *max_id_p);
 #endif
 
 #endif /* !defined(MPIDPRE_H_INCLUDED) */

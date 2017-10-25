@@ -22,7 +22,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_upids_to_lupids(int size,
                                                     size_t *remote_upid_size,
                                                     char *remote_upids,
                                                     int **remote_lupids,
-                                                    MPID_Node_id_t *remote_node_ids)
+                                                    int *remote_node_ids)
 {
     int mpi_errno = MPI_SUCCESS, i;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_UPIDS_TO_LUPIDS);
@@ -80,7 +80,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm *local_c
                                                               size_t *remote_upid_size,
                                                               char *remote_upids,
                                                               int **remote_lupids,
-                                                              MPID_Node_id_t *remote_node_ids)
+                                                              int *remote_node_ids)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -89,7 +89,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm *local_c
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     size_t *_remote_upid_size = NULL;
     char *_remote_upids = NULL;
-    MPID_Node_id_t *_remote_node_ids = NULL;
+    int *_remote_node_ids = NULL;
 
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(3);
@@ -121,7 +121,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm *local_c
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             mpi_errno =
-                MPIR_Bcast_intra(remote_node_ids, (*remote_size) * sizeof(MPID_Node_id_t), MPI_BYTE,
+                MPIR_Bcast_intra(remote_node_ids, (*remote_size) * sizeof(int), MPI_BYTE,
                                  local_leader, local_comm, &errflag);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
@@ -155,11 +155,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm *local_c
                                          local_leader, local_comm, &errflag);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
-            MPIR_CHKLMEM_MALLOC(_remote_node_ids, MPID_Node_id_t*,
-                                (*remote_size) * sizeof(MPID_Node_id_t),
+            MPIR_CHKLMEM_MALLOC(_remote_node_ids, int*,
+                                (*remote_size) * sizeof(int),
                                 mpi_errno, "_remote_node_ids");
             mpi_errno =
-                MPIR_Bcast_intra(_remote_node_ids, (*remote_size) * sizeof(MPID_Node_id_t), MPI_BYTE,
+                MPIR_Bcast_intra(_remote_node_ids, (*remote_size) * sizeof(int), MPI_BYTE,
                                  local_leader, local_comm, &errflag);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);

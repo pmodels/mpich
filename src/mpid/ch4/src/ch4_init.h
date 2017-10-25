@@ -531,7 +531,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_get_lpid(MPIR_Comm * comm_ptr,
 #define FUNCNAME MPID_Get_node_id
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Get_node_id(MPIR_Comm * comm, int rank, MPID_Node_id_t * id_p)
+MPL_STATIC_INLINE_PREFIX int MPID_Get_node_id(MPIR_Comm * comm, int rank, int * id_p)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET_NODE_ID);
@@ -547,7 +547,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_node_id(MPIR_Comm * comm, int rank, MPID_N
 #define FUNCNAME MPID_Get_max_node_id
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Get_max_node_id(MPIR_Comm * comm, MPID_Node_id_t * max_id_p)
+MPL_STATIC_INLINE_PREFIX int MPID_Get_max_node_id(MPIR_Comm * comm, int * max_id_p)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET_MAX_NODE_ID);
