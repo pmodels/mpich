@@ -55,7 +55,6 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
-#if defined(MPID_USE_NODE_IDS)
 int MPIR_Find_local_and_external(MPIR_Comm *comm, int *local_size_p, int *local_rank_p, int **local_ranks_p,
                                  int *external_size_p, int *external_rank_p, int **external_ranks_p,
                                  int **intranode_table_p, int **internode_table_p)
@@ -202,23 +201,6 @@ int MPIR_Find_local_and_external(MPIR_Comm *comm, int *local_size_p, int *local_
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
-
-#else /* !defined(MPID_USE_NODE_IDS) */
-int MPIR_Find_local_and_external(MPIR_Comm *comm, int *local_size_p, int *local_rank_p, int **local_ranks_p,
-                                 int *external_size_p, int *external_rank_p, int **external_ranks_p,
-                                 int **intranode_table_p, int **internode_table_p)
-{
-    int mpi_errno = MPI_SUCCESS;
-    
-    /* The upper level can catch this non-fatal error and should be
-       able to recover gracefully. */
-    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**notimpl");
-fn_fail:
-    return mpi_errno;
-}
-
-#endif
-
 
 /* maps rank r in comm_ptr to the rank of the leader for r's node in
    comm_ptr->node_roots_comm and returns this value.
