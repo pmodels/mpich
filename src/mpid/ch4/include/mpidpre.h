@@ -412,9 +412,6 @@ typedef struct MPIDI_Devcomm_t {
 #define MPIDI_CH4U_COMM(comm,field) ((comm)->dev.ch4.ch4u).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field
 
-
-#define MPID_USE_NODE_IDS
-
 typedef struct {
     union {
     MPIDI_NM_OP_DECL} netmod;

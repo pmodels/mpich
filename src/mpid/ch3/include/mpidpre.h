@@ -75,11 +75,6 @@ typedef int16_t MPIDI_Rank_t;
 typedef int32_t MPIDI_Rank_t;
 #endif /* CH3_RANK_BITS */
 
-/* Indicates that this device is topology aware and implements the
-   MPID_Get_node_id function (and friends). */
-#define MPID_USE_NODE_IDS
-
-
 /* For the typical communication system for which the ch3 channel is
    appropriate, 16 bits is sufficient for the rank.  By also using 16
    bits for the context, we can reduce the size of the match
@@ -728,9 +723,7 @@ int MPID_Free_mem( void *ptr );
 
 /* Prototypes and definitions for the node ID code.  This is used to support
    hierarchical collectives in a (mostly) device-independent way. */
-#if defined(MPID_USE_NODE_IDS)
 int MPID_Get_node_id(MPIR_Comm *comm, int rank, int *id_p);
 int MPID_Get_max_node_id(MPIR_Comm *comm, int *max_id_p);
-#endif
 
 #endif /* !defined(MPIDPRE_H_INCLUDED) */
