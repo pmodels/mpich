@@ -47,7 +47,7 @@ static int split_type(MPIR_Comm * user_comm_ptr, int stype, int key,
     }
 
     if (MPIDI_CH3I_Shm_supported()) {
-        mpi_errno = MPIR_Comm_split_type_node(comm_ptr, stype, key, newcomm_ptr);
+        mpi_errno = MPIR_Comm_split_type_node_topo(comm_ptr, stype, key, info_ptr, newcomm_ptr);
     }
     else {
         mpi_errno = MPIR_Comm_split_type_self(comm_ptr, stype, key, newcomm_ptr);
