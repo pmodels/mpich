@@ -8,6 +8,10 @@
 #include "mpiimpl.h"
 #include "mpicomm.h"
 
+#ifdef HAVE_HWLOC
+#include "hwloc.h"
+#endif
+
 /* -- Begin Profiling Symbol Block for routine MPI_Comm_split_type */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Comm_split_type = PMPI_Comm_split_type
@@ -94,6 +98,258 @@ int MPIR_Comm_split_type_node(MPIR_Comm * user_comm_ptr, int split_type, int key
   fn_exit:
     if (comm_ptr)
         MPIR_Comm_free_impl(comm_ptr);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#ifdef HAVE_HWLOC
+
+struct info_obj {
+    hwloc_obj_type_t obj_type;
+    union {
+        struct {
+            hwloc_obj_cache_type_t cache_type;
+            int depth;
+        } cache;
+    } u;
+};
+
+struct shmem_processor_info_table {
+    const char *val;
+    hwloc_obj_type_t obj_type;
+};
+
+/* hwloc processor object table */
+static struct shmem_processor_info_table shmem_processor_info[] = {
+    {"machine", HWLOC_OBJ_MACHINE},
+    {"socket", HWLOC_OBJ_PACKAGE},
+    {"package", HWLOC_OBJ_PACKAGE},
+    {"numanode", HWLOC_OBJ_NUMANODE},
+    {"core", HWLOC_OBJ_CORE},
+    {"hwthread", HWLOC_OBJ_PU},
+    {"pu", HWLOC_OBJ_PU},
+    {NULL, HWLOC_OBJ_TYPE_MAX}
+};
+
+static int node_split_cache(MPIR_Comm * comm_ptr, int key, struct info_obj info_obj,
+                            MPIR_Comm ** newcomm_ptr)
+{
+    int color;
+    int mpi_errno = MPI_SUCCESS;
+    hwloc_obj_t obj_containing_cpuset;
+
+    /* assign the node id as the color, initially */
+    MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
+
+    obj_containing_cpuset =
+        hwloc_get_cache_covering_cpuset(MPIR_Process.topology, MPIR_Process.bindset);
+
+    if (obj_containing_cpuset == NULL ||
+        obj_containing_cpuset->attr->cache.depth > info_obj.u.cache.depth)
+        goto do_split;
+
+    while (obj_containing_cpuset &&
+           obj_containing_cpuset->attr->cache.depth < info_obj.u.cache.depth) {
+        obj_containing_cpuset =
+            hwloc_get_ancestor_obj_by_type(MPIR_Process.topology, HWLOC_OBJ_CACHE,
+                                           obj_containing_cpuset);
+    }
+    if (obj_containing_cpuset &&
+        !(obj_containing_cpuset->attr->cache.depth > info_obj.u.cache.depth &&
+          obj_containing_cpuset->attr->cache.type == info_obj.u.cache.cache_type))
+        color = obj_containing_cpuset->logical_index;
+
+  do_split:
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static int node_split_processor(MPIR_Comm * comm_ptr, int key, struct info_obj info_obj,
+                                MPIR_Comm ** newcomm_ptr)
+{
+    int color;
+    hwloc_obj_t obj_containing_cpuset;
+    hwloc_obj_type_t query_obj_type = info_obj.obj_type;
+    int mpi_errno = MPI_SUCCESS;
+
+    /* assign the node id as the color, initially */
+    MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
+
+    /* hack to deal with the fact that older hwloc versions do not
+     * display a NUMANODE for cases where a package contains a single
+     * NUMA node. */
+    if ((query_obj_type == HWLOC_OBJ_NUMANODE)
+        && !hwloc_get_nbobjs_by_type(MPIR_Process.topology, HWLOC_OBJ_NUMANODE))
+        query_obj_type = HWLOC_OBJ_PACKAGE;
+
+    obj_containing_cpuset =
+        hwloc_get_obj_covering_cpuset(MPIR_Process.topology, MPIR_Process.bindset);
+    if (obj_containing_cpuset->type == query_obj_type) {
+        color = obj_containing_cpuset->logical_index;
+    }
+    else {
+        hwloc_obj_t hobj = hwloc_get_ancestor_obj_by_type(MPIR_Process.topology, query_obj_type,
+                                                          obj_containing_cpuset);
+        if (hobj)
+            color = hobj->logical_index;
+    }
+
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+#endif /* HAVE_HWLOC */
+
+static const char *SHMEM_INFO_KEY = "shmem_topo";
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_split_type_node_topo
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, int key,
+                                   MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
+{
+    MPIR_Comm *comm_ptr;
+    int mpi_errno = MPI_SUCCESS;
+
+#ifdef HAVE_HWLOC
+    char hintval[MPI_MAX_INFO_VAL + 1];
+    int i, flag = 0;
+    struct info_obj info_obj, info_obj_global;
+    int info_args_are_equal;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+#endif
+
+    mpi_errno = MPIR_Comm_split_type_node(user_comm_ptr, split_type, key, &comm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (comm_ptr == NULL) {
+        MPIR_Assert(split_type == MPI_UNDEFINED);
+        *newcomm_ptr = NULL;
+        goto fn_exit;
+    }
+
+    /* check if the info arguments match across processes */
+#ifdef HAVE_HWLOC
+    /* if our bindset is not valid, skip topology-aware comm split */
+    if (!MPIR_Process.bindset_is_valid)
+        goto use_node_comm;
+
+    /* initially point to HWLOC_OBJ_TYPE_MAX and then see if there is
+     * an info argument pointing to a different object */
+    info_obj.obj_type = HWLOC_OBJ_TYPE_MAX;
+    if (info_ptr) {
+        MPIR_Info_get_impl(info_ptr, SHMEM_INFO_KEY, MPI_MAX_INFO_VAL, hintval, &flag);
+        if (flag) {
+            /* try to find the info value in the processor object
+             * table */
+            for (i = 0; shmem_processor_info[i].val; i++) {
+                if (!strcmp(shmem_processor_info[i].val, hintval)) {
+                    info_obj.obj_type = shmem_processor_info[i].obj_type;
+                    break;
+                }
+            }
+
+            /* if we have not found it yet, try to see if the value
+             * matches any of our known strings.  right now, we only
+             * understand "cache". */
+            if (info_obj.obj_type == HWLOC_OBJ_TYPE_MAX) {
+                if (!strncmp(hintval, "cache:l", strlen("cache:l"))) {
+                    const char *d = hintval + strlen("cache:l");
+                    info_obj.u.cache.depth = 0;
+                    while (*d >= '0' && *d <= '9') {
+                        info_obj.u.cache.depth = 10 * info_obj.u.cache.depth + *d - '0';
+                        d++;
+                        if (*d == '\0')
+                            break;
+                    }
+
+                    if (info_obj.u.cache.depth == 0)
+                        goto use_node_comm;
+
+                    info_obj.obj_type = HWLOC_OBJ_CACHE;
+                    if (*d == 'u')
+                        info_obj.u.cache.cache_type = HWLOC_OBJ_CACHE_UNIFIED;
+                    else if (*d == 'i')
+                        info_obj.u.cache.cache_type = HWLOC_OBJ_CACHE_INSTRUCTION;
+                    else if (*d == 'd' || *d == '\0')
+                        info_obj.u.cache.cache_type = HWLOC_OBJ_CACHE_DATA;
+                    else
+                        goto use_node_comm;
+                }
+            }
+        }
+    }
+
+    /* even if we did not give an info key, do an allreduce since
+     * other processes might have given an info key */
+    mpi_errno =
+        MPID_Allreduce(&info_obj, &info_obj_global, sizeof(info_obj), MPI_BYTE, MPI_BAND, comm_ptr,
+                       &errflag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    info_args_are_equal = 1;
+    if (info_obj.obj_type != info_obj_global.obj_type)
+        info_args_are_equal = 0;
+    if (info_obj.obj_type == HWLOC_OBJ_CACHE) {
+        if (info_obj.u.cache.depth != info_obj_global.u.cache.depth)
+            info_args_are_equal = 0;
+        if (info_obj.u.cache.cache_type != info_obj_global.u.cache.cache_type)
+            info_args_are_equal = 0;
+    }
+    mpi_errno =
+        MPID_Allreduce(MPI_IN_PLACE, &info_args_are_equal, 1, MPI_INT, MPI_MIN, comm_ptr, &errflag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    /* if all processes did not give the same info key, skip
+     * topology-aware comm split */
+    if (!info_args_are_equal)
+        goto use_node_comm;
+
+    /* if no info key is given, skip topology-aware comm split */
+    if (!info_ptr)
+        goto use_node_comm;
+
+    /* if the info key is not something we recognize, skip
+     * topology-aware comm split */
+    if (info_obj.obj_type == HWLOC_OBJ_TYPE_MAX)
+        goto use_node_comm;
+
+    if (info_obj.obj_type == HWLOC_OBJ_CACHE) {
+        mpi_errno = node_split_cache(comm_ptr, key, info_obj, newcomm_ptr);
+    }
+    else {
+        mpi_errno = node_split_processor(comm_ptr, key, info_obj, newcomm_ptr);
+    }
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    MPIR_Comm_free_impl(comm_ptr);
+    goto fn_exit;
+#endif /* HAVE_HWLOC */
+
+  use_node_comm:
+    *newcomm_ptr = comm_ptr;
+
+  fn_exit:
     return mpi_errno;
 
   fn_fail:

@@ -153,6 +153,12 @@ int MPI_Finalize( void )
 {
     static const char FCNAME[] = "MPI_Finalize";
     int mpi_errno = MPI_SUCCESS;
+
+#ifdef HAVE_HWLOC
+    hwloc_topology_destroy(MPIR_Process.topology);
+    hwloc_bitmap_free(MPIR_Process.bindset);
+#endif
+
 #if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
     int rank=0;
 #endif
