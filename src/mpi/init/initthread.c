@@ -324,6 +324,14 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     int exit_init_cs_on_failure = 0;
     MPIR_Info *info_ptr;
 
+#ifdef HAVE_HWLOC
+    MPIR_Process.bindset = hwloc_bitmap_alloc();
+    hwloc_topology_init(&MPIR_Process.topology);
+    hwloc_topology_set_flags(MPIR_Process.topology, HWLOC_TOPOLOGY_FLAG_WHOLE_IO|HWLOC_TOPOLOGY_FLAG_IO_BRIDGES);
+    hwloc_topology_load(MPIR_Process.topology);
+    MPIR_Process.bindset_is_valid = !hwloc_get_proc_cpubind(MPIR_Process.topology, getpid(),
+                                                            MPIR_Process.bindset, HWLOC_CPUBIND_PROCESS);
+#endif
     /* For any code in the device that wants to check for runtime 
        decisions on the value of isThreaded, set a provisional
        value here. We could let the MPID_Init routine override this */
