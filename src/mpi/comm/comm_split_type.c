@@ -27,10 +27,10 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
 #define MPI_Comm_split_type PMPI_Comm_split_type
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_shmem_node
+#define FUNCNAME MPIR_Comm_split_type_self
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_split_type_shmem_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr)
+int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -59,7 +59,7 @@ int MPIR_Comm_split_type(MPIR_Comm * comm_ptr, int split_type, int key,
     int mpi_errno = MPI_SUCCESS;
 
     if (split_type == MPI_COMM_TYPE_SHARED) {
-        mpi_errno = MPIR_Comm_split_type_shmem_node(comm_ptr, key, newcomm_ptr);
+        mpi_errno = MPIR_Comm_split_type_self(comm_ptr, key, newcomm_ptr);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
