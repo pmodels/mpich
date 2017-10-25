@@ -12,10 +12,17 @@
 /* FIXME: This test only checks that the MPI_Comm_split_type routine
    doesn't fail.  It does not check for correct behavior */
 
+
+static const char *split_topo[] = {
+    "machine", "socket", "package", "numanode", "core", "hwthread", "pu", "cache:l1",
+    "cache:l1u", "cache:l1d", "cache:l1i", "cache:l2", "cache:l2u",
+    "cache:l2d", "cache:l2i", "cache:l3", "cache:l3u", "cache:l3d", "cache:l3i", NULL
+};
+
 int main(int argc, char *argv[])
 {
     int rank, size, verbose = 0, errs = 0, tot_errs = 0;
-    int wrank;
+    int wrank, i;
     MPI_Comm comm;
     MPI_Info info;
 
@@ -39,6 +46,103 @@ int main(int argc, char *argv[])
             printf("Created shared subcommunicator of size %d\n", size);
         MPI_Comm_free(&comm);
     }
+
+
+    /* test for topology hints: pass a valid info value, but do not
+     * expect that the MPI implementation will respect it.  */
+    for (i = 0; split_topo[i]; i++) {
+        MPI_Info_create(&info);
+        MPI_Info_set(info, "shmem_topo", split_topo[i]);
+        MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
+        if (comm == MPI_COMM_NULL) {
+            printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
+            errs++;
+        }
+        else {
+            int newsize;
+            MPI_Comm_size(comm, &newsize);
+            if (newsize > size) {
+                printf("Expected comm size to be smaller than node size\n");
+                errs++;
+            }
+            MPI_Comm_free(&comm);
+        }
+        MPI_Info_free(&info);
+    }
+
+    /* test for topology hints: pass different info values from
+     * different processes, the hint must be ignored then. */
+    MPI_Info_create(&info);
+    if (rank % 2 == 0) {
+        MPI_Info_set(info, "shmem_topo", split_topo[0]);
+    }
+    else {
+        MPI_Info_set(info, "shmem_topo", split_topo[1]);
+    }
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
+    if (comm == MPI_COMM_NULL) {
+        printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
+        errs++;
+    }
+    else {
+        int newsize;
+        MPI_Comm_size(comm, &newsize);
+        if (newsize > size) {
+            printf("Expected comm size to be smaller than node size\n");
+            errs++;
+        }
+        MPI_Comm_free(&comm);
+    }
+    MPI_Info_free(&info);
+
+
+    /* test for topology hints: pass info value to some processes, but
+     * not others. */
+    if (rank % 2 == 0) {
+        MPI_Info_create(&info);
+        MPI_Info_set(info, "shmem_topo", split_topo[0]);
+    }
+    else
+        info = MPI_INFO_NULL;
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
+    if (comm == MPI_COMM_NULL) {
+        printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
+        errs++;
+    }
+    else {
+        int newsize;
+        MPI_Comm_size(comm, &newsize);
+        if (newsize > size) {
+            printf("Expected comm size to be smaller than node size\n");
+            errs++;
+        }
+        MPI_Comm_free(&comm);
+    }
+    if (rank % 2 == 0)
+        MPI_Info_free(&info);
+
+
+    /* test for topology hints: pass an invalid info value and make
+     * sure the behavior is as if no info key was passed.  */
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "shmem_topo", "__garbage_value__");
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
+    if (comm == MPI_COMM_NULL) {
+        printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
+        errs++;
+    }
+    else {
+        int newsize;
+
+        MPI_Comm_size(comm, &newsize);
+        if (newsize != size) {
+            printf("Expected comm size to be the same as node size\n");
+            errs++;
+        }
+        MPI_Comm_free(&comm);
+    }
+    MPI_Info_free(&info);
+
 
 #if defined(MPIX_COMM_TYPE_NEIGHBORHOOD) && defined(HAVE_MPI_IO)
     /* the MPICH-specific MPIX_COMM_TYPE_NEIGHBORHOOD */
