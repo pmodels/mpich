@@ -102,11 +102,9 @@ fn_fail:
 int MPIR_Get_node_id(MPI_Comm comm, int rank, int *id)
 {
     MPIR_Comm *comm_ptr;
-    MPID_Node_id_t node_id;
 
     MPIR_Comm_get_ptr(comm, comm_ptr);
-    MPID_Get_node_id(comm_ptr, rank, &node_id);
-    *id = node_id;
+    MPID_Get_node_id(comm_ptr, rank, id);
 
     return MPI_SUCCESS;
 }

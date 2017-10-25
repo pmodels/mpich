@@ -250,8 +250,8 @@ fn_fail:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
                                                          int sz,
-                                                         MPID_Node_id_t *out_nodemap,
-                                                         MPID_Node_id_t *out_max_node_id,
+                                                         int *out_nodemap,
+                                                         int *out_max_node_id,
                                                          int *did_map)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -344,8 +344,8 @@ fn_fail:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIR_NODEMAP_build_nodemap(int sz,
                                              int myrank,
-                                             MPID_Node_id_t *out_nodemap,
-                                             MPID_Node_id_t *out_max_node_id)
+                                             int *out_nodemap,
+                                             int *out_max_node_id)
 {
     static int g_max_node_id = -1;
     int mpi_errno = MPI_SUCCESS;

@@ -26,7 +26,7 @@ static int nemesis_initialized = 0;
 static int split_type(MPIR_Comm * comm_ptr, int stype, int key,
                       MPIR_Info *info_ptr, MPIR_Comm ** newcomm_ptr)
 {
-    MPID_Node_id_t id;
+    int id;
     MPIDI_Rank_t nid;
     int mpi_errno = MPI_SUCCESS;
 
