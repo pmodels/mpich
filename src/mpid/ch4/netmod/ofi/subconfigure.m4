@@ -49,7 +49,9 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     else
         ofi_embedded="no"
         PAC_SET_HEADER_LIB_PATH(libfabric)
+        AC_SUBST([with_libfabric])
     fi
+    AC_SUBST([ofi_embedded])
 
     runtime_capabilities="no"
     no_providers="no"
