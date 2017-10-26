@@ -50,6 +50,30 @@ int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcom
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Comm_split_type_node
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Comm_split_type_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int color;
+
+    mpi_errno = MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Comm_split_type
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
