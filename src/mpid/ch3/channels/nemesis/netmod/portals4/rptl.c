@@ -88,7 +88,7 @@ static int find_target(ptl_process_t id, struct rptl_target **target)
     /* if the target does not already exist, create one */
     if (t == NULL) {
         MPIR_CHKPMEM_MALLOC(t, struct rptl_target *, sizeof(struct rptl_target), mpi_errno, "rptl target");
-        MPL_DL_APPEND(rptl_info.target_list, t);
+        DL_APPEND(rptl_info.target_list, t);
 
         t->id = id;
         t->state = RPTL_TARGET_STATE_ACTIVE;
@@ -364,9 +364,9 @@ static int rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size
     op->target = target;
 
     if (op->u.put.pt_type == RPTL_PT_DATA)
-        MPL_DL_APPEND(target->data_op_list, op);
+        DL_APPEND(target->data_op_list, op);
     else
-        MPL_DL_APPEND(target->control_op_list, op);
+        DL_APPEND(target->control_op_list, op);
 
     ret = poke_progress();
     RPTLU_ERR_POP(ret, "Error from poke_progress\n");
@@ -431,7 +431,7 @@ int MPID_nem_ptl_rptl_get(ptl_handle_md_t md_handle, ptl_size_t local_offset, pt
     op->events_ready = 0;
     op->target = target;
 
-    MPL_DL_APPEND(target->data_op_list, op);
+    DL_APPEND(target->data_op_list, op);
 
     ret = poke_progress();
     RPTLU_ERR_POP(ret, "Error from poke_progress\n");
@@ -812,7 +812,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
             event->user_ptr = op->u.get.user_ptr;
 
             /* GET operations only go into the data op list */
-            MPL_DL_DELETE(op->target->data_op_list, op);
+            DL_DELETE(op->target->data_op_list, op);
             rptli_op_free(op);
         }
 
@@ -830,7 +830,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
             if (op->u.put.pt_type == RPTL_PT_CONTROL) {
                 /* drop the ack event */
                 MPL_free(op->u.put.ack);
-                MPL_DL_DELETE(op->target->control_op_list, op);
+                DL_DELETE(op->target->control_op_list, op);
                 rptli_op_free(op);
 
                 /* drop the send event */
@@ -848,7 +848,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
                     pending_event_valid = 1;
                 }
                 MPL_free(op->u.put.ack);
-                MPL_DL_DELETE(op->target->data_op_list, op);
+                DL_DELETE(op->target->data_op_list, op);
                 rptli_op_free(op);
             }
         }
@@ -867,7 +867,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
             if (op->u.put.pt_type == RPTL_PT_CONTROL) {
                 /* drop the send event */
                 MPL_free(op->u.put.send);
-                MPL_DL_DELETE(op->target->control_op_list, op);
+                DL_DELETE(op->target->control_op_list, op);
                 rptli_op_free(op);
 
                 /* drop the ack event */
@@ -897,7 +897,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
                     event->user_ptr = op->u.put.user_ptr;
                 }
                 /* we should be in the data op list */
-                MPL_DL_DELETE(op->target->data_op_list, op);
+                DL_DELETE(op->target->data_op_list, op);
                 rptli_op_free(op);
             }
         }

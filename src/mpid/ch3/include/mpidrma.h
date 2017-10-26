@@ -335,7 +335,7 @@ static inline int enqueue_lock_origin(MPIR_Win * win_ptr, MPIDI_VC_t * vc,
     if (new_ptr != NULL) {
         MPIDI_RMA_Target_lock_entry_t **head_ptr =
             (MPIDI_RMA_Target_lock_entry_t **) (&(win_ptr->target_lock_queue_head));
-        MPL_DL_APPEND((*head_ptr), new_ptr);
+        DL_APPEND((*head_ptr), new_ptr);
         new_ptr->vc = vc;
     }
     else {
@@ -834,7 +834,7 @@ static inline int acquire_local_lock(MPIR_Win * win_ptr, int lock_type)
                 MPIR_ERR_POP(mpi_errno);
             goto fn_exit;
         }
-        MPL_DL_APPEND((*head_ptr), new_ptr);
+        DL_APPEND((*head_ptr), new_ptr);
         MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &my_vc);
         new_ptr->vc = my_vc;
 

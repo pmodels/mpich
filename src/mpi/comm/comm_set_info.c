@@ -53,7 +53,7 @@ int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
     /* MPIR_Info_set_impl will do an O(n) search to prevent duplicate keys, so
      * this _FOREACH loop will cost O(m*n) time, where "m" is the number of keys
      * in info_ptr and "n" is the number of keys in comm_ptr->info. */
-    MPL_LL_FOREACH(info_ptr, curr_info) {
+    LL_FOREACH(info_ptr, curr_info) {
         /* Have we hit the default, empty info hint? */
         if (curr_info->key == NULL) continue;
 

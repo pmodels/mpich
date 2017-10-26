@@ -36,7 +36,7 @@ int MPIR_T_pvar_handle_free_impl(MPI_T_pvar_session session, MPI_T_pvar_handle *
     int mpi_errno = MPI_SUCCESS;
     MPIR_T_pvar_handle_t *hnd = *handle;
 
-    MPL_DL_DELETE(session->hlist, hnd);
+    DL_DELETE(session->hlist, hnd);
 
     /* Unlink handle from pvar if it is a watermark */
     if (MPIR_T_pvar_is_watermark(hnd)) {

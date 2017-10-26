@@ -1557,7 +1557,7 @@ int MPIDI_CH3I_Acceptq_enqueue(MPIDI_VC_t * vc, int port_name_tag )
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_ACCEPTQ_ENQUEUE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_ACCEPTQ_ENQUEUE);
 
-    MPL_LL_SEARCH_SCALAR(active_portq.head, port, port_name_tag, port_name_tag);
+    LL_SEARCH_SCALAR(active_portq.head, port, port_name_tag, port_name_tag);
 
     /* Find port object by using port_name_tag. */
     mpi_errno = MPIDI_CH3I_Port_connreq_create(vc, &connreq);
@@ -1621,7 +1621,7 @@ int MPIDI_CH3I_Acceptq_dequeue(MPIDI_CH3I_Port_connreq_t ** connreq_ptr, int por
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_ACCEPTQ_DEQUEUE);
 
     /* Find port object by using port_name_tag. */
-    MPL_LL_SEARCH_SCALAR(active_portq.head, port, port_name_tag, port_name_tag);
+    LL_SEARCH_SCALAR(active_portq.head, port, port_name_tag, port_name_tag);
     MPIR_Assert(port != NULL);  /* Port is always initialized in open_port. */
 
     MPIDI_CH3I_Port_connreq_q_dequeue(&port->accept_connreq_q, connreq_ptr);
@@ -1649,7 +1649,7 @@ static int MPIDI_CH3I_Acceptq_cleanup(MPIDI_CH3I_Port_connreq_q_t * accept_connr
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_Port_connreq_t *connreq = NULL, *connreq_tmp = NULL;
 
-    MPL_LL_FOREACH_SAFE(accept_connreq_q->head, connreq, connreq_tmp) {
+    LL_FOREACH_SAFE(accept_connreq_q->head, connreq, connreq_tmp) {
         MPIDI_CH3I_Port_connreq_q_delete(accept_connreq_q, connreq);
 
         /* Notify connecting client. */
@@ -1694,7 +1694,7 @@ static int MPIDI_CH3I_Revokeq_cleanup(void)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_Port_connreq_t *connreq = NULL, *connreq_tmp = NULL;
 
-    MPL_LL_FOREACH_SAFE(revoked_connreq_q.head, connreq, connreq_tmp) {
+    LL_FOREACH_SAFE(revoked_connreq_q.head, connreq, connreq_tmp) {
         MPID_Progress_state progress_state;
         MPIDI_CH3I_Port_connreq_q_delete(&revoked_connreq_q, connreq);
 
@@ -1944,7 +1944,7 @@ int MPIDI_CH3I_Port_init(int port_name_tag)
     port->accept_connreq_q.size = 0;
     port->next = NULL;
 
-    MPL_LL_APPEND(active_portq.head, active_portq.tail, port);
+    LL_APPEND(active_portq.head, active_portq.tail, port);
     active_portq.size++;
 
   fn_exit:
@@ -1969,9 +1969,9 @@ int MPIDI_CH3I_Port_destroy(int port_name_tag)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PORT_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PORT_DESTROY);
 
-    MPL_LL_SEARCH_SCALAR(active_portq.head, port, port_name_tag, port_name_tag);
+    LL_SEARCH_SCALAR(active_portq.head, port, port_name_tag, port_name_tag);
     if (port != NULL) {
-        MPL_LL_DELETE(active_portq.head, active_portq.tail, port);
+        LL_DELETE(active_portq.head, active_portq.tail, port);
 
         mpi_errno = MPIDI_CH3I_Acceptq_cleanup(&port->accept_connreq_q);
         if (mpi_errno)
@@ -2009,9 +2009,9 @@ int MPIDI_Port_finalize(void)
     {
         MPIDI_CH3I_Port_t *port = NULL, *port_tmp = NULL;
 
-        MPL_LL_FOREACH_SAFE(active_portq.head, port, port_tmp) {
+        LL_FOREACH_SAFE(active_portq.head, port, port_tmp) {
             /* destroy all opening ports. */
-            MPL_LL_DELETE(active_portq.head, active_portq.tail, port);
+            LL_DELETE(active_portq.head, active_portq.tail, port);
 
             mpi_errno = MPIDI_CH3I_Acceptq_cleanup(&port->accept_connreq_q);
             MPL_free(port);
@@ -2026,7 +2026,7 @@ int MPIDI_Port_finalize(void)
     {
         MPIDI_CH3I_Port_connreq_t *connreq = NULL, *connreq_tmp = NULL;
 
-        MPL_LL_FOREACH_SAFE(unexpt_connreq_q.head, connreq, connreq_tmp) {
+        LL_FOREACH_SAFE(unexpt_connreq_q.head, connreq, connreq_tmp) {
             MPIDI_CH3I_Port_connreq_q_delete(&unexpt_connreq_q, connreq);
             mpi_errno = MPIDI_CH3I_Port_connreq_free(connreq);
             if (mpi_errno)
