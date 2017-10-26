@@ -16,7 +16,7 @@
 #include "mpir_assert.h"
 #include "mpir_pointers.h"
 #include "mpir_utarray.h"
-#include "mpl_uthash.h"
+#include "uthash.h"
 #include "mpir_objects.h"
 
 #ifdef HAVE_ERROR_CHECKING
