@@ -7,7 +7,7 @@
 #if !defined(MPID_RMA_LOCKQUEUE_H_INCLUDED)
 #define MPID_RMA_LOCKQUEUE_H_INCLUDED
 
-#include "mpl_utlist.h"
+#include "utlist.h"
 #include "mpid_rma_types.h"
 
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_lockqueue_alloc ATTRIBUTE((unused));

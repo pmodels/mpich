@@ -7,7 +7,7 @@
 #if !defined(MPID_RMA_SHM_H_INCLUDED)
 #define MPID_RMA_SHM_H_INCLUDED
 
-#include "mpl_utlist.h"
+#include "utlist.h"
 #include "mpid_rma_types.h"
 
 static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datatype source_dtp,

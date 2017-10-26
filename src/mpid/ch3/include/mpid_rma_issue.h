@@ -7,7 +7,7 @@
 #if !defined(MPID_RMA_ISSUE_H_INCLUDED)
 #define MPID_RMA_ISSUE_H_INCLUDED
 
-#include "mpl_utlist.h"
+#include "utlist.h"
 #include "mpid_rma_types.h"
 
 /* =========================================================== */

@@ -6,7 +6,7 @@
 #ifndef MPID_PORT_H_
 #define MPID_PORT_H_
 
-#include "mpl_utlist.h"
+#include "utlist.h"
 
 #ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
 

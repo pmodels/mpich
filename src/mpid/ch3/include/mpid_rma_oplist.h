@@ -7,7 +7,7 @@
 #if !defined(MPID_RMA_OPLIST_H_INCLUDED)
 #define MPID_RMA_OPLIST_H_INCLUDED
 
-#include "mpl_utlist.h"
+#include "utlist.h"
 #include "mpid_rma_types.h"
 
 int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPIR_Win * win_ptr);

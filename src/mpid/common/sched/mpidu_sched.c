@@ -5,7 +5,7 @@
  */
 
 #include "mpidimpl.h"
-#include "mpl_utlist.h"
+#include "utlist.h"
 
 /* A random guess at an appropriate value, we can tune it later.  It could also
  * be a real tunable parameter. */
