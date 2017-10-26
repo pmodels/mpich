@@ -9,7 +9,7 @@
 
 #include "mpidimpl.h"
 #include "mpidu_generic_queue.h"
-#include "mpl_utlist.h"
+#include "utlist.h"
 
 #if defined(HAVE_ASSERT_H)
 #include <assert.h>

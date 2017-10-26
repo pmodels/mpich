@@ -22,7 +22,7 @@ mpl_headers =               \
     include/mpl.h           \
     include/mpl_base.h      \
     include/mplconfig.h     \
-    include/mpl_utlist.h    \
+    include/utlist.h    \
     include/mpl_valgrind.h  \
     include/mpl_env.h       \
     include/mpl_str.h       \

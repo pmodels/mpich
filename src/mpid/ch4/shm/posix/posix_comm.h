@@ -11,7 +11,7 @@
 #define POSIX_COMM_H_INCLUDED
 
 #include "posix_impl.h"
-#include "mpl_utlist.h"
+#include "utlist.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_POSIX_mpi_comm_create_hook

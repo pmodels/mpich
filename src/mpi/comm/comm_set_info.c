@@ -6,7 +6,7 @@
  */
 
 #include "mpiimpl.h"
-#include "mpl_utlist.h"
+#include "utlist.h"
 #include "mpir_info.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Comm_set_info */

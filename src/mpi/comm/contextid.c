@@ -8,7 +8,7 @@
 #include "mpicomm.h"
 #include "mpir_info.h"    /* MPIR_Info_free */
 
-#include "mpl_utlist.h"
+#include "utlist.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===

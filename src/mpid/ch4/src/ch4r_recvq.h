@@ -13,7 +13,7 @@
 
 #include <mpidimpl.h>
 #include "mpidig.h"
-#include "mpl_utlist.h"
+#include "utlist.h"
 #include "ch4_impl.h"
 
 extern unsigned PVAR_LEVEL_posted_recvq_length ATTRIBUTE((unused));
