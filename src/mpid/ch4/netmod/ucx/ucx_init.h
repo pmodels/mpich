@@ -88,6 +88,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 #ifdef USE_PMI2_API
     val_max_sz = PMI2_MAX_VALLEN;
     key_max_sz = PMI2_MAX_KEYLEN;
+#elif defined(USE_PMIX_API)
+    MPIR_Assert(0);
 #else
     pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
     MPIDI_UCX_PMI_ERROR(pmi_errno);
@@ -124,6 +126,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /*todo: fallback if buffer is to small */
     MPIDI_UCX_STR_ERRCHK(str_errno);
 
+#ifndef USE_PMIX_API
     string_addr_len = max_string - maxlen;
     pmi_errno = PMI_KVS_Get_my_name(MPIDI_UCX_global.kvsname, val_max_sz);
     val = valS;
@@ -211,6 +214,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
         MPIDI_UCX_CHK_STATUS(ucx_status);
     }
+#else
+    MPIR_Assert(0);
+#endif
 
     MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
 
@@ -273,8 +279,10 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         ucp_request_release(pending[i]);
     }
 
+#ifndef USE_PMIX_API
     pmi_errno = PMI_Barrier();
     MPIDI_UCX_PMI_ERROR(pmi_errno);
+#endif
 
 
     if (MPIDI_UCX_global.worker != NULL)
@@ -291,7 +299,9 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         MPL_free(MPIDI_UCX_global.pmi_addr_table);
 
     MPIDIG_finalize();
+#ifndef USE_PMIX_API
     PMI_Finalize();
+#endif
 
 #ifndef HAVE_DEBUGGER_SUPPORT
     MPIR_Request_free(MPIDI_UCX_global.lw_send_req);
@@ -347,6 +357,8 @@ static inline int MPIDI_NMI_allocate_address_table()
 #ifdef USE_PMI2_API
     val_max_sz = PMI2_MAX_VALLEN;
     key_max_sz = PMI2_MAX_KEYLEN;
+#elif defined(USE_PMIX_API)
+    MPIR_Assert(0);
 #else
     pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
     MPIDI_UCX_PMI_ERROR(pmi_errno);
@@ -366,6 +378,9 @@ static inline int MPIDI_NMI_allocate_address_table()
     MPIDI_UCX_global.pmi_addr_table = MPL_malloc(size * len, MPL_MEM_ADDRESS);
     memset(MPIDI_UCX_global.pmi_addr_table, 0x0, len * size);
 
+#ifdef USE_PMIX_API
+    MPIR_Assert(0);
+#else
     for (i = 0; i < size; i++) {
         /*first get the size */
         MPL_snprintf(keyS, key_max_sz * sizeof(char), "Ksize-%d", i);
@@ -397,6 +412,7 @@ static inline int MPIDI_NMI_allocate_address_table()
         }
 
     }
+#endif
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
@@ -418,6 +434,9 @@ static inline int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upi
     *local_upid_size = (size_t *) MPL_malloc(comm->local_size * sizeof(size_t), MPL_MEM_ADDRESS);
     temp_buf = (char *) MPL_malloc(comm->local_size * len, MPL_MEM_OTHER);
 
+#ifdef USE_PMIX_API
+    MPIR_Assert(0);
+#else
     for (i = 0; i < comm->local_size; i++) {
         MPL_snprintf(keyS, MPIDI_UCX_KVSAPPSTRLEN * sizeof(char), "UCX-%d", i);
         PMI_KVS_Get(MPIDI_UCX_global.kvsname, keyS, valS, MPIDI_UCX_KVSAPPSTRLEN);
@@ -426,6 +445,7 @@ static inline int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upi
                                (int) len, (int *) &(*local_upid_size)[i]);
         total_size += (*local_upid_size)[i];
     }
+#endif
 
     *local_upids = (char *) MPL_malloc(total_size * sizeof(char), MPL_MEM_ADDRESS);
     curr_ptr = (*local_upids);

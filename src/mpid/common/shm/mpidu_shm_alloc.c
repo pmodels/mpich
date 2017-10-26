@@ -318,6 +318,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         current_addr = memory->base_addr;
         memory->symmetrical = 0;
     }
+#elif defined(USE_PMIX_API)
+    MPIR_Assert(0);
 #else /* we are using PMIv1 */
     /* if there is only one process on this processor, don't use shared memory */
     if (num_local == 1) {

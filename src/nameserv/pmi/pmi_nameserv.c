@@ -12,6 +12,8 @@
 #include "namepub.h"
 #ifdef USE_PMI2_API
 #include "pmi2.h"
+#elif defined(USE_PMIX_API)
+#include "pmix.h"
 #else
 #include "pmi.h"
 #endif
@@ -56,6 +58,8 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     rc = PMI2_Nameserv_publish(service_name, info_ptr, port);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#elif defined(USE_PMIX_API)
+    MPIR_Assert(0);
 #else
     rc = PMI_Publish_name(service_name, port);
 #endif
@@ -83,6 +87,8 @@ int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     rc = PMI2_Nameserv_lookup(service_name, info_ptr, port, MPI_MAX_PORT_NAME);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#elif defined(USE_PMIX_API)
+    MPIR_Assert(0);
 #else
     rc = PMI_Lookup_name(service_name, port);
 #endif
@@ -109,6 +115,8 @@ int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const c
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     rc = PMI2_Nameserv_unpublish(service_name, info_ptr);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#elif defined(USE_PMIX_API)
+    MPIR_Assert(0);
 #else
     rc = PMI_Unpublish_name(service_name);
 #endif
