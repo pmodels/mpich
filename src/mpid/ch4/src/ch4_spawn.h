@@ -33,6 +33,23 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+#ifdef USE_PMIX_API
+#undef FUNCNAME
+#define FUNCNAME MPID_Comm_spawn_multiple
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPID_Comm_spawn_multiple(int count,
+                                                      char *commands[],
+                                                      char **argvs[],
+                                                      const int maxprocs[],
+                                                      MPIR_Info * info_ptrs[],
+                                                      int root,
+                                                      MPIR_Comm * comm_ptr,
+                                                      MPIR_Comm ** intercomm, int errcodes[])
+{
+    MPIR_Assert(0);
+}
+#else
 static inline int MPIDI_mpi_to_pmi_keyvals(MPIR_Info * info_ptr,
                                            PMI_keyval_t ** kv_ptr, int *nkeys_ptr)
 {
@@ -232,6 +249,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_spawn_multiple(int count,
   fn_fail:
     goto fn_exit;
 }
+#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPID_Comm_connect
