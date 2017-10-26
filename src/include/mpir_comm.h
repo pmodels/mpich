@@ -310,6 +310,7 @@ int MPIR_Comm_group_failed_impl(MPIR_Comm *comm, MPIR_Group **failed_group_ptr);
 int MPIR_Comm_remote_group_failed_impl(MPIR_Comm *comm, MPIR_Group **failed_group_ptr);
 int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **newcomm_ptr);
 int MPIR_Comm_split_type_self(MPIR_Comm *comm_ptr, int key, MPIR_Comm **newcomm_ptr);
+int MPIR_Comm_split_type_node(MPIR_Comm *comm_ptr, int key, MPIR_Comm **newcomm_ptr);
 int MPIR_Comm_split_type(MPIR_Comm *comm_ptr, int split_type, int key, MPIR_Info *info_ptr,
                          MPIR_Comm **newcomm_ptr);
 int MPIR_Comm_split_type_impl(MPIR_Comm *comm_ptr, int split_type, int key, MPIR_Info *info_ptr,

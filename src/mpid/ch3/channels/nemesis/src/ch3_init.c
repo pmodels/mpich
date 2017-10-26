@@ -26,8 +26,6 @@ static int nemesis_initialized = 0;
 static int split_type(MPIR_Comm * comm_ptr, int stype, int key,
                       MPIR_Info *info_ptr, MPIR_Comm ** newcomm_ptr)
 {
-    int id;
-    MPIDI_Rank_t nid;
     int mpi_errno = MPI_SUCCESS;
 
     if (stype != MPI_COMM_TYPE_SHARED) {
@@ -38,14 +36,12 @@ static int split_type(MPIR_Comm * comm_ptr, int stype, int key,
     }
 
     if (MPIDI_CH3I_Shm_supported()) {
-        mpi_errno = MPID_Get_node_id(comm_ptr, comm_ptr->rank, &id);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPIR_Comm_split_type_node(comm_ptr, key, newcomm_ptr);
     }
-    else
-        id = comm_ptr->rank;
+    else {
+        mpi_errno = MPIR_Comm_split_type_self(comm_ptr, key, newcomm_ptr);
+    }
 
-    nid = (stype == MPI_COMM_TYPE_SHARED) ? id : MPI_UNDEFINED;
-    mpi_errno = MPIR_Comm_split_impl(comm_ptr, nid, key, newcomm_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
