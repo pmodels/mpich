@@ -21,7 +21,7 @@
 #include "mpid_timers_fallback.h"
 #include "netmodpre.h"
 #include "shmpre.h"
-#include "mpl_uthash.h"
+#include "uthash.h"
 #include "ch4_coll_params.h"
 
 typedef struct {
