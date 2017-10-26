@@ -309,7 +309,7 @@ M*/
         MPIDU_Thread_mutex_unlock(mutex_ptr_, err_ptr_);                \
         MPIR_Assert(*err_ptr_ == 0);                                    \
         MPL_thread_yield();                                             \
-        MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_);                  \
+        MPIDU_Thread_mutex_lock_l(mutex_ptr_, err_ptr_);                \
         MPIR_Assert(*err_ptr_ == 0);                                    \
     } while (0)
 
@@ -322,6 +322,8 @@ M*/
 #define MPIDUI_thread_mutex_destroy(mutex_ptr_, err_ptr_)               \
     MPL_thread_mutex_destroy(mutex_ptr_, err_ptr_)
 #define MPIDUI_thread_mutex_lock(mutex_ptr_, err_ptr_)                  \
+    MPL_thread_mutex_lock(mutex_ptr_, err_ptr_)
+#define MPIDUI_thread_mutex_lock_l(mutex_ptr_, err_ptr_)                \
     MPL_thread_mutex_lock(mutex_ptr_, err_ptr_)
 #define MPIDUI_thread_mutex_unlock(mutex_ptr_, err_ptr_)                \
     MPL_thread_mutex_unlock(mutex_ptr_, err_ptr_)
@@ -349,6 +351,10 @@ do {                                                                    \
 #define MPIDUI_thread_mutex_lock(mutex_ptr_, err_ptr_)                  \
 do {                                                                    \
     *err_ptr_ = zm_lock_acquire(mutex_ptr_);                            \
+} while (0)
+#define MPIDUI_thread_mutex_lock_l(mutex_ptr_, err_ptr_)                \
+do {                                                                    \
+    *err_ptr_ = zm_lock_acquire_l(mutex_ptr_);                          \
 } while (0)
 #define MPIDUI_thread_mutex_unlock(mutex_ptr_, err_ptr_)                \
 do {                                                                    \
@@ -427,6 +433,24 @@ do {                                                                    \
         MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDUI_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
         OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                \
     } while (0)
+
+/*@
+  MPIDU_Thread_lock_l - acquire a mutex with a low priority
+
+  Input Parameter:
+. mutex - mutex
+@*/
+
+#define MPIDU_Thread_mutex_lock_l(mutex_ptr_, err_ptr_)                 \
+    do {                                                                \
+        OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                \
+        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDUI_thread_mutex_lock_l %p", &(mutex_ptr_)->mutex); \
+        MPIDUI_thread_mutex_lock_l(&(mutex_ptr_)->mutex, err_ptr_);     \
+        MPIR_Assert(*err_ptr_ == 0);                                    \
+        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDUI_thread_mutex_lock_l %p", &(mutex_ptr_)->mutex); \
+        OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                \
+    } while (0)
+
 
 /*@
   MPIDU_Thread_unlock - release a mutex
