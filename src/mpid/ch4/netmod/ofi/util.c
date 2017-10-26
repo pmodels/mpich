@@ -140,13 +140,13 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 
         MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "SEARCHING POSTED LIST: (%d, %d, %d)", info->comm_id, info->origin_rank, info->tag));
 
-        MPL_LL_FOREACH(MPIDI_posted_huge_recv_head, list_ptr) {
+        LL_FOREACH(MPIDI_posted_huge_recv_head, list_ptr) {
             if (list_ptr->comm_id == info->comm_id &&
                     list_ptr->rank == info->origin_rank &&
                     list_ptr->tag == info->tag) {
                 MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "MATCHED POSTED LIST: (%d, %d, %d, %d)", info->comm_id, info->origin_rank, info->tag, list_ptr->rreq->handle));
 
-                MPL_LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
+                LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
 
                 recv = (MPIDI_OFI_huge_recv_t *) MPIDI_CH4U_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
                             list_ptr->rreq->handle);
@@ -165,7 +165,7 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
         recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1);
         if (!recv) MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-        MPL_LL_APPEND(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, recv);
+        LL_APPEND(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, recv);
     }
 
     recv->event_id = MPIDI_OFI_EVENT_GET_HUGE;

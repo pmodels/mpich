@@ -444,7 +444,7 @@ int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
 
     mapper->next = NULL;
 
-    MPL_LL_APPEND(newcomm->mapper_head, newcomm->mapper_tail, mapper);
+    LL_APPEND(newcomm->mapper_head, newcomm->mapper_tail, mapper);
 
     if (map)
         *map = mapper;
@@ -479,7 +479,7 @@ int MPIR_Comm_map_dup(MPIR_Comm * newcomm, MPIR_Comm * src_comm, MPIR_Comm_map_d
 
     mapper->next = NULL;
 
-    MPL_LL_APPEND(newcomm->mapper_head, newcomm->mapper_tail, mapper);
+    LL_APPEND(newcomm->mapper_head, newcomm->mapper_tail, mapper);
 
   fn_exit:
     MPIR_CHKPMEM_COMMIT();
@@ -1099,7 +1099,7 @@ int MPII_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_APPLY_HINTS);
 
-    MPL_LL_FOREACH(info_ptr, hint) {
+    LL_FOREACH(info_ptr, hint) {
         /* Have we hit the default, empty info hint? */
         if (hint->key == NULL)
             continue;

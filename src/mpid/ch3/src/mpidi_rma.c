@@ -101,7 +101,7 @@ int MPIDI_RMA_init(void)
                         mpi_errno, "RMA op pool");
     for (i = 0; i < MPIR_CVAR_CH3_RMA_OP_GLOBAL_POOL_SIZE; i++) {
         global_rma_op_pool_start[i].pool_type = MPIDI_RMA_POOL_GLOBAL;
-        MPL_DL_APPEND(global_rma_op_pool_head, &(global_rma_op_pool_start[i]));
+        DL_APPEND(global_rma_op_pool_head, &(global_rma_op_pool_start[i]));
     }
 
     MPIR_CHKPMEM_MALLOC(global_rma_target_pool_start, MPIDI_RMA_Target_t *,
@@ -109,7 +109,7 @@ int MPIDI_RMA_init(void)
                         mpi_errno, "RMA target pool");
     for (i = 0; i < MPIR_CVAR_CH3_RMA_TARGET_GLOBAL_POOL_SIZE; i++) {
         global_rma_target_pool_start[i].pool_type = MPIDI_RMA_POOL_GLOBAL;
-        MPL_DL_APPEND(global_rma_target_pool_head, &(global_rma_target_pool_start[i]));
+        DL_APPEND(global_rma_target_pool_head, &(global_rma_target_pool_start[i]));
     }
 
   fn_exit:
@@ -191,7 +191,7 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
 
     /* dequeue window from the global list */
     MPIR_Assert((*win_ptr)->active == FALSE);
-    MPL_DL_DELETE(MPIDI_RMA_Win_inactive_list_head, (*win_ptr));
+    DL_DELETE(MPIDI_RMA_Win_inactive_list_head, (*win_ptr));
 
     if (MPIDI_RMA_Win_inactive_list_head == NULL && MPIDI_RMA_Win_active_list_head == NULL) {
         /* this is the last window, de-register RMA progress hook */

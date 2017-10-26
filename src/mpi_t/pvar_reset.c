@@ -130,7 +130,7 @@ int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
      * Otherwise, do correctness check, then go to impl.
      */
     if (handle == MPI_T_PVAR_ALL_HANDLES) {
-        MPL_DL_FOREACH(session->hlist, hnd) {
+        DL_FOREACH(session->hlist, hnd) {
             if (!MPIR_T_pvar_is_readonly(hnd)) {
                 mpi_errno = MPIR_T_pvar_reset_impl(session, hnd);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;

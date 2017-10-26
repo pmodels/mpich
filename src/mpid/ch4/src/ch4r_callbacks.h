@@ -41,7 +41,7 @@ static inline int MPIDI_check_cmpl_order(MPIR_Request * req,
     MPIDI_CH4U_REQUEST(req, req->target_cmpl_cb) = (void *) target_cmpl_cb;
     MPIDI_CH4U_REQUEST(req, req->request) = (uint64_t) req;
     /* MPIDI_CS_ENTER(); */
-    MPL_DL_APPEND(MPIDI_CH4_Global.cmpl_list, req->dev.ch4.am.req);
+    DL_APPEND(MPIDI_CH4_Global.cmpl_list, req->dev.ch4.am.req);
     /* MPIDI_CS_EXIT(); */
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHECK_CMPL_ORDER);
@@ -63,9 +63,9 @@ static inline void MPIDI_progress_cmpl_list(void)
 
     /* MPIDI_CS_ENTER(); */
   do_check_again:
-    MPL_DL_FOREACH_SAFE(MPIDI_CH4_Global.cmpl_list, curr, tmp) {
+    DL_FOREACH_SAFE(MPIDI_CH4_Global.cmpl_list, curr, tmp) {
         if (curr->seq_no == (uint64_t) OPA_load_int(&MPIDI_CH4_Global.exp_seq_no)) {
-            MPL_DL_DELETE(MPIDI_CH4_Global.cmpl_list, curr);
+            DL_DELETE(MPIDI_CH4_Global.cmpl_list, curr);
             req = (MPIR_Request *) curr->request;
             target_cmpl_cb = (MPIDIG_am_target_cmpl_cb) curr->target_cmpl_cb;
             target_cmpl_cb(req);

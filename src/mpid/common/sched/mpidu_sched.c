@@ -158,7 +158,7 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
         end = tag_ub / 2;
     }
     if (start != MPI_UNDEFINED) {
-        MPL_DL_FOREACH(all_schedules.head, elt) {
+        DL_FOREACH(all_schedules.head, elt) {
             if (elt->tag >= start && elt->tag < end) {
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanynbc");
             }
@@ -497,7 +497,7 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
 
         MPID_Progress_activate_hook(nbc_progress_hook_id);
     }
-    MPL_DL_APPEND(all_schedules.head, s);
+    DL_APPEND(all_schedules.head, s);
 
     MPL_DBG_MSG_P(MPIR_DBG_COMM, TYPICAL, "started schedule s=%p\n", s);
     if (MPIR_CVAR_COLL_SCHED_DUMP)
@@ -935,7 +935,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
     if (made_progress)
         *made_progress = FALSE;
 
-    MPL_DL_FOREACH_SAFE(state->head, s, tmp) {
+    DL_FOREACH_SAFE(state->head, s, tmp) {
         if (MPIR_CVAR_COLL_SCHED_DUMP)
 	    sched_dump(s, stderr);
 
@@ -1007,7 +1007,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                              (MPL_DBG_FDEST, "completing and dequeuing s=%p r=%p\n", s, s->req));
 
             /* dequeue this schedule from the state, it's complete */
-            MPL_DL_DELETE(state->head, s);
+            DL_DELETE(state->head, s);
 
             /* TODO refactor into a sched_complete routine? */
             switch (s->req->u.nbc.errflag) {

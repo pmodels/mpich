@@ -221,7 +221,7 @@ static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPIR_
     tmp_ptr->next = NULL;
     tmp_ptr->win = win;
 
-    MPL_DL_APPEND(*list, tmp_ptr);
+    DL_APPEND(*list, tmp_ptr);
 
   fn_exit:
     MPIR_CHKPMEM_COMMIT();
@@ -245,10 +245,10 @@ static inline void MPIDI_CH3I_SHM_Wins_unlink(MPIDI_SHM_Wins_list_t * list, MPIR
     MPIDI_SHM_Win_t *elem = NULL;
     MPIDI_SHM_Win_t *tmp_elem = NULL;
 
-    MPL_LL_SEARCH_SCALAR(*list, elem, win, shm_win);
+    LL_SEARCH_SCALAR(*list, elem, win, shm_win);
     if (elem != NULL) {
         tmp_elem = elem;
-        MPL_DL_DELETE(*list, elem);
+        DL_DELETE(*list, elem);
         MPL_free(tmp_elem);
     }
 }

@@ -890,7 +890,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_CREATE_RANK_MAP);
 
     /* do some sanity checks */
-    MPL_LL_FOREACH(comm->mapper_head, mapper) {
+    LL_FOREACH(comm->mapper_head, mapper) {
         if (mapper->src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
             MPIR_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
                         mapper->dir == MPIR_COMM_MAP_DIR__L2R);
@@ -905,14 +905,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
     /* First, handle all the mappers that contribute to the local part
      * of the comm */
     total_mapper_size = 0;
-    MPL_LL_FOREACH(comm->mapper_head, mapper) {
+    LL_FOREACH(comm->mapper_head, mapper) {
         if (mapper->dir == MPIR_COMM_MAP_DIR__L2R || mapper->dir == MPIR_COMM_MAP_DIR__R2R)
             continue;
 
         total_mapper_size += MPIDI_map_size(*mapper);
     }
     mapper_offset = 0;
-    MPL_LL_FOREACH(comm->mapper_head, mapper) {
+    LL_FOREACH(comm->mapper_head, mapper) {
         src_comm = mapper->src_comm;
 
         if (mapper->dir == MPIR_COMM_MAP_DIR__L2R || mapper->dir == MPIR_COMM_MAP_DIR__R2R)
@@ -983,14 +983,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
      * of the comm (only valid for intercomms)
      */
     total_mapper_size = 0;
-    MPL_LL_FOREACH(comm->mapper_head, mapper) {
+    LL_FOREACH(comm->mapper_head, mapper) {
         if (mapper->dir == MPIR_COMM_MAP_DIR__L2L || mapper->dir == MPIR_COMM_MAP_DIR__R2L)
             continue;
 
         total_mapper_size += MPIDI_map_size(*mapper);
     }
     mapper_offset = 0;
-    MPL_LL_FOREACH(comm->mapper_head, mapper) {
+    LL_FOREACH(comm->mapper_head, mapper) {
         src_comm = mapper->src_comm;
 
         if (mapper->dir == MPIR_COMM_MAP_DIR__L2L || mapper->dir == MPIR_COMM_MAP_DIR__R2L)
