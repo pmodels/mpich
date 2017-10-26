@@ -58,7 +58,7 @@ typedef struct {
 typedef struct {
     const char *name;
     unsigned idx;
-    MPL_UT_hash_handle hh;  /* Makes this structure hashable */
+    UT_hash_handle hh;  /* Makes this structure hashable */
 } name2index_hash_t;
 
 /* MPI_T control variable (cvar)

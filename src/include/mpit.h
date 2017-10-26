@@ -44,7 +44,7 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
 {
     unsigned cvar_idx;
     name2index_hash_t *hash_entry;
-    MPL_HASH_FIND_STR(cvar_hash, cvar_name, hash_entry);
+    HASH_FIND_STR(cvar_hash, cvar_name, hash_entry);
     MPIR_Assert(hash_entry != NULL);
     cvar_idx = hash_entry->idx;
     return (cvar_table_entry_t *)utarray_eltptr(cvar_table, cvar_idx);

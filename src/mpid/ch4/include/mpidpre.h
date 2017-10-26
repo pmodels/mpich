@@ -292,7 +292,7 @@ typedef struct MPIDI_CH4U_win_target {
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
     MPIDI_CH4U_win_target_sync_t sync;
     int rank;
-    MPL_UT_hash_handle hash_handle;
+    UT_hash_handle hash_handle;
 } MPIDI_CH4U_win_target_t;
 
 typedef struct MPIDI_CH4U_win_t {

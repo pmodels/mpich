@@ -372,7 +372,7 @@ struct HYD_proxy {
 
     struct HYD_proxy *next;
 
-    MPL_UT_hash_handle hh;
+    UT_hash_handle hh;
 };
 
 /* Global user parameters */

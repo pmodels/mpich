@@ -177,7 +177,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_add(MPIR
     target_ptr->sync.access_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
     target_ptr->sync.assert_mode = 0;
 
-    MPL_HASH_ADD(hash_handle, MPIDI_CH4U_WIN(win, targets), rank, sizeof(int), target_ptr);
+    HASH_ADD(hash_handle, MPIDI_CH4U_WIN(win, targets), rank, sizeof(int), target_ptr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_WIN_TARGET_ADD);
     return target_ptr;
@@ -194,7 +194,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_find(MPI
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_WIN_TARGET_FIND);
 
     MPIDI_CH4U_win_target_t *target_ptr = NULL;
-    MPL_HASH_FIND(hash_handle, MPIDI_CH4U_WIN(win, targets), &rank, sizeof(int), target_ptr);
+    HASH_FIND(hash_handle, MPIDI_CH4U_WIN(win, targets), &rank, sizeof(int), target_ptr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_WIN_TARGET_FIND);
     return target_ptr;
@@ -210,7 +210,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_target_delete(MPIR_Win * win,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_WIN_TARGET_DELETE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_WIN_TARGET_DELETE);
 
-    MPL_HASH_DELETE(hash_handle, MPIDI_CH4U_WIN(win, targets), target_ptr);
+    HASH_DELETE(hash_handle, MPIDI_CH4U_WIN(win, targets), target_ptr);
     MPL_free(target_ptr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_WIN_TARGET_DELETE);
@@ -226,8 +226,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_target_cleanall(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_WIN_TARGET_CLEANALL);
 
     MPIDI_CH4U_win_target_t *target_ptr, *tmp;
-    MPL_HASH_ITER(hash_handle, MPIDI_CH4U_WIN(win, targets), target_ptr, tmp) {
-        MPL_HASH_DELETE(hash_handle, MPIDI_CH4U_WIN(win, targets), target_ptr);
+    HASH_ITER(hash_handle, MPIDI_CH4U_WIN(win, targets), target_ptr, tmp) {
+        HASH_DELETE(hash_handle, MPIDI_CH4U_WIN(win, targets), target_ptr);
         MPL_free(target_ptr);
     }
 
@@ -243,7 +243,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_hash_clear(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_WIN_HASH_CLEAR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_WIN_HASH_CLEAR);
 
-    MPL_HASH_CLEAR(hash_handle, MPIDI_CH4U_WIN(win, targets));
+    HASH_CLEAR(hash_handle, MPIDI_CH4U_WIN(win, targets));
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_WIN_HASH_CLEAR);
 }
@@ -860,7 +860,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_destroy(void *in_map)
 {
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
     MPIDI_CH4U_map_t *map = in_map;
-    MPL_HASH_CLEAR(hh, map->head);
+    HASH_CLEAR(hh, map->head);
     MPL_free(map);
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
 }
@@ -879,7 +879,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_set(void *in_map, uint64_t id, void
     MPIR_Assert(map_entry != NULL);
     map_entry->key = id;
     map_entry->value = val;
-    MPL_HASH_ADD(hh, map->head, key, sizeof(uint64_t), map_entry);
+    HASH_ADD(hh, map->head, key, sizeof(uint64_t), map_entry);
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
 }
 
@@ -893,9 +893,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_erase(void *in_map, uint64_t id)
     MPIDI_CH4U_map_entry_t *map_entry;
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
     map = (MPIDI_CH4U_map_t *) in_map;
-    MPL_HASH_FIND(hh, map->head, &id, sizeof(uint64_t), map_entry);
+    HASH_FIND(hh, map->head, &id, sizeof(uint64_t), map_entry);
     MPIR_Assert(map_entry != NULL);
-    MPL_HASH_DELETE(hh, map->head, map_entry);
+    HASH_DELETE(hh, map->head, map_entry);
     MPL_free(map_entry);
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
 }
@@ -912,7 +912,7 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_map_lookup(void *in_map, uint64_t id)
 
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
     map = (MPIDI_CH4U_map_t *) in_map;
-    MPL_HASH_FIND(hh, map->head, &id, sizeof(uint64_t), map_entry);
+    HASH_FIND(hh, map->head, &id, sizeof(uint64_t), map_entry);
     if (map_entry == NULL)
         rc = MPIDI_CH4U_MAP_NOT_FOUND;
     else

@@ -94,7 +94,7 @@ static cat_table_entry_t *MPIR_T_cat_create(const char *cat_name)
     /* Need not to Strdup cat_name, since cat_table and cat_hash co-exist */
     hash_entry->name = cat_name;
     hash_entry->idx = cat_idx;
-    MPL_HASH_ADD_KEYPTR(hh, cat_hash, hash_entry->name,
+    HASH_ADD_KEYPTR(hh, cat_hash, hash_entry->name,
                     strlen(hash_entry->name), hash_entry);
 
     return cat;
@@ -115,7 +115,7 @@ int MPIR_T_cat_add_pvar(const char *cat_name, int pvar_index)
     if (cat_name == NULL || *cat_name == '\0')
         goto fn_exit;
 
-    MPL_HASH_FIND_STR(cat_hash, cat_name, hash_entry);
+    HASH_FIND_STR(cat_hash, cat_name, hash_entry);
 
     if (hash_entry != NULL) {
         /* Found it, i.e., category already exists */
@@ -149,7 +149,7 @@ int MPIR_T_cat_add_cvar(const char *cat_name, int cvar_index)
     if (cat_name == NULL || *cat_name == '\0')
         goto fn_exit;
 
-    MPL_HASH_FIND_STR(cat_hash, cat_name, hash_entry);
+    HASH_FIND_STR(cat_hash, cat_name, hash_entry);
 
     if (hash_entry != NULL) {
         /* Found it, i.e., category already exists */
@@ -188,7 +188,7 @@ int MPIR_T_cat_add_subcat(const char *parent_name, const char *child_name)
     }
 
     /* Find or create parent */
-    MPL_HASH_FIND_STR(cat_hash, parent_name, hash_entry);
+    HASH_FIND_STR(cat_hash, parent_name, hash_entry);
     if (hash_entry != NULL) {
         /* Found parent in cat_table */
         parent_index = hash_entry->idx;
@@ -199,7 +199,7 @@ int MPIR_T_cat_add_subcat(const char *parent_name, const char *child_name)
     }
 
     /* Find or create child */
-    MPL_HASH_FIND_STR(cat_hash, child_name, hash_entry);
+    HASH_FIND_STR(cat_hash, child_name, hash_entry);
     if (hash_entry != NULL) {
         /* Found child in cat_table */
         child_index = hash_entry->idx;
@@ -235,7 +235,7 @@ int MPIR_T_cat_add_desc(const char *cat_name, const char *cat_desc)
     MPIR_Assert(cat_name);
     MPIR_Assert(cat_desc);
 
-    MPL_HASH_FIND_STR(cat_hash, cat_name, hash_entry);
+    HASH_FIND_STR(cat_hash, cat_name, hash_entry);
 
     if (hash_entry != NULL) {
         /* Found it, i.e., category already exists */
@@ -284,7 +284,7 @@ void MPIR_T_CVAR_REGISTER_impl(
     int cvar_idx;
 
     /* Check whether this is a replicated cvar, whose name is unique. */
-    MPL_HASH_FIND_STR(cvar_hash, name, hash_entry);
+    HASH_FIND_STR(cvar_hash, name, hash_entry);
 
     if (hash_entry != NULL) {
         /* Found it, the cvar already exists */
@@ -332,7 +332,7 @@ void MPIR_T_CVAR_REGISTER_impl(
         /* Need not to Strdup name, since cvar_table and cvar_hash co-exist */
         hash_entry->name =name;
         hash_entry->idx = cvar_idx;
-        MPL_HASH_ADD_KEYPTR(hh, cvar_hash, hash_entry->name,
+        HASH_ADD_KEYPTR(hh, cvar_hash, hash_entry->name,
                         strlen(hash_entry->name), hash_entry);
 
         /* Add the cvar to a category */
@@ -370,7 +370,7 @@ void MPIR_T_PVAR_REGISTER_impl(
     int seq = varclass - MPIR_T_PVAR_CLASS_FIRST;
 
     /* Check whether this is a replicated pvar, whose name is unique per class */
-    MPL_HASH_FIND_STR(pvar_hashs[seq], name, hash_entry);
+    HASH_FIND_STR(pvar_hashs[seq], name, hash_entry);
 
     if (hash_entry != NULL) {
         /* Found it, the pvar already exists */
@@ -407,7 +407,7 @@ void MPIR_T_PVAR_REGISTER_impl(
         /* Need not to Strdup name, since pvar_table and pvar_hashs co-exist */
         hash_entry->name = name;
         hash_entry->idx = pvar_idx;
-        MPL_HASH_ADD_KEYPTR(hh, pvar_hashs[seq], hash_entry->name,
+        HASH_ADD_KEYPTR(hh, pvar_hashs[seq], hash_entry->name,
                         strlen(hash_entry->name), hash_entry);
 
         /* Add the pvar to a category */
