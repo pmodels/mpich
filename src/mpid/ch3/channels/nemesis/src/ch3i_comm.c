@@ -95,9 +95,9 @@ int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param)
 #ifndef ENABLED_SHM_COLLECTIVES
     goto fn_exit;
 #endif
-    
+
     if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
-        MPIR_Collops *cf = comm->coll_fns;
+        MPIR_Collops *cf = comm->coll_fns, **cf_p = NULL;
 
         /* replace previous coll_fns table */
         comm->coll_fns = cf->prev_coll_fns;
@@ -105,13 +105,19 @@ int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param)
         /* free coll_fns if it's no longer used */
         --cf->ref_count;
         if (cf->ref_count == 0) {
-            utarray_erase(coll_fns_array, utarray_eltidx(coll_fns_array, cf), 1);
+            /* Find an element with value `cf`, then erase it from the array */
+            while ( (cf_p = (MPIR_Collops **)utarray_next(coll_fns_array, cf_p)) ) {
+                if (*cf_p == cf) {
+                    utarray_erase(coll_fns_array, utarray_eltidx(coll_fns_array, cf_p), 1);
+                    break;
+                }
+            }
             MPL_free(cf);
         }
             
         if (comm->dev.ch.barrier_vars && OPA_fetch_and_decr_int(&comm->dev.ch.barrier_vars->usage_cnt) == 1) {
             OPA_write_barrier();
-            OPA_store_int(&comm->dev.ch.barrier_vars->context_id, NULL_CONTEXT_ID);
+            OPA_store_int(&comm->dev.ch.barrier_vars->occupied, MPIDI_CH3I_NEM_BARRIER_VAR_EMPTY);
         }
     }
     
@@ -127,33 +133,42 @@ int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param)
 static int alloc_barrier_vars (MPIR_Comm *comm, MPID_nem_barrier_vars_t **vars)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int i;
     int c;
 
-    /* FIXME:  This has a serious design bug.  It assumes that context ids are
-       globally unique (i.e., that if two processes have communicators with the
-       same context id, they're the same communicator), but this is not true.
-       This may result in two different communicators using the same
-       barier_vars.  This code is being left in for now as an example of how to
-       override collective operations. */
-    MPIR_Assert(0);
-
-    for (i = 0; i < MPID_NEM_NUM_BARRIER_VARS; ++i)
-    {
-	c = OPA_cas_int(&MPID_nem_mem_region.barrier_vars[i].context_id, NULL_CONTEXT_ID, comm->context_id);
-        if (c == NULL_CONTEXT_ID || c == comm->context_id)
-        {
-            *vars = &MPID_nem_mem_region.barrier_vars[i];
-	    OPA_write_barrier();
-            OPA_incr_int(&(*vars)->usage_cnt);
-            goto fn_exit;
+    /* Algorithm to find an available barrier_vars:
+       First rank 0 searches for an available slot, then broadcast answer to neighbors */
+    if (comm->rank == 0) {
+        for (i = 0; i < MPID_NEM_NUM_BARRIER_VARS; ++i) {
+            c = OPA_cas_int(&MPID_nem_mem_region.barrier_vars[i].occupied,
+                            MPIDI_CH3I_NEM_BARRIER_VAR_EMPTY,   /* expected old value */
+                            MPIDI_CH3I_NEM_BARRIER_VAR_OCCUPIED /* value to set */);
+            if (c == MPIDI_CH3I_NEM_BARRIER_VAR_EMPTY) {
+                /* This slot was empty */
+                *vars = &MPID_nem_mem_region.barrier_vars[i];
+                OPA_write_barrier();
+                OPA_incr_int(&(*vars)->usage_cnt);
+                break;
+            }
         }
     }
 
-    *vars = NULL;
+    /* Rank 0 broadcasts the available slot number to the neighbors */
+    mpi_errno = MPIR_Bcast_impl(&i, 1, MPI_INT, 0, comm, &errflag);
+    MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+    if (i < MPID_NEM_NUM_BARRIER_VARS)
+        *vars = &MPID_nem_mem_region.barrier_vars[i];
+    else
+        /* No barrier vars avaialble */
+        *vars = NULL;
 
  fn_exit:
     return mpi_errno;
+
+ fn_fail:
+    goto fn_exit;
 }
 
 
@@ -199,6 +214,13 @@ static int barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 
     barrier_vars = comm_ptr->dev.ch.barrier_vars;
 
+    /*
+      Perform the barrier, based on the centralized sense-reversing barrier [1]
+
+      [1] John M. Mellor-Crummey and Michael L. Scott. 1991. Algorithms for
+      scalable synchronization on shared-memory multiprocessors. ACM
+      Trans. Comput. Syst. 9, 1 (February 1991), 21-65.
+    */
     sense = OPA_load_int(&barrier_vars->sig);
     OPA_read_barrier();
 
@@ -211,8 +233,18 @@ static int barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
     }
     else
     {
-        while (OPA_load_int(&barrier_vars->sig) == sense)
+        while (OPA_load_int(&barrier_vars->sig) == sense) {
+            /* Poke progress engine to make progress on other incoming messages */
+            MPID_Progress_state progress_state;
+
+            MPID_Progress_start(&progress_state);
+            mpi_errno = MPID_Progress_poke();
+            if (mpi_errno != MPI_SUCCESS)
+                MPIR_ERR_POP(mpi_errno);
+            MPID_Progress_end(&progress_state);
+
             MPL_sched_yield();
+        }
     }
 
  fn_exit:
@@ -236,7 +268,7 @@ int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region)
     if (MPID_nem_mem_region.local_rank == 0)
         for (i = 0; i < MPID_NEM_NUM_BARRIER_VARS; ++i)
         {
-            OPA_store_int(&barrier_region[i].context_id, NULL_CONTEXT_ID);
+            OPA_store_int(&barrier_region[i].occupied, MPIDI_CH3I_NEM_BARRIER_VAR_EMPTY);
             OPA_store_int(&barrier_region[i].usage_cnt, 0);
             OPA_store_int(&barrier_region[i].cnt, 0);
             OPA_store_int(&barrier_region[i].sig0, 0);
