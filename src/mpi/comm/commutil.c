@@ -8,7 +8,7 @@
 #include "mpicomm.h"
 #include "mpir_info.h"    /* MPIR_Info_free */
 
-#include "mpl_utlist.h"
+#include "utlist.h"
 #include "uthash.h"
 
 /* This is the utility file for comm that contains the basic comm items

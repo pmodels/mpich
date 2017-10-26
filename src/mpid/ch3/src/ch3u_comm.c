@@ -5,7 +5,7 @@
  */
 
 #include "mpidimpl.h"
-#include "mpl_utlist.h"
+#include "utlist.h"
 #if defined HAVE_LIBHCOLL
 #include "../../common/hcoll/hcoll.h"
 #endif

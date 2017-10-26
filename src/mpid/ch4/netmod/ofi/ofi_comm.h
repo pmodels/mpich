@@ -12,7 +12,7 @@
 #define OFI_COMM_H_INCLUDED
 
 #include "ofi_impl.h"
-#include "mpl_utlist.h"
+#include "utlist.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_comm_create_hook

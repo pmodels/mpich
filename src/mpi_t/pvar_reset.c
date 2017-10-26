@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "mpl_utlist.h"
+#include "utlist.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_T_pvar_reset */
 #if defined(HAVE_PRAGMA_WEAK)

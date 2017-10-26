@@ -15,7 +15,7 @@
 #include "ofi_am_impl.h"
 #include "ofi_am_events.h"
 #include "ofi_control.h"
-#include "mpl_utlist.h"
+#include "utlist.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc,
                                                       MPIR_Request * req);

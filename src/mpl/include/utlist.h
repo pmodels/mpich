@@ -5,7 +5,7 @@
  - some configure-time checking for __typeof() support was added
  - intentionally omitted from "mpl.h" in order to require using code to opt-in
  [goodell@ 2010-12-20]
- 
+
  - Added _N (for MPL_LL_ macros) and _NP (for MPL_DL_ and MPL_CDL_ macros)
    variants to each macro.  Thease take additional parameters to specify the
    next or next and prev fields, respectively.  The field name should be used in
@@ -18,7 +18,7 @@
        };
 
    Then, to append an element "my_element" of type my_struct:
-       
+
        MPL_DL_APPEND_NP(my_head, my_element, my_next, my_prev);
 
    For convenience one can define a macro to eliminate the need to specify the
@@ -122,7 +122,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MPL__PREVASGN(elt,list,to,_prev) { char **_alias = (char**)&((list)->_prev); *_alias=(char*)(to); }
 #define MPL__RS(list) { char **_alias = (char**)&(list); *_alias=_tmp; }
 #define MPL__CASTASGN(a,b) { char **_alias = (char**)&(a); *_alias=(char*)(b); }
-#else 
+#else
 #define MPL__SV(elt,list)
 #define MPL__NEXT(elt,list,_next) ((elt)->_next)
 #define MPL__NEXTASGN(elt,list,to,_next) ((elt)->_next)=(to)
@@ -574,4 +574,3 @@ do {                                                                            
 } while(0)
 
 #endif /* !defined(MPL_UTLIST_H_INCLUDED) */
-

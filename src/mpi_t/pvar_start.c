@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "mpl_utlist.h" /* For MPL_DL_FOREACH */
+#include "utlist.h" /* For MPL_DL_FOREACH */
 
 /* -- Begin Profiling Symbol Block for routine MPI_T_pvar_start */
 #if defined(HAVE_PRAGMA_WEAK)

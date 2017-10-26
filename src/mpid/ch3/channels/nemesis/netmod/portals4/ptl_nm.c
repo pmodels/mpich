@@ -5,7 +5,7 @@
  */
 
 #include "ptl_impl.h"
-#include <mpl_utlist.h>
+#include "utlist.h"
 #include "rptl.h"
 
 #define NUM_RECV_BUFS 2
