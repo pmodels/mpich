@@ -84,7 +84,7 @@ static HYD_status cleanup_proxy(struct HYD_proxy *proxy)
         status = HYDT_dmx_deregister_fd(proxy->control_fd);
         HYDU_ERR_POP(status, "error deregistering fd\n");
         close(proxy->control_fd);
-        MPL_HASH_DEL(HYD_server_info.proxy_hash, proxy);
+        HASH_DEL(HYD_server_info.proxy_hash, proxy);
 
         /* Reset the control fd, so when the fd is reused, we don't
          * find the wrong proxy */
@@ -471,7 +471,7 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
 
     /* This will be the control socket for this proxy */
     proxy->control_fd = fd;
-    MPL_HASH_ADD_INT(HYD_server_info.proxy_hash, control_fd, proxy);
+    HASH_ADD_INT(HYD_server_info.proxy_hash, control_fd, proxy);
 
     /* Send out the executable information */
     status = send_exec_info(proxy);
