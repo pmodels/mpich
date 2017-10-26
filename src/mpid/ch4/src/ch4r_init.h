@@ -18,7 +18,7 @@
 #include "ch4r_rma_target_callbacks.h"
 #include "ch4r_rma_origin_callbacks.h"
 #include "mpidig.h"
-#include "mpl_uthash.h"
+#include "uthash.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH4U_init_comm
