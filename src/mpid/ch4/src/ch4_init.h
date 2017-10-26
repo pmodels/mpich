@@ -148,6 +148,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
         MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_job_getid",
                              "**pmi_job_getid %d", pmi_errno);
     }
+#elif defined(USE_PMIX_API)
+    MPIR_Assert(0);
 #else
     pmi_errno = PMI_Init(&has_parent);
 
@@ -417,11 +419,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_universe_size(int *universe_size)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GET_UNIVERSE_SIZE);
 
 
+#ifndef USE_PMIX_API
     pmi_errno = PMI_Get_universe_size(universe_size);
 
     if (pmi_errno != PMI_SUCCESS)
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
                              "**pmi_get_universe_size", "**pmi_get_universe_size %d", pmi_errno);
+#else
+    MPIR_Assert(0);
+#endif
 
     if (*universe_size < 0)
         *universe_size = MPIR_UNIVERSE_SIZE_NOT_AVAILABLE;

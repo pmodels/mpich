@@ -42,3 +42,20 @@
 **pmi_invalid_clique_size %d:PMI_Get_clique_ranks returned an invalid size %d
 **pmi_job_getid:PMI2_Job_GetId failed
 **pmi_job_getid %d:PMI2_Job_GetId returned %d
+#
+# PMIx
+#
+**pmix_init:PMIX_Init failed
+**pmix_init %d:PMIX_Init returned %d
+**pmix_get:PMIx_Get failed
+**pmix_get %d:PMIx_Get returned %d
+**pmix_put:PMIx_Put failed
+**pmix_put %d:PMIx_Put returned %d
+**pmix_commit:PMIx_Commit failed
+**pmix_commit %d:PMIx_Commit returned %d
+**pmix_fence:PMIx_Fence failed
+**pmix_fence %d:PMIx_Fence returned %d
+**pmix_resolve_nodes: PMIx_Resolve_nodes failed
+**pmix_resolve_nodes %d: PMIx_Resolve_nodes returned %d
+**pmix_resolve_peers: PMIx_Resolve_peers failed
+**pmix_resolve_peers %d: PMIx_Resolve_peers returned %d

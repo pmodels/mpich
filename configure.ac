@@ -1805,6 +1805,21 @@ else
     # Make device_name available to subdirs
 fi
 
+PAC_SET_HEADER_LIB_PATH(pmix)
+if test -n "${with_pmix}" -a "${with_pmix}" != "no" ; then
+    # disable built-in PMI and process managers
+    with_pmi="no"
+    with_pm="no"
+    if test "${device_name}" != "ch4" ; then
+        AC_MSG_ERROR([$device_name does not support PMIx])
+    fi
+    PAC_PUSH_FLAG([LIBS])
+    PAC_CHECK_HEADER_LIB_FATAL(pmix, pmix.h, pmix, PMIx_Init)
+    PAC_APPEND_FLAG([-lpmix],[WRAPPER_LIBS])
+    PAC_POP_FLAG([LIBS])
+    AC_DEFINE(USE_PMIX_API, 1, [Define if PMIx API must be used])
+fi
+
 # with-pm
 if test "$with_pm" = "none" ; then
     # add "none" as synonym for "no" to agree with older erroneous docs
