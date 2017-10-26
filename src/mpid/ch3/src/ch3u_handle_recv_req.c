@@ -1949,7 +1949,7 @@ int MPIDI_CH3I_Release_lock(MPIR_Win * win_ptr)
                     }
                     if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, requested_lock) == 1) {
                         /* dequeue entry from lock queue */
-                        MPL_DL_DELETE(win_ptr->target_lock_queue_head, target_lock_entry);
+                        DL_DELETE(win_ptr->target_lock_queue_head, target_lock_entry);
 
                         /* perform this OP */
                         mpi_errno = perform_op_in_lock_queue(win_ptr, target_lock_entry);
@@ -2050,7 +2050,7 @@ int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete(MPIDI_VC_t * vc,
 
         if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, requested_lock) == 1) {
             /* dequeue entry from lock queue */
-            MPL_DL_DELETE(win_ptr->target_lock_queue_head, target_lock_queue_entry);
+            DL_DELETE(win_ptr->target_lock_queue_head, target_lock_queue_entry);
 
             /* perform this OP */
             mpi_errno = perform_op_in_lock_queue(win_ptr, target_lock_queue_entry);

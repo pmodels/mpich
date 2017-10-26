@@ -159,7 +159,7 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
     }
 
     /* Link the handle in its session and return it */
-    MPL_DL_APPEND(session->hlist, hnd);
+    DL_APPEND(session->hlist, hnd);
     *handle = hnd;
     *count = cnt;
 

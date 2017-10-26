@@ -32,9 +32,9 @@ static int comm_created(MPIR_Comm *comm, void *param);
 static int comm_destroyed(MPIR_Comm *comm, void *param);
 
 /* macros and head for list of communicators */
-#define COMM_ADD(comm) MPL_DL_PREPEND_NP(comm_list, comm, dev.next, dev.prev)
-#define COMM_DEL(comm) MPL_DL_DELETE_NP(comm_list, comm, dev.next, dev.prev)
-#define COMM_FOREACH(elt) MPL_DL_FOREACH_NP(comm_list, elt, dev.next, dev.prev)
+#define COMM_ADD(comm) DL_PREPEND_NP(comm_list, comm, dev.next, dev.prev)
+#define COMM_DEL(comm) DL_DELETE_NP(comm_list, comm, dev.next, dev.prev)
+#define COMM_FOREACH(elt) DL_FOREACH_NP(comm_list, elt, dev.next, dev.prev)
 static MPIR_Comm *comm_list = NULL;
 
 typedef struct hook_elt
@@ -200,7 +200,7 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
     comm->dev.is_disconnected = 0;
 
     /* do some sanity checks */
-    MPL_LL_FOREACH(comm->mapper_head, mapper) {
+    LL_FOREACH(comm->mapper_head, mapper) {
         if (mapper->src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
             MPIR_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
                         mapper->dir == MPIR_COMM_MAP_DIR__L2R);
@@ -212,7 +212,7 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
     /* First, handle all the mappers that contribute to the local part
      * of the comm */
     vcrt_size = 0;
-    MPL_LL_FOREACH(comm->mapper_head, mapper) {
+    LL_FOREACH(comm->mapper_head, mapper) {
         if (mapper->dir == MPIR_COMM_MAP_DIR__L2R ||
             mapper->dir == MPIR_COMM_MAP_DIR__R2R)
             continue;
@@ -220,7 +220,7 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
         vcrt_size += map_size(*mapper);
     }
     vcrt_offset = 0;
-    MPL_LL_FOREACH(comm->mapper_head, mapper) {
+    LL_FOREACH(comm->mapper_head, mapper) {
         src_comm = mapper->src_comm;
 
         if (mapper->dir == MPIR_COMM_MAP_DIR__L2R ||
@@ -259,7 +259,7 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
     /* Next, handle all the mappers that contribute to the remote part
      * of the comm (only valid for intercomms) */
     vcrt_size = 0;
-    MPL_LL_FOREACH(comm->mapper_head, mapper) {
+    LL_FOREACH(comm->mapper_head, mapper) {
         if (mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
             mapper->dir == MPIR_COMM_MAP_DIR__R2L)
             continue;
@@ -267,7 +267,7 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
         vcrt_size += map_size(*mapper);
     }
     vcrt_offset = 0;
-    MPL_LL_FOREACH(comm->mapper_head, mapper) {
+    LL_FOREACH(comm->mapper_head, mapper) {
         src_comm = mapper->src_comm;
 
         if (mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
@@ -300,7 +300,7 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
         }
     }
 
-    MPL_LL_FOREACH(create_hooks_head, elt) {
+    LL_FOREACH(create_hooks_head, elt) {
         mpi_errno = elt->hook_fn(comm, elt->param);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);;
     }
@@ -324,7 +324,7 @@ int MPIDI_CH3I_Comm_destroy_hook(MPIR_Comm *comm)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_COMM_DESTROY_HOOK);
 
-    MPL_LL_FOREACH(destroy_hooks_head, elt) {
+    LL_FOREACH(destroy_hooks_head, elt) {
         mpi_errno = elt->hook_fn(comm, elt->param);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
@@ -363,7 +363,7 @@ int MPIDI_CH3U_Comm_register_create_hook(int (*hook_fn)(struct MPIR_Comm *, void
     elt->hook_fn = hook_fn;
     elt->param = param;
     
-    MPL_LL_PREPEND(create_hooks_head, create_hooks_tail, elt);
+    LL_PREPEND(create_hooks_head, create_hooks_tail, elt);
 
  fn_exit:
     MPIR_CHKPMEM_COMMIT();
@@ -392,7 +392,7 @@ int MPIDI_CH3U_Comm_register_destroy_hook(int (*hook_fn)(struct MPIR_Comm *, voi
     elt->hook_fn = hook_fn;
     elt->param = param;
     
-    MPL_LL_PREPEND(destroy_hooks_head, destroy_hooks_tail, elt);
+    LL_PREPEND(destroy_hooks_head, destroy_hooks_tail, elt);
 
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_DESTROY_HOOK);
@@ -414,13 +414,13 @@ static int register_hook_finalize(void *param)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_REGISTER_HOOK_FINALIZE);
 
-    MPL_LL_FOREACH_SAFE(create_hooks_head, elt, tmp) {
-        MPL_LL_DELETE(create_hooks_head, create_hooks_tail, elt);
+    LL_FOREACH_SAFE(create_hooks_head, elt, tmp) {
+        LL_DELETE(create_hooks_head, create_hooks_tail, elt);
         MPL_free(elt);
     }
     
-    MPL_LL_FOREACH_SAFE(destroy_hooks_head, elt, tmp) {
-        MPL_LL_DELETE(destroy_hooks_head, destroy_hooks_tail, elt);
+    LL_FOREACH_SAFE(destroy_hooks_head, elt, tmp) {
+        LL_DELETE(destroy_hooks_head, destroy_hooks_tail, elt);
         MPL_free(elt);
     }
 

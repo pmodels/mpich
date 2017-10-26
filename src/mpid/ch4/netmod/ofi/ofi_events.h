@@ -200,13 +200,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry
 
         MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "SEARCHING HUGE UNEXPECTED LIST: (%d, %d, %llu)", comm_ptr->context_id, MPIDI_OFI_cqe_get_source(wc), (MPIDI_OFI_TAG_MASK & wc->tag)));
 
-        MPL_LL_FOREACH(MPIDI_unexp_huge_recv_head, list_ptr) {
+        LL_FOREACH(MPIDI_unexp_huge_recv_head, list_ptr) {
             if (list_ptr->remote_info.comm_id == comm_ptr->context_id &&
                     list_ptr->remote_info.origin_rank == MPIDI_OFI_cqe_get_source(wc) &&
                     list_ptr->remote_info.tag == (MPIDI_OFI_TAG_MASK & wc->tag)) {
                 MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "MATCHED HUGE UNEXPECTED LIST: (%d, %d, %llu, %d)", comm_ptr->context_id, MPIDI_OFI_cqe_get_source(wc), (MPIDI_OFI_TAG_MASK & wc->tag), rreq->handle));
 
-                MPL_LL_DELETE(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, list_ptr);
+                LL_DELETE(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, list_ptr);
 
                 recv = list_ptr;
                 MPIDI_CH4U_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv);
@@ -232,7 +232,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry
         list_ptr->tag = (MPIDI_OFI_TAG_MASK & wc->tag);
         list_ptr->rreq = rreq;
 
-        MPL_LL_APPEND(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
+        LL_APPEND(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
     }
 
     /* Plug the information for the huge event into the receive request and go

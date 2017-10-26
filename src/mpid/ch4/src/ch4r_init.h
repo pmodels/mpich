@@ -59,10 +59,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_init_comm(MPIR_Comm * comm)
     uelist = MPIDI_CH4U_context_id_to_uelist(comm->context_id);
     if (*uelist) {
         MPIDI_CH4U_rreq_t *curr, *tmp;
-        MPL_DL_FOREACH_SAFE(*uelist, curr, tmp) {
-            MPL_DL_DELETE(*uelist, curr);
+        DL_FOREACH_SAFE(*uelist, curr, tmp) {
+            DL_DELETE(*uelist, curr);
             MPIR_Comm_add_ref(comm);    /* +1 for each entry in unexp_list */
-            MPL_DL_APPEND(MPIDI_CH4U_COMM(comm, unexp_list), curr);
+            DL_APPEND(MPIDI_CH4U_COMM(comm, unexp_list), curr);
         }
         *uelist = NULL;
     }
