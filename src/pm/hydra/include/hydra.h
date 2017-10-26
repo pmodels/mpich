@@ -15,7 +15,7 @@
 #include "hydra_config.h"
 
 #include "mpl.h"
-#include "mpl_uthash.h"
+#include "uthash.h"
 
 extern char *HYD_dbg_prefix;
 
