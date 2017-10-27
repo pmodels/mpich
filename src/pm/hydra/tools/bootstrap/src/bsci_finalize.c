@@ -24,7 +24,7 @@ HYD_status HYDT_bsci_finalize(void)
         HYDU_ERR_POP(status, "RMK returned error while finalizing\n");
     }
 
-    // unset O_NONBLOCK on stdout, stderr
+    /* unset O_NONBLOCK on stdout, stderr */
     status = HYDU_sock_set_block(STDOUT_FILENO);
     HYDU_ERR_POP(status, "error while finalizing stdout\n");
     status = HYDU_sock_set_block(STDERR_FILENO);
