@@ -21,7 +21,7 @@ indent_code()
         `# --comment-indentation33` `# Overwritten below` \
         --declaration-comment-column33 \
         --no-comment-delimiters-on-blank-lines \
-        `# --cuddle-else` `# Overwritten below` \
+        --cuddle-else \
         --continuation-indentation4 \
         --case-indentation0 \
         `# --else-endif-column33` `# Overwritten below` \
@@ -44,7 +44,7 @@ indent_code()
         `# --dont-star-comments` `# Overwritten below` \
         --leave-optional-blank-lines \
         --dont-space-special-semicolon \
-        \
+        `# End of K&R expansion` \
         --line-length100 \
         --else-endif-column1 \
         --start-left-side-of-comments \
@@ -57,7 +57,6 @@ indent_code()
         --brace-indent0 \
         --cuddle-do-while \
         --no-space-after-function-call-names \
-        --dont-break-procedure-type \
         ${file}
 
     rm -f ${file}~
