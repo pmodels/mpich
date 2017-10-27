@@ -168,6 +168,8 @@ int MPIR_Bsend_attach( void *buffer, int buffer_size )
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bsend_detach( void *bufferp, int *size )
 {
+    int mpi_errno = MPI_SUCCESS;
+
     if (BsendBuffer.pending) {
 	/* FIXME: Process pending bsend requests in detach */
 	return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, 
@@ -179,7 +181,8 @@ int MPIR_Bsend_detach( void *bufferp, int *size )
 
 	while (p) {
 	    MPI_Request r = p->request->handle;
-	    MPIR_Wait_impl( &r, MPI_STATUS_IGNORE );
+	    mpi_errno = MPIR_Wait_impl( &r, MPI_STATUS_IGNORE );
+	    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    p = p->next;
 	}
     }
@@ -197,7 +200,10 @@ int MPIR_Bsend_detach( void *bufferp, int *size )
     BsendBuffer.active  = 0;
     BsendBuffer.pending = 0;
 
-    return MPI_SUCCESS;
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 /*
