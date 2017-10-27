@@ -1104,7 +1104,7 @@ int MPII_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
         if (hint->key == NULL)
             continue;
 
-        strncpy(hint_name, hint->key, MPI_MAX_INFO_KEY);
+        MPL_strncpy(hint_name, hint->key, MPI_MAX_INFO_KEY);
 
         HASH_FIND_STR(MPID_hint_fns, hint_name, hint_fn);
 
@@ -1165,7 +1165,7 @@ int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *
     }
 
     hint_elt = MPL_malloc(sizeof(struct MPIR_Comm_hint_fn_elt), MPL_MEM_COMM);
-    strncpy(hint_elt->name, hint_key, MPI_MAX_INFO_KEY);
+    MPL_strncpy(hint_elt->name, hint_key, MPI_MAX_INFO_KEY);
     hint_elt->state = state;
     hint_elt->fn = fn;
 
