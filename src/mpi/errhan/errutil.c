@@ -1885,7 +1885,14 @@ static int checkErrcodeIsValid( int errcode )
     /* If the errcode is a class, then it is valid */
     if (errcode <= MPIR_MAX_ERROR_CLASS_INDEX && errcode >= 0) return 0;
 
-    convertErrcodeToIndexes( errcode, &ring_idx, &ring_id, &generic_idx );
+    if (convertErrcodeToIndexes( errcode, &ring_idx, &ring_id, &generic_idx ) != 0 ) {
+        /* --BEGIN ERROR HANDLING-- */
+        MPL_error_printf(
+            "Invalid error code (%d) (error ring index %d invalid)\n",
+            errcode, ring_idx );
+        /* --END ERROR HANDLING-- */
+    }
+
     MPL_DBG_MSG_FMT(MPIR_DBG_ERRHAND, VERBOSE, (MPL_DBG_FDEST, "code=%#010x ring_idx=%d ring_id=%#010x generic_idx=%d",
                                         errcode, ring_idx, ring_id, generic_idx));
 
