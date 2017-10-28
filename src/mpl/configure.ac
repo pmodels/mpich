@@ -859,7 +859,7 @@ AC_CHECK_FUNCS(backtrace_symbols)
 
 # Check for libbacktrace support
 PAC_PUSH_FLAG([LIBS])
-LIBS="-lbacktrace"
+PAC_PREPEND_FLAG([-lbacktrace],[LIBS])
 AC_LINK_IFELSE([
     AC_LANG_PROGRAM([
 #include <backtrace.h>
@@ -876,10 +876,11 @@ if test "$ac_cv_lib_backtrace" = "yes" ; then
     AC_DEFINE([HAVE_LIBBACKTRACE],[1],[Define to 1 if you have the backtrace header (backtrace.h) and library (-lbacktrace)])
     PAC_PREPEND_FLAG([-lbacktrace],[LIBS])
 fi
+AC_CHECK_DECLS([backtrace_create_state, backtrace_print])
 
 # Check for libunwind support
 PAC_PUSH_FLAG([LIBS])
-LIBS="-lunwind"
+PAC_PREPEND_FLAG([-lunwind],[LIBS])
 AC_LINK_IFELSE([
     AC_LANG_PROGRAM([
 #include<libunwind.h>
