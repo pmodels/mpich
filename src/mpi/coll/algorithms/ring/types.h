@@ -32,6 +32,7 @@ typedef struct {
     union {
         struct {
             bcast_args_t bcast;
+            int segsize; /* segment size for pipelining */
         } bcast;
         struct {
             reduce_args_t reduce;
