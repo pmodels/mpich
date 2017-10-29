@@ -14,6 +14,7 @@ for algo_id in ${algo_ids}; do
         ext_coll_tests+="reduce 10 ${env}"
         ext_coll_tests+="red3 10 ${env}"
         ext_coll_tests+="red4 10 ${env}"
+        ext_coll_tests+="reduce 5 ${env} env=MPIR_CVAR_REDUCE_TREE_SEGSIZE=4096"
     done
 done
 # bcast tests
@@ -32,6 +33,7 @@ for algo_id in ${algo_ids}; do
         ext_coll_tests+="bcast_min_datatypes 10 timeLimit=1200 ${env}${nl}"
         ext_coll_tests+="bcast_comm_world 10 timeLimit=1200 ${env}${nl}"
         ext_coll_tests+="bcastzerotype 10 ${env}${nl}"
+        ext_coll_tests+="bcasttest 10 ${env} env=MPIR_CVAR_BCAST_TREE_SEGSIZE=4096${nl}"
     done
 done
 # Allreduce tests
