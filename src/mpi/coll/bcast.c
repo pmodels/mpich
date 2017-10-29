@@ -26,6 +26,7 @@ cvars:
         1 - Knomial tree based boradcast with non-blocking transport
         2 - Kary tree based broadcast with non-blocking transport
         3 - Knomial_2 tree based boradcast with non-blocking transport
+        4 - Ring broadcast
 
     - name        : MPIR_CVAR_BCAST_KARY_KVAL
       category    : COLLECTIVE
@@ -57,6 +58,16 @@ cvars:
       description : >-
         Segment size (in bytes) for pipelining in tree based bcast algorithms
 
+    - name        : MPIR_CVAR_BCAST_RING_SEGSIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Segment size (in bytes) for pipelining in ring based bcast algorithm
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -66,6 +77,7 @@ enum {
     BCAST_TREE_KNOMIAL_1_NONBLOCKING,
     BCAST_TREE_KARY_NONBLOCKING,
     BCAST_TREE_KNOMIAL_2_NONBLOCKING,
+    BCAST_RING
 };
 
 /* -- Begin Profiling Symbol Block for routine MPI_Bcast */
@@ -123,6 +135,12 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
                                               (int *) errflag, 2,
                                               MPIR_CVAR_BCAST_KNOMIAL_KVAL,
                                               MPIR_CVAR_BCAST_TREE_SEGSIZE);
+            break;
+        case BCAST_RING:
+            mpi_errno = MPIC_MPICH_RING_bcast(buffer, count, datatype, root,
+                                             &(MPIC_COMM(comm_ptr)->mpich_ring),
+                                             (int *)errflag, 
+                                             MPIR_CVAR_BCAST_RING_SEGSIZE);
             break;
         default:
             mpi_errno = MPIC_DEFAULT_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
