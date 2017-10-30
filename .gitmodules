@@ -1,0 +1,3 @@
+[submodule "src/mpid/ch4/netmod/ucx/ucx"]
+	path = src/mpid/ch4/netmod/ucx/ucx
+	url = https://github.com/openucx/ucx
