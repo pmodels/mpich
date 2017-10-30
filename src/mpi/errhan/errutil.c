@@ -1774,6 +1774,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
             break;
 	default:
 	    /* Error: unhandled output type */
+	    MPL_free( fmt );
 	    return 0;
 	    /*
 	    if (maxlen > 0 && str != NULL)
