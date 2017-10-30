@@ -289,12 +289,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_alloc_an
     return req;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_datatype_unmap(MPIDI_OFI_win_datatype_t * dt)
-{
-    if (dt && dt->map && (dt->map != &dt->__map))
-        MPL_free(dt->map);
-}
-
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * req)
 {
     int in_use;
@@ -302,9 +296,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
     MPIR_Object_release_ref(req, &in_use);
     MPIR_Assert(in_use >= 0);
     if (!in_use) {
-        MPIDI_OFI_win_datatype_unmap(&req->noncontig->target_dt);
-        MPIDI_OFI_win_datatype_unmap(&req->noncontig->origin_dt);
-        MPIDI_OFI_win_datatype_unmap(&req->noncontig->result_dt);
         MPL_free(req->noncontig);
         MPIR_Handle_obj_free(&MPIR_Request_mem, (req));
     }
