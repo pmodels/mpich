@@ -548,6 +548,7 @@ int MPIR_Grequest_progress_poke(int count,
     void ** state_ptrs;
     int i;
     int mpi_errno = MPI_SUCCESS;
+    int made_progress = 0;
     MPIR_CHKLMEM_DECL(1);
 
     MPIR_CHKLMEM_MALLOC(state_ptrs, void **, sizeof(void*) * count, mpi_errno, "state_ptrs");
@@ -569,8 +570,15 @@ int MPIR_Grequest_progress_poke(int count,
             {
 		mpi_errno = (request_ptrs[i]->u.ureq.greq_fns->poll_fn)(request_ptrs[i]->u.ureq.greq_fns->grequest_extra_state, &(array_of_statuses[i]));
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+		if (MPIR_Request_is_complete(request_ptrs[i])) made_progress = 1;
 	    }
 	}
+
+	if (!made_progress) {
+	    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+	    MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+	}
+
 fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
