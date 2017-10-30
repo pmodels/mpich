@@ -176,10 +176,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * w
     req = MPIDI_OFI_win_request_alloc_and_init(alloc_iov_size);
     *winreq = req;
 
-    req->noncontig->buf.iov.put_get.originv =
-        (struct iovec *) MPIDI_OFI_aligned_next_iov(&req->noncontig->buf.iov_store[0]);
-    req->noncontig->buf.iov.put_get.targetv =
-        (struct fi_rma_iov *) ((char *) req->noncontig->buf.iov.put_get.originv
+    req->noncontig->iov.put_get.originv =
+        (struct iovec *) MPIDI_OFI_aligned_next_iov(&req->noncontig->iov_store[0]);
+    req->noncontig->iov.put_get.targetv =
+        (struct fi_rma_iov *) ((char *) req->noncontig->iov.put_get.originv
                               + MPIDI_OFI_align_iov_len(o_size * alloc_iovs));
     MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, flags);
     *ep = MPIDI_OFI_WIN(win).ep;
@@ -220,10 +220,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win 
     req = MPIDI_OFI_win_request_alloc_and_init(alloc_iov_size);
     *winreq = req;
 
-    req->noncontig->buf.iov.accumulate.originv =
-        (struct fi_ioc *) MPIDI_OFI_aligned_next_iov(&req->noncontig->buf.iov_store[0]);
-    req->noncontig->buf.iov.accumulate.targetv =
-        (struct fi_rma_ioc *) ((char *) req->noncontig->buf.iov.accumulate.originv
+    req->noncontig->iov.accumulate.originv =
+        (struct fi_ioc *) MPIDI_OFI_aligned_next_iov(&req->noncontig->iov_store[0]);
+    req->noncontig->iov.accumulate.targetv =
+        (struct fi_rma_ioc *) ((char *) req->noncontig->iov.accumulate.originv
                                + MPIDI_OFI_align_iov_len(o_size * alloc_iovs));
     MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, flags);
     *ep = MPIDI_OFI_WIN(win).ep;
@@ -275,13 +275,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
     req = MPIDI_OFI_win_request_alloc_and_init(alloc_iov_size);
     *winreq = req;
 
-    req->noncontig->buf.iov.get_accumulate.originv =
-        (struct fi_ioc *) MPIDI_OFI_aligned_next_iov(&req->noncontig->buf.iov_store[0]);
-    req->noncontig->buf.iov.get_accumulate.targetv =
-        (struct fi_rma_ioc *) ((char *) req->noncontig->buf.iov.get_accumulate.originv
+    req->noncontig->iov.get_accumulate.originv =
+        (struct fi_ioc *) MPIDI_OFI_aligned_next_iov(&req->noncontig->iov_store[0]);
+    req->noncontig->iov.get_accumulate.targetv =
+        (struct fi_rma_ioc *) ((char *) req->noncontig->iov.get_accumulate.originv
                                + MPIDI_OFI_align_iov_len(o_size * alloc_iovs));
-    req->noncontig->buf.iov.get_accumulate.resultv =
-        (struct fi_ioc *) ((char *) req->noncontig->buf.iov.get_accumulate.targetv
+    req->noncontig->iov.get_accumulate.resultv =
+        (struct fi_ioc *) ((char *) req->noncontig->iov.get_accumulate.targetv
                            + MPIDI_OFI_align_iov_len(t_size * alloc_rma_iovs));
     MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, flags);
     *ep = MPIDI_OFI_WIN(win).ep;
@@ -347,8 +347,8 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
 
     size_t cur_o = 0, cur_t = 0;
     while (rc == MPIDI_OFI_SEG_EAGAIN) {
-        originv = &req->noncontig->buf.iov.put_get.originv[cur_o];
-        targetv = &req->noncontig->buf.iov.put_get.targetv[cur_t];
+        originv = &req->noncontig->iov.put_get.originv[cur_o];
+        targetv = &req->noncontig->iov.put_get.targetv[cur_t];
         omax = MPIDI_Global.rma_iov_limit;
         tmax = MPIDI_Global.rma_iov_limit;
         rc = MPIDI_OFI_merge_segment(&p, originv, omax,
@@ -511,8 +511,8 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
 
     size_t cur_o = 0, cur_t = 0;
     while (rc == MPIDI_OFI_SEG_EAGAIN) {
-        originv = &req->noncontig->buf.iov.put_get.originv[cur_o];
-        targetv = &req->noncontig->buf.iov.put_get.targetv[cur_t];
+        originv = &req->noncontig->iov.put_get.originv[cur_o];
+        targetv = &req->noncontig->iov.put_get.targetv[cur_t];
         omax = MPIDI_Global.rma_iov_limit;
         tmax = MPIDI_Global.rma_iov_limit;
 
@@ -925,8 +925,8 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
 
     size_t cur_o = 0, cur_t = 0;
     while (rc == MPIDI_OFI_SEG_EAGAIN) {
-        originv = &req->noncontig->buf.iov.accumulate.originv[cur_o];
-        targetv = &req->noncontig->buf.iov.accumulate.targetv[cur_t];
+        originv = &req->noncontig->iov.accumulate.originv[cur_o];
+        targetv = &req->noncontig->iov.accumulate.targetv[cur_t];
         omax = MPIDI_Global.rma_iov_limit;
         tmax = MPIDI_Global.rma_iov_limit;
         rc = MPIDI_OFI_merge_segment(&p, (struct iovec *) originv, omax,
@@ -1079,9 +1079,9 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
 
     size_t cur_o = 0, cur_t = 0, cur_r = 0;
     while (rc == MPIDI_OFI_SEG_EAGAIN) {
-        originv = &req->noncontig->buf.iov.get_accumulate.originv[cur_o];
-        targetv = &req->noncontig->buf.iov.get_accumulate.targetv[cur_t];
-        resultv = &req->noncontig->buf.iov.get_accumulate.resultv[cur_r];
+        originv = &req->noncontig->iov.get_accumulate.originv[cur_o];
+        targetv = &req->noncontig->iov.get_accumulate.targetv[cur_t];
+        resultv = &req->noncontig->iov.get_accumulate.resultv[cur_r];
         omax = rmax = MPIDI_OFI_FETCH_ATOMIC_IOVECS < 0 ? MPIDI_Global.rma_iov_limit : MPIDI_OFI_FETCH_ATOMIC_IOVECS;
         tmax = MPIDI_OFI_FETCH_ATOMIC_IOVECS < 0 ? MPIDI_Global.rma_iov_limit : MPIDI_OFI_FETCH_ATOMIC_IOVECS;
 
