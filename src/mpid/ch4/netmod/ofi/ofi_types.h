@@ -464,18 +464,6 @@ typedef enum MPIDI_OFI_segment_side {
 } MPIDI_OFI_segment_side_t;
 
 typedef struct {
-    MPIR_Datatype *pointer;
-    MPI_Datatype type;
-    int count;
-    int contig;
-    MPI_Aint true_lb;
-    size_t size;
-    int num_contig;
-    DLOOP_VECTOR *map;
-    DLOOP_VECTOR __map;
-} MPIDI_OFI_win_datatype_t;
-
-typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
@@ -505,9 +493,6 @@ typedef struct {
 } MPIDI_OFI_iovec_array_t;
 
 typedef struct {
-    MPIDI_OFI_win_datatype_t origin_dt;
-    MPIDI_OFI_win_datatype_t target_dt;
-    MPIDI_OFI_win_datatype_t result_dt;
     MPIDI_OFI_iovec_array_t buf;        /* Do not move me, flexible array */
 } MPIDI_OFI_win_noncontig_t;
 
