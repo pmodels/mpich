@@ -122,6 +122,17 @@ for d in $confdb_dirs ; do
     fi
 done
 
+
+########################################################################
+echo
+echo "##########################################"
+echo "## Patching necessary third-party software"
+echo "##########################################"
+echo
+
+( cd src/mpid/ch4/netmod/ucx/ucx && git am --3way ../../../../../../maint/ucx-embed.patch )
+
+
 ########################################################################
 echo
 echo "####################################"
@@ -163,12 +174,9 @@ export do_build_configure
 MAKE=${MAKE-make}
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/mpi/romio src/openpa"
+externals="src/pm/hydra src/mpi/romio src/openpa src/mpid/ch4/netmod/ucx/ucx"
 if [ -e src/mpid/ch4/netmod/ofi/libfabric ]; then
     externals="${externals} src/mpid/ch4/netmod/ofi/libfabric"
-fi
-if [ -e src/mpid/ch4/netmod/ucx/ucx ]; then
-    externals="${externals} src/mpid/ch4/netmod/ucx/ucx"
 fi
 
 # amdirs are the directories that make use of autoreconf
