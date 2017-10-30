@@ -490,10 +490,6 @@ typedef struct {
         } get_accumulate;
     } iov;
     char iov_store[0];          /* Flexible array, do not move */
-} MPIDI_OFI_iovec_array_t;
-
-typedef struct {
-    MPIDI_OFI_iovec_array_t buf;        /* Do not move me, flexible array */
 } MPIDI_OFI_win_noncontig_t;
 
 typedef struct MPIDI_OFI_win_request {
