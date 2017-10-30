@@ -47,21 +47,6 @@ ProgHomeDir() {
 }
 
 ########################################################################
-## Run any local pre-update hooks
-########################################################################
-if test -d maint/hooks/pre ; then
-    for hook in `ls maint/hooks/pre/* 2>/dev/null` ; do
-        if test -x "$hook" ; then
-            echo_n "executing pre-update hook '$hook'... "
-            ./$hook
-            echo done
-        else
-            warn "unable to execute pre-update hook: '$hook'"
-        fi
-    done
-fi
-
-########################################################################
 # This used to be an optionally installed hook to help with git-svn
 # versions of the old SVN repo.  Now that we are using git, this is our
 # mechanism that replaces relative svn:externals paths, such as for
