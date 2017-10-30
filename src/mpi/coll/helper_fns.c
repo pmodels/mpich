@@ -288,7 +288,7 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
-            ATTRIBUTE((fallthrough));
+            break;
         default:
             MPIR_TAG_SET_ERROR_BIT(tag);
     }
@@ -408,7 +408,7 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
-            ATTRIBUTE((fallthrough));
+            break;
         default:
             MPIR_TAG_SET_ERROR_BIT(tag);
     }
@@ -473,7 +473,7 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(sendtag);
-            ATTRIBUTE((fallthrough));
+            break;
         default:
             MPIR_TAG_SET_ERROR_BIT(sendtag);
     }
@@ -637,7 +637,7 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
-            ATTRIBUTE((fallthrough));
+            break;
         default:
             MPIR_TAG_SET_ERROR_BIT(tag);
     }
@@ -679,7 +679,7 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
-            ATTRIBUTE((fallthrough));
+            break;
         default:
             MPIR_TAG_SET_ERROR_BIT(tag);
     }
