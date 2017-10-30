@@ -1,3 +1,6 @@
 [submodule "src/mpid/ch4/netmod/ucx/ucx"]
 	path = src/mpid/ch4/netmod/ucx/ucx
 	url = https://github.com/openucx/ucx
+[submodule "confdb"]
+	path = confdb
+	url = https://github.com/pmodels/confdb
