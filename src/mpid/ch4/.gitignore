@@ -2,6 +2,3 @@
 src/mpid_ch4_net_array.c
 src/ch4_coll_globals_default.c
 include/coll_algo_params.h
-
-# for embedded libfabric
-netmod/ofi/libfabric/
