@@ -1,8 +1,0 @@
-
-Hydra is a process management system for starting parallel jobs. Hydra
-is designed to natively work with existing launcher daemons (such as
-ssh, rsh, fork), as well as natively integrate with resource
-management systems (such as slurm, pbs, sge).
-
-More information about using Hydra can be found here:
-http://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager

@@ -7,3 +7,6 @@
 [submodule "src/mpl"]
 	path = src/mpl
 	url = https://github.com/pmodels/mpl
+[submodule "src/pm/hydra"]
+	path = src/pm/hydra
+	url = https://github.com/pmodels/hydra
