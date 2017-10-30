@@ -430,29 +430,6 @@ typedef struct {
     void *pad;
 } MPIDI_OFI_offset_checker_t;
 
-typedef struct {
-    uintptr_t target_base_addr;
-    uintptr_t origin_base_addr;
-    uintptr_t result_base_addr;
-    size_t target_count;
-    size_t origin_count;
-    size_t result_count;
-    struct iovec *target_iov;
-    struct iovec *origin_iov;
-    struct iovec *result_iov;
-    size_t target_idx;
-    uintptr_t target_addr;
-    uintptr_t target_size;
-    size_t origin_idx;
-    uintptr_t origin_addr;
-    uintptr_t origin_size;
-    size_t result_idx;
-    uintptr_t result_addr;
-    uintptr_t result_size;
-    size_t buf_limit;
-    size_t buf_limit_left;
-} MPIDI_OFI_iovec_state_t;
-
 typedef struct MPIDI_OFI_seg_state {
     DLOOP_Count   buf_limit;        /* Maximum data size in bytes which a single OFI call can handle.
                                      * This value remains constant once seg_state is initialized. */
@@ -528,7 +505,6 @@ typedef struct {
 } MPIDI_OFI_iovec_array_t;
 
 typedef struct {
-    MPIDI_OFI_iovec_state_t iovs;
     MPIDI_OFI_win_datatype_t origin_dt;
     MPIDI_OFI_win_datatype_t target_dt;
     MPIDI_OFI_win_datatype_t result_dt;
