@@ -874,7 +874,7 @@ void MPIR_Type_access_contents(MPI_Datatype type,
                                int **ints_p, MPI_Aint ** aints_p, MPI_Datatype ** types_p)
 {
     int nr_ints, nr_aints, nr_types, combiner;
-    int types_sz, struct_sz, ints_sz, epsilon, align_sz = 8;
+    int types_sz, struct_sz, ints_sz, epsilon, align_sz;
     MPIR_Datatype *dtp;
     MPIR_Datatype_contents *cp;
 
@@ -888,9 +888,9 @@ void MPIR_Type_access_contents(MPI_Datatype type,
     DLOOP_Assert(cp != NULL);
 
 #ifdef HAVE_MAX_STRUCT_ALIGNMENT
-    if (align_sz > HAVE_MAX_STRUCT_ALIGNMENT) {
-        align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
-    }
+    align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
+#else
+    align_sz = 8;
 #endif
 
     struct_sz = sizeof(MPIR_Datatype_contents);

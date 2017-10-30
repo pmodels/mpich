@@ -390,13 +390,13 @@ int MPII_Type_zerolen(MPI_Datatype * newtype)
 void MPII_Datatype_get_contents_ints(MPIR_Datatype_contents * cp, int *user_ints)
 {
     char *ptr;
-    int align_sz = 8, epsilon;
+    int align_sz, epsilon;
     int struct_sz, types_sz;
 
 #ifdef HAVE_MAX_STRUCT_ALIGNMENT
-    if (align_sz > HAVE_MAX_STRUCT_ALIGNMENT) {
-        align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
-    }
+    align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
+#else
+    align_sz = 8;
 #endif
 
     struct_sz = sizeof(MPIR_Datatype_contents);
@@ -427,9 +427,9 @@ void MPII_Datatype_get_contents_aints(MPIR_Datatype_contents * cp, MPI_Aint * us
     int struct_sz, ints_sz, types_sz;
 
 #ifdef HAVE_MAX_STRUCT_ALIGNMENT
-    if (align_sz > HAVE_MAX_STRUCT_ALIGNMENT) {
-        align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
-    }
+    align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
+#else
+    align_sz = 8;
 #endif
 
     struct_sz = sizeof(MPIR_Datatype_contents);
@@ -464,9 +464,9 @@ void MPII_Datatype_get_contents_types(MPIR_Datatype_contents * cp, MPI_Datatype 
     int struct_sz;
 
 #ifdef HAVE_MAX_STRUCT_ALIGNMENT
-    if (align_sz > HAVE_MAX_STRUCT_ALIGNMENT) {
-        align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
-    }
+    align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
+#else
+    align_sz = 8;
 #endif
 
     struct_sz = sizeof(MPIR_Datatype_contents);

@@ -525,16 +525,16 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
                                              const MPI_Aint array_of_aints[],
                                              const MPI_Datatype array_of_types[])
 {
-    int i, contents_size, align_sz = 8, epsilon, mpi_errno;
+    int i, contents_size, align_sz, epsilon, mpi_errno;
     int struct_sz, ints_sz, aints_sz, types_sz;
     MPIR_Datatype_contents *cp;
     MPIR_Datatype *old_dtp;
     char *ptr;
 
 #ifdef HAVE_MAX_STRUCT_ALIGNMENT
-    if (align_sz > HAVE_MAX_STRUCT_ALIGNMENT) {
-        align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
-    }
+    align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
+#else
+    align_sz = 8;
 #endif
 
     struct_sz = sizeof(MPIR_Datatype_contents);
