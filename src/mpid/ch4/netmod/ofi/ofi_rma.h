@@ -673,6 +673,7 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
         mpi_errno = MPIR_Localcopy((char *) win->base + offset,
                                    target_count,
                                    target_datatype, origin_addr, origin_count, origin_datatype);
+        goto fn_exit;
     }
 
     MPIDI_Datatype_check_contig(origin_datatype, origin_contig);
