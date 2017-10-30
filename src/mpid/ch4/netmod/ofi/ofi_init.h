@@ -543,7 +543,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             MPIDI_OFI_init_global_settings(prov_first->fabric_attr->prov_name);
             MPIDI_OFI_init_hints(hints);
             MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, hints, &prov), addrinfo);
-            MPIDI_OFI_CHOOSE_PROVIDER(prov, &prov_use, "No suitable provider provider found");
+            MPIDI_OFI_CHOOSE_PROVIDER(prov, &prov_use, "No suitable provider found");
 
             if (prov_use) {
                 /* If the provider passed the above tests, then run the selection
