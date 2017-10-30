@@ -224,16 +224,6 @@ for my $module (@nem_modules) {
 }
 print("done\n");
 
-# Embed external libraries
-
-# UCX
-print("===> Embedding UCX... ");
-chdir("${expdir}/src/mpid/ch4/netmod/ucx");
-run_cmd("git clone -b v1.2.1 git://github.com/openucx/ucx ucx");
-chdir("ucx");
-run_cmd("git am ${expdir}/maint/ucx-embed.patch");
-print("done\n");
-
 # Create configure
 print("===> Creating configure in the main codebase... ");
 chdir($expdir);
