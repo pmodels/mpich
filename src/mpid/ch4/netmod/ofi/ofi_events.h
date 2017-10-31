@@ -879,6 +879,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_error(int vni_idx, ssize_t ret)
             req = MPIDI_OFI_context_to_request(e.op_context);
             MPIDI_OFI_peek_empty_event(NULL, req);
             break;
+
+        default:
+            MPIR_ERR_SETFATALANDJUMP4(mpi_errno, MPI_ERR_OTHER, "**ofid_poll",
+                                      "**ofid_poll %s %d %s %s", __SHORT_FILE__,
+                                      __LINE__, FCNAME, fi_strerror(e.err));
+            break;
         }
 
         break;
