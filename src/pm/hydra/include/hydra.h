@@ -15,7 +15,7 @@
 #include "hydra_config.h"
 
 #include "mpl.h"
-#include "mpl_uthash.h"
+#include "uthash.h"
 
 extern char *HYD_dbg_prefix;
 
@@ -372,7 +372,7 @@ struct HYD_proxy {
 
     struct HYD_proxy *next;
 
-    MPL_UT_hash_handle hh;
+    UT_hash_handle hh;
 };
 
 /* Global user parameters */

@@ -259,7 +259,7 @@ typedef struct {
 typedef struct {
     uint64_t key;
     void *value;
-    MPL_UT_hash_handle hh;      /* makes this structure hashable */
+    UT_hash_handle hh;      /* makes this structure hashable */
 } MPIDI_CH4U_map_entry_t;
 
 typedef struct MPIDI_CH4U_map_t {
