@@ -201,6 +201,19 @@ MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_find(MPI
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_CH4U_win_target_get
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_get(MPIR_Win * win,
+                                                                            int rank)
+{
+    MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, rank);
+    if (!target_ptr)
+        target_ptr = MPIDI_CH4U_win_target_add(win, rank);
+    return target_ptr;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_CH4U_win_target_delete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -596,7 +609,8 @@ do {                                                                            
         if (MPIDI_CH4U_WIN(win, sync).access_epoch_type != MPIDI_CH4U_EPOTYPE_NONE &&       \
            MPIDI_CH4U_WIN(win, sync).access_epoch_type != MPIDI_CH4U_EPOTYPE_REFENCE &&     \
            !(MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK &&      \
-           target_ptr == NULL))                                         \
+           (target_ptr == NULL || (!MPIR_CVAR_CH4_RMA_MEM_EFFICIENT &&                      \
+           target_ptr->sync.lock.locked == 0))))                        \
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,            \
                                 stmt, "**rmasync");                     \
         MPID_END_ERROR_CHECKS;                                          \
@@ -726,10 +740,7 @@ static inline void MPIDI_win_cmpl_cnts_incr(MPIR_Win * win, int target_rank,
         /* FIXME: now we simply set per-target counters for PSCW, can it be optimized ? */
     case MPIDI_CH4U_EPOTYPE_START:
         {
-            MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, target_rank);
-            if (!target_ptr) {
-                target_ptr = MPIDI_CH4U_win_target_add(win, target_rank);
-            }
+            MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_get(win, target_rank);
 
             MPIR_cc_incr(&target_ptr->local_cmpl_cnts, &c);
             MPIR_cc_incr(&target_ptr->remote_cmpl_cnts, &c);
