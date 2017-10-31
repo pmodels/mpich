@@ -20,6 +20,26 @@
 #include <sys/mman.h>
 #endif /* HAVE_SYS_MMAN_H */
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH4_RMA_MEM_EFFICIENT
+      category    : CH4
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_GROUP_EQ
+      description : >-
+        If true, memory-saving mode is on, per-target object is released
+        at the epoch end call.
+        If false, performance-efficient mode is on, all allocated target
+        objects are cached and freed at win_finalize.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_winlock_getlocallock ATTRIBUTE((unused));
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather ATTRIBUTE((unused));
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_amhdr_set ATTRIBUTE((unused));
@@ -355,7 +375,9 @@ static inline int MPIDI_CH4R_mpi_win_complete(MPIR_Win * win)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     }
 
-    MPIDI_CH4U_win_target_cleanall(win);
+    /* In performance-efficient mode, all allocated targets are freed at win_finalize. */
+    if (MPIR_CVAR_CH4_RMA_MEM_EFFICIENT)
+        MPIDI_CH4U_win_target_cleanall(win);
     MPIDI_CH4U_WIN(win, sync).access_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
     MPIR_Group_release(MPIDI_CH4U_WIN(win, sync).sc.group);
     MPIDI_CH4U_WIN(win, sync).sc.group = NULL;
@@ -503,7 +525,7 @@ static inline int MPIDI_CH4R_mpi_win_lock(int lock_type, int rank, int assert, M
 
     MPIDI_CH4U_LOCK_EPOCH_CHECK_NONE(win, rank, mpi_errno, goto fn_fail);
 
-    MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_add(win, rank);
+    MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_get(win, rank);
 
     MPIDI_CH4U_win_target_sync_lock_t *slock = &target_ptr->sync.lock;
     MPIR_Assert(slock->locked == 0);
@@ -586,7 +608,9 @@ static inline int MPIDI_CH4R_mpi_win_unlock(int rank, MPIR_Win * win)
 
     MPIDI_CH4R_PROGRESS_WHILE(slock->locked != unlocked);
   no_check:
-    MPIDI_CH4U_win_target_delete(win, target_ptr);
+    /* In performance-efficient mode, all allocated targets are freed at win_finalize. */
+    if (MPIR_CVAR_CH4_RMA_MEM_EFFICIENT)
+        MPIDI_CH4U_win_target_delete(win, target_ptr);
 
   fn_exit0:
     MPIR_Assert(MPIDI_CH4U_WIN(win, sync).lock.count > 0);
@@ -1270,7 +1294,9 @@ static inline int MPIDI_CH4R_mpi_win_unlock_all(MPIR_Win * win)
 
     MPIDI_CH4R_PROGRESS_WHILE(MPIDI_CH4U_WIN(win, sync).lockall.allLocked);
   no_check:
-    MPIDI_CH4U_win_target_cleanall(win);
+    /* In performance-efficient mode, all allocated targets are freed at win_finalize. */
+    if (MPIR_CVAR_CH4_RMA_MEM_EFFICIENT)
+        MPIDI_CH4U_win_target_cleanall(win);
     MPIDI_CH4U_WIN(win, sync).access_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
     MPIDI_CH4U_WIN(win, sync).assert_mode = 0;
 
