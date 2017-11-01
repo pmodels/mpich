@@ -164,7 +164,7 @@ my $local_git_clone = "${tdir}/mpich-clone";
 
 # clone git repo
 print("===> Cloning git repo... ");
-run_cmd("git clone ${git_repo} ${local_git_clone}");
+run_cmd("git clone --recursive ${git_repo} ${local_git_clone}");
 print("done\n");
 
 # chdirs to $local_git_clone if valid
