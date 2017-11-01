@@ -2191,7 +2191,7 @@ if test "$enable_fc" = "yes" ; then
 fi
 AM_CONDITIONAL([BUILD_F08_BINDING], [test "$f08_works" = "yes"])
 
-if test -n "$f08_works" ; then
+if test "$f08_works" = "yes" ; then
     status_f08_works=1
     bindings="$bindings f08"
 else
