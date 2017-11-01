@@ -38,7 +38,6 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
         goto fn_exit;
 
-    MPIR_Assert(comm->coll_fns != NULL);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMM_CREATE_HOOK);
     return mpi_errno;

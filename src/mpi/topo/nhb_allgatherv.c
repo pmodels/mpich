@@ -54,18 +54,16 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Neighbor_allgatherv_impl
+#define FUNCNAME MPIR_Neighbor_allgatherv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Neighbor_allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr)
+int MPIR_Neighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Neighbor_allgatherv != NULL);
-    mpi_errno = comm_ptr->coll_fns->Neighbor_allgatherv(sendbuf, sendcount, sendtype,
-                                                        recvbuf, recvcounts, displs, recvtype,
-                                                        comm_ptr);
+    mpi_errno = MPIR_Neighbor_allgatherv_default(sendbuf, sendcount, sendtype,
+                                                 recvbuf, recvcounts, displs,
+                                                 recvtype, comm_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:

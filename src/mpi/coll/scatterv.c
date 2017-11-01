@@ -7,6 +7,28 @@
 
 #include "mpiimpl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_USE_SCATTERV
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Select scatter algorithm:
+            0 - Default scatterv algorithm (old mpir scatterv)
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+enum {
+    SCATTERV_DEFAULT = 0
+};
+
+
 /* -- Begin Profiling Symbol Block for routine MPI_Scatterv */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Scatterv = PMPI_Scatterv
@@ -46,9 +68,6 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 */
 
 /* not declared static because it is called in intercomm. reduce_scatter */
-/* MPIR_Scatterv performs an scatterv using point-to-point messages.
-   This is intended to be used by device-specific implementations of
-   scatterv.  In all other cases MPIR_Scatterv_impl should be used. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scatterv
 #undef FCNAME
@@ -57,127 +76,18 @@ int MPIR_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
                   MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
                   int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
-    int rank, comm_size, mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint extent;
-    int      i, reqs;
-    MPIR_Request **reqarray;
-    MPI_Status *starray;
-    MPIR_CHKLMEM_DECL(2);
-
-    rank = comm_ptr->rank;
-    
-    /* If I'm the root, then scatter */
-    if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
-        ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT))) {
-        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-            comm_size = comm_ptr->local_size;
-        else
-            comm_size = comm_ptr->remote_size;
-
-        MPIR_Datatype_get_extent_macro(sendtype, extent);
-        /* We need a check to ensure extent will fit in a
-         * pointer. That needs extent * (max count) but we can't get
-         * that without looping over the input data. This is at least
-         * a minimal sanity check. Maybe add a global var since we do
-         * loop over sendcount[] in MPI_Scatterv before calling
-         * this? */
-        MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf + extent);
-
-        MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request **, comm_size * sizeof(MPIR_Request *), mpi_errno, "reqarray");
-        MPIR_CHKLMEM_MALLOC(starray, MPI_Status *, comm_size * sizeof(MPI_Status), mpi_errno, "starray");
-
-        reqs = 0;
-        for (i = 0; i < comm_size; i++) {
-            if (sendcounts[i]) {
-                if ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (i == rank)) {
-                    if (recvbuf != MPI_IN_PLACE) {
-                        mpi_errno = MPIR_Localcopy(((char *)sendbuf+displs[rank]*extent), 
-                                                   sendcounts[rank], sendtype,
-                                                   recvbuf, recvcount, recvtype);
-                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                    }
-                }
-                else {
-                    mpi_errno = MPIC_Isend(((char *)sendbuf+displs[i]*extent),
-                                              sendcounts[i], sendtype, i,
-                                              MPIR_SCATTERV_TAG, comm_ptr, &reqarray[reqs++], errflag);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                }
-            }
-        }
-        /* ... then wait for *all* of them to finish: */
-        mpi_errno = MPIC_Waitall(reqs, reqarray, starray, errflag);
-        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) MPIR_ERR_POP(mpi_errno);
-        /* --BEGIN ERROR HANDLING-- */
-        if (mpi_errno == MPI_ERR_IN_STATUS) {
-            for (i = 0; i < reqs; i++) {
-                if (starray[i].MPI_ERROR != MPI_SUCCESS) {
-                    mpi_errno = starray[i].MPI_ERROR;
-                    if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                    }
-                }
-            }
-        }
-        /* --END ERROR HANDLING-- */
-    }
-
-    else if (root != MPI_PROC_NULL) { /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
-        if (recvcount) {
-            mpi_errno = MPIC_Recv(recvbuf,recvcount,recvtype,root,
-                                     MPIR_SCATTERV_TAG,comm_ptr,MPI_STATUS_IGNORE, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
-        }
-    }
-    
-    
-fn_exit:
-    MPIR_CHKLMEM_FREEALL();
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    return mpi_errno;
-fn_fail:
-    goto fn_exit;
-}
-
-/* MPIR_Scatterv_impl should be called by any internal component that
-   would otherwise call MPI_Scatterv.  This differs from MPIR_Scatterv
-   in that this will call the coll_fns version if it exists.  This
-   function replaces NMPI_Scatterv. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scatterv_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts, const int *displs,
-                       MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                       int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
     int mpi_errno = MPI_SUCCESS;
-        
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Scatter != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Scatterv(sendbuf, sendcounts, displs,
-                                                 sendtype, recvbuf, recvcount,
-                                                 recvtype, root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Scatterv(sendbuf, sendcounts, displs, sendtype,
-                                  recvbuf, recvcount, recvtype,
-                                  root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+    int use_coll = MPIR_CVAR_USE_SCATTERV;
+    if(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) /*Currently only the default can handle intercommunicators*/
+        use_coll = 0;
+
+    switch (use_coll) {
+        case SCATTERV_DEFAULT:
+            mpi_errno = MPIC_DEFAULT_Scatterv (sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
+            break;
     }
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
     return mpi_errno;

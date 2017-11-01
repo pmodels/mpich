@@ -23,5 +23,6 @@
 #include "mpl_yield.h"
 #include "mpl_dbg.h"
 #include "mpl_shm.h"
+#include "mpl_math.h"
 
 #endif /* !defined(MPL_H_INCLUDED) */

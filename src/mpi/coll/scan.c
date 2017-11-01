@@ -223,9 +223,6 @@ static int MPIR_Scan_generic (
 
 
 /* not declared static because a machine-specific function may call this one in some cases */
-/* MPIR_Scan performs an scan using point-to-point messages.  This is
-   intended to be used by device-specific implementations of scan.  In
-   all other cases MPIR_Scan_impl should be used. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scan
 #undef FCNAME
@@ -423,38 +420,6 @@ int MPIR_Scan(
   fn_fail:
     goto fn_exit;
 }
-
-/* MPIR_Scan_impl should be called by any internal component that
-   would otherwise call MPI_Scan.  This differs from MPIR_Scan in that
-   this will call the coll_fns version if it exists.  This function
-   replaces NMPI_Scan. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scan_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                   MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Scan != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Scan(sendbuf, recvbuf, count,
-                                             datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype,
-                              op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-        
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
 
 #endif
 

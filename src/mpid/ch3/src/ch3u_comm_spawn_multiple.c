@@ -257,13 +257,13 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 
     if (errcodes != MPI_ERRCODES_IGNORE) {
         MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-        mpi_errno = MPIR_Bcast_impl(&should_accept, 1, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPID_Bcast(&should_accept, 1, MPI_INT, root, comm_ptr, &errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPIR_Bcast_impl(&total_num_processes, 1, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPID_Bcast(&total_num_processes, 1, MPI_INT, root, comm_ptr, &errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         
-        mpi_errno = MPIR_Bcast_impl(errcodes, total_num_processes, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPID_Bcast(errcodes, total_num_processes, MPI_INT, root, comm_ptr, &errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");

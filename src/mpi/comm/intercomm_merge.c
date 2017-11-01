@@ -111,7 +111,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
        value of local_high, which may have changed if both groups
        of processes had the same value for high
     */
-    mpi_errno = MPIR_Bcast_impl( &local_high, 1, MPI_INT, 0, comm_ptr->local_comm, &errflag );
+    mpi_errno = MPID_Bcast( &local_high, 1, MPI_INT, 0, comm_ptr->local_comm, &errflag );
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
@@ -349,7 +349,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
                The Intel test suite checks for this; it is also an easy
                error to make */
 	    acthigh = high ? 1 : 0;   /* Clamp high into 1 or 0 */
-	    mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, &acthigh, 1, MPI_INT,
+        mpi_errno = MPID_Allreduce( MPI_IN_PLACE, &acthigh, 1, MPI_INT,
                                              MPI_SUM, comm_ptr->local_comm, &errflag );
 	    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");

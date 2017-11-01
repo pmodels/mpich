@@ -12,6 +12,7 @@
 #define POSIX_COLL_IMPL_H_INCLUDED
 
 #include "posix_coll_params.h"
+#include "../../../../mpi/coll/include/coll_impl.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_POSIX_Barrier_recursive_doubling
@@ -24,7 +25,7 @@ int MPIDI_POSIX_Barrier_recursive_doubling(MPIR_Comm * comm_ptr,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Barrier_recursive_doubling(comm_ptr, errflag);
+    mpi_errno = MPIC_DEFAULT_Barrier_recursive_doubling(comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -44,7 +45,7 @@ int MPIDI_POSIX_Bcast_binomial(void *buffer,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast_binomial(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIC_DEFAULT_Bcast_binomial(buffer, count, datatype, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -64,7 +65,7 @@ int MPIDI_POSIX_Bcast_scatter_doubling_allgather(void *buffer,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIC_DEFAULT_Bcast_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -84,7 +85,7 @@ int MPIDI_POSIX_Bcast_scatter_ring_allgather(void *buffer,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIC_DEFAULT_Bcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -101,7 +102,7 @@ int MPIDI_POSIX_allreduce_recursive_doubling(const void *sendbuf, void *recvbuf,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Allreduce_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    mpi_errno = MPIC_DEFAULT_Allreduce_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -118,7 +119,7 @@ int MPIDI_POSIX_allreduce_reduce_scatter_allgather(const void *sendbuf, void *re
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Allreduce_reduce_scatter_allgather(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    mpi_errno = MPIC_DEFAULT_Allreduce_reduce_scatter_allgather(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -135,7 +136,7 @@ int MPIDI_POSIX_reduce_redscat_gather(const void *sendbuf, void *recvbuf, int co
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_redscat_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+    mpi_errno = MPIC_DEFAULT_Reduce_redscat_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -152,7 +153,7 @@ int MPIDI_POSIX_reduce_binomial(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+    mpi_errno = MPIC_DEFAULT_Reduce_binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
