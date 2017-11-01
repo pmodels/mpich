@@ -1224,6 +1224,10 @@ elif test "$enable_fc" = yes ; then
     AC_LANG_POP([Fortran])
 fi
 
+if test "$enable_f08" = "yes" ; then
+    PAC_FC_2008_SUPPORT([enable_f08=yes],[enable_f08=no])
+fi
+
 f08dir="#"
 AC_SUBST(f08dir)
 # FIXME if $FROM_MPICH is no, we should test build an MPI F08 program
