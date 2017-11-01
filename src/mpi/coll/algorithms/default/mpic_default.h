@@ -87,4 +87,8 @@ int MPIC_DEFAULT_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendty
 /*Scatterv functions */
 int MPIC_DEFAULT_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 
+/* Ibcast functions */
+int MPIC_DEFAULT_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPI_Request *request);
+int MPIC_DEFAULT_Ibcast_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
+
 #endif /* MPIC_DEFAULT_H_INCLUDED */

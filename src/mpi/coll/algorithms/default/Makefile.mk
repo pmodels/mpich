@@ -25,4 +25,5 @@ mpi_core_sources +=                     				\
     src/mpi/coll/algorithms/default/red_scat.c  	 	\
     src/mpi/coll/algorithms/default/reduce.c   			\
     src/mpi/coll/algorithms/default/scatter.c  			\
-    src/mpi/coll/algorithms/default/scatterv.c
+    src/mpi/coll/algorithms/default/scatterv.c			\
+    src/mpi/coll/algorithms/default/ibcast.c

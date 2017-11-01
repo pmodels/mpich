@@ -672,7 +672,7 @@ int MPIR_Iallgatherv_inter(const void *sendbuf, int sendcount, MPI_Datatype send
     mpi_errno = MPIR_Type_commit_impl(&newtype);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Ibcast_sched(recvbuf, 1, newtype, 0, newcomm_ptr, s);
+    mpi_errno = MPIC_DEFAULT_Ibcast_sched(recvbuf, 1, newtype, 0, newcomm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIR_Type_free_impl(&newtype);

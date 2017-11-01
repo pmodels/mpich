@@ -539,7 +539,7 @@ int MPIR_Iallgather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendt
         /* bcast to right*/
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-            mpi_errno = MPIR_Ibcast_sched(tmp_buf, sendcount*local_size,
+            mpi_errno = MPIC_DEFAULT_Ibcast_sched(tmp_buf, sendcount*local_size,
                                           sendtype, root, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
@@ -549,7 +549,7 @@ int MPIR_Iallgather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendt
         /* receive bcast from right */
         if (recvcount != 0) {
             root = 0;
-            mpi_errno = MPIR_Ibcast_sched(recvbuf, recvcount*remote_size,
+            mpi_errno = MPIC_DEFAULT_Ibcast_sched(recvbuf, recvcount*remote_size,
                                           recvtype, root, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
@@ -559,7 +559,7 @@ int MPIR_Iallgather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendt
         /* receive bcast from left */
         if (recvcount != 0) {
             root = 0;
-            mpi_errno = MPIR_Ibcast_sched(recvbuf, recvcount*remote_size,
+            mpi_errno = MPIC_DEFAULT_Ibcast_sched(recvbuf, recvcount*remote_size,
                                           recvtype, root, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
@@ -569,7 +569,7 @@ int MPIR_Iallgather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendt
         /* bcast to left */
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-            mpi_errno = MPIR_Ibcast_sched(tmp_buf, sendcount*local_size,
+            mpi_errno = MPIC_DEFAULT_Ibcast_sched(tmp_buf, sendcount*local_size,
                                           sendtype, root, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }

@@ -290,7 +290,7 @@ int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
          * "prefulldata" from another leader into "tempbuf" */
 
         if (node_comm != NULL) {
-            mpi_errno = MPIR_Ibcast_sched(tempbuf, count, datatype, 0, node_comm, s);
+            mpi_errno = MPIC_DEFAULT_Ibcast_sched(tempbuf, count, datatype, 0, node_comm, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }

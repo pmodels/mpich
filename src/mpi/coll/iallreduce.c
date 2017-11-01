@@ -52,7 +52,7 @@ int MPIR_Iallreduce_naive(const void *sendbuf, void *recvbuf, int count, MPI_Dat
 
     MPIR_SCHED_BARRIER(s);
 
-    mpi_errno = MPIR_Ibcast_intra(recvbuf, count, datatype, 0, comm_ptr, s);
+    mpi_errno = MPIC_DEFAULT_Ibcast_intra(recvbuf, count, datatype, 0, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
@@ -553,7 +553,7 @@ int MPIR_Iallreduce_inter(const void *sendbuf, void *recvbuf, int count, MPI_Dat
     }
     lcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPIR_Ibcast_sched(recvbuf, count, datatype, 0, lcomm_ptr, s);
+    mpi_errno = MPIC_DEFAULT_Ibcast_sched(recvbuf, count, datatype, 0, lcomm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
@@ -625,7 +625,7 @@ int MPIR_Iallreduce_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datat
 
     /* now broadcast the result among local processes */
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno = MPIR_Ibcast_sched(recvbuf, count, datatype, 0, nc, s);
+        mpi_errno = MPIC_DEFAULT_Ibcast_sched(recvbuf, count, datatype, 0, nc, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
