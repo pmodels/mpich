@@ -35,6 +35,11 @@ const MPIDI_coll_algo_container_t CH4_barrier_intercomm_cnt =
         .id = MPIDI_CH4_barrier_intercomm_id
     };
 
+const MPIDI_coll_algo_container_t CH4_barrier_default_cnt =
+    {
+        .id = MPIDI_CH4_barrier_default_id
+    };
+
 /* Bcast default composition containers initialization*/
 const MPIDI_coll_algo_container_t CH4_bcast_composition_alpha_cnt =
     {
@@ -71,6 +76,12 @@ const MPIDI_coll_algo_container_t CH4_bcast_intercomm_cnt =
         .id = MPIDI_CH4_bcast_intercomm_id
     };
 
+const MPIDI_coll_algo_container_t CH4_bcast_default_cnt =
+    {
+        .id = MPIDI_CH4_bcast_default_id
+    };
+
+
 /* Reduce default composition containers initialization*/
 const MPIDI_coll_algo_container_t CH4_reduce_composition_alpha_cnt =
     {
@@ -94,6 +105,11 @@ const MPIDI_coll_algo_container_t CH4_reduce_composition_beta_cnt =
 const MPIDI_coll_algo_container_t CH4_reduce_intercomm_cnt =
     {
         .id = MPIDI_CH4_reduce_intercomm_id
+    };
+
+const MPIDI_coll_algo_container_t CH4_reduce_default_cnt =
+    {
+        .id = MPIDI_CH4_reduce_default_id
     };
 
 /* Allreduce default composition containers initialization*/
@@ -120,6 +136,11 @@ const MPIDI_coll_algo_container_t CH4_allreduce_composition_beta_cnt =
             {
                 .allreduce = -1
             }
+    };
+
+const MPIDI_coll_algo_container_t CH4_allreduce_default_cnt =
+    {
+        .id = MPIDI_CH4_allreduce_default_id
     };
 
 /* *INDENT-OFF* */

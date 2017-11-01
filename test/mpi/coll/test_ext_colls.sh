@@ -1,0 +1,66 @@
+ext_coll_tests=""
+
+nl='
+'
+testing_env="env=MPIR_CVAR_TEST_MPIR_COLLECTIVES=1"
+env=""
+# reduce tests
+algo_ids="1 2"
+kvalues="3 5"
+for algo_id in ${algo_ids}; do
+    for kval in ${kvalues}; do
+        env="env=MPIR_CVAR_USE_REDUCE=${algo_id} env=MPIR_CVAR_REDUCE_TREE_KVAL=${kval} ${testing_env} ${nl}"
+        ext_coll_tests+="reduce 5 ${env}"
+        ext_coll_tests+="reduce 10 ${env}"
+        ext_coll_tests+="red3 10 ${env}"
+        ext_coll_tests+="red4 10 ${env}"
+        ext_coll_tests+="reduce 5 ${env} env=MPIR_CVAR_REDUCE_TREE_SEGSIZE=4096"
+    done
+done
+# bcast tests
+algo_ids="2 3"
+kvalues="4"
+for algo_id in ${algo_ids}; do
+    for kval in ${kvalues}; do
+        env="env=MPIR_CVAR_USE_BCAST=${algo_id} ${testing_env}"
+        if [ ${algo_id} == 1 ]; then
+            env+="env=MPIR_CVAR_BCAST_KNOMIAL_KVAL=${kval}"
+        else
+            env+="env=MPIR_CVAR_BCAST_KARY_KVAL=${kval}"
+        fi
+        ext_coll_tests+="bcasttest 10 ${env}${nl}"
+        ext_coll_tests+="bcast_full 4 timeLimit=600 ${env}${nl}"
+        ext_coll_tests+="bcast_min_datatypes 10 timeLimit=1200 ${env}${nl}"
+        ext_coll_tests+="bcast_comm_world 10 timeLimit=1200 ${env}${nl}"
+        ext_coll_tests+="bcastzerotype 10 ${env}${nl}"
+        ext_coll_tests+="bcasttest 10 ${env} env=MPIR_CVAR_BCAST_TREE_SEGSIZE=4096${nl}"
+    done
+done
+
+#bcast ring algorithm test
+ext_coll_tests+="bcasttest 10 env=MPIR_CVAR_BCAST_RING_SEGSIZE=4096 env=MPIR_CVAR_USE_BCAST=4 ${testing_env} ${nl}"
+
+# Allreduce tests
+algo_ids="1 2"
+for algo_id in ${algo_ids}; do
+            env="env=MPIR_CVAR_USE_ALLREDUCE=${algo_id} ${testing_env} ${nl}"
+            ext_coll_tests+="allred 4 ${env}"
+            ext_coll_tests+="allred 7 ${env}"
+            ext_coll_tests+="allred 4 arg=100 ${env}"
+            ext_coll_tests+="allredmany 4 ${env}"
+            ext_coll_tests+="allred2 4 ${env}"
+            ext_coll_tests+="allred3 10 ${env}"
+            ext_coll_tests+="allred4 4 ${env}"
+            ext_coll_tests+="allred5 5 ${env}"
+            ext_coll_tests+="allred5 10 ${env}"
+            ext_coll_tests+="allred6 4 ${env}"
+            ext_coll_tests+="allred6 7 ${env}"
+done
+#Alltoall tests
+algo_ids="1 2 3"
+for algo_id in ${algo_ids}; do
+    env="env=MPIR_CVAR_USE_ALLTOALL=${algo_id}$ ${testing_env} {nl}"
+    ext_coll_tests+="alltoall1 8 ${env}"
+done
+# Add more tests
+export ext_coll_tests

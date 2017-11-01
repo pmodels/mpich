@@ -51,18 +51,16 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Neighbor_alltoallv_impl
+#define FUNCNAME MPIR_Neighbor_alltoallv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Neighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[], const int sdispls[], MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr)
+int MPIR_Neighbor_alltoallv(const void *sendbuf, const int sendcounts[], const int sdispls[], MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Neighbor_alltoallv != NULL);
-    mpi_errno = comm_ptr->coll_fns->Neighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype,
-                                                       recvbuf, recvcounts, rdispls, recvtype,
-                                                       comm_ptr);
+    mpi_errno = MPIR_Neighbor_alltoallv_default(sendbuf, sendcounts, sdispls, sendtype,
+                                                recvbuf, recvcounts, rdispls, recvtype,
+                                                comm_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 fn_exit:
     return mpi_errno;

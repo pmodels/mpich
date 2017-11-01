@@ -13,6 +13,10 @@
 #define MPIC_REQUEST_PTR_ARRAY_SIZE 64
 #endif
 
+/* Global data structures for collectives framework */
+MPIC_global_t MPIC_global_instance;
+MPIC_progress_global_t MPIC_progress_global;
+
 /* These functions are used in the implementation of collective
    operations. They are wrappers around MPID send/recv functions. They do
    sends/receives by setting the context offset to

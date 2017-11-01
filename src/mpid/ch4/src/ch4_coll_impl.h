@@ -13,6 +13,7 @@
 
 #include "ch4_coll_params.h"
 #include "coll_algo_params.h"
+#include "../../../mpi/coll/include/coll_impl.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Barrier_composition_alpha
@@ -113,7 +114,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intercomm(MPIR_Comm * comm, MPIR_Errf
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Barrier_inter(comm, errflag);
+    mpi_errno = MPIR_Barrier(comm, errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
@@ -270,7 +271,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intercomm(void *buffer, int count, MPI_
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast_inter(buffer, count, datatype, root, comm, errflag);
+    mpi_errno = MPIR_Bcast(buffer, count, datatype, root, comm, errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
@@ -394,7 +395,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intercomm(const void *sendbuf, void
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Allreduce_inter(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+    mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
@@ -591,7 +592,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intercomm(const void *sendbuf, void *r
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_inter(sendbuf, recvbuf, count, datatype,
+    mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype,
                                   op, root, comm, errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 

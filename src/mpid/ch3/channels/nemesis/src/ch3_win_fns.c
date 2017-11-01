@@ -237,7 +237,7 @@ static int MPIDI_CH3I_SHM_Wins_match(MPIR_Win ** win_ptr, MPIR_Win ** matched_wi
          * this call. */
         base_shm_offs[node_rank] = (MPI_Aint) ((*win_ptr)->base)
             - (MPI_Aint) (shm_win->shm_base_addr);
-        mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
+        mpi_errno = MPID_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                                         base_shm_offs, 1, MPI_AINT, node_comm_ptr, &errflag);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -398,14 +398,14 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
             MPIR_ERR_POP(mpi_errno);
 
         mpi_errno =
-            MPIR_Bcast_impl(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+            MPID_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
                             &errflag);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
         /* wait for other processes to attach to win */
-        mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
+        mpi_errno = MPID_Barrier(node_comm_ptr, &errflag);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -420,7 +420,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
 
         /* get serialized handle from rank 0 and deserialize it */
         mpi_errno =
-            MPIR_Bcast_impl(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+            MPID_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
                             &errflag);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -439,7 +439,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
+        mpi_errno = MPID_Barrier(node_comm_ptr, &errflag);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -455,7 +455,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
     tmp_buf[4 * comm_rank + 2] = (MPI_Aint) disp_unit;
     tmp_buf[4 * comm_rank + 3] = (MPI_Aint) (*win_ptr)->handle;
 
-    mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, tmp_buf, 4, MPI_AINT,
+    mpi_errno = MPID_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, tmp_buf, 4, MPI_AINT,
                                     (*win_ptr)->comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
@@ -472,7 +472,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
     }
 
     /* Make sure that all local processes see the results written by node_rank == 0 */
-    mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
+    mpi_errno = MPID_Barrier(node_comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
@@ -540,7 +540,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
     /* FIXME: This needs to be fixed for heterogeneous systems */
     node_sizes[node_rank] = (MPI_Aint) size;
 
-    mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
+    mpi_errno = MPID_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                                     node_sizes, sizeof(MPI_Aint), MPI_BYTE,
                                     node_comm_ptr, &errflag);
     MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
@@ -586,14 +586,14 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
                 MPIR_ERR_POP(mpi_errno);
 
             mpi_errno =
-                MPIR_Bcast_impl(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+                MPID_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
                                 &errflag);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
             /* wait for other processes to attach to win */
-            mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
+            mpi_errno = MPID_Barrier(node_comm_ptr, &errflag);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -609,7 +609,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
 
             /* get serialized handle from rank 0 and deserialize it */
             mpi_errno =
-                MPIR_Bcast_impl(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+                MPID_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
                                 &errflag);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
@@ -628,7 +628,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
-            mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
+            mpi_errno = MPID_Barrier(node_comm_ptr, &errflag);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -660,14 +660,14 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
                 MPIR_ERR_POP(mpi_errno);
 
             mpi_errno =
-                MPIR_Bcast_impl(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+                MPID_Bcast(serialized_hnd_ptr, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
                                 &errflag);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
             /* wait for other processes to attach to win */
-            mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
+            mpi_errno = MPID_Barrier(node_comm_ptr, &errflag);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -682,7 +682,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
 
             /* get serialized handle from rank 0 and deserialize it */
             mpi_errno =
-                MPIR_Bcast_impl(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+                MPID_Bcast(serialized_hnd, MPL_SHM_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
                                 &errflag);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
@@ -702,7 +702,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
-            mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
+            mpi_errno = MPID_Barrier(node_comm_ptr, &errflag);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");

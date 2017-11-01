@@ -14,3 +14,4 @@ include src/str/Makefile.mk
 include src/thread/Makefile.mk
 include src/timer/Makefile.mk
 include src/shm/Makefile.mk
+include src/math/Makefile.mk

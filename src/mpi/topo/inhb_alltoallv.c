@@ -87,10 +87,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_alltoallv_impl
+#define FUNCNAME MPIR_Ineighbor_alltoallv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[], const int sdispls[], MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Ineighbor_alltoallv(const void *sendbuf, const int sendcounts[], const int sdispls[], MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
@@ -103,11 +103,9 @@ int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[], c
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Ineighbor_alltoallv != NULL);
-    mpi_errno = comm_ptr->coll_fns->Ineighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype,
-                                                        recvbuf, recvcounts, rdispls, recvtype,
-                                                        comm_ptr, s);
+    mpi_errno = MPIR_Ineighbor_alltoallv_default(sendbuf, sendcounts, sdispls, sendtype,
+                                                recvbuf, recvcounts, rdispls, recvtype,
+                                                comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);

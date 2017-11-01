@@ -527,23 +527,20 @@ int MPIR_Iallgather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendt
     newcomm_ptr = comm_ptr->local_comm;
 
     if (sendcount != 0) {
-        MPIR_Assert(newcomm_ptr->coll_fns && newcomm_ptr->coll_fns->Igather_sched);
-        mpi_errno = newcomm_ptr->coll_fns->Igather_sched(sendbuf, sendcount, sendtype,
-                                                   tmp_buf, sendcount, sendtype,
-                                                   0, newcomm_ptr, s);
+        mpi_errno = MPIR_Igather_sched(sendbuf, sendcount, sendtype, tmp_buf,
+                                       sendcount, sendtype, 0, newcomm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 
     /* first broadcast from left to right group, then from right to
        left group */
-    MPIR_Assert(comm_ptr->coll_fns && comm_ptr->coll_fns->Ibcast_sched);
     if (comm_ptr->is_low_group) {
         /* bcast to right*/
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-            mpi_errno = comm_ptr->coll_fns->Ibcast_sched(tmp_buf, sendcount*local_size,
-                                                   sendtype, root, comm_ptr, s);
+            mpi_errno = MPIR_Ibcast_sched(tmp_buf, sendcount*local_size,
+                                          sendtype, root, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
 
@@ -552,8 +549,8 @@ int MPIR_Iallgather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendt
         /* receive bcast from right */
         if (recvcount != 0) {
             root = 0;
-            mpi_errno = comm_ptr->coll_fns->Ibcast_sched(recvbuf, recvcount*remote_size,
-                                                   recvtype, root, comm_ptr, s);
+            mpi_errno = MPIR_Ibcast_sched(recvbuf, recvcount*remote_size,
+                                          recvtype, root, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         MPIR_SCHED_BARRIER(s);
@@ -562,8 +559,8 @@ int MPIR_Iallgather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendt
         /* receive bcast from left */
         if (recvcount != 0) {
             root = 0;
-            mpi_errno = comm_ptr->coll_fns->Ibcast_sched(recvbuf, recvcount*remote_size,
-                                                   recvtype, root, comm_ptr, s);
+            mpi_errno = MPIR_Ibcast_sched(recvbuf, recvcount*remote_size,
+                                          recvtype, root, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
 
@@ -572,8 +569,8 @@ int MPIR_Iallgather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendt
         /* bcast to left */
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-            mpi_errno = comm_ptr->coll_fns->Ibcast_sched(tmp_buf, sendcount*local_size,
-                                                   sendtype, root, comm_ptr, s);
+            mpi_errno = MPIR_Ibcast_sched(tmp_buf, sendcount*local_size,
+                                          sendtype, root, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         MPIR_SCHED_BARRIER(s);
@@ -588,10 +585,28 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_impl
+#define FUNCNAME MPIR_Iallgather_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Iallgather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                          MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        mpi_errno = MPIR_Iallgather_intra(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
+    } else {
+        mpi_errno = MPIR_Iallgather_inter(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
+    }
+
+    return mpi_errno;
+}
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iallgather
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *reqp = NULL;
@@ -605,9 +620,7 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendty
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Iallgather_sched != NULL);
-    mpi_errno = comm_ptr->coll_fns->Iallgather_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
+    mpi_errno = MPIR_Iallgather_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);
