@@ -33,6 +33,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
 int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key, MPIR_Comm ** newcomm_ptr)
 {
     MPIR_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_self_ptr;
     int mpi_errno = MPI_SUCCESS;
 
     /* split out the undefined processes */
@@ -46,10 +47,8 @@ int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key
         goto fn_exit;
     }
 
-    /* The default implementation is to either pass MPI_UNDEFINED or
-     * the local rank as the color (in which case a dup of
-     * MPI_COMM_SELF is returned) */
-    mpi_errno = MPIR_Comm_split_impl(comm_ptr, comm_ptr->rank, key, newcomm_ptr);
+    MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
+    mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, newcomm_ptr);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
