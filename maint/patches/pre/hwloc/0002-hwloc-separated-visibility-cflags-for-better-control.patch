@@ -1,0 +1,48 @@
+From 9ef121467a3d187de2e47a7b6def17dbaa9f1e85 Mon Sep 17 00:00:00 2001
+From: Pavan Balaji <balaji@anl.gov>
+Date: Fri, 13 Oct 2017 16:02:08 -0500
+Subject: [PATCH 2/3] hwloc: separated visibility cflags for better control.
+
+---
+ config/hwloc.m4 | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/config/hwloc.m4 b/config/hwloc.m4
+index cda92d08dfb9..c153e520f888 100644
+--- a/config/hwloc.m4
++++ b/config/hwloc.m4
+@@ -316,9 +316,6 @@ EOF])
+     _HWLOC_C_COMPILER_VENDOR([hwloc_c_vendor])
+     _HWLOC_CHECK_ATTRIBUTES
+     _HWLOC_CHECK_VISIBILITY
+-    HWLOC_CFLAGS="$HWLOC_FLAGS $HWLOC_VISIBILITY_CFLAGS"
+-    AS_IF([test "$HWLOC_VISIBILITY_CFLAGS" != ""],
+-          [AC_MSG_WARN(["$HWLOC_VISIBILITY_CFLAGS" has been added to the hwloc CFLAGS])])
+ 
+     # Make sure the compiler returns an error code when function arg
+     # count is wrong, otherwise sched_setaffinity checks may fail.
+@@ -1179,15 +1176,21 @@ EOF])
+ 
+     AS_IF([test "$hwloc_mode" = "embedded"],
+           [HWLOC_EMBEDDED_CFLAGS=$HWLOC_CFLAGS
++           HWLOC_EMBEDDED_VISIBILITY_CFLAGS=$HWLOC_VISIBILITY_CFLAGS
+            HWLOC_EMBEDDED_CPPFLAGS=$HWLOC_CPPFLAGS
+            HWLOC_EMBEDDED_LDADD='$(HWLOC_top_builddir)/src/libhwloc_embedded.la'
+            HWLOC_EMBEDDED_LIBS=$HWLOC_LIBS
+            HWLOC_LIBS=])
+     AC_SUBST(HWLOC_EMBEDDED_CFLAGS)
++    AC_SUBST(HWLOC_EMBEDDED_VISIBILITY_CFLAGS)
+     AC_SUBST(HWLOC_EMBEDDED_CPPFLAGS)
+     AC_SUBST(HWLOC_EMBEDDED_LDADD)
+     AC_SUBST(HWLOC_EMBEDDED_LIBS)
+ 
++    HWLOC_CFLAGS="$HWLOC_FLAGS $HWLOC_VISIBILITY_CFLAGS $HWLOC_CFLAGS"
++    AS_IF([test "$HWLOC_VISIBILITY_CFLAGS" != ""],
++          [AC_MSG_WARN(["$HWLOC_VISIBILITY_CFLAGS" has been added to the hwloc CFLAGS])])
++
+     # Always generate these files
+     AC_CONFIG_FILES(
+         hwloc_config_prefix[Makefile]
+-- 
+2.14.2
+

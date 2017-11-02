@@ -124,6 +124,9 @@ echo
 # ucx
 ( cd src/mpid/ch4/netmod/ucx/ucx && git am --3way ../../../../../../maint/patches/pre/ucx/*.patch )
 
+# hwloc
+( cd src/hwloc && git am --3way ../../maint/patches/pre/hwloc/*.patch )
+
 
 ########################################################################
 echo
