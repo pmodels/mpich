@@ -121,7 +121,8 @@ echo "## Patching necessary third-party software"
 echo "##########################################"
 echo
 
-( cd src/mpid/ch4/netmod/ucx/ucx && git am --3way ../../../../../../maint/ucx-embed.patch )
+# ucx
+( cd src/mpid/ch4/netmod/ucx/ucx && git am --3way ../../../../../../maint/patches/pre/ucx/*.patch )
 
 
 ########################################################################
@@ -923,7 +924,7 @@ if [ "$do_build_configure" = "yes" ] ; then
                 ifort_patch_requires_rebuild=no
                 if [ $do_bindings = "yes" ] ; then
                     echo_n "Patching libtool.m4 for compatibility with ifort on OSX... "
-                    patch -N -s -l $amdir/confdb/libtool.m4 maint/darwin-ifort.patch
+                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/post/confdb/darwin-ifort.patch
                     if [ $? -eq 0 ] ; then
                         ifort_patch_requires_rebuild=yes
                         # Remove possible leftovers, which don't imply a failure
