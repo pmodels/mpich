@@ -30,9 +30,21 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
 #define FUNCNAME MPIR_Comm_split_type_self
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr)
+int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key, MPIR_Comm ** newcomm_ptr)
 {
+    MPIR_Comm *comm_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
+
+    /* split out the undefined processes */
+    mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
+                                     key, &comm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (split_type == MPI_UNDEFINED) {
+        *newcomm_ptr = NULL;
+        goto fn_exit;
+    }
 
     /* The default implementation is to either pass MPI_UNDEFINED or
      * the local rank as the color (in which case a dup of
@@ -43,6 +55,8 @@ int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcom
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
+    if (comm_ptr)
+        MPIR_Comm_free_impl(comm_ptr);
     return mpi_errno;
 
   fn_fail:
@@ -53,10 +67,22 @@ int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcom
 #define FUNCNAME MPIR_Comm_split_type_node
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_split_type_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcomm_ptr)
+int MPIR_Comm_split_type_node(MPIR_Comm * user_comm_ptr, int split_type, int key, MPIR_Comm ** newcomm_ptr)
 {
+    MPIR_Comm *comm_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
     int color;
+
+    /* split out the undefined processes */
+    mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
+                                     key, &comm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (split_type == MPI_UNDEFINED) {
+        *newcomm_ptr = NULL;
+        goto fn_exit;
+    }
 
     mpi_errno = MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
     if (mpi_errno)
@@ -67,6 +93,8 @@ int MPIR_Comm_split_type_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcom
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
+    if (comm_ptr)
+        MPIR_Comm_free_impl(comm_ptr);
     return mpi_errno;
 
   fn_fail:
@@ -77,13 +105,25 @@ int MPIR_Comm_split_type_node(MPIR_Comm * comm_ptr, int key, MPIR_Comm ** newcom
 #define FUNCNAME MPIR_Comm_split_type
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_split_type(MPIR_Comm * comm_ptr, int split_type, int key,
+int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
                          MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
+    MPIR_Comm *comm_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
 
+    /* split out the undefined processes */
+    mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
+                                     key, &comm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (split_type == MPI_UNDEFINED) {
+        *newcomm_ptr = NULL;
+        goto fn_exit;
+    }
+
     if (split_type == MPI_COMM_TYPE_SHARED) {
-        mpi_errno = MPIR_Comm_split_type_self(comm_ptr, key, newcomm_ptr);
+        mpi_errno = MPIR_Comm_split_type_self(comm_ptr, split_type, key, newcomm_ptr);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -126,12 +166,12 @@ int MPIR_Comm_split_type(MPIR_Comm * comm_ptr, int split_type, int key,
             MPIR_ERR_POP(mpi_errno);
     }
     else {
-        mpi_errno = MPIR_Comm_split_impl(comm_ptr, MPI_UNDEFINED, key, newcomm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, goto fn_fail, "**splittype");
     }
 
   fn_exit:
+    if (comm_ptr)
+        MPIR_Comm_free_impl(comm_ptr);
     return mpi_errno;
 
   fn_fail:
