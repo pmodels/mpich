@@ -346,6 +346,9 @@ if [ "yes" = "$do_ucx" ] ; then
 ( cd src/mpid/ch4/netmod/ucx/ucx && git am --3way ../../../../../../maint/patches/pre/ucx/*.patch )
 fi
 
+# hwloc
+( cd src/hwloc && git am --3way ../../maint/patches/pre/hwloc/*.patch )
+
 
 ########################################################################
 ## Check for the location of autotools
