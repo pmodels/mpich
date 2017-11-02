@@ -150,20 +150,16 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
 
 	    MPIR_Comm_get_ptr(dummycomm, dummycomm_ptr);
 	    *newcomm_ptr = dummycomm_ptr;
-
-	    goto fn_exit;
 #endif
-	    /* fall through to the "not supported" case if ROMIO was not
-	     * enabled for some reason */
 	}
-
-	/* In the mean time, the user passed in COMM_TYPE_NEIGHBORHOOD
-	 * but did not give us an info we know how to work with.
-	 * Throw up our hands and treat it like UNDEFINED.  This will
-	 * result in MPI_COMM_NULL being returned to the user. */
-        mpi_errno = MPIR_Comm_split_impl(comm_ptr, MPI_UNDEFINED, key, newcomm_ptr);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        else {
+            /* In the mean time, the user passed in
+             * COMM_TYPE_NEIGHBORHOOD but did not give us an info we
+             * know how to work with.  Throw up our hands and treat it
+             * like UNDEFINED.  This will result in MPI_COMM_NULL
+             * being returned to the user. */
+            *newcomm_ptr = NULL;
+        }
     }
     else {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_ARG, "**arg");
