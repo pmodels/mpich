@@ -79,8 +79,9 @@ confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
 confdb_dirs="${confdb_dirs} test/mpi/confdb"
 
-# hydra's copy of mpl
+# hydra's copies of mpl and hwloc
 sync_external src/mpl src/pm/hydra/mpl
+sync_external src/hwloc src/pm/hydra/tools/topo/hwloc/hwloc
 
 # ROMIO's copy of mpl
 sync_external src/mpl src/mpi/romio/mpl
@@ -319,7 +320,7 @@ done
 ########################################################################
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/mpi/romio src/openpa"
+externals="src/pm/hydra src/mpi/romio src/openpa src/hwloc"
 
 if [ "yes" = "$do_izem" ] ; then
     externals="${externals} src/izem"

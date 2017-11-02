@@ -602,6 +602,8 @@ AC_ARG_ENABLE(dbg-nolocal, AC_HELP_STRING([--enable-dbg-nolocal], [enables debug
 AC_ARG_ENABLE(dbg-localoddeven, AC_HELP_STRING([--enable-dbg-localoddeven], [enables debugging mode where shared-memory communication is enabled only between even processes or odd processes on a node]),
     AC_DEFINE(ENABLED_ODD_EVEN_CLIQUES, 1, [Define to enable debugging mode where shared-memory communication is done only between even procs or odd procs]))
 
+AC_CANONICAL_TARGET
+
 # Find a C compiler.
 # We also need to do this before the F77 and FC test to ensure that we
 # find the C preprocessor reliably.
@@ -619,6 +621,10 @@ if test "$pac_cross_compiling" = "yes" -a "$ac_cv_prog_cc_cross" = "no" ; then
     ac_cv_prog_cxx_cross=yes
 fi
 PAC_POP_FLAG([CFLAGS])
+
+# also needed by hwloc in embedded mode, must also come early for expansion
+# ordering reasons
+AC_USE_SYSTEM_EXTENSIONS
 
 dnl now that autoconf and core compilers are setup, init automake and libtool
 dnl
@@ -1395,6 +1401,86 @@ if test "$enable_izem" != "no" && test "$enable_izem" != "none"; then
         zmlibdir="-L${with_zm_prefix}/lib"
     fi
 fi
+
+
+# ----------------------------------------------------------------------------
+# HWLOC
+# ----------------------------------------------------------------------------
+# Allow the user to override the hwloc location (from embedded to user
+# path)
+# HWLOC
+AC_ARG_WITH([hwloc-prefix],
+            [AS_HELP_STRING([[--with-hwloc-prefix[=DIR]]],
+                            [use the HWLOC library installed in DIR,
+                             rather than the one included in src/hwloc.  Pass
+                             "embedded" to force usage of the HWLOC source
+                             distributed with MPICH.])],
+            [],dnl action-if-given
+            [with_hwloc_prefix=embedded]) dnl action-if-not-given
+hwlocsrcdir=""
+AC_SUBST([hwlocsrcdir])
+hwloclibdir=""
+AC_SUBST([hwloclibdir])
+hwloclib=""
+AC_SUBST([hwloclib])
+
+# Unconditionally include the hwloc macros, even if we are using an
+# external hwloc (or hwloc is disabled). This is needed for the
+# AM_CONDITIONALS that we will set later.
+m4_include([src/hwloc/config/hwloc.m4])
+m4_include([src/hwloc/config/hwloc_check_attributes.m4])
+m4_include([src/hwloc/config/hwloc_check_visibility.m4])
+m4_include([src/hwloc/config/hwloc_check_vendor.m4])
+m4_include([src/hwloc/config/hwloc_components.m4])
+m4_include([src/hwloc/config/hwloc_pkg.m4])
+
+if test "$with_hwloc_prefix" = "embedded" ; then
+   HWLOC_SETUP_CORE([src/hwloc],[have_hwloc=yes],[have_hwloc=no],[1])
+   # Only build hwloc in embedded mode
+   if test "$have_hwloc" = "yes" ; then
+      use_embedded_hwloc=yes
+      CFLAGS="$HWLOC_EMBEDDED_CFLAGS $CFLAGS"
+      CPPFLAGS="$HWLOC_EMBEDDED_CPPFLAGS $CPPFLAGS"
+      LIBS="$HWLOC_EMBEDDED_LIBS $LIBS"
+      hwlocsrcdir="src/hwloc"
+      hwloclib="src/hwloc/src/libhwloc_embedded.la"
+   fi
+else
+   AC_CHECK_HEADERS([hwloc.h])
+   # hwloc_topology_set_pid was added in hwloc-1.0.0, which is our
+   # minimum required version
+   AC_CHECK_LIB([hwloc],[hwloc_topology_set_pid])
+   AC_MSG_CHECKING([if non-embedded hwloc works])
+   if test "$ac_cv_header_hwloc_h" = "yes" -a "$ac_cv_lib_hwloc_hwloc_topology_set_pid" = "yes" ; then
+      have_hwloc=yes
+   else
+      have_hwloc=no
+   fi
+   AC_MSG_RESULT([$have_hwloc])
+
+   # FIXME: Disable hwloc on Cygwin for now. The hwloc package,
+   # atleast as of 1.0.2, does not install correctly on Cygwin
+   AS_CASE([$host], [*-*-cygwin], [have_hwloc=no])
+
+   if test "$have_hwloc" = "yes" ; then
+      hwloclib="-lhwloc"
+      if test -d ${with_hwloc_prefix}/lib64 ; then
+         PAC_APPEND_FLAG([-L${with_hwloc_prefix}/lib64],[WRAPPER_LDFLAGS])
+         hwloclibdir="-L${with_hwloc_prefix}/lib64"
+      else
+	 hwloclibdir="-L${with_hwloc_prefix}/lib"
+      fi
+   fi
+fi
+
+if test "$have_hwloc" = "yes" ; then
+   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
+fi
+
+HWLOC_DO_AM_CONDITIONALS
+AM_CONDITIONAL([have_hwloc], [test "${have_hwloc}" = "yes"])
+AM_CONDITIONAL([use_embedded_hwloc], [test "${use_embedded_hwloc}" = "yes"])
+
 
 # ----------------------------------------------------------------------------
 # Threads
