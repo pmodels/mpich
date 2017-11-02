@@ -21,7 +21,7 @@ algo_ids="2 3"
 kvalues="4"
 for algo_id in ${algo_ids}; do
     for kval in ${kvalues}; do
-        env="env=MPIR_CVAR_USE_BCAST=${algo_id} ${testing_env}"
+        env="env=MPIR_CVAR_USE_BCAST=${algo_id} ${testing_env} "
         if [ ${algo_id} == 1 ]; then
             env+="env=MPIR_CVAR_BCAST_KNOMIAL_KVAL=${kval}"
         else
