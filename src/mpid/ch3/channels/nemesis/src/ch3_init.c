@@ -23,10 +23,21 @@ static int nemesis_initialized = 0;
 #define FUNCNAME split_type
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int split_type(MPIR_Comm * comm_ptr, int stype, int key,
+static int split_type(MPIR_Comm * user_comm_ptr, int stype, int key,
                       MPIR_Info *info_ptr, MPIR_Comm ** newcomm_ptr)
 {
+    MPIR_Comm *comm_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, stype == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
+                                     key, &comm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (stype == MPI_UNDEFINED) {
+        *newcomm_ptr = NULL;
+        goto fn_exit;
+    }
 
     if (stype != MPI_COMM_TYPE_SHARED) {
         /* we don't know how to handle other split types; hand it back
@@ -36,15 +47,17 @@ static int split_type(MPIR_Comm * comm_ptr, int stype, int key,
     }
 
     if (MPIDI_CH3I_Shm_supported()) {
-        mpi_errno = MPIR_Comm_split_type_node(comm_ptr, key, newcomm_ptr);
+        mpi_errno = MPIR_Comm_split_type_node(comm_ptr, stype, key, newcomm_ptr);
     }
     else {
-        mpi_errno = MPIR_Comm_split_type_self(comm_ptr, key, newcomm_ptr);
+        mpi_errno = MPIR_Comm_split_type_self(comm_ptr, stype, key, newcomm_ptr);
     }
 
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
+    if (comm_ptr)
+        MPIR_Comm_free_impl(comm_ptr);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
