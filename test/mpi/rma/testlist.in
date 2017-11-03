@@ -143,7 +143,7 @@ atomic_rmw_gacc 3
 atomic_get 3 mpiversion=3.0 timeLimit=300
 aint 2 mpiversion=3.1
 acc-pairtype 2
-manyget 2
+manyget 2 timeLimit=300
 derived-acc-flush_local 3 mpiversion=3.0
 large-acc-flush_local 3 mpiversion=3.0
 large-small-acc 2
