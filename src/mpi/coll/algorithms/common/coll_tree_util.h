@@ -153,8 +153,8 @@ MPL_STATIC_INLINE_PREFIX void COLL_tree_knomial_init(int rank, int nranks, int k
     for (i = time; i < maxtime; i++) {
         for (j = 1; j < k; j++) {
             if (crank < nranks) {
-                MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"adding child %d to rank %d\n", (crank + root) % nranks, rank);
-                COLL_tree_add_child(ct, (crank + root) % nranks));
+                MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"adding child %d to rank %d\n", (crank + root) % nranks, rank));
+                COLL_tree_add_child(ct, (crank + root) % nranks);
             }
             crank += COLL_ipow(k, maxtime - i - 1);
         }
