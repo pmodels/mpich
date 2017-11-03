@@ -14,6 +14,14 @@
    - Test failures differ based on experimental setup and network
      support built in.
 
+### OS/X
+
+ * C++ bindings - Exception handling in C++ bindings is broken because
+   of a bug in libc++ (see
+   https://github.com/android-ndk/ndk/issues/289).  You can workaround
+   this issue by explicitly linking your application to libstdc++
+   instead (e.g., mpicxx -o foo foo.cxx -lstdc++).
+
 ### Solaris compilers
 
  * Compilation on solaris will freeze when MPICH is configured with 
