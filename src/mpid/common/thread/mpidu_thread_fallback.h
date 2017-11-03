@@ -9,6 +9,11 @@
 
 #include "opa_primitives.h"
 
+#if defined(ENABLE_IZEM_SYNC)
+#include "lock/zm_lock.h"
+#include "cond/zm_cond.h"
+#endif
+
 /* some important critical section names:
  *   GLOBAL - entered/exited at beginning/end of (nearly) every MPI_ function
  *   INIT - entered before MPID_Init and exited near the end of MPI_Init(_thread)
@@ -58,12 +63,20 @@ g * MPI_FINALIZED, MPI_GET_COUNT, MPI_GET_ELEMENTS, MPI_GRAPH_GET,
  * state.  Such situations should be avoided where possible.
  */
 
+#if !defined(ENABLE_IZEM_SYNC)
 typedef struct {
     MPL_thread_mutex_t mutex;
     OPA_int_t num_queued_threads;
 } MPIDU_Thread_mutex_t;
-
 typedef MPL_thread_cond_t  MPIDU_Thread_cond_t;
+#else
+typedef struct {
+    zm_lock_t mutex;
+    OPA_int_t num_queued_threads;
+} MPIDU_Thread_mutex_t;
+typedef zm_cond_t  MPIDU_Thread_cond_t;
+#endif
+
 typedef MPL_thread_id_t    MPIDU_Thread_id_t;
 typedef MPL_thread_tls_t   MPIDU_Thread_tls_t;
 typedef MPL_thread_func_t  MPIDU_Thread_func_t;
@@ -300,6 +313,70 @@ M*/
         MPIR_Assert(*err_ptr_ == 0);                                    \
     } while (0)
 
+/* Internal utility layer to choose between MPL and Izem */
+
+#if !defined(ENABLE_IZEM_SYNC) /* Use the MPL interface*/
+
+#define MPIDUI_thread_mutex_create(mutex_ptr_, err_ptr_)                \
+    MPL_thread_mutex_create(mutex_ptr_, err_ptr_)
+#define MPIDUI_thread_mutex_destroy(mutex_ptr_, err_ptr_)               \
+    MPL_thread_mutex_destroy(mutex_ptr_, err_ptr_)
+#define MPIDUI_thread_mutex_lock(mutex_ptr_, err_ptr_)                  \
+    MPL_thread_mutex_lock(mutex_ptr_, err_ptr_)
+#define MPIDUI_thread_mutex_unlock(mutex_ptr_, err_ptr_)                \
+    MPL_thread_mutex_unlock(mutex_ptr_, err_ptr_)
+#define MPIDUI_thread_cond_create(cond_ptr_, err_ptr_)                  \
+    MPL_thread_cond_create(cond_ptr_, err_ptr_)
+#define MPIDUI_thread_cond_destroy(cond_ptr_, err_ptr_)                 \
+    MPL_thread_cond_destroy(cond_ptr_, err_ptr_)
+#define MPIDUI_thread_cond_wait(cond_ptr_, mutex_ptr_, err_ptr_)        \
+    MPL_thread_cond_wait(cond_ptr_, mutex_ptr_, err_ptr_)
+#define MPIDUI_thread_cond_signal(cond_ptr_, err_ptr_)                  \
+    MPL_thread_cond_signal(cond_ptr_, err_ptr_)
+#define MPIDUI_thread_cond_broadcast(cond_ptr_, err_ptr_)               \
+    MPL_thread_cond_broadcast(cond_ptr_, err_ptr_)
+
+#else /* Use the Izem interface */
+
+#define MPIDUI_thread_mutex_create(mutex_ptr_, err_ptr_)                \
+do {                                                                    \
+    *err_ptr_ = zm_lock_init(mutex_ptr_);                               \
+} while (0)
+#define MPIDUI_thread_mutex_destroy(mutex_ptr_, err_ptr_)               \
+do {                                                                    \
+    *err_ptr_ = zm_lock_destroy(mutex_ptr_);                            \
+} while (0)
+#define MPIDUI_thread_mutex_lock(mutex_ptr_, err_ptr_)                  \
+do {                                                                    \
+    *err_ptr_ = zm_lock_acquire(mutex_ptr_);                            \
+} while (0)
+#define MPIDUI_thread_mutex_unlock(mutex_ptr_, err_ptr_)                \
+do {                                                                    \
+    *err_ptr_ = zm_lock_release(mutex_ptr_);                            \
+} while (0)
+#define MPIDUI_thread_cond_create(cond_ptr_, err_ptr_)                  \
+do {                                                                    \
+    *err_ptr_ = zm_cond_init(cond_ptr_);                                \
+} while (0)
+#define MPIDUI_thread_cond_destroy(cond_ptr_, err_ptr_)                 \
+do {                                                                    \
+    *err_ptr_ = zm_cond_destroy(cond_ptr_);                             \
+} while (0)
+#define MPIDUI_thread_cond_wait(cond_ptr_, mutex_ptr_, err_ptr_)        \
+do {                                                                    \
+    *err_ptr_ = zm_cond_wait(cond_ptr_, mutex_ptr_);                    \
+} while (0)
+#define MPIDUI_thread_cond_signal(cond_ptr_, err_ptr_)                  \
+do {                                                                    \
+    *err_ptr_ = zm_cond_signal(cond_ptr_);                              \
+} while (0)
+#define MPIDUI_thread_cond_broadcast(cond_ptr_, err_ptr_)               \
+do {                                                                    \
+    *err_ptr_ = zm_cond_bcast(cond_ptr_);                               \
+} while (0)
+
+#endif  /* ENABLE_IZEM_SYNC */
+
 /*
  *    Mutexes
  */
@@ -314,9 +391,9 @@ M*/
 #define MPIDU_Thread_mutex_create(mutex_ptr_, err_ptr_)                 \
     do {                                                                \
         OPA_store_int(&(mutex_ptr_)->num_queued_threads, 0);            \
-        MPL_thread_mutex_create(&(mutex_ptr_)->mutex, err_ptr_);        \
+        MPIDUI_thread_mutex_create(&(mutex_ptr_)->mutex, err_ptr_);        \
         MPIR_Assert(*err_ptr_ == 0);                                    \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"Created MPL_thread_mutex %p", (mutex_ptr_)); \
+        MPL_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"Created MPIDUI_thread_mutex %p", (mutex_ptr_)); \
     } while (0)
 
 /*@
@@ -330,8 +407,8 @@ M*/
 @*/
 #define MPIDU_Thread_mutex_destroy(mutex_ptr_, err_ptr_)                \
     do {                                                                \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to destroy MPL_thread_mutex %p", (mutex_ptr_)); \
-        MPL_thread_mutex_destroy(&(mutex_ptr_)->mutex, err_ptr_);       \
+        MPL_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to destroy MPIDUI_thread_mutex %p", (mutex_ptr_)); \
+        MPIDUI_thread_mutex_destroy(&(mutex_ptr_)->mutex, err_ptr_);       \
         MPIR_Assert(*err_ptr_ == 0);                                    \
     } while (0)
 
@@ -344,10 +421,10 @@ M*/
 #define MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_)                   \
     do {                                                                \
         OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPL_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
-        MPL_thread_mutex_lock(&(mutex_ptr_)->mutex, err_ptr_);          \
+        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDUI_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
+        MPIDUI_thread_mutex_lock(&(mutex_ptr_)->mutex, err_ptr_);          \
         MPIR_Assert(*err_ptr_ == 0);                                    \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPL_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
+        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDUI_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
         OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                \
     } while (0)
 
@@ -359,7 +436,7 @@ M*/
 @*/
 #define MPIDU_Thread_mutex_unlock(mutex_ptr_, err_ptr_)                 \
     do {                                                                \
-        MPL_thread_mutex_unlock(&(mutex_ptr_)->mutex, err_ptr_);        \
+        MPIDUI_thread_mutex_unlock(&(mutex_ptr_)->mutex, err_ptr_);        \
         MPIR_Assert(*err_ptr_ == 0);                                    \
     } while (0)
 
@@ -376,9 +453,9 @@ M*/
 @*/
 #define MPIDU_Thread_cond_create(cond_ptr_, err_ptr_)                   \
     do {                                                                \
-        MPL_thread_cond_create(cond_ptr_, err_ptr_);                    \
+        MPIDUI_thread_cond_create(cond_ptr_, err_ptr_);                    \
         MPIR_Assert(*err_ptr_ == 0);                                    \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"Created MPL_thread_cond %p", (cond_ptr_)); \
+        MPL_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"Created MPIDUI_thread_cond %p", (cond_ptr_)); \
     } while (0)
 
 /*@
@@ -393,8 +470,8 @@ M*/
 @*/
 #define MPIDU_Thread_cond_destroy(cond_ptr_, err_ptr_)                  \
     do {                                                                \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to destroy MPL_thread_cond %p", (cond_ptr_)); \
-        MPL_thread_cond_destroy(cond_ptr_, err_ptr_);                   \
+        MPL_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to destroy MPIDUI_thread_cond %p", (cond_ptr_)); \
+        MPIDUI_thread_cond_destroy(cond_ptr_, err_ptr_);                   \
         MPIR_Assert(*err_ptr_ == 0);                                    \
     } while (0)
 
@@ -416,7 +493,7 @@ M*/
     do {                                                                \
         OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                \
         MPL_DBG_MSG_FMT(MPIR_DBG_THREAD,TYPICAL,(MPL_DBG_FDEST,"Enter cond_wait on cond=%p mutex=%p",(cond_ptr_),&(mutex_ptr_)->mutex)); \
-        MPL_thread_cond_wait(cond_ptr_, &(mutex_ptr_)->mutex, err_ptr_); \
+        MPIDUI_thread_cond_wait(cond_ptr_, &(mutex_ptr_)->mutex, err_ptr_); \
         MPIR_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
                             ("cond_wait failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
         MPL_DBG_MSG_FMT(MPIR_DBG_THREAD,TYPICAL,(MPL_DBG_FDEST,"Exit cond_wait on cond=%p mutex=%p",(cond_ptr_),&(mutex_ptr_)->mutex)); \
@@ -431,8 +508,8 @@ M*/
 @*/
 #define MPIDU_Thread_cond_broadcast(cond_ptr_, err_ptr_)                \
     do {                                                                \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to cond_broadcast on MPL_thread_cond %p", (cond_ptr_)); \
-        MPL_thread_cond_broadcast(cond_ptr_, err_ptr_);                 \
+        MPL_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to cond_broadcast on MPIDUI_thread_cond %p", (cond_ptr_)); \
+        MPIDUI_thread_cond_broadcast(cond_ptr_, err_ptr_);                 \
         MPIR_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
                             ("cond_broadcast failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
     } while (0)
@@ -445,8 +522,8 @@ M*/
 @*/
 #define MPIDU_Thread_cond_signal(cond_ptr_, err_ptr_)                   \
     do {                                                                \
-        MPL_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to cond_signal on MPL_thread_cond %p", (cond_ptr_)); \
-        MPL_thread_cond_signal(cond_ptr_, err_ptr_);                    \
+        MPL_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to cond_signal on MPIDUI_thread_cond %p", (cond_ptr_)); \
+        MPIDUI_thread_cond_signal(cond_ptr_, err_ptr_);                    \
         MPIR_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
                             ("cond_signal failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
     } while (0)
