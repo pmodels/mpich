@@ -53,11 +53,11 @@ int MPI_T_pvar_get_num(int *num_pvar)
     /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_ARGNULL(num_pvar, "num_pvar", mpi_errno);
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
