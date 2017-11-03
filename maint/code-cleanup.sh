@@ -83,7 +83,7 @@ recursive=0
 got_file=0
 debug=
 ignore=0
-ignore_list="__I_WILL_NEVER_FIND_YOU__"
+ignore_list="src/mpid/ch3|confdb/|doc/|src/mpl/|src/pm/hydra/|src/mpid/ch4/netmod/ofi/libfabric/|src/mpid/ch4/netmod/ucx/ucx/"
 for arg in $@; do
     if [ "$ignore" = "1" ] ; then
 	ignore_list="$ignore_list|$arg"
