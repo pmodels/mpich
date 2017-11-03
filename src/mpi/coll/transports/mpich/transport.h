@@ -147,9 +147,9 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_sched_init(MPIC_MPICH_sched_t * sched, 
     sched->max_edges_per_vtx = MPIC_MPICH_MAX_EDGES;
 
     /* allocate memory for storing vertices */
-    sched->vtcs = MPIC_MPICH_allocate_mem(sizeof(MPIC_MPICH_vtx_t) * sched->max_vtcs);
+    sched->vtcs = MPL_malloc(sizeof(MPIC_MPICH_vtx_t) * sched->max_vtcs);
     /* initialize array for storing memory buffer addresses */
-    sched->buf_array.array = (void **) MPIC_MPICH_allocate_mem(sizeof(void *) * sched->max_vtcs);
+    sched->buf_array.array = (void **) MPL_malloc(sizeof(void *) * sched->max_vtcs);
     sched->buf_array.size = sched->max_vtcs;
     sched->buf_array.used = 0;
 
@@ -196,7 +196,7 @@ MPL_STATIC_INLINE_PREFIX MPIC_MPICH_sched_t *MPIC_MPICH_get_schedule(MPIC_MPICH_
         MPIC_MPICH_sched_reset(sched, tag);
     } else {
         *is_new = 1;
-        sched = MPIC_MPICH_allocate_mem(sizeof(MPIC_MPICH_sched_t));
+        sched = MPL_malloc(sizeof(MPIC_MPICH_sched_t));
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"New schedule is created:[%p]\n", sched));
         /* initialize the newly created schedule */
         MPIC_MPICH_sched_init(sched, tag);
@@ -281,9 +281,9 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_allocate_vtx(MPIC_MPICH_vtx_t * vtx, in
                                          int outvtcs_array_size)
 {
     /* allocate memory for storing incoming and outgoing vertices */
-    vtx->invtcs.array = MPIC_MPICH_allocate_mem(sizeof(int) * invtcs_array_size);
+    vtx->invtcs.array = MPL_malloc(sizeof(int) * invtcs_array_size);
     vtx->invtcs.size = invtcs_array_size;
-    vtx->outvtcs.array = MPIC_MPICH_allocate_mem(sizeof(int) * outvtcs_array_size);
+    vtx->outvtcs.array = MPL_malloc(sizeof(int) * outvtcs_array_size);
     vtx->outvtcs.size = outvtcs_array_size;
 }
 
@@ -303,8 +303,8 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_init_vtx(MPIC_MPICH_sched_t * sched, MP
 /* Internal transport function to free the memory associated with a vertex */
 MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_free_vtx(MPIC_MPICH_vtx_t * vtx)
 {
-    MPIC_MPICH_free_mem(vtx->invtcs.array);
-    MPIC_MPICH_free_mem(vtx->outvtcs.array);
+    MPL_free(vtx->invtcs.array);
+    MPL_free(vtx->outvtcs.array);
 }
 
 /* Internal transport function to add list of integers to an integer array (MPIC_MPICH_int_array)*/
@@ -318,11 +318,11 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_add_elems_int_array(MPIC_MPICH_int_arra
 
         in->size = MPL_MAX(2 * in->size, in->used + n_elems);
         /* reallocate array */
-        in->array = (int *) MPIC_MPICH_allocate_mem(sizeof(int) * in->size);
+        in->array = (int *) MPL_malloc(sizeof(int) * in->size);
         /* copy old elements */
         memcpy(in->array, old_array, sizeof(int) * in->used);
         /* free old array */
-        MPIC_MPICH_free_mem(old_array);
+        MPL_free(old_array);
     }
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Adding %d elems to int_array\n", n_elems));
     /* add new elements */
@@ -385,7 +385,7 @@ MPL_STATIC_INLINE_PREFIX int MPIC_MPICH_get_new_vtx(MPIC_MPICH_sched_t * sched, 
         MPIC_MPICH_vtx_t *old_vtcs = sched->vtcs;
         sched->max_vtcs *= 2;
         /* allocate new array */
-        sched->vtcs = MPIC_MPICH_allocate_mem(sizeof(MPIC_MPICH_vtx_t) * sched->max_vtcs);
+        sched->vtcs = MPL_malloc(sizeof(MPIC_MPICH_vtx_t) * sched->max_vtcs);
         /* copy vertices from old array to new array */
         memcpy(sched->vtcs, old_vtcs, sizeof(MPIC_MPICH_vtx_t) * old_size);
         int i;
@@ -407,7 +407,7 @@ MPL_STATIC_INLINE_PREFIX int MPIC_MPICH_get_new_vtx(MPIC_MPICH_sched_t * sched, 
             MPIC_MPICH_free_vtx(&old_vtcs[i]);
         }
         /* free the arary of old vertices */
-        MPIC_MPICH_free_mem(old_vtcs);
+        MPL_free(old_vtcs);
     }
     /* return last unused vertex */
     *vtx = &sched->vtcs[sched->total];
@@ -428,7 +428,7 @@ MPL_STATIC_INLINE_PREFIX int MPIC_MPICH_fence(MPIC_MPICH_sched_t * sched)
     vtxp->kind = MPIC_MPICH_KIND_FENCE;
     MPIC_MPICH_init_vtx(sched, vtxp, vtx_id);
 
-    invtcs = (int *) MPIC_MPICH_allocate_mem(sizeof(int) * vtx_id);
+    invtcs = (int *) MPL_malloc(sizeof(int) * vtx_id);
     /* record incoming vertices */
     for (i = vtx_id - 1; i >= 0; i--) {
         if (sched->vtcs[i].kind == MPIC_MPICH_KIND_WAIT)
@@ -588,11 +588,11 @@ MPL_STATIC_INLINE_PREFIX int MPIC_MPICH_multicast(const void *buf,
     vtxp->nbargs.multicast.count = count;
     vtxp->nbargs.multicast.dt = dt;
     vtxp->nbargs.multicast.num_destinations = num_destinations;
-    vtxp->nbargs.multicast.destinations = (int *) MPIC_MPICH_allocate_mem(sizeof(int)*num_destinations);
+    vtxp->nbargs.multicast.destinations = (int *) MPL_malloc(sizeof(int)*num_destinations);
     memcpy(vtxp->nbargs.multicast.destinations, destinations, sizeof(int)*num_destinations);
 
     vtxp->nbargs.multicast.comm = comm;
-    vtxp->nbargs.multicast.mpir_req = (struct MPIR_Request**)MPIC_MPICH_allocate_mem(sizeof(struct MPIR_Request*)*num_destinations);
+    vtxp->nbargs.multicast.mpir_req = (struct MPIR_Request**)MPL_malloc(sizeof(struct MPIR_Request*)*num_destinations);
     vtxp->nbargs.multicast.last_complete = -1;
     /* set unused request pointers to NULL */
     vtxp->mpid_req[0] = NULL;
@@ -721,7 +721,7 @@ MPL_STATIC_INLINE_PREFIX int MPIC_MPICH_recv_reduce(void *buf,
 
     /* store the arguments */
     MPIC_MPICH_dtinfo(datatype, &iscontig, &type_size, &out_extent, &lower_bound);
-    vtxp->nbargs.recv_reduce.inbuf = MPIC_MPICH_allocate_mem(count * out_extent);
+    vtxp->nbargs.recv_reduce.inbuf = MPL_malloc(count * out_extent);
     vtxp->nbargs.recv_reduce.inoutbuf = buf;
     vtxp->nbargs.recv_reduce.count = count;
     vtxp->nbargs.recv_reduce.datatype = datatype;
@@ -827,11 +827,11 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_add_elem_ptr_array(MPIC_MPICH_ptr_array
         void **old_array = buf_array->array;
         buf_array->size *= 2;
         /* allocate new array */
-        buf_array->array = (void **) MPIC_MPICH_allocate_mem(sizeof(void *) * buf_array->size);
+        buf_array->array = (void **) MPL_malloc(sizeof(void *) * buf_array->size);
         /* copy from old array to new array */
         memcpy(buf_array->array, old_array, sizeof(void *) * old_size);
         /* free old array */
-        MPIC_MPICH_free_mem(old_array);
+        MPL_free(old_array);
     }
     /* add element to the array */
     buf_array->array[buf_array->used++] = buf;
@@ -843,14 +843,14 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_add_elem_ptr_array(MPIC_MPICH_ptr_array
  */
 MPL_STATIC_INLINE_PREFIX void *MPIC_MPICH_allocate_buffer(size_t size, MPIC_MPICH_sched_t * s)
 {
-    void *buf = MPIC_MPICH_allocate_mem(size);
+    void *buf = MPL_malloc(size);
     /* record memory allocation */
     MPIC_MPICH_add_elem_ptr_array(&s->buf_array, buf);
     return buf;
 }
 
 /* Transport function to schedule memory free'ing */
-MPL_STATIC_INLINE_PREFIX int MPIC_MPICH_free_mem_nb(void *ptr,
+MPL_STATIC_INLINE_PREFIX int MPL_free_nb(void *ptr,
                                        MPIC_MPICH_sched_t * sched, int n_invtcs, int *invtcs)
 {
     MPIC_MPICH_vtx_t *vtxp;
@@ -1176,26 +1176,26 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_free_buffers(MPIC_MPICH_sched_t * sched
     for (i = 0; i < sched->total; i++) {
         /* free the temporary memory allocated by recv_reduce call */
         if (sched->vtcs[i].kind == MPIC_MPICH_KIND_RECV_REDUCE) {
-            MPIC_MPICH_free_mem(sched->vtcs[i].nbargs.recv_reduce.inbuf);
+            MPL_free(sched->vtcs[i].nbargs.recv_reduce.inbuf);
             sched->vtcs[i].nbargs.recv_reduce.inbuf = NULL;
         }
 
         if (sched->vtcs[i].kind == MPIC_MPICH_KIND_FREE_MEM) {
-            MPIC_MPICH_free_mem(sched->vtcs[i].nbargs.free_mem.ptr);
+            MPL_free(sched->vtcs[i].nbargs.free_mem.ptr);
             sched->vtcs[i].nbargs.free_mem.ptr = NULL;
         }
 
         if(sched->vtcs[i].kind == MPIC_MPICH_KIND_MULTICAST){
-            MPIC_MPICH_free_mem(sched->vtcs[i].nbargs.multicast.mpir_req);
-            MPIC_MPICH_free_mem(sched->vtcs[i].nbargs.multicast.destinations);
+            MPL_free(sched->vtcs[i].nbargs.multicast.mpir_req);
+            MPL_free(sched->vtcs[i].nbargs.multicast.destinations);
         }
     }
     /* free temporary buffers allocated using MPIC_MPICH_allocate_buffer call */
     for (i = 0; i < sched->buf_array.used; i++) {
-        MPIC_MPICH_free_mem(sched->buf_array.array[i]);
+        MPL_free(sched->buf_array.array[i]);
     }
     if(sched->buf_array.size!=0)
-        MPIC_MPICH_free_mem(sched->buf_array.array);
+        MPL_free(sched->buf_array.array);
 
     /* free each vtx and then the list of vtcs */
     for (i = 0; i < sched->total; i++) {
@@ -1203,7 +1203,7 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_free_buffers(MPIC_MPICH_sched_t * sched
         MPIC_MPICH_free_vtx(&sched->vtcs[i]);
     }
     /* free the list of vertices */
-    MPIC_MPICH_free_mem(sched->vtcs);
+    MPL_free(sched->vtcs);
 }
 
 /* Internal transport function to destroy all memory associated with a schedule */

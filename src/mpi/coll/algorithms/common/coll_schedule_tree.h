@@ -251,9 +251,9 @@ COLL_sched_reduce_tree(const void *sendbuf,
                 num_children, size, is_root, is_inplace, is_intermediate, lb));
 
     /* variables to store task ids */
-    vtcs = TSP_allocate_mem(sizeof(int) * (num_children + 1));
-    reduce_id = TSP_allocate_mem(sizeof(int) * num_children);
-    recv_id = TSP_allocate_mem(sizeof(int) * num_children);
+    vtcs = MPL_malloc(sizeof(int) * (num_children + 1));
+    reduce_id = MPL_malloc(sizeof(int) * num_children);
+    recv_id = MPL_malloc(sizeof(int) * num_children);
 
     if (is_root) {
         target_buf = recvbuf;
@@ -274,7 +274,7 @@ COLL_sched_reduce_tree(const void *sendbuf,
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Allocating buffer for receiving data from children\n"));
 
     /* allocate buffer space to receive data from children */
-    childbuf = (void **) TSP_allocate_mem(sizeof(void *) * num_children);
+    childbuf = (void **) MPL_malloc(sizeof(void *) * num_children);
 
     if (num_children) { /* allocate at least one buffer if you have at least one child */
         childbuf[0] = TSP_allocate_buffer(extent * count, sched);
@@ -367,10 +367,10 @@ COLL_sched_reduce_tree(const void *sendbuf,
     }
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"completed schedule generation\n"));
-    TSP_free_mem(childbuf);
-    TSP_free_mem(vtcs);
-    TSP_free_mem(recv_id);
-    TSP_free_mem(reduce_id);
+    MPL_free(childbuf);
+    MPL_free(vtcs);
+    MPL_free(recv_id);
+    MPL_free(reduce_id);
     COLL_tree_free (tree);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_REDUCE_TREE);
