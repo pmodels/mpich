@@ -72,14 +72,14 @@ int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len,
     /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_CVAR_INDEX(cvar_index, mpi_errno);
             /* Do not do *_TEST_ARGNULL for pointer arguments, since this is
              * allowed or will be allowed by MPI_T standard.
              */
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 

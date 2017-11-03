@@ -72,14 +72,14 @@ int MPI_Type_size_x(MPI_Datatype datatype, MPI_Count *size)
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
 
             /* TODO more checks may be appropriate */
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
@@ -88,7 +88,7 @@ int MPI_Type_size_x(MPI_Datatype datatype, MPI_Count *size)
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
@@ -100,7 +100,7 @@ int MPI_Type_size_x(MPI_Datatype datatype, MPI_Count *size)
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             MPIR_ERRTEST_ARGNULL(size, "size", mpi_errno);
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 

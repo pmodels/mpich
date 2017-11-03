@@ -111,7 +111,7 @@ int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle 
     /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_CVAR_INDEX(cvar_index, mpi_errno);
             /* obj_handle is ignored if cvar has no binding, so no
@@ -119,7 +119,7 @@ int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle 
             MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
             MPIR_ERRTEST_ARGNULL(count, "count", mpi_errno);
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 

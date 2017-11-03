@@ -222,14 +222,14 @@ int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MP
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_COMM(comm, mpi_errno);
 
             /* TODO more checks may be appropriate */
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
@@ -239,13 +239,13 @@ int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MP
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 

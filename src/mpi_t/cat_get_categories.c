@@ -82,13 +82,13 @@ int MPI_T_category_get_categories(int cat_index, int len, int indices[])
     /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_CAT_INDEX(cat_index, mpi_errno);
             if (len != 0)
                 MPIR_ERRTEST_ARGNULL(indices, "indices", mpi_errno);
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 

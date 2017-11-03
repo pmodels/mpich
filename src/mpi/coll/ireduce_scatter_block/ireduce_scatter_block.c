@@ -310,7 +310,7 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
             MPIR_ERRTEST_OP(op, mpi_errno);
@@ -318,7 +318,7 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
 
             /* TODO more checks may be appropriate */
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
@@ -328,7 +328,7 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
@@ -356,7 +356,7 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
                 MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno)
             /* TODO more checks may be appropriate (counts, in_place, etc) */
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 

@@ -120,12 +120,12 @@ int MPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf)
    /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_CVAR_HANDLE(handle, mpi_errno);
             MPIR_ERRTEST_ARGNULL(buf, "buf", mpi_errno);
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
