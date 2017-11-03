@@ -212,7 +212,7 @@ int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index,
     /* Validate parameters  */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_PVAR_SESSION(session, mpi_errno);
             MPIR_ERRTEST_PVAR_INDEX(pvar_index, mpi_errno);
@@ -220,7 +220,7 @@ int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index,
             MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
             /* Do not test obj_handle since it may be NULL when no binding */
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 

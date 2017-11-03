@@ -58,7 +58,7 @@ int MPI_T_pvar_get_index(const char *name, int var_class, int *pvar_index)
     /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_ARGNULL(name, "name", mpi_errno);
             MPIR_ERRTEST_ARGNULL(pvar_index, "pvar_index", mpi_errno);
@@ -69,7 +69,7 @@ int MPI_T_pvar_get_index(const char *name, int var_class, int *pvar_index)
                goto fn_fail;
             }
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 

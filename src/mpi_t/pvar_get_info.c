@@ -76,14 +76,14 @@ int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosit
     /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_PVAR_INDEX(pvar_index, mpi_errno);
             /* Do not do _TEST_ARGNULL for other arguments, since this is
              * allowed or will be allowed by MPI_T standard.
              */
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 

@@ -64,7 +64,7 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int index, int *value, char *name, 
     /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_ENUM_HANDLE(enumtype, mpi_errno);
             MPIR_ERRTEST_ENUM_ITEM(enumtype, index, mpi_errno);
@@ -73,7 +73,7 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int index, int *value, char *name, 
              * permitted per MPI_T standard.
              */
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
