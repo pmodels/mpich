@@ -507,6 +507,10 @@ AM_CONDITIONAL([hydra_use_embedded_hwloc], [test "${hydra_use_embedded_hwloc}" =
 AC_MSG_CHECKING([available processor topology libraries])
 AC_MSG_RESULT([$available_topolibs])
 
+#########################################################################
+# POSIX Regcomp
+#########################################################################
+AX_CHECK_POSIX_REGCOMP
 
 #########################################################################
 # Checkpoint/Restart
