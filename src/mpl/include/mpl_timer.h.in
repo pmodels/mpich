@@ -40,7 +40,9 @@ int usleep(useconds_t usec);
 #define MPL_TIMER_KIND @MPL_TIMER_KIND@
 
 /* Define a time stamp */
+/* *INDENT-OFF* */
 typedef @MPL_TIMER_TYPE@ MPL_time_t;
+/* *INDENT-ON* */
 
 /* The timer code is allowed to return "NOT_INITIALIZED" before the
  * device is initialized.  Once the device is initialized, it must

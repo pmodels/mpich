@@ -108,9 +108,11 @@
 
 #include <stdio.h>			/* For FILENAME_MAX */
 
+/* *INDENT-OFF* */
 #ifdef	__cplusplus
 extern "C" {
 #endif
+/* *INDENT-ON* */
 
 /***********************************************************************
  * Version of the interface this header represents 
@@ -613,9 +615,12 @@ extern int next_new_process (mqs_process *, mqs_process_location *);
 extern int mqs_set_process_identity (mqs_process *, int); 
 #endif
 
+/* *INDENT-OFF* */
 #ifdef	__cplusplus
 }
 #endif
+/* *INDENT-ON* */
+
 #endif /* MPI_INTERFACE_H_INCLUDED */
 
 
