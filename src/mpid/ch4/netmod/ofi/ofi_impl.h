@@ -127,9 +127,9 @@ int MPIDI_OFI_progress(int vci, int blocking);
                             #STR);                              \
     } while (0)
 
-#define MPIDI_OFI_REQUEST_CREATE(req, kind)                 \
+#define MPIDI_OFI_REQUEST_CREATE(req, kind, pool)             \
     do {                                                      \
-        (req) = MPIR_Request_create(kind);  \
+        (req) = MPIR_Request_create(kind, pool);                    \
         MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
         MPIR_Request_add_ref((req));                                \
     } while (0)
@@ -169,12 +169,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
     }
 }
 
-#define MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(req, kind)                 \
+#define MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(req, kind, vci)            \
       do {                                                              \
           if (MPIDI_OFI_need_request_creation(req)) {                   \
               MPIR_Assert(MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT ||  \
                           (req) == NULL);                               \
-              (req) = MPIR_Request_create(kind);                        \
+              (req) = MPIR_Request_create(kind, vci);                   \
               MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, \
                                   "**nomemreq");                        \
           }                                                             \
@@ -183,14 +183,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_lw_request_cc_val(void)
           MPIR_Request_add_ref((req));                                  \
       } while (0)
 
-#define MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(req)               \
+#define MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(req, vci)          \
     do {                                                                \
         if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_DIRECT) {                \
             (req) = MPIR_Request_create_complete(MPIR_REQUEST_KIND__SEND); \
         } else {                                                        \
             if (MPIDI_OFI_need_request_creation(req)) {                 \
                 MPIR_Assert((req) == NULL);                             \
-                (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);   \
+                (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, vci); \
                 MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, \
                                     "**nomemreq");                      \
             }                                                           \
@@ -282,10 +282,16 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
 {
     int in_use;
     MPIR_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);
+
+    /* Free the win_request object. Since it was allocated using MPIR_Request_create,
+     * it has to be returned to the request object pool with the proper pool mutex
+     * held. Since we need to manually free the `noncontig` member which does not
+     * exist in the regular request object, we manually manipulate the refcount
+     * and manage free it. */
     MPIR_Object_release_ref(req, &in_use);
     if (!in_use) {
         MPL_free(req->noncontig);
-        MPIR_Handle_obj_free(&MPIR_Request_mem, (req));
+        MPIR_Request_destroy((MPIR_Request *) req);
     }
 }
 

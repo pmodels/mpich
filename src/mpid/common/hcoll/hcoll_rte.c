@@ -268,7 +268,7 @@ static int group_id(rte_grp_handle_t group)
 static void *get_coll_handle(void)
 {
     MPIR_Request *req;
-    req = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
+    req = MPIR_Request_create(MPIR_REQUEST_KIND__COLL, 0);
     MPIR_Request_add_ref(req);
     return (void *) req;
 }

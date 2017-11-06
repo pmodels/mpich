@@ -128,9 +128,14 @@ int MPII_init_global(int *p_thread_required)
     /* Set the number of tag bits. The device may override this value. */
     MPIR_Process.tag_bits = MPIR_TAG_BITS_DEFAULT;
 
+    /* Populate the pool of request objects */
+    MPIR_Object_alloc_populate(MPIR_Request_mem, MPIR_REQUEST, sizeof(MPIR_Request),
+                               MPIR_Request_direct, MPIR_REQUEST_PREALLOC, HANDLE_NUM_PBLOCKS,
+                               HANDLE_NUM_PINDICES, HANDLE_NUM_POOLS);
+
     /* Create complete request to return in the event of immediately complete
      * operations. Use a SEND request to cover all possible use-cases. */
-    MPIR_Process.lw_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+    MPIR_Process.lw_req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND, 0);
     MPIR_ERR_CHKANDSTMT(MPIR_Process.lw_req == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
                         "**nomemreq");
     MPIR_cc_set(&MPIR_Process.lw_req->cc, 0);

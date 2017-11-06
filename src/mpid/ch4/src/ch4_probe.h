@@ -175,8 +175,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
     goto fn_exit;
 }
 
-
-
 MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
                                          int tag,
                                          MPIR_Comm * comm,

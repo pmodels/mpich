@@ -210,9 +210,9 @@ struct MPIR_Request {
 
 #define MPIR_REQUEST_PREALLOC 8
 
-extern MPIR_Object_alloc_t MPIR_Request_mem;
+extern MPIR_Object_alloc_t MPIR_Request_mem[];
 /* Preallocated request objects */
-extern MPIR_Request MPIR_Request_direct[];
+extern MPIR_Request MPIR_Request_direct[HANDLE_NUM_POOLS][MPIR_REQUEST_PREALLOC];
 
 static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
 {
@@ -240,16 +240,22 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
                                          | MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY)
 
 static inline MPIR_Request *MPIR_Request_create_impl(MPIR_Request_kind_t kind,
-                                                     MPII_Reqalloc_use_lock_t use_lock)
+                                                     MPII_Reqalloc_use_lock_t use_lock,
+                                                     int pool_idx)
 {
     MPIR_Request *req;
-
-    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
-    req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem);
-    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_MUTEX);
+    if (use_lock == LOCK) {
+        MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[pool_idx]);
+        req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem[pool_idx]);
+        MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[pool_idx]);
+    } else {
+        req = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem[pool_idx]);
+    }
 
     if (req != NULL) {
-        MPL_DBG_MSG_P(MPIR_DBG_REQUEST, VERBOSE, "allocated request, handle=0x%08x", req->handle);
+        MPL_DBG_MSG_FMT(MPIR_DBG_REQUEST, VERBOSE,
+                        (MPL_DBG_FDEST, "allocated request from pool %d, handle=0x%08x", pool_idx,
+                         req->handle));
 #ifdef MPICH_DBG_OUTPUT
         /*MPIR_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST); */
         if (HANDLE_GET_MPI_KIND(req->handle) != MPIR_REQUEST) {
@@ -296,25 +302,25 @@ static inline MPIR_Request *MPIR_Request_create_impl(MPIR_Request_kind_t kind,
         MPID_Request_create_hook(req);
     } else {
         /* FIXME: This fails to fail if debugging is turned off */
-        MPL_DBG_MSG(MPIR_DBG_REQUEST, TYPICAL, "unable to allocate a request");
+        MPL_DBG_MSG_D(MPIR_DBG_REQUEST, TYPICAL, "unable to allocate a request, pool=%d", pool_idx);
     }
 
     return req;
 }
 
 /* Thread-safe version for request creation */
-static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
+static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind, int pool_idx)
 {
     MPIR_Request *req;
-    req = MPIR_Request_create_impl(kind, LOCK);
+    req = MPIR_Request_create_impl(kind, LOCK, pool_idx);
     return req;
 }
 
 /* Thread-unsafe version for request creation */
-static inline MPIR_Request *MPIR_Request_create_unsafe(MPIR_Request_kind_t kind)
+static inline MPIR_Request *MPIR_Request_create_unsafe(MPIR_Request_kind_t kind, int pool_idx)
 {
     MPIR_Request *req;
-    req = MPIR_Request_create_impl(kind, NOLOCK);
+    req = MPIR_Request_create_impl(kind, NOLOCK, pool_idx);
     return req;
 }
 
@@ -329,7 +335,9 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_complete(MPIR_Request
     MPIR_Request *req;
 
 #ifdef HAVE_DEBUGGER_SUPPORT
-    req = MPIR_Request_create(kind);
+    /* For the debugging build we don't care too much about performance.
+     * Let's just use pool_idx==0 always. */
+    req = MPIR_Request_create(kind, 0);
     MPIR_cc_set(&req->cc, 0);
 #else
     req = MPIR_Process.lw_req;
@@ -337,6 +345,19 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIR_Request_create_complete(MPIR_Request
 #endif
 
     return req;
+}
+
+/* Actually destroy (free) a request object that already reached refcnt == 0 */
+MPL_STATIC_INLINE_PREFIX void MPIR_Request_destroy(MPIR_Request * req)
+{
+    int pool_idx;
+
+    MPIR_Assert(MPIR_Object_get_ref(req) == 0);
+
+    pool_idx = HANDLE_POOL_INDEX(req->handle);
+    MPID_THREAD_CS_ENTER(VCI, MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[pool_idx]);
+    MPIR_Handle_obj_free_unsafe(&MPIR_Request_mem[pool_idx], req);
+    MPID_THREAD_CS_EXIT(VCI, MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[pool_idx]);
 }
 
 static inline void MPIR_Request_free(MPIR_Request * req)
@@ -393,7 +414,7 @@ static inline void MPIR_Request_free(MPIR_Request * req)
 
         MPID_Request_destroy_hook(req);
 
-        MPIR_Handle_obj_free(&MPIR_Request_mem, req);
+        MPIR_Request_destroy(req);
     }
 }
 

@@ -33,6 +33,8 @@ MPIR_Object_alloc_t MPII_Keyval_mem = { 0, 0, 0, 0, MPIR_KEYVAL,
     sizeof(MPII_Keyval),
     MPII_Keyval_direct,
     MPID_KEYVAL_PREALLOC,
+    HANDLE_NUM_BLOCKS,
+    HANDLE_NUM_INDICES
 };
 
 #ifndef MPIR_ATTR_PREALLOC
@@ -46,6 +48,8 @@ MPIR_Object_alloc_t MPID_Attr_mem = { 0, 0, 0, 0, MPIR_ATTR,
     sizeof(MPIR_Attribute),
     MPID_Attr_direct,
     MPIR_ATTR_PREALLOC,
+    HANDLE_NUM_BLOCKS,
+    HANDLE_NUM_INDICES
 };
 
 /* Provides a way to trap all attribute allocations when debugging leaks. */

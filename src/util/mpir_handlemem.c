@@ -34,6 +34,26 @@ cvars:
 #include "mpiimpl.h"
 #include <stdio.h>
 
+/* Initialize objmem. Useful for multi-pool kind. */
+void MPIR_Object_alloc_populate(MPIR_Object_alloc_t * objmem,
+                                MPII_Object_kind kind,
+                                int size, void *direct, int direct_size,
+                                int indirect_num_blocks, int indirect_num_indices, int num_pools)
+{
+    int i;
+
+    for (i = 0; i < num_pools; i++) {
+        memset(&objmem[i], 0, sizeof(*objmem));
+        objmem[i].kind = kind;
+        objmem[i].size = size;
+        objmem[i].direct = (char *) direct + size * direct_size * i;
+        objmem[i].direct_size = direct_size;
+        objmem[i].indirect_num_blocks = indirect_num_blocks;
+        objmem[i].indirect_num_indices = indirect_num_indices;
+        objmem[i].pool_idx = i;
+    }
+}
+
 /* style: allow:printf:5 sig:0 */
 #ifdef MPICH_DEBUG_HANDLEALLOC
 /* The following is a handler that may be added to finalize to test whether
@@ -92,7 +112,7 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr)
             void **indirect = (void **) objmem->indirect;
             for (i = 0; i < objmem->indirect_size; i++) {
                 char *start = indirect[i];
-                char *end = start + HANDLE_NUM_INDICES * objmem->size;
+                char *end = start + objmem->indirect_num_indices * objmem->size;
                 if ((char *) ptr >= start && (char *) ptr < end) {
                     nIndirect[i]++;
                     break;
@@ -106,7 +126,7 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr)
                 printf("direct block is [%p,%p]\n", direct, directEnd);
                 if (objmem->indirect_size) {
                     printf("indirect block is [%p,%p]\n", indirect[0],
-                           (char *) indirect[0] + HANDLE_NUM_INDICES * objmem->size);
+                           (char *) indirect[0] + objmem->indirect_num_indices * objmem->size);
                 }
             }
         }
@@ -124,11 +144,12 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr)
                MPIR_Handle_get_kind_str(objmem->kind), directSize - nDirect);
     }
     for (i = 0; i < objmem->indirect_size; i++) {
-        if (nIndirect[i] != HANDLE_NUM_INDICES) {
+        if (nIndirect[i] != objmem->indirect_num_indices) {
             leaked_handles = TRUE;
             printf
                 ("In indirect memory block %d for handle type %s, %d handles are still allocated\n",
-                 i, MPIR_Handle_get_kind_str(objmem->kind), HANDLE_NUM_INDICES - nIndirect[i]);
+                 i, MPIR_Handle_get_kind_str(objmem->kind),
+                 objmem->indirect_num_indices - nIndirect[i]);
         }
     }
 

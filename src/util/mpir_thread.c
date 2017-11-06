@@ -44,6 +44,9 @@ void MPIR_Thread_CS_Init(void)
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VCI
     MPIR_Add_mutex(&MPIR_THREAD_VCI_GLOBAL_MUTEX);
     MPIR_Add_mutex(&MPIR_THREAD_VCI_HANDLE_MUTEX);
+    for (int i = 0; i < HANDLE_NUM_POOLS; i++) {
+        MPIR_Add_mutex(&MPIR_THREAD_VCI_HANDLE_POOL_MUTEXES[i]);
+    }
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE
 /* Updates to shared data and access to shared services is handled without

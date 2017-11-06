@@ -18,7 +18,9 @@ MPIR_Datatype MPIR_Datatype_direct[MPIR_DATATYPE_PREALLOC];
 
 MPIR_Object_alloc_t MPIR_Datatype_mem = { 0, 0, 0, 0, MPIR_DATATYPE,
     sizeof(MPIR_Datatype), MPIR_Datatype_direct,
-    MPIR_DATATYPE_PREALLOC
+    MPIR_DATATYPE_PREALLOC,
+    HANDLE_NUM_BLOCKS,
+    HANDLE_NUM_INDICES
 };
 
 static int pairtypes_finalize_cb(void *dummy);

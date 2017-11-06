@@ -418,7 +418,7 @@ static inline int enqueue_lock_origin(MPIR_Win * win_ptr, MPIDI_VC_t * vc,
         }
 
         /* create request to receive upcoming requests */
-        req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+        req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED, 0);
         MPIR_Object_set_ref(req, 1);
 
         /* fill in area in req that will be used in Receive_data_found() */

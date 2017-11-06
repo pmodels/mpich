@@ -92,7 +92,8 @@ static inline int MPIR_Handle_free(void **indirect, int indirect_size)
 #endif
 
 static inline void *MPIR_Handle_direct_init(void *direct,
-                                            int direct_size, int obj_size, int handle_type)
+                                            int direct_size, int obj_size, int handle_type,
+                                            int pool_idx)
 {
     int i;
     MPIR_Handle_common *hptr = 0;
@@ -106,7 +107,7 @@ static inline void *MPIR_Handle_direct_init(void *direct,
         ptr = ptr + obj_size;
         hptr->next = ptr;
         hptr->handle = ((unsigned) HANDLE_KIND_DIRECT << HANDLE_KIND_SHIFT) |
-            (handle_type << HANDLE_MPI_KIND_SHIFT) | i;
+            (handle_type << HANDLE_MPI_KIND_SHIFT) | (pool_idx << HANDLE_POOL_SHIFT) | i;
 
         HANDLE_VG_LABEL(hptr, obj_size, handle_type, 1);
     }
@@ -122,7 +123,7 @@ static inline void *MPIR_Handle_indirect_init(void ***indirect,
                                               int *indirect_size,
                                               int indirect_num_blocks,
                                               int indirect_num_indices,
-                                              int obj_size, int handle_type)
+                                              int obj_size, int handle_type, int pool_idx)
 {
     void *block_ptr;
     MPIR_Handle_common *hptr = 0;
@@ -145,7 +146,8 @@ static inline void *MPIR_Handle_indirect_init(void ***indirect,
 
     /* See if we can allocate another block */
     if (*indirect_size >= indirect_num_blocks) {
-        /* printf("Out of space in indirect table\n"); */
+        /* printf("Out of space in indirect table, type=%s pool=%d\n",
+         * MPIR_Handle_get_kind_str(handle_type), pool_idx); */
         return 0;
     }
 
@@ -162,8 +164,10 @@ static inline void *MPIR_Handle_indirect_init(void ***indirect,
         ptr = ptr + obj_size;
         hptr->next = ptr;
         hptr->handle = ((unsigned) HANDLE_KIND_INDIRECT << HANDLE_KIND_SHIFT) |
-            (handle_type << HANDLE_MPI_KIND_SHIFT) | (*indirect_size << HANDLE_INDIRECT_SHIFT) | i;
-        /* printf("handle=%#x handle_type=%x *indirect_size=%d i=%d\n", hptr->handle, handle_type, *indirect_size, i); */
+            (handle_type << HANDLE_MPI_KIND_SHIFT) | (*indirect_size << HANDLE_INDIRECT_SHIFT) |
+            (pool_idx << HANDLE_POOL_SHIFT) | i;
+        /* printf("handle=%#x handle_type=%x *indirect_size=%d pool_idx=%d i=%d\n",
+         * hptr->handle, handle_type, *indirect_size, pool_idx, i); */
 
         HANDLE_VG_LABEL(hptr, obj_size, handle_type, 0);
     }
@@ -249,7 +253,9 @@ static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem)
              * jobs do not need to include any of the Info code if no
              * Info-using routines are used */
             objmem->initialized = 1;
-            ptr = MPIR_Handle_direct_init(objmem->direct, objmem->direct_size, objsize, objkind);
+            ptr =
+                MPIR_Handle_direct_init(objmem->direct, objmem->direct_size, objsize, objkind,
+                                        objmem->pool_idx);
             if (ptr) {
                 objmem->avail = ptr->next;
             }
@@ -267,8 +273,9 @@ static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem)
 
             ptr = MPIR_Handle_indirect_init(&objmem->indirect,
                                             &objmem->indirect_size,
-                                            HANDLE_NUM_BLOCKS,
-                                            HANDLE_NUM_INDICES, objsize, objkind);
+                                            objmem->indirect_num_blocks,
+                                            objmem->indirect_num_indices,
+                                            objsize, objkind, objmem->pool_idx);
             if (ptr) {
                 objmem->avail = ptr->next;
             }
@@ -382,7 +389,9 @@ static inline void MPIR_Handle_obj_free(MPIR_Object_alloc_t * objmem, void *obje
 /*
  * Get an pointer to dynamically allocated storage for objects.
  */
-static inline void *MPIR_Handle_get_ptr_indirect(int handle, MPIR_Object_alloc_t * objmem)
+MPL_STATIC_INLINE_PREFIX void *MPIR_Handle_get_ptr_indirect_generic(int handle,
+                                                                    MPIR_Object_alloc_t * objmem,
+                                                                    int multi_pool)
 {
     int block_num, index_num;
 
@@ -392,7 +401,11 @@ static inline void *MPIR_Handle_get_ptr_indirect(int handle, MPIR_Object_alloc_t
     }
 
     /* Find the block */
-    block_num = HANDLE_BLOCK(handle);
+    if (multi_pool)     /* Branch should compile out */
+        block_num = HANDLE_PBLOCK(handle);
+    else
+        block_num = HANDLE_BLOCK(handle);
+
     if (block_num >= objmem->indirect_size) {
         return 0;
     }
@@ -416,5 +429,10 @@ static inline void *MPIR_Handle_get_ptr_indirect(int handle, MPIR_Object_alloc_t
     }
 }
 
+MPL_STATIC_INLINE_PREFIX void *MPIR_Handle_get_ptr_indirect(int handle,
+                                                            MPIR_Object_alloc_t * objmem)
+{
+    return MPIR_Handle_get_ptr_indirect_generic(handle, objmem, 0 /* Single pool */);
+}
 
 #endif /* MPIR_HANDLEMEM_H_INCLUDED */

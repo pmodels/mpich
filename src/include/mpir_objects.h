@@ -174,10 +174,16 @@ const char *MPIR_Handle_get_kind_str(int kind);
 #define HANDLE_SET_KIND(a,kind) ((a)|((kind)<<HANDLE_KIND_SHIFT))
 #define HANDLE_IS_BUILTIN(a) (HANDLE_GET_KIND((a)) == HANDLE_KIND_BUILTIN)
 
+#define HANDLE_POOL_MASK 0x03f00000
+#define HANDLE_POOL_SHIFT 20
+#define HANDLE_POOL_INDEX(a) (((a) & HANDLE_POOL_MASK) >> HANDLE_POOL_SHIFT)
+#define HANDLE_NUM_POOLS ((HANDLE_POOL_MASK >> HANDLE_POOL_SHIFT) + 1)
+
 /* For indirect, the remainder of the handle has a block and index within that
  * block */
 #define HANDLE_INDIRECT_SHIFT 12
 #define HANDLE_BLOCK(a) (((a)& 0x03FFF000) >> HANDLE_INDIRECT_SHIFT)
+#define HANDLE_PBLOCK(a) (((a)& 0x0003F000) >> HANDLE_INDIRECT_SHIFT)
 #define HANDLE_BLOCK_INDEX(a) ((a) & 0x00000FFF)
 
 /* Number of blocks is between 1 and 16384 */
@@ -195,10 +201,19 @@ const char *MPIR_Handle_get_kind_str(int kind);
 #define HANDLE_NUM_INDICES 1024
 #endif /* MPID_HANDLE_NUM_INDICES */
 
+/* Number of blocks (when multiple pools are present) is between 1 and 64 */
+#define HANDLE_NUM_PBLOCKS (1 << (HANDLE_POOL_SHIFT - HANDLE_INDIRECT_SHIFT))
+
+/* Number of objects in a block when multiple pools are present */
+#define HANDLE_NUM_PINDICES 4096
+
 /* For direct, the remainder of the handle is the index into a predefined
    block */
 #define HANDLE_MASK 0x03FFFFFF
 #define HANDLE_INDEX(a) ((a)& HANDLE_MASK)
+
+#define HANDLE_PMASK 0x0003FFFF
+#define HANDLE_PINDEX(a) ((a)& HANDLE_PMASK)
 
 #if defined (MPL_USE_DBG_LOGGING)
 extern MPL_dbg_class MPIR_DBG_HANDLE;
@@ -423,12 +438,21 @@ typedef struct MPIR_Object_alloc_t {
     void *direct;               /* Pointer to direct block, used
                                  * for allocation */
     int direct_size;            /* Size of direct block */
+    int indirect_num_blocks;    /* Max. number of indirect blocks */
+    int indirect_num_indices;   /* Number of objects in one indirect block */
+    int pool_idx;               /* Pool index within kind */
 } MPIR_Object_alloc_t;
 static inline void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t *);
 static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t *);
 static inline void MPIR_Handle_obj_free(MPIR_Object_alloc_t *, void *);
-static inline void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
+MPL_STATIC_INLINE_PREFIX void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
+MPL_STATIC_INLINE_PREFIX void *MPIR_Handle_get_ptr_indirect_generic(int, MPIR_Object_alloc_t *,
+                                                                    int);
 
+void MPIR_Object_alloc_populate(MPIR_Object_alloc_t * objmem,
+                                MPII_Object_kind kind,
+                                int size, void *direct, int direct_size,
+                                int indirect_num_blocks, int indirect_num_indices, int num_pools);
 
 /* Convert Handles to objects for MPI types that have predefined objects */
 /* TODO examine generated assembly for this construct, it's probably suboptimal
@@ -475,6 +499,25 @@ static inline void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
         }                                                               \
     }
 
+/* Convert handles to objects for MPI types that are divided into multiple pools,
+   and do not have any predefined objects */
+#define MPIR_Getp_ptr(kind,a,ptr)                                       \
+{                                                                       \
+    int p = HANDLE_POOL_INDEX(a);                                       \
+    switch (HANDLE_GET_KIND(a)) {                                       \
+    case HANDLE_KIND_DIRECT:                                            \
+        ptr=MPIR_##kind##_direct[p]+HANDLE_PINDEX(a);                   \
+        break;                                                          \
+    case HANDLE_KIND_INDIRECT:                                          \
+        ptr=((MPIR_##kind*)                                             \
+             MPIR_Handle_get_ptr_indirect_generic(a, &MPIR_##kind##_mem[p], 1 /* Multi-pool */)); \
+        break;                                                          \
+    default:								\
+        ptr=0;                                                          \
+        break;                                                          \
+    }                                                                   \
+}
+
 /* FIXME: the masks should be defined with the handle definitions instead
    of inserted here as literals */
 #define MPIR_Comm_get_ptr(a,ptr)       MPIR_Getb_ptr(Comm,COMM,a,0x03ffffff,ptr)
@@ -483,7 +526,7 @@ static inline void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
 #define MPIR_Op_get_ptr(a,ptr)         MPIR_Getb_ptr(Op,OP,a,0x000000ff,ptr)
 #define MPIR_Info_get_ptr(a,ptr)       MPIR_Getb_ptr(Info,INFO,a,0x03ffffff,ptr)
 #define MPIR_Win_get_ptr(a,ptr)        MPIR_Get_ptr(Win,a,ptr)
-#define MPIR_Request_get_ptr(a,ptr)    MPIR_Get_ptr(Request,a,ptr)
+#define MPIR_Request_get_ptr(a,ptr)    MPIR_Getp_ptr(Request,a,ptr)
 #define MPIR_Grequest_class_get_ptr(a,ptr) MPIR_Get_ptr(Grequest_class,a,ptr)
 /* Keyvals have a special format. This is roughly MPIR_Get_ptrb, but
    the handle index is in a smaller bit field.  In addition,
