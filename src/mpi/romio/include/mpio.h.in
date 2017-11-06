@@ -30,7 +30,9 @@ extern "C" {
 typedef struct ADIOI_FileD *MPI_File;
 #endif
 
+/* *INDENT-OFF* */
 @DEFINE_HAVE_MPI_GREQUEST@
+/* *INDENT-ON* */
 #ifndef HAVE_MPI_GREQUEST
 typedef struct ADIOI_RequestD *MPIO_Request;  
 #else
@@ -45,7 +47,9 @@ typedef struct ADIOI_RequestD *MPIO_Request;
 #define MPIO_REQUEST_DEFINED
 
 #ifndef HAVE_MPI_OFFSET
+/* *INDENT-OFF* */
 @DEFINE_MPI_OFFSET@
+/* *INDENT-ON* */
 /* If we needed to define MPI_Offset, then we also need to make
    this definition. */
 #ifndef HAVE_MPI_DATAREP_FUNCTIONS
@@ -58,14 +62,18 @@ typedef int (MPI_Datarep_extent_function)(MPI_Datatype datatype, MPI_Aint *,
 #endif
 
 #ifndef NEEDS_MPI_FINT
+/* *INDENT-OFF* */
 @NEEDS_MPI_FINT@
+/* *INDENT-ON* */
 #endif
 #ifdef NEEDS_MPI_FINT
 typedef int MPI_Fint; 
 #endif
 
 #ifndef HAVE_MPI_INFO
+/* *INDENT-OFF* */
 @HAVE_MPI_INFO@
+/* *INDENT-ON* */
 #endif
 #ifndef HAVE_MPI_INFO
   typedef struct MPIR_Info *MPI_Info;
@@ -105,7 +113,9 @@ typedef int MPI_Fint;
 #endif
 
 #ifndef HAVE_MPI_DARRAY_SUBARRAY
+/* *INDENT-OFF* */
 @HAVE_MPI_DARRAY_SUBARRAY@
+/* *INDENT-ON* */
 #endif
 #ifndef HAVE_MPI_DARRAY_SUBARRAY
 #  define MPI_ORDER_C             56
