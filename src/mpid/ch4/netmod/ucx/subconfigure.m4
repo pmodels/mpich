@@ -83,7 +83,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
         PAC_PUSH_FLAG(LIBS)
         PAC_CHECK_HEADER_LIB_FATAL(ucx, ucp/api/ucp.h, ucp, ucp_config_read)
         PAC_POP_FLAG(LIBS)
-        PAC_APPEND_FLAG([-lucp],[WRAPPER_LIBS])
+        PAC_APPEND_FLAG([-lucp -lucs],[WRAPPER_LIBS])
     fi
 
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_OFI,...)
