@@ -324,6 +324,15 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     int exit_init_cs_on_failure = 0;
     MPIR_Info *info_ptr;
 
+#if (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS)
+    int rc = ABT_initialized();
+    if (rc != ABT_SUCCESS) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                         "MPI_Init_thread", __LINE__, MPI_ERR_OTHER,
+                                         "**argobots_uninitialized", 0);
+        goto fn_fail;
+    }
+#endif
     /* For any code in the device that wants to check for runtime 
        decisions on the value of isThreaded, set a provisional
        value here. We could let the MPID_Init routine override this */
@@ -702,6 +711,10 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     if (MPIR_CVAR_ASYNC_PROGRESS) {
+#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS
+        printf("WARNING: Asynchronous progress is not supported with Argobots\n");
+        goto fn_fail;
+#else
         if (*provided == MPI_THREAD_MULTIPLE) {
             mpi_errno = MPIR_Init_async_thread();
             if (mpi_errno) goto fn_fail;
@@ -711,6 +724,7 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
         else {
             printf("WARNING: No MPI_THREAD_MULTIPLE support (needed for async progress)\n");
         }
+#endif
     }
 
     /* ... end of body of routine ... */

@@ -1589,6 +1589,9 @@ is too big (> MPIU_SHMW_GHND_SZ)
 # Datarep conversion function not supported by ROMIO (Temproary until implemented)
 **drconvnotsupported:Read and Write datarep conversions are currently not supported by MPI-IO
 
+# Argobots related error messages
+**argobots_uninitialized:Argobots is not initialized
+
 # -----------------------------------------------------------------------------
 # The following names are defined but not used (see the -careful option 
 # for extracterrmsgs) (still to do: move the undefined names here)
