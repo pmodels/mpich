@@ -152,7 +152,9 @@ int hcoll_comm_create(MPID_Comm * comm_ptr, void *param)
         goto fn_exit;
     }
     num_ranks = comm_ptr->local_size;
-    if ((MPID_INTRACOMM != comm_ptr->comm_kind) || (2 > num_ranks)) {
+    if ((MPID_INTRACOMM != comm_ptr->comm_kind) || (2 > num_ranks)
+        || comm_ptr->hierarchy_kind == MPID_HIERARCHY_NODE_ROOTS
+        || comm_ptr->hierarchy_kind == MPID_HIERARCHY_NODE) {
         comm_ptr->hcoll_priv.is_hcoll_init = 0;
         goto fn_exit;
     }
