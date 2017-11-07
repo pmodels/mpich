@@ -179,6 +179,10 @@ int MPI_Init( int *argc, char ***argv )
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     if (MPIR_CVAR_ASYNC_PROGRESS) {
+#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS
+        printf("WARNING: Asynchronous progress is not supported with Argobots\n");
+        goto fn_fail;
+#else
         if (provided == MPI_THREAD_MULTIPLE) {
             mpi_errno = MPIR_Init_async_thread();
             if (mpi_errno) goto fn_fail;
@@ -188,6 +192,7 @@ int MPI_Init( int *argc, char ***argv )
         else {
             printf("WARNING: No MPI_THREAD_MULTIPLE support (needed for async progress)\n");
         }
+#endif
     }
 
     /* ... end of body of routine ... */
