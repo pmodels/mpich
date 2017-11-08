@@ -131,6 +131,21 @@ Makefile.am-stamp
 # created by maint/gen_subcfg_m4
 /subsys_include.m4
 
+# root confdb/ contents
+/confdb/ar-lib
+/confdb/compile
+/confdb/config.guess
+/confdb/config.sub
+/confdb/depcomp
+/confdb/install-sh
+/confdb/libtool.m4
+/confdb/ltmain.sh
+/confdb/ltoptions.m4
+/confdb/ltsugar.m4
+/confdb/ltversion.m4
+/confdb/lt~obsolete.m4
+/confdb/missing
+
 # random stuff
 /maint/gcovmerge
 /src/binding/fortran/mpif_h/buildiface-stamp
