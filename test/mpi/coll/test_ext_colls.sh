@@ -9,12 +9,12 @@ algo_ids="1 2"
 kvalues="3 5"
 for algo_id in ${algo_ids}; do
     for kval in ${kvalues}; do
-        env="env=MPIR_CVAR_USE_REDUCE=${algo_id} env=MPIR_CVAR_REDUCE_TREE_KVAL=${kval} ${testing_env} ${nl}"
-        ext_coll_tests+="reduce 5 ${env}"
-        ext_coll_tests+="reduce 10 ${env}"
-        ext_coll_tests+="red3 10 ${env}"
-        ext_coll_tests+="red4 10 ${env}"
-        ext_coll_tests+="reduce 5 ${env} env=MPIR_CVAR_REDUCE_TREE_SEGSIZE=4096"
+        env="env=MPIR_CVAR_USE_REDUCE=${algo_id} env=MPIR_CVAR_REDUCE_TREE_KVAL=${kval} ${testing_env}"
+        ext_coll_tests+="reduce 5 ${env}${nl}"
+        ext_coll_tests+="reduce 10 ${env}${nl}"
+        ext_coll_tests+="red3 10 ${env}${nl}"
+        ext_coll_tests+="red4 10 ${env}${nl}"
+        ext_coll_tests+="reduce 5 ${env} env=MPIR_CVAR_REDUCE_TREE_SEGSIZE=4096${nl}"
     done
 done
 # bcast tests
@@ -22,7 +22,7 @@ algo_ids="2 3"
 kvalues="4"
 for algo_id in ${algo_ids}; do
     for kval in ${kvalues}; do
-        env="env=MPIR_CVAR_USE_BCAST=${algo_id} ${testing_env}"
+        env="env=MPIR_CVAR_USE_BCAST=${algo_id} ${testing_env} "
         if [ ${algo_id} == 1 ]; then
             env+="env=MPIR_CVAR_BCAST_KNOMIAL_KVAL=${kval}"
         else
@@ -59,7 +59,7 @@ done
 #Alltoall tests
 algo_ids="1 2 3"
 for algo_id in ${algo_ids}; do
-    env="env=MPIR_CVAR_USE_ALLTOALL=${algo_id}$ ${testing_env} {nl}"
+    env="env=MPIR_CVAR_USE_ALLTOALL=${algo_id} ${testing_env} ${nl}"
     ext_coll_tests+="alltoall1 8 ${env}"
 done
 # Add more tests
