@@ -73,7 +73,10 @@ sync_external () {
 
 confdb_dirs=
 confdb_dirs="${confdb_dirs} src/mpi/romio/confdb"
+confdb_dirs="${confdb_dirs} src/mpi/romio/mpl/confdb"
+confdb_dirs="${confdb_dirs} src/mpl/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
+confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
 confdb_dirs="${confdb_dirs} test/mpi/confdb"
 
 # hydra's copy of mpl
