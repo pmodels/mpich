@@ -1171,6 +1171,14 @@ INTERFACE
     END FUNCTION FOO
 END INTERFACE
 
+! Test assumed-rank + asynchronous
+INTERFACE TEST_ASSUMED_RANK_ASYNC
+    SUBROUTINE TEST_ASSUMED_RANK_ASYNC_IMPL(BUF)
+        IMPLICIT NONE
+        TYPE(*), DIMENSION(..), ASYNCHRONOUS :: BUF
+    END SUBROUTINE TEST_ASSUMED_RANK_ASYNC_IMPL
+END INTERFACE TEST_ASSUMED_RANK_ASYNC
+
 CONTAINS
 
 ! Test TS 29113 asychronous attribute and optional
@@ -1199,16 +1207,18 @@ END MODULE
 
 !==============================================
 PROGRAM MAIN
-USE :: F08TS_MODULE, ONLY : FOO
+USE :: F08TS_MODULE, ONLY : FOO, TEST_ASSUMED_RANK_ASYNC
 IMPLICIT NONE
 
 INTEGER, DIMENSION(4,4) :: A, B
 INTEGER, DIMENSION(2,2) :: C
 INTEGER                 :: ERRCODE
+INTEGER, DIMENSION(10), ASYNCHRONOUS :: IAR
 
 ! Test contiguous and non-contiguous array section passing
 ! and linkage with C code
 ERRCODE = FOO(A(1:4:2, :), B(:, 2:4:2), C)
+CALL TEST_ASSUMED_RANK_ASYNC(IAR(2:7))
 
 END PROGRAM
     ])],[],[f08_works=no])
