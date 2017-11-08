@@ -46,20 +46,6 @@ ProgHomeDir() {
     eval $2=$proghome
 }
 
-
-########################################################################
-echo
-echo "########################################################"
-echo "## Checking to make sure the directory structure is sane"
-echo "########################################################"
-echo
-
-if test ! -e "src/mpl/confdb/aclocal.m4" ; then
-    echo "submodules have not been initialized"
-    exit 1
-fi
-
-
 ########################################################################
 # This used to be an optionally installed hook to help with git-svn
 # versions of the old SVN repo.  Now that we are using git, this is our
