@@ -4,9 +4,6 @@
 [submodule "confdb"]
 	path = confdb
 	url = https://github.com/pmodels/confdb
-[submodule "src/mpl"]
-	path = src/mpl
-	url = https://github.com/pmodels/mpl
 [submodule "src/izem"]
 	path = src/izem
 	url = https://github.com/pmodels/izem
