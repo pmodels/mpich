@@ -7,3 +7,6 @@
 [submodule "src/mpid/ch4/netmod/ofi/libfabric"]
 	path = src/mpid/ch4/netmod/ofi/libfabric
 	url = https://github.com/ofiwg/libfabric
+[submodule "src/pm/hydra/tools/topo/hwloc/hwloc"]
+	path = src/pm/hydra/tools/topo/hwloc/hwloc
+	url = https://github.com/open-mpi/hwloc
