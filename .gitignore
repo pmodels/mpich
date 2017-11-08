@@ -115,9 +115,13 @@ apply-xfail.sh
 /src/armci/m4
 /src/mpi/romio/confdb
 /src/mpl/confdb
+/src/pm/hydra/confdb
+/src/pm/hydra/mpl
+/src/pm/hydra/mpl/confdb
 /src/mpi/romio/mpl
 /src/mpi/romio/mpl/confdb
 /src/mpi/romio/version.m4
+/src/pm/hydra/version.m4
 /test/mpi/version.m4
 
 # created by the build process in the test dirs
