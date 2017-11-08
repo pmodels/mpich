@@ -10,9 +10,6 @@
 [submodule "src/izem"]
 	path = src/izem
 	url = https://github.com/pmodels/izem
-[submodule "src/pm/hydra"]
-	path = src/pm/hydra
-	url = https://github.com/pmodels/hydra
 [submodule "src/mpid/ch4/netmod/ofi/libfabric"]
 	path = src/mpid/ch4/netmod/ofi/libfabric
 	url = https://github.com/ofiwg/libfabric
