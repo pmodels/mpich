@@ -87,7 +87,11 @@ sync_external () {
 
 confdb_dirs=
 confdb_dirs="${confdb_dirs} src/mpi/romio/confdb"
+confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
 confdb_dirs="${confdb_dirs} test/mpi/confdb"
+
+# hydra's copy of mpl
+sync_external src/mpl src/pm/hydra/mpl
 
 # ROMIO's copy of mpl
 sync_external src/mpl src/mpi/romio/mpl
@@ -99,6 +103,7 @@ done
 
 # a couple of other random files
 if [ -f maint/version.m4 ] ; then
+    cp -pPR maint/version.m4 src/pm/hydra/version.m4
     cp -pPR maint/version.m4 src/mpi/romio/version.m4
     cp -pPR maint/version.m4 test/mpi/version.m4
 fi
