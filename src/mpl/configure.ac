@@ -617,6 +617,7 @@ AC_ARG_WITH([thread-package],
 [  --with-thread-package=package     Thread package to use. Supported thread packages include:
         posix or pthreads - POSIX threads (default, if required)
         solaris - Solaris threads (Solaris OS only)
+        abt or argobots - Argobots threads
         win - windows threads
         uti - POSIX threads plus Utility Thread Offloading library
         none - no threads
@@ -735,6 +736,18 @@ void f1(void *a) { return; }],
         THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_WIN
         AC_MSG_ERROR([The 'win' thread package is not supported via autoconf builds at this time.])
         ;;
+    abt|argobots)
+        with_thread_package=argobots
+        AC_CHECK_HEADERS(abt.h)
+        AC_CHECK_LIB([abt],[abt_key_create],have_abt=yes)
+        if test "$have_abt" = "yes"; then
+           PAC_PREPEND_FLAG([-labt],[LIBS])
+        fi
+        AC_CHECK_FUNCS(ABT_thread_yield)
+        AC_CHECK_FUNC([abt_key_create],[],[AC_MSG_ERROR([unable to find Argobots library])])
+        AC_CHECK_FUNCS(abt_cleanup_push)
+        THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_ARGOBOTS
+        ;;
     no|none)
 	with_thread_package=none
         THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_NONE
@@ -749,7 +762,9 @@ esac
 AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name of the thread package])
 
 # check for compiler-support for thread-local storage (MPL_TLS_SPECIFIER)
-AX_TLS
+if test "${with_thread_package}" != "argobots" ; then
+    AX_TLS
+fi
 
 #######################################################################
 ## END OF THREADS CODE
