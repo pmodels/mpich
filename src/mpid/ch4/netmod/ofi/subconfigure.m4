@@ -39,6 +39,13 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     dnl Use embedded libfabric if we specify to do so or we didn't specify and the source is present
     if test "${with_libfabric}" = "embedded" ; then
         ofi_embedded="yes"
+    elif test -z "${with_libfabric}" ; then
+        if test -f ${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/configure ; then
+            ofi_embedded="yes"
+        else
+            ofi_embedded="no"
+            PAC_SET_HEADER_LIB_PATH(libfabric)
+        fi
     else
         ofi_embedded="no"
         PAC_SET_HEADER_LIB_PATH(libfabric)
