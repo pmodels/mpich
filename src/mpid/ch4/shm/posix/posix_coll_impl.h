@@ -14,13 +14,13 @@
 #include "posix_coll_params.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_Barrier_recursive_doubling
+#define FUNCNAME MPIDI_POSIX_Barrier_intra_recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_POSIX_Barrier_recursive_doubling(MPIR_Comm * comm_ptr,
-                                           MPIR_Errflag_t * errflag,
-                                           MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_POSIX_Barrier_intra_recursive_doubling(MPIR_Comm * comm_ptr,
+                                               MPIR_Errflag_t * errflag,
+                                               MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -30,17 +30,17 @@ int MPIDI_POSIX_Barrier_recursive_doubling(MPIR_Comm * comm_ptr,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_Bcast_binomial
+#define FUNCNAME MPIDI_POSIX_Bcast_intra_binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_POSIX_Bcast_binomial(void *buffer,
-                               int count,
-                               MPI_Datatype datatype,
-                               int root,
-                               MPIR_Comm * comm_ptr,
-                               MPIR_Errflag_t * errflag,
-                               MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_POSIX_Bcast_intra_binomial(void *buffer,
+                                   int count,
+                                   MPI_Datatype datatype,
+                                   int root,
+                                   MPIR_Comm * comm_ptr,
+                                   MPIR_Errflag_t * errflag,
+                                   MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -50,37 +50,17 @@ int MPIDI_POSIX_Bcast_binomial(void *buffer,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_Bcast_scatter_doubling_allgather
+#define FUNCNAME MPIDI_POSIX_Bcast_intra_scatter_doubling_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_POSIX_Bcast_scatter_doubling_allgather(void *buffer,
-                                                 int count,
-                                                 MPI_Datatype datatype,
-                                                 int root,
-                                                 MPIR_Comm * comm_ptr,
-                                                 MPIR_Errflag_t * errflag,
-                                                 MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Bcast_intra_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
-
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_Bcast_scatter_doubling_allgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-int MPIDI_POSIX_Bcast_scatter_ring_allgather(void *buffer,
-                                             int count,
-                                             MPI_Datatype datatype,
-                                             int root,
-                                             MPIR_Comm * comm_ptr,
-                                             MPIR_Errflag_t * errflag,
-                                             MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_POSIX_Bcast_intra_scatter_doubling_allgather(void *buffer,
+                                                     int count,
+                                                     MPI_Datatype datatype,
+                                                     int root,
+                                                     MPIR_Comm * comm_ptr,
+                                                     MPIR_Errflag_t * errflag,
+                                                     MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -90,14 +70,34 @@ int MPIDI_POSIX_Bcast_scatter_ring_allgather(void *buffer,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_allreduce_recursive_doubling
+#define FUNCNAME MPIDI_POSIX_Bcast_intra_scatter_ring_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_POSIX_allreduce_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
-                                             MPI_Datatype datatype, MPI_Op op,
-                                             MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                             MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_POSIX_Bcast_intra_scatter_ring_allgather(void *buffer,
+                                                 int count,
+                                                 MPI_Datatype datatype,
+                                                 int root,
+                                                 MPIR_Comm * comm_ptr,
+                                                 MPIR_Errflag_t * errflag,
+                                                 MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_Allreduce_intra_recursive_doubling
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_POSIX_Allreduce_intra_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
+                                                 MPI_Datatype datatype, MPI_Op op,
+                                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                                 MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -107,14 +107,14 @@ int MPIDI_POSIX_allreduce_recursive_doubling(const void *sendbuf, void *recvbuf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_allreduce_reduce_scatter_allgather
+#define FUNCNAME MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_POSIX_allreduce_reduce_scatter_allgather(const void *sendbuf, void *recvbuf, int count,
-                                                   MPI_Datatype datatype, MPI_Op op,
-                                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                                   MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf, void *recvbuf, int count,
+                                                       MPI_Datatype datatype, MPI_Op op,
+                                                       MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                                       MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -124,14 +124,14 @@ int MPIDI_POSIX_allreduce_reduce_scatter_allgather(const void *sendbuf, void *re
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_reduce_redscat_gather
+#define FUNCNAME MPIDI_POSIX_Reduce_intra_redscat_gather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_POSIX_reduce_redscat_gather(const void *sendbuf, void *recvbuf, int count,
-                                      MPI_Datatype datatype, MPI_Op op, int root,
-                                      MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                      MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_POSIX_Reduce_intra_redscat_gather(const void *sendbuf, void *recvbuf, int count,
+                                          MPI_Datatype datatype, MPI_Op op, int root,
+                                          MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                          MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -141,14 +141,14 @@ int MPIDI_POSIX_reduce_redscat_gather(const void *sendbuf, void *recvbuf, int co
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_reduce_binomial
+#define FUNCNAME MPIDI_POSIX_Reduce_intra_binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_POSIX_reduce_binomial(const void *sendbuf, void *recvbuf, int count,
-                                MPI_Datatype datatype, MPI_Op op, int root,
-                                MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_POSIX_Reduce_intra_binomial(const void *sendbuf, void *recvbuf, int count,
+                                    MPI_Datatype datatype, MPI_Op op, int root,
+                                    MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                    MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -158,22 +158,281 @@ int MPIDI_POSIX_reduce_binomial(const void *sendbuf, void *recvbuf, int count,
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_Alltoall_intra_brucks
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_POSIX_Alltoall_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                    MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                    MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Alltoall_intra_brucks(sendbuf, sendcount, sendtype,
+                                           recvbuf, recvcount, recvtype,
+                                           comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_Alltoall_intra_scattered
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_POSIX_Alltoall_intra_scattered(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                       MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                       MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Alltoall_intra_scattered(sendbuf, sendcount, sendtype,
+                                              recvbuf, recvcount, recvtype,
+                                              comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_Alltoall_intra_pairwise
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_POSIX_Alltoall_intra_pairwise(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                      MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                      MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Alltoall_intra_pairwise(sendbuf, sendcount, sendtype,
+                                             recvbuf, recvcount, recvtype,
+                                             comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_Alltoall_intra_pairwise_sendrecv_replace
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_POSIX_Alltoall_intra_pairwise_sendrecv_replace(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                                       MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                                       MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Alltoall_intra_pairwise_sendrecv_replace(sendbuf, sendcount, sendtype,
+                                                              recvbuf, recvcount, recvtype,
+                                                              comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_Alltoallv_intra_pairwise_sendrecv_replace
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_POSIX_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const int *sendcounts,
+                                                        const int *sdispls, MPI_Datatype sendtype,
+                                                        void *recvbuf, const int *recvcounts,
+                                                        const int *rdispls, MPI_Datatype recvtype,
+                                                        MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                                        MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Alltoallv_intra_pairwise_sendrecv_replace(sendbuf, sendcounts, sdispls, sendtype,
+                                                               recvbuf, recvcounts, rdispls, recvtype,
+                                                               comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_Alltoallv_intra_scattered
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_POSIX_Alltoallv_intra_scattered(const void *sendbuf, const int *sendcounts,
+                                        const int *sdispls, MPI_Datatype sendtype,
+                                        void *recvbuf, const int *recvcounts,
+                                        const int *rdispls, MPI_Datatype recvtype,
+                                        MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                        MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Alltoallv_intra_scattered(sendbuf, sendcounts, sdispls, sendtype,
+                                               recvbuf, recvcounts, rdispls, recvtype,
+                                               comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_Alltoallw_intra_pairwise_sendrecv_replace
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_POSIX_Alltoallw_intra_pairwise_sendrecv_replace(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                                                        const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
+                                                        const int rdispls[], const MPI_Datatype recvtypes[],
+                                                        MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                                        MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Alltoallw_intra_pairwise_sendrecv_replace(sendbuf, sendcounts, sdispls, sendtypes,
+                                                               recvbuf, recvcounts, rdispls, recvtypes,
+                                                               comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_Alltoallw_intra_scattered
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_POSIX_Alltoallw_intra_scattered(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                                        const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
+                                        const int rdispls[], const MPI_Datatype recvtypes[],
+                                        MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                        MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Alltoallw_intra_scattered(sendbuf, sendcounts, sdispls, sendtypes,
+                                               recvbuf, recvcounts, rdispls, recvtypes,
+                                               comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_Allgather_intra_recursive_doubling
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_POSIX_Allgather_intra_recursive_doubling(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                                 void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                                 MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Allgather_intra_recursive_doubling(sendbuf, sendcount, sendtype,
+                                                        recvbuf, recvcount, recvtype,
+                                                        comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_Allgather_intra_brucks
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_POSIX_Allgather_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                     MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                     MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Allgather_intra_brucks(sendbuf, sendcount, sendtype,
+                                            recvbuf, recvcount, recvtype,
+                                            comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_Allgather_intra_ring
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_POSIX_Allgather_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                   MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Allgather_intra_ring(sendbuf, sendcount, sendtype,
+                                          recvbuf, recvcount, recvtype,
+                                          comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_Allgatherv_intra_recursive_doubling
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_POSIX_Allgatherv_intra_recursive_doubling(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                                  void *recvbuf, const int *recvcounts, const int *displs,
+                                                  MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                                  MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Allgatherv_intra_recursive_doubling(sendbuf, sendcount, sendtype,
+                                                         recvbuf, recvcounts, displs,
+                                                         recvtype, comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_Allgatherv_intra_brucks
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_POSIX_Allgatherv_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                      void *recvbuf, const int *recvcounts, const int *displs,
+                                      MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                      MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Allgatherv_intra_brucks(sendbuf, sendcount, sendtype,
+                                             recvbuf, recvcounts, displs,
+                                             recvtype, comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_Allgatherv_intra_ring
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_POSIX_Allgatherv_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                    void *recvbuf, const int *recvcounts, const int *displs,
+                                    MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                    MPIDI_POSIX_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Allgatherv_intra_ring(sendbuf, sendcount, sendtype,
+                                           recvbuf, recvcounts, displs,
+                                           recvtype, comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_POSIX_gather_intra_binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_POSIX_gather_intra_binomial(const void *sendbuf, int sendcount,
-                                      MPI_Datatype sendtype, void *recvbuf,
-                                      int recvcount, MPI_Datatype recvtype,
-                                      int root, MPIR_Comm * comm,
-                                      MPIR_Errflag_t * errflag,
-                                      MPIDI_POSIX_coll_algo_container_t *
-                                      params_container ATTRIBUTE((unused)))
+int MPIDI_POSIX_Gather_intra_binomial(const void *sendbuf, int sendcount,
+                                    MPI_Datatype sendtype, void *recvbuf,
+                                    int recvcount, MPI_Datatype recvtype,
+                                    int root, MPIR_Comm * comm,
+                                    MPIR_Errflag_t * errflag,
+                                    MPIDI_POSIX_coll_algo_container_t *
+                                    params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Gather_intra_binomial(sendbuf, sendcount, sendtype,
-                                           recvbuf, recvcount, recvtype, root, comm, errflag);
+                                           recvbuf, recvcount, recvtype,
+                                           root, comm, errflag);
 
     return mpi_errno;
 }
@@ -183,20 +442,19 @@ int MPIDI_POSIX_gather_intra_binomial(const void *sendbuf, int sendcount,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_POSIX_gather_intra_binomial_indexed(const void *sendbuf, int sendcount,
-                                              MPI_Datatype sendtype, void *recvbuf,
-                                              int recvcount, MPI_Datatype recvtype,
-                                              int root, MPIR_Comm * comm,
-                                              MPIR_Errflag_t * errflag,
-                                              MPIDI_POSIX_coll_algo_container_t *
-                                              params_container ATTRIBUTE((unused)))
+int MPIDI_POSIX_Gather_intra_binomial_indexed(const void *sendbuf, int sendcount,
+                                            MPI_Datatype sendtype, void *recvbuf,
+                                            int recvcount, MPI_Datatype recvtype,
+                                            int root, MPIR_Comm * comm,
+                                            MPIR_Errflag_t * errflag,
+                                            MPIDI_POSIX_coll_algo_container_t *
+                                            params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Gather_intra_binomial_indexed(sendbuf, sendcount, sendtype,
                                                    recvbuf, recvcount, recvtype,
                                                    root, comm, errflag);
-
     return mpi_errno;
 }
 
@@ -205,20 +463,19 @@ int MPIDI_POSIX_gather_intra_binomial_indexed(const void *sendbuf, int sendcount
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_POSIX_gatherv_intra_linear_ssend(const void *sendbuf, int sendcount,
-                                           MPI_Datatype sendtype, void *recvbuf,
-                                           const int *recvcounts, const int *displs,
-                                           MPI_Datatype recvtype, int root,
-                                           MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                           MPIDI_POSIX_coll_algo_container_t *
-                                           params_container ATTRIBUTE((unused)))
+int MPIDI_POSIX_Gatherv_intra_linear_ssend(const void *sendbuf, int sendcount,
+                                         MPI_Datatype sendtype, void *recvbuf,
+                                         const int *recvcounts, const int *displs,
+                                         MPI_Datatype recvtype, int root,
+                                         MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                         MPIDI_POSIX_coll_algo_container_t *
+                                         params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Gatherv_intra_linear_ssend(sendbuf, sendcount, sendtype, recvbuf,
                                                 recvcounts, displs, recvtype, root,
                                                 comm_ptr, errflag);
-
     return mpi_errno;
 }
 
@@ -227,19 +484,18 @@ int MPIDI_POSIX_gatherv_intra_linear_ssend(const void *sendbuf, int sendcount,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_POSIX_gatherv_intra_linear(const void *sendbuf, int sendcount,
-                                     MPI_Datatype sendtype, void *recvbuf,
-                                     const int *recvcounts, const int *displs,
-                                     MPI_Datatype recvtype, int root,
-                                     MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                     MPIDI_POSIX_coll_algo_container_t *
-                                     params_container ATTRIBUTE((unused)))
+int MPIDI_POSIX_Gatherv_intra_linear(const void *sendbuf, int sendcount,
+                                   MPI_Datatype sendtype, void *recvbuf,
+                                   const int *recvcounts, const int *displs,
+                                   MPI_Datatype recvtype, int root,
+                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                   MPIDI_POSIX_coll_algo_container_t *
+                                   params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Gatherv_intra_linear(sendbuf, sendcount, sendtype, recvbuf,
                                           recvcounts, displs, recvtype, root, comm_ptr, errflag);
-
     return mpi_errno;
 }
 
@@ -248,19 +504,18 @@ int MPIDI_POSIX_gatherv_intra_linear(const void *sendbuf, int sendcount,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_POSIX_scatter_intra_binomial(const void *sendbuf, int sendcount,
-                                       MPI_Datatype sendtype, void *recvbuf,
-                                       int recvcount, MPI_Datatype recvtype,
-                                       int root, MPIR_Comm * comm_ptr,
-                                       MPIR_Errflag_t * errflag,
-                                       MPIDI_POSIX_coll_algo_container_t *
-                                       params_container ATTRIBUTE((unused)))
+int MPIDI_POSIX_Scatter_intra_binomial(const void *sendbuf, int sendcount,
+                                     MPI_Datatype sendtype, void *recvbuf,
+                                     int recvcount, MPI_Datatype recvtype,
+                                     int root, MPIR_Comm * comm_ptr,
+                                     MPIR_Errflag_t * errflag,
+                                     MPIDI_POSIX_coll_algo_container_t *
+                                     params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Scatter_intra_binomial(sendbuf, sendcount, sendtype, recvbuf,
                                             recvcount, recvtype, root, comm_ptr, errflag);
-
     return mpi_errno;
 }
 
@@ -269,20 +524,18 @@ int MPIDI_POSIX_scatter_intra_binomial(const void *sendbuf, int sendcount,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_POSIX_scatterv_intra_linear(const void *sendbuf, const int *sendcounts,
-                                      const int *displs, MPI_Datatype sendtype,
-                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                      int root, MPIR_Comm * comm_ptr,
-                                      MPIR_Errflag_t * errflag,
-                                      MPIDI_POSIX_coll_algo_container_t *
-                                      params_container ATTRIBUTE((unused)))
+int MPIDI_POSIX_Scatterv_intra_linear(const void *sendbuf, const int *sendcounts,
+                                    const int *displs, MPI_Datatype sendtype,
+                                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                    int root, MPIR_Comm * comm_ptr,
+                                    MPIR_Errflag_t * errflag,
+                                    MPIDI_POSIX_coll_algo_container_t *
+                                    params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Scatterv_intra_linear(sendbuf, sendcounts, displs, sendtype,
                                            recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-
     return mpi_errno;
 }
-
 #endif /* POSIX_COLL_IMPL_H_INCLUDED */

@@ -2,33 +2,57 @@
 #define OFI_COLL_CONTAINERS_H_INCLUDED
 
 /* Barrier OFI containers declaration */
-extern const MPIDI_OFI_coll_algo_container_t OFI_barrier_recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Barrier_intra_recursive_doubling_cnt;
 
 /* Bcast OFI containers declaration */
-extern const MPIDI_OFI_coll_algo_container_t OFI_bcast_binomial_cnt;
-extern const MPIDI_OFI_coll_algo_container_t OFI_bcast_scatter_doubling_allgather_cnt;
-extern const MPIDI_OFI_coll_algo_container_t OFI_bcast_scatter_ring_allgather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Bcast_intra_binomial_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Bcast_intra_scatter_doubling_allgather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Bcast_intra_scatter_ring_allgather_cnt;
 
 /* Reduce OFI containers declaration */
-extern const MPIDI_OFI_coll_algo_container_t OFI_reduce_binomial_cnt;
-extern const MPIDI_OFI_coll_algo_container_t OFI_reduce_redscat_gather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_intra_binomial_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_intra_redscat_gather_cnt;
 
 /* Allreduce OFI containers declaration */
-extern const MPIDI_OFI_coll_algo_container_t OFI_allreduce_recursive_doubling_cnt;
-extern const MPIDI_OFI_coll_algo_container_t OFI_allreduce_reduce_scatter_allgather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allreduce_intra_recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allreduce_intra_reduce_scatter_allgather_cnt;
+
+/* Alltoall OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoall_intra_brucks_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoall_intra_scattered_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoall_intra_pairwise_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoall_intra_pairwise_sendrecv_replace_cnt;
+
+/* Alltoallv OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoallv_intra_scattered_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoallv_intra_pairwise_sendrecv_replace_cnt;
+
+/* Alltoallw OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoallw_intra_scattered_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoallw_intra_pairwise_sendrecv_replace_cnt;
+
+/* Allgather OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allgather_intra_recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allgather_intra_brucks_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allgather_intra_ring_cnt;
+
+/* Allgatherv OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allgatherv_intra_recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allgatherv_intra_brucks_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allgatherv_intra_ring_cnt;
 
 /* Gather OFI containers declaration */
-extern const MPIDI_OFI_coll_algo_container_t OFI_gather_intra_binomial_cnt;
-extern const MPIDI_OFI_coll_algo_container_t OFI_gather_intra_binomial_indexed_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Gather_intra_binomial_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Gather_intra_binomial_indexed_cnt;
 
 /* Gatherv OFI containers declaration */
-extern const MPIDI_OFI_coll_algo_container_t OFI_gatherv_intra_linear_ssend_cnt;
-extern const MPIDI_OFI_coll_algo_container_t OFI_gatherv_intra_linear_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Gatherv_intra_linear_ssend_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Gatherv_intra_linear_cnt;
 
 /* Scatter OFI containers declaration */
-extern const MPIDI_OFI_coll_algo_container_t OFI_scatter_intra_binomial_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Scatter_intra_binomial_cnt;
 
 /* Scatterv OFI containers declaration */
-extern const MPIDI_OFI_coll_algo_container_t OFI_scatterv_intra_linear_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Scatterv_intra_linear_cnt;
 
 #endif /* OFI_COLL_CONTAINERS_H_INCLUDED */

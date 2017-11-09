@@ -9,10 +9,10 @@ void * MPIDI_coll_get_next_container(void *container)
     return NULL;
 }
 
-/* Barrier default composition containers initialization*/
-const MPIDI_coll_algo_container_t CH4_barrier_composition_alpha_cnt =
+/* Barrier default composition containers initialization */
+const MPIDI_coll_algo_container_t CH4_Barrier_composition_alpha_cnt =
     {
-        .id = MPIDI_CH4_barrier_composition_alpha_id,
+        .id = MPIDI_CH4_Barrier_composition_alpha_id,
         .params.ch4_barrier_params.ch4_barrier_alpha =
             {
                 .node_barrier = -1,
@@ -21,9 +21,9 @@ const MPIDI_coll_algo_container_t CH4_barrier_composition_alpha_cnt =
             }
     };
 
-const MPIDI_coll_algo_container_t CH4_barrier_composition_beta_cnt =
+const MPIDI_coll_algo_container_t CH4_Barrier_composition_beta_cnt =
     {
-        .id = MPIDI_CH4_barrier_composition_beta_id,
+        .id = MPIDI_CH4_Barrier_composition_beta_id,
         .params.ch4_barrier_params.ch4_barrier_beta =
             {
                 .barrier = -1
@@ -31,9 +31,9 @@ const MPIDI_coll_algo_container_t CH4_barrier_composition_beta_cnt =
     };
 
 #ifdef MPIDI_BUILD_CH4_SHM
-const MPIDI_coll_algo_container_t CH4_barrier_composition_gamma_cnt =
+const MPIDI_coll_algo_container_t CH4_Barrier_composition_gamma_cnt =
     {
-        .id = MPIDI_CH4_barrier_composition_gamma_id,
+        .id = MPIDI_CH4_Barrier_composition_gamma_id,
         .params.ch4_barrier_params.ch4_barrier_gamma =
             {
                 .barrier = -1
@@ -41,15 +41,15 @@ const MPIDI_coll_algo_container_t CH4_barrier_composition_gamma_cnt =
     };
 #endif /* MPIDI_BUILD_CH4_SHM */
 
-const MPIDI_coll_algo_container_t CH4_barrier_intercomm_cnt =
+const MPIDI_coll_algo_container_t CH4_Barrier_intercomm_cnt =
     {
-        .id = MPIDI_CH4_barrier_intercomm_id
+        .id = MPIDI_CH4_Barrier_intercomm_id
     };
 
-/* Bcast default composition containers initialization*/
-const MPIDI_coll_algo_container_t CH4_bcast_composition_alpha_cnt =
+/* Bcast default composition containers initialization */
+const MPIDI_coll_algo_container_t CH4_Bcast_composition_alpha_cnt =
     {
-        .id = MPIDI_CH4_bcast_composition_alpha_id,
+        .id = MPIDI_CH4_Bcast_composition_alpha_id,
         .params.ch4_bcast_params.ch4_bcast_alpha =
             {
                 .roots_bcast = -1,
@@ -57,9 +57,9 @@ const MPIDI_coll_algo_container_t CH4_bcast_composition_alpha_cnt =
             }
     };
 
-const MPIDI_coll_algo_container_t CH4_bcast_composition_beta_cnt =
+const MPIDI_coll_algo_container_t CH4_Bcast_composition_beta_cnt =
     {
-        .id = MPIDI_CH4_bcast_composition_beta_id,
+        .id = MPIDI_CH4_Bcast_composition_beta_id,
         .params.ch4_bcast_params.ch4_bcast_beta =
             {
                 .node_bcast_first = -1,
@@ -68,9 +68,9 @@ const MPIDI_coll_algo_container_t CH4_bcast_composition_beta_cnt =
             }
     };
 
-const MPIDI_coll_algo_container_t CH4_bcast_composition_gamma_cnt =
+const MPIDI_coll_algo_container_t CH4_Bcast_composition_gamma_cnt =
     {
-       .id = MPIDI_CH4_bcast_composition_gamma_id,
+       .id = MPIDI_CH4_Bcast_composition_gamma_id,
        .params.ch4_bcast_params.ch4_bcast_gamma =
             {
                 .bcast = -1,
@@ -78,9 +78,9 @@ const MPIDI_coll_algo_container_t CH4_bcast_composition_gamma_cnt =
     };
 
 #ifdef MPIDI_BUILD_CH4_SHM
-const MPIDI_coll_algo_container_t CH4_bcast_composition_delta_cnt =
+const MPIDI_coll_algo_container_t CH4_Bcast_composition_delta_cnt =
     {
-       .id = MPIDI_CH4_bcast_composition_delta_id,
+       .id = MPIDI_CH4_Bcast_composition_delta_id,
        .params.ch4_bcast_params.ch4_bcast_delta =
             {
                 .bcast = -1,
@@ -88,15 +88,15 @@ const MPIDI_coll_algo_container_t CH4_bcast_composition_delta_cnt =
     };
 #endif /* MPIDI_BUILD_CH4_SHM */
 
-const MPIDI_coll_algo_container_t CH4_bcast_intercomm_cnt =
+const MPIDI_coll_algo_container_t CH4_Bcast_intercomm_cnt =
     {
-        .id = MPIDI_CH4_bcast_intercomm_id
+        .id = MPIDI_CH4_Bcast_intercomm_id
     };
 
-/* Reduce default composition containers initialization*/
-const MPIDI_coll_algo_container_t CH4_reduce_composition_alpha_cnt =
+/* Reduce default composition containers initialization */
+const MPIDI_coll_algo_container_t CH4_Reduce_composition_alpha_cnt =
     {
-        .id = MPIDI_CH4_reduce_composition_alpha_id,
+        .id = MPIDI_CH4_Reduce_composition_alpha_id,
         .params.ch4_reduce_params.ch4_reduce_alpha =
             {
                 .roots_reduce = -1,
@@ -104,9 +104,9 @@ const MPIDI_coll_algo_container_t CH4_reduce_composition_alpha_cnt =
             }
    };
 
-const MPIDI_coll_algo_container_t CH4_reduce_composition_beta_cnt =
+const MPIDI_coll_algo_container_t CH4_Reduce_composition_beta_cnt =
     {
-        .id = MPIDI_CH4_reduce_composition_beta_id,
+        .id = MPIDI_CH4_Reduce_composition_beta_id,
         .params.ch4_reduce_params.ch4_reduce_beta =
             {
                 .reduce = -1
@@ -114,9 +114,9 @@ const MPIDI_coll_algo_container_t CH4_reduce_composition_beta_cnt =
 };
 
 #ifdef MPIDI_BUILD_CH4_SHM
-const MPIDI_coll_algo_container_t CH4_reduce_composition_gamma_cnt =
+const MPIDI_coll_algo_container_t CH4_Reduce_composition_gamma_cnt =
     {
-        .id = MPIDI_CH4_reduce_composition_gamma_id,
+        .id = MPIDI_CH4_Reduce_composition_gamma_id,
         .params.ch4_reduce_params.ch4_reduce_gamma =
             {
                 .reduce = -1
@@ -124,20 +124,20 @@ const MPIDI_coll_algo_container_t CH4_reduce_composition_gamma_cnt =
 };
 #endif /* MPIDI_BUILD_CH4_SHM */
 
-const MPIDI_coll_algo_container_t CH4_reduce_intercomm_cnt =
+const MPIDI_coll_algo_container_t CH4_Reduce_intercomm_cnt =
     {
-        .id = MPIDI_CH4_reduce_intercomm_id
+        .id = MPIDI_CH4_Reduce_intercomm_id
     };
 
-/* Allreduce default composition containers initialization*/
-const MPIDI_coll_algo_container_t CH4_allreduce_intercomm_cnt =
+/* Allreduce default composition containers initialization */
+const MPIDI_coll_algo_container_t CH4_Allreduce_intercomm_cnt =
     {
-        .id = MPIDI_CH4_allreduce_intercomm_id
+        .id = MPIDI_CH4_Allreduce_intercomm_id
     };
 
-const MPIDI_coll_algo_container_t CH4_allreduce_composition_alpha_cnt =
+const MPIDI_coll_algo_container_t CH4_Allreduce_composition_alpha_cnt =
     {
-        .id = MPIDI_CH4_allreduce_composition_alpha_id,
+        .id = MPIDI_CH4_Allreduce_composition_alpha_id,
         .params.ch4_allreduce_params.ch4_allreduce_alpha =
             {
                 .node_reduce = -1,
@@ -146,9 +146,9 @@ const MPIDI_coll_algo_container_t CH4_allreduce_composition_alpha_cnt =
             }
     };
 
-const MPIDI_coll_algo_container_t CH4_allreduce_composition_beta_cnt =
+const MPIDI_coll_algo_container_t CH4_Allreduce_composition_beta_cnt =
     {
-        .id = MPIDI_CH4_allreduce_composition_beta_id,
+        .id = MPIDI_CH4_Allreduce_composition_beta_id,
         .params.ch4_allreduce_params.ch4_allreduce_beta =
             {
                 .allreduce = -1
@@ -156,9 +156,9 @@ const MPIDI_coll_algo_container_t CH4_allreduce_composition_beta_cnt =
     };
 
 #ifdef MPIDI_BUILD_CH4_SHM
-const MPIDI_coll_algo_container_t CH4_allreduce_composition_gamma_cnt =
+const MPIDI_coll_algo_container_t CH4_Allreduce_composition_gamma_cnt =
     {
-        .id = MPIDI_CH4_allreduce_composition_gamma_id,
+        .id = MPIDI_CH4_Allreduce_composition_gamma_id,
         .params.ch4_allreduce_params.ch4_allreduce_gamma =
             {
                 .allreduce = -1
@@ -166,73 +166,207 @@ const MPIDI_coll_algo_container_t CH4_allreduce_composition_gamma_cnt =
     };
 #endif /* MPIDI_BUILD_CH4_SHM */
 
-const MPIDI_coll_algo_container_t CH4_gather_intercomm_cnt =
+/* Gather default composition containers initialization */
+const MPIDI_coll_algo_container_t CH4_Gather_composition_alpha_cnt =
     {
-        .id = MPIDI_CH4_gather_intercomm_id
-    };
-
-const MPIDI_coll_algo_container_t CH4_gather_composition_alpha_cnt =
-    {
-        .id = MPIDI_CH4_gather_composition_alpha_id
+        .id = MPIDI_CH4_Gather_composition_alpha_id
     };
 
 #ifdef MPIDI_BUILD_CH4_SHM
-const MPIDI_coll_algo_container_t CH4_gather_composition_beta_cnt =
+const MPIDI_coll_algo_container_t CH4_Gather_composition_beta_cnt =
     {
-        .id = MPIDI_CH4_gather_composition_beta_id
+        .id = MPIDI_CH4_Gather_composition_beta_id
     };
 #endif /* MPIDI_BUILD_CH4_SHM */
 
-const MPIDI_coll_algo_container_t CH4_gatherv_intercomm_cnt =
+const MPIDI_coll_algo_container_t CH4_Gather_intercomm_cnt =
     {
-        .id = MPIDI_CH4_gatherv_intercomm_id
+        .id = MPIDI_CH4_Gather_intercomm_id
     };
 
-const MPIDI_coll_algo_container_t CH4_gatherv_composition_alpha_cnt =
+/* Gatherv default composition containers initialization */
+const MPIDI_coll_algo_container_t CH4_Gatherv_composition_alpha_cnt =
     {
-        .id = MPIDI_CH4_gatherv_composition_alpha_id
+        .id = MPIDI_CH4_Gatherv_composition_alpha_id
     };
 
 #ifdef MPIDI_BUILD_CH4_SHM
-const MPIDI_coll_algo_container_t CH4_gatherv_composition_beta_cnt =
+const MPIDI_coll_algo_container_t CH4_Gatherv_composition_beta_cnt =
     {
-        .id = MPIDI_CH4_gatherv_composition_beta_id
+        .id = MPIDI_CH4_Gatherv_composition_beta_id
     };
 #endif /* MPIDI_BUILD_CH4_SHM */
 
-const MPIDI_coll_algo_container_t CH4_scatter_intercomm_cnt =
+const MPIDI_coll_algo_container_t CH4_Gatherv_intercomm_cnt =
     {
-        .id = MPIDI_CH4_scatter_intercomm_id
+        .id = MPIDI_CH4_Gatherv_intercomm_id
     };
 
-const MPIDI_coll_algo_container_t CH4_scatter_composition_alpha_cnt =
+/* Scatter default composition containers initialization */
+const MPIDI_coll_algo_container_t CH4_Scatter_composition_alpha_cnt =
     {
-        .id = MPIDI_CH4_scatter_composition_alpha_id
+        .id = MPIDI_CH4_Scatter_composition_alpha_id
     };
 
 #ifdef MPIDI_BUILD_CH4_SHM
-const MPIDI_coll_algo_container_t CH4_scatter_composition_beta_cnt =
+const MPIDI_coll_algo_container_t CH4_Scatter_composition_beta_cnt =
     {
-        .id = MPIDI_CH4_scatter_composition_beta_id
+        .id = MPIDI_CH4_Scatter_composition_beta_id
     };
 #endif /* MPIDI_BUILD_CH4_SHM */
 
-const MPIDI_coll_algo_container_t CH4_scatterv_intercomm_cnt =
+const MPIDI_coll_algo_container_t CH4_Scatter_intercomm_cnt =
     {
-        .id = MPIDI_CH4_scatterv_intercomm_id
+        .id = MPIDI_CH4_Scatter_intercomm_id
     };
 
-const MPIDI_coll_algo_container_t CH4_scatterv_composition_alpha_cnt =
+/* Scatterv default composition containers initialization */
+const MPIDI_coll_algo_container_t CH4_Scatterv_composition_alpha_cnt =
     {
-        .id = MPIDI_CH4_scatterv_composition_alpha_id
+        .id = MPIDI_CH4_Scatterv_composition_alpha_id
     };
 
 #ifdef MPIDI_BUILD_CH4_SHM
-const MPIDI_coll_algo_container_t CH4_scatterv_composition_beta_cnt =
+const MPIDI_coll_algo_container_t CH4_Scatterv_composition_beta_cnt =
     {
-        .id = MPIDI_CH4_scatterv_composition_beta_id
+        .id = MPIDI_CH4_Scatterv_composition_beta_id
     };
 #endif /* MPIDI_BUILD_CH4_SHM */
+
+const MPIDI_coll_algo_container_t CH4_Scatterv_intercomm_cnt =
+    {
+        .id = MPIDI_CH4_Scatterv_intercomm_id
+    };
+
+/* Alltoall default containers initialization */
+const MPIDI_coll_algo_container_t CH4_Alltoall_composition_alpha_cnt =
+    {
+        .id = MPIDI_CH4_Alltoall_composition_alpha_id,
+        .params.ch4_alltoall_params.ch4_alltoall_alpha =
+            {
+                .alltoall = -1
+            }
+    };
+
+#ifdef MPIDI_BUILD_CH4_SHM
+const MPIDI_coll_algo_container_t CH4_Alltoall_composition_beta_cnt =
+    {
+        .id = MPIDI_CH4_Alltoall_composition_beta_id,
+        .params.ch4_alltoall_params.ch4_alltoall_beta =
+            {
+                .alltoall = -1
+            }
+    };
+#endif /* MPIDI_BUILD_CH4_SHM */
+
+const MPIDI_coll_algo_container_t CH4_Alltoall_intercomm_cnt =
+    {
+        .id = MPIDI_CH4_Alltoall_intercomm_id
+    };
+
+/* Alltoallv default containers initialization */
+const MPIDI_coll_algo_container_t CH4_Alltoallv_composition_alpha_cnt =
+    {
+        .id = MPIDI_CH4_Alltoallv_composition_alpha_id,
+        .params.ch4_alltoallv_params.ch4_alltoallv_alpha =
+            {
+                .alltoallv = -1
+            }
+    };
+
+#ifdef MPIDI_BUILD_CH4_SHM
+const MPIDI_coll_algo_container_t CH4_Alltoallv_composition_beta_cnt =
+    {
+        .id = MPIDI_CH4_Alltoallv_composition_beta_id,
+        .params.ch4_alltoallv_params.ch4_alltoallv_beta =
+            {
+                .alltoallv = -1
+            }
+    };
+#endif /* MPIDI_BUILD_CH4_SHM */
+
+const MPIDI_coll_algo_container_t CH4_Alltoallv_intercomm_cnt =
+    {
+        .id = MPIDI_CH4_Alltoallv_intercomm_id
+    };
+
+/* Alltoallw default containers initialization */
+const MPIDI_coll_algo_container_t CH4_Alltoallw_composition_alpha_cnt =
+    {
+        .id = MPIDI_CH4_Alltoallw_composition_alpha_id,
+        .params.ch4_alltoallw_params.ch4_alltoallw_alpha =
+            {
+                .alltoallw = -1
+            }
+    };
+
+#ifdef MPIDI_BUILD_CH4_SHM
+const MPIDI_coll_algo_container_t CH4_Alltoallw_composition_beta_cnt =
+    {
+        .id = MPIDI_CH4_Alltoallw_composition_beta_id,
+        .params.ch4_alltoallw_params.ch4_alltoallw_beta =
+            {
+                .alltoallw = -1
+            }
+    };
+#endif /* MPIDI_BUILD_CH4_SHM */
+
+const MPIDI_coll_algo_container_t CH4_Alltoallw_intercomm_cnt =
+    {
+        .id = MPIDI_CH4_Alltoallw_intercomm_id
+    };
+
+/* Allgather default containers initialization */
+const MPIDI_coll_algo_container_t CH4_Allgather_composition_alpha_cnt =
+    {
+        .id = MPIDI_CH4_Allgather_composition_alpha_id,
+        .params.ch4_allgather_params.ch4_allgather_alpha =
+            {
+                .allgather = -1
+            }
+    };
+
+#ifdef MPIDI_BUILD_CH4_SHM
+const MPIDI_coll_algo_container_t CH4_Allgather_composition_beta_cnt =
+    {
+        .id = MPIDI_CH4_Allgather_composition_beta_id,
+        .params.ch4_allgather_params.ch4_allgather_beta =
+            {
+                .allgather = -1
+            }
+    };
+#endif /* MPIDI_BUILD_CH4_SHM */
+
+const MPIDI_coll_algo_container_t CH4_Allgather_intercomm_cnt =
+    {
+        .id = MPIDI_CH4_Allgather_intercomm_id
+    };
+
+/* Allgatherv default containers initialization */
+const MPIDI_coll_algo_container_t CH4_Allgatherv_composition_alpha_cnt =
+    {
+        .id = MPIDI_CH4_Allgatherv_composition_alpha_id,
+        .params.ch4_allgatherv_params.ch4_allgatherv_alpha =
+            {
+                .allgatherv = -1
+            }
+    };
+
+#ifdef MPIDI_BUILD_CH4_SHM
+const MPIDI_coll_algo_container_t CH4_Allgatherv_composition_beta_cnt =
+    {
+        .id = MPIDI_CH4_Allgatherv_composition_beta_id,
+        .params.ch4_allgatherv_params.ch4_allgatherv_beta =
+            {
+                .allgatherv = -1
+            }
+    };
+#endif /* MPIDI_BUILD_CH4_SHM */
+
+const MPIDI_coll_algo_container_t CH4_Allgatherv_intercomm_cnt =
+    {
+        .id = MPIDI_CH4_Allgatherv_intercomm_id
+    };
 
 /* *INDENT-OFF* */
 @ch4_netmod_coll_globals_default@

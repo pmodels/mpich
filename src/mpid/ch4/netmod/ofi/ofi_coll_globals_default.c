@@ -1,78 +1,152 @@
 /* Barrier default OFI containers initialization*/
-const MPIDI_OFI_coll_algo_container_t OFI_barrier_recursive_doubling_cnt =
+const MPIDI_OFI_coll_algo_container_t OFI_Barrier_intra_recursive_doubling_cnt =
     {
-        .id = MPIDI_OFI_barrier_recursive_doubling_id
+        .id = MPIDI_OFI_Barrier_intra_recursive_doubling_id
     };
 
 /* Bcast default OFI containers initialization*/
-const MPIDI_OFI_coll_algo_container_t OFI_bcast_binomial_cnt =
+const MPIDI_OFI_coll_algo_container_t OFI_Bcast_intra_binomial_cnt =
     {
-        .id = MPIDI_OFI_bcast_binomial_id
+        .id = MPIDI_OFI_Bcast_intra_binomial_id
     };
 
-const MPIDI_OFI_coll_algo_container_t OFI_bcast_scatter_doubling_allgather_cnt =
+const MPIDI_OFI_coll_algo_container_t OFI_Bcast_intra_scatter_doubling_allgather_cnt =
     {
-        .id = MPIDI_OFI_bcast_scatter_doubling_allgather_id
+        .id = MPIDI_OFI_Bcast_intra_scatter_doubling_allgather_id
     };
 
-const MPIDI_OFI_coll_algo_container_t OFI_bcast_scatter_ring_allgather_cnt =
+const MPIDI_OFI_coll_algo_container_t OFI_Bcast_intra_scatter_ring_allgather_cnt =
     {
-        .id = MPIDI_OFI_bcast_scatter_ring_allgather_id
+        .id = MPIDI_OFI_Bcast_intra_scatter_ring_allgather_id
     };
 
 /* Reduce default OFI containers initialization*/
-const MPIDI_OFI_coll_algo_container_t OFI_reduce_redscat_gather_cnt =
+const MPIDI_OFI_coll_algo_container_t OFI_Reduce_intra_redscat_gather_cnt =
     {
-        .id = MPIDI_OFI_reduce_redscat_gather_id
+        .id = MPIDI_OFI_Reduce_intra_redscat_gather_id
     };
 
-const MPIDI_OFI_coll_algo_container_t OFI_reduce_binomial_cnt =
+const MPIDI_OFI_coll_algo_container_t OFI_Reduce_intra_binomial_cnt =
     {
-        .id = MPIDI_OFI_reduce_binomial_id
+        .id = MPIDI_OFI_Reduce_intra_binomial_id
     };
 
-/* Allreduce default OFI containers initialization*/
-const MPIDI_OFI_coll_algo_container_t OFI_allreduce_recursive_doubling_cnt =
+/* Allreduce default OFI containers initialization */
+const MPIDI_OFI_coll_algo_container_t OFI_Allreduce_intra_recursive_doubling_cnt =
     {
-        .id = MPIDI_OFI_allreduce_recursive_doubling_id
+        .id = MPIDI_OFI_Allreduce_intra_recursive_doubling_id
     };
 
-const MPIDI_OFI_coll_algo_container_t OFI_allreduce_reduce_scatter_allgather_cnt =
+const MPIDI_OFI_coll_algo_container_t OFI_Allreduce_intra_reduce_scatter_allgather_cnt =
     {
-        .id = MPIDI_OFI_allreduce_reduce_scatter_allgather_id
+        .id = MPIDI_OFI_Allreduce_intra_reduce_scatter_allgather_id
+    };
+
+/* Alltoall default OFI containers initialization */
+const MPIDI_OFI_coll_algo_container_t OFI_Alltoall_intra_pairwise_sendrecv_replace_cnt =
+    {
+        .id = MPIDI_OFI_Alltoall_intra_pairwise_sendrecv_replace_id
+    };
+
+const MPIDI_OFI_coll_algo_container_t OFI_Alltoall_intra_brucks_cnt =
+    {
+        .id = MPIDI_OFI_Alltoall_intra_brucks_id
+    };
+
+const MPIDI_OFI_coll_algo_container_t OFI_Alltoall_intra_scattered_cnt =
+    {
+        .id = MPIDI_OFI_Alltoall_intra_scattered_id
+    };
+
+const MPIDI_OFI_coll_algo_container_t OFI_Alltoall_intra_pairwise_cnt =
+    {
+        .id = MPIDI_OFI_Alltoall_intra_pairwise_id
+    };
+
+/* Alltoallv default OFI containers initialization */
+const MPIDI_OFI_coll_algo_container_t OFI_Alltoallv_intra_pairwise_sendrecv_replace_cnt =
+    {
+        .id = MPIDI_OFI_Alltoallv_intra_pairwise_sendrecv_replace_id
+    };
+
+const MPIDI_OFI_coll_algo_container_t OFI_Alltoallv_intra_scattered_cnt =
+    {
+        .id = MPIDI_OFI_Alltoallv_intra_scattered_id
+    };
+
+/* Alltoallw default OFI containers initialization */
+const MPIDI_OFI_coll_algo_container_t OFI_Alltoallw_intra_pairwise_sendrecv_replace_cnt =
+    {
+        .id = MPIDI_OFI_Alltoallw_intra_pairwise_sendrecv_replace_id
+    };
+
+const MPIDI_OFI_coll_algo_container_t OFI_Alltoallw_intra_scattered_cnt =
+    {
+        .id = MPIDI_OFI_Alltoallw_intra_scattered_id
+    };
+
+/* Allgather default OFI containers initialization */
+const MPIDI_OFI_coll_algo_container_t OFI_Allgather_intra_recursive_doubling_cnt =
+    {
+        .id = MPIDI_OFI_Allgather_intra_recursive_doubling_id
+    };
+
+const MPIDI_OFI_coll_algo_container_t OFI_Allgather_intra_brucks_cnt =
+    {
+        .id = MPIDI_OFI_Allgather_intra_brucks_id
+    };
+
+const MPIDI_OFI_coll_algo_container_t OFI_Allgather_intra_ring_cnt =
+    {
+        .id = MPIDI_OFI_Allgather_intra_ring_id
+    };
+
+/* Allgatherv default OFI containers initialization */
+const MPIDI_OFI_coll_algo_container_t OFI_Allgatherv_intra_recursive_doubling_cnt =
+    {
+        .id = MPIDI_OFI_Allgatherv_intra_recursive_doubling_id
+    };
+
+const MPIDI_OFI_coll_algo_container_t OFI_Allgatherv_intra_brucks_cnt =
+    {
+        .id = MPIDI_OFI_Allgatherv_intra_brucks_id
+    };
+
+const MPIDI_OFI_coll_algo_container_t OFI_Allgatherv_intra_ring_cnt =
+    {
+        .id = MPIDI_OFI_Allgatherv_intra_ring_id
     };
 
 /* Gather default OFI containers initialization*/
-const MPIDI_OFI_coll_algo_container_t OFI_gather_intra_binomial_cnt =
+const MPIDI_OFI_coll_algo_container_t OFI_Gather_intra_binomial_cnt =
     {
-        .id = MPIDI_OFI_gather_intra_binomial_id
+        .id = MPIDI_OFI_Gather_intra_binomial_id
     };
 
-const MPIDI_OFI_coll_algo_container_t OFI_gather_intra_binomial_indexed_cnt =
+const MPIDI_OFI_coll_algo_container_t OFI_Gather_intra_binomial_indexed_cnt =
     {
-        .id = MPIDI_OFI_gather_intra_binomial_indexed_id
+        .id = MPIDI_OFI_Gather_intra_binomial_indexed_id
     };
 
 /* Gatherv default OFI containers initialization*/
-const MPIDI_OFI_coll_algo_container_t OFI_gatherv_intra_linear_ssend_cnt =
+const MPIDI_OFI_coll_algo_container_t OFI_Gatherv_intra_linear_ssend_cnt =
     {
-        .id = MPIDI_OFI_gatherv_intra_linear_ssend_id
+        .id = MPIDI_OFI_Gatherv_intra_linear_ssend_id
     };
 
-const MPIDI_OFI_coll_algo_container_t OFI_gatherv_intra_linear_cnt =
+const MPIDI_OFI_coll_algo_container_t OFI_Gatherv_intra_linear_cnt =
     {
-        .id = MPIDI_OFI_gatherv_intra_linear_id
+        .id = MPIDI_OFI_Gatherv_intra_linear_id
     };
 
 /* Scatter default OFI containers initialization*/
-const MPIDI_OFI_coll_algo_container_t OFI_scatter_intra_binomial_cnt =
+const MPIDI_OFI_coll_algo_container_t OFI_Scatter_intra_binomial_cnt =
     {
-        .id = MPIDI_OFI_scatter_intra_binomial_id
+        .id = MPIDI_OFI_Scatter_intra_binomial_id
     };
 
 /* Scatterv default OFI containers initialization*/
-const MPIDI_OFI_coll_algo_container_t OFI_scatterv_intra_linear_cnt =
+const MPIDI_OFI_coll_algo_container_t OFI_Scatterv_intra_linear_cnt =
     {
-        .id = MPIDI_OFI_scatterv_intra_linear_id
+        .id = MPIDI_OFI_Scatterv_intra_linear_id
     };
-

@@ -26,18 +26,18 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
     ch4_algo_parameters_container = MPIDI_CH4_Barrier_select(comm, errflag);
 
     switch (ch4_algo_parameters_container->id) {
-    case MPIDI_CH4_barrier_composition_alpha_id:
+    case MPIDI_CH4_Barrier_composition_alpha_id:
         mpi_errno = MPIDI_Barrier_composition_alpha(comm, errflag, ch4_algo_parameters_container);
         break;
-    case MPIDI_CH4_barrier_composition_beta_id:
+    case MPIDI_CH4_Barrier_composition_beta_id:
         mpi_errno = MPIDI_Barrier_composition_beta(comm, errflag, ch4_algo_parameters_container);
         break;
 #ifdef MPIDI_BUILD_CH4_SHM
-    case MPIDI_CH4_barrier_composition_gamma_id:
+    case MPIDI_CH4_Barrier_composition_gamma_id:
         mpi_errno = MPIDI_Barrier_composition_gamma(comm, errflag, ch4_algo_parameters_container);
         break;
 #endif /* MPIDI_BUILD_CH4_SHM */
-    case MPIDI_CH4_barrier_intercomm_id:
+    case MPIDI_CH4_Barrier_intercomm_id:
         mpi_errno = MPIDI_Barrier_intercomm(comm, errflag, ch4_algo_parameters_container);
         break;
     default:
@@ -61,29 +61,29 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
     ch4_algo_parameters_container = MPIDI_CH4_Bcast_select(buffer, count, datatype, root, comm, errflag);
 
     switch (ch4_algo_parameters_container->id) {
-    case MPIDI_CH4_bcast_composition_alpha_id:
+    case MPIDI_CH4_Bcast_composition_alpha_id:
         mpi_errno =
             MPIDI_Bcast_composition_alpha(buffer, count, datatype, root, comm, errflag,
                                           ch4_algo_parameters_container);
         break;
-    case MPIDI_CH4_bcast_composition_beta_id:
+    case MPIDI_CH4_Bcast_composition_beta_id:
         mpi_errno =
             MPIDI_Bcast_composition_beta(buffer, count, datatype, root, comm, errflag,
                                          ch4_algo_parameters_container);
         break;
-    case MPIDI_CH4_bcast_composition_gamma_id:
+    case MPIDI_CH4_Bcast_composition_gamma_id:
         mpi_errno =
             MPIDI_Bcast_composition_gamma(buffer, count, datatype, root, comm, errflag,
                                           ch4_algo_parameters_container);
         break;
 #ifdef MPIDI_BUILD_CH4_SHM
-    case MPIDI_CH4_bcast_composition_delta_id:
+    case MPIDI_CH4_Bcast_composition_delta_id:
         mpi_errno =
             MPIDI_Bcast_composition_delta(buffer, count, datatype, root, comm, errflag,
                                           ch4_algo_parameters_container);
         break;
 #endif /* MPIDI_BUILD_CH4_SHM */
-    case MPIDI_CH4_bcast_intercomm_id:
+    case MPIDI_CH4_Bcast_intercomm_id:
         mpi_errno =
             MPIDI_Bcast_intercomm(buffer, count, datatype, root, comm, errflag,
                                   ch4_algo_parameters_container);
@@ -111,24 +111,24 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
         MPIDI_CH4_Allreduce_select(sendbuf, recvbuf, count, datatype, op, comm, errflag);
 
     switch (ch4_algo_parameters_container->id) {
-    case MPIDI_CH4_allreduce_composition_alpha_id:
+    case MPIDI_CH4_Allreduce_composition_alpha_id:
         mpi_errno =
             MPIDI_Allreduce_composition_alpha(sendbuf, recvbuf, count, datatype, op, comm, errflag,
                                               ch4_algo_parameters_container);
         break;
-    case MPIDI_CH4_allreduce_composition_beta_id:
+    case MPIDI_CH4_Allreduce_composition_beta_id:
         mpi_errno =
             MPIDI_Allreduce_composition_beta(sendbuf, recvbuf, count, datatype, op, comm, errflag,
                                              ch4_algo_parameters_container);
         break;
 #ifdef MPIDI_BUILD_CH4_SHM
-    case MPIDI_CH4_allreduce_composition_gamma_id:
+    case MPIDI_CH4_Allreduce_composition_gamma_id:
         mpi_errno =
             MPIDI_Allreduce_composition_gamma(sendbuf, recvbuf, count, datatype, op, comm, errflag,
                                               ch4_algo_parameters_container);
         break;
 #endif /* MPIDI_BUILD_CH4_SHM */
-    case MPIDI_CH4_allreduce_intercomm_id:
+    case MPIDI_CH4_Allreduce_intercomm_id:
         mpi_errno =
             MPIDI_Allreduce_intercomm(sendbuf, recvbuf, count, datatype, op, comm, errflag,
                                       ch4_algo_parameters_container);
@@ -147,16 +147,46 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, int sendcount,
                                              MPI_Datatype recvtype, MPIR_Comm * comm,
                                              MPIR_Errflag_t * errflag)
 {
-    int ret;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t * ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLGATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLGATHER);
 
-    ret = MPIDI_NM_mpi_allgather(sendbuf, sendcount, sendtype, recvbuf,
-                                 recvcount, recvtype, comm, errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Allgather_select(sendbuf, sendcount, sendtype, recvbuf,
+                                   recvcount, recvtype, comm, errflag);
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_CH4_Allgather_composition_alpha_id:
+        mpi_errno =
+            MPIDI_Allgather_composition_alpha(sendbuf, sendcount, sendtype,
+                                              recvbuf, recvcount, recvtype,
+                                              comm, errflag, ch4_algo_parameters_container);
+        break;
+#ifdef MPIDI_BUILD_CH4_SHM
+    case MPIDI_CH4_Allgather_composition_beta_id:
+        mpi_errno =
+            MPIDI_Allgather_composition_beta(sendbuf, sendcount, sendtype,
+                                             recvbuf, recvcount, recvtype,
+                                             comm, errflag, ch4_algo_parameters_container);
+        break;
+#endif /* MPIDI_BUILD_CH4_SHM */
+    case MPIDI_CH4_Allgather_intercomm_id:
+        mpi_errno =
+            MPIDI_Allgather_intercomm(sendbuf, sendcount, sendtype,
+                                      recvbuf, recvcount, recvtype,
+                                      comm, errflag, ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Allgather(sendbuf, sendcount, sendtype,
+                                   recvbuf, recvcount, recvtype,
+                                   comm, errflag);
+        break;
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLGATHER);
-    return ret;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, int sendcount,
@@ -165,16 +195,49 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, int sendcount,
                                               MPI_Datatype recvtype, MPIR_Comm * comm,
                                               MPIR_Errflag_t * errflag)
 {
-    int ret;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t * ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLGATHERV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLGATHERV);
 
-    ret = MPIDI_NM_mpi_allgatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                  recvcounts, displs, recvtype, comm, errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Allgatherv_select(sendbuf, sendcount, sendtype, recvbuf,
+                                   recvcounts, displs, recvtype, comm, errflag);
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_CH4_Allgatherv_composition_alpha_id:
+        mpi_errno =
+            MPIDI_Allgatherv_composition_alpha(sendbuf, sendcount, sendtype,
+                                               recvbuf, recvcounts, displs, 
+                                               recvtype, comm, errflag,
+                                               ch4_algo_parameters_container);
+        break;
+#ifdef MPIDI_BUILD_CH4_SHM
+    case MPIDI_CH4_Allgatherv_composition_beta_id:
+        mpi_errno =
+            MPIDI_Allgatherv_composition_beta(sendbuf, sendcount, sendtype,
+                                              recvbuf, recvcounts, displs,
+                                              recvtype, comm, errflag,
+                                              ch4_algo_parameters_container);
+        break;
+#endif /* MPIDI_BUILD_CH4_SHM */
+    case MPIDI_CH4_Allgatherv_intercomm_id:
+        mpi_errno =
+            MPIDI_Allgatherv_intercomm(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcounts, displs,
+                                       recvtype, comm, errflag,
+                                       ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Allgatherv(sendbuf, sendcount, sendtype,
+                                    recvbuf, recvcounts, displs,
+                                    recvtype, comm, errflag);
+        break;
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLGATHERV);
-    return ret;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, int sendcount,
@@ -182,9 +245,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, int sendcount,
                                           int recvcount, MPI_Datatype recvtype,
                                           int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    int ret = MPI_SUCCESS;
-
-    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t * ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SCATTER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SCATTER);
@@ -195,22 +257,22 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, int sendcount,
 
 
     switch (ch4_algo_parameters_container->id) {
-    case MPIDI_CH4_scatter_composition_alpha_id:
-        ret =
+    case MPIDI_CH4_Scatter_composition_alpha_id:
+        mpi_errno =
             MPIDI_Scatter_composition_alpha(sendbuf, sendcount, sendtype, recvbuf,
                                             recvcount, recvtype, root, comm, errflag,
                                             ch4_algo_parameters_container);
         break;
 #ifdef MPIDI_BUILD_CH4_SHM
-    case MPIDI_CH4_scatter_composition_beta_id:
-        ret =
+    case MPIDI_CH4_Scatter_composition_beta_id:
+        mpi_errno =
             MPIDI_Scatter_composition_beta(sendbuf, sendcount, sendtype, recvbuf,
                                            recvcount, recvtype, root, comm, errflag,
                                            ch4_algo_parameters_container);
         break;
 #endif /* MPIDI_BUILD_CH4_SHM */
-    case MPIDI_CH4_scatter_intercomm_id:
-        ret =
+    case MPIDI_CH4_Scatter_intercomm_id:
+        mpi_errno =
             MPIDI_Scatter_intercomm(sendbuf, sendcount, sendtype, recvbuf,
                                     recvcount, recvtype, root, comm, errflag,
                                     ch4_algo_parameters_container);
@@ -222,7 +284,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, int sendcount,
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SCATTER);
-    return ret;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const int *sendcounts,
@@ -230,9 +292,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const int *sendc
                                            void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                            int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
-    int ret = MPI_SUCCESS;
-
-    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t * ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SCATTERV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SCATTERV);
@@ -243,21 +304,21 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const int *sendc
 
 
     switch (ch4_algo_parameters_container->id) {
-    case MPIDI_CH4_scatterv_composition_alpha_id:
-        ret =
+    case MPIDI_CH4_Scatterv_composition_alpha_id:
+        mpi_errno =
             MPIDI_Scatterv_composition_alpha(sendbuf, sendcounts, displs, sendtype,
                                              recvbuf, recvcount, recvtype, root,
                                              comm_ptr, errflag, ch4_algo_parameters_container);
         break;
 #ifdef MPIDI_BUILD_CH4_SHM
-        ret =
+        mpi_errno =
             MPIDI_Scatterv_composition_beta(sendbuf, sendcounts, displs, sendtype,
                                             recvbuf, recvcount, recvtype, root,
                                             comm_ptr, errflag, ch4_algo_parameters_container);
         break;
 #endif /* MPIDI_BUILD_CH4_SHM */
-    case MPIDI_CH4_scatterv_intercomm_id:
-        ret =
+    case MPIDI_CH4_Scatterv_intercomm_id:
+        mpi_errno =
             MPIDI_Scatterv_intercomm(sendbuf, sendcounts, displs, sendtype,
                                      recvbuf, recvcount, recvtype, root, comm_ptr,
                                      errflag, ch4_algo_parameters_container);
@@ -269,7 +330,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const int *sendc
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SCATTERV);
-    return ret;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, int sendcount,
@@ -277,8 +338,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, int sendcount,
                                          int recvcount, MPI_Datatype recvtype,
                                          int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    int ret = MPI_SUCCESS;
-    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t * ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GATHER);
@@ -288,34 +349,34 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, int sendcount,
                                 recvcount, recvtype, root, comm, errflag);
 
     switch (ch4_algo_parameters_container->id) {
-    case MPIDI_CH4_gather_composition_alpha_id:
-        ret =
+    case MPIDI_CH4_Gather_composition_alpha_id:
+        mpi_errno =
             MPIDI_Gather_composition_alpha(sendbuf, sendcount, sendtype, recvbuf,
                                            recvcount, recvtype, root, comm, errflag,
                                            ch4_algo_parameters_container);
         break;
 #ifdef MPIDI_BUILD_CH4_SHM
-    case MPIDI_CH4_gather_composition_beta_id:
-        ret =
+    case MPIDI_CH4_Gather_composition_beta_id:
+        mpi_errno =
             MPIDI_Gather_composition_beta(sendbuf, sendcount, sendtype, recvbuf,
                                           recvcount, recvtype, root, comm, errflag,
                                           ch4_algo_parameters_container);
         break;
 #endif /* MPIDI_BUILD_CH4_SHM */
-    case MPIDI_CH4_gather_intercomm_id:
-        ret =
+    case MPIDI_CH4_Gather_intercomm_id:
+        mpi_errno =
             MPIDI_Gather_intercomm(sendbuf, sendcount, sendtype, recvbuf,
                                    recvcount, recvtype, root, comm, errflag,
                                    ch4_algo_parameters_container);
         break;
     default:
-        ret = MPIR_Gather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+        mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
                           recvtype, root, comm, errflag);
         break;
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GATHER);
-    return ret;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, int sendcount,
@@ -324,8 +385,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, int sendcount,
                                           MPI_Datatype recvtype, int root,
                                           MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    int ret = MPI_SUCCESS;
-    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t * ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GATHERV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GATHERV);
@@ -335,34 +396,34 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, int sendcount,
                                  recvcounts, displs, recvtype, root, comm, errflag);
 
     switch (ch4_algo_parameters_container->id) {
-    case MPIDI_CH4_gatherv_composition_alpha_id:
-        ret =
+    case MPIDI_CH4_Gatherv_composition_alpha_id:
+        mpi_errno =
             MPIDI_Gatherv_composition_alpha(sendbuf, sendcount, sendtype, recvbuf,
                                             recvcounts, displs, recvtype, root,
                                             comm, errflag, ch4_algo_parameters_container);
         break;
 #ifdef MPIDI_BUILD_CH4_SHM
-    case MPIDI_CH4_gatherv_composition_beta_id:
-        ret =
+    case MPIDI_CH4_Gatherv_composition_beta_id:
+        mpi_errno =
             MPIDI_Gatherv_composition_beta(sendbuf, sendcount, sendtype, recvbuf,
                                            recvcounts, displs, recvtype, root,
                                            comm, errflag, ch4_algo_parameters_container);
         break;
 #endif /* MPIDI_BUILD_CH4_SHM */
-    case MPIDI_CH4_gatherv_intercomm_id:
-        ret =
+    case MPIDI_CH4_Gatherv_intercomm_id:
+        mpi_errno =
             MPIDI_Gatherv_intercomm(sendbuf, sendcount, sendtype, recvbuf,
                                     recvcounts, displs, recvtype, root,
                                     comm, errflag, ch4_algo_parameters_container);
         break;
     default:
-        ret = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+        mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
                            displs, recvtype, root, comm, errflag);
         break;
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_GATHERV);
-    return ret;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, int sendcount,
@@ -370,16 +431,46 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, int sendcount,
                                             MPI_Datatype recvtype, MPIR_Comm * comm,
                                             MPIR_Errflag_t * errflag)
 {
-    int ret;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t * ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALL);
 
-    ret = MPIDI_NM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
-                                recvcount, recvtype, comm, errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Alltoall_select(sendbuf, sendcount, sendtype, recvbuf,
+                                  recvcount, recvtype, comm, errflag);
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_CH4_Alltoall_composition_alpha_id:
+        mpi_errno =
+            MPIDI_Alltoall_composition_alpha(sendbuf, sendcount, sendtype,
+                                             recvbuf, recvcount, recvtype,
+                                             comm, errflag, ch4_algo_parameters_container);
+        break;
+#ifdef MPIDI_BUILD_CH4_SHM
+    case MPIDI_CH4_Alltoall_composition_beta_id:
+        mpi_errno =
+            MPIDI_Alltoall_composition_beta(sendbuf, sendcount, sendtype,
+                                            recvbuf, recvcount, recvtype,
+                                            comm, errflag, ch4_algo_parameters_container);
+        break;
+#endif /* MPIDI_BUILD_CH4_SHM */
+    case MPIDI_CH4_Alltoall_intercomm_id:
+        mpi_errno =
+            MPIDI_Alltoall_intercomm(sendbuf, sendcount, sendtype,
+                                     recvbuf, recvcount, recvtype,
+                                     comm, errflag, ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Alltoall(sendbuf, sendcount, sendtype,
+                                  recvbuf, recvcount, recvtype,
+                                  comm, errflag);
+        break;
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLTOALL);
-    return ret;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const int *sendcounts,
@@ -388,34 +479,102 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const int *send
                                              const int *rdispls, MPI_Datatype recvtype,
                                              MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    int ret;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t * ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALLV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALLV);
 
-    ret = MPIDI_NM_mpi_alltoallv(sendbuf, sendcounts, sdispls, sendtype,
-                                 recvbuf, recvcounts, rdispls, recvtype, comm, errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Alltoallv_select(sendbuf, sendcounts, sdispls, sendtype,
+                                   recvbuf, recvcounts, rdispls, recvtype,
+                                   comm, errflag);
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_CH4_Alltoallv_composition_alpha_id:
+        mpi_errno =
+            MPIDI_Alltoallv_composition_alpha(sendbuf, sendcounts, sdispls,
+                                              sendtype, recvbuf, recvcounts,
+                                              rdispls, recvtype, comm, errflag,
+                                              ch4_algo_parameters_container);
+        break;
+#ifdef MPIDI_BUILD_CH4_SHM
+    case MPIDI_CH4_Alltoallv_composition_beta_id:
+        mpi_errno =
+            MPIDI_Alltoallv_composition_beta(sendbuf, sendcounts, sdispls,
+                                             sendtype, recvbuf, recvcounts,
+                                             rdispls, recvtype, comm, errflag,
+                                             ch4_algo_parameters_container);
+        break;
+#endif /* MPIDI_BUILD_CH4_SHM */
+    case MPIDI_CH4_Alltoallv_intercomm_id:
+        mpi_errno =
+            MPIDI_Alltoallv_intercomm(sendbuf, sendcounts, sdispls,
+                                      sendtype, recvbuf, recvcounts,
+                                      rdispls, recvtype, comm, errflag,
+                                      ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Alltoallv(sendbuf, sendcounts, sdispls,
+                                   sendtype, recvbuf, recvcounts,
+                                   rdispls, recvtype, comm, errflag);
+        break;
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLTOALLV);
-    return ret;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const int sendcounts[],
                                              const int sdispls[], const MPI_Datatype sendtypes[],
                                              void *recvbuf, const int recvcounts[],
                                              const int rdispls[], const MPI_Datatype recvtypes[],
-                                             MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                             MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    int ret;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t * ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALLW);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALLW);
 
-    ret = MPIDI_NM_mpi_alltoallw(sendbuf, sendcounts, sdispls, sendtypes,
-                                 recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Alltoallw_select(sendbuf, sendcounts, sdispls, sendtypes,
+                                   recvbuf, recvcounts, rdispls, recvtypes,
+                                   comm, errflag);
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_CH4_Alltoallw_composition_alpha_id:
+        mpi_errno =
+            MPIDI_Alltoallw_composition_alpha(sendbuf, sendcounts, sdispls,
+                                              sendtypes, recvbuf, recvcounts,
+                                              rdispls, recvtypes, comm, errflag,
+                                              ch4_algo_parameters_container);
+        break;
+#ifdef MPIDI_BUILD_CH4_SHM
+    case MPIDI_CH4_Alltoallw_composition_beta_id:
+        mpi_errno =
+            MPIDI_Alltoallw_composition_beta(sendbuf, sendcounts, sdispls,
+                                             sendtypes, recvbuf, recvcounts,
+                                             rdispls, recvtypes, comm, errflag,
+                                             ch4_algo_parameters_container);
+        break;
+#endif /* MPIDI_BUILD_CH4_SHM */
+    case MPIDI_CH4_Alltoallw_intercomm_id:
+        mpi_errno =
+            MPIDI_Alltoallw_intercomm(sendbuf, sendcounts, sdispls,
+                                      sendtypes, recvbuf, recvcounts,
+                                      rdispls, recvtypes, comm, errflag,
+                                      ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Alltoallw(sendbuf, sendcounts, sdispls,
+                                   sendtypes, recvbuf, recvcounts,
+                                   rdispls, recvtypes, comm, errflag);
+        break;
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLTOALLW);
-    return ret;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
@@ -432,24 +591,24 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
         MPIDI_CH4_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, comm, errflag);
 
     switch (ch4_algo_parameters_container->id) {
-    case MPIDI_CH4_reduce_composition_alpha_id:
+    case MPIDI_CH4_Reduce_composition_alpha_id:
         mpi_errno =
             MPIDI_Reduce_composition_alpha(sendbuf, recvbuf, count, datatype, op, root, comm,
                                            errflag, ch4_algo_parameters_container);
         break;
-    case MPIDI_CH4_reduce_composition_beta_id:
+    case MPIDI_CH4_Reduce_composition_beta_id:
         mpi_errno =
             MPIDI_Reduce_composition_beta(sendbuf, recvbuf, count, datatype, op, root, comm,
                                           errflag, ch4_algo_parameters_container);
         break;
 #ifdef MPIDI_BUILD_CH4_SHM
-    case MPIDI_CH4_reduce_composition_gamma_id:
+    case MPIDI_CH4_Reduce_composition_gamma_id:
         mpi_errno =
             MPIDI_Reduce_composition_gamma(sendbuf, recvbuf, count, datatype, op, root, comm,
                                            errflag, ch4_algo_parameters_container);
         break;
 #endif /* MPIDI_BUILD_CH4_SHM */
-    case MPIDI_CH4_reduce_intercomm_id:
+    case MPIDI_CH4_Reduce_intercomm_id:
         mpi_errno =
             MPIDI_Reduce_intercomm(sendbuf, recvbuf, count, datatype, op, root, comm, errflag,
                                    ch4_algo_parameters_container);
