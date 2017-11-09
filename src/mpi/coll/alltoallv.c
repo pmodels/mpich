@@ -65,160 +65,28 @@ int MPIR_Alltoallv_intra(const void *sendbuf, const int *sendcounts, const int *
                          const int *rdispls, MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
                          MPIR_Errflag_t *errflag)
 {
-    int        comm_size, i, j;
-    MPI_Aint   send_extent, recv_extent;
-    int        mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Status *starray;
-    MPI_Status status;
-    MPIR_Request **reqarray;
-    int dst, rank, req_cnt;
-    int ii, ss, bblock;
-    int type_size;
 
-    MPIR_CHKLMEM_DECL(2);
-
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
-
-    /* Get extent of recv type, but send type is only valid if (sendbuf!=MPI_IN_PLACE) */
-    MPIR_Datatype_get_extent_macro(recvtype, recv_extent);
+    int mpi_errno = MPI_SUCCESS;
 
     if (sendbuf == MPI_IN_PLACE) {
-        /* We use pair-wise sendrecv_replace in order to conserve memory usage,
-         * which is keeping with the spirit of the MPI-2.2 Standard.  But
-         * because of this approach all processes must agree on the global
-         * schedule of sendrecv_replace operations to avoid deadlock.
-         *
-         * Note that this is not an especially efficient algorithm in terms of
-         * time and there will be multiple repeated malloc/free's rather than
-         * maintaining a single buffer across the whole loop.  Something like
-         * MADRE is probably the best solution for the MPI_IN_PLACE scenario. */
-        for (i = 0; i < comm_size; ++i) {
-            /* start inner loop at i to avoid re-exchanging data */
-            for (j = i; j < comm_size; ++j) {
-                if (rank == i) {
-                    /* also covers the (rank == i && rank == j) case */
-                    mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[j]*recv_extent),
-                                                         recvcounts[j], recvtype,
-                                                         j, MPIR_ALLTOALLV_TAG,
-                                                         j, MPIR_ALLTOALLV_TAG,
-                                                         comm_ptr, &status, errflag);
-                    if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                    }
-
-                }
-                else if (rank == j) {
-                    /* same as above with i/j args reversed */
-                    mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[i]*recv_extent),
-                                                         recvcounts[i], recvtype,
-                                                         i, MPIR_ALLTOALLV_TAG,
-                                                         i, MPIR_ALLTOALLV_TAG,
-                                                         comm_ptr, &status, errflag);
-                    if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                    }
-                }
-            }
+        mpi_errno = MPIR_Alltoallv_sendrecv_replace(sendbuf, sendcounts, sdispls, sendtype, 
+                                                    recvbuf, recvcounts, rdispls, recvtype, 
+                                                    comm_ptr, errflag);
+        if (mpi_errno) {
+            MPIR_ERR_POP(mpi_errno);
         }
     }
     else {
-        bblock = MPIR_CVAR_ALLTOALL_THROTTLE;
-        if (bblock == 0) bblock = comm_size;
-
-        MPIR_Datatype_get_extent_macro(sendtype, send_extent);
-
-        MPIR_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*bblock*sizeof(MPI_Status),  mpi_errno, "starray", MPL_MEM_BUFFER);
-        MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request**, 2*bblock*sizeof(MPIR_Request *), mpi_errno, "reqarray", MPL_MEM_BUFFER);
-
-        /* post only bblock isends/irecvs at a time as suggested by Tony Ladd */
-        for (ii=0; ii<comm_size; ii+=bblock) {
-            req_cnt = 0;
-            ss = comm_size-ii < bblock ? comm_size-ii : bblock;
-
-            /* do the communication -- post ss sends and receives: */
-            for ( i=0; i<ss; i++ ) { 
-                dst = (rank+i+ii) % comm_size;
-                if (recvcounts[dst]) {
-                    MPIR_Datatype_get_size_macro(recvtype, type_size);
-                    if (type_size) {
-                        MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                                         rdispls[dst]*recv_extent);
-                        mpi_errno = MPIC_Irecv((char *)recvbuf+rdispls[dst]*recv_extent,
-                                                  recvcounts[dst], recvtype, dst,
-                                                  MPIR_ALLTOALLV_TAG, comm_ptr,
-                                                  &reqarray[req_cnt]);
-                        if (mpi_errno) {
-                            /* for communication errors, just record the error but continue */
-                            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                        }
-                        req_cnt++;
-                    }
-                }
-            }
-
-            for ( i=0; i<ss; i++ ) { 
-                dst = (rank-i-ii+comm_size) % comm_size;
-                if (sendcounts[dst]) {
-                    MPIR_Datatype_get_size_macro(sendtype, type_size);
-                    if (type_size) {
-                        MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
-                                                         sdispls[dst]*send_extent);
-                        mpi_errno = MPIC_Isend((char *)sendbuf+sdispls[dst]*send_extent,
-                                                  sendcounts[dst], sendtype, dst,
-                                                  MPIR_ALLTOALLV_TAG, comm_ptr,
-                                                  &reqarray[req_cnt], errflag);
-                        if (mpi_errno) {
-                            /* for communication errors, just record the error but continue */
-                            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                        }
-                        req_cnt++;
-                    }
-                }
-            }
-
-            mpi_errno = MPIC_Waitall(req_cnt, reqarray, starray, errflag);
-            if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) MPIR_ERR_POP(mpi_errno);
-
-            /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno == MPI_ERR_IN_STATUS) {
-                for (i=0; i<req_cnt; i++) {
-                    if (starray[i].MPI_ERROR != MPI_SUCCESS) {
-                        mpi_errno = starray[i].MPI_ERROR;
-                        if (mpi_errno) {
-                            /* for communication errors, just record the error but continue */
-                            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                        }
-                    }
-                }
-            }
-            /* --END ERROR HANDLING-- */
+        mpi_errno = MPIR_Alltoallv_isend_irecv(sendbuf, sendcounts, sdispls, sendtype, 
+                                               recvbuf, recvcounts, rdispls, recvtype, 
+                                               comm_ptr, errflag);
+        if (mpi_errno) {
+            MPIR_ERR_POP(mpi_errno);
         }
     }
 
 fn_exit:
-    MPIR_CHKLMEM_FREEALL();
-
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-
     return mpi_errno;
-
 fn_fail:
     goto fn_exit;
 }
@@ -262,7 +130,7 @@ int MPIR_Alltoallv_inter(const void *sendbuf, const int *sendcounts, const int *
     /* Get extent of send and recv types */
     MPIR_Datatype_get_extent_macro(sendtype, send_extent);
     MPIR_Datatype_get_extent_macro(recvtype, recv_extent);
-    
+
     /* Use pairwise exchange algorithm. */
     max_size = MPL_MAX(local_size, remote_size);
     for (i=0; i<max_size; i++) {
@@ -308,6 +176,201 @@ int MPIR_Alltoallv_inter(const void *sendbuf, const int *sendcounts, const int *
     else if (*errflag != MPIR_ERR_NONE)
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Alltoallv_sendrecv_replace
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Alltoallv_sendrecv_replace(
+    const void *sendbuf,
+    const int *sendcounts,
+    const int *sdispls,
+    MPI_Datatype sendtype,
+    void *recvbuf,
+    const int *recvcounts,
+    const int *rdispls,
+    MPI_Datatype recvtype,
+    MPIR_Comm *comm_ptr,
+    MPIR_Errflag_t *errflag)
+{
+    int comm_size = 0;
+    int i = 0;
+    int j = 0;
+    int mpi_errno = MPI_SUCCESS;
+    int rank = -1;
+    MPI_Aint recvtype_extent = 0;
+    MPI_Status status;
+
+    /* Get extent of recv type */
+    MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
+
+    comm_size = comm_ptr->local_size;
+    rank = comm_ptr->rank;
+
+    /* We use pair-wise sendrecv_replace in order to conserve memory usage,
+     * which is keeping with the spirit of the MPI-2.2 Standard.  But
+     * because of this approach all processes must agree on the global
+     * schedule of sendrecv_replace operations to avoid deadlock.
+     *
+     * Note that this is not an especially efficient algorithm in terms of
+     * time and there will be multiple repeated malloc/free's rather than
+     * maintaining a single buffer across the whole loop.  Something like
+     * MADRE is probably the best solution for the MPI_IN_PLACE scenario. */
+    for (i = 0; i < comm_size; ++i) {
+        /* start inner loop at i to avoid re-exchanging data */
+        for (j = i; j < comm_size; ++j) {
+            if (rank == i) {
+                /* also covers the (rank == i && rank == j) case */
+                mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[j]*recvtype_extent),
+                                                     recvcounts[j], recvtype,
+                                                     j, MPIR_ALLTOALLV_TAG,
+                                                     j, MPIR_ALLTOALLV_TAG,
+                                                     comm_ptr, &status, errflag);
+                if (mpi_errno) {
+                    MPIR_ERR_POP(mpi_errno);
+                }
+            }
+            else if (rank == j) {
+                /* same as above with i/j args reversed */
+                mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[i]*recvtype_extent),
+                                                     recvcounts[i], recvtype,
+                                                     i, MPIR_ALLTOALLV_TAG,
+                                                     i, MPIR_ALLTOALLV_TAG,
+                                                     comm_ptr, &status, errflag);
+                if (mpi_errno) {
+                    MPIR_ERR_POP(mpi_errno);
+                }
+            }
+        }
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Alltoallv_isend_irecv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Alltoallv_isend_irecv(
+    const void *sendbuf,
+    const int *sendcounts,
+    const int *sdispls,
+    MPI_Datatype sendtype,
+    void *recvbuf,
+    const int *recvcounts,
+    const int *rdispls,
+    MPI_Datatype recvtype,
+    MPIR_Comm *comm_ptr,
+    MPIR_Errflag_t *errflag)
+{
+    int comm_size = 0;
+    int i = 0;
+    MPI_Aint sendtype_extent = 0;
+    MPI_Aint recvtype_extent = 0;
+    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
+    int dst = 0;
+    int rank = -1;
+    MPIR_Request **reqarray = NULL;
+    MPI_Status *starray = NULL;
+    int ii = 0;
+    int ss = 0;
+    int bblock = 0;
+    int req_cnt = 0;
+    int type_size = 0;
+
+    MPIR_CHKLMEM_DECL(2);
+
+    /* Get extent of send and recv types */
+    MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
+    MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
+
+    comm_size = comm_ptr->local_size;
+    rank = comm_ptr->rank;
+
+    bblock = MPIR_CVAR_ALLTOALL_THROTTLE;
+    if (bblock == 0) bblock = comm_size;
+
+    MPIR_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*bblock*sizeof(MPI_Status),  mpi_errno, "starray", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request**, 2*bblock*sizeof(MPIR_Request *), mpi_errno, "reqarray", MPL_MEM_BUFFER);
+
+    /* post only bblock isends/irecvs at a time as suggested by Tony Ladd */
+    for (ii=0; ii<comm_size; ii+=bblock) {
+        req_cnt = 0;
+        ss = comm_size-ii < bblock ? comm_size-ii : bblock;
+
+        /* do the communication -- post ss sends and receives: */
+        for ( i=0; i<ss; i++ ) {
+            dst = (rank+i+ii) % comm_size;
+            if (recvcounts[dst]) {
+                MPIR_Datatype_get_size_macro(recvtype, type_size);
+                if (type_size) {
+                    MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+                                                     rdispls[dst]*recvtype_extent);
+                    mpi_errno = MPIC_Irecv((char *)recvbuf+rdispls[dst]*recvtype_extent,
+                                           recvcounts[dst], recvtype, dst,
+                                           MPIR_ALLTOALLV_TAG, comm_ptr,
+                                           &reqarray[req_cnt]);
+                    if (mpi_errno) {
+                        MPIR_ERR_POP(mpi_errno);
+                    }
+                    req_cnt++;
+                }
+            }
+        }
+
+        for ( i=0; i<ss; i++ ) { 
+            dst = (rank-i-ii+comm_size) % comm_size;
+            if (sendcounts[dst]) {
+                MPIR_Datatype_get_size_macro(sendtype, type_size);
+                if (type_size) {
+                    MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+                                                     sdispls[dst]*sendtype_extent);
+                    mpi_errno = MPIC_Isend((char *)sendbuf+sdispls[dst]*sendtype_extent,
+                                           sendcounts[dst], sendtype, dst,
+                                           MPIR_ALLTOALLV_TAG, comm_ptr,
+                                           &reqarray[req_cnt], errflag);
+                    if (mpi_errno) {
+                        MPIR_ERR_POP(mpi_errno);
+                    }
+                    req_cnt++;
+                }
+            }
+        }
+
+        mpi_errno = MPIC_Waitall(req_cnt, reqarray, starray, errflag);
+        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) MPIR_ERR_POP(mpi_errno);
+
+        /* --BEGIN ERROR HANDLING-- */
+        if (mpi_errno == MPI_ERR_IN_STATUS) {
+            for (i=0; i<req_cnt; i++) {
+                if (starray[i].MPI_ERROR != MPI_SUCCESS) {
+                    mpi_errno = starray[i].MPI_ERROR;
+                    if (mpi_errno) {
+                        /* for communication errors, just record the error but continue */
+                        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                    }
+                }
+            }
+        }
+        /* --END ERROR HANDLING-- */
+    }
+
+fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
+    else if (*errflag != MPIR_ERR_NONE)
+        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 
