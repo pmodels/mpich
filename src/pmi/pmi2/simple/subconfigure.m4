@@ -43,10 +43,10 @@ if test "$enable_pmiport" = "yes" ; then
         sys/un.h        \
         netdb.h         \
         ],,missing_headers=yes )
-    AC_SEARCH_LIBS(socket,socket)
-    AC_SEARCH_LIBS(gethostbyname,nsl)
     missing_functions=no
-    AC_CHECK_FUNCS(socket setsockopt gethostbyname,,missing_functions=yes)
+    AC_SEARCH_LIBS(socket,socket,,[missing_functions=yes])
+    AC_SEARCH_LIBS(gethostbyname,nsl,,[missing_functions=yes])
+    AC_SEARCH_LIBS(setsockopt,,,[missing_functions=yes])
 
     if test "$missing_functions" = "no" ; then
         AC_DEFINE(USE_PMI_PORT,1,[Define if access to PMI information through a port rather than just an fd is allowed])
