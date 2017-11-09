@@ -112,28 +112,48 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_get_all_failed_procs(MPIR_Comm * comm_ptr
 #define FUNCNAME MPIDI_Comm_split_type
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_split_type(MPIR_Comm * comm_ptr,
+MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr,
                                                    int split_type,
                                                    int key, MPIR_Info * info_ptr,
                                                    MPIR_Comm ** newcomm_ptr)
 {
+    MPIR_Comm *comm_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
-    int idx;
-    int node_id;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_SPLIT_TYPE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_SPLIT_TYPE);
 
-    if (split_type == MPI_COMM_TYPE_SHARED) {
-        MPID_Comm_get_lpid(comm_ptr, comm_ptr->rank, &idx, FALSE);
-        MPID_Get_node_id(comm_ptr, comm_ptr->rank, &node_id);
-        mpi_errno = MPIR_Comm_split_impl(comm_ptr, node_id, key, newcomm_ptr);
-    }
-    else
-        mpi_errno = MPIR_Comm_split_impl(comm_ptr, MPI_UNDEFINED, key, newcomm_ptr);
+    mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
+                                     key, &comm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
+    if (split_type == MPI_UNDEFINED) {
+        *newcomm_ptr = NULL;
+        goto fn_exit;
+    }
+
+    if (split_type != MPI_COMM_TYPE_SHARED) {
+        /* we don't know how to handle other split types; hand it back
+         * to the upper layer */
+        mpi_errno = MPIR_Comm_split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
+        goto fn_exit;
+    }
+
+    mpi_errno = MPIR_Comm_split_type_node_topo(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+fn_exit:
+    if (comm_ptr)
+        MPIR_Comm_free_impl(comm_ptr);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_SPLIT_TYPE);
     return mpi_errno;
+
+    /* --BEGIN ERROR HANDLING-- */
+fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 #undef FUNCNAME
