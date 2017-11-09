@@ -71,7 +71,8 @@ MPL_STATIC_INLINE_PREFIX int COLL_allreduce(const void *sendbuf,
                                                        .rbuf = recvbuf,
                                                        .count = count,
                                                        .dt_id = (int) datatype,
-                                                       .op_id = (int) op
+                                                       .op_id = (int) op,
+                                                       .pad = 0
                                                       },
                                                     .tree_type = tree_type,
                                                     .k = k}
@@ -124,7 +125,8 @@ MPL_STATIC_INLINE_PREFIX int COLL_bcast_get_tree_schedule(void *buffer, int coun
                                                  {.buf = buffer,
                                                   .count = count,
                                                   .dt_id = (int) datatype,
-                                                  .root = root
+                                                  .root = root,
+                                                  .pad = 0
                                                  },
                                                 .tree_type = tree_type,
                                                 .k = k,

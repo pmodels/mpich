@@ -20,6 +20,7 @@ typedef struct {
     int count;
     int dt_id;
     int root;
+    int pad;
 } bcast_args_t;
 
 typedef struct {
@@ -37,6 +38,7 @@ typedef struct {
     int count;
     int dt_id;
     int op_id;
+    int pad;
 } allreduce_args_t;
 
 typedef struct {
