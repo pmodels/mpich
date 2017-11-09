@@ -17,4 +17,29 @@ extern const MPIDI_POSIX_coll_algo_container_t POSIX_reduce_redscat_gather_cnt;
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_allreduce_recursive_doubling_cnt;
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_allreduce_reduce_scatter_allgather_cnt;
 
+/* Alltoall POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_alltoall_bruck_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_alltoall_isend_irecv_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_alltoall_pairwise_exchange_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_alltoall_sendrecv_replace_cnt;
+
+/* Alltoallv POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_alltoallv_isend_irecv_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_alltoallv_sendrecv_replace_cnt;
+
+/* Alltoallw POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_alltoallw_isend_irecv_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_alltoallw_pairwise_exchange_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_alltoallw_sendrecv_replace_cnt;
+
+/* Allgather POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_allgather_recursive_doubling_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_allgather_bruck_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_allgather_ring_cnt;
+
+/* Allgatherv POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_allgatherv_recursive_doubling_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_allgatherv_bruck_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_allgatherv_ring_cnt;
+
 #endif /* SHM_COLL_CONTAINERS_H_INCLUDED */

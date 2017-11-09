@@ -196,4 +196,361 @@ int MPIDI_POSIX_Reduce_call(const void *sendbuf, void *recvbuf, int count,
 
     return mpi_errno;
 }
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Alltoall_select(const void *sendbuf,
+                                                                    int sendcount,
+                                                                    MPI_Datatype sendtype,
+                                                                    void *recvbuf,
+                                                                    int recvcount,
+                                                                    MPI_Datatype recvtype,
+                                                                    MPIR_Comm * comm_ptr,
+                                                                    MPIR_Errflag_t * errflag,
+                                                                    MPIDI_POSIX_coll_algo_container_t
+                                                                    *
+                                                                    ch4_algo_parameters_container_in
+                                                                    ATTRIBUTE((unused)))
+{
+    MPI_Aint type_size;
+    int nbytes = 0;
+
+    MPIR_Datatype_get_size_macro(sendtype, type_size);
+    nbytes = sendcount * type_size;
+
+    if (sendbuf == MPI_IN_PLACE) {
+        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_alltoall_sendrecv_replace_cnt;
+    }
+    else if ((nbytes <= MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE) && (comm_ptr->local_size >= 8)) {
+        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_alltoall_bruck_cnt;
+    }
+    else if (nbytes <= MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE) {
+        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_alltoall_isend_irecv_cnt;
+    }
+    else {
+        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_alltoall_pairwise_exchange_cnt;
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX
+    int MPIDI_POSIX_Alltoall_call(const void *sendbuf, int sendcount,
+                                  MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                                  MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                  MPIR_Errflag_t * errflag,
+                                  MPIDI_POSIX_coll_algo_container_t * ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_POSIX_alltoall_bruck_id:
+        mpi_errno =
+            MPIDI_POSIX_alltoall_bruck(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcount, recvtype,
+                                       comm_ptr, errflag, ch4_algo_parameters_container);
+        break;
+    case MPIDI_POSIX_alltoall_isend_irecv_id:
+        mpi_errno =
+            MPIDI_POSIX_alltoall_isend_irecv(sendbuf, sendcount, sendtype,
+                                             recvbuf, recvcount, recvtype,
+                                             comm_ptr, errflag, ch4_algo_parameters_container);
+        break;
+    case MPIDI_POSIX_alltoall_pairwise_exchange_id:
+        mpi_errno =
+            MPIDI_POSIX_alltoall_pairwise_exchange(sendbuf, sendcount, sendtype,
+                                                   recvbuf, recvcount, recvtype,
+                                                   comm_ptr, errflag,
+                                                   ch4_algo_parameters_container);
+        break;
+    case MPIDI_POSIX_alltoall_sendrecv_replace_id:
+        mpi_errno =
+            MPIDI_POSIX_alltoall_sendrecv_replace(sendbuf, sendcount, sendtype,
+                                                  recvbuf, recvcount, recvtype,
+                                                  comm_ptr, errflag, ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Alltoall(sendbuf, sendcount, sendtype,
+                                  recvbuf, recvcount, recvtype, comm_ptr, errflag);
+        break;
+    }
+
+    return mpi_errno;
+
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Alltoallv_select(const void *sendbuf,
+                                                                     const int *sendcounts,
+                                                                     const int *sdispls,
+                                                                     MPI_Datatype sendtype,
+                                                                     void *recvbuf,
+                                                                     const int *recvcounts,
+                                                                     const int *rdispls,
+                                                                     MPI_Datatype recvtype,
+                                                                     MPIR_Comm * comm_ptr,
+                                                                     MPIR_Errflag_t * errflag,
+                                                                     MPIDI_POSIX_coll_algo_container_t
+                                                                     *
+                                                                     ch4_algo_parameters_container_in
+                                                                     ATTRIBUTE((unused)))
+{
+    if (sendbuf == MPI_IN_PLACE) {
+        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_alltoallv_sendrecv_replace_cnt;
+    }
+    else {
+        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_alltoallv_isend_irecv_cnt;
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX
+    int MPIDI_POSIX_Alltoallv_call(const void *sendbuf, const int *sendcounts, const int *sdispls,
+                                   MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
+                                   const int *rdispls, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                   MPIR_Errflag_t * errflag,
+                                   MPIDI_POSIX_coll_algo_container_t *
+                                   ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_POSIX_alltoallv_sendrecv_replace_id:
+        mpi_errno =
+            MPIDI_POSIX_alltoallv_sendrecv_replace(sendbuf, sendcounts, sdispls,
+                                                   sendtype, recvbuf, recvcounts,
+                                                   rdispls, recvtype, comm_ptr,
+                                                   errflag, ch4_algo_parameters_container);
+        break;
+    case MPIDI_POSIX_alltoallv_isend_irecv_id:
+        mpi_errno =
+            MPIDI_POSIX_alltoallv_isend_irecv(sendbuf, sendcounts, sdispls,
+                                              sendtype, recvbuf, recvcounts,
+                                              rdispls, recvtype, comm_ptr,
+                                              errflag, ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Alltoallv(sendbuf, sendcounts, sdispls,
+                                   sendtype, recvbuf, recvcounts,
+                                   rdispls, recvtype, comm_ptr, errflag);
+        break;
+    }
+
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Alltoallw_select(const void *sendbuf,
+                                                                     const int sendcounts[],
+                                                                     const int sdispls[],
+                                                                     const MPI_Datatype sendtypes[],
+                                                                     void *recvbuf,
+                                                                     const int recvcounts[],
+                                                                     const int rdispls[],
+                                                                     const MPI_Datatype recvtypes[],
+                                                                     MPIR_Comm * comm_ptr,
+                                                                     MPIR_Errflag_t * errflag,
+                                                                     MPIDI_POSIX_coll_algo_container_t
+                                                                     *
+                                                                     ch4_algo_parameters_container_in
+                                                                     ATTRIBUTE((unused)))
+{
+    if (sendbuf == MPI_IN_PLACE) {
+        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_alltoallw_sendrecv_replace_cnt;
+    }
+    else {
+        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_alltoallw_isend_irecv_cnt;
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX
+    int MPIDI_POSIX_Alltoallw_call(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                                   const MPI_Datatype sendtypes[], void *recvbuf,
+                                   const int recvcounts[], const int rdispls[],
+                                   const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
+                                   MPIR_Errflag_t * errflag,
+                                   MPIDI_POSIX_coll_algo_container_t *
+                                   ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_POSIX_alltoallw_sendrecv_replace_id:
+        mpi_errno =
+            MPIDI_POSIX_alltoallw_sendrecv_replace(sendbuf, sendcounts, sdispls,
+                                                   sendtypes, recvbuf, recvcounts,
+                                                   rdispls, recvtypes, comm_ptr,
+                                                   errflag, ch4_algo_parameters_container);
+        break;
+    case MPIDI_POSIX_alltoallw_isend_irecv_id:
+        mpi_errno =
+            MPIDI_POSIX_alltoallw_isend_irecv(sendbuf, sendcounts, sdispls,
+                                              sendtypes, recvbuf, recvcounts,
+                                              rdispls, recvtypes, comm_ptr,
+                                              errflag, ch4_algo_parameters_container);
+        break;
+    case MPIDI_POSIX_alltoallw_pairwise_exchange_id:
+        mpi_errno =
+            MPIDI_POSIX_alltoallw_pairwise_exchange(sendbuf, sendcounts, sdispls,
+                                                    sendtypes, recvbuf, recvcounts,
+                                                    rdispls, recvtypes, comm_ptr,
+                                                    errflag, ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Alltoallw(sendbuf, sendcounts, sdispls,
+                                   sendtypes, recvbuf, recvcounts,
+                                   rdispls, recvtypes, comm_ptr, errflag);
+        break;
+    }
+
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Allgather_select(const void *sendbuf,
+                                                                     int sendcount,
+                                                                     MPI_Datatype sendtype,
+                                                                     void *recvbuf, int recvcount,
+                                                                     MPI_Datatype recvtype,
+                                                                     MPIR_Comm * comm_ptr,
+                                                                     MPIR_Errflag_t * errflag,
+                                                                     MPIDI_POSIX_coll_algo_container_t
+                                                                     *
+                                                                     ch4_algo_parameters_container_in)
+{
+    int comm_size = 0;
+    int type_size = 0;
+    int nbytes = 0;
+
+    comm_size = comm_ptr->local_size;
+    MPIR_Datatype_get_size_macro(recvtype, type_size);
+    nbytes = (MPI_Aint) recvcount *comm_size * type_size;
+
+    if ((nbytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
+        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_allgather_recursive_doubling_cnt;
+    }
+    else if (nbytes < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
+        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_allgather_bruck_cnt;
+    }
+    else {
+        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_allgather_ring_cnt;
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX
+    int MPIDI_POSIX_Allgather_call(const void *sendbuf, int sendcount,
+                                   MPI_Datatype sendtype, void *recvbuf,
+                                   int recvcount, MPI_Datatype recvtype,
+                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                   MPIDI_POSIX_coll_algo_container_t *
+                                   ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_POSIX_allgather_recursive_doubling_id:
+        mpi_errno =
+            MPIDI_POSIX_allgather_recursive_doubling(sendbuf, sendcount, sendtype,
+                                                     recvbuf, recvcount, recvtype,
+                                                     comm_ptr, errflag,
+                                                     ch4_algo_parameters_container);
+        break;
+    case MPIDI_POSIX_allgather_bruck_id:
+        mpi_errno =
+            MPIDI_POSIX_allgather_bruck(sendbuf, sendcount, sendtype,
+                                        recvbuf, recvcount, recvtype,
+                                        comm_ptr, errflag, ch4_algo_parameters_container);
+        break;
+    case MPIDI_POSIX_allgather_ring_id:
+        mpi_errno =
+            MPIDI_POSIX_allgather_ring(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcount, recvtype,
+                                       comm_ptr, errflag, ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Allgather(sendbuf, sendcount, sendtype,
+                                   recvbuf, recvcount, recvtype, comm_ptr, errflag);
+        break;
+    }
+
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Allgatherv_select(const void *sendbuf,
+                                                                      int sendcount,
+                                                                      MPI_Datatype sendtype,
+                                                                      void *recvbuf,
+                                                                      const int *recvcounts,
+                                                                      const int *displs,
+                                                                      MPI_Datatype recvtype,
+                                                                      MPIR_Comm * comm_ptr,
+                                                                      MPIR_Errflag_t * errflag,
+                                                                      MPIDI_POSIX_coll_algo_container_t
+                                                                      *
+                                                                      ch4_algo_parameters_container_in)
+{
+    int comm_size = 0;
+    int type_size = 0;
+    int nbytes = 0;
+    int i = 0;
+    int total_count = 0;
+
+    comm_size = comm_ptr->local_size;
+    MPIR_Datatype_get_size_macro(recvtype, type_size);
+
+    total_count = 0;
+    for (i = 0; i < comm_size; i++)
+        total_count += recvcounts[i];
+
+    nbytes = total_count * type_size;
+
+    if ((nbytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
+        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_allgatherv_recursive_doubling_cnt;
+    }
+    else if (nbytes < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
+        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_allgatherv_bruck_cnt;
+    }
+    else {
+        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_allgatherv_ring_cnt;
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX
+    int MPIDI_POSIX_Allgatherv_call(const void *sendbuf, int sendcount,
+                                    MPI_Datatype sendtype, void *recvbuf,
+                                    const int *recvcounts, const int *displs,
+                                    MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                    MPIR_Errflag_t * errflag,
+                                    MPIDI_POSIX_coll_algo_container_t *
+                                    ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_POSIX_allgather_recursive_doubling_id:
+        mpi_errno =
+            MPIDI_POSIX_allgatherv_recursive_doubling(sendbuf, sendcount, sendtype,
+                                                      recvbuf, recvcounts, displs,
+                                                      recvtype, comm_ptr, errflag,
+                                                      ch4_algo_parameters_container);
+        break;
+    case MPIDI_POSIX_allgather_bruck_id:
+        mpi_errno =
+            MPIDI_POSIX_allgatherv_bruck(sendbuf, sendcount, sendtype,
+                                         recvbuf, recvcounts, displs,
+                                         recvtype, comm_ptr, errflag,
+                                         ch4_algo_parameters_container);
+        break;
+    case MPIDI_POSIX_allgather_ring_id:
+        mpi_errno =
+            MPIDI_POSIX_allgatherv_ring(sendbuf, sendcount, sendtype,
+                                        recvbuf, recvcounts, displs,
+                                        recvtype, comm_ptr, errflag, ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Allgatherv(sendbuf, sendcount, sendtype,
+                                    recvbuf, recvcounts, displs, recvtype, comm_ptr, errflag);
+        break;
+    }
+
+    return mpi_errno;
+}
+
 #endif /* SHM_POSIX_COLL_SELECT_H_INCLUDED */

@@ -77,13 +77,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, int sendcount,
                                              MPI_Datatype recvtype, MPIR_Comm * comm,
                                              MPIR_Errflag_t * errflag)
 {
-    int ret;
+    int ret = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLGATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLGATHER);
 
-    ret = MPIDI_NM_mpi_allgather(sendbuf, sendcount, sendtype, recvbuf,
-                                 recvcount, recvtype, comm, errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Allgather_select(sendbuf, sendcount, sendtype, recvbuf,
+                                   recvcount, recvtype, comm, errflag);
+
+    ret = MPIDI_CH4_Allgather_call(sendbuf, sendcount, sendtype, recvbuf,
+                                   recvcount, recvtype, comm, errflag,
+                                   ch4_algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLGATHER);
     return ret;
@@ -95,13 +101,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, int sendcount,
                                               MPI_Datatype recvtype, MPIR_Comm * comm,
                                               MPIR_Errflag_t * errflag)
 {
-    int ret;
+    int ret = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLGATHERV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLGATHERV);
 
-    ret = MPIDI_NM_mpi_allgatherv(sendbuf, sendcount, sendtype, recvbuf,
-                                  recvcounts, displs, recvtype, comm, errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Allgatherv_select(sendbuf, sendcount, sendtype, recvbuf,
+                                   recvcounts, displs, recvtype, comm, errflag);
+
+    ret = MPIDI_CH4_Allgatherv_call(sendbuf, sendcount, sendtype, recvbuf,
+                                    recvcounts, displs, recvtype, comm, errflag,
+                                    ch4_algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLGATHERV);
     return ret;
@@ -182,12 +194,18 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, int sendcount,
                                             MPIR_Errflag_t * errflag)
 {
     int ret;
+    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALL);
 
-    ret = MPIDI_NM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
-                                recvcount, recvtype, comm, errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Alltoall_select(sendbuf, sendcount, sendtype, recvbuf,
+                                  recvcount, recvtype, comm, errflag);
+
+    ret = MPIDI_CH4_Alltoall_call(sendbuf, sendcount, sendtype, recvbuf,
+                                  recvcount, recvtype, comm, errflag,
+                                  ch4_algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLTOALL);
     return ret;
@@ -200,12 +218,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const int *send
                                              MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int ret;
+    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALLV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALLV);
 
-    ret = MPIDI_NM_mpi_alltoallv(sendbuf, sendcounts, sdispls, sendtype,
-                                 recvbuf, recvcounts, rdispls, recvtype, comm, errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Alltoallv_select(sendbuf, sendcounts, sdispls, sendtype,
+                                   recvbuf, recvcounts, rdispls, recvtype,
+                                   comm, errflag);
+
+    ret = MPIDI_CH4_Alltoallv_call(sendbuf, sendcounts, sdispls, sendtype,
+                                   recvbuf, recvcounts, rdispls, recvtype,
+                                   comm, errflag, ch4_algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLTOALLV);
     return ret;
@@ -215,15 +240,22 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const int sendc
                                              const int sdispls[], const MPI_Datatype sendtypes[],
                                              void *recvbuf, const int recvcounts[],
                                              const int rdispls[], const MPI_Datatype recvtypes[],
-                                             MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                             MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int ret;
+    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALLW);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALLW);
 
-    ret = MPIDI_NM_mpi_alltoallw(sendbuf, sendcounts, sdispls, sendtypes,
-                                 recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Alltoallw_select(sendbuf, sendcounts, sdispls, sendtypes,
+                                   recvbuf, recvcounts, rdispls, recvtypes,
+                                   comm, errflag);
+
+    ret = MPIDI_CH4_Alltoallw_call(sendbuf, sendcounts, sdispls, sendtypes,
+                                   recvbuf, recvcounts, rdispls, recvtypes,
+                                   comm, errflag, ch4_algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLTOALLW);
     return ret;

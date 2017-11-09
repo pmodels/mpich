@@ -257,4 +257,243 @@ int MPIDI_CH4_Reduce_call(const void *sendbuf, void *recvbuf, int count,
     }
     return mpi_errno;
 }
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Alltoall_select(const void *sendbuf,
+                                                            int sendcount,
+                                                            MPI_Datatype sendtype,
+                                                            void *recvbuf,
+                                                            int recvcount,
+                                                            MPI_Datatype recvtype,
+                                                            MPIR_Comm * comm,
+                                                            MPIR_Errflag_t * errflag)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_alltoall_intercomm_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_alltoall_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    int MPIDI_CH4_Alltoall_call(const void *sendbuf, int sendcount,
+                                MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                                MPI_Datatype recvtype, MPIR_Comm * comm,
+                                MPIR_Errflag_t * errflag,
+                                MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_CH4_alltoall_composition_alpha_id:
+        mpi_errno =
+            MPIDI_Alltoall_composition_alpha(sendbuf, sendcount, sendtype,
+                                             recvbuf, recvcount, recvtype,
+                                             comm, errflag, ch4_algo_parameters_container);
+        break;
+    case MPIDI_CH4_alltoall_intercomm_id:
+        mpi_errno =
+            MPIDI_Alltoall_intercomm(sendbuf, sendcount, sendtype,
+                                     recvbuf, recvcount, recvtype,
+                                     comm, errflag, ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Alltoall(sendbuf, sendcount, sendtype,
+                                  recvbuf, recvcount, recvtype,
+                                  comm, errflag);
+        break;
+    }
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Alltoallv_select(const void *sendbuf, const int *sendcounts,
+                                                             const int *sdispls, MPI_Datatype sendtype,
+                                                             void *recvbuf, const int *recvcounts,
+                                                             const int *rdispls, MPI_Datatype recvtype,
+                                                             MPIR_Comm *comm, MPIR_Errflag_t *errflag)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_alltoallv_intercomm_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_alltoallv_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    int MPIDI_CH4_Alltoallv_call(const void *sendbuf, const int *sendcounts,
+                                 const int *sdispls, MPI_Datatype sendtype,
+                                 void *recvbuf, const int *recvcounts,
+                                 const int *rdispls, MPI_Datatype recvtype,
+                                 MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                 MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_CH4_alltoallv_composition_alpha_id:
+        mpi_errno =
+            MPIDI_Alltoallv_composition_alpha(sendbuf, sendcounts, sdispls,
+                                              sendtype, recvbuf, recvcounts,
+                                              rdispls, recvtype, comm_ptr, errflag,
+                                              ch4_algo_parameters_container);
+        break;
+    case MPIDI_CH4_alltoallv_intercomm_id:
+        mpi_errno =
+            MPIDI_Alltoallv_intercomm(sendbuf, sendcounts, sdispls,
+                                      sendtype, recvbuf, recvcounts,
+                                      rdispls, recvtype, comm_ptr, errflag,
+                                      ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Alltoallv(sendbuf, sendcounts, sdispls,
+                                   sendtype, recvbuf, recvcounts,
+                                   rdispls, recvtype, comm_ptr, errflag);
+        break;
+    }
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Alltoallw_select(const void *sendbuf, const int sendcounts[],
+                                                             const int sdispls[], const MPI_Datatype sendtypes[],
+                                                             void *recvbuf, const int recvcounts[],
+                                                             const int rdispls[], const MPI_Datatype recvtypes[],
+                                                             MPIR_Comm *comm, MPIR_Errflag_t *errflag)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_alltoallw_intercomm_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_alltoallw_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    int MPIDI_CH4_Alltoallw_call(const void *sendbuf, const int sendcounts[],
+                                 const int sdispls[], const MPI_Datatype sendtypes[],
+                                 void *recvbuf, const int recvcounts[],
+                                 const int rdispls[], const MPI_Datatype recvtypes[],
+                                 MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                 MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_CH4_alltoallw_composition_alpha_id:
+        mpi_errno =
+            MPIDI_Alltoallw_composition_alpha(sendbuf, sendcounts, sdispls,
+                                              sendtypes, recvbuf, recvcounts,
+                                              rdispls, recvtypes, comm_ptr, errflag,
+                                              ch4_algo_parameters_container);
+        break;
+    case MPIDI_CH4_alltoallw_intercomm_id:
+        mpi_errno =
+            MPIDI_Alltoallw_intercomm(sendbuf, sendcounts, sdispls,
+                                      sendtypes, recvbuf, recvcounts,
+                                      rdispls, recvtypes, comm_ptr, errflag,
+                                      ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Alltoallw(sendbuf, sendcounts, sdispls,
+                                   sendtypes, recvbuf, recvcounts,
+                                   rdispls, recvtypes, comm_ptr, errflag);
+        break;
+    }
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Allgather_select(const void *sendbuf, int sendcount,
+                                                             MPI_Datatype sendtype, void *recvbuf,
+                                                             int recvcount, MPI_Datatype recvtype,
+                                                             MPIR_Comm * comm, MPIR_Errflag_t * errflag)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_allgather_intercomm_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_allgather_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    int MPIDI_CH4_Allgather_call(const void *sendbuf, int sendcount,
+                                 MPI_Datatype sendtype, void *recvbuf,
+                                 int recvcount, MPI_Datatype recvtype,
+                                 MPIR_Comm * comm, MPIR_Errflag_t * errflag,
+                                 MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_CH4_allgather_composition_alpha_id:
+        mpi_errno =
+            MPIDI_Allgather_composition_alpha(sendbuf, sendcount, sendtype,
+                                              recvbuf, recvcount, recvtype,
+                                              comm, errflag, ch4_algo_parameters_container);
+        break;
+    case MPIDI_CH4_allgather_intercomm_id:
+        mpi_errno =
+            MPIDI_Allgather_intercomm(sendbuf, sendcount, sendtype,
+                                      recvbuf, recvcount, recvtype,
+                                      comm, errflag, ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Allgather(sendbuf, sendcount, sendtype,
+                                   recvbuf, recvcount, recvtype,
+                                   comm, errflag);
+        break;
+    }
+
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Allgatherv_select(const void *sendbuf, int sendcount, 
+                                                              MPI_Datatype sendtype, void *recvbuf,
+                                                              const int *recvcounts, const int *displs,
+                                                              MPI_Datatype recvtype, MPIR_Comm *comm,
+                                                              MPIR_Errflag_t *errflag)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_allgatherv_intercomm_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_allgatherv_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    int MPIDI_CH4_Allgatherv_call(const void *sendbuf, int sendcount, 
+                                  MPI_Datatype sendtype, void *recvbuf,
+                                  const int *recvcounts, const int *displs,
+                                  MPI_Datatype recvtype, MPIR_Comm *comm,
+                                  MPIR_Errflag_t *errflag,
+                                  MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_CH4_allgatherv_composition_alpha_id:
+        mpi_errno =
+            MPIDI_Allgatherv_composition_alpha(sendbuf, sendcount, sendtype,
+                                               recvbuf, recvcounts, displs, 
+                                               recvtype, comm, errflag,
+                                               ch4_algo_parameters_container);
+        break;
+    case MPIDI_CH4_allgatherv_intercomm_id:
+        mpi_errno =
+            MPIDI_Allgatherv_intercomm(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcounts, displs,
+                                       recvtype, comm, errflag,
+                                       ch4_algo_parameters_container);
+        break;
+    default:
+        mpi_errno = MPIR_Allgatherv(sendbuf, sendcount, sendtype,
+                                    recvbuf, recvcounts, displs,
+                                    recvtype, comm, errflag);
+        break;
+    }
+
+    return mpi_errno;
+}
+
 #endif /* CH4_COLL_SELECT_H_INCLUDED */
