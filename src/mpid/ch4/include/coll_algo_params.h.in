@@ -2,7 +2,7 @@
 #define COLL_ALGO_PARAMS_H_INCLUDED
 
 #include "../src/ch4_coll_params.h"
-#include "coll_tuning_types.h"
+#include "ch4_coll_containers.h"
 /* *INDENT-OFF* */
 @ch4_netmod_coll_params_include@
 @ch4_shm_coll_params_include@
