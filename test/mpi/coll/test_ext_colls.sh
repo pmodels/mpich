@@ -5,45 +5,47 @@ nl='
 testing_env="env=MPIR_CVAR_TEST_MPIR_COLLECTIVES=1"
 env=""
 # reduce tests
-algo_ids="1 2"
-kvalues="3 5"
-for algo_id in ${algo_ids}; do
-    for kval in ${kvalues}; do
-        env="env=MPIR_CVAR_USE_REDUCE=${algo_id} env=MPIR_CVAR_REDUCE_TREE_KVAL=${kval} ${testing_env}"
-        ext_coll_tests+="reduce 5 ${env}${nl}"
-        ext_coll_tests+="reduce 10 ${env}${nl}"
-        ext_coll_tests+="red3 10 ${env}${nl}"
-        ext_coll_tests+="red4 10 ${env}${nl}"
-        ext_coll_tests+="reduce 5 ${env} env=MPIR_CVAR_REDUCE_TREE_SEGSIZE=4096${nl}"
-    done
-done
-# bcast tests
-algo_ids="2 3"
-kvalues="4"
-for algo_id in ${algo_ids}; do
-    for kval in ${kvalues}; do
-        env="env=MPIR_CVAR_USE_BCAST=${algo_id} ${testing_env} "
-        if [ ${algo_id} == 1 ]; then
-            env+="env=MPIR_CVAR_BCAST_KNOMIAL_KVAL=${kval}"
-        else
-            env+="env=MPIR_CVAR_BCAST_KARY_KVAL=${kval}"
-        fi
-        ext_coll_tests+="bcasttest 10 ${env}${nl}"
-        ext_coll_tests+="bcast_full 4 timeLimit=600 ${env}${nl}"
-        ext_coll_tests+="bcast_min_datatypes 10 timeLimit=1200 ${env}${nl}"
-        ext_coll_tests+="bcast_comm_world 10 timeLimit=1200 ${env}${nl}"
-        ext_coll_tests+="bcastzerotype 10 ${env}${nl}"
-        ext_coll_tests+="bcasttest 10 ${env} env=MPIR_CVAR_BCAST_TREE_SEGSIZE=4096${nl}"
-    done
-done
-
-#bcast ring algorithm test
-ext_coll_tests+="bcasttest 10 env=MPIR_CVAR_BCAST_RING_SEGSIZE=4096 env=MPIR_CVAR_USE_BCAST=4 ${testing_env} ${nl}"
-
+#algo_ids="1 2"
+#kvalues="3 5"
+#for algo_id in ${algo_ids}; do
+#    for kval in ${kvalues}; do
+#        env="env=MPIR_CVAR_USE_REDUCE=${algo_id} env=MPIR_CVAR_REDUCE_TREE_KVAL=${kval} ${testing_env}"
+#        ext_coll_tests+="reduce 5 ${env}${nl}"
+#        ext_coll_tests+="reduce 10 ${env}${nl}"
+#        ext_coll_tests+="red3 10 ${env}${nl}"
+#        ext_coll_tests+="red4 10 ${env}${nl}"
+#        ext_coll_tests+="reduce 5 ${env} env=MPIR_CVAR_REDUCE_TREE_SEGSIZE=4096${nl}"
+#    done
+#done
+## bcast tests
+#algo_ids="2 3"
+#kvalues="4"
+#for algo_id in ${algo_ids}; do
+#    for kval in ${kvalues}; do
+#        env="env=MPIR_CVAR_USE_BCAST=${algo_id} ${testing_env} "
+#        if [ ${algo_id} == 1 ]; then
+#            env+="env=MPIR_CVAR_BCAST_KNOMIAL_KVAL=${kval}"
+#        else
+#            env+="env=MPIR_CVAR_BCAST_KARY_KVAL=${kval}"
+#        fi
+#        ext_coll_tests+="bcasttest 10 ${env}${nl}"
+#        ext_coll_tests+="bcast_full 4 timeLimit=600 ${env}${nl}"
+#        ext_coll_tests+="bcast_min_datatypes 10 timeLimit=1200 ${env}${nl}"
+#        ext_coll_tests+="bcast_comm_world 10 timeLimit=1200 ${env}${nl}"
+#        ext_coll_tests+="bcastzerotype 10 ${env}${nl}"
+#        ext_coll_tests+="bcasttest 10 ${env} env=MPIR_CVAR_BCAST_TREE_SEGSIZE=4096${nl}"
+#    done
+#done
+#
+##bcast ring algorithm test
+#ext_coll_tests+="bcasttest 10 env=MPIR_CVAR_BCAST_RING_SEGSIZE=4096 env=MPIR_CVAR_USE_BCAST=4 ${testing_env} ${nl}"
+#
 # Allreduce tests
-algo_ids="1 2"
+algo_ids="1 2 3 4 5"
+kvlaues="3 5"
 for algo_id in ${algo_ids}; do
-            env="env=MPIR_CVAR_USE_ALLREDUCE=${algo_id} ${testing_env} ${nl}"
+    for kval in ${kvalues}; do
+            env="env=MPIR_CVAR_USE_ALLREDUCE=${algo_id} env=MPIR_CVAR_ALLRED_RECEXCH_KVAL=${kval} ${testing_env} ${nl}"
             ext_coll_tests+="allred 4 ${env}"
             ext_coll_tests+="allred 7 ${env}"
             ext_coll_tests+="allred 4 arg=100 ${env}"
@@ -55,12 +57,27 @@ for algo_id in ${algo_ids}; do
             ext_coll_tests+="allred5 10 ${env}"
             ext_coll_tests+="allred6 4 ${env}"
             ext_coll_tests+="allred6 7 ${env}"
+    done
 done
 #Alltoall tests
-algo_ids="1 2 3"
+#algo_ids="1 2 3"
+#for algo_id in ${algo_ids}; do
+#    env="env=MPIR_CVAR_USE_ALLTOALL=${algo_id} ${testing_env} ${nl}"
+#    ext_coll_tests+="alltoall1 8 ${env}"
+#done
+#Allgather tests
+algo_ids="1 2"
+kvlaues="3 5"
 for algo_id in ${algo_ids}; do
-    env="env=MPIR_CVAR_USE_ALLTOALL=${algo_id} ${testing_env} ${nl}"
-    ext_coll_tests+="alltoall1 8 ${env}"
+    for kval in ${kvalues}; do
+        env="env=MPIR_CVAR_USE_ALLGATHER=${algo_id} env=MPIR_CVAR_ALLGATHER_RECEXCH_KVAL=${kval} ${testing_env} ${nl}"
+        ext_coll_tests+="allgather2 10 ${env}"
+        ext_coll_tests+="allgather3 10 ${env}"
+        ext_coll_tests+="allgatherv2 10 ${env}"
+        ext_coll_tests+="allgatherv3 10 ${env}"
+        ext_coll_tests+="allgatherv4 4 timelimit=600 ${env}"
+        ext_coll_tests+="allgather_struct 10 ${env}"
+    done
 done
 # Add more tests
 export ext_coll_tests
