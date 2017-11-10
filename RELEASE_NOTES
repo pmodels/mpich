@@ -22,6 +22,15 @@
    this issue by explicitly linking your application to libstdc++
    instead (e.g., mpicxx -o foo foo.cxx -lstdc++).
 
+ * GCC builds - When using Homebrew or Macports gcc (not the default
+   gcc, which is just a symlink to clang), a bug in gcc
+   (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=40838) causes stack
+   alignment issues in some cases causing segmentation faults.  You
+   can workaround this issue by building mpich with clang, or by
+   passing a lower optimization level than the default (-O2).
+   Currently, this bug only seems to show up when the
+   --disable-error-checking flag is passed to configure.
+
 ### Solaris compilers
 
  * Compilation on solaris will freeze when MPICH is configured with 
