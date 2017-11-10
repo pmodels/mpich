@@ -139,6 +139,10 @@ int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
             mpi_errno = MPIC_MPICH_RECEXCH_allreduce(sendbuf, recvbuf, count, datatype, op,
                                             &(MPIC_COMM(comm_ptr)->mpich_recexch), 1, MPIR_CVAR_ALLRED_RECEXCH_KVAL, (int*)errflag);
             break;
+        case ALLREDUCE_DISSEM:
+            mpi_errno = MPIC_MPICH_DISSEM_allreduce(sendbuf, recvbuf, count, datatype, op,
+                                            &(MPIC_COMM(comm_ptr)->mpich_dissem), (int*)errflag);
+            break;
         default:
             mpi_errno = MPIC_DEFAULT_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
