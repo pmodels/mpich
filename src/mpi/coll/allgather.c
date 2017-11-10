@@ -205,7 +205,7 @@ int MPIR_Allgather_inter (
         MPIR_Datatype_get_extent_macro( sendtype, send_extent );
         extent = MPL_MAX(send_extent, true_extent);
 
-	      MPIR_Ensure_Aint_fits_in_pointer(extent * sendcount * local_size);
+  MPIR_Ensure_Aint_fits_in_pointer(extent * sendcount * local_size);
         MPIR_CHKLMEM_MALLOC(tmp_buf, void*, extent*sendcount*local_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* adjust for potential negative lower bound in datatype */
