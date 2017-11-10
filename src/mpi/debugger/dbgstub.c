@@ -102,7 +102,7 @@ int dbgrI_field_offset(mqs_type *type, char *name)
     /* printf ( "curtype is %d\n", curType ); */
 
     switch (curType) {
-    case TYPE_MPIR_COMM:
+    case TYPE_MPID_COMM:
 	{
 	    MPID_Comm c;
 	    if (strcmp( name, "name" ) == 0) {
