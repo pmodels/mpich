@@ -198,9 +198,7 @@ int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatyp
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Iexscan_sched != NULL);
-    mpi_errno = comm_ptr->coll_fns->Iexscan_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+    mpi_errno = MPID_Iexscan_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);

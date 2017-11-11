@@ -239,9 +239,7 @@ fn_fail:
 
 
 /* MPIR_Exscan_impl should be called by any internal component that
-   would otherwise call MPI_Exscan.  This differs from MPIR_Exscan in
-   that this will call the coll_fns version if it exists.  This
-   function replaces NMPI_Exscan. */
+   would otherwise call MPI_Exscan. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Exscan_impl
 #undef FCNAME
@@ -250,17 +248,9 @@ int MPIR_Exscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Exscan != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    mpi_errno = MPID_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-	mpi_errno = MPIR_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
 
-        
  fn_exit:
     return mpi_errno;
  fn_fail:

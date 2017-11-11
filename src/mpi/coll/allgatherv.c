@@ -913,10 +913,7 @@ int MPIR_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 }
 
 /* MPIR_Allgatherv_impl should be called by any internal component
-   that would otherwise call MPI_Allgatherv.  This differs from
-   MPIR_Allgatherv in that this is SMP aware and will call the
-   coll_fns version if it exists.  This is a replacement for
-   NMPI_Allgatherv. */
+   that would otherwise call MPI_Allgatherv. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allgatherv_impl
 #undef FCNAME
@@ -926,18 +923,10 @@ int MPIR_Allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendty
                          MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-        
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Allgatherv != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Allgatherv(sendbuf, sendcount, sendtype,
-                                                   recvbuf, recvcounts, displs, recvtype, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Allgatherv(sendbuf, sendcount, sendtype,
-                                    recvbuf, recvcounts, displs, recvtype, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
+
+    mpi_errno = MPID_Allgatherv(sendbuf, sendcount, sendtype,
+                                recvbuf, recvcounts, displs, recvtype, comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
     return mpi_errno;
