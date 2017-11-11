@@ -47,12 +47,12 @@ int MPI_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[
 */
 /* this routine handles both intracomms and intercomms */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatterv
+#define FUNCNAME MPIR_Iscatterv_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[],
-                   MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                   int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iscatterv_sched(const void *sendbuf, const int sendcounts[], const int displs[],
+                         MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                         int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;

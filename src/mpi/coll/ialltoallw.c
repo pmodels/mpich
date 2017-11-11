@@ -52,10 +52,10 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
    End Algorithm: MPI_Alltoallw
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_intra
+#define FUNCNAME MPIR_Ialltoallw_intra_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoallw_intra(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Ialltoallw_intra_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                           const int rdispls[], const MPI_Datatype recvtypes[],
                           MPIR_Comm *comm_ptr, MPIR_Sched_t s)
@@ -177,10 +177,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_inter
+#define FUNCNAME MPIR_Ialltoallw_inter_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoallw_inter(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Ialltoallw_inter_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                           const int rdispls[], const MPI_Datatype recvtypes[],
                           MPIR_Comm *comm_ptr, MPIR_Sched_t s)
