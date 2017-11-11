@@ -295,7 +295,7 @@ int MPIR_Barrier_recursive_doubling(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag
 
 /* MPIR_Barrier performs an barrier using point-to-point messages.
    This is intended to be used by device-specific implementations of
-   barrier.  In all other cases MPIR_Barrier_impl should be used. */
+   barrier. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Barrier
 #undef FCNAME
@@ -315,28 +315,6 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
     }
 
  fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
-
-/* MPIR_Barrier_impl should be called by any internal component that
-   would otherwise call MPI_Barrier. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Barrier_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier_impl(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPID_Barrier(comm_ptr, errflag);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
- fn_exit:
-    if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     return mpi_errno;
  fn_fail:
     goto fn_exit;

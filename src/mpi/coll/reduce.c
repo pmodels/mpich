@@ -1025,8 +1025,7 @@ int MPIR_Reduce_inter (
 
 /* MPIR_Reduce performs an reduce using point-to-point messages.
    This is intended to be used by device-specific implementations of
-   reduce.  In all other cases MPIR_Reduce_impl should be
-   used. */
+   reduce. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce
 #undef FCNAME
@@ -1053,28 +1052,6 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
  fn_fail:
     goto fn_exit;
 }
-
-/* MPIR_Reduce_impl should be called by any internal component that
-   would otherwise call MPI_Reduce. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                     MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype,
-                            op, root, comm_ptr, errflag);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
 
 #endif
 

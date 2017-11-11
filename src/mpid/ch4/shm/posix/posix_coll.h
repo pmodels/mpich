@@ -409,8 +409,8 @@ static inline int MPIDI_POSIX_mpi_neighbor_allgather(const void *sendbuf, int se
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_NEIGHBOR_ALLGATHER);
 
     mpi_errno =
-        MPIR_Neighbor_allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                                     comm_ptr);
+        MPIR_Neighbor_allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                comm_ptr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_NEIGHBOR_ALLGATHER);
     return mpi_errno;
@@ -429,8 +429,8 @@ static inline int MPIDI_POSIX_mpi_neighbor_allgatherv(const void *sendbuf, int s
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_NEIGHBOR_ALLGATHERV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_NEIGHBOR_ALLGATHERV);
 
-    mpi_errno = MPIR_Neighbor_allgatherv_impl(sendbuf, sendcount, sendtype,
-                                              recvbuf, recvcounts, displs, recvtype, comm_ptr);
+    mpi_errno = MPIR_Neighbor_allgatherv(sendbuf, sendcount, sendtype,
+                                         recvbuf, recvcounts, displs, recvtype, comm_ptr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_NEIGHBOR_ALLGATHERV);
     return mpi_errno;
@@ -449,8 +449,8 @@ static inline int MPIDI_POSIX_mpi_neighbor_alltoall(const void *sendbuf, int sen
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_NEIGHBOR_ALLTOALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_NEIGHBOR_ALLTOALL);
 
-    mpi_errno = MPIR_Neighbor_alltoall_impl(sendbuf, sendcount, sendtype,
-                                            recvbuf, recvcount, recvtype, comm_ptr);
+    mpi_errno = MPIR_Neighbor_alltoall(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcount, recvtype, comm_ptr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_NEIGHBOR_ALLTOALL);
     return mpi_errno;
@@ -470,8 +470,8 @@ static inline int MPIDI_POSIX_mpi_neighbor_alltoallv(const void *sendbuf, const 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_NEIGHBOR_ALLTOALLV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_NEIGHBOR_ALLTOALLV);
 
-    mpi_errno = MPIR_Neighbor_alltoallv_impl(sendbuf, sendcounts, sdispls, sendtype,
-                                             recvbuf, recvcounts, rdispls, recvtype, comm_ptr);
+    mpi_errno = MPIR_Neighbor_alltoallv(sendbuf, sendcounts, sdispls, sendtype,
+                                        recvbuf, recvcounts, rdispls, recvtype, comm_ptr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_NEIGHBOR_ALLTOALLV);
     return mpi_errno;
@@ -492,8 +492,8 @@ static inline int MPIDI_POSIX_mpi_neighbor_alltoallw(const void *sendbuf, const 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_NEIGHBOR_ALLTOALLW);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_NEIGHBOR_ALLTOALLW);
 
-    mpi_errno = MPIR_Neighbor_alltoallw_impl(sendbuf, sendcounts, sdispls, sendtypes,
-                                             recvbuf, recvcounts, rdispls, recvtypes, comm_ptr);
+    mpi_errno = MPIR_Neighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes,
+                                        recvbuf, recvcounts, rdispls, recvtypes, comm_ptr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_NEIGHBOR_ALLTOALLW);
     return mpi_errno;

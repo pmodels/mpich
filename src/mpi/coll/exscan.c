@@ -79,7 +79,7 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
    one in some cases */
 /* MPIR_Exscan performs an exscan using point-to-point messages.  This
    is intended to be used by device-specific implementations of
-   exscan.  In all other cases MPIR_Exscan_impl should be used. */
+   exscan. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Exscan
 #undef FCNAME
@@ -236,27 +236,6 @@ fn_exit:
 fn_fail:
     goto fn_exit;
 }
-
-
-/* MPIR_Exscan_impl should be called by any internal component that
-   would otherwise call MPI_Exscan. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Exscan_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Exscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPID_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
 
 #endif
 

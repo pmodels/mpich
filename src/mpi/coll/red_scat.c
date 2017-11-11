@@ -1031,8 +1031,7 @@ int MPIR_Reduce_scatter_inter(const void *sendbuf, void *recvbuf, const int recv
 
 /* MPIR_Reduce_Scatter performs an reduce_scatter using point-to-point
    messages.  This is intended to be used by device-specific
-   implementations of reduce_scatter.  In all other cases
-   MPIR_Reduce_Scatter_impl should be used. */
+   implementations of reduce_scatter. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_scatter
 #undef FCNAME
@@ -1053,27 +1052,6 @@ int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts
                                               datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
-
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
-/* MPIR_Reduce_Scatter_impl should be called by any internal component
-   that would otherwise call MPI_Reduce_Scatter. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recvcounts[],
-                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-        mpi_errno = MPIR_Reduce_scatter(sendbuf, recvbuf, recvcounts,
-                                        datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
     return mpi_errno;
