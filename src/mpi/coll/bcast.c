@@ -942,33 +942,6 @@ fn_fail:
     goto fn_exit;
 }
 
-/* A convenience function to de-clutter code and minimize copy-paste bugs.
-   Invokes the coll_fns->Bcast override for the given communicator if non-null.
-   Otherwise it invokes bcast_fn_ with the given args.
-   
-   NOTE: calls MPIR_ERR_POP on any failure, so a fn_fail label is needed. */
-#define MPIR_Bcast_fn_or_override(bcast_fn_,mpi_errno_ret_,buffer_,count_,datatype_,root_,comm_ptr_,errflag_) \
-    do {                                                                                         \
-        int mpi_errno_ = MPI_SUCCESS;                                                            \
-        if (comm_ptr_->coll_fns != NULL && comm_ptr_->coll_fns->Bcast != NULL)                   \
-        {                                                                                        \
-            /* --BEGIN USEREXTENSION-- */                                                        \
-            mpi_errno_ = comm_ptr_->coll_fns->Bcast(buffer_, count_,                              \
-                                                   datatype_, root_, comm_ptr_, errflag_);       \
-            /* --END USEREXTENSION-- */                                                          \
-        }                                                                                        \
-        else                                                                                     \
-        {                                                                                        \
-            mpi_errno_ = bcast_fn_(buffer_, count_, datatype_, root_, comm_ptr_, errflag_);      \
-        }                                                                                        \
-        if (mpi_errno_) {                                                                        \
-            /* for communication errors, just record the error but continue */                   \
-            *(errflag_) = MPIR_ERR_GET_CLASS(mpi_errno_);                                        \
-            MPIR_ERR_SET(mpi_errno_, *(errflag_), "**fail");                                     \
-            MPIR_ERR_ADD(mpi_errno_ret_, mpi_errno_);                                            \
-        }                                                                                        \
-    } while (0)
-
 /* FIXME This function uses some heuristsics based off of some testing on a
  * cluster at Argonne.  We need a better system for detrmining and controlling
  * the cutoff points for these algorithms.  If I've done this right, you should
@@ -1066,17 +1039,28 @@ static int MPIR_SMP_Bcast(
         /* perform the internode broadcast */
         if (comm_ptr->node_roots_comm != NULL)
         {
-            MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno_ret,
-                                      buffer, count, datatype,
-                                      MPIR_Get_internode_rank(comm_ptr, root),
-                                      comm_ptr->node_roots_comm, errflag);
+            mpi_errno = MPID_Bcast(buffer, count, datatype,
+                                   MPIR_Get_internode_rank(comm_ptr, root),
+                                   comm_ptr->node_roots_comm, errflag);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
         }
 
         /* perform the intranode broadcast on all except for the root's node */
         if (comm_ptr->node_comm != NULL)
         {
-            MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno_ret,
-                                      buffer, count, datatype, 0, comm_ptr->node_comm, errflag);
+            mpi_errno = MPID_Bcast(buffer, count, datatype, 0,
+                                   comm_ptr->node_comm, errflag);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
         }
     }
     else /* (nbytes > MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_ptr->size >= MPIR_CVAR_BCAST_MIN_PROCS) */
@@ -1095,28 +1079,28 @@ static int MPIR_SMP_Bcast(
                 /* FIXME binomial may not be the best algorithm for on-node
                    bcast.  We need a more comprehensive system for selecting the
                    right algorithms here. */
-                MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno_ret,
-                                          buffer, count, datatype,
-                                          MPIR_Get_intranode_rank(comm_ptr, root),
-                                          comm_ptr->node_comm, errflag);
+                mpi_errno = MPID_Bcast(buffer, count, datatype,
+                                       MPIR_Get_intranode_rank(comm_ptr, root),
+                                       comm_ptr->node_comm, errflag);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
             }
 
             /* perform the internode broadcast */
             if (comm_ptr->node_roots_comm != NULL)
             {
-                if (MPIU_is_pof2(comm_ptr->node_roots_comm->local_size, NULL))
-                {
-                    MPIR_Bcast_fn_or_override(MPIR_Bcast_scatter_doubling_allgather, mpi_errno_ret,
-                                              buffer, count, datatype,
-                                              MPIR_Get_internode_rank(comm_ptr, root),
-                                              comm_ptr->node_roots_comm, errflag);
-                }
-                else
-                {
-                    MPIR_Bcast_fn_or_override(MPIR_Bcast_scatter_ring_allgather, mpi_errno_ret,
-                                              buffer, count, datatype,
-                                              MPIR_Get_internode_rank(comm_ptr, root),
-                                              comm_ptr->node_roots_comm, errflag);
+                mpi_errno = MPID_Bcast(buffer, count, datatype,
+                                       MPIR_Get_internode_rank(comm_ptr, root),
+                                       comm_ptr->node_roots_comm, errflag);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
             }
 
@@ -1127,8 +1111,14 @@ static int MPIR_SMP_Bcast(
                 /* FIXME binomial may not be the best algorithm for on-node
                    bcast.  We need a more comprehensive system for selecting the
                    right algorithms here. */
-                MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno_ret,
-                                          buffer, count, datatype, 0, comm_ptr->node_comm, errflag);
+                mpi_errno = MPID_Bcast(buffer, count, datatype, 0,
+                                       comm_ptr->node_comm, errflag);
+                if (mpi_errno) {
+                    /* for communication errors, just record the error but continue */
+                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                }
             }
         }
         else /* large msg or non-pof2 */
@@ -1154,6 +1144,9 @@ fn_exit:
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     /* --END ERROR HANDLING-- */
     return mpi_errno;
+
+fn_fail:
+    goto fn_exit;
 }
 
 
