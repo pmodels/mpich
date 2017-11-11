@@ -1020,10 +1020,10 @@ int MPIR_Ireduce_scatter_sched(const void *sendbuf, void *recvbuf, const int rec
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_impl
+#define FUNCNAME MPIR_Ireduce_scatter
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                               MPI_Request *request)
 {

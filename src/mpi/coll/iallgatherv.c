@@ -703,10 +703,10 @@ int MPIR_Iallgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype send
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv_impl
+#define FUNCNAME MPIR_Iallgatherv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                           void *recvbuf, const int recvcounts[], const int displs[],
                           MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPI_Request *request)
 {
