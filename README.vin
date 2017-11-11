@@ -1,8 +1,8 @@
 			MPICH Release %VERSION%
 
 MPICH is a high-performance and widely portable implementation of the
-MPI-3.0 standard from the Argonne National Laboratory.  This release
-has all MPI 3.0 functions and features required by the standard with
+MPI-3.1 standard from the Argonne National Laboratory.  This release
+has all MPI 3.1 functions and features required by the standard with
 the exception of support for the "external32" portable I/O format and
 user-defined data representations for I/O.
 
@@ -416,42 +416,7 @@ nemesis, you can use the following configure option:
 
   --with-device=ch3:nemesis
 
-The TCP network module gets configured in by default. To specify a
-different network module such as MX, you can use:
-
-  --with-device=ch3:nemesis:mx
-
-If the MX include files and libraries are not in the normal search
-paths, you can specify them with the following options:
-
-  --with-mx-include= and --with-mx-lib=
-
-... or the if lib/ and include/ are in the same directory, you can use
-the following option:
-
-  --with-mx=
-
-If the MX libraries are shared libraries, they need to be in the
-shared library search path. This can be done by adding the path to
-/etc/ld.so.conf, or by setting the LD_LIBRARY_PATH variable in your
-.bashrc (or .tcshrc) file.  It's also possible to set the shared
-library search path in the binary. If you're using gcc, you can do
-this by adding
-
-  LD_LIBRARY_PATH=/path/to/lib
-
-  (and)
-
-  LDFLAGS="-Wl,-rpath -Wl,/path/to/lib"
-
-... as arguments to configure.
-
-By default, MX allows for only eight endpoints per node causing
-ch3:nemesis:mx to give initialization errors with greater than 8
-processes on the same node (this is an MX error and not an inherent
-limitation in the MPICH/Nemesis design). If needed, this can be set
-to a higher number when MX is loaded. We recommend the user to contact
-help@myri.com for details on how to do this.
+The TCP network module gets configured in by default.
 
 Shared-memory optimizations are enabled by default to improve
 performance for multi-processor/multi-core platforms. They can be
