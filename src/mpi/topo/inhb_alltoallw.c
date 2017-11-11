@@ -78,6 +78,25 @@ fn_fail:
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Ineighbor_alltoallw_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Ineighbor_alltoallw_sched(const void *sendbuf, const int sendcounts[],
+                                   const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                   void *recvbuf, const int recvcounts[],
+                                   const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                   MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Ineighbor_alltoallw_sched(sendbuf, sendcounts, sdispls, sendtypes,
+                                   recvbuf, recvcounts, rdispls, recvtypes,
+                                   comm_ptr, s);
+
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Ineighbor_alltoallw_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
