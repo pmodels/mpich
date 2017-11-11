@@ -588,6 +588,25 @@ fn_fail:
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Iallgather_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Iallgather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                          MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        mpi_errno = MPIR_Iallgather_intra(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
+    } else {
+        mpi_errno = MPIR_Iallgather_inter(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
+    }
+
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Iallgather_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)

@@ -966,6 +966,27 @@ fn_fail:
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Ibcast_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Ibcast_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
+            mpi_errno = MPIR_Ibcast_SMP(buffer, count, datatype, root, comm_ptr, s);
+        } else {
+            mpi_errno = MPIR_Ibcast_intra(buffer, count, datatype, root, comm_ptr, s);
+        }
+    } else {
+        mpi_errno = MPIR_Ibcast_inter(buffer, count, datatype, root, comm_ptr, s);
+    }
+
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Ibcast_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)

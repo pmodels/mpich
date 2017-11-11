@@ -641,6 +641,26 @@ fn_fail:
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iallreduce_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
+            mpi_errno = MPIR_Iallreduce_SMP(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        } else {
+            mpi_errno = MPIR_Iallreduce_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        }
+    } else {
+        mpi_errno = MPIR_Iallreduce_inter(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+    }
+
+    return mpi_errno;
+}
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Iallreduce_impl
