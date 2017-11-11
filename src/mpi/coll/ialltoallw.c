@@ -269,11 +269,12 @@ int MPIR_Ialltoallw_sched(const void *sendbuf, const int sendcounts[], const int
 
     return mpi_errno;
 }
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_impl
+#define FUNCNAME MPIR_Ialltoallw
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispls[],
                          const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                          const int rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm *comm_ptr,
                          MPI_Request *request)
