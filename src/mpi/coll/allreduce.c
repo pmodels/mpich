@@ -144,32 +144,6 @@ MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[] = {
    End Algorithm: MPI_Allreduce
 */
 
-#undef FUNCNAME
-#define FUNCNAME allreduce_intra_or_coll_fn
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int allreduce_intra_or_coll_fn(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
-                                             MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Allreduce != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-        
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
-
 /* not declared static because a machine-specific function may call this one 
    in some cases */
 #undef FUNCNAME
@@ -241,8 +215,8 @@ int MPIR_Allreduce_intra (
 
         /* now do an IN_PLACE allreduce among the local roots of all nodes */
         if (comm_ptr->node_roots_comm != NULL) {
-            mpi_errno = allreduce_intra_or_coll_fn(MPI_IN_PLACE, recvbuf, count, datatype, op, comm_ptr->node_roots_comm,
-                                                   errflag);
+            mpi_errno = MPID_Allreduce(MPI_IN_PLACE, recvbuf, count, datatype, op, comm_ptr->node_roots_comm,
+                                       errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
