@@ -33,10 +33,10 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
 /* A recursive halving MPI_Ireduce_scatter_block algorithm.  Requires that op is
  * commutative.  Typically yields better performance for shorter messages. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_rec_hlv
+#define FUNCNAME MPIR_Ireduce_scatter_block_rec_hlv_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_rec_hlv(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_rec_hlv_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, i;
@@ -253,10 +253,10 @@ fn_fail:
 /* A pairwise exchange algorithm for MPI_Ireduce_scatter_block.  Requires a
  * commutative op and is intended for use with large messages. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_rec_pairwise
+#define FUNCNAME MPIR_Ireduce_scatter_block_rec_pairwise_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_pairwise(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_pairwise_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int   rank, comm_size, i;
@@ -390,10 +390,10 @@ fn_fail:
 /* A recursive doubling algorithm for MPI_Ireduce_scatter_block, suitable for
  * noncommutative and (non-pof2 or block irregular). */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_rec_dbl
+#define FUNCNAME MPIR_Ireduce_scatter_block_rec_dbl_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_rec_dbl(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_rec_dbl_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, i;
@@ -641,10 +641,10 @@ fn_fail:
  * from EuroPVM/MPI 2005.  This function currently only implements support for
  * the power-of-2 case. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_noncomm
+#define FUNCNAME MPIR_Reduce_scatter_block_noncomm_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_noncomm(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_noncomm_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size = comm_ptr->local_size;
@@ -764,10 +764,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_intra
+#define FUNCNAME MPIR_Ireduce_scatter_block_intra_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_intra(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_intra_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative;
@@ -786,22 +786,22 @@ int MPIR_Ireduce_scatter_block_intra(const void *sendbuf, void *recvbuf, int rec
 
     /* select an appropriate algorithm based on commutivity and message size */
     if (is_commutative && (nbytes < MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
-        mpi_errno = MPIR_Ireduce_scatter_block_rec_hlv(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Ireduce_scatter_block_rec_hlv_sched(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else if (is_commutative && (nbytes >= MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
-        mpi_errno = MPIR_Ireduce_scatter_block_pairwise(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Ireduce_scatter_block_pairwise_sched(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else /* (!is_commutative) */ {
         if (MPIU_is_pof2(comm_size, NULL)) {
             /* noncommutative, pof2 size */
-            mpi_errno = MPIR_Ireduce_scatter_block_noncomm(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
+            mpi_errno = MPIR_Ireduce_scatter_block_noncomm_sched(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         else {
             /* noncommutative and non-pof2, use recursive doubling. */
-            mpi_errno = MPIR_Ireduce_scatter_block_rec_dbl(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
+            mpi_errno = MPIR_Ireduce_scatter_block_rec_dbl_sched(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
     }
@@ -814,10 +814,10 @@ fn_fail:
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_inter
+#define FUNCNAME MPIR_Ireduce_scatter_block_inter_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_inter(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_inter_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
 /* Intercommunicator Ireduce_scatter_block.
    We first do an intercommunicator reduce to rank 0 on left group,
@@ -918,9 +918,9 @@ int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int rec
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        mpi_errno = MPIR_Ireduce_scatter_block_intra(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Ireduce_scatter_block_intra_sched(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Ireduce_scatter_block_inter(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Ireduce_scatter_block_inter_sched(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
     }
 
     return mpi_errno;

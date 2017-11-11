@@ -50,10 +50,10 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request) __attribute__((weak,alias(
  * It will choose between several different algorithms based on the given
  * parameters. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_intra
+#define FUNCNAME MPIR_Ibarrier_intra_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_intra(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_intra_sched(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int size, rank, src, dst, mask;
@@ -93,10 +93,10 @@ fn_fail:
  * It will choose between several different algorithms based on the given
  * parameters. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_inter
+#define FUNCNAME MPIR_Ibarrier_inter_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_inter(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_inter_sched(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, root;
@@ -174,9 +174,9 @@ int MPIR_Ibarrier_sched(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        mpi_errno = MPIR_Ibarrier_intra(comm_ptr, s);
+        mpi_errno = MPIR_Ibarrier_intra_sched(comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Ibarrier_inter(comm_ptr, s);
+        mpi_errno = MPIR_Ibarrier_inter_sched(comm_ptr, s);
     }
 
     return mpi_errno;
