@@ -113,11 +113,9 @@ int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[], c
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Ineighbor_alltoallw != NULL);
-    mpi_errno = comm_ptr->coll_fns->Ineighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes,
-                                                        recvbuf, recvcounts, rdispls, recvtypes,
-                                                        comm_ptr, s);
+    mpi_errno = MPID_Ineighbor_alltoallw_sched(sendbuf, sendcounts, sdispls, sendtypes,
+                                               recvbuf, recvcounts, rdispls, recvtypes,
+                                               comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);

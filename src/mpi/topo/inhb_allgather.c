@@ -109,11 +109,9 @@ int MPIR_Ineighbor_allgather_impl(const void *sendbuf, int sendcount, MPI_Dataty
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Ineighbor_allgather != NULL);
-    mpi_errno = comm_ptr->coll_fns->Ineighbor_allgather(sendbuf, sendcount, sendtype,
-                                                        recvbuf, recvcount, recvtype,
-                                                        comm_ptr, s);
+    mpi_errno = MPID_Ineighbor_allgather_sched(sendbuf, sendcount, sendtype,
+                                               recvbuf, recvcount, recvtype,
+                                               comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);

@@ -57,11 +57,9 @@ int MPIR_Neighbor_allgather_impl(const void *sendbuf, int sendcount, MPI_Datatyp
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Neighbor_allgather != NULL);
-    mpi_errno = comm_ptr->coll_fns->Neighbor_allgather(sendbuf, sendcount, sendtype,
-                                                       recvbuf, recvcount, recvtype,
-                                                       comm_ptr);
+    mpi_errno = MPID_Neighbor_allgather(sendbuf, sendcount, sendtype,
+                                        recvbuf, recvcount, recvtype,
+                                        comm_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:

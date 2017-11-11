@@ -691,9 +691,7 @@ int MPIR_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 }
 
 /* MPIR_Gather_impl should be called by any internal component that
-   would otherwise call MPI_Gather.  This differs from MPIR_Gather in
-   that this will call the coll_fns version if it exists.  This
-   function replaces NMPI_Gather. */
+   would otherwise call MPI_Gather. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Gather_impl
 #undef FCNAME
@@ -703,20 +701,11 @@ int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                      int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-        
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Gather != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Gather(sendbuf, sendcount,
-                                               sendtype, recvbuf, recvcount,
-                                               recvtype, root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype,
-                                recvbuf, recvcount, recvtype, root,
-                                comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
+
+    mpi_errno = MPID_Gather(sendbuf, sendcount, sendtype,
+                            recvbuf, recvcount, recvtype, root,
+                            comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
     return mpi_errno;

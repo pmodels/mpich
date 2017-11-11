@@ -282,9 +282,7 @@ int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int 
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Ialltoallv_sched != NULL);
-    mpi_errno = comm_ptr->coll_fns->Ialltoallv_sched(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
+    mpi_errno = MPID_Ialltoallv_sched(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);

@@ -479,10 +479,9 @@ int MPIR_Igather_inter_sched(const void *sendbuf, int sendcount, MPI_Datatype se
             newcomm_ptr = comm_ptr->local_comm;
 
             /* now do the a local gather on this intracommunicator */
-            MPIR_Assert(newcomm_ptr->coll_fns && newcomm_ptr->coll_fns->Igather_sched);
-            mpi_errno = newcomm_ptr->coll_fns->Igather_sched(sendbuf, sendcount, sendtype,
-                                                       tmp_buf, sendcount, sendtype, 0,
-                                                       newcomm_ptr, s);
+            mpi_errno = MPID_Igather_sched(sendbuf, sendcount, sendtype,
+                                           tmp_buf, sendcount, sendtype, 0,
+                                           newcomm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
             if (rank == 0) {
@@ -555,9 +554,7 @@ int MPIR_Igather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Igather_sched != NULL);
-    mpi_errno = comm_ptr->coll_fns->Igather_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+    mpi_errno = MPID_Igather_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);

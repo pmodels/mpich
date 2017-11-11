@@ -870,9 +870,7 @@ fn_fail:
 }
 
 /* MPIR_Allreduce_impl should be called by any internal component that
-   would otherwise call MPI_Allreduce.  This differs from
-   MPIR_Allreduce in that this will call the coll_fns version if it
-   exists.  */
+   would otherwise call MPI_Allreduce. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allreduce_impl
 #undef FCNAME
@@ -882,26 +880,8 @@ int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datat
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Allreduce != NULL)
-    {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    }
-    else
-    {
-        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-            /* intracommunicator */
-            mpi_errno = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	}
-        else {
-            /* intercommunicator */
-            mpi_errno = MPIR_Allreduce_inter(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        }
-    }
+    mpi_errno = MPID_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;
