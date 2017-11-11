@@ -807,9 +807,7 @@ fn_fail:
 }
 
 /* MPIR_Allgather_impl should be called by any internal component that
-   would otherwise call MPI_Allgather.  This differs from
-   MPIR_Allgather in that this will call the coll_fns version if it
-   exists.  This function replaces NMPI_Allgather. */
+   would otherwise call MPI_Allgather. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allgather_impl
 #undef FCNAME
@@ -820,20 +818,10 @@ int MPIR_Allgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Allgather != NULL)
-    {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Allgather(sendbuf, sendcount, sendtype,
-                                                  recvbuf, recvcount, recvtype,
-                                                  comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Allgather(sendbuf, sendcount, sendtype,
-                                   recvbuf, recvcount, recvtype,
-                                   comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
+    mpi_errno = MPID_Allgather(sendbuf, sendcount, sendtype,
+                               recvbuf, recvcount, recvtype,
+                               comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;

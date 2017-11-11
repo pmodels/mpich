@@ -152,9 +152,7 @@ fn_fail:
 }
 
 /* MPIR_Scatterv_impl should be called by any internal component that
-   would otherwise call MPI_Scatterv.  This differs from MPIR_Scatterv
-   in that this will call the coll_fns version if it exists.  This
-   function replaces NMPI_Scatterv. */
+   would otherwise call MPI_Scatterv. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scatterv_impl
 #undef FCNAME
@@ -164,20 +162,11 @@ int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts, const int *di
                        int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-        
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Scatter != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Scatterv(sendbuf, sendcounts, displs,
-                                                 sendtype, recvbuf, recvcount,
-                                                 recvtype, root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Scatterv(sendbuf, sendcounts, displs, sendtype,
-                                  recvbuf, recvcount, recvtype,
-                                  root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
+
+    mpi_errno = MPID_Scatterv(sendbuf, sendcounts, displs, sendtype,
+                              recvbuf, recvcount, recvtype,
+                              root, comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
     return mpi_errno;

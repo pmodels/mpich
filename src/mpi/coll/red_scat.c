@@ -1061,9 +1061,7 @@ int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts
 }
 
 /* MPIR_Reduce_Scatter_impl should be called by any internal component
-   that would otherwise call MPI_Reduce_Scatter.  This differs from
-   MPIR_Reduce_Scatter in that this will call the coll_fns version if
-   it exists.  This function replaces NMPI_Reduce_Scatter. */
+   that would otherwise call MPI_Reduce_Scatter. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_scatter_impl
 #undef FCNAME
@@ -1072,20 +1070,11 @@ int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recvc
                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-        
-    if (comm_ptr->coll_fns != NULL && 
-	comm_ptr->coll_fns->Reduce_scatter != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Reduce_scatter(sendbuf, recvbuf, recvcounts,
-                                                       datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
+
         mpi_errno = MPIR_Reduce_scatter(sendbuf, recvbuf, recvcounts,
                                         datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    
+
  fn_exit:
     return mpi_errno;
  fn_fail:

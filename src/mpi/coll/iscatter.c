@@ -507,11 +507,9 @@ int MPIR_Iscatter_inter_sched(const void *sendbuf, int sendcount, MPI_Datatype s
             newcomm_ptr = comm_ptr->local_comm;
 
             /* now do the usual scatter on this intracommunicator */
-            MPIR_Assert(newcomm_ptr->coll_fns != NULL);
-            MPIR_Assert(newcomm_ptr->coll_fns->Iscatter_sched != NULL);
-            mpi_errno = newcomm_ptr->coll_fns->Iscatter_sched(tmp_buf, recvcount, recvtype,
-                                                        recvbuf, recvcount, recvtype,
-                                                        0, newcomm_ptr, s);
+            mpi_errno = MPID_Iscatter_sched(tmp_buf, recvcount, recvtype,
+                                            recvbuf, recvcount, recvtype,
+                                            0, newcomm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }
@@ -580,8 +578,7 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIR_Assert(comm_ptr->coll_fns->Iscatter_sched != NULL);
-    mpi_errno = comm_ptr->coll_fns->Iscatter_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+    mpi_errno = MPID_Iscatter_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);
