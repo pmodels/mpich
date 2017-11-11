@@ -116,7 +116,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
             /* do the reduction on received data. since the
                ordering is right, it doesn't matter whether
                the operation is commutative or not. */
-            mpi_errno = MPIR_Reduce_local_impl(tmp_buf, recvbuf, count, datatype, op);
+            mpi_errno = MPIR_Reduce_local(tmp_buf, recvbuf, count, datatype, op);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
             /* change the rank */
@@ -167,12 +167,12 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
 
                     if (is_commutative  || (dst < group_rank)) {
                         /* op is commutative OR the order is already right */
-                        mpi_errno = MPIR_Reduce_local_impl(tmp_buf, recvbuf, count, datatype, op);
+                        mpi_errno = MPIR_Reduce_local(tmp_buf, recvbuf, count, datatype, op);
                         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     }
                     else {
                         /* op is noncommutative and the order is not right */
-                        mpi_errno = MPIR_Reduce_local_impl(recvbuf, tmp_buf, count, datatype, op);
+                        mpi_errno = MPIR_Reduce_local(recvbuf, tmp_buf, count, datatype, op);
                         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
                         /* copy result back into recvbuf */
@@ -251,7 +251,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
 
                 /* This algorithm is used only for predefined ops
                    and predefined ops are always commutative. */
-                mpi_errno = MPIR_Reduce_local_impl(((char *) tmp_buf + disps[recv_idx]*extent),
+                mpi_errno = MPIR_Reduce_local(((char *) tmp_buf + disps[recv_idx]*extent),
                                                    ((char *) recvbuf + disps[recv_idx]*extent),
                                                    recv_cnt, datatype, op);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);

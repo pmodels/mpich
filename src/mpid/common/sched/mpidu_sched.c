@@ -257,7 +257,7 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
     case MPIDU_SCHED_ENTRY_REDUCE:
         MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "starting REDUCE entry %d\n", (int) idx);
         mpi_errno =
-            MPIR_Reduce_local_impl(e->u.reduce.inbuf, e->u.reduce.inoutbuf, e->u.reduce.count,
+            MPIR_Reduce_local(e->u.reduce.inbuf, e->u.reduce.inoutbuf, e->u.reduce.count,
                                    e->u.reduce.datatype, e->u.reduce.op);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
