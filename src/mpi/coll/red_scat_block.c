@@ -1028,10 +1028,7 @@ int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
 }
 
 /* MPIR_Reduce_scatter_block_impl should be called by any internal
-   component that would otherwise call MPI_Reduce_scatter_block.  This
-   differs from MPIR_Reduce_scatter_block in that this will call the
-   coll_fns version if it exists.  This is a replacement for
-   NMPI_Reduce_scatter_block. */
+   component that would otherwise call MPI_Reduce_scatter_block. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_scatter_block_impl
 #undef FCNAME
@@ -1041,23 +1038,9 @@ int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
                                    MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-        
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Reduce_scatter_block != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-            /* intracommunicator */
-            mpi_errno = MPIR_Reduce_scatter_block_intra(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        } else {
-            /* intercommunicator */
-            mpi_errno = MPIR_Reduce_scatter_block_inter(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        }
-    }
+
+    mpi_errno = MPID_Reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
     return mpi_errno;

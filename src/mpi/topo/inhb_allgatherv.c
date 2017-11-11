@@ -116,11 +116,9 @@ int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datat
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Ineighbor_allgatherv != NULL);
-    mpi_errno = comm_ptr->coll_fns->Ineighbor_allgatherv(sendbuf, sendcount, sendtype,
-                                                         recvbuf, recvcounts, displs, recvtype,
-                                                         comm_ptr, s);
+    mpi_errno = MPID_Ineighbor_allgatherv_sched(sendbuf, sendcount, sendtype,
+                                                recvbuf, recvcounts, displs, recvtype,
+                                                comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);

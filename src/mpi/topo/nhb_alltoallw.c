@@ -57,11 +57,9 @@ int MPIR_Neighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[], co
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Neighbor_alltoallw != NULL);
-    mpi_errno = comm_ptr->coll_fns->Neighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes,
-                                                       recvbuf, recvcounts, rdispls, recvtypes,
-                                                       comm_ptr);
+    mpi_errno = MPID_Neighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes,
+                                        recvbuf, recvcounts, rdispls, recvtypes,
+                                        comm_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:

@@ -1394,9 +1394,7 @@ int MPIR_Bcast_inter (
 
 
 /* MPIR_Bcast_impl should be called by any internal component that
-   would otherwise call MPI_Bcast.  This differs from MPIR_Bcast in
-   that this will call the coll_fns version if it exists and will use
-   the SMP-aware bcast algorithm. */
+   would otherwise call MPI_Bcast. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bcast_impl
 #undef FCNAME
@@ -1405,20 +1403,8 @@ int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MP
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Bcast != NULL)
-    {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Bcast(buffer, count,
-                                              datatype, root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    }
-    else
-    {
-        mpi_errno = MPIR_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
+    mpi_errno = MPID_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
     return mpi_errno;
