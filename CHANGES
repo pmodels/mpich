@@ -1,4 +1,27 @@
 ===============================================================================
+                               Changes in 3.2.1
+===============================================================================
+
+ # Fixes for platforms with strict memory alignment requirements.
+
+ # Fixes for MPI_Win info management.
+
+ # Fixed a progress bug with MPI generalized requests.
+
+ # Fixed multiple integer overflow bugs in CH3 and ROMIO.
+
+ # Improved detection for Fortran 2008 binding support.
+
+ # Enhanced support for libfabric (OFI) netmod.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+
+   A full list of changes is available at the following link:
+
+     http://git.mpich.org/mpich.git/shortlog/v3.2..v3.2.1
+
+
+===============================================================================
                                Changes in 3.2
 ===============================================================================
 
