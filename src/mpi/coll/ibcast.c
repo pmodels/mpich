@@ -95,10 +95,10 @@ static int sched_add_length(MPIR_Comm * comm, int tag, void *state)
  * to build up a larger hierarchical broadcast from multiple invocations of this
  * function. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_binomial
+#define FUNCNAME MPIR_Ibcast_binomial_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_binomial(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_binomial_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int mask;
@@ -261,10 +261,10 @@ fn_fail:
  * arguments.  At the moment this function always scatters a buffer of nbytes
  * starting at tmp_buf address. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatter_for_bcast
+#define FUNCNAME MPIR_Iscatter_for_bcast_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatter_for_bcast(void *tmp_buf, int root, MPIR_Comm *comm_ptr, int nbytes, MPIR_Sched_t s)
+int MPIR_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm *comm_ptr, int nbytes, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, src, dst;
@@ -383,10 +383,10 @@ fn_fail:
  * implement the recursive doubling algorithm here.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_scatter_rec_dbl_allgather
+#define FUNCNAME MPIR_Ibcast_scatter_rec_dbl_allgather_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_scatter_rec_dbl_allgather_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, dst;
@@ -448,7 +448,7 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype 
     }
 
 
-    mpi_errno = MPIR_Iscatter_for_bcast(tmp_buf, root, comm_ptr, nbytes, s);
+    mpi_errno = MPIR_Iscatter_for_bcast_sched(tmp_buf, root, comm_ptr, nbytes, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* this is the block size used for the scatter operation */
@@ -638,10 +638,10 @@ fn_fail:
    Total Cost = (lgp+p-1).alpha + 2.n.((p-1)/p).beta
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_scatter_ring_allgather
+#define FUNCNAME MPIR_Ibcast_scatter_ring_allgather_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_scatter_ring_allgather_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank;
@@ -696,7 +696,7 @@ int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype dat
         }
     }
 
-    mpi_errno = MPIR_Iscatter_for_bcast(tmp_buf, root, comm_ptr, nbytes, s);
+    mpi_errno = MPIR_Iscatter_for_bcast_sched(tmp_buf, root, comm_ptr, nbytes, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* this is the block size used for the scatter operation */
@@ -767,10 +767,10 @@ fn_fail:
  * currently make any decision about which particular algorithm to use for any
  * subcommunicator. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_SMP
+#define FUNCNAME MPIR_Ibcast_SMP_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_SMP_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_homogeneous;
@@ -864,10 +864,10 @@ fn_fail:
 /* Provides a generic "flat" broadcast that doesn't know anything about hierarchy.  It will choose
  * between several different algorithms based on the given parameters. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_intra
+#define FUNCNAME MPIR_Ibcast_intra_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_intra(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_intra_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, is_homogeneous ATTRIBUTE((unused));
@@ -890,17 +890,17 @@ int MPIR_Ibcast_intra(void *buffer, int count, MPI_Datatype datatype, int root, 
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
         (comm_size < MPIR_CVAR_BCAST_MIN_PROCS))
     {
-        mpi_errno = MPIR_Ibcast_binomial(buffer, count, datatype, root, comm_ptr, s);
+        mpi_errno = MPIR_Ibcast_binomial_sched(buffer, count, datatype, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else /* (nbytes >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_size >= MPIR_CVAR_BCAST_MIN_PROCS) */
     {
         if ((nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE) && (MPIU_is_pof2(comm_size, NULL))) {
-            mpi_errno = MPIR_Ibcast_scatter_rec_dbl_allgather(buffer, count, datatype, root, comm_ptr, s);
+            mpi_errno = MPIR_Ibcast_scatter_rec_dbl_allgather_sched(buffer, count, datatype, root, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         else {
-            mpi_errno = MPIR_Ibcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, s);
+            mpi_errno = MPIR_Ibcast_scatter_ring_allgather_sched(buffer, count, datatype, root, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
     }
@@ -915,10 +915,10 @@ fn_fail:
  * anything about hierarchy.  It will choose between several different
  * algorithms based on the given parameters. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_inter
+#define FUNCNAME MPIR_Ibcast_inter_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_inter(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_inter_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -975,12 +975,12 @@ int MPIR_Ibcast_sched(void *buffer, int count, MPI_Datatype datatype, int root, 
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
-            mpi_errno = MPIR_Ibcast_SMP(buffer, count, datatype, root, comm_ptr, s);
+            mpi_errno = MPIR_Ibcast_SMP_sched(buffer, count, datatype, root, comm_ptr, s);
         } else {
-            mpi_errno = MPIR_Ibcast_intra(buffer, count, datatype, root, comm_ptr, s);
+            mpi_errno = MPIR_Ibcast_intra_sched(buffer, count, datatype, root, comm_ptr, s);
         }
     } else {
-        mpi_errno = MPIR_Ibcast_inter(buffer, count, datatype, root, comm_ptr, s);
+        mpi_errno = MPIR_Ibcast_inter_sched(buffer, count, datatype, root, comm_ptr, s);
     }
 
     return mpi_errno;

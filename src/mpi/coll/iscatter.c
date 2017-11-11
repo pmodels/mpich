@@ -85,10 +85,10 @@ static int calc_curr_count(MPIR_Comm *comm, int tag, void *state)
    End Algorithm: MPI_Scatter
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatter_intra
+#define FUNCNAME MPIR_Iscatter_intra_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iscatter_intra_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                         int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
@@ -427,10 +427,10 @@ int MPIR_Iscatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatter_inter
+#define FUNCNAME MPIR_Iscatter_inter_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iscatter_inter_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                         int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
@@ -554,9 +554,9 @@ int MPIR_Iscatter_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        mpi_errno = MPIR_Iscatter_intra(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+        mpi_errno = MPIR_Iscatter_intra_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Iscatter_inter(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+        mpi_errno = MPIR_Iscatter_inter_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
     }
 
     return mpi_errno;

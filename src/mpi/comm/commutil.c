@@ -265,22 +265,22 @@ static int init_default_collops(void)
         ops->ref_count = 1;     /* force existence until finalize time */
 
         /* intracomm default defaults... */
-        ops->Ibcast_sched = &MPIR_Ibcast_intra;
-        ops->Ibarrier_sched = &MPIR_Ibarrier_intra;
-        ops->Ireduce_sched = &MPIR_Ireduce_intra;
-        ops->Ialltoall_sched = &MPIR_Ialltoall_intra;
-        ops->Ialltoallv_sched = &MPIR_Ialltoallv_intra;
-        ops->Ialltoallw_sched = &MPIR_Ialltoallw_intra;
-        ops->Iallreduce_sched = &MPIR_Iallreduce_intra;
-        ops->Igather_sched = &MPIR_Igather_intra;
+        ops->Ibcast_sched = &MPIR_Ibcast_intra_sched;
+        ops->Ibarrier_sched = &MPIR_Ibarrier_intra_sched;
+        ops->Ireduce_sched = &MPIR_Ireduce_intra_sched;
+        ops->Ialltoall_sched = &MPIR_Ialltoall_intra_sched;
+        ops->Ialltoallv_sched = &MPIR_Ialltoallv_intra_sched;
+        ops->Ialltoallw_sched = &MPIR_Ialltoallw_intra_sched;
+        ops->Iallreduce_sched = &MPIR_Iallreduce_intra_sched;
+        ops->Igather_sched = &MPIR_Igather_intra_sched;
         ops->Igatherv_sched = &MPIR_Igatherv_sched;
-        ops->Iscatter_sched = &MPIR_Iscatter_intra;
+        ops->Iscatter_sched = &MPIR_Iscatter_intra_sched;
         ops->Iscatterv_sched = &MPIR_Iscatterv_sched;
-        ops->Ireduce_scatter_sched = &MPIR_Ireduce_scatter_intra;
-        ops->Ireduce_scatter_block_sched = &MPIR_Ireduce_scatter_block_intra;
-        ops->Iallgather_sched = &MPIR_Iallgather_intra;
-        ops->Iallgatherv_sched = &MPIR_Iallgatherv_intra;
-        ops->Iscan_sched = &MPIR_Iscan_rec_dbl;
+        ops->Ireduce_scatter_sched = &MPIR_Ireduce_scatter_intra_sched;
+        ops->Ireduce_scatter_block_sched = &MPIR_Ireduce_scatter_block_intra_sched;
+        ops->Iallgather_sched = &MPIR_Iallgather_intra_sched;
+        ops->Iallgatherv_sched = &MPIR_Iallgatherv_intra_sched;
+        ops->Iscan_sched = &MPIR_Iscan_rec_dbl_sched;
         ops->Iexscan_sched = &MPIR_Iexscan_sched;
         ops->Neighbor_allgather = &MPIR_Neighbor_allgather_default;
         ops->Neighbor_allgatherv = &MPIR_Neighbor_allgatherv_default;
@@ -298,10 +298,10 @@ static int init_default_collops(void)
         case MPIR_COMM_HIERARCHY_KIND__FLAT:
             break;
         case MPIR_COMM_HIERARCHY_KIND__PARENT:
-            ops->Ibcast_sched = &MPIR_Ibcast_SMP;
-            ops->Iscan_sched = &MPIR_Iscan_SMP;
-            ops->Iallreduce_sched = &MPIR_Iallreduce_SMP;
-            ops->Ireduce_sched = &MPIR_Ireduce_SMP;
+            ops->Ibcast_sched = &MPIR_Ibcast_SMP_sched;
+            ops->Iscan_sched = &MPIR_Iscan_SMP_sched;
+            ops->Iallreduce_sched = &MPIR_Iallreduce_SMP_sched;
+            ops->Ireduce_sched = &MPIR_Ireduce_SMP_sched;
             break;
         case MPIR_COMM_HIERARCHY_KIND__NODE:
             break;
@@ -328,21 +328,21 @@ static int init_default_collops(void)
         ops->ref_count = 1;     /* force existence until finalize time */
 
         /* intercomm defaults */
-        ops->Ibcast_sched = &MPIR_Ibcast_inter;
-        ops->Ibarrier_sched = &MPIR_Ibarrier_inter;
-        ops->Ireduce_sched = &MPIR_Ireduce_inter;
-        ops->Ialltoall_sched = &MPIR_Ialltoall_inter;
-        ops->Ialltoallv_sched = &MPIR_Ialltoallv_inter;
-        ops->Ialltoallw_sched = &MPIR_Ialltoallw_inter;
-        ops->Iallreduce_sched = &MPIR_Iallreduce_inter;
-        ops->Igather_sched = &MPIR_Igather_inter;
+        ops->Ibcast_sched = &MPIR_Ibcast_inter_sched;
+        ops->Ibarrier_sched = &MPIR_Ibarrier_inter_sched;
+        ops->Ireduce_sched = &MPIR_Ireduce_inter_sched;
+        ops->Ialltoall_sched = &MPIR_Ialltoall_inter_sched;
+        ops->Ialltoallv_sched = &MPIR_Ialltoallv_inter_sched;
+        ops->Ialltoallw_sched = &MPIR_Ialltoallw_inter_sched;
+        ops->Iallreduce_sched = &MPIR_Iallreduce_inter_sched;
+        ops->Igather_sched = &MPIR_Igather_inter_sched;
         ops->Igatherv_sched = &MPIR_Igatherv_sched;
-        ops->Iscatter_sched = &MPIR_Iscatter_inter;
+        ops->Iscatter_sched = &MPIR_Iscatter_inter_sched;
         ops->Iscatterv_sched = &MPIR_Iscatterv_sched;
-        ops->Ireduce_scatter_sched = &MPIR_Ireduce_scatter_inter;
-        ops->Ireduce_scatter_block_sched = &MPIR_Ireduce_scatter_block_inter;
-        ops->Iallgather_sched = &MPIR_Iallgather_inter;
-        ops->Iallgatherv_sched = &MPIR_Iallgatherv_inter;
+        ops->Ireduce_scatter_sched = &MPIR_Ireduce_scatter_inter_sched;
+        ops->Ireduce_scatter_block_sched = &MPIR_Ireduce_scatter_block_inter_sched;
+        ops->Iallgather_sched = &MPIR_Iallgather_inter_sched;
+        ops->Iallgatherv_sched = &MPIR_Iallgatherv_inter_sched;
         /* scan and exscan are not valid for intercommunicators, leave them NULL */
         /* Ineighbor_all* routines are not valid for intercommunicators, leave
          * them NULL */
