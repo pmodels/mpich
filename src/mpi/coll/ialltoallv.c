@@ -242,6 +242,26 @@ fn_fail:
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Ialltoallv_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Ialltoallv_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                          MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                          const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
+                          MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        mpi_errno = MPIR_Ialltoallv_intra(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
+    } else {
+        mpi_errno = MPIR_Ialltoallv_inter(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
+    }
+
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Ialltoallv_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
