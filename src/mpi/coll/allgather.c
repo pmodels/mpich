@@ -774,8 +774,7 @@ int MPIR_Allgather_inter (
 
 /* MPIR_Allgather performs an allgather using point-to-point messages.
    This is intended to be used by device-specific implementations of
-   allgather.  In all other cases MPIR_Allgather_impl should be
-   used. */
+   allgather. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allgather
 #undef FCNAME
@@ -799,29 +798,6 @@ int MPIR_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                          comm_ptr, errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
-
-fn_exit:
-    return mpi_errno;
-fn_fail:
-    goto fn_exit;
-}
-
-/* MPIR_Allgather_impl should be called by any internal component that
-   would otherwise call MPI_Allgather. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Allgather_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                        MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPID_Allgather(sendbuf, sendcount, sendtype,
-                               recvbuf, recvcount, recvtype,
-                               comm_ptr, errflag);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;

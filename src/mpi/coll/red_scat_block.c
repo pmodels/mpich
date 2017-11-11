@@ -138,7 +138,7 @@ static int MPIR_Reduce_scatter_block_noncomm (
            is now our peer's responsibility */
         if (rank > peer) {
             /* higher ranked value so need to call op(received_data, my_data) */
-            mpi_errno = MPIR_Reduce_local_impl(
+            mpi_errno = MPIR_Reduce_local(
                      incoming_data + recv_offset*true_extent,
                      outgoing_data + recv_offset*true_extent,
                      size, datatype, op);
@@ -146,7 +146,7 @@ static int MPIR_Reduce_scatter_block_noncomm (
         }
         else {
             /* lower ranked value so need to call op(my_data, received_data) */
-            mpi_errno = MPIR_Reduce_local_impl(
+            mpi_errno = MPIR_Reduce_local(
                      outgoing_data + recv_offset*true_extent,
                      incoming_data + recv_offset*true_extent,
                      size, datatype, op);
@@ -372,7 +372,7 @@ int MPIR_Reduce_scatter_block_intra (
                 /* do the reduction on received data. since the
                    ordering is right, it doesn't matter whether
                    the operation is commutative or not. */
-                mpi_errno = MPIR_Reduce_local_impl( tmp_recvbuf, tmp_results, 
+                mpi_errno = MPIR_Reduce_local( tmp_recvbuf, tmp_results, 
                                                     total_count, datatype, op);
                 
                 /* change the rank */
@@ -469,7 +469,7 @@ int MPIR_Reduce_scatter_block_intra (
                    tmp_results contains data accumulated so far */
                 
                 if (recv_cnt) {
-                    mpi_errno = MPIR_Reduce_local_impl( 
+                    mpi_errno = MPIR_Reduce_local( 
                              (char *) tmp_recvbuf + newdisps[recv_idx]*extent,
                              (char *) tmp_results + newdisps[recv_idx]*extent, 
                              recv_cnt, datatype, op);
@@ -562,11 +562,11 @@ int MPIR_Reduce_scatter_block_intra (
             
             if (is_commutative || (src < rank)) {
                 if (sendbuf != MPI_IN_PLACE) {
-                    mpi_errno = MPIR_Reduce_local_impl( tmp_recvbuf, recvbuf, 
+                    mpi_errno = MPIR_Reduce_local( tmp_recvbuf, recvbuf, 
                                                      recvcount, datatype, op); 
                 }
                 else {
-                    mpi_errno = MPIR_Reduce_local_impl( 
+                    mpi_errno = MPIR_Reduce_local( 
                           tmp_recvbuf, ((char *)recvbuf+disps[rank]*extent), 
                           recvcount, datatype, op ); 
                     /* we can't store the result at the beginning of
@@ -578,7 +578,7 @@ int MPIR_Reduce_scatter_block_intra (
             }
             else {
                 if (sendbuf != MPI_IN_PLACE) {
-                    mpi_errno = MPIR_Reduce_local_impl(recvbuf, tmp_recvbuf, 
+                    mpi_errno = MPIR_Reduce_local(recvbuf, tmp_recvbuf, 
                                                        recvcount, datatype,op); 
                     /* copy result back into recvbuf */
                     mpi_errno = MPIR_Localcopy(tmp_recvbuf, recvcount, 
@@ -587,7 +587,7 @@ int MPIR_Reduce_scatter_block_intra (
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 }
                 else {
-                    mpi_errno = MPIR_Reduce_local_impl( 
+                    mpi_errno = MPIR_Reduce_local( 
                                ((char *)recvbuf+disps[rank]*extent),
                                tmp_recvbuf, recvcount, datatype, op);
                     /* copy result back into recvbuf */
@@ -803,24 +803,24 @@ int MPIR_Reduce_scatter_block_intra (
                    we do the reduce here. */
                 if (received) {
                     if (is_commutative || (dst_tree_root < my_tree_root)) {
-                        mpi_errno = MPIR_Reduce_local_impl(
+                        mpi_errno = MPIR_Reduce_local(
                                           tmp_recvbuf, tmp_results, blklens[0],
                                           datatype, op); 
                         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-                        mpi_errno = MPIR_Reduce_local_impl( 
+                        mpi_errno = MPIR_Reduce_local( 
                                           ((char *)tmp_recvbuf + dis[1]*extent),
                                           ((char *)tmp_results + dis[1]*extent),
                                           blklens[1], datatype, op); 
                         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     }
                     else {
-                        mpi_errno = MPIR_Reduce_local_impl( 
+                        mpi_errno = MPIR_Reduce_local( 
                                         tmp_results, tmp_recvbuf, blklens[0],
                                         datatype, op); 
                         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-                        mpi_errno = MPIR_Reduce_local_impl( 
+                        mpi_errno = MPIR_Reduce_local( 
                                         ((char *)tmp_results + dis[1]*extent),
                                         ((char *)tmp_recvbuf + dis[1]*extent),
                                         blklens[1], datatype, op); 
@@ -999,8 +999,7 @@ int MPIR_Reduce_scatter_block_inter (
 
 /* MPIR_Reduce_scatter_block performs a red_scat_block using
    point-to-point messages.  This is intended to be used by
-   device-specific implementations of red_scat_block.  In all other
-   cases MPIR_Reduce_scatter_block_impl should be used. */
+   device-specific implementations of red_scat_block. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_scatter_block
 #undef FCNAME
@@ -1026,28 +1025,6 @@ int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
  fn_fail:
     goto fn_exit;
 }
-
-/* MPIR_Reduce_scatter_block_impl should be called by any internal
-   component that would otherwise call MPI_Reduce_scatter_block. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf, 
-                                   int recvcount, MPI_Datatype datatype,
-                                   MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPID_Reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
 
 #endif
 

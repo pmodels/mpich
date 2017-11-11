@@ -190,11 +190,11 @@ int MPIR_Reduce_binomial (
                 /* The sender is above us, so the received buffer must be
                    the second argument (in the noncommutative case). */
                 if (is_commutative) {
-                    mpi_errno = MPIR_Reduce_local_impl(tmp_buf, recvbuf, count, datatype, op);
+                    mpi_errno = MPIR_Reduce_local(tmp_buf, recvbuf, count, datatype, op);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 }
                 else {
-                    mpi_errno = MPIR_Reduce_local_impl(recvbuf, tmp_buf, count, datatype, op);
+                    mpi_errno = MPIR_Reduce_local(recvbuf, tmp_buf, count, datatype, op);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
                     mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
@@ -404,7 +404,7 @@ int MPIR_Reduce_redscat_gather (
             /* do the reduction on received data. */
             /* This algorithm is used only for predefined ops
                and predefined ops are always commutative. */
-	    mpi_errno = MPIR_Reduce_local_impl(tmp_buf, recvbuf, 
+	    mpi_errno = MPIR_Reduce_local(tmp_buf, recvbuf, 
 					       count, datatype, op);
             /* change the rank */
             newrank = rank / 2;
@@ -484,7 +484,7 @@ int MPIR_Reduce_redscat_gather (
             
             /* This algorithm is used only for predefined ops
                and predefined ops are always commutative. */
-	    mpi_errno = MPIR_Reduce_local_impl( 
+	    mpi_errno = MPIR_Reduce_local( 
 		       (char *) tmp_buf + disps[recv_idx]*extent,
                        (char *) recvbuf + disps[recv_idx]*extent, 
                        recv_cnt, datatype, op );
@@ -1025,8 +1025,7 @@ int MPIR_Reduce_inter (
 
 /* MPIR_Reduce performs an reduce using point-to-point messages.
    This is intended to be used by device-specific implementations of
-   reduce.  In all other cases MPIR_Reduce_impl should be
-   used. */
+   reduce. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce
 #undef FCNAME
@@ -1053,28 +1052,6 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
  fn_fail:
     goto fn_exit;
 }
-
-/* MPIR_Reduce_impl should be called by any internal component that
-   would otherwise call MPI_Reduce. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                     MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype,
-                            op, root, comm_ptr, errflag);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
 
 #endif
 
