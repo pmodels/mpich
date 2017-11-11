@@ -335,29 +335,6 @@ int MPIR_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallw_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoallw_impl(const void *sendbuf, const int sendcounts[], const int sdispls[],
-                        const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                        const int rdispls[], const MPI_Datatype recvtypes[],
-                        MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPID_Alltoallw(sendbuf, sendcounts, sdispls,
-                               sendtypes, recvbuf, recvcounts,
-                               rdispls, recvtypes, comm_ptr, errflag);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
- fn_exit:
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
-
 #endif
 
 

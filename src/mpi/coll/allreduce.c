@@ -840,8 +840,7 @@ fn_fail:
 
 /* MPIR_Allreduce performs an allreduce using point-to-point messages.
    This is intended to be used by device-specific implementations of
-   allreduce.  In all other cases MPIR_Allreduce_impl should be
-   used. */
+   allreduce. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allreduce
 #undef FCNAME
@@ -868,27 +867,6 @@ fn_fail:
 
     goto fn_exit;
 }
-
-/* MPIR_Allreduce_impl should be called by any internal component that
-   would otherwise call MPI_Allreduce. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Allreduce_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-                        MPIR_Errflag_t *errflag)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPID_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-fn_exit:
-    return mpi_errno;
-fn_fail:
-    goto fn_exit;
-}
-
 
 #endif
 
