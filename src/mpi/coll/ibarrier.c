@@ -181,10 +181,10 @@ int MPIR_Ibarrier_sched(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_impl
+#define FUNCNAME MPIR_Ibarrier
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_impl(MPIR_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Ibarrier(MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *reqp = NULL;
