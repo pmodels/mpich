@@ -42,8 +42,6 @@
    platforms (e.g., a big-endian machine communicating with a
    little-endian machine).
 
- * ch3:nemesis:mx does not support dynamic processes at this time.
-
  * Support for "external32" data representation is incomplete. This
    affects the MPI_Pack_external and MPI_Unpack_external routines, as
    well the external data representation capabilities of ROMIO.  In
@@ -58,13 +56,6 @@
  * ch3 has known problems in some cases when threading and dynamic
    processes are used together on communicators of size greater than
    one.
-
-
-### Process Managers
-
- * Hydra has a bug related to stdin handling:
-
-     https://trac.mpich.org/projects/mpich/ticket/1782
 
 
 ### Performance issues
