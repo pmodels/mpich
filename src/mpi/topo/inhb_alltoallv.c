@@ -106,10 +106,10 @@ int MPIR_Ineighbor_alltoallv_sched(const void *sendbuf, const int sendcounts[],
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_alltoallv_impl
+#define FUNCNAME MPIR_Ineighbor_alltoallv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[], const int sdispls[], MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Ineighbor_alltoallv(const void *sendbuf, const int sendcounts[], const int sdispls[], MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;

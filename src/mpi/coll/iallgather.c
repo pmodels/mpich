@@ -605,10 +605,10 @@ int MPIR_Iallgather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendt
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_impl
+#define FUNCNAME MPIR_Iallgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *reqp = NULL;

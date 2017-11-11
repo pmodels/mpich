@@ -783,10 +783,10 @@ int MPIR_Ireduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_impl
+#define FUNCNAME MPIR_Ireduce
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *reqp = NULL;

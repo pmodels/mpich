@@ -113,10 +113,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatterv_impl
+#define FUNCNAME MPIR_Iscatterv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int displs[],
+int MPIR_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[],
                         MPI_Datatype sendtype, void *recvbuf, int recvcount,
                         MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPI_Request *request)
 {

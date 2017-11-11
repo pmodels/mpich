@@ -262,10 +262,10 @@ int MPIR_Ialltoallv_sched(const void *sendbuf, const int sendcounts[], const int
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallv_impl
+#define FUNCNAME MPIR_Ialltoallv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispls[],
                          MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
                          const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
                          MPI_Request *request)
