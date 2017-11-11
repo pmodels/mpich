@@ -30,12 +30,12 @@ int MPI_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Igatherv
+#define FUNCNAME MPIR_Igatherv_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
-                  const int recvcounts[], const int displs[], MPI_Datatype recvtype, int root,
-                  MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Igatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                        const int recvcounts[], const int displs[], MPI_Datatype recvtype, int root,
+                        MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;

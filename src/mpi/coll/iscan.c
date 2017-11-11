@@ -66,10 +66,10 @@ int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dataty
    End Algorithm: MPI_Scan
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscan_rec_dbl
+#define FUNCNAME MPIR_Iscan_rec_dbl_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscan_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iscan_rec_dbl_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint true_extent, true_lb, extent;
@@ -171,10 +171,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscan_rec_dbl
+#define FUNCNAME MPIR_Iscan_SMP_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iscan_SMP_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank = comm_ptr->rank;
@@ -193,7 +193,7 @@ int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 
     if (!MPII_Comm_is_node_consecutive(comm_ptr)) {
         /* We can't use the SMP-aware algorithm, use the generic one */
-        return MPIR_Iscan_rec_dbl(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        return MPIR_Iscan_rec_dbl_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     }
 
     node_comm = comm_ptr->node_comm;
@@ -323,9 +323,9 @@ int MPIR_Iscan_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
-        mpi_errno = MPIR_Iscan_SMP(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Iscan_SMP_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Iscan_rec_dbl(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Iscan_rec_dbl_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     }
 
     return mpi_errno;
