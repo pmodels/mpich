@@ -31,10 +31,10 @@ int MPI_Ineighbor_alltoallv(const void *sendbuf, const int sendcounts[], const i
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_alltoallv_default
+#define FUNCNAME MPIR_Ineighbor_alltoallv_default_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ineighbor_alltoallv_default(const void *sendbuf, const int sendcounts[], const int sdispls[], MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ineighbor_alltoallv_default_sched(const void *sendbuf, const int sendcounts[], const int sdispls[], MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;
@@ -98,7 +98,7 @@ int MPIR_Ineighbor_alltoallv_sched(const void *sendbuf, const int sendcounts[],
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ineighbor_alltoallv_sched(sendbuf, sendcounts, sdispls, sendtype,
+    mpi_errno = MPIR_Ineighbor_alltoallv_default_sched(sendbuf, sendcounts, sdispls, sendtype,
                                                recvbuf, recvcounts, rdispls, recvtype,
                                                comm_ptr, s);
 

@@ -30,10 +30,10 @@ int MPI_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype se
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_allgatherv_impl
+#define FUNCNAME MPIR_Ineighbor_allgatherv_default_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ineighbor_allgatherv_default(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ineighbor_allgatherv_default_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;
@@ -92,7 +92,7 @@ int MPIR_Ineighbor_allgatherv_sched(const void *sendbuf, int sendcount,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Ineighbor_allgatherv_default(sendbuf, sendcount, sendtype,
+    MPIR_Ineighbor_allgatherv_default_sched(sendbuf, sendcount, sendtype,
                                       recvbuf, recvcounts, displs, recvtype,
                                       comm_ptr, s);
 

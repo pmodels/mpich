@@ -287,11 +287,11 @@ static int init_default_collops(void)
         ops->Neighbor_alltoall = &MPIR_Neighbor_alltoall_default;
         ops->Neighbor_alltoallv = &MPIR_Neighbor_alltoallv_default;
         ops->Neighbor_alltoallw = &MPIR_Neighbor_alltoallw_default;
-        ops->Ineighbor_allgather = &MPIR_Ineighbor_allgather_default;
-        ops->Ineighbor_allgatherv = &MPIR_Ineighbor_allgatherv_default;
-        ops->Ineighbor_alltoall = &MPIR_Ineighbor_alltoall_default;
-        ops->Ineighbor_alltoallv = &MPIR_Ineighbor_alltoallv_default;
-        ops->Ineighbor_alltoallw = &MPIR_Ineighbor_alltoallw_default;
+        ops->Ineighbor_allgather = &MPIR_Ineighbor_allgather_default_sched;
+        ops->Ineighbor_allgatherv = &MPIR_Ineighbor_allgatherv_default_sched;
+        ops->Ineighbor_alltoall = &MPIR_Ineighbor_alltoall_default_sched;
+        ops->Ineighbor_alltoallv = &MPIR_Ineighbor_alltoallv_default_sched;
+        ops->Ineighbor_alltoallw = &MPIR_Ineighbor_alltoallw_default_sched;
 
         /* override defaults, such as for SMP */
         switch (i) {
