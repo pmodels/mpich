@@ -322,9 +322,7 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 
 
 /* MPIR_Barrier_impl should be called by any internal component that
-   would otherwise call MPI_Barrier.  This differs from MPIR_Barrier
-   in that this is SMP aware and will call the coll_fns version if it
-   exists.  This is a replacement for NMPI_Barrier. */
+   would otherwise call MPI_Barrier. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Barrier_impl
 #undef FCNAME
@@ -332,19 +330,10 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 int MPIR_Barrier_impl(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Barrier != NULL)
-    {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Barrier(comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    }
-    else
-    {
-        mpi_errno = MPIR_Barrier(comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-        
+
+    mpi_errno = MPID_Barrier(comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
  fn_exit:
     if (*errflag != MPIR_ERR_NONE)
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");

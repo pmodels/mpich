@@ -575,20 +575,11 @@ int MPIR_Alltoall_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype
                        MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Alltoall != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Alltoall(sendbuf, sendcount, sendtype,
-                                                 recvbuf, recvcount, recvtype,
-                                                 comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Alltoall(sendbuf, sendcount, sendtype,
-                                  recvbuf, recvcount, recvtype,
-                                  comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    
+    mpi_errno = MPID_Alltoall(sendbuf, sendcount, sendtype,
+                              recvbuf, recvcount, recvtype,
+                              comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
  fn_exit:
     return mpi_errno;
  fn_fail:

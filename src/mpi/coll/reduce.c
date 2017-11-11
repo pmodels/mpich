@@ -1055,9 +1055,7 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 }
 
 /* MPIR_Reduce_impl should be called by any internal component that
-   would otherwise call MPI_Reduce.  This differs from
-   MPIR_Reduce in that this will call the coll_fns version if it
-   exists.  This function replaces NMPI_Reduce. */
+   would otherwise call MPI_Reduce. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_impl
 #undef FCNAME
@@ -1066,26 +1064,10 @@ int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype
                      MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-        
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Reduce != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Reduce(sendbuf, recvbuf, count,
-                                               datatype, op, root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-            /* intracommunicator */
-            mpi_errno = MPIR_Reduce_intra(sendbuf, recvbuf, count, datatype,
-                                          op, root, comm_ptr, errflag);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	} else {
-            /* intercommunicator */
-            mpi_errno = MPIR_Reduce_inter(sendbuf, recvbuf, count, datatype,
-                                          op, root, comm_ptr, errflag);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        }
-    }
+
+    mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype,
+                            op, root, comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
     return mpi_errno;

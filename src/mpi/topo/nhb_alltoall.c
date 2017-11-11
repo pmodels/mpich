@@ -59,11 +59,9 @@ int MPIR_Neighbor_alltoall_impl(const void *sendbuf, int sendcount, MPI_Datatype
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(comm_ptr->coll_fns != NULL);
-    MPIR_Assert(comm_ptr->coll_fns->Neighbor_alltoall != NULL);
-    mpi_errno = comm_ptr->coll_fns->Neighbor_alltoall(sendbuf, sendcount, sendtype,
-                                                      recvbuf, recvcount, recvtype,
-                                                      comm_ptr);
+    mpi_errno = MPID_Neighbor_alltoall(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcount, recvtype,
+                                       comm_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:

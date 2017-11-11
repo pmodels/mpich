@@ -591,9 +591,7 @@ int MPIR_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 }
 
 /* MPIR_Scatter_impl should be called by any internal component that
-   would otherwise call MPI_Scatter.  This differs from MPIR_Scatter
-   in that this will call the coll_fns version if it exists.  This
-   function replaces NMPI_Scatter. */
+   would otherwise call MPI_Scatter. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scatter_impl
 #undef FCNAME
@@ -604,18 +602,10 @@ int MPIR_Scatter_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Scatter != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Scatter(sendbuf, sendcount, sendtype,
-                                                recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
-    } else {
-        mpi_errno = MPIR_Scatter(sendbuf, sendcount, sendtype,
-                                 recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    
+    mpi_errno = MPID_Scatter(sendbuf, sendcount, sendtype,
+                             recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
  fn_exit:
     return mpi_errno;
  fn_fail:
