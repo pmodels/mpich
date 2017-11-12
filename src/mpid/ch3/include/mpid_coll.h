@@ -718,3 +718,382 @@ static inline int MPID_Iscatterv(const void *sendbuf, const int *sendcounts,
 
     return mpi_errno;
 }
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Ibarrier_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Ibarrier_sched(MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Ibarrier_sched(comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Ibcast_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Ibcast_sched(void *buffer, int count, MPI_Datatype datatype, int root,
+                              MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Ibcast_sched(buffer, count, datatype, root, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Iallgather_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Iallgather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                  MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Iallgather_sched(sendbuf, sendcount, sendtype, recvbuf,
+                                     recvcount, recvtype, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Iallgatherv_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Iallgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                   void *recvbuf, const int *recvcounts, const int *displs,
+                                   MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Iallgatherv_sched(sendbuf, sendcount, sendtype, recvbuf,
+                                      recvcounts, displs, recvtype, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Iallreduce_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count,
+                                  MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                  MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Iallreduce_sched(sendbuf, recvbuf, count, datatype, op, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Ialltoall_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Ialltoall_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                 void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                 MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Ialltoall_sched(sendbuf, sendcount, sendtype, recvbuf,
+                                    recvcount, recvtype, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Ialltoallv_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Ialltoallv_sched(const void *sendbuf, const int sendcounts[],
+                                  const int sdispls[], MPI_Datatype sendtype,
+                                  void *recvbuf, const int recvcounts[],
+                                  const int rdispls[], MPI_Datatype recvtype,
+                                  MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Ialltoallv_sched(sendbuf, sendcounts, sdispls, sendtype,
+                                     recvbuf, recvcounts, rdispls, recvtype, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Ialltoallw_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Ialltoallw_sched(const void *sendbuf, const int sendcounts[],
+                                  const int sdispls[], const MPI_Datatype sendtypes[],
+                                  void *recvbuf, const int recvcounts[],
+                                  const int rdispls[], const MPI_Datatype recvtypes[],
+                                  MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Ialltoallw_sched(sendbuf, sendcounts, sdispls, sendtypes,
+                                     recvbuf, recvcounts, rdispls, recvtypes, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Iexscan_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Iexscan_sched(const void *sendbuf, void *recvbuf, int count,
+                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                               MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Iexscan_sched(sendbuf, recvbuf, count, datatype, op, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Igather_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Igather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                               void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                               int root, MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Igather_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                  recvtype, root, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Igatherv_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Igatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                void *recvbuf, const int *recvcounts, const int *displs,
+                                MPI_Datatype recvtype, int root, MPIR_Comm * comm,
+                                MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                   displs, recvtype, root, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Ireduce_scatter_block_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int recvcount,
+                                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                             MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Ireduce_scatter_block_sched(sendbuf, recvbuf, recvcount,
+                                                datatype, op, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Ireduce_scatter_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Ireduce_scatter_sched(const void *sendbuf, void *recvbuf, const int recvcounts[],
+                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                       MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Ireduce_scatter_sched(sendbuf, recvbuf, recvcounts, datatype,
+                                          op, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Ireduce_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Ireduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                               MPI_Op op, int root, MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Iscan_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Iscan_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                             MPI_Op op, MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Iscan_sched(sendbuf, recvbuf, count, datatype, op, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Iscatter_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Iscatter_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                int root, MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Iscatter_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                   recvtype, root, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Iscatterv_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Iscatterv_sched(const void *sendbuf, const int *sendcounts,
+                                 const int *displs, MPI_Datatype sendtype,
+                                 void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                 int root, MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Iscatterv_sched(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                                    recvcount, recvtype, root, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Ineighbor_allgather_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Ineighbor_allgather_sched(const void *sendbuf, int sendcount,
+                                           MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                                           MPI_Datatype recvtype, MPIR_Comm * comm,
+                                           MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Ineighbor_allgather_sched(sendbuf, sendcount, sendtype, recvbuf,
+                                              recvcount, recvtype, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Ineighbor_allgatherv_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Ineighbor_allgatherv_sched(const void *sendbuf, int sendcount,
+                                            MPI_Datatype sendtype, void *recvbuf,
+                                            const int recvcounts[], const int displs[],
+                                            MPI_Datatype recvtype, MPIR_Comm * comm,
+                                            MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Ineighbor_allgatherv_sched(sendbuf, sendcount, sendtype,
+                                               recvbuf, recvcounts, displs, recvtype, comm,
+                                               s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Ineighbor_alltoall_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Ineighbor_alltoall_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                          MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Ineighbor_alltoall_sched(sendbuf, sendcount, sendtype, recvbuf,
+                                             recvcount, recvtype, comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Ineighbor_alltoallv_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Ineighbor_alltoallv_sched(const void *sendbuf, const int sendcounts[],
+                                           const int sdispls[], MPI_Datatype sendtype,
+                                           void *recvbuf, const int recvcounts[],
+                                           const int rdispls[], MPI_Datatype recvtype,
+                                           MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Ineighbor_alltoallv_sched(sendbuf, sendcounts, sdispls,
+                                              sendtype, recvbuf, recvcounts, rdispls, recvtype,
+                                              comm, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Ineighbor_alltoallw_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPID_Ineighbor_alltoallw_sched(const void *sendbuf, const int sendcounts[],
+                                           const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                           void *recvbuf, const int recvcounts[],
+                                           const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                           MPIR_Comm * comm, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Ineighbor_alltoallw_sched(sendbuf, sendcounts, sdispls,
+                                              sendtypes, recvbuf, recvcounts, rdispls, recvtypes,
+                                              comm, s);
+
+    return mpi_errno;
+}
