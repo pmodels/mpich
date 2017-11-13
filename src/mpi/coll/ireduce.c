@@ -740,7 +740,7 @@ int MPIR_Ireduce_inter_sched(const void *sendbuf, void *recvbuf, int count, MPI_
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
 
-        mpi_errno = MPIR_Ireduce_intra_sched(sendbuf, tmp_buf, count, datatype, op, 0, comm_ptr->local_comm, s);
+        mpi_errno = MPID_Ireduce_sched(sendbuf, tmp_buf, count, datatype, op, 0, comm_ptr->local_comm, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         mpi_errno = MPIR_Sched_barrier(s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
