@@ -56,41 +56,13 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request) __attribute__((weak,alias(
 int MPIR_Ibarrier_intra_sched(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int size, rank, src, dst, mask;
 
-    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+    mpi_errno = MPIR_Ibarrier_rec_dbl_sched(comm_ptr, s);
 
-    size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
-
-    /* Trivial barriers return immediately */
-    if (size == 1) goto fn_exit;
-
-    mask = 0x1;
-    while (mask < size) {
-        dst = (rank + mask) % size;
-        src = (rank - mask + size) % size;
-
-        mpi_errno = MPIR_Sched_send(NULL, 0, MPI_BYTE, dst, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-        mpi_errno = MPIR_Sched_recv(NULL, 0, MPI_BYTE, src, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-        mpi_errno = MPIR_Sched_barrier(s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-        mask <<= 1;
-    }
-
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
-/* Provides a generic "flat" barrier that doesn't know anything about hierarchy.
- * It will choose between several different algorithms based on the given
+/* It will choose between several different algorithms based on the given
  * parameters. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ibarrier_inter_sched
@@ -98,69 +70,11 @@ fn_fail:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_inter_sched(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
-    int mpi_errno = MPI_SUCCESS;
-    int rank, root;
-    MPIR_SCHED_CHKPMEM_DECL(1);
-    char *buf = NULL;
+    int mpi_errno;
 
-    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+    mpi_errno = MPIR_Ibarrier_bcast_sched(comm_ptr, s);
 
-    rank = comm_ptr->rank;
-
-    /* Get the local intracommunicator */
-    if (!comm_ptr->local_comm) {
-        mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
-    /* do a barrier on the local intracommunicator */
-    if(comm_ptr->local_size != 1) {
-        mpi_errno = MPID_Ibarrier_sched(comm_ptr->local_comm, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPIR_SCHED_BARRIER(s);
-    }
-    /* rank 0 on each group does an intercommunicator broadcast to the
-       remote group to indicate that all processes in the local group
-       have reached the barrier. We do a 1-byte bcast because a 0-byte
-       bcast will just return without doing anything. */
-
-    MPIR_SCHED_CHKPMEM_MALLOC(buf, char *, 1, mpi_errno, "bcast buf", MPL_MEM_BUFFER);
-    buf[0] = 'D'; /* avoid valgrind warnings */
-
-    /* first broadcast from left to right group, then from right to
-       left group */
-    if (comm_ptr->is_low_group) {
-        root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPID_Ibcast_sched(buf, 1, MPI_BYTE, root, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-        MPIR_SCHED_BARRIER(s);
-
-        /* receive bcast from right */
-        root = 0;
-        mpi_errno = MPID_Ibcast_sched(buf, 1, MPI_BYTE, root, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else {
-        /* receive bcast from left */
-        root = 0;
-        mpi_errno = MPID_Ibcast_sched(buf, 1, MPI_BYTE, root, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-        MPIR_SCHED_BARRIER(s);
-
-        /* bcast to left */
-        root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPID_Ibcast_sched(buf, 1, MPI_BYTE, root, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
-fn_exit:
     return mpi_errno;
-fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
-    goto fn_exit;
 }
 
 #undef FUNCNAME

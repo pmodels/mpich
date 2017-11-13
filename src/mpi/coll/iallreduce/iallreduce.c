@@ -27,547 +27,11 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 #undef MPI_Iallreduce
 #define MPI_Iallreduce PMPI_Iallreduce
 
-/* any non-MPI functions go here, especially non-static ones */
-
-/* implements the naive intracomm allreduce, that is, reduce followed by bcast */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_naive_sched
+#define FUNCNAME iallreduce_smp_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_naive_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int rank;
-
-    rank = comm_ptr->rank;
-
-    if ((sendbuf == MPI_IN_PLACE) && (rank != 0)) {
-        mpi_errno = MPIR_Ireduce_intra_sched(recvbuf, NULL, count, datatype, op, 0, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else {
-        mpi_errno = MPIR_Ireduce_intra_sched(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
-    MPIR_SCHED_BARRIER(s);
-
-    mpi_errno = MPIR_Ibcast_intra_sched(recvbuf, count, datatype, 0, comm_ptr, s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-fn_exit:
-    return mpi_errno;
-fn_fail:
-    goto fn_exit;
-}
-
-/* also known as "Rabenseifner's algorithm" */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_redscat_allgather_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_redscat_allgather_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int comm_size, rank, newrank, pof2, rem;
-    int i, send_idx, recv_idx, last_idx, mask, newdst, dst, send_cnt, recv_cnt;
-    MPI_Aint true_lb, true_extent, extent;
-    void *tmp_buf = NULL;
-    int *cnts, *disps;
-    MPIR_SCHED_CHKPMEM_DECL(1);
-    MPIR_CHKLMEM_DECL(2);
-
-    /* we only support builtin datatypes for now, breaking up user types to do
-     * the reduce-scatter is tricky */
-    MPIR_Assert(HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN);
-
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
-
-    /* need to allocate temporary buffer to store incoming data*/
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-    MPIR_Datatype_get_extent_macro(datatype, extent);
-
-    MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
-
-    /* adjust for potential negative lower bound in datatype */
-    tmp_buf = (void *)((char*)tmp_buf - true_lb);
-
-    /* copy local data into recvbuf */
-    if (sendbuf != MPI_IN_PLACE) {
-        mpi_errno = MPIR_Sched_copy(sendbuf, count, datatype,
-                                    recvbuf, count, datatype, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPIR_SCHED_BARRIER(s);
-    }
-
-    /* find nearest power-of-two less than or equal to comm_size */
-    pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
-
-    rem = comm_size - pof2;
-
-    /* In the non-power-of-two case, all even-numbered
-       processes of rank < 2*rem send their data to
-       (rank+1). These even-numbered processes no longer
-       participate in the algorithm until the very end. The
-       remaining processes form a nice power-of-two. */
-
-    if (rank < 2*rem) {
-        if (rank % 2 == 0) { /* even */
-            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank+1, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
-
-            /* temporarily set the rank to -1 so that this
-               process does not pariticipate in recursive
-               doubling */
-            newrank = -1;
-        }
-        else { /* odd */
-            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, rank-1, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
-
-            /* do the reduction on received data. since the
-               ordering is right, it doesn't matter whether
-               the operation is commutative or not. */
-            mpi_errno = MPIR_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
-
-            /* change the rank */
-            newrank = rank / 2;
-        }
-    }
-    else  /* rank >= 2*rem */
-        newrank = rank - rem;
-
-    if (newrank != -1) {
-        /* for the reduce-scatter, calculate the count that
-           each process receives and the displacement within
-           the buffer */
-        /* TODO I (goodell@) believe that these counts and displacements could be
-         * calculated directly during the loop, rather than requiring a less-scalable
-         * "2*pof2"-sized memory allocation */
-
-        MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts", MPL_MEM_BUFFER);
-        MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements", MPL_MEM_BUFFER);
-
-        MPIR_Assert(count >= pof2); /* the cnts calculations assume this */
-        for (i=0; i<(pof2-1); i++)
-            cnts[i] = count/pof2;
-        cnts[pof2-1] = count - (count/pof2)*(pof2-1);
-
-        disps[0] = 0;
-        for (i=1; i<pof2; i++)
-            disps[i] = disps[i-1] + cnts[i-1];
-
-        mask = 0x1;
-        send_idx = recv_idx = 0;
-        last_idx = pof2;
-        while (mask < pof2) {
-            newdst = newrank ^ mask;
-            /* find real rank of dest */
-            dst = (newdst < rem) ? newdst*2 + 1 : newdst + rem;
-
-            send_cnt = recv_cnt = 0;
-            if (newrank < newdst) {
-                send_idx = recv_idx + pof2/(mask*2);
-                for (i=send_idx; i<last_idx; i++)
-                    send_cnt += cnts[i];
-                for (i=recv_idx; i<send_idx; i++)
-                    recv_cnt += cnts[i];
-            }
-            else {
-                recv_idx = send_idx + pof2/(mask*2);
-                for (i=send_idx; i<recv_idx; i++)
-                    send_cnt += cnts[i];
-                for (i=recv_idx; i<last_idx; i++)
-                    recv_cnt += cnts[i];
-            }
-
-            /* Send data from recvbuf. Recv into tmp_buf */
-            mpi_errno = MPIR_Sched_recv(((char *)tmp_buf + disps[recv_idx]*extent),
-                                        recv_cnt, datatype, dst, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            /* sendrecv, no barrier here */
-            mpi_errno = MPIR_Sched_send(((char *)recvbuf + disps[send_idx]*extent),
-                                        send_cnt, datatype, dst, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
-
-            /* tmp_buf contains data received in this step.
-               recvbuf contains data accumulated so far */
-
-            /* This algorithm is used only for predefined ops
-               and predefined ops are always commutative. */
-            mpi_errno = MPIR_Sched_reduce(((char *)tmp_buf + disps[recv_idx]*extent),
-                                          ((char *)recvbuf + disps[recv_idx]*extent),
-                                          recv_cnt, datatype, op, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
-
-            /* update send_idx for next iteration */
-            send_idx = recv_idx;
-            mask <<= 1;
-
-            /* update last_idx, but not in last iteration
-               because the value is needed in the allgather
-               step below. */
-            if (mask < pof2)
-                last_idx = recv_idx + pof2/mask;
-        }
-
-        /* now do the allgather */
-
-        mask >>= 1;
-        while (mask > 0) {
-            newdst = newrank ^ mask;
-            /* find real rank of dest */
-            dst = (newdst < rem) ? newdst*2 + 1 : newdst + rem;
-
-            send_cnt = recv_cnt = 0;
-            if (newrank < newdst) {
-                /* update last_idx except on first iteration */
-                if (mask != pof2/2)
-                    last_idx = last_idx + pof2/(mask*2);
-
-                recv_idx = send_idx + pof2/(mask*2);
-                for (i=send_idx; i<recv_idx; i++)
-                    send_cnt += cnts[i];
-                for (i=recv_idx; i<last_idx; i++)
-                    recv_cnt += cnts[i];
-            }
-            else {
-                recv_idx = send_idx - pof2/(mask*2);
-                for (i=send_idx; i<last_idx; i++)
-                    send_cnt += cnts[i];
-                for (i=recv_idx; i<send_idx; i++)
-                    recv_cnt += cnts[i];
-            }
-
-            mpi_errno = MPIR_Sched_recv(((char *)recvbuf + disps[recv_idx]*extent),
-                                        recv_cnt, datatype, dst, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            /* sendrecv, no barrier here */
-            mpi_errno = MPIR_Sched_send(((char *)recvbuf + disps[send_idx]*extent),
-                                        send_cnt, datatype, dst, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
-
-            if (newrank > newdst) send_idx = recv_idx;
-
-            mask >>= 1;
-        }
-    }
-
-    /* In the non-power-of-two case, all odd-numbered
-       processes of rank < 2*rem send the result to
-       (rank-1), the ranks who didn't participate above. */
-    if (rank < 2*rem) {
-        if (rank % 2) { /* odd */
-            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank-1, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        }
-        else { /* even */
-            mpi_errno = MPIR_Sched_recv(recvbuf, count, datatype, rank+1, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        }
-    }
-
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
-fn_exit:
-    MPIR_CHKLMEM_FREEALL();
-    return mpi_errno;
-fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
-    goto fn_exit;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_rec_dbl_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_rec_dbl_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int pof2, rem, comm_size, is_commutative, rank;
-    int newrank, mask, newdst, dst;
-    MPI_Aint true_lb, true_extent, extent;
-    void *tmp_buf = NULL;
-    MPIR_SCHED_CHKPMEM_DECL(1);
-
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
-
-    is_commutative = MPIR_Op_is_commutative(op);
-
-    /* need to allocate temporary buffer to store incoming data*/
-    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-    MPIR_Datatype_get_extent_macro(datatype, extent);
-
-    MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
-
-    /* adjust for potential negative lower bound in datatype */
-    tmp_buf = (void *)((char*)tmp_buf - true_lb);
-
-    /* copy local data into recvbuf */
-    if (sendbuf != MPI_IN_PLACE) {
-        mpi_errno = MPIR_Sched_copy(sendbuf, count, datatype,
-                                    recvbuf, count, datatype, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPIR_SCHED_BARRIER(s);
-    }
-
-    /* find nearest power-of-two less than or equal to comm_size */
-    pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
-
-    rem = comm_size - pof2;
-
-    /* In the non-power-of-two case, all even-numbered
-       processes of rank < 2*rem send their data to
-       (rank+1). These even-numbered processes no longer
-       participate in the algorithm until the very end. The
-       remaining processes form a nice power-of-two. */
-
-    if (rank < 2*rem) {
-        if (rank % 2 == 0) { /* even */
-            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank+1, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
-
-            /* temporarily set the rank to -1 so that this
-               process does not pariticipate in recursive
-               doubling */
-            newrank = -1;
-        }
-        else { /* odd */
-            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, rank-1, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
-
-            /* do the reduction on received data. since the
-               ordering is right, it doesn't matter whether
-               the operation is commutative or not. */
-            mpi_errno = MPIR_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
-
-            /* change the rank */
-            newrank = rank / 2;
-        }
-    }
-    else  /* rank >= 2*rem */
-        newrank = rank - rem;
-
-    if (newrank != -1) {
-        mask = 0x1;
-        while (mask < pof2) {
-            newdst = newrank ^ mask;
-            /* find real rank of dest */
-            dst = (newdst < rem) ? newdst*2 + 1 : newdst + rem;
-
-            /* Send the most current data, which is in recvbuf. Recv
-               into tmp_buf */
-            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, dst, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            /* sendrecv, no barrier here */
-            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype,
-                                        dst, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
-
-            /* tmp_buf contains data received in this step.
-               recvbuf contains data accumulated so far */
-
-            if (is_commutative  || (dst < rank)) {
-                /* op is commutative OR the order is already right */
-                mpi_errno = MPIR_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                MPIR_SCHED_BARRIER(s);
-            }
-            else {
-                /* op is noncommutative and the order is not right */
-                mpi_errno = MPIR_Sched_reduce(recvbuf, tmp_buf, count, datatype, op, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                MPIR_SCHED_BARRIER(s);
-
-                /* copy result back into recvbuf */
-                mpi_errno = MPIR_Sched_copy(tmp_buf, count, datatype,
-                                            recvbuf, count, datatype, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                MPIR_SCHED_BARRIER(s);
-            }
-            mask <<= 1;
-        }
-    }
-
-    /* In the non-power-of-two case, all odd-numbered
-       processes of rank < 2*rem send the result to
-       (rank-1), the ranks who didn't participate above. */
-    if (rank < 2*rem) {
-        if (rank % 2) { /* odd */
-            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank-1, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        }
-        else { /* even */
-            mpi_errno = MPIR_Sched_recv(recvbuf, count, datatype, rank+1, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        }
-    }
-
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
-fn_exit:
-    return mpi_errno;
-fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
-    goto fn_exit;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_intra_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_intra_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int comm_size, is_homogeneous, pof2, type_size;
-
-    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
-
-    is_homogeneous = TRUE;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = FALSE;
-#endif
-
-    if (!is_homogeneous) {
-        mpi_errno = MPIR_Iallreduce_naive_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        goto fn_exit;
-    }
-
-    comm_size = comm_ptr->local_size;
-
-    MPIR_Datatype_get_size_macro(datatype, type_size);
-
-    /* find nearest power-of-two less than or equal to comm_size */
-    pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
-
-    /* If op is user-defined or count is less than pof2, use
-       recursive doubling algorithm. Otherwise do a reduce-scatter
-       followed by allgather. (If op is user-defined,
-       derived datatypes are allowed and the user could pass basic
-       datatypes on one process and derived on another as long as
-       the type maps are the same. Breaking up derived
-       datatypes to do the reduce-scatter is tricky, therefore
-       using recursive doubling in that case.) */
-
-    if ((count*type_size <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
-        (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) ||
-        (count < pof2))
-    {
-        /* use recursive doubling */
-        mpi_errno = MPIR_Iallreduce_rec_dbl_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else {
-        /* do a reduce-scatter followed by allgather */
-        mpi_errno = MPIR_Iallreduce_redscat_allgather_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
-fn_exit:
-    return mpi_errno;
-fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_inter_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_inter_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
-{
-/* Intercommunicator Allreduce.
-   We first do an intercommunicator reduce to rank 0 on left group,
-   then an intercommunicator reduce to rank 0 on right group, followed
-   by local intracommunicator broadcasts in each group.
-
-   We don't do local reduces first and then intercommunicator
-   broadcasts because it would require allocation of a temporary buffer.
-*/
-    int mpi_errno = MPI_SUCCESS;
-    int rank, root;
-    MPIR_Comm *lcomm_ptr = NULL;
-
-    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
-
-    rank = comm_ptr->rank;
-
-    /* first do a reduce from right group to rank 0 in left group,
-       then from left group to rank 0 in right group*/
-    if (comm_ptr->is_low_group) {
-        /* reduce from right group to rank 0*/
-        root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPID_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-        /* no barrier, these reductions can be concurrent */
-
-        /* reduce to rank 0 of right group */
-        root = 0;
-        mpi_errno = MPID_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else {
-        /* reduce to rank 0 of left group */
-        root = 0;
-        mpi_errno = MPID_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-        /* no barrier, these reductions can be concurrent */
-
-        /* reduce from right group to rank 0 */
-        root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPID_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
-    /* don't bcast until the reductions have finished */
-    mpi_errno = MPIR_Sched_barrier(s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-    /* Get the local intracommunicator */
-    if (!comm_ptr->local_comm) {
-        MPII_Setup_intercomm_localcomm( comm_ptr );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    lcomm_ptr = comm_ptr->local_comm;
-
-    mpi_errno = MPID_Ibcast_sched(recvbuf, count, datatype, 0, lcomm_ptr, s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-fn_exit:
-    return mpi_errno;
-fn_fail:
-    goto fn_exit;
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_SMP_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_SMP_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+static int iallreduce_smp_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative;
@@ -637,6 +101,83 @@ fn_fail:
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Iallreduce_intra_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Iallreduce_intra_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int comm_size, is_homogeneous, pof2, type_size;
+
+    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+
+    is_homogeneous = TRUE;
+#ifdef MPID_HAS_HETERO
+    if (comm_ptr->is_hetero)
+        is_homogeneous = FALSE;
+#endif
+
+    if (!is_homogeneous) {
+        mpi_errno = MPIR_Iallreduce_naive_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        goto fn_exit;
+    }
+
+    comm_size = comm_ptr->local_size;
+
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+
+    /* find nearest power-of-two less than or equal to comm_size */
+    pof2 = 1;
+    while (pof2 <= comm_size) pof2 <<= 1;
+    pof2 >>=1;
+
+    /* If op is user-defined or count is less than pof2, use
+       recursive doubling algorithm. Otherwise do a reduce-scatter
+       followed by allgather. (If op is user-defined,
+       derived datatypes are allowed and the user could pass basic
+       datatypes on one process and derived on another as long as
+       the type maps are the same. Breaking up derived
+       datatypes to do the reduce-scatter is tricky, therefore
+       using recursive doubling in that case.) */
+
+    if ((count*type_size <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
+        (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) ||
+        (count < pof2))
+    {
+        /* use recursive doubling */
+        mpi_errno = MPIR_Iallreduce_rec_dbl_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    }
+    else {
+        /* do a reduce-scatter followed by allgather */
+        mpi_errno = MPIR_Iallreduce_redscat_allgather_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iallreduce_inter_sched
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Iallreduce_inter_sched(const void *sendbuf, void *recvbuf, int count,
+        MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Iallreduce_generic_inter_sched(sendbuf, recvbuf, count,
+            datatype, op, comm_ptr, s);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Iallreduce_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -646,7 +187,7 @@ int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dat
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
-            mpi_errno = MPIR_Iallreduce_SMP_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+            mpi_errno = iallreduce_smp_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         } else {
             mpi_errno = MPIR_Iallreduce_intra_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         }
