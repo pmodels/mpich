@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "collutil.h"
+#include "../collutil.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Ireduce_scatter_block */
 #if defined(HAVE_PRAGMA_WEAK)
