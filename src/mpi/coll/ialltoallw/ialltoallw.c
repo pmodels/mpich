@@ -27,8 +27,6 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 #undef MPI_Ialltoallw
 #define MPI_Ialltoallw PMPI_Ialltoallw
 
-/* any non-MPI functions go here, especially non-static ones */
-
 /* This is the default implementation of alltoallw. The algorithm is:
 
    Algorithm: MPI_Alltoallw
@@ -61,118 +59,20 @@ int MPIR_Ialltoallw_intra_sched(const void *sendbuf, const int sendcounts[], con
                           MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size, i, j;
-    int dst, rank;
-    int ii, ss, bblock;
-    int type_size, recv_extent;
-    MPI_Aint true_extent, true_lb;
-    MPIR_SCHED_CHKPMEM_DECL(1);
-
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
 
     if (sendbuf == MPI_IN_PLACE) {
-        int max_size;
-        void *tmp_buf = NULL, *adj_tmp_buf = NULL;
-
-        /* The regular MPI_Alltoallw handles MPI_IN_PLACE using pairwise
-         * sendrecv_replace calls.  We don't have a sendrecv_replace, so just
-         * malloc the maximum of the counts array entries and then perform the
-         * pairwise exchanges manually with schedule barriers instead.
-         *
-         * Because of this approach all processes must agree on the global
-         * schedule of "sendrecv_replace" operations to avoid deadlock.
-         *
-         * This keeps with the spirit of the MPI-2.2 standard, which is to
-         * conserve memory when using MPI_IN_PLACE for these routines.
-         * Something like MADRE would probably generate a more optimal
-         * algorithm. */
-        max_size = 0;
-        for (i = 0; i < comm_size; ++i) {
-            /* only look at recvtypes/recvcounts because the send vectors are
-             * ignored when sendbuf==MPI_IN_PLACE */
-            MPIR_Type_get_true_extent_impl(recvtypes[i], &true_lb, &true_extent);
-            MPIR_Datatype_get_extent_macro(recvtypes[i], recv_extent);
-            max_size = MPL_MAX(max_size, recvcounts[i] * MPL_MAX(recv_extent, true_extent));
-        }
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, max_size, mpi_errno, "Ialltoallw tmp_buf", MPL_MEM_BUFFER);
-
-        for (i = 0; i < comm_size; ++i) {
-            /* start inner loop at i to avoid re-exchanging data */
-            for (j = i; j < comm_size; ++j) {
-                if (rank == i && rank == j) {
-                    /* no need to "sendrecv_replace" for ourselves */
-                }
-                else if (rank == i || rank == j) {
-                    if (rank == i)
-                        dst = j;
-                    else
-                        dst = i;
-
-                    MPIR_Type_get_true_extent_impl(recvtypes[i], &true_lb, &true_extent);
-                    adj_tmp_buf = (void *)((char*)tmp_buf - true_lb);
-
-                    mpi_errno = MPIR_Sched_send(((char *)recvbuf + rdispls[dst]),
-                                                recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                    mpi_errno = MPIR_Sched_recv(adj_tmp_buf, recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                    MPIR_SCHED_BARRIER(s);
-
-                    mpi_errno = MPIR_Sched_copy(adj_tmp_buf, recvcounts[dst], recvtypes[dst],
-                                                ((char *)recvbuf + rdispls[dst]),
-                                                recvcounts[dst], recvtypes[dst], s);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                    MPIR_SCHED_BARRIER(s);
-                }
-            }
-        }
-    }
-    else {
-        bblock = MPIR_CVAR_ALLTOALL_THROTTLE;
-        if (bblock == 0) bblock = comm_size;
-
-        /* post only bblock isends/irecvs at a time as suggested by Tony Ladd */
-        for (ii = 0; ii < comm_size; ii += bblock) {
-            ss = comm_size-ii < bblock ? comm_size-ii : bblock;
-
-            /* do the communication -- post ss sends and receives: */
-            for (i = 0; i < ss; i++) {
-                dst = (rank + i + ii) % comm_size;
-                if (recvcounts[dst]) {
-                    MPIR_Datatype_get_size_macro(recvtypes[dst], type_size);
-                    if (type_size) {
-                        mpi_errno = MPIR_Sched_recv((char *)recvbuf+rdispls[dst],
-                                                    recvcounts[dst], recvtypes[dst],
-                                                    dst, comm_ptr, s);
-                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                    }
-                }
-            }
-
-            for (i=0; i<ss; i++) {
-                dst = (rank-i-ii+comm_size) % comm_size;
-                if (sendcounts[dst]) {
-                    MPIR_Datatype_get_size_macro(sendtypes[dst], type_size);
-                    if (type_size) {
-                        mpi_errno = MPIR_Sched_send((char *)sendbuf+sdispls[dst],
-                                                    sendcounts[dst], sendtypes[dst],
-                                                    dst, comm_ptr, s);
-                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                    }
-                }
-            }
-
-            /* force our block of sends/recvs to complete before starting the next block */
-            MPIR_SCHED_BARRIER(s);
-        }
+        mpi_errno = MPIR_Ialltoallw_inplace_sched(sendbuf, sendcounts, sdispls,
+                                                  sendtypes, recvbuf, recvcounts,
+                                                  rdispls, recvtypes, comm_ptr, s);
+    } else {
+        mpi_errno = MPIR_Ialltoallw_blocked_sched(sendbuf, sendcounts, sdispls,
+                                                  sendtypes, recvbuf, recvcounts,
+                                                  rdispls, recvtypes, comm_ptr, s);
     }
 
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
 fn_exit:
     return mpi_errno;
 fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
 
@@ -185,65 +85,13 @@ int MPIR_Ialltoallw_inter_sched(const void *sendbuf, const int sendcounts[], con
                           const int rdispls[], const MPI_Datatype recvtypes[],
                           MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
-/* Intercommunicator alltoallw. We use a pairwise exchange algorithm
-   similar to the one used in intracommunicator alltoallw. Since the local and
-   remote groups can be of different sizes, we first compute the max of
-   local_group_size, remote_group_size.  At step i, 0 <= i < max_size, each
-   process receives from src = (rank - i + max_size) % max_size if src < remote_size,
-   and sends to dst = (rank + i) % max_size if dst < remote_size.
-
-   FIXME: change algorithm to match intracommunicator alltoallw
-*/
     int mpi_errno = MPI_SUCCESS;
-    int local_size, remote_size, max_size, i;
-    int src, dst, rank, sendcount, recvcount;
-    char *sendaddr, *recvaddr;
-    MPI_Datatype sendtype, recvtype;
 
-    local_size = comm_ptr->local_size;
-    remote_size = comm_ptr->remote_size;
-    rank = comm_ptr->rank;
+    mpi_errno = MPIR_Ialltoallw_pairwise_xchg_sched(sendbuf, sendcounts, sdispls,
+                                                    sendtypes, recvbuf, recvcounts,
+                                                    rdispls, recvtypes, comm_ptr, s);
 
-    /* Use pairwise exchange algorithm. */
-    max_size = MPL_MAX(local_size, remote_size);
-    for (i=0; i<max_size; i++) {
-        src = (rank - i + max_size) % max_size;
-        dst = (rank + i) % max_size;
-        if (src >= remote_size) {
-            src = MPI_PROC_NULL;
-            recvaddr = NULL;
-            recvcount = 0;
-            recvtype = MPI_DATATYPE_NULL;
-        }
-        else {
-            recvaddr = (char *)recvbuf + rdispls[src];
-            recvcount = recvcounts[src];
-            recvtype = recvtypes[src];
-        }
-        if (dst >= remote_size) {
-            dst = MPI_PROC_NULL;
-            sendaddr = NULL;
-            sendcount = 0;
-            sendtype = MPI_DATATYPE_NULL;
-        }
-        else {
-            sendaddr = (char *)sendbuf+sdispls[dst];
-            sendcount = sendcounts[dst];
-            sendtype = sendtypes[dst];
-        }
-
-        mpi_errno = MPIR_Sched_send(sendaddr, sendcount, sendtype, dst, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        /* sendrecv, no barrier here */
-        mpi_errno = MPIR_Sched_recv(recvaddr, recvcount, recvtype, src, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPIR_SCHED_BARRIER(s);
-    }
-
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME

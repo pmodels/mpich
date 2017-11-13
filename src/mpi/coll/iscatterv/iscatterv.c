@@ -55,56 +55,9 @@ int MPIR_Iscatterv_sched(const void *sendbuf, const int sendcounts[], const int 
                          int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rank, comm_size;
-    MPI_Aint extent;
-    int i;
 
-    rank = comm_ptr->rank;
-
-    /* If I'm the root, then scatter */
-    if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
-        ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT)))
-    {
-        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-            comm_size = comm_ptr->local_size;
-        else
-            comm_size = comm_ptr->remote_size;
-
-        MPIR_Datatype_get_extent_macro(sendtype, extent);
-        /* We need a check to ensure extent will fit in a
-         * pointer. That needs extent * (max count) but we can't get
-         * that without looping over the input data. This is at least
-         * a minimal sanity check. Maybe add a global var since we do
-         * loop over sendcount[] in MPI_Scatterv before calling
-         * this? */
-        MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf + extent);
-
-        for (i = 0; i < comm_size; i++) {
-            if (sendcounts[i]) {
-                if ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (i == rank)) {
-                    if (recvbuf != MPI_IN_PLACE) {
-                        mpi_errno = MPIR_Sched_copy(((char *)sendbuf+displs[rank]*extent),
-                                                    sendcounts[rank], sendtype,
-                                                    recvbuf, recvcount, recvtype, s);
-                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                    }
-                }
-                else {
-                    mpi_errno = MPIR_Sched_send(((char *)sendbuf+displs[i]*extent),
-                                                sendcounts[i], sendtype, i, comm_ptr, s);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                }
-            }
-        }
-    }
-
-    else if (root != MPI_PROC_NULL) {
-        /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
-        if (recvcount) {
-            mpi_errno = MPIR_Sched_recv(recvbuf, recvcount, recvtype, root, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        }
-    }
+    mpi_errno = MPIR_Iscatterv_linear_sched(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;
