@@ -123,6 +123,14 @@ int MPIR_Alltoallv_intra(const void *sendbuf, const int *sendcnts, const int *sd
                          MPI_Datatype sendtype, void *recvbuf, const int *recvcnts,
                          const int *rdispls, MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
                          MPIR_Errflag_t *errflag);
+int MPIR_Alltoallv_pairwise_sendrecv_replace(const void *sendbuf, const int *sendcnts, const int *sdispls,
+                         MPI_Datatype sendtype, void *recvbuf, const int *recvcnts,
+                         const int *rdispls, MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
+                         MPIR_Errflag_t *errflag);
+int MPIR_Alltoallv_scattered(const void *sendbuf, const int *sendcnts, const int *sdispls,
+                         MPI_Datatype sendtype, void *recvbuf, const int *recvcnts,
+                         const int *rdispls, MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
+                         MPIR_Errflag_t *errflag);
 int MPIR_Alltoallv_inter(const void *sendbuf, const int *sendcnts, const int *sdispls,
                          MPI_Datatype sendtype, void *recvbuf, const int *recvcnts,
                          const int *rdispls, MPI_Datatype recvtype,
