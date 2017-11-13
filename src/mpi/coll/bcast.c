@@ -948,11 +948,7 @@ fn_fail:
  * be able to make changes along these lines almost exclusively in this function
  * and some new functions. [goodell@ 2008/01/07] */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_SMP_Bcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIR_SMP_Bcast(
+static int smp_bcast(
         void *buffer, 
         int count, 
         MPI_Datatype datatype, 
@@ -1221,7 +1217,7 @@ int MPIR_Bcast_intra (
     nbytes = MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE ? type_size*count : 0;
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BCAST &&
         nbytes <= MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE && MPIR_Comm_is_node_aware(comm_ptr)) {
-        mpi_errno = MPIR_SMP_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
+        mpi_errno = smp_bcast(buffer, count, datatype, root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
