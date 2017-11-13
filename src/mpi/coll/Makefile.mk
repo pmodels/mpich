@@ -10,13 +10,13 @@ include $(top_srcdir)/src/mpi/coll/allgatherv/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/alltoall/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/alltoallv/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/alltoallw/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/barrier/Makefile.mk
 
 # mpi_sources includes only the routines that are MPI function entry points
 # The code for the MPI operations (e.g., MPI_SUM) is not included in 
 # mpi_sources
 mpi_sources +=                     \
     src/mpi/coll/allreduce/allreduce.c       \
-    src/mpi/coll/barrier/barrier.c         \
     src/mpi/coll/op/op_create.c       \
     src/mpi/coll/op/op_free.c         \
     src/mpi/coll/bcast/bcast.c           \
