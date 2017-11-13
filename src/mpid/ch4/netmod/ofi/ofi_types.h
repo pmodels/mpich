@@ -274,7 +274,7 @@ typedef struct {
 typedef union {
     MPID_Thread_mutex_t m;
     char cacheline[MPIDI_OFI_CACHELINE_SIZE];
-} MPIDI_OFI_cacheline_mutex_t __attribute__ ((aligned(MPIDI_OFI_CACHELINE_SIZE)));
+} MPIDI_OFI_cacheline_mutex_t MPL_ATTR_ALIGNED(MPIDI_OFI_CACHELINE_SIZE);
 
 typedef struct {
     struct fi_cq_tagged_entry cq_entry;
