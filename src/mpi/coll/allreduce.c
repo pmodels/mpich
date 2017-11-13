@@ -349,8 +349,8 @@ int MPIR_Allreduce_inter (
     newcomm_ptr = comm_ptr->local_comm;
 
     /* Do a local reduce on this intracommunicator */
-    mpi_errno = MPIR_Reduce_intra(sendbuf, tmp_buf, count, datatype,
-                                  op, 0, newcomm_ptr, errflag);
+    mpi_errno = MPID_Reduce(sendbuf, tmp_buf, count, datatype,
+                            op, 0, newcomm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
