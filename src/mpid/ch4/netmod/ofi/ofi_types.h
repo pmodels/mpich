@@ -374,7 +374,7 @@ typedef struct {
     MPIDI_OFI_atomic_valid_t win_op_table[MPIDI_OFI_DT_SIZES][MPIDI_OFI_OP_SIZES];
 
     /* Active Message Globals */
-    struct iovec am_iov[MPIDI_OFI_NUM_AM_BUFFERS];
+    struct iovec am_iov[MPIDI_OFI_NUM_AM_BUFFERS] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
     struct fi_msg am_msg[MPIDI_OFI_NUM_AM_BUFFERS];
     void *am_bufs[MPIDI_OFI_NUM_AM_BUFFERS];
     MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_NUM_AM_BUFFERS];
