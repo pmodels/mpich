@@ -952,7 +952,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             MPIDI_Global.am_reqs[i].event_id = MPIDI_OFI_EVENT_AM_RECV;
             MPIDI_Global.am_reqs[i].index = i;
             MPIR_Assert(MPIDI_Global.am_bufs[i]);
-            MPIDI_OFI_ASSERT_IOVEC_ALIGN(MPIDI_Global.am_bufs[i]);
+            MPIDI_OFI_ASSERT_IOVEC_ALIGN(&MPIDI_Global.am_iov[i]);
             MPIDI_Global.am_iov[i].iov_base = MPIDI_Global.am_bufs[i];
             MPIDI_Global.am_iov[i].iov_len = MPIDI_OFI_AM_BUFF_SZ;
             MPIDI_Global.am_msg[i].msg_iov = &MPIDI_Global.am_iov[i];
