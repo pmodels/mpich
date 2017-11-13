@@ -19,7 +19,7 @@ typedef union MPIDI_CH4_Ticket_lock {
         unsigned short ticket;
         unsigned short clients;
     } s;
-} MPIDI_CH4_Ticket_lock __attribute__ ((aligned(MPIDI_CH4_CACHELINE_SIZE)));
+} MPIDI_CH4_Ticket_lock MPL_ATTR_ALIGNED(MPIDI_CH4_CACHELINE_SIZE);
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_acquire(MPIDI_CH4_Ticket_lock * m)
 {
