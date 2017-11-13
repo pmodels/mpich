@@ -145,6 +145,14 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int *sendcnts, const int *sd
                          const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcnts,
                          const int *rdispls, const MPI_Datatype *recvtypes, MPIR_Comm *comm_ptr,
                          MPIR_Errflag_t *errflag);
+int MPIR_Alltoallw_pairwise_sendrecv_replace(const void *sendbuf, const int *sendcnts, const int *sdispls,
+                         const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcnts,
+                         const int *rdispls, const MPI_Datatype *recvtypes, MPIR_Comm *comm_ptr,
+                         MPIR_Errflag_t *errflag);
+int MPIR_Alltoallw_scattered(const void *sendbuf, const int *sendcnts, const int *sdispls,
+                         const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcnts,
+                         const int *rdispls, const MPI_Datatype *recvtypes, MPIR_Comm *comm_ptr,
+                         MPIR_Errflag_t *errflag);
 int MPIR_Alltoallw_inter(const void *sendbuf, const int *sendcnts, const int *sdispls,
                          const MPI_Datatype *sendtypes, void *recvbuf,
                          const int *recvcnts, const int *rdispls, const MPI_Datatype *recvtypes,
