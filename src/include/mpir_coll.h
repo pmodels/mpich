@@ -47,6 +47,15 @@ int MPIR_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 int MPIR_Allgather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
                          MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag );
+int MPIR_Allgather_recursive_doubling(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                         MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag );
+int MPIR_Allgather_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                         MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag );
+int MPIR_Allgather_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                         MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Allgather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
                          MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag );

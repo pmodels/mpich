@@ -5,6 +5,8 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
+include $(top_srcdir)/src/mpi/coll/allgather/Makefile.mk
+
 # mpi_sources includes only the routines that are MPI function entry points
 # The code for the MPI operations (e.g., MPI_SUM) is not included in 
 # mpi_sources
@@ -23,7 +25,6 @@ mpi_sources +=                     \
     src/mpi/coll/gatherv/gatherv.c         \
     src/mpi/coll/scan/scan.c            \
     src/mpi/coll/exscan/exscan.c          \
-    src/mpi/coll/allgather/allgather.c       \
     src/mpi/coll/allgatherv/allgatherv.c      \
     src/mpi/coll/red_scat/red_scat.c        \
     src/mpi/coll/alltoallw/alltoallw.c       \
