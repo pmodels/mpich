@@ -1,18 +1,7 @@
-From 505392c182729e345a7308db37f6727a74196f10 Mon Sep 17 00:00:00 2001
-From: Pavan Balaji <balaji@anl.gov>
-Date: Fri, 13 Oct 2017 23:16:35 -0500
-Subject: [PATCH 3/3] hwloc: warning squash.
-
----
- src/topology-xml-libxml.c   | 2 +-
- src/topology-xml-nolibxml.c | 2 +-
- src/topology-xml.c          | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/src/topology-xml-libxml.c b/src/topology-xml-libxml.c
+diff --git c/src/topology-xml-libxml.c w/src/topology-xml-libxml.c
 index ac20d87f21ca..f35eab2795f1 100644
---- a/src/topology-xml-libxml.c
-+++ b/src/topology-xml-libxml.c
+--- c/src/topology-xml-libxml.c
++++ w/src/topology-xml-libxml.c
 @@ -134,7 +134,7 @@ hwloc__libxml_import_get_content(hwloc__xml_import_state_t state,
    if (!child || child->type != XML_TEXT_NODE) {
      if (expected_length)
@@ -22,10 +11,10 @@ index ac20d87f21ca..f35eab2795f1 100644
      return 0;
    }
  
-diff --git a/src/topology-xml-nolibxml.c b/src/topology-xml-nolibxml.c
+diff --git c/src/topology-xml-nolibxml.c w/src/topology-xml-nolibxml.c
 index 147e703cc172..f11ae8cf5ff6 100644
---- a/src/topology-xml-nolibxml.c
-+++ b/src/topology-xml-nolibxml.c
+--- c/src/topology-xml-nolibxml.c
++++ w/src/topology-xml-nolibxml.c
 @@ -222,7 +222,7 @@ hwloc__nolibxml_import_get_content(hwloc__xml_import_state_t state,
    if (nstate->closed) {
      if (expected_length)
@@ -35,10 +24,10 @@ index 147e703cc172..f11ae8cf5ff6 100644
      return 0;
    }
  
-diff --git a/src/topology-xml.c b/src/topology-xml.c
+diff --git c/src/topology-xml.c w/src/topology-xml.c
 index 9eeb85b728a9..1f2a654a37a9 100644
---- a/src/topology-xml.c
-+++ b/src/topology-xml.c
+--- c/src/topology-xml.c
++++ w/src/topology-xml.c
 @@ -673,7 +673,7 @@ hwloc__xml_import_userdata(hwloc_topology_t topology __hwloc_attribute_unused, h
        }
  
@@ -48,6 +37,3 @@ index 9eeb85b728a9..1f2a654a37a9 100644
        if (length) {
  	ret = state->global->get_content(state, &buffer, length);
  	if (ret < 0)
--- 
-2.14.2
-

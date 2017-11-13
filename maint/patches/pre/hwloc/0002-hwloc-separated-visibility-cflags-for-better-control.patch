@@ -1,16 +1,7 @@
-From 9ef121467a3d187de2e47a7b6def17dbaa9f1e85 Mon Sep 17 00:00:00 2001
-From: Pavan Balaji <balaji@anl.gov>
-Date: Fri, 13 Oct 2017 16:02:08 -0500
-Subject: [PATCH 2/3] hwloc: separated visibility cflags for better control.
-
----
- config/hwloc.m4 | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/config/hwloc.m4 b/config/hwloc.m4
+diff --git c/config/hwloc.m4 w/config/hwloc.m4
 index cda92d08dfb9..c153e520f888 100644
---- a/config/hwloc.m4
-+++ b/config/hwloc.m4
+--- c/config/hwloc.m4
++++ w/config/hwloc.m4
 @@ -316,9 +316,6 @@ EOF])
      _HWLOC_C_COMPILER_VENDOR([hwloc_c_vendor])
      _HWLOC_CHECK_ATTRIBUTES
@@ -43,6 +34,3 @@ index cda92d08dfb9..c153e520f888 100644
      # Always generate these files
      AC_CONFIG_FILES(
          hwloc_config_prefix[Makefile]
--- 
-2.14.2
-

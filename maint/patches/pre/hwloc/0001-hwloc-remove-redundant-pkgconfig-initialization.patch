@@ -1,19 +1,7 @@
-From bb57d00958aea444f6866a11d5539a1985ed6bd4 Mon Sep 17 00:00:00 2001
-From: Pavan Balaji <balaji@anl.gov>
-Date: Fri, 13 Oct 2017 23:00:05 -0500
-Subject: [PATCH 1/3] hwloc: remove redundant pkgconfig initialization.
-
-When hwloc is embedded into mpich, pkgconfig is already initialized.
-Even though the STANDALONE path is never reached, autoreconf still
-complains of a possible reinitialization.
----
- Makefile.am | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/Makefile.am b/Makefile.am
+diff --git c/Makefile.am w/Makefile.am
 index b92ff287de8c..21878c177ab9 100644
---- a/Makefile.am
-+++ b/Makefile.am
+--- c/Makefile.am
++++ w/Makefile.am
 @@ -21,13 +21,13 @@ DIST_SUBDIRS = $(SUBDIRS)
  
  # Only install the pkg file if we're building in standalone mode (and not on Windows)
@@ -31,6 +19,3 @@ index b92ff287de8c..21878c177ab9 100644
  endif
  
  #
--- 
-2.14.2
-
