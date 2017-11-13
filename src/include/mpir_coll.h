@@ -67,6 +67,15 @@ int MPIR_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 int MPIR_Allgatherv_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                           void *recvbuf, const int *recvcounts, const int *displs,
                           MPI_Datatype recvtype, MPIR_Comm *comm_pt, MPIR_Errflag_t *errflag );
+int MPIR_Allgatherv_recursive_doubling(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                          void *recvbuf, const int *recvcounts, const int *displs,
+                          MPI_Datatype recvtype, MPIR_Comm *comm_pt, MPIR_Errflag_t *errflag );
+int MPIR_Allgatherv_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                          void *recvbuf, const int *recvcounts, const int *displs,
+                          MPI_Datatype recvtype, MPIR_Comm *comm_pt, MPIR_Errflag_t *errflag );
+int MPIR_Allgatherv_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                          void *recvbuf, const int *recvcounts, const int *displs,
+                          MPI_Datatype recvtype, MPIR_Comm *comm_pt, MPIR_Errflag_t *errflag );
 int MPIR_Allgatherv_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                           void *recvbuf, const int *recvcounts, const int *displs,
                           MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag );
