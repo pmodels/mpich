@@ -6,6 +6,7 @@
 
 #include "mpiimpl.h"
 #include "../collutil.h"
+#include "ibcast.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Ibcast */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -20,239 +21,12 @@ int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Com
 #endif
 /* -- End Profiling Symbol Block */
 
-struct MPIR_Ibcast_status{
-    int curr_bytes;
-    int n_bytes;
-    MPI_Status status;
-};
-/* Add some functions for asynchronous error detection */
-
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Ibcast
 #define MPI_Ibcast PMPI_Ibcast
 
-#undef FUNCNAME
-#define FUNCNAME sched_test_length
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-
-static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int recv_size;
-    struct  MPIR_Ibcast_status *status = (struct MPIR_Ibcast_status*) state;
-    MPIR_Get_count_impl(&status->status, MPI_BYTE, &recv_size);
-    if(status->n_bytes != recv_size || status->status.MPI_ERROR != MPI_SUCCESS) {
-         mpi_errno = MPIR_Err_create_code( mpi_errno, MPIR_ERR_RECOVERABLE,
-               FCNAME, __LINE__, MPI_ERR_OTHER,
-                     "**collective_size_mismatch",
-		          "**collective_size_mismatch %d %d", status->n_bytes, recv_size);
-    }
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME sched_test_curr_length
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-
-static int sched_test_curr_length(MPIR_Comm * comm, int tag, void *state)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct  MPIR_Ibcast_status *status = (struct MPIR_Ibcast_status*) state;
-    if(status->n_bytes != status->curr_bytes) {
-        mpi_errno = MPIR_Err_create_code( mpi_errno, MPIR_ERR_RECOVERABLE,
-               FCNAME, __LINE__, MPI_ERR_OTHER,
-                     "**collective_size_mismatch",
-		          "**collective_size_mismatch %d %d", status->n_bytes, status->curr_bytes);
-    }
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME sched_add_length
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-
-static int sched_add_length(MPIR_Comm * comm, int tag, void *state)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int recv_size;
-    struct  MPIR_Ibcast_status *status = (struct MPIR_Ibcast_status*) state;
-    MPIR_Get_count_impl(&status->status, MPI_BYTE, &recv_size);
-    status->curr_bytes+= recv_size;
-    return mpi_errno;
-}
-
-/* any non-MPI functions go here, especially non-static ones */
-
-/* A binomial tree broadcast algorithm.  Good for short messages,
-   Cost = lgp.alpha + n.lgp.beta */
-/* Adds operations to the given schedule that correspond to the specified
- * binomial broadcast.  It does _not_ start the schedule.  This permits callers
- * to build up a larger hierarchical broadcast from multiple invocations of this
- * function. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_binomial_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_binomial_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int mask;
-    int comm_size, rank;
-    int is_contig, is_homogeneous;
-    MPI_Aint nbytes, type_size;
-    int relative_rank;
-    int src, dst;
-    struct MPIR_Ibcast_status *status;
-    void *tmp_buf = NULL;
-    MPIR_SCHED_CHKPMEM_DECL(2);
-
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
-
-    if (comm_size == 1) {
-        /* nothing to add, this is a useless broadcast */
-        goto fn_exit;
-    }
-
-    MPIR_Datatype_is_contig(datatype, &is_contig);
-
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
-    MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPIR_Ibcast_status *,
-                              sizeof(struct MPIR_Ibcast_status), mpi_errno, "MPI_Stauts", MPL_MEM_BUFFER);
-
-
-    /* MPI_Type_size() might not give the accurate size of the packed
-     * datatype for heterogeneous systems (because of padding, encoding,
-     * etc). On the other hand, MPI_Pack_size() can become very
-     * expensive, depending on the implementation, especially for
-     * heterogeneous systems. We want to use MPI_Type_size() wherever
-     * possible, and MPI_Pack_size() in other places.
-     */
-    if (is_homogeneous)
-        MPIR_Datatype_get_size_macro(datatype, type_size);
-    else
-        MPIR_Pack_size_impl(1, datatype, &type_size);
-
-    nbytes = type_size * count;
-
-    status->n_bytes = nbytes;
-
-    if (!is_contig || !is_homogeneous)
-    {
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
-
-        /* TODO: Pipeline the packing and communication */
-        if (rank == root) {
-            mpi_errno = MPIR_Sched_copy(buffer, count, datatype, tmp_buf, nbytes, MPI_PACKED, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
-        }
-    }
-
-    relative_rank = (rank >= root) ? rank - root : rank - root + comm_size;
-
-    /* Use short message algorithm, namely, binomial tree */
-
-    /* Algorithm:
-       This uses a fairly basic recursive subdivision algorithm.
-       The root sends to the process comm_size/2 away; the receiver becomes
-       a root for a subtree and applies the same process. 
-
-       So that the new root can easily identify the size of its
-       subtree, the (subtree) roots are all powers of two (relative
-       to the root) If m = the first power of 2 such that 2^m >= the
-       size of the communicator, then the subtree at root at 2^(m-k)
-       has size 2^k (with special handling for subtrees that aren't
-       a power of two in size).
-
-       Do subdivision.  There are two phases:
-       1. Wait for arrival of data.  Because of the power of two nature
-       of the subtree roots, the source of this message is always the
-       process whose relative rank has the least significant 1 bit CLEARED.
-       That is, process 4 (100) receives from process 0, process 7 (111)
-       from process 6 (110), etc.
-       2. Forward to my subtree
-
-       Note that the process that is the tree root is handled automatically
-       by this code, since it has no bits set.  */
-
-    mask = 0x1;
-    while (mask < comm_size) {
-        if (relative_rank & mask) {
-            src = rank - mask; 
-            if (src < 0) src += comm_size;
-            if (!is_contig || !is_homogeneous)
-                mpi_errno = MPIR_Sched_recv_status(tmp_buf, nbytes, MPI_BYTE, src,
-                                                    comm_ptr, &status->status, s);
-            else
-                mpi_errno = MPIR_Sched_recv_status(buffer, count, datatype, src,
-                                                   comm_ptr, &status->status, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-            MPIR_SCHED_BARRIER(s);
-            if(is_homogeneous){
-                mpi_errno = MPIR_Sched_cb(&sched_test_length, status, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                MPIR_SCHED_BARRIER(s);
-            }
-            break;
-        }
-        mask <<= 1;
-    }
-
-    /* This process is responsible for all processes that have bits
-       set from the LSB upto (but not including) mask.  Because of
-       the "not including", we start by shifting mask back down one.
-
-       We can easily change to a different algorithm at any power of two
-       by changing the test (mask > 1) to (mask > block_size) 
-
-       One such version would use non-blocking operations for the last 2-4
-       steps (this also bounds the number of MPI_Requests that would
-       be needed).  */
-
-    mask >>= 1;
-    while (mask > 0) {
-        if (relative_rank + mask < comm_size) {
-            dst = rank + mask;
-            if (dst >= comm_size) dst -= comm_size;
-            if (!is_contig || !is_homogeneous)
-                mpi_errno = MPIR_Sched_send(tmp_buf, nbytes, MPI_BYTE, dst, comm_ptr, s);
-            else
-                mpi_errno = MPIR_Sched_send(buffer, count, datatype, dst, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-            /* NOTE: This is departure from MPIR_Bcast_binomial.  A true analog
-             * would put an MPIR_Sched_barrier here after every send. */
-        }
-        mask >>= 1;
-    }
-
-    if (!is_contig || !is_homogeneous) {
-        if (rank != root) {
-            MPIR_SCHED_BARRIER(s);
-            mpi_errno = MPIR_Sched_copy(tmp_buf, nbytes, MPI_PACKED, buffer, count, datatype, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
-        }
-    }
-
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
-fn_exit:
-    return mpi_errno;
-fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
-    goto fn_exit;
-}
 
 /* TODO it would be nice if we could refactor things to minimize
    duplication between this and MPIR_Iscatter_intra and friends.  We can't use
@@ -397,7 +171,7 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather_sched(void *buffer, int count, MPI_Dat
     int recv_offset, tree_root, nprocs_completed, offset;
     MPI_Aint true_extent, true_lb;
     void *tmp_buf;
-    struct MPIR_Ibcast_status *status;
+    struct MPII_Ibcast_status *status;
     MPIR_SCHED_CHKPMEM_DECL(2);
 
     comm_size = comm_ptr->local_size;
@@ -415,8 +189,8 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather_sched(void *buffer, int count, MPI_Dat
         MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
-    MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPIR_Ibcast_status*,
-                              sizeof(struct MPIR_Ibcast_status), mpi_errno, "MPI_Status", MPL_MEM_BUFFER);
+    MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPII_Ibcast_status*,
+                              sizeof(struct MPII_Ibcast_status), mpi_errno, "MPI_Status", MPL_MEM_BUFFER);
     is_homogeneous = 1;
 #ifdef MPID_HAS_HETERO
     if (comm_ptr->is_hetero)
@@ -504,7 +278,7 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather_sched(void *buffer, int count, MPI_Dat
                                         MPI_BYTE, dst, comm_ptr,&status->status, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
-            mpi_errno = MPIR_Sched_cb(&sched_add_length, status, s);
+            mpi_errno = MPIR_Sched_cb(&MPII_sched_add_length, status, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
@@ -586,7 +360,7 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather_sched(void *buffer, int count, MPI_Dat
                                                 &status->status, s);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
-                    mpi_errno = MPIR_Sched_cb(&sched_add_length, status, s);
+                    mpi_errno = MPIR_Sched_cb(&MPII_sched_add_length, status, s);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
 
@@ -602,7 +376,7 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather_sched(void *buffer, int count, MPI_Dat
         i++;
     }
     if(is_homogeneous){
-        mpi_errno = MPIR_Sched_cb(&sched_test_curr_length, status, s);
+        mpi_errno = MPIR_Sched_cb(&MPII_sched_test_curr_length, status, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     if (!is_contig) {
@@ -620,238 +394,6 @@ fn_fail:
     MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
-
-/*
-   Broadcast based on a scatter followed by an allgather.
-
-   We first scatter the buffer using a binomial tree algorithm. This costs
-   lgp.alpha + n.((p-1)/p).beta
-   If the datatype is contiguous and the communicator is homogeneous,
-   we treat the data as bytes and divide (scatter) it among processes
-   by using ceiling division. For the noncontiguous or heterogeneous
-   cases, we first pack the data into a temporary buffer by using
-   MPI_Pack, scatter it as bytes, and unpack it after the allgather.
-
-   We use a ring algorithm for the allgather, which takes p-1 steps.
-   This may perform better than recursive doubling for long messages and
-   medium-sized non-power-of-two messages.
-   Total Cost = (lgp+p-1).alpha + 2.n.((p-1)/p).beta
-*/
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_scatter_ring_allgather_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_scatter_ring_allgather_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int comm_size, rank;
-    int is_contig, is_homogeneous ATTRIBUTE((unused)), type_size, nbytes;
-    int scatter_size, curr_size;
-    int i, j, jnext, left, right;
-    MPI_Aint true_extent, true_lb;
-    void *tmp_buf = NULL;
-
-    struct MPIR_Ibcast_status *status;
-    MPIR_SCHED_CHKPMEM_DECL(4);
-
-    comm_size = comm_ptr->local_size;
-    rank = comm_ptr->rank;
-
-    /* If there is only one process, return */
-    if (comm_size == 1)
-        goto fn_exit;
-
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
-        is_contig = 1;
-    else {
-        MPIR_Datatype_is_contig(datatype, &is_contig);
-    }
-
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
-    MPIR_Assert(is_homogeneous); /* we don't handle the hetero case yet */
-    MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPIR_Ibcast_status*,
-                              sizeof(struct MPIR_Ibcast_status), mpi_errno, "MPI_Status", MPL_MEM_BUFFER);
-    MPIR_Datatype_get_size_macro(datatype, type_size);
-    nbytes = type_size * count;
-    status->n_bytes = nbytes;
-    status->curr_bytes = 0;
-    if (is_contig) {
-        /* contiguous, no need to pack. */
-        MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-
-        tmp_buf = (char *) buffer + true_lb;
-    }
-    else {
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
-
-        /* TODO: Pipeline the packing and communication */
-        if (rank == root) {
-            mpi_errno = MPIR_Sched_copy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
-        }
-    }
-
-    mpi_errno = MPIR_Iscatter_for_bcast_sched(tmp_buf, root, comm_ptr, nbytes, s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-    /* this is the block size used for the scatter operation */
-    scatter_size = (nbytes + comm_size - 1) / comm_size; /* ceiling division */
-
-    /* curr_size is the amount of data that this process now has stored in
-     * buffer at byte offset (rank*scatter_size) */
-    curr_size = MPL_MIN(scatter_size, (nbytes - (rank * scatter_size)));
-    if (curr_size < 0)
-        curr_size = 0;
-    /* curr_size bytes already inplace */
-    status->curr_bytes = curr_size;
-
-    /* long-message allgather or medium-size but non-power-of-two. use ring algorithm. */
-
-    left  = (comm_size + rank - 1) % comm_size;
-    right = (rank + 1) % comm_size;
-
-    j     = rank;
-    jnext = left;
-    for (i = 1; i < comm_size; i++) {
-        int left_count, right_count, left_disp, right_disp, rel_j, rel_jnext;
-
-        rel_j     = (j     - root + comm_size) % comm_size;
-        rel_jnext = (jnext - root + comm_size) % comm_size;
-        left_count = MPL_MIN(scatter_size, (nbytes - rel_jnext * scatter_size));
-        if (left_count < 0)
-            left_count = 0;
-        left_disp = rel_jnext * scatter_size;
-        right_count = MPL_MIN(scatter_size, (nbytes - rel_j * scatter_size));
-        if (right_count < 0)
-            right_count = 0;
-        right_disp = rel_j * scatter_size;
-
-        mpi_errno = MPIR_Sched_send(((char *)tmp_buf + right_disp),
-                                    right_count, MPI_BYTE, right, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        /* sendrecv, no barrier here */
-        mpi_errno = MPIR_Sched_recv_status(((char *)tmp_buf + left_disp),
-                                    left_count, MPI_BYTE, left, comm_ptr, &status->status, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPIR_SCHED_BARRIER(s);
-        mpi_errno = MPIR_Sched_cb(&sched_add_length, status, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPIR_SCHED_BARRIER(s);
-
-        j     = jnext;
-        jnext = (comm_size + jnext - 1) % comm_size;
-    }
-    mpi_errno = MPIR_Sched_cb(&sched_test_curr_length, status, s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-    if (!is_contig && rank != root) {
-        mpi_errno = MPIR_Sched_copy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
-fn_exit:
-    return mpi_errno;
-fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
-    goto fn_exit;
-}
-
-
-/* This routine purely handles the hierarchical version of bcast, and does not
- * currently make any decision about which particular algorithm to use for any
- * subcommunicator. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_SMP_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_SMP_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int is_homogeneous;
-    MPI_Aint type_size;
-    struct MPIR_Ibcast_status *status;
-    MPIR_SCHED_CHKPMEM_DECL(1);
-
-    if (!MPIR_CVAR_ENABLE_SMP_COLLECTIVES || !MPIR_CVAR_ENABLE_SMP_BCAST)
-        MPID_Abort(comm_ptr, MPI_ERR_OTHER, 1, "SMP collectives are disabled!");
-    MPIR_Assert(MPIR_Comm_is_node_aware(comm_ptr));
-    MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPIR_Ibcast_status*,
-                              sizeof(struct MPIR_Ibcast_status), mpi_errno, "MPI_Status", MPL_MEM_BUFFER);
-
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
-
-    MPIR_Assert(is_homogeneous); /* we don't handle the hetero case yet */
-
-    /* MPI_Type_size() might not give the accurate size of the packed
-     * datatype for heterogeneous systems (because of padding, encoding,
-     * etc). On the other hand, MPI_Pack_size() can become very
-     * expensive, depending on the implementation, especially for
-     * heterogeneous systems. We want to use MPI_Type_size() wherever
-     * possible, and MPI_Pack_size() in other places.
-     */
-    if (is_homogeneous)
-        MPIR_Datatype_get_size_macro(datatype, type_size);
-    else
-        MPIR_Pack_size_impl(1, datatype, &type_size);
-
-     status->n_bytes = type_size * count;
-    /* TODO insert packing here */
-
-    /* send to intranode-rank 0 on the root's node */
-    if (comm_ptr->node_comm != NULL &&
-        MPIR_Get_intranode_rank(comm_ptr, root) > 0) /* is not the node root (0) */
-    {                                                /* and is on our node (!-1) */
-        if (root == comm_ptr->rank) {
-            mpi_errno = MPIR_Sched_send(buffer, count, datatype, 0, comm_ptr->node_comm, s);
-        }
-        else if (0 == comm_ptr->node_comm->rank) {
-            mpi_errno = MPIR_Sched_recv_status(buffer, count, datatype, MPIR_Get_intranode_rank(comm_ptr, root),
-                                        comm_ptr->node_comm, &status->status, s);
-        }
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPIR_SCHED_BARRIER(s);
-        MPIR_SCHED_BARRIER(s);
-        mpi_errno = MPIR_Sched_cb(&sched_test_length, status, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPIR_SCHED_BARRIER(s);
-    }
-
-    /* perform the internode broadcast */
-    if (comm_ptr->node_roots_comm != NULL)
-    {
-        mpi_errno = MPID_Ibcast_sched(buffer, count, datatype,
-                                      MPIR_Get_internode_rank(comm_ptr, root),
-                                      comm_ptr->node_roots_comm, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-        /* don't allow the local ops for the intranode phase to start until this has completed */
-        MPIR_SCHED_BARRIER(s);
-    }
-    /* perform the intranode broadcast on all except for the root's node */
-    if (comm_ptr->node_comm != NULL)
-    {
-        mpi_errno = MPID_Ibcast_sched(buffer, count, datatype, 0, comm_ptr->node_comm, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
-    MPIR_SCHED_CHKPMEM_COMMIT(s);
-fn_exit:
-    return mpi_errno;
-fn_fail:
-    MPIR_SCHED_CHKPMEM_REAP(s);
-    goto fn_exit;
-}
-
 
 /* Provides a generic "flat" broadcast that doesn't know anything about hierarchy.  It will choose
  * between several different algorithms based on the given parameters. */
@@ -892,7 +434,7 @@ int MPIR_Ibcast_intra_sched(void *buffer, int count, MPI_Datatype datatype, int 
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         else {
-            mpi_errno = MPIR_Ibcast_scatter_ring_allgather_sched(buffer, count, datatype, root, comm_ptr, s);
+            mpi_errno = MPII_Ibcast_scatter_ring_allgather_sched(buffer, count, datatype, root, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
     }
@@ -914,46 +456,9 @@ int MPIR_Ibcast_inter_sched(void *buffer, int count, MPI_Datatype datatype, int 
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+    mpi_errno = MPIR_Ibcast_flat_sched(buffer, count, datatype, root, comm_ptr, s);
 
-    /* Intercommunicator broadcast.
-     * Root sends to rank 0 in remote group. Remote group does local
-     * intracommunicator broadcast. */
-    if (root == MPI_PROC_NULL)
-    {
-        /* local processes other than root do nothing */
-        mpi_errno = MPI_SUCCESS;
-    }
-    else if (root == MPI_ROOT)
-    {
-        /* root sends to rank 0 on remote group and returns */
-        mpi_errno = MPIR_Sched_send(buffer, count, datatype, 0, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else
-    {
-        /* remote group. rank 0 on remote group receives from root */
-        if (comm_ptr->rank == 0) {
-            mpi_errno = MPIR_Sched_recv(buffer, count, datatype, root, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPIR_SCHED_BARRIER(s);
-        }
-
-        if (comm_ptr->local_comm == NULL) {
-            mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        }
-
-        /* now do the usual broadcast on this intracommunicator
-           with rank 0 as root. */
-        mpi_errno = MPID_Ibcast_sched(buffer, count, datatype, root, comm_ptr->local_comm, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME

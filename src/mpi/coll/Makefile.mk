@@ -5,48 +5,50 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
+include $(top_srcdir)/src/mpi/coll/allgather/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/allgatherv/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/alltoall/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/alltoallv/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/alltoallw/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/barrier/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/bcast/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/exscan/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/gather/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/gatherv/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/red_scat/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/red_scat_block/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/reduce/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/scan/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/scatter/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/scatterv/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/allreduce/Makefile.mk
+
+include $(top_srcdir)/src/mpi/coll/iallgather/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/iallgatherv/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/iallreduce/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/ialltoall/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/ialltoallv/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/ialltoallw/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/ibarrier/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/ibcast/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/iexscan/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/igather/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/igatherv/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/ired_scat/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/ired_scat_block/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/ireduce/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/iscan/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/iscatter/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/iscatterv/Makefile.mk
+
 # mpi_sources includes only the routines that are MPI function entry points
 # The code for the MPI operations (e.g., MPI_SUM) is not included in 
 # mpi_sources
 mpi_sources +=                     \
-    src/mpi/coll/allreduce/allreduce.c       \
-    src/mpi/coll/barrier/barrier.c         \
     src/mpi/coll/op/op_create.c       \
     src/mpi/coll/op/op_free.c         \
-    src/mpi/coll/bcast/bcast.c           \
-    src/mpi/coll/alltoall/alltoall.c        \
-    src/mpi/coll/alltoallv/alltoallv.c       \
-    src/mpi/coll/reduce/reduce.c          \
-    src/mpi/coll/scatter/scatter.c         \
-    src/mpi/coll/gather/gather.c          \
-    src/mpi/coll/scatterv/scatterv.c        \
-    src/mpi/coll/gatherv/gatherv.c         \
-    src/mpi/coll/scan/scan.c            \
-    src/mpi/coll/exscan/exscan.c          \
-    src/mpi/coll/allgather/allgather.c       \
-    src/mpi/coll/allgatherv/allgatherv.c      \
-    src/mpi/coll/red_scat/red_scat.c        \
-    src/mpi/coll/alltoallw/alltoallw.c       \
     src/mpi/coll/reduce_local/reduce_local.c    \
-    src/mpi/coll/op/op_commutative.c  \
-    src/mpi/coll/red_scat_block/red_scat_block.c  \
-    src/mpi/coll/iallgather/iallgather.c      \
-    src/mpi/coll/iallgatherv/iallgatherv.c     \
-    src/mpi/coll/iallreduce/iallreduce.c      \
-    src/mpi/coll/ialltoall/ialltoall.c       \
-    src/mpi/coll/ialltoallv/ialltoallv.c      \
-    src/mpi/coll/ialltoallw/ialltoallw.c      \
-    src/mpi/coll/ibarrier/ibarrier.c        \
-    src/mpi/coll/ibcast/ibcast.c          \
-    src/mpi/coll/iexscan/iexscan.c         \
-    src/mpi/coll/igather/igather.c         \
-    src/mpi/coll/igatherv/igatherv.c        \
-    src/mpi/coll/ired_scat/ired_scat.c       \
-    src/mpi/coll/ired_scat_block/ired_scat_block.c \
-    src/mpi/coll/ireduce/ireduce.c         \
-    src/mpi/coll/iscan/iscan.c           \
-    src/mpi/coll/iscatter/iscatter.c        \
-    src/mpi/coll/iscatterv/iscatterv.c
+    src/mpi/coll/op/op_commutative.c
 
 mpi_core_sources += \
     src/mpi/coll/allred_group/allred_group.c   \
