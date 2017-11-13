@@ -182,6 +182,7 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
             }
             /* --END ERROR HANDLING-- */   
         }
+    }
 
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
