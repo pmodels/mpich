@@ -343,11 +343,11 @@ echo
 
 # ucx
 if [ "yes" = "$do_ucx" ] ; then
-( cd src/mpid/ch4/netmod/ucx/ucx && git am --3way ../../../../../../maint/patches/pre/ucx/*.patch )
+( cd src/mpid/ch4/netmod/ucx/ucx && for i in ../../../../../../maint/patches/pre/ucx/*.patch; do patch -p1 < $i; done )
 fi
 
 # hwloc
-( cd src/hwloc && git am --3way ../../maint/patches/pre/hwloc/*.patch )
+( cd src/hwloc && for i in  ../../maint/patches/pre/hwloc/*.patch; do patch -p1 < $i; done )
 
 
 ########################################################################
