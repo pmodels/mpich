@@ -11,5 +11,5 @@
 	ignore = dirty
 [submodule "src/hwloc"]
 	path = src/hwloc
-	url = https://github.com/open-mpi/hwloc
-	ignore = dirty
+	url = https://github.com/pmodels/hwloc
+	branch = 1.11.8-mpich
