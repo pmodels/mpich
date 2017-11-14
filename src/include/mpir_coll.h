@@ -175,6 +175,8 @@ int MPIR_Bcast_scatter_doubling_allgather(void *buffer, int count, MPI_Datatype 
 /* Exscan functions */
 int MPIR_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                 MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag );
+int MPIR_Exscan_recursive_doubling(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 
 /* Gather functions */
 int MPIR_Gather (const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
