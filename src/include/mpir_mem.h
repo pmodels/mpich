@@ -223,7 +223,7 @@ if (pointer_) { \
  * are handled and are not considered an error. */
 #define MPIR_REALLOC_ORJUMP(ptr_,size_,class_,rc_) do { \
     void *realloc_tmp_ = MPL_realloc((ptr_), (size_), (class_)); \
-    if (size_) \
+    if (size_ != 0) \
         MPIR_ERR_CHKANDJUMP2(!realloc_tmp_,rc_,MPI_ERR_OTHER,"**nomem2","**nomem2 %d %s",(size_),MPL_QUOTE(ptr_)); \
     (ptr_) = realloc_tmp_; \
 } while (0)
@@ -249,7 +249,7 @@ if (pointer_) { \
    the checks fail. */
 #define CHECK_MEMCPY(dst_,src_,len_)                                                                   \
     do {                                                                                                        \
-        if (len_) {                                                                                             \
+        if (len_ != 0) {                                                \
             MPL_VG_CHECK_MEM_IS_ADDRESSABLE((dst_),(len_));                                                     \
             MPL_VG_CHECK_MEM_IS_ADDRESSABLE((src_),(len_));                                                     \
             if (MPIR_MEM_RANGES_OVERLAP((dst_),(len_),(src_),(len_))) {                                          \
