@@ -185,6 +185,9 @@ int MPIR_Gather (const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
 int MPIR_Gather_intra (const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                        void *recvbuf, int recvcnt, MPI_Datatype recvtype,
                        int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
+int MPIR_Gather_binomial (const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
+                       void *recvbuf, int recvcnt, MPI_Datatype recvtype,
+                       int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Gather_inter (const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                        void *recvbuf, int recvcnt, MPI_Datatype recvtype,
                        int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag );
