@@ -222,6 +222,18 @@ int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
 int MPIR_Reduce_scatter_block_intra(const void *sendbuf, void *recvbuf, int recvcount,
                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm
                                     *comm_ptr, MPIR_Errflag_t *errflag );
+int MPIR_Reduce_scatter_block_noncomm(const void *sendbuf, void *recvbuf, int recvcount,
+                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm
+                                    *comm_ptr, MPIR_Errflag_t *errflag );
+int MPIR_Reduce_scatter_block_recursive_halving(const void *sendbuf, void *recvbuf, int recvcount,
+                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm
+                                    *comm_ptr, MPIR_Errflag_t *errflag );
+int MPIR_Reduce_scatter_block_pairwise(const void *sendbuf, void *recvbuf, int recvcount,
+                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm
+                                    *comm_ptr, MPIR_Errflag_t *errflag );
+int MPIR_Reduce_scatter_block_recursive_doubling(const void *sendbuf, void *recvbuf, int recvcount,
+                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm
+                                    *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Reduce_scatter_block_inter(const void *sendbuf, void *recvbuf, int recvcount,
                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm
                                     *comm_ptr, MPIR_Errflag_t *errflag);
