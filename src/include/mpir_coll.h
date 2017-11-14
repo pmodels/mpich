@@ -253,6 +253,10 @@ int MPIR_Reduce_inter (const void *sendbuf, void *recvbuf, int count, MPI_Dataty
 /* Scan functions */
 int MPIR_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
               MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
+int MPIR_Scan_generic(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+              MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
+int MPIR_Scan_smp(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+              MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 
 /* Scatter functions */
 int MPIR_Scatter(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
