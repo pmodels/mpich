@@ -15,6 +15,7 @@ include $(top_srcdir)/src/mpi/coll/bcast/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/exscan/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/gather/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/gatherv/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/red_scat/Makefile.mk
 
 include $(top_srcdir)/src/mpi/coll/iallgather/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/iallgatherv/Makefile.mk
@@ -32,7 +33,6 @@ mpi_sources +=                     \
     src/mpi/coll/scatter/scatter.c         \
     src/mpi/coll/scatterv/scatterv.c        \
     src/mpi/coll/scan/scan.c            \
-    src/mpi/coll/red_scat/red_scat.c        \
     src/mpi/coll/reduce_local/reduce_local.c    \
     src/mpi/coll/op/op_commutative.c  \
     src/mpi/coll/red_scat_block/red_scat_block.c  \
