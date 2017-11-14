@@ -21,6 +21,7 @@ include $(top_srcdir)/src/mpi/coll/reduce/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/scan/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/scatter/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/scatterv/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/allreduce/Makefile.mk
 
 include $(top_srcdir)/src/mpi/coll/iallgather/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/iallgatherv/Makefile.mk
@@ -35,7 +36,6 @@ include $(top_srcdir)/src/mpi/coll/ibcast/Makefile.mk
 # The code for the MPI operations (e.g., MPI_SUM) is not included in 
 # mpi_sources
 mpi_sources +=                     \
-    src/mpi/coll/allreduce/allreduce.c       \
     src/mpi/coll/op/op_create.c       \
     src/mpi/coll/op/op_free.c         \
     src/mpi/coll/reduce_local/reduce_local.c    \
