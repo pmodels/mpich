@@ -277,6 +277,10 @@ int MPIR_Scatterv (const void *sendbuf, const int *sendcnts, const int *displs,
                    MPI_Datatype sendtype, void *recvbuf, int recvcnt,
                    MPI_Datatype recvtype, int root, MPIR_Comm
                    *comm_ptr, MPIR_Errflag_t *errflag);
+int MPIR_Scatterv_linear (const void *sendbuf, const int *sendcnts, const int *displs,
+                   MPI_Datatype sendtype, void *recvbuf, int recvcnt,
+                   MPI_Datatype recvtype, int root, MPIR_Comm
+                   *comm_ptr, MPIR_Errflag_t *errflag);
 
 /* Barrier functions */
 int MPIR_Barrier( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);

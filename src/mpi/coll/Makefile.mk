@@ -20,6 +20,7 @@ include $(top_srcdir)/src/mpi/coll/red_scat_block/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/reduce/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/scan/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/scatter/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/scatterv/Makefile.mk
 
 include $(top_srcdir)/src/mpi/coll/iallgather/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/iallgatherv/Makefile.mk
@@ -35,7 +36,6 @@ mpi_sources +=                     \
     src/mpi/coll/allreduce/allreduce.c       \
     src/mpi/coll/op/op_create.c       \
     src/mpi/coll/op/op_free.c         \
-    src/mpi/coll/scatterv/scatterv.c        \
     src/mpi/coll/reduce_local/reduce_local.c    \
     src/mpi/coll/op/op_commutative.c  \
     src/mpi/coll/ibarrier/ibarrier.c        \
