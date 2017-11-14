@@ -33,6 +33,7 @@ include $(top_srcdir)/src/mpi/coll/ibarrier/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/ibcast/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/iexscan/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/igather/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/igatherv/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/iscan/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/iscatter/Makefile.mk
 
@@ -44,7 +45,6 @@ mpi_sources +=                     \
     src/mpi/coll/op/op_free.c         \
     src/mpi/coll/reduce_local/reduce_local.c    \
     src/mpi/coll/op/op_commutative.c  \
-    src/mpi/coll/igatherv/igatherv.c        \
     src/mpi/coll/ired_scat/ired_scat.c       \
     src/mpi/coll/ired_scat_block/ired_scat_block.c \
     src/mpi/coll/ireduce/ireduce.c         \
