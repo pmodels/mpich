@@ -182,34 +182,6 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
             }
             /* --END ERROR HANDLING-- */   
         }
-
-#ifdef FOO
-        /* Use pairwise exchange algorithm. */
-        
-        /* Make local copy first */
-        mpi_errno = MPIR_Localcopy(((char *)sendbuf+sdispls[rank]), 
-                                   sendcounts[rank], sendtypes[rank],
-                                   ((char *)recvbuf+rdispls[rank]), 
-                                   recvcounts[rank], recvtypes[rank]);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        /* Do the pairwise exchange. */
-        for (i=1; i<comm_size; i++) {
-            src = (rank - i + comm_size) % comm_size;
-            dst = (rank + i) % comm_size;
-            mpi_errno = MPIC_Sendrecv(((char *)sendbuf+sdispls[dst]),
-                                         sendcounts[dst], sendtypes[dst], dst,
-                                         MPIR_ALLTOALLW_TAG, 
-                                         ((char *)recvbuf+rdispls[src]), 
-                                         recvcounts[src], recvtypes[dst], src,
-                                         MPIR_ALLTOALLW_TAG, comm_ptr, &status, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
-        }
-#endif
     }
 
   fn_exit:
