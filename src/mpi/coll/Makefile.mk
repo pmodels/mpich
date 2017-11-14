@@ -33,6 +33,7 @@ include $(top_srcdir)/src/mpi/coll/ibarrier/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/ibcast/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/iexscan/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/igather/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/iscan/Makefile.mk
 
 # mpi_sources includes only the routines that are MPI function entry points
 # The code for the MPI operations (e.g., MPI_SUM) is not included in 
@@ -46,7 +47,6 @@ mpi_sources +=                     \
     src/mpi/coll/ired_scat/ired_scat.c       \
     src/mpi/coll/ired_scat_block/ired_scat_block.c \
     src/mpi/coll/ireduce/ireduce.c         \
-    src/mpi/coll/iscan/iscan.c           \
     src/mpi/coll/iscatter/iscatter.c        \
     src/mpi/coll/iscatterv/iscatterv.c
 
