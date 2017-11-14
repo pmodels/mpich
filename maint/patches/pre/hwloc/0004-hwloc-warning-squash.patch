@@ -1,0 +1,16 @@
+diff --git a/src/topology-linux.c b/src/topology-linux.c
+index 4f604b8aecf4..9d0b29bb917d 100644
+--- c/src/topology-linux.c
++++ w/src/topology-linux.c
+@@ -5473,9 +5473,9 @@ hwloc_linux_component_instantiate(struct hwloc_disc_component *component,
+   data->dumped_hwdata_dirname = getenv("HWLOC_DUMPED_HWDATA_DIR");
+   if (!data->dumped_hwdata_dirname) {
+     if (_data1)
+-      data->dumped_hwdata_dirname = "/var/run/hwloc";
++      data->dumped_hwdata_dirname = (char *) "/var/run/hwloc";
+     else
+-      data->dumped_hwdata_dirname = RUNSTATEDIR "/hwloc";
++      data->dumped_hwdata_dirname = (char *) RUNSTATEDIR "/hwloc";
+   }
+ 
+   data->deprecated_classlinks_model = -2; /* never tried */
