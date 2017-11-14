@@ -230,6 +230,7 @@ static HYD_status resolve_pattern_string(const char *pattern, char **str, int pg
             case '\0':
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                     "dangling '%%' at end of pattern\n");
+                break;
             default:
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                     "unrecognized pattern specifier ('%c')\n", pattern[pos]);

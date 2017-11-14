@@ -144,7 +144,7 @@ extern char *HYD_dbg_prefix;
 
 #define HYD_CONVERT_FALSE_TO_NULL(x)                                    \
     {                                                                   \
-        if (!(x)) {                                                     \
+        if ((x) == NULL) {                                              \
         }                                                               \
         else if (!strcasecmp((x), "none") || !strcasecmp((x), "no") ||  \
                  !strcasecmp((x), "dummy") || !strcasecmp((x), "null") || \
@@ -461,7 +461,7 @@ struct HYD_user_global {
 
 #define HYDU_ASSERT(x, status)                                  \
     {                                                           \
-        if (!(x)) {                                             \
+        if ((x) == 0) {                                         \
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,     \
                                 "assert (%s) failed\n", #x);    \
         }                                                       \
