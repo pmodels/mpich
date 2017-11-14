@@ -1,7 +1,3 @@
-[submodule "src/mpid/ch4/netmod/ucx/ucx"]
-	path = src/mpid/ch4/netmod/ucx/ucx
-	url = https://github.com/openucx/ucx
-	ignore = dirty
 [submodule "src/izem"]
 	path = src/izem
 	url = https://github.com/pmodels/izem
@@ -13,3 +9,7 @@
 	path = src/hwloc
 	url = https://github.com/pmodels/hwloc
 	branch = 1.11.8-mpich
+[submodule "src/mpid/ch4/netmod/ucx/ucx"]
+	path = src/mpid/ch4/netmod/ucx/ucx
+	url = https://github.com/pmodels/ucx
+	branch = 1.2.1-mpich
