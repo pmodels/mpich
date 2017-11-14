@@ -31,7 +31,22 @@ int MPIDI_OFI_handle_cq_error_util(int vni_idx, ssize_t ret)
 
 int MPIDI_OFI_progress_test_no_inline()
 {
-    return MPID_Progress_test();
+    int mpi_errno;
+    mpi_errno = MPIDI_NM_progress(0, 0);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+    mpi_errno = MPIDI_SHM_progress(0, 0);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#endif
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;;
+
 }
 
 typedef struct MPIDI_OFI_index_allocator_t {
