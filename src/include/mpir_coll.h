@@ -265,6 +265,9 @@ int MPIR_Scatter(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
 int MPIR_Scatter_intra(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                        void *recvbuf, int recvcnt, MPI_Datatype recvtype,
                        int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag );
+int MPIR_Scatter_binomial(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
+                       void *recvbuf, int recvcnt, MPI_Datatype recvtype,
+                       int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Scatter_inter(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                        void *recvbuf, int recvcnt, MPI_Datatype recvtype,
                        int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag );
