@@ -122,6 +122,81 @@ const MPIDI_coll_algo_container_t CH4_allreduce_composition_beta_cnt =
             }
     };
 
+/* Alltoall default containers initialization*/
+const MPIDI_coll_algo_container_t CH4_alltoall_intercomm_cnt =
+    {
+        .id = MPIDI_CH4_alltoall_intercomm_id
+    };
+
+const MPIDI_coll_algo_container_t CH4_alltoall_composition_alpha_cnt =
+    {
+        .id = MPIDI_CH4_alltoall_composition_alpha_id,
+        .params.ch4_alltoall_params.ch4_alltoall_alpha =
+            {
+                .alltoall = -1
+            }
+    };
+
+/* Alltoallv default containers initialization*/
+const MPIDI_coll_algo_container_t CH4_alltoallv_intercomm_cnt =
+    {
+        .id = MPIDI_CH4_alltoallv_intercomm_id
+    };
+
+const MPIDI_coll_algo_container_t CH4_alltoallv_composition_alpha_cnt =
+    {
+        .id = MPIDI_CH4_alltoallv_composition_alpha_id,
+        .params.ch4_alltoallv_params.ch4_alltoallv_alpha =
+            {
+                .alltoallv = -1
+            }
+    };
+
+/* Alltoallw default containers initialization*/
+const MPIDI_coll_algo_container_t CH4_alltoallw_intercomm_cnt =
+    {
+        .id = MPIDI_CH4_alltoallw_intercomm_id
+    };
+
+const MPIDI_coll_algo_container_t CH4_alltoallw_composition_alpha_cnt =
+    {
+        .id = MPIDI_CH4_alltoallw_composition_alpha_id,
+        .params.ch4_alltoallw_params.ch4_alltoallw_alpha =
+            {
+                .alltoallw = -1
+            }
+    };
+
+/* Allgather default containers initialization*/
+const MPIDI_coll_algo_container_t CH4_allgather_intercomm_cnt =
+    {
+        .id = MPIDI_CH4_allgather_intercomm_id
+    };
+
+const MPIDI_coll_algo_container_t CH4_allgather_composition_alpha_cnt =
+    {
+        .id = MPIDI_CH4_allgather_composition_alpha_id,
+        .params.ch4_allgather_params.ch4_allgather_alpha =
+            {
+                .allgather = -1
+            }
+    };
+
+/* Allgatherv default containers initialization*/
+const MPIDI_coll_algo_container_t CH4_allgatherv_intercomm_cnt =
+    {
+        .id = MPIDI_CH4_allgatherv_intercomm_id
+    };
+
+const MPIDI_coll_algo_container_t CH4_allgatherv_composition_alpha_cnt =
+    {
+        .id = MPIDI_CH4_allgatherv_composition_alpha_id,
+        .params.ch4_allgatherv_params.ch4_allgatherv_alpha =
+            {
+                .allgatherv = -1
+            }
+    };
+
 /* *INDENT-OFF* */
 @ch4_netmod_coll_globals_default@
 @ch4_shm_coll_globals_default@

@@ -2,7 +2,8 @@
 #define COLL_ALGO_PARAMS_H_INCLUDED
 
 #include "../src/ch4_coll_params.h"
-#include "coll_tuning_types.h"
+#include "ch4_coll_containers.h"
+
 /* *INDENT-OFF* */
 @ch4_netmod_coll_params_include@
 @ch4_shm_coll_params_include@
@@ -42,16 +43,66 @@ typedef union MPIDI_allreduce_algo_params {
     /* *INDENT-ON* */
 } MPIDI_ALLREDUCE_ALGO_params_t;
 
-#define MPIDI_BARRIER_PARAMS_DECL MPIDI_BARRIER_ALGO_params_t barrier_params
-#define MPIDI_BCAST_PARAMS_DECL MPIDI_BCAST_ALGO_params_t bcast_params
-#define MPIDI_REDUCE_PARAMS_DECL MPIDI_REDUCE_ALGO_params_t reduce_params
-#define MPIDI_ALLREDUCE_PARAMS_DECL MPIDI_ALLREDUCE_ALGO_params_t allreduce_params
+typedef union MPIDI_alltoall_algo_params {
+    /* *INDENT-OFF* */
+    MPIDI_CH4_ALLTOALL_PARAMS_DECL;
+    @ch4_netmod_alltoall_params_decl@
+    @ch4_shm_alltoall_params_decl@
+    /* *INDENT-ON* */
+} MPIDI_ALLTOALL_ALGO_params_t;
+
+typedef union MPIDI_alltoallv_algo_params {
+    /* *INDENT-OFF* */
+    MPIDI_CH4_ALLTOALLV_PARAMS_DECL;
+    @ch4_netmod_alltoallv_params_decl@
+    @ch4_shm_alltoallv_params_decl@
+    /* *INDENT-ON* */
+} MPIDI_ALLTOALLV_ALGO_params_t;
+
+typedef union MPIDI_alltoallw_algo_params {
+    /* *INDENT-OFF* */
+    MPIDI_CH4_ALLTOALLW_PARAMS_DECL;
+    @ch4_netmod_alltoallw_params_decl@
+    @ch4_shm_alltoallw_params_decl@
+    /* *INDENT-ON* */
+} MPIDI_ALLTOALLW_ALGO_params_t;
+
+typedef union MPIDI_allgather_algo_params {
+    /* *INDENT-OFF* */
+    MPIDI_CH4_ALLGATHER_PARAMS_DECL;
+    @ch4_netmod_allgather_params_decl@
+    @ch4_shm_allgather_params_decl@
+    /* *INDENT-ON* */
+} MPIDI_ALLGATHER_ALGO_params_t;
+
+typedef union MPIDI_allgatherv_algo_params {
+    /* *INDENT-OFF* */
+    MPIDI_CH4_ALLGATHERV_PARAMS_DECL;
+    @ch4_netmod_allgatherv_params_decl@
+    @ch4_shm_allgatherv_params_decl@
+    /* *INDENT-ON* */
+} MPIDI_ALLGATHERV_ALGO_params_t;
+
+#define MPIDI_BARRIER_PARAMS_DECL MPIDI_BARRIER_ALGO_params_t barrier_params;
+#define MPIDI_BCAST_PARAMS_DECL MPIDI_BCAST_ALGO_params_t bcast_params;
+#define MPIDI_REDUCE_PARAMS_DECL MPIDI_REDUCE_ALGO_params_t reduce_params;
+#define MPIDI_ALLREDUCE_PARAMS_DECL MPIDI_ALLREDUCE_ALGO_params_t allreduce_params;
+#define MPIDI_ALLTOALL_PARAMS_DECL MPIDI_ALLTOALL_ALGO_params_t alltoall_params;
+#define MPIDI_ALLTOALLV_PARAMS_DECL MPIDI_ALLTOALLV_ALGO_params_t alltoallv_params;
+#define MPIDI_ALLTOALLW_PARAMS_DECL MPIDI_ALLTOALLW_ALGO_params_t alltoallw_params;
+#define MPIDI_ALLGATHER_PARAMS_DECL MPIDI_ALLGATHER_ALGO_params_t allgather_params;
+#define MPIDI_ALLGATHERV_PARAMS_DECL MPIDI_ALLGATHERV_ALGO_params_t allgatherv_params;
 
 typedef union MPIDI_coll_algo_generic_params {
     MPIDI_BARRIER_PARAMS_DECL;
     MPIDI_BCAST_PARAMS_DECL;
     MPIDI_REDUCE_PARAMS_DECL;
     MPIDI_ALLREDUCE_PARAMS_DECL;
+    MPIDI_ALLTOALL_PARAMS_DECL;
+    MPIDI_ALLTOALLV_PARAMS_DECL;
+    MPIDI_ALLTOALLW_PARAMS_DECL;
+    MPIDI_ALLGATHER_PARAMS_DECL;
+    MPIDI_ALLGATHERV_PARAMS_DECL;
 } MPIDI_coll_algo_generic_params_t;
 
 typedef struct MPIDI_coll_algo_generic_container {

@@ -601,4 +601,324 @@ fn_fail:
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Alltoall_composition_alpha
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_composition_alpha(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                                              void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                                              MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                                              MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void * alltoall_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+#ifndef MPIDI_BUILD_CH4_SHM
+    mpi_errno =
+        MPIDI_NM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
+                              recvcount, recvtype, comm_ptr, errflag, alltoall_container);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+#else
+    if(comm_ptr->is_single_node) {
+        mpi_errno =
+            MPIDI_SHM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
+                                   recvcount, recvtype, comm_ptr, errflag, alltoall_container);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    } else {
+        mpi_errno =
+            MPIDI_NM_mpi_alltoall(sendbuf, sendcount, sendtype, recvbuf,
+                                  recvcount, recvtype, comm_ptr, errflag, alltoall_container);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    }
+#endif/*MPIDI_BUILD_CH4_SHM*/
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Alltoall_intercomm
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intercomm(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                                      MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                                      MPIDI_coll_algo_container_t * ch4_algo_parameters_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Alltoall_inter(sendbuf, sendcount, sendtype, recvbuf,
+                                    recvcount, recvtype, comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Alltoallv_composition_alpha
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_composition_alpha(const void *sendbuf, const int *sendcounts,
+                                                               const int *sdispls, MPI_Datatype sendtype, void *recvbuf,
+                                                               const int *recvcounts, const int *rdispls,
+                                                               MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
+                                                               MPIR_Errflag_t *errflag,
+                                                               MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void * alltoallv_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+#ifndef MPIDI_BUILD_CH4_SHM
+    mpi_errno =
+        MPIDI_NM_mpi_alltoallv(sendbuf, sendcounts, sdispls,
+                               sendtype, recvbuf, recvcounts,
+                               rdispls, recvtype, comm_ptr, errflag,
+                               alltoallv_container);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+#else
+    if(comm_ptr->is_single_node) {
+        mpi_errno =
+            MPIDI_SHM_mpi_alltoallv(sendbuf, sendcounts, sdispls,
+                                    sendtype, recvbuf, recvcounts,
+                                    rdispls, recvtype, comm_ptr, errflag,
+                                    alltoallv_container);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    } else {
+        mpi_errno =
+            MPIDI_NM_mpi_alltoallv(sendbuf, sendcounts, sdispls,
+                                   sendtype, recvbuf, recvcounts,
+                                   rdispls, recvtype, comm_ptr, errflag,
+                                   alltoallv_container);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    }
+#endif/*MPIDI_BUILD_CH4_SHM*/
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Alltoallv_intercomm
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_intercomm(const void *sendbuf, const int *sendcounts,
+                                                       const int *sdispls, MPI_Datatype sendtype, void *recvbuf,
+                                                       const int *recvcounts, const int *rdispls,
+                                                       MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
+                                                       MPIR_Errflag_t *errflag,
+                                                       MPIDI_coll_algo_container_t * ch4_algo_parameters_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Alltoallv_inter(sendbuf, sendcounts, sdispls,
+                                     sendtype, recvbuf, recvcounts,
+                                     rdispls, recvtype, comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Alltoallw_composition_alpha
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_composition_alpha(const void *sendbuf, const int sendcounts[],
+                                                               const int sdispls[], const MPI_Datatype sendtypes[],
+                                                               void *recvbuf, const int recvcounts[],
+                                                               const int rdispls[], const MPI_Datatype recvtypes[],
+                                                               MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                                               MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void * alltoallw_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+#ifndef MPIDI_BUILD_CH4_SHM
+    mpi_errno =
+        MPIDI_NM_mpi_alltoallw(sendbuf, sendcounts, sdispls,
+                               sendtypes, recvbuf, recvcounts,
+                               rdispls, recvtypes, comm_ptr, errflag,
+                               alltoallw_container);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+#else
+    if(comm_ptr->is_single_node) {
+        mpi_errno =
+            MPIDI_SHM_mpi_alltoallw(sendbuf, sendcounts, sdispls,
+                                    sendtypes, recvbuf, recvcounts,
+                                    rdispls, recvtypes, comm_ptr, errflag,
+                                    alltoallw_container);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    } else {
+        mpi_errno =
+            MPIDI_NM_mpi_alltoallw(sendbuf, sendcounts, sdispls,
+                                   sendtypes, recvbuf, recvcounts,
+                                   rdispls, recvtypes, comm_ptr, errflag,
+                                   alltoallw_container);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    }
+#endif/*MPIDI_BUILD_CH4_SHM*/
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Alltoallw_intercomm
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intercomm(const void *sendbuf, const int sendcounts[],
+                                                       const int sdispls[], const MPI_Datatype sendtypes[],
+                                                       void *recvbuf, const int recvcounts[],
+                                                       const int rdispls[], const MPI_Datatype recvtypes[],
+                                                       MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                                       MPIDI_coll_algo_container_t * ch4_algo_parameters_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Alltoallw_inter(sendbuf, sendcounts, sdispls,
+                                     sendtypes, recvbuf, recvcounts,
+                                     rdispls, recvtypes, comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Allgather_composition_alpha
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_composition_alpha(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                                               void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                                               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                                               MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void * allgather_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+#ifndef MPIDI_BUILD_CH4_SHM
+    mpi_errno =
+        MPIDI_NM_mpi_allgather(sendbuf, sendcount, sendtype,
+                               recvbuf, recvcount, recvtype,
+                               comm_ptr, errflag, allgather_container);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+#else
+    if(comm_ptr->is_single_node) {
+        mpi_errno =
+            MPIDI_SHM_mpi_allgather(sendbuf, sendcount, sendtype,
+                                    recvbuf, recvcount, recvtype,
+                                    comm_ptr, errflag, allgather_container);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    } else {
+        mpi_errno =
+            MPIDI_NM_mpi_allgather(sendbuf, sendcount, sendtype,
+                                   recvbuf, recvcount, recvtype,
+                                   comm_ptr, errflag, allgather_container);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    }
+#endif/*MPIDI_BUILD_CH4_SHM*/
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Allgather_intercomm
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intercomm(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                                       MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                                       MPIDI_coll_algo_container_t * ch4_algo_parameters_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Allgather_inter(sendbuf, sendcount, sendtype, 
+                                     recvbuf, recvcount, recvtype,
+                                     comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Allgatherv_composition_alpha
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_composition_alpha(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                                                void *recvbuf, const int *recvcounts, const int *displs,
+                                                                MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                                                MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void * allgatherv_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+#ifndef MPIDI_BUILD_CH4_SHM
+    mpi_errno =
+        MPIDI_NM_mpi_allgatherv(sendbuf, sendcount, sendtype, 
+                                recvbuf, recvcounts, displs, 
+                                recvtype, comm_ptr, errflag, allgatherv_container);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+#else
+    if(comm_ptr->is_single_node) {
+        mpi_errno =
+            MPIDI_SHM_mpi_allgatherv(sendbuf, sendcount, sendtype, 
+                                     recvbuf, recvcounts, displs, 
+                                     recvtype, comm_ptr, errflag, allgatherv_container);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    } else {
+        mpi_errno =
+            MPIDI_NM_mpi_allgatherv(sendbuf, sendcount, sendtype, 
+                                    recvbuf, recvcounts, displs, 
+                                    recvtype, comm_ptr, errflag, allgatherv_container);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    }
+#endif/*MPIDI_BUILD_CH4_SHM*/
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Allgatherv_intercomm
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_intercomm(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                                        void *recvbuf, const int *recvcounts, const int *displs,
+                                                        MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                                        MPIDI_coll_algo_container_t * ch4_algo_parameters_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Allgatherv_inter(sendbuf, sendcount, sendtype, 
+                                     recvbuf, recvcounts, displs, 
+                                     recvtype, comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
 #endif /* CH4_COLL_IMPL_H_INCLUDED */

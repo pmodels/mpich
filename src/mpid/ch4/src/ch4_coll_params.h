@@ -73,16 +73,81 @@ typedef union {
     } ch4_allreduce_beta;
 } MPIDI_CH4_allreduce_params_t;
 
-#define MPIDI_CH4_BARRIER_PARAMS_DECL MPIDI_CH4_barrier_params_t ch4_barrier_params
-#define MPIDI_CH4_BCAST_PARAMS_DECL MPIDI_CH4_bcast_params_t ch4_bcast_params
-#define MPIDI_CH4_REDUCE_PARAMS_DECL MPIDI_CH4_reduce_params_t ch4_reduce_params
-#define MPIDI_CH4_ALLREDUCE_PARAMS_DECL MPIDI_CH4_allreduce_params_t ch4_allreduce_params
+typedef enum {
+    MPIDI_CH4_alltoall_composition_alpha_id,
+    MPIDI_CH4_alltoall_intercomm_id
+} MPIDI_CH4_alltoall_id_t;
+
+typedef union {
+    struct MPIDI_CH4_alltoall_alpha {
+        int alltoall;
+    } ch4_alltoall_alpha;
+} MPIDI_CH4_alltoall_params_t;
+
+typedef enum {
+    MPIDI_CH4_alltoallv_composition_alpha_id,
+    MPIDI_CH4_alltoallv_intercomm_id
+} MPIDI_CH4_alltoallv_id_t;
+
+typedef union {
+    struct MPIDI_CH4_alltoallv_alpha {
+        int alltoallv;
+    } ch4_alltoallv_alpha;
+} MPIDI_CH4_alltoallv_params_t;
+
+typedef enum {
+    MPIDI_CH4_alltoallw_composition_alpha_id,
+    MPIDI_CH4_alltoallw_intercomm_id
+} MPIDI_CH4_alltoallw_id_t;
+
+typedef union {
+    struct MPIDI_CH4_alltoallw_alpha {
+        int alltoallw;
+    } ch4_alltoallw_alpha;
+} MPIDI_CH4_alltoallw_params_t;
+
+typedef enum {
+    MPIDI_CH4_allgather_composition_alpha_id,
+    MPIDI_CH4_allgather_intercomm_id
+} MPIDI_CH4_allgather_id_t;
+
+typedef union {
+    struct MPIDI_CH4_allgather_alpha {
+        int allgather;
+    } ch4_allgather_alpha;
+} MPIDI_CH4_allgather_params_t;
+
+typedef enum {
+    MPIDI_CH4_allgatherv_composition_alpha_id,
+    MPIDI_CH4_allgatherv_intercomm_id
+} MPIDI_CH4_allgatherv_id_t;
+
+typedef union {
+    struct MPIDI_CH4_allgatherv_alpha {
+        int allgatherv;
+    } ch4_allgatherv_alpha;
+} MPIDI_CH4_allgatherv_params_t;
+
+#define MPIDI_CH4_BARRIER_PARAMS_DECL MPIDI_CH4_barrier_params_t ch4_barrier_params;
+#define MPIDI_CH4_BCAST_PARAMS_DECL MPIDI_CH4_bcast_params_t ch4_bcast_params;
+#define MPIDI_CH4_REDUCE_PARAMS_DECL MPIDI_CH4_reduce_params_t ch4_reduce_params;
+#define MPIDI_CH4_ALLREDUCE_PARAMS_DECL MPIDI_CH4_allreduce_params_t ch4_allreduce_params;
+#define MPIDI_CH4_ALLTOALL_PARAMS_DECL MPIDI_CH4_alltoall_params_t ch4_alltoall_params;
+#define MPIDI_CH4_ALLTOALLV_PARAMS_DECL MPIDI_CH4_alltoallv_params_t ch4_alltoallv_params;
+#define MPIDI_CH4_ALLTOALLW_PARAMS_DECL MPIDI_CH4_alltoallw_params_t ch4_alltoallw_params;
+#define MPIDI_CH4_ALLGATHER_PARAMS_DECL MPIDI_CH4_allgather_params_t ch4_allgather_params;
+#define MPIDI_CH4_ALLGATHERV_PARAMS_DECL MPIDI_CH4_allgatherv_params_t ch4_allgatherv_params;
 
 typedef union {
     MPIDI_CH4_BARRIER_PARAMS_DECL;
     MPIDI_CH4_BCAST_PARAMS_DECL;
     MPIDI_CH4_REDUCE_PARAMS_DECL;
     MPIDI_CH4_ALLREDUCE_PARAMS_DECL;
+    MPIDI_CH4_ALLTOALL_PARAMS_DECL;
+    MPIDI_CH4_ALLTOALLV_PARAMS_DECL;
+    MPIDI_CH4_ALLTOALLW_PARAMS_DECL;
+    MPIDI_CH4_ALLGATHER_PARAMS_DECL;
+    MPIDI_CH4_ALLGATHERV_PARAMS_DECL;
 } MPIDI_CH4_coll_params_t;
 
 typedef struct MPIDI_coll_algo_container {
