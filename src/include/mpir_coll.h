@@ -196,6 +196,9 @@ int MPIR_Gather_inter (const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
 int MPIR_Gatherv (const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                   void *recvbuf, const int *recvcnts, const int *displs,
                   MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
+int MPIR_Gatherv_linear (const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
+                      void *recvbuf, const int *recvcnts, const int *displs,
+                      MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 
 /* Reduce_scatter functions */
 int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcnts,
