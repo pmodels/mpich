@@ -32,6 +32,7 @@ include $(top_srcdir)/src/mpi/coll/ialltoallw/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/ibarrier/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/ibcast/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/iexscan/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/igather/Makefile.mk
 
 # mpi_sources includes only the routines that are MPI function entry points
 # The code for the MPI operations (e.g., MPI_SUM) is not included in 
@@ -41,7 +42,6 @@ mpi_sources +=                     \
     src/mpi/coll/op/op_free.c         \
     src/mpi/coll/reduce_local/reduce_local.c    \
     src/mpi/coll/op/op_commutative.c  \
-    src/mpi/coll/igather/igather.c         \
     src/mpi/coll/igatherv/igatherv.c        \
     src/mpi/coll/ired_scat/ired_scat.c       \
     src/mpi/coll/ired_scat_block/ired_scat_block.c \
