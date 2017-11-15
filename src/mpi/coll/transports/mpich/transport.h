@@ -464,9 +464,9 @@ MPL_STATIC_INLINE_PREFIX int MPIC_MPICH_wait_for(MPIC_MPICH_sched_t * sched, int
 /* MPIC_MPICH_wait waits for all the operations posted before it to complete
 * before issuing any operations posted after it. This is useful in composing
 * multiple schedules, for example, allreduce can be written as
-* COLL_sched_reduce(s)
-* MPIC_MPICH_wait(s)
-* COLL_sched_bcast(s)
+* MPIR_ALGO_sched_reduce(s)
+* MPIR_TSP_wait(s)
+* MPIR_ALGO_sched_bcast(s)
 * This is different from the fence operation in the sense that fence requires
 * a vertex to post dependencies on it while MPIC_MPICH_wait is used internally
 * by the transport to add it as a dependency to any operations poster after it

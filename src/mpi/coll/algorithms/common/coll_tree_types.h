@@ -9,11 +9,11 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-typedef struct COLL_tree_t {
+typedef struct MPIR_ALGO_tree_t {
     int rank;
     int nranks;
     int parent;
     int num_children;
     int max_children;
     int *children;
-} COLL_tree_t;
+} MPIR_ALGO_tree_t;

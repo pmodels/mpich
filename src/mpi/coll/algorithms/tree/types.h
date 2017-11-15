@@ -12,26 +12,26 @@
 #include "coll_tree_types.h" /* from the ../common directory */
 #include "coll_args_generic_types.h"
 
-typedef struct COLL_global_t {
-} COLL_global_t;
+typedef struct MPIR_ALGO_global_t {
+} MPIR_ALGO_global_t;
 
-typedef struct COLL_tree_comm_t {
+typedef struct MPIR_ALGO_tree_comm_t {
     int id; /* unique local id for the communicator */
-    COLL_tree_t tree;
+    MPIR_ALGO_tree_t tree;
     int *curTag;
-} COLL_tree_comm_t;
+} MPIR_ALGO_tree_comm_t;
 
-typedef MPIR_TSP_dt_t COLL_dt_t;
+typedef MPIR_TSP_dt_t MPIR_ALGO_dt_t;
 
-typedef MPIR_TSP_op_t COLL_op_t;
+typedef MPIR_TSP_op_t MPIR_ALGO_op_t;
 
-typedef struct COLL_comm_t {
+typedef struct MPIR_ALGO_comm_t {
     MPIR_TSP_comm_t tsp_comm;        /* transport communicator */
-    COLL_tree_comm_t tree_comm; /* algorithm specific structures */
-} COLL_comm_t;
+    MPIR_ALGO_tree_comm_t tree_comm; /* algorithm specific structures */
+} MPIR_ALGO_comm_t;
 
-typedef MPIC_req_t COLL_req_t;
-typedef long int COLL_aint_t;
+typedef MPIC_req_t MPIR_ALGO_req_t;
+typedef long int MPIR_ALGO_aint_t;
 
 typedef struct {
     int coll_op;
@@ -72,4 +72,4 @@ typedef struct {
         struct {} allgatherv;
         struct {} scatterv;
     } args;
-} COLL_args_t;    /* structure used as key for schedule database */
+} MPIR_ALGO_args_t;    /* structure used as key for schedule database */

@@ -19,14 +19,14 @@
  *         .
  *         .
  *     } args;
- * } COLL_args_t;
+ * } MPIR_ALGO_args_t;
  * This function returns the number of bytes actually used in the key.
  * Size of the key can be larger than that required by coll_op
  * because key containts a union of args for different collective types.
  * The coll_op values are as per the enum in coll/include/coll_sched_db.h file
  * */
 
-MPL_STATIC_INLINE_PREFIX int COLL_get_key_size (COLL_args_t* key) {
+MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_get_key_size (MPIR_ALGO_args_t* key) {
     int key_size=0;
     key_size += sizeof(key->coll_op);
 

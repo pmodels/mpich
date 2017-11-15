@@ -8,27 +8,27 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-typedef MPIR_TSP_dt_t COLL_dt_t;
+typedef MPIR_TSP_dt_t MPIR_ALGO_dt_t;
 
-typedef MPIR_TSP_op_t COLL_op_t;
+typedef MPIR_TSP_op_t MPIR_ALGO_op_t;
 
-typedef struct COLL_comm_t {
+typedef struct MPIR_ALGO_comm_t {
     int id; /*unique id for the communicator */
     MPIR_TSP_comm_t tsp_comm;
-} COLL_comm_t;
+} MPIR_ALGO_comm_t;
 
-typedef struct COLL_req_t {
+typedef struct MPIR_ALGO_req_t {
     MPIC_queue_elem_t elem;
-} COLL_req_t;
+} MPIR_ALGO_req_t;
 
-typedef struct COLL_sched_t {
+typedef struct MPIR_ALGO_sched_t {
     MPIR_TSP_sched_t tsp_sched;
-} COLL_sched_t;
+} MPIR_ALGO_sched_t;
 
-typedef long int COLL_aint_t;
+typedef long int MPIR_ALGO_aint_t;
 
-typedef struct COLL_global_t {
-} COLL_global_t;
+typedef struct MPIR_ALGO_global_t {
+} MPIR_ALGO_global_t;
 
 typedef struct {
-} COLL_args_t;
+} MPIR_ALGO_args_t;

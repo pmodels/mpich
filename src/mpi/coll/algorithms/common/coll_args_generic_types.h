@@ -9,8 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#ifndef COLL_ARGS_GENERIC_H
-#define COLL_ARGS_GENERIC_H
+#ifndef MPIR_ALGO_ARGS_GENERIC_H
+#define MPIR_ALGO_ARGS_GENERIC_H
 
 typedef struct {
 } barrier_args_t; /* barrier had no arguments */
@@ -49,4 +49,4 @@ typedef struct {
     int rcount;
     int rt_id;
 } alltoall_args_t;
-#endif /* COLL_ARGS_GENERIC_H */
+#endif /* MPIR_ALGO_ARGS_GENERIC_H */

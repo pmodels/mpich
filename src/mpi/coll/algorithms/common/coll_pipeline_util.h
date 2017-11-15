@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef COLL_UTIL_H_INCLUDED
-#define COLL_UTIL_H_INCLUDED
+#ifndef MPIR_ALGO_UTIL_H_INCLUDED
+#define MPIR_ALGO_UTIL_H_INCLUDED
 
 #undef FUNCNAME
 #define FUNCNAME MPIC_calculate_chunk_info

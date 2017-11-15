@@ -10,7 +10,7 @@
  */
 
 /* Routine to calculate log_k of an integer */
-MPL_STATIC_INLINE_PREFIX int COLL_ilog(int k, int number)
+MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_ilog(int k, int number)
 {
     int i = 1, p = k - 1;
 
@@ -21,7 +21,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_ilog(int k, int number)
 }
 
 /* Routing to calculate base^exp for integers */
-MPL_STATIC_INLINE_PREFIX int COLL_ipow(int base, int exp)
+MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_ipow(int base, int exp)
 {
     int result = 1;
 
@@ -37,23 +37,23 @@ MPL_STATIC_INLINE_PREFIX int COLL_ipow(int base, int exp)
 }
 
 /* get the number at 'digit'th location in base k representation of 'number' */
-MPL_STATIC_INLINE_PREFIX int COLL_getdigit(int k, int number, int digit)
+MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_getdigit(int k, int number, int digit)
 {
-    return (number / COLL_ipow(k, digit)) % k;
+    return (number / MPIR_ALGO_ipow(k, digit)) % k;
 }
 
 /* set the number at 'digit'the location in base k representation of 'number' to newdigit */
-MPL_STATIC_INLINE_PREFIX int COLL_setdigit(int k, int number, int digit, int newdigit)
+MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_setdigit(int k, int number, int digit, int newdigit)
 {
     int res = number;
-    int lshift = COLL_ipow(k, digit);
-    res -= COLL_getdigit(k, number, digit) * lshift;
+    int lshift = MPIR_ALGO_ipow(k, digit);
+    res -= MPIR_ALGO_getdigit(k, number, digit) * lshift;
     res += newdigit * lshift;
     return res;
 }
 
-/* utility function to add a child to COLL_tree_t data structure */
-MPL_STATIC_INLINE_PREFIX void COLL_tree_add_child(COLL_tree_t * t, int rank)
+/* utility function to add a child to MPIR_ALGO_tree_t data structure */
+MPL_STATIC_INLINE_PREFIX void MPIR_ALGO_tree_add_child(MPIR_ALGO_tree_t * t, int rank)
 {
     if(t->num_children + 1 > t->max_children){
        int* old_children = t->children;
@@ -65,8 +65,8 @@ MPL_STATIC_INLINE_PREFIX void COLL_tree_add_child(COLL_tree_t * t, int rank)
     t->children[t->num_children++] = rank;
 }
 
-/* Function to generate kary tree information for rank 'rank' and store it in COLL_tree_t data structure */
-MPL_STATIC_INLINE_PREFIX void COLL_tree_kary_init(int rank, int nranks, int k, int root, COLL_tree_t * ct)
+/* Function to generate kary tree information for rank 'rank' and store it in MPIR_ALGO_tree_t data structure */
+MPL_STATIC_INLINE_PREFIX void MPIR_ALGO_tree_kary_init(int rank, int nranks, int k, int root, MPIR_ALGO_tree_t * ct)
 {
     int lrank, child;
 
@@ -90,12 +90,12 @@ MPL_STATIC_INLINE_PREFIX void COLL_tree_kary_init(int rank, int nranks, int k, i
         if (val >= nranks)
             break;
         val = (val + root) % nranks;
-        COLL_tree_add_child(ct, val);
+        MPIR_ALGO_tree_add_child(ct, val);
     }
 }
 
-/* Function to generate knomial tree information for rank 'rank' and store it in COLL_tree_t data structure */
-MPL_STATIC_INLINE_PREFIX void COLL_tree_knomial_init(int rank, int nranks, int k, int root, COLL_tree_t * ct)
+/* Function to generate knomial tree information for rank 'rank' and store it in MPIR_ALGO_tree_t data structure */
+MPL_STATIC_INLINE_PREFIX void MPIR_ALGO_tree_knomial_init(int rank, int nranks, int k, int root, MPIR_ALGO_tree_t * ct)
 {
     int lrank, i, j, maxtime, tmp, time, parent, current_rank, running_rank, crank;
 
@@ -129,14 +129,14 @@ MPL_STATIC_INLINE_PREFIX void COLL_tree_knomial_init(int rank, int nranks, int k
         if (lrank == current_rank) /* desired rank found */
             break;
         for (j = 1; j < k; j++) {
-            if (lrank >= running_rank && lrank < running_rank + COLL_ipow(k, maxtime - time - 1)) {     /* check if rank lies in this range */
+            if (lrank >= running_rank && lrank < running_rank + MPIR_ALGO_ipow(k, maxtime - time - 1)) {     /* check if rank lies in this range */
                 /* move to the corresponding subtree */
                 parent = current_rank;
                 current_rank = running_rank;
                 running_rank = current_rank + 1;
                 break;
             } else
-                running_rank += COLL_ipow(k, maxtime - time - 1);
+                running_rank += MPIR_ALGO_ipow(k, maxtime - time - 1);
         }
         time++;
         MPIR_Assert(time <= nranks); /* actually, should not need more steps than log_k(nranks)*/
@@ -154,9 +154,9 @@ MPL_STATIC_INLINE_PREFIX void COLL_tree_knomial_init(int rank, int nranks, int k
         for (j = 1; j < k; j++) {
             if (crank < nranks) {
                 MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"adding child %d to rank %d\n", (crank + root) % nranks, rank));
-                COLL_tree_add_child(ct, (crank + root) % nranks);
+                MPIR_ALGO_tree_add_child(ct, (crank + root) % nranks);
             }
-            crank += COLL_ipow(k, maxtime - i - 1);
+            crank += MPIR_ALGO_ipow(k, maxtime - i - 1);
         }
     }
 }

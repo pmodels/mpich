@@ -12,60 +12,60 @@
 #include "coll_pipeline_util.h"
 #include "coll_tree_util.h"
 
-#ifndef COLL_NAMESPACE
-#error "The tree template must be namespaced with COLL_NAMESPACE"
+#ifndef MPIR_ALGO_NAMESPACE
+#error "The tree template must be namespaced with MPIR_ALGO_NAMESPACE"
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME COLL_tree_init
+#define FUNCNAME MPIR_ALGO_tree_init
 /* Generate the tree */
-MPL_STATIC_INLINE_PREFIX int COLL_tree_init(int rank, int nranks, int tree_type, int k, int root,
-                               COLL_tree_t * ct)
+MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_tree_init(int rank, int nranks, int tree_type, int k, int root,
+                               MPIR_ALGO_tree_t * ct)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_TREE_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_TREE_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_ALGO_TREE_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_ALGO_TREE_INIT);
 
     int mpi_errno = MPI_SUCCESS;
 
     if (tree_type == 0) /* knomial tree */
-        COLL_tree_knomial_init(rank, nranks, k, root, ct);
+        MPIR_ALGO_tree_knomial_init(rank, nranks, k, root, ct);
     else if (tree_type == 1) /* kary tree */
-        COLL_tree_kary_init(rank, nranks, k, root, ct);
+        MPIR_ALGO_tree_kary_init(rank, nranks, k, root, ct);
     else {
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"tree_type %d not defined, initializing knomial tree\n", tree_type));
-        COLL_tree_knomial_init(rank, nranks, k, root, ct);
+        MPIR_ALGO_tree_knomial_init(rank, nranks, k, root, ct);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_TREE_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_ALGO_TREE_INIT);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME COLL_tree_free
-/* Free any memory associate with COLL_tree_t */
-MPL_STATIC_INLINE_PREFIX void COLL_tree_free (COLL_tree_t *tree) {
+#define FUNCNAME MPIR_ALGO_tree_free
+/* Free any memory associate with MPIR_ALGO_tree_t */
+MPL_STATIC_INLINE_PREFIX void MPIR_ALGO_tree_free (MPIR_ALGO_tree_t *tree) {
     if(tree->max_children)
         MPL_free (tree->children);
 }
 
 #undef FUNCNAME
-#define FUNCNAME COLL_tree_dump
+#define FUNCNAME MPIR_ALGO_tree_dump
 /* Utility routine to print a tree */
-MPL_STATIC_INLINE_PREFIX int COLL_tree_dump(int tree_size, int root, int tree_type, int k)
+MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_tree_dump(int tree_size, int root, int tree_type, int k)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_TREE_DUMP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_TREE_DUMP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_ALGO_TREE_DUMP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_ALGO_TREE_DUMP);
 
     int mpi_errno = MPI_SUCCESS;
     int i;
 
     char str_out[1000]; int str_len=0;
     for (i = 0; i < tree_size; i++) {
-        COLL_tree_t ct;
+        MPIR_ALGO_tree_t ct;
         int j;
 
-        mpi_errno = COLL_tree_init(i, tree_size, tree_type, k, root, &ct);
+        mpi_errno = MPIR_ALGO_tree_init(i, tree_size, tree_type, k, root, &ct);
         MPIR_Assert(str_len <= 950); /* make sure there is enough space to write buffer */
         str_len += sprintf(str_out+str_len, "%d -> %d, ", ct.rank, ct.parent);
 
@@ -79,34 +79,34 @@ MPL_STATIC_INLINE_PREFIX int COLL_tree_dump(int tree_size, int root, int tree_ty
         MPIR_Assert(str_len <= 950);
         str_len += sprintf(str_out+str_len, "}\n");
 
-        COLL_tree_free (&ct);
+        MPIR_ALGO_tree_free (&ct);
     }
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,str_out));
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_TREE_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_ALGO_TREE_INIT);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME COLL_sched_bcast_tree
+#define FUNCNAME MPIR_ALGO_sched_bcast_tree
 /* Routine to schedule a tree based broadcast */
 MPL_STATIC_INLINE_PREFIX int
-COLL_sched_bcast_tree(void *buffer, int count, COLL_dt_t datatype, int root, int tag,
-                      COLL_comm_t * comm, int tree_type, int k, MPIR_TSP_sched_t * sched, int finalize)
+MPIR_ALGO_sched_bcast_tree(void *buffer, int count, MPIR_ALGO_dt_t datatype, int root, int tag,
+                      MPIR_ALGO_comm_t * comm, int tree_type, int k, MPIR_TSP_sched_t * sched, int finalize)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_BCAST_TREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_SCHED_BCAST_TREE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_ALGO_SCHED_BCAST_TREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_ALGO_SCHED_BCAST_TREE);
 
     int mpi_errno = MPI_SUCCESS;
-    COLL_tree_t my_tree;
+    MPIR_ALGO_tree_t my_tree;
     my_tree.children = NULL;
-    COLL_tree_comm_t *mycomm = &comm->tree_comm;
+    MPIR_ALGO_tree_comm_t *mycomm = &comm->tree_comm;
     int size = mycomm->tree.nranks;
     int rank = mycomm->tree.rank;
     int recv_id;
 
-    mpi_errno = COLL_tree_init(rank, size, tree_type, k, root, &my_tree);
+    mpi_errno = MPIR_ALGO_tree_init(rank, size, tree_type, k, root, &my_tree);
 
     /* Receive message from Parent */
     if (my_tree.parent != -1) {
@@ -127,23 +127,23 @@ COLL_sched_bcast_tree(void *buffer, int count, COLL_dt_t datatype, int root, int
         MPIR_TSP_sched_commit(sched);
     }
 
-    COLL_tree_free (&my_tree);
+    MPIR_ALGO_tree_free (&my_tree);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_BCAST_TREE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_ALGO_SCHED_BCAST_TREE);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME COLL_sched_bcast_tree_pipelined
+#define FUNCNAME MPIR_ALGO_sched_bcast_tree_pipelined
 /* Routine to schedule a pipelined tree based broadcast */
 MPL_STATIC_INLINE_PREFIX int
-COLL_sched_bcast_tree_pipelined(void *buffer, int count, COLL_dt_t datatype, int root, int tag,
-                                COLL_comm_t * comm, int tree_type, int k, int segsize,
+MPIR_ALGO_sched_bcast_tree_pipelined(void *buffer, int count, MPIR_ALGO_dt_t datatype, int root, int tag,
+                                MPIR_ALGO_comm_t * comm, int tree_type, int k, int segsize,
                                 MPIR_TSP_sched_t * sched, int finalize)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_BCAST_TREE_PIPELINED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_SCHED_BCAST_TREE_PIPELINED);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_ALGO_SCHED_BCAST_TREE_PIPELINED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_ALGO_SCHED_BCAST_TREE_PIPELINED);
 
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -175,7 +175,7 @@ COLL_sched_bcast_tree_pipelined(void *buffer, int count, COLL_dt_t datatype, int
     for (i = 0; i < num_chunks; i++) {
         int msgsize = (i < num_chunks_floor) ? chunk_size_floor : chunk_size_ceil;
         mpi_errno =
-            COLL_sched_bcast_tree((char *) buffer + offset * extent, msgsize, datatype, root, tag,
+            MPIR_ALGO_sched_bcast_tree((char *) buffer + offset * extent, msgsize, datatype, root, tag,
                                   comm, tree_type, k, sched, 0);
         offset += msgsize;
     }
@@ -184,28 +184,28 @@ COLL_sched_bcast_tree_pipelined(void *buffer, int count, COLL_dt_t datatype, int
     if (finalize)
         MPIR_TSP_sched_commit(sched);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_BCAST_TREE_PIPELINED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_ALGO_SCHED_BCAST_TREE_PIPELINED);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME COLL_sched_reduce_tree
+#define FUNCNAME MPIR_ALGO_sched_reduce_tree
 /* routing to schedule a tree based broadcast. This routing only handles the
  * cases when (root==0 || operation is commutative) */
 MPL_STATIC_INLINE_PREFIX int
-COLL_sched_reduce_tree(const void *sendbuf,
+MPIR_ALGO_sched_reduce_tree(const void *sendbuf,
                        void *recvbuf,
                        int count,
-                       COLL_dt_t datatype,
-                       COLL_op_t op,
+                       MPIR_ALGO_dt_t datatype,
+                       MPIR_ALGO_op_t op,
                        int root,
                        int tag,
-                       COLL_comm_t * comm, int tree_type, int k, int is_commutative,
+                       MPIR_ALGO_comm_t * comm, int tree_type, int k, int is_commutative,
                        MPIR_TSP_sched_t * sched, int finalize, bool per_child_buffer)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_REDUCE_TREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_SCHED_REDUCE_TREE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_ALGO_SCHED_REDUCE_TREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_ALGO_SCHED_REDUCE_TREE);
 
     int mpi_errno = MPI_SUCCESS;
 
@@ -214,7 +214,7 @@ COLL_sched_reduce_tree(const void *sendbuf,
     int is_contig;
     size_t lb, extent, type_size;
 
-    COLL_tree_comm_t *mycomm = &comm->tree_comm;
+    MPIR_ALGO_tree_comm_t *mycomm = &comm->tree_comm;
     int size = mycomm->tree.nranks;
     int rank = mycomm->tree.rank;
     int is_inplace, dtcopy_id=-1, *vtcs, *reduce_id, *recv_id, nvtcs;
@@ -226,15 +226,15 @@ COLL_sched_reduce_tree(const void *sendbuf,
     MPIR_TSP_comm_t *tsp_comm = &comm->tsp_comm;
 
     /* structure in which tree is stored */
-    COLL_tree_t my_tree;
+    MPIR_ALGO_tree_t my_tree;
     my_tree.children = NULL;
     int num_children = 0; /* number of children in the tree */
 
     if (is_commutative)
-        COLL_tree_init(rank, size, tree_type, k, root, &my_tree);
+        MPIR_ALGO_tree_init(rank, size, tree_type, k, root, &my_tree);
     else
         /* We have to use knomial trees to get rank order */
-        COLL_tree_knomial_init(rank, size, k, root, &my_tree);
+        MPIR_ALGO_tree_knomial_init(rank, size, k, root, &my_tree);
 
     /* get dataype information */
     MPIR_TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
@@ -372,33 +372,33 @@ COLL_sched_reduce_tree(const void *sendbuf,
     MPIR_TSP_free_mem(vtcs);
     MPIR_TSP_free_mem(recv_id);
     MPIR_TSP_free_mem(reduce_id);
-    COLL_tree_free (&my_tree);
+    MPIR_ALGO_tree_free (&my_tree);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_REDUCE_TREE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_ALGO_SCHED_REDUCE_TREE);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME COLL_sched_reduce_tree_full
+#define FUNCNAME MPIR_ALGO_sched_reduce_tree_full
 /* routine to schedule a reduce. This routine handles all the scenarios */
 MPL_STATIC_INLINE_PREFIX int
-COLL_sched_reduce_tree_full(const void *sendbuf,
+MPIR_ALGO_sched_reduce_tree_full(const void *sendbuf,
                             void *recvbuf,
                             int count,
-                            COLL_dt_t datatype,
-                            COLL_op_t op,
-                            int root, int tag, COLL_comm_t * comm, int tree_type, int k,
+                            MPIR_ALGO_dt_t datatype,
+                            MPIR_ALGO_op_t op,
+                            int root, int tag, MPIR_ALGO_comm_t * comm, int tree_type, int k,
                             MPIR_TSP_sched_t * s, int finalize, int nbuffers)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_REDUCE_TREE_FULL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_SCHED_REDUCE_TREE_FULL);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_ALGO_SCHED_REDUCE_TREE_FULL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_ALGO_SCHED_REDUCE_TREE_FULL);
 
     int is_commutative, rc;
     MPIR_TSP_opinfo(op, &is_commutative);
 
     if (root == 0 || is_commutative) {
-        rc = COLL_sched_reduce_tree(sendbuf, recvbuf, count, datatype,
+        rc = MPIR_ALGO_sched_reduce_tree(sendbuf, recvbuf, count, datatype,
                                     op, root, tag, comm, tree_type, k, is_commutative, s, finalize,
                                     nbuffers);
     } else {    /* when root!=0 && !is_commutative */
@@ -421,7 +421,7 @@ COLL_sched_reduce_tree_full(const void *sendbuf,
             sb = (void *) sendbuf;
 
         /* do a reduce to rank 0 */
-        rc = COLL_sched_reduce_tree(sb, tmp_buf, count, datatype,
+        rc = MPIR_ALGO_sched_reduce_tree(sb, tmp_buf, count, datatype,
                                     op, 0, tag, comm, tree_type, k, is_commutative, s, 0, nbuffers);
 
         /* send the reduced data to the root */
@@ -438,22 +438,22 @@ COLL_sched_reduce_tree_full(const void *sendbuf,
         }
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_REDUCE_TREE_FULL);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_ALGO_SCHED_REDUCE_TREE_FULL);
 
     return rc;
 }
 
 #undef FUNCNAME
-#define FUNCNAME COLL_sched_bcast_tree_full_pipelined
+#define FUNCNAME MPIR_ALGO_sched_bcast_tree_full_pipelined
 /* Routing to schedule a pipelined tree based reduce */
 MPL_STATIC_INLINE_PREFIX int
-COLL_sched_reduce_tree_full_pipelined(const void *sendbuf, void *recvbuf, int count,
-                                      COLL_dt_t datatype, COLL_op_t op, int root, int tag,
-                                      COLL_comm_t * comm, int tree_type, int k, MPIR_TSP_sched_t * sched,
+MPIR_ALGO_sched_reduce_tree_full_pipelined(const void *sendbuf, void *recvbuf, int count,
+                                      MPIR_ALGO_dt_t datatype, MPIR_ALGO_op_t op, int root, int tag,
+                                      MPIR_ALGO_comm_t * comm, int tree_type, int k, MPIR_TSP_sched_t * sched,
                                       int segsize, int finalize, int nbuffers)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_REDUCE_TREE_FULL_PIPELINED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_SCHED_REDUCE_TREE_FULL_PIPELINED);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_ALGO_SCHED_REDUCE_TREE_FULL_PIPELINED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_ALGO_SCHED_REDUCE_TREE_FULL_PIPELINED);
 
     int mpi_errno = MPI_SUCCESS;
     /* variables to store pipelining information */
@@ -481,7 +481,7 @@ COLL_sched_reduce_tree_full_pipelined(const void *sendbuf, void *recvbuf, int co
         int msgsize = (i < num_chunks_floor) ? chunk_size_floor : chunk_size_ceil;
 
         const char *send_buf = (is_inplace) ? sendbuf : (char *) sendbuf + offset * extent;     /* if it is in_place send_buf should remain MPI_INPLACE */
-        COLL_sched_reduce_tree_full(send_buf, (char *) recvbuf + offset * extent, msgsize, datatype,
+        MPIR_ALGO_sched_reduce_tree_full(send_buf, (char *) recvbuf + offset * extent, msgsize, datatype,
                                     op, root, tag, comm, tree_type, k, sched, 0, nbuffers);
 
         offset += msgsize;
@@ -492,22 +492,22 @@ COLL_sched_reduce_tree_full_pipelined(const void *sendbuf, void *recvbuf, int co
         MPIR_TSP_sched_commit(sched);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_REDUCE_TREE_FULL_PIPELINED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_ALGO_SCHED_REDUCE_TREE_FULL_PIPELINED);
 
     return mpi_errno;
 }
 
 
 #undef FUNCNAME
-#define FUNCNAME COLL_sched_allreduce_tree
+#define FUNCNAME MPIR_ALGO_sched_allreduce_tree
 /* Routine to schedule tree based allreduce */
 MPL_STATIC_INLINE_PREFIX int
-COLL_sched_allreduce_tree(const void *sendbuf, void *recvbuf, int count, COLL_dt_t datatype,
-                          COLL_op_t op, int tag, COLL_comm_t * comm, int tree_type, int k,
+MPIR_ALGO_sched_allreduce_tree(const void *sendbuf, void *recvbuf, int count, MPIR_ALGO_dt_t datatype,
+                          MPIR_ALGO_op_t op, int tag, MPIR_ALGO_comm_t * comm, int tree_type, int k,
                           MPIR_TSP_sched_t * s, int finalize)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_ALLREDUCE_TREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_SCHED_ALLREDUCE_TREE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_ALGO_SCHED_ALLREDUCE_TREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_ALGO_SCHED_ALLREDUCE_TREE);
 
     int mpi_errno = MPI_SUCCESS;
     int is_commutative, is_inplace, is_contig;
@@ -526,12 +526,12 @@ COLL_sched_allreduce_tree(const void *sendbuf, void *recvbuf, int count, COLL_dt
         rbuf = tmp_buf;
     }
     /* schedule reduce */
-    COLL_sched_reduce_tree_full(sbuf, rbuf, count, datatype, op, 0, tag, comm, tree_type, k, s, 0,
+    MPIR_ALGO_sched_reduce_tree_full(sbuf, rbuf, count, datatype, op, 0, tag, comm, tree_type, k, s, 0,
                                 0);
     /* wait for reduce to complete */
     MPIR_TSP_wait(s);
     /* schedule broadcast */
-    COLL_sched_bcast_tree(rbuf, count, datatype, 0, tag, comm, tree_type, k, s, 0);
+    MPIR_ALGO_sched_bcast_tree(rbuf, count, datatype, 0, tag, comm, tree_type, k, s, 0);
 
     if (is_inplace) {
         int fence_id = MPIR_TSP_fence(s);
@@ -542,27 +542,27 @@ COLL_sched_allreduce_tree(const void *sendbuf, void *recvbuf, int count, COLL_dt
         MPIR_TSP_sched_commit(s);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_ALLREDUCE_TREE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_ALGO_SCHED_ALLREDUCE_TREE);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME COLL_sched_barrier_tree
+#define FUNCNAME MPIR_ALGO_sched_barrier_tree
 /* routine to schedule a tree based barrier */
-MPL_STATIC_INLINE_PREFIX int COLL_sched_barrier_tree(int tag, COLL_comm_t * comm, int tree_type, int k,
+MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_sched_barrier_tree(int tag, MPIR_ALGO_comm_t * comm, int tree_type, int k,
                                         MPIR_TSP_sched_t * s, int finalize)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_BARRIER_TREE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_SCHED_BARRIER_TREE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_ALGO_SCHED_BARRIER_TREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_ALGO_SCHED_BARRIER_TREE);
 
     int mpi_errno = MPI_SUCCESS;
     int i;
-    COLL_tree_t my_tree;
+    MPIR_ALGO_tree_t my_tree;
     my_tree.children = NULL;
     MPIR_TSP_dt_t dt = MPIR_TSP_global.control_dt;
 
-    COLL_tree_init(MPIR_TSP_rank(&comm->tsp_comm), MPIR_TSP_size(&comm->tsp_comm), tree_type, k, 0, &my_tree);
+    MPIR_ALGO_tree_init(MPIR_TSP_rank(&comm->tsp_comm), MPIR_TSP_size(&comm->tsp_comm), tree_type, k, 0, &my_tree);
 
     /* Receive from all children */
     for(i=0; i< my_tree.num_children; i++) {
@@ -591,9 +591,9 @@ MPL_STATIC_INLINE_PREFIX int COLL_sched_barrier_tree(int tag, COLL_comm_t * comm
     if(finalize)
         MPIR_TSP_sched_commit(s);
 
-    COLL_tree_free (&my_tree);
+    MPIR_ALGO_tree_free (&my_tree);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_BARRIER_TREE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_ALGO_SCHED_BARRIER_TREE);
 
     return mpi_errno;
 }

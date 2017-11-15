@@ -8,14 +8,14 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#define COLL_TREE_RADIX_DEFAULT 2
-#define COLL_MAX_TREE_BREADTH  16
+#define MPIR_ALGO_TREE_RADIX_DEFAULT 2
+#define MPIR_ALGO_MAX_TREE_BREADTH  16
 /* algrithm namespace */
-#define COLL_NAME TREE_
+#define MPIR_ALGO_NAME TREE_
 /* algorithm namespace in lower case */
-#define COLL_NAME_LC tree
+#define MPIR_ALGO_NAME_LC tree
 #include "../../src/coll_namespace_def.h"
 #include "./coll.h"
 #include "../../src/coll_namespace_undef.h"
-#undef COLL_TREE_RADIX_DEFAULT
-#undef COLL_MAX_TREE_BREADTH
+#undef MPIR_ALGO_TREE_RADIX_DEFAULT
+#undef MPIR_ALGO_MAX_TREE_BREADTH

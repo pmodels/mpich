@@ -10,124 +10,124 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifndef COLL_NAMESPACE
-#error "The collectives template must be namespaced with COLL_NAMESPACE"
+#ifndef MPIR_ALGO_NAMESPACE
+#error "The collectives template must be namespaced with MPIR_ALGO_NAMESPACE"
 #endif
 
 
 
-MPL_STATIC_INLINE_PREFIX int COLL_init()
+MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_init()
 {
     return 0;
 }
 
 
-MPL_STATIC_INLINE_PREFIX int COLL_comm_init(COLL_comm_t * comm, int *tag, int rank, int size)
+MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_comm_init(MPIR_ALGO_comm_t * comm, int *tag, int rank, int size)
 {
-    MPIR_TSP_comm_init(&comm->tsp_comm, COLL_COMM_BASE(comm));
+    MPIR_TSP_comm_init(&comm->tsp_comm, MPIR_ALGO_COMM_BASE(comm));
     return 0;
 }
 
-MPL_STATIC_INLINE_PREFIX int COLL_comm_init_null(COLL_comm_t * comm)
+MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_comm_init_null(MPIR_ALGO_comm_t * comm)
 {
-    MPIR_TSP_comm_init_null(&comm->tsp_comm, COLL_COMM_BASE(comm));
+    MPIR_TSP_comm_init_null(&comm->tsp_comm, MPIR_ALGO_COMM_BASE(comm));
     return 0;
 }
 
-MPL_STATIC_INLINE_PREFIX int COLL_comm_cleanup(COLL_comm_t * comm)
+MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_comm_cleanup(MPIR_ALGO_comm_t * comm)
 {
     MPIR_TSP_comm_cleanup(&comm->tsp_comm);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_allgather(const void *sendbuf, int sendcount, COLL_dt_t sendtype,
-                               void *recvbuf, int recvcount, COLL_dt_t recvtype, COLL_comm_t * comm,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_allgather(const void *sendbuf, int sendcount, MPIR_ALGO_dt_t sendtype,
+                               void *recvbuf, int recvcount, MPIR_ALGO_dt_t recvtype, MPIR_ALGO_comm_t * comm,
                                int k, int halving, int *errflag)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_allgatherv(const void *sendbuf, int sendcount, COLL_dt_t sendtype,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_allgatherv(const void *sendbuf, int sendcount, MPIR_ALGO_dt_t sendtype,
                                 void *recvbuf, const int *recvcounts, const int *displs,
-                                COLL_dt_t recvtype, COLL_comm_t * comm, int *errflag)
+                                MPIR_ALGO_dt_t recvtype, MPIR_ALGO_comm_t * comm, int *errflag)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_allreduce(const void *sendbuf, void *recvbuf, int count,
-                               COLL_dt_t datatype, COLL_op_t op, COLL_comm_t * comm, int *errflag)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_allreduce(const void *sendbuf, void *recvbuf, int count,
+                               MPIR_ALGO_dt_t datatype, MPIR_ALGO_op_t op, MPIR_ALGO_comm_t * comm, int *errflag)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_alltoall(const void *sendbuf, int sendcount, COLL_dt_t sendtype, void *recvbuf,
-                              int recvcount, COLL_dt_t recvtype, COLL_comm_t * comm, int *errflag)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_alltoall(const void *sendbuf, int sendcount, MPIR_ALGO_dt_t sendtype, void *recvbuf,
+                              int recvcount, MPIR_ALGO_dt_t recvtype, MPIR_ALGO_comm_t * comm, int *errflag)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_alltoallv(const void *sendbuf, const int *sendcnts, const int *sdispls,
-                               COLL_dt_t sendtype, void *recvbuf, const int *recvcnts,
-                               const int *rdispls, COLL_dt_t recvtype, COLL_comm_t * comm,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_alltoallv(const void *sendbuf, const int *sendcnts, const int *sdispls,
+                               MPIR_ALGO_dt_t sendtype, void *recvbuf, const int *recvcnts,
+                               const int *rdispls, MPIR_ALGO_dt_t recvtype, MPIR_ALGO_comm_t * comm,
                                int *errflag)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_alltoallw(const void *sendbuf, const int *sendcnts, const int *sdispls,
-                               const COLL_dt_t * sendtypes, void *recvbuf, const int *recvcnts,
-                               const int *rdispls, const COLL_dt_t * recvtypes, COLL_comm_t * comm,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_alltoallw(const void *sendbuf, const int *sendcnts, const int *sdispls,
+                               const MPIR_ALGO_dt_t * sendtypes, void *recvbuf, const int *recvcnts,
+                               const int *rdispls, const MPIR_ALGO_dt_t * recvtypes, MPIR_ALGO_comm_t * comm,
                                int *errflag)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_bcast(void *buffer, int count, COLL_dt_t datatype, int root,
-                           COLL_comm_t * comm, int *errflag)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_bcast(void *buffer, int count, MPIR_ALGO_dt_t datatype, int root,
+                           MPIR_ALGO_comm_t * comm, int *errflag)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_exscan(const void *sendbuf, void *recvbuf, int count,
-                            COLL_dt_t datatype, COLL_op_t op, COLL_comm_t * comm, int *errflag)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_exscan(const void *sendbuf, void *recvbuf, int count,
+                            MPIR_ALGO_dt_t datatype, MPIR_ALGO_op_t op, MPIR_ALGO_comm_t * comm, int *errflag)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_gather(const void *sendbuf, int sendcnt, COLL_dt_t sendtype, void *recvbuf,
-                            int recvcnt, COLL_dt_t recvtype, int root, COLL_comm_t * comm,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_gather(const void *sendbuf, int sendcnt, MPIR_ALGO_dt_t sendtype, void *recvbuf,
+                            int recvcnt, MPIR_ALGO_dt_t recvtype, int root, MPIR_ALGO_comm_t * comm,
                             int *errflag)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_gatherv(const void *sendbuf, int sendcnt, COLL_dt_t sendtype, void *recvbuf,
-                             const int *recvcnts, const int *displs, COLL_dt_t recvtype, int root,
-                             COLL_comm_t * comm, int *errflag)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_gatherv(const void *sendbuf, int sendcnt, MPIR_ALGO_dt_t sendtype, void *recvbuf,
+                             const int *recvcnts, const int *displs, MPIR_ALGO_dt_t recvtype, int root,
+                             MPIR_ALGO_comm_t * comm, int *errflag)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_reduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcnts,
-                                    COLL_dt_t datatype, COLL_op_t op, COLL_comm_t comm,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_reduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcnts,
+                                    MPIR_ALGO_dt_t datatype, MPIR_ALGO_op_t op, MPIR_ALGO_comm_t comm,
                                     int *errflag)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
-                                          COLL_dt_t datatype, COLL_op_t op, COLL_comm_t * comm,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
+                                          MPIR_ALGO_dt_t datatype, MPIR_ALGO_op_t op, MPIR_ALGO_comm_t * comm,
                                           int *errflag)
 {
     MPIC_Assert(0);
@@ -135,312 +135,312 @@ MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_reduce_scatter_block(const void *se
 }
 
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_reduce(const void *sendbuf, void *recvbuf, int count, COLL_dt_t datatype,
-                            COLL_op_t op, int root, COLL_comm_t * comm, int *errflag, int k,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_reduce(const void *sendbuf, void *recvbuf, int count, MPIR_ALGO_dt_t datatype,
+                            MPIR_ALGO_op_t op, int root, MPIR_ALGO_comm_t * comm, int *errflag, int k,
                             int segsize, int nbuffers)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_scan(const void *sendbuf, void *recvbuf, int count,
-                          COLL_dt_t datatype, COLL_op_t op, COLL_comm_t * comm, int *errflag)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_scan(const void *sendbuf, void *recvbuf, int count,
+                          MPIR_ALGO_dt_t datatype, MPIR_ALGO_op_t op, MPIR_ALGO_comm_t * comm, int *errflag)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_scatter(const void *sendbuf, int sendcnt, COLL_dt_t sendtype, void *recvbuf,
-                             int recvcnt, COLL_dt_t recvtype, int root, COLL_comm_t * comm,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_scatter(const void *sendbuf, int sendcnt, MPIR_ALGO_dt_t sendtype, void *recvbuf,
+                             int recvcnt, MPIR_ALGO_dt_t recvtype, int root, MPIR_ALGO_comm_t * comm,
                              int *errflag)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_scatterv(const void *sendbuf, const int *sendcnts, const int *displs,
-                              COLL_dt_t sendtype, void *recvbuf, int recvcnt, COLL_dt_t recvtype,
-                              int root, COLL_comm_t * comm, int *errflag)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_scatterv(const void *sendbuf, const int *sendcnts, const int *displs,
+                              MPIR_ALGO_dt_t sendtype, void *recvbuf, int recvcnt, MPIR_ALGO_dt_t recvtype,
+                              int root, MPIR_ALGO_comm_t * comm, int *errflag)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_barrier(COLL_comm_t * comm, int *errflag)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_barrier(MPIR_ALGO_comm_t * comm, int *errflag)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_iallgather(const void *sendbuf, int sendcount, COLL_dt_t sendtype,
-                                void *recvbuf, int recvcount, COLL_dt_t recvtype,
-                                COLL_comm_t * comm, COLL_req_t * request)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_iallgather(const void *sendbuf, int sendcount, MPIR_ALGO_dt_t sendtype,
+                                void *recvbuf, int recvcount, MPIR_ALGO_dt_t recvtype,
+                                MPIR_ALGO_comm_t * comm, MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_iallgatherv(const void *sendbuf, int sendcount, COLL_dt_t sendtype,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_iallgatherv(const void *sendbuf, int sendcount, MPIR_ALGO_dt_t sendtype,
                                  void *recvbuf, const int *recvcounts, const int *displs,
-                                 COLL_dt_t recvtype, COLL_comm_t * comm, COLL_req_t * request)
+                                 MPIR_ALGO_dt_t recvtype, MPIR_ALGO_comm_t * comm, MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_kick_nb(MPIC_queue_elem_t * elem)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_kick_nb(MPIC_queue_elem_t * elem)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_iallreduce(const void *sendbuf, void *recvbuf, int count, COLL_dt_t datatype,
-                                COLL_op_t op, COLL_comm_t * comm, COLL_req_t * request)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_iallreduce(const void *sendbuf, void *recvbuf, int count, MPIR_ALGO_dt_t datatype,
+                                MPIR_ALGO_op_t op, MPIR_ALGO_comm_t * comm, MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_ialltoall(const void *sendbuf, int sendcount, COLL_dt_t sendtype,
-                               void *recvbuf, int recvcount, COLL_dt_t recvtype, COLL_comm_t * comm,
-                               COLL_req_t * request)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_ialltoall(const void *sendbuf, int sendcount, MPIR_ALGO_dt_t sendtype,
+                               void *recvbuf, int recvcount, MPIR_ALGO_dt_t recvtype, MPIR_ALGO_comm_t * comm,
+                               MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_ialltoallv(const void *sendbuf, const int *sendcnts, const int *sdispls,
-                                COLL_dt_t sendtype, void *recvbuf, const int *recvcnts,
-                                const int *rdispls, COLL_dt_t recvtype, COLL_comm_t comm,
-                                COLL_req_t * request)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_ialltoallv(const void *sendbuf, const int *sendcnts, const int *sdispls,
+                                MPIR_ALGO_dt_t sendtype, void *recvbuf, const int *recvcnts,
+                                const int *rdispls, MPIR_ALGO_dt_t recvtype, MPIR_ALGO_comm_t comm,
+                                MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_ialltoallw(const void *sendbuf, const int *sendcnts, const int *sdispls,
-                                const COLL_dt_t * sendtypes, void *recvbuf, const int *recvcnts,
-                                const int *rdispls, const COLL_dt_t * recvtypes, COLL_comm_t * comm,
-                                COLL_req_t * request)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_ialltoallw(const void *sendbuf, const int *sendcnts, const int *sdispls,
+                                const MPIR_ALGO_dt_t * sendtypes, void *recvbuf, const int *recvcnts,
+                                const int *rdispls, const MPIR_ALGO_dt_t * recvtypes, MPIR_ALGO_comm_t * comm,
+                                MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_ibcast(void *buffer, int count, COLL_dt_t datatype,
-                            int root, COLL_comm_t * comm, COLL_req_t * request)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_ibcast(void *buffer, int count, MPIR_ALGO_dt_t datatype,
+                            int root, MPIR_ALGO_comm_t * comm, MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_iexscan(const void *sendbuf, void *recvbuf, int count, COLL_dt_t datatype,
-                             COLL_op_t op, COLL_comm_t * comm, COLL_req_t * request)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_iexscan(const void *sendbuf, void *recvbuf, int count, MPIR_ALGO_dt_t datatype,
+                             MPIR_ALGO_op_t op, MPIR_ALGO_comm_t * comm, MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_igather(const void *sendbuf, int sendcnt, COLL_dt_t sendtype, void *recvbuf,
-                             int recvcnt, COLL_dt_t recvtype, int root, COLL_comm_t * comm,
-                             COLL_req_t * request)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_igather(const void *sendbuf, int sendcnt, MPIR_ALGO_dt_t sendtype, void *recvbuf,
+                             int recvcnt, MPIR_ALGO_dt_t recvtype, int root, MPIR_ALGO_comm_t * comm,
+                             MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_igatherv(const void *sendbuf, int sendcnt, COLL_dt_t sendtype, void *recvbuf,
-                              const int *recvcnts, const int *displs, COLL_dt_t recvtype,
-                              int root, COLL_comm_t * comm, COLL_req_t * request)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_igatherv(const void *sendbuf, int sendcnt, MPIR_ALGO_dt_t sendtype, void *recvbuf,
+                              const int *recvcnts, const int *displs, MPIR_ALGO_dt_t recvtype,
+                              int root, MPIR_ALGO_comm_t * comm, MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_ireduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcnts,
-                                     COLL_dt_t datatype, COLL_op_t op, COLL_comm_t * comm,
-                                     COLL_req_t * request)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_ireduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcnts,
+                                     MPIR_ALGO_dt_t datatype, MPIR_ALGO_op_t op, MPIR_ALGO_comm_t * comm,
+                                     MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_ireduce_scatter_block(const void *sendbuf,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_ireduce_scatter_block(const void *sendbuf,
                                            void *recvbuf,
                                            int recvcount,
-                                           COLL_dt_t datatype,
-                                           COLL_op_t op, COLL_comm_t * comm, COLL_req_t * request)
+                                           MPIR_ALGO_dt_t datatype,
+                                           MPIR_ALGO_op_t op, MPIR_ALGO_comm_t * comm, MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_ireduce(const void *sendbuf,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_ireduce(const void *sendbuf,
                              void *recvbuf,
                              int count,
-                             COLL_dt_t datatype,
-                             COLL_op_t op, int root, COLL_comm_t * comm, COLL_req_t * request)
+                             MPIR_ALGO_dt_t datatype,
+                             MPIR_ALGO_op_t op, int root, MPIR_ALGO_comm_t * comm, MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_iscan(const void *sendbuf,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_iscan(const void *sendbuf,
                            void *recvbuf,
                            int count,
-                           COLL_dt_t datatype,
-                           COLL_op_t op, COLL_comm_t * comm, COLL_req_t * request)
+                           MPIR_ALGO_dt_t datatype,
+                           MPIR_ALGO_op_t op, MPIR_ALGO_comm_t * comm, MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_iscatter(const void *sendbuf,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_iscatter(const void *sendbuf,
                               int sendcnt,
-                              COLL_dt_t sendtype,
+                              MPIR_ALGO_dt_t sendtype,
                               void *recvbuf,
                               int recvcnt,
-                              COLL_dt_t recvtype,
-                              int root, COLL_comm_t * comm, COLL_req_t * request)
+                              MPIR_ALGO_dt_t recvtype,
+                              int root, MPIR_ALGO_comm_t * comm, MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_iscatterv(const void *sendbuf,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_iscatterv(const void *sendbuf,
                                const int *sendcnts,
                                const int *displs,
-                               COLL_dt_t sendtype,
+                               MPIR_ALGO_dt_t sendtype,
                                void *recvbuf,
                                int recvcnt,
-                               COLL_dt_t recvtype,
-                               int root, COLL_comm_t * comm, COLL_req_t * request)
+                               MPIR_ALGO_dt_t recvtype,
+                               int root, MPIR_ALGO_comm_t * comm, MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_ibarrier(COLL_comm_t * comm, COLL_req_t * request)
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_ibarrier(MPIR_ALGO_comm_t * comm, MPIR_ALGO_req_t * request)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_neighbor_allgather(const void *sendbuf,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_neighbor_allgather(const void *sendbuf,
                                         int sendcount,
-                                        COLL_dt_t sendtype,
+                                        MPIR_ALGO_dt_t sendtype,
                                         void *recvbuf,
-                                        int recvcount, COLL_dt_t recvtype, COLL_comm_t * comm)
+                                        int recvcount, MPIR_ALGO_dt_t recvtype, MPIR_ALGO_comm_t * comm)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_neighbor_allgatherv(const void *sendbuf,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_neighbor_allgatherv(const void *sendbuf,
                                          int sendcount,
-                                         COLL_dt_t sendtype,
+                                         MPIR_ALGO_dt_t sendtype,
                                          void *recvbuf,
                                          const int recvcounts[],
-                                         const int displs[], COLL_dt_t recvtype, COLL_comm_t * comm)
+                                         const int displs[], MPIR_ALGO_dt_t recvtype, MPIR_ALGO_comm_t * comm)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_neighbor_alltoall(const void *sendbuf,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_neighbor_alltoall(const void *sendbuf,
                                        int sendcount,
-                                       COLL_dt_t sendtype,
+                                       MPIR_ALGO_dt_t sendtype,
                                        void *recvbuf,
-                                       int recvcount, COLL_dt_t recvtype, COLL_comm_t * comm)
+                                       int recvcount, MPIR_ALGO_dt_t recvtype, MPIR_ALGO_comm_t * comm)
 {
     MPIC_Assert(0);
     return 0;
 }
 
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_neighbor_alltoallv(const void *sendbuf,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_neighbor_alltoallv(const void *sendbuf,
                                         const int sendcounts[],
                                         const int sdispls[],
-                                        COLL_dt_t sendtype,
+                                        MPIR_ALGO_dt_t sendtype,
                                         void *recvbuf,
                                         const int recvcounts[],
-                                        const int rdispls[], COLL_dt_t recvtype, COLL_comm_t * comm)
+                                        const int rdispls[], MPIR_ALGO_dt_t recvtype, MPIR_ALGO_comm_t * comm)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_neighbor_alltoallw(const void *sendbuf,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_neighbor_alltoallw(const void *sendbuf,
                                         const int sendcounts[],
-                                        const COLL_aint_t * sdispls[],
-                                        const COLL_dt_t sendtypes[],
+                                        const MPIR_ALGO_aint_t * sdispls[],
+                                        const MPIR_ALGO_dt_t sendtypes[],
                                         void *recvbuf,
                                         const int recvcounts[],
-                                        const COLL_aint_t * rdispls[],
-                                        const COLL_dt_t recvtypes[], COLL_comm_t * comm)
+                                        const MPIR_ALGO_aint_t * rdispls[],
+                                        const MPIR_ALGO_dt_t recvtypes[], MPIR_ALGO_comm_t * comm)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_ineighbor_allgather(const void *sendbuf,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_ineighbor_allgather(const void *sendbuf,
                                          int sendcount,
-                                         COLL_dt_t sendtype,
+                                         MPIR_ALGO_dt_t sendtype,
                                          void *recvbuf,
                                          int recvcount,
-                                         COLL_dt_t recvtype, COLL_comm_t * comm, COLL_sched_t * s)
+                                         MPIR_ALGO_dt_t recvtype, MPIR_ALGO_comm_t * comm, MPIR_ALGO_sched_t * s)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_ineighbor_allgatherv(const void *sendbuf,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_ineighbor_allgatherv(const void *sendbuf,
                                           int sendcount,
-                                          COLL_dt_t sendtype,
+                                          MPIR_ALGO_dt_t sendtype,
                                           void *recvbuf,
                                           const int recvcounts[],
                                           const int displs[],
-                                          COLL_dt_t recvtype, COLL_comm_t * comm, COLL_sched_t * s)
+                                          MPIR_ALGO_dt_t recvtype, MPIR_ALGO_comm_t * comm, MPIR_ALGO_sched_t * s)
 {
     MPIC_Assert(0);
     return 0;
 }
 
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_ineighbor_alltoall(const void *sendbuf,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_ineighbor_alltoall(const void *sendbuf,
                                         int sendcount,
-                                        COLL_dt_t sendtype,
+                                        MPIR_ALGO_dt_t sendtype,
                                         void *recvbuf,
                                         int recvcount,
-                                        COLL_dt_t recvtype, COLL_comm_t * comm, COLL_sched_t * s)
+                                        MPIR_ALGO_dt_t recvtype, MPIR_ALGO_comm_t * comm, MPIR_ALGO_sched_t * s)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_ineighbor_alltoallv(const void *sendbuf,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_ineighbor_alltoallv(const void *sendbuf,
                                          const int sendcounts[],
                                          const int sdispls[],
-                                         COLL_dt_t sendtype,
+                                         MPIR_ALGO_dt_t sendtype,
                                          void *recvbuf,
                                          const int recvcounts[],
                                          const int rdispls[],
-                                         COLL_dt_t recvtype, COLL_comm_t * comm, COLL_sched_t * s)
+                                         MPIR_ALGO_dt_t recvtype, MPIR_ALGO_comm_t * comm, MPIR_ALGO_sched_t * s)
 {
     MPIC_Assert(0);
     return 0;
 }
 
-MPL_UNUSED MPL_STATIC_INLINE_PREFIX int COLL_ineighbor_alltoallw(const void *sendbuf,
+MPL_UNUSED MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_ineighbor_alltoallw(const void *sendbuf,
                                          const int sendcounts[],
-                                         const COLL_aint_t * sdispls[],
-                                         const COLL_dt_t sendtypes[],
+                                         const MPIR_ALGO_aint_t * sdispls[],
+                                         const MPIR_ALGO_dt_t sendtypes[],
                                          void *recvbuf,
                                          const int recvcounts[],
-                                         const COLL_aint_t * rdispls[],
-                                         const COLL_dt_t recvtypes[],
-                                         COLL_comm_t * comm, COLL_sched_t * s)
+                                         const MPIR_ALGO_aint_t * rdispls[],
+                                         const MPIR_ALGO_dt_t recvtypes[],
+                                         MPIR_ALGO_comm_t * comm, MPIR_ALGO_sched_t * s)
 {
     MPIC_Assert(0);
     return 0;

@@ -19,17 +19,17 @@
 #include "../transports/mpich/api_def.h"
 
 /* algorithm namespace */
-#define COLL_NAME TREE_
+#define MPIR_ALGO_NAME TREE_
 /* algorithm namespace in lower case */
-#define COLL_NAME_LC tree
+#define MPIR_ALGO_NAME_LC tree
 
-/* Define COLL namespace */
+/* Define MPIR_ALGO namespace */
 #include "../../src/coll_namespace_def.h"
 
 /* Algorithm file */
 #include "bcast_tree.h"
 
-/* Undef COLL namespace */
+/* Undef MPIR_ALGO namespace */
 #include "../../src/coll_namespace_undef.h"
 
 /* Undef Transport API */
