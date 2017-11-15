@@ -12,7 +12,7 @@
 
 
 #include "mpiimpl.h"
-#include "../collutil.h"
+#include "collutil.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_scatter_block_pairwise

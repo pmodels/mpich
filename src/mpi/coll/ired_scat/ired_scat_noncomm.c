@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "../collutil.h"
+#include "collutil.h"
 
 /* Implements the reduce-scatter butterfly algorithm described in J. L. Traff's
  * "An Improved Algorithm for (Non-commutative) Reduce-Scatter with an Application"
