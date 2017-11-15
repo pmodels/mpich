@@ -64,7 +64,7 @@ int MPIDI_POSIX_Bcast_scatter_doubling_allgather(void *buffer,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Bcast_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
