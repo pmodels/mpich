@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "collutil.h"
+#include "coll_util.h"
 
 /* also known as "Rabenseifner's algorithm" */
 #undef FUNCNAME

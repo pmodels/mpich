@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "collutil.h"
+#include "coll_util.h"
 
 /* Send/recv to permuted destinations/sources, in batches based on Tony Ladd's
  * suggestion.  Permuting the sources helps to avoid overloading a single source

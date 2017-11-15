@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "collutil.h"
+#include "coll_util.h"
 
 /* A recursive halving MPI_Ireduce_scatter algorithm.  Requires that op is
  * commutative.  Typically yields better performance for shorter messages. */
