@@ -106,6 +106,9 @@ typedef struct MPIR_Op {
      MPIR_Op_kind       kind;
      MPIR_Lang_t        language;
      MPIR_User_function function;
+#ifdef MPID_DEV_OP_DECL
+     MPID_DEV_OP_DECL
+#endif
   } MPIR_Op;
 #define MPIR_OP_N_BUILTIN 15
 extern MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN];
