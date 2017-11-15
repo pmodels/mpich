@@ -24,19 +24,19 @@ MPL_STATIC_INLINE_PREFIX int COLL_init()
 
 MPL_STATIC_INLINE_PREFIX int COLL_comm_init(COLL_comm_t * comm, int *tag, int rank, int size)
 {
-    TSP_comm_init(&comm->tsp_comm, COLL_COMM_BASE(comm));
+    MPIR_TSP_comm_init(&comm->tsp_comm, COLL_COMM_BASE(comm));
     return 0;
 }
 
 MPL_STATIC_INLINE_PREFIX int COLL_comm_init_null(COLL_comm_t * comm)
 {
-    TSP_comm_init_null(&comm->tsp_comm, COLL_COMM_BASE(comm));
+    MPIR_TSP_comm_init_null(&comm->tsp_comm, COLL_COMM_BASE(comm));
     return 0;
 }
 
 MPL_STATIC_INLINE_PREFIX int COLL_comm_cleanup(COLL_comm_t * comm)
 {
-    TSP_comm_cleanup(&comm->tsp_comm);
+    MPIR_TSP_comm_cleanup(&comm->tsp_comm);
     return 0;
 }
 

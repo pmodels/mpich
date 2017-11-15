@@ -8,13 +8,13 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-typedef TSP_dt_t COLL_dt_t;
+typedef MPIR_TSP_dt_t COLL_dt_t;
 
-typedef TSP_op_t COLL_op_t;
+typedef MPIR_TSP_op_t COLL_op_t;
 
 typedef struct COLL_comm_t {
     int id; /*unique id for the communicator */
-    TSP_comm_t tsp_comm;
+    MPIR_TSP_comm_t tsp_comm;
 } COLL_comm_t;
 
 typedef struct COLL_req_t {
@@ -22,7 +22,7 @@ typedef struct COLL_req_t {
 } COLL_req_t;
 
 typedef struct COLL_sched_t {
-    TSP_sched_t tsp_sched;
+    MPIR_TSP_sched_t tsp_sched;
 } COLL_sched_t;
 
 typedef long int COLL_aint_t;

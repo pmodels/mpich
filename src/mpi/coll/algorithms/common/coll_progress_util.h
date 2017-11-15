@@ -19,7 +19,7 @@ extern MPIC_progress_global_t MPIC_progress_global;
 #undef FUNCNAME
 #define FUNCNAME COLL_sched_wait
 /* Routing to kick-start and completely execute a blocking schedule*/
-MPL_STATIC_INLINE_PREFIX void COLL_sched_wait(TSP_sched_t * sched)
+MPL_STATIC_INLINE_PREFIX void COLL_sched_wait(MPIR_TSP_sched_t * sched)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_WAIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_SCHED_WAIT);
@@ -27,14 +27,14 @@ MPL_STATIC_INLINE_PREFIX void COLL_sched_wait(TSP_sched_t * sched)
     int rc = 0;
 
     while (!rc) {
-        rc = TSP_test(sched);   /* Make progress on the collective schedule */
+        rc = MPIR_TSP_test(sched);   /* Make progress on the collective schedule */
         if (!rc) {
             MPIC_progress_global.progress_fn();
         }
     }
 
     /* Mark sched as completed */
-    TSP_sched_finalize(sched);
+    MPIR_TSP_sched_finalize(sched);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_WAIT);
 }
@@ -48,17 +48,17 @@ MPL_STATIC_INLINE_PREFIX int COLL_kick_nb(MPIC_queue_elem_t * elem)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_KICK_NB);
 
     int done = 0;
-    TSP_sched_t *sched = (TSP_sched_t *) (((COLL_req_t *) elem)->sched);
+    MPIR_TSP_sched_t *sched = (MPIR_TSP_sched_t *) (((COLL_req_t *) elem)->sched);
 
     /* make progress on the collective */
-    done = TSP_test(sched);
+    done = MPIR_TSP_test(sched);
 
     if (done) {
         /* remove the collective from the queue */
         TAILQ_REMOVE(&MPIC_progress_global.head, elem, list_data);
 
         /* delete all memory associated with the schedule */
-        TSP_sched_finalize(sched);
+        MPIR_TSP_sched_finalize(sched);
         ((COLL_req_t *) elem)->sched = NULL;
     }
 
@@ -70,7 +70,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_kick_nb(MPIC_queue_elem_t * elem)
 #undef FUNCNAME
 #define FUNCNAME COLL_sched_test
 /* Routing to kick-start a non-blocking schedule*/
-MPL_STATIC_INLINE_PREFIX int COLL_sched_test(TSP_sched_t * sched, COLL_req_t * request)
+MPL_STATIC_INLINE_PREFIX int COLL_sched_test(MPIR_TSP_sched_t * sched, COLL_req_t * request)
 {
     int rc;
 
@@ -86,7 +86,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_sched_test(TSP_sched_t * sched, COLL_req_t * r
     TAILQ_INSERT_TAIL(&MPIC_progress_global.head, &request->elem, list_data);
 
     /* Make some progress now */
-    rc = TSP_test(sched);
+    rc = MPIR_TSP_test(sched);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_TEST);
 

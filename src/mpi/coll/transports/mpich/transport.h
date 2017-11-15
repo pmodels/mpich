@@ -360,7 +360,7 @@ MPL_STATIC_INLINE_PREFIX void MPIC_MPICH_add_vtx_dependencies(MPIC_MPICH_sched_t
     }
 
     /* check if there was any MPIC_MPICH_wait operation and add appropriate dependencies.
-     * TSP_wait function does not return a vertex id, so the application will never explicity
+     * MPIR_TSP_wait function does not return a vertex id, so the application will never explicity
      * specify a dependency on it, the transport has to make sure that the dependency
      * on the wait operation is met */
     if (sched->last_wait != -1 && sched->last_wait != vtx_id) {
@@ -475,7 +475,7 @@ MPL_STATIC_INLINE_PREFIX int MPIC_MPICH_wait(MPIC_MPICH_sched_t * sched)
 {
     int wait_id;
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Scheduling a TSP_wait\n"));
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Scheduling a MPIR_TSP_wait\n"));
     /* wait operation is an extension to fence, so we can resuse the fence call */
     wait_id = MPIC_MPICH_fence(sched);
     /* change the vertex kind from FENCE to WAIT */

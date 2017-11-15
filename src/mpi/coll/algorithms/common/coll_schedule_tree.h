@@ -93,7 +93,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_tree_dump(int tree_size, int root, int tree_ty
 /* Routine to schedule a tree based broadcast */
 MPL_STATIC_INLINE_PREFIX int
 COLL_sched_bcast_tree(void *buffer, int count, COLL_dt_t datatype, int root, int tag,
-                      COLL_comm_t * comm, int tree_type, int k, TSP_sched_t * sched, int finalize)
+                      COLL_comm_t * comm, int tree_type, int k, MPIR_TSP_sched_t * sched, int finalize)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_BCAST_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_SCHED_BCAST_TREE);
@@ -110,7 +110,7 @@ COLL_sched_bcast_tree(void *buffer, int count, COLL_dt_t datatype, int root, int
 
     /* Receive message from Parent */
     if (my_tree.parent != -1) {
-        recv_id = TSP_recv(buffer, count, datatype, my_tree.parent, tag,
+        recv_id = MPIR_TSP_recv(buffer, count, datatype, my_tree.parent, tag,
                            &comm->tsp_comm, sched, 0, NULL);
     }
 
@@ -118,13 +118,13 @@ COLL_sched_bcast_tree(void *buffer, int count, COLL_dt_t datatype, int root, int
 
     if(num_children){
         /*Multicast data to the children*/
-        TSP_multicast(buffer, count, datatype, my_tree.children, num_children, tag, &comm->tsp_comm, sched,
+        MPIR_TSP_multicast(buffer, count, datatype, my_tree.children, num_children, tag, &comm->tsp_comm, sched,
                             (my_tree.parent != -1) ? 1 : 0, &recv_id);
     }
 
     if (finalize) {
-        TSP_fence(sched);
-        TSP_sched_commit(sched);
+        MPIR_TSP_fence(sched);
+        MPIR_TSP_sched_commit(sched);
     }
 
     COLL_tree_free (&my_tree);
@@ -140,7 +140,7 @@ COLL_sched_bcast_tree(void *buffer, int count, COLL_dt_t datatype, int root, int
 MPL_STATIC_INLINE_PREFIX int
 COLL_sched_bcast_tree_pipelined(void *buffer, int count, COLL_dt_t datatype, int root, int tag,
                                 COLL_comm_t * comm, int tree_type, int k, int segsize,
-                                TSP_sched_t * sched, int finalize)
+                                MPIR_TSP_sched_t * sched, int finalize)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_BCAST_TREE_PIPELINED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_SCHED_BCAST_TREE_PIPELINED);
@@ -157,9 +157,9 @@ COLL_sched_bcast_tree_pipelined(void *buffer, int count, COLL_dt_t datatype, int
     size_t lb, extent, type_size;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Scheduling pipelined broadcast on %d ranks, root=%d\n",
-                TSP_size(&comm->tsp_comm), root));
+                MPIR_TSP_size(&comm->tsp_comm), root));
 
-    TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
+    MPIR_TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
 
     /* calculate chunking information for pipelining */
     MPIC_calculate_chunk_info(segsize, type_size, count, &num_chunks, &num_chunks_floor,
@@ -182,7 +182,7 @@ COLL_sched_bcast_tree_pipelined(void *buffer, int count, COLL_dt_t datatype, int
 
     /* if this is final part of the schedule, commit it */
     if (finalize)
-        TSP_sched_commit(sched);
+        MPIR_TSP_sched_commit(sched);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_BCAST_TREE_PIPELINED);
 
@@ -202,7 +202,7 @@ COLL_sched_reduce_tree(const void *sendbuf,
                        int root,
                        int tag,
                        COLL_comm_t * comm, int tree_type, int k, int is_commutative,
-                       TSP_sched_t * sched, int finalize, bool per_child_buffer)
+                       MPIR_TSP_sched_t * sched, int finalize, bool per_child_buffer)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_REDUCE_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_SCHED_REDUCE_TREE);
@@ -223,7 +223,7 @@ COLL_sched_reduce_tree(const void *sendbuf,
     void **childbuf;
     bool is_root, is_leaf, is_intermediate;
 
-    TSP_comm_t *tsp_comm = &comm->tsp_comm;
+    MPIR_TSP_comm_t *tsp_comm = &comm->tsp_comm;
 
     /* structure in which tree is stored */
     COLL_tree_t my_tree;
@@ -237,9 +237,9 @@ COLL_sched_reduce_tree(const void *sendbuf,
         COLL_tree_knomial_init(rank, size, k, root, &my_tree);
 
     /* get dataype information */
-    TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
+    MPIR_TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
 
-    is_inplace = TSP_isinplace((void *) sendbuf);
+    is_inplace = MPIR_TSP_isinplace((void *) sendbuf);
 
     /* calculate the number of children to allocate #children buffers */
     num_children = my_tree.num_children;
@@ -252,15 +252,15 @@ COLL_sched_reduce_tree(const void *sendbuf,
                 num_children, size, is_root, is_inplace, is_intermediate, lb));
 
     /* variables to store task ids */
-    vtcs = TSP_allocate_mem(sizeof(int) * (num_children + 1));
-    reduce_id = TSP_allocate_mem(sizeof(int) * num_children);
-    recv_id = TSP_allocate_mem(sizeof(int) * num_children);
+    vtcs = MPIR_TSP_allocate_mem(sizeof(int) * (num_children + 1));
+    reduce_id = MPIR_TSP_allocate_mem(sizeof(int) * num_children);
+    recv_id = MPIR_TSP_allocate_mem(sizeof(int) * num_children);
 
     if (is_root) {
         target_buf = recvbuf;
     } else if (is_intermediate) { /* For intermediate vertex in tree, recv buffer can be invalid,
                                    * therefore, we need a buffer to accumulate reduced data */
-        result_buf = TSP_allocate_buffer(extent * count, sched);
+        result_buf = MPIR_TSP_allocate_buffer(extent * count, sched);
         result_buf = (void *) ((char *) result_buf - lb);
         target_buf = result_buf;
     }
@@ -269,16 +269,16 @@ COLL_sched_reduce_tree(const void *sendbuf,
         /* no need to copy for leaves because no reduction happens there */
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"scheduling data copy\n"));
         dtcopy_id =
-            TSP_dtcopy_nb(target_buf, count, datatype, sendbuf, count, datatype, sched, 0, NULL);
+            MPIR_TSP_dtcopy_nb(target_buf, count, datatype, sendbuf, count, datatype, sched, 0, NULL);
     }
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Allocating buffer for receiving data from children\n"));
 
     /* allocate buffer space to receive data from children */
-    childbuf = (void **) TSP_allocate_mem(sizeof(void *) * num_children);
+    childbuf = (void **) MPIR_TSP_allocate_mem(sizeof(void *) * num_children);
 
     if (num_children) { /* allocate at least one buffer if you have at least one child */
-        childbuf[0] = TSP_allocate_buffer(extent * count, sched);
+        childbuf[0] = MPIR_TSP_allocate_buffer(extent * count, sched);
         childbuf[0] = (void *) ((char *) childbuf[0] - lb);
     }
     /* allocate/assign buffer for all the children */
@@ -288,7 +288,7 @@ COLL_sched_reduce_tree(const void *sendbuf,
             continue; /* memory is already allocated for the first child above */
         else {
             if (per_child_buffer) { /* different buffer per child */
-                childbuf[i] = TSP_allocate_buffer(extent * count, sched);
+                childbuf[i] = MPIR_TSP_allocate_buffer(extent * count, sched);
                 childbuf[i] = (void *) ((char *) childbuf[i] - lb);
             } else  /* same buffer for every child */
                 childbuf[i] = childbuf[0];
@@ -313,7 +313,7 @@ COLL_sched_reduce_tree(const void *sendbuf,
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Schedule receive from child %d\n", j));
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Posting receive at address %p\n", childbuf[i]));
             /* post the recv */
-            recv_id[i] = TSP_recv(childbuf[i], count, datatype,
+            recv_id[i] = MPIR_TSP_recv(childbuf[i], count, datatype,
                                             j, tag, tsp_comm, sched, nvtcs, vtcs);
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"receive scheduled\n"));
@@ -331,8 +331,8 @@ COLL_sched_reduce_tree(const void *sendbuf,
 
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"schedule reduce\n"));
             if (is_commutative) {       /* reduction order does not matter */
-                reduce_id[i] = TSP_reduce_local(childbuf[i], target_buf, count,
-                                                          datatype, op, TSP_FLAG_REDUCE_L, sched,
+                reduce_id[i] = MPIR_TSP_reduce_local(childbuf[i], target_buf, count,
+                                                          datatype, op, MPIR_TSP_FLAG_REDUCE_L, sched,
                                                           nvtcs, vtcs);
             } else {
                 /* NOTE: Make sure that knomial tree is being constructed differently for reduce for optimal performace.
@@ -343,8 +343,8 @@ COLL_sched_reduce_tree(const void *sendbuf,
                     vtcs[nvtcs] = reduce_id[i - 1];
                     nvtcs++;
                 }
-                reduce_id[i] = TSP_reduce_local(childbuf[i], target_buf, count,
-                                                          datatype, op, TSP_FLAG_REDUCE_R, sched,
+                reduce_id[i] = MPIR_TSP_reduce_local(childbuf[i], target_buf, count,
+                                                          datatype, op, MPIR_TSP_FLAG_REDUCE_R, sched,
                                                           nvtcs, vtcs);
             }
     }
@@ -364,14 +364,14 @@ COLL_sched_reduce_tree(const void *sendbuf,
         }
 
         /* send date to parent */
-        TSP_send(target_buf, count, datatype, my_tree.parent, tag, tsp_comm, sched, nvtcs, vtcs);
+        MPIR_TSP_send(target_buf, count, datatype, my_tree.parent, tag, tsp_comm, sched, nvtcs, vtcs);
     }
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"completed schedule generation\n"));
-    TSP_free_mem(childbuf);
-    TSP_free_mem(vtcs);
-    TSP_free_mem(recv_id);
-    TSP_free_mem(reduce_id);
+    MPIR_TSP_free_mem(childbuf);
+    MPIR_TSP_free_mem(vtcs);
+    MPIR_TSP_free_mem(recv_id);
+    MPIR_TSP_free_mem(reduce_id);
     COLL_tree_free (&my_tree);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_REDUCE_TREE);
@@ -389,13 +389,13 @@ COLL_sched_reduce_tree_full(const void *sendbuf,
                             COLL_dt_t datatype,
                             COLL_op_t op,
                             int root, int tag, COLL_comm_t * comm, int tree_type, int k,
-                            TSP_sched_t * s, int finalize, int nbuffers)
+                            MPIR_TSP_sched_t * s, int finalize, int nbuffers)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_REDUCE_TREE_FULL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_SCHED_REDUCE_TREE_FULL);
 
     int is_commutative, rc;
-    TSP_opinfo(op, &is_commutative);
+    MPIR_TSP_opinfo(op, &is_commutative);
 
     if (root == 0 || is_commutative) {
         rc = COLL_sched_reduce_tree(sendbuf, recvbuf, count, datatype,
@@ -408,12 +408,12 @@ COLL_sched_reduce_tree_full(const void *sendbuf,
         int is_contig, is_inplace, fence_id;
         void *tmp_buf = NULL, *sb = NULL;
 
-        TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
+        MPIR_TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
 
-        is_inplace = TSP_isinplace((void *) sendbuf);
+        is_inplace = MPIR_TSP_isinplace((void *) sendbuf);
 
         if (rank == 0)
-            tmp_buf = TSP_allocate_buffer(extent * count, s);
+            tmp_buf = MPIR_TSP_allocate_buffer(extent * count, s);
 
         if (rank == root && is_inplace)
             sb = recvbuf;
@@ -425,16 +425,16 @@ COLL_sched_reduce_tree_full(const void *sendbuf,
                                     op, 0, tag, comm, tree_type, k, is_commutative, s, 0, nbuffers);
 
         /* send the reduced data to the root */
-        fence_id = TSP_fence(s);
+        fence_id = MPIR_TSP_fence(s);
         if (rank == 0) {
-            TSP_send(tmp_buf, count, datatype, root, tag, &comm->tsp_comm, s, 1, &fence_id);
+            MPIR_TSP_send(tmp_buf, count, datatype, root, tag, &comm->tsp_comm, s, 1, &fence_id);
         } else if (rank == root) {
-            TSP_recv(recvbuf, count, datatype, 0, tag, &comm->tsp_comm, s, 1, &fence_id);
+            MPIR_TSP_recv(recvbuf, count, datatype, 0, tag, &comm->tsp_comm, s, 1, &fence_id);
         }
 
         if (finalize) {
-            TSP_fence(s);
-            TSP_sched_commit(s);
+            MPIR_TSP_fence(s);
+            MPIR_TSP_sched_commit(s);
         }
     }
 
@@ -449,7 +449,7 @@ COLL_sched_reduce_tree_full(const void *sendbuf,
 MPL_STATIC_INLINE_PREFIX int
 COLL_sched_reduce_tree_full_pipelined(const void *sendbuf, void *recvbuf, int count,
                                       COLL_dt_t datatype, COLL_op_t op, int root, int tag,
-                                      COLL_comm_t * comm, int tree_type, int k, TSP_sched_t * sched,
+                                      COLL_comm_t * comm, int tree_type, int k, MPIR_TSP_sched_t * sched,
                                       int segsize, int finalize, int nbuffers)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_REDUCE_TREE_FULL_PIPELINED);
@@ -463,10 +463,10 @@ COLL_sched_reduce_tree_full_pipelined(const void *sendbuf, void *recvbuf, int co
     size_t lb, extent, type_size;
 
     int i, offset = 0;
-    int is_inplace = TSP_isinplace((void *) sendbuf);
+    int is_inplace = MPIR_TSP_isinplace((void *) sendbuf);
 
     /* get datatype information */
-    TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
+    MPIR_TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
 
     /* get chunking information for pipelining */
     MPIC_calculate_chunk_info(segsize, type_size, count, &num_chunks, &num_chunks_floor,
@@ -488,8 +488,8 @@ COLL_sched_reduce_tree_full_pipelined(const void *sendbuf, void *recvbuf, int co
     }
 
     if (finalize) {
-        TSP_fence(sched);
-        TSP_sched_commit(sched);
+        MPIR_TSP_fence(sched);
+        MPIR_TSP_sched_commit(sched);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_REDUCE_TREE_FULL_PIPELINED);
@@ -504,7 +504,7 @@ COLL_sched_reduce_tree_full_pipelined(const void *sendbuf, void *recvbuf, int co
 MPL_STATIC_INLINE_PREFIX int
 COLL_sched_allreduce_tree(const void *sendbuf, void *recvbuf, int count, COLL_dt_t datatype,
                           COLL_op_t op, int tag, COLL_comm_t * comm, int tree_type, int k,
-                          TSP_sched_t * s, int finalize)
+                          MPIR_TSP_sched_t * s, int finalize)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_ALLREDUCE_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_SCHED_ALLREDUCE_TREE);
@@ -516,12 +516,12 @@ COLL_sched_allreduce_tree(const void *sendbuf, void *recvbuf, int count, COLL_dt
     void *sbuf = (void *) sendbuf;
     void *rbuf = recvbuf;
 
-    is_inplace = TSP_isinplace((void *) sendbuf);
-    TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
-    TSP_opinfo(op, &is_commutative);
+    is_inplace = MPIR_TSP_isinplace((void *) sendbuf);
+    MPIR_TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
+    MPIR_TSP_opinfo(op, &is_commutative);
 
     if (is_inplace) {
-        tmp_buf = TSP_allocate_buffer(extent * count, s);
+        tmp_buf = MPIR_TSP_allocate_buffer(extent * count, s);
         sbuf = recvbuf;
         rbuf = tmp_buf;
     }
@@ -529,17 +529,17 @@ COLL_sched_allreduce_tree(const void *sendbuf, void *recvbuf, int count, COLL_dt
     COLL_sched_reduce_tree_full(sbuf, rbuf, count, datatype, op, 0, tag, comm, tree_type, k, s, 0,
                                 0);
     /* wait for reduce to complete */
-    TSP_wait(s);
+    MPIR_TSP_wait(s);
     /* schedule broadcast */
     COLL_sched_bcast_tree(rbuf, count, datatype, 0, tag, comm, tree_type, k, s, 0);
 
     if (is_inplace) {
-        int fence_id = TSP_fence(s);
-        TSP_dtcopy_nb(recvbuf, count, datatype, tmp_buf, count, datatype, s, 1, &fence_id);
+        int fence_id = MPIR_TSP_fence(s);
+        MPIR_TSP_dtcopy_nb(recvbuf, count, datatype, tmp_buf, count, datatype, s, 1, &fence_id);
     }
 
     if (finalize) {
-        TSP_sched_commit(s);
+        MPIR_TSP_sched_commit(s);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_SCHED_ALLREDUCE_TREE);
@@ -551,7 +551,7 @@ COLL_sched_allreduce_tree(const void *sendbuf, void *recvbuf, int count, COLL_dt
 #define FUNCNAME COLL_sched_barrier_tree
 /* routine to schedule a tree based barrier */
 MPL_STATIC_INLINE_PREFIX int COLL_sched_barrier_tree(int tag, COLL_comm_t * comm, int tree_type, int k,
-                                        TSP_sched_t * s, int finalize)
+                                        MPIR_TSP_sched_t * s, int finalize)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_SCHED_BARRIER_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_SCHED_BARRIER_TREE);
@@ -560,36 +560,36 @@ MPL_STATIC_INLINE_PREFIX int COLL_sched_barrier_tree(int tag, COLL_comm_t * comm
     int i;
     COLL_tree_t my_tree;
     my_tree.children = NULL;
-    TSP_dt_t dt = TSP_global.control_dt;
+    MPIR_TSP_dt_t dt = MPIR_TSP_global.control_dt;
 
-    COLL_tree_init(TSP_rank(&comm->tsp_comm), TSP_size(&comm->tsp_comm), tree_type, k, 0, &my_tree);
+    COLL_tree_init(MPIR_TSP_rank(&comm->tsp_comm), MPIR_TSP_size(&comm->tsp_comm), tree_type, k, 0, &my_tree);
 
     /* Receive from all children */
     for(i=0; i< my_tree.num_children; i++) {
-        TSP_recv(NULL, 0, dt, my_tree.children[i], tag, &comm->tsp_comm, s, 0, NULL);
+        MPIR_TSP_recv(NULL, 0, dt, my_tree.children[i], tag, &comm->tsp_comm, s, 0, NULL);
     }
 
-    int fid = TSP_fence(s);
+    int fid = MPIR_TSP_fence(s);
 
     if (my_tree.parent == -1) {
         for(i=0; i< my_tree.num_children; i++) {
-            TSP_send(NULL, 0, dt, my_tree.children[i], tag, &comm->tsp_comm, s, 1, &fid);
+            MPIR_TSP_send(NULL, 0, dt, my_tree.children[i], tag, &comm->tsp_comm, s, 1, &fid);
         }
     } else {
         int recv_id;
 
         /* Send to Parent      */
-        TSP_send(NULL, 0, dt, my_tree.parent, tag, &comm->tsp_comm, s, 1, &fid);
+        MPIR_TSP_send(NULL, 0, dt, my_tree.parent, tag, &comm->tsp_comm, s, 1, &fid);
         /* Receive from Parent */
-        recv_id = TSP_recv(NULL, 0, dt, my_tree.parent, tag, &comm->tsp_comm, s, 0, NULL);
+        recv_id = MPIR_TSP_recv(NULL, 0, dt, my_tree.parent, tag, &comm->tsp_comm, s, 0, NULL);
         /* Send to all children */
         for(i=0; i< my_tree.num_children; i++) {
-            TSP_send(NULL, 0, dt, my_tree.children[i], tag, &comm->tsp_comm, s, 1, &recv_id);
+            MPIR_TSP_send(NULL, 0, dt, my_tree.children[i], tag, &comm->tsp_comm, s, 1, &recv_id);
         }
     }
 
     if(finalize)
-        TSP_sched_commit(s);
+        MPIR_TSP_sched_commit(s);
 
     COLL_tree_free (&my_tree);
 

@@ -31,7 +31,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_comm_init(COLL_comm_t * comm, int *tag_ptr, in
     int k;
 
     /* initialize transport communicator */
-    TSP_comm_init(&comm->tsp_comm, COLL_COMM_BASE(comm));
+    MPIR_TSP_comm_init(&comm->tsp_comm, COLL_COMM_BASE(comm));
 
     /* generate a knomial tree (tree_type=0) by default */
     COLL_tree_comm_t *mycomm = &comm->tree_comm;
@@ -47,7 +47,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_comm_init(COLL_comm_t * comm, int *tag_ptr, in
 MPL_STATIC_INLINE_PREFIX int COLL_comm_init_null(COLL_comm_t * comm)
 {
     /* initialize transport communicator */
-    TSP_comm_init_null(&comm->tsp_comm, COLL_COMM_BASE(comm));
+    MPIR_TSP_comm_init_null(&comm->tsp_comm, COLL_COMM_BASE(comm));
 
     comm->tree_comm.tree.max_children = 0;
 
@@ -57,7 +57,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_comm_init_null(COLL_comm_t * comm)
 /* Cleanup algorithm communicator */
 MPL_STATIC_INLINE_PREFIX int COLL_comm_cleanup(COLL_comm_t * comm)
 {
-    TSP_comm_cleanup(&comm->tsp_comm);
+    MPIR_TSP_comm_cleanup(&comm->tsp_comm);
     COLL_tree_free (&comm->tree_comm.tree);
 
     return 0;
@@ -70,7 +70,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_comm_cleanup(COLL_comm_t * comm)
  * to get the broadcast schedule */
 MPL_STATIC_INLINE_PREFIX int COLL_bcast_get_tree_schedule(void *buffer, int count, COLL_dt_t datatype,
                                                       int root, COLL_comm_t * comm, int tree_type,
-                                                      int k, int segsize, TSP_sched_t ** sched)
+                                                      int k, int segsize, MPIR_TSP_sched_t ** sched)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COLL_BCAST_GET_TREE_SCHEDULE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COLL_BCAST_GET_TREE_SCHEDULE);
@@ -100,7 +100,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_bcast_get_tree_schedule(void *buffer, int coun
      * return a new empty schedule */
     int key_size = COLL_get_key_size (&coll_args);
     *sched =
-        TSP_get_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, tag, &is_new);
+        MPIR_TSP_get_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, tag, &is_new);
 
     if (is_new) {
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,"Schedule does not exist\n"));
@@ -108,7 +108,7 @@ MPL_STATIC_INLINE_PREFIX int COLL_bcast_get_tree_schedule(void *buffer, int coun
         mpi_errno = COLL_sched_bcast_tree_pipelined(buffer, count, datatype, root, tag, comm,
                                                     tree_type, k, segsize, *sched, 1);
         /* store the schedule (it is optional for the transport to store the schedule */
-        TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, (void *) *sched);
+        MPIR_TSP_save_schedule(&comm->tsp_comm, (void *) &coll_args, key_size, (void *) *sched);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COLL_BCAST_GET_TREE_SCHEDULE);

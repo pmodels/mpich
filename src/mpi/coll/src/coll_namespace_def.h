@@ -28,8 +28,8 @@
 #endif /* COLL_NAMESPACE */
 
 /* Common Collective Types */
-#define COLL_dt_t         TSP_dt_t
-#define COLL_op_t         TSP_op_t
+#define COLL_dt_t         MPIR_TSP_dt_t
+#define COLL_op_t         MPIR_TSP_op_t
 
 #define COLL_comm_t       COLL_NAMESPACE(comm_t)
 #define COLL_req_t        COLL_NAMESPACE(req_t)

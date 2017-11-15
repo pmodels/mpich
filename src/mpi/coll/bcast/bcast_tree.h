@@ -31,7 +31,7 @@ int COLL_bcast(void *buffer, int count, COLL_dt_t datatype, int root,
     int mpi_errno = MPI_SUCCESS;
 
     /* get the schedule */
-    TSP_sched_t *sched;
+    MPIR_TSP_sched_t *sched;
     mpi_errno = COLL_bcast_get_tree_schedule(buffer, count, datatype, root, comm, tree_type, k, segsize, &sched);
 
     /* execute the schedule */

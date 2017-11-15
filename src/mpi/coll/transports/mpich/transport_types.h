@@ -216,8 +216,8 @@ typedef struct MPIC_MPICH_sched_t {
     /* Maximum number of edges per vertex. This is increase when more edges need to be added */
     int max_edges_per_vtx;
 
-    /* last_wait keeps track of the vertex id of the last TSP_wait call
-     * so that when the next TSP_wait call is made, its incoming dependencies
+    /* last_wait keeps track of the vertex id of the last MPIR_TSP_wait call
+     * so that when the next MPIR_TSP_wait call is made, its incoming dependencies
      * are made only up to the last_wait vertex to avoid redundant dependencies */
     int last_wait;
 
@@ -234,9 +234,9 @@ typedef struct MPIC_MPICH_sched_t {
     MPIC_MPICH_vtx_t *issued_head; /* head of the issued vertices linked list */
     MPIC_MPICH_vtx_t *vtx_iter;    /* temporary pointer to keep track of the
                                       current vertex under consideration in
-                                      TSP_test function */
+                                      MPIR_TSP_test function */
     MPIC_MPICH_vtx_t *last_issued; /* temporary pointer to the last vertex
-                                      issued in the current pass of TSP_test
+                                      issued in the current pass of MPIR_TSP_test
                                       function */
 } MPIC_MPICH_sched_t;
 

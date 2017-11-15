@@ -21,12 +21,12 @@ typedef struct COLL_tree_comm_t {
     int *curTag;
 } COLL_tree_comm_t;
 
-typedef TSP_dt_t COLL_dt_t;
+typedef MPIR_TSP_dt_t COLL_dt_t;
 
-typedef TSP_op_t COLL_op_t;
+typedef MPIR_TSP_op_t COLL_op_t;
 
 typedef struct COLL_comm_t {
-    TSP_comm_t tsp_comm;        /* transport communicator */
+    MPIR_TSP_comm_t tsp_comm;        /* transport communicator */
     COLL_tree_comm_t tree_comm; /* algorithm specific structures */
 } COLL_comm_t;
 
