@@ -17,6 +17,7 @@ extern MPL_dbg_class MPIR_DBG_COMM;
 extern MPL_dbg_class MPIR_DBG_BSEND;
 extern MPL_dbg_class MPIR_DBG_ERRHAND;
 extern MPL_dbg_class MPIR_DBG_OTHER;
+extern MPL_dbg_class MPIR_DBG_COLL;
 extern MPL_dbg_class MPIR_DBG_REQUEST;
 extern MPL_dbg_class MPIR_DBG_ASSERT;
 #endif /* MPL_USE_DBG_LOGGING */
