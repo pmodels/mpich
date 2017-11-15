@@ -6,8 +6,8 @@
  */
 
 #include "mpiimpl.h"
-#include "../collutil.h"
 #include "bcast.h"
+#include "collutil.h"
 
 /*
    Broadcast based on a scatter followed by an allgather.

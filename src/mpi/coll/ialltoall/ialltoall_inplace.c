@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "../collutil.h"
+#include "collutil.h"
 
 /* Implements nonblocking all-to-all for sendbuf==MPI_IN_PLACE.
  *
