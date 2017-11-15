@@ -172,8 +172,8 @@ int MPIR_Bcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype data
                                       MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Bcast_scatter_doubling_allgather(void *buffer, int count, MPI_Datatype datatype, int root,
                                           MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
-int MPIC_MPICH_TREE_bcast(void *buffer, int count, MPIC_MPICH_dt_t datatype, int root, 
-                    MPIC_MPICH_TREE_comm_t *comm, int *errflag, int tree_type, int k, int segsize);
+int MPIR_COLL_MPICH_TREE_bcast(void *buffer, int count, MPIR_COLL_MPICH_dt_t datatype, int root, 
+                    MPIR_COLL_MPICH_TREE_comm_t *comm, int *errflag, int tree_type, int k, int segsize);
 
 /* Exscan functions */
 int MPIR_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,

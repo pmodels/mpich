@@ -65,8 +65,8 @@
 #define MPIR_ALGO_comm_cleanup          MPIR_ALGO_NAMESPACE(comm_cleanup)
 
 #define MPIR_ALGO_FIELD_NAME         MPIR_ALGO_NSCAT1(MPIR_ALGO_NSCAT1(TRANSPORT_NAME_LC,_),MPIR_ALGO_NAME_LC)
-#define MPIR_ALGO_COMM_BASE(addr)    container_of(addr,MPIC_comm_t, MPIR_ALGO_FIELD_NAME)
-#define MPIR_ALGO_global             MPIC_global_instance.MPIR_ALGO_FIELD_NAME
+#define MPIR_ALGO_COMM_BASE(addr)    container_of(addr,MPIR_COLL_comm_t, MPIR_ALGO_FIELD_NAME)
+#define MPIR_ALGO_global             MPIR_COLL_global_instance.MPIR_ALGO_FIELD_NAME
 
 /* Scheduling API */
 #define MPIR_ALGO_sched_init                 MPIR_ALGO_NAMESPACE(sched_init)

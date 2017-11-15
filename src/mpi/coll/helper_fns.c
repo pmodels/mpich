@@ -14,8 +14,8 @@
 #endif
 
 /* Global data structures for collectives framework */
-MPIC_global_t MPIC_global_instance;
-MPIC_progress_global_t MPIC_progress_global;
+MPIR_COLL_global_t MPIR_COLL_global_instance;
+MPIR_COLL_progress_global_t MPIR_COLL_progress_global;
 
 /* These functions are used in the implementation of collective
    operations. They are wrappers around MPID send/recv functions. They do

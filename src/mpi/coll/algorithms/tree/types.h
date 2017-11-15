@@ -30,7 +30,7 @@ typedef struct MPIR_ALGO_comm_t {
     MPIR_ALGO_tree_comm_t tree_comm; /* algorithm specific structures */
 } MPIR_ALGO_comm_t;
 
-typedef MPIC_req_t MPIR_ALGO_req_t;
+typedef MPIR_COLL_req_t MPIR_ALGO_req_t;
 typedef long int MPIR_ALGO_aint_t;
 
 typedef struct {

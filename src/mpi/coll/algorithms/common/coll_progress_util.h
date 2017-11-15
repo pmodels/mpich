@@ -13,8 +13,8 @@
 #error "The template must be namespaced with MPIR_ALGO_NAMESPACE"
 #endif
 
-/*FIXME: MPIC_progress_global should be per-VNI */
-extern MPIC_progress_global_t MPIC_progress_global;
+/*FIXME: MPIR_COLL_progress_global should be per-VNI */
+extern MPIR_COLL_progress_global_t MPIR_COLL_progress_global;
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_ALGO_sched_wait
@@ -29,7 +29,7 @@ MPL_STATIC_INLINE_PREFIX void MPIR_ALGO_sched_wait(MPIR_TSP_sched_t * sched)
     while (!rc) {
         rc = MPIR_TSP_test(sched);   /* Make progress on the collective schedule */
         if (!rc) {
-            MPIC_progress_global.progress_fn();
+            MPIR_COLL_progress_global.progress_fn();
         }
     }
 
@@ -42,7 +42,7 @@ MPL_STATIC_INLINE_PREFIX void MPIR_ALGO_sched_wait(MPIR_TSP_sched_t * sched)
 #undef FUNCNAME
 #define FUNCNAME MPIR_ALGO_kick_nb
 /* Function to make progress on a non-blocking collective*/
-MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_kick_nb(MPIC_queue_elem_t * elem)
+MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_kick_nb(MPIR_COLL_queue_elem_t * elem)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_ALGO_KICK_NB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_ALGO_KICK_NB);
@@ -55,7 +55,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_kick_nb(MPIC_queue_elem_t * elem)
 
     if (done) {
         /* remove the collective from the queue */
-        TAILQ_REMOVE(&MPIC_progress_global.head, elem, list_data);
+        TAILQ_REMOVE(&MPIR_COLL_progress_global.head, elem, list_data);
 
         /* delete all memory associated with the schedule */
         MPIR_TSP_sched_finalize(sched);
@@ -82,8 +82,8 @@ MPL_STATIC_INLINE_PREFIX int MPIR_ALGO_sched_test(MPIR_TSP_sched_t * sched, MPIR
     /* function to make progress on the collective */
     request->elem.kick_fn = MPIR_ALGO_kick_nb;
 
-    /* FIXME: MPIC_progress_global should be per-VNI */
-    TAILQ_INSERT_TAIL(&MPIC_progress_global.head, &request->elem, list_data);
+    /* FIXME: MPIR_COLL_progress_global should be per-VNI */
+    TAILQ_INSERT_TAIL(&MPIR_COLL_progress_global.head, &request->elem, list_data);
 
     /* Make some progress now */
     rc = MPIR_TSP_test(sched);

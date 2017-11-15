@@ -14,7 +14,7 @@
 /* MPICH trannsport */
 #include "../transports/mpich/transport.h"
 
-#define GLOBAL_NAME MPIC_
+#define GLOBAL_NAME MPIR_COLL_
 /* Define Transport API */
 #include "../transports/mpich/api_def.h"
 

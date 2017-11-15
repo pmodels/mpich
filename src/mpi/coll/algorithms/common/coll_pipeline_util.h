@@ -12,15 +12,15 @@
 #define MPIR_ALGO_UTIL_H_INCLUDED
 
 #undef FUNCNAME
-#define FUNCNAME MPIC_calculate_chunk_info
-MPL_STATIC_INLINE_PREFIX int MPIC_calculate_chunk_info(int segsize_input, int type_size, int count,
+#define FUNCNAME MPIR_COLL_calculate_chunk_info
+MPL_STATIC_INLINE_PREFIX int MPIR_COLL_calculate_chunk_info(int segsize_input, int type_size, int count,
                                           int *num_chunks, int *num_chunks_floor,
                                           int *chunk_size_floor, int *chunk_size_ceil)
 {
     int segsize_bytes, segsize;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIC_CALCULATE_CHUNK_INFO);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_CALCULATE_CHUNK_INFO);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_COLL_CALCULATE_CHUNK_INFO);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_COLL_CALCULATE_CHUNK_INFO);
 
     if (count == 0) {
         *num_chunks = *num_chunks_floor = *chunk_size_floor = *chunk_size_ceil = 0;
@@ -54,7 +54,7 @@ MPL_STATIC_INLINE_PREFIX int MPIC_calculate_chunk_info(int segsize_input, int ty
     /* number of chunks of size chunk_size_floor */
     *num_chunks_floor = (*num_chunks) * (*chunk_size_ceil) - count;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_CALCULATE_CHUNK_INFO);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_COLL_CALCULATE_CHUNK_INFO);
 
     return 0;
 }

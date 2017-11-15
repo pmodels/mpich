@@ -354,7 +354,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
         MPIR_ERR_POP(mpi_errno);
 
     /* Create collectives-specific infrastructure */
-    mpi_errno = MPIC_comm_init(comm);
+    mpi_errno = MPIR_COLL_comm_init(comm);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -432,7 +432,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             /* don't call MPIR_Comm_commit here */
 
             /* Create collectives-specific infrastructure */
-            mpi_errno = MPIC_comm_init(comm->node_comm);
+            mpi_errno = MPIR_COLL_comm_init(comm->node_comm);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -468,7 +468,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             /* don't call MPIR_Comm_commit here */
 
             /* Create collectives-specific infrastructure */
-            mpi_errno = MPIC_comm_init(comm->node_roots_comm);
+            mpi_errno = MPIR_COLL_comm_init(comm->node_roots_comm);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -770,7 +770,7 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
             MPIR_Process.comm_parent = NULL;
 
         /* Cleanup collectives-specific infrastructure */
-        mpi_errno = MPIC_comm_cleanup(comm_ptr);
+        mpi_errno = MPIR_COLL_comm_cleanup(comm_ptr);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 

@@ -531,7 +531,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Init extended collectives infrastructure */
-    mpi_errno = MPIC_init();
+    mpi_errno = MPIR_COLL_init();
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Assert: tag_ub should be a power of 2 minus 1 */

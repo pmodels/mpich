@@ -121,8 +121,8 @@ cvars:
 
 enum {
     MPIR_BCAST_INTRA=0,
-    MPIR_MPICH_TREE_BCAST_KNOMIAL,
-    MPIR_MPICH_TREE_BCAST_KARY
+    MPIR_COLL_MPICH_TREE_BCAST_KNOMIAL,
+    MPIR_COLL_MPICH_TREE_BCAST_KARY
 };
 
 /* -- Begin Profiling Symbol Block for routine MPI_Bcast */
@@ -616,14 +616,14 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
                 mpi_errno = MPIR_Bcast_intra( buffer, count, datatype, root, comm_ptr, errflag );
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 break;
-            case MPIR_MPICH_TREE_BCAST_KNOMIAL:
-                mpi_errno = MPIC_MPICH_TREE_bcast (buffer, count, datatype, root, 
-                        &(MPIC_COMM(comm_ptr)->mpich_tree), (int*) errflag, 0, MPIR_CVAR_BCAST_TREE_KVAL, -1);
+            case MPIR_COLL_MPICH_TREE_BCAST_KNOMIAL:
+                mpi_errno = MPIR_COLL_MPICH_TREE_bcast (buffer, count, datatype, root, 
+                        &(MPIR_COLL_COMM(comm_ptr)->mpich_tree), (int*) errflag, 0, MPIR_CVAR_BCAST_TREE_KVAL, -1);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 break;
-            case MPIR_MPICH_TREE_BCAST_KARY:
-                mpi_errno = MPIC_MPICH_TREE_bcast (buffer, count, datatype, root, 
-                        &(MPIC_COMM(comm_ptr)->mpich_tree), (int*) errflag, 1, MPIR_CVAR_BCAST_TREE_KVAL, -1);
+            case MPIR_COLL_MPICH_TREE_BCAST_KARY:
+                mpi_errno = MPIR_COLL_MPICH_TREE_bcast (buffer, count, datatype, root, 
+                        &(MPIR_COLL_COMM(comm_ptr)->mpich_tree), (int*) errflag, 1, MPIR_CVAR_BCAST_TREE_KVAL, -1);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 break;
             default:

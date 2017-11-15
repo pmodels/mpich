@@ -9,9 +9,9 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#ifndef MPIC_TYPES_DECL_H_INCLUDED
-#define MPIC_TYPES_DECL_H_INCLUDED
-#define GLOBAL_NAME    MPIC_
+#ifndef MPIR_COLL_TYPES_DECL_H_INCLUDED
+#define MPIR_COLL_TYPES_DECL_H_INCLUDED
+#define GLOBAL_NAME    MPIR_COLL_
 
 #include "../transports/stub/transport_types.h"
 #include "../transports/mpich/transport_types.h"

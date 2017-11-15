@@ -18,7 +18,7 @@ typedef struct MPIR_ALGO_comm_t {
 } MPIR_ALGO_comm_t;
 
 typedef struct MPIR_ALGO_req_t {
-    MPIC_queue_elem_t elem;
+    MPIR_COLL_queue_elem_t elem;
 } MPIR_ALGO_req_t;
 
 typedef struct MPIR_ALGO_sched_t {

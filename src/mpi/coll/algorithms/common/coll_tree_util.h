@@ -81,7 +81,7 @@ MPL_STATIC_INLINE_PREFIX void MPIR_ALGO_tree_kary_init(int rank, int nranks, int
         return;
 
     lrank = (rank + (nranks - root)) % nranks;
-    MPIC_Assert(k >= 1);
+    MPIR_COLL_Assert(k >= 1);
 
     ct->parent = (lrank <= 0) ? -1 : (((lrank - 1) / k) + root) % nranks;
 
@@ -108,7 +108,7 @@ MPL_STATIC_INLINE_PREFIX void MPIR_ALGO_tree_knomial_init(int rank, int nranks, 
         return;
 
     lrank = (rank + (nranks - root)) % nranks;
-    MPIC_Assert(k >= 2);
+    MPIR_COLL_Assert(k >= 2);
 
     maxtime = 0;            /* maximum number of steps while generating the knomial tree */
     tmp = nranks - 1;

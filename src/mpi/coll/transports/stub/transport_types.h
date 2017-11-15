@@ -9,21 +9,21 @@
  */
 
 /* refer to ../mpich/transport_types.h for documentation */
-typedef int MPIC_STUB_dt_t;
+typedef int MPIR_COLL_STUB_dt_t;
 
-typedef int MPIC_STUB_op_t;
+typedef int MPIR_COLL_STUB_op_t;
 
-typedef struct MPIC_STUB_comm_t {
-} MPIC_STUB_comm_t;
+typedef struct MPIR_COLL_STUB_comm_t {
+} MPIR_COLL_STUB_comm_t;
 
-typedef struct MPIC_STUB_sched_t {
-} MPIC_STUB_sched_t;
+typedef struct MPIR_COLL_STUB_sched_t {
+} MPIR_COLL_STUB_sched_t;
 
-typedef struct MPIC_STUB_req_t {
-} MPIC_STUB_req_t;
+typedef struct MPIR_COLL_STUB_req_t {
+} MPIR_COLL_STUB_req_t;
 
-typedef struct MPIC_STUB_global_t {
-    MPIC_STUB_dt_t control_dt;
-} MPIC_STUB_global_t;
+typedef struct MPIR_COLL_STUB_global_t {
+    MPIR_COLL_STUB_dt_t control_dt;
+} MPIR_COLL_STUB_global_t;
 
-typedef uint64_t MPIC_STUB_aint_t;
+typedef uint64_t MPIR_COLL_STUB_aint_t;

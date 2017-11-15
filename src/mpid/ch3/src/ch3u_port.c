@@ -571,7 +571,7 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
     MPIDI_VCR_Dup(vc_ptr, &tmp_comm->dev.vcrt->vcr_table[0]);
 
     /* Set all collectives communicator data to NULL */
-    MPIC_comm_init_null(tmp_comm);
+    MPIR_COLL_comm_init_null(tmp_comm);
 
     /* Even though this is a tmp comm and we don't call
        MPI_Comm_commit, we still need to call the creation hook

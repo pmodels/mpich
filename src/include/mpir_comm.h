@@ -199,7 +199,7 @@ struct MPIR_Comm {
     MPIR_Comm_map_t *mapper_tail;
 
     /* Collectives specific information */
-    MPIC_comm_t coll;
+    MPIR_COLL_comm_t coll;
 
   /* Other, device-specific information */
 #ifdef MPID_DEV_COMM_DECL

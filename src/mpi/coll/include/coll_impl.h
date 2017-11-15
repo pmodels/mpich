@@ -27,15 +27,15 @@ cvars:
 */
 
 
-#ifndef MPIC_COLL_IMPL_H_INCLUDED
-#define MPIC_COLL_IMPL_H_INCLUDED
+#ifndef MPIR_COLL_COLL_IMPL_H_INCLUDED
+#define MPIR_COLL_COLL_IMPL_H_INCLUDED
 
 #include "queue.h"
 
-extern MPIC_progress_global_t MPIC_progress_global;
-extern MPIC_global_t MPIC_global_instance;
+extern MPIR_COLL_progress_global_t MPIR_COLL_progress_global;
+extern MPIR_COLL_global_t MPIR_COLL_global_instance;
 
-#define GLOBAL_NAME MPIC_
+#define GLOBAL_NAME MPIR_COLL_
 
 #include "../transports/stub/transport.h"
 #include "../transports/mpich/transport.h"
@@ -58,20 +58,20 @@ extern MPIC_global_t MPIC_global_instance;
 struct MPIR_Request;
 
 /* Hook to make progress on non-blocking collective operations */
-MPL_STATIC_INLINE_PREFIX int MPIC_progress_hook()
+MPL_STATIC_INLINE_PREFIX int MPIR_COLL_progress_hook()
 {
     int count = 0;
     int mpi_errno = MPI_SUCCESS;
-    MPIC_queue_elem_t *s;
+    MPIR_COLL_queue_elem_t *s;
 
-    /* Go over up to MPIC_PROGRESS_MAX_COLLS collecives in the queue and make progress on them */
-    for (s = MPIC_progress_global.head.tqh_first;
+    /* Go over up to MPIR_COLL_PROGRESS_MAX_COLLS collecives in the queue and make progress on them */
+    for (s = MPIR_COLL_progress_global.head.tqh_first;
             ((s != NULL) && (count < MPIR_CVAR_PROGRESS_MAX_COLLS));
             s = s->list_data.tqe_next) {
         /* kick_fn makes progress on the collective operation */
         if (s->kick_fn(s)) {
             /* If the collective operation has completed, mark it as complete */
-            MPIC_req_t *base = (MPIC_req_t *) s;
+            MPIR_COLL_req_t *base = (MPIR_COLL_req_t *) s;
             MPIR_Request *req = container_of(base, MPIR_Request, coll);
             MPID_Request_complete(req);
             count++;
@@ -82,18 +82,18 @@ MPL_STATIC_INLINE_PREFIX int MPIC_progress_hook()
 }
 
 /* Function to initialze communicators for collectives */
-MPL_STATIC_INLINE_PREFIX int MPIC_comm_init(struct MPIR_Comm *comm)
+MPL_STATIC_INLINE_PREFIX int MPIR_COLL_comm_init(struct MPIR_Comm *comm)
 {
     int rank, size, mpi_errno = MPI_SUCCESS;
-    int *tag = &(MPIC_COMM(comm)->use_tag);
+    int *tag = &(MPIR_COLL_COMM(comm)->use_tag);
     *tag = 0;
     rank = comm->rank;
     size = comm->local_size;
 
-    MPIC_STUB_STUB_comm_init(&(MPIC_COMM(comm)->stub_stub),  tag,  rank, size);
-    MPIC_STUB_TREE_comm_init(&(MPIC_COMM(comm)->stub_tree),  tag, rank, size);
-    MPIC_MPICH_STUB_comm_init(&(MPIC_COMM(comm)->mpich_stub),  tag, rank, size);
-    MPIC_MPICH_TREE_comm_init(&(MPIC_COMM(comm)->mpich_tree),  tag, rank, size);
+    MPIR_COLL_STUB_STUB_comm_init(&(MPIR_COLL_COMM(comm)->stub_stub),  tag,  rank, size);
+    MPIR_COLL_STUB_TREE_comm_init(&(MPIR_COLL_COMM(comm)->stub_tree),  tag, rank, size);
+    MPIR_COLL_MPICH_STUB_comm_init(&(MPIR_COLL_COMM(comm)->mpich_stub),  tag, rank, size);
+    MPIR_COLL_MPICH_TREE_comm_init(&(MPIR_COLL_COMM(comm)->mpich_tree),  tag, rank, size);
 
 #ifdef MPID_COLL_COMM_INIT_HOOK
     MPID_COLL_COMM_INIT_HOOK;
@@ -104,16 +104,16 @@ MPL_STATIC_INLINE_PREFIX int MPIC_comm_init(struct MPIR_Comm *comm)
 /* Function to initialize communicators for collectives to NULL.
    This is needed for light weight initialization of temporary
    communicators in CH3 for setting up dynamic communicators */
-MPL_STATIC_INLINE_PREFIX int MPIC_comm_init_null(struct MPIR_Comm *comm)
+MPL_STATIC_INLINE_PREFIX int MPIR_COLL_comm_init_null(struct MPIR_Comm *comm)
 {
-    MPIC_STUB_STUB_comm_init_null(&(MPIC_COMM(comm)->stub_stub));
-    MPIC_STUB_TREE_comm_init_null(&(MPIC_COMM(comm)->stub_tree));
-    MPIC_MPICH_STUB_comm_init_null(&(MPIC_COMM(comm)->mpich_stub));
-    MPIC_MPICH_TREE_comm_init_null(&(MPIC_COMM(comm)->mpich_tree));
+    MPIR_COLL_STUB_STUB_comm_init_null(&(MPIR_COLL_COMM(comm)->stub_stub));
+    MPIR_COLL_STUB_TREE_comm_init_null(&(MPIR_COLL_COMM(comm)->stub_tree));
+    MPIR_COLL_MPICH_STUB_comm_init_null(&(MPIR_COLL_COMM(comm)->mpich_stub));
+    MPIR_COLL_MPICH_TREE_comm_init_null(&(MPIR_COLL_COMM(comm)->mpich_tree));
 }
 
 /* Function to cleanup any communicators for collectives */
-MPL_STATIC_INLINE_PREFIX int MPIC_comm_cleanup(struct MPIR_Comm *comm)
+MPL_STATIC_INLINE_PREFIX int MPIR_COLL_comm_cleanup(struct MPIR_Comm *comm)
 {
     int mpi_errno = MPI_SUCCESS;
     /* cleanup device level collective communicators */
@@ -121,28 +121,28 @@ MPL_STATIC_INLINE_PREFIX int MPIC_comm_cleanup(struct MPIR_Comm *comm)
     MPID_COLL_COMM_CLEANUP_HOOK;
 #endif
     /* cleanup all collective communicators */
-    MPIC_STUB_STUB_comm_cleanup(&(MPIC_COMM(comm)->stub_stub));
-    MPIC_STUB_TREE_comm_cleanup(&(MPIC_COMM(comm)->stub_tree));
+    MPIR_COLL_STUB_STUB_comm_cleanup(&(MPIR_COLL_COMM(comm)->stub_stub));
+    MPIR_COLL_STUB_TREE_comm_cleanup(&(MPIR_COLL_COMM(comm)->stub_tree));
 
-    MPIC_MPICH_STUB_comm_cleanup(&(MPIC_COMM(comm)->mpich_stub));
-    MPIC_MPICH_TREE_comm_cleanup(&(MPIC_COMM(comm)->mpich_tree));
+    MPIR_COLL_MPICH_STUB_comm_cleanup(&(MPIR_COLL_COMM(comm)->mpich_stub));
+    MPIR_COLL_MPICH_TREE_comm_cleanup(&(MPIR_COLL_COMM(comm)->mpich_tree));
 
     return mpi_errno;
 }
 
 /* Hook for any collective algorithms related initialization */
-MPL_STATIC_INLINE_PREFIX int MPIC_init()
+MPL_STATIC_INLINE_PREFIX int MPIR_COLL_init()
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIC_progress_global.progress_fn = MPID_Progress_test;
+    MPIR_COLL_progress_global.progress_fn = MPID_Progress_test;
 
-    MPIC_STUB_init();
-    MPIC_MPICH_init();
+    MPIR_COLL_STUB_init();
+    MPIR_COLL_MPICH_init();
 
-    MPIC_STUB_STUB_init();
-    MPIC_STUB_TREE_init();
-    MPIC_MPICH_STUB_init();
-    MPIC_MPICH_TREE_init();
+    MPIR_COLL_STUB_STUB_init();
+    MPIR_COLL_STUB_TREE_init();
+    MPIR_COLL_MPICH_STUB_init();
+    MPIR_COLL_MPICH_TREE_init();
 
 #ifdef MPIDI_NM_COLL_INIT_HOOK
     MPIDI_NM_COLL_INIT_HOOK;
@@ -150,9 +150,9 @@ MPL_STATIC_INLINE_PREFIX int MPIC_init()
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIC_finalize()
+MPL_STATIC_INLINE_PREFIX int MPIR_COLL_finalize()
 {
     int mpi_errno = MPI_SUCCESS;
     return mpi_errno;
 }
-#endif /* MPIC_COLL_IMPL_H_INCLUDED */
+#endif /* MPIR_COLL_COLL_IMPL_H_INCLUDED */

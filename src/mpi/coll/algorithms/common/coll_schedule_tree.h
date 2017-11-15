@@ -162,7 +162,7 @@ MPIR_ALGO_sched_bcast_tree_pipelined(void *buffer, int count, MPIR_ALGO_dt_t dat
     MPIR_TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
 
     /* calculate chunking information for pipelining */
-    MPIC_calculate_chunk_info(segsize, type_size, count, &num_chunks, &num_chunks_floor,
+    MPIR_COLL_calculate_chunk_info(segsize, type_size, count, &num_chunks, &num_chunks_floor,
                               &chunk_size_floor, &chunk_size_ceil);
     /* print chunking information */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,
@@ -469,7 +469,7 @@ MPIR_ALGO_sched_reduce_tree_full_pipelined(const void *sendbuf, void *recvbuf, i
     MPIR_TSP_dtinfo(datatype, &is_contig, &type_size, &extent, &lb);
 
     /* get chunking information for pipelining */
-    MPIC_calculate_chunk_info(segsize, type_size, count, &num_chunks, &num_chunks_floor,
+    MPIR_COLL_calculate_chunk_info(segsize, type_size, count, &num_chunks, &num_chunks_floor,
                               &chunk_size_floor, &chunk_size_ceil);
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL,VERBOSE,(MPL_DBG_FDEST,
          "Reduce segsize %d type_size %zd count %d num_chunks %d num_chunks_floor %d chunk_size_floor %d chunk_size_ceil %d \n",
