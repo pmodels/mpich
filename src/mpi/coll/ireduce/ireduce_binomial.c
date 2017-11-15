@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "../collutil.h"
+#include "collutil.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ireduce_binomial_sched

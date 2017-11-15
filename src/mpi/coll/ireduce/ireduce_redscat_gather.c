@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "../collutil.h"
+#include "collutil.h"
 
 /* An implementation of Rabenseifner's reduce algorithm (see
    http://www.hlrs.de/mpi/myreduce.html).

@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "../collutil.h"
+#include "collutil.h"
 
 /* A recursive doubling algorithm for MPI_Ireduce_scatter, suitable for
  * noncommutative and (non-pof2 or block irregular). */

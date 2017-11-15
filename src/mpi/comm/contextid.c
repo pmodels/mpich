@@ -7,7 +7,7 @@
 #include "mpiimpl.h"
 #include "mpicomm.h"
 #include "mpir_info.h"    /* MPIR_Info_free */
-#include "../coll/collutil.h"
+#include "../coll/include/collutil.h"
 
 #include "utlist.h"
 

@@ -7,7 +7,7 @@
 #include "mpiimpl.h"
 #include "mpicomm.h"
 #include <stdint.h>
-#include "../coll/collutil.h"
+#include "../coll/include/collutil.h"
 
 /* This function has multiple phases.
  *
