@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "collutil.h"
+#include "coll_util.h"
 
 /* A pairwise exchange algorithm for MPI_Ireduce_scatter.  Requires a
  * commutative op and is intended for use with large messages. */

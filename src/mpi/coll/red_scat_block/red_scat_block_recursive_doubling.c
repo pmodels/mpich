@@ -12,7 +12,7 @@
 
 
 #include "mpiimpl.h"
-#include "collutil.h"
+#include "coll_util.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_scatter_block_intra

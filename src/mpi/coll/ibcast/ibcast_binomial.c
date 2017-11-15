@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "collutil.h"
+#include "coll_util.h"
 #include "ibcast.h"
 
 /* A binomial tree broadcast algorithm.  Good for short messages,

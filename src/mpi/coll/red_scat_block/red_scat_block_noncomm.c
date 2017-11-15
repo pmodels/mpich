@@ -12,7 +12,7 @@
 
 
 #include "mpiimpl.h"
-#include "collutil.h"
+#include "coll_util.h"
 
 /* FIXME should we be checking the op_errno here? */
 

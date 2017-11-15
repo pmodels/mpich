@@ -6,7 +6,7 @@
  */
 
 #include "mpiimpl.h"
-#include "collutil.h"
+#include "coll_util.h"
 
 /* This function implements a binomial tree reduce.
 

@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "collutil.h"
+#include "coll_util.h"
 
 /* Pairwise exchanges for long messages. If comm_size is a power-of-two, do a
  * pairwise exchange using exclusive-or to create pairs. Else send to rank+i,
