@@ -7,7 +7,7 @@
 #include "mpiimpl.h"
 #include "mpicomm.h"
 #include <stdint.h>
-#include "../coll/include/collutil.h"
+#include "../coll/include/coll_util.h"
 
 /* -- Begin Profiling Symbol Block for routine MPIX_Comm_agree */
 #if defined(HAVE_PRAGMA_WEAK)

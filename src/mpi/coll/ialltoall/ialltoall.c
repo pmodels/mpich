@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "collutil.h"
+#include "coll_util.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Ialltoall */
 #if defined(HAVE_PRAGMA_WEAK)

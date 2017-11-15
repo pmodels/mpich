@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "collutil.h"
+#include "coll_util.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Iallreduce_rec_dbl_sched

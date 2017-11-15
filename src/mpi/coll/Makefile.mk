@@ -81,4 +81,4 @@ mpi_core_sources += \
     src/mpi/coll/nbcutil.c
 
 noinst_HEADERS +=                    \
-    src/mpi/coll/include/collutil.h
+    src/mpi/coll/include/coll_util.h
