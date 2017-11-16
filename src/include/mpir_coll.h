@@ -206,15 +206,6 @@ int MPIR_Barrier_recursive_doubling(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag
 /* Reduce_local implementation */
 int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op);
 
-
-/* group collectives */
-int MPIR_Allreduce_group(void *sendbuf, void *recvbuf, int count,
-                         MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-                         MPIR_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
-int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
-                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-                               MPIR_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
-
 /* impl functions for NBC */
 int MPIR_Ibarrier(MPIR_Comm *comm_ptr, MPI_Request *request);
 int MPIR_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPI_Request *request);
