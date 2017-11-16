@@ -101,7 +101,7 @@ typedef struct {
     MPIDI_OFI_am_header_t msg_hdr;
     uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE];
     /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
-    struct iovec iov[3];
+    struct iovec iov[3] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
 } MPIDI_OFI_am_request_header_t;
 
 typedef struct {
