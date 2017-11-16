@@ -215,10 +215,6 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
                                MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                                MPIR_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
 
-
-int MPIR_Barrier_group(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
-
-
 /* impl functions for NBC */
 int MPIR_Ibarrier(MPIR_Comm *comm_ptr, MPI_Request *request);
 int MPIR_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPI_Request *request);
