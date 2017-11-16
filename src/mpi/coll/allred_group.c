@@ -18,10 +18,10 @@
     } while (0)
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allreduce_group_intra
+#define FUNCNAME MPII_Allreduce_group_intra
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
+int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
                                MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                                MPIR_Group *group_ptr, int tag, MPIR_Errflag_t *errflag)
 {
@@ -357,10 +357,10 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allreduce_group
+#define FUNCNAME MPII_Allreduce_group
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allreduce_group(void *sendbuf, void *recvbuf, int count,
+int MPII_Allreduce_group(void *sendbuf, void *recvbuf, int count,
                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                          MPIR_Group *group_ptr, int tag, MPIR_Errflag_t *errflag)
 {
@@ -368,7 +368,7 @@ int MPIR_Allreduce_group(void *sendbuf, void *recvbuf, int count,
 
     MPIR_ERR_CHKANDJUMP(comm_ptr->comm_kind != MPIR_COMM_KIND__INTRACOMM, mpi_errno, MPI_ERR_OTHER, "**commnotintra");
 
-    mpi_errno = MPIR_Allreduce_group_intra(sendbuf, recvbuf, count, datatype,
+    mpi_errno = MPII_Allreduce_group_intra(sendbuf, recvbuf, count, datatype,
                                            op, comm_ptr, group_ptr, tag, errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
