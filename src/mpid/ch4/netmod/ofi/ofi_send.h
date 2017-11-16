@@ -150,6 +150,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
             size_t countp_huge = 0;
             MPIR_Segment seg;
             DLOOP_Offset last_byte = dt_ptr->size * count;
+            size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
 
             /* If the number of iovecs is greater than the supported hardware limit (to transfer in a single send),
              *  fallback to the pack path */
@@ -164,7 +165,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
             num_contig = map_size;  /* map_size is the maximum number of iovecs that can be generated */
 
             size = o_size*num_contig + sizeof(*(MPIDI_OFI_REQUEST(sreq, noncontig.nopack)));
-            MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = (struct iovec *) MPL_malloc(size, MPL_MEM_BUFFER);
+
+            MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = MPL_aligned_alloc(iov_align, size, MPL_MEM_BUFFER);
             memset(MPIDI_OFI_REQUEST(sreq, noncontig.nopack), 0, size);
 
             MPIR_Segment_init(buf, count, datatype, &seg, 0);
@@ -198,7 +200,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
             }
 
             if (countp_huge >= 1 && huge) {
-                originv_huge = (struct iovec *) MPL_malloc(sizeof(struct iovec) * countp_huge, MPL_MEM_BUFFER);
+                originv_huge = MPL_aligned_alloc(iov_align, sizeof(struct iovec) * countp_huge, MPL_MEM_BUFFER);
 
                 for (j=0; j<num_contig; j++) {
                     l = 0;

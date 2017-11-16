@@ -227,6 +227,18 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         fi
     fi
 
+    # Check for required functions
+
+    # Does MPL provide MPL_aligned_malloc?
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <mplconfig.h>]],
+                                       [[
+                                       #ifndef MPL_DEFINE_ALIGNED_ALLOC
+                                       # error
+                                       #endif
+                                       ]])],
+                                       [],
+                                       [AC_MSG_ERROR(MPL_aligned_alloc is required to build OFI netmod)])
+
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_OFI,...)
 ])dnl end _BODY
 
