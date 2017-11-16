@@ -330,6 +330,7 @@ static void *trmalloc(size_t a, MPL_memory_class class, int lineno, const char f
 
     if (TRhead[0] != TRHEAD_PRESENTINAL || TRhead[2] != TRHEAD_POSTSENTINAL) {
         MPL_error_printf("TRhead corrupted - likely memory overwrite.\n");
+        free(head);
         goto fn_exit;
     }
     if (TRhead[1]) {
