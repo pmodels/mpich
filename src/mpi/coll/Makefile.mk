@@ -50,7 +50,6 @@ mpi_sources +=                     \
 
 mpi_core_sources += \
     src/mpi/coll/allred_group.c   \
-    src/mpi/coll/barrier_group.c  \
     src/mpi/coll/helper_fns.c     \
     src/mpi/coll/opsum.c          \
     src/mpi/coll/opmax.c          \
