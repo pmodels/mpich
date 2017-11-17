@@ -299,7 +299,7 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, MPI
 #define FUNCNAME pkt_CTS_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, intptr_t *buflen, MPID_Request **rreqp)
+static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, MPIDI_msg_sz_t *buflen, MPID_Request **rreqp)
 {
     MPID_nem_pkt_lmt_cts_t * const cts_pkt = (MPID_nem_pkt_lmt_cts_t *)pkt;
     MPID_Request *sreq;
