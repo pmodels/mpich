@@ -82,7 +82,7 @@ static HYD_status group_to_nodes(char *str)
 /* List is a comma separated collection of groups, where each group is
  * of the form "[host001-host012]", "host001-host012", "host009",
  * "[host001-host012,host014-host020]", etc. */
-static HYD_status list_to_groups(char *str)
+static HYD_status list_to_nodes(char *str)
 {
     char *tmp, group[3 * MAX_HOSTNAME_LEN];     /* maximum group size */
     int nesting, i;
@@ -199,7 +199,7 @@ HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list)
     status = extract_tasks_per_node(nnodes, task_list);
     HYDU_ERR_POP(status, "unable to extract the number of tasks per node\n");
 
-    list_to_groups(list);
+    list_to_nodes(list);
     *node_list = global_node_list;
 
   fn_exit:
