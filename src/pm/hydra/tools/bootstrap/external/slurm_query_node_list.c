@@ -9,7 +9,9 @@
 #include "bscu.h"
 #include "slurm.h"
 
-#if defined(HAVE_POSIX_REGCOMP)
+#if defined(HAVE_SLURM_SLURM_H)
+#include <slurm/slurm.h> /* for slurm_hostlist_create */
+#elif defined(HAVE_POSIX_REGCOMP)
 #include <regex.h> /* for POSIX regular expressions */
 
 #define MAX_GMATCH 5 /* max number of atoms in group matches + 1 */
@@ -88,7 +90,32 @@ static HYD_status group_to_nodes(char *str)
     goto fn_exit;
 }
 
-#if defined(HAVE_POSIX_REGCOMP)
+#if defined(HAVE_LIBSLURM)
+static HYD_status list_to_nodes(char *str) {
+    hostlist_t hostlist;
+    char *host;
+    int k = 0;
+    HYD_status status = HYD_SUCCESS;
+
+    if ((hostlist = slurm_hostlist_create(str)) == NULL) {
+        status = HYD_FAILURE;
+        goto fn_fail;
+    }
+
+    while (host = slurm_hostlist_shift(hostlist)) {
+        status = HYDU_add_to_node_list(host, tasks_per_node[k++], &global_node_list);
+        HYDU_ERR_POP(status, "unable to add to node list\n");
+    }
+
+    slurm_hostlist_destroy(hostlist);
+
+fn_exit:
+    return status;
+
+fn_fail:
+    goto fn_exit;
+}
+#elif defined(HAVE_POSIX_REGCOMP)
 static HYD_status list_to_nodes(char *str)
 {
     regex_t gmatch_old[2];
