@@ -508,6 +508,16 @@ AC_MSG_CHECKING([available processor topology libraries])
 AC_MSG_RESULT([$available_topolibs])
 
 #########################################################################
+# Slurm hostlist parsing
+#########################################################################
+AC_CHECK_HEADERS(slurm/slurm.h)
+AC_CHECK_LIB([slurm],[slurm_hostlist_create],have_libslurm=yes)
+if test "$have_libslurm" = "yes" ; then
+    PAC_PREPEND_FLAG([-lslurm],[LIBS])
+    AC_DEFINE(HAVE_LIBSLURM,1,[Define if libslurm is available])
+fi
+
+#########################################################################
 # POSIX Regcomp
 #########################################################################
 AX_CHECK_POSIX_REGCOMP
