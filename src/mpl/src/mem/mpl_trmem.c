@@ -219,7 +219,6 @@ static void init_classes() {
 void MPL_trinit()
 {
     char *s;
-    int i;
 
     /* FIXME: We should use generalized parameter handling here
      * to allow use of the command line as well as environment
