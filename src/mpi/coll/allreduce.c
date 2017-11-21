@@ -614,7 +614,7 @@ int MPIR_Allreduce_reduce_scatter_allgather(
     MPIR_Comm * comm_ptr,
     MPIR_Errflag_t * errflag)
 {
-    MPIR_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL(2);
 #ifdef MPID_HAS_HETERO
     int is_homogeneous;
     int rc;
@@ -623,7 +623,7 @@ int MPIR_Allreduce_reduce_scatter_allgather(
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int mask, dst, pof2, newrank, rem, newdst, i,
-        send_idx, recv_idx, last_idx, send_cnt, recv_cnt, *cnts, *disps;
+        niter, newcount, scnt, rcnt, sdisp, rdisp, lsize, rsize;
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf;
 
@@ -635,7 +635,7 @@ int MPIR_Allreduce_reduce_scatter_allgather(
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
     MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
 
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -649,39 +649,60 @@ int MPIR_Allreduce_reduce_scatter_allgather(
 
     /* find nearest power-of-two less than or equal to comm_size */
     pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
+    niter = -1;
+
+    while (pof2 <= comm_size) {
+           niter ++;
+           pof2 <<= 1;
+    }
+
+    pof2 >>= 1;
 
     rem = comm_size - pof2;
 
-    /* In the non-power-of-two case, all even-numbered
-       processes of rank < 2*rem send their data to
-       (rank+1). These even-numbered processes no longer
-       participate in the algorithm until the very end. The
-       remaining processes form a nice power-of-two. */
+    if (rank < 2 * rem) {
+        lsize  = count / 2;
+        rsize  = count - lsize;
 
-    if (rank < 2*rem) {
-        if (rank % 2 == 0) { /* even */
-            mpi_errno = MPIC_Send(recvbuf, count,
-                                     datatype, rank+1,
-                                     MPIR_ALLREDUCE_TAG, comm_ptr, errflag);
+        if (rank % 2 != 0) {/* Odd-process: Exchange with rank -1
+            Send: the left half of the input vector to the left neighbor
+            Recv: the right half of the input vector from the left neighbor */
+
+            mpi_errno = MPIC_Sendrecv(recvbuf, lsize, datatype,
+                                      rank - 1, MPIR_ALLREDUCE_TAG,
+                                      (char *)tmp_buf + lsize * extent,
+                                      rsize, datatype, rank - 1,
+                                      MPIR_ALLREDUCE_TAG, comm_ptr,
+                                      MPI_STATUS_IGNORE, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
                 MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
+            mpi_errno = MPIR_Reduce_local_impl((char *)tmp_buf +
+                                               lsize * extent,
+                                               (char *)recvbuf +
+                                               lsize * extent,
+                                               rsize, datatype, op);
 
-            /* temporarily set the rank to -1 so that this
-               process does not pariticipate in recursive
-               doubling */
+            /* Send the right half to the left neighbor */
+            mpi_errno = MPIC_Send((char *)recvbuf + lsize * extent,
+                                  rsize, datatype, rank - 1,
+                                  MPIR_ALLREDUCE_TAG, comm_ptr, errflag);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
             newrank = -1;
-        }
-        else { /* odd */
-            mpi_errno = MPIC_Recv(tmp_buf, count,
-                                     datatype, rank-1,
-                                     MPIR_ALLREDUCE_TAG, comm_ptr,
-                                     MPI_STATUS_IGNORE, errflag);
+         } else {
+            mpi_errno = MPIC_Sendrecv((char *)recvbuf + lsize * extent,
+                                      rsize, datatype, rank + 1,
+                                      MPIR_ALLREDUCE_TAG, tmp_buf, lsize,
+                                      datatype, rank + 1, MPIR_ALLREDUCE_TAG,
+                                      comm_ptr, MPI_STATUS_IGNORE, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -689,140 +710,107 @@ int MPIR_Allreduce_reduce_scatter_allgather(
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
 
-            /* do the reduction on received data. since the
-               ordering is right, it doesn't matter whether
-               the operation is commutative or not. */
-            mpi_errno = MPIR_Reduce_local_impl(tmp_buf, recvbuf, count, datatype, op);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            /* Reduce on the left half of the buffers (result in recvbuf) */
+            mpi_errno = MPIR_Reduce_local_impl(tmp_buf, recvbuf, lsize,
+                                               datatype, op);
 
-            /* change the rank */
+            /* Recv the right half from the right neighbor */
+            mpi_errno = MPIC_Recv((char *)recvbuf + lsize * extent,
+                                  rsize, datatype, rank + 1,
+                                  MPIR_ALLREDUCE_TAG, comm_ptr, MPI_STATUS_IGNORE,
+                                  errflag);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
             newrank = rank / 2;
         }
-    }
-    else  /* rank >= 2*rem */
+    } else  /* rank >= 2*rem */
         newrank = rank - rem;
 
-    /* If op is user-defined or count is less than pof2, use
-       recursive doubling algorithm. Otherwise do a reduce-scatter
-       followed by allgather. (If op is user-defined,
-       derived datatypes are allowed and the user could pass basic
-       datatypes on one process and derived on another as long as
-       the type maps are the same. Breaking up derived
-       datatypes to do the reduce-scatter is tricky, therefore
-       using recursive doubling in that case.) */
+   if (newrank != -1) {
+       newcount = count;
+       sdisp = rdisp = 0;
 
+       for (mask = 1; mask < pof2; mask <<= 1) {
+            newdst = newrank ^ mask;
+            /* Find real rank of the dest */
+            dst = (newdst < rem) ? newdst * 2 : newdst + rem;
+            if ((rank < dst)) {
+                /* Recv: into the left half of the current window
+                   Send: the right half of the window to the peer
+                  (perform reduce on the left half of the current window)*/
+                rcnt = newcount / 2;
+                scnt = newcount - rcnt;
+                sdisp = rdisp + rcnt;
+            } else {
+                /* Recv into the right half of the current window
+                   Send the left half of the window to the peer
+                   (perform reduce on the right half of the current window) */
+                scnt = newcount / 2;
+                rcnt = newcount - scnt;
+                rdisp = sdisp + scnt;
+            }
+            mpi_errno = MPIC_Sendrecv((char *)recvbuf + sdisp * extent,
+                                      scnt, datatype, dst,
+                                      MPIR_ALLREDUCE_TAG,
+                                      (char *)tmp_buf + rdisp * extent,
+                                      rcnt, datatype, dst,
+                                      MPIR_ALLREDUCE_TAG, comm_ptr,
+                                      MPI_STATUS_IGNORE, errflag);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
+            /* Local-reduce */
+            mpi_errno = MPIR_Reduce_local_impl((char *)tmp_buf +
+                                               rdisp * extent,
+                                               (char *)recvbuf +
+                                               rdisp * extent,
+                                               rcnt, datatype, op);
+
+            sdisp = rdisp;
+            newcount = rcnt;
+         }
+    }
+
+    /* Gather */
     if (newrank != -1) {
-      MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts", MPL_MEM_BUFFER);
-      MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements", MPL_MEM_BUFFER);
+        mask = pof2 >> 1;
 
-      for (i=0; i<pof2; i++)
-          cnts[i] = count/pof2;
-      if ((count % pof2) > 0) {
-          for (i=0; i<(count % pof2); i++)
-              cnts[i] += 1;
-      }
+        while (mask > 0) {
+               newcount = count;
+               pof2 = 1;
+               sdisp = rdisp = rcnt = 0;
+               /* Computing the disp and cnt for Gather */
+               for (i = 1; i <= mask; i <<= 1) {
+                    newdst = newrank ^ pof2;
+                    dst = (newdst < rem) ? newdst * 2 : newdst + rem;
+                    sdisp = rdisp;
 
-      disps[0] = 0;
-      for (i=1; i<pof2; i++)
-          disps[i] = disps[i-1] + cnts[i-1];
-
-      mask = 0x1;
-      send_idx = recv_idx = 0;
-      last_idx = pof2;
-      while (mask < pof2) {
-          newdst = newrank ^ mask;
-          /* find real rank of dest */
-          dst = (newdst < rem) ? newdst*2 + 1 : newdst + rem;
-
-          send_cnt = recv_cnt = 0;
-          if (newrank < newdst) {
-              send_idx = recv_idx + pof2/(mask*2);
-              for (i=send_idx; i<last_idx; i++)
-                  send_cnt += cnts[i];
-              for (i=recv_idx; i<send_idx; i++)
-                  recv_cnt += cnts[i];
-          }
-          else {
-              recv_idx = send_idx + pof2/(mask*2);
-              for (i=send_idx; i<recv_idx; i++)
-                  send_cnt += cnts[i];
-              for (i=recv_idx; i<last_idx; i++)
-                  recv_cnt += cnts[i];
-          }
-
-          /* Send data from recvbuf. Recv into tmp_buf */
-          mpi_errno = MPIC_Sendrecv((char *) recvbuf +
-                                       disps[send_idx]*extent,
-                                       send_cnt, datatype,
-                                       dst, MPIR_ALLREDUCE_TAG,
-                                       (char *) tmp_buf +
-                                       disps[recv_idx]*extent,
-                                       recv_cnt, datatype, dst,
-                                       MPIR_ALLREDUCE_TAG, comm_ptr,
-                                       MPI_STATUS_IGNORE, errflag);
-          if (mpi_errno) {
-              /* for communication errors, just record the error but continue */
-              *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-              MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-              MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-          }
-
-          /* tmp_buf contains data received in this step.
-             recvbuf contains data accumulated so far */
-
-          /* This algorithm is used only for predefined ops
-             and predefined ops are always commutative. */
-          mpi_errno = MPIR_Reduce_local_impl(((char *) tmp_buf + disps[recv_idx]*extent),
-                                             ((char *) recvbuf + disps[recv_idx]*extent),
-                                             recv_cnt, datatype, op);
-          if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-          /* update send_idx for next iteration */
-          send_idx = recv_idx;
-          mask <<= 1;
-
-          /* update last_idx, but not in last iteration
-             because the value is needed in the allgather
-             step below. */
-          if (mask < pof2)
-              last_idx = recv_idx + pof2/mask;
-      }
-
-      /* now do the allgather */
-
-      mask >>= 1;
-      while (mask > 0) {
-          newdst = newrank ^ mask;
-          /* find real rank of dest */
-          dst = (newdst < rem) ? newdst*2 + 1 : newdst + rem;
-
-          send_cnt = recv_cnt = 0;
-          if (newrank < newdst) {
-              /* update last_idx except on first iteration */
-              if (mask != pof2/2)
-                  last_idx = last_idx + pof2/(mask*2);
-
-              recv_idx = send_idx + pof2/(mask*2);
-              for (i=send_idx; i<recv_idx; i++)
-                  send_cnt += cnts[i];
-              for (i=recv_idx; i<last_idx; i++)
-                  recv_cnt += cnts[i];
-          }
-          else {
-              recv_idx = send_idx - pof2/(mask*2);
-              for (i=send_idx; i<last_idx; i++)
-                  send_cnt += cnts[i];
-              for (i=recv_idx; i<send_idx; i++)
-                  recv_cnt += cnts[i];
-          }
-
-          mpi_errno = MPIC_Sendrecv((char *) recvbuf +
-                                       disps[send_idx]*extent,
-                                       send_cnt, datatype,
+                    if ((rank < dst)) {
+                        rcnt = newcount / 2;
+                        scnt = newcount - rcnt;
+                        sdisp = rdisp + rcnt;
+                    } else {
+                        scnt = newcount / 2;
+                        rcnt = newcount - scnt;
+                        rdisp = sdisp + scnt;
+                    }
+                    newcount = rcnt;
+                    pof2 <<= 1;
+                }
+        mpi_errno = MPIC_Sendrecv((char *) recvbuf +
+                                       rdisp * extent,
+                                       rcnt, datatype,
                                        dst, MPIR_ALLREDUCE_TAG,
                                        (char *) recvbuf +
-                                       disps[recv_idx]*extent,
-                                       recv_cnt, datatype, dst,
+                                       sdisp * extent,
+                                       scnt, datatype, dst,
                                        MPIR_ALLREDUCE_TAG, comm_ptr,
                                        MPI_STATUS_IGNORE, errflag);
           if (mpi_errno) {
@@ -832,15 +820,14 @@ int MPIR_Allreduce_reduce_scatter_allgather(
               MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
           }
 
-          if (newrank > newdst) send_idx = recv_idx;
-
-          mask >>= 1;
+         mask >>= 1;
       }
     }
-    /* In the non-power-of-two case, all odd-numbered
+
+  /* In the non-power-of-two case, all odd-numbered
        processes of rank < 2*rem send the result to
        (rank-1), the ranks who didn't participate above. */
-    if (rank < 2*rem) {
+    if (rank < 2 * rem) {
         if (rank % 2)  /* odd */
             mpi_errno = MPIC_Send(recvbuf, count,
                                      datatype, rank-1,
