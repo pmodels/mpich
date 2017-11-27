@@ -53,6 +53,45 @@ cvars:
         Maximum message size for which SMP-aware allreduce is used.  A
         value of '0' uses SMP-aware allreduce for all message sizes.
 
+    - name        : MPIR_CVAR_ALLREDUCE_ALGORITHM_INTRA
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select allreduce algorithm
+        auto - Internal algorithm selection
+        recursive_doubling - Force recursive doubling algorithm
+        redscat_allgather - Force redscat allgather algorithm
+
+    - name        : MPIR_CVAR_ALLREDUCE_ALGORITHM_INTER
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select allreduce algorithm
+        auto - Internal algorithm selection
+        generic - Force generic algorithm
+
+    - name        : MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_Allreduce will allow the device to override the
+        MPIR-level collective algorithms. The device still has the
+        option to call the MPIR-level algorithms manually.
+        If set to false, the device-level allreduce function will not be
+        called.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -95,7 +134,7 @@ MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[] = {
     MPIR_REPLACE_check_dtype, MPIR_NO_OP_check_dtype }; 
 
 
-/* This is the default implementation of allreduce. The algorithm is:
+/* This is the machine-independent implementation of allreduce. The algorithm is:
    
    Algorithm: MPI_Allreduce
 
@@ -339,14 +378,38 @@ int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        mpi_errno = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        switch (MPIR_Allreduce_alg_intra_choice) {
+            case MPIR_ALLREDUCE_ALG_INTRA_RECURSIVE_DOUBLING:
+                mpi_errno = MPIR_Allreduce_recursive_doubling(sendbuf, recvbuf, count,
+                            datatype, op, comm_ptr, errflag);
+                break;
+            case MPIR_ALLREDUCE_ALG_INTRA_REDSCAT_ALLGATHER:
+                mpi_errno = MPIR_Allreduce_reduce_scatter_allgather(sendbuf, recvbuf, count,
+                            datatype, op, comm_ptr, errflag);
+                break;
+            case MPIR_ALLREDUCE_ALG_INTRA_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op,
+                            comm_ptr, errflag);
+                break;
+         }
+     } else {
+         /* intercommunicator */
+         switch (MPIR_Allreduce_alg_inter_choice) {
+             case MPIR_ALLREDUCE_ALG_INTER_GENERIC:
+                  mpi_errno = MPIR_Allreduce_generic_inter(sendbuf, recvbuf, count, datatype, op,
+                              comm_ptr, errflag);
+                  break;
+             case MPIR_ALLREDUCE_ALG_INTER_AUTO:
+                 MPL_FALLTHROUGH;
+             default:
+                  mpi_errno = MPIR_Allreduce_inter(sendbuf, recvbuf, count, datatype, op,
+                              comm_ptr, errflag);
+                  break;
+         }
     }
-    else {
-        /* intercommunicator */
-        mpi_errno = MPIR_Allreduce_inter(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;
@@ -467,7 +530,11 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
+    if (MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
+    } else {
+        mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
+    }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

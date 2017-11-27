@@ -6,6 +6,52 @@
 
 #include "mpiimpl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_IALLTOALLV_ALGORITHM_INTRA
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select ialltoallv algorithm
+        auto - Internal algorithm selection
+        blocked - Force blocked algorithm
+        inplace - Force inplace algorithm
+        pairwise_xchg - Force pairwise xchg algorithm
+
+    - name        : MPIR_CVAR_IALLTOALLV_ALGORITHM_INTER
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select ialltoallv algorithm
+        auto - Internal algorithm selection
+
+    - name        : MPIR_CVAR_IALLTOALLV_DEVICE_COLLECTIVE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_Ialltoallv will allow the device to override the
+        MPIR-level collective algorithms. The device still has the
+        option to call the MPIR-level algorithms manually.
+        If set to false, the device-level ialltoallv function will not be
+        called.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Ialltoallv */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Ialltoallv = PMPI_Ialltoallv
@@ -89,9 +135,37 @@ int MPIR_Ialltoallv_sched(const void *sendbuf, const int sendcounts[], const int
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        mpi_errno = MPIR_Ialltoallv_intra_sched(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
+        /* intracommunicator */
+        switch (MPIR_Ialltoallv_alg_intra_choice) {
+            case MPIR_IALLTOALLV_ALG_INTRA_BLOCKED:
+                mpi_errno = MPIR_Ialltoallv_blocked_sched(sendbuf, sendcounts, sdispls,
+                 sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
+                break;
+            case MPIR_IALLTOALLV_ALG_INTRA_INPLACE:
+                mpi_errno = MPIR_Ialltoallv_inplace_sched(sendbuf, sendcounts, sdispls,
+                 sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
+                break;
+            case MPIR_IALLTOALLV_ALG_INTRA_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Ialltoallv_intra_sched(sendbuf, sendcounts, sdispls,
+                 sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
+                break;
+        }
     } else {
-        mpi_errno = MPIR_Ialltoallv_inter_sched(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
+        /* intercommunicator */
+        switch (MPIR_Ialltoallv_alg_inter_choice) {
+            case MPIR_IALLTOALLV_ALG_INTER_PAIRWISE_XCHG:
+                mpi_errno = MPIR_Ialltoallv_pairwise_xchg_sched(sendbuf, sendcounts, sdispls,
+                 sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
+                break;
+            case MPIR_IALLTOALLV_ALG_INTER_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Ialltoallv_inter_sched(sendbuf, sendcounts, sdispls,
+                 sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
+                break;
+        }
     }
 
     return mpi_errno;
@@ -240,7 +314,13 @@ int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispl
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, request);
+    if (MPIR_CVAR_IALLTOALLV_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                    recvcounts, rdispls, recvtype, comm_ptr, request);
+    } else {
+        mpi_errno = MPIR_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                    recvcounts, rdispls, recvtype, comm_ptr, request);
+    }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

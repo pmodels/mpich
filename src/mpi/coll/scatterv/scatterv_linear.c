@@ -7,7 +7,7 @@
 
 #include "mpiimpl.h"
 
-/* This is the default implementation of scatterv. The algorithm is:
+/* This is the machine-independent implementation of scatterv. The algorithm is:
    
    Algorithm: MPI_Scatterv
 

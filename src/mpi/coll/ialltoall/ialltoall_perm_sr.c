@@ -11,7 +11,7 @@
  * suggestion.  Permuting the sources helps to avoid overloading a single source
  * or destination all at once.
  *
- * We use this as our default medium-sized-message algorithm. */
+ * We use this as our medium-sized-message algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ialltoall_perm_sr_sched
 #undef FCNAME

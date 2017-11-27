@@ -6,6 +6,51 @@
 
 #include "mpiimpl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_ISCATTER_ALGORITHM_INTRA
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select iscatter algorithm
+        auto - Internal algorithm selection
+        binomial - Force binomial algorithm
+
+    - name        : MPIR_CVAR_ISCATTER_ALGORITHM_INTER
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select iscatter algorithm
+        auto - Internal algorithm selection
+        generic - Force generic algorithm
+
+    - name        : MPIR_CVAR_ISCATTER_DEVICE_COLLECTIVE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_Iscatter will allow the device to override the
+        MPIR-level collective algorithms. The device still has the
+        option to call the MPIR-level algorithms manually.
+        If set to false, the device-level iscatter function will not be
+        called.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Iscatter */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Iscatter = PMPI_Iscatter
@@ -38,7 +83,7 @@ struct shared_state {
 
 /* any non-MPI functions go here, especially non-static ones */
 
-/* This is the default implementation of scatter. The algorithm is:
+/* This is the machine-independent implementation of scatter. The algorithm is:
 
    Algorithm: MPI_Scatter
 
@@ -105,9 +150,33 @@ int MPIR_Iscatter_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        mpi_errno = MPIR_Iscatter_intra_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+        /* intracommunicator */
+        switch (MPIR_Iscatter_alg_intra_choice) {
+            case MPIR_ISCATTER_ALG_INTRA_BINOMIAL:
+                mpi_errno = MPIR_Iscatter_binomial_sched(sendbuf, sendcount, sendtype,
+                            recvbuf, recvcount, recvtype, root, comm_ptr, s);
+                break;
+            case MPIR_ISCATTER_ALG_INTRA_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Iscatter_intra_sched(sendbuf, sendcount, sendtype,
+                            recvbuf, recvcount, recvtype, root, comm_ptr, s);
+                break;
+        }
     } else {
-        mpi_errno = MPIR_Iscatter_inter_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+        /* intercommunicator */
+        switch (MPIR_Iscatter_alg_inter_choice) {
+            case MPIR_ISCATTER_ALG_INTER_GENERIC:
+                mpi_errno = MPIR_Iscatter_generic_inter_sched(sendbuf, sendcount, sendtype,
+                          recvbuf, recvcount, recvtype, root, comm_ptr, s);
+                break;
+            case MPIR_ISCATTER_ALG_INTER_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Iscatter_inter_sched(sendbuf, sendcount, sendtype,
+                          recvbuf, recvcount, recvtype, root, comm_ptr, s);
+                break;
+        }
     }
 
     return mpi_errno;
@@ -285,7 +354,13 @@ int MPI_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Iscatter(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, request);
+    if (MPIR_CVAR_ISCATTER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Iscatter(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                    recvtype, root, comm_ptr, request);
+    } else {
+        mpi_errno = MPIR_Iscatter(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                    recvtype, root, comm_ptr, request);
+    }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

@@ -6,7 +6,7 @@
  */
 
 #include "mpiimpl.h"
-/* This is the default implementation of scan. The algorithm is:
+/* This is the machine-independent implementation of scan. The algorithm is:
    
    Algorithm: MPI_Scan
 
