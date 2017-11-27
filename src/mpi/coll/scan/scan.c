@@ -7,6 +7,39 @@
 
 #include "mpiimpl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_SCAN_ALGORITHM_INTRA
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select allgather algorithm
+        auto - Internal algorithm selection
+        generic - Force generic algorithm
+
+    - name        : MPIR_CVAR_SCAN_DEVICE_COLLECTIVE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_Scan will allow the device to override the
+        MPIR-level collective algorithms. The device still has the
+        option to call the MPIR-level algorithms manually.
+        If set to false, the device-level scan function will not be
+        called.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Scan */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Scan = PMPI_Scan
@@ -262,12 +295,22 @@ int MPIR_Scan(
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Scan_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    switch (MPIR_Scan_alg_intra_choice) {
+        case MPIR_SCAN_ALG_INTRA_GENERIC:
+            mpi_errno = MPIR_Scan_generic(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+            break;
+        case MPIR_SCAN_ALG_INTRA_AUTO:
+            MPL_FALLTHROUGH;
+        default:
+            mpi_errno = MPIR_Scan_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+            break;
+    }
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-  fn_exit:
+fn_exit:
     return mpi_errno;
 
-  fn_fail:
+fn_fail:
     goto fn_exit;
 }
 
@@ -381,7 +424,11 @@ int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
+    if (MPIR_CVAR_SCAN_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
+    } else {
+        mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
+    }
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

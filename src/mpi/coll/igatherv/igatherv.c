@@ -6,6 +6,51 @@
 
 #include "mpiimpl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_IGATHERV_ALGORITHM_INTRA
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select igatherv algorithm
+        auto - Internal algorithm selection
+        generic - Force generic algorithm
+
+    - name        : MPIR_CVAR_IGATHERV_ALGORITHM_INTER
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select igatherv algorithm
+        auto - Internal algorithm selection
+        generic - Force generic algorithm
+
+    - name        : MPIR_CVAR_IGATHERV_DEVICE_COLLECTIVE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_Igatherv will allow the device to override the
+        MPIR-level collective algorithms. The device still has the
+        option to call the MPIR-level algorithms manually.
+        If set to false, the device-level igatherv function will not be
+        called.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Igatherv */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Igatherv = PMPI_Igatherv
@@ -37,7 +82,29 @@ int MPIR_Igatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Igatherv_generic_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        switch (MPIR_Igatherv_alg_intra_choice) {
+            case MPIR_IGATHERV_ALG_INTRA_GENERIC:
+                mpi_errno = MPIR_Igatherv_generic_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
+                break;
+            case MPIR_IGATHERV_ALG_INTRA_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Igatherv_generic_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
+                break;
+        }
+    } else {
+        switch (MPIR_Igatherv_alg_inter_choice) {
+            case MPIR_IGATHERV_ALG_INTER_GENERIC:
+                mpi_errno = MPIR_Igatherv_generic_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
+                break;
+            case MPIR_IGATHERV_ALG_INTER_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Igatherv_generic_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
+                break;
+        }
+    }
 
     return mpi_errno;
 }
@@ -239,7 +306,11 @@ int MPI_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Igatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, request);
+    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Igatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, request);
+    } else {
+        mpi_errno = MPIR_Igatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, request);
+    }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

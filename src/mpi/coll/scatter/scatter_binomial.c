@@ -7,7 +7,7 @@
 
 #include "mpiimpl.h"
 
-/* This is the default implementation of scatter. The algorithm is:
+/* This is the machine-independent implementation of scatter. The algorithm is:
    
    Algorithm: MPI_Scatter
 
