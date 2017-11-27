@@ -170,12 +170,12 @@ int MPIR_Waitall_impl(int count, MPIR_Request *request_ptrs[],
   Setting statuses, freeing requests objects, etc.
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Waitall_post
+#define FUNCNAME do_waitall_post
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Waitall_post(int count, MPI_Request array_of_requests[],
-                      MPIR_Request *request_ptrs[],
-                      MPI_Status array_of_statuses[])
+MPL_STATIC_INLINE_PREFIX int do_waitall_post(int count, MPI_Request array_of_requests[],
+                                             MPIR_Request *request_ptrs[],
+                                             MPI_Status array_of_statuses[])
 {
     int i, j;
     int mpi_errno = MPI_SUCCESS;
@@ -235,6 +235,18 @@ int MPIR_Waitall_post(int count, MPI_Request array_of_requests[],
     }
 
     return mpi_errno;
+}
+
+/* External entry point of do_waitall_post for users outside of this compile unit */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Waitall_post
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Waitall_post(int count, MPI_Request array_of_requests[],
+                      MPIR_Request *request_ptrs[],
+                      MPI_Status array_of_statuses[])
+{
+    return do_waitall_post(count, array_of_requests, request_ptrs, array_of_statuses);
 }
 
 #undef FUNCNAME
@@ -387,7 +399,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
     }
 
     /* ------ "slow" code path below ------ */
-    mpi_errno = MPIR_Waitall_post(count, array_of_requests, request_ptrs, array_of_statuses);
+    mpi_errno = do_waitall_post(count, array_of_requests, request_ptrs, array_of_statuses);
     if (mpi_errno)
         goto fn_fail;
 
