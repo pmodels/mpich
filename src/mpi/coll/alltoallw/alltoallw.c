@@ -7,6 +7,52 @@
 
 #include "mpiimpl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_ALLTOALLW_ALGORITHM_INTRA
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select alltoallw algorithm
+        auto - Internal algorithm selection
+        pairwise_sendrecv_replace - Force pairwise sendrecv replace algorithm
+        scattered - Force scattered algorithm
+
+    - name        : MPIR_CVAR_ALLTOALLW_ALGORITHM_INTER
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select alltoallw algorithm
+        auto - Internal algorithm selection
+        generic - Force generic algorithm
+
+    - name        : MPIR_CVAR_ALLTOALLW_DEVICE_COLLECTIVE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_Alltoallw will allow the device to override the
+        MPIR-level collective algorithms. The device still has the
+        option to call the MPIR-level algorithms manually.
+        If set to false, the device-level alltoallw function will not be
+        called.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Alltoallw */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Alltoallw = PMPI_Alltoallw
@@ -26,7 +72,7 @@ int MPI_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispls
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Alltoallw
 #define MPI_Alltoallw PMPI_Alltoallw
-/* This is the default implementation of alltoallw. The algorithm is:
+/* This is the machine-independent implementation of alltoallw. The algorithm is:
    
    Algorithm: MPI_Alltoallw
 
@@ -123,17 +169,43 @@ int MPIR_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
         
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        mpi_errno = MPIR_Alltoallw_intra(sendbuf, sendcounts, sdispls,
-                                         sendtypes, recvbuf, recvcounts,
+        switch (MPIR_Alltoallw_alg_intra_choice) {
+            case MPIR_ALLTOALLW_ALG_INTRA_PAIRWISE_SENDRECV_REPLACE:
+                mpi_errno = MPIR_Alltoallw_pairwise_sendrecv_replace(sendbuf, sendcounts,
+                                         sdispls, sendtypes, recvbuf, recvcounts,
                                          rdispls, recvtypes, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                break;
+            case MPIR_ALLTOALLW_ALG_INTRA_SCATTERED:
+                mpi_errno = MPIR_Alltoallw_scattered(sendbuf, sendcounts,
+                                         sdispls, sendtypes, recvbuf, recvcounts,
+                                         rdispls, recvtypes, comm_ptr, errflag);
+                break;
+            case MPIR_ALLTOALLW_ALG_INTRA_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Alltoallw_intra(sendbuf, sendcounts,
+                                         sdispls, sendtypes, recvbuf, recvcounts,
+                                         rdispls, recvtypes, comm_ptr, errflag);
+                break;
+        }
     } else {
         /* intercommunicator */
-        mpi_errno = MPIR_Alltoallw_inter(sendbuf, sendcounts, sdispls,
+        switch (MPIR_Alltoallw_alg_inter_choice) {
+            case MPIR_ALLTOALLW_ALG_INTER_GENERIC:
+                mpi_errno = MPIR_Alltoallw_generic_inter(sendbuf, sendcounts, sdispls,
                                          sendtypes, recvbuf, recvcounts,
                                          rdispls, recvtypes, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                break;
+            case MPIR_ALLTOALLW_ALG_INTER_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Alltoallw_inter(sendbuf, sendcounts, sdispls,
+                                         sendtypes, recvbuf, recvcounts,
+                                         rdispls, recvtypes, comm_ptr, errflag);
+                break;
+        }
     }
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
     return mpi_errno;
@@ -289,9 +361,15 @@ int MPI_Alltoallw(const void *sendbuf, const int sendcounts[],
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Alltoallw(sendbuf, sendcounts, sdispls,
+    if (MPIR_CVAR_ALLTOALLW_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Alltoallw(sendbuf, sendcounts, sdispls,
                                     sendtypes, recvbuf, recvcounts,
                                     rdispls, recvtypes, comm_ptr, &errflag);
+    } else {
+        mpi_errno = MPIR_Alltoallw(sendbuf, sendcounts, sdispls,
+                                    sendtypes, recvbuf, recvcounts,
+                                    rdispls, recvtypes, comm_ptr, &errflag);
+    }
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

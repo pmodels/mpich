@@ -6,6 +6,51 @@
 
 #include "mpiimpl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_NHB_ALLGATHER_ALGORITHM_INTRA
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select inhb_allgather algorithm
+        auto - Internal algorithm selection
+        nb - Force nonblocking algorithm
+
+    - name        : MPIR_CVAR_NHB_ALLGATHER_ALGORITHM_INTER
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select inhb_allgather algorithm
+        auto - Internal algorithm selection
+        nb - Force nonblocking algorithm
+
+    - name        : MPIR_CVAR_NHB_ALLGATHER_DEVICE_COLLECTIVE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_nhb_allgather will allow the device to override the
+        MPIR-level collective algorithms. The device still has the
+        option to call the MPIR-level algorithms manually.
+        If set to false, the device-level nhb_allgather function will not be
+        called.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Neighbor_allgather */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Neighbor_allgather = PMPI_Neighbor_allgather
@@ -36,8 +81,29 @@ int MPIR_Neighbor_allgather(const void *sendbuf, int sendcount, MPI_Datatype sen
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* just call the nonblocking version and wait on it */
-    mpi_errno = MPIR_Neighbor_allgather_nb(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr);
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        switch (MPIR_Nhb_allgather_alg_intra_choice) {
+            case MPIR_NHB_ALLGATHER_ALG_INTRA_NB:
+                mpi_errno = MPIR_Neighbor_allgather_nb(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr);
+                break;
+            case MPIR_NHB_ALLGATHER_ALG_INTRA_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Neighbor_allgather_nb(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr);
+                break;
+        }
+    } else {
+        switch (MPIR_Nhb_allgather_alg_inter_choice) {
+            case MPIR_NHB_ALLGATHER_ALG_INTER_NB:
+                mpi_errno = MPIR_Neighbor_allgather_nb(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr);
+                break;
+            case MPIR_NHB_ALLGATHER_ALG_INTER_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Neighbor_allgather_nb(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr);
+                break;
+        }
+    }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
@@ -132,7 +198,11 @@ int MPI_Neighbor_allgather(const void *sendbuf, int sendcount, MPI_Datatype send
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Neighbor_allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr);
+    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Neighbor_allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr);
+    } else {
+        mpi_errno = MPIR_Neighbor_allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr);
+    }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

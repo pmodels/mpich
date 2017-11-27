@@ -8,6 +8,8 @@
 #ifndef MPIR_COLL_H_INCLUDED
 #define MPIR_COLL_H_INCLUDED
 
+#include "coll_impl.h"
+
 /* Internal point-to-point communication for collectives */
 /* These functions are used in the implementation of collective and
    other internal operations. They are wrappers around MPID send/recv

@@ -43,7 +43,7 @@ static int calc_curr_count(MPIR_Comm *comm, int tag, void *state)
 
 /* any non-MPI functions go here, especially non-static ones */
 
-/* This is the default implementation of scatter. The algorithm is:
+/* This is the machine-independent implementation of scatter. The algorithm is:
 
    Algorithm: MPI_Scatter
 

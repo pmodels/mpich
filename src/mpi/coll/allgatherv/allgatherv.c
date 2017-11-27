@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "coll_util.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -21,6 +22,46 @@ cvars:
       description : >-
         The smallest message size that will be used for the pipelined, large-message,
         ring algorithm in the MPI_Allgatherv implementation.
+
+    - name        : MPIR_CVAR_ALLGATHERV_ALGORITHM_INTRA
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select allgatherv algorithm
+        auto - Internal algorithm selection
+        brucks - Force brucks algorithm
+        recursive_doubling - Force recursive doubling algorithm
+        ring - Force ring algorithm
+
+    - name        : MPIR_CVAR_ALLGATHERV_ALGORITHM_INTER
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select allgatherv algorithm
+        auto - Internal algorithm selection
+        generic - Force generic algorithm
+
+    - name        : MPIR_CVAR_ALLGATHERV_DEVICE_COLLECTIVE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_Allgatherv will allow the device to override the
+        MPIR-level collective algorithms. The device still has the
+        option to call the MPIR-level algorithms manually.
+        If set to false, the device-level allgatherv function will not be
+        called.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -45,7 +86,7 @@ int MPI_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, vo
 #undef MPI_Allgatherv
 #define MPI_Allgatherv PMPI_Allgatherv
 
-/* This is the default implementation of allgatherv. The algorithm is:
+/* This is the machine-independent implementation of allgatherv. The algorithm is:
    
    Algorithm: MPI_Allgatherv
 
@@ -197,17 +238,48 @@ int MPIR_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        mpi_errno = MPIR_Allgatherv_intra(sendbuf, sendcount, sendtype,
+        switch (MPIR_Allgatherv_alg_intra_choice) {
+            case MPIR_ALLGATHERV_ALG_INTRA_BRUCKS:
+                mpi_errno = MPIR_Allgatherv_brucks(sendbuf, sendcount, sendtype,
                                           recvbuf, recvcounts, displs, recvtype,
                                           comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                break;
+            case MPIR_ALLGATHERV_ALG_INTRA_RECURSIVE_DOUBLING:
+                mpi_errno = MPIR_Allgatherv_recursive_doubling(sendbuf, sendcount, sendtype,
+                                          recvbuf, recvcounts, displs, recvtype,
+                                          comm_ptr, errflag);
+                break;
+            case MPIR_ALLGATHERV_ALG_INTRA_RING:
+                mpi_errno = MPIR_Allgatherv_ring(sendbuf, sendcount, sendtype,
+                                          recvbuf, recvcounts, displs, recvtype,
+                                          comm_ptr, errflag);
+                break;
+            case MPIR_ALLGATHERV_ALG_INTRA_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Allgatherv_intra(sendbuf, sendcount, sendtype,
+                                          recvbuf, recvcounts, displs, recvtype,
+                                          comm_ptr, errflag);
+                break;
+        }
     } else {
-        /* intracommunicator */
-        mpi_errno = MPIR_Allgatherv_inter(sendbuf, sendcount, sendtype,
+        /* intercommunicator */
+        switch (MPIR_Allgatherv_alg_inter_choice) {
+            case MPIR_ALLGATHERV_ALG_INTER_GENERIC:
+                mpi_errno = MPIR_Allgatherv_generic_inter(sendbuf, sendcount, sendtype,
                                           recvbuf, recvcounts, displs, recvtype,
                                           comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                break;
+            case MPIR_ALLGATHERV_ALG_INTER_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Allgatherv_inter(sendbuf, sendcount, sendtype,
+                                          recvbuf, recvcounts, displs, recvtype,
+                                          comm_ptr, errflag);
+                break;
+        }
     }
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
     return mpi_errno;
@@ -366,9 +438,15 @@ int MPI_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Allgatherv(sendbuf, sendcount, sendtype,
+    if (MPIR_CVAR_ALLGATHERV_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Allgatherv(sendbuf, sendcount, sendtype,
                                      recvbuf, recvcounts, displs, recvtype,
                                      comm_ptr, &errflag);
+    } else {
+        mpi_errno = MPIR_Allgatherv(sendbuf, sendcount, sendtype,
+                                     recvbuf, recvcounts, displs, recvtype,
+                                     comm_ptr, &errflag);
+    }
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

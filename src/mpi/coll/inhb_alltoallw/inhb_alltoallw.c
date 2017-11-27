@@ -6,6 +6,51 @@
 
 #include "mpiimpl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_INHB_ALLTOALLW_ALGORITHM_INTRA
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select inhb_alltoallw algorithm
+        auto - Internal algorithm selection
+        generic - Force generic algorithm
+
+    - name        : MPIR_CVAR_INHB_ALLTOALLW_ALGORITHM_INTER
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select inhb_alltoallw algorithm
+        auto - Internal algorithm selection
+        generic - Force generic algorithm
+
+    - name        : MPIR_CVAR_INHB_ALLTOALLW_DEVICE_COLLECTIVE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_inhb_alltoallw will allow the device to override the
+        MPIR-level collective algorithms. The device still has the
+        option to call the MPIR-level algorithms manually.
+        If set to false, the device-level inhb_alltoallw function will not be
+        called.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Ineighbor_alltoallw */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Ineighbor_alltoallw = PMPI_Ineighbor_alltoallw
@@ -39,9 +84,37 @@ int MPIR_Ineighbor_alltoallw_sched(const void *sendbuf, const int sendcounts[],
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ineighbor_alltoallw_generic_sched(sendbuf, sendcounts, sdispls, sendtypes,
-                                   recvbuf, recvcounts, rdispls, recvtypes,
-                                   comm_ptr, s);
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        switch (MPIR_Inhb_alltoallw_alg_intra_choice) {
+            case MPIR_INHB_ALLTOALLW_ALG_INTRA_GENERIC:
+                mpi_errno = MPIR_Ineighbor_alltoallw_generic_sched(sendbuf, sendcounts, sdispls, sendtypes,
+                                               recvbuf, recvcounts, rdispls, recvtypes,
+                                               comm_ptr, s);
+                break;
+            case MPIR_INHB_ALLTOALLW_ALG_INTRA_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Ineighbor_alltoallw_generic_sched(sendbuf, sendcounts, sdispls, sendtypes,
+                                               recvbuf, recvcounts, rdispls, recvtypes,
+                                               comm_ptr, s);
+                break;
+        }
+    } else {
+        switch (MPIR_Inhb_alltoallw_alg_inter_choice) {
+            case MPIR_INHB_ALLTOALLW_ALG_INTER_GENERIC:
+                mpi_errno = MPIR_Ineighbor_alltoallw_generic_sched(sendbuf, sendcounts, sdispls, sendtypes,
+                                               recvbuf, recvcounts, rdispls, recvtypes,
+                                               comm_ptr, s);
+                break;
+            case MPIR_INHB_ALLTOALLW_ALG_INTER_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Ineighbor_alltoallw_generic_sched(sendbuf, sendcounts, sdispls, sendtypes,
+                                               recvbuf, recvcounts, rdispls, recvtypes,
+                                               comm_ptr, s);
+                break;
+        }
+    }
 
     return mpi_errno;
 }
@@ -150,7 +223,11 @@ int MPI_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[], const M
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Ineighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, request);
+    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Ineighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, request);
+    } else {
+        mpi_errno = MPIR_Ineighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, request);
+    }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

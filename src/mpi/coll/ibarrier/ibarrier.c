@@ -6,6 +6,51 @@
 
 #include "mpiimpl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_IBARRIER_ALGORITHM_INTRA
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select ibarrier algorithm
+        auto - Internal algorithm selection
+        recursive_doubling - Force recursive doubling algorithm
+
+    - name        : MPIR_CVAR_IBARRIER_ALGORITHM_INTER
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select ibarrier algorithm
+        auto - Internal algorithm selection
+        bcast - Force bcast algorithm
+
+    - name        : MPIR_CVAR_IBARRIER_DEVICE_COLLECTIVE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_Ibarrier will allow the device to override the
+        MPIR-level collective algorithms. The device still has the
+        option to call the MPIR-level algorithms manually.
+        If set to false, the device-level ibarrier function will not be
+        called.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Ibarrier */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Ibarrier = PMPI_Ibarrier
@@ -26,7 +71,7 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request) __attribute__((weak,alias(
 
 /* any non-MPI functions go here, especially non-static ones */
 
-/* This is the default implementation of the barrier operation.  The
+/* This is the machine-independent implementation of the barrier operation.  The
    algorithm is:
 
    Algorithm: MPI_Ibarrier
@@ -86,9 +131,29 @@ int MPIR_Ibarrier_sched(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        mpi_errno = MPIR_Ibarrier_intra_sched(comm_ptr, s);
+        /* intracommunicator */
+        switch (MPIR_Ibarrier_alg_intra_choice) {
+            case MPIR_IBARRIER_ALG_INTRA_RECURSIVE_DOUBLING:
+                mpi_errno = MPIR_Ibarrier_rec_dbl_sched(comm_ptr, s);
+                break;
+            case MPIR_BARRIER_ALG_INTRA_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Ibarrier_intra_sched(comm_ptr, s);
+                break;
+        }
     } else {
-        mpi_errno = MPIR_Ibarrier_inter_sched(comm_ptr, s);
+        /* intercommunicator */
+        switch (MPIR_Ibarrier_alg_inter_choice) {
+            case MPIR_IBARRIER_ALG_INTER_BCAST:
+                mpi_errno = MPIR_Ibarrier_bcast_sched(comm_ptr, s);
+                break;
+            case MPIR_IBARRIER_ALG_INTER_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Ibarrier_inter_sched(comm_ptr, s);
+                break;
+        }
     }
 
     return mpi_errno;
@@ -201,7 +266,11 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Ibarrier(comm_ptr, request);
+    if (MPIR_CVAR_IBARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+         mpi_errno = MPID_Ibarrier(comm_ptr, request);
+    } else {
+         mpi_errno = MPIR_Ibarrier(comm_ptr, request);
+    }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

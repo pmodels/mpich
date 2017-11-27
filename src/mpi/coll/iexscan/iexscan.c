@@ -7,6 +7,39 @@
 #include "mpiimpl.h"
 #include "coll_util.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_IEXSCAN_ALGORITHM_INTRA
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select iexscan algorithm
+        auto - Internal algorithm selection
+        recursive_doubling - Force recursive doubling algorithm
+
+    - name        : MPIR_CVAR_IEXSCAN_DEVICE_COLLECTIVE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_Iexscan will allow the device to override the
+        MPIR-level collective algorithms. The device still has the
+        option to call the MPIR-level algorithms manually.
+        If set to false, the device-level iexscan function will not be
+        called.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Iexscan */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Iexscan = PMPI_Iexscan
@@ -35,7 +68,15 @@ int MPIR_Iexscan_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Iexscan_rec_dbl_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+    /* intracommunicator */
+    switch (MPIR_Iexscan_alg_intra_choice) {
+        case MPIR_IEXSCAN_ALG_INTRA_RECURSIVE_DOUBLING:
+            mpi_errno = MPIR_Iexscan_rec_dbl_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+            break;
+        case MPIR_IEXSCAN_ALG_INTRA_AUTO:
+            mpi_errno = MPIR_Iexscan_rec_dbl_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+            break;
+    }
 
     return mpi_errno;
 }
@@ -166,7 +207,11 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Iexscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
+    if (MPIR_CVAR_IEXSCAN_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Iexscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
+    } else {
+        mpi_errno = MPIR_Iexscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
+    }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

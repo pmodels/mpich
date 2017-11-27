@@ -7,6 +7,53 @@
 #include "mpiimpl.h"
 #include "coll_util.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_IALLREDUCE_ALGORITHM_INTRA
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select iallreduce algorithm
+        auto - Internal algorithm selection
+        naive - Force naive algorithm
+        recursive_doubling - Force recursive doubling algorithm
+        redscat_allgather - Force redscat allgather algorithm
+
+    - name        : MPIR_CVAR_IALLREDUCE_ALGORITHM_INTER
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select iallreduce algorithm
+        auto - Internal algorithm selection
+        generic - Force generic algorithm
+
+    - name        : MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_Iallreduce will allow the device to override the
+        MPIR-level collective algorithms. The device still has the
+        option to call the MPIR-level algorithms manually.
+        If set to false, the device-level iallreduce function will not be
+        called.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Iallreduce */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Iallreduce = PMPI_Iallreduce
@@ -189,12 +236,44 @@ int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dat
         if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
             mpi_errno = iallreduce_smp_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         } else {
-            mpi_errno = MPIR_Iallreduce_intra_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+            /* intracommunicator */
+            switch (MPIR_Iallreduce_alg_intra_choice) {
+                case MPIR_IALLREDUCE_ALG_INTRA_NAIVE:
+                    mpi_errno = MPIR_Iallreduce_naive_sched(sendbuf, recvbuf, count,
+                                datatype, op, comm_ptr, s);
+                    break;
+                case MPIR_IALLREDUCE_ALG_INTRA_RECURSIVE_DOUBLING:
+                    mpi_errno = MPIR_Iallreduce_rec_dbl_sched(sendbuf, recvbuf, count,
+                                datatype, op, comm_ptr, s);
+                    break;
+                case MPIR_IALLREDUCE_ALG_INTRA_REDSCAT_ALLGATHER:
+                    mpi_errno = MPIR_Iallreduce_redscat_allgather_sched(sendbuf, recvbuf, count,
+                                datatype, op, comm_ptr, s);
+                    break;
+                case MPIR_IALLREDUCE_ALG_INTRA_AUTO:
+                    MPL_FALLTHROUGH;
+                default:
+                    mpi_errno = MPIR_Iallreduce_intra_sched(sendbuf, recvbuf, count,
+                            datatype, op, comm_ptr, s);
+                    break;
+            }
         }
     } else {
-        mpi_errno = MPIR_Iallreduce_inter_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    }
+        /* intercommunicator */
+        switch (MPIR_Iallreduce_alg_inter_choice) {
+            case MPIR_IALLREDUCE_ALG_INTER_GENERIC:
+                mpi_errno = MPIR_Iallreduce_generic_inter_sched(sendbuf, recvbuf, count,
+                            datatype, op, comm_ptr, s);
+                break;
+            case MPIR_IALLREDUCE_ALG_INTER_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Iallreduce_inter_sched(sendbuf, recvbuf, count,
+                            datatype, op, comm_ptr, s);
+                break;
+        }
 
+    }
     return mpi_errno;
 }
 
@@ -331,7 +410,11 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
+    if (MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
+    } else {
+        mpi_errno = MPIR_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
+    }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

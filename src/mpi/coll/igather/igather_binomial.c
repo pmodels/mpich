@@ -6,7 +6,7 @@
 
 #include "mpiimpl.h"
 
-/* This is the default implementation of igather. The algorithm is:
+/* This is the machine-independent implementation of igather. The algorithm is:
 
    Algorithm: MPI_Igather
 

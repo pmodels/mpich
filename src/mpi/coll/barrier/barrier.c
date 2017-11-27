@@ -20,6 +20,44 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : Enable SMP aware barrier.
 
+    - name        : MPIR_CVAR_BARRIER_ALGORITHM_INTRA
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select barrier algorithm
+        auto - Internal algorithm selection
+        recursive_doubling - Force recursive doubling algorithm
+
+    - name        : MPIR_CVAR_BARRIER_ALGORITHM_INTER
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select barrier algorithm
+        auto - Internal algorithm selection
+        generic - Force generic algorithm
+
+    - name        : MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_Barrier will allow the device to override the
+        MPIR-level collective algorithms. The device still has the
+        option to call the MPIR-level algorithms manually.
+        If set to false, the device-level barrier function will not be
+        called.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -42,7 +80,7 @@ int MPI_Barrier(MPI_Comm comm) __attribute__((weak,alias("PMPI_Barrier")));
 #define MPI_Barrier PMPI_Barrier
 
 
-/* This is the default implementation of the barrier operation.  The
+/* This is the machine-independent implementation of the barrier operation.  The
    algorithm is:
    
    Algorithm: MPI_Barrier
@@ -188,13 +226,30 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        mpi_errno = MPIR_Barrier_intra( comm_ptr, errflag );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        switch (MPIR_Barrier_alg_intra_choice) {
+            case MPIR_BARRIER_ALG_INTRA_RECURSIVE_DOUBLING:
+                mpi_errno = MPIR_Barrier_recursive_doubling(comm_ptr, errflag);
+                break;
+            case MPIR_BARRIER_ALG_INTRA_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Barrier_intra(comm_ptr, errflag);
+                break;
+        }
     } else {
         /* intercommunicator */
-        mpi_errno = MPIR_Barrier_inter( comm_ptr, errflag );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        switch (MPIR_Barrier_alg_inter_choice) {
+            case MPIR_BARRIER_ALG_INTER_GENERIC:
+                mpi_errno = MPIR_Barrier_generic_inter(comm_ptr, errflag);
+                break;
+            case MPIR_BARRIER_ALG_INTER_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Barrier_inter(comm_ptr, errflag);
+                break;
+        }
     }
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
     return mpi_errno;
@@ -274,7 +329,11 @@ int MPI_Barrier( MPI_Comm comm )
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Barrier(comm_ptr, &errflag);
+    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Barrier(comm_ptr, &errflag);
+    } else {
+        mpi_errno = MPIR_Barrier(comm_ptr, &errflag);
+    }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     /* ... end of body of routine ... */

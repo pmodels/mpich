@@ -44,6 +44,44 @@ cvars:
         Maximum message size for which SMP-aware reduce is used.  A
         value of '0' uses SMP-aware reduce for all message sizes.
 
+    - name        : MPIR_CVAR_REDUCE_ALGORITHM_INTRA
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select reduce algorithm
+        auto - Internal algorithm selection
+        binomial - Force binomial algorithm
+        redscat_gather - Force redscat gather algorithm
+
+    - name        : MPIR_CVAR_REDUCE_ALGORITHM_INTER
+      category    : COLLECTIVE
+      type        : string
+      default     : auto
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Variable to select reduce algorithm
+        auto - Internal algorithm selection
+        generic - Force generic algorithm
+
+    - name        : MPIR_CVAR_REDUCE_DEVICE_COLLECTIVE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPI_Reduce will allow the device to override the
+        MPIR-level collective algorithms. The device still has the
+        option to call the MPIR-level algorithms manually.
+        If set to false, the device-level reduce function will not be
+        called.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -69,7 +107,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 #define MPI_Reduce PMPI_Reduce
 
 
-/* This is the default implementation of reduce. The algorithm is:
+/* This is the machine-independent implementation of reduce. The algorithm is:
    
    Algorithm: MPI_Reduce
 
@@ -346,15 +384,38 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
         
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        mpi_errno = MPIR_Reduce_intra(sendbuf, recvbuf, count, datatype,
-                                      op, root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        switch (MPIR_Reduce_alg_intra_choice) {
+            case MPIR_REDUCE_ALG_INTRA_BINOMIAL:
+                mpi_errno = MPIR_Reduce_binomial(sendbuf, recvbuf,
+                            count, datatype, op, root, comm_ptr, errflag);
+                break;
+            case MPIR_REDUCE_ALG_INTRA_REDSCAT_GATHER:
+                mpi_errno = MPIR_Reduce_redscat_gather(sendbuf, recvbuf,
+                            count, datatype, op, root, comm_ptr, errflag);
+                break;
+            case MPIR_REDUCE_ALG_INTRA_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                 mpi_errno = MPIR_Reduce_intra(sendbuf, recvbuf,
+                             count, datatype, op, root, comm_ptr, errflag);
+                 break;
+        }
     } else {
         /* intercommunicator */
-        mpi_errno = MPIR_Reduce_inter(sendbuf, recvbuf, count, datatype,
+        switch (MPIR_Reduce_alg_inter_choice) {
+            case MPIR_REDUCE_ALG_INTER_GENERIC:
+                mpi_errno = MPIR_Reduce_generic_inter(sendbuf, recvbuf, count, datatype,
                                       op, root, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                break;
+            case MPIR_REDUCE_ALG_INTER_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Reduce_inter(sendbuf, recvbuf, count, datatype,
+                                      op, root, comm_ptr, errflag);
+                break;
+        }
     }
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
     return mpi_errno;
@@ -519,7 +580,13 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, &errflag);
+    if (MPIR_CVAR_REDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype, op,
+                    root, comm_ptr, &errflag);
+    } else {
+        mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype, op,
+                    root, comm_ptr, &errflag);
+    }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     /* ... end of body of routine ... */

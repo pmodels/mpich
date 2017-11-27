@@ -7,7 +7,7 @@
 #include "mpiimpl.h"
 #include "coll_util.h"
 
-/* This is the default implementation of exscan. The algorithm is:
+/* This is the machine-independent implementation of exscan. The algorithm is:
 
    Algorithm: MPI_Iexscan
 
