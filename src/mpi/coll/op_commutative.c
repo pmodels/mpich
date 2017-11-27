@@ -28,6 +28,28 @@ int MPI_Op_commutative(MPI_Op op, int *commute) __attribute__((weak,alias("PMPI_
 #endif
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Op_commutative
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Op_commutative(MPIR_Op *op_ptr, int *commute)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Build-in op */
+    if (MPIR_OP_KIND__USER_NONCOMMUTE > op_ptr->kind) {
+        *commute = 1;
+    }
+    else {
+        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
+            *commute = 0;
+        else
+            *commute = 1;
+    }
+
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPI_Op_commutative
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -78,15 +100,7 @@ int MPI_Op_commutative(MPI_Op op, int *commute)
 
     /* ... body of routine ...  */
 
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-        *commute = 1;
-    }
-    else {
-        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
-            *commute = 0;
-        else
-            *commute = 1;
-    }
+    MPIR_Op_commutative(op_ptr, commute);
 
     /* ... end of body of routine ... */
 
