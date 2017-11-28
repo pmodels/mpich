@@ -383,10 +383,10 @@ typedef struct {
     OPA_int_t am_inflight_rma_send_mrs;
 
     /* Completion queue buffering */
-    MPIDI_OFI_cq_buff_entry_t cq_buffered[MPIDI_OFI_NUM_CQ_BUFFERED];
-    struct slist cq_buff_list;
-    int cq_buff_head;
-    int cq_buff_tail;
+    MPIDI_OFI_cq_buff_entry_t cq_buffered_static_list[MPIDI_OFI_NUM_CQ_BUFFERED];
+    int cq_buffered_static_head;
+    int cq_buffered_static_tail;
+    struct slist cq_buffered_dynamic_list;
 
     /* Process management and PMI globals */
     int pname_set;
