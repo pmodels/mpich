@@ -788,15 +788,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(struct fi_cq_tagged_entry *w
 {
     int rc = 0;
 
-    if ((MPIDI_Global.cq_buff_head != MPIDI_Global.cq_buff_tail) ||
-        !slist_empty(&MPIDI_Global.cq_buff_list)) {
-        if (MPIDI_Global.cq_buff_head != MPIDI_Global.cq_buff_tail) {
-            wc[0] = MPIDI_Global.cq_buffered[MPIDI_Global.cq_buff_tail].cq_entry;
-            MPIDI_Global.cq_buff_tail = (MPIDI_Global.cq_buff_tail + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
+    if ((MPIDI_Global.cq_buffered_static_head != MPIDI_Global.cq_buffered_static_tail) ||
+        !slist_empty(&MPIDI_Global.cq_buffered_dynamic_list)) {
+        if (MPIDI_Global.cq_buffered_static_head != MPIDI_Global.cq_buffered_static_tail) {
+            wc[0] = MPIDI_Global.cq_buffered_static_list[MPIDI_Global.cq_buffered_static_tail].cq_entry;
+            MPIDI_Global.cq_buffered_static_tail = (MPIDI_Global.cq_buffered_static_tail + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
         }
         else {
             MPIDI_OFI_cq_list_t *MPIDI_OFI_cq_list_entry;
-            struct slist_entry *entry = slist_remove_head(&MPIDI_Global.cq_buff_list);
+            struct slist_entry *entry = slist_remove_head(&MPIDI_Global.cq_buffered_dynamic_list);
             MPIDI_OFI_cq_list_entry = MPL_container_of(entry, MPIDI_OFI_cq_list_t, entry);
             wc[0] = MPIDI_OFI_cq_list_entry->cq_entry;
             MPL_free((void *) MPIDI_OFI_cq_list_entry);
