@@ -162,18 +162,18 @@ static inline int MPIDI_OFI_progress_do_queue(int vni_idx)
         goto fn_fail;
     }
 
-    if (((MPIDI_Global.cq_buff_head + 1) %
-         MPIDI_OFI_NUM_CQ_BUFFERED == MPIDI_Global.cq_buff_tail) ||
-        !slist_empty(&MPIDI_Global.cq_buff_list)) {
+    if (((MPIDI_Global.cq_buffered_static_head + 1) %
+         MPIDI_OFI_NUM_CQ_BUFFERED == MPIDI_Global.cq_buffered_static_tail) ||
+        !slist_empty(&MPIDI_Global.cq_buffered_dynamic_list)) {
         MPIDI_OFI_cq_list_t *list_entry =
             (MPIDI_OFI_cq_list_t *) MPL_malloc(sizeof(MPIDI_OFI_cq_list_t), MPL_MEM_BUFFER);
         MPIR_Assert(list_entry);
         list_entry->cq_entry = cq_entry;
-        slist_insert_tail(&list_entry->entry, &MPIDI_Global.cq_buff_list);
+        slist_insert_tail(&list_entry->entry, &MPIDI_Global.cq_buffered_dynamic_list);
     }
     else {
-        MPIDI_Global.cq_buffered[MPIDI_Global.cq_buff_head].cq_entry = cq_entry;
-        MPIDI_Global.cq_buff_head = (MPIDI_Global.cq_buff_head + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
+        MPIDI_Global.cq_buffered_static_list[MPIDI_Global.cq_buffered_static_head].cq_entry = cq_entry;
+        MPIDI_Global.cq_buffered_static_head = (MPIDI_Global.cq_buffered_static_head + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
     }
 
     if ((cq_entry.flags & FI_RECV) && (cq_entry.flags & FI_MULTI_RECV)) {
