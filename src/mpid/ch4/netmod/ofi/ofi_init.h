@@ -939,7 +939,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        slist_init(&MPIDI_Global.cq_buffered_dynamic_list);
+        MPIDI_Global.cq_buffered_dynamic_head = MPIDI_Global.cq_buffered_dynamic_tail = NULL;
         MPIDI_Global.cq_buffered_static_head = MPIDI_Global.cq_buffered_static_tail = 0;
         optlen = MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE;
 
@@ -1086,7 +1086,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         MPIDI_CH4R_destroy_buf_pool(MPIDI_Global.am_buf_pool);
 
         MPIR_Assert(MPIDI_Global.cq_buffered_static_head == MPIDI_Global.cq_buffered_static_tail);
-        MPIR_Assert(slist_empty(&MPIDI_Global.cq_buffered_dynamic_list));
+        MPIR_Assert(NULL == MPIDI_Global.cq_buffered_dynamic_head);
     }
 
 #ifdef USE_PMI2_API
