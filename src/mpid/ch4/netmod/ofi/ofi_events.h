@@ -789,17 +789,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(struct fi_cq_tagged_entry *w
     int rc = 0;
 
     if ((MPIDI_Global.cq_buffered_static_head != MPIDI_Global.cq_buffered_static_tail) ||
-        !slist_empty(&MPIDI_Global.cq_buffered_dynamic_list)) {
+        (NULL != MPIDI_Global.cq_buffered_dynamic_head)) {
+        /* If the static list isn't empty, do so first */
         if (MPIDI_Global.cq_buffered_static_head != MPIDI_Global.cq_buffered_static_tail) {
             wc[0] = MPIDI_Global.cq_buffered_static_list[MPIDI_Global.cq_buffered_static_tail].cq_entry;
             MPIDI_Global.cq_buffered_static_tail = (MPIDI_Global.cq_buffered_static_tail + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
         }
-        else {
-            MPIDI_OFI_cq_list_t *MPIDI_OFI_cq_list_entry;
-            struct slist_entry *entry = slist_remove_head(&MPIDI_Global.cq_buffered_dynamic_list);
-            MPIDI_OFI_cq_list_entry = MPL_container_of(entry, MPIDI_OFI_cq_list_t, entry);
-            wc[0] = MPIDI_OFI_cq_list_entry->cq_entry;
-            MPL_free((void *) MPIDI_OFI_cq_list_entry);
+        /* If there's anything in the dynamic list, it goes second. */
+        else if (NULL != MPIDI_Global.cq_buffered_dynamic_head) {
+            MPIDI_OFI_cq_list_t *cq_list_entry = MPIDI_Global.cq_buffered_dynamic_head;
+            LL_DELETE(MPIDI_Global.cq_buffered_dynamic_head, MPIDI_Global.cq_buffered_dynamic_tail, cq_list_entry);
+            wc[0] = cq_list_entry->cq_entry;
+            MPL_free(cq_list_entry);
         }
 
         rc = 1;

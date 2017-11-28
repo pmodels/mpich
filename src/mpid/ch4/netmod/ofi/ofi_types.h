@@ -20,7 +20,6 @@
 #include "ofi_pre.h"
 #include "ch4_types.h"
 #include "mpidch4r.h"
-#include "fi_list.h"
 
 #define __SHORT_FILE__                          \
     (strrchr(__FILE__,'/')                      \
@@ -276,10 +275,10 @@ typedef union {
     char cacheline[MPIDI_OFI_CACHELINE_SIZE];
 } MPIDI_OFI_cacheline_mutex_t MPL_ATTR_ALIGNED(MPIDI_OFI_CACHELINE_SIZE);
 
-typedef struct {
+typedef struct MPIDI_OFI_cq_list_t {
     struct fi_cq_tagged_entry cq_entry;
     fi_addr_t source;
-    struct slist_entry entry;
+    struct MPIDI_OFI_cq_list_t *next;
 } MPIDI_OFI_cq_list_t;
 
 typedef struct {
@@ -386,7 +385,7 @@ typedef struct {
     MPIDI_OFI_cq_buff_entry_t cq_buffered_static_list[MPIDI_OFI_NUM_CQ_BUFFERED];
     int cq_buffered_static_head;
     int cq_buffered_static_tail;
-    struct slist cq_buffered_dynamic_list;
+    MPIDI_OFI_cq_list_t *cq_buffered_dynamic_head, *cq_buffered_dynamic_tail;
 
     /* Process management and PMI globals */
     int pname_set;

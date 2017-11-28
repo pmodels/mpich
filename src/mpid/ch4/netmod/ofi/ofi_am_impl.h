@@ -162,14 +162,16 @@ static inline int MPIDI_OFI_progress_do_queue(int vni_idx)
         goto fn_fail;
     }
 
+    /* If the statically allocated buffered list is full or we've already
+     * started using the dynamic list, continue using it. */
     if (((MPIDI_Global.cq_buffered_static_head + 1) %
          MPIDI_OFI_NUM_CQ_BUFFERED == MPIDI_Global.cq_buffered_static_tail) ||
-        !slist_empty(&MPIDI_Global.cq_buffered_dynamic_list)) {
+        (NULL != MPIDI_Global.cq_buffered_dynamic_head)) {
         MPIDI_OFI_cq_list_t *list_entry =
             (MPIDI_OFI_cq_list_t *) MPL_malloc(sizeof(MPIDI_OFI_cq_list_t), MPL_MEM_BUFFER);
         MPIR_Assert(list_entry);
         list_entry->cq_entry = cq_entry;
-        slist_insert_tail(&list_entry->entry, &MPIDI_Global.cq_buffered_dynamic_list);
+        LL_APPEND(MPIDI_Global.cq_buffered_dynamic_head, MPIDI_Global.cq_buffered_dynamic_tail, list_entry);
     }
     else {
         MPIDI_Global.cq_buffered_static_list[MPIDI_Global.cq_buffered_static_head].cq_entry = cq_entry;
