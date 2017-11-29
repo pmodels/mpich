@@ -175,7 +175,8 @@ noinst_PROGRAMS =          \
     overlap_wins_fop  \
     overlap_wins_cas  \
     rget-unlock  \
-    lock_nested
+    lock_nested  \
+    rget-testall
 
 if BUILD_MPIX_TESTS
 noinst_PROGRAMS += aint
