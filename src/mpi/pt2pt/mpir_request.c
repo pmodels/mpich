@@ -263,6 +263,7 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
 	case MPIR_REQUEST_KIND__SEND:
 	case MPIR_REQUEST_KIND__RECV:
         case MPIR_REQUEST_KIND__COLL:
+        case MPIR_REQUEST_KIND__RMA:
 	{
 	    mpi_errno = request_ptr->status.MPI_ERROR;
 	    break;
