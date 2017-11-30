@@ -48,7 +48,7 @@ ProgHomeDir() {
 
 # checking and patching submodules
 check_submodule_presence() {
-    if test ! -f "$SRCROOTDIR/$1/.git"; then
+    if test ! -f "$SRCROOTDIR/$1/configure.ac"; then
         error "Submodule $1 is not checked out"
         exit 1
     fi
