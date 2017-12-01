@@ -434,6 +434,7 @@ unexpected messages queued.
 **proc_failed:Process failed
 **failure_pending:Request pending due to failure
 **revoked:Communication object revoked
+**eagain:Operation could not be issued (EAGAIN)
 # Duplicates?
 #**argnull:Invalid null parameter
 #**argnull %s:Invalid null parameter %s
