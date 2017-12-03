@@ -56,7 +56,7 @@ struct ADIOI_GEN_IwriteStridedColl_vars {
     ADIO_Offset *fd_start;
     ADIO_Offset *fd_end;
     ADIO_Offset *end_offsets;
-    int *buf_idx;
+    MPI_Aint *buf_idx;
     ADIO_Offset *len_list;
     int old_error;
     int tmp_error;
@@ -83,7 +83,7 @@ struct ADIOI_Iexch_and_write_vars {
     ADIO_Offset fd_size;
     ADIO_Offset *fd_start;
     ADIO_Offset *fd_end;
-    int *buf_idx;
+    MPI_Aint *buf_idx;
 
     /* stack variables */
     /* Not convinced end_loc-st_loc couldn't be > int, so make these offsets */
@@ -153,7 +153,7 @@ struct ADIOI_W_Iexchange_data_vars {
     int *hole;
     int iter;
     MPI_Aint buftype_extent;
-    int *buf_idx;
+    MPI_Aint *buf_idx;
 
     /* stack variables */
     int nprocs_recv;
@@ -1154,7 +1154,7 @@ static void ADIOI_W_Iexchange_data_send(ADIOI_NBC_Request * nbc_req, int *error_
     int nprocs = vars->nprocs;
     int myrank = vars->myrank;
     int iter = vars->iter;
-    int *buf_idx = vars->buf_idx;
+    MPI_Aint *buf_idx = vars->buf_idx;
 
     int nprocs_recv = vars->nprocs_recv;
     MPI_Datatype *recv_types = vars->recv_types;

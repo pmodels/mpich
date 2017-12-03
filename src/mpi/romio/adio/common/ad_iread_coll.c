@@ -59,7 +59,7 @@ struct ADIOI_GEN_IreadStridedColl_vars {
     ADIO_Offset *fd_end;
     ADIO_Offset *end_offsets;
     ADIO_Offset *len_list;
-    int *buf_idx;
+    MPI_Aint *buf_idx;
 };
 
 /* ADIOI_Iread_and_exch */
@@ -82,7 +82,7 @@ struct ADIOI_Iread_and_exch_vars {
     ADIO_Offset fd_size;
     ADIO_Offset *fd_start;
     ADIO_Offset *fd_end;
-    int *buf_idx;
+    MPI_Aint *buf_idx;
 
     /* stack variables */
     int m;
@@ -143,7 +143,7 @@ struct ADIOI_R_Iexchange_data_vars {
     ADIOI_Access *others_req;
     int iter;
     MPI_Aint buftype_extent;
-    int *buf_idx;
+    MPI_Aint *buf_idx;
 
     /* stack variables */
     int nprocs_recv;
@@ -998,7 +998,7 @@ static void ADIOI_R_Iexchange_data_recv(ADIOI_NBC_Request * nbc_req, int *error_
     int myrank = vars->myrank;
     ADIOI_Access *others_req = vars->others_req;
     int iter = vars->iter;
-    int *buf_idx = vars->buf_idx;
+    MPI_Aint *buf_idx = vars->buf_idx;
 
     int i, j, k = 0, tmp = 0, nprocs_recv, nprocs_send;
     char **recv_buf = NULL;
