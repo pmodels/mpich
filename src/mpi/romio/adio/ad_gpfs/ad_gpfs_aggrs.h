@@ -52,7 +52,7 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset
                             int nprocs,
                             int *count_my_req_procs_ptr,
                             int **count_my_req_per_proc_ptr,
-                            ADIOI_Access ** my_req_ptr, int **buf_idx_ptr);
+                            ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr);
 
     /*
      * ADIOI_Calc_others_req
