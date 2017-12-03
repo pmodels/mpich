@@ -20,7 +20,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
                                  ADIO_Offset * len_list, int contig_access_count, ADIO_Offset
                                  min_st_offset, ADIO_Offset fd_size,
                                  ADIO_Offset * fd_start, ADIO_Offset * fd_end,
-                                 int *buf_idx, int *error_code);
+                                 MPI_Aint * buf_idx, int *error_code);
 static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
                                   ADIOI_Flatlist_node * flat_buf, ADIO_Offset
                                   * offset_list, ADIO_Offset * len_list, int *send_size,
@@ -34,7 +34,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
                                   ADIOI_Access * others_req,
                                   int *send_buf_idx, int *curr_to_proc,
                                   int *done_to_proc, int *hole, int iter,
-                                  MPI_Aint buftype_extent, int *buf_idx, int *error_code);
+                                  MPI_Aint buftype_extent, MPI_Aint * buf_idx, int *error_code);
 void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             * flat_buf, char **send_buf, ADIO_Offset
                             * offset_list, ADIO_Offset * len_list, int *send_size,
@@ -75,7 +75,7 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     ADIO_Offset orig_fp, start_offset, end_offset, fd_size, min_st_offset, off;
     ADIO_Offset *offset_list = NULL, *st_offsets = NULL, *fd_start = NULL,
         *fd_end = NULL, *end_offsets = NULL;
-    int *buf_idx = NULL;
+    MPI_Aint *buf_idx = NULL;
     ADIO_Offset *len_list = NULL;
     int old_error, tmp_error;
 
@@ -285,7 +285,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
                                  ADIO_Offset * len_list, int contig_access_count,
                                  ADIO_Offset min_st_offset, ADIO_Offset fd_size,
                                  ADIO_Offset * fd_start, ADIO_Offset * fd_end,
-                                 int *buf_idx, int *error_code)
+                                 MPI_Aint * buf_idx, int *error_code)
 {
 /* Send data to appropriate processes and write in sizes of no more
    than coll_bufsize.
@@ -556,7 +556,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
                                   ADIOI_Access * others_req,
                                   int *send_buf_idx, int *curr_to_proc,
                                   int *done_to_proc, int *hole, int iter,
-                                  MPI_Aint buftype_extent, int *buf_idx, int *error_code)
+                                  MPI_Aint buftype_extent, MPI_Aint * buf_idx, int *error_code)
 {
     int i, j, k, *tmp_len, nprocs_recv, nprocs_send, err;
     char **send_buf = NULL;

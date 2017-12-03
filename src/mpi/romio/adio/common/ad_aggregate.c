@@ -254,11 +254,12 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * le
                        int nprocs,
                        int *count_my_req_procs_ptr,
                        int **count_my_req_per_proc_ptr,
-                       ADIOI_Access ** my_req_ptr, int **buf_idx_ptr)
+                       ADIOI_Access ** my_req_ptr, MPI_Aint ** buf_idx_ptr)
 /* Possibly reconsider if buf_idx's are ok as int's, or should they be aints/offsets?
    They are used as memory buffer indices so it seems like the 2G limit is in effect */
 {
-    int *count_my_req_per_proc, count_my_req_procs, *buf_idx;
+    int *count_my_req_per_proc, count_my_req_procs;
+    MPI_Aint *buf_idx;
     int i, l, proc;
     ADIO_Offset fd_len, rem_len, curr_idx, off;
     ADIOI_Access *my_req;
@@ -274,7 +275,7 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * le
    I'm allocating memory of size nprocs, so that I can do an
    MPI_Alltoall later on.*/
 
-    buf_idx = (int *) ADIOI_Malloc(nprocs * sizeof(int));
+    buf_idx = (MPI_Aint *) ADIOI_Malloc(nprocs * sizeof(MPI_Aint));
 /* buf_idx is relevant only if buftype_is_contig.
    buf_idx[i] gives the index into user_buf where data received
    from proc. i should be placed. This allows receives to be done
@@ -350,8 +351,8 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * le
 
         /* for each separate contiguous access from this process */
         if (buf_idx[proc] == -1) {
-            ADIOI_Assert(curr_idx == (int) curr_idx);
-            buf_idx[proc] = (int) curr_idx;
+            ADIOI_Assert(curr_idx == (MPI_Aint) curr_idx);
+            buf_idx[proc] = (MPI_Aint) curr_idx;
         }
 
         l = my_req[proc].count;
@@ -375,8 +376,8 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset * le
                                          fd_size, fd_start, fd_end);
 
             if (buf_idx[proc] == -1) {
-                ADIOI_Assert(curr_idx == (int) curr_idx);
-                buf_idx[proc] = (int) curr_idx;
+                ADIOI_Assert(curr_idx == (MPI_Aint) curr_idx);
+                buf_idx[proc] = (MPI_Aint) curr_idx;
             }
 
             l = my_req[proc].count;
