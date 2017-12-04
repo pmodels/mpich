@@ -15,7 +15,7 @@
 #include "mpir_type_defs.h"
 #include "mpir_assert.h"
 #include "mpir_pointers.h"
-#include "mpir_utarray.h"
+#include "utarray.h"
 #include "uthash.h"
 #include "mpir_objects.h"
 
