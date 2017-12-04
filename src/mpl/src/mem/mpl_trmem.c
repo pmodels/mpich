@@ -13,6 +13,7 @@
 /* style: allow:malloc:2 sig:0 */
 /* style: allow:strdup:1 sig:0 */
 
+#include <assert.h>
 #include "mpl.h"
 
 #ifdef malloc
@@ -54,6 +55,7 @@ typedef struct TRSPACE {
     int freed_lineno;
     char freed_fname[TR_FNAME_LEN];
     char fname[TR_FNAME_LEN];
+    void *real_head; /* Pointer we got from (libc) malloc */
     struct TRSPACE *volatile next, *prev;
     unsigned long cookie;       /* Cookie is always the last element
                                  * inorder to catch the off-by-one
@@ -278,6 +280,30 @@ void MPL_trconfig(int rank, int need_thread_safety)
     is_configured = 1;
 }
 
+/*
+  Validate given alignment.
+  Invoked only when memory tracing is enabled.
+ */
+MPL_STATIC_INLINE_PREFIX int is_valid_alignment(size_t a)
+{
+    /* No alignment constraints - okay */
+    if (a == 0)
+        return 1;
+
+    /* Alignment should be multiple of sizeof(void *), as in posix_memalign(3) */
+    if (a % sizeof(void *) != 0)
+        return 0;
+
+    /* Check if it's power of two */
+    while (a > 1) {
+        if (a % 2 == 1)
+            return 0; /* Don't allow non-power-of-two numbers */
+        a /= 2;
+    }
+
+    return 1;
+}
+
 /*+C
     MPL_trmalloc - Malloc with tracing
 
@@ -290,13 +316,16 @@ Input Parameters:
     double aligned pointer to requested storage, or null if not
     available.
  +*/
-static void *trmalloc(size_t a, MPL_memory_class class, int lineno, const char fname[])
+static void *trmalloc(size_t alignment, size_t a, MPL_memory_class class, int lineno, const char fname[])
 {
     TRSPACE *head;
     char *new = NULL;
     unsigned long *nend;
-    size_t nsize;
+    size_t nsize, alloc_size, align_shift;
     int l;
+
+    if (!is_valid_alignment(alignment))
+        goto fn_exit;
 
     if (TRdebugLevel > 0) {
         if (MPL_trvalid2( "Invalid MALLOC arena detected at line %d in %s\n", 
@@ -316,20 +345,45 @@ static void *trmalloc(size_t a, MPL_memory_class class, int lineno, const char f
         goto fn_exit;
     }
 
-    new = (char *)malloc(nsize + sizeof(TrSPACE) + sizeof(unsigned long));
+    /*
+     * Memory layout:
+     *  _______________________________________
+     * | pad | TrSPACE | user space | cookie |
+     * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     * ^     |         |            |
+     * real_head: pointer we got from underlying malloc (len(pad) == align_shift)
+     *       ^         |            |
+     *       head: our own metadata block for memory tracing
+     *                 ^            |
+     *                 Pointer returned to user (aligned if requested)
+     *                              ^
+     *                              Cookied at the tail (unsigned long)
+     */
+
+    alloc_size = alignment + sizeof(TrSPACE) + nsize + sizeof(unsigned long);
+
+    new = (char *) malloc(alloc_size);
     if (!new)
         goto fn_exit;
 
     if(TRSetBytes)
-      memset(new, TRDefaultByte, nsize + sizeof(TrSPACE) + sizeof(unsigned long));
+      memset(new, TRDefaultByte, alloc_size);
 
+    if (alignment > 0)
+        align_shift = alignment - ((uintptr_t) new + sizeof(TrSPACE)) % alignment;
+    else
+        align_shift = 0;
+    if (align_shift == alignment)
+        align_shift = 0; /* buffer was already aligned at desired boundary */
     /* Cast to (void*) to avoid false warnings about alignment issues */
-    head = (TRSPACE *) (void *)new;
-    new += sizeof(TrSPACE);
+    head = (TRSPACE *) (void *)(new + align_shift);
+    head->real_head = new; /* Record the pointer we got from malloc */
+    new += sizeof(TrSPACE) + align_shift;
+    assert(!alignment || (uintptr_t) new % alignment == 0);
 
     if (TRhead[0] != TRHEAD_PRESENTINAL || TRhead[2] != TRHEAD_POSTSENTINAL) {
         MPL_error_printf("TRhead corrupted - likely memory overwrite.\n");
-        free(head);
+        free(head->real_head);
         goto fn_exit;
     }
     if (TRhead[1]) {
@@ -380,7 +434,7 @@ static void *trmalloc(size_t a, MPL_memory_class class, int lineno, const char f
 
     /* Warn the user about tracing overhead if the total memory overhead for
      * tracing is larger than the threshold, TRMaxOverhead. */
-    TRCurOverhead += sizeof(TrSPACE);
+    TRCurOverhead += sizeof(TrSPACE) + align_shift;
     if ((TRCurOverhead > TRMaxOverhead) && TRMaxOverhead) {
         MPL_error_printf("[%d] %.1lf MB was used for memory usage tracing!\n",
                          world_rank, (double)TRCurOverhead / 1024 / 1024);
@@ -392,7 +446,7 @@ static void *trmalloc(size_t a, MPL_memory_class class, int lineno, const char f
      * MPL_VG_MALLOCLIKE_BLOCK and friends, but they don't work when the
      * underlying source of the memory is malloc/free. */
     MPL_VG_MAKE_MEM_UNDEFINED(new, nsize);
-    MPL_VG_MAKE_MEM_NOACCESS(head, sizeof(TrSPACE));
+    MPL_VG_MAKE_MEM_NOACCESS(head->real_head, sizeof(TrSPACE) + align_shift);
     MPL_VG_MAKE_MEM_NOACCESS(nend, sizeof(unsigned long));
   fn_exit:
     return (void *) new;
@@ -403,11 +457,24 @@ void *MPL_trmalloc(size_t a, MPL_memory_class class, int lineno, const char fnam
     void *retval;
 
     TR_THREAD_CS_ENTER;
-    retval = trmalloc(a, class, lineno, fname);
+    retval = trmalloc(0, a, class, lineno, fname);
     TR_THREAD_CS_EXIT;
 
     return retval;
 }
+
+#ifdef MPL_DEFINE_ALIGNED_ALLOC
+void *MPL_traligned_alloc(size_t alignment, size_t size, MPL_memory_class class, int lineno, const char fname[])
+{
+    void *memptr;
+
+    TR_THREAD_CS_ENTER;
+    memptr = trmalloc(alignment, size, class, lineno, fname);
+    TR_THREAD_CS_EXIT;
+
+    return memptr;
+}
+#endif /* #ifdef MPL_DEFINE_ALIGNED_ALLOC */
 
 /*+C
    MPL_trfree - Free with tracing
@@ -541,7 +608,7 @@ static void trfree(void *a_ptr, int line, const char file[])
                          file, line);
     }
 
-    TRCurOverhead -= sizeof(TrSPACE);
+    TRCurOverhead -= (uintptr_t) a_ptr - (uintptr_t) head->real_head;
 
     /*
      * Now, scrub the data (except possibly the first few ints) to
@@ -563,7 +630,7 @@ static void trfree(void *a_ptr, int line, const char file[])
         if(TRSetBytes)
           memset((char *)a_ptr + 2 * sizeof(int), TRFreedByte, nset);
     }
-    free(head);
+    free(head->real_head);
 }
 
 void MPL_trfree(void *a_ptr, int line, const char fname[])
@@ -779,7 +846,7 @@ static void *trcalloc(size_t nelem, size_t elsize, MPL_memory_class class, int l
 {
     void *p;
 
-    p = trmalloc(nelem * elsize, class, lineno, fname);
+    p = trmalloc(0, nelem * elsize, class, lineno, fname);
     if (p) {
         memset(p, 0, nelem * elsize);
     }
@@ -840,7 +907,7 @@ static void *trrealloc(void *p, size_t size, MPL_memory_class class, int lineno,
         return NULL;
     }
 
-    pnew = trmalloc(size, class, lineno, fname);
+    pnew = trmalloc(0, size, class, lineno, fname);
 
     if (p && pnew) {
         nsize = size;
@@ -934,7 +1001,7 @@ static void *trstrdup(const char *str, int lineno, const char fname[])
     void *p;
     size_t len = strlen(str) + 1;
 
-    p = trmalloc(len, MPL_MEM_STRINGS, lineno, fname);
+    p = trmalloc(0, len, MPL_MEM_STRINGS, lineno, fname);
     if (p) {
         memcpy(p, str, len);
     }

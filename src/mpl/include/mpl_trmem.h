@@ -199,6 +199,35 @@ typedef struct {
   M*/
 #define MPL_munmap(a,b,c) MPL_trmunmap((a),(b),(c),__LINE__,__FILE__)
 
+#ifdef MPL_DEFINE_ALIGNED_ALLOC
+/*M
+  MPL_aligned_alloc - Allocate aligned memory
+
+  Synopsis:
+.vb
+  void *MPL_aligned_alloc( size_t alignment, size_t size )
+.ve
+
+  Input Parameters:
+. alignment - Returned address will be multiple of this value.
+              It must be power of two and multiple of sizeof(void *).
+. length - Length of the memory to allocate
+
+  Notes:
+  This routine will often be implemented as a call to posix_memalign(3),
+  However, it can also be defined as
+.vb
+  #define MPL_aligned_alloc(a,b,c) MPL_traligned_alloc(a,b,c,__LINE__,__FILE__)
+.ve
+  where 'MPL_traligned_alloc' is a tracing version of 'aligned_alloc' that is included with
+  MPICH.
+
+  Module:
+  Utility
+  M*/
+#define MPL_aligned_alloc(a,b,c) MPL_traligned_alloc((a),(b),(c),__LINE__,__FILE__)
+#endif /* #ifdef MPL_DEFINE_ALIGNED_ALLOC */
+
 #else /* MPL_USE_MEMORY_TRACING */
 /* No memory tracing; just use native functions */
 #define MPL_malloc(a,b)    malloc((size_t)(a))
@@ -207,6 +236,25 @@ typedef struct {
 #define MPL_realloc(a,b,c)  realloc((void *)(a),(size_t)(b))
 #define MPL_mmap(a,b,c,d,e,f,g) mmap((void *)(a),(size_t)(b),(int)(c),(int)(d),(int)(e),(off_t)(f))
 #define MPL_munmap(a,b,c)  munmap((void *)(a),(size_t)(b))
+
+#ifdef MPL_DEFINE_ALIGNED_ALLOC
+MPL_STATIC_INLINE_PREFIX void *MPL_aligned_alloc(size_t alignment, size_t size, MPL_memory_class class)
+{
+#if defined (MPL_HAVE_ALIGNED_ALLOC)
+    return aligned_alloc(alignment, size);
+#elif defined (MPL_HAVE_POSIX_MEMALIGN)
+    void *ptr;
+    int ret;
+
+    ret = posix_memalign(&ptr, alignment, size);
+    if (ret != 0)
+        return NULL;
+    return ptr;
+#else
+    #error "MPL_DEFINE_ALIGNED_ALLOC defined but no underlying support function found - should not reach here."
+#endif
+}
+#endif /* #ifdef MPL_DEFINE_ALIGNED_ALLOC */
 
 #endif /* MPL_USE_MEMORY_TRACING */
 
@@ -293,6 +341,7 @@ void *MPL_trmmap(void *, size_t, int, int, int, off_t, MPL_memory_class, int, co
 void MPL_trmunmap(void *, size_t, MPL_memory_class, int, const char[]);
 void *MPL_trrealloc(void *, size_t, MPL_memory_class, int, const char[]);
 void *MPL_trstrdup(const char *, int, const char[]);
+void *MPL_traligned_alloc(size_t alignment, size_t length, MPL_memory_class, int, const char[]);
 
 /* Make sure that FILE is defined */
 #include <stdio.h>
