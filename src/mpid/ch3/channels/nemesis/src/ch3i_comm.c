@@ -7,7 +7,7 @@
 #include "mpid_nem_impl.h"
 #undef utarray_oom
 #define utarray_oom() do { goto fn_oom; } while (0)
-#include "mpir_utarray.h"
+#include "utarray.h"
 
 #define NULL_CONTEXT_ID -1
 
