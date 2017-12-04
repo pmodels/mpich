@@ -897,10 +897,10 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     MPIDI_OFI_query_datatype(basic_type, &fi_dt, op, &fi_op, &max_count, &dt_size);
     if (max_count == 0)
         goto am_fallback;
+    max_size = max_count * dt_size;
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_accumulate
                            (win, origin_count, target_count, target_rank, origin_datatype,
-                            target_datatype, max_count, &req, &flags, &ep, sigreq));
-    max_size = max_count * dt_size;
+                            target_datatype, max_size, &req, &flags, &ep, sigreq));
 
     req->event_id = MPIDI_OFI_EVENT_ABORT;
     req->next = MPIDI_OFI_WIN(win).syncQ;
@@ -1040,11 +1040,11 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     if (max_count == 0)
         goto am_fallback;
 
+    max_size = max_count * dt_size;
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_get_accumulate
                            (win, origin_count, target_count, result_count, target_rank, op,
-                            origin_datatype, target_datatype, result_datatype, max_count, &req,
+                            origin_datatype, target_datatype, result_datatype, max_size, &req,
                             &flags, &ep, sigreq));
-    max_size = max_count * dt_size;
 
     req->event_id = MPIDI_OFI_EVENT_RMA_DONE;
     req->next = MPIDI_OFI_WIN(win).syncQ;
