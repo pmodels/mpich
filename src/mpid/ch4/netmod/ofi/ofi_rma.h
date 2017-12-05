@@ -151,6 +151,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * w
                                                                     int target_rank,
                                                                     MPI_Datatype origin_datatype,
                                                                     MPI_Datatype target_datatype,
+                                                                    size_t max_pipe,
                                                                     MPIDI_OFI_win_request_t **
                                                                     winreq, uint64_t * flags,
                                                                     struct fid_ep **ep,
@@ -167,7 +168,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * w
     t_size = sizeof(struct fi_rma_iov);
     /* An upper bound on the iov limit */
     MPIDI_OFI_count_iovecs(origin_count, target_count, 0, origin_datatype,
-                           target_datatype, MPI_DATATYPE_NULL, INT64_MAX, &alloc_iovs);
+                           target_datatype, MPI_DATATYPE_NULL, max_pipe, &alloc_iovs);
 
     alloc_iov_size = MPIDI_OFI_align_iov_len(alloc_iovs * o_size)
         + MPIDI_OFI_align_iov_len(alloc_iovs * t_size)
@@ -324,6 +325,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                                                                   target_rank,
                                                                   origin_datatype,
                                                                   target_datatype,
+                                                                  MPIDI_Global.max_write,
                                                                   &req, &flags, &ep, sigreq));
 
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
@@ -340,7 +342,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                              MPIDI_OFI_winfo_base(win, req->target_rank) + offset,
                              origin_count,
                              target_count,
-                             INT64_MAX,
+                             MPIDI_Global.max_write,
                              origin_datatype,
                              target_datatype);
     rc = MPIDI_OFI_SEG_EAGAIN;
@@ -489,6 +491,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_put_get(win, origin_count, target_count,
                                                                   target_rank,
                                                                   origin_datatype, target_datatype,
+                                                                  MPIDI_Global.max_write,
                                                                   &req, &flags, &ep, sigreq));
 
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
@@ -504,7 +507,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
                              MPIDI_OFI_winfo_base(win, req->target_rank) + offset,
                              origin_count,
                              target_count,
-                             INT64_MAX,
+                             MPIDI_Global.max_write,
                              origin_datatype,
                              target_datatype);
     rc = MPIDI_OFI_SEG_EAGAIN;
@@ -897,7 +900,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     MPIDI_OFI_query_datatype(basic_type, &fi_dt, op, &fi_op, &max_count, &dt_size);
     if (max_count == 0)
         goto am_fallback;
-    max_size = max_count * dt_size;
+    max_size = MPL_MIN(max_count * dt_size, MPIDI_Global.max_write / dt_size * dt_size);
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_accumulate
                            (win, origin_count, target_count, target_rank, origin_datatype,
                             target_datatype, max_size, &req, &flags, &ep, sigreq));
@@ -1040,7 +1043,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     if (max_count == 0)
         goto am_fallback;
 
-    max_size = max_count * dt_size;
+    max_size = MPL_MIN(max_count * dt_size, MPIDI_Global.max_write / dt_size * dt_size);
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_get_accumulate
                            (win, origin_count, target_count, result_count, target_rank, op,
                             origin_datatype, target_datatype, result_datatype, max_size, &req,
