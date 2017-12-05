@@ -170,7 +170,7 @@ typedef struct {
   (a)->i += utarray_len(w);                                                   \
 } while(0)
 
-#define utarray_resize(dst,num) do {                                          \
+#define utarray_resize(dst,num,class) do {                                    \
   size_t _ut_i;                                                               \
   if (dst->i > (size_t)(num)) {                                               \
     if ((dst)->icd->dtor) {                                                   \
@@ -179,7 +179,7 @@ typedef struct {
       }                                                                       \
     }                                                                         \
   } else if (dst->i < (size_t)(num)) {                                        \
-    utarray_reserve(dst,num-dst->i);                                          \
+    utarray_reserve(dst,num-dst->i,class);                                    \
     if ((dst)->icd->init) {                                                   \
       for(_ut_i=dst->i; _ut_i < num; _ut_i++) {                               \
         (dst)->icd->init(utarray_eltptr(dst,_ut_i));                          \
@@ -191,8 +191,8 @@ typedef struct {
   dst->i = num;                                                               \
 } while(0)
 
-#define utarray_concat(dst,src) do {                                          \
-  utarray_inserta((dst),(src),utarray_len(dst));                                  \
+#define utarray_concat(dst,src,class) do {                                    \
+  utarray_inserta((dst),(src),utarray_len(dst),class);                        \
 } while(0)
 
 #define utarray_erase(a,pos,len) do {                                         \
