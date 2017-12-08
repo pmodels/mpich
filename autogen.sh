@@ -304,7 +304,11 @@ if [ -n "$autotoolsdir" ] ; then
         automake=$autotoolsdir/automake
         autom4te=$autotoolsdir/autom4te
         aclocal=$autotoolsdir/aclocal
-        libtoolize=$autotoolsdir/libtoolize
+        if [ -x "$autotoolsdir/glibtoolize" ] ; then
+            libtoolize=$autotoolsdir/glibtoolize
+        else
+            libtoolize=$autotoolsdir/libtoolize
+        fi
 
 	AUTOCONF=$autoconf
 	AUTOHEADER=$autoheader
@@ -332,7 +336,11 @@ else
     autom4te=${AUTOM4TE:-autom4te}
     automake=${AUTOMAKE:-automake}
     aclocal=${ACLOCAL:-aclocal}
-    libtoolize=${LIBTOOLIZE:-libtoolize}
+    if test -z "${LIBTOOLIZE+set}" && ( glibtoolize --version ) >/dev/null 2>&1 ; then
+        libtoolize=glibtoolize
+    else
+        libtoolize=${LIBTOOLIZE:-libtoolize}
+    fi
 fi
 
 ProgHomeDir $autoconf   autoconfdir
