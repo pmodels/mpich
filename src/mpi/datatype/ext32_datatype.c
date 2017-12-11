@@ -5,12 +5,11 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <mpichconf.h>
 #include <mpiimpl.h>
 #include <mpir_dataloop.h>
+
+#include <stdio.h>
+#include <stdlib.h>
 
 
 typedef struct external32_basic_size

@@ -5,10 +5,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "mpiimpl.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "mpiimpl.h"
 
 #undef DLOOP_DEBUG_MANIPULATE
 
