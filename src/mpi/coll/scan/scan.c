@@ -209,21 +209,13 @@ static int scan_smp(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-/* not declared static because a machine-specific function may call this one in some cases */
-/* MPIR_Scan performs an scan using point-to-point messages.  This is
-   intended to be used by device-specific implementations of scan. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scan
+#define FUNCNAME MPIR_Scan_intra
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scan(
-    const void *sendbuf,
-    void *recvbuf,
-    int count,
-    MPI_Datatype datatype,
-    MPI_Op op,
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag )
+int MPIR_Scan_intra (const void *sendbuf, void *recvbuf, int count,
+                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                     MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -246,6 +238,33 @@ int MPIR_Scan(
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+/* not declared static because a machine-specific function may call this one in some cases */
+/* MPIR_Scan performs an scan using point-to-point messages.  This is
+   intended to be used by device-specific implementations of scan. */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Scan
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Scan(
+    const void *sendbuf,
+    void *recvbuf,
+    int count,
+    MPI_Datatype datatype,
+    MPI_Op op,
+    MPIR_Comm *comm_ptr,
+    MPIR_Errflag_t *errflag )
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Scan_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+
+  fn_exit:
     return mpi_errno;
 
   fn_fail:
