@@ -9,5 +9,5 @@ mpi_core_sources +=                          \
     src/mpi/coll/ired_scat/ired_scat_pairwise.c \
     src/mpi/coll/ired_scat/ired_scat_recursive_doubling.c \
     src/mpi/coll/ired_scat/ired_scat_noncomm.c \
-    src/mpi/coll/ired_scat/ired_scat_default_inter.c
+    src/mpi/coll/ired_scat/ired_scat_generic_inter.c
 

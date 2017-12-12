@@ -7,10 +7,10 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Igatherv_default_sched
+#define FUNCNAME MPIR_Igatherv_generic_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Igatherv_default_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+int MPIR_Igatherv_generic_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                                 const int recvcounts[], const int displs[], MPI_Datatype recvtype, int root,
                                 MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {

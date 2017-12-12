@@ -86,7 +86,7 @@ int MPIR_Ireduce_scatter_block_inter_sched(const void *sendbuf, void *recvbuf, i
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ireduce_scatter_block_default_inter_sched(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
+    mpi_errno = MPIR_Ireduce_scatter_block_generic_inter_sched(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
 
     return mpi_errno;
 }
