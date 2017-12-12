@@ -147,7 +147,7 @@ int MPIR_Ireduce_scatter_inter_sched(const void *sendbuf, void *recvbuf, const i
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ireduce_scatter_default_inter_sched(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, s);
+    mpi_errno = MPIR_Ireduce_scatter_generic_inter_sched(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, s);
 
     return mpi_errno;
 }
