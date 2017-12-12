@@ -926,6 +926,14 @@ dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
 AX_GCC_VAR_ATTRIBUTE(aligned)
 
+dnl Check for fallthrough attribute
+PAC_PUSH_ALL_FLAGS
+dnl This check requires removing -Wall and -Wextra first or it will fail. Just
+dnl clear them all.
+CFLAGS=""
+AX_GCC_FUNC_ATTRIBUTE(fallthrough)
+PAC_POP_ALL_FLAGS
+
 dnl Final output
 AC_CONFIG_FILES([Makefile localdefs include/mpl_timer.h])
 AC_OUTPUT
