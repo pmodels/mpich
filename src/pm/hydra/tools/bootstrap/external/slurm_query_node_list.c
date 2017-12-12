@@ -23,73 +23,6 @@
 static int *tasks_per_node = NULL;
 static struct HYD_node *global_node_list = NULL;
 
-static HYD_status group_to_nodes(char *str)
-{
-    char *nodes, *tnodes, *tmp, *start_str, *end_str, **set;
-    int start, end, i, j, k = 0;
-    HYD_status status = HYD_SUCCESS;
-
-    for (tmp = str; *tmp != '[' && *tmp != 0; tmp++);
-
-    if (*tmp == 0) {    /* only one node in the group */
-        status = HYDU_add_to_node_list(str, tasks_per_node[k++], &global_node_list);
-        HYDU_ERR_POP(status, "unable to add to node list\n");
-
-        goto fn_exit;
-    }
-
-    /* more than one node in the group */
-    *tmp = 0;
-    nodes = tmp + 1;
-
-    for (tmp = nodes; *tmp != ']' && *tmp != 0; tmp++);
-    *tmp = 0;   /* remove the closing ']' */
-
-    /* Find the number of sets */
-    tnodes = HYDU_strdup(nodes);
-    tmp = strtok(tnodes, ",");
-    for (i = 1; tmp; i++)
-        tmp = strtok(NULL, ",");
-
-    HYDU_MALLOC(set, char **, i * sizeof(char *), status);
-
-    /* Find the actual node sets */
-    set[0] = strtok(nodes, ",");
-    for (i = 1; set[i - 1]; i++)
-        set[i] = strtok(NULL, ",");
-
-    for (i = 0; set[i]; i++) {
-        start_str = strtok(set[i], "-");
-        if ((end_str = strtok(NULL, "-")) == NULL)
-            end_str = start_str;
-
-        start = atoi(start_str);
-        end = atoi(end_str);
-
-        for (j = start; j <= end; j++) {
-            char *node_str[HYD_NUM_TMP_STRINGS];
-
-            node_str[0] = HYDU_strdup(str);
-            node_str[1] = HYDU_int_to_str_pad(j, strlen(start_str));
-            node_str[2] = NULL;
-
-            status = HYDU_str_alloc_and_join(node_str, &tmp);
-            HYDU_ERR_POP(status, "unable to join strings\n");
-
-            HYDU_free_strlist(node_str);
-
-            status = HYDU_add_to_node_list(tmp, tasks_per_node[k++], &global_node_list);
-            HYDU_ERR_POP(status, "unable to add to node list\n");
-        }
-    }
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 #if defined(HAVE_LIBSLURM)
 static HYD_status list_to_nodes(char *str) {
     hostlist_t hostlist;
@@ -333,6 +266,73 @@ fn_fail:
     goto fn_exit;
 }
 #else
+static HYD_status group_to_nodes(char *str)
+{
+    char *nodes, *tnodes, *tmp, *start_str, *end_str, **set;
+    int start, end, i, j, k = 0;
+    HYD_status status = HYD_SUCCESS;
+
+    for (tmp = str; *tmp != '[' && *tmp != 0; tmp++);
+
+    if (*tmp == 0) {    /* only one node in the group */
+        status = HYDU_add_to_node_list(str, tasks_per_node[k++], &global_node_list);
+        HYDU_ERR_POP(status, "unable to add to node list\n");
+
+        goto fn_exit;
+    }
+
+    /* more than one node in the group */
+    *tmp = 0;
+    nodes = tmp + 1;
+
+    for (tmp = nodes; *tmp != ']' && *tmp != 0; tmp++);
+    *tmp = 0;   /* remove the closing ']' */
+
+    /* Find the number of sets */
+    tnodes = HYDU_strdup(nodes);
+    tmp = strtok(tnodes, ",");
+    for (i = 1; tmp; i++)
+        tmp = strtok(NULL, ",");
+
+    HYDU_MALLOC(set, char **, i * sizeof(char *), status);
+
+    /* Find the actual node sets */
+    set[0] = strtok(nodes, ",");
+    for (i = 1; set[i - 1]; i++)
+        set[i] = strtok(NULL, ",");
+
+    for (i = 0; set[i]; i++) {
+        start_str = strtok(set[i], "-");
+        if ((end_str = strtok(NULL, "-")) == NULL)
+            end_str = start_str;
+
+        start = atoi(start_str);
+        end = atoi(end_str);
+
+        for (j = start; j <= end; j++) {
+            char *node_str[HYD_NUM_TMP_STRINGS];
+
+            node_str[0] = HYDU_strdup(str);
+            node_str[1] = HYDU_int_to_str_pad(j, strlen(start_str));
+            node_str[2] = NULL;
+
+            status = HYDU_str_alloc_and_join(node_str, &tmp);
+            HYDU_ERR_POP(status, "unable to join strings\n");
+
+            HYDU_free_strlist(node_str);
+
+            status = HYDU_add_to_node_list(tmp, tasks_per_node[k++], &global_node_list);
+            HYDU_ERR_POP(status, "unable to add to node list\n");
+        }
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 /* List is a comma separated collection of groups, where each group is
  * of the form "[host001-host012]", "host001-host012", "host009",
  * "[host001-host012,host014-host020]", etc. */
