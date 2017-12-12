@@ -14,26 +14,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Barrier_select(MPIR_Comm * comm_ptr,
 }
 
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Barrier_call(MPIR_Comm * comm_ptr,
-                           MPIR_Errflag_t * errflag,
-                           MPIDI_OFI_coll_algo_container_t * ch4_algo_parameters_container)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    switch (ch4_algo_parameters_container->id) {
-    case MPIDI_OFI_barrier_recursive_doubling_id:
-        mpi_errno =
-            MPIDI_OFI_Barrier_recursive_doubling(comm_ptr, errflag, ch4_algo_parameters_container);
-        break;
-    default:
-        mpi_errno = MPIR_Barrier(comm_ptr, errflag);
-        break;
-    }
-
-    return mpi_errno;
-}
-
-MPL_STATIC_INLINE_PREFIX
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Bcast_select(void *buffer, int count,
                                                         MPI_Datatype datatype,
                                                         int root,
@@ -61,38 +41,6 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Bcast_select(void *buffer, int count,
 }
 
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Bcast_call(void *buffer, int count, MPI_Datatype datatype,
-                         int root, MPIR_Comm * comm_ptr,
-                         MPIR_Errflag_t * errflag,
-                         MPIDI_OFI_coll_algo_container_t * ch4_algo_parameters_container)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    switch (ch4_algo_parameters_container->id) {
-    case MPIDI_OFI_bcast_binomial_id:
-        mpi_errno =
-            MPIDI_OFI_Bcast_binomial(buffer, count, datatype, root, comm_ptr, errflag,
-                                     ch4_algo_parameters_container);
-        break;
-    case MPIDI_OFI_bcast_scatter_doubling_allgather_id:
-        mpi_errno =
-            MPIDI_OFI_Bcast_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag,
-                                                       ch4_algo_parameters_container);
-        break;
-    case MPIDI_OFI_bcast_scatter_ring_allgather_id:
-        mpi_errno =
-            MPIDI_OFI_Bcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag,
-                                                   ch4_algo_parameters_container);
-        break;
-    default:
-        mpi_errno = MPIR_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
-        break;
-    }
-
-    return mpi_errno;
-}
-
-MPL_STATIC_INLINE_PREFIX
 MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Allreduce_select(const void *sendbuf,
                                                              void *recvbuf,
                                                              int count,
@@ -112,33 +60,6 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Allreduce_select(const void *sendbuf
     } else {
         return (MPIDI_OFI_coll_algo_container_t *) &OFI_allreduce_reduce_scatter_allgather_cnt;
     }
-}
-
-MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Allreduce_call(const void *sendbuf, void *recvbuf, int count,
-                             MPI_Datatype datatype, MPI_Op op,
-                             MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                             MPIDI_OFI_coll_algo_container_t * ch4_algo_parameters_container)
-{
-    int mpi_errno = MPI_SUCCESS;
-    switch (ch4_algo_parameters_container->id) {
-    case MPIDI_OFI_allreduce_recursive_doubling_id:
-        mpi_errno =
-            MPIDI_OFI_allreduce_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr,
-                                                   errflag, ch4_algo_parameters_container);
-        break;
-    case MPIDI_OFI_allreduce_reduce_scatter_allgather_id:
-        mpi_errno =
-            MPIDI_OFI_allreduce_reduce_scatter_allgather(sendbuf, recvbuf, count, datatype, op,
-                                                         comm_ptr, errflag,
-                                                         ch4_algo_parameters_container);
-        break;
-    default:
-        mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
-        break;
-    }
-
-    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -162,33 +83,6 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Reduce_select(const void *sendbuf,
     } else {
         return (MPIDI_OFI_coll_algo_container_t *) &OFI_reduce_binomial_cnt;
     }
-}
-
-MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Reduce_call(const void *sendbuf, void *recvbuf, int count,
-                          MPI_Datatype datatype, MPI_Op op, int root,
-                          MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                          MPIDI_OFI_coll_algo_container_t * ch4_algo_parameters_container)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    switch (ch4_algo_parameters_container->id) {
-    case MPIDI_OFI_reduce_redscat_gather_id:
-        mpi_errno =
-            MPIDI_OFI_reduce_redscat_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
-                                            errflag, ch4_algo_parameters_container);
-        break;
-    case MPIDI_OFI_reduce_binomial_id:
-        mpi_errno =
-            MPIDI_OFI_reduce_binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
-                                      errflag, ch4_algo_parameters_container);
-        break;
-    default:
-        mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
-        break;
-    }
-
-    return mpi_errno;
 }
 
 #endif /* NETMOD_OFI_COLL_SELECT_H_INCLUDED */
