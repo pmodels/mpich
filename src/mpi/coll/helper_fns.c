@@ -552,7 +552,7 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(sendtag);
-            ATTRIBUTE((fallthrough));
+            MPL_FALLTHROUGH;
         default:
             MPIR_TAG_SET_ERROR_BIT(sendtag);
     }

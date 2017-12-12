@@ -346,11 +346,11 @@ void MPIR_Dataloop_alloc_and_copy(int kind,
 	    /* need space for dataloop pointers and extents */
 	    ptr_sz = count * sizeof(DLOOP_Dataloop *);
 	    extent_sz = count * sizeof(DLOOP_Offset);
-            ATTRIBUTE((fallthrough));
+            MPL_FALLTHROUGH;
 	case DLOOP_KIND_INDEXED:
 	    /* need space for block sizes */
 	    blk_sz = count * sizeof(DLOOP_Count);
-            ATTRIBUTE((fallthrough));
+            MPL_FALLTHROUGH;
 	case DLOOP_KIND_BLOCKINDEXED:
 	    /* need space for block offsets */
 	    off_sz = count * sizeof(DLOOP_Offset);
