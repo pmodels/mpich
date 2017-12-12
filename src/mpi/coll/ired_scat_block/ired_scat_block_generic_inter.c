@@ -8,45 +8,31 @@
 #include "coll_util.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_default_inter_sched
+#define FUNCNAME MPIR_Ireduce_scatter_block_generic_inter_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_default_inter_sched(const void *sendbuf, void *recvbuf, const int recvcounts[],
-                                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-                                             MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_generic_inter_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
-    /* Intercommunicator Reduce_scatter.
-       We first do an intercommunicator reduce to rank 0 on left group,
-       then an intercommunicator reduce to rank 0 on right group, followed
-       by local intracommunicator scattervs in each group.
-    */
+/* Intercommunicator Ireduce_scatter_block.
+   We first do an intercommunicator reduce to rank 0 on left group,
+   then an intercommunicator reduce to rank 0 on right group, followed
+   by local intracommunicator scattervs in each group.
+*/
     int mpi_errno = MPI_SUCCESS;
-    int rank, root, local_size, total_count, i;
+    int rank, root, local_size, total_count;
     MPI_Aint true_extent, true_lb = 0, extent;
     void *tmp_buf = NULL;
-    int *disps = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPIR_SCHED_CHKPMEM_DECL(2);
+    MPIR_SCHED_CHKPMEM_DECL(1);
 
     rank = comm_ptr->rank;
     local_size = comm_ptr->local_size;
 
-    total_count = 0;
-    for (i=0; i<local_size; i++)
-        total_count += recvcounts[i];
+    total_count = recvcount * local_size;
 
     if (rank == 0) {
         /* In each group, rank 0 allocates a temp. buffer for the
            reduce */
-
-        MPIR_SCHED_CHKPMEM_MALLOC(disps, int *, local_size*sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
-
-        total_count = 0;
-        for (i=0; i<local_size; i++) {
-            disps[i] = total_count;
-            total_count += recvcounts[i];
-        }
-
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPIR_Datatype_get_extent_macro(datatype, extent);
 
@@ -100,9 +86,9 @@ int MPIR_Ireduce_scatter_default_inter_sched(const void *sendbuf, void *recvbuf,
 
     newcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPID_Iscatterv_sched(tmp_buf, recvcounts, disps, datatype,
-                                     recvbuf, recvcounts[rank], datatype, 0,
-                                     newcomm_ptr, s);
+    mpi_errno = MPID_Iscatter_sched(tmp_buf, recvcount, datatype,
+                                    recvbuf, recvcount, datatype, 0,
+                                    newcomm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIR_SCHED_CHKPMEM_COMMIT(s);
