@@ -32,6 +32,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
     case MPIDI_CH4_barrier_composition_beta_id:
         mpi_errno = MPIDI_Barrier_composition_beta(comm, errflag, ch4_algo_parameters_container);
         break;
+#ifdef MPIDI_BUILD_CH4_SHM
+    case MPIDI_CH4_barrier_composition_gamma_id:
+        mpi_errno = MPIDI_Barrier_composition_gamma(comm, errflag, ch4_algo_parameters_container);
+        break;
+#endif /* MPIDI_BUILD_CH4_SHM */
     case MPIDI_CH4_barrier_intercomm_id:
         mpi_errno = MPIDI_Barrier_intercomm(comm, errflag, ch4_algo_parameters_container);
         break;
@@ -71,6 +76,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
             MPIDI_Bcast_composition_gamma(buffer, count, datatype, root, comm, errflag,
                                           ch4_algo_parameters_container);
         break;
+#ifdef MPIDI_BUILD_CH4_SHM
+    case MPIDI_CH4_bcast_composition_delta_id:
+        mpi_errno =
+            MPIDI_Bcast_composition_delta(buffer, count, datatype, root, comm, errflag,
+                                          ch4_algo_parameters_container);
+        break;
+#endif /* MPIDI_BUILD_CH4_SHM */
     case MPIDI_CH4_bcast_intercomm_id:
         mpi_errno =
             MPIDI_Bcast_intercomm(buffer, count, datatype, root, comm, errflag,
@@ -109,6 +121,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
             MPIDI_Allreduce_composition_beta(sendbuf, recvbuf, count, datatype, op, comm, errflag,
                                              ch4_algo_parameters_container);
         break;
+#ifdef MPIDI_BUILD_CH4_SHM
+    case MPIDI_CH4_allreduce_composition_gamma_id:
+        mpi_errno =
+            MPIDI_Allreduce_composition_gamma(sendbuf, recvbuf, count, datatype, op, comm, errflag,
+                                              ch4_algo_parameters_container);
+        break;
+#endif /* MPIDI_BUILD_CH4_SHM */
     case MPIDI_CH4_allreduce_intercomm_id:
         mpi_errno =
             MPIDI_Allreduce_intercomm(sendbuf, recvbuf, count, datatype, op, comm, errflag,
@@ -304,6 +323,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
             MPIDI_Reduce_composition_beta(sendbuf, recvbuf, count, datatype, op, root, comm,
                                           errflag, ch4_algo_parameters_container);
         break;
+#ifdef MPIDI_BUILD_CH4_SHM
+    case MPIDI_CH4_reduce_composition_gamma_id:
+        mpi_errno =
+            MPIDI_Reduce_composition_gamma(sendbuf, recvbuf, count, datatype, op, root, comm,
+                                           errflag, ch4_algo_parameters_container);
+        break;
+#endif /* MPIDI_BUILD_CH4_SHM */
     case MPIDI_CH4_reduce_intercomm_id:
         mpi_errno =
             MPIDI_Reduce_intercomm(sendbuf, recvbuf, count, datatype, op, root, comm, errflag,

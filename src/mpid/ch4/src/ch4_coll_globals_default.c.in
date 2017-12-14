@@ -4,7 +4,7 @@
 
 /* container traverse function to be implemented  */
 /* e.g. return ((void *) ((char *)container) + sizeof(MPIDI_coll_algo_generic_container_t)); */
-void *MPIDI_coll_get_next_container(void *container)
+void * MPIDI_coll_get_next_container(void *container)
 {
     return NULL;
 }
@@ -29,6 +29,17 @@ const MPIDI_coll_algo_container_t CH4_barrier_composition_beta_cnt =
                 .barrier = -1
             }
     };
+
+#ifdef MPIDI_BUILD_CH4_SHM
+const MPIDI_coll_algo_container_t CH4_barrier_composition_gamma_cnt =
+    {
+        .id = MPIDI_CH4_barrier_composition_gamma_id,
+        .params.ch4_barrier_params.ch4_barrier_gamma =
+            {
+                .barrier = -1
+            }
+    };
+#endif /* MPIDI_BUILD_CH4_SHM */
 
 const MPIDI_coll_algo_container_t CH4_barrier_intercomm_cnt =
     {
@@ -66,6 +77,17 @@ const MPIDI_coll_algo_container_t CH4_bcast_composition_gamma_cnt =
             }
     };
 
+#ifdef MPIDI_BUILD_CH4_SHM
+const MPIDI_coll_algo_container_t CH4_bcast_composition_delta_cnt =
+    {
+       .id = MPIDI_CH4_bcast_composition_delta_id,
+       .params.ch4_bcast_params.ch4_bcast_delta =
+            {
+                .bcast = -1,
+            }
+    };
+#endif /* MPIDI_BUILD_CH4_SHM */
+
 const MPIDI_coll_algo_container_t CH4_bcast_intercomm_cnt =
     {
         .id = MPIDI_CH4_bcast_intercomm_id
@@ -90,6 +112,17 @@ const MPIDI_coll_algo_container_t CH4_reduce_composition_beta_cnt =
                 .reduce = -1
             }
 };
+
+#ifdef MPIDI_BUILD_CH4_SHM
+const MPIDI_coll_algo_container_t CH4_reduce_composition_gamma_cnt =
+    {
+        .id = MPIDI_CH4_reduce_composition_gamma_id,
+        .params.ch4_reduce_params.ch4_reduce_gamma =
+            {
+                .reduce = -1
+            }
+};
+#endif /* MPIDI_BUILD_CH4_SHM */
 
 const MPIDI_coll_algo_container_t CH4_reduce_intercomm_cnt =
     {
@@ -121,6 +154,17 @@ const MPIDI_coll_algo_container_t CH4_allreduce_composition_beta_cnt =
                 .allreduce = -1
             }
     };
+
+#ifdef MPIDI_BUILD_CH4_SHM
+const MPIDI_coll_algo_container_t CH4_allreduce_composition_gamma_cnt =
+    {
+        .id = MPIDI_CH4_allreduce_composition_gamma_id,
+        .params.ch4_allreduce_params.ch4_allreduce_gamma =
+            {
+                .allreduce = -1
+            }
+    };
+#endif /* MPIDI_BUILD_CH4_SHM */
 
 /* *INDENT-OFF* */
 @ch4_netmod_coll_globals_default@

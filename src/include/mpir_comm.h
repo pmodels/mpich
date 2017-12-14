@@ -160,20 +160,13 @@ struct MPIR_Comm {
                                     node_roots_comm of rank i in this comm.
                                     It is of size 'local_size'. */
 
-    union {
-        int flags;
-        struct {
-            char is_low_group;/* For intercomms only, this boolean is
-                set for all members of one of the
-                two groups of processes and clear for
-                the other.  It enables certain
-                intercommunicator collective operations
-                that wish to use half-duplex operations
-                to implement a full-duplex operation */
-            char is_single_node;/* if a communicator is inside a single node */
-        };
-    };
-
+    int is_low_group;/* For intercomms only, this boolean is
+        set for all members of one of the
+        two groups of processes and clear for
+        the other.  It enables certain
+        intercommunicator collective operations
+        that wish to use half-duplex operations
+        to implement a full-duplex operation */
     struct MPIR_Comm     *comm_next;/* Provides a chain through all active
 				       communicators */
     struct MPII_Topo_ops  *topo_fns; /* Pointer to a table of functions
