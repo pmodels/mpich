@@ -5,5 +5,5 @@ mpi_sources +=                                  \
     src/mpi/coll/ibarrier/ibarrier.c
 
 mpi_core_sources +=                                      \
-    src/mpi/coll/ibarrier/ibarrier_recursive_doubling.c  \
-    src/mpi/coll/ibarrier/ibarrier_bcast.c
+    src/mpi/coll/ibarrier/ibarrier_intra_recursive_doubling.c  \
+    src/mpi/coll/ibarrier/ibarrier_intra_bcast.c

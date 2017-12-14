@@ -16,17 +16,17 @@ include $(top_srcdir)/src/mpi/coll/bcast/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/exscan/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/gather/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/gatherv/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/red_scat/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/red_scat_block/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/reduce_scatter/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/reduce_scatter_block/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/reduce/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/scan/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/scatter/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/scatterv/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/nhb_allgather/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/nhb_allgatherv/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/nhb_alltoall/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/nhb_alltoallv/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/nhb_alltoallw/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/neighbor_allgather/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/neighbor_allgatherv/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/neighbor_alltoall/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/neighbor_alltoallv/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/neighbor_alltoallw/Makefile.mk
 
 include $(top_srcdir)/src/mpi/coll/iallgather/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/iallgatherv/Makefile.mk
@@ -39,17 +39,17 @@ include $(top_srcdir)/src/mpi/coll/ibcast/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/iexscan/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/igather/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/igatherv/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/ired_scat/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/ired_scat_block/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/ireduce_scatter/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/ireduce_scatter_block/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/ireduce/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/iscan/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/iscatter/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/iscatterv/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/inhb_allgather/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/inhb_allgatherv/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/inhb_alltoall/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/inhb_alltoallv/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/inhb_alltoallw/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/ineighbor_allgather/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/ineighbor_allgatherv/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/ineighbor_alltoall/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/ineighbor_alltoallv/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/ineighbor_alltoallw/Makefile.mk
 
 include $(top_srcdir)/src/mpi/coll/src/Makefile.mk
 
@@ -64,7 +64,7 @@ mpi_sources +=                     \
     src/mpi/coll/op/op_commutative.c
 
 mpi_core_sources += \
-    src/mpi/coll/allred_group/allred_group.c   \
+    src/mpi/coll/allreduce_group/allreduce_group.c   \
     src/mpi/coll/helper_fns.c     \
     src/mpi/coll/op/opsum.c          \
     src/mpi/coll/op/opmax.c          \

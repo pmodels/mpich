@@ -5,6 +5,6 @@ mpi_sources +=                                    \
     src/mpi/coll/ialltoallv/ialltoallv.c
 
 mpi_core_sources +=                               \
-    src/mpi/coll/ialltoallv/ialltoallv_inplace.c  \
-    src/mpi/coll/ialltoallv/ialltoallv_blocked.c  \
-    src/mpi/coll/ialltoallv/ialltoallv_pairwise_xchg.c
+    src/mpi/coll/ialltoallv/ialltoallv_intra_inplace.c  \
+    src/mpi/coll/ialltoallv/ialltoallv_intra_blocked.c  \
+    src/mpi/coll/ialltoallv/ialltoallv_intra_pairwise_xchg.c

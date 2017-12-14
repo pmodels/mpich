@@ -22,7 +22,7 @@ cvars:
         use the short message algorithm for intercommunicator MPI_Scatter if the
         send buffer size is < this value (in bytes)
 
-    - name        : MPIR_CVAR_SCATTER_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_SCATTER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -34,7 +34,7 @@ cvars:
         auto - Internal algorithm selection
         binomial - Force binomial algorithm
 
-    - name        : MPIR_CVAR_SCATTER_ALGORITHM_INTER
+    - name        : MPIR_CVAR_SCATTER_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -117,7 +117,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     int        mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     
-    mpi_errno = MPIR_Scatter_binomial(sendbuf, sendcount, sendtype,
+    mpi_errno = MPIR_Scatter_intra_binomial(sendbuf, sendcount, sendtype,
                                 recvbuf, recvcount, recvtype, root,
                                 comm_ptr, errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -142,7 +142,7 @@ int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Scatter_generic_inter(sendbuf, sendcount, sendtype, recvbuf,
+    mpi_errno = MPIR_Scatter_inter_generic(sendbuf, sendcount, sendtype, recvbuf,
             recvcount, recvtype, root, comm_ptr, errflag);
 
     return mpi_errno;
@@ -164,13 +164,13 @@ int MPIR_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Scatter_alg_intra_choice) {
-            case MPIR_SCATTER_ALG_INTRA_BINOMIAL:
-                mpi_errno = MPIR_Scatter_binomial(sendbuf, sendcount, sendtype,
+        switch (MPIR_Scatter_intra_algo_choice) {
+            case MPIR_SCATTER_INTRA_ALGO_BINOMIAL:
+                mpi_errno = MPIR_Scatter_intra_binomial(sendbuf, sendcount, sendtype,
                                        recvbuf, recvcount, recvtype, root,
                                        comm_ptr, errflag);
                 break;
-            case MPIR_SCATTER_ALG_INTRA_AUTO:
+            case MPIR_SCATTER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Scatter_intra(sendbuf, sendcount, sendtype,
@@ -180,13 +180,13 @@ int MPIR_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Scatter_alg_inter_choice) {
-            case MPIR_SCATTER_ALG_INTER_GENERIC:
-                mpi_errno = MPIR_Scatter_generic_inter(sendbuf, sendcount, sendtype,
+        switch (MPIR_Scatter_inter_algo_choice) {
+            case MPIR_SCATTER_INTER_ALGO_GENERIC:
+                mpi_errno = MPIR_Scatter_inter_generic(sendbuf, sendcount, sendtype,
                                        recvbuf, recvcount, recvtype, root,
                                        comm_ptr, errflag);
                 break;
-            case MPIR_SCATTER_ALG_INTER_AUTO:
+            case MPIR_SCATTER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Scatter_inter(sendbuf, sendcount, sendtype,

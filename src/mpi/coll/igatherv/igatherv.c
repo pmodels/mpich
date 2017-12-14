@@ -10,7 +10,7 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_IGATHERV_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_IGATHERV_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -22,7 +22,7 @@ cvars:
         auto - Internal algorithm selection
         generic - Force generic algorithm
 
-    - name        : MPIR_CVAR_IGATHERV_ALGORITHM_INTER
+    - name        : MPIR_CVAR_IGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -83,22 +83,22 @@ int MPIR_Igatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        switch (MPIR_Igatherv_alg_intra_choice) {
-            case MPIR_IGATHERV_ALG_INTRA_GENERIC:
+        switch (MPIR_Igatherv_intra_algo_choice) {
+            case MPIR_IGATHERV_INTRA_ALGO_GENERIC:
                 mpi_errno = MPIR_Igatherv_generic_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
                 break;
-            case MPIR_IGATHERV_ALG_INTRA_AUTO:
+            case MPIR_IGATHERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Igatherv_generic_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
                 break;
         }
     } else {
-        switch (MPIR_Igatherv_alg_inter_choice) {
-            case MPIR_IGATHERV_ALG_INTER_GENERIC:
+        switch (MPIR_Igatherv_inter_algo_choice) {
+            case MPIR_IGATHERV_INTER_ALGO_GENERIC:
                 mpi_errno = MPIR_Igatherv_generic_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
                 break;
-            case MPIR_IGATHERV_ALG_INTER_AUTO:
+            case MPIR_IGATHERV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Igatherv_generic_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);

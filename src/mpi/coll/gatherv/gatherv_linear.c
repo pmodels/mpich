@@ -31,7 +31,7 @@ cvars:
 #define FUNCNAME MPIR_Gatherv_linear
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gatherv_linear ( 
+int MPIR_Gatherv_linear (
 	const void *sendbuf,
 	int sendcount,
 	MPI_Datatype sendtype,

@@ -11,7 +11,7 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_SCAN_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_SCAN_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -260,7 +260,7 @@ int MPIR_Scan_intra (const void *sendbuf, void *recvbuf, int count,
 
     if (!MPII_Comm_is_node_consecutive(comm_ptr)) {
         /* We can't use the SMP-aware algorithm, use the generic one */
-        return MPIR_Scan_generic(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+        return MPIR_Scan_intra_generic(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
     }
 
     mpi_errno = scan_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
@@ -295,11 +295,11 @@ int MPIR_Scan(
 {
     int mpi_errno = MPI_SUCCESS;
 
-    switch (MPIR_Scan_alg_intra_choice) {
-        case MPIR_SCAN_ALG_INTRA_GENERIC:
-            mpi_errno = MPIR_Scan_generic(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    switch (MPIR_Scan_intra_algo_choice) {
+        case MPIR_SCAN_INTRA_ALGO_GENERIC:
+            mpi_errno = MPIR_Scan_intra_generic(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
-        case MPIR_SCAN_ALG_INTRA_AUTO:
+        case MPIR_SCAN_INTRA_ALGO_AUTO:
             MPL_FALLTHROUGH;
         default:
             mpi_errno = MPIR_Scan_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);

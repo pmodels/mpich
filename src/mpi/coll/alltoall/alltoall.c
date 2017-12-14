@@ -52,7 +52,7 @@ cvars:
        algorithms. Setting it to 0 causes all irecvs/isends to be
        posted at once
 
-   - name        : MPIR_CVAR_ALLTOALL_ALGORITHM_INTRA
+   - name        : MPIR_CVAR_ALLTOALL_INTRA_ALGORITHM
      category    : COLLECTIVE
      type        : string
      default     : auto
@@ -67,7 +67,7 @@ cvars:
        pairwise_sendrecv_replace - Force pairwise sendrecv replace algorithm
        scattered - Force scattered algorithm
 
-   - name        : MPIR_CVAR_ALLTOALL_ALGORITHM_INTER
+   - name        : MPIR_CVAR_ALLTOALL_INTER_ALGORITHM
      category    : COLLECTIVE
      type        : string
      default     : auto
@@ -201,13 +201,13 @@ int MPIR_Alltoall_intra(
          * time and there will be multiple repeated malloc/free's rather than
          * maintaining a single buffer across the whole loop.  Something like
          * MADRE is probably the best solution for the MPI_IN_PLACE scenario. */
-        mpi_errno = MPIR_Alltoall_pairwise_sendrecv_replace (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
+        mpi_errno = MPIR_Alltoall_intra_pairwise_sendrecv_replace (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
     }
     else if ((nbytes <= MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE) && (comm_size >= 8)) {
 
         /* use the indexing algorithm by Jehoshua Bruck et al,
          * IEEE TPDS, Nov. 97 */ 
-        mpi_errno = MPIR_Alltoall_brucks (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
+        mpi_errno = MPIR_Alltoall_intra_brucks (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
 
     }
 
@@ -215,7 +215,7 @@ int MPIR_Alltoall_intra(
         /* Medium-size message. Use isend/irecv with scattered
            destinations. Use Tony Ladd's modification to post only
            a small number of isends/irecvs at a time. */
-        mpi_errno = MPIR_Alltoall_scattered (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
+        mpi_errno = MPIR_Alltoall_intra_scattered (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
     }
 
     else {
@@ -223,7 +223,7 @@ int MPIR_Alltoall_intra(
            exchange using exclusive-or to create pairs. Else send to
            rank+i, receive from rank-i. */
 
-        mpi_errno = MPIR_Alltoall_pairwise(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
+        mpi_errno = MPIR_Alltoall_intra_pairwise(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
     }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
@@ -259,7 +259,7 @@ int MPIR_Alltoall_inter(
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Alltoall_generic_inter(sendbuf, sendcount, sendtype,
+    mpi_errno = MPIR_Alltoall_inter_generic(sendbuf, sendcount, sendtype,
             recvbuf, recvcount, recvtype, comm_ptr, errflag);
 
     return mpi_errno;
@@ -277,28 +277,28 @@ int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Alltoall_alg_intra_choice) {
-            case MPIR_ALLTOALL_ALG_INTRA_BRUCKS:
-                mpi_errno = MPIR_Alltoall_brucks(sendbuf, sendcount, sendtype,
+        switch (MPIR_Alltoall_intra_algo_choice) {
+            case MPIR_ALLTOALL_INTRA_ALGO_BRUCKS:
+                mpi_errno = MPIR_Alltoall_intra_brucks(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;
-            case MPIR_ALLTOALL_ALG_INTRA_PAIRWISE:
-                mpi_errno = MPIR_Alltoall_pairwise(sendbuf, sendcount, sendtype,
+            case MPIR_ALLTOALL_INTRA_ALGO_PAIRWISE:
+                mpi_errno = MPIR_Alltoall_intra_pairwise(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;
-            case MPIR_ALLTOALL_ALG_INTRA_PAIRWISE_SENDRECV_REPLACE:
-                mpi_errno = MPIR_Alltoall_pairwise_sendrecv_replace(sendbuf, sendcount,
+            case MPIR_ALLTOALL_INTRA_ALGO_PAIRWISE_SENDRECV_REPLACE:
+                mpi_errno = MPIR_Alltoall_intra_pairwise_sendrecv_replace(sendbuf, sendcount,
                                         sendtype, recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;
-            case MPIR_ALLTOALL_ALG_INTRA_SCATTERED:
-                mpi_errno = MPIR_Alltoall_scattered(sendbuf, sendcount, sendtype,
+            case MPIR_ALLTOALL_INTRA_ALGO_SCATTERED:
+                mpi_errno = MPIR_Alltoall_intra_scattered(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;
-            case MPIR_ALLTOALL_ALG_INTRA_AUTO:
+            case MPIR_ALLTOALL_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Alltoall_intra(sendbuf, sendcount, sendtype,
@@ -308,13 +308,13 @@ int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Alltoall_alg_inter_choice) {
-            case MPIR_ALLTOALL_ALG_INTER_GENERIC:
-                mpi_errno = MPIR_Alltoall_generic_inter(sendbuf, sendcount, sendtype,
+        switch (MPIR_Alltoall_inter_algo_choice) {
+            case MPIR_ALLTOALL_INTER_ALGO_GENERIC:
+                mpi_errno = MPIR_Alltoall_inter_generic(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;
-            case MPIR_ALLTOALL_ALG_INTER_AUTO:
+            case MPIR_ALLTOALL_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Alltoall_inter(sendbuf, sendcount, sendtype,

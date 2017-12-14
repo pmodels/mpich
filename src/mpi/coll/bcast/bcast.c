@@ -93,7 +93,7 @@ cvars:
         value of '0' uses SMP-aware broadcast for all message sizes.
         (See also: MPIR_CVAR_ENABLE_SMP_BCAST)
 
-    - name        : MPIR_CVAR_BCAST_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_BCAST_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -107,7 +107,7 @@ cvars:
         scatter_doubling_allgather - Force Scatter Doubling
         scatter_ring_allgather - Force Scatter Ring
 
-    - name        : MPIR_CVAR_BCAST_ALGORITHM_INTER
+    - name        : MPIR_CVAR_BCAST_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -337,7 +337,7 @@ static int smp_bcast(
             /* FIXME It would be good to have an SMP-aware version of this
                algorithm that (at least approximately) minimized internode
                communication. */
-            mpi_errno = MPIR_Bcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+            mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -470,7 +470,7 @@ int MPIR_Bcast_intra (
 
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) || (comm_size < MPIR_CVAR_BCAST_MIN_PROCS))
     {
-        mpi_errno = MPIR_Bcast_binomial(buffer, count, datatype, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Bcast_intra_binomial(buffer, count, datatype, root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -482,7 +482,7 @@ int MPIR_Bcast_intra (
     {
         if ((nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE) && (MPIU_is_pof2(comm_size, NULL)))
         {
-            mpi_errno = MPIR_Bcast_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+            mpi_errno = MPIR_Bcast_intra_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -495,7 +495,7 @@ int MPIR_Bcast_intra (
             /* We want the ring algorithm whether or not we have a
                topologically aware communicator.  Doing inter/intra-node
                communication phases breaks the pipelining of the algorithm.  */
-            mpi_errno = MPIR_Bcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+            mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -532,7 +532,7 @@ int MPIR_Bcast_inter (
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast_generic_inter(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Bcast_inter_generic(buffer, count, datatype, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -550,17 +550,17 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Bcast_alg_intra_choice) {
-            case MPIR_BCAST_ALG_INTRA_BINOMIAL:
-                mpi_errno = MPIR_Bcast_binomial(buffer, count, datatype, root, comm_ptr, errflag);
+        switch (MPIR_Bcast_intra_algo_choice) {
+            case MPIR_BCAST_INTRA_ALGO_BINOMIAL:
+                mpi_errno = MPIR_Bcast_intra_binomial(buffer, count, datatype, root, comm_ptr, errflag);
                 break;
-            case MPIR_BCAST_ALG_INTRA_SCATTER_DOUBLING_ALLGATHER:
-                mpi_errno = MPIR_Bcast_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+            case MPIR_BCAST_INTRA_ALGO_SCATTER_DOUBLING_ALLGATHER:
+                mpi_errno = MPIR_Bcast_intra_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
                 break;
-            case MPIR_BCAST_ALG_INTRA_SCATTER_RING_ALLGATHER:
-                mpi_errno = MPIR_Bcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+            case MPIR_BCAST_INTRA_ALGO_SCATTER_RING_ALLGATHER:
+                mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
                 break;
-            case MPIR_BCAST_ALG_INTRA_AUTO:
+            case MPIR_BCAST_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Bcast_intra( buffer, count, datatype, root, comm_ptr, errflag );
@@ -568,11 +568,11 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Bcast_alg_inter_choice) {
-            case MPIR_BCAST_ALG_INTER_GENERIC:
-                mpi_errno = MPIR_Bcast_generic_inter( buffer, count, datatype, root, comm_ptr, errflag );
+        switch (MPIR_Bcast_inter_algo_choice) {
+            case MPIR_BCAST_INTER_ALGO_GENERIC:
+                mpi_errno = MPIR_Bcast_inter_generic( buffer, count, datatype, root, comm_ptr, errflag );
                 break;
-            case MPIR_BCAST_ALG_INTER_AUTO:
+            case MPIR_BCAST_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Bcast_inter( buffer, count, datatype, root, comm_ptr, errflag );

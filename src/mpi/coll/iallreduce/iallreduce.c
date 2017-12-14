@@ -11,7 +11,7 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_IALLREDUCE_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -25,7 +25,7 @@ cvars:
         recursive_doubling - Force recursive doubling algorithm
         redscat_allgather - Force redscat allgather algorithm
 
-    - name        : MPIR_CVAR_IALLREDUCE_ALGORITHM_INTER
+    - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -165,7 +165,7 @@ int MPIR_Iallreduce_intra_sched(const void *sendbuf, void *recvbuf, int count, M
 #endif
 
     if (!is_homogeneous) {
-        mpi_errno = MPIR_Iallreduce_naive_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Iallreduce_intra_naive_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
     }
@@ -193,12 +193,12 @@ int MPIR_Iallreduce_intra_sched(const void *sendbuf, void *recvbuf, int count, M
         (count < pof2))
     {
         /* use recursive doubling */
-        mpi_errno = MPIR_Iallreduce_rec_dbl_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Iallreduce_intra_recursive_doubling_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
         /* do a reduce-scatter followed by allgather */
-        mpi_errno = MPIR_Iallreduce_redscat_allgather_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Iallreduce_intra_redscat_allgather_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
@@ -217,7 +217,7 @@ int MPIR_Iallreduce_inter_sched(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Iallreduce_generic_inter_sched(sendbuf, recvbuf, count,
+    mpi_errno = MPIR_Iallreduce_inter_generic_sched(sendbuf, recvbuf, count,
             datatype, op, comm_ptr, s);
 
     return mpi_errno;
@@ -237,20 +237,20 @@ int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dat
             mpi_errno = iallreduce_smp_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         } else {
             /* intracommunicator */
-            switch (MPIR_Iallreduce_alg_intra_choice) {
-                case MPIR_IALLREDUCE_ALG_INTRA_NAIVE:
-                    mpi_errno = MPIR_Iallreduce_naive_sched(sendbuf, recvbuf, count,
+            switch (MPIR_Iallreduce_intra_algo_choice) {
+                case MPIR_IALLREDUCE_INTRA_ALGO_NAIVE:
+                    mpi_errno = MPIR_Iallreduce_intra_naive_sched(sendbuf, recvbuf, count,
                                 datatype, op, comm_ptr, s);
                     break;
-                case MPIR_IALLREDUCE_ALG_INTRA_RECURSIVE_DOUBLING:
-                    mpi_errno = MPIR_Iallreduce_rec_dbl_sched(sendbuf, recvbuf, count,
+                case MPIR_IALLREDUCE_INTRA_ALGO_RECURSIVE_DOUBLING:
+                    mpi_errno = MPIR_Iallreduce_intra_recursive_doubling_sched(sendbuf, recvbuf, count,
                                 datatype, op, comm_ptr, s);
                     break;
-                case MPIR_IALLREDUCE_ALG_INTRA_REDSCAT_ALLGATHER:
-                    mpi_errno = MPIR_Iallreduce_redscat_allgather_sched(sendbuf, recvbuf, count,
+                case MPIR_IALLREDUCE_INTRA_ALGO_REDSCAT_ALLGATHER:
+                    mpi_errno = MPIR_Iallreduce_intra_redscat_allgather_sched(sendbuf, recvbuf, count,
                                 datatype, op, comm_ptr, s);
                     break;
-                case MPIR_IALLREDUCE_ALG_INTRA_AUTO:
+                case MPIR_IALLREDUCE_INTRA_ALGO_AUTO:
                     MPL_FALLTHROUGH;
                 default:
                     mpi_errno = MPIR_Iallreduce_intra_sched(sendbuf, recvbuf, count,
@@ -260,12 +260,12 @@ int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dat
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Iallreduce_alg_inter_choice) {
-            case MPIR_IALLREDUCE_ALG_INTER_GENERIC:
-                mpi_errno = MPIR_Iallreduce_generic_inter_sched(sendbuf, recvbuf, count,
+        switch (MPIR_Iallreduce_inter_algo_choice) {
+            case MPIR_IALLREDUCE_INTER_ALGO_GENERIC:
+                mpi_errno = MPIR_Iallreduce_inter_generic_sched(sendbuf, recvbuf, count,
                             datatype, op, comm_ptr, s);
                 break;
-            case MPIR_IALLREDUCE_ALG_INTER_AUTO:
+            case MPIR_IALLREDUCE_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Iallreduce_inter_sched(sendbuf, recvbuf, count,

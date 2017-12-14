@@ -6,8 +6,8 @@ mpi_sources +=                     		\
 	src/mpi/coll/alltoall/alltoall.c
 
 mpi_core_sources +=												\
-	src/mpi/coll/alltoall/alltoall_pairwise_sendrecv_replace.c	\
-	src/mpi/coll/alltoall/alltoall_brucks.c						\
-	src/mpi/coll/alltoall/alltoall_scattered.c					\
-	src/mpi/coll/alltoall/alltoall_pairwise.c					\
-	src/mpi/coll/alltoall/alltoall_generic_inter.c
+	src/mpi/coll/alltoall/alltoall_intra_pairwise_sendrecv_replace.c	\
+	src/mpi/coll/alltoall/alltoall_intra_brucks.c						\
+	src/mpi/coll/alltoall/alltoall_intra_scattered.c					\
+	src/mpi/coll/alltoall/alltoall_intra_pairwise.c					\
+	src/mpi/coll/alltoall/alltoall_inter_generic.c
