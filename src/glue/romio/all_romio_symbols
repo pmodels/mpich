@@ -72,7 +72,6 @@ print OUTFD <<EOT;
  * have shown up when Fortran support is disabled.
  */
 
-#include "mpi.h"
 #include "mpiimpl.h"
 
 #include <stdio.h>
