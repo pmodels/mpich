@@ -13,23 +13,63 @@
 
 #undef AGG_DEBUG
 
-void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr, int mode)
+static int gcd(int a, int b)
 {
-    int *striping_info = NULL;
-    /* get striping information:
-     *  striping_info[0]: stripe_size
-     *  striping_info[1]: stripe_count
-     *  striping_info[2]: avail_cb_nodes
-     */
-    int stripe_size, stripe_count, CO = 1;
-    int avail_cb_nodes, divisor, nprocs_for_coll = fd->hints->cb_nodes;
+    if (a % b == 0)
+        return b;
+    return gcd(b, a % b);
+}
 
-    /* Get hints value */
-    /* stripe size */
-    stripe_size = fd->hints->striping_unit;
-    /* stripe count */
-    /* stripe_size and stripe_count have been validated in ADIOI_LUSTRE_Open() */
-    stripe_count = fd->hints->striping_factor;
+static int ADIOI_LUSTRE_LCM(int a, int b)
+{
+    int g;
+
+    if (a == 0 || b == 0)
+        return (a + b);
+    g = gcd(a, b);
+    return a * b / g;
+}
+
+ADIO_Offset ADIOI_LUSTRE_Get_last_stripe_size(struct llapi_layout * layout)
+{
+    uint64_t last_stripe_size;
+    int rc;
+
+#ifdef HAVE_LUSTRE_COMP_LAYOUT_SUPPORT
+    if (!llapi_layout_comp_use(layout, LLAPI_LAYOUT_COMP_USE_LAST))
+#endif
+        rc = llapi_layout_stripe_size_get(layout, &last_stripe_size);
+
+#ifdef AGG_DEBUG
+    LDEBUG("last_stripe_size is %llu\n", last_stripe_size);
+#endif
+    return last_stripe_size;
+}
+
+int ADIOI_LUSTRE_Get_lcm_stripe_count(struct llapi_layout *layout)
+{
+    uint64_t lcm_stripe_count = 1, stripe_count = 1;
+    int rc;
+#ifdef HAVE_LUSTRE_COMP_LAYOUT_SUPPORT
+    rc = llapi_layout_comp_use(layout, LLAPI_LAYOUT_COMP_USE_FIRST);
+    while (rc == 0) {
+        if (llapi_layout_stripe_count_get(layout, &stripe_count))
+            break;
+        lcm_stripe_count = ADIOI_LUSTRE_LCM(lcm_stripe_count, stripe_count);
+        rc = llapi_layout_comp_use(layout, LLAPI_LAYOUT_COMP_USE_NEXT);
+    }
+#else
+    rc = llapi_layout_stripe_count_get(layout, &lcm_stripe_count);
+#endif
+    return lcm_stripe_count;
+}
+
+static int ADIOI_LUSTRE_Calc_avail_cbnodes(ADIO_File fd, int mode)
+{
+    int avail_cb_nodes, divisor, CO = 1;
+    int nprocs_for_coll = fd->hints->cb_nodes;
+    int lcm_stripe_count = fd->hints->striping_factor;
+    int rc;
 
     /* Calculate the available number of I/O clients */
     if (!mode) {
@@ -45,6 +85,7 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr, int m
         /* CO also has been validated in ADIOI_LUSTRE_Open(), >0 */
         CO = fd->hints->fs_hints.lustre.co_ratio;
     }
+
     /* Calculate how many IO clients we need */
     /* Algorithm courtesy Pascal Deveze (pascal.deveze@bull.net) */
     /* To avoid extent lock conflicts,
@@ -52,15 +93,15 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr, int m
      *  - be a multiple of stripe_count,
      *  - or divide stripe_count exactly
      * so that each OST is accessed by a maximum of CO constant clients. */
-    if (nprocs_for_coll >= stripe_count)
+    if (nprocs_for_coll >= lcm_stripe_count) {
         /* avail_cb_nodes should be a multiple of stripe_count and the number
          * of procs per OST should be limited to the minimum between
          * nprocs_for_coll/stripe_count and CO
          *
          * e.g. if stripe_count=20, nprocs_for_coll=42 and CO=3 then
          * avail_cb_nodes should be equal to 40 */
-        avail_cb_nodes = stripe_count * MPL_MIN(nprocs_for_coll / stripe_count, CO);
-    else {
+        avail_cb_nodes = lcm_stripe_count * MPL_MIN(nprocs_for_coll / lcm_stripe_count, CO);
+    } else {
         /* nprocs_for_coll is less than stripe_count */
         /* avail_cb_nodes should divide stripe_count */
         /* e.g. if stripe_count=60 and nprocs_for_coll=8 then
@@ -72,11 +113,11 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr, int m
         divisor = 2;
         avail_cb_nodes = 1;
         /* try to divise */
-        while (stripe_count >= divisor * divisor) {
-            if ((stripe_count % divisor) == 0) {
-                if (stripe_count / divisor <= nprocs_for_coll) {
+        while (lcm_stripe_count >= divisor * divisor) {
+            if ((lcm_stripe_count % divisor) == 0) {
+                if (lcm_stripe_count / divisor <= nprocs_for_coll) {
                     /* The value is found ! */
-                    avail_cb_nodes = stripe_count / divisor;
+                    avail_cb_nodes = lcm_stripe_count / divisor;
                     break;
                 }
                 /* if divisor is less than nprocs_for_coll, divisor is a
@@ -88,40 +129,53 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr, int m
         }
     }
 
-    *striping_info_ptr = (int *) ADIOI_Malloc(3 * sizeof(int));
-    striping_info = *striping_info_ptr;
-    striping_info[0] = stripe_size;
-    striping_info[1] = stripe_count;
-    striping_info[2] = avail_cb_nodes;
+#ifdef AGG_DEBUG
+    LDEBUG("lcm_stripe_count=%llu, avail_cb_nodes=%d\n", lcm_stripe_count, avail_cb_nodes);
+#endif
+    return avail_cb_nodes;
 }
 
-int ADIOI_LUSTRE_Calc_aggregator(ADIO_File fd, ADIO_Offset off,
-                                 ADIO_Offset * len, int *striping_info)
+/* Get striping information:
+*  striping_info[0]: stripe_size
+*  striping_info[1]: avail_cb_nodes
+*/
+void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int mode, int **striping_info_ptr)
 {
-    int rank_index, rank;
+    int *striping_info = NULL;
+    int stripe_size, avail_cb_nodes;
+
+    *striping_info_ptr = (int *) ADIOI_Malloc(2 * sizeof(int));
+    striping_info = *striping_info_ptr;
+    striping_info[0] = fd->hints->striping_unit;
+    striping_info[1] = ADIOI_LUSTRE_Calc_avail_cbnodes(fd, mode);
+}
+
+int ADIOI_LUSTRE_Calc_aggregator(ADIO_File fd, ADIO_Offset offset,
+                                 int *striping_info, ADIO_Offset * len)
+{
     ADIO_Offset avail_bytes;
     int stripe_size = striping_info[0];
-    int avail_cb_nodes = striping_info[2];
+    int avail_cb_nodes = striping_info[1];
+    int rank;
 
-    /* Produce the stripe-contiguous pattern for Lustre */
-    rank_index = (int) ((off / stripe_size) % avail_cb_nodes);
-
+    rank = (int) (offset / stripe_size % avail_cb_nodes);
     /* we index into fd_end with rank_index, and fd_end was allocated to be no
      * bigger than fd->hins->cb_nodes.   If we ever violate that, we're
      * overrunning arrays.  Obviously, we should never ever hit this abort
      */
-    if (rank_index >= fd->hints->cb_nodes)
+    if (rank >= fd->hints->cb_nodes)
         MPI_Abort(MPI_COMM_WORLD, 1);
 
-    avail_bytes = (off / (ADIO_Offset) stripe_size + 1) * (ADIO_Offset) stripe_size - off;
+    avail_bytes = (offset / stripe_size + 1) * stripe_size - offset;
     if (avail_bytes < *len) {
         /* this proc only has part of the requested contig. region */
         *len = avail_bytes;
     }
-    /* map our index to a rank */
+#ifdef AGG_DEBUG
+    LDEBUG("rank(%d), offset=%llu, stripe_size=%d, avail_bytes=%llu\n",
+           rank, offset, stripe_size, avail_bytes);
+#endif
     /* NOTE: FOR NOW WE DON'T HAVE A MAPPING...JUST DO 0..NPROCS_FOR_COLL */
-    rank = fd->hints->ranklist[rank_index];
-
     return rank;
 }
 
@@ -144,6 +198,10 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
     int i, l, proc;
     ADIO_Offset avail_len, rem_len, curr_idx, off, **buf_idx;
     ADIOI_Access *my_req;
+#ifdef AGG_DEBUG
+    int myrank;
+    MPI_Comm_rank(fd->comm, &myrank);
+#endif
 
     *count_my_req_per_proc_ptr = (int *) ADIOI_Calloc(nprocs, sizeof(int));
     count_my_req_per_proc = *count_my_req_per_proc_ptr;
@@ -170,7 +228,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
          * then ADIOI_LUSTRE_Calc_aggregator() will modify the value to return
          * the amount that was available.
          */
-        proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, &avail_len, striping_info);
+        proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, striping_info, &avail_len);
         count_my_req_per_proc[proc]++;
 
         /* figure out how many data is remaining in the access
@@ -182,7 +240,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
         while (rem_len != 0) {
             off += avail_len;   /* point to first remaining byte */
             avail_len = rem_len;        /* save remaining size, pass to calc */
-            proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, &avail_len, striping_info);
+            proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, striping_info, &avail_len);
             count_my_req_per_proc[proc]++;
             rem_len -= avail_len;       /* reduce remaining length by amount from fd */
         }
@@ -225,7 +283,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
             continue;
         off = offset_list[i];
         avail_len = len_list[i];
-        proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, &avail_len, striping_info);
+        proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, striping_info, &avail_len);
 
         l = my_req[proc].count;
 
@@ -248,7 +306,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
         while (rem_len != 0) {
             off += avail_len;
             avail_len = rem_len;
-            proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, &avail_len, striping_info);
+            proc = ADIOI_LUSTRE_Calc_aggregator(fd, off, striping_info, &avail_len);
 
             l = my_req[proc].count;
             ADIOI_Assert(l < count_my_req_per_proc[proc]);
@@ -267,10 +325,10 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list,
 #ifdef AGG_DEBUG
     for (i = 0; i < nprocs; i++) {
         if (count_my_req_per_proc[i] > 0) {
-            FPRINTF(stdout, "data needed from %d (count = %d):\n", i, my_req[i].count);
+            LDEBUG("rank(%d) data needed from %d (count = %d):\n", myrank, i, my_req[i].count);
             for (l = 0; l < my_req[i].count; l++) {
-                FPRINTF(stdout, "   off[%d] = %lld, len[%d] = %d\n",
-                        l, my_req[i].offsets[l], l, my_req[i].lens[l]);
+                LDEBUG("	off[%d] = %lld, len[%d] = %d\n",
+                       l, my_req[i].offsets[l], l, my_req[i].lens[l]);
             }
         }
     }

@@ -75,6 +75,7 @@ struct ADIOI_Hints_struct {
             int lock_ahead_flags;
             ADIO_Offset lock_ahead_start_extent;
             ADIO_Offset lock_ahead_end_extent;
+            char *comp_layout;
         } lustre;
         struct {
             unsigned read_chunk_sz;     /* chunk size for direct reads */

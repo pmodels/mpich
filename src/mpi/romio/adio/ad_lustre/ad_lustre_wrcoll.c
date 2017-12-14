@@ -120,6 +120,7 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     ADIO_Offset *lustre_offsets0, *lustre_offsets, *count_sizes = NULL;
 
     MPI_Comm_size(fd->comm, &nprocs);
+    fd->hints->cb_nodes = nprocs;
     MPI_Comm_rank(fd->comm, &myrank);
 
     orig_fp = fd->fp_ind;
@@ -132,7 +133,6 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
         /* Note: end_offset points to the last byte-offset that will be accessed.
          * e.g., if start_offset=0 and 100 bytes to be read, end_offset=99
          */
-
         ADIOI_Calc_my_off_len(fd, count, datatype, file_ptr_type, offset,
                               &offset_list, &len_list, &start_offset,
                               &end_offset, &contig_access_count);
@@ -196,10 +196,9 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
         } else {
             MPI_Allgather(&start_offset, 1, ADIO_OFFSET, st_offsets, 1, ADIO_OFFSET, fd->comm);
             MPI_Allgather(&end_offset, 1, ADIO_OFFSET, end_offsets, 1, ADIO_OFFSET, fd->comm);
-            if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2)) {
+            if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2))
                 MPI_Allgather(&my_count_size, 1, ADIO_OFFSET, count_sizes, 1,
                               ADIO_OFFSET, fd->comm);
-            }
         }
         /* are the accesses of different processes interleaved? */
         for (i = 1; i < nprocs; i++)
@@ -212,18 +211,16 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
          *   1) the processes are interleaved, and
          *   2) the req size is small.
          */
-        if (interleave_count > 0) {
+        if (interleave_count > 0)
             do_collect = 1;
-        } else {
+        else
             do_collect = ADIOI_LUSTRE_Docollect(fd, contig_access_count, len_list, nprocs);
-        }
     }
     ADIOI_Datatype_iscontig(datatype, &buftype_is_contig);
 
     /* Decide if collective I/O should be done */
     if ((!do_collect && fd->hints->cb_write == ADIOI_HINT_AUTO) ||
         fd->hints->cb_write == ADIOI_HINT_DISABLE) {
-
         /* use independent accesses */
         if (fd->hints->cb_write != ADIOI_HINT_DISABLE) {
             ADIOI_Free(offset_list);
@@ -241,8 +238,9 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
                 off = fd->disp + (ADIO_Offset) (fd->etype_size) * offset;
                 ADIO_WriteContig(fd, buf, count, datatype,
                                  ADIO_EXPLICIT_OFFSET, off, status, error_code);
-            } else
+            } else {
                 ADIO_WriteContig(fd, buf, count, datatype, ADIO_INDIVIDUAL, 0, status, error_code);
+            }
         } else {
             ADIO_WriteStrided(fd, buf, count, datatype, file_ptr_type, offset, status, error_code);
         }
@@ -272,15 +270,15 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     }
 
     /* Get Lustre hints information */
-    ADIOI_LUSTRE_Get_striping_info(fd, &striping_info, 1);
+    ADIOI_LUSTRE_Get_striping_info(fd, 1, &striping_info);
     /* If the user has specified to use a one-sided aggregation method then do that at
      * this point instead of the two-phase I/O.
      */
     if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2)) {
-
-        ADIOI_LUSTRE_IterateOneSided(fd, buf, striping_info, offset_list, len_list,
-                                     contig_access_count, currentValidDataIndex, count,
-                                     file_ptr_type, offset, start_offset, end_offset,
+        ADIOI_LUSTRE_IterateOneSided(fd, buf, striping_info,
+                                     offset_list, len_list, contig_access_count,
+                                     currentValidDataIndex, count, file_ptr_type,
+                                     offset, start_offset, end_offset,
                                      firstFileOffset, lastFileOffset, datatype, myrank, error_code);
 
         ADIOI_Free(offset_list);
@@ -288,7 +286,6 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
         ADIOI_Free(st_offsets);
         ADIOI_Free(end_offsets);
         ADIOI_Free(count_sizes);
-        ADIOI_Free(striping_info);
 
         goto fn_exit;
 
@@ -431,8 +428,8 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
     MPI_Status status;
     ADIOI_Flatlist_node *flat_buf = NULL;
     MPI_Aint buftype_extent;
-    int stripe_size = striping_info[0], avail_cb_nodes = striping_info[2];
     int data_sieving = 0;
+    int stripe_size = striping_info[0], avail_cb_nodes = striping_info[1];
     ADIO_Offset *srt_off = NULL;
     int *srt_len = NULL;
     int srt_num = 0;
@@ -471,16 +468,16 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
         st_loc = max_end_loc;
     MPI_Allreduce(&st_loc, &min_st_loc, 1, MPI_LONG_LONG_INT, MPI_MIN, fd->comm);
     /* align downward */
-    min_st_loc -= min_st_loc % (ADIO_Offset) stripe_size;
+    min_st_loc -= min_st_loc % stripe_size;
 
     /* Each time, only avail_cb_nodes number of IO clients perform IO,
      * so, step_size=avail_cb_nodes*stripe_size IO will be performed at most,
      * and ntimes=whole_file_portion/step_size
      */
-    step_size = (ADIO_Offset) avail_cb_nodes *stripe_size;
+    step_size = avail_cb_nodes * stripe_size;
     max_ntimes = (max_end_loc - min_st_loc + 1) / step_size
         + (((max_end_loc - min_st_loc + 1) % step_size) ? 1 : 0);
-/*     max_ntimes = (int)((max_end_loc - min_st_loc) / step_size + 1); */
+    /* max_ntimes = (int)((max_end_loc - min_st_loc) / step_size + 1); */
     if (ntimes)
         write_buf = (char *) ADIOI_Malloc(stripe_size);
 
@@ -585,7 +582,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
 
         off = off_list[m];
         max_size = MPL_MIN(step_size, max_end_loc - iter_st_off + 1);
-        real_size = (int) MPL_MIN((off / stripe_size + 1) * stripe_size - off, end_loc - off + 1);
+        real_size = MPL_MIN((off / stripe_size + 1) * stripe_size - off, end_loc - off + 1);
 
         for (i = 0; i < nprocs; i++) {
             if (my_req[i].count) {
@@ -1035,7 +1032,7 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
              * longer than the single region that processor "p" is responsible
              * for.
              */
-            p = ADIOI_LUSTRE_Calc_aggregator(fd, off, &len, striping_info);
+            p = ADIOI_LUSTRE_Calc_aggregator(fd, off, striping_info, &len);
 
             if (send_buf_idx[p] < send_size[p]) {
                 if (curr_to_proc[p] + len > done_to_proc[p]) {
@@ -1094,7 +1091,9 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
                                          MPI_Datatype datatype, int myrank, int *error_code)
 {
     int i;
-    int stripesPerAgg = fd->hints->cb_buffer_size / striping_info[0];
+    int stripe_size = striping_info[0];
+    int stripesPerAgg = fd->hints->cb_buffer_size / stripe_size;
+
     if (stripesPerAgg == 0) {
         /* The striping unit is larger than the collective buffer size
          * therefore we must abort since the buffer has already been
@@ -1103,14 +1102,14 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
         FPRINTF(stderr, "Error: The collective buffer size %d is less "
                 "than the striping unit size %d - the ROMIO "
                 "Lustre one-sided write aggregation algorithm "
-                "cannot continue.\n", fd->hints->cb_buffer_size, striping_info[0]);
+                "cannot continue.\n", fd->hints->cb_buffer_size, stripe_size);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
     /* The maximum number of aggregators we can use is the number of
      * stripes used in the file - each agg writes exactly 1 stripe.
      */
-    int numStripedAggs = striping_info[2];
+    int numStripedAggs = striping_info[1];
 
     int orig_cb_nodes = fd->hints->cb_nodes;
     if (fd->hints->cb_nodes > numStripedAggs)
@@ -1121,7 +1120,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
     /* Declare ADIOI_OneSidedStripeParms here as some fields will not change.
      */
     ADIOI_OneSidedStripeParms stripeParms;
-    stripeParms.stripeSize = striping_info[0];
+    stripeParms.stripeSize = stripe_size;
     stripeParms.stripedLastFileOffset = lastFileOffset;
 
     /* The general algorithm here is to divide the file up into segements, a segment
@@ -1134,8 +1133,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
      * have been packed or the aggregation for all the data is complete, minimizing
      * synchronization.
      */
-    stripeParms.segmentLen = ((ADIO_Offset) numStripedAggs) * ((ADIO_Offset) (striping_info[0]));
-
+    stripeParms.segmentLen = numStripedAggs * stripe_size;
     /* These arrays define the file offsets for the stripes for a given segment - similar
      * to the concept of file domains in GPFS, essentially file domeains for the segment.
      */
@@ -1152,14 +1150,13 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
     int startingStripeWithData = 0;
     int foundStartingStripeWithData = 0;
     while (!foundStartingStripeWithData) {
-        if (((startingStripeWithData + 1) * (ADIO_Offset) (striping_info[0])) > firstFileOffset)
+        if (((startingStripeWithData + 1) * stripe_size) > firstFileOffset)
             foundStartingStripeWithData = 1;
         else
             startingStripeWithData++;
     }
 
-    ADIO_Offset currentSegementOffset =
-        (ADIO_Offset) startingStripeWithData * (ADIO_Offset) (striping_info[0]);
+    ADIO_Offset currentSegementOffset = startingStripeWithData * stripe_size;
 
     int numSegments =
         (int) ((lastFileOffset + (ADIO_Offset) 1 - currentSegementOffset) / stripeParms.segmentLen);
@@ -1212,12 +1209,11 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
                     segment_stripe_start[i] = firstFileOffset;
                 else
                     segment_stripe_start[i] = segment_stripe_offset;
-                if ((segment_stripe_offset + (ADIO_Offset) (striping_info[0])) > lastFileOffset)
+                if ((segment_stripe_offset + stripe_size) > lastFileOffset)
                     segment_stripe_end[i] = lastFileOffset;
                 else
-                    segment_stripe_end[i] =
-                        segment_stripe_offset + (ADIO_Offset) (striping_info[0]) - (ADIO_Offset) 1;
-                segment_stripe_offset += (ADIO_Offset) (striping_info[0]);
+                    segment_stripe_end[i] = segment_stripe_offset + stripe_size - 1;
+                segment_stripe_offset += stripe_size;
             }
 
             /* In the interest of performance for non-contiguous data with large offset lists
@@ -1412,8 +1408,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
                                       &offset_list, &len_list, &start_offset,
                                       &end_offset, &contig_access_count);
 
-                currentSegementOffset =
-                    (ADIO_Offset) startingStripeWithData *(ADIO_Offset) (striping_info[0]);
+                currentSegementOffset = startingStripeWithData * stripe_size;
                 romio_onesided_always_rmw = 1;
                 romio_onesided_no_rmw = 1;
 

@@ -124,8 +124,6 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 #endif
         }
 
-
-
         /* set striping information with ioctl */
         MPI_Comm_rank(fd->comm, &myrank);
         if (myrank == 0) {
@@ -167,6 +165,12 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
                                              &(fd->hints->fs_hints.lustre.ds_in_coll), myname,
                                              error_code);
 
+#ifdef HAVE_LUSTRE_COMP_LAYOUT_SUPPORT
+        /* comp_layout for composite layout feature */
+        ADIOI_Info_check_and_install_str(fd, users_info, "romio_lustre_comp_layout",
+                                         &(fd->hints->fs_hints.lustre.comp_layout), myname,
+                                         error_code);
+#endif
     }
     /* set the values for collective I/O and data sieving parameters */
     ADIOI_GEN_SetInfo(fd, users_info, error_code);

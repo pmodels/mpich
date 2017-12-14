@@ -1,9 +1,14 @@
-Upcoming soon: 
+Upcoming soon:
   o Hierarchical striping as described in the paper from CCGrid2007
     http://ft.ornl.gov/projects/io/pubs/CCGrid-2007-file-joining.pdf
 Further out:
   o To post the code for ParColl (Partitioned collective IO)
  
+-----------------------------------------------------
+V06: 
+-----------------------------------------------------
+  o Composite layout support
+
 -----------------------------------------------------
 V05: 
 -----------------------------------------------------

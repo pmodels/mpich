@@ -882,7 +882,7 @@ if test -n "$file_system_testfs"; then
     AC_DEFINE(ROMIO_TESTFS,1,[Define for ROMIO with TESTFS])
 fi
 #
-# Verify presence of lustre/lustre_user.h
+# Verify presence of lustre headers
 #
 lustre_lockahead="no"
 if test -n "$file_system_lustre"; then
@@ -905,8 +905,17 @@ if test -n "$file_system_lustre"; then
         ])],
         lustre_lockahead="yes"
 	AC_DEFINE(HAVE_LUSTRE_LOCKAHEAD, 1, [Define if LUSTRE_LOCKAHEAD is enabled.]) )
+    AC_CHECK_HEADERS([lustre/lustreapi.h])
+    # Verify presence of composite layout functions
+    AC_SEARCH_LIBS(llapi_layout_comp_use, lustreapi,
+	[AC_DEFINE(HAVE_LUSTRE_COMP_LAYOUT_SUPPORT, 1, [Lustre composite layout is supported])],
+	[AC_MSG_WARN([Lustre composite layout is not supported])])
+    # Verify presence of yaml.h
+    AC_CHECK_HEADERS(yaml.h,
+	[AC_DEFINE(HAVE_YAML_SUPPORT, 1, [yaml is present])],
+	[AC_MSG_WARN([yaml is not present])])
 fi
-
+AM_CONDITIONAL([LUSTRE_YAML], [test x$ac_cv_header_yaml_h = xyes])
 # Add conditional compilation of Lustre lockahead sources
 AM_CONDITIONAL([LUSTRE_LOCKAHEAD],[test "$lustre_lockahead" = "yes"])
 

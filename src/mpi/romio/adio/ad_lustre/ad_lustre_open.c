@@ -10,10 +10,7 @@
 
 #include "ad_lustre.h"
 
-/* what is the basis for this define?
- * what happens if there are more than 1k UUIDs? */
-
-#define MAX_LOV_UUID_COUNT      1000
+#undef OPEN_DEBUG
 
 int ADIOI_LUSTRE_clear_locks(ADIO_File fd);     /* in ad_lustre_lock.c */
 int ADIOI_LUSTRE_request_only_lock_ioctl(ADIO_File fd); /* in ad_lustre_lock.c */
@@ -21,11 +18,11 @@ int ADIOI_LUSTRE_request_only_lock_ioctl(ADIO_File fd); /* in ad_lustre_lock.c *
 void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
 {
     int perm, old_mask, amode, amode_direct;
-    int lumlen, myrank, flag, set_layout = 0, err;
-    struct lov_user_md *lum = NULL;
+    int myrank, flag, err;
+    bool set_layout = false;
+    struct llapi_layout *layout = NULL;
     char *value;
-    ADIO_Offset str_factor = -1, str_unit = 0, start_iodev = -1;
-    size_t value_sz = (MPI_MAX_INFO_VAL + 1) * sizeof(char);
+    ADIO_Offset str_factor = 0, str_unit = 0, start_iodev = -1;
 
 #if defined(MPICH) || !defined(PRINT_ERR_MSG)
     static char myname[] = "ADIOI_LUSTRE_OPEN";
@@ -54,96 +51,118 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
 
     amode_direct = amode | O_DIRECT;
 
-    /* odd length here because lov_user_md contains some fixed data and
-     * then a list of 'lmm_objects' representing stripe */
-    lumlen = sizeof(struct lov_user_md) + MAX_LOV_UUID_COUNT * sizeof(struct lov_user_ost_data);
-    lum = (struct lov_user_md *) ADIOI_Calloc(1, lumlen);
-
-    value = (char *) ADIOI_Malloc(value_sz);
+    value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL + 1) * sizeof(char));
     /* we already validated in LUSTRE_SetInfo that these are going to be the same */
+    /* striping information */
     if (fd->info != MPI_INFO_NULL) {
-        /* striping information */
-        ADIOI_Info_get(fd->info, "striping_unit", MPI_MAX_INFO_VAL, value, &flag);
-        if (flag)
-            str_unit = atoll(value);
+#ifdef HAVE_LUSTRE_COMP_LAYOUT_SUPPORT
+        if (fd->hints->fs_hints.lustre.comp_layout != NULL) {
+            set_layout = true;
+        } else
+#endif
+        {
+            ADIOI_Info_get(fd->info, "striping_unit", MPI_MAX_INFO_VAL, value, &flag);
+            if (flag)
+                str_unit = atoll(value);
 
-        ADIOI_Info_get(fd->info, "striping_factor", MPI_MAX_INFO_VAL, value, &flag);
-        if (flag)
-            str_factor = atoll(value);
+            ADIOI_Info_get(fd->info, "striping_factor", MPI_MAX_INFO_VAL, value, &flag);
+            if (flag)
+                str_factor = atoll(value);
 
-        ADIOI_Info_get(fd->info, "romio_lustre_start_iodevice", MPI_MAX_INFO_VAL, value, &flag);
-        if (flag)
-            start_iodev = atoll(value);
+            ADIOI_Info_get(fd->info, "romio_lustre_start_iodevice", MPI_MAX_INFO_VAL, value, &flag);
+            if (flag)
+                start_iodev = atoll(value);
+
+            if (str_unit > 0 || (str_factor == -1 || str_factor > 0) || start_iodev >= 0)
+                set_layout = true;
+#ifdef OPEN_DEBUG
+            if (myrank == 0)
+                LDEBUG("stripe_size=%ld, stripe_count=%d, stripe_offset=%d\n",
+                       (long long) str_unit, (int) str_factor, (int) start_iodev);
+#endif
+        }
     }
-    if ((str_factor > 0) || (str_unit > 0) || (start_iodev >= 0))
-        set_layout = 1;
 
-    /* if hints were set, we need to delay creation of any lustre objects.
-     * However, if we open the file with O_LOV_DELAY_CREATE and don't call the
-     * follow-up ioctl, subsequent writes will fail */
-    if (myrank == 0 && set_layout)
-        amode = amode | O_LOV_DELAY_CREATE;
-
-    fd->fd_sys = open(fd->filename, amode, perm);
-    if (fd->fd_sys == -1)
-        goto fn_exit;
-
-    /* we can only set these hints on new files */
-    /* It was strange and buggy to open the file in the hint path.  Instead,
-     * we'll apply the file tunings at open time */
-    if ((amode & O_CREAT) && set_layout) {
+    /* we set these hints on new files */
+    if ((amode & O_CREAT) && (myrank == 0 || fd->comm == MPI_COMM_SELF) && set_layout) {
         /* if user has specified striping info, first aggregator tries to set
          * it */
-        if (myrank == fd->hints->ranklist[0] || fd->comm == MPI_COMM_SELF) {
-            lum->lmm_magic = LOV_USER_MAGIC;
-            lum->lmm_pattern = 0;
-            /* crude check for overflow of lustre internal datatypes.
-             * Silently cap to large value if user provides a value
-             * larger than lustre supports */
-            if (str_unit > UINT_MAX)
-                lum->lmm_stripe_size = UINT_MAX;
-            else
-                lum->lmm_stripe_size = str_unit;
-
-            if (str_factor > USHRT_MAX)
-                lum->lmm_stripe_count = USHRT_MAX;
-            else
-                lum->lmm_stripe_count = str_factor;
-
-            if (start_iodev > USHRT_MAX)
-                lum->lmm_stripe_offset = USHRT_MAX;
-            else
-                lum->lmm_stripe_offset = start_iodev;
-            err = ioctl(fd->fd_sys, LL_IOC_LOV_SETSTRIPE, lum);
-            if (err == -1 && errno != EEXIST) {
-                fprintf(stderr, "Failure to set stripe info %s \n", strerror(errno));
-                /* not a fatal error, but user might care to know */
+#ifdef HAVE_LUSTRE_COMP_LAYOUT_SUPPORT
+        if (fd->hints->fs_hints.lustre.comp_layout != NULL) {
+            char *comp_layout = fd->hints->fs_hints.lustre.comp_layout;
+#ifdef HAVE_YAML_SUPPORT
+            /* YAML template file ? */
+            if (ADIOI_LUSTRE_Parse_yaml_temp(comp_layout, &layout))
+#endif /* HAVE_YAML_SUPPORT */
+                /* option string ? */
+                if (ADIOI_LUSTRE_Parse_comp_layout_opt(comp_layout, &layout))
+                    /* lustre source file ? */
+                    if (!(layout = llapi_layout_get_by_path(comp_layout, 0))) {
+                        LDEBUG("'%s' is not a Lustre src file.\n", comp_layout);
+                        GOTO(fn_exit, err = MPI_KEYVAL_INVALID);
+                    }
+        } else
+#endif /* HAVE_LUSTRE_COMP_LAYOUT_SUPPORT */
+        {
+            layout = llapi_layout_alloc();
+            if (layout == NULL) {
+                LDEBUG("Failed to allocate Lustre file layout %s \n", strerror(errno));
+                goto fn_exit;
             }
-        }       /* End of striping parameters validation */
+
+            if (str_unit > 0) {
+                str_unit = str_unit > UINT_MAX ? UINT_MAX : str_unit;
+                err = llapi_layout_stripe_size_set(layout, (uint64_t) str_unit);
+                if (err) {
+                    LDEBUG("Failed to set stripe_size (%d): %s \n", err, strerror(errno));
+                    GOTO(fn_exit, err = MPI_KEYVAL_INVALID);
+                }
+            }
+            if (str_factor == -1 || str_factor > 0) {
+                if (str_factor == -1)
+                    str_factor = LLAPI_LAYOUT_WIDE;
+                else if (str_factor > USHRT_MAX)
+                    str_factor = USHRT_MAX;
+                err = llapi_layout_stripe_count_set(layout, (uint64_t) str_factor);
+                if (err) {
+                    LDEBUG("Failed to set stripe_count (%d): %s\n", err, strerror(errno));
+                    GOTO(fn_exit, err = MPI_KEYVAL_INVALID);
+                }
+            }
+            if (start_iodev >= 0) {
+                start_iodev = start_iodev > USHRT_MAX ? USHRT_MAX : start_iodev;
+                err = llapi_layout_ost_index_set(layout, 0, (uint64_t) start_iodev);
+                if (err) {
+                    LDEBUG("Failed to set stripe_offset (%d): %s \n", err, strerror(errno));
+                    GOTO(fn_exit, err = MPI_KEYVAL_INVALID);
+                }
+            }
+        }
+
+        err = llapi_layout_file_create(fd->filename, amode, perm, layout);
+        if (err > 0)
+            fd->fd_sys = err;
+        else if (err == -1 && errno != EEXIST)
+            /* not a fatal error, but user might care to know */
+            LDEBUG("Failed to set stripe info %s \n", strerror(errno));
     }
+    /* End of striping parameters validation */
+    if (fd->fd_sys <= 0) {
+        if (set_layout || myrank != 0)
+            amode &= ~O_CREAT;
+        fd->fd_sys = open(fd->filename, amode, perm);
+    }
+#ifdef OPEN_DEBUG
+    LDEBUG("rank(%d): fd_sys=%d\n", myrank, fd->fd_sys);
+#endif
+    if (fd->fd_sys <= 0)
+        goto fn_exit;
 
-    /* Pascal Deveze reports that, even though we pass a
-     * "GETSTRIPE" (read) flag to the ioctl, if some of the values of this
-     * struct are uninitialzed, the call can give an error.  zero it out in case
-     * there are other members that must be initialized and in case
-     * lov_user_md struct changes in future */
-    memset(lum, 0, lumlen);
-    lum->lmm_magic = LOV_USER_MAGIC;
-    err = ioctl(fd->fd_sys, LL_IOC_LOV_GETSTRIPE, (void *) lum);
-    if (!err) {
-
-        fd->hints->striping_unit = lum->lmm_stripe_size;
-        MPL_snprintf(value, value_sz, "%d", lum->lmm_stripe_size);
-        ADIOI_Info_set(fd->info, "striping_unit", value);
-
-        fd->hints->striping_factor = lum->lmm_stripe_count;
-        MPL_snprintf(value, value_sz, "%d", lum->lmm_stripe_count);
-        ADIOI_Info_set(fd->info, "striping_factor", value);
-
-        fd->hints->start_iodevice = lum->lmm_stripe_offset;
-        MPL_snprintf(value, value_sz, "%d", lum->lmm_stripe_offset);
-        ADIOI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
-
+    /* Get/set common stripe size and LCM of stripe count */
+    layout = llapi_layout_get_by_fd(fd->fd_sys, 0);
+    if (layout != NULL) {
+        fd->hints->striping_unit = ADIOI_LUSTRE_Get_last_stripe_size(layout);
+        fd->hints->striping_factor = ADIOI_LUSTRE_Get_lcm_stripe_count(layout);
     }
 
     if (fd->access_mode & ADIO_APPEND)
@@ -168,14 +187,15 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
 
 
   fn_exit:
-    ADIOI_Free(lum);
+    llapi_layout_free(layout);
     ADIOI_Free(value);
     /* --BEGIN ERROR HANDLING-- */
-    if (fd->fd_sys == -1 || ((fd->fd_direct == -1) && (fd->direct_write || fd->direct_read))) {
+    if (fd->fd_sys == -1 || ((fd->fd_direct == -1) && (fd->direct_write || fd->direct_read)))
         *error_code = ADIOI_Err_create_code(myname, fd->filename, errno);
-    }
     /* --END ERROR HANDLING-- */
     else
         *error_code = MPI_SUCCESS;
 
+    if (err == MPI_KEYVAL_INVALID)
+        *error_code = MPI_KEYVAL_INVALID;
 }
