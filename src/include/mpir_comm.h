@@ -176,9 +176,6 @@ struct MPIR_Comm {
 
     struct MPIR_Comm     *comm_next;/* Provides a chain through all active
 				       communicators */
-    struct MPIR_Collops  *coll_fns; /* Pointer to a table of functions
-                                              implementing the collective
-                                              routines */
     struct MPII_Topo_ops  *topo_fns; /* Pointer to a table of functions
 				       implementting the topology routines */
     int next_sched_tag;             /* used by the NBC schedule code to allocate tags */
@@ -200,6 +197,9 @@ struct MPIR_Comm {
      * the device has initialized the comm. */
     MPIR_Comm_map_t *mapper_head;
     MPIR_Comm_map_t *mapper_tail;
+
+    /* Collectives specific information */
+    MPIR_COLL_comm_t coll;
 
   /* Other, device-specific information */
 #ifdef MPID_DEV_COMM_DECL

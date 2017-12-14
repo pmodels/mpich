@@ -167,3 +167,4 @@ nbicscatterv 8 mpiversion=3.0
 nbicalltoall 8 mpiversion=3.0
 nbicalltoallv 8 mpiversion=3.0
 nbicalltoallw 8 mpiversion=3.0
+@ext_coll_tests@

@@ -5,6 +5,7 @@ typedef enum {
     MPIDI_CH4_barrier_composition_alpha_id,
     MPIDI_CH4_barrier_composition_beta_id,
     MPIDI_CH4_barrier_intercomm_id,
+    MPIDI_CH4_barrier_default_id
 } MPIDI_CH4_barrier_id_t;
 
 typedef union {
@@ -23,6 +24,7 @@ typedef enum {
     MPIDI_CH4_bcast_composition_beta_id,
     MPIDI_CH4_bcast_composition_gamma_id,
     MPIDI_CH4_bcast_intercomm_id,
+    MPIDI_CH4_bcast_default_id,
 } MPIDI_CH4_bcast_id_t;
 
 typedef union {
@@ -44,6 +46,7 @@ typedef enum {
     MPIDI_CH4_reduce_composition_alpha_id,
     MPIDI_CH4_reduce_composition_beta_id,
     MPIDI_CH4_reduce_intercomm_id,
+    MPIDI_CH4_reduce_default_id
 } MPIDI_CH4_reduce_id_t;
 
 typedef union {
@@ -60,6 +63,7 @@ typedef enum {
     MPIDI_CH4_allreduce_composition_alpha_id,
     MPIDI_CH4_allreduce_composition_beta_id,
     MPIDI_CH4_allreduce_intercomm_id,
+    MPIDI_CH4_allreduce_default_id
 } MPIDI_CH4_allreduce_id_t;
 
 typedef union {

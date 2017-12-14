@@ -6,7 +6,7 @@
 
 #include "mpidi_ch3_impl.h"
 #include "mpid_port.h"
-
+#include "coll_impl.h"
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -570,6 +570,9 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
     /* FIXME: Why do we do a dup here? */
     MPIDI_VCR_Dup(vc_ptr, &tmp_comm->dev.vcrt->vcr_table[0]);
 
+    /* Set all collectives communicator data to NULL */
+    MPIR_COLL_comm_init_null(tmp_comm);
+
     /* Even though this is a tmp comm and we don't call
        MPI_Comm_commit, we still need to call the creation hook
        because the destruction hook will be called in comm_release */
@@ -1072,7 +1075,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
     }
 
     /* Now, broadcast the number of local pgs */
-    mpi_errno = MPIR_Bcast_impl( &n_local_pgs, 1, MPI_INT, root, comm_p, &errflag);
+    mpi_errno = MPID_Bcast( &n_local_pgs, 1, MPI_INT, root, comm_p, &errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
@@ -1093,7 +1096,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
 	    len     = pg_list->lenStr;
 	    pg_list = pg_list->next;
 	}
-	mpi_errno = MPIR_Bcast_impl( &len, 1, MPI_INT, root, comm_p, &errflag);
+	mpi_errno = MPID_Bcast( &len, 1, MPI_INT, root, comm_p, &errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	if (rank != root) {
@@ -1103,7 +1106,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
                 goto fn_exit;
             }
 	}
-	mpi_errno = MPIR_Bcast_impl( pg_str, len, MPI_CHAR, root, comm_p, &errflag);
+	mpi_errno = MPID_Bcast( pg_str, len, MPI_CHAR, root, comm_p, &errflag);
         if (mpi_errno) {
             if (rank != root)
                 MPL_free( pg_str );
@@ -1455,7 +1458,6 @@ static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
     intercomm->remote_group = NULL;
     intercomm->comm_kind    = MPIR_COMM_KIND__INTERCOMM;
     intercomm->local_comm   = NULL;
-    intercomm->coll_fns     = NULL;
 
     /* Point local vcrt at those of incoming intracommunicator */
     intercomm->dev.local_vcrt = comm_ptr->dev.vcrt;
