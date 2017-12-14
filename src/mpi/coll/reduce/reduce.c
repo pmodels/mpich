@@ -44,7 +44,7 @@ cvars:
         Maximum message size for which SMP-aware reduce is used.  A
         value of '0' uses SMP-aware reduce for all message sizes.
 
-    - name        : MPIR_CVAR_REDUCE_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_REDUCE_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -57,7 +57,7 @@ cvars:
         binomial - Force binomial algorithm
         redscat_gather - Force redscat gather algorithm
 
-    - name        : MPIR_CVAR_REDUCE_ALGORITHM_INTER
+    - name        : MPIR_CVAR_REDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -315,7 +315,7 @@ int MPIR_Reduce_intra (
     if ((count*type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
         (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) && (count >= pof2)) {
         /* do a reduce-scatter followed by gather to root. */
-        mpi_errno = MPIR_Reduce_redscat_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Reduce_intra_redscat_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -325,7 +325,7 @@ int MPIR_Reduce_intra (
     }
     else {
         /* use a binomial tree algorithm */ 
-        mpi_errno = MPIR_Reduce_binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Reduce_intra_binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -363,7 +363,7 @@ int MPIR_Reduce_inter (
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_generic_inter(sendbuf, recvbuf, count, datatype,
+    mpi_errno = MPIR_Reduce_inter_generic(sendbuf, recvbuf, count, datatype,
             op, root, comm_ptr, errflag);
 
     return mpi_errno;
@@ -384,16 +384,16 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
         
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Reduce_alg_intra_choice) {
-            case MPIR_REDUCE_ALG_INTRA_BINOMIAL:
-                mpi_errno = MPIR_Reduce_binomial(sendbuf, recvbuf,
+        switch (MPIR_Reduce_intra_algo_choice) {
+            case MPIR_REDUCE_INTRA_ALGO_BINOMIAL:
+                mpi_errno = MPIR_Reduce_intra_binomial(sendbuf, recvbuf,
                             count, datatype, op, root, comm_ptr, errflag);
                 break;
-            case MPIR_REDUCE_ALG_INTRA_REDSCAT_GATHER:
-                mpi_errno = MPIR_Reduce_redscat_gather(sendbuf, recvbuf,
+            case MPIR_REDUCE_INTRA_ALGO_REDSCAT_GATHER:
+                mpi_errno = MPIR_Reduce_intra_redscat_gather(sendbuf, recvbuf,
                             count, datatype, op, root, comm_ptr, errflag);
                 break;
-            case MPIR_REDUCE_ALG_INTRA_AUTO:
+            case MPIR_REDUCE_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                  mpi_errno = MPIR_Reduce_intra(sendbuf, recvbuf,
@@ -402,12 +402,12 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Reduce_alg_inter_choice) {
-            case MPIR_REDUCE_ALG_INTER_GENERIC:
-                mpi_errno = MPIR_Reduce_generic_inter(sendbuf, recvbuf, count, datatype,
+        switch (MPIR_Reduce_inter_algo_choice) {
+            case MPIR_REDUCE_INTER_ALGO_GENERIC:
+                mpi_errno = MPIR_Reduce_inter_generic(sendbuf, recvbuf, count, datatype,
                                       op, root, comm_ptr, errflag);
                 break;
-            case MPIR_REDUCE_ALG_INTER_AUTO:
+            case MPIR_REDUCE_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Reduce_inter(sendbuf, recvbuf, count, datatype,

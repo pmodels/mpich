@@ -11,7 +11,7 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_EXSCAN_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_EXSCAN_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -60,7 +60,7 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 #undef MPI_Exscan
 #define MPI_Exscan PMPI_Exscan
 
-/* NOTE: copied from red_scat.c, if we use this one more time we need to
+/* NOTE: copied from reduce_scatter.c, if we use this one more time we need to
  * refactor it into a common location */
 
 /* This is the machine-independent implementation of exscan. The algorithm is:
@@ -129,14 +129,14 @@ int MPIR_Exscan (
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
 
-    switch (MPIR_Exscan_alg_intra_choice) {
-        case MPIR_EXSCAN_ALG_INTRA_RECURSIVE_DOUBLING:
-            mpi_errno = MPIR_Exscan_recursive_doubling (sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    switch (MPIR_Exscan_intra_algo_choice) {
+        case MPIR_EXSCAN_INTRA_ALGO_RECURSIVE_DOUBLING:
+            mpi_errno = MPIR_Exscan_intra_recursive_doubling (sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
-        case MPIR_EXSCAN_ALG_INTRA_AUTO:
+        case MPIR_EXSCAN_INTRA_ALGO_AUTO:
             MPL_FALLTHROUGH;
         default:
-            mpi_errno = MPIR_Exscan_recursive_doubling (sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+            mpi_errno = MPIR_Exscan_intra_recursive_doubling (sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
     }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

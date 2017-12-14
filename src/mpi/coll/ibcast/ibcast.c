@@ -12,7 +12,7 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_IBCAST_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_IBCAST_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -24,7 +24,7 @@ cvars:
         auto - Internal algorithm selection
         binomial - Force Binomial algorithm
 
-    - name        : MPIR_CVAR_IBCAST_ALGORITHM_INTER
+    - name        : MPIR_CVAR_IBCAST_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -214,7 +214,7 @@ int MPIR_Ibcast_intra_sched(void *buffer, int count, MPI_Datatype datatype, int 
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
         (comm_size < MPIR_CVAR_BCAST_MIN_PROCS))
     {
-        mpi_errno = MPIR_Ibcast_binomial_sched(buffer, count, datatype, root, comm_ptr, s);
+        mpi_errno = MPIR_Ibcast_intra_binomial_sched(buffer, count, datatype, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else /* (nbytes >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_size >= MPIR_CVAR_BCAST_MIN_PROCS) */
@@ -264,12 +264,12 @@ int MPIR_Ibcast_sched(void *buffer, int count, MPI_Datatype datatype, int root, 
             mpi_errno = ibcast_smp_sched(buffer, count, datatype, root, comm_ptr, s);
         } else {
             /* intercommunicator */
-            switch (MPIR_Ibcast_alg_intra_choice) {
-                case MPIR_IBCAST_ALG_INTRA_BINOMIAL:
-                    mpi_errno = MPIR_Ibcast_binomial_sched(buffer, count, datatype,
+            switch (MPIR_Ibcast_intra_algo_choice) {
+                case MPIR_IBCAST_INTRA_ALGO_BINOMIAL:
+                    mpi_errno = MPIR_Ibcast_intra_binomial_sched(buffer, count, datatype,
                                 root, comm_ptr, s);
                     break;
-                case MPIR_IBCAST_ALG_INTRA_AUTO:
+                case MPIR_IBCAST_INTRA_ALGO_AUTO:
                     MPL_FALLTHROUGH;
                 default:
                     mpi_errno = MPIR_Ibcast_intra_sched(buffer, count, datatype,
@@ -279,12 +279,12 @@ int MPIR_Ibcast_sched(void *buffer, int count, MPI_Datatype datatype, int root, 
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Ibcast_alg_inter_choice) {
-            case MPIR_IBCAST_ALG_INTER_FLAT:
+        switch (MPIR_Ibcast_inter_algo_choice) {
+            case MPIR_IBCAST_INTER_ALGO_FLAT:
                 mpi_errno = MPIR_Ibcast_flat_sched(buffer, count, datatype, root,
                             comm_ptr, s);
                  break;
-            case MPIR_IBCAST_ALG_INTER_AUTO:
+            case MPIR_IBCAST_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ibcast_inter_sched(buffer, count, datatype, root,

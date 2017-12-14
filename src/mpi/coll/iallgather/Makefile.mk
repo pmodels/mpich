@@ -5,8 +5,8 @@ mpi_sources +=                                              \
     src/mpi/coll/iallgather/iallgather.c
 
 mpi_core_sources +=                                         \
-    src/mpi/coll/iallgather/iallgather_recursive_doubling.c \
-    src/mpi/coll/iallgather/iallgather_brucks.c             \
-    src/mpi/coll/iallgather/iallgather_ring.c               \
-    src/mpi/coll/iallgather/iallgather_generic_inter.c
+    src/mpi/coll/iallgather/iallgather_intra_recursive_doubling.c \
+    src/mpi/coll/iallgather/iallgather_intra_brucks.c             \
+    src/mpi/coll/iallgather/iallgather_intra_ring.c               \
+    src/mpi/coll/iallgather/iallgather_inter_generic.c
 

@@ -5,8 +5,8 @@ mpi_sources +=                                  \
     src/mpi/coll/ialltoall/ialltoall.c
 
 mpi_core_sources +=                             \
-    src/mpi/coll/ialltoall/ialltoall_inplace.c  \
-    src/mpi/coll/ialltoall/ialltoall_brucks.c   \
-    src/mpi/coll/ialltoall/ialltoall_perm_sr.c  \
-    src/mpi/coll/ialltoall/ialltoall_pairwise.c \
-    src/mpi/coll/ialltoall/ialltoall_generic_inter.c
+    src/mpi/coll/ialltoall/ialltoall_intra_inplace.c  \
+    src/mpi/coll/ialltoall/ialltoall_intra_brucks.c   \
+    src/mpi/coll/ialltoall/ialltoall_intra_perm_sr.c  \
+    src/mpi/coll/ialltoall/ialltoall_intra_pairwise.c \
+    src/mpi/coll/ialltoall/ialltoall_inter_generic.c

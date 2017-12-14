@@ -24,7 +24,7 @@ int MPIDI_OFI_Barrier_recursive_doubling(MPIR_Comm * comm_ptr,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Barrier_recursive_doubling(comm_ptr, errflag);
+    mpi_errno = MPIR_Barrier_intra_recursive_doubling(comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -44,7 +44,7 @@ int MPIDI_OFI_Bcast_binomial(void *buffer,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast_binomial(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Bcast_intra_binomial(buffer, count, datatype, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -64,7 +64,7 @@ int MPIDI_OFI_Bcast_scatter_doubling_allgather(void *buffer,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -84,7 +84,7 @@ int MPIDI_OFI_Bcast_scatter_ring_allgather(void *buffer,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -101,7 +101,7 @@ int MPIDI_OFI_allreduce_recursive_doubling(const void *sendbuf, void *recvbuf, i
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Allreduce_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    mpi_errno = MPIR_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -118,7 +118,7 @@ int MPIDI_OFI_allreduce_reduce_scatter_allgather(const void *sendbuf, void *recv
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Allreduce_reduce_scatter_allgather(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    mpi_errno = MPIR_Allreduce_intra_reduce_scatter_allgather(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -135,7 +135,7 @@ int MPIDI_OFI_reduce_redscat_gather(const void *sendbuf, void *recvbuf, int coun
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_redscat_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Reduce_intra_redscat_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -152,7 +152,7 @@ int MPIDI_OFI_reduce_binomial(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Reduce_intra_binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
 
     return mpi_errno;
 }

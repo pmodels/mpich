@@ -23,7 +23,7 @@ cvars:
         send buffer size is < this value (in bytes)
         (See also: MPIR_CVAR_GATHER_VSMALL_MSG_SIZE)
 
-    - name        : MPIR_CVAR_GATHER_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_GATHER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -35,7 +35,7 @@ cvars:
         auto - Internal algorithm selection
         binomial - Force binomial algorithm
 
-    - name        : MPIR_CVAR_GATHER_ALGORITHM_INTER
+    - name        : MPIR_CVAR_GATHER_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -117,7 +117,7 @@ int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     
-    mpi_errno = MPIR_Gather_binomial(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Gather_intra_binomial(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
  fn_exit:
@@ -143,7 +143,7 @@ int MPIR_Gather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Gather_generic_inter(sendbuf, sendcount, sendtype,
+    mpi_errno = MPIR_Gather_inter_generic(sendbuf, sendcount, sendtype,
             recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
 
     return mpi_errno;
@@ -165,13 +165,13 @@ int MPIR_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Gather_alg_intra_choice) {
-            case MPIR_GATHER_ALG_INTRA_BINOMIAL:
-                mpi_errno = MPIR_Gather_binomial(sendbuf, sendcount, sendtype,
+        switch (MPIR_Gather_intra_algo_choice) {
+            case MPIR_GATHER_INTRA_ALGO_BINOMIAL:
+                mpi_errno = MPIR_Gather_intra_binomial(sendbuf, sendcount, sendtype,
                                       recvbuf, recvcount, recvtype, root,
                                       comm_ptr, errflag);
                 break;
-            case MPIR_GATHER_ALG_INTRA_AUTO:
+            case MPIR_GATHER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Gather_intra(sendbuf, sendcount, sendtype,
@@ -181,13 +181,13 @@ int MPIR_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Gather_alg_inter_choice) {
-            case MPIR_GATHER_ALG_INTER_GENERIC:
-                mpi_errno = MPIR_Gather_generic_inter(sendbuf, sendcount, sendtype,
+        switch (MPIR_Gather_inter_algo_choice) {
+            case MPIR_GATHER_INTER_ALGO_GENERIC:
+                mpi_errno = MPIR_Gather_inter_generic(sendbuf, sendcount, sendtype,
                                       recvbuf, recvcount, recvtype, root,
                                       comm_ptr, errflag);
                 break;
-            case MPIR_GATHER_ALG_INTER_AUTO:
+            case MPIR_GATHER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Gather_inter(sendbuf, sendcount, sendtype,

@@ -10,7 +10,7 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_ISCATTER_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_ISCATTER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -22,7 +22,7 @@ cvars:
         auto - Internal algorithm selection
         binomial - Force binomial algorithm
 
-    - name        : MPIR_CVAR_ISCATTER_ALGORITHM_INTER
+    - name        : MPIR_CVAR_ISCATTER_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -113,7 +113,7 @@ int MPIR_Iscatter_intra_sched(const void *sendbuf, int sendcount, MPI_Datatype s
 {
     int mpi_errno = MPI_SUCCESS;
     
-    mpi_errno = MPIR_Iscatter_binomial_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+    mpi_errno = MPIR_Iscatter_intra_binomial_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 
@@ -133,7 +133,7 @@ int MPIR_Iscatter_inter_sched(const void *sendbuf, int sendcount, MPI_Datatype s
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Iscatter_generic_inter_sched(sendbuf, sendcount, sendtype,
+    mpi_errno = MPIR_Iscatter_inter_generic_sched(sendbuf, sendcount, sendtype,
             recvbuf, recvcount, recvtype, root, comm_ptr, s);
 
     return mpi_errno;
@@ -151,12 +151,12 @@ int MPIR_Iscatter_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Iscatter_alg_intra_choice) {
-            case MPIR_ISCATTER_ALG_INTRA_BINOMIAL:
-                mpi_errno = MPIR_Iscatter_binomial_sched(sendbuf, sendcount, sendtype,
+        switch (MPIR_Iscatter_intra_algo_choice) {
+            case MPIR_ISCATTER_INTRA_ALGO_BINOMIAL:
+                mpi_errno = MPIR_Iscatter_intra_binomial_sched(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, root, comm_ptr, s);
                 break;
-            case MPIR_ISCATTER_ALG_INTRA_AUTO:
+            case MPIR_ISCATTER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Iscatter_intra_sched(sendbuf, sendcount, sendtype,
@@ -165,12 +165,12 @@ int MPIR_Iscatter_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Iscatter_alg_inter_choice) {
-            case MPIR_ISCATTER_ALG_INTER_GENERIC:
-                mpi_errno = MPIR_Iscatter_generic_inter_sched(sendbuf, sendcount, sendtype,
+        switch (MPIR_Iscatter_inter_algo_choice) {
+            case MPIR_ISCATTER_INTER_ALGO_GENERIC:
+                mpi_errno = MPIR_Iscatter_inter_generic_sched(sendbuf, sendcount, sendtype,
                           recvbuf, recvcount, recvtype, root, comm_ptr, s);
                 break;
-            case MPIR_ISCATTER_ALG_INTER_AUTO:
+            case MPIR_ISCATTER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Iscatter_inter_sched(sendbuf, sendcount, sendtype,

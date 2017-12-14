@@ -6,6 +6,6 @@ mpi_sources +=                     		\
 	src/mpi/coll/alltoallw/alltoallw.c
 
 mpi_core_sources +=												\
-	src/mpi/coll/alltoallw/alltoallw_pairwise_sendrecv_replace.c	\
-	src/mpi/coll/alltoallw/alltoallw_scattered.c					\
-	src/mpi/coll/alltoallw/alltoallw_generic_inter.c
+	src/mpi/coll/alltoallw/alltoallw_intra_pairwise_sendrecv_replace.c	\
+	src/mpi/coll/alltoallw/alltoallw_intra_scattered.c					\
+	src/mpi/coll/alltoallw/alltoallw_inter_generic.c

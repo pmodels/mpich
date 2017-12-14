@@ -6,4 +6,4 @@ mpi_sources +=                     		\
 	src/mpi/coll/exscan/exscan.c
 
 mpi_core_sources +=									\
-	src/mpi/coll/exscan/exscan_recursive_doubling.c
+	src/mpi/coll/exscan/exscan_intra_recursive_doubling.c

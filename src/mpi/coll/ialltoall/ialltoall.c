@@ -11,7 +11,7 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_IALLTOALL_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -26,7 +26,7 @@ cvars:
         pairwise - Force pairwise algorithm
         perm_sr - Force Perm sr algorithm
 
-    - name        : MPIR_CVAR_IALLTOALL_ALGORITHM_INTER
+    - name        : MPIR_CVAR_IALLTOALL_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -135,27 +135,27 @@ int MPIR_Ialltoall_intra_sched(const void *sendbuf, int sendcount, MPI_Datatype 
     nbytes = sendtype_size * sendcount;
 
     if (sendbuf == MPI_IN_PLACE) {
-        mpi_errno = MPIR_Ialltoall_inplace_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
+        mpi_errno = MPIR_Ialltoall_intra_inplace_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else if ((nbytes <= MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE) && (comm_size >= 8)) {
         /* use the indexing algorithm by Jehoshua Bruck et al,
          * IEEE TPDS, Nov. 97 */
-        mpi_errno = MPIR_Ialltoall_bruck_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
+        mpi_errno = MPIR_Ialltoall_intra_brucks_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else if (nbytes <= MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE) {
         /* Medium-size message. Use isend/irecv with scattered
            destinations. Use Tony Ladd's modification to post only
            a small number of isends/irecvs at a time. */
-        mpi_errno = MPIR_Ialltoall_perm_sr_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
+        mpi_errno = MPIR_Ialltoall_intra_perm_sr_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
         /* Long message. If comm_size is a power-of-two, do a pairwise
            exchange using exclusive-or to create pairs. Else send to
            rank+i, receive from rank-i. */
-        mpi_errno = MPIR_Ialltoall_pairwise_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
+        mpi_errno = MPIR_Ialltoall_intra_pairwise_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
@@ -176,7 +176,7 @@ int MPIR_Ialltoall_inter_sched(const void *sendbuf, int sendcount, MPI_Datatype
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ialltoall_generic_inter_sched(sendbuf, sendcount,
+    mpi_errno = MPIR_Ialltoall_inter_generic_sched(sendbuf, sendcount,
             sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
 
     return mpi_errno;
@@ -192,24 +192,24 @@ int MPIR_Ialltoall_sched(const void *sendbuf, int sendcount, MPI_Datatype sendty
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Ialltoall_alg_intra_choice) {
-            case MPIR_IALLTOALL_ALG_INTRA_BRUCKS:
-                mpi_errno = MPIR_Ialltoall_bruck_sched(sendbuf, sendcount, sendtype,
+        switch (MPIR_Ialltoall_intra_algo_choice) {
+            case MPIR_IALLTOALL_INTRA_ALGO_BRUCKS:
+                mpi_errno = MPIR_Ialltoall_intra_brucks_sched(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, comm_ptr, s);
                 break;
-            case MPIR_IALLTOALL_ALG_INTRA_INPLACE:
-                mpi_errno = MPIR_Ialltoall_inplace_sched(sendbuf, sendcount, sendtype,
+            case MPIR_IALLTOALL_INTRA_ALGO_INPLACE:
+                mpi_errno = MPIR_Ialltoall_intra_inplace_sched(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, comm_ptr, s);
                 break;
-            case MPIR_IALLTOALL_ALG_INTRA_PAIRWISE:
-                mpi_errno = MPIR_Ialltoall_pairwise_sched(sendbuf, sendcount, sendtype,
+            case MPIR_IALLTOALL_INTRA_ALGO_PAIRWISE:
+                mpi_errno = MPIR_Ialltoall_intra_pairwise_sched(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, comm_ptr, s);
                 break;
-            case MPIR_IALLTOALL_ALG_INTRA_PERM_SR:
-                mpi_errno = MPIR_Ialltoall_perm_sr_sched(sendbuf, sendcount, sendtype,
+            case MPIR_IALLTOALL_INTRA_ALGO_PERM_SR:
+                mpi_errno = MPIR_Ialltoall_intra_perm_sr_sched(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, comm_ptr, s);
                 break;
-            case MPIR_IALLTOALL_ALG_INTRA_AUTO:
+            case MPIR_IALLTOALL_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ialltoall_intra_sched(sendbuf, sendcount, sendtype,
@@ -218,12 +218,12 @@ int MPIR_Ialltoall_sched(const void *sendbuf, int sendcount, MPI_Datatype sendty
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Ialltoall_alg_inter_choice) {
-            case MPIR_IALLTOALL_ALG_INTER_GENERIC:
-                mpi_errno = MPIR_Ialltoall_generic_inter_sched(sendbuf, sendcount, sendtype,
+        switch (MPIR_Ialltoall_inter_algo_choice) {
+            case MPIR_IALLTOALL_INTER_ALGO_GENERIC:
+                mpi_errno = MPIR_Ialltoall_inter_generic_sched(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, comm_ptr, s);
                 break;
-            case MPIR_IALLTOALL_ALG_INTER_AUTO:
+            case MPIR_IALLTOALL_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ialltoall_inter_sched(sendbuf, sendcount, sendtype,
