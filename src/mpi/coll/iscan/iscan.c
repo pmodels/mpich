@@ -11,7 +11,7 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_ISCAN_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_ISCAN_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -83,7 +83,7 @@ static int iscan_smp_sched(const void *sendbuf, void *recvbuf, int count, MPI_Da
 
     if (!MPII_Comm_is_node_consecutive(comm_ptr)) {
         /* We can't use the SMP-aware algorithm, use the generic one */
-        return MPIR_Iscan_rec_dbl_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        return MPIR_Iscan_intra_recursive_doubling_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     }
 
     node_comm = comm_ptr->node_comm;
@@ -209,7 +209,7 @@ int MPIR_Iscan_intra_sched(const void *sendbuf, void *recvbuf, int count, MPI_Da
     if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
         mpi_errno = iscan_smp_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Iscan_rec_dbl_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Iscan_intra_recursive_doubling_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     }
 
     return mpi_errno;
@@ -223,11 +223,11 @@ int MPIR_Iscan_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype
 {
     int mpi_errno = MPI_SUCCESS;
 
-    switch (MPIR_Iscan_alg_intra_choice) {
-        case MPIR_ISCAN_ALG_INTRA_RECURSIVE_DOUBLING:
-            mpi_errno = MPIR_Iscan_rec_dbl_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+    switch (MPIR_Iscan_intra_algo_choice) {
+        case MPIR_ISCAN_INTRA_ALGO_RECURSIVE_DOUBLING:
+            mpi_errno = MPIR_Iscan_intra_recursive_doubling_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
             break;
-        case MPIR_ISCAN_ALG_INTRA_AUTO:
+        case MPIR_ISCAN_INTRA_ALGO_AUTO:
             MPL_FALLTHROUGH;
         default:
             mpi_errno = MPIR_Iscan_intra_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);

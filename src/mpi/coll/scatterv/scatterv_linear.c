@@ -29,7 +29,7 @@
    This is intended to be used by device-specific implementations of
    scatterv. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scatterv
+#define FUNCNAME MPIR_Scatterv_linear
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scatterv_linear (const void *sendbuf, const int *sendcounts, const int *displs,

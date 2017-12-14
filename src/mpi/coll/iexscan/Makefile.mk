@@ -5,5 +5,5 @@ mpi_sources +=                                  \
     src/mpi/coll/iexscan/iexscan.c
 
 mpi_core_sources +=                        \
-    src/mpi/coll/iexscan/iexscan_recursive_doubling.c
+    src/mpi/coll/iexscan/iexscan_intra_recursive_doubling.c
 

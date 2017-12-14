@@ -11,7 +11,7 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_GATHERV_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_GATHERV_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -23,7 +23,7 @@ cvars:
         auto - Internal algorithm selection
         linear - Force linear algorithm
 
-    - name        : MPIR_CVAR_GATHERV_ALGORITHM_INTER
+    - name        : MPIR_CVAR_GATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -114,22 +114,22 @@ int MPIR_Gatherv (
     int mpi_errno_ret = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        switch (MPIR_Gatherv_alg_intra_choice) {
-            case MPIR_GATHERV_ALG_INTRA_LINEAR:
+        switch (MPIR_Gatherv_intra_algo_choice) {
+            case MPIR_GATHERV_INTRA_ALGO_LINEAR:
                 mpi_errno = MPIR_Gatherv_linear (sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
                 break;
-            case MPIR_GATHERV_ALG_INTRA_AUTO:
+            case MPIR_GATHERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Gatherv_linear (sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
                 break;
         }
     } else {
-        switch (MPIR_Gatherv_alg_inter_choice) {
-            case MPIR_GATHERV_ALG_INTER_LINEAR:
+        switch (MPIR_Gatherv_inter_algo_choice) {
+            case MPIR_GATHERV_INTER_ALGO_LINEAR:
                 mpi_errno = MPIR_Gatherv_linear (sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
                 break;
-            case MPIR_GATHERV_ALG_INTER_AUTO:
+            case MPIR_GATHERV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Gatherv_linear (sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);

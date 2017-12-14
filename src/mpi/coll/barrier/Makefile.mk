@@ -6,6 +6,6 @@ mpi_sources +=                     		\
 	src/mpi/coll/barrier/barrier.c
 
 mpi_core_sources +=										\
-	src/mpi/coll/barrier/barrier_recursive_doubling.c	\
-	src/mpi/coll/barrier/barrier_generic_inter.c
+	src/mpi/coll/barrier/barrier_intra_recursive_doubling.c	\
+	src/mpi/coll/barrier/barrier_inter_generic.c
 

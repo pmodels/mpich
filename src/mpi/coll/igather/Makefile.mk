@@ -5,7 +5,7 @@ mpi_sources +=                                  \
     src/mpi/coll/igather/igather.c
 
 mpi_core_sources +=                          \
-    src/mpi/coll/igather/igather_binomial.c  \
-    src/mpi/coll/igather/igather_short_inter.c \
-    src/mpi/coll/igather/igather_long_inter.c
+    src/mpi/coll/igather/igather_intra_binomial.c  \
+    src/mpi/coll/igather/igather_inter_short.c \
+    src/mpi/coll/igather/igather_inter_long.c
 

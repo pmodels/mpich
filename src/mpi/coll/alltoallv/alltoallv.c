@@ -12,7 +12,7 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_ALLTOALLV_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_ALLTOALLV_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -25,7 +25,7 @@ cvars:
         pairwise_sendrecv_replace - Force pairwise_sendrecv_replace algorithm
         scattered - Force scattered algorithm
 
-    - name        : MPIR_CVAR_ALLTOALLV_ALGORITHM_INTER
+    - name        : MPIR_CVAR_ALLTOALLV_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -124,12 +124,12 @@ int MPIR_Alltoallv_intra(const void *sendbuf, const int *sendcounts, const int *
          * time and there will be multiple repeated malloc/free's rather than
          * maintaining a single buffer across the whole loop.  Something like
          * MADRE is probably the best solution for the MPI_IN_PLACE scenario. */
-        mpi_errno = MPIR_Alltoallv_pairwise_sendrecv_replace (sendbuf, sendcounts, sdispls, sendtype, 
+        mpi_errno = MPIR_Alltoallv_intra_pairwise_sendrecv_replace (sendbuf, sendcounts, sdispls, sendtype,
                                                              recvbuf, recvcounts, rdispls, recvtype, comm_ptr, errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
-        mpi_errno = MPIR_Alltoallv_scattered (sendbuf, sendcounts, sdispls, sendtype, 
+        mpi_errno = MPIR_Alltoallv_intra_scattered (sendbuf, sendcounts, sdispls, sendtype,
                                                  recvbuf, recvcounts, rdispls, recvtype, comm_ptr, errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
@@ -158,7 +158,7 @@ int MPIR_Alltoallv_inter(const void *sendbuf, const int *sendcounts, const int *
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Alltoallv_generic_inter(sendbuf, sendcounts, sdispls,
+    mpi_errno = MPIR_Alltoallv_inter_generic(sendbuf, sendcounts, sdispls,
             sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr,
             errflag);
 
@@ -178,18 +178,18 @@ int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispl
         
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Alltoallv_alg_intra_choice) {
-            case MPIR_ALLTOALLV_ALG_INTRA_PAIRWISE_SENDRECV_REPLACE:
-                mpi_errno = MPIR_Alltoallv_pairwise_sendrecv_replace(sendbuf, sendcounts,
+        switch (MPIR_Alltoallv_intra_algo_choice) {
+            case MPIR_ALLTOALLV_INTRA_ALGO_PAIRWISE_SENDRECV_REPLACE:
+                mpi_errno = MPIR_Alltoallv_intra_pairwise_sendrecv_replace(sendbuf, sendcounts,
                                          sdispls, sendtype, recvbuf, recvcounts,
                                          rdispls, recvtype, comm_ptr, errflag);
                 break;
-            case MPIR_ALLTOALLV_ALG_INTRA_SCATTERED:
-                mpi_errno = MPIR_Alltoallv_scattered(sendbuf, sendcounts, sdispls,
+            case MPIR_ALLTOALLV_INTRA_ALGO_SCATTERED:
+                mpi_errno = MPIR_Alltoallv_intra_scattered(sendbuf, sendcounts, sdispls,
                                          sendtype, recvbuf, recvcounts,
                                          rdispls, recvtype, comm_ptr, errflag);
                 break;
-            case MPIR_ALLTOALLV_ALG_INTRA_AUTO:
+            case MPIR_ALLTOALLV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Alltoallv_intra(sendbuf, sendcounts, sdispls,
@@ -198,14 +198,14 @@ int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispl
                 break;
         }
     } else {
-        switch (MPIR_Alltoallv_alg_inter_choice) {
+        switch (MPIR_Alltoallv_inter_algo_choice) {
         /* intercommunicator */
-            case MPIR_ALLTOALLV_ALG_INTER_GENERIC:
-                mpi_errno = MPIR_Alltoallv_generic_inter(sendbuf, sendcounts, sdispls,
+            case MPIR_ALLTOALLV_INTER_ALGO_GENERIC:
+                mpi_errno = MPIR_Alltoallv_inter_generic(sendbuf, sendcounts, sdispls,
                                          sendtype, recvbuf, recvcounts,
                                          rdispls, recvtype, comm_ptr, errflag);
                 break;
-            case MPIR_ALLTOALLV_ALG_INTER_AUTO:
+            case MPIR_ALLTOALLV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Alltoallv_inter(sendbuf, sendcounts, sdispls,

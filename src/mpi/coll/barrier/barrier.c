@@ -20,7 +20,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : Enable SMP aware barrier.
 
-    - name        : MPIR_CVAR_BARRIER_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_BARRIER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -32,7 +32,7 @@ cvars:
         auto - Internal algorithm selection
         recursive_doubling - Force recursive doubling algorithm
 
-    - name        : MPIR_CVAR_BARRIER_ALGORITHM_INTER
+    - name        : MPIR_CVAR_BARRIER_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -184,7 +184,7 @@ int MPIR_Barrier_intra( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
         goto fn_exit;
     }
 
-    mpi_errno = MPIR_Barrier_recursive_doubling(comm_ptr, errflag);
+    mpi_errno = MPIR_Barrier_intra_recursive_doubling(comm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -208,7 +208,7 @@ int MPIR_Barrier_inter( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Barrier_generic_inter(comm_ptr, errflag);
+    mpi_errno = MPIR_Barrier_inter_generic(comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -226,11 +226,11 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Barrier_alg_intra_choice) {
-            case MPIR_BARRIER_ALG_INTRA_RECURSIVE_DOUBLING:
-                mpi_errno = MPIR_Barrier_recursive_doubling(comm_ptr, errflag);
+        switch (MPIR_Barrier_intra_algo_choice) {
+            case MPIR_BARRIER_INTRA_ALGO_RECURSIVE_DOUBLING:
+                mpi_errno = MPIR_Barrier_intra_recursive_doubling(comm_ptr, errflag);
                 break;
-            case MPIR_BARRIER_ALG_INTRA_AUTO:
+            case MPIR_BARRIER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Barrier_intra(comm_ptr, errflag);
@@ -238,11 +238,11 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Barrier_alg_inter_choice) {
-            case MPIR_BARRIER_ALG_INTER_GENERIC:
-                mpi_errno = MPIR_Barrier_generic_inter(comm_ptr, errflag);
+        switch (MPIR_Barrier_inter_algo_choice) {
+            case MPIR_BARRIER_INTER_ALGO_GENERIC:
+                mpi_errno = MPIR_Barrier_inter_generic(comm_ptr, errflag);
                 break;
-            case MPIR_BARRIER_ALG_INTER_AUTO:
+            case MPIR_BARRIER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Barrier_inter(comm_ptr, errflag);

@@ -10,7 +10,7 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_IALLTOALLV_ALGORITHM_INTRA
+    - name        : MPIR_CVAR_IALLTOALLV_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -24,7 +24,7 @@ cvars:
         inplace - Force inplace algorithm
         pairwise_xchg - Force pairwise xchg algorithm
 
-    - name        : MPIR_CVAR_IALLTOALLV_ALGORITHM_INTER
+    - name        : MPIR_CVAR_IALLTOALLV_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : string
       default     : auto
@@ -90,11 +90,11 @@ int MPIR_Ialltoallv_intra_sched(const void *sendbuf, const int sendcounts[], con
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     if (sendbuf == MPI_IN_PLACE) {
-        mpi_errno = MPIR_Ialltoallv_inplace_sched(sendbuf, sendcounts, sdispls,
+        mpi_errno = MPIR_Ialltoallv_intra_inplace_sched(sendbuf, sendcounts, sdispls,
                                                   sendtype, recvbuf, recvcounts,
                                                   rdispls, recvtype, comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Ialltoallv_blocked_sched(sendbuf, sendcounts, sdispls,
+        mpi_errno = MPIR_Ialltoallv_intra_blocked_sched(sendbuf, sendcounts, sdispls,
                                                   sendtype, recvbuf, recvcounts,
                                                   rdispls, recvtype, comm_ptr, s);
     }
@@ -116,7 +116,7 @@ int MPIR_Ialltoallv_inter_sched(const void *sendbuf, const int sendcounts[], con
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ialltoallv_pairwise_xchg_sched(sendbuf, sendcounts, sdispls,
+    mpi_errno = MPIR_Ialltoallv_intra_pairwise_xchg_sched(sendbuf, sendcounts, sdispls,
                                             sendtype, recvbuf, recvcounts,
                                             rdispls, recvtype, comm_ptr, s);
 
@@ -136,16 +136,16 @@ int MPIR_Ialltoallv_sched(const void *sendbuf, const int sendcounts[], const int
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
-        switch (MPIR_Ialltoallv_alg_intra_choice) {
-            case MPIR_IALLTOALLV_ALG_INTRA_BLOCKED:
-                mpi_errno = MPIR_Ialltoallv_blocked_sched(sendbuf, sendcounts, sdispls,
+        switch (MPIR_Ialltoallv_intra_algo_choice) {
+            case MPIR_IALLTOALLV_INTRA_ALGO_BLOCKED:
+                mpi_errno = MPIR_Ialltoallv_intra_blocked_sched(sendbuf, sendcounts, sdispls,
                  sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
                 break;
-            case MPIR_IALLTOALLV_ALG_INTRA_INPLACE:
-                mpi_errno = MPIR_Ialltoallv_inplace_sched(sendbuf, sendcounts, sdispls,
+            case MPIR_IALLTOALLV_INTRA_ALGO_INPLACE:
+                mpi_errno = MPIR_Ialltoallv_intra_inplace_sched(sendbuf, sendcounts, sdispls,
                  sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
                 break;
-            case MPIR_IALLTOALLV_ALG_INTRA_AUTO:
+            case MPIR_IALLTOALLV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ialltoallv_intra_sched(sendbuf, sendcounts, sdispls,
@@ -154,12 +154,12 @@ int MPIR_Ialltoallv_sched(const void *sendbuf, const int sendcounts[], const int
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Ialltoallv_alg_inter_choice) {
-            case MPIR_IALLTOALLV_ALG_INTER_PAIRWISE_XCHG:
-                mpi_errno = MPIR_Ialltoallv_pairwise_xchg_sched(sendbuf, sendcounts, sdispls,
+        switch (MPIR_Ialltoallv_inter_algo_choice) {
+            case MPIR_IALLTOALLV_INTER_ALGO_PAIRWISE_XCHG:
+                mpi_errno = MPIR_Ialltoallv_intra_pairwise_xchg_sched(sendbuf, sendcounts, sdispls,
                  sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
                 break;
-            case MPIR_IALLTOALLV_ALG_INTER_AUTO:
+            case MPIR_IALLTOALLV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ialltoallv_inter_sched(sendbuf, sendcounts, sdispls,

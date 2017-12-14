@@ -6,5 +6,5 @@ mpi_sources +=                     		\
 	src/mpi/coll/gather/gather.c
 
 mpi_core_sources +=									\
-	src/mpi/coll/gather/gather_binomial.c			\
-	src/mpi/coll/gather/gather_generic_inter.c
+	src/mpi/coll/gather/gather_intra_binomial.c			\
+	src/mpi/coll/gather/gather_inter_generic.c
