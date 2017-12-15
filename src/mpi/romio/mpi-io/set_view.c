@@ -42,7 +42,7 @@ Input Parameters:
 int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype,
 		      MPI_Datatype filetype, ROMIO_CONST char *datarep, MPI_Info info)
 {
-    int error_code;
+    int error_code = MPI_SUCCESS;
     MPI_Count filetype_size, etype_size;
     static char myname[] = "MPI_FILE_SET_VIEW";
     ADIO_Offset shared_fp, byte_off;
