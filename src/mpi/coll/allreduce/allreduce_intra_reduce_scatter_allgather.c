@@ -7,6 +7,39 @@
 #include "mpiimpl.h"
 #include "coll_util.h"
 
+/* Algorithm: Rabenseifner's Algorithm
+ *
+ * Restrictions: Built-in ops only
+ *
+ * This algorithm is from http://www.hlrs.de/mpi/myreduce.html.
+.
+ * This algorithm implements the allreduce in two steps: first a
+ * reduce-scatter, followed by an allgather. A recursive-halving algorithm
+ * (beginning with processes that are distance 1 apart) is used for the
+ * reduce-scatter, and a recursive doubling algorithm is used for the
+ * allgather. The non-power-of-two case is handled by dropping to the nearest
+ * lower power-of-two: the first few even-numbered processes send their data to
+ * their right neighbors (rank+1), and the reduce-scatter and allgather happen
+ * among the remaining power-of-two processes. At the end, the first few
+ * even-numbered processes get the result from their right neighbors.
+ *
+ * For the power-of-two case, the cost for the reduce-scatter is:
+ *
+ * lgp.alpha + n.((p-1)/p).beta + n.((p-1)/p).gamma.
+ *
+ * The cost for the allgather:
+ *
+ * lgp.alpha +.n.((p-1)/p).beta
+ *
+ * Therefore, the total cost is:
+ *
+ * Cost = 2.lgp.alpha + 2.n.((p-1)/p).beta + n.((p-1)/p).gamma
+ *
+ * For the non-power-of-two case:
+ *
+ * Cost = (2.floor(lgp)+2).alpha + (2.((p-1)/p) + 2).n.beta + n.(1+(p-1)/p).gamma
+ */
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allreduce_intra_reduce_scatter_allgather
 #undef FCNAME

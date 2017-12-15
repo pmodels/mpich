@@ -29,8 +29,18 @@ static int dtp_release_ref(MPIR_Comm *comm, int tag, void *state)
     return MPI_SUCCESS;
 }
 
-/* allgather implemented by recursive doubling, only for power-of-2 processes */
-/* TODO does not currently handle the heterogeneous case */
+/*
+ * Recursive Doubling Algorithm:
+ *
+ * Restrictions: power-of-two no. of processes
+ *
+ * Cost = lgp.alpha + n.((p-1)/p).beta
+ *
+ * TODO: On TCP, we may want to use recursive doubling instead of the
+ * Bruck's algorithm in all cases because of the pairwise-exchange
+ * property of recursive doubling (see Benson et al paper in Euro
+ * PVM/MPI 2003).
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Iallgather_intra_recursive_doubling_sched
 #undef FCNAME

@@ -81,28 +81,6 @@ int MPI_Barrier(MPI_Comm comm) __attribute__((weak,alias("PMPI_Barrier")));
 #undef MPI_Barrier
 #define MPI_Barrier PMPI_Barrier
 
-
-/* This is the machine-independent implementation of the barrier operation.  The
-   algorithm is:
-   
-   Algorithm: MPI_Barrier
-
-   We use the dissemination algorithm described in:
-   Debra Hensgen, Raphael Finkel, and Udi Manbet, "Two Algorithms for
-   Barrier Synchronization," International Journal of Parallel
-   Programming, 17(1):1-17, 1988.  
-
-   It uses ceiling(lgp) steps. In step k, 0 <= k <= (ceiling(lgp)-1),
-   process i sends to process (i + 2^k) % p and receives from process 
-   (i - 2^k + p) % p.
-
-   Possible improvements: 
-
-   End Algorithm: MPI_Barrier
-
-   This is an intracommunicator barrier only!
-*/
-
 /* not declared static because it is called in ch3_comm_connect/accept */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Barrier_intra

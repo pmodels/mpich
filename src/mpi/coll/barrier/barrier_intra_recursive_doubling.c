@@ -7,6 +7,17 @@
 
 #include "mpiimpl.h"
 
+/* Algorithm: MPI_Barrier
+ *
+ * We use the dissemination algorithm described in:
+ * Debra Hensgen, Raphael Finkel, and Udi Manbet, "Two Algorithms for
+ * Barrier Synchronization," International Journal of Parallel
+ * Programming, 17(1):1-17, 1988.
+ *
+ * It uses ceiling(lgp) steps. In step k, 0 <= k <= (ceiling(lgp)-1),
+ * process i sends to process (i + 2^k) % p and receives from process
+ * (i - 2^k + p) % p.
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Barrier_intra_recursive_doubling
 #undef FCNAME

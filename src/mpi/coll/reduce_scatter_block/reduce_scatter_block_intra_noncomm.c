@@ -16,11 +16,15 @@
 
 /* FIXME should we be checking the op_errno here? */
 
-/* Implements the reduce-scatter butterfly algorithm described in J. L. Traff's
- * "An Improved Algorithm for (Non-commutative) Reduce-Scatter with an 
- * Application"
- * from EuroPVM/MPI 2005.  This function currently only implements support for
- * the power-of-2 case. */
+/* Algorithm: Noncommutative
+ *
+ * Restrictions: Only power-of-two and noncommutative
+ *
+ * Implements the reduce-scatter butterfly algorithm described in J. L. Traff's
+ * "An Improved Algorithm for (Non-commutative) Reduce-Scatter with an
+ * Application" from EuroPVM/MPI 2005.
+ */
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_scatter_block_intra_noncomm
 #undef FCNAME

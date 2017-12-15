@@ -13,7 +13,13 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
-/* not declared static because a machine-specific function may call this one in some cases */
+/* Algorithm: Pairwise Exchange
+ *
+ * For commutative operations and very long messages we use This is a pairwise
+ * exchange algorithm similar to the one used in MPI_Alltoall. At step i, each
+ * process sends n/p amount of data to (rank+i) and receives n/p amount of data
+ * from (rank-i).
+ */
 int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const int recvcounts[],
                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {

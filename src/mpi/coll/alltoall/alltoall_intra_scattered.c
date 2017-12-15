@@ -7,7 +7,28 @@
 
 #include "mpiimpl.h"
 
-/* not declared static because a machine-specific function may call this one in some cases */
+/* Algorithm: Scatter
+ *
+ * It posts all irecvs and isends and then does a waitall. We scatter the order
+ * of sources and destinations among the processes, so that all processes don't
+ * try to send/recv to/from the same process at the same time.
+ *
+ * *** Modification: We post only a small number of isends and irecvs at a time
+ * and wait on them as suggested by Tony Ladd. See comments below about
+ * an additional modification that we may want to consider ***
+ *
+ *  FIXME: This converts the Alltoall to a set of blocking phases.  Two
+ *  alternatives should be considered:
+ *
+ * 1) the choice of communication pattern could try to avoid contending routes
+ * in each phase
+ *
+ * 2) rather than wait for all communication to finish (waitall), we could
+ * maintain constant queue size by using waitsome and posting new isend/irecv
+ * as others complete.  This avoids synchronization delays at the end of each
+ * block (when there are only a few isend/irecvs left).
+ */
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Alltoall_intra_scattered
 #undef FCNAME
@@ -39,20 +60,6 @@ int MPIR_Alltoall_intra_scattered(
     /* Get extent of send and recv types */
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
-
-    /* Medium-size message. Use isend/irecv with scattered
-       destinations. Use Tony Ladd's modification to post only
-       a small number of isends/irecvs at a time. */
-	/* FIXME: This converts the Alltoall to a set of blocking phases.
-	   Two alternatives should be considered:
-	   1) the choice of communication pattern could try to avoid
-	      contending routes in each phase
-	   2) rather than wait for all communication to finish (waitall),
-	      we could maintain constant queue size by using waitsome 
-	      and posting new isend/irecv as others complete.  This avoids
-	      synchronization delays at the end of each block (when
-	      there are only a few isend/irecvs left)
-	 */
     int ii, ss, bblock;
 
     bblock = MPIR_CVAR_ALLTOALL_THROTTLE;

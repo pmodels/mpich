@@ -93,43 +93,7 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[
 
    Algorithm: MPI_Reduce_scatter
 
-   If the operation is commutative, for short and medium-size
-   messages, we use a recursive-halving
-   algorithm in which the first p/2 processes send the second n/2 data
-   to their counterparts in the other half and receive the first n/2
-   data from them. This procedure continues recursively, halving the
-   data communicated at each step, for a total of lgp steps. If the
-   number of processes is not a power-of-two, we convert it to the
-   nearest lower power-of-two by having the first few even-numbered
-   processes send their data to the neighboring odd-numbered process
-   at (rank+1). Those odd-numbered processes compute the result for
-   their left neighbor as well in the recursive halving algorithm, and
-   then at  the end send the result back to the processes that didn't
-   participate.
-   Therefore, if p is a power-of-two,
-   Cost = lgp.alpha + n.((p-1)/p).beta + n.((p-1)/p).gamma
-   If p is not a power-of-two,
-   Cost = (floor(lgp)+2).alpha + n.(1+(p-1+n)/p).beta + n.(1+(p-1)/p).gamma
-   The above cost in the non power-of-two case is approximate because
-   there is some imbalance in the amount of work each process does
-   because some processes do the work of their neighbors as well.
-
-   For commutative operations and very long messages we use
-   we use a pairwise exchange algorithm similar to
-   the one used in MPI_Alltoall. At step i, each process sends n/p
-   amount of data to (rank+i) and receives n/p amount of data from
-   (rank-i).
-   Cost = (p-1).alpha + n.((p-1)/p).beta + n.((p-1)/p).gamma
-
-
    If the operation is not commutative, we do the following:
-
-   We use a recursive doubling algorithm, which
-   takes lgp steps. At step 1, processes exchange (n-n/p) amount of
-   data; at step 2, (n-2n/p) amount of data; at step 3, (n-4n/p)
-   amount of data, and so forth.
-
-   Cost = lgp.alpha + n.(lgp-(p-1)/p).beta + n.(lgp-(p-1)/p).gamma
 
    Possible improvements:
 

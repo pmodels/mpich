@@ -100,17 +100,6 @@ int MPIR_Igather_inter_sched(const void *sendbuf, int sendcount, MPI_Datatype se
     MPI_Aint local_size, remote_size;
     MPI_Aint recvtype_size, sendtype_size, nbytes;
 
-/*  Intercommunicator gather.
-    For short messages, remote group does a local intracommunicator
-    gather to rank 0. Rank 0 then sends data to root.
-
-    Cost: (lgp+1).alpha + n.((p-1)/p).beta + n.beta
-
-    For long messages, we use linear gather to avoid the extra n.beta.
-
-    Cost: p.alpha + n.beta
-*/
-
     if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */
         goto fn_exit;

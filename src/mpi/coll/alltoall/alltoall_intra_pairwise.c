@@ -7,6 +7,23 @@
 
 #include "mpiimpl.h"
 
+/* Algorithm: Pairwise Exchange
+ *
+ * This pairwise exchange algorithm takes p-1 steps.
+ *
+ * We calculate the pairs by using an exclusive-or algorithm:
+ *         for (i=1; i<comm_size; i++)
+ *             dest = rank ^ i;
+ * This algorithm doesn't work if the number of processes is not a power of
+ * two. For a non-power-of-two number of processes, we use an
+ * algorithm in which, in step i, each process  receives from (rank-i)
+ * and sends to (rank+i).
+ *
+ * Cost = (p-1).alpha + n.beta
+ *
+ * where n is the total amount of data a process needs to send to all
+ * other processes.
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Alltoall_intra_pairwise
 #undef FCNAME

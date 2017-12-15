@@ -74,28 +74,6 @@ int MPI_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispls
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Alltoallw
 #define MPI_Alltoallw PMPI_Alltoallw
-/* This is the machine-independent implementation of alltoallw. The algorithm is:
-   
-   Algorithm: MPI_Alltoallw
-
-   Since each process sends/receives different amounts of data to
-   every other process, we don't know the total message size for all
-   processes without additional communication. Therefore we simply use
-   the "middle of the road" isend/irecv algorithm that works
-   reasonably well in all cases.
-
-   We post all irecvs and isends and then do a waitall. We scatter the
-   order of sources and destinations among the processes, so that all
-   processes don't try to send/recv to/from the same process at the
-   same time. 
-
-   *** Modification: We post only a small number of isends and irecvs 
-   at a time and wait on them as suggested by Tony Ladd. ***
-
-   Possible improvements: 
-
-   End Algorithm: MPI_Alltoallw
-*/
 
 /* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
@@ -110,15 +88,6 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
     int mpi_errno = MPI_SUCCESS;
 
     if (sendbuf == MPI_IN_PLACE) {
-        /* We use pair-wise sendrecv_replace in order to conserve memory usage,
-         * which is keeping with the spirit of the MPI-2.2 Standard.  But
-         * because of this approach all processes must agree on the global
-         * schedule of sendrecv_replace operations to avoid deadlock.
-         *
-         * Note that this is not an especially efficient algorithm in terms of
-         * time and there will be multiple repeated malloc/free's rather than
-         * maintaining a single buffer across the whole loop.  Something like
-         * MADRE is probably the best solution for the MPI_IN_PLACE scenario. */
         mpi_errno = MPIR_Alltoallw_intra_pairwise_sendrecv_replace(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts,
                                                              rdispls, recvtypes, comm_ptr, errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);

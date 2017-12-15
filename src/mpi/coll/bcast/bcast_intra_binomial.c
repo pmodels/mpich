@@ -8,8 +8,11 @@
 #include "mpiimpl.h"
 #include "coll_util.h"
 
-/* A binomial tree broadcast algorithm.  Good for short messages, 
-   Cost = lgp.alpha + n.lgp.beta */
+/* Algorithm: Binomial bcast
+ *
+ * For short messages, we use a binomial tree algorithm.
+ * Cost = lgp.alpha + n.lgp.beta
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bcast_intra_binomial
 #undef FCNAME

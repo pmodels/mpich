@@ -27,6 +27,16 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+/* Algorithm: MPI_Gatherv
+ *
+ * Since the array of recvcounts is valid only on the root, we cannot do a tree
+ * algorithm without first communicating the recvcounts to other processes.
+ * Therefore, we simply use a linear algorithm for the gather, which takes
+ * (p-1) steps versus lgp steps for the tree algorithm. The bandwidth
+ * requirement is the same for both algorithms.
+ *
+ * Cost = (p-1).alpha + n.((p-1)/p).beta
+*/
 #undef FUNCNAME
 #define FUNCNAME MPIR_Gatherv_linear
 #undef FCNAME

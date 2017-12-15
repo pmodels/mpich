@@ -8,22 +8,22 @@
 #include "mpiimpl.h"
 
 /* This is the machine-independent implementation of scatter. The algorithm is:
-   
-   Algorithm: MPI_Scatter
+
+   Algorithm: Binomial
 
    We use a binomial tree algorithm for both short and
    long messages. At nodes other than leaf nodes we need to allocate
    a temporary buffer to store the incoming message. If the root is
-   not rank 0, we reorder the sendbuf in order of relative ranks by 
+   not rank 0, we reorder the sendbuf in order of relative ranks by
    copying it into a temporary buffer, so that all the sends from the
    root are contiguous and in the right order. In the heterogeneous
    case, we first pack the buffer by using MPI_Pack and then do the
-   scatter. 
+   scatter.
 
    Cost = lgp.alpha + n.((p-1)/p).beta
    where n is the total size of the data to be scattered from the root.
 
-   Possible improvements: 
+   Possible improvements:
 
    End Algorithm: MPI_Scatter
 */

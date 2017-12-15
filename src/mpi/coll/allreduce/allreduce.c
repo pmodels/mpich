@@ -135,56 +135,6 @@ MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[] = {
     MPIR_MINLOC_check_dtype, MPIR_MAXLOC_check_dtype,
     MPIR_REPLACE_check_dtype, MPIR_NO_OP_check_dtype }; 
 
-
-/* This is the machine-independent implementation of allreduce. The algorithm is:
-   
-   Algorithm: MPI_Allreduce
-
-   For the heterogeneous case, we call MPI_Reduce followed by MPI_Bcast
-   in order to meet the requirement that all processes must have the
-   same result. For the homogeneous case, we use the following algorithms.
-
-
-   For long messages and for builtin ops and if count >= pof2 (where
-   pof2 is the nearest power-of-two less than or equal to the number
-   of processes), we use Rabenseifner's algorithm (see 
-   http://www.hlrs.de/mpi/myreduce.html).
-   This algorithm implements the allreduce in two steps: first a
-   reduce-scatter, followed by an allgather. A recursive-halving
-   algorithm (beginning with processes that are distance 1 apart) is
-   used for the reduce-scatter, and a recursive doubling 
-   algorithm is used for the allgather. The non-power-of-two case is
-   handled by dropping to the nearest lower power-of-two: the first
-   few even-numbered processes send their data to their right neighbors
-   (rank+1), and the reduce-scatter and allgather happen among the remaining
-   power-of-two processes. At the end, the first few even-numbered
-   processes get the result from their right neighbors.
-
-   For the power-of-two case, the cost for the reduce-scatter is 
-   lgp.alpha + n.((p-1)/p).beta + n.((p-1)/p).gamma. The cost for the
-   allgather lgp.alpha + n.((p-1)/p).beta. Therefore, the
-   total cost is:
-   Cost = 2.lgp.alpha + 2.n.((p-1)/p).beta + n.((p-1)/p).gamma
-
-   For the non-power-of-two case, 
-   Cost = (2.floor(lgp)+2).alpha + (2.((p-1)/p) + 2).n.beta + n.(1+(p-1)/p).gamma
-
-   
-   For short messages, for user-defined ops, and for count < pof2 
-   we use a recursive doubling algorithm (similar to the one in
-   MPI_Allgather). We use this algorithm in the case of user-defined ops
-   because in this case derived datatypes are allowed, and the user
-   could pass basic datatypes on one process and derived on another as
-   long as the type maps are the same. Breaking up derived datatypes
-   to do the reduce-scatter is tricky. 
-
-   Cost = lgp.alpha + n.lgp.beta + n.lgp.gamma
-
-   Possible improvements: 
-
-   End Algorithm: MPI_Allreduce
-*/
-
 /* not declared static because a machine-specific function may call this one 
    in some cases */
 #undef FUNCNAME
@@ -241,8 +191,11 @@ int MPIR_Allreduce_intra (
     else
         is_homogeneous = 1;
 #endif
-    
+
 #ifdef MPID_HAS_HETERO
+    /* For the heterogeneous case, we call MPI_Reduce followed by MPI_Bcast in
+     * order to meet the requirement that all processes must have the same
+     * result.  For the homogeneous case, we use the following algorithms.  */
     if (!is_homogeneous) {
         /* heterogeneous. To get the same result on all processes, we
            do a reduce to 0 and then broadcast. */

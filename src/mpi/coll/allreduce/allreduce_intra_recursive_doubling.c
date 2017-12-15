@@ -7,6 +7,18 @@
 #include "mpiimpl.h"
 #include "coll_util.h"
 
+/*
+ * Algorithm: Recursive Doubling
+ *
+ * We use this algorithm in the case of user-defined ops because in this case
+ * derived datatypes are allowed, and the user could pass basic datatypes on
+ * one process and derived on another as long as the type maps are the same.
+ * Breaking up derived datatypes to do the reduce-scatter is tricky.
+ *
+ * Cost = lgp.alpha + n.lgp.beta + n.lgp.gamma
+ */
+
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allreduce_intra_recursive_doubling
 #undef FCNAME
