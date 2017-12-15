@@ -35,7 +35,7 @@ static HYD_status list_to_nodes(char *str) {
         goto fn_fail;
     }
 
-    while ((host = slurm_hostlist_shift(hostlist))) {
+    for (host = slurm_hostlist_shift(hostlist); host; host = slurm_hostlist_shift(hostlist)) {
         status = HYDU_add_to_node_list(host, tasks_per_node[k++], &global_node_list);
         HYDU_ERR_POP(status, "unable to add to node list\n");
     }
