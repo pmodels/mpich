@@ -61,59 +61,8 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 #undef MPI_Exscan
 #define MPI_Exscan PMPI_Exscan
 
-/* NOTE: copied from reduce_scatter.c, if we use this one more time we need to
- * refactor it into a common location */
-
-/* This is the machine-independent implementation of exscan. The algorithm is:
-   
-   Algorithm: MPI_Exscan
-
-   We use a lgp recursive doubling algorithm. The basic algorithm is
-   given below. (You can replace "+" with any other scan operator.)
-   The result is stored in recvbuf.
-
- .vb
-   partial_scan = sendbuf;
-   mask = 0x1;
-   flag = 0;
-   while (mask < size) {
-      dst = rank^mask;
-      if (dst < size) {
-         send partial_scan to dst;
-         recv from dst into tmp_buf;
-         if (rank > dst) {
-            partial_scan = tmp_buf + partial_scan;
-            if (rank != 0) {
-               if (flag == 0) {
-                   recv_buf = tmp_buf;
-                   flag = 1;
-               }
-               else 
-                   recv_buf = tmp_buf + recvbuf;
-            }
-         }
-         else {
-            if (op is commutative)
-               partial_scan = tmp_buf + partial_scan;
-            else {
-               tmp_buf = partial_scan + tmp_buf;
-               partial_scan = tmp_buf;
-            }
-         }
-      }
-      mask <<= 1;
-   }  
-.ve
-
-   End Algorithm: MPI_Exscan
-*/
-
-
-/* not declared static because a machine-specific function may call this 
-   one in some cases */
-/* MPIR_Exscan performs an exscan using point-to-point messages.  This
-   is intended to be used by device-specific implementations of
-   exscan. */
+/* not declared static because a machine-specific function may call this one in
+ * some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Exscan
 #undef FCNAME

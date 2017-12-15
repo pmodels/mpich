@@ -71,29 +71,6 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request) __attribute__((weak,alias(
 
 /* any non-MPI functions go here, especially non-static ones */
 
-/* This is the machine-independent implementation of the barrier operation.  The
-   algorithm is:
-
-   Algorithm: MPI_Ibarrier
-
-   We use the dissemination algorithm described in:
-   Debra Hensgen, Raphael Finkel, and Udi Manber, "Two Algorithms for
-   Barrier Synchronization," International Journal of Parallel
-   Programming, 17(1):1-17, 1988.
-
-   It uses ceiling(lgp) steps. In step k, 0 <= k <= (ceiling(lgp)-1),
-   process i sends to process (i + 2^k) % p and receives from process
-   (i - 2^k + p) % p.
-
-   Possible improvements:
-
-   End Algorithm: MPI_Ibarrier
-
-   This is an intracommunicator barrier only!
-*/
-/* Provides a generic "flat" barrier that doesn't know anything about hierarchy.
- * It will choose between several different algorithms based on the given
- * parameters. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ibarrier_intra_sched
 #undef FCNAME

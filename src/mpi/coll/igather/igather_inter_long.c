@@ -6,6 +6,13 @@
 
 #include "mpiimpl.h"
 
+/* Algorithm: Long Linear Gather
+ *
+ * This linear gather algorithm is tuned for long messages. It avoids an extra
+ * O(n) communications over the short message algorithm.
+ *
+ * Cost: p.alpha + n.beta
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Igather_inter_long_sched
 #undef FCNAME

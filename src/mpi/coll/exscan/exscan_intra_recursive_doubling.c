@@ -7,9 +7,7 @@
 
 #include "mpiimpl.h"
 
-/* This is the machine-independent implementation of exscan. The algorithm is:
-   
-   Algorithm: MPI_Exscan
+/* Algorithm: MPI_Exscan
 
    We use a lgp recursive doubling algorithm. The basic algorithm is
    given below. (You can replace "+" with any other scan operator.)
@@ -31,7 +29,7 @@
                    recv_buf = tmp_buf;
                    flag = 1;
                }
-               else 
+               else
                    recv_buf = tmp_buf + recvbuf;
             }
          }
@@ -45,16 +43,9 @@
          }
       }
       mask <<= 1;
-   }  
+   }
 .ve
-
-   End Algorithm: MPI_Exscan
 */
-
-
-/* MPIR_Exscan performs an exscan using point-to-point messages.  This
-   is intended to be used by device-specific implementations of
-   exscan. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Exscan_intra_recursive_doubling
 #undef FCNAME

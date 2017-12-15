@@ -6,6 +6,20 @@
 
 #include "mpiimpl.h"
 
+/* Algorithm: Blocked Alltoallw
+ *
+ * Since each process sends/receives different amounts of data to every other
+ * process, we don't know the total message size for all processes without
+ * additional communication. Therefore we simply use the "middle of the road"
+ * isend/irecv algorithm that works reasonably well in all cases.
+ *
+ * We post all irecvs and isends and then do a waitall. We scatter the order of
+ * sources and destinations among the processes, so that all processes don't
+ * try to send/recv to/from the same process at the same time.
+ *
+ * *** Modification: We post only a small number of isends and irecvs at a time
+ * and wait on them as suggested by Tony Ladd. ***
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ialltoallw_intra_blocked_sched
 #undef FCNAME

@@ -7,7 +7,9 @@
 #include "mpiimpl.h"
 #include "coll_util.h"
 
-/* Implements nonblocking all-to-all for sendbuf==MPI_IN_PLACE.
+/* Algorithm: Nonblocking all-to-all for sendbuf==MPI_IN_PLACE.
+ *
+ * Restrictions: Only for MPI_IN_PLACE
  *
  * We use nonblocking equivalent of pair-wise sendrecv_replace in order to
  * conserve memory usage, which is keeping with the spirit of the MPI-2.2

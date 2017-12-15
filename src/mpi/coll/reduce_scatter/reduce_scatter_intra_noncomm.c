@@ -8,12 +8,21 @@
 #include "mpiimpl.h"
 #include "coll_util.h"
 
-
-/* Implements the reduce-scatter butterfly algorithm described in J. L. Traff's
- * "An Improved Algorithm for (Non-commutative) Reduce-Scatter with an 
- * Application"
- * from EuroPVM/MPI 2005.  This function currently only implements support for
- * the power-of-2, block-regular case (all receive counts are equal). */
+/* Algorithm: Noncommutative recursive doubling
+ *
+ * Restrictions: This function currently only implements support for the
+ * power-of-2, block-regular case (all receive counts are equal).
+ *
+ * Implements the reduce-scatter butterfly algorithm described in J. L. Traff's
+ * "An Improved Algorithm for (Non-commutative) Reduce-Scatter with an
+ * Application" from EuroPVM/MPI 2005.
+ *
+ * It takes lgp steps. At step 1, processes exchange (n-n/p) amount of
+ * data; at step 2, (n-2n/p) amount of data; at step 3, (n-4n/p)
+ * amount of data, and so forth.
+ *
+ * Cost = lgp.alpha + n.(lgp-(p-1)/p).beta + n.(lgp-(p-1)/p).gamma
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_scatter_intra_noncomm
 #undef FCNAME

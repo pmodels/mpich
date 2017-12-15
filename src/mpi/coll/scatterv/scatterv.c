@@ -75,27 +75,7 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 #undef MPI_Scatterv
 #define MPI_Scatterv PMPI_Scatterv
 
-/* This is the machine-independent implementation of scatterv. The algorithm is:
-   
-   Algorithm: MPI_Scatterv
-
-   Since the array of sendcounts is valid only on the root, we cannot
-   do a tree algorithm without first communicating the sendcounts to
-   other processes. Therefore, we simply use a linear algorithm for the
-   scatter, which takes (p-1) steps versus lgp steps for the tree
-   algorithm. The bandwidth requirement is the same for both algorithms.
-
-   Cost = (p-1).alpha + n.((p-1)/p).beta
-
-   Possible improvements: 
-
-   End Algorithm: MPI_Scatterv
-*/
-
 /* not declared static because it is called in intercomm. reduce_scatter */
-/* MPIR_Scatterv performs an scatterv using point-to-point messages.
-   This is intended to be used by device-specific implementations of
-   scatterv. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scatterv
 #undef FCNAME

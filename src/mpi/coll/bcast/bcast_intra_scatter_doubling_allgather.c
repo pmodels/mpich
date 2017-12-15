@@ -9,25 +9,24 @@
 #include "bcast.h"
 #include "coll_util.h"
 
-/*
-   Broadcast based on a scatter followed by an allgather.
-
-   We first scatter the buffer using a binomial tree algorithm. This costs
-   lgp.alpha + n.((p-1)/p).beta
-   If the datatype is contiguous and the communicator is homogeneous,
-   we treat the data as bytes and divide (scatter) it among processes
-   by using ceiling division. For the noncontiguous or heterogeneous
-   cases, we first pack the data into a temporary buffer by using
-   MPI_Pack, scatter it as bytes, and unpack it after the allgather.
-
-   For the allgather, we use a recursive doubling algorithm for 
-   medium-size messages and power-of-two number of processes. This
-   takes lgp steps. In each step pairs of processes exchange all the
-   data they have (we take care of non-power-of-two situations). This
-   costs approximately lgp.alpha + n.((p-1)/p).beta. (Approximately
-   because it may be slightly more in the non-power-of-two case, but
-   it's still a logarithmic algorithm.) Therefore, for long messages
-   Total Cost = 2.lgp.alpha + 2.n.((p-1)/p).beta
+/* Algorithm: Broadcast based on a scatter followed by an allgather.
+ *
+ * We first scatter the buffer using a binomial tree algorithm. This costs
+ * lgp.alpha + n.((p-1)/p).beta
+ * If the datatype is contiguous and the communicator is homogeneous,
+ * we treat the data as bytes and divide (scatter) it among processes
+ * by using ceiling division. For the noncontiguous or heterogeneous
+ * cases, we first pack the data into a temporary buffer by using
+ * MPI_Pack, scatter it as bytes, and unpack it after the allgather.
+ *
+ * For the allgather, we use a recursive doubling algorithm for
+ * medium-size messages and power-of-two number of processes. This
+ * takes lgp steps. In each step pairs of processes exchange all the
+ * data they have (we take care of non-power-of-two situations). This
+ * costs approximately lgp.alpha + n.((p-1)/p).beta. (Approximately
+ * because it may be slightly more in the non-power-of-two case, but
+ * it's still a logarithmic algorithm.) Therefore, for long messages
+ * Total Cost = 2.lgp.alpha + 2.n.((p-1)/p).beta
 */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bcast_intra_scatter_doubling_allgather

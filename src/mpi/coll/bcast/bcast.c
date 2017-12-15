@@ -156,48 +156,6 @@ int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm
 #undef MPI_Bcast
 #define MPI_Bcast PMPI_Bcast
 
-/* This is the machine-independent implementation of broadcast. The algorithm is:
-   
-   Algorithm: MPI_Bcast
-
-   For short messages, we use a binomial tree algorithm. 
-   Cost = lgp.alpha + n.lgp.beta
-
-   For long messages, we do a scatter followed by an allgather. 
-   We first scatter the buffer using a binomial tree algorithm. This costs
-   lgp.alpha + n.((p-1)/p).beta
-   If the datatype is contiguous and the communicator is homogeneous,
-   we treat the data as bytes and divide (scatter) it among processes
-   by using ceiling division. For the noncontiguous or heterogeneous
-   cases, we first pack the data into a temporary buffer by using
-   MPI_Pack, scatter it as bytes, and unpack it after the allgather.
-
-   For the allgather, we use a recursive doubling algorithm for 
-   medium-size messages and power-of-two number of processes. This
-   takes lgp steps. In each step pairs of processes exchange all the
-   data they have (we take care of non-power-of-two situations). This
-   costs approximately lgp.alpha + n.((p-1)/p).beta. (Approximately
-   because it may be slightly more in the non-power-of-two case, but
-   it's still a logarithmic algorithm.) Therefore, for long messages
-   Total Cost = 2.lgp.alpha + 2.n.((p-1)/p).beta
-
-   Note that this algorithm has twice the latency as the tree algorithm
-   we use for short messages, but requires lower bandwidth: 2.n.beta
-   versus n.lgp.beta. Therefore, for long messages and when lgp > 2,
-   this algorithm will perform better.
-
-   For long messages and for medium-size messages and non-power-of-two 
-   processes, we use a ring algorithm for the allgather, which 
-   takes p-1 steps, because it performs better than recursive doubling.
-   Total Cost = (lgp+p-1).alpha + 2.n.((p-1)/p).beta
-
-   Possible improvements: 
-   For clusters of SMPs, we may want to do something differently to
-   take advantage of shared memory on each node.
-
-   End Algorithm: MPI_Bcast
-*/
-
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bcast_intra
 #undef FCNAME
@@ -263,41 +221,20 @@ int MPIR_Bcast_intra (
     if (nbytes == 0)
         goto fn_exit; /* nothing to do */
 
-    if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) || (comm_size < MPIR_CVAR_BCAST_MIN_PROCS))
-    {
+    if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) || (comm_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
         mpi_errno = MPIR_Bcast_intra_binomial(buffer, count, datatype, root, comm_ptr, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+    } else /* (nbytes >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_size >= MPIR_CVAR_BCAST_MIN_PROCS) */ {
+        if ((nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE) && (MPIU_is_pof2(comm_size, NULL))) {
+            mpi_errno = MPIR_Bcast_intra_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+        } else /* (nbytes >= MPIR_CVAR_BCAST_LONG_MSG_SIZE) || !(comm_size_is_pof2) */ {
+            mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
         }
     }
-    else /* (nbytes >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_size >= MPIR_CVAR_BCAST_MIN_PROCS) */
-    {
-        if ((nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE) && (MPIU_is_pof2(comm_size, NULL)))
-        {
-            mpi_errno = MPIR_Bcast_intra_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
-        }
-        else /* (nbytes >= MPIR_CVAR_BCAST_LONG_MSG_SIZE) || !(comm_size_is_pof2) */
-        {
-            /* We want the ring algorithm whether or not we have a
-               topologically aware communicator.  Doing inter/intra-node
-               communication phases breaks the pipelining of the algorithm.  */
-            mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
-        }
+    if (mpi_errno) {
+        /* for communication errors, just record the error but continue */
+        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
 
 fn_exit:
@@ -311,7 +248,6 @@ fn_exit:
     /* --END ERROR HANDLING-- */
     return mpi_errno;
 }
-
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bcast_inter

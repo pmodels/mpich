@@ -118,53 +118,6 @@ int MPI_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
 #undef MPI_Alltoall
 #define MPI_Alltoall PMPI_Alltoall
 
-/* This is the machine-independent implementation of alltoall. The algorithm is:
-   
-   Algorithm: MPI_Alltoall
-
-   We use four algorithms for alltoall. For short messages and
-   (comm_size >= 8), we use the algorithm by Jehoshua Bruck et al,
-   IEEE TPDS, Nov. 1997. It is a store-and-forward algorithm that
-   takes lgp steps. Because of the extra communication, the bandwidth
-   requirement is (n/2).lgp.beta.
-
-   Cost = lgp.alpha + (n/2).lgp.beta
-
-   where n is the total amount of data a process needs to send to all
-   other processes.
-
-   For medium size messages and (short messages for comm_size < 8), we
-   use an algorithm that posts all irecvs and isends and then does a
-   waitall. We scatter the order of sources and destinations among the
-   processes, so that all processes don't try to send/recv to/from the
-   same process at the same time.
-
-   *** Modification: We post only a small number of isends and irecvs 
-   at a time and wait on them as suggested by Tony Ladd. ***
-   *** See comments below about an additional modification that 
-   we may want to consider ***
-
-   For long messages and power-of-two number of processes, we use a
-   pairwise exchange algorithm, which takes p-1 steps. We
-   calculate the pairs by using an exclusive-or algorithm:
-           for (i=1; i<comm_size; i++)
-               dest = rank ^ i;
-   This algorithm doesn't work if the number of processes is not a power of
-   two. For a non-power-of-two number of processes, we use an
-   algorithm in which, in step i, each process  receives from (rank-i)
-   and sends to (rank+i). 
-
-   Cost = (p-1).alpha + n.beta
-
-   where n is the total amount of data a process needs to send to all
-   other processes.
-
-   Possible improvements: 
-
-   End Algorithm: MPI_Alltoall
-*/
-
-
 /* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Alltoall_intra
@@ -194,37 +147,12 @@ int MPIR_Alltoall_intra(
     nbytes = sendtype_size * sendcount;
 
     if (sendbuf == MPI_IN_PLACE) {
-        /* We use pair-wise sendrecv_replace in order to conserve memory usage,
-         * which is keeping with the spirit of the MPI-2.2 Standard.  But
-         * because of this approach all processes must agree on the global
-         * schedule of sendrecv_replace operations to avoid deadlock.
-         *
-         * Note that this is not an especially efficient algorithm in terms of
-         * time and there will be multiple repeated malloc/free's rather than
-         * maintaining a single buffer across the whole loop.  Something like
-         * MADRE is probably the best solution for the MPI_IN_PLACE scenario. */
         mpi_errno = MPIR_Alltoall_intra_pairwise_sendrecv_replace (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
-    }
-    else if ((nbytes <= MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE) && (comm_size >= 8)) {
-
-        /* use the indexing algorithm by Jehoshua Bruck et al,
-         * IEEE TPDS, Nov. 97 */ 
+    } else if ((nbytes <= MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE) && (comm_size >= 8)) {
         mpi_errno = MPIR_Alltoall_intra_brucks (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
-
-    }
-
-    else if (nbytes <= MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE) {
-        /* Medium-size message. Use isend/irecv with scattered
-           destinations. Use Tony Ladd's modification to post only
-           a small number of isends/irecvs at a time. */
+    } else if (nbytes <= MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE) {
         mpi_errno = MPIR_Alltoall_intra_scattered (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
-    }
-
-    else {
-        /* Long message. If comm_size is a power-of-two, do a pairwise
-           exchange using exclusive-or to create pairs. Else send to
-           rank+i, receive from rank-i. */
-
+    } else {
         mpi_errno = MPIR_Alltoall_intra_pairwise(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
     }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

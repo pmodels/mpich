@@ -137,23 +137,13 @@ int MPIR_Iallgather_intra_sched(const void *sendbuf, int sendcount, MPI_Datatype
     tot_bytes = (MPI_Aint)recvcount * comm_size * recvtype_size;
 
     if ((tot_bytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
-        /* Short or medium size message and power-of-two no. of processes. Use
-         * recursive doubling algorithm */
         mpi_errno = MPIR_Iallgather_intra_recursive_doubling_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else if (tot_bytes < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
-        /* Short message and non-power-of-two no. of processes. Use
-         * Bruck algorithm (see description above). */
+    } else if (tot_bytes < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
         mpi_errno = MPIR_Iallgather_intra_brucks_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else {
-        /* long message or medium-size message and non-power-of-two no. of
-         * processes. use ring algorithm. */
+    } else {
         mpi_errno = MPIR_Iallgather_intra_ring_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;

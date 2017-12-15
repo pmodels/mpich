@@ -7,8 +7,13 @@
 #include "mpiimpl.h"
 #include "coll_util.h"
 
-/* A pairwise exchange algorithm for MPI_Ireduce_scatter.  Requires a
- * commutative op and is intended for use with large messages. */
+/* Algorithm: Pairwise Exchange
+ *
+ * For commutative operations and very long messages we use This is a pairwise
+ * exchange algorithm similar to the one used in MPI_Alltoall. At step i, each
+ * process sends n/p amount of data to (rank+i) and receives n/p amount of data
+ * from (rank-i).
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ireduce_scatter_intra_pairwise_sched
 #undef FCNAME

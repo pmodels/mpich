@@ -26,6 +26,20 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+/* Algorithm: MPI_Gather
+ *
+ * We use a binomial tree algorithm for both short and long messages. At nodes
+ * other than leaf nodes we need to allocate a temporary buffer to store the
+ * incoming message. If the root is not rank 0, for very small messages, we
+ * pack it into a temporary contiguous buffer and reorder it to be placed in
+ * the right order. For small (but not very small) messages, we use a derived
+ * datatype to unpack the incoming data into non-contiguous buffers in the
+ * right order. In the heterogeneous case we first pack the buffers by using
+ * MPI_Pack and then do the gather.
+ *
+ * Cost = lgp.alpha + n.((p-1)/p).beta where n is the total size of the data
+ * gathered at the root.
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Gather_intra_binomial
 #undef FCNAME

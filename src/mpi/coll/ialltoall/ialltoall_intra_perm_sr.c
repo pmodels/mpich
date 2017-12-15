@@ -7,11 +7,14 @@
 #include "mpiimpl.h"
 #include "coll_util.h"
 
-/* Send/recv to permuted destinations/sources, in batches based on Tony Ladd's
+/* Algorithm: Batched Sendrecv
+ *
+ * Send/recv to permuted destinations/sources, in batches based on Tony Ladd's
  * suggestion.  Permuting the sources helps to avoid overloading a single source
  * or destination all at once.
  *
- * We use this as our medium-sized-message algorithm. */
+ * We use this as our medium-sized-message algorithm.
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ialltoall_intra_perm_sr_sched
 #undef FCNAME
