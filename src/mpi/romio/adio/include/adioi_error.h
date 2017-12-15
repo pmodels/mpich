@@ -71,6 +71,7 @@ if (count*datatype_size != (ADIO_Offset)(unsigned)count*(ADIO_Offset)datatype_si
                                               "**dtypenull", 0);    \
         }                                                           \
         else {                                                      \
+            error_code = MPI_SUCCESS;                               \
             MPIO_DATATYPE_ISCOMMITTED(datatype, error_code);        \
         }                                                           \
         if (error_code != MPI_SUCCESS) {                            \
