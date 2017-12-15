@@ -712,9 +712,9 @@ extern void MPIR_T_PVAR_REGISTER_impl(
     } while (0)
 #define MPIR_T_PVAR_TIMER_END_VAR_impl(ptr_) \
     do { \
-        MPID_Time_t tmp; \
-        MPID_Wtime(&tmp); \
-        MPID_Wtime_acc(&((ptr_)->curstart), &tmp, &((ptr_)->total)); \
+        MPID_Time_t tmp_; \
+        MPID_Wtime(&tmp_); \
+        MPID_Wtime_acc(&((ptr_)->curstart), &tmp_, &((ptr_)->total)); \
     } while (0)
 
 #define MPIR_T_PVAR_TIMER_INIT_impl(name_) \
