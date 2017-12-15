@@ -177,6 +177,18 @@ static inline int MPID_Progress_test(void)
 }
 #define MPID_Progress_poke()		     MPIDI_CH3_Progress_poke()
 
+/*
+ * Device level MPI wait/test functions
+ */
+#define MPID_Wait MPIR_Wait_impl
+#define MPID_Waitall MPIR_Waitall_imp
+#define MPID_Waitany MPIR_Waitany_impl
+#define MPID_Waitsome MPIR_Waitsome_impl
+#define MPID_Test MPIR_Test_impl
+#define MPID_Testall MPIR_Testall_impl
+#define MPID_Testany MPIR_Testany_impl
+#define MPID_Testsome MPIR_Testsome_impl
+
 /* Dynamic process support */
 int MPIDI_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
                              MPIDI_Gpid local_gpids[], int *singlePG );
