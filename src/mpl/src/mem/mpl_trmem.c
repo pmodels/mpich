@@ -199,14 +199,10 @@ static void addrToHex(void *addr, char string[MAX_ADDRESS_CHARS])
 
 static void init_classes() {
     int i;
+    MPL_memory_allocation_t _template = { 0, 0, 0, 0, };
 
     for (i = 0; i < MPL_MAX_MEMORY_CLASS; i++) {
-        allocation_classes[i] = (MPL_memory_allocation_t) {
-            .max_allocated_mem = 0,
-            .curr_allocated_mem = 0,
-            .total_allocated_mem = 0,
-            .num_allocations = 0
-        };
+        allocation_classes[i] = _template;
     }
 
     classes_initialized = 1;

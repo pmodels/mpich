@@ -14,6 +14,13 @@
 
 #include "mplconfig.h"
 
+/* Allocate mem for references within the handle */
+/* Returns 0 on success, -1 on error */
+#define MPL_shm_hnd_ref_alloc(hnd)(                               \
+    ((hnd)->ghnd = (MPLI_shm_ghnd_t)                               \
+                    MPL_malloc(MPLI_SHM_GHND_SZ, MPL_MEM_SHM)) ? 0 : -1 \
+)
+
 #ifdef MPL_USE_SYSV_SHM
 #include "mpl_shm_sysv.h"
 #elif defined MPL_USE_MMAP_SHM
@@ -54,12 +61,6 @@
 #define MPLI_shm_lhnd_is_valid(hnd) (((hnd)->lhnd != MPLI_SHM_LHND_INVALID))
 #define MPLI_shm_lhnd_is_init(hnd)  1
 
-/* Allocate mem for references within the handle */
-/* Returns 0 on success, -1 on error */
-#define MPL_shm_hnd_ref_alloc(hnd)(                               \
-    ((hnd)->ghnd = (MPLI_shm_ghnd_t)                               \
-                    MPL_malloc(MPLI_SHM_GHND_SZ, MPL_MEM_SHM)) ? 0 : -1 \
-)
 
 
 /* These macros are the setters/getters for the shm handle */
