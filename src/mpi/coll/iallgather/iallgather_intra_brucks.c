@@ -6,6 +6,15 @@
 
 #include "mpiimpl.h"
 
+/* Algorithm: Bruck's
+ *
+ * This algorithm is from the IEEE TPDS Nov 97 paper by Jehoshua Bruck
+ * et al.  It is a variant of the disemmination algorithm for barrier.
+ * It takes ceiling(lg p) steps.
+ *
+ * Cost = lgp.alpha + n.((p-1)/p).beta
+ * where n is total size of data gathered on each process.
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Iallgather_intra_brucks_sched
 #undef FCNAME

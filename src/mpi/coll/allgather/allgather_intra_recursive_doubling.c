@@ -7,6 +7,18 @@
 
 #include "mpiimpl.h"
 
+/*
+ * Recursive Doubling Algorithm:
+ *
+ * Restrictions: power-of-two no. of processes
+ *
+ * Cost = lgp.alpha + n.((p-1)/p).beta
+ *
+ * TODO: On TCP, we may want to use recursive doubling instead of the
+ * Bruck's algorithm in all cases because of the pairwise-exchange
+ * property of recursive doubling (see Benson et al paper in Euro
+ * PVM/MPI 2003).
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allgather_intra_recursive_doubling
 #undef FCNAME

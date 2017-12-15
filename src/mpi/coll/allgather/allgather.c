@@ -100,51 +100,6 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, voi
 #undef MPI_Allgather
 #define MPI_Allgather PMPI_Allgather
 
-/* This is the machine-independent implementation of allgather. The algorithm is:
-   
-   Algorithm: MPI_Allgather
-
-   For short messages and non-power-of-two no. of processes, we use
-   the algorithm from the Jehoshua Bruck et al IEEE TPDS Nov 97
-   paper. It is a variant of the disemmination algorithm for
-   barrier. It takes ceiling(lg p) steps.
-
-   Cost = lgp.alpha + n.((p-1)/p).beta
-   where n is total size of data gathered on each process.
-
-   For short or medium-size messages and power-of-two no. of
-   processes, we use the recursive doubling algorithm.
-
-   Cost = lgp.alpha + n.((p-1)/p).beta
-
-   TODO: On TCP, we may want to use recursive doubling instead of the Bruck
-   algorithm in all cases because of the pairwise-exchange property of
-   recursive doubling (see Benson et al paper in Euro PVM/MPI
-   2003).
-
-   It is interesting to note that either of the above algorithms for
-   MPI_Allgather has the same cost as the tree algorithm for MPI_Gather!
-
-   For long messages or medium-size messages and non-power-of-two
-   no. of processes, we use a ring algorithm. In the first step, each
-   process i sends its contribution to process i+1 and receives
-   the contribution from process i-1 (with wrap-around). From the
-   second step onwards, each process i forwards to process i+1 the
-   data it received from process i-1 in the previous step. This takes
-   a total of p-1 steps.
-
-   Cost = (p-1).alpha + n.((p-1)/p).beta
-
-   We use this algorithm instead of recursive doubling for long
-   messages because we find that this communication pattern (nearest
-   neighbor) performs twice as fast as recursive doubling for long
-   messages (on Myrinet and IBM SP).
-
-   Possible improvements: 
-
-   End Algorithm: MPI_Allgather
-*/
-
 /* not declared static because a machine-specific function may call this 
    one in some cases */
 #undef FUNCNAME
@@ -176,15 +131,10 @@ int MPIR_Allgather_intra (
 
     tot_bytes = (MPI_Aint)recvcount * comm_size * type_size;
     if ((tot_bytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
-        /* Short or medium size message and power-of-two no. of processes. Use
-         * recursive doubling algorithm */
         mpi_errno = MPIR_Allgather_intra_recursive_doubling (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
     } else if (tot_bytes < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
-        /* Short message and non-power-of-two no. of processes. Use
-         * Bruck algorithm (see description above). */
         mpi_errno = MPIR_Allgather_intra_brucks (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
-    } else {  /* long message or medium-size message and non-power-of-two
-             * no. of processes. use ring algorithm. */
+    } else {
         mpi_errno = MPIR_Allgather_intra_ring (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
     }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

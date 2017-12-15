@@ -75,27 +75,7 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void 
 #undef MPI_Gatherv
 #define MPI_Gatherv PMPI_Gatherv
 
-/* This is the machine-independent implementation of gatherv. The algorithm is:
-   
-   Algorithm: MPI_Gatherv
-
-   Since the array of recvcounts is valid only on the root, we cannot
-   do a tree algorithm without first communicating the recvcounts to
-   other processes. Therefore, we simply use a linear algorithm for the
-   gather, which takes (p-1) steps versus lgp steps for the tree
-   algorithm. The bandwidth requirement is the same for both algorithms.
-
-   Cost = (p-1).alpha + n.((p-1)/p).beta
-
-   Possible improvements: 
-
-   End Algorithm: MPI_Gatherv
-*/
-
 /* not declared static because it is called in intercommunicator allgatherv */
-/* MPIR_Gatherv performs an gatherv using point-to-point messages.
-   This is intended to be used by device-specific implementations of
-   gatherv. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Gatherv
 #undef FCNAME

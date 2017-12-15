@@ -6,6 +6,14 @@
 
 #include "mpiimpl.h"
 
+/* Algorithm: Short Linear Gather
+ *
+ * This linear gather algorithm is tuned for short messages. The remote group
+ * does a local intracommunicator gather to rank 0. Rank 0 then sends data to
+ * root.
+ *
+ * Cost: (lgp+1).alpha + n.((p-1)/p).beta + n.beta
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Igather_inter_short_sched
 #undef FCNAME

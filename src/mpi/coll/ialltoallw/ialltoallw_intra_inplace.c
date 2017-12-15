@@ -6,6 +6,18 @@
 
 #include "mpiimpl.h"
 
+/* Algorithm: Inplace Alltoallw
+ *
+ * We use pair-wise sendrecv_replace in order to conserve memory usage, which
+ * is keeping with the spirit of the MPI-2.2 Standard.  But because of this
+ * approach all processes must agree on the global schedule of sendrecv_replace
+ * operations to avoid deadlock.
+ *
+ * Note that this is not an especially efficient algorithm in terms of time and
+ * there will be multiple repeated malloc/free's rather than maintaining a
+ * single buffer across the whole loop.  Something like MADRE is probably the
+ * best solution for the MPI_IN_PLACE scenario.
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ialltoallw_intra_inplace_sched
 #undef FCNAME

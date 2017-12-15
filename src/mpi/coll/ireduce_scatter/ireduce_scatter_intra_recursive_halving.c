@@ -7,8 +7,34 @@
 #include "mpiimpl.h"
 #include "coll_util.h"
 
-/* A recursive halving MPI_Ireduce_scatter algorithm.  Requires that op is
- * commutative.  Typically yields better performance for shorter messages. */
+/* Algorithm: Recursive Halving
+ *
+ * If the operation is commutative, for short and medium-size messages, we use
+ * a recursive-halving algorithm in which the first p/2 processes send the
+ * second n/2 data to their counterparts in the other half and receive the
+ * first n/2 data from them. This procedure continues recursively, halving the
+ * data communicated at each step, for a total of lgp steps. If the number of
+ * processes is not a power-of-two, we convert it to the nearest lower
+ * power-of-two by having the first few even-numbered processes send their data
+ * to the neighboring odd-numbered process at (rank+1). Those odd-numbered
+ * processes compute the result for their left neighbor as well in the
+ * recursive halving algorithm, and then at  the end send the result back to
+ * the processes that didn't participate.
+ *
+ * Therefore, if p is a power-of-two:
+ *
+ * Cost = lgp.alpha + n.((p-1)/p).beta + n.((p-1)/p).gamma
+ *
+ * If p is not a power-of-two:
+ *
+ * Cost = (floor(lgp)+2).alpha + n.(1+(p-1+n)/p).beta + n.(1+(p-1)/p).gamma
+ *
+ * The above cost in the non power-of-two case is approximate because there is
+ * some imbalance in the amount of work each process does because some
+ * processes do the work of their neighbors as well.
+ *
+ * Cost = (p-1).alpha + n.((p-1)/p).beta + n.((p-1)/p).gamma
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ireduce_scatter_intra_recursive_halving_sched
 #undef FCNAME

@@ -136,28 +136,14 @@ int MPIR_Ialltoall_intra_sched(const void *sendbuf, int sendcount, MPI_Datatype 
 
     if (sendbuf == MPI_IN_PLACE) {
         mpi_errno = MPIR_Ialltoall_intra_inplace_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else if ((nbytes <= MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE) && (comm_size >= 8)) {
-        /* use the indexing algorithm by Jehoshua Bruck et al,
-         * IEEE TPDS, Nov. 97 */
+    } else if ((nbytes <= MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE) && (comm_size >= 8)) {
         mpi_errno = MPIR_Ialltoall_intra_brucks_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else if (nbytes <= MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE) {
-        /* Medium-size message. Use isend/irecv with scattered
-           destinations. Use Tony Ladd's modification to post only
-           a small number of isends/irecvs at a time. */
+    } else if (nbytes <= MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE) {
         mpi_errno = MPIR_Ialltoall_intra_perm_sr_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else {
-        /* Long message. If comm_size is a power-of-two, do a pairwise
-           exchange using exclusive-or to create pairs. Else send to
-           rank+i, receive from rank-i. */
+    } else {
         mpi_errno = MPIR_Ialltoall_intra_pairwise_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;

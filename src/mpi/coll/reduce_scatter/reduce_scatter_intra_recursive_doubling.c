@@ -13,7 +13,17 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
-/* not declared static because a machine-specific function may call this one in some cases */
+/* Algorithm: Recursive Doubling
+ *
+ * Restrictions: Suitible for noncommutative and non-pof2 or block irregular.
+ *
+ * We use a recursive doubling algorithm, which
+ * takes lgp steps. At step 1, processes exchange (n-n/p) amount of
+ * data; at step 2, (n-2n/p) amount of data; at step 3, (n-4n/p)
+ * amount of data, and so forth.
+ *
+ * Cost = lgp.alpha + n.(lgp-(p-1)/p).beta + n.(lgp-(p-1)/p).gamma
+ */
 int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recvbuf, const int recvcounts[],
                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {

@@ -7,9 +7,23 @@
 #include "mpiimpl.h"
 #include "coll_util.h"
 
-/* Pairwise exchanges for long messages. If comm_size is a power-of-two, do a
- * pairwise exchange using exclusive-or to create pairs. Else send to rank+i,
- * receive from rank-i. */
+/* Algorithm: Pairwise Exchange
+ *
+ * This pairwise exchange algorithm takes p-1 steps.
+ *
+ * We calculate the pairs by using an exclusive-or algorithm:
+ *         for (i=1; i<comm_size; i++)
+ *             dest = rank ^ i;
+ * This algorithm doesn't work if the number of processes is not a power of
+ * two. For a non-power-of-two number of processes, we use an
+ * algorithm in which, in step i, each process  receives from (rank-i)
+ * and sends to (rank+i).
+ *
+ * Cost = (p-1).alpha + n.beta
+ *
+ * where n is the total amount of data a process needs to send to all
+ * other processes.
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ialltoall_intra_pairwise_sched
 #undef FCNAME

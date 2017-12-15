@@ -7,6 +7,19 @@
 #include "mpiimpl.h"
 #include "coll_util.h"
 
+/* Algorithm: Bruck's Algorithm
+ *
+ * This algorithm is from the IEEE TPDS Nov 97 paper by Jehoshua Bruck et al.
+ *
+ * It is a store-and-forward algorithm that
+ * takes lgp steps. Because of the extra communication, the bandwidth
+ * requirement is (n/2).lgp.beta.
+ *
+ * Cost = lgp.alpha + (n/2).lgp.beta
+ *
+ * where n is the total amount of data a process needs to send to all
+ * other processes.
+ */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ialltoall_intra_brucks_sched
 #undef FCNAME
