@@ -135,9 +135,9 @@ static const char *allocation_class_strings[] = {
 #define TR_THREAD_CS_ENTER                                              \
     do {                                                                \
         if (TR_is_threaded) {                                           \
-            int err;                                                    \
-            MPL_thread_mutex_lock(&memalloc_mutex, &err);               \
-            if (err)                                                    \
+            int err_;                                                   \
+            MPL_thread_mutex_lock(&memalloc_mutex, &err_);              \
+            if (err_)                                                   \
                 MPL_error_printf("Error acquiring memalloc mutex lock\n"); \
         }                                                               \
     } while (0)
@@ -145,9 +145,9 @@ static const char *allocation_class_strings[] = {
 #define TR_THREAD_CS_EXIT                                               \
     do {                                                                \
         if (TR_is_threaded) {                                           \
-            int err;                                                    \
-            MPL_thread_mutex_unlock(&memalloc_mutex, &err);             \
-            if (err)                                                    \
+            int err_;                                                   \
+            MPL_thread_mutex_unlock(&memalloc_mutex, &err_);            \
+            if (err_)                                                   \
                 MPL_error_printf("Error releasing memalloc mutex lock\n"); \
         }                                                               \
     } while (0)
