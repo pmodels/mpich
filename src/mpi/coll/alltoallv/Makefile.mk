@@ -6,6 +6,7 @@ mpi_sources +=                     		\
 	src/mpi/coll/alltoallv/alltoallv.c
 
 mpi_core_sources +=												\
+	src/mpi/coll/alltoallv/alltoallv_nb.c	\
 	src/mpi/coll/alltoallv/alltoallv_intra_pairwise_sendrecv_replace.c	\
 	src/mpi/coll/alltoallv/alltoallv_intra_scattered.c					\
 	src/mpi/coll/alltoallv/alltoallv_inter_generic.c

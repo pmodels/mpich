@@ -22,6 +22,7 @@ cvars:
         Variable to select allgather algorithm
         auto - Internal algorithm selection
         generic - Force generic algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_SCAN_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -298,6 +299,9 @@ int MPIR_Scan(
     switch (MPIR_Scan_intra_algo_choice) {
         case MPIR_SCAN_INTRA_ALGO_GENERIC:
             mpi_errno = MPIR_Scan_intra_generic(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+            break;
+        case MPIR_SCAN_INTRA_ALGO_NB:
+            mpi_errno = MPIR_Scan_nb(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
         case MPIR_SCAN_INTRA_ALGO_AUTO:
             MPL_FALLTHROUGH;

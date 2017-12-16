@@ -65,6 +65,7 @@ cvars:
         auto - Internal algorithm selection
         recursive_doubling - Force recursive doubling algorithm
         redscat_allgather - Force redscat allgather algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_ALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -77,6 +78,7 @@ cvars:
         Variable to select allreduce algorithm
         auto - Internal algorithm selection
         generic - Force generic algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -387,6 +389,10 @@ int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
                 mpi_errno = MPIR_Allreduce_intra_reduce_scatter_allgather(sendbuf, recvbuf, count,
                             datatype, op, comm_ptr, errflag);
                 break;
+            case MPIR_ALLREDUCE_INTRA_ALGO_NB:
+                mpi_errno = MPIR_Allreduce_nb(sendbuf, recvbuf, count,
+                            datatype, op, comm_ptr, errflag);
+                break;
             case MPIR_ALLREDUCE_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
@@ -401,6 +407,10 @@ int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
                   mpi_errno = MPIR_Allreduce_inter_generic(sendbuf, recvbuf, count, datatype, op,
                               comm_ptr, errflag);
                   break;
+            case MPIR_ALLREDUCE_INTER_ALGO_NB:
+                mpi_errno = MPIR_Allreduce_nb(sendbuf, recvbuf, count,
+                            datatype, op, comm_ptr, errflag);
+                break;
              case MPIR_ALLREDUCE_INTER_ALGO_AUTO:
                  MPL_FALLTHROUGH;
              default:

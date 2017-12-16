@@ -31,6 +31,7 @@ cvars:
         recursive_doubling - Force recursive doubling algorithm
         pairwise - Force pairwise algorithm
         recursive_halving - Force recursive halving algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -43,6 +44,7 @@ cvars:
         Variable to select reduce_scatter_block algorithm
         auto - Internal algorithm selection
         generic - Force generic algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_REDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -300,6 +302,10 @@ int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
                 mpi_errno = MPIR_Reduce_scatter_block_intra_recursive_doubling(sendbuf, recvbuf,
                             recvcount, datatype, op, comm_ptr, errflag);
                 break;
+            case MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_NB:
+                mpi_errno = MPIR_Reduce_scatter_block_nb(sendbuf, recvbuf,
+                            recvcount, datatype, op, comm_ptr, errflag);
+                break;
             case MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
@@ -313,6 +319,10 @@ int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
             case MPIR_REDUCE_SCATTER_BLOCK_INTER_ALGO_GENERIC:
                 mpi_errno = MPIR_Reduce_scatter_block_inter_generic(sendbuf, recvbuf, recvcount,
                           datatype, op, comm_ptr, errflag);
+                break;
+            case MPIR_REDUCE_SCATTER_BLOCK_INTER_ALGO_NB:
+                mpi_errno = MPIR_Reduce_scatter_block_nb(sendbuf, recvbuf,
+                            recvcount, datatype, op, comm_ptr, errflag);
                 break;
             case MPIR_REDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;

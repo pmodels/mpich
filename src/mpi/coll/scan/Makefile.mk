@@ -6,4 +6,5 @@ mpi_sources +=                     		\
 	src/mpi/coll/scan/scan.c
 
 mpi_core_sources +=									\
+	src/mpi/coll/scan/scan_nb.c \
 	src/mpi/coll/scan/scan_intra_generic.c

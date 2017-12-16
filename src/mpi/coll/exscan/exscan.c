@@ -22,6 +22,7 @@ cvars:
         Variable to select allgather algorithm
         auto - Internal algorithm selection
         recursive_doubling - Force recursive doubling algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_EXSCAN_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -132,6 +133,9 @@ int MPIR_Exscan (
     switch (MPIR_Exscan_intra_algo_choice) {
         case MPIR_EXSCAN_INTRA_ALGO_RECURSIVE_DOUBLING:
             mpi_errno = MPIR_Exscan_intra_recursive_doubling (sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+            break;
+        case MPIR_EXSCAN_INTRA_ALGO_NB:
+            mpi_errno = MPIR_Exscan_nb(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
         case MPIR_EXSCAN_INTRA_ALGO_AUTO:
             MPL_FALLTHROUGH;

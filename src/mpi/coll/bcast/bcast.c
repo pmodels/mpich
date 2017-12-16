@@ -106,6 +106,7 @@ cvars:
         binomial - Force Binomial Tree
         scatter_doubling_allgather - Force Scatter Doubling
         scatter_ring_allgather - Force Scatter Ring
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_BCAST_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -118,6 +119,7 @@ cvars:
         Variable to select bcast algorithm
         auto - Internal algorithm selection
         generic - Force generic algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_BCAST_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -560,6 +562,9 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
             case MPIR_BCAST_INTRA_ALGO_SCATTER_RING_ALLGATHER:
                 mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
                 break;
+            case MPIR_BCAST_INTRA_ALGO_NB:
+                mpi_errno = MPIR_Bcast_nb(buffer, count, datatype, root, comm_ptr, errflag);
+                break;
             case MPIR_BCAST_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
@@ -571,6 +576,9 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
         switch (MPIR_Bcast_inter_algo_choice) {
             case MPIR_BCAST_INTER_ALGO_GENERIC:
                 mpi_errno = MPIR_Bcast_inter_generic( buffer, count, datatype, root, comm_ptr, errflag );
+                break;
+            case MPIR_BCAST_INTER_ALGO_NB:
+                mpi_errno = MPIR_Bcast_nb(buffer, count, datatype, root, comm_ptr, errflag);
                 break;
             case MPIR_BCAST_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
