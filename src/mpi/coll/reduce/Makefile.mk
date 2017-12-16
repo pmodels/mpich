@@ -9,5 +9,6 @@ mpi_core_sources +=										\
 	src/mpi/coll/reduce/reduce_nb.c				\
 	src/mpi/coll/reduce/reduce_intra_binomial.c				\
 	src/mpi/coll/reduce/reduce_intra_redscat_gather.c			\
+	src/mpi/coll/reduce/reduce_intra_smp.c			\
 	src/mpi/coll/reduce/reduce_inter_generic.c
 

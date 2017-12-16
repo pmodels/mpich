@@ -204,80 +204,35 @@ int MPIR_Allreduce_intra (
     int is_homogeneous;
     int rc;
 #endif
-    MPI_Aint type_size;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int pof2;
+    int is_commutative;
     int nbytes = 0;
-    int is_commutative, pof2;
-    
-    if (count == 0) goto fn_exit;
+    MPI_Aint type_size;
 
-    is_commutative = MPIR_Op_is_commutative(op);
-
-    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_ALLREDUCE) {
-    /* is the op commutative? We do SMP optimizations only if it is. */
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE ? type_size*count : 0;
-    if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative &&
-        nbytes <= MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE) {
-        /* on each node, do a reduce to the local root */ 
-        if (comm_ptr->node_comm != NULL) {
-            /* take care of the MPI_IN_PLACE case. For reduce, 
-               MPI_IN_PLACE is specified only on the root; 
-               for allreduce it is specified on all processes. */
+    is_commutative = MPIR_Op_is_commutative(op);
 
-            if ((sendbuf == MPI_IN_PLACE) && (comm_ptr->node_comm->rank != 0)) {
-                /* IN_PLACE and not root of reduce. Data supplied to this
-                   allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
-			
-                mpi_errno = MPID_Reduce(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm, errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
-            } else {
-                mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm, errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
-            }
-        } else {
-            /* only one process on the node. copy sendbuf to recvbuf */
-            if (sendbuf != MPI_IN_PLACE) {
-                mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            }
+    if (count == 0) goto fn_exit;
+
+    /* is the op commutative? We do SMP optimizations only if it is. */
+    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES &&
+            MPIR_CVAR_ENABLE_SMP_ALLREDUCE &&
+            MPIR_Comm_is_node_aware(comm_ptr) &&
+            is_commutative &&
+            nbytes <= MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE) {
+        mpi_errno = MPIR_Allreduce_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
 
-        /* now do an IN_PLACE allreduce among the local roots of all nodes */
-        if (comm_ptr->node_roots_comm != NULL) {
-            mpi_errno = MPID_Allreduce(MPI_IN_PLACE, recvbuf, count, datatype, op, comm_ptr->node_roots_comm,
-                                       errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
-        }
-
-        /* now broadcast the result among local processes */
-        if (comm_ptr->node_comm != NULL) {
-            mpi_errno = MPID_Bcast(recvbuf, count, datatype, 0, comm_ptr->node_comm, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
-        }
         goto fn_exit;
-    }
     }
     
 #ifdef MPID_HAS_HETERO

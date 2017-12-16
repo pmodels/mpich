@@ -7,4 +7,5 @@ mpi_sources +=                                  \
 mpi_core_sources +=                             \
     src/mpi/coll/ireduce/ireduce_intra_binomial.c		\
     src/mpi/coll/ireduce/ireduce_intra_redscat_gather.c \
+    src/mpi/coll/ireduce/ireduce_intra_smp.c            \
     src/mpi/coll/ireduce/ireduce_inter_generic.c
