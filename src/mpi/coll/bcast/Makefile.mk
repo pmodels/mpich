@@ -11,6 +11,7 @@ mpi_core_sources +=											\
 	src/mpi/coll/bcast/bcast_intra_binomial.c						\
 	src/mpi/coll/bcast/bcast_intra_scatter_doubling_allgather.c	\
 	src/mpi/coll/bcast/bcast_intra_scatter_ring_allgather.c		\
+	src/mpi/coll/bcast/bcast_intra_smp.c						\
 	src/mpi/coll/bcast/bcast_inter_generic.c
 
 noinst_HEADERS += \

@@ -103,63 +103,6 @@ int MPI_Barrier(MPI_Comm comm) __attribute__((weak,alias("PMPI_Barrier")));
    This is an intracommunicator barrier only!
 */
 
-#undef FUNCNAME
-#define FUNCNAME barrier_smp_intra
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static int barrier_smp_intra(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
-{
-    int mpi_errno=MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
-
-    MPIR_Assert(MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BARRIER &&
-                MPIR_Comm_is_node_aware(comm_ptr));
-
-    /* do the intranode barrier on all nodes */
-    if (comm_ptr->node_comm != NULL)
-    {
-        mpi_errno = MPID_Barrier(comm_ptr->node_comm, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
-    }
-
-    /* do the barrier across roots of all nodes */
-    if (comm_ptr->node_roots_comm != NULL) {
-        mpi_errno = MPID_Barrier(comm_ptr->node_roots_comm, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
-    }
-
-    /* release the local processes on each node with a 1-byte
-       broadcast (0-byte broadcast just returns without doing
-       anything) */
-    if (comm_ptr->node_comm != NULL)
-    {
-        int i=0;
-        mpi_errno = MPID_Bcast(&i, 1, MPI_BYTE, 0, comm_ptr->node_comm, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
-    }
-
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
-        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    return mpi_errno;
-}
-
 /* not declared static because it is called in ch3_comm_connect/accept */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Barrier_intra
@@ -174,19 +117,14 @@ int MPIR_Barrier_intra( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
     /* Trivial barriers return immediately */
     if (size == 1) goto fn_exit;
 
-    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BARRIER &&
-        MPIR_Comm_is_node_aware(comm_ptr)) {
-        mpi_errno = barrier_smp_intra(comm_ptr, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
-        goto fn_exit;
+    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES &&
+            MPIR_CVAR_ENABLE_SMP_BARRIER &&
+            MPIR_Comm_is_node_aware(comm_ptr)) {
+        mpi_errno = MPIR_Barrier_intra_smp(comm_ptr, errflag);
+    } else {
+        mpi_errno = MPIR_Barrier_intra_recursive_doubling(comm_ptr, errflag);
     }
 
-    mpi_errno = MPIR_Barrier_intra_recursive_doubling(comm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
