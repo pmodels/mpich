@@ -24,6 +24,7 @@ cvars:
         auto - Internal algorithm selection
         pairwise_sendrecv_replace - Force pairwise_sendrecv_replace algorithm
         scattered - Force scattered algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_ALLTOALLV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -36,6 +37,7 @@ cvars:
         Variable to select alltoallv algorithm
         auto - Internal algorithm selection
         generic - Force generic algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_ALLTOALLV_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -189,6 +191,11 @@ int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispl
                                          sendtype, recvbuf, recvcounts,
                                          rdispls, recvtype, comm_ptr, errflag);
                 break;
+            case MPIR_ALLTOALLV_INTRA_ALGO_NB:
+                mpi_errno = MPIR_Alltoallv_nb(sendbuf, sendcounts, sdispls,
+                                         sendtype, recvbuf, recvcounts,
+                                         rdispls, recvtype, comm_ptr, errflag);
+                break;
             case MPIR_ALLTOALLV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
@@ -202,6 +209,11 @@ int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispl
         /* intercommunicator */
             case MPIR_ALLTOALLV_INTER_ALGO_GENERIC:
                 mpi_errno = MPIR_Alltoallv_inter_generic(sendbuf, sendcounts, sdispls,
+                                         sendtype, recvbuf, recvcounts,
+                                         rdispls, recvtype, comm_ptr, errflag);
+                break;
+            case MPIR_ALLTOALLV_INTER_ALGO_NB:
+                mpi_errno = MPIR_Alltoallv_nb(sendbuf, sendcounts, sdispls,
                                          sendtype, recvbuf, recvcounts,
                                          rdispls, recvtype, comm_ptr, errflag);
                 break;

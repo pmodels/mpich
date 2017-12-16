@@ -22,6 +22,7 @@ cvars:
         Variable to select gatherv algorithm
         auto - Internal algorithm selection
         linear - Force linear algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_GATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -34,6 +35,7 @@ cvars:
         Variable to select gatherv algorithm
         auto - Internal algorithm selection
         linear - Force linear algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_GATHERV_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -118,6 +120,9 @@ int MPIR_Gatherv (
             case MPIR_GATHERV_INTRA_ALGO_LINEAR:
                 mpi_errno = MPIR_Gatherv_linear (sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
                 break;
+            case MPIR_GATHERV_INTRA_ALGO_NB:
+                mpi_errno = MPIR_Gatherv_nb(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
+                break;
             case MPIR_GATHERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
@@ -128,6 +133,9 @@ int MPIR_Gatherv (
         switch (MPIR_Gatherv_inter_algo_choice) {
             case MPIR_GATHERV_INTER_ALGO_LINEAR:
                 mpi_errno = MPIR_Gatherv_linear (sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
+                break;
+            case MPIR_GATHERV_INTER_ALGO_NB:
+                mpi_errno = MPIR_Gatherv_nb(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_GATHERV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;

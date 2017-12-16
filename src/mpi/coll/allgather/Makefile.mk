@@ -6,6 +6,7 @@ mpi_sources +=                     		\
 	src/mpi/coll/allgather/allgather.c
 
 mpi_core_sources +=											\
+	src/mpi/coll/allgather/allgather_nb.c	\
 	src/mpi/coll/allgather/allgather_intra_recursive_doubling.c	\
 	src/mpi/coll/allgather/allgather_intra_brucks.c				\
 	src/mpi/coll/allgather/allgather_intra_ring.c					\

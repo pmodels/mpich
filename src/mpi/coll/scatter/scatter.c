@@ -33,6 +33,7 @@ cvars:
         Variable to select scatter algorithm
         auto - Internal algorithm selection
         binomial - Force binomial algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_SCATTER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -45,6 +46,7 @@ cvars:
         Variable to select scatter algorithm
         auto - Internal algorithm selection
         generic - Force generic algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_SCATTER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -170,6 +172,11 @@ int MPIR_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        recvbuf, recvcount, recvtype, root,
                                        comm_ptr, errflag);
                 break;
+            case MPIR_SCATTER_INTRA_ALGO_NB:
+                mpi_errno = MPIR_Scatter_nb(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcount, recvtype, root,
+                                       comm_ptr, errflag);
+                break;
             case MPIR_SCATTER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
@@ -183,6 +190,11 @@ int MPIR_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         switch (MPIR_Scatter_inter_algo_choice) {
             case MPIR_SCATTER_INTER_ALGO_GENERIC:
                 mpi_errno = MPIR_Scatter_inter_generic(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcount, recvtype, root,
+                                       comm_ptr, errflag);
+                break;
+            case MPIR_SCATTER_INTER_ALGO_NB:
+                mpi_errno = MPIR_Scatter_nb(sendbuf, sendcount, sendtype,
                                        recvbuf, recvcount, recvtype, root,
                                        comm_ptr, errflag);
                 break;

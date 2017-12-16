@@ -22,6 +22,7 @@ cvars:
         Variable to select scatterv algorithm
         auto - Internal algorithm selection
         linear - Force linear algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_SCATTERV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -34,6 +35,7 @@ cvars:
         Variable to select scatterv algorithm
         auto - Internal algorithm selection
         linear - Force linear algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_SCATTERV_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -109,6 +111,9 @@ int MPIR_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
             case MPIR_SCATTERV_INTRA_ALGO_LINEAR:
                 mpi_errno = MPIR_Scatterv_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
                 break;
+            case MPIR_SCATTERV_INTRA_ALGO_NB:
+                mpi_errno = MPIR_Scatterv_nb(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
+                break;
             case MPIR_SCATTERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
@@ -119,6 +124,9 @@ int MPIR_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
         switch (MPIR_Scatterv_inter_algo_choice) {
             case MPIR_SCATTERV_INTER_ALGO_LINEAR:
                 mpi_errno = MPIR_Scatterv_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
+                break;
+            case MPIR_SCATTERV_INTER_ALGO_NB:
+                mpi_errno = MPIR_Scatterv_nb(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_SCATTERV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;

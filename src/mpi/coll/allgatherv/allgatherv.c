@@ -36,6 +36,7 @@ cvars:
         brucks - Force brucks algorithm
         recursive_doubling - Force recursive doubling algorithm
         ring - Force ring algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_ALLGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -48,6 +49,7 @@ cvars:
         Variable to select allgatherv algorithm
         auto - Internal algorithm selection
         generic - Force generic algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_ALLGATHERV_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -254,6 +256,11 @@ int MPIR_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                           recvbuf, recvcounts, displs, recvtype,
                                           comm_ptr, errflag);
                 break;
+            case MPIR_ALLGATHERV_INTRA_ALGO_NB:
+                mpi_errno = MPIR_Allgatherv_nb(sendbuf, sendcount, sendtype,
+                                          recvbuf, recvcounts, displs, recvtype,
+                                          comm_ptr, errflag);
+                break;
             case MPIR_ALLGATHERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
@@ -267,6 +274,11 @@ int MPIR_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         switch (MPIR_Allgatherv_inter_algo_choice) {
             case MPIR_ALLGATHERV_INTER_ALGO_GENERIC:
                 mpi_errno = MPIR_Allgatherv_inter_generic(sendbuf, sendcount, sendtype,
+                                          recvbuf, recvcounts, displs, recvtype,
+                                          comm_ptr, errflag);
+                break;
+            case MPIR_ALLGATHERV_INTER_ALGO_NB:
+                mpi_errno = MPIR_Allgatherv_nb(sendbuf, sendcount, sendtype,
                                           recvbuf, recvcounts, displs, recvtype,
                                           comm_ptr, errflag);
                 break;

@@ -23,6 +23,7 @@ cvars:
         auto - Internal algorithm selection
         pairwise_sendrecv_replace - Force pairwise sendrecv replace algorithm
         scattered - Force scattered algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_ALLTOALLW_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -35,6 +36,7 @@ cvars:
         Variable to select alltoallw algorithm
         auto - Internal algorithm selection
         generic - Force generic algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_ALLTOALLW_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -180,6 +182,11 @@ int MPIR_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
                                          sdispls, sendtypes, recvbuf, recvcounts,
                                          rdispls, recvtypes, comm_ptr, errflag);
                 break;
+            case MPIR_ALLTOALLW_INTRA_ALGO_NB:
+                mpi_errno = MPIR_Alltoallw_nb(sendbuf, sendcounts,
+                                         sdispls, sendtypes, recvbuf, recvcounts,
+                                         rdispls, recvtypes, comm_ptr, errflag);
+                break;
             case MPIR_ALLTOALLW_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
@@ -194,6 +201,11 @@ int MPIR_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
             case MPIR_ALLTOALLW_INTER_ALGO_GENERIC:
                 mpi_errno = MPIR_Alltoallw_inter_generic(sendbuf, sendcounts, sdispls,
                                          sendtypes, recvbuf, recvcounts,
+                                         rdispls, recvtypes, comm_ptr, errflag);
+                break;
+            case MPIR_ALLTOALLW_INTER_ALGO_NB:
+                mpi_errno = MPIR_Alltoallw_nb(sendbuf, sendcounts,
+                                         sdispls, sendtypes, recvbuf, recvcounts,
                                          rdispls, recvtypes, comm_ptr, errflag);
                 break;
             case MPIR_ALLTOALLW_INTER_ALGO_AUTO:

@@ -66,6 +66,7 @@ cvars:
        pairwise - Force pairwise algorithm
        pairwise_sendrecv_replace - Force pairwise sendrecv replace algorithm
        scattered - Force scattered algorithm
+       nb - Force nonblocking algorithm
 
    - name        : MPIR_CVAR_ALLTOALL_INTER_ALGORITHM
      category    : COLLECTIVE
@@ -78,6 +79,7 @@ cvars:
        Variable to select alltoall algorithm
        auto - Internal algorithm selection
        generic - Force generic algorithm
+       nb - Force nonblocking algorithm
 
    - name        : MPIR_CVAR_ALLTOALL_DEVICE_COLLECTIVE
      category    : COLLECTIVE
@@ -298,6 +300,11 @@ int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                         recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;
+            case MPIR_ALLTOALL_INTRA_ALGO_NB:
+                mpi_errno = MPIR_Alltoall_nb(sendbuf, sendcount, sendtype,
+                                        recvbuf, recvcount, recvtype,
+                                        comm_ptr, errflag);
+                break;
             case MPIR_ALLTOALL_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
@@ -311,6 +318,11 @@ int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         switch (MPIR_Alltoall_inter_algo_choice) {
             case MPIR_ALLTOALL_INTER_ALGO_GENERIC:
                 mpi_errno = MPIR_Alltoall_inter_generic(sendbuf, sendcount, sendtype,
+                                        recvbuf, recvcount, recvtype,
+                                        comm_ptr, errflag);
+                break;
+            case MPIR_ALLTOALL_INTER_ALGO_NB:
+                mpi_errno = MPIR_Alltoall_nb(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;
