@@ -56,6 +56,7 @@ cvars:
         auto - Internal algorithm selection
         binomial - Force binomial algorithm
         redscat_gather - Force redscat gather algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_REDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -68,6 +69,7 @@ cvars:
         Variable to select reduce algorithm
         auto - Internal algorithm selection
         generic - Force generic algorithm
+        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_REDUCE_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -393,6 +395,10 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
                 mpi_errno = MPIR_Reduce_intra_redscat_gather(sendbuf, recvbuf,
                             count, datatype, op, root, comm_ptr, errflag);
                 break;
+            case MPIR_REDUCE_INTRA_ALGO_NB:
+                mpi_errno = MPIR_Reduce_nb(sendbuf, recvbuf,
+                            count, datatype, op, root, comm_ptr, errflag);
+                break;
             case MPIR_REDUCE_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
@@ -406,6 +412,10 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
             case MPIR_REDUCE_INTER_ALGO_GENERIC:
                 mpi_errno = MPIR_Reduce_inter_generic(sendbuf, recvbuf, count, datatype,
                                       op, root, comm_ptr, errflag);
+                break;
+            case MPIR_REDUCE_INTER_ALGO_NB:
+                mpi_errno = MPIR_Reduce_nb(sendbuf, recvbuf,
+                            count, datatype, op, root, comm_ptr, errflag);
                 break;
             case MPIR_REDUCE_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
