@@ -182,14 +182,12 @@ int MPIR_Reduce_intra (
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int comm_size, is_commutative, type_size, pof2;
+    int is_commutative, comm_size, type_size, pof2;
     int nbytes = 0;
     MPIR_Op *op_ptr;
-    MPIR_CHKLMEM_DECL(1);
 
     if (count == 0) return MPI_SUCCESS;
 
-    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_REDUCE) {
     /* is the op commutative? We do SMP optimizations only if it is. */
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN)
         is_commutative = 1;
@@ -200,109 +198,23 @@ int MPIR_Reduce_intra (
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE ? type_size*count : 0;
-    if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative &&
-        nbytes <= MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE) {
 
-        void *tmp_buf = NULL;
-        MPI_Aint  true_lb, true_extent, extent;
+    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES &&
+            MPIR_CVAR_ENABLE_SMP_REDUCE &&
+            MPIR_Comm_is_node_aware(comm_ptr) &&
+            is_commutative &&
+            nbytes <= MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE) {
+        mpi_errno = MPIR_Reduce_intra_smp(sendbuf, recvbuf, count, datatype,
+                op, root, comm_ptr, errflag);
 
-        /* Create a temporary buffer on local roots of all nodes */
-        if (comm_ptr->node_roots_comm != NULL) {
-
-            MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-            MPIR_Datatype_get_extent_macro(datatype, extent);
-
-            MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
-                                mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
-            /* adjust for potential negative lower bound in datatype */
-            tmp_buf = (void *)((char*)tmp_buf - true_lb);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
 
-        /* do the intranode reduce on all nodes other than the root's node */
-        if (comm_ptr->node_comm != NULL &&
-            MPIR_Get_intranode_rank(comm_ptr, root) == -1) {
-            mpi_errno = MPID_Reduce(sendbuf, tmp_buf, count, datatype,
-                                         op, 0, comm_ptr->node_comm, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
-        }
-
-        /* do the internode reduce to the root's node */
-        if (comm_ptr->node_roots_comm != NULL) {
-            if (comm_ptr->node_roots_comm->rank != MPIR_Get_internode_rank(comm_ptr, root)) {
-                /* I am not on root's node.  Use tmp_buf if we
-                   participated in the first reduce, otherwise use sendbuf */
-                const void *buf = (comm_ptr->node_comm == NULL ? sendbuf : tmp_buf);
-                mpi_errno = MPID_Reduce(buf, NULL, count, datatype,
-                                             op, MPIR_Get_internode_rank(comm_ptr, root),
-                                             comm_ptr->node_roots_comm, errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
-            }
-            else { /* I am on root's node. I have not participated in the earlier reduce. */
-                if (comm_ptr->rank != root) {
-                    /* I am not the root though. I don't have a valid recvbuf.
-                       Use tmp_buf as recvbuf. */
-
-                    mpi_errno = MPID_Reduce(sendbuf, tmp_buf, count, datatype,
-                                                 op, MPIR_Get_internode_rank(comm_ptr, root),
-                                                 comm_ptr->node_roots_comm, errflag);
-                    if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                    }
-
-                    /* point sendbuf at tmp_buf to make final intranode reduce easy */
-                    sendbuf = tmp_buf;
-                }
-                else {
-                    /* I am the root. in_place is automatically handled. */
-
-                    mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype,
-                                                 op, MPIR_Get_internode_rank(comm_ptr, root),
-                                                 comm_ptr->node_roots_comm, errflag);
-                    if (mpi_errno) {
-                        /* for communication errors, just record the error but continue */
-                        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                    }
-
-                    /* set sendbuf to MPI_IN_PLACE to make final intranode reduce easy. */
-                    sendbuf = MPI_IN_PLACE;
-                }
-            }
-
-        }
-
-        /* do the intranode reduce on the root's node */
-        if (comm_ptr->node_comm != NULL &&
-            MPIR_Get_intranode_rank(comm_ptr, root) != -1) {
-            mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype,
-                                         op, MPIR_Get_intranode_rank(comm_ptr, root),
-                                         comm_ptr->node_comm, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
-        }
-        
         goto fn_exit;
-    }
     }
 
     comm_size = comm_ptr->local_size;
@@ -318,12 +230,6 @@ int MPIR_Reduce_intra (
         (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) && (count >= pof2)) {
         /* do a reduce-scatter followed by gather to root. */
         mpi_errno = MPIR_Reduce_intra_redscat_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
     }
     else {
         /* use a binomial tree algorithm */ 
@@ -338,8 +244,6 @@ int MPIR_Reduce_intra (
         
 
   fn_exit:
-    MPIR_CHKLMEM_FREEALL();
-
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)
