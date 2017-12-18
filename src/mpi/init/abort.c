@@ -122,7 +122,7 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
 
     if (!comm_ptr) {
         /* Use comm world if the communicator is not valid */
-        comm_ptr = MPIR_Process.comm_world;
+        comm_ptr = MPIR_Process.comm_self;
     }
 
 
