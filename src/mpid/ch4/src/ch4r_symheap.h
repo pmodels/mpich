@@ -242,7 +242,8 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
             baseP = (void *) -1ULL;
 
             if (comm->rank == maxloc_result.loc) {
-                map_pointer = (uintptr_t) MPIDI_CH4R_generate_random_addr(mapsize);
+                void *p = MPIDI_CH4R_generate_random_addr(mapsize);
+                map_pointer = (uintptr_t) p;
                 baseP = MPL_mmap((void *) map_pointer, mapsize,
                                  PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0, MPL_MEM_RMA);
             }
