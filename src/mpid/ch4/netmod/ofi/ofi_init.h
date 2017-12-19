@@ -252,7 +252,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                                             struct fid_av *av,
                                             struct fid_ep **ep, int index);
 static inline int MPIDI_OFI_application_hints(int rank);
-static inline int MPIDI_OFI_init_global_settings(char *prov_name);
+static inline int MPIDI_OFI_init_global_settings(const char *prov_name);
 static inline int MPIDI_OFI_init_hints(struct fi_info *hints);
 
 #define MPIDI_OFI_CHOOSE_PROVIDER(prov, prov_use,errstr)                          \
@@ -1461,7 +1461,7 @@ static inline int MPIDI_OFI_application_hints(int rank)
     return mpi_errno;
 }
 
-static inline int MPIDI_OFI_init_global_settings(char *prov_name)
+static inline int MPIDI_OFI_init_global_settings(const char *prov_name)
 {
     /* Seed the global settings values for cases where we are using runtime sets */
     MPIDI_Global.settings.enable_data               = MPIR_CVAR_CH4_OFI_ENABLE_DATA != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_DATA :

@@ -31,7 +31,7 @@ enum {
 #define MPIDI_OFI_MAX_ENDPOINTS_BITS_REGULAR    0
 
 /* This needs to be kept in sync with the order in globals.c */
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 {
     if (!strcmp("psm", set_name)) {
         return MPIDI_OFI_SET_NUMBER_PSM;
