@@ -699,7 +699,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_align_iov_len(size_t len)
 #define FCNAME   MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void* MPIDI_OFI_aligned_next_iov(void *ptr)
 {
-    return (void *) MPIDI_OFI_align_iov_len((size_t) ptr);
+    return (void *) (uintptr_t) MPIDI_OFI_align_iov_len((size_t) ptr);
 }
 
 #undef  FUNCNAME
@@ -718,7 +718,7 @@ MPL_STATIC_INLINE_PREFIX struct iovec *MPIDI_OFI_request_util_iov(MPIR_Request *
 /* Make sure `p` is properly aligned */
 #define MPIDI_OFI_ASSERT_IOVEC_ALIGN(p)                                 \
     do {                                                                \
-        MPIR_Assert((((uintptr_t)p) & (MPIDI_OFI_IOVEC_ALIGN - 1)) == 0); \
+        MPIR_Assert((((uintptr_t)(void *) p) & (MPIDI_OFI_IOVEC_ALIGN - 1)) == 0); \
     } while (0)
 
 #endif /* OFI_IMPL_H_INCLUDED */
