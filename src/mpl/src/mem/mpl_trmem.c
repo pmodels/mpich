@@ -13,8 +13,8 @@
 /* style: allow:malloc:2 sig:0 */
 /* style: allow:strdup:1 sig:0 */
 
-#include <assert.h>
 #include "mpl.h"
+#include <assert.h>
 
 #ifdef malloc
 /* Undefine these in case they were set to 'error' */
