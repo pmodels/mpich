@@ -5,12 +5,12 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#include <assert.h>
 #include "adio.h"
 #include "adio_extern.h"
 #ifdef AGGREGATION_PROFILE
 #include "mpe.h"
 #endif
+#include <assert.h>
 
 /*
 #define DEBUG
