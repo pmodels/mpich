@@ -701,6 +701,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
                 if (first)
                     shm_unlink(shm_key);
 
+                mpi_errno = MPIR_Bcast_impl(&map_ptr, 1, MPI_UNSIGNED_LONG, 0, comm_ptr, &errflag);
                 MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
             }
         }
@@ -709,6 +710,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
 
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
+        MPIR_ERR_CHKANDSTMT(map_ptr == NULL || map_ptr == MAP_FAILED, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
         unsigned map_fail = 0;
         if (comm_ptr->rank != 0) {
@@ -780,6 +782,8 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_ALLOCATE_SHARED);
     return mpi_errno;
   fn_fail:
+    if (win_ptr)
+        MPIDI_CH4R_win_finalize(win_ptr);
     goto fn_exit;
 }
 
