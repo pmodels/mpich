@@ -4,12 +4,13 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-
 #include "mpioimpl.h"
 #include "adio_extern.h"
 #include "mpir_ext.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+
 
 int MPIO_Err_create_code(int lastcode, int fatal, const char fcname[],
 			 int line, int error_class, const char generic_msg[],
