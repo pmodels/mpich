@@ -250,6 +250,8 @@ MPL_STATIC_INLINE_PREFIX void *MPL_aligned_alloc(size_t alignment, size_t size, 
     if (ret != 0)
         return NULL;
     return ptr;
+#elif MPL_HAVE__ALIGNED_MALLOC
+    return _aligned_malloc(size, alignment);
 #else
     #error "MPL_DEFINE_ALIGNED_ALLOC defined but no underlying support function found - should not reach here."
 #endif
