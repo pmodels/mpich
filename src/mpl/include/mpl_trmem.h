@@ -19,6 +19,10 @@ extern char *strdup(const char *);
 char *MPL_strdup(const char *str);
 #endif /* defined(MPL_USE_MEMORY_TRACING) || defined(MPL_HAVE_STRDUP) */
 
+#if defined MPL_NEEDS_ALIGNED_ALLOC_DECL
+extern void *aligned_alloc(size_t alignment, size_t size);
+#endif
+
 typedef enum {
     MPL_MEM_ADDRESS,        /* Address information */
     MPL_MEM_OBJECT,         /* General MPI Objects */
