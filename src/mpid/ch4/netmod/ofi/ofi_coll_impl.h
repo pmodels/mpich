@@ -124,18 +124,18 @@ int MPIDI_OFI_allreduce_reduce_scatter_allgather(const void *sendbuf, void *recv
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_reduce_redscat_gather
+#define FUNCNAME MPIDI_OFI_reduce_reduce_scatter_gather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_reduce_redscat_gather(const void *sendbuf, void *recvbuf, int count,
+int MPIDI_OFI_reduce_reduce_scatter_gather(const void *sendbuf, void *recvbuf, int count,
                                     MPI_Datatype datatype, MPI_Op op, int root,
                                     MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
                                     MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_intra_redscat_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Reduce_intra_reduce_scatter_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
 
     return mpi_errno;
 }

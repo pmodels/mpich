@@ -21,9 +21,9 @@ const MPIDI_UCX_coll_algo_container_t UCX_bcast_scatter_ring_allgather_cnt =
     };
 
 /* Reduce default UCX containers initialization*/
-const MPIDI_UCX_coll_algo_container_t UCX_reduce_redscat_gather_cnt =
+const MPIDI_UCX_coll_algo_container_t UCX_reduce_reduce_scatter_gather_cnt =
     {
-        .id = MPIDI_UCX_reduce_redscat_gather_id
+        .id = MPIDI_UCX_reduce_reduce_scatter_gather_id
     };
 
 const MPIDI_UCX_coll_algo_container_t UCX_reduce_binomial_cnt =

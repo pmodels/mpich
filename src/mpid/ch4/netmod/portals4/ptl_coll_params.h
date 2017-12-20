@@ -42,7 +42,7 @@ typedef union {
 } MPIDI_PTL_allreduce_params_t;
 
 typedef enum {
-    MPIDI_PTL_reduce_redscat_gather_id,
+    MPIDI_PTL_reduce_reduce_scatter_gather_id,
     MPIDI_PTL_reduce_binomial_id
 } MPIDI_PTL_reduce_id_t;
 

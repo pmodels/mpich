@@ -12,7 +12,7 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE
+    - name        : MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE
       category    : COLLECTIVE
       type        : int
       default     : 524288
@@ -63,7 +63,7 @@ cvars:
         If set to true, MPI_Redscat will allow the device to override the
         MPIR-level collective algorithms. The device still has the
         option to call the MPIR-level algorithms manually.
-        If set to false, the device-level redscat function will not be
+        If set to false, the device-level reduce_scatter function will not be
         called.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
@@ -161,14 +161,14 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = total_count * type_size;
 
-    if ((is_commutative) && (nbytes < MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+    if ((is_commutative) && (nbytes < MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         /* commutative and short. use recursive halving algorithm */
         
         mpi_errno = MPIR_Reduce_scatter_intra_recursive_halving (sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     
-    if (is_commutative && (nbytes >= MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+    if (is_commutative && (nbytes >= MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
 
         /* commutative and long message, or noncommutative and long message.
            use (p-1) pairwise exchanges */ 
