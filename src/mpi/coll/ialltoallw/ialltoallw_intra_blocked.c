@@ -21,10 +21,10 @@
  * and wait on them as suggested by Tony Ladd. ***
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_intra_blocked_sched
+#define FUNCNAME MPIR_Ialltoallw_sched_intra_blocked
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoallw_intra_blocked_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Ialltoallw_sched_intra_blocked(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                           const int rdispls[], const MPI_Datatype recvtypes[],
                           MPIR_Comm *comm_ptr, MPIR_Sched_t s)

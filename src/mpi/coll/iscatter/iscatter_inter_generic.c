@@ -22,10 +22,10 @@
  * where n is the total size of the data to be scattered from the root.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatter_inter_generic_sched
+#define FUNCNAME MPIR_Iscatter_sched_inter_generic
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatter_inter_generic_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iscatter_sched_inter_generic(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                         int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
