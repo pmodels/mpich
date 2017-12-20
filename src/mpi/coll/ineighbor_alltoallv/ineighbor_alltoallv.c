@@ -88,14 +88,14 @@ int MPIR_Ineighbor_alltoallv_sched(const void *sendbuf, const int sendcounts[],
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_Ineighbor_alltoallv_intra_algo_choice) {
             case MPIR_INEIGHBOR_ALLTOALLV_INTRA_ALGO_GENERIC:
-                mpi_errno = MPIR_Ineighbor_alltoallv_generic_sched(sendbuf, sendcounts, sdispls, sendtype,
+                mpi_errno = MPIR_Ineighbor_alltoallv_sched_generic(sendbuf, sendcounts, sdispls, sendtype,
                                                            recvbuf, recvcounts, rdispls, recvtype,
                                                            comm_ptr, s);
                 break;
             case MPIR_INEIGHBOR_ALLTOALLV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ineighbor_alltoallv_generic_sched(sendbuf, sendcounts, sdispls, sendtype,
+                mpi_errno = MPIR_Ineighbor_alltoallv_sched_generic(sendbuf, sendcounts, sdispls, sendtype,
                                                            recvbuf, recvcounts, rdispls, recvtype,
                                                            comm_ptr, s);
                 break;
@@ -103,14 +103,14 @@ int MPIR_Ineighbor_alltoallv_sched(const void *sendbuf, const int sendcounts[],
     } else {
         switch (MPIR_Ineighbor_alltoallv_inter_algo_choice) {
             case MPIR_INEIGHBOR_ALLTOALLV_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Ineighbor_alltoallv_generic_sched(sendbuf, sendcounts, sdispls, sendtype,
+                mpi_errno = MPIR_Ineighbor_alltoallv_sched_generic(sendbuf, sendcounts, sdispls, sendtype,
                                                            recvbuf, recvcounts, rdispls, recvtype,
                                                            comm_ptr, s);
                 break;
             case MPIR_INEIGHBOR_ALLTOALLV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ineighbor_alltoallv_generic_sched(sendbuf, sendcounts, sdispls, sendtype,
+                mpi_errno = MPIR_Ineighbor_alltoallv_sched_generic(sendbuf, sendcounts, sdispls, sendtype,
                                                            recvbuf, recvcounts, rdispls, recvtype,
                                                            comm_ptr, s);
                 break;

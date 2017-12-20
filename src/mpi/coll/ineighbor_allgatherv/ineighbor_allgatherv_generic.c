@@ -7,10 +7,10 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_allgatherv_generic_sched
+#define FUNCNAME MPIR_Ineighbor_allgatherv_sched_generic
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ineighbor_allgatherv_generic_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ineighbor_allgatherv_sched_generic(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;

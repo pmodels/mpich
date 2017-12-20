@@ -7,10 +7,10 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_inter_generic_sched
+#define FUNCNAME MPIR_Iallgather_sched_inter_generic
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgather_inter_generic_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iallgather_sched_inter_generic(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     /* Intercommunicator Allgather.
        Each group does a gather to local root with the local

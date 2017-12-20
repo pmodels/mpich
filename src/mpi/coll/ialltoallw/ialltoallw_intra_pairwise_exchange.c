@@ -7,10 +7,10 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_intra_pairwise_exchange_sched
+#define FUNCNAME MPIR_Ialltoallw_sched_intra_pairwise_exchange
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoallw_intra_pairwise_exchange_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Ialltoallw_sched_intra_pairwise_exchange(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                           const int rdispls[], const MPI_Datatype recvtypes[],
                           MPIR_Comm *comm_ptr, MPIR_Sched_t s)

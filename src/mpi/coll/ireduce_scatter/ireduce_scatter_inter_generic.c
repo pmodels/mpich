@@ -8,10 +8,10 @@
 #include "coll_util.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_inter_generic_sched
+#define FUNCNAME MPIR_Ireduce_scatter_sched_inter_generic
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_inter_generic_sched(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Ireduce_scatter_sched_inter_generic(const void *sendbuf, void *recvbuf, const int recvcounts[],
                                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                                              MPIR_Sched_t s)
 {

@@ -88,23 +88,23 @@ int MPIR_Iscatterv_sched(const void *sendbuf, const int sendcounts[], const int 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_Iscatterv_intra_algo_choice) {
             case MPIR_ISCATTERV_INTRA_ALGO_LINEAR:
-                mpi_errno = MPIR_Iscatterv_linear_sched(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+                mpi_errno = MPIR_Iscatterv_sched_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
                 break;
             case MPIR_ISCATTERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Iscatterv_linear_sched(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+                mpi_errno = MPIR_Iscatterv_sched_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
                 break;
         }
     } else {
         switch (MPIR_Iscatterv_inter_algo_choice) {
             case MPIR_ISCATTERV_INTER_ALGO_LINEAR:
-                mpi_errno = MPIR_Iscatterv_linear_sched(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+                mpi_errno = MPIR_Iscatterv_sched_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
                 break;
             case MPIR_ISCATTERV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Iscatterv_linear_sched(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+                mpi_errno = MPIR_Iscatterv_sched_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
                 break;
         }
     }

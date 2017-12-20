@@ -86,14 +86,14 @@ int MPIR_Ineighbor_alltoall_sched(const void *sendbuf, int sendcount,
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_Ineighbor_alltoall_intra_algo_choice) {
             case MPIR_INEIGHBOR_ALLTOALL_INTRA_ALGO_GENERIC:
-                mpi_errno = MPIR_Ineighbor_alltoall_generic_sched(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Ineighbor_alltoall_sched_generic(sendbuf, sendcount, sendtype,
                                                           recvbuf, recvcount, recvtype,
                                                           comm_ptr, s);
                 break;
             case MPIR_INEIGHBOR_ALLTOALL_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ineighbor_alltoall_generic_sched(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Ineighbor_alltoall_sched_generic(sendbuf, sendcount, sendtype,
                                                           recvbuf, recvcount, recvtype,
                                                           comm_ptr, s);
                 break;
@@ -101,14 +101,14 @@ int MPIR_Ineighbor_alltoall_sched(const void *sendbuf, int sendcount,
     } else {
         switch (MPIR_Ineighbor_alltoall_inter_algo_choice) {
             case MPIR_INEIGHBOR_ALLTOALL_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Ineighbor_alltoall_generic_sched(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Ineighbor_alltoall_sched_generic(sendbuf, sendcount, sendtype,
                                                           recvbuf, recvcount, recvtype,
                                                           comm_ptr, s);
                 break;
             case MPIR_INEIGHBOR_ALLTOALL_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ineighbor_alltoall_generic_sched(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Ineighbor_alltoall_sched_generic(sendbuf, sendcount, sendtype,
                                                           recvbuf, recvcount, recvtype,
                                                           comm_ptr, s);
                 break;

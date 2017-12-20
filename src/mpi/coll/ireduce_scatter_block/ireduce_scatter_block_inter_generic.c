@@ -8,10 +8,10 @@
 #include "coll_util.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_inter_generic_sched
+#define FUNCNAME MPIR_Ireduce_scatter_block_sched_inter_generic
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_inter_generic_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_sched_inter_generic(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
 /* Intercommunicator Ireduce_scatter_block.
    We first do an intercommunicator reduce to rank 0 on left group,

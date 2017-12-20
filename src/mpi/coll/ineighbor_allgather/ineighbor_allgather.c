@@ -83,14 +83,14 @@ int MPIR_Ineighbor_allgather_sched(const void *sendbuf, int sendcount, MPI_Datat
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_Ineighbor_allgather_intra_algo_choice) {
             case MPIR_INEIGHBOR_ALLGATHER_INTRA_ALGO_GENERIC:
-                mpi_errno = MPIR_Ineighbor_allgather_generic_sched(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Ineighbor_allgather_sched_generic(sendbuf, sendcount, sendtype,
                                                                    recvbuf, recvcount, recvtype,
                                                                    comm_ptr, s);
                 break;
             case MPIR_INEIGHBOR_ALLGATHER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ineighbor_allgather_generic_sched(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Ineighbor_allgather_sched_generic(sendbuf, sendcount, sendtype,
                                                                    recvbuf, recvcount, recvtype,
                                                                    comm_ptr, s);
                 break;
@@ -98,14 +98,14 @@ int MPIR_Ineighbor_allgather_sched(const void *sendbuf, int sendcount, MPI_Datat
     } else {
         switch (MPIR_Ineighbor_allgather_inter_algo_choice) {
             case MPIR_INEIGHBOR_ALLGATHER_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Ineighbor_allgather_generic_sched(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Ineighbor_allgather_sched_generic(sendbuf, sendcount, sendtype,
                                                                    recvbuf, recvcount, recvtype,
                                                                    comm_ptr, s);
                 break;
             case MPIR_INEIGHBOR_ALLGATHER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ineighbor_allgather_generic_sched(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Ineighbor_allgather_sched_generic(sendbuf, sendcount, sendtype,
                                                                    recvbuf, recvcount, recvtype,
                                                                    comm_ptr, s);
                 break;

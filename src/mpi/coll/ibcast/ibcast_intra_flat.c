@@ -9,10 +9,10 @@
 #include "ibcast.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_intra_flat_sched
+#define FUNCNAME MPIR_Ibcast_sched_intra_flat
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_flat_sched(void *buffer, int count, MPI_Datatype datatype,
+int MPIR_Ibcast_sched_inter_flat(void *buffer, int count, MPI_Datatype datatype,
                            int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;

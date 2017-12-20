@@ -42,10 +42,10 @@ static int dtp_release_ref(MPIR_Comm *comm, int tag, void *state)
  * PVM/MPI 2003).
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_intra_recursive_doubling_sched
+#define FUNCNAME MPIR_Iallgather_sched_intra_recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgather_intra_recursive_doubling_sched(const void *sendbuf, int sendcount,
+int MPIR_Iallgather_sched_intra_recursive_doubling(const void *sendbuf, int sendcount,
         MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype
         recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
