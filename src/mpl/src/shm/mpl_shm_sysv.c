@@ -32,7 +32,7 @@ static inline int MPL_shm_seg_create_attach_templ(
     if(flag & MPLI_SHM_FLAG_SHM_CREATE){
         lhnd = shmget(IPC_PRIVATE, seg_sz, IPC_CREAT | S_IRWXU);
         MPLI_shm_lhnd_set(hnd, lhnd);
-        rc = MPLI_shm_ghnd_alloc(hnd);
+        rc = MPLI_shm_ghnd_alloc(hnd, MPL_MEM_SHM);
         rc = MPLI_shm_ghnd_set_by_val(hnd, "%d", lhnd);
     }
     else{
