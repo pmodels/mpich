@@ -873,6 +873,9 @@ fi
 # Check if we can implement MPL_aligned_alloc
 AC_CHECK_FUNCS(posix_memalign)
 AC_CHECK_FUNCS(aligned_alloc)
+if test "$ac_cv_func_aligned_alloc" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],aligned_alloc)
+fi
 if test "$ac_cv_func_posix_memalign" = "yes" -o "$ac_cv_func_aligned_alloc" = "yes"; then
    AC_DEFINE([DEFINE_ALIGNED_ALLOC],[1],[Define to 1 if MPL enables MPL_aligned_alloc.])
 fi
