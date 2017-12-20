@@ -475,13 +475,11 @@ int MPIR_Ineighbor_alltoallw_sched_generic(const void *sendbuf, const int sendco
 
 /* nonblocking collective default algorithms */
 int MPIR_Ibcast_sched_intra(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
-int MPIR_Ibcast_generic_sched_inter(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ibcast_sched_inter(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ibcast_sched_inter_flat(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ibarrier_sched_intra(MPIR_Comm *comm_ptr, MPIR_Sched_t s);
-int MPIR_Ibarrier_generic_sched_inter(MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ibarrier_sched_inter(MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ireduce_sched_intra(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ireduce_sched_inter_generic(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
@@ -490,7 +488,6 @@ int MPIR_Ireduce_sched_intra_binomial(const void *sendbuf, void *recvbuf, int co
 int MPIR_Ireduce_sched_intra_reduce_scatter_gather(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ireduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ialltoallv_sched_intra(const void *sendbuf, const int *sendcounts, const int *sdispls, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
-int MPIR_Ialltoallv_generic_sched_inter(const void *sendbuf, const int *sendcounts, const int *sdispls, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ialltoallv_sched_inter(const void *sendbuf, const int *sendcounts, const int *sdispls, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Iallreduce_sched_intra(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Iallreduce_sched_inter_generic(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
@@ -547,7 +544,6 @@ int MPIR_Iscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf
 int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Iexscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ialltoallw_sched_intra(const void *sendbuf, const int *sendcounts, const int *sdispls, const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcounts, const int *rdispls, const MPI_Datatype *recvtypes, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
-int MPIR_Ialltoallw_generic_sched_inter(const void *sendbuf, const int *sendcounts, const int *sdispls, const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcounts, const int *rdispls, const MPI_Datatype *recvtypes, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ialltoallw_sched_inter(const void *sendbuf, const int *sendcounts, const int *sdispls, const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcounts, const int *rdispls, const MPI_Datatype *recvtypes, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 
 #endif /* MPIR_COLL_H_INCLUDED */
