@@ -21,9 +21,9 @@ const MPIDI_OFI_coll_algo_container_t OFI_bcast_scatter_ring_allgather_cnt =
     };
 
 /* Reduce default OFI containers initialization*/
-const MPIDI_OFI_coll_algo_container_t OFI_reduce_redscat_gather_cnt =
+const MPIDI_OFI_coll_algo_container_t OFI_reduce_reduce_scatter_gather_cnt =
     {
-        .id = MPIDI_OFI_reduce_redscat_gather_id
+        .id = MPIDI_OFI_reduce_reduce_scatter_gather_id
     };
 
 const MPIDI_OFI_coll_algo_container_t OFI_reduce_binomial_cnt =

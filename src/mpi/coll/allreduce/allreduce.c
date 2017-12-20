@@ -64,7 +64,7 @@ cvars:
         Variable to select allreduce algorithm
         auto - Internal algorithm selection
         recursive_doubling - Force recursive doubling algorithm
-        redscat_allgather - Force redscat allgather algorithm
+        reduce_scatter_allgather - Force reduce scatter allgather algorithm
         nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_ALLREDUCE_INTER_ALGORITHM
@@ -293,7 +293,7 @@ int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
                 mpi_errno = MPIR_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count,
                             datatype, op, comm_ptr, errflag);
                 break;
-            case MPIR_ALLREDUCE_INTRA_ALGO_REDSCAT_ALLGATHER:
+            case MPIR_ALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER:
                 mpi_errno = MPIR_Allreduce_intra_reduce_scatter_allgather(sendbuf, recvbuf, count,
                             datatype, op, comm_ptr, errflag);
                 break;

@@ -22,7 +22,7 @@ cvars:
         Variable to select ireduce algorithm
         auto - Internal algorithm selection
         binomial - Force binomial algorithm
-        redscat_gather - Force redscat gather algorithm
+        reduce_scatter_gather - Force reduce scatter gather algorithm
 
     - name        : MPIR_CVAR_IREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -98,7 +98,7 @@ int MPIR_Ireduce_intra_sched(const void *sendbuf, void *recvbuf, int count, MPI_
         (count >= pof2))
     {
         /* do a reduce-scatter followed by gather to root. */
-        mpi_errno = MPIR_Ireduce_intra_redscat_gather_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+        mpi_errno = MPIR_Ireduce_intra_reduce_scatter_gather_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
@@ -149,8 +149,8 @@ int MPIR_Ireduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
                     mpi_errno = MPIR_Ireduce_intra_binomial_sched(sendbuf, recvbuf, count,
                                 datatype, op, root, comm_ptr, s);
                     break;
-                case MPIR_IREDUCE_INTRA_ALGO_REDSCAT_GATHER:
-                    mpi_errno = MPIR_Ireduce_intra_redscat_gather_sched(sendbuf, recvbuf, count,
+                case MPIR_IREDUCE_INTRA_ALGO_REDUCE_SCATTER_GATHER:
+                    mpi_errno = MPIR_Ireduce_intra_reduce_scatter_gather_sched(sendbuf, recvbuf, count,
                                 datatype, op, root, comm_ptr, s);
                     break;
                 case MPIR_IREDUCE_INTRA_ALGO_AUTO:

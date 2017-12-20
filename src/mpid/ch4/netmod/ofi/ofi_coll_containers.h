@@ -11,7 +11,7 @@ extern const MPIDI_OFI_coll_algo_container_t OFI_bcast_scatter_ring_allgather_cn
 
 /* Reduce OFI containers declaration */
 extern const MPIDI_OFI_coll_algo_container_t OFI_reduce_binomial_cnt;
-extern const MPIDI_OFI_coll_algo_container_t OFI_reduce_redscat_gather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_reduce_reduce_scatter_gather_cnt;
 
 /* Allreduce OFI containers declaration */
 extern const MPIDI_OFI_coll_algo_container_t OFI_allreduce_recursive_doubling_cnt;

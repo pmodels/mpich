@@ -55,7 +55,7 @@ cvars:
         Variable to select reduce algorithm
         auto - Internal algorithm selection
         binomial - Force binomial algorithm
-        redscat_gather - Force redscat gather algorithm
+        reduce_scatter_gather - Force reduce scatter gather algorithm
         nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_REDUCE_INTER_ALGORITHM
@@ -229,7 +229,7 @@ int MPIR_Reduce_intra (
     if ((count*type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
         (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) && (count >= pof2)) {
         /* do a reduce-scatter followed by gather to root. */
-        mpi_errno = MPIR_Reduce_intra_redscat_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Reduce_intra_reduce_scatter_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
     }
     else {
         /* use a binomial tree algorithm */ 
@@ -295,8 +295,8 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
                 mpi_errno = MPIR_Reduce_intra_binomial(sendbuf, recvbuf,
                             count, datatype, op, root, comm_ptr, errflag);
                 break;
-            case MPIR_REDUCE_INTRA_ALGO_REDSCAT_GATHER:
-                mpi_errno = MPIR_Reduce_intra_redscat_gather(sendbuf, recvbuf,
+            case MPIR_REDUCE_INTRA_ALGO_REDUCE_SCATTER_GATHER:
+                mpi_errno = MPIR_Reduce_intra_reduce_scatter_gather(sendbuf, recvbuf,
                             count, datatype, op, root, comm_ptr, errflag);
                 break;
             case MPIR_REDUCE_INTRA_ALGO_NB:

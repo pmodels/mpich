@@ -103,11 +103,11 @@ int MPIR_Ireduce_scatter_intra_sched(const void *sendbuf, void *recvbuf, const i
     nbytes = total_count * type_size;
 
     /* select an appropriate algorithm based on commutivity and message size */
-    if (is_commutative && (nbytes < MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+    if (is_commutative && (nbytes < MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         mpi_errno = MPIR_Ireduce_scatter_intra_recursive_halving_sched(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
-    else if (is_commutative && (nbytes >= MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+    else if (is_commutative && (nbytes >= MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         mpi_errno = MPIR_Ireduce_scatter_pairwise_sched(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }

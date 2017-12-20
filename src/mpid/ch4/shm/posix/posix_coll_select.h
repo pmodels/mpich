@@ -164,7 +164,7 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Reduce_select(const void *sendbuf
     pof2 = MPIU_pof2(comm_size);
     if ((count * type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
         (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) && (count >= pof2)) {
-        return (MPIDI_POSIX_coll_algo_container_t *) &POSIX_reduce_redscat_gather_cnt;
+        return (MPIDI_POSIX_coll_algo_container_t *) &POSIX_reduce_reduce_scatter_gather_cnt;
     } else {
         return (MPIDI_POSIX_coll_algo_container_t *) &POSIX_reduce_binomial_cnt;
     }
@@ -179,9 +179,9 @@ int MPIDI_POSIX_Reduce_call(const void *sendbuf, void *recvbuf, int count,
     int mpi_errno = MPI_SUCCESS;
 
     switch (ch4_algo_parameters_container->id) {
-    case MPIDI_POSIX_reduce_redscat_gather_id:
+    case MPIDI_POSIX_reduce_reduce_scatter_gather_id:
         mpi_errno =
-            MPIDI_POSIX_reduce_redscat_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
+            MPIDI_POSIX_reduce_reduce_scatter_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
                                               errflag, ch4_algo_parameters_container);
         break;
     case MPIDI_POSIX_reduce_binomial_id:
