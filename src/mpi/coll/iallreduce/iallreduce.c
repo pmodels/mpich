@@ -23,7 +23,7 @@ cvars:
         auto - Internal algorithm selection
         naive - Force naive algorithm
         recursive_doubling - Force recursive doubling algorithm
-        redscat_allgather - Force redscat allgather algorithm
+        reduce_scatter_allgather - Force reduce scatter allgather algorithm
 
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -125,7 +125,7 @@ int MPIR_Iallreduce_intra_sched(const void *sendbuf, void *recvbuf, int count, M
     }
     else {
         /* do a reduce-scatter followed by allgather */
-        mpi_errno = MPIR_Iallreduce_intra_redscat_allgather_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Iallreduce_intra_reduce_scatter_allgather_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
@@ -174,8 +174,8 @@ int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dat
                     mpi_errno = MPIR_Iallreduce_intra_recursive_doubling_sched(sendbuf, recvbuf, count,
                                 datatype, op, comm_ptr, s);
                     break;
-                case MPIR_IALLREDUCE_INTRA_ALGO_REDSCAT_ALLGATHER:
-                    mpi_errno = MPIR_Iallreduce_intra_redscat_allgather_sched(sendbuf, recvbuf, count,
+                case MPIR_IALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER:
+                    mpi_errno = MPIR_Iallreduce_intra_reduce_scatter_allgather_sched(sendbuf, recvbuf, count,
                                 datatype, op, comm_ptr, s);
                     break;
                 case MPIR_IALLREDUCE_INTRA_ALGO_AUTO:

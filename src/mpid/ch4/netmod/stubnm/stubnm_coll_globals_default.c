@@ -21,9 +21,9 @@ const MPIDI_STUBNM_coll_algo_container_t STUBNM_bcast_scatter_ring_allgather_cnt
     };
 
 /* Reduce default STUBNM containers initialization*/
-const MPIDI_STUBNM_coll_algo_container_t STUBNM_reduce_redscat_gather_cnt =
+const MPIDI_STUBNM_coll_algo_container_t STUBNM_reduce_reduce_scatter_gather_cnt =
     {
-        .id = MPIDI_STUBNM_reduce_redscat_gather_id
+        .id = MPIDI_STUBNM_reduce_reduce_scatter_gather_id
     };
 
 const MPIDI_STUBNM_coll_algo_container_t STUBNM_reduce_binomial_cnt =

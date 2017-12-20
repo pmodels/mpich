@@ -176,8 +176,8 @@ int MPIR_COLL_init(void) {
     /* Allreduce Intra */
     if (0 == strcmp(MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM, "recursive_doubling"))
         MPIR_Allreduce_intra_algo_choice = MPIR_ALLREDUCE_INTRA_ALGO_RECURSIVE_DOUBLING;
-    else if (0 == strcmp(MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM, "redscat_allgather"))
-        MPIR_Allreduce_intra_algo_choice = MPIR_ALLREDUCE_INTRA_ALGO_REDSCAT_ALLGATHER;
+    else if (0 == strcmp(MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM, "reduce_scatter_allgather"))
+        MPIR_Allreduce_intra_algo_choice = MPIR_ALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER;
     else if (0 == strcmp(MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM, "nb"))
         MPIR_Allreduce_intra_algo_choice = MPIR_ALLREDUCE_INTRA_ALGO_NB;
     else
@@ -362,8 +362,8 @@ int MPIR_COLL_init(void) {
         MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_NAIVE;
     else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "recursive_doubling"))
         MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_RECURSIVE_DOUBLING;
-    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "redscat_allgather"))
-        MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_REDSCAT_ALLGATHER;
+    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "reduce_scatter_allgather"))
+        MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER;
     else
         MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_AUTO;
 
@@ -574,8 +574,8 @@ int MPIR_COLL_init(void) {
     /* Ireduce Intra */
     if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "binomial"))
         MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_BINOMIAL;
-    else if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "redscat_gather"))
-        MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_REDSCAT_GATHER;
+    else if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "reduce_scatter_gather"))
+        MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_REDUCE_SCATTER_GATHER;
     else
         MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_AUTO;
 
@@ -722,8 +722,8 @@ int MPIR_COLL_init(void) {
     /* Reduce Intra */
     if (0 == strcmp(MPIR_CVAR_REDUCE_INTRA_ALGORITHM, "binomial"))
         MPIR_Reduce_intra_algo_choice = MPIR_REDUCE_INTRA_ALGO_BINOMIAL;
-    else if (0 == strcmp(MPIR_CVAR_REDUCE_INTRA_ALGORITHM, "redscat_gather"))
-        MPIR_Reduce_intra_algo_choice = MPIR_REDUCE_INTRA_ALGO_REDSCAT_GATHER;
+    else if (0 == strcmp(MPIR_CVAR_REDUCE_INTRA_ALGORITHM, "reduce_scatter_gather"))
+        MPIR_Reduce_intra_algo_choice = MPIR_REDUCE_INTRA_ALGO_REDUCE_SCATTER_GATHER;
     else if (0 == strcmp(MPIR_CVAR_REDUCE_INTRA_ALGORITHM, "nb"))
         MPIR_Reduce_intra_algo_choice = MPIR_REDUCE_INTRA_ALGO_NB;
     else

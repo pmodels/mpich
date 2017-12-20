@@ -11,7 +11,7 @@ extern const MPIDI_POSIX_coll_algo_container_t POSIX_bcast_scatter_ring_allgathe
 
 /* Reduce POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_reduce_binomial_cnt;
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_reduce_redscat_gather_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_reduce_reduce_scatter_gather_cnt;
 
 /* Allreduce POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_allreduce_recursive_doubling_cnt;

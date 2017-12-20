@@ -30,7 +30,7 @@ typedef union {
 } MPIDI_STUBSHM_bcast_params_t;
 
 typedef enum {
-    MPIDI_STUBSHM_reduce_redscat_gather_id,
+    MPIDI_STUBSHM_reduce_reduce_scatter_gather_id,
     MPIDI_STUBSHM_reduce_binomial_id
 } MPIDI_STUBSHM_reduce_id_t;
 

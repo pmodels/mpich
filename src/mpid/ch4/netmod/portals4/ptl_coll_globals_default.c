@@ -21,9 +21,9 @@ const MPIDI_PTL_coll_algo_container_t PTL_bcast_scatter_ring_allgather_cnt =
     };
 
 /* Reduce default PTL containers initialization*/
-const MPIDI_PTL_coll_algo_container_t PTL_reduce_redscat_gather_cnt =
+const MPIDI_PTL_coll_algo_container_t PTL_reduce_reduce_scatter_gather_cnt =
     {
-        .id = MPIDI_PTL_reduce_redscat_gather_id
+        .id = MPIDI_PTL_reduce_reduce_scatter_gather_id
     };
 
 const MPIDI_PTL_coll_algo_container_t PTL_reduce_binomial_cnt =
