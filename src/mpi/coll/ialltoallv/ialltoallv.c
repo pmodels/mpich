@@ -77,10 +77,10 @@ int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispl
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallv_intra_sched
+#define FUNCNAME MPIR_Ialltoallv_sched_intra
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoallv_intra_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Ialltoallv_sched_intra(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
                           const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
                           MPIR_Sched_t s)
@@ -90,11 +90,11 @@ int MPIR_Ialltoallv_intra_sched(const void *sendbuf, const int sendcounts[], con
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     if (sendbuf == MPI_IN_PLACE) {
-        mpi_errno = MPIR_Ialltoallv_intra_inplace_sched(sendbuf, sendcounts, sdispls,
+        mpi_errno = MPIR_Ialltoallv_sched_intra_inplace(sendbuf, sendcounts, sdispls,
                                                   sendtype, recvbuf, recvcounts,
                                                   rdispls, recvtype, comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Ialltoallv_intra_blocked_sched(sendbuf, sendcounts, sdispls,
+        mpi_errno = MPIR_Ialltoallv_sched_intra_blocked(sendbuf, sendcounts, sdispls,
                                                   sendtype, recvbuf, recvcounts,
                                                   rdispls, recvtype, comm_ptr, s);
     }
@@ -106,17 +106,17 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallv_inter_sched
+#define FUNCNAME MPIR_Ialltoallv_sched_inter
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoallv_inter_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Ialltoallv_sched_inter(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
                           const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
                           MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ialltoallv_intra_pairwise_exchange_sched(sendbuf, sendcounts, sdispls,
+    mpi_errno = MPIR_Ialltoallv_sched_intra_pairwise_exchange(sendbuf, sendcounts, sdispls,
                                             sendtype, recvbuf, recvcounts,
                                             rdispls, recvtype, comm_ptr, s);
 
@@ -138,17 +138,17 @@ int MPIR_Ialltoallv_sched(const void *sendbuf, const int sendcounts[], const int
         /* intracommunicator */
         switch (MPIR_Ialltoallv_intra_algo_choice) {
             case MPIR_IALLTOALLV_INTRA_ALGO_BLOCKED:
-                mpi_errno = MPIR_Ialltoallv_intra_blocked_sched(sendbuf, sendcounts, sdispls,
+                mpi_errno = MPIR_Ialltoallv_sched_intra_blocked(sendbuf, sendcounts, sdispls,
                  sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
                 break;
             case MPIR_IALLTOALLV_INTRA_ALGO_INPLACE:
-                mpi_errno = MPIR_Ialltoallv_intra_inplace_sched(sendbuf, sendcounts, sdispls,
+                mpi_errno = MPIR_Ialltoallv_sched_intra_inplace(sendbuf, sendcounts, sdispls,
                  sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
                 break;
             case MPIR_IALLTOALLV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ialltoallv_intra_sched(sendbuf, sendcounts, sdispls,
+                mpi_errno = MPIR_Ialltoallv_sched_intra(sendbuf, sendcounts, sdispls,
                  sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
                 break;
         }
@@ -156,13 +156,13 @@ int MPIR_Ialltoallv_sched(const void *sendbuf, const int sendcounts[], const int
         /* intercommunicator */
         switch (MPIR_Ialltoallv_inter_algo_choice) {
             case MPIR_IALLTOALLV_INTER_ALGO_PAIRWISE_EXCHANGE:
-                mpi_errno = MPIR_Ialltoallv_intra_pairwise_exchange_sched(sendbuf, sendcounts, sdispls,
+                mpi_errno = MPIR_Ialltoallv_sched_intra_pairwise_exchange(sendbuf, sendcounts, sdispls,
                  sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
                 break;
             case MPIR_IALLTOALLV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ialltoallv_inter_sched(sendbuf, sendcounts, sdispls,
+                mpi_errno = MPIR_Ialltoallv_sched_inter(sendbuf, sendcounts, sdispls,
                  sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
                 break;
         }

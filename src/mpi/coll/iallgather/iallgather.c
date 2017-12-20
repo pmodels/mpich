@@ -119,10 +119,10 @@ int MPI_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, vo
 */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_intra_sched
+#define FUNCNAME MPIR_Iallgather_sched_intra
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgather_intra_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iallgather_sched_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, recvtype_size;
@@ -137,11 +137,11 @@ int MPIR_Iallgather_intra_sched(const void *sendbuf, int sendcount, MPI_Datatype
     tot_bytes = (MPI_Aint)recvcount * comm_size * recvtype_size;
 
     if ((tot_bytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
-        mpi_errno = MPIR_Iallgather_intra_recursive_doubling_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
+        mpi_errno = MPIR_Iallgather_sched_intra_recursive_doubling(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
     } else if (tot_bytes < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
-        mpi_errno = MPIR_Iallgather_intra_brucks_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
+        mpi_errno = MPIR_Iallgather_sched_intra_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Iallgather_intra_ring_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
+        mpi_errno = MPIR_Iallgather_sched_intra_ring(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
     }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
@@ -152,16 +152,16 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_inter_sched
+#define FUNCNAME MPIR_Iallgather_sched_inter
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgather_inter_sched(const void *sendbuf, int sendcount,
+int MPIR_Iallgather_sched_inter(const void *sendbuf, int sendcount,
         MPI_Datatype sendtype, void *recvbuf, int recvcount,
         MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Iallgather_inter_generic_sched(sendbuf, sendcount,
+    mpi_errno = MPIR_Iallgather_sched_inter_generic(sendbuf, sendcount,
             sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
 
     return mpi_errno;
@@ -181,21 +181,21 @@ int MPIR_Iallgather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendt
        /* intracommunicator */
         switch (MPIR_Iallgather_intra_algo_choice) {
             case MPIR_IALLGATHER_INTRA_ALGO_BRUCKS:
-                mpi_errno = MPIR_Iallgather_intra_brucks_sched(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Iallgather_sched_intra_brucks(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, comm_ptr, s);
                 break;
             case MPIR_IALLGATHER_INTRA_ALGO_RECURSIVE_DOUBLING:
-                mpi_errno = MPIR_Iallgather_intra_recursive_doubling_sched(sendbuf, sendcount,
+                mpi_errno = MPIR_Iallgather_sched_intra_recursive_doubling(sendbuf, sendcount,
                             sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
                 break;
             case MPIR_IALLGATHER_INTRA_ALGO_RING:
-                mpi_errno = MPIR_Iallgather_intra_ring_sched(sendbuf, sendcount, sendtype, recvbuf,
+                mpi_errno = MPIR_Iallgather_sched_intra_ring(sendbuf, sendcount, sendtype, recvbuf,
                             recvcount, recvtype, comm_ptr, s);
                 break;
             case MPIR_IALLGATHER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Iallgather_intra_sched(sendbuf, sendcount, sendtype, recvbuf,
+                mpi_errno = MPIR_Iallgather_sched_intra(sendbuf, sendcount, sendtype, recvbuf,
                             recvcount, recvtype, comm_ptr, s);
                 break;
         }
@@ -203,13 +203,13 @@ int MPIR_Iallgather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendt
         /* intercommunicator */
         switch (MPIR_Iallgather_inter_algo_choice) {
             case MPIR_IALLGATHER_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Iallgather_inter_generic_sched(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Iallgather_sched_inter_generic(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, comm_ptr, s);
                 break;
             case MPIR_IALLGATHER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Iallgather_inter_sched(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Iallgather_sched_inter(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, comm_ptr, s);
                 break;
         }

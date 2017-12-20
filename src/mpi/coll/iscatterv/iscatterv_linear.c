@@ -17,10 +17,10 @@
  * Cost = (p-1).alpha + n.((p-1)/p).beta
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatterv_linear_sched
+#define FUNCNAME MPIR_Iscatterv_sched_linear
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatterv_linear_sched(const void *sendbuf, const int sendcounts[], const int displs[],
+int MPIR_Iscatterv_sched_linear(const void *sendbuf, const int sendcounts[], const int displs[],
                          MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
                          int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {

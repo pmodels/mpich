@@ -85,23 +85,23 @@ int MPIR_Igatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_Igatherv_intra_algo_choice) {
             case MPIR_IGATHERV_INTRA_ALGO_GENERIC:
-                mpi_errno = MPIR_Igatherv_generic_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
+                mpi_errno = MPIR_Igatherv_sched_generic(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
                 break;
             case MPIR_IGATHERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Igatherv_generic_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
+                mpi_errno = MPIR_Igatherv_sched_generic(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
                 break;
         }
     } else {
         switch (MPIR_Igatherv_inter_algo_choice) {
             case MPIR_IGATHERV_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Igatherv_generic_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
+                mpi_errno = MPIR_Igatherv_sched_generic(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
                 break;
             case MPIR_IGATHERV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Igatherv_generic_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
+                mpi_errno = MPIR_Igatherv_sched_generic(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
                 break;
         }
     }

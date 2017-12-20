@@ -7,10 +7,10 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_intra_bcast_sched
+#define FUNCNAME MPIR_Ibarrier_sched_intra_bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_intra_bcast_sched(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_sched_intra_bcast(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, root;

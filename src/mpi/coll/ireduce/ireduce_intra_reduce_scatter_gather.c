@@ -35,10 +35,10 @@
            n.(1+(p-1)/p).gamma
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_intra_reduce_scatter_gather_sched
+#define FUNCNAME MPIR_Ireduce_sched_intra_reduce_scatter_gather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_intra_reduce_scatter_gather_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_sched_intra_reduce_scatter_gather(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j, comm_size, rank, pof2, is_commutative ATTRIBUTE((unused));

@@ -76,10 +76,10 @@ int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Com
 /* Provides a generic "flat" broadcast that doesn't know anything about hierarchy.  It will choose
  * between several different algorithms based on the given parameters. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_intra_sched
+#define FUNCNAME MPIR_Ibcast_sched_intra
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_intra_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_sched_intra(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, is_homogeneous ATTRIBUTE((unused));
@@ -102,7 +102,7 @@ int MPIR_Ibcast_intra_sched(void *buffer, int count, MPI_Datatype datatype, int 
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
         (comm_size < MPIR_CVAR_BCAST_MIN_PROCS))
     {
-        mpi_errno = MPIR_Ibcast_intra_binomial_sched(buffer, count, datatype, root, comm_ptr, s);
+        mpi_errno = MPIR_Ibcast_sched_intra_binomial(buffer, count, datatype, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else /* (nbytes >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_size >= MPIR_CVAR_BCAST_MIN_PROCS) */
@@ -127,14 +127,14 @@ fn_fail:
  * anything about hierarchy.  It will choose between several different
  * algorithms based on the given parameters. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_inter_sched
+#define FUNCNAME MPIR_Ibcast_sched_inter
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_inter_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_sched_inter(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ibcast_flat_sched(buffer, count, datatype, root, comm_ptr, s);
+    mpi_errno = MPIR_Ibcast_sched_inter_flat(buffer, count, datatype, root, comm_ptr, s);
 
     return mpi_errno;
 }
@@ -150,18 +150,18 @@ int MPIR_Ibcast_sched(void *buffer, int count, MPI_Datatype datatype, int root, 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT &&
                 MPIR_CVAR_ENABLE_SMP_COLLECTIVES && !MPIR_CVAR_ENABLE_SMP_BCAST) {
-            mpi_errno = MPIR_Ibcast_intra_smp_sched(buffer, count, datatype, root, comm_ptr, s);
+            mpi_errno = MPIR_Ibcast_sched_intra_smp(buffer, count, datatype, root, comm_ptr, s);
         } else {
             /* intercommunicator */
             switch (MPIR_Ibcast_intra_algo_choice) {
                 case MPIR_IBCAST_INTRA_ALGO_BINOMIAL:
-                    mpi_errno = MPIR_Ibcast_intra_binomial_sched(buffer, count, datatype,
+                    mpi_errno = MPIR_Ibcast_sched_intra_binomial(buffer, count, datatype,
                                 root, comm_ptr, s);
                     break;
                 case MPIR_IBCAST_INTRA_ALGO_AUTO:
                     MPL_FALLTHROUGH;
                 default:
-                    mpi_errno = MPIR_Ibcast_intra_sched(buffer, count, datatype,
+                    mpi_errno = MPIR_Ibcast_sched_intra(buffer, count, datatype,
                                 root, comm_ptr, s);
                     break;
             }
@@ -170,13 +170,13 @@ int MPIR_Ibcast_sched(void *buffer, int count, MPI_Datatype datatype, int root, 
         /* intercommunicator */
         switch (MPIR_Ibcast_inter_algo_choice) {
             case MPIR_IBCAST_INTER_ALGO_FLAT:
-                mpi_errno = MPIR_Ibcast_flat_sched(buffer, count, datatype, root,
+                mpi_errno = MPIR_Ibcast_sched_inter_flat(buffer, count, datatype, root,
                             comm_ptr, s);
                  break;
             case MPIR_IBCAST_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ibcast_inter_sched(buffer, count, datatype, root,
+                mpi_errno = MPIR_Ibcast_sched_inter(buffer, count, datatype, root,
                             comm_ptr, s);
                 break;
          }

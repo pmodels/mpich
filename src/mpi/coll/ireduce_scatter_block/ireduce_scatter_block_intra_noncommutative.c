@@ -12,10 +12,10 @@
  * from EuroPVM/MPI 2005.  This function currently only implements support for
  * the power-of-2 case. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_intra_noncommutative_sched
+#define FUNCNAME MPIR_Ireduce_scatter_block_sched_intra_noncommutative
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_noncommutative_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_sched_intra_noncommutative(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size = comm_ptr->local_size;

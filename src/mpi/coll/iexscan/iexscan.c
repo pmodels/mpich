@@ -71,10 +71,10 @@ int MPIR_Iexscan_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
     /* intracommunicator */
     switch (MPIR_Iexscan_intra_algo_choice) {
         case MPIR_IEXSCAN_INTRA_ALGO_RECURSIVE_DOUBLING:
-            mpi_errno = MPIR_Iexscan_intra_recursive_doubling_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+            mpi_errno = MPIR_Iexscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
             break;
         case MPIR_IEXSCAN_INTRA_ALGO_AUTO:
-            mpi_errno = MPIR_Iexscan_intra_recursive_doubling_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+            mpi_errno = MPIR_Iexscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
             break;
     }
 
