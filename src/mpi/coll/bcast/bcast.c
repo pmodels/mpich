@@ -102,11 +102,11 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select bcast algorithm
-        auto - Internal algorithm selection
-        binomial - Force Binomial Tree
+        auto                       - Internal algorithm selection
+        binomial                   - Force Binomial Tree
+        nb                         - Force nonblocking algorithm
         scatter_doubling_allgather - Force Scatter Doubling
-        scatter_ring_allgather - Force Scatter Ring
-        nb - Force nonblocking algorithm
+        scatter_ring_allgather     - Force Scatter Ring
 
     - name        : MPIR_CVAR_BCAST_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -117,9 +117,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select bcast algorithm
-        auto - Internal algorithm selection
+        auto    - Internal algorithm selection
         generic - Force generic algorithm
-        nb - Force nonblocking algorithm
+        nb      - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_BCAST_DEVICE_COLLECTIVE
       category    : COLLECTIVE

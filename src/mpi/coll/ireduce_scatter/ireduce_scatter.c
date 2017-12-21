@@ -20,11 +20,11 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce_scatter algorithm
-        auto - Internal algorithm selection
-        noncommutative - Force noncommutative algorithm
+        auto               - Internal algorithm selection
+        noncommutative     - Force noncommutative algorithm
         recursive_doubling - Force recursive doubling algorithm
-        pairwise - Force pairwise algorithm
-        recursive_halving - Force recursive halving algorithm
+        pairwise           - Force pairwise algorithm
+        recursive_halving  - Force recursive halving algorithm
 
     - name        : MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -35,7 +35,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce_scatter algorithm
-        auto - Internal algorithm selection
+        auto    - Internal algorithm selection
         generic - Force generic inter algorithm
 
     - name        : MPIR_CVAR_IREDUCE_SCATTER_DEVICE_COLLECTIVE

@@ -29,9 +29,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select barrier algorithm
-        auto - Internal algorithm selection
+        auto               - Internal algorithm selection
+        nb                 - Force nonblocking algorithm
         recursive_doubling - Force recursive doubling algorithm
-        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_BARRIER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -42,9 +42,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select barrier algorithm
-        auto - Internal algorithm selection
+        auto    - Internal algorithm selection
         generic - Force generic algorithm
-        nb - Force nonblocking algorithm
+        nb      - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE
       category    : COLLECTIVE

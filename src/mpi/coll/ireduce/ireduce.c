@@ -20,8 +20,8 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce algorithm
-        auto - Internal algorithm selection
-        binomial - Force binomial algorithm
+        auto                  - Internal algorithm selection
+        binomial              - Force binomial algorithm
         reduce_scatter_gather - Force reduce scatter gather algorithm
 
     - name        : MPIR_CVAR_IREDUCE_INTER_ALGORITHM
@@ -33,7 +33,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce algorithm
-        auto - Internal algorithm selection
+        auto    - Internal algorithm selection
         generic - Force generic algorithm
 
     - name        : MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE

@@ -20,7 +20,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allgather algorithm
-        auto - Internal algorithm selection
+        auto               - Internal algorithm selection
         recursive_doubling - Force recursive doubling algorithm
 
     - name        : MPIR_CVAR_ISCAN_DEVICE_COLLECTIVE
