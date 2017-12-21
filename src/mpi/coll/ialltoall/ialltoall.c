@@ -20,10 +20,10 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ialltoall algorithm
-        auto - Internal algorithm selection
-        brucks - Force brucks algorithm
-        inplace - Force inplace algorithm
-        pairwise - Force pairwise algorithm
+        auto              - Internal algorithm selection
+        brucks            - Force brucks algorithm
+        inplace           - Force inplace algorithm
+        pairwise          - Force pairwise algorithm
         permuted_sendrecv - Force permuted sendrecv algorithm
 
     - name        : MPIR_CVAR_IALLTOALL_INTER_ALGORITHM
@@ -35,7 +35,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ialltoall algorithm
-        auto - Internal algorithm selection
+        auto    - Internal algorithm selection
         generic - Force generic algorithm
 
     - name        : MPIR_CVAR_IALLTOALL_DEVICE_COLLECTIVE

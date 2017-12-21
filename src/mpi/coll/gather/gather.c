@@ -32,9 +32,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select gather algorithm
-        auto - Internal algorithm selection
+        auto     - Internal algorithm selection
         binomial - Force binomial algorithm
-        nb - Force nonblocking algorithm
+        nb       - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_GATHER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -45,9 +45,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select gather algorithm
-        auto - Internal algorithm selection
+        auto    - Internal algorithm selection
         generic - Force generic algorithm
-        nb - Force nonblocking algorithm
+        nb      - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_GATHER_DEVICE_COLLECTIVE
       category    : COLLECTIVE

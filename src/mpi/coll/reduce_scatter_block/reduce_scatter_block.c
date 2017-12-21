@@ -26,12 +26,12 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select reduce_scatter_block algorithm
-        auto - Internal algorithm selection
-        noncommutative - Force noncommutative algorithm
+        auto               - Internal algorithm selection
+        noncommutative     - Force noncommutative algorithm
         recursive_doubling - Force recursive doubling algorithm
-        pairwise - Force pairwise algorithm
-        recursive_halving - Force recursive halving algorithm
-        nb - Force nonblocking algorithm
+        pairwise           - Force pairwise algorithm
+        recursive_halving  - Force recursive halving algorithm
+        nb                 - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -42,9 +42,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select reduce_scatter_block algorithm
-        auto - Internal algorithm selection
+        auto    - Internal algorithm selection
         generic - Force generic algorithm
-        nb - Force nonblocking algorithm
+        nb      - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_REDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE
       category    : COLLECTIVE

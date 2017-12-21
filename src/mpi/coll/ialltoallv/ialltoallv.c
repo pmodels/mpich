@@ -19,9 +19,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ialltoallv algorithm
-        auto - Internal algorithm selection
-        blocked - Force blocked algorithm
-        inplace - Force inplace algorithm
+        auto              - Internal algorithm selection
+        blocked           - Force blocked algorithm
+        inplace           - Force inplace algorithm
         pairwise_exchange - Force pairwise exchange algorithm
 
     - name        : MPIR_CVAR_IALLTOALLV_INTER_ALGORITHM

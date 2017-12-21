@@ -53,10 +53,10 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select reduce algorithm
-        auto - Internal algorithm selection
-        binomial - Force binomial algorithm
+        auto                  - Internal algorithm selection
+        binomial              - Force binomial algorithm
+        nb                    - Force nonblocking algorithm
         reduce_scatter_gather - Force reduce scatter gather algorithm
-        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_REDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -67,9 +67,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select reduce algorithm
-        auto - Internal algorithm selection
+        auto    - Internal algorithm selection
         generic - Force generic algorithm
-        nb - Force nonblocking algorithm
+        nb      - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_REDUCE_DEVICE_COLLECTIVE
       category    : COLLECTIVE

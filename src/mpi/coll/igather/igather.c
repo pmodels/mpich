@@ -19,7 +19,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select igather algorithm
-        auto - Internal algorithm selection
+        auto     - Internal algorithm selection
         binomial - Force binomial algorithm
 
     - name        : MPIR_CVAR_IGATHER_INTER_ALGORITHM
@@ -31,8 +31,8 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select igather algorithm
-        auto - Internal algorithm selection
-        long_inter - Force long inter algorithm
+        auto        - Internal algorithm selection
+        long_inter  - Force long inter algorithm
         short_inter - Force short inter algorithm
 
     - name        : MPIR_CVAR_IGATHER_DEVICE_COLLECTIVE

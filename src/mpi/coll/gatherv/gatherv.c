@@ -20,9 +20,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select gatherv algorithm
-        auto - Internal algorithm selection
+        auto   - Internal algorithm selection
         linear - Force linear algorithm
-        nb - Force nonblocking algorithm
+        nb     - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_GATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -33,9 +33,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select gatherv algorithm
-        auto - Internal algorithm selection
+        auto   - Internal algorithm selection
         linear - Force linear algorithm
-        nb - Force nonblocking algorithm
+        nb     - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_GATHERV_DEVICE_COLLECTIVE
       category    : COLLECTIVE

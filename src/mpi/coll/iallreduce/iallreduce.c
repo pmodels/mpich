@@ -20,9 +20,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallreduce algorithm
-        auto - Internal algorithm selection
-        naive - Force naive algorithm
-        recursive_doubling - Force recursive doubling algorithm
+        auto                     - Internal algorithm selection
+        naive                    - Force naive algorithm
+        recursive_doubling       - Force recursive doubling algorithm
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
 
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
@@ -34,7 +34,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallreduce algorithm
-        auto - Internal algorithm selection
+        auto    - Internal algorithm selection
         generic - Force generic algorithm
 
     - name        : MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE

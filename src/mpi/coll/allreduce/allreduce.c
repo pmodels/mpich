@@ -62,10 +62,10 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allreduce algorithm
-        auto - Internal algorithm selection
-        recursive_doubling - Force recursive doubling algorithm
+        auto                     - Internal algorithm selection
+        nb                       - Force nonblocking algorithm
+        recursive_doubling       - Force recursive doubling algorithm
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
-        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_ALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -76,9 +76,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allreduce algorithm
-        auto - Internal algorithm selection
+        auto    - Internal algorithm selection
         generic - Force generic algorithm
-        nb - Force nonblocking algorithm
+        nb      - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE
       category    : COLLECTIVE
