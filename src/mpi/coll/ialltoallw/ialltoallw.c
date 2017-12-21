@@ -22,7 +22,7 @@ cvars:
         auto - Internal algorithm selection
         blocked - Force blocked algorithm
         inplace - Force inplace algorithm
-        pairwise_xchg - Force pairwise xchg algorithm
+        pairwise_exchange - Force pairwise exchange algorithm
 
     - name        : MPIR_CVAR_IALLTOALLW_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -111,7 +111,7 @@ int MPIR_Ialltoallw_inter_sched(const void *sendbuf, const int sendcounts[], con
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ialltoallw_intra_pairwise_xchg_sched(sendbuf, sendcounts, sdispls,
+    mpi_errno = MPIR_Ialltoallw_intra_pairwise_exchange_sched(sendbuf, sendcounts, sdispls,
                                                     sendtypes, recvbuf, recvcounts,
                                                     rdispls, recvtypes, comm_ptr, s);
 
@@ -150,8 +150,8 @@ int MPIR_Ialltoallw_sched(const void *sendbuf, const int sendcounts[], const int
     } else {
         /* intercommunicator */
         switch (MPIR_Ialltoallw_inter_algo_choice) {
-            case MPIR_IALLTOALLW_INTER_ALGO_PAIRWISE_XCHG:
-                mpi_errno = MPIR_Ialltoallw_intra_pairwise_xchg_sched(sendbuf, sendcounts, sdispls,
+            case MPIR_IALLTOALLW_INTER_ALGO_PAIRWISE_EXCHANGE:
+                mpi_errno = MPIR_Ialltoallw_intra_pairwise_exchange_sched(sendbuf, sendcounts, sdispls,
                  sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, s);
                 break;
             case MPIR_IALLTOALLW_INTER_ALGO_AUTO:

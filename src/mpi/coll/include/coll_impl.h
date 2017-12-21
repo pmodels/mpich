@@ -240,7 +240,7 @@ extern int MPIR_Ialltoallv_intra_algo_choice;
 
 typedef enum MPIR_Ialltoallv_inter_algo_t {
     MPIR_IALLTOALLV_INTER_ALGO_AUTO,
-    MPIR_IALLTOALLV_INTER_ALGO_PAIRWISE_XCHG
+    MPIR_IALLTOALLV_INTER_ALGO_PAIRWISE_EXCHANGE
 } MPIR_Ialltoallv_inter_algo_t;
 extern int MPIR_Ialltoallv_inter_algo_choice;
 
@@ -253,7 +253,7 @@ extern int MPIR_Ialltoallw_intra_algo_choice;
 
 typedef enum MPIR_Ialltoallw_inter_algo_t {
     MPIR_IALLTOALLW_INTER_ALGO_AUTO,
-    MPIR_IALLTOALLW_INTER_ALGO_PAIRWISE_XCHG
+    MPIR_IALLTOALLW_INTER_ALGO_PAIRWISE_EXCHANGE
 } MPIR_Ialltoallw_inter_algo_t;
 extern int MPIR_Ialltoallw_inter_algo_choice;
 

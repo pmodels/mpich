@@ -400,8 +400,8 @@ int MPIR_COLL_init(void) {
         MPIR_Ialltoallv_intra_algo_choice = MPIR_IALLTOALLV_INTRA_ALGO_AUTO;
 
     /* Ialltoallv Inter */
-    if (0 == strcmp(MPIR_CVAR_IALLTOALLV_INTER_ALGORITHM, "pairwise_xchg"))
-        MPIR_Ialltoallv_inter_algo_choice = MPIR_IALLTOALLV_INTER_ALGO_PAIRWISE_XCHG;
+    if (0 == strcmp(MPIR_CVAR_IALLTOALLV_INTER_ALGORITHM, "pairwise_exchange"))
+        MPIR_Ialltoallv_inter_algo_choice = MPIR_IALLTOALLV_INTER_ALGO_PAIRWISE_EXCHANGE;
     else
         MPIR_Ialltoallv_inter_algo_choice = MPIR_IALLTOALLV_INTER_ALGO_AUTO;
 
@@ -414,8 +414,8 @@ int MPIR_COLL_init(void) {
         MPIR_Ialltoallw_intra_algo_choice = MPIR_IALLTOALLW_INTRA_ALGO_AUTO;
 
     /* Ialltoallw Inter */
-    if (0 == strcmp(MPIR_CVAR_IALLTOALLW_INTER_ALGORITHM, "pairwise_xchg"))
-        MPIR_Ialltoallw_inter_algo_choice = MPIR_IALLTOALLW_INTER_ALGO_PAIRWISE_XCHG;
+    if (0 == strcmp(MPIR_CVAR_IALLTOALLW_INTER_ALGORITHM, "pairwise_exchange"))
+        MPIR_Ialltoallw_inter_algo_choice = MPIR_IALLTOALLW_INTER_ALGO_PAIRWISE_EXCHANGE;
     else
         MPIR_Ialltoallw_inter_algo_choice = MPIR_IALLTOALLW_INTER_ALGO_AUTO;
 
