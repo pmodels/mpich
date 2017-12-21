@@ -21,7 +21,7 @@ cvars:
       description : >-
         Variable to select ireduce_scatter_block algorithm
         auto - Internal algorithm selection
-        noncomm - Force noncomm algorithm
+        noncommutative - Force noncommutative algorithm
         recursive_doubling - Force recursive doubling algorithm
         pairwise - Force pairwise algorithm
         recursive_halving - Force recursive halving algorithm
@@ -109,7 +109,7 @@ int MPIR_Ireduce_scatter_block_intra_sched(const void *sendbuf, void *recvbuf, i
     else /* (!is_commutative) */ {
         if (MPIU_is_pof2(comm_size, NULL)) {
             /* noncommutative, pof2 size */
-            mpi_errno = MPIR_Ireduce_scatter_block_noncomm_sched(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
+            mpi_errno = MPIR_Ireduce_scatter_block_noncommutative_sched(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         else {
@@ -152,8 +152,8 @@ int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int rec
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
         switch (MPIR_Ireduce_scatter_block_intra_algo_choice) {
-            case MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_NONCOMM:
-                mpi_errno = MPIR_Ireduce_scatter_block_noncomm_sched(sendbuf, recvbuf,
+            case MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_NONCOMMUTATIVE:
+                mpi_errno = MPIR_Ireduce_scatter_block_noncommutative_sched(sendbuf, recvbuf,
                             recvcount, datatype, op, comm_ptr, s);
                 break;
             case MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_PAIRWISE:

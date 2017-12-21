@@ -536,8 +536,8 @@ int MPIR_COLL_init(void) {
         MPIR_Ineighbor_alltoallw_inter_algo_choice = MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_AUTO;
 
     /* Ireduce_scatter Intra */
-    if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM, "noncomm"))
-        MPIR_Ireduce_scatter_intra_algo_choice = MPIR_IREDUCE_SCATTER_INTRA_ALGO_NONCOMM;
+    if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM, "noncommutative"))
+        MPIR_Ireduce_scatter_intra_algo_choice = MPIR_IREDUCE_SCATTER_INTRA_ALGO_NONCOMMUTATIVE;
     else if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM, "pairwise"))
         MPIR_Ireduce_scatter_intra_algo_choice = MPIR_IREDUCE_SCATTER_INTRA_ALGO_PAIRWISE;
     else if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM, "recursive_doubling"))
@@ -554,8 +554,8 @@ int MPIR_COLL_init(void) {
         MPIR_Ireduce_scatter_inter_algo_choice = MPIR_IREDUCE_SCATTER_INTER_ALGO_AUTO;
 
     /* Ireduce_scatter_block Intra */
-    if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "noncomm"))
-        MPIR_Ireduce_scatter_block_intra_algo_choice = MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_NONCOMM;
+    if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "noncommutative"))
+        MPIR_Ireduce_scatter_block_intra_algo_choice = MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_NONCOMMUTATIVE;
     else if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "pairwise"))
         MPIR_Ireduce_scatter_block_intra_algo_choice = MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_PAIRWISE;
     else if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "recursive_doubling"))
@@ -676,8 +676,8 @@ int MPIR_COLL_init(void) {
         MPIR_Neighbor_alltoallw_inter_algo_choice = MPIR_NEIGHBOR_ALLTOALLW_INTER_ALGO_AUTO;
 
     /* Red_scat Intra */
-    if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_INTRA_ALGORITHM, "noncomm"))
-        MPIR_Reduce_scatter_intra_algo_choice = MPIR_REDUCE_SCATTER_INTRA_ALGO_NONCOMM;
+    if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_INTRA_ALGORITHM, "noncommutative"))
+        MPIR_Reduce_scatter_intra_algo_choice = MPIR_REDUCE_SCATTER_INTRA_ALGO_NONCOMMUTATIVE;
     else if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_INTRA_ALGORITHM, "pairwise"))
         MPIR_Reduce_scatter_intra_algo_choice = MPIR_REDUCE_SCATTER_INTRA_ALGO_PAIRWISE;
     else if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_INTRA_ALGORITHM, "recursive_doubling"))
@@ -698,8 +698,8 @@ int MPIR_COLL_init(void) {
         MPIR_Reduce_scatter_inter_algo_choice = MPIR_REDUCE_SCATTER_INTER_ALGO_AUTO;
 
     /* Red_scat_block Intra */
-    if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "noncomm"))
-        MPIR_Reduce_scatter_block_intra_algo_choice = MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_NONCOMM;
+    if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "noncommutative"))
+        MPIR_Reduce_scatter_block_intra_algo_choice = MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_NONCOMMUTATIVE;
     else if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "pairwise"))
         MPIR_Reduce_scatter_block_intra_algo_choice = MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_PAIRWISE;
     else if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "recursive_doubling"))
