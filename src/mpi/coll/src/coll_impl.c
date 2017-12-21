@@ -380,8 +380,8 @@ int MPIR_COLL_init(void) {
         MPIR_Ialltoall_intra_algo_choice = MPIR_IALLTOALL_INTRA_ALGO_INPLACE;
     else if (0 == strcmp(MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM, "pairwise"))
         MPIR_Ialltoall_intra_algo_choice = MPIR_IALLTOALL_INTRA_ALGO_PAIRWISE;
-    else if (0 == strcmp(MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM, "perm_sr"))
-        MPIR_Ialltoall_intra_algo_choice = MPIR_IALLTOALL_INTRA_ALGO_PERM_SR;
+    else if (0 == strcmp(MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM, "permuted_sendrecv"))
+        MPIR_Ialltoall_intra_algo_choice = MPIR_IALLTOALL_INTRA_ALGO_PERMUTED_SENDRECV;
     else
         MPIR_Ialltoall_intra_algo_choice = MPIR_IALLTOALL_INTRA_ALGO_AUTO;
 
