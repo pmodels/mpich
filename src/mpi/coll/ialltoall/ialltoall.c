@@ -24,7 +24,7 @@ cvars:
         brucks - Force brucks algorithm
         inplace - Force inplace algorithm
         pairwise - Force pairwise algorithm
-        perm_sr - Force Perm sr algorithm
+        permuted_sendrecv - Force permuted sendrecv algorithm
 
     - name        : MPIR_CVAR_IALLTOALL_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -139,7 +139,7 @@ int MPIR_Ialltoall_intra_sched(const void *sendbuf, int sendcount, MPI_Datatype 
     } else if ((nbytes <= MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE) && (comm_size >= 8)) {
         mpi_errno = MPIR_Ialltoall_intra_brucks_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
     } else if (nbytes <= MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE) {
-        mpi_errno = MPIR_Ialltoall_intra_perm_sr_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
+        mpi_errno = MPIR_Ialltoall_intra_permuted_sendrecv_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
     } else {
         mpi_errno = MPIR_Ialltoall_intra_pairwise_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
     }
@@ -191,8 +191,8 @@ int MPIR_Ialltoall_sched(const void *sendbuf, int sendcount, MPI_Datatype sendty
                 mpi_errno = MPIR_Ialltoall_intra_pairwise_sched(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, comm_ptr, s);
                 break;
-            case MPIR_IALLTOALL_INTRA_ALGO_PERM_SR:
-                mpi_errno = MPIR_Ialltoall_intra_perm_sr_sched(sendbuf, sendcount, sendtype,
+            case MPIR_IALLTOALL_INTRA_ALGO_PERMUTED_SENDRECV:
+                mpi_errno = MPIR_Ialltoall_intra_permuted_sendrecv_sched(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, comm_ptr, s);
                 break;
             case MPIR_IALLTOALL_INTRA_ALGO_AUTO:
