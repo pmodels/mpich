@@ -269,7 +269,7 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const
                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recvbuf, const int *recvcnts,
                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
-int MPIR_Reduce_scatter_intra_noncomm(const void *sendbuf, void *recvbuf, const int *recvcnts,
+int MPIR_Reduce_scatter_intra_noncommutative(const void *sendbuf, void *recvbuf, const int *recvcnts,
                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Reduce_scatter_inter_generic(const void *sendbuf, void *recvbuf, const int *recvcnts,
                                       MPI_Datatype datatype, MPI_Op op,
@@ -287,7 +287,7 @@ int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
 int MPIR_Reduce_scatter_block_intra(const void *sendbuf, void *recvbuf, int recvcount,
                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm
                                     *comm_ptr, MPIR_Errflag_t *errflag );
-int MPIR_Reduce_scatter_block_intra_noncomm(const void *sendbuf, void *recvbuf, int recvcount,
+int MPIR_Reduce_scatter_block_intra_noncommutative(const void *sendbuf, void *recvbuf, int recvcount,
                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm
                                     *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf, void *recvbuf, int recvcount,
@@ -513,7 +513,7 @@ int MPIR_Ireduce_scatter_inter_sched(const void *sendbuf, void *recvbuf, const i
 int MPIR_Ireduce_scatter_intra_recursive_doubling_sched(const void *sendbuf, void *recvbuf, const int *recvcnts, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ireduce_scatter_intra_recursive_halving_sched(const void *sendbuf, void *recvbuf, const int *recvcnts, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ireduce_scatter_pairwise_sched(const void *sendbuf, void *recvbuf, const int *recvcnts, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
-int MPIR_Ireduce_scatter_intra_noncomm_sched(const void *sendbuf, void *recvbuf, const int *recvcnts, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
+int MPIR_Ireduce_scatter_intra_noncommutative_sched(const void *sendbuf, void *recvbuf, const int *recvcnts, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ireduce_scatter_inter_generic_sched(const void *sendbuf, void *recvbuf, const int *recvcnts, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Igatherv_generic_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ireduce_scatter_block_intra_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
@@ -521,7 +521,7 @@ int MPIR_Ireduce_scatter_block_inter_sched(const void *sendbuf, void *recvbuf, i
 int MPIR_Ireduce_scatter_block_intra_recursive_halving_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ireduce_scatter_block_pairwise_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ireduce_scatter_block_intra_recursive_doubling_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
-int MPIR_Ireduce_scatter_block_noncomm_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
+int MPIR_Ireduce_scatter_block_noncommutative_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ireduce_scatter_block_inter_generic_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ialltoall_intra_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPIR_Ialltoall_inter_generic_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s);

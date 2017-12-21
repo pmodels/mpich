@@ -1,35 +1,42 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *
- *  (C) 2001 by Argonne National Laboratory.
+ *  (C) 2009 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
+
+
+/* This implementation of MPI_Reduce_scatter_block was obtained by taking
+   the implementation of MPI_Reduce_scatter from reduce_scatter.c and replacing
+   recvcnts[i] with recvcount everywhere. */
+
 
 #include "mpiimpl.h"
 #include "coll_util.h"
 
-/* Algorithm: Noncommutative recursive doubling
+/* FIXME should we be checking the op_errno here? */
+
+/* Algorithm: Noncommutative
  *
- * Restrictions: This function currently only implements support for the
- * power-of-2, block-regular case (all receive counts are equal).
+ * Restrictions: Only power-of-two and noncommutative
  *
  * Implements the reduce-scatter butterfly algorithm described in J. L. Traff's
  * "An Improved Algorithm for (Non-commutative) Reduce-Scatter with an
  * Application" from EuroPVM/MPI 2005.
- *
- * It takes lgp steps. At step 1, processes exchange (n-n/p) amount of
- * data; at step 2, (n-2n/p) amount of data; at step 3, (n-4n/p)
- * amount of data, and so forth.
- *
- * Cost = lgp.alpha + n.(lgp-(p-1)/p).beta + n.(lgp-(p-1)/p).gamma
  */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_intra_noncomm
+#define FUNCNAME MPIR_Reduce_scatter_block_intra_noncommutative
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_intra_noncomm(const void *sendbuf, void *recvbuf, const int recvcounts[],
-                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-                                       MPIR_Errflag_t *errflag)
+int MPIR_Reduce_scatter_block_intra_noncommutative (
+    const void *sendbuf,
+    void *recvbuf,
+    int recvcount,
+    MPI_Datatype datatype,
+    MPI_Op op,
+    MPIR_Comm *comm_ptr,
+    MPIR_Errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -58,14 +65,10 @@ int MPIR_Reduce_scatter_intra_noncomm(const void *sendbuf, void *recvbuf, const 
 
     /* begin error checking */
     MPIR_Assert(pof2 == comm_size); /* FIXME this version only works for power of 2 procs */
-
-    for (i = 0; i < (comm_size - 1); ++i) {
-        MPIR_Assert(recvcounts[i] == recvcounts[i+1]);
-    }
     /* end error checking */
 
     /* size of a block (count of datatype per block, NOT bytes per block) */
-    block_size = recvcounts[0];
+    block_size = recvcount;
     total_count = block_size * comm_size;
 
     MPIR_CHKLMEM_MALLOC(tmp_buf0, void *, true_extent * total_count, mpi_errno, "tmp_buf0", MPL_MEM_BUFFER);
@@ -104,9 +107,9 @@ int MPIR_Reduce_scatter_intra_noncomm(const void *sendbuf, void *recvbuf, const 
         }
 
         mpi_errno = MPIC_Sendrecv(outgoing_data + send_offset*true_extent,
-                                     size, datatype, peer, MPIR_REDUCE_SCATTER_TAG,
+                                     size, datatype, peer, MPIR_REDUCE_SCATTER_BLOCK_TAG,
                                      incoming_data + recv_offset*true_extent,
-                                     size, datatype, peer, MPIR_REDUCE_SCATTER_TAG,
+                                     size, datatype, peer, MPIR_REDUCE_SCATTER_BLOCK_TAG,
                                      comm_ptr, MPI_STATUS_IGNORE, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
@@ -118,16 +121,16 @@ int MPIR_Reduce_scatter_intra_noncomm(const void *sendbuf, void *recvbuf, const 
            is now our peer's responsibility */
         if (rank > peer) {
             /* higher ranked value so need to call op(received_data, my_data) */
-	    mpi_errno = MPIR_Reduce_local( 
-		     incoming_data + recv_offset*true_extent,
+            mpi_errno = MPIR_Reduce_local(
+                     incoming_data + recv_offset*true_extent,
                      outgoing_data + recv_offset*true_extent,
-                     size, datatype, op );
+                     size, datatype, op);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         else {
             /* lower ranked value so need to call op(my_data, received_data) */
-	    MPIR_Reduce_local( 
-		     outgoing_data + recv_offset*true_extent,
+            mpi_errno = MPIR_Reduce_local(
+                     outgoing_data + recv_offset*true_extent,
                      incoming_data + recv_offset*true_extent,
                      size, datatype, op);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -139,20 +142,22 @@ int MPIR_Reduce_scatter_intra_noncomm(const void *sendbuf, void *recvbuf, const 
         send_offset = recv_offset;
     }
 
-    MPIR_Assert(size == recvcounts[rank]);
+    MPIR_Assert(size == recvcount);
 
     /* copy the reduced data to the recvbuf */
     result_ptr = (char *)(buf0_was_inout ? tmp_buf0 : tmp_buf1) + recv_offset * true_extent;
     mpi_errno = MPIR_Localcopy(result_ptr, size, datatype,
                                recvbuf, size, datatype);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
+    
 fn_exit:
     MPIR_CHKLMEM_FREEALL();
+    /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
+    /* --END ERROR HANDLING-- */
     return mpi_errno;
 fn_fail:
     goto fn_exit;
