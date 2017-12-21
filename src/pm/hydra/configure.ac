@@ -512,7 +512,7 @@ AC_MSG_RESULT([$available_topolibs])
 #########################################################################
 AC_CHECK_HEADERS(slurm/slurm.h)
 AC_CHECK_LIB([slurm],[slurm_hostlist_create],have_libslurm=yes)
-if test "$have_libslurm" = "yes" ; then
+if test "$have_libslurm" = "yes" -a "$ac_cv_header_slurm_slurm_h" = "yes" ; then
     PAC_PREPEND_FLAG([-lslurm],[LIBS])
     AC_DEFINE(HAVE_LIBSLURM,1,[Define if libslurm is available])
 fi
