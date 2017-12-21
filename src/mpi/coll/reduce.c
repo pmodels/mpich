@@ -76,7 +76,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 #define FUNCNAME MPIR_Reduce_binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_binomial ( 
+int MPIR_Reduce_binomial (
     const void *sendbuf,
     void *recvbuf,
     int count,
@@ -113,7 +113,7 @@ int MPIR_Reduce_binomial (
     MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
     MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
-                        mpi_errno, "temporary buffer");
+                        mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
     
@@ -122,7 +122,7 @@ int MPIR_Reduce_binomial (
     if (rank != root) {
         MPIR_CHKLMEM_MALLOC(recvbuf, void *,
                             count*(MPL_MAX(extent,true_extent)), 
-                            mpi_errno, "receive buffer");
+                            mpi_errno, "receive buffer", MPL_MEM_BUFFER);
         recvbuf = (void *)((char*)recvbuf - true_lb);
     }
 
@@ -282,7 +282,7 @@ fn_fail:
 #define FUNCNAME MPIR_Reduce_redscat_gather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_redscat_gather ( 
+int MPIR_Reduce_redscat_gather (
     const void *sendbuf,
     void *recvbuf,
     int count,
@@ -294,18 +294,17 @@ int MPIR_Reduce_redscat_gather (
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int comm_size, rank, type_size ATTRIBUTE((unused)), pof2, rem, newrank;
-    int mask, *cnts, *disps, i, j, send_idx=0;
-    int recv_idx, last_idx=0, newdst;
-    int dst, send_cnt, recv_cnt, newroot, newdst_tree_root, newroot_tree_root; 
+    int comm_size, rank, type_size ATTRIBUTE((unused)), pof2, rem, newrank, rank_gather;
+    int mask, i, j, newdst;
+    int dst, newroot, newdst_tree_root, newroot_tree_root;
     MPI_Aint true_lb, true_extent, extent; 
     void *tmp_buf;
-
-    MPIR_CHKLMEM_DECL(4);
+    int lsize, rsize, sdisp, rdisp, rcnt, scnt, iter, niter, newcount;
+    MPIR_CHKLMEM_DECL(2);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
-
+//    printf("\n IAM ASSIGNED RANK AND STARTING MY JOB WITH rank =%d and comm_size = %d", rank, comm_size);
     /* set op_errno to 0. stored in perthread structure */
     {
         MPIR_Per_thread_t *per_thread = NULL;
@@ -321,23 +320,14 @@ int MPIR_Reduce_redscat_gather (
 
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
-
-    /* I think this is the worse case, so we can avoid an assert() 
-     * inside the for loop */
-    /* should be buf+{this}? */
     MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
-    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
-                        mpi_errno, "temporary buffer");
-    /* adjust for potential negative lower bound in datatype */
+    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent,true_extent)),
+                        mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
-    
-    /* If I'm not the root, then my recvbuf may not be valid, therefore
-       I have to allocate a temporary one */
     if (rank != root) {
-        MPIR_CHKLMEM_MALLOC(recvbuf, void *,
-                            count*(MPL_MAX(extent,true_extent)), 
-                            mpi_errno, "receive buffer");
+        MPIR_CHKLMEM_MALLOC(recvbuf, void *, count * (MPL_MAX(extent,true_extent)),
+                            mpi_errno, "receive buffer", MPL_MEM_BUFFER);
         recvbuf = (void *)((char*)recvbuf - true_lb);
     }
 
@@ -348,30 +338,18 @@ int MPIR_Reduce_redscat_gather (
     }
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
-
-    /* find nearest power-of-two less than or equal to comm_size */
+   /* Find nearest power-of-two less than or equal to comm_size */
     pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
+    niter= -1;
+
+    while (pof2 <= comm_size) {
+           niter ++;
+           pof2 <<= 1;
+    }
     pof2 >>=1;
 
     rem = comm_size - pof2;
 
-    /* In the non-power-of-two case, all odd-numbered
-       processes of rank < 2*rem send their data to
-       (rank-1). These odd-numbered processes no longer
-       participate in the algorithm until the very end. The
-       remaining processes form a nice power-of-two. 
-
-       Note that in MPI_Allreduce we have the even-numbered processes
-       send data to odd-numbered processes. That is better for
-       non-commutative operations because it doesn't require a
-       buffer copy. However, for MPI_Reduce, the most common case
-       is commutative operations with root=0. Therefore we want
-       even-numbered processes to participate the computation for
-       the root=0 case, in order to avoid an extra send-to-root
-       communication after the reduce-scatter. In MPI_Allreduce it
-       doesn't matter because all processes must get the result. */
-    
     if (rank < 2*rem) {
         if (rank % 2 != 0) { /* odd */
             mpi_errno = MPIC_Send(recvbuf, count,
@@ -383,11 +361,11 @@ int MPIR_Reduce_redscat_gather (
                 MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
-            
+
             /* temporarily set the rank to -1 so that this
-               process does not pariticipate in recursive
-               doubling */
-            newrank = -1; 
+            *     process does not pariticipate in recursive
+            *          doubling */
+            newrank = -1;
         }
         else { /* even */
             mpi_errno = MPIC_Recv(tmp_buf, count,
@@ -400,219 +378,166 @@ int MPIR_Reduce_redscat_gather (
                 MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
-            
+
             /* do the reduction on received data. */
             /* This algorithm is used only for predefined ops
-               and predefined ops are always commutative. */
-	    mpi_errno = MPIR_Reduce_local_impl(tmp_buf, recvbuf, 
-					       count, datatype, op);
+            *    and predefined ops are always commutative. */
+            mpi_errno = MPIR_Reduce_local_impl(tmp_buf, recvbuf,
+                                               count, datatype, op);
             /* change the rank */
             newrank = rank / 2;
         }
     }
     else  /* rank >= 2*rem */
         newrank = rank - rem;
-    
-    /* for the reduce-scatter, calculate the count that
-       each process receives and the displacement within
-       the buffer */
 
-    /* We allocate these arrays on all processes, even if newrank=-1,
-       because if root is one of the excluded processes, we will
-       need them on the root later on below. */
-    MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts");
-    MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements");
-    
-    if (newrank != -1) {
-        for (i=0; i<pof2; i++)
-            cnts[i] = count/pof2;
-        if ((count % pof2) > 0) {
-            for (i=0; i<(count % pof2); i++)
-                cnts[i] += 1;
-        }
-        
-        disps[0] = 0;
-        for (i=1; i<pof2; i++)
-            disps[i] = disps[i-1] + cnts[i-1];
-        
-        mask = 0x1;
-        send_idx = recv_idx = 0;
-        last_idx = pof2;
-        while (mask < pof2) {
+   if (newrank != -1) {
+       newcount = count;
+       sdisp = rdisp = 0;
+       iter = 0;
+
+       for (mask = 1; mask < pof2; mask <<= 1) {
             newdst = newrank ^ mask;
-            /* find real rank of dest */
-            dst = (newdst < rem) ? newdst*2 : newdst + rem;
-            
-            send_cnt = recv_cnt = 0;
-            if (newrank < newdst) {
-                send_idx = recv_idx + pof2/(mask*2);
-                for (i=send_idx; i<last_idx; i++)
-                    send_cnt += cnts[i];
-                for (i=recv_idx; i<send_idx; i++)
-                    recv_cnt += cnts[i];
+            /* Find real rank of the dest */
+            dst = (newdst < rem) ? newdst * 2 : newdst + rem;
+            if ((rank < dst)) {
+                /* Recv: into the left half of the current window
+                   Send: the right half of the window to the peer
+                  (perform reduce on the left half of the current window)*/
+                rcnt = newcount / 2;
+                scnt = newcount - rcnt;
+                sdisp = rdisp + rcnt;
+            } else {
+                /* Recv into the right half of the current window
+                   Send the left half of the window to the peer
+                   (perform reduce on the right half of the current window) */
+                scnt = newcount / 2;
+                rcnt = newcount - scnt;
+                rdisp = sdisp + scnt;
             }
-            else {
-                recv_idx = send_idx + pof2/(mask*2);
-                for (i=send_idx; i<recv_idx; i++)
-                    send_cnt += cnts[i];
-                for (i=recv_idx; i<last_idx; i++)
-                    recv_cnt += cnts[i];
-            }
-            
-/*                    printf("Rank %d, send_idx %d, recv_idx %d, send_cnt %d, recv_cnt %d, last_idx %d\n", newrank, send_idx, recv_idx,
-                  send_cnt, recv_cnt, last_idx);
-*/
-            /* Send data from recvbuf. Recv into tmp_buf */ 
-            mpi_errno = MPIC_Sendrecv((char *) recvbuf +
-                                         disps[send_idx]*extent,
-                                         send_cnt, datatype,
-                                         dst, MPIR_REDUCE_TAG,
-                                         (char *) tmp_buf +
-                                         disps[recv_idx]*extent,
-                                         recv_cnt, datatype, dst,
-                                         MPIR_REDUCE_TAG, comm_ptr,
-                                         MPI_STATUS_IGNORE, errflag);
+            mpi_errno = MPIC_Sendrecv((char *)recvbuf + sdisp * extent,
+                                      scnt, datatype, dst,
+                                      MPIR_REDUCE_TAG,
+                                      (char *)tmp_buf + rdisp * extent,
+                                      rcnt, datatype, dst,
+                                      MPIR_REDUCE_TAG, comm_ptr,
+                                      MPI_STATUS_IGNORE, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
                 MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
-            
-            /* tmp_buf contains data received in this step.
-               recvbuf contains data accumulated so far */
-            
-            /* This algorithm is used only for predefined ops
-               and predefined ops are always commutative. */
-	    mpi_errno = MPIR_Reduce_local_impl( 
-		       (char *) tmp_buf + disps[recv_idx]*extent,
-                       (char *) recvbuf + disps[recv_idx]*extent, 
-                       recv_cnt, datatype, op );
-            /* update send_idx for next iteration */
-            send_idx = recv_idx;
-            mask <<= 1;
+            /* Local-reduce */
+            mpi_errno = MPIR_Reduce_local_impl((char *)tmp_buf +
+                                               rdisp * extent,
+                                               (char *)recvbuf +
+                                               rdisp * extent,
+                                               rcnt, datatype, op);
 
-            /* update last_idx, but not in last iteration
-               because the value is needed in the gather
-               step below. */
-            if (mask < pof2)
-                last_idx = recv_idx + pof2/mask;
-        }
+            if (iter < niter) {
+                sdisp = rdisp;
+                newcount = rcnt;
+                iter ++;
+            }
+         }
     }
 
-    /* now do the gather to root */
-    
-    /* Is root one of the processes that was excluded from the
-       computation above? If so, send data from newrank=0 to
-       the root and have root take on the role of newrank = 0 */ 
-
+    /* Set root process to gather at root*/
     if (root < 2*rem) {
         if (root % 2 != 0) {
-            if (rank == root) {    /* recv */
-                /* initialize the arrays that weren't initialized */
-                for (i=0; i<pof2; i++)
-                    cnts[i] = count/pof2;
-                if ((count % pof2) > 0) {
-                    for (i=0; i<(count % pof2); i++)
-                        cnts[i] +=1;
-                }
-                
-                disps[0] = 0;
-                for (i=1; i<pof2; i++)
-                    disps[i] = disps[i-1] + cnts[i-1];
-                
-                mpi_errno = MPIC_Recv(recvbuf, cnts[0], datatype,
-                                         0, MPIR_REDUCE_TAG, comm_ptr,
-                                         MPI_STATUS_IGNORE, errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
-                newrank = 0;
-                send_idx = 0;
-                last_idx = 2;
+            if (rank == root) {
+                 rdisp =0;
+                 newcount = count;
+
+                 for(mask = 1; mask < pof2; mask *= 2) {
+                     rcnt = newcount / 2;
+                     scnt = newcount - rcnt;
+                     sdisp = rcnt;
+                     newcount = newcount / 2;
+                  }
+                  mpi_errno = MPIC_Recv(recvbuf, sdisp, datatype,
+                                        0, MPIR_REDUCE_TAG, comm_ptr,
+                                        MPI_STATUS_IGNORE, errflag);
+                  if (mpi_errno) {
+                      *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                      MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                      MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                  }
+                  newrank = 0;
             }
             else if (newrank == 0) {  /* send */
-                mpi_errno = MPIC_Send(recvbuf, cnts[0], datatype,
-                                         root, MPIR_REDUCE_TAG, comm_ptr, errflag);
-                if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
-                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                    MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                    MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
-                newrank = -1;
+                     mpi_errno = MPIC_Send(recvbuf, sdisp, datatype,
+                                           root, MPIR_REDUCE_TAG, comm_ptr, errflag);
+                     if (mpi_errno) {
+                         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                         MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                     }
+                     newrank = -1;
             }
             newroot = 0;
-        }
-        else newroot = root / 2;
+        } else
+            newroot = root / 2;
     }
     else
         newroot = root - rem;
 
+    /* Gather */
     if (newrank != -1) {
-        j = 0;
-        mask = 0x1;
-        while (mask < pof2) {
-            mask <<= 1;
-            j++;
-        }
-        mask >>= 1;
-        j--;
+        mask = pof2 >> 1;
+        j = niter - 1;
+
         while (mask > 0) {
-            newdst = newrank ^ mask;
+               newcount = count;
+               pof2 = 1;
+               sdisp = rdisp = rcnt = 0;
+               /* Computing the disp and cnt for Gather */
+               for (i = 1; i <= mask; i <<= 1) {
+                    newdst = newrank ^ pof2;
+                    dst = (newdst < rem) ? newdst * 2 : newdst + rem;
+                    sdisp = rdisp;
 
-            /* find real rank of dest */
-            dst = (newdst < rem) ? newdst*2 : newdst + rem;
-            /* if root is playing the role of newdst=0, adjust for
-               it */
-            if ((newdst == 0) && (root < 2*rem) && (root % 2 != 0))
-                dst = root;
-            
-            /* if the root of newdst's half of the tree is the
-               same as the root of newroot's half of the tree, send to
-               newdst and exit, else receive from newdst. */
+                    if ((rank == root) && (newrank == 0))
+                        rank_gather = newrank;
+                    else
+                        rank_gather = rank;
+                    if ((rank_gather < dst)) {
+                        rcnt = newcount / 2;
+                        scnt = newcount - rcnt;
+                        sdisp = rdisp + rcnt;
+                    } else {
+                        scnt = newcount / 2;
+                        rcnt = newcount - scnt;
+                        rdisp = sdisp + scnt;
+                    }
+                    newcount = rcnt;
+                    pof2 <<= 1;
+                }
 
-            newdst_tree_root = newdst >> j;
-            newdst_tree_root <<= j;
-            
-            newroot_tree_root = newroot >> j;
-            newroot_tree_root <<= j;
+                newdst = newrank ^ mask;
 
-            send_cnt = recv_cnt = 0;
-            if (newrank < newdst) {
-                /* update last_idx except on first iteration */
-                if (mask != pof2/2)
-                    last_idx = last_idx + pof2/(mask*2);
-                
-                recv_idx = send_idx + pof2/(mask*2);
-                for (i=send_idx; i<recv_idx; i++)
-                    send_cnt += cnts[i];
-                for (i=recv_idx; i<last_idx; i++)
-                    recv_cnt += cnts[i];
-            }
-            else {
-                recv_idx = send_idx - pof2/(mask*2);
-                for (i=send_idx; i<last_idx; i++)
-                    send_cnt += cnts[i];
-                for (i=recv_idx; i<send_idx; i++)
-                    recv_cnt += cnts[i];
-            }
-            
-            if (newdst_tree_root == newroot_tree_root) {
-                /* send and exit */
-                /* printf("Rank %d, send_idx %d, send_cnt %d, last_idx %d\n", newrank, send_idx, send_cnt, last_idx);
-                   fflush(stdout); */
-                /* Send data from recvbuf. Recv into tmp_buf */ 
-                mpi_errno = MPIC_Send((char *) recvbuf +
-                                         disps[send_idx]*extent,
-                                         send_cnt, datatype,
-                                         dst, MPIR_REDUCE_TAG,
-                                         comm_ptr, errflag);
+                dst = (newdst < rem) ? newdst * 2 : newdst + rem;
+                if ((newdst == 0) && (root < 2 * rem) && (root % 2 != 0))
+                    dst = root;
+
+                /* if the root of newdst's half of the tree is the
+                same as the root of newroot's half of the tree, send to
+                newdst and exit, else receive from newdst. */
+                newdst_tree_root = newdst >> j;
+                newdst_tree_root <<= j;
+
+                newroot_tree_root = newroot >> j;
+                newroot_tree_root <<= j;
+
+                if (newdst_tree_root == newroot_tree_root) {
+                    /* Send data from recvbuf */
+                    mpi_errno = MPIC_Send((char *) recvbuf +
+                                          rdisp * extent,
+                                          rcnt, datatype,
+                                          dst, MPIR_REDUCE_TAG,
+                                          comm_ptr, errflag);
                 if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
                     MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
@@ -620,26 +545,21 @@ int MPIR_Reduce_redscat_gather (
                 break;
             }
             else {
-                /* recv and continue */
-                /* printf("Rank %d, recv_idx %d, recv_cnt %d, last_idx %d\n", newrank, recv_idx, recv_cnt, last_idx);
-                   fflush(stdout); */
-                mpi_errno = MPIC_Recv((char *) recvbuf +
-                                         disps[recv_idx]*extent,
-                                         recv_cnt, datatype, dst,
+               /* Recv and continue */
+               mpi_errno = MPIC_Recv((char *) recvbuf +
+                                         sdisp * extent,
+                                         scnt, datatype, dst,
                                          MPIR_REDUCE_TAG, comm_ptr,
                                          MPI_STATUS_IGNORE, errflag);
                 if (mpi_errno) {
-                    /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
                     MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
             }
-            
-            if (newrank > newdst) send_idx = recv_idx;
-            
             mask >>= 1;
-            j--;
+            j --;
+
         }
     }
 
@@ -777,7 +697,7 @@ int MPIR_Reduce_intra (
             MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
             MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
-                                mpi_errno, "temporary buffer");
+                                mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
             /* adjust for potential negative lower bound in datatype */
             tmp_buf = (void *)((char*)tmp_buf - true_lb);
         }
@@ -974,7 +894,7 @@ int MPIR_Reduce_inter (
 	     * inside the for loop */
 	    /* Should MPIR_CHKLMEM_MALLOC do this? */
 	    MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-	    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
+	    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
             /* adjust for potential negative lower bound in datatype */
             tmp_buf = (void *)((char*)tmp_buf - true_lb);
         }
@@ -1252,7 +1172,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, &errflag);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno) goto fn_fail;
     
     /* ... end of body of routine ... */
     
