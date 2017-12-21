@@ -19,10 +19,10 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallgatherv algorithm
-        auto - Internal algorithm selection
-        brucks - Force brucks algorithm
+        auto               - Internal algorithm selection
+        brucks             - Force brucks algorithm
         recursive_doubling - Force recursive doubling algorithm
-        ring - Force ring algorithm
+        ring               - Force ring algorithm
 
     - name        : MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -33,7 +33,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallgatherv algorithm
-        auto - Internal algorithm selection
+        auto    - Internal algorithm selection
         generic - Force generic algorithm
 
     - name        : MPIR_CVAR_IALLGATHERV_DEVICE_COLLECTIVE

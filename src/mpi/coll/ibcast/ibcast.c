@@ -21,7 +21,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ibcast algorithm
-        auto - Internal algorithm selection
+        auto     - Internal algorithm selection
         binomial - Force Binomial algorithm
 
     - name        : MPIR_CVAR_IBCAST_INTER_ALGORITHM

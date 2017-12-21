@@ -19,7 +19,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatter algorithm
-        auto - Internal algorithm selection
+        auto     - Internal algorithm selection
         binomial - Force binomial algorithm
 
     - name        : MPIR_CVAR_ISCATTER_INTER_ALGORITHM
@@ -31,7 +31,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatter algorithm
-        auto - Internal algorithm selection
+        auto    - Internal algorithm selection
         generic - Force generic algorithm
 
     - name        : MPIR_CVAR_ISCATTER_DEVICE_COLLECTIVE

@@ -21,10 +21,10 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select alltoallv algorithm
-        auto - Internal algorithm selection
+        auto                      - Internal algorithm selection
+        nb                        - Force nonblocking algorithm
         pairwise_sendrecv_replace - Force pairwise_sendrecv_replace algorithm
-        scattered - Force scattered algorithm
-        nb - Force nonblocking algorithm
+        scattered                 - Force scattered algorithm
 
     - name        : MPIR_CVAR_ALLTOALLV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -35,9 +35,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select alltoallv algorithm
-        auto - Internal algorithm selection
+        auto    - Internal algorithm selection
         generic - Force generic algorithm
-        nb - Force nonblocking algorithm
+        nb      - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_ALLTOALLV_DEVICE_COLLECTIVE
       category    : COLLECTIVE

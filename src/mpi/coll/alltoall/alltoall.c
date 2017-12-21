@@ -61,12 +61,12 @@ cvars:
      scope       : MPI_T_SCOPE_ALL_EQ
      description : |-
        Variable to select alltoall algorithm
-       auto - Internal algorithm selection
-       brucks - Force brucks algorithm
-       pairwise - Force pairwise algorithm
+       auto                      - Internal algorithm selection
+       brucks                    - Force brucks algorithm
+       nb                        - Force nonblocking algorithm
+       pairwise                  - Force pairwise algorithm
        pairwise_sendrecv_replace - Force pairwise sendrecv replace algorithm
-       scattered - Force scattered algorithm
-       nb - Force nonblocking algorithm
+       scattered                 - Force scattered algorithm
 
    - name        : MPIR_CVAR_ALLTOALL_INTER_ALGORITHM
      category    : COLLECTIVE
@@ -77,9 +77,9 @@ cvars:
      scope       : MPI_T_SCOPE_ALL_EQ
      description : |-
        Variable to select alltoall algorithm
-       auto - Internal algorithm selection
+       auto    - Internal algorithm selection
        generic - Force generic algorithm
-       nb - Force nonblocking algorithm
+       nb      - Force nonblocking algorithm
 
    - name        : MPIR_CVAR_ALLTOALL_DEVICE_COLLECTIVE
      category    : COLLECTIVE

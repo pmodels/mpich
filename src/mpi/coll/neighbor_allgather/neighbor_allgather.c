@@ -20,7 +20,7 @@ cvars:
       description : |-
         Variable to select ineighbor_allgather algorithm
         auto - Internal algorithm selection
-        nb - Force nonblocking algorithm
+        nb   - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLGATHER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -32,7 +32,7 @@ cvars:
       description : |-
         Variable to select ineighbor_allgather algorithm
         auto - Internal algorithm selection
-        nb - Force nonblocking algorithm
+        nb   - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLGATHER_DEVICE_COLLECTIVE
       category    : COLLECTIVE

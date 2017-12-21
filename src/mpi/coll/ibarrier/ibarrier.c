@@ -19,7 +19,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ibarrier algorithm
-        auto - Internal algorithm selection
+        auto               - Internal algorithm selection
         recursive_doubling - Force recursive doubling algorithm
 
     - name        : MPIR_CVAR_IBARRIER_INTER_ALGORITHM
@@ -31,7 +31,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ibarrier algorithm
-        auto - Internal algorithm selection
+        auto  - Internal algorithm selection
         bcast - Force bcast algorithm
 
     - name        : MPIR_CVAR_IBARRIER_DEVICE_COLLECTIVE

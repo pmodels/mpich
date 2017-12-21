@@ -19,7 +19,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatterv algorithm
-        auto - Internal algorithm selection
+        auto   - Internal algorithm selection
         linear - Force linear algorithm
 
     - name        : MPIR_CVAR_ISCATTERV_INTER_ALGORITHM
@@ -31,7 +31,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatterv algorithm
-        auto - Internal algorithm selection
+        auto   - Internal algorithm selection
         linear - Force linear algorithm
 
     - name        : MPIR_CVAR_ISCATTERV_DEVICE_COLLECTIVE
