@@ -592,5 +592,6 @@ typedef enum MPIR_Scatterv_inter_algo_t {
 extern MPIR_Scatterv_inter_algo_t MPIR_Scatterv_inter_algo_choice;
 
 int MPII_COLL_init(void);
+int MPII_COLL_finalize(void);
 
 #endif /* COLL_IMPL_H_INCLUDED */
