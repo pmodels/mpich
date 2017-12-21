@@ -526,6 +526,10 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 			  &has_args, &has_env);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
+     /* Initialize collectives infrastructure */
+     mpi_errno = MPIR_COLL_init();
+     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
     /* Assert: tag_ub should be a power of 2 minus 1 */
     MPIR_Assert(((unsigned)MPIR_Process.attrs.tag_ub & ((unsigned)MPIR_Process.attrs.tag_ub + 1)) == 0);
 
