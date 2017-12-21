@@ -788,3 +788,15 @@ int MPII_COLL_init(void) {
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPII_COLL_finalize
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPII_COLL_finalize(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* nothing to do */
+
+    return MPI_SUCCESS;
+}
