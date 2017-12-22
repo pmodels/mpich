@@ -30,6 +30,7 @@ for algo_name in ${algo_names}; do
         coll_algo_tests+="bcast_min_datatypes 10 timeLimit=1200 ${env}${nl}"
         coll_algo_tests+="bcast_comm_world 10 timeLimit=1200 ${env}${nl}"
         coll_algo_tests+="bcastzerotype 5 ${env}${nl}"
+        coll_algo_tests+="bcasttest 10 ${env} env=MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE=4096 ${nl}"
     done
 done
 
