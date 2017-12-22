@@ -59,8 +59,9 @@ int MPII_sched_add_length(MPIR_Comm * comm, int tag, void *state)
 }
 
 /* TODO it would be nice if we could refactor things to minimize
-   duplication between this and MPIR_Iscatter_intra and friends.  We can't use
-   MPIR_Iscatter_intra as is without inducing an extra copy in the noncontig case. */
+   duplication between this and MPIR_Iscatter and algorithms.  We
+   can't use the MPIR_Iscatter algorithms as is without inducing an
+   extra copy in the noncontig case. */
 /* This is a binomial scatter operation, but it does *not* take typical scatter
  * arguments.  At the moment this function always scatters a buffer of nbytes
  * starting at tmp_buf address. */
