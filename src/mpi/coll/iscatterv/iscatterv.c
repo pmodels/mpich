@@ -17,7 +17,7 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select iscatterv algorithm
         auto - Internal algorithm selection
         linear - Force linear algorithm
@@ -29,7 +29,7 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select iscatterv algorithm
         auto - Internal algorithm selection
         linear - Force linear algorithm

@@ -30,7 +30,7 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select reduce_scatter algorithm
         auto - Internal algorithm selection
         noncommutative - Force noncommutative algorithm
@@ -46,7 +46,7 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select reduce_scatter algorithm
         auto - Internal algorithm selection
         generic - Force generic algorithm
