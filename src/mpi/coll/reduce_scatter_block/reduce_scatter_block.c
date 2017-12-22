@@ -154,25 +154,18 @@ int MPIR_Reduce_scatter_block_intra (
         /* commutative and short. use recursive halving algorithm */
         mpi_errno = MPIR_Reduce_scatter_block_intra_recursive_halving(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
     }
-    
-    if (is_commutative && (nbytes >= MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
-
+    else if (is_commutative && (nbytes >= MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         /* commutative and long message, or noncommutative and long message.
            use (p-1) pairwise exchanges */ 
         mpi_errno = MPIR_Reduce_scatter_block_intra_pairwise(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
     }
-    
-    if (!is_commutative) {
-
-        /* power of two check */
-        if (!(comm_size & (comm_size - 1))) {
-            /* noncommutative, pof2 size */
-            mpi_errno = MPIR_Reduce_scatter_block_intra_noncommutative(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
-        }
-        else {
-            /* noncommutative and non-pof2, use recursive doubling. */
-            mpi_errno = MPIR_Reduce_scatter_block_intra_recursive_doubling(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
-        }
+    else if (!(comm_size & (comm_size - 1))) {     /* power of two check */
+        /* noncommutative, pof2 size */
+        mpi_errno = MPIR_Reduce_scatter_block_intra_noncommutative(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
+    }
+    else {
+        /* noncommutative and non-pof2, use recursive doubling. */
+        mpi_errno = MPIR_Reduce_scatter_block_intra_recursive_doubling(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
     }
 
     if (mpi_errno) {
