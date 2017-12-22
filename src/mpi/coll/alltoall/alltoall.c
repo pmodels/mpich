@@ -134,9 +134,7 @@ int MPIR_Alltoall_intra(
 {
     int comm_size;
     int mpi_errno=MPI_SUCCESS, nbytes;
-    int mpi_errno_ret = MPI_SUCCESS;
     int sendtype_size;
-    MPI_Datatype newtype = MPI_DATATYPE_NULL;
 
     if (recvcount == 0) return MPI_SUCCESS;
 
@@ -157,15 +155,11 @@ int MPIR_Alltoall_intra(
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
+    if (*errflag != MPIR_ERR_NONE)
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
 
     return mpi_errno;
  fn_fail:
-    if (newtype != MPI_DATATYPE_NULL)
-        MPIR_Type_free_impl(&newtype);
     goto fn_exit;
 }
 

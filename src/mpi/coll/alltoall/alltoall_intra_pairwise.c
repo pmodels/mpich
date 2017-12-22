@@ -43,7 +43,6 @@ int MPIR_Alltoall_intra_pairwise(
     int mpi_errno=MPI_SUCCESS, src, dst, rank;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    MPI_Datatype newtype = MPI_DATATYPE_NULL;
 
     if (recvcount == 0) return MPI_SUCCESS;
 
@@ -107,7 +106,5 @@ int MPIR_Alltoall_intra_pairwise(
 
     return mpi_errno;
  fn_fail:
-    if (newtype != MPI_DATATYPE_NULL)
-        MPIR_Type_free_impl(&newtype);
     goto fn_exit;
 }
