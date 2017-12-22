@@ -54,7 +54,7 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Bcast_select(void *buffer,
         return (MPIDI_POSIX_coll_algo_container_t *) &POSIX_bcast_binomial_cnt;
     } else {
         if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPIU_is_pof2(comm_ptr->local_size, NULL)) {
-            return (MPIDI_POSIX_coll_algo_container_t *) &POSIX_bcast_scatter_doubling_allgather_cnt;
+            return (MPIDI_POSIX_coll_algo_container_t *) &POSIX_bcast_scatter_recursive_doubling_allgather_cnt;
         } else {
             return (MPIDI_POSIX_coll_algo_container_t *) &POSIX_bcast_scatter_ring_allgather_cnt;
         }
@@ -75,9 +75,9 @@ int MPIDI_POSIX_Bcast_call(void *buffer, int count, MPI_Datatype datatype,
             MPIDI_POSIX_Bcast_binomial(buffer, count, datatype, root, comm_ptr, errflag,
                                        ch4_algo_parameters_container);
         break;
-    case MPIDI_POSIX_bcast_scatter_doubling_allgather_id:
+    case MPIDI_POSIX_bcast_scatter_recursive_doubling_allgather_id:
         mpi_errno =
-            MPIDI_POSIX_Bcast_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr,
+            MPIDI_POSIX_Bcast_scatter_recursive_doubling_allgather(buffer, count, datatype, root, comm_ptr,
                                                          errflag, ch4_algo_parameters_container);
         break;
     case MPIDI_POSIX_bcast_scatter_ring_allgather_id:

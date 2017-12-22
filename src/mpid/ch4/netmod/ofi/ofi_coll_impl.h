@@ -50,11 +50,11 @@ int MPIDI_OFI_Bcast_binomial(void *buffer,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Bcast_scatter_doubling_allgather
+#define FUNCNAME MPIDI_OFI_Bcast_scatter_recursive_doubling_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Bcast_scatter_doubling_allgather(void *buffer,
+int MPIDI_OFI_Bcast_scatter_recursive_doubling_allgather(void *buffer,
                                                int count,
                                                MPI_Datatype datatype,
                                                int root,
