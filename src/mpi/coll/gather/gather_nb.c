@@ -7,7 +7,6 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#undef FUNCNAME
 #define FUNCNAME MPIR_Gather_nb
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
