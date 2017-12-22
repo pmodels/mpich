@@ -272,6 +272,8 @@ extern int MPIR_Ibarrier_inter_algo_choice;
 typedef enum MPIR_Ibcast_intra_algo_t {
     MPIR_IBCAST_INTRA_ALGO_AUTO,
     MPIR_IBCAST_INTRA_ALGO_BINOMIAL,
+    MPIR_IBCAST_INTRA_ALGO_SCATTER_RECURSIVE_DOUBLING_ALLGATHER,
+    MPIR_IBCAST_INTRA_ALGO_SCATTER_RING_ALLGATHER,
 } MPIR_Ibcast_intra_algo_t;
 extern int MPIR_Ibcast_intra_algo_choice;
 
