@@ -279,9 +279,10 @@ int MPIR_Bcast_intra(void *buffer, int count, MPI_Datatype datatype, int root, M
                      MPIR_Errflag_t * errflag);
 int MPIR_Bcast_intra_binomial(void *buffer, int count, MPI_Datatype datatype, int root,
                               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
-int MPIR_Bcast_intra_scatter_doubling_allgather(void *buffer, int count, MPI_Datatype datatype,
-                                                int root, MPIR_Comm * comm_ptr,
-                                                MPIR_Errflag_t * errflag);
+int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer, int count,
+                                                          MPI_Datatype datatype, int root,
+                                                          MPIR_Comm * comm_ptr,
+                                                          MPIR_Errflag_t * errflag);
 int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer, int count, MPI_Datatype datatype,
                                             int root, MPIR_Comm * comm_ptr,
                                             MPIR_Errflag_t * errflag);

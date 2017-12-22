@@ -6,7 +6,7 @@ extern const MPIDI_OFI_coll_algo_container_t OFI_barrier_recursive_doubling_cnt;
 
 /* Bcast OFI containers declaration */
 extern const MPIDI_OFI_coll_algo_container_t OFI_bcast_binomial_cnt;
-extern const MPIDI_OFI_coll_algo_container_t OFI_bcast_scatter_doubling_allgather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_bcast_scatter_recursive_doubling_allgather_cnt;
 extern const MPIDI_OFI_coll_algo_container_t OFI_bcast_scatter_ring_allgather_cnt;
 
 /* Reduce OFI containers declaration */

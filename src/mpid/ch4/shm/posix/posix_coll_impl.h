@@ -50,11 +50,11 @@ int MPIDI_POSIX_Bcast_binomial(void *buffer,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_Bcast_scatter_doubling_allgather
+#define FUNCNAME MPIDI_POSIX_Bcast_scatter_recursive_doubling_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_POSIX_Bcast_scatter_doubling_allgather(void *buffer,
+int MPIDI_POSIX_Bcast_scatter_recursive_doubling_allgather(void *buffer,
                                                  int count,
                                                  MPI_Datatype datatype,
                                                  int root,
@@ -64,13 +64,13 @@ int MPIDI_POSIX_Bcast_scatter_doubling_allgather(void *buffer,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast_intra_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Bcast_intra_scatter_recursive_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_Bcast_scatter_doubling_allgather
+#define FUNCNAME MPIDI_POSIX_Bcast_scatter_recursive_doubling_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
