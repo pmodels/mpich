@@ -19,7 +19,7 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select ibcast algorithm
         auto - Internal algorithm selection
         binomial - Force Binomial algorithm
@@ -31,7 +31,7 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select ibcast algorithm
         auto - Internal algorithm selection
         flat - Force flat algorithm

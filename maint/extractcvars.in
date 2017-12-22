@@ -293,6 +293,7 @@ foreach my $p (@cvars) {
     # Register the cvar
     my $desc = $p->{description};
     $desc =~ s/"/\\"/g;
+    $desc =~ s/\n/\\\n/g;
     printf OUTPUT_C qq(    MPIR_T_CVAR_REGISTER_STATIC(\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s);\n),
         qq(        $mpi_dtype,),
         qq(        ${uc_ns}_$p->{name}, /* name */),
