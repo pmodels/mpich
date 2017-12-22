@@ -31,6 +31,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+int MPIR_Nbc_progress_hook_id=0;
 /*
  * Initializing the below choice variables is not strictly necessary.
  * However, such uninitialized variables are common variables, which
@@ -785,7 +786,15 @@ int MPII_COLL_init(void) {
     else
         MPIR_Scatterv_inter_algo_choice = MPIR_SCATTERV_INTER_ALGO_AUTO;
 
+    /* register non blocking collectives progress hook */
+    mpi_errno = MPID_Progress_register_hook(MPIDU_Sched_progress, &MPIR_Nbc_progress_hook_id);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -796,7 +805,12 @@ int MPII_COLL_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* nothing to do */
+    /* deregister non blocking collectives progress hook */
+    MPID_Progress_deregister_hook(MPIR_Nbc_progress_hook_id);
 
-    return MPI_SUCCESS;
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
 }
