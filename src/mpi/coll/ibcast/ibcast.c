@@ -21,8 +21,10 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ibcast algorithm
-        auto     - Internal algorithm selection
-        binomial - Force Binomial algorithm
+        auto                                 - Internal algorithm selection
+        binomial                             - Force Binomial algorithm
+        scatter_recursive_doubling_allgather - Force Scatter Recursive Doubling Allgather algorithm
+        scatter_ring_allgather               - Force Scatter Ring Allgather algorithm
 
     - name        : MPIR_CVAR_IBCAST_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -108,11 +110,11 @@ int MPIR_Ibcast_sched_intra(void *buffer, int count, MPI_Datatype datatype, int 
     else /* (nbytes >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_size >= MPIR_CVAR_BCAST_MIN_PROCS) */
     {
         if ((nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE) && (MPIU_is_pof2(comm_size, NULL))) {
-            mpi_errno = MPII_Ibcast_scatter_rec_dbl_allgather_sched(buffer, count, datatype, root, comm_ptr, s);
+            mpi_errno = MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(buffer, count, datatype, root, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         else {
-            mpi_errno = MPII_Ibcast_scatter_ring_allgather_sched(buffer, count, datatype, root, comm_ptr, s);
+            mpi_errno = MPIR_Ibcast_sched_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
     }
@@ -156,6 +158,14 @@ int MPIR_Ibcast_sched(void *buffer, int count, MPI_Datatype datatype, int root, 
             switch (MPIR_Ibcast_intra_algo_choice) {
                 case MPIR_IBCAST_INTRA_ALGO_BINOMIAL:
                     mpi_errno = MPIR_Ibcast_sched_intra_binomial(buffer, count, datatype,
+                                root, comm_ptr, s);
+                    break;
+                case MPIR_IBCAST_INTRA_ALGO_SCATTER_RECURSIVE_DOUBLING_ALLGATHER:
+                    mpi_errno = MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(buffer, count, datatype,
+                                root, comm_ptr, s);
+                    break;
+                case MPIR_IBCAST_INTRA_ALGO_SCATTER_RING_ALLGATHER:
+                    mpi_errno = MPIR_Ibcast_sched_intra_scatter_ring_allgather(buffer, count, datatype,
                                 root, comm_ptr, s);
                     break;
                 case MPIR_IBCAST_INTRA_ALGO_AUTO:

@@ -434,6 +434,10 @@ int MPIR_COLL_init(void) {
     /* Ibcast Intra */
     if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "binomial"))
         MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_BINOMIAL;
+    else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "scatter_recursive_doubling_allgather"))
+        MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_SCATTER_RECURSIVE_DOUBLING_ALLGATHER;
+    else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "scatter_ring_allgather"))
+        MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_SCATTER_RING_ALLGATHER;
     else
         MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_AUTO;
 

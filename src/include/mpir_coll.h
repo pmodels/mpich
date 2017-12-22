@@ -646,6 +646,12 @@ int MPIR_Ibcast_sched_intra(void *buffer, int count, MPI_Datatype datatype, int 
                             MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datatype, int root,
                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s);
+int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, int count,
+                                                                 MPI_Datatype datatype, int root,
+                                                                 MPIR_Comm * comm_ptr,
+                                                                 MPIR_Sched_t s);
+int MPIR_Ibcast_sched_intra_scatter_ring_allgather(void *buffer, int count, MPI_Datatype datatype,
+                                                   int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, int root,
                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
