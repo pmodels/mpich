@@ -104,8 +104,6 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[
 #define FUNCNAME MPIR_Reduce_scatter_intra
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-
-/* not declared static because a machine-specific function may call this one in some cases */
 int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recvcounts[],
                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {

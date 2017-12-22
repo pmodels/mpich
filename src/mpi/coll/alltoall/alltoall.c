@@ -118,7 +118,6 @@ int MPI_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
 #undef MPI_Alltoall
 #define MPI_Alltoall PMPI_Alltoall
 
-/* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Alltoall_intra
 #undef FCNAME
@@ -171,8 +170,6 @@ int MPIR_Alltoall_intra(
 }
 
 
-
-/* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Alltoall_inter
 #undef FCNAME

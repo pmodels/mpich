@@ -96,7 +96,6 @@ int MPIR_Scan_intra (const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-/* not declared static because a machine-specific function may call this one in some cases */
 /* MPIR_Scan performs an scan using point-to-point messages.  This is
    intended to be used by device-specific implementations of scan. */
 #undef FUNCNAME

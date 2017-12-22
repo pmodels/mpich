@@ -164,8 +164,6 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 */
 
 
-/* not declared static because a machine-specific function may call this one 
-   in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_intra
 #undef FCNAME

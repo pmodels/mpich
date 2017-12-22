@@ -61,8 +61,6 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 #undef MPI_Exscan
 #define MPI_Exscan PMPI_Exscan
 
-/* not declared static because a machine-specific function may call this one in
- * some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Exscan
 #undef FCNAME

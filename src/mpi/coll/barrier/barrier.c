@@ -81,7 +81,6 @@ int MPI_Barrier(MPI_Comm comm) __attribute__((weak,alias("PMPI_Barrier")));
 #undef MPI_Barrier
 #define MPI_Barrier PMPI_Barrier
 
-/* not declared static because it is called in ch3_comm_connect/accept */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Barrier_intra
 #undef FCNAME

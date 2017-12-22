@@ -75,7 +75,6 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 #undef MPI_Scatterv
 #define MPI_Scatterv PMPI_Scatterv
 
-/* not declared static because it is called in intercomm. reduce_scatter */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scatterv
 #undef FCNAME

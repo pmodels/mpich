@@ -97,8 +97,6 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
 #define FUNCNAME MPIR_Reduce_scatter_block_intra
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-
-/* not declared static because a machine-specific function may call this one in some cases */
 int MPIR_Reduce_scatter_block_intra ( 
     const void *sendbuf, 
     void *recvbuf, 

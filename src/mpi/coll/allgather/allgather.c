@@ -100,8 +100,6 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, voi
 #undef MPI_Allgather
 #define MPI_Allgather PMPI_Allgather
 
-/* not declared static because a machine-specific function may call this 
-   one in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allgather_intra
 #undef FCNAME
@@ -156,9 +154,6 @@ int MPIR_Allgather_intra (
 #define FUNCNAME MPIR_Allgather_inter
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-
-/* not declared static because a machine-specific function may call this one 
-   in some cases */
 int MPIR_Allgather_inter ( 
     const void *sendbuf,
     int sendcount,
