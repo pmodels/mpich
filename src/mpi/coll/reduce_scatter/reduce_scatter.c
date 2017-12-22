@@ -184,7 +184,7 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
             }
         }
 
-        /* slightly retask pof2 to mean pof2 equal or greater, not always greater as it is above */
+        /* power-of-two that is equal or greater than comm_size */
         pof2 = 1;
         while (pof2 < comm_size) pof2 <<= 1;
 
