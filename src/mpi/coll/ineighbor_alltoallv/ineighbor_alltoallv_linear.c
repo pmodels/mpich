@@ -6,27 +6,37 @@
 
 #include "mpiimpl.h"
 
+/*
+ * Linear
+ *
+ * Simple send to each outgoing neighbor and recv from each incoming
+ * neighbor.
+ */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_allgatherv_sched_generic
+#define FUNCNAME MPIR_Ineighbor_alltoallv_sched_linear
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ineighbor_allgatherv_sched_generic(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ineighbor_alltoallv_sched_linear(const void *sendbuf, const int sendcounts[], const int sdispls[], MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;
     int i, k,l;
     int *srcs, *dsts;
     int comm_size;
-    MPI_Aint recvtype_extent;
+    MPI_Aint sendtype_extent, recvtype_extent;
     MPIR_CHKLMEM_DECL(2);
 
     comm_size = comm_ptr->local_size;
 
+    MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     for (i = 0; i < comm_size; ++i) {
+        MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+                                         (sdispls[i] * sendtype_extent));
         MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                         (displs[i] * recvtype_extent));
+                                         (rdispls[i] * recvtype_extent));
     }
 
     mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);
@@ -39,12 +49,13 @@ int MPIR_Ineighbor_allgatherv_sched_generic(const void *sendbuf, int sendcount, 
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     for (k = 0; k < outdegree; ++k) {
-        mpi_errno = MPIR_Sched_send(sendbuf, sendcount, sendtype, dsts[k], comm_ptr, s);
+        char *sb = ((char *)sendbuf) + sdispls[k] * sendtype_extent;
+        mpi_errno = MPIR_Sched_send(sb, sendcounts[k], sendtype, dsts[k], comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     for (l = 0; l < indegree; ++l) {
-        char *rb = ((char *)recvbuf) + displs[l] * recvtype_extent;
+        char *rb = ((char *)recvbuf) + rdispls[l] * recvtype_extent;
         mpi_errno = MPIR_Sched_recv(rb, recvcounts[l], recvtype, srcs[l], comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }

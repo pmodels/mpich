@@ -42,9 +42,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select barrier algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
-        nb      - Force nonblocking algorithm
+        auto  - Internal algorithm selection
+        bcast - Force bcast algorithm
+        nb    - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -125,7 +125,7 @@ int MPIR_Barrier_inter( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Barrier_inter_generic(comm_ptr, errflag);
+    mpi_errno = MPIR_Barrier_inter_bcast(comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -159,8 +159,8 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
     } else {
         /* intercommunicator */
         switch (MPIR_Barrier_inter_algo_choice) {
-            case MPIR_BARRIER_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Barrier_inter_generic(comm_ptr, errflag);
+            case MPIR_BARRIER_INTER_ALGO_BCAST:
+                mpi_errno = MPIR_Barrier_inter_bcast(comm_ptr, errflag);
                 break;
             case MPIR_BARRIER_INTER_ALGO_NB:
                 mpi_errno = MPIR_Barrier_nb(comm_ptr, errflag);

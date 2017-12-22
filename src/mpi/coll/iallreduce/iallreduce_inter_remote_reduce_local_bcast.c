@@ -6,20 +6,23 @@
 
 #include "mpiimpl.h"
 
+/* Intercommunicator Allreduce
+ *
+ * We first do an intercommunicator reduce to rank 0 on left group,
+ * then an intercommunicator reduce to rank 0 on right group, followed
+ * by local intracommunicator broadcasts in each group.
+ *
+ * We don't do local reduces first and then intercommunicator
+ * broadcasts because it would require allocation of a temporary
+ * buffer.
+ */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_sched_inter_generic
+#define FUNCNAME MPIR_Iallreduce_sched_inter_remote_reduce_local_bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_sched_inter_generic(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iallreduce_sched_inter_remote_reduce_local_bcast(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
-    /* Intercommunicator Allreduce.
-       We first do an intercommunicator reduce to rank 0 on left group,
-       then an intercommunicator reduce to rank 0 on right group, followed
-       by local intracommunicator broadcasts in each group.
-
-       We don't do local reduces first and then intercommunicator
-       broadcasts because it would require allocation of a temporary buffer.
-       */
     int mpi_errno = MPI_SUCCESS;
     int rank, root;
     MPIR_Comm *lcomm_ptr = NULL;

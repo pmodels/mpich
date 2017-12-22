@@ -7,11 +7,23 @@
 
 #include "mpiimpl.h"
 
+/*
+ * Bcast-based algorithm
+ *
+ * rank 0 on each group does an intercommunicator broadcast to the
+ * remote group to indicate that all processes in the local group have
+ * reached the barrier. We do a 1-byte bcast because a 0-byte bcast
+ * will just return without doing anything.
+ *
+ * first broadcast from left to right group, then from right to left
+ * group.
+ */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Barrier_inter_generic
+#define FUNCNAME MPIR_Barrier_inter_bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier_inter_generic( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
+int MPIR_Barrier_inter_bcast( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int rank, mpi_errno = MPI_SUCCESS, root;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -37,13 +49,6 @@ int MPIR_Barrier_inter_generic( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
 
-    /* rank 0 on each group does an intercommunicator broadcast to the
-       remote group to indicate that all processes in the local group
-       have reached the barrier. We do a 1-byte bcast because a 0-byte
-       bcast will just return without doing anything. */
-    
-    /* first broadcast from left to right group, then from right to
-       left group */
     if (comm_ptr->is_low_group) {
         /* bcast to right*/
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;

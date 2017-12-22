@@ -6,11 +6,18 @@
 
 #include "mpiimpl.h"
 
+/*
+ * Linear
+ *
+ * Simple send to each outgoing neighbor and recv from each incoming
+ * neighbor.
+ */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_alltoall_sched_generic
+#define FUNCNAME MPIR_Ineighbor_alltoall_sched_linear
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ineighbor_alltoall_sched_generic(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ineighbor_alltoall_sched_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;

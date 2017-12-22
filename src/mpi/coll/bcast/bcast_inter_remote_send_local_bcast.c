@@ -7,11 +7,17 @@
 
 #include "mpiimpl.h"
 
+/* Intercommunicator broadcast
+ *
+ * Root sends to rank 0 in remote group.  Remote group does local
+ * intracommunicator broadcast.
+ */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Bcast_inter_generic
+#define FUNCNAME MPIR_Bcast_inter_remote_send_local_bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Bcast_inter_generic (
+int MPIR_Bcast_inter_remote_send_local_bcast (
         void *buffer, 
         int count, 
         MPI_Datatype datatype, 
@@ -19,10 +25,6 @@ int MPIR_Bcast_inter_generic (
         MPIR_Comm *comm_ptr,
         MPIR_Errflag_t *errflag)
 {
-    /*  Intercommunicator broadcast.
-        Root sends to rank 0 in remote group. Remote group does local
-        intracommunicator broadcast.
-        */
     int rank, mpi_errno;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;

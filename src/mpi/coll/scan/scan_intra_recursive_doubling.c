@@ -6,49 +6,47 @@
  */
 
 #include "mpiimpl.h"
-/* This is the machine-independent implementation of scan. The algorithm is:
-   
-   Algorithm: MPI_Scan
 
-   We use a lgp recursive doubling algorithm. The basic algorithm is
-   given below. (You can replace "+" with any other scan operator.)
-   The result is stored in recvbuf.
-
- .vb
-   recvbuf = sendbuf;
-   partial_scan = sendbuf;
-   mask = 0x1;
-   while (mask < size) {
-      dst = rank^mask;
-      if (dst < size) {
-         send partial_scan to dst;
-         recv from dst into tmp_buf;
-         if (rank > dst) {
-            partial_scan = tmp_buf + partial_scan;
-            recvbuf = tmp_buf + recvbuf;
-         }
-         else {
-            if (op is commutative)
-               partial_scan = tmp_buf + partial_scan;
-            else {
-               tmp_buf = partial_scan + tmp_buf;
-               partial_scan = tmp_buf;
-            }
-         }
-      }
-      mask <<= 1;
-   }  
- .ve
-
-   End Algorithm: MPI_Scan
-*/
-
+/*
+ * Recursive-doubling
+ *
+ * We use a lgp recursive doubling algorithm. The basic algorithm is
+ * given below. (You can replace "+" with any other scan operator.)
+ * The result is stored in recvbuf.
+ *
+ * .vb
+ *   recvbuf = sendbuf;
+ *   partial_scan = sendbuf;
+ *   mask = 0x1;
+ *   while (mask < size) {
+ *       dst = rank^mask;
+ *       if (dst < size) {
+ *           send partial_scan to dst;
+ *           recv from dst into tmp_buf;
+ *           if (rank > dst) {
+ *               partial_scan = tmp_buf + partial_scan;
+ *               recvbuf = tmp_buf + recvbuf;
+ *           }
+ *           else {
+ *               if (op is commutative)
+ *                   partial_scan = tmp_buf + partial_scan;
+ *               else {
+ *                   tmp_buf = partial_scan + tmp_buf;
+ *                   partial_scan = tmp_buf;
+ *               }
+ *           }
+ *       }
+ *       mask <<= 1;
+ *   }
+ * .ve
+ *
+ */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scan_intra_generic
+#define FUNCNAME MPIR_Scan_intra_recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scan_intra_generic (
+int MPIR_Scan_intra_recursive_doubling (
     const void *sendbuf,
     void *recvbuf,
     int count,

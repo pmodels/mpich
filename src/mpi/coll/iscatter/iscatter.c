@@ -32,7 +32,7 @@ cvars:
       description : |-
         Variable to select iscatter algorithm
         auto                      - Internal algorithm selection
-        linear                    - Force generic algorithm
+        linear                    - Force linear algorithm
         remote_send_local_scatter - Force remote-send-local-scatter algorithm
 
     - name        : MPIR_CVAR_ISCATTER_DEVICE_COLLECTIVE

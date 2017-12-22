@@ -6,19 +6,22 @@
 
 #include "mpiimpl.h"
 
+/* Intercommunicator Allreduce
+ *
+ * We first do intracommunicator reduces to rank 0 on left and right
+ * groups, then an exchange between left and right rank 0, and finally
+ * intracommunicator broadcasts from rank 0 on left and right
+ * group.
+ */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allreduce_inter_generic
+#define FUNCNAME MPIR_Allreduce_inter_reduce_exchange_bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allreduce_inter_generic ( const void *sendbuf, void *recvbuf, int
+int MPIR_Allreduce_inter_reduce_exchange_bcast ( const void *sendbuf, void *recvbuf, int
         count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
         MPIR_Errflag_t *errflag )
 {
-    /* Intercommunicator Allreduce.  We first do intracommunicator reduces to rank
-     * 0 on left and right groups, then an exchange between left and right rank 0,
-     * and finally intracommunicator broadcasts from rank 0 on left and right
-     * group.  */
-
     int mpi_errno;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint true_extent, true_lb, extent;

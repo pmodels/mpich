@@ -5,5 +5,5 @@ mpi_sources +=                                  \
     src/mpi/coll/igatherv/igatherv.c
 
 mpi_core_sources +=                          \
-    src/mpi/coll/igatherv/igatherv_generic.c
+    src/mpi/coll/igatherv/igatherv_linear.c
 

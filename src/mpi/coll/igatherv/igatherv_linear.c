@@ -6,11 +6,17 @@
 
 #include "mpiimpl.h"
 
+/*
+ * Linear
+ *
+ * Root receives from all processes, everyone else sends to root.
+ */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Igatherv_sched_generic
+#define FUNCNAME MPIR_Igatherv_sched_linear
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Igatherv_sched_generic(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+int MPIR_Igatherv_sched_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                                 const int recvcounts[], const int displs[], MPI_Datatype recvtype, int root,
                                 MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {

@@ -9,4 +9,4 @@ mpi_core_sources +=                                         \
     src/mpi/coll/iallreduce/iallreduce_intra_reduce_scatter_allgather.c  \
     src/mpi/coll/iallreduce/iallreduce_intra_recursive_doubling.c \
     src/mpi/coll/iallreduce/iallreduce_intra_smp.c                \
-    src/mpi/coll/iallreduce/iallreduce_inter_generic.c
+    src/mpi/coll/iallreduce/iallreduce_inter_remote_reduce_local_bcast.c
