@@ -160,7 +160,6 @@ int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm
 #define FUNCNAME MPIR_Bcast_intra
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* not declared static because it is called in intercomm. allgatherv */
 int MPIR_Bcast_intra ( 
         void *buffer, 
         int count, 

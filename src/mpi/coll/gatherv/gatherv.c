@@ -75,7 +75,6 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void 
 #undef MPI_Gatherv
 #define MPI_Gatherv PMPI_Gatherv
 
-/* not declared static because it is called in intercommunicator allgatherv */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Gatherv
 #undef FCNAME
