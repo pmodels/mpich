@@ -18,7 +18,7 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select iallreduce algorithm
         auto - Internal algorithm selection
         naive - Force naive algorithm
@@ -32,7 +32,7 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select iallreduce algorithm
         auto - Internal algorithm selection
         generic - Force generic algorithm

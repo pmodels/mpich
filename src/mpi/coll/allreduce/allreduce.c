@@ -60,7 +60,7 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select allreduce algorithm
         auto - Internal algorithm selection
         recursive_doubling - Force recursive doubling algorithm
@@ -74,7 +74,7 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select allreduce algorithm
         auto - Internal algorithm selection
         generic - Force generic algorithm
