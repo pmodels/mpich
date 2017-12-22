@@ -12,6 +12,8 @@
 #ifndef COLL_IMPL_H_INCLUDED
 #define COLL_IMPL_H_INCLUDED
 
+extern int MPIR_Nbc_progress_hook_id;
+
 /* Enumerate the list of algorithms */
 typedef enum MPIR_Allgather_intra_algo_t {
     MPIR_ALLGATHER_INTRA_ALGO_AUTO,
