@@ -86,7 +86,6 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *
 #undef MPI_Gather
 #define MPI_Gather PMPI_Gather
 
-/* not declared static because it is called in intercomm. allgather */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Gather_intra
 #undef FCNAME
@@ -112,8 +111,6 @@ int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 }
 
 
-
-/* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Gather_inter
 #undef FCNAME

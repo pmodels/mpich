@@ -135,8 +135,6 @@ MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[] = {
     MPIR_MINLOC_check_dtype, MPIR_MAXLOC_check_dtype,
     MPIR_REPLACE_check_dtype, MPIR_NO_OP_check_dtype }; 
 
-/* not declared static because a machine-specific function may call this one 
-   in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allreduce_intra
 #undef FCNAME
@@ -252,8 +250,6 @@ int MPIR_Allreduce_intra (
 }
 
 
-/* not declared static because a machine-specific function may call this one 
-   in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allreduce_inter
 #undef FCNAME

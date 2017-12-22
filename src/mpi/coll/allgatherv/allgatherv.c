@@ -88,8 +88,6 @@ int MPI_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, vo
 #undef MPI_Allgatherv
 #define MPI_Allgatherv PMPI_Allgatherv
 
-/* not declared static because a machine-specific function may call this one 
-   in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allgatherv_intra
 #undef FCNAME
@@ -161,8 +159,6 @@ int MPIR_Allgatherv_intra (
 }
 
 
-
-/* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allgatherv_inter
 #undef FCNAME
