@@ -10,9 +10,9 @@ const MPIDI_STUBNM_coll_algo_container_t STUBNM_bcast_binomial_cnt =
         .id = MPIDI_STUBNM_bcast_binomial_id
     };
 
-const MPIDI_STUBNM_coll_algo_container_t STUBNM_bcast_scatter_doubling_allgather_cnt =
+const MPIDI_STUBNM_coll_algo_container_t STUBNM_bcast_scatter_recursive_doubling_allgather_cnt =
     {
-        .id = MPIDI_STUBNM_bcast_scatter_doubling_allgather_id
+        .id = MPIDI_STUBNM_bcast_scatter_recursive_doubling_allgather_id
     };
 
 const MPIDI_STUBNM_coll_algo_container_t STUBNM_bcast_scatter_ring_allgather_cnt =

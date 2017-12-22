@@ -14,7 +14,7 @@ typedef union {
 
 typedef enum {
     MPIDI_STUBNM_bcast_binomial_id,
-    MPIDI_STUBNM_bcast_scatter_doubling_allgather_id,
+    MPIDI_STUBNM_bcast_scatter_recursive_doubling_allgather_id,
     MPIDI_STUBNM_bcast_scatter_ring_allgather_id,
 } MPIDI_STUBNM_bcast_id_t;
 

@@ -102,11 +102,11 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select bcast algorithm
-        auto                       - Internal algorithm selection
-        binomial                   - Force Binomial Tree
-        nb                         - Force nonblocking algorithm
-        scatter_doubling_allgather - Force Scatter Doubling
-        scatter_ring_allgather     - Force Scatter Ring
+        auto                                    - Internal algorithm selection
+        binomial                                - Force Binomial Tree
+        nb                                      - Force nonblocking algorithm
+        scatter_recursive_doubling_allgather    - Force Scatter Recursive-Doubling Allgather
+        scatter_ring_allgather                  - Force Scatter Ring
 
     - name        : MPIR_CVAR_BCAST_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -224,7 +224,7 @@ int MPIR_Bcast_intra (
         mpi_errno = MPIR_Bcast_intra_binomial(buffer, count, datatype, root, comm_ptr, errflag);
     } else /* (nbytes >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_size >= MPIR_CVAR_BCAST_MIN_PROCS) */ {
         if ((nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE) && (MPIU_is_pof2(comm_size, NULL))) {
-            mpi_errno = MPIR_Bcast_intra_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+            mpi_errno = MPIR_Bcast_intra_scatter_recursive_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
         } else /* (nbytes >= MPIR_CVAR_BCAST_LONG_MSG_SIZE) || !(comm_size_is_pof2) */ {
             mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
         }
@@ -284,8 +284,8 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
             case MPIR_BCAST_INTRA_ALGO_BINOMIAL:
                 mpi_errno = MPIR_Bcast_intra_binomial(buffer, count, datatype, root, comm_ptr, errflag);
                 break;
-            case MPIR_BCAST_INTRA_ALGO_SCATTER_DOUBLING_ALLGATHER:
-                mpi_errno = MPIR_Bcast_intra_scatter_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+            case MPIR_BCAST_INTRA_ALGO_SCATTER_RECURSIVE_DOUBLING_ALLGATHER:
+                mpi_errno = MPIR_Bcast_intra_scatter_recursive_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
                 break;
             case MPIR_BCAST_INTRA_ALGO_SCATTER_RING_ALLGATHER:
                 mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);

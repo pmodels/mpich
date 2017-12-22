@@ -275,8 +275,8 @@ int MPII_COLL_init(void) {
         MPIR_Bcast_intra_algo_choice = MPIR_BCAST_INTRA_ALGO_BINOMIAL;
     else if (0 == strcmp(MPIR_CVAR_BCAST_INTRA_ALGORITHM, "nb"))
         MPIR_Bcast_intra_algo_choice = MPIR_BCAST_INTRA_ALGO_NB;
-    else if (0 == strcmp(MPIR_CVAR_BCAST_INTRA_ALGORITHM, "scatter_doubling_allgather"))
-        MPIR_Bcast_intra_algo_choice = MPIR_BCAST_INTRA_ALGO_SCATTER_DOUBLING_ALLGATHER;
+    else if (0 == strcmp(MPIR_CVAR_BCAST_INTRA_ALGORITHM, "scatter_recursive_doubling_allgather"))
+        MPIR_Bcast_intra_algo_choice = MPIR_BCAST_INTRA_ALGO_SCATTER_RECURSIVE_DOUBLING_ALLGATHER;
     else if (0 == strcmp(MPIR_CVAR_BCAST_INTRA_ALGORITHM, "scatter_ring_allgather"))
         MPIR_Bcast_intra_algo_choice = MPIR_BCAST_INTRA_ALGO_SCATTER_RING_ALLGATHER;
     else
