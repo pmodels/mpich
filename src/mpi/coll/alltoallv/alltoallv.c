@@ -35,9 +35,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select alltoallv algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
-        nb      - Force nonblocking algorithm
+        auto              - Internal algorithm selection
+        pairwise_exchange - Force pairwise exchange algorithm
+        nb                - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_ALLTOALLV_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -121,7 +121,7 @@ int MPIR_Alltoallv_inter(const void *sendbuf, const int *sendcounts, const int *
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Alltoallv_inter_generic(sendbuf, sendcounts, sdispls,
+    mpi_errno = MPIR_Alltoallv_inter_pairwise_exchange(sendbuf, sendcounts, sdispls,
             sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr,
             errflag);
 
@@ -168,8 +168,8 @@ int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispl
     } else {
         switch (MPIR_Alltoallv_inter_algo_choice) {
         /* intercommunicator */
-            case MPIR_ALLTOALLV_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Alltoallv_inter_generic(sendbuf, sendcounts, sdispls,
+            case MPIR_ALLTOALLV_INTER_ALGO_PAIRWISE_EXCHANGE:
+                mpi_errno = MPIR_Alltoallv_inter_pairwise_exchange(sendbuf, sendcounts, sdispls,
                                          sendtype, recvbuf, recvcounts,
                                          rdispls, recvtype, comm_ptr, errflag);
                 break;

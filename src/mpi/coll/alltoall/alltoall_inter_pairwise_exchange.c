@@ -7,23 +7,25 @@
 
 #include "mpiimpl.h"
 
+/* Intercommunicator alltoall
+ *
+ * We use a pairwise exchange algorithm similar to the one used in
+ * intracommunicator alltoall for long messages.  Since the local and
+ * remote groups can be of different sizes, we first compute the max
+ * of local_group_size, remote_group_size.  At step i, 0 <= i <
+ * max_size, each process receives from src = (rank - i + max_size) %
+ * max_size if src < remote_size, and sends to dst = (rank + i) %
+ * max_size if dst < remote_size.
+ */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoall_inter_generic
+#define FUNCNAME MPIR_Alltoall_inter_pairwise_exchange
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoall_inter_generic( const void *sendbuf, int sendcount,
+int MPIR_Alltoall_inter_pairwise_exchange( const void *sendbuf, int sendcount,
         MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype
         recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
-    /* Intercommunicator alltoall. We use a pairwise exchange algorithm
-       similar to the one used in intracommunicator alltoall for long
-       messages. Since the local and remote groups can be of different
-       sizes, we first compute the max of local_group_size,
-       remote_group_size. At step i, 0 <= i < max_size, each process
-       receives from src = (rank - i + max_size) % max_size if src <
-       remote_size, and sends to dst = (rank + i) % max_size if dst <
-       remote_size.
-       */
     int          local_size, remote_size, max_size, i;
     MPI_Aint     sendtype_extent, recvtype_extent;
     int mpi_errno = MPI_SUCCESS;

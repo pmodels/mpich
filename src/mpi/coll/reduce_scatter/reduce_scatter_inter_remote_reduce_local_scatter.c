@@ -7,20 +7,21 @@
 
 #include "mpiimpl.h"
 
+/* Intercommunicator Reduce_scatter
+ *
+ * We first do an intercommunicator reduce to rank 0 on left group,
+ * then an intercommunicator reduce to rank 0 on right group, followed
+ * by local intracommunicator scattervs in each group.
+ */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_inter_generic
+#define FUNCNAME MPIR_Reduce_scatter_inter_remote_reduce_local_scatter
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_inter_generic(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                               MPIR_Errflag_t *errflag)
 {
-    /* Intercommunicator Reduce_scatter.
-       We first do an intercommunicator reduce to rank 0 on left group,
-       then an intercommunicator reduce to rank 0 on right group, followed
-       by local intracommunicator scattervs in each group.
-       */
-
     int rank, mpi_errno, root, local_size, total_count, i;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint true_extent, true_lb = 0, extent;

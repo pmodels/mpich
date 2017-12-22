@@ -76,9 +76,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allreduce algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
-        nb      - Force nonblocking algorithm
+        auto                  - Internal algorithm selection
+        nb                    - Force nonblocking algorithm
+        reduce_exchange_bcast - Force reduce-exchange-bcast algorithm
 
     - name        : MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -265,7 +265,7 @@ int MPIR_Allreduce_inter (
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Allreduce_inter_generic(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    mpi_errno = MPIR_Allreduce_inter_reduce_exchange_bcast(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -307,8 +307,8 @@ int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
      } else {
          /* intercommunicator */
          switch (MPIR_Allreduce_inter_algo_choice) {
-             case MPIR_ALLREDUCE_INTER_ALGO_GENERIC:
-                  mpi_errno = MPIR_Allreduce_inter_generic(sendbuf, recvbuf, count, datatype, op,
+             case MPIR_ALLREDUCE_INTER_ALGO_REDUCE_EXCHANGE_BCAST:
+                  mpi_errno = MPIR_Allreduce_inter_reduce_exchange_bcast(sendbuf, recvbuf, count, datatype, op,
                               comm_ptr, errflag);
                   break;
             case MPIR_ALLREDUCE_INTER_ALGO_NB:

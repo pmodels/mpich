@@ -19,8 +19,8 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_alltoall algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
+        auto   - Internal algorithm selection
+        linear - Force linear algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALL_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -31,8 +31,8 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ineighbor_alltoall algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
+        auto   - Internal algorithm selection
+        linear - Force linear algorithm
 
     - name        : MPIR_CVAR_INEIGHBOR_ALLTOALL_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -85,30 +85,30 @@ int MPIR_Ineighbor_alltoall_sched(const void *sendbuf, int sendcount,
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_Ineighbor_alltoall_intra_algo_choice) {
-            case MPIR_INEIGHBOR_ALLTOALL_INTRA_ALGO_GENERIC:
-                mpi_errno = MPIR_Ineighbor_alltoall_sched_generic(sendbuf, sendcount, sendtype,
+            case MPIR_INEIGHBOR_ALLTOALL_INTRA_ALGO_LINEAR:
+                mpi_errno = MPIR_Ineighbor_alltoall_sched_linear(sendbuf, sendcount, sendtype,
                                                           recvbuf, recvcount, recvtype,
                                                           comm_ptr, s);
                 break;
             case MPIR_INEIGHBOR_ALLTOALL_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ineighbor_alltoall_sched_generic(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Ineighbor_alltoall_sched_linear(sendbuf, sendcount, sendtype,
                                                           recvbuf, recvcount, recvtype,
                                                           comm_ptr, s);
                 break;
         }
     } else {
         switch (MPIR_Ineighbor_alltoall_inter_algo_choice) {
-            case MPIR_INEIGHBOR_ALLTOALL_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Ineighbor_alltoall_sched_generic(sendbuf, sendcount, sendtype,
+            case MPIR_INEIGHBOR_ALLTOALL_INTER_ALGO_LINEAR:
+                mpi_errno = MPIR_Ineighbor_alltoall_sched_linear(sendbuf, sendcount, sendtype,
                                                           recvbuf, recvcount, recvtype,
                                                           comm_ptr, s);
                 break;
             case MPIR_INEIGHBOR_ALLTOALL_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ineighbor_alltoall_sched_generic(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Ineighbor_alltoall_sched_linear(sendbuf, sendcount, sendtype,
                                                           recvbuf, recvcount, recvtype,
                                                           comm_ptr, s);
                 break;

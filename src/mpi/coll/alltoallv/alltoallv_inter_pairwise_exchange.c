@@ -7,27 +7,29 @@
 
 #include "mpiimpl.h"
 
+/*
+ * Pairwise exchange
+ *
+ * We use a pairwise exchange algorithm similar to the one used in
+ * intracommunicator alltoallv.  Since the local and remote groups can
+ * be of different sizes, we first compute the max of
+ * local_group_size, remote_group_size.  At step i, 0 <= i < max_size,
+ * each process receives from src = (rank - i + max_size) % max_size
+ * if src < remote_size, and sends to dst = (rank + i) % max_size if
+ * dst < remote_size.
+ *
+ * FIXME: change algorithm to match intracommunicator alltoallv
+ */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallv_inter_generic
+#define FUNCNAME MPIR_Alltoallv_inter_pairwise_exchange
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoallv_inter_generic(const void *sendbuf, const int *sendcounts, const int *sdispls,
+int MPIR_Alltoallv_inter_pairwise_exchange(const void *sendbuf, const int *sendcounts, const int *sdispls,
                                  MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
                                  const int *rdispls, MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
                                  MPIR_Errflag_t *errflag)
 {
-/* Intercommunicator alltoallv. We use a pairwise exchange algorithm
-   similar to the one used in intracommunicator alltoallv. Since the
-   local and remote groups can be of different 
-   sizes, we first compute the max of local_group_size,
-   remote_group_size. At step i, 0 <= i < max_size, each process
-   receives from src = (rank - i + max_size) % max_size if src <
-   remote_size, and sends to dst = (rank + i) % max_size if dst <
-   remote_size. 
-
-   FIXME: change algorithm to match intracommunicator alltoallv
-
-*/
     int local_size, remote_size, max_size, i;
     MPI_Aint   send_extent, recv_extent;
     int        mpi_errno = MPI_SUCCESS;

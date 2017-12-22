@@ -6,11 +6,17 @@
 
 #include "mpiimpl.h"
 
+/* Local reduce remote send
+ *
+ * Remote group does a local intracommunicator reduce to rank 0. Rank
+ * 0 then sends data to root.
+ */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_sched_inter_generic
+#define FUNCNAME MPIR_Ireduce_sched_inter_local_reduce_remote_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_sched_inter_generic(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Ireduce_sched_inter_local_reduce_remote_send(const void *sendbuf, void *recvbuf, int count,
         MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm *comm_ptr,
         MPIR_Sched_t s)
 {
@@ -21,11 +27,6 @@ int MPIR_Ireduce_sched_inter_generic(const void *sendbuf, void *recvbuf, int cou
     MPIR_SCHED_CHKPMEM_DECL(1);
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
-
-/*  Intercommunicator reduce.
-    Remote group does a local intracommunicator
-    reduce to rank 0. Rank 0 then sends data to root.
-*/
 
     if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */

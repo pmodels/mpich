@@ -7,17 +7,19 @@
 #include "mpiimpl.h"
 #include "coll_util.h"
 
+/* Remote reduce local scatterv
+ *
+ * We first do an intercommunicator reduce to rank 0 on left group,
+ * then an intercommunicator reduce to rank 0 on right group, followed
+ * by local intracommunicator scattervs in each group.
+ */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_sched_inter_generic
+#define FUNCNAME MPIR_Ireduce_scatter_block_sched_inter_remote_reduce_local_scatterv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_sched_inter_generic(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_sched_inter_remote_reduce_local_scatterv(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
-/* Intercommunicator Ireduce_scatter_block.
-   We first do an intercommunicator reduce to rank 0 on left group,
-   then an intercommunicator reduce to rank 0 on right group, followed
-   by local intracommunicator scattervs in each group.
-*/
     int mpi_errno = MPI_SUCCESS;
     int rank, root, local_size, total_count;
     MPI_Aint true_extent, true_lb = 0, extent;

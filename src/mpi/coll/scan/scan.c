@@ -20,9 +20,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select allgather algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
-        nb      - Force nonblocking algorithm
+        auto               - Internal algorithm selection
+        nb                 - Force nonblocking algorithm
+        recursive_doubling - Force recursive doubling algorithm
 
     - name        : MPIR_CVAR_SCAN_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -79,7 +79,7 @@ int MPIR_Scan_intra (const void *sendbuf, void *recvbuf, int count,
     if (MPII_Comm_is_node_consecutive(comm_ptr)) {
         mpi_errno = MPIR_Scan_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
     } else {
-        mpi_errno = MPIR_Scan_intra_generic(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+        mpi_errno = MPIR_Scan_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
     }
 
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -111,8 +111,8 @@ int MPIR_Scan(
     int mpi_errno = MPI_SUCCESS;
 
     switch (MPIR_Scan_intra_algo_choice) {
-        case MPIR_SCAN_INTRA_ALGO_GENERIC:
-            mpi_errno = MPIR_Scan_intra_generic(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+        case MPIR_SCAN_INTRA_ALGO_RECURSIVE_DOUBLING:
+            mpi_errno = MPIR_Scan_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
         case MPIR_SCAN_INTRA_ALGO_NB:
             mpi_errno = MPIR_Scan_nb(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
