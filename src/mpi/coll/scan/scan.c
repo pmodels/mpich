@@ -70,7 +70,6 @@ int MPIR_Scan_intra (const void *sendbuf, void *recvbuf, int count,
                      MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
 
     /* In order to use the SMP-aware algorithm, the "op" can be
        either commutative or non-commutative, but we require a
@@ -86,9 +85,7 @@ int MPIR_Scan_intra (const void *sendbuf, void *recvbuf, int count,
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
   fn_exit:
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
+    if (*errflag != MPIR_ERR_NONE)
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     return mpi_errno;
 

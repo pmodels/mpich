@@ -92,7 +92,6 @@ int MPIR_Gatherv (
         MPIR_Errflag_t *errflag )
 {
     int        mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_Gatherv_intra_algo_choice) {
@@ -127,9 +126,7 @@ int MPIR_Gatherv (
 
 
 fn_exit:
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
+    if (*errflag != MPIR_ERR_NONE)
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     return mpi_errno;
 fn_fail:
