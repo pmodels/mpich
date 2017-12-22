@@ -33,8 +33,8 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
+        auto                     - Internal algorithm selection
+        local_reduce_remote_send - Force local-reduce-remote-send algorithm
 
     - name        : MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -123,7 +123,7 @@ int MPIR_Ireduce_sched_inter(const void *sendbuf, void *recvbuf,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ireduce_sched_inter_generic(sendbuf, recvbuf, count,
+    mpi_errno = MPIR_Ireduce_sched_inter_local_reduce_remote_send(sendbuf, recvbuf, count,
             datatype, op, root, comm_ptr, s);
 
     return mpi_errno;
@@ -164,8 +164,8 @@ int MPIR_Ireduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
     } else {
         /* intercommunicator */
         switch (MPIR_Ireduce_inter_algo_choice) {
-            case MPIR_IREDUCE_INTER_ALGO_GENERIC:
-               mpi_errno = MPIR_Ireduce_sched_inter_generic(sendbuf, recvbuf, count,
+            case MPIR_IREDUCE_INTER_ALGO_LOCAL_REDUCE_REMOTE_SEND:
+               mpi_errno = MPIR_Ireduce_sched_inter_local_reduce_remote_send(sendbuf, recvbuf, count,
                            datatype, op, root, comm_ptr, s);
                break;
             case MPIR_IREDUCE_INTER_ALGO_AUTO:

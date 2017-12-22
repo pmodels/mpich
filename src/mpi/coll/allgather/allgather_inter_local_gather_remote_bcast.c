@@ -7,18 +7,21 @@
 
 #include "mpiimpl.h"
 
+/* Intercommunicator Allgather
+ *
+ * Each group does a gather to local root with the local
+ * intracommunicator, and then does an intercommunicator
+ * broadcast.
+ */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allgather_inter_generic
+#define FUNCNAME MPIR_Allgather_inter_local_gather_remote_bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgather_inter_generic (const void *sendbuf, int sendcount,
+int MPIR_Allgather_inter_local_gather_remote_bcast (const void *sendbuf, int sendcount,
         MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype
         recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
-    /* Intercommunicator Allgather.  Each group does a gather to local root
-     * with the local intracommunicator, and then does an intercommunicator
-     * broadcast.  */
-
     int rank, local_size, remote_size, mpi_errno = MPI_SUCCESS, root;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint true_extent, true_lb = 0, extent, send_extent;

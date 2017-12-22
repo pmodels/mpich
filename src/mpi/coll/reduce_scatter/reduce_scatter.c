@@ -48,9 +48,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select reduce_scatter algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
-        nb      - Force nonblocking algorithm
+        auto                        - Internal algorithm selection
+        nb                          - Force nonblocking algorithm
+        remote_reduce_local_scatter - Force remote-reduce-local-scatter algorithm
 
     - name        : MPIR_CVAR_REDUCE_SCATTER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -237,7 +237,7 @@ int MPIR_Reduce_scatter_inter(const void *sendbuf, void *recvbuf, const int recv
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Reduce_scatter_inter_generic(sendbuf, recvbuf, recvcounts, datatype,
+    MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(sendbuf, recvbuf, recvcounts, datatype,
             op, comm_ptr, errflag);
 
     return mpi_errno;
@@ -289,8 +289,8 @@ int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts
     } else {
         /* intercommunicator */
         switch (MPIR_Reduce_scatter_intra_algo_choice) {
-            case MPIR_REDUCE_SCATTER_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Reduce_scatter_inter_generic(sendbuf, recvbuf, recvcounts,
+            case MPIR_REDUCE_SCATTER_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTER:
+                mpi_errno = MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(sendbuf, recvbuf, recvcounts,
                           datatype, op, comm_ptr, errflag);
                 break;
             case MPIR_REDUCE_SCATTER_INTER_ALGO_NB:

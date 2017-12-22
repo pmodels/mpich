@@ -7,11 +7,19 @@
 
 #include "mpiimpl.h"
 
+/* Local Reduce remote send
+ *
+ * Remote group does a local intracommunicator reduce to rank 0. Rank
+ * 0 then sends data to root.
+ *
+ * Cost: (lgp+1).alpha + n.(lgp+1).beta
+ */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_inter_generic
+#define FUNCNAME MPIR_Reduce_inter_local_reduce_remote_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_inter_generic (
+int MPIR_Reduce_inter_local_reduce_remote_send (
     const void *sendbuf,
     void *recvbuf,
     int count,
@@ -21,13 +29,6 @@ int MPIR_Reduce_inter_generic (
     MPIR_Comm *comm_ptr,
     MPIR_Errflag_t *errflag )
 {
-    /*  Intercommunicator reduce.
-        Remote group does a local intracommunicator
-        reduce to rank 0. Rank 0 then sends data to root.
-
-        Cost: (lgp+1).alpha + n.(lgp+1).beta
-    */
-
     int rank, mpi_errno;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;

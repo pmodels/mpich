@@ -7,5 +7,5 @@ mpi_sources +=                     		\
 
 mpi_core_sources +=									\
 	src/mpi/coll/scan/scan_nb.c \
-	src/mpi/coll/scan/scan_intra_generic.c \
+	src/mpi/coll/scan/scan_intra_recursive_doubling.c \
 	src/mpi/coll/scan/scan_intra_smp.c

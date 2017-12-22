@@ -7,21 +7,25 @@
 
 #include "mpiimpl.h"
 
+/* Remote Gather Local Bcast
+ *
+ * This is done differently from the intercommunicator allgather
+ * because we don't have all the information to do a local
+ * intracommunictor gather (sendcount can be different on each
+ * process). Therefore, we do the following: Each group first does an
+ * intercommunicator gather to rank 0 and then does an
+ * intracommunicator broadcast.
+ */
+
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allgatherv_inter_generic
+#define FUNCNAME MPIR_Allgatherv_inter_remote_gather_local_bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgatherv_inter_generic ( const void *sendbuf, int sendcount,
+int MPIR_Allgatherv_inter_remote_gather_local_bcast ( const void *sendbuf, int sendcount,
         MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int
         *displs, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t
         *errflag )
 {
-    /* Intercommunicator Allgatherv.  This is done differently from the
-     * intercommunicator allgather because we don't have all the information to
-     * do a local intracommunictor gather (sendcount can be different on each
-     * process). Therefore, we do the following: Each group first does an
-     * intercommunicator gather to rank 0 and then does an intracommunicator
-     * broadcast.  */
     int remote_size, mpi_errno, root, rank;
     int mpi_errno_ret = MPI_SUCCESS;
     MPIR_Comm *newcomm_ptr = NULL;

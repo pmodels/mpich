@@ -19,8 +19,8 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select neighbor_allgatherv algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
+        auto - Internal algorithm selection
+        nb   - Force nb algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -31,8 +31,8 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select neighbor_allgatherv algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
+        auto - Internal algorithm selection
+        nb   - Force nb algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLGATHERV_DEVICE_COLLECTIVE
       category    : COLLECTIVE

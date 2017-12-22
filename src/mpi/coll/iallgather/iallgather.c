@@ -33,8 +33,8 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iallgather algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
+        auto                      - Internal algorithm selection
+        local_gather_remote_bcast - Force local-gather-remote-bcast algorithm
 
     - name        : MPIR_CVAR_IALLGATHER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -161,7 +161,7 @@ int MPIR_Iallgather_sched_inter(const void *sendbuf, int sendcount,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Iallgather_sched_inter_generic(sendbuf, sendcount,
+    mpi_errno = MPIR_Iallgather_sched_inter_local_gather_remote_bcast(sendbuf, sendcount,
             sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
 
     return mpi_errno;
@@ -202,8 +202,8 @@ int MPIR_Iallgather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendt
     } else {
         /* intercommunicator */
         switch (MPIR_Iallgather_inter_algo_choice) {
-            case MPIR_IALLGATHER_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Iallgather_sched_inter_generic(sendbuf, sendcount, sendtype,
+            case MPIR_IALLGATHER_INTER_ALGO_LOCAL_GATHER_REMOTE_BCAST:
+                mpi_errno = MPIR_Iallgather_sched_inter_local_gather_remote_bcast(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, comm_ptr, s);
                 break;
             case MPIR_IALLGATHER_INTER_ALGO_AUTO:

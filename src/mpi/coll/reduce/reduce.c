@@ -67,9 +67,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select reduce algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
-        nb      - Force nonblocking algorithm
+        auto                     - Internal algorithm selection
+        local_reduce_remote_send - Force local-reduce-remote-send algorithm
+        nb                       - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_REDUCE_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -266,7 +266,7 @@ int MPIR_Reduce_inter (
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_inter_generic(sendbuf, recvbuf, count, datatype,
+    mpi_errno = MPIR_Reduce_inter_local_reduce_remote_send(sendbuf, recvbuf, count, datatype,
             op, root, comm_ptr, errflag);
 
     return mpi_errno;
@@ -310,8 +310,8 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
     } else {
         /* intercommunicator */
         switch (MPIR_Reduce_inter_algo_choice) {
-            case MPIR_REDUCE_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Reduce_inter_generic(sendbuf, recvbuf, count, datatype,
+            case MPIR_REDUCE_INTER_ALGO_LOCAL_REDUCE_REMOTE_SEND:
+                mpi_errno = MPIR_Reduce_inter_local_reduce_remote_send(sendbuf, recvbuf, count, datatype,
                                       op, root, comm_ptr, errflag);
                 break;
             case MPIR_REDUCE_INTER_ALGO_NB:

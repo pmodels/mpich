@@ -9,5 +9,5 @@ mpi_core_sources +=										\
 	src/mpi/coll/barrier/barrier_nb.c	\
 	src/mpi/coll/barrier/barrier_intra_recursive_doubling.c	\
 	src/mpi/coll/barrier/barrier_intra_smp.c				\
-	src/mpi/coll/barrier/barrier_inter_generic.c
+	src/mpi/coll/barrier/barrier_inter_bcast.c
 

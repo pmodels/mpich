@@ -9,4 +9,4 @@ mpi_core_sources +=												\
 	src/mpi/coll/alltoallw/alltoallw_nb.c	\
 	src/mpi/coll/alltoallw/alltoallw_intra_pairwise_sendrecv_replace.c	\
 	src/mpi/coll/alltoallw/alltoallw_intra_scattered.c					\
-	src/mpi/coll/alltoallw/alltoallw_inter_generic.c
+	src/mpi/coll/alltoallw/alltoallw_inter_pairwise_exchange.c

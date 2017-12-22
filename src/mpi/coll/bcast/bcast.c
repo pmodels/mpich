@@ -117,9 +117,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select bcast algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
-        nb      - Force nonblocking algorithm
+        auto                    - Internal algorithm selection
+        nb                      - Force nonblocking algorithm
+        remote_send_local_bcast - Force remote-send-local-bcast algorithm
 
     - name        : MPIR_CVAR_BCAST_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -262,7 +262,7 @@ int MPIR_Bcast_inter (
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast_inter_generic(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Bcast_inter_remote_send_local_bcast(buffer, count, datatype, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -302,8 +302,8 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
     } else {
         /* intercommunicator */
         switch (MPIR_Bcast_inter_algo_choice) {
-            case MPIR_BCAST_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Bcast_inter_generic( buffer, count, datatype, root, comm_ptr, errflag );
+            case MPIR_BCAST_INTER_ALGO_REMOTE_SEND_LOCAL_BCAST:
+                mpi_errno = MPIR_Bcast_inter_remote_send_local_bcast( buffer, count, datatype, root, comm_ptr, errflag );
                 break;
             case MPIR_BCAST_INTER_ALGO_NB:
                 mpi_errno = MPIR_Bcast_nb(buffer, count, datatype, root, comm_ptr, errflag);

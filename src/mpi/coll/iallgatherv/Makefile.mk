@@ -8,4 +8,4 @@ mpi_core_sources +=                                           \
     src/mpi/coll/iallgatherv/iallgatherv_intra_recursive_doubling.c \
     src/mpi/coll/iallgatherv/iallgatherv_intra_brucks.c             \
     src/mpi/coll/iallgatherv/iallgatherv_intra_ring.c               \
-    src/mpi/coll/iallgatherv/iallgatherv_inter_generic.c
+    src/mpi/coll/iallgatherv/iallgatherv_inter_remote_gather_local_bcast.c

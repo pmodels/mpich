@@ -35,8 +35,8 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ialltoall algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
+        auto              - Internal algorithm selection
+        pairwise_exchange - Force pairwise exchange algorithm
 
     - name        : MPIR_CVAR_IALLTOALL_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -162,7 +162,7 @@ int MPIR_Ialltoall_sched_inter(const void *sendbuf, int sendcount, MPI_Datatype
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ialltoall_sched_inter_generic(sendbuf, sendcount,
+    mpi_errno = MPIR_Ialltoall_sched_inter_pairwise_exchange(sendbuf, sendcount,
             sendtype, recvbuf, recvcount, recvtype, comm_ptr, s);
 
     return mpi_errno;
@@ -205,8 +205,8 @@ int MPIR_Ialltoall_sched(const void *sendbuf, int sendcount, MPI_Datatype sendty
     } else {
         /* intercommunicator */
         switch (MPIR_Ialltoall_inter_algo_choice) {
-            case MPIR_IALLTOALL_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Ialltoall_sched_inter_generic(sendbuf, sendcount, sendtype,
+            case MPIR_IALLTOALL_INTER_ALGO_PAIRWISE_EXCHANGE:
+                mpi_errno = MPIR_Ialltoall_sched_inter_pairwise_exchange(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, comm_ptr, s);
                 break;
             case MPIR_IALLTOALL_INTER_ALGO_AUTO:

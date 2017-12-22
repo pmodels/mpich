@@ -6,4 +6,4 @@ mpi_sources += \
     src/mpi/coll/ineighbor_allgather/ineighbor_allgather.c
 
 mpi_core_sources += \
-    src/mpi/coll/ineighbor_allgather/ineighbor_allgather_generic.c
+    src/mpi/coll/ineighbor_allgather/ineighbor_allgather_linear.c

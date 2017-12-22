@@ -35,8 +35,8 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select ireduce_scatter algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic inter algorithm
+        auto                         - Internal algorithm selection
+        remote_reduce_local_scatterv - Force remote-reduce-local-scatterv algorithm
 
     - name        : MPIR_CVAR_IREDUCE_SCATTER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -148,7 +148,7 @@ int MPIR_Ireduce_scatter_sched_inter(const void *sendbuf, void *recvbuf, const i
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ireduce_scatter_sched_inter_generic(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, s);
+    mpi_errno = MPIR_Ireduce_scatter_sched_inter_remote_reduce_local_scatterv(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, s);
 
     return mpi_errno;
 }
@@ -191,8 +191,8 @@ int MPIR_Ireduce_scatter_sched(const void *sendbuf, void *recvbuf, const int rec
    } else {
        /* intercommunicator */
        switch (MPIR_Ireduce_scatter_inter_algo_choice) {
-           case MPIR_IREDUCE_SCATTER_INTER_ALGO_GENERIC:
-               mpi_errno = MPIR_Ireduce_scatter_sched_inter_generic(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, s);
+           case MPIR_IREDUCE_SCATTER_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTERV:
+               mpi_errno = MPIR_Ireduce_scatter_sched_inter_remote_reduce_local_scatterv(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, s);
                break;
            case MPIR_IREDUCE_SCATTER_INTER_ALGO_AUTO:
                MPL_FALLTHROUGH;
