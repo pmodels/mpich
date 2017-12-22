@@ -191,18 +191,16 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
         if (pof2 == comm_size && is_block_regular) {
             /* noncommutative, pof2 size, and block regular */
             mpi_errno = MPIR_Reduce_scatter_intra_noncommutative(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
         }
         else {
             /* noncommutative and (non-pof2 or block irregular), use recursive doubling. */
-
             mpi_errno = MPIR_Reduce_scatter_intra_recursive_doubling (sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        }
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
     }
 

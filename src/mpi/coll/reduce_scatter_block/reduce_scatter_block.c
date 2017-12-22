@@ -153,7 +153,6 @@ int MPIR_Reduce_scatter_block_intra (
     if ((is_commutative) && (nbytes < MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         /* commutative and short. use recursive halving algorithm */
         mpi_errno = MPIR_Reduce_scatter_block_intra_recursive_halving(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     
     if (is_commutative && (nbytes >= MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
@@ -161,8 +160,6 @@ int MPIR_Reduce_scatter_block_intra (
         /* commutative and long message, or noncommutative and long message.
            use (p-1) pairwise exchanges */ 
         mpi_errno = MPIR_Reduce_scatter_block_intra_pairwise(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        
     }
     
     if (!is_commutative) {
@@ -171,18 +168,18 @@ int MPIR_Reduce_scatter_block_intra (
         if (!(comm_size & (comm_size - 1))) {
             /* noncommutative, pof2 size */
             mpi_errno = MPIR_Reduce_scatter_block_intra_noncommutative(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
-            if (mpi_errno) {
-                /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-            }
         }
         else {
             /* noncommutative and non-pof2, use recursive doubling. */
             mpi_errno = MPIR_Reduce_scatter_block_intra_recursive_doubling(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
+    }
+
+    if (mpi_errno) {
+        /* for communication errors, just record the error but continue */
+        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
 
 fn_exit:
