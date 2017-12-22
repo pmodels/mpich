@@ -7,4 +7,4 @@ mpi_sources +=                                    \
 mpi_core_sources +=                               \
     src/mpi/coll/ialltoallv/ialltoallv_intra_inplace.c  \
     src/mpi/coll/ialltoallv/ialltoallv_intra_blocked.c  \
-    src/mpi/coll/ialltoallv/ialltoallv_intra_pairwise_exchange.c
+    src/mpi/coll/ialltoallv/ialltoallv_inter_pairwise_exchange.c

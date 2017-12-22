@@ -559,17 +559,17 @@ int MPIR_Ialltoallv_sched_intra_inplace(const void *sendbuf, const int sendcount
                                         const int recvcounts[], const int rdispls[],
                                         MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                         MPIR_Sched_t s);
-int MPIR_Ialltoallv_sched_intra_pairwise_exchange(const void *sendbuf, const int sendcounts[],
-                                                  const int sdispls[], MPI_Datatype sendtype,
-                                                  void *recvbuf, const int recvcounts[],
-                                                  const int rdispls[], MPI_Datatype recvtype,
-                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
 int MPIR_Ialltoallv_sched_inter(const void *sendbuf, const int *sendcounts, const int *sdispls,
                                 MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
                                 const int *rdispls, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                                 MPIR_Sched_t s);
+int MPIR_Ialltoallv_sched_inter_pairwise_exchange(const void *sendbuf, const int sendcounts[],
+                                                  const int sdispls[], MPI_Datatype sendtype,
+                                                  void *recvbuf, const int recvcounts[],
+                                                  const int rdispls[], MPI_Datatype recvtype,
+                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 
 /******************************** Ialltoallw ********************************/
@@ -601,12 +601,6 @@ int MPIR_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendcount
                                         void *recvbuf, const int recvcounts[], const int rdispls[],
                                         const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
                                         MPIR_Sched_t s);
-int MPIR_Ialltoallw_sched_intra_pairwise_exchange(const void *sendbuf, const int sendcounts[],
-                                                  const int sdispls[],
-                                                  const MPI_Datatype sendtypes[], void *recvbuf,
-                                                  const int recvcounts[], const int rdispls[],
-                                                  const MPI_Datatype recvtypes[],
-                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
 int MPIR_Ialltoallw_sched_inter(const void *sendbuf, const int *sendcounts, const int *sdispls,
@@ -614,6 +608,12 @@ int MPIR_Ialltoallw_sched_inter(const void *sendbuf, const int *sendcounts, cons
                                 const int *recvcounts, const int *rdispls,
                                 const MPI_Datatype * recvtypes, MPIR_Comm * comm_ptr,
                                 MPIR_Sched_t s);
+int MPIR_Ialltoallw_sched_inter_pairwise_exchange(const void *sendbuf, const int sendcounts[],
+                                                  const int sdispls[],
+                                                  const MPI_Datatype sendtypes[], void *recvbuf,
+                                                  const int recvcounts[], const int rdispls[],
+                                                  const MPI_Datatype recvtypes[],
+                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 
 /******************************** Ibarrier ********************************/
@@ -625,11 +625,11 @@ int MPIR_Ibarrier_sched(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intracomm-only functions */
 int MPIR_Ibarrier_sched_intra(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Ibarrier_sched_intra_bcast(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 int MPIR_Ibarrier_sched_intra_recursive_doubling(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 /* sched-based intercomm-only functions */
 int MPIR_Ibarrier_sched_inter(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
+int MPIR_Ibarrier_sched_inter_bcast(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 
 
 /******************************** Ibcast ********************************/

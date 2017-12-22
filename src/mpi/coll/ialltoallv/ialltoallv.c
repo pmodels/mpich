@@ -116,7 +116,7 @@ int MPIR_Ialltoallv_sched_inter(const void *sendbuf, const int sendcounts[], con
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ialltoallv_sched_intra_pairwise_exchange(sendbuf, sendcounts, sdispls,
+    mpi_errno = MPIR_Ialltoallv_sched_inter_pairwise_exchange(sendbuf, sendcounts, sdispls,
                                             sendtype, recvbuf, recvcounts,
                                             rdispls, recvtype, comm_ptr, s);
 
@@ -156,7 +156,7 @@ int MPIR_Ialltoallv_sched(const void *sendbuf, const int sendcounts[], const int
         /* intercommunicator */
         switch (MPIR_Ialltoallv_inter_algo_choice) {
             case MPIR_IALLTOALLV_INTER_ALGO_PAIRWISE_EXCHANGE:
-                mpi_errno = MPIR_Ialltoallv_sched_intra_pairwise_exchange(sendbuf, sendcounts, sdispls,
+                mpi_errno = MPIR_Ialltoallv_sched_inter_pairwise_exchange(sendbuf, sendcounts, sdispls,
                  sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
                 break;
             case MPIR_IALLTOALLV_INTER_ALGO_AUTO:

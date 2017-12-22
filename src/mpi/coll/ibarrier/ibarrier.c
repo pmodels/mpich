@@ -94,7 +94,7 @@ int MPIR_Ibarrier_sched_inter(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno;
 
-    mpi_errno = MPIR_Ibarrier_sched_intra_bcast(comm_ptr, s);
+    mpi_errno = MPIR_Ibarrier_sched_inter_bcast(comm_ptr, s);
 
     return mpi_errno;
 }
@@ -123,7 +123,7 @@ int MPIR_Ibarrier_sched(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
         /* intercommunicator */
         switch (MPIR_Ibarrier_inter_algo_choice) {
             case MPIR_IBARRIER_INTER_ALGO_BCAST:
-                mpi_errno = MPIR_Ibarrier_sched_intra_bcast(comm_ptr, s);
+                mpi_errno = MPIR_Ibarrier_sched_inter_bcast(comm_ptr, s);
                 break;
             case MPIR_IBARRIER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
