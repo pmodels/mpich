@@ -38,7 +38,6 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
     int pof2, received;
     MPI_Datatype sendtype, recvtype;
     int nprocs_completed, tmp_mask, tree_root, is_commutative;
-    MPIR_Op *op_ptr;
     MPIR_CHKLMEM_DECL(5);
 
     comm_size = comm_ptr->local_size;
@@ -58,16 +57,7 @@ int MPIR_Reduce_scatter_intra_recursive_doubling(const void *sendbuf, void *recv
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-        is_commutative = 1;
-    }
-    else {
-        MPIR_Op_get_ptr(op, op_ptr);
-        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
-            is_commutative = 0;
-        else
-            is_commutative = 1;
-    }
+    is_commutative = MPIR_Op_is_commutative(op);
 
     MPIR_CHKLMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
 

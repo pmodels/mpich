@@ -209,12 +209,7 @@ MPIDI_coll_algo_container_t *MPIDI_CH4_Reduce_select(const void *sendbuf,
     }
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_REDUCE) {
         /* is the op commutative? We do SMP optimizations only if it is. */
-        if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-            is_commutative = 1;
-        } else {
-            MPIR_Op_get_ptr(op, op_ptr);
-            is_commutative = (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE) ? 0 : 1;
-        }
+        is_commutative = MPIR_Op_is_commutative(op);
 
         MPIR_Datatype_get_size_macro(datatype, type_size);
         nbytes = MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE ? type_size * count : 0;
