@@ -111,10 +111,10 @@ int MPI_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, v
    End Algorithm: MPI_Allgatherv
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv_sched_intra
+#define FUNCNAME MPIR_Iallgatherv_sched_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgatherv_sched_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                            void *recvbuf, const int recvcounts[], const int displs[],
                            MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
@@ -159,10 +159,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv_sched_inter
+#define FUNCNAME MPIR_Iallgatherv_sched_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgatherv_sched_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                            void *recvbuf, const int recvcounts[], const int displs[],
                            MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
@@ -202,7 +202,7 @@ int MPIR_Iallgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype send
             case MPIR_IALLGATHERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Iallgatherv_sched_intra(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Iallgatherv_sched_intra_auto(sendbuf, sendcount, sendtype,
                             recvbuf, recvcounts, displs, recvtype, comm_ptr, s);
                 break;
         }
@@ -216,7 +216,7 @@ int MPIR_Iallgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype send
             case MPIR_IALLGATHERV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Iallgatherv_sched_inter(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Iallgatherv_sched_inter_auto(sendbuf, sendcount, sendtype,
                             recvbuf, recvcounts, displs, recvtype, comm_ptr, s);
                 break;
         }

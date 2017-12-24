@@ -62,10 +62,10 @@ int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 #define MPI_Scan PMPI_Scan
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scan_intra
+#define FUNCNAME MPIR_Scan_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scan_intra (const void *sendbuf, void *recvbuf, int count,
+int MPIR_Scan_intra_auto (const void *sendbuf, void *recvbuf, int count,
                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                      MPIR_Errflag_t *errflag)
 {
@@ -120,7 +120,7 @@ int MPIR_Scan(
         case MPIR_SCAN_INTRA_ALGO_AUTO:
             MPL_FALLTHROUGH;
         default:
-            mpi_errno = MPIR_Scan_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+            mpi_errno = MPIR_Scan_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
     }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

@@ -33,7 +33,7 @@ int MPIR_Ireduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int count,
     is_commutative = MPIR_Op_is_commutative(op);
     if (!is_commutative) {
         mpi_errno =
-            MPIR_Ireduce_sched_intra(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+            MPIR_Ireduce_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;

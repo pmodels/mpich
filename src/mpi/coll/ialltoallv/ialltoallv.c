@@ -77,10 +77,10 @@ int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispl
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallv_sched_intra
+#define FUNCNAME MPIR_Ialltoallv_sched_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoallv_sched_intra(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Ialltoallv_sched_intra_auto(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
                           const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
                           MPIR_Sched_t s)
@@ -106,10 +106,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallv_sched_inter
+#define FUNCNAME MPIR_Ialltoallv_sched_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoallv_sched_inter(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Ialltoallv_sched_inter_auto(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
                           const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
                           MPIR_Sched_t s)
@@ -148,7 +148,7 @@ int MPIR_Ialltoallv_sched(const void *sendbuf, const int sendcounts[], const int
             case MPIR_IALLTOALLV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ialltoallv_sched_intra(sendbuf, sendcounts, sdispls,
+                mpi_errno = MPIR_Ialltoallv_sched_intra_auto(sendbuf, sendcounts, sdispls,
                  sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
                 break;
         }
@@ -162,7 +162,7 @@ int MPIR_Ialltoallv_sched(const void *sendbuf, const int sendcounts[], const int
             case MPIR_IALLTOALLV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ialltoallv_sched_inter(sendbuf, sendcounts, sdispls,
+                mpi_errno = MPIR_Ialltoallv_sched_inter_auto(sendbuf, sendcounts, sdispls,
                  sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
                 break;
         }

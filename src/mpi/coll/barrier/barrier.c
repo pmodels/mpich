@@ -82,10 +82,10 @@ int MPI_Barrier(MPI_Comm comm) __attribute__((weak,alias("PMPI_Barrier")));
 #define MPI_Barrier PMPI_Barrier
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Barrier_intra
+#define FUNCNAME MPIR_Barrier_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier_intra( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
+int MPIR_Barrier_intra_auto( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int size, mpi_errno=MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -118,10 +118,10 @@ int MPIR_Barrier_intra( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Barrier_inter
+#define FUNCNAME MPIR_Barrier_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier_inter( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
+int MPIR_Barrier_inter_auto( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -153,7 +153,7 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
             case MPIR_BARRIER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Barrier_intra(comm_ptr, errflag);
+                mpi_errno = MPIR_Barrier_intra_auto(comm_ptr, errflag);
                 break;
         }
     } else {
@@ -168,7 +168,7 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
             case MPIR_BARRIER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Barrier_inter(comm_ptr, errflag);
+                mpi_errno = MPIR_Barrier_inter_auto(comm_ptr, errflag);
                 break;
         }
     }

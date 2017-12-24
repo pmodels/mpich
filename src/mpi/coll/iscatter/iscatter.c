@@ -84,10 +84,10 @@ struct shared_state {
 
 /* any non-MPI functions go here, especially non-static ones */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatter_sched_intra
+#define FUNCNAME MPIR_Iscatter_sched_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatter_sched_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iscatter_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                         int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
@@ -104,10 +104,10 @@ int MPIR_Iscatter_sched_intra(const void *sendbuf, int sendcount, MPI_Datatype s
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatter_sched_inter
+#define FUNCNAME MPIR_Iscatter_sched_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatter_sched_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iscatter_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                         int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
@@ -165,7 +165,7 @@ int MPIR_Iscatter_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
             case MPIR_ISCATTER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Iscatter_sched_intra(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Iscatter_sched_intra_auto(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, root, comm_ptr, s);
                 break;
         }
@@ -183,7 +183,7 @@ int MPIR_Iscatter_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
             case MPIR_ISCATTER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Iscatter_sched_inter(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Iscatter_sched_inter_auto(sendbuf, sendcount, sendtype,
                           recvbuf, recvcount, recvtype, root, comm_ptr, s);
                 break;
         }
