@@ -311,19 +311,19 @@ int MPIR_COLL_init(void) {
 
     /* Gatherv Intra */
     if (0 == strcmp(MPIR_CVAR_GATHERV_INTRA_ALGORITHM, "linear"))
-        MPIR_Gather_intra_algo_choice = MPIR_GATHERV_INTRA_ALGO_LINEAR;
+        MPIR_Gatherv_intra_algo_choice = MPIR_GATHERV_INTRA_ALGO_LINEAR;
     else if (0 == strcmp(MPIR_CVAR_GATHERV_INTRA_ALGORITHM, "nb"))
-        MPIR_Gather_intra_algo_choice = MPIR_GATHERV_INTRA_ALGO_NB;
+        MPIR_Gatherv_intra_algo_choice = MPIR_GATHERV_INTRA_ALGO_NB;
     else
-        MPIR_Gather_intra_algo_choice = MPIR_GATHERV_INTRA_ALGO_AUTO;
+        MPIR_Gatherv_intra_algo_choice = MPIR_GATHERV_INTRA_ALGO_AUTO;
 
     /* Gatherv Inter */
     if (0 == strcmp(MPIR_CVAR_GATHERV_INTER_ALGORITHM, "linear"))
-        MPIR_Gather_inter_algo_choice = MPIR_GATHERV_INTER_ALGO_LINEAR;
+        MPIR_Gatherv_inter_algo_choice = MPIR_GATHERV_INTER_ALGO_LINEAR;
     else if (0 == strcmp(MPIR_CVAR_GATHERV_INTER_ALGORITHM, "nb"))
-        MPIR_Gather_inter_algo_choice = MPIR_GATHERV_INTER_ALGO_NB;
+        MPIR_Gatherv_inter_algo_choice = MPIR_GATHERV_INTER_ALGO_NB;
     else
-        MPIR_Gather_inter_algo_choice = MPIR_GATHERV_INTER_ALGO_AUTO;
+        MPIR_Gatherv_inter_algo_choice = MPIR_GATHERV_INTER_ALGO_AUTO;
 
     /* Iallgather Intra */
     if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "brucks"))
@@ -349,7 +349,7 @@ int MPIR_COLL_init(void) {
     else if (0 == strcmp(MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM, "ring"))
         MPIR_Iallgatherv_intra_algo_choice = MPIR_IALLGATHERV_INTRA_ALGO_RING;
     else
-        MPIR_Iallgather_intra_algo_choice = MPIR_IALLGATHERV_INTRA_ALGO_AUTO;
+        MPIR_Iallgatherv_intra_algo_choice = MPIR_IALLGATHERV_INTRA_ALGO_AUTO;
 
     /* Iallgatherv Inter */
     if (0 == strcmp(MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM, "generic"))
