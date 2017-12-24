@@ -76,10 +76,10 @@ int MPI_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispls
 #define MPI_Alltoallw PMPI_Alltoallw
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallw_intra
+#define FUNCNAME MPIR_Alltoallw_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Alltoallw_intra_auto(const void *sendbuf, const int sendcounts[], const int sdispls[],
                          const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                          const int rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm *comm_ptr,
                          MPIR_Errflag_t *errflag)
@@ -108,10 +108,10 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallw_inter
+#define FUNCNAME MPIR_Alltoallw_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoallw_inter(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Alltoallw_inter_auto(const void *sendbuf, const int sendcounts[], const int sdispls[],
                          const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                          const int rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm *comm_ptr,
                          MPIR_Errflag_t *errflag)
@@ -157,7 +157,7 @@ int MPIR_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
             case MPIR_ALLTOALLW_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Alltoallw_intra(sendbuf, sendcounts,
+                mpi_errno = MPIR_Alltoallw_intra_auto(sendbuf, sendcounts,
                                          sdispls, sendtypes, recvbuf, recvcounts,
                                          rdispls, recvtypes, comm_ptr, errflag);
                 break;
@@ -178,7 +178,7 @@ int MPIR_Alltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
             case MPIR_ALLTOALLW_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Alltoallw_inter(sendbuf, sendcounts, sdispls,
+                mpi_errno = MPIR_Alltoallw_inter_auto(sendbuf, sendcounts, sdispls,
                                          sendtypes, recvbuf, recvcounts,
                                          rdispls, recvtypes, comm_ptr, errflag);
                 break;

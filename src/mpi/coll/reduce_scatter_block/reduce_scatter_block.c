@@ -94,10 +94,10 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
 */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_intra
+#define FUNCNAME MPIR_Reduce_scatter_block_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_block_intra ( 
+int MPIR_Reduce_scatter_block_intra_auto (
     const void *sendbuf, 
     void *recvbuf, 
     int recvcount, 
@@ -200,10 +200,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_inter
+#define FUNCNAME MPIR_Reduce_scatter_block_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_block_inter ( 
+int MPIR_Reduce_scatter_block_inter_auto (
     const void *sendbuf, 
     void *recvbuf, 
     int recvcount, 
@@ -259,7 +259,7 @@ int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
             case MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Reduce_scatter_block_intra(sendbuf, recvbuf,
+                mpi_errno = MPIR_Reduce_scatter_block_intra_auto(sendbuf, recvbuf,
                             recvcount, datatype, op, comm_ptr, errflag);
                 break;
         }
@@ -277,7 +277,7 @@ int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
             case MPIR_REDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Reduce_scatter_block_inter(sendbuf, recvbuf, recvcount,
+                mpi_errno = MPIR_Reduce_scatter_block_inter_auto(sendbuf, recvbuf, recvcount,
                           datatype, op, comm_ptr, errflag);
                 break;
         }

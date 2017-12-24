@@ -74,10 +74,10 @@ int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 #define MPI_Ireduce PMPI_Ireduce
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_sched_intra
+#define FUNCNAME MPIR_Ireduce_sched_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_sched_intra(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int pof2, type_size, comm_size;
@@ -114,10 +114,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_sched_inter
+#define FUNCNAME MPIR_Ireduce_sched_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_sched_inter(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_sched_inter_auto(const void *sendbuf, void *recvbuf,
         int count, MPI_Datatype datatype, MPI_Op op, int root,
         MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
@@ -156,7 +156,7 @@ int MPIR_Ireduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
                 case MPIR_IREDUCE_INTRA_ALGO_AUTO:
                     MPL_FALLTHROUGH;
                 default:
-                    mpi_errno = MPIR_Ireduce_sched_intra(sendbuf, recvbuf, count,
+                    mpi_errno = MPIR_Ireduce_sched_intra_auto(sendbuf, recvbuf, count,
                                 datatype, op, root, comm_ptr, s);
                     break;
              }
@@ -171,7 +171,7 @@ int MPIR_Ireduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
             case MPIR_IREDUCE_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-               mpi_errno = MPIR_Ireduce_sched_inter(sendbuf, recvbuf, count,
+               mpi_errno = MPIR_Ireduce_sched_inter_auto(sendbuf, recvbuf, count,
                            datatype, op, root, comm_ptr, s);
                break;
         }

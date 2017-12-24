@@ -121,10 +121,10 @@ int MPI_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, voi
    End Algorithm: MPI_Alltoall
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoall_sched_intra
+#define FUNCNAME MPIR_Ialltoall_sched_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoall_sched_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ialltoall_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int nbytes, comm_size, sendtype_size;
@@ -153,10 +153,10 @@ fn_fail:
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoall_sched_inter
+#define FUNCNAME MPIR_Ialltoall_sched_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoall_sched_inter(const void *sendbuf, int sendcount, MPI_Datatype
+int MPIR_Ialltoall_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype
         sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
         MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
@@ -198,7 +198,7 @@ int MPIR_Ialltoall_sched(const void *sendbuf, int sendcount, MPI_Datatype sendty
             case MPIR_IALLTOALL_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ialltoall_sched_intra(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Ialltoall_sched_intra_auto(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, comm_ptr, s);
                 break;
         }
@@ -212,7 +212,7 @@ int MPIR_Ialltoall_sched(const void *sendbuf, int sendcount, MPI_Datatype sendty
             case MPIR_IALLTOALL_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ialltoall_sched_inter(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Ialltoall_sched_inter_auto(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, comm_ptr, s);
                 break;
         }

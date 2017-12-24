@@ -76,10 +76,10 @@ int MPI_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts
 #define MPI_Ireduce_scatter PMPI_Ireduce_scatter
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_sched_intra
+#define FUNCNAME MPIR_Ireduce_scatter_sched_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_sched_intra(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Ireduce_scatter_sched_intra_auto(const void *sendbuf, void *recvbuf, const int recvcounts[],
                                MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                                MPIR_Sched_t s)
 {
@@ -139,10 +139,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_sched_inter
+#define FUNCNAME MPIR_Ireduce_scatter_sched_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_sched_inter(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Ireduce_scatter_sched_inter_auto(const void *sendbuf, void *recvbuf, const int recvcounts[],
                                MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                                MPIR_Sched_t s)
 {
@@ -184,7 +184,7 @@ int MPIR_Ireduce_scatter_sched(const void *sendbuf, void *recvbuf, const int rec
             case MPIR_IREDUCE_SCATTER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ireduce_scatter_sched_intra(sendbuf, recvbuf,
+                mpi_errno = MPIR_Ireduce_scatter_sched_intra_auto(sendbuf, recvbuf,
                             recvcounts, datatype, op, comm_ptr, s);
                 break;
        }
@@ -197,7 +197,7 @@ int MPIR_Ireduce_scatter_sched(const void *sendbuf, void *recvbuf, const int rec
            case MPIR_IREDUCE_SCATTER_INTER_ALGO_AUTO:
                MPL_FALLTHROUGH;
            default:
-               mpi_errno = MPIR_Ireduce_scatter_sched_inter(sendbuf, recvbuf, recvcounts,
+               mpi_errno = MPIR_Ireduce_scatter_sched_inter_auto(sendbuf, recvbuf, recvcounts,
                            datatype, op, comm_ptr, s);
                break;
         }

@@ -165,10 +165,10 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_intra
+#define FUNCNAME MPIR_Reduce_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_intra ( 
+int MPIR_Reduce_intra_auto (
     const void *sendbuf,
     void *recvbuf,
     int count,
@@ -251,10 +251,10 @@ int MPIR_Reduce_intra (
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_inter
+#define FUNCNAME MPIR_Reduce_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_inter ( 
+int MPIR_Reduce_inter_auto (
     const void *sendbuf,
     void *recvbuf,
     int count,
@@ -303,7 +303,7 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
             case MPIR_REDUCE_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                 mpi_errno = MPIR_Reduce_intra(sendbuf, recvbuf,
+                 mpi_errno = MPIR_Reduce_intra_auto(sendbuf, recvbuf,
                              count, datatype, op, root, comm_ptr, errflag);
                  break;
         }
@@ -321,7 +321,7 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
             case MPIR_REDUCE_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Reduce_inter(sendbuf, recvbuf, count, datatype,
+                mpi_errno = MPIR_Reduce_inter_auto(sendbuf, recvbuf, count, datatype,
                                       op, root, comm_ptr, errflag);
                 break;
         }

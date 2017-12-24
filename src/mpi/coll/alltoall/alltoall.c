@@ -119,10 +119,10 @@ int MPI_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
 #define MPI_Alltoall PMPI_Alltoall
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoall_intra
+#define FUNCNAME MPIR_Alltoall_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoall_intra( 
+int MPIR_Alltoall_intra_auto(
     const void *sendbuf,
     int sendcount, 
     MPI_Datatype sendtype, 
@@ -165,10 +165,10 @@ int MPIR_Alltoall_intra(
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoall_inter
+#define FUNCNAME MPIR_Alltoall_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoall_inter( 
+int MPIR_Alltoall_inter_auto(
     const void *sendbuf,
     int sendcount, 
     MPI_Datatype sendtype, 
@@ -227,7 +227,7 @@ int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             case MPIR_ALLTOALL_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Alltoall_intra(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Alltoall_intra_auto(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;
@@ -248,7 +248,7 @@ int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             case MPIR_ALLTOALL_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Alltoall_inter(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Alltoall_inter_auto(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;

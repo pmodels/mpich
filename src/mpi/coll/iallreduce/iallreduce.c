@@ -75,10 +75,10 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 #define MPI_Iallreduce PMPI_Iallreduce
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_sched_intra
+#define FUNCNAME MPIR_Iallreduce_sched_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_sched_intra(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, is_homogeneous, pof2, type_size;
@@ -136,10 +136,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_sched_inter
+#define FUNCNAME MPIR_Iallreduce_sched_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_sched_inter(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iallreduce_sched_inter_auto(const void *sendbuf, void *recvbuf, int count,
         MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -181,7 +181,7 @@ int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dat
                 case MPIR_IALLREDUCE_INTRA_ALGO_AUTO:
                     MPL_FALLTHROUGH;
                 default:
-                    mpi_errno = MPIR_Iallreduce_sched_intra(sendbuf, recvbuf, count,
+                    mpi_errno = MPIR_Iallreduce_sched_intra_auto(sendbuf, recvbuf, count,
                             datatype, op, comm_ptr, s);
                     break;
             }
@@ -196,7 +196,7 @@ int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dat
             case MPIR_IALLREDUCE_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Iallreduce_sched_inter(sendbuf, recvbuf, count,
+                mpi_errno = MPIR_Iallreduce_sched_inter_auto(sendbuf, recvbuf, count,
                             datatype, op, comm_ptr, s);
                 break;
         }

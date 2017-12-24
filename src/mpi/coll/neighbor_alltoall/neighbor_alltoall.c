@@ -74,10 +74,10 @@ int MPI_Neighbor_alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendt
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Neighbor_alltoall_intra
+#define FUNCNAME MPIR_Neighbor_alltoall_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Neighbor_alltoall_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr)
+int MPIR_Neighbor_alltoall_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -94,10 +94,10 @@ int MPIR_Neighbor_alltoall_intra(const void *sendbuf, int sendcount, MPI_Datatyp
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Neighbor_alltoall_inter
+#define FUNCNAME MPIR_Neighbor_alltoall_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Neighbor_alltoall_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr)
+int MPIR_Neighbor_alltoall_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -131,7 +131,7 @@ int MPIR_Neighbor_alltoall(const void *sendbuf, int sendcount, MPI_Datatype send
             case MPIR_NEIGHBOR_ALLTOALL_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Neighbor_alltoall_intra(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Neighbor_alltoall_intra_auto(sendbuf, sendcount, sendtype,
                                                       recvbuf, recvcount, recvtype,
                                                       comm_ptr);
                 break;
@@ -146,7 +146,7 @@ int MPIR_Neighbor_alltoall(const void *sendbuf, int sendcount, MPI_Datatype send
             case MPIR_NEIGHBOR_ALLTOALL_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Neighbor_alltoall_inter(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Neighbor_alltoall_inter_auto(sendbuf, sendcount, sendtype,
                                                       recvbuf, recvcount, recvtype,
                                                       comm_ptr);
                 break;

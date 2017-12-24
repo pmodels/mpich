@@ -72,10 +72,10 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request) __attribute__((weak,alias(
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_sched_intra
+#define FUNCNAME MPIR_Ibarrier_sched_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_sched_intra(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_sched_intra_auto(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -87,10 +87,10 @@ int MPIR_Ibarrier_sched_intra(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 /* It will choose between several different algorithms based on the given
  * parameters. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_sched_inter
+#define FUNCNAME MPIR_Ibarrier_sched_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_sched_inter(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_sched_inter_auto(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno;
 
@@ -116,7 +116,7 @@ int MPIR_Ibarrier_sched(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
             case MPIR_BARRIER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ibarrier_sched_intra(comm_ptr, s);
+                mpi_errno = MPIR_Ibarrier_sched_intra_auto(comm_ptr, s);
                 break;
         }
     } else {
@@ -128,7 +128,7 @@ int MPIR_Ibarrier_sched(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
             case MPIR_IBARRIER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ibarrier_sched_inter(comm_ptr, s);
+                mpi_errno = MPIR_Ibarrier_sched_inter_auto(comm_ptr, s);
                 break;
         }
     }

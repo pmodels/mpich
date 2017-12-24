@@ -157,10 +157,10 @@ int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm
 #define MPI_Bcast PMPI_Bcast
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Bcast_intra
+#define FUNCNAME MPIR_Bcast_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Bcast_intra ( 
+int MPIR_Bcast_intra_auto (
         void *buffer, 
         int count, 
         MPI_Datatype datatype, 
@@ -249,10 +249,10 @@ fn_exit:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Bcast_inter
+#define FUNCNAME MPIR_Bcast_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Bcast_inter ( 
+int MPIR_Bcast_inter_auto (
     void *buffer, 
     int count, 
     MPI_Datatype datatype, 
@@ -296,7 +296,7 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
             case MPIR_BCAST_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Bcast_intra( buffer, count, datatype, root, comm_ptr, errflag );
+                mpi_errno = MPIR_Bcast_intra_auto( buffer, count, datatype, root, comm_ptr, errflag );
                 break;
         }
     } else {
@@ -311,7 +311,7 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
             case MPIR_BCAST_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Bcast_inter( buffer, count, datatype, root, comm_ptr, errflag );
+                mpi_errno = MPIR_Bcast_inter_auto( buffer, count, datatype, root, comm_ptr, errflag );
                 break;
         }
     }

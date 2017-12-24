@@ -88,10 +88,10 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *
 #define MPI_Gather PMPI_Gather
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Gather_intra
+#define FUNCNAME MPIR_Gather_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+int MPIR_Gather_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                       int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
                       MPIR_Errflag_t *errflag)
 {
@@ -110,10 +110,10 @@ int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Gather_inter
+#define FUNCNAME MPIR_Gather_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+int MPIR_Gather_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                       int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
                       MPIR_Errflag_t *errflag)
 {
@@ -181,7 +181,7 @@ int MPIR_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             case MPIR_GATHER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Gather_intra(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Gather_intra_auto(sendbuf, sendcount, sendtype,
                                       recvbuf, recvcount, recvtype, root,
                                       comm_ptr, errflag);
                 break;
@@ -207,7 +207,7 @@ int MPIR_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             case MPIR_GATHER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Gather_inter(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Gather_inter_auto(sendbuf, sendcount, sendtype,
                                       recvbuf, recvcount, recvtype, root,
                                       comm_ptr, errflag);
                 break;
