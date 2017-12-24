@@ -1196,9 +1196,13 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, int sendcnt, MPI_Datatype s
 int MPIR_Scatter_inter(const void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf,
                        int recvcnt, MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                        MPIR_Errflag_t * errflag);
-int MPIR_Scatter_inter_generic(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
-                               void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root,
-                               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
+int MPIR_Scatter_inter_linear(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
+                              void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root,
+                              MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
+int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, int sendcnt,
+                                                 MPI_Datatype sendtype, void *recvbuf, int recvcnt,
+                                                 MPI_Datatype recvtype, int root,
+                                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
 
 /* anycomm functions */
 int MPIR_Scatter_nb(const void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf,
