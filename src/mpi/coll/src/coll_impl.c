@@ -307,8 +307,10 @@ int MPII_COLL_init(void) {
         MPIR_Gather_intra_algo_choice = MPIR_GATHER_INTRA_ALGO_AUTO;
 
     /* Gather Inter */
-    if (0 == strcmp(MPIR_CVAR_GATHER_INTER_ALGORITHM, "generic"))
-        MPIR_Gather_inter_algo_choice = MPIR_GATHER_INTER_ALGO_GENERIC;
+    if (0 == strcmp(MPIR_CVAR_GATHER_INTER_ALGORITHM, "linear"))
+        MPIR_Gather_inter_algo_choice = MPIR_GATHER_INTER_ALGO_LINEAR;
+    else if (0 == strcmp(MPIR_CVAR_GATHER_INTER_ALGORITHM, "local_gather_remote_send"))
+        MPIR_Gather_inter_algo_choice = MPIR_GATHER_INTER_ALGO_LOCAL_GATHER_REMOTE_SEND;
     else if (0 == strcmp(MPIR_CVAR_GATHER_INTER_ALGORITHM, "nb"))
         MPIR_Gather_inter_algo_choice = MPIR_GATHER_INTER_ALGO_NB;
     else
