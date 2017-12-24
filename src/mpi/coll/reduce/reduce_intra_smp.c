@@ -22,6 +22,14 @@ int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, int count,
     MPI_Aint true_lb, true_extent, extent;
     MPIR_CHKLMEM_DECL(1);
 
+#ifdef HAVE_ERROR_CHECKING
+    {
+        int is_commutative;
+        is_commutative = MPIR_Op_is_commutative(op);
+        MPIR_Assert(is_commutative);
+    }
+#endif /* HAVE_ERROR_CHECKING */
+
     /* Create a temporary buffer on local roots of all nodes */
     if (comm_ptr->node_roots_comm != NULL) {
 

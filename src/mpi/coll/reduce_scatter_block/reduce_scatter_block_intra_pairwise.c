@@ -79,6 +79,10 @@ int MPIR_Reduce_scatter_block_intra_pairwise (
             is_commutative = 1;
     }
 
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_Assert(is_commutative);
+#endif /* HAVE_ERROR_CHECKING */
+
     MPIR_CHKLMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
 
     for (i=0; i<comm_size; i++) {
