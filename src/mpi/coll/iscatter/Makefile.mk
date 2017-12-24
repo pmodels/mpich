@@ -6,4 +6,5 @@ mpi_sources +=                                  \
 
 mpi_core_sources +=                             \
     src/mpi/coll/iscatter/iscatter_intra_binomial.c   \
-    src/mpi/coll/iscatter/iscatter_inter_generic.c
+    src/mpi/coll/iscatter/iscatter_inter_linear.c \
+    src/mpi/coll/iscatter/iscatter_inter_remote_send_local_scatter.c

@@ -31,8 +31,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select iscatter algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
+        auto                      - Internal algorithm selection
+        linear                    - Force generic algorithm
+        remote_send_local_scatter - Force remote-send-local-scatter algorithm
 
     - name        : MPIR_CVAR_ISCATTER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -110,12 +111,38 @@ int MPIR_Iscatter_sched_inter(const void *sendbuf, int sendcount, MPI_Datatype s
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                         int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
+    int local_size, remote_size, sendtype_size, recvtype_size, nbytes;
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Iscatter_sched_inter_generic(sendbuf, sendcount, sendtype,
-            recvbuf, recvcount, recvtype, root, comm_ptr, s);
+    remote_size = comm_ptr->remote_size;
+    local_size  = comm_ptr->local_size;
 
+    if (root == MPI_ROOT) {
+        MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
+        nbytes = sendtype_size * sendcount * remote_size;
+    }
+    else {
+        MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
+        nbytes = recvtype_size * recvcount * local_size;
+    }
+
+    if (nbytes < MPIR_CVAR_SCATTER_INTER_SHORT_MSG_SIZE) {
+        mpi_errno = MPIR_Iscatter_sched_inter_remote_send_local_scatter(sendbuf, sendcount, sendtype,
+                                                                        recvbuf, recvcount, recvtype,
+                                                                        root, comm_ptr, s);
+    }
+    else {
+        mpi_errno = MPIR_Iscatter_sched_inter_linear(sendbuf, sendcount, sendtype,
+                                                     recvbuf, recvcount, recvtype,
+                                                     root, comm_ptr, s);
+    }
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
     return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -145,8 +172,12 @@ int MPIR_Iscatter_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
     } else {
         /* intercommunicator */
         switch (MPIR_Iscatter_inter_algo_choice) {
-            case MPIR_ISCATTER_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Iscatter_sched_inter_generic(sendbuf, sendcount, sendtype,
+            case MPIR_ISCATTER_INTER_ALGO_LINEAR:
+                mpi_errno = MPIR_Iscatter_sched_inter_linear(sendbuf, sendcount, sendtype,
+                          recvbuf, recvcount, recvtype, root, comm_ptr, s);
+                break;
+            case MPIR_ISCATTER_INTER_ALGO_REMOTE_SEND_LOCAL_SCATTER:
+                mpi_errno = MPIR_Iscatter_sched_inter_remote_send_local_scatter(sendbuf, sendcount, sendtype,
                           recvbuf, recvcount, recvtype, root, comm_ptr, s);
                 break;
             case MPIR_ISCATTER_INTER_ALGO_AUTO:
