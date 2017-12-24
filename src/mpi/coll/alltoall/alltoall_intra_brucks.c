@@ -50,6 +50,10 @@ int MPIR_Alltoall_intra_brucks(
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_Assert(sendbuf != MPI_IN_PLACE);
+#endif /* HAVE_ERROR_CHECKING */
+
     /* Get extent of send and recv types */
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);

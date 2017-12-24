@@ -150,6 +150,11 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(
        datatypes to do the reduce-scatter is tricky, therefore
        using recursive doubling in that case.) */
 
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_Assert(HANDLE_GET_KIND(op)==HANDLE_KIND_BUILTIN);
+    MPIR_Assert(count >= pof2);
+#endif /* HAVE_ERROR_CHECKING */
+
     if (newrank != -1) {
       MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts", MPL_MEM_BUFFER);
       MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements", MPL_MEM_BUFFER);
