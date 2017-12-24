@@ -20,17 +20,17 @@ int MPIR_Iallreduce_sched_intra_naive(const void *sendbuf, void *recvbuf, int co
     rank = comm_ptr->rank;
 
     if ((sendbuf == MPI_IN_PLACE) && (rank != 0)) {
-        mpi_errno = MPIR_Ireduce_sched_intra(recvbuf, NULL, count, datatype, op, 0, comm_ptr, s);
+        mpi_errno = MPIR_Ireduce_sched_intra_auto(recvbuf, NULL, count, datatype, op, 0, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
-        mpi_errno = MPIR_Ireduce_sched_intra(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr, s);
+        mpi_errno = MPIR_Ireduce_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     MPIR_SCHED_BARRIER(s);
 
-    mpi_errno = MPIR_Ibcast_sched_intra(recvbuf, count, datatype, 0, comm_ptr, s);
+    mpi_errno = MPIR_Ibcast_sched_intra_auto(recvbuf, count, datatype, 0, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:

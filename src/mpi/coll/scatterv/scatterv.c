@@ -76,10 +76,10 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 #define MPI_Scatterv PMPI_Scatterv
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scatterv_intra
+#define FUNCNAME MPIR_Scatterv_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scatterv_intra(const void *sendbuf, const int *sendcounts, const int *displs,
+int MPIR_Scatterv_intra_auto(const void *sendbuf, const int *sendcounts, const int *displs,
                   MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
                   int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
@@ -98,10 +98,10 @@ int MPIR_Scatterv_intra(const void *sendbuf, const int *sendcounts, const int *d
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scatterv_inter
+#define FUNCNAME MPIR_Scatterv_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scatterv_inter(const void *sendbuf, const int *sendcounts, const int *displs,
+int MPIR_Scatterv_inter_auto(const void *sendbuf, const int *sendcounts, const int *displs,
                   MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
                   int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
@@ -140,7 +140,7 @@ int MPIR_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
             case MPIR_SCATTERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Scatterv_intra(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
+                mpi_errno = MPIR_Scatterv_intra_auto(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
                 break;
         }
     } else {
@@ -154,7 +154,7 @@ int MPIR_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
             case MPIR_SCATTERV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Scatterv_inter(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
+                mpi_errno = MPIR_Scatterv_inter_auto(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
                 break;
         }
     }

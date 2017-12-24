@@ -62,10 +62,10 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 #define MPI_Exscan PMPI_Exscan
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Exscan_intra
+#define FUNCNAME MPIR_Exscan_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Exscan_intra(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
+int MPIR_Exscan_intra_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -106,7 +106,7 @@ int MPIR_Exscan (
         case MPIR_EXSCAN_INTRA_ALGO_AUTO:
             MPL_FALLTHROUGH;
         default:
-            mpi_errno = MPIR_Exscan_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+            mpi_errno = MPIR_Exscan_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
     }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

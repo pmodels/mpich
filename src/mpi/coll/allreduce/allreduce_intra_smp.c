@@ -8,7 +8,7 @@
 #include "coll_util.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allreduce_intra
+#define FUNCNAME MPIR_Allreduce_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, int count,

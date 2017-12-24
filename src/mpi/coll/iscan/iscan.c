@@ -61,10 +61,10 @@ int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dataty
 #define MPI_Iscan PMPI_Iscan
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscan_sched_intra
+#define FUNCNAME MPIR_Iscan_sched_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscan_sched_intra(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -92,7 +92,7 @@ int MPIR_Iscan_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype
         case MPIR_ISCAN_INTRA_ALGO_AUTO:
             MPL_FALLTHROUGH;
         default:
-            mpi_errno = MPIR_Iscan_sched_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+            mpi_errno = MPIR_Iscan_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
             break;
     }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

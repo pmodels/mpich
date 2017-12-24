@@ -77,10 +77,10 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
 #define MPI_Ireduce_scatter_block PMPI_Ireduce_scatter_block
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_sched_intra
+#define FUNCNAME MPIR_Ireduce_scatter_block_sched_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_sched_intra(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_sched_intra_auto(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative;
@@ -127,10 +127,10 @@ fn_fail:
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_sched_inter
+#define FUNCNAME MPIR_Ireduce_scatter_block_sched_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_sched_inter(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_sched_inter_auto(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -171,7 +171,7 @@ int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int rec
             case MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ireduce_scatter_block_sched_intra(sendbuf, recvbuf,
+                mpi_errno = MPIR_Ireduce_scatter_block_sched_intra_auto(sendbuf, recvbuf,
                             recvcount, datatype, op, comm_ptr, s);
                 break;
        }
@@ -185,7 +185,7 @@ int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int rec
            case MPIR_IREDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO:
                MPL_FALLTHROUGH;
            default:
-               mpi_errno = MPIR_Ireduce_scatter_block_sched_inter(sendbuf, recvbuf,
+               mpi_errno = MPIR_Ireduce_scatter_block_sched_inter_auto(sendbuf, recvbuf,
                            recvcount, datatype, op, comm_ptr, s);
        }
     }

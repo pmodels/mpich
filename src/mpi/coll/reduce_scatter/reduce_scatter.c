@@ -101,10 +101,10 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[
 */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_intra
+#define FUNCNAME MPIR_Reduce_scatter_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Reduce_scatter_intra_auto(const void *sendbuf, void *recvbuf, const int recvcounts[],
                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int comm_size, i;
@@ -228,10 +228,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_inter
+#define FUNCNAME MPIR_Reduce_scatter_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_inter(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Reduce_scatter_inter_auto(const void *sendbuf, void *recvbuf, const int recvcounts[],
                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                               MPIR_Errflag_t *errflag)
 {
@@ -282,7 +282,7 @@ int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts
             case MPIR_REDUCE_SCATTER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Reduce_scatter_intra(sendbuf, recvbuf,
+                mpi_errno = MPIR_Reduce_scatter_intra_auto(sendbuf, recvbuf,
                             recvcounts, datatype, op, comm_ptr, errflag);
                 break;
         }
@@ -300,7 +300,7 @@ int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts
             case MPIR_REDUCE_SCATTER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Reduce_scatter_inter(sendbuf, recvbuf, recvcounts,
+                mpi_errno = MPIR_Reduce_scatter_inter_auto(sendbuf, recvbuf, recvcounts,
                           datatype, op, comm_ptr, errflag);
                 break;
         }
