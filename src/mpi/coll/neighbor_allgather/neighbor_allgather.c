@@ -74,6 +74,40 @@ int MPI_Neighbor_allgather(const void *sendbuf, int sendcount, MPI_Datatype send
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Neighbor_allgather_intra
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Neighbor_allgather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Neighbor_allgather_nb(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Neighbor_allgather_inter
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Neighbor_allgather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Neighbor_allgather_nb(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Neighbor_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -89,7 +123,7 @@ int MPIR_Neighbor_allgather(const void *sendbuf, int sendcount, MPI_Datatype sen
             case MPIR_NEIGHBOR_ALLGATHER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Neighbor_allgather_nb(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr);
+                mpi_errno = MPIR_Neighbor_allgather_intra(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr);
                 break;
         }
     } else {
@@ -100,7 +134,7 @@ int MPIR_Neighbor_allgather(const void *sendbuf, int sendcount, MPI_Datatype sen
             case MPIR_NEIGHBOR_ALLGATHER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Neighbor_allgather_nb(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr);
+                mpi_errno = MPIR_Neighbor_allgather_inter(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr);
                 break;
         }
     }
