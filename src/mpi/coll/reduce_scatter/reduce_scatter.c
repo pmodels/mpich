@@ -115,7 +115,6 @@ int MPIR_Reduce_scatter_intra_auto(const void *sendbuf, void *recvbuf, const int
     int type_size, total_count, nbytes;
     int pof2;
     int is_commutative;
-    MPIR_Op *op_ptr;
     MPIR_CHKLMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
@@ -133,16 +132,7 @@ int MPIR_Reduce_scatter_intra_auto(const void *sendbuf, void *recvbuf, const int
 
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-        is_commutative = 1;
-    }
-    else {
-        MPIR_Op_get_ptr(op, op_ptr);
-        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
-            is_commutative = 0;
-        else
-            is_commutative = 1;
-    }
+    is_commutative = MPIR_Op_is_commutative(op);
 
     MPIR_CHKLMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
 
