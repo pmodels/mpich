@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "coll_util.h"
 
 /* Algorithm: MPI_Exscan
 
@@ -66,7 +67,6 @@ int MPIR_Exscan_intra_recursive_doubling (
     int mask, dst, is_commutative, flag; 
     MPI_Aint true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
-    MPIR_Op *op_ptr;
     MPIR_CHKLMEM_DECL(2);
     
     if (count == 0) return MPI_SUCCESS;
@@ -85,17 +85,8 @@ int MPIR_Exscan_intra_recursive_doubling (
         per_thread->op_errno = 0;
     }
 
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-        is_commutative = 1;
-    }
-    else {
-        MPIR_Op_get_ptr(op, op_ptr);
-        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
-            is_commutative = 0;
-        else
-            is_commutative = 1;
-    }
-    
+    is_commutative = MPIR_Op_is_commutative(op);
+
     /* need to allocate temporary buffer to store partial scan*/
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 

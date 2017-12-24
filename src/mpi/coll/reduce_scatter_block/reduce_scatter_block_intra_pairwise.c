@@ -44,7 +44,6 @@ int MPIR_Reduce_scatter_block_intra_pairwise (
     int mpi_errno_ret = MPI_SUCCESS;
     int src, dst;
     int is_commutative;
-    MPIR_Op *op_ptr;
     MPIR_CHKLMEM_DECL(5);
 
     comm_size = comm_ptr->local_size;
@@ -68,16 +67,7 @@ int MPIR_Reduce_scatter_block_intra_pairwise (
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-        is_commutative = 1;
-    }
-    else {
-        MPIR_Op_get_ptr(op, op_ptr);
-        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
-            is_commutative = 0;
-        else
-            is_commutative = 1;
-    }
+    is_commutative = MPIR_Op_is_commutative(op);
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(is_commutative);
