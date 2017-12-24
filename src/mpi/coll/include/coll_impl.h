@@ -434,7 +434,8 @@ extern MPIR_Iscatter_intra_algo_t MPIR_Iscatter_intra_algo_choice;
 
 typedef enum MPIR_Iscatter_inter_algo_t {
     MPIR_ISCATTER_INTER_ALGO_AUTO,
-    MPIR_ISCATTER_INTER_ALGO_GENERIC,
+    MPIR_ISCATTER_INTER_ALGO_LINEAR,
+    MPIR_ISCATTER_INTER_ALGO_REMOTE_SEND_LOCAL_SCATTER,
 } MPIR_Iscatter_inter_algo_t;
 extern MPIR_Iscatter_inter_algo_t MPIR_Iscatter_inter_algo_choice;
 

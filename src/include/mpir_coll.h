@@ -980,9 +980,14 @@ int MPIR_Iscatter_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_D
 int MPIR_Iscatter_sched_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                               void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                               MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-int MPIR_Iscatter_sched_inter_generic(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                      void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
-                                      MPIR_Comm * comm_ptr, MPIR_Sched_t s);
+int MPIR_Iscatter_sched_inter_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                     void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
+                                     MPIR_Comm * comm_ptr, MPIR_Sched_t s);
+int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int sendcount,
+                                                        MPI_Datatype sendtype, void *recvbuf,
+                                                        int recvcount, MPI_Datatype recvtype,
+                                                        int root, MPIR_Comm * comm_ptr,
+                                                        MPIR_Sched_t s);
 
 
 /******************************** Iscatterv ********************************/
