@@ -763,8 +763,10 @@ int MPII_COLL_init(void) {
         MPIR_Scatter_intra_algo_choice = MPIR_SCATTER_INTRA_ALGO_AUTO;
 
     /* Scatter Inter */
-    if (0 == strcmp(MPIR_CVAR_SCATTER_INTRA_ALGORITHM, "generic"))
-        MPIR_Scatter_inter_algo_choice = MPIR_SCATTER_INTER_ALGO_GENERIC;
+    if (0 == strcmp(MPIR_CVAR_SCATTER_INTRA_ALGORITHM, "linear"))
+        MPIR_Scatter_inter_algo_choice = MPIR_SCATTER_INTER_ALGO_LINEAR;
+    else if (0 == strcmp(MPIR_CVAR_SCATTER_INTRA_ALGORITHM, "remote_send_local_scatter"))
+        MPIR_Scatter_inter_algo_choice = MPIR_SCATTER_INTER_ALGO_REMOTE_SEND_LOCAL_SCATTER;
     else if (0 == strcmp(MPIR_CVAR_SCATTER_INTRA_ALGORITHM, "nb"))
         MPIR_Scatter_inter_algo_choice = MPIR_SCATTER_INTER_ALGO_NB;
     else
