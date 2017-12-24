@@ -8,4 +8,5 @@ mpi_sources +=                     		\
 mpi_core_sources +=									\
 	src/mpi/coll/gather/gather_nb.c			\
 	src/mpi/coll/gather/gather_intra_binomial.c			\
-	src/mpi/coll/gather/gather_inter_generic.c
+	src/mpi/coll/gather/gather_inter_linear.c \
+	src/mpi/coll/gather/gather_inter_local_gather_remote_send.c

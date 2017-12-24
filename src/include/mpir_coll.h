@@ -330,9 +330,13 @@ int MPIR_Gather_intra_binomial(const void *sendbuf, int sendcnt, MPI_Datatype se
 int MPIR_Gather_inter(const void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf,
                       int recvcnt, MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                       MPIR_Errflag_t * errflag);
-int MPIR_Gather_inter_generic(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
-                              void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root,
-                              MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
+int MPIR_Gather_inter_linear(const void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf,
+                             int recvcnt, MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
+                             MPIR_Errflag_t * errflag);
+int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcnt,
+                                               MPI_Datatype sendtype, void *recvbuf, int recvcnt,
+                                               MPI_Datatype recvtype, int root,
+                                               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
 
 /* anycomm functions */
 int MPIR_Gather_nb(const void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf,

@@ -157,7 +157,8 @@ extern MPIR_Gather_intra_algo_t MPIR_Gather_intra_algo_choice;
 
 typedef enum MPIR_Gather_inter_algo_t {
     MPIR_GATHER_INTER_ALGO_AUTO,
-    MPIR_GATHER_INTER_ALGO_GENERIC,
+    MPIR_GATHER_INTER_ALGO_LINEAR,
+    MPIR_GATHER_INTER_ALGO_LOCAL_GATHER_REMOTE_SEND,
     MPIR_GATHER_INTER_ALGO_NB,
 } MPIR_Gather_inter_algo_t;
 extern MPIR_Gather_inter_algo_t MPIR_Gather_inter_algo_choice;

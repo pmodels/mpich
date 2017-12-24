@@ -45,9 +45,10 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : |-
         Variable to select gather algorithm
-        auto    - Internal algorithm selection
-        generic - Force generic algorithm
-        nb      - Force nonblocking algorithm
+        auto                     - Internal algorithm selection
+        linear                   - Force linear algorithm
+        local_gather_remote_send - Force local-gather-remote-send algorithm
+        nb                       - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_GATHER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -116,12 +117,38 @@ int MPIR_Gather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                       int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
                       MPIR_Errflag_t *errflag)
 {
+    int sendtype_size, recvtype_size, local_size, remote_size, nbytes;
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Gather_inter_generic(sendbuf, sendcount, sendtype,
-            recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
+    remote_size = comm_ptr->remote_size;
+    local_size = comm_ptr->local_size;
 
+    if (root == MPI_ROOT) {
+        MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
+        nbytes = recvtype_size * recvcount * remote_size;
+    }
+    else {
+        MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
+        nbytes = sendtype_size * sendcount * local_size;
+    }
+
+    if (nbytes < MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE) {
+        mpi_errno = MPIR_Gather_inter_local_gather_remote_send(sendbuf, sendcount, sendtype,
+                                                               recvbuf, recvcount, recvtype,
+                                                               root, comm_ptr, errflag);
+    }
+    else {
+        mpi_errno = MPIR_Gather_inter_linear(sendbuf, sendcount, sendtype,
+                                             recvbuf, recvcount, recvtype,
+                                             root, comm_ptr, errflag);
+    }
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
     return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -162,8 +189,13 @@ int MPIR_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     } else {
         /* intercommunicator */
         switch (MPIR_Gather_inter_algo_choice) {
-            case MPIR_GATHER_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Gather_inter_generic(sendbuf, sendcount, sendtype,
+            case MPIR_GATHER_INTER_ALGO_LINEAR:
+                mpi_errno = MPIR_Gather_inter_linear(sendbuf, sendcount, sendtype,
+                                      recvbuf, recvcount, recvtype, root,
+                                      comm_ptr, errflag);
+                break;
+            case MPIR_GATHER_INTER_ALGO_LOCAL_GATHER_REMOTE_SEND:
+                mpi_errno = MPIR_Gather_inter_local_gather_remote_send(sendbuf, sendcount, sendtype,
                                       recvbuf, recvcount, recvtype, root,
                                       comm_ptr, errflag);
                 break;
