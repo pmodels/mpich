@@ -111,6 +111,11 @@ int MPIR_Reduce_intra_reduce_scatter_gather (
     while (pof2 <= comm_size) pof2 <<= 1;
     pof2 >>=1;
 
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_Assert(HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN);
+    MPIR_Assert(count >= pof2);
+#endif /* HAVE_ERROR_CHECKING */
+
     rem = comm_size - pof2;
 
     /* In the non-power-of-two case, all odd-numbered

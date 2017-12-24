@@ -60,6 +60,14 @@ int MPIR_Reduce_scatter_intra_recursive_halving (const void *sendbuf, void *recv
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
+#ifdef HAVE_ERROR_CHECKING
+    {
+        int is_commutative;
+        is_commutative = MPIR_Op_is_commutative(op);
+        MPIR_Assert(is_commutative);
+    }
+#endif /* HAVE_ERROR_CHECKING */
+
     /* set op_errno to 0. stored in perthread structure */
     {
         MPIR_Per_thread_t *per_thread = NULL;

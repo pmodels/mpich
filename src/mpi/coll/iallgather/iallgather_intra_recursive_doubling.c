@@ -63,6 +63,12 @@ int MPIR_Iallgather_sched_intra_recursive_doubling(const void *sendbuf, int send
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
+#ifdef HAVE_ERROR_CHECKING
+    /* Currently this algorithm can only handle power-of-2 comm_size.
+     * Non power-of-2 comm_size is still experimental */
+    MPIR_Assert(!(comm_size & (comm_size-1)));
+#endif /* HAVE_ERROR_CHECKING */
+
     recv_dtp = NULL;
     if (HANDLE_GET_KIND(recvtype) != HANDLE_KIND_BUILTIN) {
         MPIR_Datatype_get_ptr(recvtype, recv_dtp);

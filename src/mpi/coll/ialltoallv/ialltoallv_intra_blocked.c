@@ -22,6 +22,10 @@ int MPIR_Ialltoallv_sched_intra_blocked(const void *sendbuf, const int sendcount
     MPI_Aint send_extent, recv_extent, sendtype_size, recvtype_size;
     int dst, rank;
 
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_Assert(sendbuf != MPI_IN_PLACE);
+#endif /* HAVE_ERROR_CHECKING */
+
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 

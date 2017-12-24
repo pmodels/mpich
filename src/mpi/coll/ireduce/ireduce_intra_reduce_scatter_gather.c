@@ -81,6 +81,11 @@ int MPIR_Ireduce_sched_intra_reduce_scatter_gather(const void *sendbuf, void *re
     while (pof2 <= comm_size) pof2 <<= 1;
     pof2 >>=1;
 
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_Assert(HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN);
+    MPIR_Assert(count >= pof2);
+#endif /* HAVE_ERROR_CHECKING */
+
     rem = comm_size - pof2;
 
     /* If I'm not the root, then my recvbuf may not be valid, therefore

@@ -55,6 +55,12 @@ int MPIR_Allgather_intra_recursive_doubling (
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
+#ifdef HAVE_ERROR_CHECKING
+    /* Currently this algorithm can only handle power-of-2 comm_size.
+     * Non power-of-2 comm_size is still experimental */
+    MPIR_Assert(!(comm_size & (comm_size-1)));
+#endif /* HAVE_ERROR_CHECKING */
+
     MPIR_Datatype_get_extent_macro( recvtype, recvtype_extent );
 
     /* This is the largest offset we add to recvbuf */
