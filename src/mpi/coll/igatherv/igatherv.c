@@ -73,6 +73,46 @@ int MPI_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
 #define MPI_Igatherv PMPI_Igatherv
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Igatherv_sched_intra
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Igatherv_sched_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                        const int recvcounts[], const int displs[], MPI_Datatype recvtype, int root,
+                        MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Igatherv_sched_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Igatherv_sched_inter
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Igatherv_sched_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                        const int recvcounts[], const int displs[], MPI_Datatype recvtype, int root,
+                        MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Igatherv_sched_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Igatherv_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -90,7 +130,7 @@ int MPIR_Igatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
             case MPIR_IGATHERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Igatherv_sched_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
+                mpi_errno = MPIR_Igatherv_sched_intra(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
                 break;
         }
     } else {
@@ -101,7 +141,7 @@ int MPIR_Igatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
             case MPIR_IGATHERV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Igatherv_sched_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
+                mpi_errno = MPIR_Igatherv_sched_inter(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
                 break;
         }
     }
