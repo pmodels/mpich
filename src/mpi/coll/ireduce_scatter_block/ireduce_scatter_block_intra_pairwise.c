@@ -87,47 +87,20 @@ int MPIR_Ireduce_scatter_block_sched_intra_pairwise(const void *sendbuf, void *r
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
 
-        /* FIXME does this algorithm actually work correctly for noncommutative ops?
-         * If so, relax restriction in assert and comments... */
-        if (is_commutative || (src < rank)) {
-            if (sendbuf != MPI_IN_PLACE) {
-                mpi_errno = MPIR_Sched_reduce(tmp_recvbuf, recvbuf, recvcount, datatype, op, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            }
-            else {
-                mpi_errno = MPIR_Sched_reduce(tmp_recvbuf, ((char *)recvbuf+disps[rank]*extent),
-                                              recvcount, datatype, op, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                /* We can't store the result at the beginning of
-                   recvbuf right here because there is useful data there that
-                   other process/processes need.  At the end we will copy back
-                   the result to the beginning of recvbuf. */
-            }
-            MPIR_SCHED_BARRIER(s);
+        if (sendbuf != MPI_IN_PLACE) {
+            mpi_errno = MPIR_Sched_reduce(tmp_recvbuf, recvbuf, recvcount, datatype, op, s);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         else {
-            if (sendbuf != MPI_IN_PLACE) {
-                mpi_errno = MPIR_Sched_reduce(recvbuf, tmp_recvbuf, recvcount, datatype, op, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                MPIR_SCHED_BARRIER(s);
-                /* copy result back into recvbuf */
-                mpi_errno = MPIR_Sched_copy(tmp_recvbuf, recvcount, datatype,
-                                            recvbuf, recvcount, datatype, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            }
-            else {
-                mpi_errno = MPIR_Sched_reduce(((char *)recvbuf+disps[rank]*extent),
-                                              tmp_recvbuf, recvcount, datatype, op, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                MPIR_SCHED_BARRIER(s);
-                /* copy result back into recvbuf */
-                mpi_errno = MPIR_Sched_copy(tmp_recvbuf, recvcount, datatype,
-                                            ((char *)recvbuf + disps[rank]*extent),
-                                            recvcount, datatype, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            }
-            MPIR_SCHED_BARRIER(s);
+            mpi_errno = MPIR_Sched_reduce(tmp_recvbuf, ((char *)recvbuf+disps[rank]*extent),
+                                          recvcount, datatype, op, s);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            /* We can't store the result at the beginning of
+               recvbuf right here because there is useful data there that
+               other process/processes need.  At the end we will copy back
+               the result to the beginning of recvbuf. */
         }
+        MPIR_SCHED_BARRIER(s);
     }
 
     /* if MPI_IN_PLACE, move output data to the beginning of
