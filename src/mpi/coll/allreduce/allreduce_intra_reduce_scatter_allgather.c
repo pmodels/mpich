@@ -86,10 +86,8 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
-    /* find nearest power-of-two less than or equal to comm_size */
-    pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
+    /* get nearest power-of-two less than or equal to comm_size */
+    pof2 = MPIU_pof2(comm_size);
 
     rem = comm_size - pof2;
 

@@ -100,9 +100,7 @@ int MPIR_Ireduce_scatter_sched_intra_recursive_halving(const void *sendbuf, void
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIR_SCHED_BARRIER(s);
 
-    pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
+    pof2 = MPIU_pof2(comm_size);
 
     rem = comm_size - pof2;
 

@@ -43,10 +43,8 @@ int MPIR_Iallreduce_sched_intra_recursive_doubling(const void *sendbuf, void *re
         MPIR_SCHED_BARRIER(s);
     }
 
-    /* find nearest power-of-two less than or equal to comm_size */
-    pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
+    /* get nearest power-of-two less than or equal to comm_size */
+    pof2 = MPIU_pof2(comm_size);
 
     rem = comm_size - pof2;
 
