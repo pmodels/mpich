@@ -101,10 +101,8 @@ int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int cou
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
-    /* find nearest power-of-two less than or equal to comm_size */
-    pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
+    /* get nearest power-of-two less than or equal to comm_size */
+    pof2 = MPIU_pof2(comm_size);
 
     /* If op is user-defined or count is less than pof2, use
        recursive doubling algorithm. Otherwise do a reduce-scatter
