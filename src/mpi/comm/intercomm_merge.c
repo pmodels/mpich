@@ -189,6 +189,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
         }
         (*new_intracomm_ptr)->recvcontext_id = (*new_intracomm_ptr)->context_id;
         (*new_intracomm_ptr)->remote_size    = (*new_intracomm_ptr)->local_size   = new_size;
+        (*new_intracomm_ptr)->pof2           = MPIU_pof2(new_size);
         (*new_intracomm_ptr)->rank           = -1;
         (*new_intracomm_ptr)->comm_kind      = MPIR_COMM_KIND__INTRACOMM;
 
@@ -224,6 +225,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     (*new_intracomm_ptr)->remote_size    = (*new_intracomm_ptr)->local_size   = new_size;
+    (*new_intracomm_ptr)->pof2           = MPIU_pof2(new_size);
     (*new_intracomm_ptr)->rank           = -1;
     (*new_intracomm_ptr)->comm_kind      = MPIR_COMM_KIND__INTRACOMM;
     (*new_intracomm_ptr)->context_id = new_context_id;

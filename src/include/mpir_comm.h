@@ -139,6 +139,9 @@ struct MPIR_Comm {
     int           rank;          /* Value of MPI_Comm_rank */
     MPIR_Attribute *attributes;  /* List of attributes */
     int           local_size;    /* Value of MPI_Comm_size for local group */
+    int           pof2;          /* Nearest (smaller than or equal to) power of 2
+                                    to the number of ranks in the communicator.
+                                    To be used during collective communication */
     MPIR_Group   *local_group,   /* Groups in communicator. */
                  *remote_group;  /* The local and remote groups are the
                                     same for intra communicators */
