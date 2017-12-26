@@ -19,7 +19,6 @@
 #include "../shm/include/shm.h"
 #endif
 
-#include "coll_util.h"
 
 MPL_STATIC_INLINE_PREFIX
 MPIDI_coll_algo_container_t *MPIDI_CH4_Barrier_select(MPIR_Comm * comm,
@@ -84,7 +83,7 @@ MPIDI_coll_algo_container_t *MPIDI_CH4_Bcast_select(void *buffer,
             (comm->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
             return (MPIDI_coll_algo_container_t *) &CH4_bcast_composition_alpha_cnt;
         } else {
-            if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPIU_is_pof2(comm->local_size, NULL)) {
+            if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm->local_size, NULL)) {
                 return (MPIDI_coll_algo_container_t *) &CH4_bcast_composition_beta_cnt;
             }
         }

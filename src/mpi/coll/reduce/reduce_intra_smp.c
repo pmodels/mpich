@@ -6,7 +6,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_intra_smp

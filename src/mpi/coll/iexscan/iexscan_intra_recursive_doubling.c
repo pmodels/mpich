@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* This is the machine-independent implementation of exscan. The algorithm is:
 

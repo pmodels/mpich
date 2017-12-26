@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* Algorithm: Noncommutative recursive doubling
  *
@@ -79,7 +78,7 @@ int MPIR_Ireduce_scatter_sched_intra_noncommutative(const void *sendbuf, void *r
     for (i = 0; i < comm_size; ++i) {
         mpi_errno = MPIR_Sched_copy(((char *)(sendbuf == MPI_IN_PLACE ? (const void *)recvbuf : sendbuf) + (i * true_extent * block_size)),
                                     block_size, datatype,
-                                    ((char *)tmp_buf0 + (MPIU_Mirror_permutation(i, log2_comm_size) * true_extent * block_size)),
+                                    ((char *)tmp_buf0 + (MPL_mirror_permutation(i, log2_comm_size) * true_extent * block_size)),
                                     block_size, datatype, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);

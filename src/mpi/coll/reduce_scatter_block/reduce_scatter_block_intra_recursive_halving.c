@@ -12,7 +12,6 @@
 
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_scatter_block_intra_recursive_halving

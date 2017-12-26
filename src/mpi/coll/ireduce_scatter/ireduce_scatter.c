@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -120,7 +119,7 @@ int MPIR_Ireduce_scatter_sched_intra_auto(const void *sendbuf, void *recvbuf, co
             }
         }
 
-        if (MPIU_is_pof2(comm_size, NULL) && is_block_regular) {
+        if (MPL_is_pof2(comm_size, NULL) && is_block_regular) {
             /* noncommutative, pof2 size, and block regular */
             mpi_errno = MPIR_Ireduce_scatter_sched_intra_noncommutative(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);

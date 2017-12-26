@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* Local utility macro: takes an two args and sets lvalue cr_ equal to the rank
  * in comm_ptr corresponding to rvalue gr_ */
@@ -70,7 +69,7 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* get nearest power-of-two less than or equal to comm_size */
-    pof2 = MPIU_pof2(group_size);
+    pof2 = MPL_pof2(group_size);
 
     rem = group_size - pof2;
 

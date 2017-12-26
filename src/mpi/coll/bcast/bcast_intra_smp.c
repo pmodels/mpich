@@ -6,7 +6,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* FIXME This function uses some heuristsics based off of some testing on a
  * cluster at Argonne.  We need a better system for detrmining and controlling
@@ -127,7 +126,7 @@ int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int ro
         /* supposedly...
            smp+doubling good for pof2
            reg+ring better for non-pof2 */
-        if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPIU_is_pof2(comm_ptr->local_size, NULL))
+        if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm_ptr->local_size, NULL))
         {
             /* medium-sized msg and pof2 np */
 

@@ -6,7 +6,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -223,7 +222,7 @@ int MPIR_Bcast_intra_auto (
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) || (comm_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
         mpi_errno = MPIR_Bcast_intra_binomial(buffer, count, datatype, root, comm_ptr, errflag);
     } else /* (nbytes >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_size >= MPIR_CVAR_BCAST_MIN_PROCS) */ {
-        if ((nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE) && (MPIU_is_pof2(comm_size, NULL))) {
+        if ((nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE) && (MPL_is_pof2(comm_size, NULL))) {
             mpi_errno = MPIR_Bcast_intra_scatter_recursive_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
         } else /* (nbytes >= MPIR_CVAR_BCAST_LONG_MSG_SIZE) || !(comm_size_is_pof2) */ {
             mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);

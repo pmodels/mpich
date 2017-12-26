@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 #include "ibcast.h"
 
 /*
@@ -73,7 +72,7 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
 #ifdef HAVE_ERROR_CHECKING
     /* This algorithm can currently handle only power of 2 cases,
      * non-power of 2 is still experimental */
-    MPIR_Assert(MPIU_is_pof2(comm_size, NULL));
+    MPIR_Assert(MPL_is_pof2(comm_size, NULL));
 #endif /* HAVE_ERROR_CHECKING */
 
     /* If there is only one process, return */
