@@ -7,13 +7,6 @@
 #ifndef COLL_UTIL_H_INCLUDED
 #define COLL_UTIL_H_INCLUDED
 
-int MPII_Allreduce_group(void *sendbuf, void *recvbuf, int count,
-                         MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-                         MPIR_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
-int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
-                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-                               MPIR_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
-
 /* Returns the nearest (smaller than or equal to) power of two of a number*/
 static inline int MPIU_pof2(int number)
 {
