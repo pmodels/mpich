@@ -37,26 +37,6 @@ static inline int MPIU_is_pof2(int val, int *ceil_pof2)
         return 0;
 }
 
-/* TODO with a modest amount of work in the handle allocator code we should be
- * able to encode commutativity in the handle value and greatly simplify this
- * routine */
-/* returns TRUE iff the given op is commutative */
-static inline int MPIR_Op_is_commutative(MPI_Op op)
-{
-    MPIR_Op *op_ptr;
-
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-        return TRUE;
-    }
-    else {
-        MPIR_Op_get_ptr(op, op_ptr);
-        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
-            return FALSE;
-        else
-            return TRUE;
-    }
-}
-
 /* Implements the "mirror permutation" of "bits" low-order bits of an integer "x".
  *
  * positions 76543210, bits==3 yields 76543012.
