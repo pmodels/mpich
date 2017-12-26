@@ -129,6 +129,7 @@ static inline int MPIDI_OFI_dynproc_create_intercomm(const char *port_name,
     tmp_comm_ptr->recvcontext_id = tmp_comm_ptr->context_id;
     tmp_comm_ptr->remote_size = remote_size;
     tmp_comm_ptr->local_size = comm_ptr->local_size;
+    tmp_comm_ptr->pof2 = comm_ptr->pof2;
     tmp_comm_ptr->rank = comm_ptr->rank;
     tmp_comm_ptr->comm_kind = MPIR_COMM_KIND__INTERCOMM;
     tmp_comm_ptr->local_comm = comm_ptr;

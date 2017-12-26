@@ -544,6 +544,7 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
 
     /* Fill in new intercomm */
     tmp_comm->local_size   = 1;
+    tmp_comm->pof2         = 0;
     tmp_comm->rank         = 0;
     tmp_comm->comm_kind    = MPIR_COMM_KIND__INTERCOMM;
     tmp_comm->local_comm   = NULL;
@@ -1450,6 +1451,7 @@ static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
     intercomm->attributes   = NULL;
     intercomm->remote_size  = remote_comm_size;
     intercomm->local_size   = comm_ptr->local_size;
+    intercomm->pof2         = MPIU_pof2(intercomm->local_size);
     intercomm->rank         = comm_ptr->rank;
     intercomm->local_group  = NULL;
     intercomm->remote_group = NULL;
