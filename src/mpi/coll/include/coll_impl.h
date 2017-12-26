@@ -9,6 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
+#include "allreduce_group.h"
+
 #ifndef COLL_IMPL_H_INCLUDED
 #define COLL_IMPL_H_INCLUDED
 
