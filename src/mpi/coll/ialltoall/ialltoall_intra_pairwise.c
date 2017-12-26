@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* Algorithm: Pairwise Exchange
  *
@@ -53,7 +52,7 @@ int MPIR_Ialltoall_sched_intra_pairwise(const void *sendbuf, int sendcount, MPI_
                                 recvcount, recvtype, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    is_pof2 = MPIU_is_pof2(comm_size, NULL);
+    is_pof2 = MPL_is_pof2(comm_size, NULL);
 
     /* Do the pairwise exchanges */
     for (i = 1; i < comm_size; i++) {

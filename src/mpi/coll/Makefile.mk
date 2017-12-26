@@ -84,6 +84,5 @@ mpi_core_sources += \
     src/mpi/coll/nbcutil.c
 
 noinst_HEADERS +=                    \
-    src/mpi/coll/include/coll_util.h \
     src/mpi/coll/include/coll_impl.h \
     src/mpi/coll/allreduce_group/allreduce_group.h

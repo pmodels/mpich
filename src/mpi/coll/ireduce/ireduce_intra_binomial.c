@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ireduce_sched_intra_binomial

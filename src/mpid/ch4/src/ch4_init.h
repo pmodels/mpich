@@ -206,7 +206,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIR_Process.comm_world->rank = rank;
     MPIR_Process.comm_world->remote_size = size;
     MPIR_Process.comm_world->local_size = size;
-    MPIR_Process.comm_world->pof2 = MPIU_pof2(size);
+    MPIR_Process.comm_world->pof2 = MPL_pof2(size);
 
     MPIDIU_avt_init();
     MPIDIU_get_next_avtid(&avtid);

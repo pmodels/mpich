@@ -52,7 +52,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Bcast_select(void *buffer, int count,
         (comm_ptr->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
         return (MPIDI_OFI_coll_algo_container_t *) &OFI_bcast_binomial_cnt;
     } else {
-        if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPIU_is_pof2(comm_ptr->local_size, NULL)) {
+        if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm_ptr->local_size, NULL)) {
             return (MPIDI_OFI_coll_algo_container_t *) &OFI_bcast_scatter_recursive_doubling_allgather_cnt;
         } else {
             return (MPIDI_OFI_coll_algo_container_t *) &OFI_bcast_scatter_ring_allgather_cnt;

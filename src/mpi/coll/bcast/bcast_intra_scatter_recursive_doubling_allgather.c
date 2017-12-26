@@ -7,7 +7,6 @@
 
 #include "mpiimpl.h"
 #include "bcast.h"
-#include "coll_util.h"
 
 /* Algorithm: Broadcast based on a scatter followed by an allgather.
  *
@@ -65,7 +64,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(
 #ifdef HAVE_ERROR_CHECKING
     /* This algorithm can currently handle only power of 2 cases,
      * non-power of 2 is still experimental */
-    MPIR_Assert(MPIU_is_pof2(comm_size, NULL));
+    MPIR_Assert(MPL_is_pof2(comm_size, NULL));
 #endif /* HAVE_ERROR_CHECKING */
 
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
