@@ -21,6 +21,9 @@ mpi_core_sources += \
     src/mpi/coll/ibcast/ibcast_intra_scatter_recursive_doubling_allgather.c \
     src/mpi/coll/ibcast/ibcast_intra_smp.c                                  \
     src/mpi/coll/ibcast/ibcast_inter_flat.c                                 \
+    src/mpi/coll/ibcast/ibcast_gentran_algos.c                              \
+    src/mpi/coll/ibcast/ibcast_intra_tree_knomial.c                         \
+    src/mpi/coll/ibcast/ibcast_intra_tree_kary.c                            \
     src/mpi/coll/ibcast/ibcast_utils.c
 
 noinst_HEADERS += \

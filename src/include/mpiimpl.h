@@ -197,6 +197,8 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpii_f77interface.h"
 #endif
 
+#include "coll_types.h"
+#include "coll_impl.h"
 
 /*****************************************************************************/
 /********************** PART 4: DEVICE PRE DECLARATION ***********************/
