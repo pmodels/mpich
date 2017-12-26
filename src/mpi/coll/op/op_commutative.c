@@ -59,7 +59,7 @@ int MPIR_Op_commutative(MPIR_Op *op_ptr, int *commute)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* Build-in op */
+    /* Built-in op */
     if (MPIR_OP_KIND__USER_NONCOMMUTE > op_ptr->kind) {
         *commute = 1;
     }
