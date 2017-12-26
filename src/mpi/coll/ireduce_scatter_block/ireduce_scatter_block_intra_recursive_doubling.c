@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* A recursive doubling algorithm for MPI_Ireduce_scatter_block, suitable for
  * noncommutative and (non-pof2 or block irregular). */

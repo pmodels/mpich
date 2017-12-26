@@ -1,18 +1,24 @@
-/* -*- Mode: c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2011 by Argonne National Laboratory.
+ *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef COLL_UTIL_H_INCLUDED
-#define COLL_UTIL_H_INCLUDED
+#if !defined(MPL_MATH_H_INCLUDED)
+#define MPL_MATH_H_INCLUDED
+
+/* *INDENT-ON* */
+#if defined(__cplusplus)
+extern "C" {
+#endif
+/* *INDENT-OFF* */
 
 /* Returns the nearest (smaller than or equal to) power of two of a number*/
-static inline int MPIU_pof2(int number)
+static inline int MPL_pof2(int number)
 {
     int pof2 = 1;
 
-    while(pof2 <= number)
+    while (pof2 <= number)
         pof2 <<= 1;
     pof2 >>= 1;
 
@@ -22,7 +28,7 @@ static inline int MPIU_pof2(int number)
 /* Returns non-zero if val is a power of two.  If ceil_pof2 is non-NULL, it sets
    *ceil_pof2 to the power of two that is just larger than or equal to val.
    That is, it rounds up to the nearest power of two. */
-static inline int MPIU_is_pof2(int val, int *ceil_pof2)
+static inline int MPL_is_pof2(int val, int *ceil_pof2)
 {
     int pof2 = 1;
 
@@ -43,7 +49,7 @@ static inline int MPIU_is_pof2(int val, int *ceil_pof2)
  */
 ATTRIBUTE((const)) /* tells the compiler that this func only depends on its args
                       and may be optimized much more aggressively, similar to "pure" */
-static inline int MPIU_Mirror_permutation(unsigned int x, int bits)
+static inline int MPL_mirror_permutation(unsigned int x, int bits)
 {
     /* a mask for the high order bits that should be copied as-is */
     int high_mask = ~((0x1 << bits) - 1);
@@ -58,4 +64,10 @@ static inline int MPIU_Mirror_permutation(unsigned int x, int bits)
     return retval;
 }
 
-#endif /* COLL_UTIL_H_INCLUDED */
+/* *INDENT-ON* */
+#if defined(__cplusplus)
+}
+#endif
+/* *INDENT-OFF* */
+
+#endif /* MPL_MATH_H_INCLUDED */

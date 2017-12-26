@@ -12,7 +12,6 @@
 
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* FIXME should we be checking the op_errno here? */
 
@@ -84,7 +83,7 @@ int MPIR_Reduce_scatter_block_intra_noncommutative (
     for (i = 0; i < comm_size; ++i) {
         mpi_errno = MPIR_Localcopy((char *)(sendbuf == MPI_IN_PLACE ? (const void *)recvbuf : sendbuf) + (i * true_extent * block_size),
                                    block_size, datatype,
-                                   (char *)tmp_buf0 + (MPIU_Mirror_permutation(i, log2_comm_size) * true_extent * block_size), block_size, datatype);
+                                   (char *)tmp_buf0 + (MPL_mirror_permutation(i, log2_comm_size) * true_extent * block_size), block_size, datatype);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     buf0_was_inout = 1;

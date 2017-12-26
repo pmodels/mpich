@@ -8,7 +8,6 @@
 #define IBCAST_H_INCLUDED
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 
 struct MPII_Ibcast_status{

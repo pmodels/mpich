@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 #include "ibcast.h"
 
 /*
@@ -109,7 +108,7 @@ int MPIR_Ibcast_sched_intra_auto(void *buffer, int count, MPI_Datatype datatype,
     }
     else /* (nbytes >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE) && (comm_size >= MPIR_CVAR_BCAST_MIN_PROCS) */
     {
-        if ((nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE) && (MPIU_is_pof2(comm_size, NULL))) {
+        if ((nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE) && (MPL_is_pof2(comm_size, NULL))) {
             mpi_errno = MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(buffer, count, datatype, root, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }

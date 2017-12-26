@@ -7,7 +7,6 @@
 #include "mpiimpl.h"
 #include "mpicomm.h"
 #include "mpir_info.h"    /* MPIR_Info_free */
-#include "coll_util.h"
 
 #include "utlist.h"
 #include "uthash.h"
@@ -354,7 +353,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
     MPIR_Comm_map_free(comm);
 
-    comm->pof2 = MPIU_pof2(comm->local_size);
+    comm->pof2 = MPL_pof2(comm->local_size);
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
             !MPIR_CONTEXT_READ_FIELD(SUBCOMM,comm->context_id)) {  /*make sure this is not a subcomm*/
@@ -416,7 +415,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Create node_comm=%p\n", comm->node_comm);
 
             comm->node_comm->local_size = num_local;
-            comm->node_comm->pof2 = MPIU_pof2(comm->node_comm->local_size);
+            comm->node_comm->pof2 = MPL_pof2(comm->node_comm->local_size);
             comm->node_comm->remote_size = num_local;
 
             MPIR_Comm_map_irregular(comm->node_comm, comm, local_procs,
@@ -448,7 +447,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
             comm->node_roots_comm->is_single_node = (char)0;
             comm->node_roots_comm->local_size = num_external;
-            comm->node_roots_comm->pof2 = MPIU_pof2(comm->node_roots_comm->local_size);
+            comm->node_roots_comm->pof2 = MPL_pof2(comm->node_roots_comm->local_size);
             comm->node_roots_comm->remote_size = num_external;
 
             MPIR_Comm_map_irregular(comm->node_roots_comm, comm,
@@ -615,7 +614,7 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
         newcomm_ptr->local_size = size;
         newcomm_ptr->remote_size = size;
     }
-    newcomm_ptr->pof2 = MPIU_pof2(newcomm_ptr->local_size);
+    newcomm_ptr->pof2 = MPL_pof2(newcomm_ptr->local_size);
 
     /* Inherit the error handler (if any) */
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));

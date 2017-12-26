@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* Algorithm: Nonblocking all-to-all for sendbuf==MPI_IN_PLACE.
  *

@@ -1451,7 +1451,7 @@ static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
     intercomm->attributes   = NULL;
     intercomm->remote_size  = remote_comm_size;
     intercomm->local_size   = comm_ptr->local_size;
-    intercomm->pof2         = MPIU_pof2(intercomm->local_size);
+    intercomm->pof2         = MPL_pof2(intercomm->local_size);
     intercomm->rank         = comm_ptr->rank;
     intercomm->local_group  = NULL;
     intercomm->remote_group = NULL;

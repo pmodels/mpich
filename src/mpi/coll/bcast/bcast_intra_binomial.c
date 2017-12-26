@@ -6,7 +6,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* Algorithm: Binomial bcast
  *
