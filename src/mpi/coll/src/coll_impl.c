@@ -10,6 +10,7 @@
  */
 
 #include "mpiimpl.h"
+#include "coll_impl.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -446,6 +447,10 @@ int MPII_Coll_init(void)
         MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_SCATTER_RECURSIVE_DOUBLING_ALLGATHER;
     else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "scatter_ring_allgather"))
         MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_SCATTER_RING_ALLGATHER;
+    else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "tree_knomial"))
+        MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KNOMIAL;
+    else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "tree_kary"))
+        MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KARY;
     else
         MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_AUTO;
 
@@ -798,6 +803,14 @@ int MPII_Coll_init(void)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+    /* initialize transports */
+    MPII_Stubtran_init();
+    MPII_Gentran_init();
+
+    /* initialize algorithms */
+    MPII_Stubalgo_init();
+    MPII_Treealgo_init();
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -814,6 +827,49 @@ int MPII_Coll_finalize(void)
 
     /* deregister non blocking collectives progress hook */
     MPID_Progress_deregister_hook(MPIR_Nbc_progress_hook_id);
+
+    MPII_Gentran_finalize();
+    MPII_Stubtran_finalize();
+
+    return mpi_errno;
+}
+
+/* Function used by CH3 progress engine to decide whether to
+ * block for a recv operation */
+int MPIR_Coll_safe_to_block()
+{
+    return MPII_Gentran_scheds_are_pending() == false;
+}
+
+/* Function to initialze communicators for collectives */
+int MPIR_Coll_comm_init(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* initialize any stub algo related data structures */
+    MPII_Stubalgo_comm_init(comm);
+    /* initialize any tree algo related data structures */
+    MPII_Treealgo_comm_init(comm);
+
+    /* initialize any transport data structures */
+    MPII_Stubtran_comm_init(comm);
+    MPII_Gentran_comm_init(comm);
+
+    return mpi_errno;
+}
+
+/* Function to cleanup any communicators for collectives */
+int MPII_Coll_comm_cleanup(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* cleanup all collective communicators */
+    MPII_Stubalgo_comm_cleanup(comm);
+    MPII_Treealgo_comm_cleanup(comm);
+
+    /* cleanup transport data */
+    MPII_Stubtran_comm_cleanup(comm);
+    MPII_Gentran_comm_cleanup(comm);
 
     return mpi_errno;
 }

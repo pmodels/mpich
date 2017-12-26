@@ -571,6 +571,8 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
     /* FIXME: Why do we do a dup here? */
     MPIDI_VCR_Dup(vc_ptr, &tmp_comm->dev.vcrt->vcr_table[0]);
 
+    MPIR_Coll_comm_init(tmp_comm);
+
     /* Even though this is a tmp comm and we don't call
        MPI_Comm_commit, we still need to call the creation hook
        because the destruction hook will be called in comm_release */
