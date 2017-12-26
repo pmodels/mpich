@@ -120,6 +120,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
     (*new_intercomm_ptr)->recvcontext_id = recvcontext_id;
     (*new_intercomm_ptr)->remote_size    = remote_size;
     (*new_intercomm_ptr)->local_size     = local_comm_ptr->local_size;
+    (*new_intercomm_ptr)->pof2           = local_comm_ptr->pof2;
     (*new_intercomm_ptr)->rank           = local_comm_ptr->rank;
     (*new_intercomm_ptr)->comm_kind      = MPIR_COMM_KIND__INTERCOMM;
     (*new_intercomm_ptr)->local_comm     = 0;

@@ -7,6 +7,7 @@
 
 #include "mpiimpl.h"
 #include "mpicomm.h"
+#include "coll_util.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -281,7 +282,8 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
 
 	(*newcomm_ptr)->recvcontext_id = new_context_id;
 	(*newcomm_ptr)->local_size	    = new_size;
-	(*newcomm_ptr)->comm_kind	    = comm_ptr->comm_kind;
+    (*newcomm_ptr)->pof2            = MPIU_pof2(new_size);
+    (*newcomm_ptr)->comm_kind	    = comm_ptr->comm_kind;
 	/* Other fields depend on whether this is an intercomm or intracomm */
 
 	/* Step 4: Order the processes by their key values.  Sort the
