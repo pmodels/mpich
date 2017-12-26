@@ -219,7 +219,7 @@ int MPIR_Allreduce_intra_auto (
     {
         /* homogeneous */
 
-        pof2 = MPIU_pof2(comm_ptr->local_size);
+        pof2 = comm_ptr->pof2;
         if ((nbytes <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
             (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {
             mpi_errno = MPIR_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);

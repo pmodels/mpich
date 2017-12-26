@@ -67,7 +67,7 @@ int MPIR_Allreduce_intra_recursive_doubling(
     }
 
     /* get nearest power-of-two less than or equal to comm_size */
-    pof2 = MPIU_pof2(comm_size);
+    pof2 = comm_ptr->pof2;
 
     rem = comm_size - pof2;
 
