@@ -214,7 +214,7 @@ int MPIR_Reduce_intra_auto (
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* get nearest power-of-two less than or equal to comm_size */
-    pof2 = MPIU_pof2(comm_size);
+    pof2 = comm_ptr->pof2;
 
     if ((count*type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
         (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) && (count >= pof2)) {

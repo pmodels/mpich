@@ -77,7 +77,7 @@ int MPIR_Ireduce_sched_intra_reduce_scatter_gather(const void *sendbuf, void *re
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
 
     /* get nearest power-of-two less than or equal to comm_size */
-    pof2 = MPIU_pof2(comm_size);
+    pof2 = comm_ptr->pof2;
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN);
