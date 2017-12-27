@@ -63,6 +63,18 @@ cvars:
         If set to false, the device-level gather function will not be
         called.
 
+    - name        : MPIR_CVAR_GATHER_VSMALL_MSG_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 1024
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        use a temporary buffer for intracommunicator MPI_Gather if the send
+        buffer size is < this value (in bytes)
+        (See also: MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE)
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -92,22 +104,111 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
-                      int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
-                      MPIR_Errflag_t *errflag)
+                      int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
+                      MPIR_Errflag_t * errflag)
 {
+    int comm_size = 0;
+    int rank = -1;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    
-    mpi_errno = MPIR_Gather_intra_binomial(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    
- fn_exit:
-    if (mpi_errno_ret)
+    int is_homogeneous = 1;
+    MPI_Aint extent = 0;        /* Datatype extent */
+    MPI_Aint nbytes = 0;
+    MPI_Aint sendtype_size = 0;
+    MPI_Aint recvtype_size = 0;
+
+    MPIR_CHKLMEM_DECL(1);
+
+#ifdef MPID_HAS_HETERO
+    int position = -1;
+    int recv_size = 0;
+#endif
+
+    comm_size = comm_ptr->local_size;
+    rank = comm_ptr->rank;
+
+    if (((rank == root) && (recvcount == 0)) || ((rank != root) && (sendcount == 0))) {
+        return MPI_SUCCESS;
+    }
+
+    is_homogeneous = 1;
+#ifdef MPID_HAS_HETERO
+    if (comm_ptr->is_hetero) {
+        is_homogeneous = 0;
+    }
+#endif
+
+    if (rank == root) {
+        MPIR_Datatype_get_extent_macro(recvtype, extent);
+        MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+                                         (extent * recvcount * comm_size));
+    }
+
+    if (is_homogeneous) {
+
+        /* communicator is homogeneous. no need to pack buffer. */
+
+        if (rank == root) {
+            MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
+            nbytes = recvtype_size * recvcount;
+        } else {
+            MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
+            nbytes = sendtype_size * sendcount;
+        }
+
+        if (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE) {
+            mpi_errno = MPIR_Gather_intra_binomial(sendbuf, sendcount,
+                                                   sendtype, recvbuf,
+                                                   recvcount, recvtype, root,
+                                                   comm_ptr, errflag);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
+        } else {
+            mpi_errno = MPIR_Gather_intra_binomial_indexed(sendbuf, sendcount,
+                                                           sendtype, recvbuf,
+                                                           recvcount, recvtype,
+                                                           root, comm_ptr,
+                                                           errflag);
+            if (mpi_errno) {
+                /* for communication errors, just record the error but continue */
+                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
+        }
+    }
+#ifdef MPID_HAS_HETERO
+    else {
+        mpi_errno = MPIR_Gather_intra_heterogeneous(sendbuf, sendcount,
+                                                    sendtype, recvbuf,
+                                                    recvcount, recvtype,
+                                                    root, comm_ptr, errflag);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
+    }
+#endif /* MPID_HAS_HETERO */
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    if (mpi_errno_ret) {
         mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
+    }
+    else if (*errflag != MPIR_ERR_NONE) {
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
+    }
     return mpi_errno;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -119,13 +220,14 @@ int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Gather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
-                      int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
-                      MPIR_Errflag_t *errflag)
+                      int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
+                      MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Gather_inter_generic(sendbuf, sendcount, sendtype,
-            recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
+                                          recvbuf, recvcount, recvtype,
+                                          root, comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -140,58 +242,60 @@ int MPIR_Gather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+                int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-        
+
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
         switch (MPIR_Gather_intra_algo_choice) {
-            case MPIR_GATHER_INTRA_ALGO_BINOMIAL:
-                mpi_errno = MPIR_Gather_intra_binomial(sendbuf, sendcount, sendtype,
-                                      recvbuf, recvcount, recvtype, root,
-                                      comm_ptr, errflag);
-                break;
-            case MPIR_GATHER_INTRA_ALGO_NB:
-                mpi_errno = MPIR_Gather_nb(sendbuf, sendcount, sendtype,
-                                      recvbuf, recvcount, recvtype, root,
-                                      comm_ptr, errflag);
-                break;
-            case MPIR_GATHER_INTRA_ALGO_AUTO:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Gather_intra(sendbuf, sendcount, sendtype,
-                                      recvbuf, recvcount, recvtype, root,
-                                      comm_ptr, errflag);
-                break;
+        case MPIR_GATHER_INTRA_ALGO_BINOMIAL:
+            mpi_errno = MPIR_Gather_intra(sendbuf, sendcount, sendtype,
+                                          recvbuf, recvcount, recvtype, root,
+                                          comm_ptr, errflag);
+            break;
+        case MPIR_GATHER_INTRA_ALGO_NB:
+            mpi_errno = MPIR_Gather_nb(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcount, recvtype, root,
+                                       comm_ptr, errflag);
+            break;
+        case MPIR_GATHER_INTRA_ALGO_AUTO:
+            MPL_FALLTHROUGH;
+        default:
+            mpi_errno = MPIR_Gather_intra(sendbuf, sendcount, sendtype,
+                                          recvbuf, recvcount, recvtype, root,
+                                          comm_ptr, errflag);
+            break;
         }
     } else {
         /* intercommunicator */
         switch (MPIR_Gather_inter_algo_choice) {
-            case MPIR_GATHER_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Gather_inter_generic(sendbuf, sendcount, sendtype,
-                                      recvbuf, recvcount, recvtype, root,
-                                      comm_ptr, errflag);
-                break;
-            case MPIR_GATHER_INTER_ALGO_NB:
-                mpi_errno = MPIR_Gather_nb(sendbuf, sendcount, sendtype,
-                                      recvbuf, recvcount, recvtype, root,
-                                      comm_ptr, errflag);
-                break;
-            case MPIR_GATHER_INTER_ALGO_AUTO:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Gather_inter(sendbuf, sendcount, sendtype,
-                                      recvbuf, recvcount, recvtype, root,
-                                      comm_ptr, errflag);
-                break;
+        case MPIR_GATHER_INTER_ALGO_GENERIC:
+            mpi_errno = MPIR_Gather_inter_generic(sendbuf, sendcount, sendtype,
+                                                  recvbuf, recvcount, recvtype, root,
+                                                  comm_ptr, errflag);
+            break;
+        case MPIR_GATHER_INTER_ALGO_NB:
+            mpi_errno = MPIR_Gather_nb(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcount, recvtype, root,
+                                       comm_ptr, errflag);
+            break;
+        case MPIR_GATHER_INTER_ALGO_AUTO:
+            MPL_FALLTHROUGH;
+        default:
+            mpi_errno = MPIR_Gather_inter(sendbuf, sendcount, sendtype,
+                                          recvbuf, recvcount, recvtype, root,
+                                          comm_ptr, errflag);
+            break;
         }
     }
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
 
- fn_exit:
+  fn_exit:
     return mpi_errno;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 

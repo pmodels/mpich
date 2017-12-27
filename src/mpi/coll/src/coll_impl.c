@@ -318,8 +318,8 @@ int MPIR_COLL_init(void) {
         MPIR_Gather_intra_algo_choice = MPIR_GATHERV_INTRA_ALGO_AUTO;
 
     /* Gatherv Inter */
-    if (0 == strcmp(MPIR_CVAR_GATHERV_INTER_ALGORITHM, "linear"))
-        MPIR_Gather_inter_algo_choice = MPIR_GATHERV_INTER_ALGO_LINEAR;
+    if (0 == strcmp(MPIR_CVAR_GATHERV_INTER_ALGORITHM, "generic"))
+        MPIR_Gather_inter_algo_choice = MPIR_GATHERV_INTER_ALGO_GENERIC;
     else if (0 == strcmp(MPIR_CVAR_GATHERV_INTER_ALGORITHM, "nb"))
         MPIR_Gather_inter_algo_choice = MPIR_GATHERV_INTER_ALGO_NB;
     else
