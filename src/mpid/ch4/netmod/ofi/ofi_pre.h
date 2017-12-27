@@ -126,8 +126,8 @@ typedef struct {
         MPIDI_OFI_pack_t *pack;
         struct iovec *nopack;
     } noncontig;
-    /* persistent send fields */
     union {
+        /* persistent send fields */
         struct {
             int type;
             int rank;
