@@ -85,4 +85,109 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Reduce_select(const void *sendbuf,
     }
 }
 
+MPL_STATIC_INLINE_PREFIX
+MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Gather_select(const void *sendbuf,
+                                                          int sendcount,
+                                                          MPI_Datatype sendtype,
+                                                          void *recvbuf,
+                                                          int recvcount,
+                                                          MPI_Datatype recvtype,
+                                                          int root,
+                                                          MPIR_Comm * comm,
+                                                          MPIR_Errflag_t * errflag,
+                                                          MPIDI_OFI_coll_algo_container_t *
+                                                          ch4_algo_parameters_container_in
+                                                          ATTRIBUTE((unused)))
+{
+    int rank = -1;
+    MPI_Aint nbytes = 0;
+    MPI_Aint sendtype_size = 0;
+    MPI_Aint recvtype_size = 0;
+
+    rank = comm->rank;
+
+    // nbytes for root and non-root ranks are equal
+    if (rank == root) {
+        MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
+        nbytes = recvtype_size * recvcount;
+    } else {
+        MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
+        nbytes = sendtype_size * sendcount;
+    }
+
+    if (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE) {
+        return (MPIDI_OFI_coll_algo_container_t *) & OFI_gather_intra_binomial_cnt;
+    } else {
+        return (MPIDI_OFI_coll_algo_container_t *) & OFI_gather_intra_binomial_indexed_cnt;
+    }
+
+}
+
+MPL_STATIC_INLINE_PREFIX
+MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Gatherv_select(const void *sendbuf,
+                                                           int sendcount,
+                                                           MPI_Datatype sendtype,
+                                                           void *recvbuf,
+                                                           const int *recvcounts,
+                                                           const int *displs,
+                                                           MPI_Datatype recvtype,
+                                                           int root,
+                                                           MPIR_Comm * comm,
+                                                           MPIR_Errflag_t * errflag,
+                                                           MPIDI_OFI_coll_algo_container_t *
+                                                           ch4_algo_parameters_container_in
+                                                           ATTRIBUTE((unused)))
+{
+    int comm_size = 0;
+    int min_procs = 0;
+
+    comm_size = comm->local_size;
+    min_procs = MPIR_CVAR_GATHERV_INTER_SSEND_MIN_PROCS;
+
+    if (min_procs == -1) {
+        min_procs = comm_size + 1;      /* Disable ssend */
+    } else if (min_procs == 0) {        /* backwards compatibility, use default value */
+        MPIR_CVAR_GET_DEFAULT_INT(MPIR_CVAR_GATHERV_INTER_SSEND_MIN_PROCS, &min_procs);
+    }
+    if (comm_size >= min_procs) {
+        return (MPIDI_OFI_coll_algo_container_t *) & OFI_gatherv_intra_linear_ssend_cnt;
+    } else {
+        return (MPIDI_OFI_coll_algo_container_t *) & OFI_gatherv_intra_linear_cnt;
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX
+MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Scatter_select(const void *sendbuf,
+                                                           int sendcount,
+                                                           MPI_Datatype sendtype,
+                                                           void *recvbuf,
+                                                           int recvcount,
+                                                           MPI_Datatype recvtype,
+                                                           int root,
+                                                           MPIR_Comm * comm,
+                                                           MPIR_Errflag_t * errflag,
+                                                           MPIDI_OFI_coll_algo_container_t *
+                                                           ch4_algo_parameters_container_in
+                                                           ATTRIBUTE((unused)))
+{
+    return (MPIDI_OFI_coll_algo_container_t *) & OFI_scatter_intra_binomial_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Scatterv_select(const void *sendbuf,
+                                                            const int *sendcounts,
+                                                            const int *displs,
+                                                            MPI_Datatype sendtype,
+                                                            void *recvbuf,
+                                                            int recvcount,
+                                                            MPI_Datatype recvtype,
+                                                            int root,
+                                                            MPIR_Comm * comm,
+                                                            MPIR_Errflag_t * errflag,
+                                                            MPIDI_OFI_coll_algo_container_t *
+                                                            ch4_algo_parameters_container_in
+                                                            ATTRIBUTE((unused)))
+{
+    return (MPIDI_OFI_coll_algo_container_t *) & OFI_scatterv_intra_linear_cnt;
+}
 #endif /* NETMOD_OFI_COLL_SELECT_H_INCLUDED */

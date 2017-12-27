@@ -23,4 +23,24 @@ extern const MPIDI_coll_algo_container_t CH4_allreduce_composition_beta_cnt;
 extern const MPIDI_coll_algo_container_t CH4_allreduce_composition_gamma_cnt;
 extern const MPIDI_coll_algo_container_t CH4_allreduce_intercomm_cnt;
 
+/* Gather  CH4 level containers declaration */
+extern const MPIDI_coll_algo_container_t CH4_gather_composition_alpha_cnt;
+extern const MPIDI_coll_algo_container_t CH4_gather_composition_beta_cnt;
+extern const MPIDI_coll_algo_container_t CH4_gather_intercomm_cnt;
+
+/* Gatherv  CH4 level containers declaration */
+extern const MPIDI_coll_algo_container_t CH4_gatherv_composition_alpha_cnt;
+extern const MPIDI_coll_algo_container_t CH4_gatherv_composition_beta_cnt;
+extern const MPIDI_coll_algo_container_t CH4_gatherv_intercomm_cnt;
+
+/* Scatter CH4 level containers declaration */
+extern const MPIDI_coll_algo_container_t CH4_scatter_composition_alpha_cnt;
+extern const MPIDI_coll_algo_container_t CH4_scatter_composition_beta_cnt;
+extern const MPIDI_coll_algo_container_t CH4_scatter_intercomm_cnt;
+
+/* Scatterv CH4 level containers declaration */
+extern const MPIDI_coll_algo_container_t CH4_scatterv_composition_alpha_cnt;
+extern const MPIDI_coll_algo_container_t CH4_scatterv_composition_beta_cnt;
+extern const MPIDI_coll_algo_container_t CH4_scatterv_intercomm_cnt;
+
 #endif /*COLL_TUNING_TYPES_H_INCLUDED */

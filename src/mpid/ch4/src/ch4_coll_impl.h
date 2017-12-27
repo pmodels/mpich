@@ -642,4 +642,351 @@ fn_fail:
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Gather_intercomm
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_intercomm(const void *sendbuf, int sendcount,
+                                                    MPI_Datatype sendtype, void *recvbuf,
+                                                    int recvcount, MPI_Datatype recvtype, int root,
+                                                    MPIR_Comm * comm, MPIR_Errflag_t * errflag,
+                                                    MPIDI_coll_algo_container_t *
+                                                    ch4_algo_parameters_container
+                                                    ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Gather_inter(sendbuf, sendcount, sendtype, recvbuf,
+                                  recvcount, recvtype, root, comm, errflag);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Gather_composition_alpha
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_composition_alpha(const void *sendbuf, int sendcount,
+                                                            MPI_Datatype sendtype, void *recvbuf,
+                                                            int recvcount, MPI_Datatype recvtype,
+                                                            int root, MPIR_Comm * comm,
+                                                            MPIR_Errflag_t * errflag,
+                                                            MPIDI_coll_algo_container_t *
+                                                            ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void *gather_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno =
+        MPIDI_NM_mpi_gather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                            recvtype, root, comm, errflag, gather_container);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#ifdef MPIDI_BUILD_CH4_SHM
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Gather_composition_beta
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_composition_beta(const void *sendbuf, int sendcount,
+                                                           MPI_Datatype sendtype, void *recvbuf,
+                                                           int recvcount, MPI_Datatype recvtype,
+                                                           int root, MPIR_Comm * comm,
+                                                           MPIR_Errflag_t * errflag,
+                                                           MPIDI_coll_algo_container_t *
+                                                           ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void *gather_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno =
+        MPIDI_SHM_mpi_gather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                             recvtype, root, comm, errflag, gather_container);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+#endif /*MPIDI_BUILD_CH4_SHM */
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Gatherv_intercomm
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_intercomm(const void *sendbuf, int sendcount,
+                                                     MPI_Datatype sendtype, void *recvbuf,
+                                                     const int *recvcounts, const int *displs,
+                                                     MPI_Datatype recvtype, int root,
+                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag,
+                                                     MPIDI_coll_algo_container_t *
+                                                     ch4_algo_parameters_container
+                                                     ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Gatherv_inter(sendbuf, sendcount, sendtype, recvbuf,
+                                   recvcounts, displs, recvtype, root, comm, errflag);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Gatherv_composition_alpha
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_composition_alpha(const void *sendbuf, int sendcount,
+                                                             MPI_Datatype sendtype, void *recvbuf,
+                                                             const int *recvcounts,
+                                                             const int *displs,
+                                                             MPI_Datatype recvtype, int root,
+                                                             MPIR_Comm * comm,
+                                                             MPIR_Errflag_t * errflag,
+                                                             MPIDI_coll_algo_container_t *
+                                                             ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void *gatherv_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno =
+        MPIDI_NM_mpi_gatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                             displs, recvtype, root, comm, errflag, gatherv_container);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#ifdef MPIDI_BUILD_CH4_SHM
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Gatherv_composition_beta
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_composition_beta(const void *sendbuf, int sendcount,
+                                                            MPI_Datatype sendtype, void *recvbuf,
+                                                            const int *recvcounts,
+                                                            const int *displs,
+                                                            MPI_Datatype recvtype, int root,
+                                                            MPIR_Comm * comm,
+                                                            MPIR_Errflag_t * errflag,
+                                                            MPIDI_coll_algo_container_t *
+                                                            ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void *gatherv_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno =
+        MPIDI_SHM_mpi_gatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                              displs, recvtype, root, comm, errflag, gatherv_container);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+#endif /*MPIDI_BUILD_CH4_SHM */
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Scatter_intercomm
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_intercomm(const void *sendbuf, int sendcount,
+                                                     MPI_Datatype sendtype, void *recvbuf,
+                                                     int recvcount, MPI_Datatype recvtype,
+                                                     int root, MPIR_Comm * comm_ptr,
+                                                     MPIR_Errflag_t * errflag,
+                                                     MPIDI_coll_algo_container_t *
+                                                     ch4_algo_parameters_container
+                                                     ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Scatter_inter(sendbuf, sendcount, sendtype, recvbuf,
+                                   recvcount, recvtype, root, comm_ptr, errflag);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Scatter_composition_alpha
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_composition_alpha(const void *sendbuf, int sendcount,
+                                                             MPI_Datatype sendtype, void *recvbuf,
+                                                             int recvcount, MPI_Datatype recvtype,
+                                                             int root, MPIR_Comm * comm,
+                                                             MPIR_Errflag_t * errflag,
+                                                             MPIDI_coll_algo_container_t *
+                                                             ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void *scatter_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno =
+        MPIDI_NM_mpi_scatter(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                             recvtype, root, comm, errflag, scatter_container);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#ifdef MPIDI_BUILD_CH4_SHM
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Scatter_composition_beta
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_composition_beta(const void *sendbuf, int sendcount,
+                                                            MPI_Datatype sendtype, void *recvbuf,
+                                                            int recvcount, MPI_Datatype recvtype,
+                                                            int root, MPIR_Comm * comm,
+                                                            MPIR_Errflag_t * errflag,
+                                                            MPIDI_coll_algo_container_t *
+                                                            ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void *scatter_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno =
+        MPIDI_SHM_mpi_scatter(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                              recvtype, root, comm, errflag, scatter_container);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+#endif /*MPIDI_BUILD_CH4_SHM */
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Scatterv_intercomm
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_intercomm(const void *sendbuf, const int *sendcounts,
+                                                      const int *displs, MPI_Datatype sendtype,
+                                                      void *recvbuf, int recvcount,
+                                                      MPI_Datatype recvtype, int root,
+                                                      MPIR_Comm * comm, MPIR_Errflag_t * errflag,
+                                                      MPIDI_coll_algo_container_t *
+                                                      ch4_algo_parameters_container
+                                                      ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Scatterv_inter(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                                    recvcount, recvtype, root, comm, errflag);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Scatterv_composition_alpha
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_composition_alpha(const void *sendbuf,
+                                                              const int *sendcounts,
+                                                              const int *displs,
+                                                              MPI_Datatype sendtype, void *recvbuf,
+                                                              int recvcount, MPI_Datatype recvtype,
+                                                              int root, MPIR_Comm * comm,
+                                                              MPIR_Errflag_t * errflag,
+                                                              MPIDI_coll_algo_container_t *
+                                                              ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void *scatterv_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno =
+        MPIDI_NM_mpi_scatterv(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                              recvcount, recvtype, root, comm, errflag, scatterv_container);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#ifdef MPIDI_BUILD_CH4_SHM
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Scatterv_composition_beta
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_composition_beta(const void *sendbuf,
+                                                             const int *sendcounts,
+                                                             const int *displs,
+                                                             MPI_Datatype sendtype, void *recvbuf,
+                                                             int recvcount, MPI_Datatype recvtype,
+                                                             int root, MPIR_Comm * comm,
+                                                             MPIR_Errflag_t * errflag,
+                                                             MPIDI_coll_algo_container_t *
+                                                             ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void *scatterv_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno =
+        MPIDI_SHM_mpi_scatterv(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                               recvcount, recvtype, root, comm, errflag, scatterv_container);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+#endif /*MPIDI_BUILD_CH4_SHM */
+
 #endif /* CH4_COLL_IMPL_H_INCLUDED */

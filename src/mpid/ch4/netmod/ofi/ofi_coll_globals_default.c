@@ -41,3 +41,38 @@ const MPIDI_OFI_coll_algo_container_t OFI_allreduce_reduce_scatter_allgather_cnt
     {
         .id = MPIDI_OFI_allreduce_reduce_scatter_allgather_id
     };
+
+/* Gather default OFI containers initialization*/
+const MPIDI_OFI_coll_algo_container_t OFI_gather_intra_binomial_cnt =
+    {
+        .id = MPIDI_OFI_gather_intra_binomial_id
+    };
+
+const MPIDI_OFI_coll_algo_container_t OFI_gather_intra_binomial_indexed_cnt =
+    {
+        .id = MPIDI_OFI_gather_intra_binomial_indexed_id
+    };
+
+/* Gatherv default OFI containers initialization*/
+const MPIDI_OFI_coll_algo_container_t OFI_gatherv_intra_linear_ssend_cnt =
+    {
+        .id = MPIDI_OFI_gatherv_intra_linear_ssend_id
+    };
+
+const MPIDI_OFI_coll_algo_container_t OFI_gatherv_intra_linear_cnt =
+    {
+        .id = MPIDI_OFI_gatherv_intra_linear_id
+    };
+
+/* Scatter default OFI containers initialization*/
+const MPIDI_OFI_coll_algo_container_t OFI_scatter_intra_binomial_cnt =
+    {
+        .id = MPIDI_OFI_scatter_intra_binomial_id
+    };
+
+/* Scatterv default OFI containers initialization*/
+const MPIDI_OFI_coll_algo_container_t OFI_scatterv_intra_linear_cnt =
+    {
+        .id = MPIDI_OFI_scatterv_intra_linear_id
+    };
+

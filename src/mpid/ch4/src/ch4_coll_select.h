@@ -133,4 +133,80 @@ MPIDI_coll_algo_container_t *MPIDI_CH4_Reduce_select(const void *sendbuf,
     return (MPIDI_coll_algo_container_t *) &CH4_reduce_composition_beta_cnt;
 }
 
+MPL_STATIC_INLINE_PREFIX
+MPIDI_coll_algo_container_t * MPIDI_CH4_Gather_select(const void *sendbuf,
+                                                      int sendcount,
+                                                      MPI_Datatype sendtype,
+                                                      void *recvbuf,
+                                                      int recvcount,
+                                                      MPI_Datatype recvtype,
+                                                      int root,
+                                                      MPIR_Comm * comm,
+                                                      MPIR_Errflag_t * errflag)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_gather_intercomm_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_gather_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+MPIDI_coll_algo_container_t * MPIDI_CH4_Gatherv_select(const void *sendbuf,
+                                                       int sendcount,
+                                                       MPI_Datatype sendtype,
+                                                       void *recvbuf,
+                                                       const int *recvcounts,
+                                                       const int *displs,
+                                                       MPI_Datatype recvtype,
+                                                       int root,
+                                                       MPIR_Comm * comm,
+                                                       MPIR_Errflag_t * errflag)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_gatherv_intercomm_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_gatherv_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+MPIDI_coll_algo_container_t * MPIDI_CH4_Scatter_select(const void *sendbuf,
+                                                       int sendcount,
+                                                       MPI_Datatype sendtype,
+                                                       void *recvbuf,
+                                                       int recvcount,
+                                                       MPI_Datatype recvtype,
+                                                       int root,
+                                                       MPIR_Comm * comm,
+                                                       MPIR_Errflag_t * errflag)
+{
+
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_scatter_intercomm_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_scatter_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+MPIDI_coll_algo_container_t * MPIDI_CH4_Scatterv_select(const void *sendbuf,
+                                                        const int *sendcounts,
+                                                        const int *displs,
+                                                        MPI_Datatype sendtype,
+                                                        void *recvbuf,
+                                                        int recvcount,
+                                                        MPI_Datatype recvtype,
+                                                        int root,
+                                                        MPIR_Comm * comm,
+                                                        MPIR_Errflag_t * errflag)
+{
+
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_scatterv_intercomm_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_scatterv_composition_alpha_cnt;
+}
+
 #endif /* CH4_COLL_SELECT_H_INCLUDED */

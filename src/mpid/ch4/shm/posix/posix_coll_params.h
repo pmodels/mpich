@@ -34,6 +34,24 @@ typedef enum {
     MPIDI_POSIX_reduce_binomial_id
 } MPIDI_POSIX_reduce_id_t;
 
+typedef enum {
+    MPIDI_POSIX_gather_intra_binomial_id,
+    MPIDI_POSIX_gather_intra_binomial_indexed_id,
+} MPIDI_POSIX_gather_id_t;
+
+typedef enum {
+    MPIDI_POSIX_gatherv_intra_linear_ssend_id,
+    MPIDI_POSIX_gatherv_intra_linear_id,
+} MPIDI_POSIX_gatherv_id_t;
+
+typedef enum {
+    MPIDI_POSIX_scatter_intra_binomial_id,
+} MPIDI_POSIX_scatter_id_t;
+
+typedef enum {
+    MPIDI_POSIX_scatterv_intra_linear_id,
+} MPIDI_POSIX_scatterv_id_t;
+
 typedef union {
     /* reserved for parameters related to SHM specific collectives */
     struct MPIDI_POSIX_reduce_empty_parameters {

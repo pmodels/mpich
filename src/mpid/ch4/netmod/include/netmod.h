@@ -862,26 +862,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_scatter(const void *sendbuf, int sendc
                                                   MPI_Datatype sendtype, void *recvbuf,
                                                   int recvcount, MPI_Datatype recvtype, int root,
                                                   MPIR_Comm * comm,
-                                                  MPIR_Errflag_t *
-                                                  errflag) MPL_STATIC_INLINE_SUFFIX;
+                                                  MPIR_Errflag_t * errflag,
+                                                  void * algo_parameters_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_scatterv(const void *sendbuf, const int *sendcounts,
                                                    const int *displs, MPI_Datatype sendtype,
                                                    void *recvbuf, int recvcount,
                                                    MPI_Datatype recvtype, int root,
                                                    MPIR_Comm * comm_ptr,
-                                                   MPIR_Errflag_t *
-                                                   errflag) MPL_STATIC_INLINE_SUFFIX;
+                                                   MPIR_Errflag_t * errflag,
+                                                   void * algo_parameters_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_gather(const void *sendbuf, int sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  int recvcount, MPI_Datatype recvtype, int root,
                                                  MPIR_Comm * comm,
-                                                 MPIR_Errflag_t * errflag) MPL_STATIC_INLINE_SUFFIX;
+                                                 MPIR_Errflag_t * errflag,
+                                                 void * algo_parameters_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_gatherv(const void *sendbuf, int sendcount,
                                                   MPI_Datatype sendtype, void *recvbuf,
                                                   const int *recvcounts, const int *displs,
                                                   MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                                  MPIR_Errflag_t *
-                                                  errflag) MPL_STATIC_INLINE_SUFFIX;
+                                                  MPIR_Errflag_t * errflag,
+                                                  void * algo_parameters_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_alltoall(const void *sendbuf, int sendcount,
                                                    MPI_Datatype sendtype, void *recvbuf,
                                                    int recvcount, MPI_Datatype recvtype,

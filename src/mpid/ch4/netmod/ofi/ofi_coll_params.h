@@ -53,6 +53,24 @@ typedef union {
     } ofi_reduce_empty_parameters;
 } MPIDI_OFI_reduce_params_t;
 
+typedef enum {
+    MPIDI_OFI_gather_intra_binomial_id,
+    MPIDI_OFI_gather_intra_binomial_indexed_id,
+} MPIDI_OFI_gather_id_t;
+
+typedef enum {
+    MPIDI_OFI_gatherv_intra_linear_ssend_id,
+    MPIDI_OFI_gatherv_intra_linear_id,
+} MPIDI_OFI_gatherv_id_t;
+
+typedef enum {
+    MPIDI_OFI_scatter_intra_binomial_id,
+} MPIDI_OFI_scatter_id_t;
+
+typedef enum {
+    MPIDI_OFI_scatterv_intra_linear_id,
+} MPIDI_OFI_scatterv_id_t;
+
 #define MPIDI_OFI_BARRIER_PARAMS_DECL MPIDI_OFI_barrier_params_t ofi_barrier_params
 #define MPIDI_OFI_BCAST_PARAMS_DECL MPIDI_OFI_bcast_params_t ofi_bcast_params
 #define MPIDI_OFI_REDUCE_PARAMS_DECL MPIDI_OFI_reduce_params_t ofi_reduce_params

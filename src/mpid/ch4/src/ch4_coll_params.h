@@ -107,6 +107,38 @@ typedef union {
 #endif /* MPIDI_BUILD_CH4_SHM */
 } MPIDI_CH4_allreduce_params_t;
 
+typedef enum {
+    MPIDI_CH4_gather_intercomm_id,
+    MPIDI_CH4_gather_composition_alpha_id,
+#ifdef MPIDI_BUILD_CH4_SHM
+    MPIDI_CH4_gather_composition_beta_id,
+#endif /* MPIDI_BUILD_CH4_SHM */
+} MPIDI_CH4_gather_id_t;
+
+typedef enum {
+    MPIDI_CH4_gatherv_intercomm_id,
+    MPIDI_CH4_gatherv_composition_alpha_id,
+#ifdef MPIDI_BUILD_CH4_SHM
+    MPIDI_CH4_gatherv_composition_beta_id,
+#endif /* MPIDI_BUILD_CH4_SHM */
+} MPIDI_CH4_gatherv_id_t;
+
+typedef enum {
+    MPIDI_CH4_scatter_intercomm_id,
+    MPIDI_CH4_scatter_composition_alpha_id,
+#ifdef MPIDI_BUILD_CH4_SHM
+    MPIDI_CH4_scatter_composition_beta_id,
+#endif /* MPIDI_BUILD_CH4_SHM */
+} MPIDI_CH4_scatter_id_t;
+
+typedef enum {
+    MPIDI_CH4_scatterv_intercomm_id,
+    MPIDI_CH4_scatterv_composition_alpha_id,
+#ifdef MPIDI_BUILD_CH4_SHM
+    MPIDI_CH4_scatterv_composition_beta_id,
+#endif /* MPIDI_BUILD_CH4_SHM */
+} MPIDI_CH4_scatterv_id_t;
+
 #define MPIDI_CH4_BARRIER_PARAMS_DECL MPIDI_CH4_barrier_params_t ch4_barrier_params
 #define MPIDI_CH4_BCAST_PARAMS_DECL MPIDI_CH4_bcast_params_t ch4_bcast_params
 #define MPIDI_CH4_REDUCE_PARAMS_DECL MPIDI_CH4_reduce_params_t ch4_reduce_params
