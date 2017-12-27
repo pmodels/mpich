@@ -23,9 +23,11 @@ int MPIR_Iallreduce_sched_intra_reduce_scatter_allgather(const void *sendbuf, vo
     MPIR_SCHED_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(2);
 
+#ifdef HAVE_ERROR_CHECKING
     /* we only support builtin datatypes for now, breaking up user types to do
      * the reduce-scatter is tricky */
     MPIR_Assert(HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN);
+#endif
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;

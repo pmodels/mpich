@@ -61,7 +61,9 @@ int MPIR_Ireduce_scatter_sched_intra_recursive_halving(const void *sendbuf, void
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
+#ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(MPIR_Op_is_commutative(op));
+#endif
 
     MPIR_SCHED_CHKPMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
 

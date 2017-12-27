@@ -27,7 +27,9 @@ int MPIR_Ialltoall_sched_intra_permuted_sendrecv(const void *sendbuf, int sendco
     int ii, ss, bblock, dst;
     MPI_Aint sendtype_extent, recvtype_extent;
 
+#ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(sendbuf != MPI_IN_PLACE); /* we do not handle in-place */
+#endif
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;

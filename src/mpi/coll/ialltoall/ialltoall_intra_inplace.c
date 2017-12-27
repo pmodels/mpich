@@ -34,7 +34,9 @@ int MPIR_Ialltoall_sched_intra_inplace(const void *sendbuf, int sendcount, MPI_D
     int peer;
     MPIR_SCHED_CHKPMEM_DECL(1);
 
+#ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(sendbuf == MPI_IN_PLACE);
+#endif
 
     if (recvcount == 0)
         goto fn_exit;

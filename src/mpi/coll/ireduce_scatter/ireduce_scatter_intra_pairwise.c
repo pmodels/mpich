@@ -28,8 +28,8 @@ int MPIR_Ireduce_scatter_sched_intra_pairwise(const void *sendbuf, void *recvbuf
     int  *disps;
     void *tmp_recvbuf;
     int src, dst;
-    int is_commutative;
     int total_count;
+    int is_commutative;
     MPIR_SCHED_CHKPMEM_DECL(2);
 
     comm_size = comm_ptr->local_size;
@@ -39,7 +39,11 @@ int MPIR_Ireduce_scatter_sched_intra_pairwise(const void *sendbuf, void *recvbuf
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     is_commutative = MPIR_Op_is_commutative(op);
-    MPIR_Assert(is_commutative);
+#ifdef HAVE_ERROR_CHECKING
+    {
+        MPIR_Assert(is_commutative);
+    }
+#endif
 
     MPIR_SCHED_CHKPMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
 
