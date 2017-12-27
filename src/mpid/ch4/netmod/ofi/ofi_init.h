@@ -233,7 +233,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_MAX_VNIS
       category    : CH4_OFI
       type        : int
-      default     : -1
+      default     : 1
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
