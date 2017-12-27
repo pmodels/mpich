@@ -770,8 +770,8 @@ int MPIR_COLL_init(void) {
         MPIR_Scatterv_intra_algo_choice = MPIR_SCATTERV_INTRA_ALGO_AUTO;
 
     /* Scatterv Inter */
-    if (0 == strcmp(MPIR_CVAR_SCATTERV_INTER_ALGORITHM, "linear"))
-        MPIR_Scatterv_inter_algo_choice = MPIR_SCATTERV_INTER_ALGO_LINEAR;
+    if (0 == strcmp(MPIR_CVAR_SCATTERV_INTER_ALGORITHM, "generic"))
+        MPIR_Scatterv_inter_algo_choice = MPIR_SCATTERV_INTER_ALGO_GENERIC;
     else if (0 == strcmp(MPIR_CVAR_SCATTERV_INTER_ALGORITHM, "nb"))
         MPIR_Scatterv_inter_algo_choice = MPIR_SCATTERV_INTER_ALGO_NB;
     else

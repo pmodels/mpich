@@ -74,6 +74,57 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Scatterv
 #define MPI_Scatterv PMPI_Scatterv
+/* not declared static because it is called in intercomm. reduce_scatter */
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Scatterv_intra
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Scatterv_intra(const void *sendbuf, const int *sendcounts, const int *displs,
+                        MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                        int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
+
+
+    MPIR_CHKLMEM_DECL(2);
+    mpi_errno = MPIR_Scatterv_intra_linear(sendbuf, sendcounts, displs, sendtype,
+                                           recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
+    if (mpi_errno) {
+        /* for communication errors, just record the error but continue */
+        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+        MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+    }
+
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    if (mpi_errno_ret) {
+        mpi_errno = mpi_errno_ret;
+    } else if (*errflag != MPIR_ERR_NONE) {
+        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
+    }
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Scatterv_inter
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Scatterv_inter(const void *sendbuf, const int *sendcounts, const int *displs,
+                        MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                        int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Scatterv_inter_generic(sendbuf, sendcounts, displs, sendtype,
+                                            recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
+
+    return mpi_errno;
+}
 
 /* not declared static because it is called in intercomm. reduce_scatter */
 #undef FUNCNAME
@@ -82,46 +133,61 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
                   MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                  int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+                  int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_Scatterv_intra_algo_choice) {
-            case MPIR_SCATTERV_INTRA_ALGO_LINEAR:
-                mpi_errno = MPIR_Scatterv_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-                break;
-            case MPIR_SCATTERV_INTRA_ALGO_NB:
-                mpi_errno = MPIR_Scatterv_nb(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-                break;
-            case MPIR_SCATTERV_INTRA_ALGO_AUTO:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Scatterv_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-                break;
+        case MPIR_SCATTERV_INTRA_ALGO_LINEAR:
+            mpi_errno =
+                MPIR_Scatterv_intra(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
+                                    recvtype, root, comm_ptr, errflag);
+            break;
+        case MPIR_SCATTERV_INTRA_ALGO_NB:
+            mpi_errno =
+                MPIR_Scatterv_nb(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
+                                 recvtype, root, comm_ptr, errflag);
+            break;
+        case MPIR_SCATTERV_INTRA_ALGO_AUTO:
+            MPL_FALLTHROUGH;
+        default:
+            mpi_errno =
+                MPIR_Scatterv_intra(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
+                                    recvtype, root, comm_ptr, errflag);
+            break;
         }
     } else {
         switch (MPIR_Scatterv_inter_algo_choice) {
-            case MPIR_SCATTERV_INTER_ALGO_LINEAR:
-                mpi_errno = MPIR_Scatterv_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-                break;
-            case MPIR_SCATTERV_INTER_ALGO_NB:
-                mpi_errno = MPIR_Scatterv_nb(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-                break;
-            case MPIR_SCATTERV_INTER_ALGO_AUTO:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Scatterv_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-                break;
+        case MPIR_SCATTERV_INTER_ALGO_GENERIC:
+            mpi_errno =
+                MPIR_Scatterv_inter_generic(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                                            recvcount, recvtype, root, comm_ptr, errflag);
+            break;
+        case MPIR_SCATTERV_INTER_ALGO_NB:
+            mpi_errno =
+                MPIR_Scatterv_nb(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
+                                 recvtype, root, comm_ptr, errflag);
+            break;
+        case MPIR_SCATTERV_INTER_ALGO_AUTO:
+            MPL_FALLTHROUGH;
+        default:
+            mpi_errno =
+                MPIR_Scatterv_inter(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
+                                    recvtype, root, comm_ptr, errflag);
+            break;
         }
     }
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
 
-fn_exit:
-    if (*errflag != MPIR_ERR_NONE)
+  fn_exit:
+    if (*errflag != MPIR_ERR_NONE) {
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
+    }
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 

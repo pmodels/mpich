@@ -584,7 +584,7 @@ extern int MPIR_Scatterv_intra_algo_choice;
 
 typedef enum MPIR_Scatterv_inter_algo_t {
     MPIR_SCATTERV_INTER_ALGO_AUTO,
-    MPIR_SCATTERV_INTER_ALGO_LINEAR,
+    MPIR_SCATTERV_INTER_ALGO_GENERIC,
     MPIR_SCATTERV_INTER_ALGO_NB,
 } MPIR_Scatterv_inter_algo_t;
 extern int MPIR_Scatterv_inter_algo_choice;
