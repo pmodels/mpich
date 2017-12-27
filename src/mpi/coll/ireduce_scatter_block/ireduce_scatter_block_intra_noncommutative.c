@@ -41,9 +41,11 @@ int MPIR_Ireduce_scatter_block_sched_intra_noncommutative(const void *sendbuf, v
         ++log2_comm_size;
     }
 
+#ifdef HAVE_ERROR_CHECKING
     /* begin error checking */
     MPIR_Assert(pof2 == comm_size); /* FIXME this version only works for power of 2 procs */
     /* end error checking */
+#endif
 
     /* size of a block (count of datatype per block, NOT bytes per block) */
     block_size = recvcount;

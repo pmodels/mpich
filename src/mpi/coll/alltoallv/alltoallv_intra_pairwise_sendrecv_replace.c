@@ -42,7 +42,10 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace (const void *sendbuf, const i
     /* Get extent of recv type, but send type is only valid if (sendbuf!=MPI_IN_PLACE) */
     MPIR_Datatype_get_extent_macro(recvtype, recv_extent);
 
+#ifdef HAVE_ERROR_CHECKING
     MPIR_Assert (sendbuf == MPI_IN_PLACE);
+#endif
+
     /* We use pair-wise sendrecv_replace in order to conserve memory usage,
      * which is keeping with the spirit of the MPI-2.2 Standard.  But
      * because of this approach all processes must agree on the global
