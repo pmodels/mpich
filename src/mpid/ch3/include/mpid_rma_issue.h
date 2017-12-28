@@ -319,11 +319,10 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
      * always need a request to be passed in. */
 
     /* create a new request */
-    req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+    req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
     MPIR_ERR_CHKANDJUMP(req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
     MPIR_Object_set_ref(req, 2);
-    req->kind = MPIR_REQUEST_KIND__SEND;
 
     /* set extended packet header, it is freed when the request is freed.  */
     if (ext_hdr_sz > 0) {
