@@ -1,3 +1,9 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *   Copyright (C) 2008 University of Chicago.
+ *   See COPYRIGHT notice in top-level directory.
+ */
+
 #ifndef HEAP_SORT_H_INCLUDED
 #define HEAP_SORT_H_INCLUDED
 
