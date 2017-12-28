@@ -37,9 +37,8 @@ int MPID_Rput(const void *origin_addr, int origin_count,
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, data_sz, dtp, dt_true_lb);
 
     /* Create user request, initially cc=1, ref=1 */
-    ureq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+    ureq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
     MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
-    ureq->kind = MPIR_REQUEST_KIND__RMA;
 
     /* This request is referenced by user and ch3 by default. */
     MPIR_Object_set_ref(ureq, 2);
@@ -100,9 +99,8 @@ int MPID_Rget(void *origin_addr, int origin_count,
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, data_sz, dtp, dt_true_lb);
 
     /* Create user request, initially cc=1, ref=1 */
-    ureq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+    ureq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
     MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
-    ureq->kind = MPIR_REQUEST_KIND__RMA;
 
     /* This request is referenced by user and ch3 by default. */
     MPIR_Object_set_ref(ureq, 2);
@@ -161,9 +159,8 @@ int MPID_Raccumulate(const void *origin_addr, int origin_count,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     /* Create user request, initially cc=1, ref=1 */
-    ureq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+    ureq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
     MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
-    ureq->kind = MPIR_REQUEST_KIND__RMA;
 
     /* This request is referenced by user and ch3 by default. */
     MPIR_Object_set_ref(ureq, 2);
@@ -225,9 +222,8 @@ int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     /* Create user request, initially cc=1, ref=1 */
-    ureq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+    ureq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
     MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
-    ureq->kind = MPIR_REQUEST_KIND__RMA;
 
     /* This request is referenced by user and ch3 by default. */
     MPIR_Object_set_ref(ureq, 2);
