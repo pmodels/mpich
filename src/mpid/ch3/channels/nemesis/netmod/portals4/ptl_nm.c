@@ -365,10 +365,9 @@ int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, voi
     MPIR_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
     /* create a request */
-    *sreq_ptr = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+    *sreq_ptr = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
     MPIR_Assert(*sreq_ptr != NULL);
     MPIR_Object_set_ref(*sreq_ptr, 2);
-    (*sreq_ptr)->kind = MPIR_REQUEST_KIND__SEND;
     (*sreq_ptr)->dev.OnDataAvail = NULL;
     (*sreq_ptr)->dev.user_buf = NULL;
 
