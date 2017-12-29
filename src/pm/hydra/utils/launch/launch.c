@@ -94,11 +94,13 @@ static int HYDU_pip_before(struct pip_task_fds *fds)
             }
         }
     }
+#ifdef AHA
     if (fds->idx >= 0) {
         if (HYDT_topo_bind(fds->idx) != HYD_SUCCESS) {
             fprintf(stderr, "bind process failed\n");
         }
     }
+#endif
     return 0;
 }
 
@@ -121,6 +123,7 @@ HYD_status HYDU_spawn_pip_tasks(char **client_arg, struct HYD_env * env_list,
     struct pip_task_fds *fds;
     intptr_t pip_id;
     int tpid;
+    int coreno;
     int pip_err;
     HYD_status status = HYD_SUCCESS;
 
@@ -146,10 +149,16 @@ HYD_status HYDU_spawn_pip_tasks(char **client_arg, struct HYD_env * env_list,
     if (err && (pipe(fds->errpipe) < 0))
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n", MPL_strerror(errno));
 
+    if (fds->idx >= 0) {
+        coreno = idx;
+    } else {
+        coreno = PIP_CPUCORE_ASIS;
+    }
+
     if ((pip_err = pip_spawn(client_arg[0],
                              client_arg,
                              fds->envv,
-                             PIP_CPUCORE_ASIS,
+                             coreno,
                              &pipid,
                              (pip_spawnhook_t) HYDU_pip_before,
                              (pip_spawnhook_t) HYDU_pip_after, (void *) fds)) != 0) {

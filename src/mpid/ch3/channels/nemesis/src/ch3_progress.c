@@ -16,12 +16,6 @@
 #endif
 
 
-//#define AH
-#ifdef AH
-#include <sched.h>
-unsigned long long ah_yield_count = 0;
-#endif
-
 
 typedef struct vc_term_element
 {
@@ -118,7 +112,7 @@ static int check_terminating_vcs(void)
         MPIR_ERR_CHECK(mpi_errno);
         MPL_free(ep);
     }
-    
+
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CHECK_TERMINATING_VCS);
     return mpi_errno;
@@ -273,7 +267,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
             MPIR_ERR_CHECK(mpi_errno);
         }
     }
-        
+
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_SHM_SEND_PROGRESS);
     return mpi_errno;
@@ -304,7 +298,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
         mpi_errno = MPIDI_CH3U_Check_for_failed_procs();
         MPIR_ERR_CHECK(mpi_errno);
     }
-    
+
 #ifdef ENABLE_CHECKPOINTING
     if (MPIR_CVAR_NEMESIS_ENABLE_CKPOINT) {
         if (MPIDI_nem_ckpt_start_checkpoint) {
@@ -403,7 +397,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                     buflen = payload_len;
 
                     MPIDI_PG_Get_vc_set_active(MPIDI_Process.my_pg, MPID_NEM_FBOX_SOURCE(cell), &vc);
-		   
+
 		    MPIR_Assert(vc->ch.recv_active == NULL &&
                                 vc->ch.pending_pkt_len == 0);
                     vc_ch = &vc->ch;
@@ -458,7 +452,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             mpi_errno = MPIDI_CH3I_Shm_send_progress();
             MPIR_ERR_CHECK(mpi_errno);
         }
-        
+
         /* make progress on LMTs */
         if (MPID_nem_local_lmt_pending)
         {
@@ -484,11 +478,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                 break;
             }
         }
-
-#ifdef AH
-    sched_yield();
-        ah_yield_count++;
-#endif
 
 #ifdef MPICH_IS_THREADED
         MPIR_THREAD_CHECK_BEGIN;
@@ -518,7 +507,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
     }
     while (is_blocking);
 
-    
+
 #ifdef MPICH_IS_THREADED
     MPIR_THREAD_CHECK_BEGIN;
     {
@@ -725,7 +714,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
 
             iov = &rreq->dev.iov[rreq->dev.iov_offset];
             n_iov = rreq->dev.iov_count;
-		
+
             while (n_iov && buflen >= iov->MPL_IOV_LEN)
             {
                 size_t iov_len = iov->MPL_IOV_LEN;
@@ -739,7 +728,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
                 --n_iov;
                 ++iov;
             }
-		
+
             if (n_iov)
             {
                 if (buflen > 0)
@@ -837,7 +826,7 @@ int MPIDI_CH3I_Progress_init(void)
     MPIDI_CH3I_shm_sendq.head = NULL;
     MPIDI_CH3I_shm_sendq.tail = NULL;
     MPIDI_CH3I_shm_active_send = NULL;
-    
+
     /* Initialize the code to handle incoming packets */
     if (PKTARRAY_SIZE <= MPIDI_CH3_PKT_END_ALL) {
         MPIR_ERR_SETFATALANDJUMP(mpi_errno, MPI_ERR_INTERN, "**ch3|pktarraytoosmall");
@@ -849,7 +838,6 @@ int MPIDI_CH3I_Progress_init(void)
     /* pkt handlers for LMT */
     mpi_errno = MPID_nem_lmt_pkthandler_init(pktArray, PKTARRAY_SIZE);
     MPIR_ERR_CHECK(mpi_errno);
-    
 #ifdef ENABLE_CHECKPOINTING
     mpi_errno = MPIDI_nem_ckpt_pkthandler_init(pktArray, PKTARRAY_SIZE);
     MPIR_ERR_CHECK(mpi_errno);
@@ -857,7 +845,7 @@ int MPIDI_CH3I_Progress_init(void)
 
     /* other pkt handlers */
     pktArray[MPIDI_NEM_PKT_NETMOD] = pkt_NETMOD_handler;
-   
+
 #ifdef HAVE_SIGNAL
     /* install signal handler for process failure notifications from hydra */
     prev_sighandler = signal(SIGUSR1, sigusr1_handler);
@@ -906,12 +894,12 @@ static int shm_connection_terminated(MPIDI_VC_t * vc)
         mpi_errno = vc->ch.lmt_vc_terminated(vc);
         MPIR_ERR_CHECK(mpi_errno);
     }
-    
+
     mpi_errno = MPL_shm_hnd_finalize(&(vc->ch.lmt_copy_buf_handle));
     if(mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
     mpi_errno = MPL_shm_hnd_finalize(&(vc->ch.lmt_recv_copy_buf_handle));
     if(mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
-    
+
     mpi_errno = MPIDI_CH3U_Handle_connection(vc, MPIDI_VC_EVENT_TERMINATED);
     MPIR_ERR_CHECK(mpi_errno);
 
@@ -980,13 +968,13 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
                 TERMQ_ENQUEUE(ep);
             }
         }
-    
+
     } else {
         MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "VC is remote");
         mpi_errno = MPID_nem_netmod_func->vc_terminate(vc);
         MPIR_ERR_CHECK(mpi_errno);
     }
-    
+
  fn_exit:
     MPIR_CHKPMEM_COMMIT();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_CONNECTION_TERMINATE);
@@ -1019,7 +1007,7 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
 
             req->status.MPI_ERROR = MPI_SUCCESS;
             MPIR_ERR_SET1(req->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
-            
+
             MPIR_Request_free(req); /* ref count was incremented when added to queue */
             mpi_errno = MPID_Request_complete(req);
             MPIR_ERR_CHECK(mpi_errno);
@@ -1104,9 +1092,9 @@ static int anysource_matched(MPIR_Request *rreq)
         if (ent->dequeue_fn)
         {
             int m;
-            
+
             m = ent->dequeue_fn(rreq);
-            
+
             /* this is a crude check to check if the req has been
                matched by more than one netmod.  When MPIR_Assert() is
                defined to empty, the extra matched=m is optimized
@@ -1223,4 +1211,3 @@ int MPIDI_CH3I_Posted_recv_dequeued(MPIR_Request *rreq)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_POSTED_RECV_DEQUEUED);
     return matched;
 }
-
