@@ -196,14 +196,13 @@ int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int rec
 #define FUNCNAME MPIR_Ireduce_scatter_block
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *reqp = NULL;
     int tag = -1;
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
-    *request = MPI_REQUEST_NULL;
+    *request = NULL;
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -213,9 +212,7 @@ int MPIR_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount
     mpi_errno = MPID_Ireduce_scatter_block_sched(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);
-    if (reqp)
-        *request = reqp->handle;
+    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
@@ -258,6 +255,7 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IREDUCE_SCATTER_BLOCK);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -320,12 +318,17 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
 
     if (MPIR_CVAR_IREDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
         mpi_errno = MPID_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype,
-                    op, comm_ptr, request);
+                    op, comm_ptr, &request_ptr);
     } else {
         mpi_errno = MPIR_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype,
-                    op, comm_ptr, request);
+                    op, comm_ptr, &request_ptr);
     }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+    /* return the handle of the request to the user */
+    if(request_ptr)
+        *request = request_ptr->handle;
+    else *request = MPI_REQUEST_NULL;
 
     /* ... end of body of routine ... */
 

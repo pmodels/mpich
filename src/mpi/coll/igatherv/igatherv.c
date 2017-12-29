@@ -155,14 +155,13 @@ int MPIR_Igatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                        const int recvcounts[], const int displs[], MPI_Datatype recvtype,
-                       int root, MPIR_Comm *comm_ptr, MPI_Request *request)
+                       int root, MPIR_Comm *comm_ptr, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *reqp = NULL;
     int tag = -1;
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
-    *request = MPI_REQUEST_NULL;
+    *request = NULL;
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -172,9 +171,7 @@ int MPIR_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, voi
     mpi_errno = MPID_Igatherv_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);
-    if (reqp)
-        *request = reqp->handle;
+    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
@@ -219,6 +216,7 @@ int MPI_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IGATHERV);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -347,11 +345,16 @@ int MPI_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
     /* ... body of routine ...  */
 
     if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Igatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, request);
+        mpi_errno = MPID_Igatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, &request_ptr);
     } else {
-        mpi_errno = MPIR_Igatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, request);
+        mpi_errno = MPIR_Igatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, &request_ptr);
     }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+    /* return the handle of the request to the user */
+    if(request_ptr)
+        *request = request_ptr->handle;
+    else *request = MPI_REQUEST_NULL;
 
     /* ... end of body of routine ... */
 
