@@ -372,7 +372,7 @@ static inline int MPID_Neighbor_alltoall(const void *sendbuf, int sendcount, MPI
 static inline int MPID_Ineighbor_allgather(const void *sendbuf, int sendcount,
                                            MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                            MPI_Datatype recvtype, MPIR_Comm * comm,
-                                           MPI_Request * request)
+                                           MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -390,7 +390,7 @@ static inline int MPID_Ineighbor_allgatherv(const void *sendbuf, int sendcount,
                                             MPI_Datatype sendtype, void *recvbuf,
                                             const int recvcounts[], const int displs[],
                                             MPI_Datatype recvtype, MPIR_Comm * comm,
-                                            MPI_Request * request)
+                                            MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -407,7 +407,7 @@ static inline int MPID_Ineighbor_allgatherv(const void *sendbuf, int sendcount,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPID_Ineighbor_alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                           void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                          MPIR_Comm * comm, MPI_Request * request)
+                                          MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -425,7 +425,7 @@ static inline int MPID_Ineighbor_alltoallv(const void *sendbuf, const int sendco
                                            const int sdispls[], MPI_Datatype sendtype,
                                            void *recvbuf, const int recvcounts[],
                                            const int rdispls[], MPI_Datatype recvtype,
-                                           MPIR_Comm * comm, MPI_Request * request)
+                                           MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -444,7 +444,7 @@ static inline int MPID_Ineighbor_alltoallw(const void *sendbuf, const int sendco
                                            const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                            void *recvbuf, const int recvcounts[],
                                            const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                           MPIR_Comm * comm, MPI_Request * request)
+                                           MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -459,7 +459,7 @@ static inline int MPID_Ineighbor_alltoallw(const void *sendbuf, const int sendco
 #define FUNCNAME MPID_Ibarrier
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPID_Ibarrier(MPIR_Comm * comm, MPI_Request * request)
+static inline int MPID_Ibarrier(MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -473,7 +473,7 @@ static inline int MPID_Ibarrier(MPIR_Comm * comm, MPI_Request * request)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPID_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root,
-                              MPIR_Comm * comm, MPI_Request * request)
+                              MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -488,7 +488,7 @@ static inline int MPID_Ibcast(void *buffer, int count, MPI_Datatype datatype, in
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPID_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                  MPIR_Comm * comm, MPI_Request * request)
+                                  MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -504,7 +504,7 @@ static inline int MPID_Iallgather(const void *sendbuf, int sendcount, MPI_Dataty
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPID_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                    void *recvbuf, const int *recvcounts, const int *displs,
-                                   MPI_Datatype recvtype, MPIR_Comm * comm, MPI_Request * request)
+                                   MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -520,7 +520,7 @@ static inline int MPID_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datat
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPID_Iallreduce(const void *sendbuf, void *recvbuf, int count,
                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                  MPI_Request * request)
+                                  MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -535,7 +535,7 @@ static inline int MPID_Iallreduce(const void *sendbuf, void *recvbuf, int count,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPID_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                 MPIR_Comm * comm, MPI_Request * request)
+                                 MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -553,7 +553,7 @@ static inline int MPID_Ialltoallv(const void *sendbuf, const int sendcounts[],
                                   const int sdispls[], MPI_Datatype sendtype,
                                   void *recvbuf, const int recvcounts[],
                                   const int rdispls[], MPI_Datatype recvtype,
-                                  MPIR_Comm * comm, MPI_Request * request)
+                                  MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -571,7 +571,7 @@ static inline int MPID_Ialltoallw(const void *sendbuf, const int sendcounts[],
                                   const int sdispls[], const MPI_Datatype sendtypes[],
                                   void *recvbuf, const int recvcounts[],
                                   const int rdispls[], const MPI_Datatype recvtypes[],
-                                  MPIR_Comm * comm, MPI_Request * request)
+                                  MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -587,7 +587,7 @@ static inline int MPID_Ialltoallw(const void *sendbuf, const int sendcounts[],
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPID_Iexscan(const void *sendbuf, void *recvbuf, int count,
                                MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                               MPI_Request * request)
+                               MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -602,7 +602,7 @@ static inline int MPID_Iexscan(const void *sendbuf, void *recvbuf, int count,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPID_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                               int root, MPIR_Comm * comm, MPI_Request * request)
+                               int root, MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -619,7 +619,7 @@ static inline int MPID_Igather(const void *sendbuf, int sendcount, MPI_Datatype 
 static inline int MPID_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                 void *recvbuf, const int *recvcounts, const int *displs,
                                 MPI_Datatype recvtype, int root, MPIR_Comm * comm,
-                                MPI_Request * request)
+                                MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -635,7 +635,7 @@ static inline int MPID_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPID_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
                                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                             MPI_Request * request)
+                                             MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -651,7 +651,7 @@ static inline int MPID_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPID_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
                                        MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                       MPI_Request * request)
+                                       MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -666,7 +666,7 @@ static inline int MPID_Ireduce_scatter(const void *sendbuf, void *recvbuf, const
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPID_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                               MPI_Op op, int root, MPIR_Comm * comm, MPI_Request * request)
+                               MPI_Op op, int root, MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -680,7 +680,7 @@ static inline int MPID_Ireduce(const void *sendbuf, void *recvbuf, int count, MP
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPID_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                             MPI_Op op, MPIR_Comm * comm, MPI_Request * request)
+                             MPI_Op op, MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -695,7 +695,7 @@ static inline int MPID_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPID_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                 void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                int root, MPIR_Comm * comm, MPI_Request * request)
+                                int root, MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -712,7 +712,7 @@ static inline int MPID_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype
 static inline int MPID_Iscatterv(const void *sendbuf, const int *sendcounts,
                                  const int *displs, MPI_Datatype sendtype,
                                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                 int root, MPIR_Comm * comm, MPI_Request * request)
+                                 int root, MPIR_Comm * comm, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 

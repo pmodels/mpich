@@ -512,7 +512,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
             goto finish_fence;
         }
         else {
-            MPI_Request fence_sync_req;
+            MPIR_Request* fence_sync_req_ptr;
 
             if (win_ptr->shm_allocated == TRUE) {
                 MPIR_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
@@ -523,24 +523,21 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
                 MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
             }
 
-            mpi_errno = MPID_Ibarrier(win_ptr->comm_ptr, &fence_sync_req);
+            mpi_errno = MPID_Ibarrier(win_ptr->comm_ptr, &fence_sync_req_ptr);
             if (mpi_errno != MPI_SUCCESS)
                 MPIR_ERR_POP(mpi_errno);
 
-            if (fence_sync_req == MPI_REQUEST_NULL) {
+            if (fence_sync_req_ptr == NULL) {
                 /* ibarrier completed immediately. */
                 win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
             }
             else {
-                MPIR_Request *req_ptr;
-
                 /* Set window access state properly. */
                 win_ptr->states.access_state = MPIDI_RMA_FENCE_ISSUED;
 
-                MPIR_Request_get_ptr(fence_sync_req, req_ptr);
-                if (!MPIR_Request_is_complete(req_ptr)) {
-                    req_ptr->dev.source_win_handle = win_ptr->handle;
-                    req_ptr->dev.request_completed_cb = fence_barrier_complete;
+                if (!MPIR_Request_is_complete(fence_sync_req_ptr)) {
+                    fence_sync_req_ptr->dev.source_win_handle = win_ptr->handle;
+                    fence_sync_req_ptr->dev.request_completed_cb = fence_barrier_complete;
                     win_ptr->sync_request_cnt++;
                 }
                 else {
@@ -548,7 +545,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
                     win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
                 }
 
-                MPIR_Request_free(req_ptr);
+                MPIR_Request_free(fence_sync_req_ptr);
             }
 
             goto finish_fence;
@@ -645,26 +642,23 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
             win_ptr->states.access_state = MPIDI_RMA_NONE;
         }
         else {
-            MPI_Request fence_sync_req;
+            MPIR_Request* fence_sync_req_ptr;
 
             /* Prepare for the next possible epoch */
-            mpi_errno = MPID_Ibarrier(win_ptr->comm_ptr, &fence_sync_req);
+            mpi_errno = MPID_Ibarrier(win_ptr->comm_ptr, &fence_sync_req_ptr);
             if (mpi_errno != MPI_SUCCESS)
                 MPIR_ERR_POP(mpi_errno);
 
-            if (fence_sync_req == MPI_REQUEST_NULL) {
+            if (fence_sync_req_ptr == NULL) {
                 /* ibarrier completed immediately. */
                 win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
             }
             else {
-                MPIR_Request *req_ptr;
-
                 win_ptr->states.access_state = MPIDI_RMA_FENCE_ISSUED;
 
-                MPIR_Request_get_ptr(fence_sync_req, req_ptr);
-                if (!MPIR_Request_is_complete(req_ptr)) {
-                    req_ptr->dev.source_win_handle = win_ptr->handle;
-                    req_ptr->dev.request_completed_cb = fence_barrier_complete;
+                if (!MPIR_Request_is_complete(fence_sync_req_ptr)) {
+                    fence_sync_req_ptr->dev.source_win_handle = win_ptr->handle;
+                    fence_sync_req_ptr->dev.request_completed_cb = fence_barrier_complete;
                     win_ptr->sync_request_cnt++;
                 }
                 else {
@@ -672,7 +666,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
                     win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
                 }
 
-                MPIR_Request_free(req_ptr);
+                MPIR_Request_free(fence_sync_req_ptr);
             }
 
             if (win_ptr->shm_allocated == TRUE) {
