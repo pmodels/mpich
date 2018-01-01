@@ -48,7 +48,6 @@ static inline int MPIDI_reply_ssend(MPIR_Request * rreq)
 static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    uint64_t match_bits;
     size_t message_sz;
     MPI_Aint last;
     int dt_contig;
@@ -63,9 +62,8 @@ static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_HANDLE_UNEXP_MRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_HANDLE_UNEXP_MRECV);
 
-    match_bits = MPIDI_CH4U_REQUEST(rreq, match_bits);
     rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
-    rreq->status.MPI_TAG = MPIDI_CH4U_get_tag(match_bits);
+    rreq->status.MPI_TAG = MPIDI_CH4U_request_get_tag(rreq);
 
     buf = MPIDI_CH4U_REQUEST(rreq, req->rreq.mrcv_buffer);
     count = MPIDI_CH4U_REQUEST(rreq, req->rreq.mrcv_count);
