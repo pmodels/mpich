@@ -85,7 +85,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS, in_use;
     MPIR_Comm *root_comm;
     MPIR_Request *match_req = NULL;
-    uint64_t msg_tag;
+    uint64_t match_bits;
     size_t count;
     MPI_Aint last;
     int dt_contig;
@@ -107,8 +107,8 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
     }
     /* MPIDI_CS_EXIT(); */
 
-    msg_tag = MPIDI_CH4U_REQUEST(rreq, tag);
-    root_comm = MPIDI_CH4U_context_id_to_comm(MPIDI_CH4U_get_context(msg_tag));
+    match_bits = MPIDI_CH4U_REQUEST(rreq, match_bits);
+    root_comm = MPIDI_CH4U_context_id_to_comm(MPIDI_CH4U_get_context(match_bits));
 
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_MATCHED) {
         match_req = (MPIR_Request *) MPIDI_CH4U_REQUEST(rreq, req->rreq.match_req);
@@ -117,7 +117,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
         /* MPIDI_CS_ENTER(); */
         if (root_comm)
             match_req =
-                MPIDI_CH4U_dequeue_posted(msg_tag, &MPIDI_CH4U_COMM(root_comm, posted_list));
+                MPIDI_CH4U_dequeue_posted(match_bits, &MPIDI_CH4U_COMM(root_comm, posted_list));
 
         if (match_req) {
             MPIDI_CH4U_delete_unexp(rreq, &MPIDI_CH4U_COMM(root_comm, unexp_list));
@@ -134,7 +134,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
     }
 
     match_req->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
-    match_req->status.MPI_TAG = MPIDI_CH4U_get_tag(msg_tag);
+    match_req->status.MPI_TAG = MPIDI_CH4U_get_tag(match_bits);
 
     MPIDI_Datatype_get_info(MPIDI_CH4U_REQUEST(match_req, count),
                             MPIDI_CH4U_REQUEST(match_req, datatype),
@@ -292,7 +292,7 @@ static inline int MPIDI_recv_target_cmpl_cb(MPIR_Request * rreq)
     }
 
     rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
-    rreq->status.MPI_TAG = MPIDI_CH4U_get_tag(MPIDI_CH4U_REQUEST(rreq, tag));
+    rreq->status.MPI_TAG = MPIDI_CH4U_get_tag(MPIDI_CH4U_REQUEST(rreq, match_bits));
 
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_PEER_SSEND) {
         mpi_errno = MPIDI_reply_ssend(rreq);
@@ -403,7 +403,7 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
             MPIDI_CH4U_REQUEST(rreq, buffer) = NULL;
             MPIDI_CH4U_REQUEST(rreq, count) = 0;
         }
-        MPIDI_CH4U_REQUEST(rreq, tag) = hdr->msg_tag;
+        MPIDI_CH4U_REQUEST(rreq, match_bits) = hdr->msg_tag;
         MPIDI_CH4U_REQUEST(rreq, rank) = hdr->src_rank;
         MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_BUSY;
         MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_UNEXPECTED;
@@ -423,7 +423,7 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
         /* Decrement the refcnt when popping a request out from posted_list */
         MPIR_Comm_release(root_comm);
         MPIDI_CH4U_REQUEST(rreq, rank) = hdr->src_rank;
-        MPIDI_CH4U_REQUEST(rreq, tag) = hdr->msg_tag;
+        MPIDI_CH4U_REQUEST(rreq, match_bits) = hdr->msg_tag;
     }
 
     *req = rreq;
@@ -471,7 +471,7 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
         MPIDI_CH4U_REQUEST(rreq, count) = lreq_hdr->data_sz;
         MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_LONG_RTS;
         MPIDI_CH4U_REQUEST(rreq, req->rreq.peer_req_ptr) = lreq_hdr->sreq_ptr;
-        MPIDI_CH4U_REQUEST(rreq, tag) = hdr->msg_tag;
+        MPIDI_CH4U_REQUEST(rreq, match_bits) = hdr->msg_tag;
         MPIDI_CH4U_REQUEST(rreq, rank) = hdr->src_rank;
 
         /* MPIDI_CS_ENTER(); */
@@ -489,7 +489,7 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
         MPIR_Comm_release(root_comm);   /* -1 for posted_list */
         MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_LONG_RTS;
         MPIDI_CH4U_REQUEST(rreq, req->rreq.peer_req_ptr) = lreq_hdr->sreq_ptr;
-        MPIDI_CH4U_REQUEST(rreq, tag) = hdr->msg_tag;
+        MPIDI_CH4U_REQUEST(rreq, match_bits) = hdr->msg_tag;
         MPIDI_CH4U_REQUEST(rreq, rank) = hdr->src_rank;
         mpi_errno = MPIDI_NM_am_recv(rreq);
         if (mpi_errno)
@@ -615,7 +615,7 @@ static inline int MPIDI_send_long_ack_target_msg_cb(int handler_id, void *am_hdr
     /* Start the main data transfer */
     send_hdr.rreq_ptr = msg_hdr->rreq_ptr;
     mpi_errno =
-        MPIDI_NM_am_isend_reply(MPIDI_CH4U_get_context(MPIDI_CH4U_REQUEST(sreq, req->lreq).msg_tag),
+        MPIDI_NM_am_isend_reply(MPIDI_CH4U_get_context(MPIDI_CH4U_REQUEST(sreq, req->lreq).match_bits),
                                 MPIDI_CH4U_REQUEST(sreq, rank), MPIDI_CH4U_SEND_LONG_LMT,
                                 &send_hdr, sizeof(send_hdr),
                                 MPIDI_CH4U_REQUEST(sreq, req->lreq).src_buf,
