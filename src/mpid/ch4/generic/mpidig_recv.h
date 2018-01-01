@@ -95,7 +95,7 @@ static inline int MPIDI_handle_unexpected(void *buf,
     MPL_free(MPIDI_CH4U_REQUEST(rreq, buffer));
 
     rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
-    rreq->status.MPI_TAG = MPIDI_CH4U_get_tag(MPIDI_CH4U_REQUEST(rreq, match_bits));
+    rreq->status.MPI_TAG = MPIDI_CH4U_request_get_tag(rreq);
 
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_PEER_SSEND) {
         mpi_errno = MPIDI_reply_ssend(rreq);
