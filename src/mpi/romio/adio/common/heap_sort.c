@@ -5,7 +5,7 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#include "heap-sort.h"
+#include "heap_sort.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>

@@ -4,7 +4,7 @@
  *  (C) 2008 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#include "../adio/include/heap-sort.h"
+#include "../adio/include/heap_sort.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

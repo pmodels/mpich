@@ -15,7 +15,7 @@ noinst_HEADERS +=                      \
     adio/include/adioi_errmsg.h        \
     adio/include/adioi_error.h         \
     adio/include/adioi_fs_proto.h      \
-    adio/include/heap-sort.h           \
+    adio/include/heap_sort.h           \
     adio/include/mpio_error.h          \
     adio/include/mpipr.h               \
     adio/include/mpiu_greq.h           \
