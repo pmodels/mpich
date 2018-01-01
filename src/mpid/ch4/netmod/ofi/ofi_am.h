@@ -202,7 +202,7 @@ static inline int MPIDI_NM_am_recv(MPIR_Request * req)
     msg.sreq_ptr = (MPIDI_CH4U_REQUEST(req, req->rreq.peer_req_ptr));
     msg.rreq_ptr = (uint64_t) req;
     MPIR_Assert((void *) msg.sreq_ptr != NULL);
-    mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDI_CH4U_get_context(MPIDI_CH4U_REQUEST(req, tag)),
+    mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDI_CH4U_get_context(MPIDI_CH4U_REQUEST(req, match_bits)),
                                            MPIDI_CH4U_REQUEST(req, rank),
                                            MPIDI_CH4U_SEND_LONG_ACK, &msg, sizeof(msg));
     if (mpi_errno)

@@ -24,7 +24,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
     int mpi_errno = MPI_SUCCESS, i;
     int rank, tag, context_offset;
     MPI_Datatype datatype;
-    uint64_t msg_tag;
+    uint64_t match_bits;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_STARTALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_STARTALL);
@@ -33,12 +33,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
         MPIR_Request *const preq = requests[i];
         MPI_Request sreq_handle;
 
-        msg_tag = MPIDI_CH4U_REQUEST(preq, tag);
+        match_bits = MPIDI_CH4U_REQUEST(preq, match_bits);
         datatype = MPIDI_CH4U_REQUEST(preq, datatype);
 
-        tag = MPIDI_CH4U_get_tag(msg_tag);
+        tag = MPIDI_CH4U_get_tag(match_bits);
         rank = MPIDI_CH4U_REQUEST(preq, rank);
-        context_offset = MPIDI_CH4U_get_context(msg_tag) - preq->comm->context_id;
+        context_offset = MPIDI_CH4U_get_context(match_bits) - preq->comm->context_id;
 
         switch (MPIDI_CH4U_REQUEST(preq, p_type)) {
 

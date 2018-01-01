@@ -103,7 +103,7 @@ static inline int MPIDI_psend_init(const void *buf,
     MPIDI_CH4U_REQUEST(sreq, buffer) = (void *) buf;
     MPIDI_CH4U_REQUEST(sreq, count) = count;
     MPIDI_CH4U_REQUEST(sreq, datatype) = datatype;
-    MPIDI_CH4U_REQUEST(sreq, tag) = match_bits;
+    MPIDI_CH4U_REQUEST(sreq, match_bits) = match_bits;
     MPIDI_CH4U_REQUEST(sreq, rank) = rank;
 
     sreq->u.persist.real_request = NULL;
