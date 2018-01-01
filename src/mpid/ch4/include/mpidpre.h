@@ -152,7 +152,7 @@ typedef struct MPIDI_CH4U_req_t {
     union {
     MPIDI_NM_REQUEST_AM_DECL} netmod_am;
     MPIDI_CH4U_req_ext_t *req;
-    MPIDI_ptype p_type;
+    MPIDI_ptype p_type;                 /* persistent request type */
     void *buffer;
     uint64_t count;
     uint64_t tag;
