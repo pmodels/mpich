@@ -30,7 +30,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
 
     for (i = 0; i < count; i++) {
         MPIR_Request *const preq = requests[i];
-        MPI_Request sreq_handle;
 
         switch (MPIDI_CH4U_REQUEST(preq, p_type)) {
 
@@ -103,7 +102,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
 #endif
             break;
 
-        case MPIDI_PTYPE_BSEND:
+        case MPIDI_PTYPE_BSEND: {
+            MPI_Request sreq_handle;
             mpi_errno = MPIR_Ibsend_impl(MPIDI_CH4U_REQUEST(preq, buffer),
                                          MPIDI_CH4U_REQUEST(preq, count),
                                          MPIDI_CH4U_REQUEST(preq, datatype),
@@ -115,6 +115,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
                 MPIR_Request_get_ptr(sreq_handle, preq->u.persist.real_request);
 
             break;
+        }
 
         default:
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __FUNCTION__,
