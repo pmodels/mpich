@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef TCP_IMPL_H
-#define TCP_IMPL_H
+#ifndef TCP_IMPL_H_INCLUDED
+#define TCP_IMPL_H_INCLUDED
 
 #include "mpid_nem_impl.h"
 #include <sys/types.h>
@@ -206,4 +206,4 @@ typedef struct MPIDI_nem_tcp_pkt_unpause
 
 
 
-#endif /* TCP_IMPL_H */
+#endif /* TCP_IMPL_H_INCLUDED */

@@ -13,4 +13,4 @@ static int SQ_VERBOSE = 0;
     }                                           \
   } while (0)
 
-#endif
+#endif /* SQUELCH_H_INCLUDED */

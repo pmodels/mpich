@@ -27,8 +27,8 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef UTHASH_H
-#define UTHASH_H
+#ifndef UTHASH_H_INCLUDED
+#define UTHASH_H_INCLUDED
 
 #define UTHASH_VERSION 2.0.2
 
@@ -1082,4 +1082,4 @@ typedef struct UT_hash_handle {
    unsigned hashv;                   /* result of hash-fcn(key)        */
 } UT_hash_handle;
 
-#endif /* UTHASH_H */
+#endif /* UTHASH_H_INCLUDED */

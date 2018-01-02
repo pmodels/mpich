@@ -251,4 +251,4 @@ void WriteCurrentDataAndLogEvent(RLOG_Struct *pRLOG, int event, double starttime
 }
 #endif
 
-#endif
+#endif /* RLOG_H_INCLUDED */

@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPID_RMA_OPLIST_H_INCLUDED)
+#ifndef MPID_RMA_OPLIST_H_INCLUDED
 #define MPID_RMA_OPLIST_H_INCLUDED
 
 #include "utlist.h"

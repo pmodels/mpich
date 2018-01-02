@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPID_NEM_NETS_H
-#define MPID_NEM_NETS_H
+#ifndef MPID_NEM_NETS_H_INCLUDED
+#define MPID_NEM_NETS_H_INCLUDED
 
 typedef int (* MPID_nem_net_module_init_t)(MPIDI_PG_t *pg_p, int pg_rank,
                                            char **bc_val_p, int *val_max_sz_p);
@@ -62,4 +62,4 @@ extern char MPID_nem_netmod_strings[][MPID_NEM_MAX_NETMOD_STRING_LEN];
 
 int MPID_nem_net_init(void);
 
-#endif /* MPID_NEM_NETS_H */
+#endif /* MPID_NEM_NETS_H_INCLUDED */

@@ -292,4 +292,4 @@ static inline int MPIDIU_release_mlut(MPIDI_rank_map_mlut_t * mlut)
     return mpi_errno;
 }
 
-#endif /* ifndef CH4R_COMM_H_INCLUDED */
+#endif /* CH4R_COMM_H_INCLUDED */

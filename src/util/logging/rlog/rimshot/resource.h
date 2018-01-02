@@ -4,6 +4,9 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#ifndef RESOURCE_H_INCLUDED
+#define RESOURCE_H_INCLUDED
+
 /* style:c++ header*/
 
 //{{NO_DEPENDENCIES}}
@@ -47,3 +50,5 @@
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
+
+#endif /* RESOURCE_H_INCLUDED */

@@ -134,4 +134,4 @@ do {                                    \
     memset(addr_, 0, size_);            \
 } while (0)
 
-#endif
+#endif /* MPITEST_H_INCLUDED */

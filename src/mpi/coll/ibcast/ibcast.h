@@ -4,6 +4,9 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#ifndef IBCAST_H_INCLUDED
+#define IBCAST_H_INCLUDED
+
 #include "mpiimpl.h"
 #include "coll_util.h"
 
@@ -21,3 +24,4 @@ int MPII_Ibcast_scatter_ring_allgather_sched(void *buffer, int count, MPI_Dataty
 int MPII_Ibcast_scatter_rec_dbl_allgather_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s);
 int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm *comm_ptr, int nbytes, MPIR_Sched_t s);
 
+#endif /* IBCAST_H_INCLUDED */

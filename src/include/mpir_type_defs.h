@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPIR_TYPE_DEFS_H_INCLUDED)
+#ifndef MPIR_TYPE_DEFS_H_INCLUDED
 #define MPIR_TYPE_DEFS_H_INCLUDED
 
 #include "mpichconf.h"
@@ -78,4 +78,4 @@
 #define MPIR_VOID_PTR_CAST_TO_MPI_AINT (MPI_Aint)(uintptr_t)
 #define MPIR_PTR_DISP_CAST_TO_MPI_AINT (MPI_Aint)(intptr_t)
 
-#endif /* !defined(MPIR_TYPE_DEFS_H_INCLUDED) */
+#endif /* MPIR_TYPE_DEFS_H_INCLUDED */

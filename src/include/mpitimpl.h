@@ -1217,4 +1217,4 @@ extern MPID_Thread_mutex_t mpi_t_mutex;
 extern void MPIR_T_env_init(void);
 extern void MPIR_T_env_finalize(void);
 
-#endif
+#endif /* MPITIMPL_H_INCLUDED */

@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPL_THREAD_H_INCLUDED)
+#ifndef MPL_THREAD_H_INCLUDED
 #define MPL_THREAD_H_INCLUDED
 
 #include "mplconfig.h"
@@ -45,4 +45,4 @@ typedef void (*MPL_thread_func_t) (void *data);
 
 #include "mpl_thread_priv.h"
 
-#endif /* !defined(MPL_THREAD_H_INCLUDED) */
+#endif /* MPL_THREAD_H_INCLUDED */

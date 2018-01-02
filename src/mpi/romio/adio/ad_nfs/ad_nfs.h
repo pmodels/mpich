@@ -4,8 +4,8 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#ifndef AD_NFS_INCLUDE
-#define AD_NFS_INCLUDE
+#ifndef AD_NFS_H_INCLUDED
+#define AD_NFS_H_INCLUDED
 
 #include "adio.h"
 
@@ -85,4 +85,4 @@ void ADIOI_NFS_Set_shared_fp(ADIO_File fd, ADIO_Offset offset, int *error_code);
 void ADIOI_NFS_Resize(ADIO_File fd, ADIO_Offset size, int *error_code);
 int ADIOI_NFS_Feature(ADIO_File fd, int feature_flag);
 
-#endif
+#endif /* AD_NFS_H_INCLUDED */

@@ -22,4 +22,4 @@ static inline void MPL_wtime(MPL_time_t *timeval)
     return MPL_TIMER_SUCCESS;
 }
 
-#endif
+#endif /* MPL_TIMER_WIN86_CYCLE_H_INCLUDED */

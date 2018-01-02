@@ -13,6 +13,9 @@
  * particular purpose and non-infringement.
  */
 
+#ifndef ATTR_H_INCLUDED
+#define ATTR_H_INCLUDED
+
 /*
   Keyval and attribute storage
  */
@@ -27,3 +30,4 @@ extern void MPID_Attr_free(MPIR_Attribute *attr_ptr);
 extern int MPIR_Call_attr_delete( int, MPIR_Attribute * );
 extern int MPIR_Call_attr_copy( int, MPIR_Attribute *, void**, int* );
 
+#endif /* ATTR_H_INCLUDED */

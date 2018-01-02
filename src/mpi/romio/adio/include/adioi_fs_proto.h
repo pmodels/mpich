@@ -6,8 +6,8 @@
  */
 
 
-#ifndef ADIO_PROTO
-#define ADIO_PROTO
+#ifndef ADIOI_FS_PROTO_H_INCLUDED
+#define ADIOI_FS_PROTO_H_INCLUDED
 
 #ifdef ROMIO_NFS
 extern struct ADIOI_Fns_struct ADIO_NFS_operations;
@@ -54,4 +54,4 @@ extern struct ADIOI_Fns_struct ADIO_GPFS_operations;
 extern struct ADIOI_Fns_struct ADIO_IME_operations;
 #endif
 
-#endif
+#endif /* ADIOI_FS_PROTO_H_INCLUDED */

@@ -14,8 +14,8 @@
  *	  on process 0.
  */
 
-#ifndef AD_BG_PSET_H_
-#define AD_BG_PSET_H_
+#ifndef AD_BG_PSET_H_INCLUDED
+#define AD_BG_PSET_H_INCLUDED
 
 
 /* Keeps specific information to each process, will be exchanged among processes */
@@ -74,4 +74,4 @@ typedef struct {
 				  ADIOI_BG_ProcInfo_t *proc );
 
 
-#endif  /* AD_BG_PSET_H_ */
+#endif /* AD_BG_PSET_H_INCLUDED */

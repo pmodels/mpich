@@ -29,4 +29,4 @@ extern int (*MPL_wtime_acc_fn)(MPL_time_t *t1, MPL_time_t *t2, MPL_time_t *t3);
 extern int (*MPL_wtime_todouble_fn)(MPL_time_t *timeval, double *seconds);
 extern int (*MPL_wtick_fn)(double *tick);
 
-#endif
+#endif /* MPL_TIMER_DEVICE_H_INCLUDED */

@@ -9,8 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#ifndef MPIR_COLL_IMPL_H_INCLUDED
-#define MPIR_COLL_IMPL_H_INCLUDED
+#ifndef COLL_IMPL_H_INCLUDED
+#define COLL_IMPL_H_INCLUDED
 
 /* Enumerate the list of algorithms */
 typedef enum MPIR_Allgather_intra_algo_t {
@@ -591,4 +591,4 @@ extern int MPIR_Scatterv_inter_algo_choice;
 
 int MPIR_COLL_init(void);
 
-#endif /* MPIR_COLL_IMPL_H_INCLUDED */
+#endif /* COLL_IMPL_H_INCLUDED */

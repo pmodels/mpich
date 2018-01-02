@@ -10,8 +10,8 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#if !defined(AFX_RIMSHOTVIEW_H__7E08A000_563B_4F32_ABF2_F9B1CA0B9486__INCLUDED_)
-#define AFX_RIMSHOTVIEW_H__7E08A000_563B_4F32_ABF2_F9B1CA0B9486__INCLUDED_
+#ifndef RIMSHOTVIEW_H_INCLUDED
+#define RIMSHOTVIEW_H_INCLUDED
 
 #if _MSC_VER > 1000
 #pragma once
@@ -94,4 +94,4 @@ inline CRimshotDoc* CRimshotView::GetDocument()
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-#endif // !defined(AFX_RIMSHOTVIEW_H__7E08A000_563B_4F32_ABF2_F9B1CA0B9486__INCLUDED_)
+#endif /* RIMSHOTVIEW_H_INCLUDED */

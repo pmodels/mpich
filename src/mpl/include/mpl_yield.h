@@ -3,8 +3,8 @@
  *  (C) 2006 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#ifndef MPL_PROCESS_WRAPPERS_H_INCLUDED
-#define MPL_PROCESS_WRAPPERS_H_INCLUDED
+#ifndef MPL_YIELD_H_INCLUDED
+#define MPL_YIELD_H_INCLUDED
 
 #include "mplconfig.h"
 
@@ -61,4 +61,4 @@
     #error "No mechanism available to yield"
 #endif
 
-#endif /* MPL_PROCESS_WRAPPERS_H_INCLUDED */
+#endif /* MPL_YIELD_H_INCLUDED */

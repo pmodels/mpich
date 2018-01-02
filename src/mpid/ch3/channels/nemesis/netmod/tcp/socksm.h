@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef SOCKSM_H
-#define SOCKSM_H
+#ifndef SOCKSM_H_INCLUDED
+#define SOCKSM_H_INCLUDED
 
 #include <sys/poll.h>
 #include <stddef.h> 
@@ -184,4 +184,4 @@ typedef struct MPIDI_nem_tcp_portinfo {
 #define MPID_nem_tcp_vc_is_connected(vc_tcp) (vc_tcp->sc && vc_tcp->sc->state.cstate == CONN_STATE_TS_COMMRDY)
 #define MPID_nem_tcp_vc_send_paused(vc_tcp) (vc_tcp->send_paused)
 
-#endif
+#endif /* SOCKSM_H_INCLUDED */

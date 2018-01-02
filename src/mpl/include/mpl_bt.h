@@ -5,7 +5,7 @@
  */
 
 
-#if !defined(MPL_BT_H_INCLUDED)
+#ifndef MPL_BT_H_INCLUDED
 #define MPL_BT_H_INCLUDED
 
 #include "mplconfig.h"
@@ -35,4 +35,4 @@ void MPL_backtrace_show(FILE *output);
 }
 #endif
 
-#endif  /* !defined(MPL_BT_H_INCLUDED) */
+#endif /* MPL_BT_H_INCLUDED */

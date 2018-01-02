@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPID_RMA_LOCKQUEUE_H_INCLUDED)
+#ifndef MPID_RMA_LOCKQUEUE_H_INCLUDED
 #define MPID_RMA_LOCKQUEUE_H_INCLUDED
 
 #include "utlist.h"
@@ -67,4 +67,4 @@ static inline int MPIDI_CH3I_Win_target_lock_entry_free(MPIR_Win * win_ptr,
     return mpi_errno;
 }
 
-#endif /* MPID_RMA_ISSUE_H_INCLUDED */
+#endif /* MPID_RMA_LOCKQUEUE_H_INCLUDED */

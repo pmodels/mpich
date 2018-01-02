@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPID_THREAD_H_INCLUDED)
+#ifndef MPID_THREAD_H_INCLUDED
 #define MPID_THREAD_H_INCLUDED
 
 #include "mpidu_thread_fallback.h"
@@ -48,4 +48,4 @@ typedef MPIDU_Thread_func_t  MPID_Thread_func_t;
 #define MPID_THREADPRIV_KEY_GET_ADDR    MPIDU_THREADPRIV_KEY_GET_ADDR
 #define MPID_THREADPRIV_KEY_DESTROY MPIDU_THREADPRIV_KEY_DESTROY
 
-#endif /* !defined(MPID_THREAD_H_INCLUDED) */
+#endif /* MPID_THREAD_H_INCLUDED */

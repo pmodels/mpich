@@ -28,4 +28,4 @@ int MPIE_IOLoop( int );
 void TimeoutInit( int );
 int  TimeoutGetRemaining( void );
 
-#endif
+#endif /* IOLOOP_H_INCLUDED */

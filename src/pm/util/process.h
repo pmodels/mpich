@@ -190,4 +190,4 @@ int MPIE_PrintDebuggerInfo( FILE * );
 /* Set the processor affinity to the processor with the given rank */
 int MPIE_SetProcessorAffinity( int, int );
 
-#endif
+#endif /* PROCESS_H_INCLUDED */

@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPIDU_THREAD_H_INCLUDED)
-#define MPIDU_THREAD_H_INCLUDED
+#ifndef MPIDU_THREAD_FALLBACK_H_INCLUDED
+#define MPIDU_THREAD_FALLBACK_H_INCLUDED
 
 #include "opa_primitives.h"
 
@@ -648,4 +648,4 @@ do {                                                                    \
     MPL_THREADPRIV_KEY_GET_ADDR(0, key, var, addr, err_ptr_)
 #define MPIDU_THREADPRIV_KEY_DESTROY(key, err_ptr_)
 #endif /* MPICH_IS_THREADED */
-#endif /* !defined(MPIDU_THREAD_H_INCLUDED) */
+#endif /* MPIDU_THREAD_FALLBACK_H_INCLUDED */

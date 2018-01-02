@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPICH_MPIDI_CH3_PRE_H_INCLUDED)
-#define MPICH_MPIDI_CH3_PRE_H_INCLUDED
+#ifndef MPIDI_CH3_PRE_H_INCLUDED
+#define MPIDI_CH3_PRE_H_INCLUDED
 #include "mpid_nem_pre.h"
 #include "mpidu_generic_queue.h"
 
@@ -237,5 +237,5 @@ extern OPA_int_t MPIDI_CH3I_progress_completion_count;
                        OPA_load_int(&MPIDI_CH3I_progress_completion_count));            \
     } while(0)
 
-#endif /* !defined(MPICH_MPIDI_CH3_PRE_H_INCLUDED) */
+#endif /* MPIDI_CH3_PRE_H_INCLUDED */
 

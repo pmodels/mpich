@@ -179,4 +179,4 @@ int beasy_error_to_string(int error, char *str, int length);
 }
 #endif
 
-#endif
+#endif /* BSOCKET_H_INCLUDED */

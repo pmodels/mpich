@@ -33,4 +33,4 @@ typedef MPLI_shm_lghnd_t *MPL_shm_hnd_t;
 /* Returns 0 on success, -1 on error */
 int MPLI_shm_lhnd_close(MPL_shm_hnd_t hnd);
 
-#endif /* ifndef MPL_SHM_MMAP_H_INCLUDED */
+#endif /* MPL_SHM_MMAP_H_INCLUDED */

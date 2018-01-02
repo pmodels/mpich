@@ -12,4 +12,4 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
-#endif
+#endif /* MPL_TIMER_GETTIMEOFDAY_H_INCLUDED */

@@ -28,4 +28,4 @@ int MPIE_ChooseHosts( ProcessWorld *,
 		      void * );
 int MPIE_RMProcessArg( int, char *[], void * );
 
-#endif
+#endif /* RM_H_INCLUDED */

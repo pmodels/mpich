@@ -202,4 +202,4 @@ static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
 
 
 #endif /* defined(OPA_HAVE_PTHREAD_H) */
-#endif /* !defined(OPA_BY_LOCK_H_INCLUDED) */
+#endif /* OPA_BY_LOCK_H_INCLUDED */

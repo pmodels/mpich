@@ -5,8 +5,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MTEST_DATATYPE_H_
-#define MTEST_DATATYPE_H_
+#ifndef MTEST_DATATYPE_H_INCLUDED
+#define MTEST_DATATYPE_H_INCLUDED
 
 #include "mpi.h"
 #include "mpitestconf.h"
@@ -59,4 +59,4 @@ extern void *MTestTypeInitRecv(MTestDatatype * mtype);
 extern int MTestTypeBasicCreate(MPI_Datatype oldtype, MTestDatatype * mtype);
 extern int MTestTypeDupCreate(MPI_Datatype oldtype, MTestDatatype * mtype);
 
-#endif /* MTEST_DATATYPE_H_ */
+#endif /* MTEST_DATATYPE_H_INCLUDED */

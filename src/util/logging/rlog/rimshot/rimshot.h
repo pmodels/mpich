@@ -8,8 +8,8 @@
 // rimshot.h : main header file for the RIMSHOT application
 //
 
-#if !defined(AFX_RIMSHOT_H__2CC6723E_77B4_41B3_B62C_CF482B7A447E__INCLUDED_)
-#define AFX_RIMSHOT_H__2CC6723E_77B4_41B3_B62C_CF482B7A447E__INCLUDED_
+#ifndef RIMSHOT_H_INCLUDED
+#define RIMSHOT_H_INCLUDED
 
 #if _MSC_VER > 1000
 #pragma once
@@ -51,4 +51,4 @@ public:
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-#endif // !defined(AFX_RIMSHOT_H__2CC6723E_77B4_41B3_B62C_CF482B7A447E__INCLUDED_)
+#endif /* RIMSHOT_H_INCLUDED */

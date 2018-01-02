@@ -1,5 +1,5 @@
-#ifndef NETMOD_OFI_COLL_SELECT_H_INCLUDED
-#define NETMOD_OFI_COLL_SELECT_H_INCLUDED
+#ifndef OFI_COLL_SELECT_H_INCLUDED
+#define OFI_COLL_SELECT_H_INCLUDED
 
 #include "ofi_impl.h"
 #include "coll_algo_params.h"
@@ -191,4 +191,4 @@ int MPIDI_OFI_Reduce_call(const void *sendbuf, void *recvbuf, int count,
     return mpi_errno;
 }
 
-#endif /* NETMOD_OFI_COLL_SELECT_H_INCLUDED */
+#endif /* OFI_COLL_SELECT_H_INCLUDED */

@@ -6,8 +6,8 @@
 
 /* style:c++ header */
 
-#if !defined(AFX_ZOOMDLG_H__E425FB6A_FDA5_4359_AA8F_FF1283FF7B1B__INCLUDED_)
-#define AFX_ZOOMDLG_H__E425FB6A_FDA5_4359_AA8F_FF1283FF7B1B__INCLUDED_
+#ifndef ZOOMDLG_H_INCLUDED
+#define ZOOMDLG_H_INCLUDED
 
 #if _MSC_VER > 1000
 #pragma once
@@ -65,4 +65,4 @@ protected:
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-#endif // !defined(AFX_ZOOMDLG_H__E425FB6A_FDA5_4359_AA8F_FF1283FF7B1B__INCLUDED_)
+#endif /* ZOOMDLG_H_INCLUDED */
