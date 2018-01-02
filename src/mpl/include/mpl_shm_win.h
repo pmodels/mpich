@@ -4,8 +4,8 @@
  *  (C) 2016 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#ifndef MPL_SHM_WIN_INCLUDED
-#define MPL_SHM_WIN_INCLUDED
+#ifndef MPL_SHM_WIN_H_INCLUDED
+#define MPL_SHM_WIN_H_INCLUDED
 
 typedef HANDLE MPL_shm_lhnd_t;
 
@@ -67,4 +67,4 @@ static inline int MPL_shm_seg_remove(MPL_shm_hnd_t hnd)
     return MPI_SUCCESS;
 }
 
-#endif /* ifndef MPL_SHM_WIN_INCLUDED */
+#endif /* MPL_SHM_WIN_H_INCLUDED */

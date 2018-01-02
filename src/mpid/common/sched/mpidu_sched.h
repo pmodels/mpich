@@ -138,4 +138,4 @@ int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype, v
                      MPI_Aint outcount, MPI_Datatype outtype, MPIR_Sched_t s);
 int MPIDU_Sched_barrier(MPIR_Sched_t s);
 
-#endif /* !defined(MPIDU_SCHED_H_INCLUDED) */
+#endif /* MPIDU_SCHED_H_INCLUDED */

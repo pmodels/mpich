@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPID_NEM_DEFS_H
-#define MPID_NEM_DEFS_H
+#ifndef MPID_NEM_DEFS_H_INCLUDED
+#define MPID_NEM_DEFS_H_INCLUDED
 
 #include "mpid_nem_datatypes.h"
 #include "mpi.h"
@@ -117,4 +117,4 @@ extern MPID_nem_mem_region_t MPID_nem_mem_region;
 
 
 
-#endif /* MPID_NEM_DEFS_H */
+#endif /* MPID_NEM_DEFS_H_INCLUDED */

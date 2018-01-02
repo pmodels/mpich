@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPID_NEM_POST_H
-#define MPID_NEM_POST_H
+#ifndef MPID_NEM_POST_H_INCLUDED
+#define MPID_NEM_POST_H_INCLUDED
 
 #include "mpidu_shm.h"
 
@@ -110,4 +110,4 @@ int MPID_nem_mpich_dequeue_fastbox(int local_rank);
 #endif /* MPID_NEM_INLINE */
 
 
-#endif /* MPID_NEM_POST_H */
+#endif /* MPID_NEM_POST_H_INCLUDED */

@@ -10,8 +10,8 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#if !defined(AFX_RIMSHOTDOC_H__C4934ACC_DBF0_46BF_8A88_6FAA09F6A9CE__INCLUDED_)
-#define AFX_RIMSHOTDOC_H__C4934ACC_DBF0_46BF_8A88_6FAA09F6A9CE__INCLUDED_
+#ifndef RIMSHOTDOC_H_INCLUDED
+#define RIMSHOTDOC_H_INCLUDED
 
 #if _MSC_VER > 1000
 #pragma once
@@ -79,4 +79,4 @@ protected:
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-#endif // !defined(AFX_RIMSHOTDOC_H__C4934ACC_DBF0_46BF_8A88_6FAA09F6A9CE__INCLUDED_)
+#endif /* RIMSHOTDOC_H_INCLUDED */

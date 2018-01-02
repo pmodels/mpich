@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef PTL_IMPL_H
-#define PTL_IMPL_H
+#ifndef PTL_IMPL_H_INCLUDED
+#define PTL_IMPL_H_INCLUDED
 
 #include <mpid_nem_impl.h>
 #include <portals4.h>
@@ -256,4 +256,4 @@ const char *MPID_nem_ptl_strlist(ptl_list_t list);
     
 
 
-#endif /* PTL_IMPL_H */
+#endif /* PTL_IMPL_H_INCLUDED */

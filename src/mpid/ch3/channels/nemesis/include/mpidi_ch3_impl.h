@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPICH_MPIDI_CH3_IMPL_H_INCLUDED)
-#define MPICH_MPIDI_CH3_IMPL_H_INCLUDED
+#ifndef MPIDI_CH3_IMPL_H_INCLUDED
+#define MPIDI_CH3_IMPL_H_INCLUDED
 
 #include "mpidimpl.h"
 #include "mpidu_generic_queue.h"
@@ -253,4 +253,4 @@ static inline void MPIDI_CH3I_SHM_Wins_unlink(MPIDI_SHM_Wins_list_t * list, MPIR
     }
 }
 
-#endif /* !defined(MPICH_MPIDI_CH3_IMPL_H_INCLUDED) */
+#endif /* MPIDI_CH3_IMPL_H_INCLUDED */

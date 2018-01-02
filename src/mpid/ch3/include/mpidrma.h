@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPID_RMA_H_INCLUDED)
-#define MPID_RMA_H_INCLUDED
+#ifndef MPIDRMA_H_INCLUDED
+#define MPIDRMA_H_INCLUDED
 
 #include "mpid_rma_types.h"
 #include "mpid_rma_oplist.h"
@@ -1247,4 +1247,4 @@ static inline void MPIDI_CH3_ExtPkt_Gaccum_get_stream(MPIDI_CH3_Pkt_flags_t flag
     MPIDI_CH3_ExtPkt_Accum_get_stream(flags, is_derived_dt, ext_hdr_ptr, stream_offset);
 }
 
-#endif /* MPID_RMA_H_INCLUDED */
+#endif /* MPIDRMA_H_INCLUDED */

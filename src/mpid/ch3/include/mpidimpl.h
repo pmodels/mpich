@@ -10,8 +10,8 @@
  * channel.  Do not include them in the MPID macros.
  */
 
-#if !defined(MPICH_MPIDIMPL_H_INCLUDED)
-#define MPICH_MPIDIMPL_H_INCLUDED
+#ifndef MPIDIMPL_H_INCLUDED
+#define MPIDIMPL_H_INCLUDED
 
 #include "mpichconf.h"
 
@@ -1858,4 +1858,4 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPIR_Request *);
     } while (0)
 
 
-#endif /* !defined(MPICH_MPIDIMPL_H_INCLUDED) */
+#endif /* MPIDIMPL_H_INCLUDED */

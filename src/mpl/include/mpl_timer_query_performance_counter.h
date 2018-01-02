@@ -17,4 +17,4 @@ static inline void MPL_wtime(MPL_time_t *timeval)
     return MPL_TIMER_SUCCESS;
 }
 
-#endif
+#endif /* MPL_TIMER_QUERY_PERFORMANCE_COUNTER_H_INCLUDED */

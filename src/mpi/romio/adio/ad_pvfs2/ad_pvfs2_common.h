@@ -5,8 +5,8 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#ifndef _AD_PVFS2_COMMON_H
-#define _AD_PVFS2_COMMON_H
+#ifndef AD_PVFS2_COMMON_H_INCLUDED
+#define AD_PVFS2_COMMON_H_INCLUDED
 #include "ad_pvfs2.h"
 
 /* useful values:
@@ -32,4 +32,4 @@ int ADIOI_PVFS2_End_call(MPI_Comm comm, int keyval,
 	void *attribute_val, void *extra_state);
 int ADIOI_PVFS2_error_convert(int pvfs_error);
 
-#endif
+#endif /* AD_PVFS2_COMMON_H_INCLUDED */

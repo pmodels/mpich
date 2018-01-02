@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPICH_MPIDI_CH3_IMPL_H_INCLUDED)
-#define MPICH_MPIDI_CH3_IMPL_H_INCLUDED
+#ifndef MPIDI_CH3_IMPL_H_INCLUDED
+#define MPIDI_CH3_IMPL_H_INCLUDED
 
 #include "mpidimpl.h"
 #include "ch3usock.h"
@@ -85,4 +85,4 @@ int MPIDI_CH3I_VC_post_connect(MPIDI_VC_t *);
 #define MPIDI_CH3I_SHM_MUTEX_INIT(win_ptr)
 #define MPIDI_CH3I_SHM_MUTEX_DESTROY(win_ptr)
 
-#endif /* !defined(MPICH_MPIDI_CH3_IMPL_H_INCLUDED) */
+#endif /* MPIDI_CH3_IMPL_H_INCLUDED */

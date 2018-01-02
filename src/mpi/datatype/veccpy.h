@@ -5,8 +5,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef VECCPY_H
-#define VECCPY_H
+#ifndef VECCPY_H_INCLUDED
+#define VECCPY_H_INCLUDED
 
 #ifdef HAVE_ANY_INT64_T_ALIGNEMENT
 #define MPIR_ALIGN8_TEST(p1,p2)
@@ -513,7 +513,7 @@
     dest = (char *) l_dest;                                     \
 }
 
-#endif /* VECCPY_H */
+#endif /* VECCPY_H_INCLUDED */
 
 /*
  * Local variables:

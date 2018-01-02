@@ -6,8 +6,8 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#ifndef AD_PANFS_INCLUDE
-#define AD_PANFS_INCLUDE
+#ifndef AD_PANFS_H_INCLUDED
+#define AD_PANFS_H_INCLUDED
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -67,4 +67,4 @@ int usleep(useconds_t usec);
     } \
 }
 
-#endif
+#endif /* AD_PANFS_H_INCLUDED */

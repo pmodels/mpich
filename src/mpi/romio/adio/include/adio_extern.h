@@ -5,6 +5,9 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
+#ifndef ADIO_EXTERN_H_INCLUDED
+#define ADIO_EXTERN_H_INCLUDED
+
 extern ADIOI_Datarep *ADIOI_Datarep_head;
 
 /* for f2c and c2f conversion */
@@ -28,3 +31,5 @@ extern MPI_Op ADIO_same_amode;
 
 extern int ADIOI_cb_config_list_keyval;
 extern int ADIOI_Flattened_type_keyval;
+
+#endif /* ADIO_EXTERN_H_INCLUDED */

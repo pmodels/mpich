@@ -11,4 +11,4 @@
 
 #include <sys/time.h>
 
-#endif
+#endif /* MPL_TIMER_GETHRTIME_H_INCLUDED */

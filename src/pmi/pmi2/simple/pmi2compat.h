@@ -4,6 +4,9 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#ifndef PMI2COMPAT_H_INCLUDED
+#define PMI2COMPAT_H_INCLUDED
+
 #include "mpiimpl.h"
 
 #define PMI2U_Malloc(size_) MPL_malloc(size_, MPL_MEM_PM)
@@ -15,3 +18,4 @@
 #define PMI2U_Info MPIR_Info
 #define PMI2U_Memcpy MPIR_Memcpy
 
+#endif /* PMI2COMPAT_H_INCLUDED */

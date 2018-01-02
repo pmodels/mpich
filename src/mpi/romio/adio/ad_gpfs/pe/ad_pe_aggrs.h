@@ -14,8 +14,8 @@
  *
  */
 
-#ifndef AD_PE_AGGRS_H_
-#define AD_PE_AGGRS_H_
+#ifndef AD_PE_AGGRS_H_INCLUDED
+#define AD_PE_AGGRS_H_INCLUDED
 
 #include "adio.h"
 #include <sys/stat.h>
@@ -27,4 +27,4 @@
     /* generate a list of I/O aggregators following a methodology specific for PE */
     int ADIOI_PE_gen_agg_ranklist(ADIO_File fd);
 
-#endif  /* AD_PE_AGGRS_H_ */
+#endif /* AD_PE_AGGRS_H_INCLUDED */

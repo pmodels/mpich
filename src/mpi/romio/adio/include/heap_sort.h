@@ -1,3 +1,6 @@
+#ifndef HEAP_SORT_H_INCLUDED
+#define HEAP_SORT_H_INCLUDED
+
 #include "adio.h"
 
 typedef struct {
@@ -20,3 +23,5 @@ void ADIOI_Heap_insert(heap_t *heap, ADIO_Offset offset, int proc,
 		 ADIO_Offset reg_max_len);
 void ADIOI_Heap_extract_min(heap_t *heap, ADIO_Offset* key, int *proc,
 		      ADIO_Offset *reg_max_len);
+
+#endif /* HEAP_SORT_H_INCLUDED */

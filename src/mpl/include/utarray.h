@@ -33,8 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /* a dynamic array implementation using macros 
  * see http://uthash.sourceforge.net/utarray
  */
-#ifndef UTARRAY_H
-#define UTARRAY_H
+#ifndef UTARRAY_H_INCLUDED
+#define UTARRAY_H_INCLUDED
 
 #define UTARRAY_VERSION 1.9.4
 
@@ -255,4 +255,4 @@ static const UT_icd ut_ptr_icd _UNUSED_ = {sizeof(void*),NULL,NULL,NULL};
 #define ut_ptr_array(a) ((void**)(a)->d)
 
 
-#endif /* UTARRAY_H */
+#endif /* UTARRAY_H_INCLUDED */

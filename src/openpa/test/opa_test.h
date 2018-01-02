@@ -4,6 +4,9 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#ifndef OPA_TEST_H_INCLUDED
+#define OPA_TEST_H_INCLUDED
+
 #ifndef OPA_TEST_NAIVE
 #  include "opa_primitives.h"
 #else /* OPA_TEST_NAIVE */
@@ -177,3 +180,4 @@ static const unsigned iter_reduction[] = {1, 1, 1, 1, 10};
  */
 static unsigned curr_test;   /* Current test number bein run */
 
+#endif /* OPA_TEST_H_INCLUDED */

@@ -3,7 +3,8 @@
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#if !defined(MPIR_ASSERT_H_INCLUDED)
+
+#ifndef MPIR_ASSERT_H_INCLUDED
 #define MPIR_ASSERT_H_INCLUDED
 
 #include "mpir_type_defs.h"
@@ -130,4 +131,4 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
 #  define MPIR_Static_assert(cond_,msg_) MPIR_Assert_fmt_msg((cond_), ("%s", (msg_)))
 #endif
 
-#endif /* !defined(MPIR_ASSERT_H_INCLUDED) */
+#endif /* MPIR_ASSERT_H_INCLUDED */

@@ -5,6 +5,9 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
+#ifndef AD_PVFS2_IO_H_INCLUDED
+#define AD_PVFS2_IO_H_INCLUDED
+
 /* Contig I/O helper prototypes */
 
 #define READ 0
@@ -77,3 +80,4 @@ void print_dtype_info(int combiner,
 int convert_mpi_pvfs2_dtype(MPI_Datatype *mpi_dtype,
                             PVFS_Request *pvfs_dtype);
 
+#endif /* AD_PVFS2_IO_H_INCLUDED */

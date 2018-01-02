@@ -76,4 +76,4 @@ int MPIDI_CH3I_Sock_get_conninfo_from_bc( const char *bc,
 int MPIDU_CH3I_SetupListener( MPIDI_CH3I_Sock_set_t );
 int MPIDU_CH3I_ShutdownListener( void );
 
-#endif
+#endif /* CH3USOCK_H_INCLUDED */

@@ -157,4 +157,4 @@ int OPA_Interprocess_lock_init(OPA_emulation_ipl_t *shm_lock, int isLeader);
 #  define OPA_busy_wait() do { } while (0)
 #endif
 
-#endif /* defined(OPA_PRIMITIVES_H_INCLUDED) */
+#endif /* OPA_PRIMITIVES_H_INCLUDED */

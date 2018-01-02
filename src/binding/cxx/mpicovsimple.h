@@ -11,8 +11,8 @@
  */
 /* style: c++ header */
 
-#ifndef MPIX_SIMPLECOVERAGE_H
-#define MPIX_SIMPLECOVERAGE_H
+#ifndef MPICOVSIMPLE_H_INCLUDED
+#define MPICOVSIMPLE_H_INCLUDED
 
 typedef struct _covinfo {
     char   *name;               // Routine name (or block)
@@ -40,4 +40,4 @@ public:
 
 extern MPIX_Coverage MPIR_Cov;
 
-#endif
+#endif /* MPICOVSIMPLE_H_INCLUDED */

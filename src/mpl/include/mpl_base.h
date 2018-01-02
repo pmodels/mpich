@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPL_BASE_H_INCLUDED)
+#ifndef MPL_BASE_H_INCLUDED
 #define MPL_BASE_H_INCLUDED
 
 /* this file splits off the base functionality in MPL, which does not
@@ -129,4 +129,4 @@
 
 typedef int MPL_bool;
 
-#endif /* !defined(MPL_BASE_H_INCLUDED) */
+#endif /* MPL_BASE_H_INCLUDED */

@@ -18,8 +18,8 @@
    an existing ADIO implementation, would need to use the ADIOI_
    functions/datatypes. */
 
-#ifndef ADIO_INCLUDE
-#define ADIO_INCLUDE
+#ifndef ADIO_H_INCLUDED
+#define ADIO_H_INCLUDED
 
 #ifdef SPPUX
 #define _POSIX_SOURCE
@@ -452,4 +452,4 @@ void MPIO_Completed_request_create(MPI_File *fh, MPI_Offset nbytes,
 #define MPIR_ERR_FATAL 1
 #define MPIR_ERR_RECOVERABLE 0
 
-#endif
+#endif /* ADIO_H_INCLUDED */

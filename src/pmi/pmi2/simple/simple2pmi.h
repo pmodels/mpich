@@ -120,4 +120,4 @@ extern int MPIE_Debug;
 
 
 
-#endif
+#endif /* SIMPLE2PMI_H_INCLUDED */
