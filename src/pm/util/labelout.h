@@ -15,4 +15,4 @@ int IOLabelSetupInClient( IOLabelSetup * );
 int IOLabelSetupFinishInServer( IOLabelSetup *, ProcessState * );
 int IOLabelCheckEnv( void );
 
-#endif
+#endif /* LABELOUT_H_INCLUDED */

@@ -12,6 +12,10 @@
  * excludes the implied warranties of merchantability, fitness for a
  * particular purpose and non-infringement.
  */
+
+#ifndef MPI_FORTIMPL_H_INCLUDED
+#define MPI_FORTIMPL_H_INCLUDED
+
 #include "mpichconf.h"
 
 /* Handle different mechanisms for passing Fortran CHARACTER to routines.
@@ -234,3 +238,5 @@ typedef char *MPID_FCHAR_T;
 #define MPI_File_f2c(a) ((MPI_File)(MPI_Aint)(a))
 #endif
 #endif /* MPI_MODE_RDONLY */
+
+#endif /* MPI_FORTIMPL_H_INCLUDED */

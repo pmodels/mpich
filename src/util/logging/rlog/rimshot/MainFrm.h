@@ -9,8 +9,8 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#if !defined(AFX_MAINFRM_H__D4379D9C_763B_4BE6_AAFA_484B800FBD90__INCLUDED_)
-#define AFX_MAINFRM_H__D4379D9C_763B_4BE6_AAFA_484B800FBD90__INCLUDED_
+#ifndef MAINFRM_H_INCLUDED
+#define MAINFRM_H_INCLUDED
 
 #if _MSC_VER > 1000
 #pragma once
@@ -60,4 +60,4 @@ protected:
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-#endif // !defined(AFX_MAINFRM_H__D4379D9C_763B_4BE6_AAFA_484B800FBD90__INCLUDED_)
+#endif /* MAINFRM_H_INCLUDED */

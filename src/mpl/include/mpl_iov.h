@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPL_IOV_H_INCLUDED)
+#ifndef MPL_IOV_H_INCLUDED
 #define MPL_IOV_H_INCLUDED
 
 #include <stdio.h>
@@ -35,4 +35,4 @@
 /* FIXME: How is IOV_LIMIT chosen? */
 #define MPL_IOV_LIMIT   16
 
-#endif  /* !defined(MPL_IOV_H_INCLUDED) */
+#endif /* MPL_IOV_H_INCLUDED */

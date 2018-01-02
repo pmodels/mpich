@@ -4,6 +4,9 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#ifndef DATATYPE_H_INCLUDED
+#define DATATYPE_H_INCLUDED
+
 #include "mpiimpl.h"
 
 /* Definitions private to the datatype code */
@@ -121,3 +124,5 @@ void MPII_Dataloop_dot_printf(MPIR_Dataloop *loop_p, int depth, int header);
 void MPII_Datatype_get_contents_ints(MPIR_Datatype_contents *cp, int *user_ints);
 void MPII_Datatype_get_contents_aints(MPIR_Datatype_contents *cp, MPI_Aint *user_aints);
 void MPII_Datatype_get_contents_types(MPIR_Datatype_contents *cp, MPI_Datatype *user_types);
+
+#endif /* DATATYPE_H_INCLUDED */

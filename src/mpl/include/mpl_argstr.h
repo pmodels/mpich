@@ -46,4 +46,4 @@ int MPL_str_add_int_arg(char **str_ptr, int *maxlen_ptr, const char *key,
 int MPL_str_add_string(char **str_ptr, int *maxlen_ptr, const char *val);
 int MPL_str_get_string(char **str_ptr, char *val, int maxlen);
 
-#endif
+#endif /* MPL_ARGSTR_H_INCLUDED */

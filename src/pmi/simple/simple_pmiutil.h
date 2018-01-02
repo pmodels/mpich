@@ -4,6 +4,9 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#ifndef SIMPLE_PMIUTIL_H_INCLUDED
+#define SIMPLE_PMIUTIL_H_INCLUDED
+
 /* maximum sizes for arrays */
 #define PMIU_MAXLINE 1024
 #define PMIU_IDSIZE    32
@@ -31,3 +34,5 @@ int  PMIU_parse_keyvals( char *st );
 void PMIU_dump_keyvals( void );
 char *PMIU_getval( const char *keystr, char *valstr, int vallen );
 void PMIU_chgval( const char *keystr, char *valstr );
+
+#endif /* SIMPLE_PMIUTIL_H_INCLUDED */

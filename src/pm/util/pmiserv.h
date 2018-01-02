@@ -138,4 +138,4 @@ int PMIWriteLine( int, const char * );
 int PMIReadLine( int, char *, int );
 #endif
 
-#endif
+#endif /* PMISERV_H_INCLUDED */

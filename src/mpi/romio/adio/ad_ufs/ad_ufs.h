@@ -4,8 +4,8 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#ifndef AD_UNIX_INCLUDE
-#define AD_UNIX_INCLUDE
+#ifndef AD_UFS_H_INCLUDED
+#define AD_UFS_H_INCLUDED
 
 #include "adio.h"
 #include <unistd.h>
@@ -59,4 +59,4 @@ void ADIOI_UFS_WriteComplete(ADIO_Request *request, ADIO_Status *status,
 void ADIOI_UFS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct, int
 		*error_code); 
 
-#endif
+#endif /* AD_UFS_H_INCLUDED */

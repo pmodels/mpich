@@ -1,5 +1,5 @@
-#ifndef SHM_POSIX_COLL_SELECT_H_INCLUDED
-#define SHM_POSIX_COLL_SELECT_H_INCLUDED
+#ifndef POSIX_COLL_SELECT_H_INCLUDED
+#define POSIX_COLL_SELECT_H_INCLUDED
 
 #include "posix_impl.h"
 #include "ch4_impl.h"
@@ -196,4 +196,4 @@ int MPIDI_POSIX_Reduce_call(const void *sendbuf, void *recvbuf, int count,
 
     return mpi_errno;
 }
-#endif /* SHM_POSIX_COLL_SELECT_H_INCLUDED */
+#endif /* POSIX_COLL_SELECT_H_INCLUDED */

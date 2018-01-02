@@ -5,8 +5,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPIR_DATALOOP_H
-#define MPIR_DATALOOP_H
+#ifndef MPIR_DATALOOP_H_INCLUDED
+#define MPIR_DATALOOP_H_INCLUDED
 
 #include <mpi.h>
 
@@ -683,4 +683,4 @@ void DLOOP_Stackelm_load(struct DLOOP_Dataloop_stackelm *elmp,
                          struct DLOOP_Dataloop *dlp,
                          int branch_flag);
 
-#endif
+#endif /* MPIR_DATALOOP_H_INCLUDED */

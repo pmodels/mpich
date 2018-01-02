@@ -5,8 +5,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(SOCKI_H_INCLUDED)
-#define SOCKI_H_INCLUDED
+#ifndef MPIDU_SOCKI_H_INCLUDED
+#define MPIDU_SOCKI_H_INCLUDED
 
 #include "mpichconf.h"
 
@@ -59,4 +59,4 @@ MPID_STATE_POLL,
 extern MPL_dbg_class MPIDI_CH3I_DBG_SOCK_CONNECT;
 #endif /* MPL_USE_DBG_LOGGING */
 
-#endif /* !defined(SOCKI_H_INCLUDED) */
+#endif /* MPIDU_SOCKI_H_INCLUDED */

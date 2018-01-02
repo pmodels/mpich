@@ -20,4 +20,4 @@ int MPID_NS_Free( MPID_NS_Handle * );
 
 extern MPID_NS_Handle MPIR_Namepub;
 
-#endif
+#endif /* NAMEPUB_H_INCLUDED */

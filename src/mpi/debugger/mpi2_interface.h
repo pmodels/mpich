@@ -7,6 +7,9 @@
  * Prototype of the MPI2 debugger interface
  */
 
+#ifndef MPI2_INTERFACE_H_INCLUDED
+#define MPI2_INTERFACE_H_INCLUDED
+
 /* Basic types */
 typedef void *MPI2DD_ADDR_T;
 typedef int32_t MPI2DD_INT32_T;
@@ -91,3 +94,5 @@ typedef struct MPI2DD_INFO {
     MPI2DD_INT32_T  meta_pid;           /* pid of meta directory process */
     MPI2DD_INT32_T  padding[8];         /* for future extensions */
 } MPI2DD_INFO;
+
+#endif /* MPI2_INTERFACE_H_INCLUDED */

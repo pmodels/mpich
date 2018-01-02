@@ -9,8 +9,8 @@
 /* header file for MPI-IO implementation. not intended to be
    user-visible */ 
 
-#ifndef MPIOIMPL_INCLUDE
-#define MPIOIMPL_INCLUDE
+#ifndef MPIOIMPL_H_INCLUDED
+#define MPIOIMPL_H_INCLUDED
 
 #include "adio.h"
 #include "mpio.h"
@@ -69,5 +69,5 @@ void MPIR_MPIOInit(int * error_code);
 #  include "mpioinst.h"
 #endif /* MPI_hpux */
 
-#endif
+#endif /* MPIOIMPL_H_INCLUDED */
 

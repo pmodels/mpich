@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPID_TIMERS_FALLBACK_H_INCLUDED)
+#ifndef MPID_TIMERS_FALLBACK_H_INCLUDED
 #define MPID_TIMERS_FALLBACK_H_INCLUDED
 
 #define MPID_Time_t         MPL_time_t
@@ -15,4 +15,4 @@
 #define MPID_Wtick          MPL_wtick
 #define MPID_Wtime_init     MPL_wtime_init
 
-#endif /* !defined(MPID_TIMERS_FALLBACK_H_INCLUDED) */
+#endif /* MPID_TIMERS_FALLBACK_H_INCLUDED */

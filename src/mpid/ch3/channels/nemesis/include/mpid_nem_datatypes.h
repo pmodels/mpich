@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPID_NEM_DATATYPES_H
-#define MPID_NEM_DATATYPES_H
+#ifndef MPID_NEM_DATATYPES_H_INCLUDED
+#define MPID_NEM_DATATYPES_H_INCLUDED
 
 #include "mpid_nem_debug.h"
 #include "mpid_nem_atomics.h"
@@ -276,4 +276,4 @@ typedef struct MPID_nem_fbox_arrays
     MPID_nem_fastbox_t **out;
 } MPID_nem_fbox_arrays_t;
 
-#endif /* MPID_NEM_DATATYPES_H */
+#endif /* MPID_NEM_DATATYPES_H_INCLUDED */

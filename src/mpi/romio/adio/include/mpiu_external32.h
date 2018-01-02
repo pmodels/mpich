@@ -5,8 +5,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef _MPIU_EXTERNAL32_H_
-#define _MPIU_EXTERNAL32_H_
+#ifndef MPIU_EXTERNAL32_H_INCLUDED
+#define MPIU_EXTERNAL32_H_INCLUDED
 
 int MPIU_write_external32_conversion_fn (const void *userbuf, MPI_Datatype datatype,
 	        int count, void *filebuf);
@@ -19,4 +19,4 @@ int MPIU_datatype_full_size(MPI_Datatype datatype, MPI_Aint *size);
  *   * routine */
 int MPIU_external32_buffer_setup(const void * buf, int count, MPI_Datatype type, void **newbuf);
 
-#endif
+#endif /* MPIU_EXTERNAL32_H_INCLUDED */

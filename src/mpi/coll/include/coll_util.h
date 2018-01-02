@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef COLLUTIL_H_INCLUDED
-#define COLLUTIL_H_INCLUDED
+#ifndef COLL_UTIL_H_INCLUDED
+#define COLL_UTIL_H_INCLUDED
 
 int MPII_Allreduce_group(void *sendbuf, void *recvbuf, int count,
                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
@@ -85,4 +85,4 @@ static inline int MPIU_Mirror_permutation(unsigned int x, int bits)
     return retval;
 }
 
-#endif /* !defined(COLLUTIL_H_INCLUDED) */
+#endif /* COLL_UTIL_H_INCLUDED */

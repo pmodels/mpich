@@ -4,6 +4,9 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#ifndef MPID_COLL_H_INCLUDED
+#define MPID_COLL_H_INCLUDED
+
 #include "mpidimpl.h"
 
 #undef FUNCNAME
@@ -1097,3 +1100,5 @@ static inline int MPID_Ineighbor_alltoallw_sched(const void *sendbuf, const int 
 
     return mpi_errno;
 }
+
+#endif /* MPID_COLL_H_INCLUDED */

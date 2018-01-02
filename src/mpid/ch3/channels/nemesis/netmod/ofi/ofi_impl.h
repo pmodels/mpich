@@ -7,8 +7,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef OFI_IMPL_H
-#define OFI_IMPL_H
+#ifndef OFI_IMPL_H_INCLUDED
+#define OFI_IMPL_H_INCLUDED
 
 #include "mpid_nem_impl.h"
 #include "mpir_objects.h"
@@ -339,4 +339,4 @@ int MPID_nem_ofi_get_ordering(int *ordering);
 extern MPID_nem_ofi_global_t gl_data;
 extern MPIDI_Comm_ops_t _g_comm_ops;
 
-#endif
+#endif /* OFI_IMPL_H_INCLUDED */

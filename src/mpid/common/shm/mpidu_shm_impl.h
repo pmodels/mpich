@@ -3,12 +3,12 @@
  *  (C) 2016 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#ifndef MPIDU_SHM_IMPL_H
-#define MPIDU_SHM_IMPL_H
+#ifndef MPIDU_SHM_IMPL_H_INCLUDED
+#define MPIDU_SHM_IMPL_H_INCLUDED
 
 #include "mpidimpl.h"
 
 #include "mpidu_shm.h"
 
-#endif /* ifndef MPIDU_SHM_IMPL_H */
+#endif /* MPIDU_SHM_IMPL_H_INCLUDED */
 /* vim: ft=c */

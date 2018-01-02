@@ -5,8 +5,8 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#ifndef AD_XFS_INCLUDE
-#define AD_XFS_INCLUDE
+#ifndef AD_XFS_H_INCLUDED
+#define AD_XFS_H_INCLUDED
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -36,4 +36,4 @@ void ADIOI_XFS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct, int
 void ADIOI_XFS_Resize(ADIO_File fd, ADIO_Offset size, int *error_code);
 void ADIOI_XFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code);
 
-#endif
+#endif /* AD_XFS_H_INCLUDED */

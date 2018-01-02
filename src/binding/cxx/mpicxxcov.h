@@ -9,6 +9,10 @@
 //
 // Include for the simple coverage analysis
 //
+
+#ifndef MPICXXCOV_H_INCLUDED
+#define MPICXXCOV_H_INCLUDED
+
 #ifdef USE_COVERAGE_PRINT
 #include <stdio.h>
 #define COVERAGE_INITIALIZE()
@@ -29,3 +33,5 @@
 #define COVERAGE_END(a,b)
 #define COVERAGE_FINALIZE()
 #endif
+
+#endif /* MPICXXCOV_H_INCLUDED */

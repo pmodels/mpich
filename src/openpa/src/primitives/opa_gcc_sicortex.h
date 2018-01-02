@@ -8,8 +8,8 @@
  * Originally contributed by Lawrence Stewart at SiCortex.
  */
 
-#ifndef OPA_GCC_SICORTEX_H
-#define OPA_GCC_SICORTEX_H
+#ifndef OPA_GCC_SICORTEX_H_INCLUDED
+#define OPA_GCC_SICORTEX_H_INCLUDED
 
 /* FIXME do these need alignment? */
 typedef struct { volatile int v;  } OPA_int_t;
@@ -440,4 +440,4 @@ static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
     return(OPA_shmemi_swap_4(&ptr->v, val));
 }
 
-#endif /* OPA_GCC_SICORTEX_H */
+#endif /* OPA_GCC_SICORTEX_H_INCLUDED */

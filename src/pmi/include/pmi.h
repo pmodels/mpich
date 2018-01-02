@@ -470,4 +470,4 @@ int PMI_Spawn_multiple(int count,
 }
 #endif
 
-#endif
+#endif /* PMI_H_INCLUDED */

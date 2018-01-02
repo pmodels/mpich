@@ -3,6 +3,10 @@
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
+
+#ifndef MPIPR_H_INCLUDED
+#define MPIPR_H_INCLUDED
+
 /* This file replaces all MPI function names with their PMPI equivalents.
    PMPI versions are used by default so that the user can profile 
    application code without interference from MPI functions used by 
@@ -383,3 +387,5 @@
 #define MPI_Type_create_keyval PMPI_Type_create_keyval
 
 #endif
+
+#endif /* MPIPR_H_INCLUDED */

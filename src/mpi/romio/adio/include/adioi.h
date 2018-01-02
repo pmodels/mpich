@@ -21,8 +21,8 @@
    functions/datatypes. */
 
 
-#ifndef ADIOI_INCLUDE
-#define ADIOI_INCLUDE
+#ifndef ADIOI_H_INCLUDED
+#define ADIOI_H_INCLUDED
 /* used to keep track of hint/info values.
  * Note that there are a lot of int-sized values in here...they are
  * used as int-sized entities other places as well.  This would be a 
@@ -1072,4 +1072,4 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
 
 #include "mpl.h"
 
-#endif  /* ADIOI_INCLUDE */
+#endif /* ADIOI_H_INCLUDED */

@@ -3,8 +3,8 @@
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#ifndef SIMPLE_PMI_UTIL_H_INCLUDED
-#define SIMPLE_PMI_UTIL_H_INCLUDED
+#ifndef SIMPLE_PMIUTIL_H_INCLUDED
+#define SIMPLE_PMIUTIL_H_INCLUDED
 
 #include "mpichconf.h"
 
@@ -252,4 +252,4 @@ extern int PMI2_pmiverbose; /* Set this to true to print PMI debugging info */
         (ptr_) = realloc_tmp_;                                                                  \
     } while (0)
 
-#endif /*SIMPLE_PMI_UTIL_H_INCLUDED*/
+#endif /* SIMPLE_PMIUTIL_H_INCLUDED */

@@ -5,8 +5,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef _HINT_FNS_H
-#define _HINT_FNS_H
+#ifndef HINT_FNS_H_INCLUDED
+#define HINT_FNS_H_INCLUDED
 
 int ADIOI_Info_check_and_install_int(ADIO_File fd, MPI_Info info, const char *key,
 	        int *local_cache, char *funcname, int *error_code);
@@ -20,4 +20,4 @@ int ADIOI_Info_check_and_install_true(ADIO_File fd, MPI_Info info, const char *k
 int ADIOI_Info_check_and_install_str(ADIO_File fd, MPI_Info info, const char *key,
 	        char **local_cache, char *funcname, int *error_code);
 
-#endif
+#endif /* HINT_FNS_H_INCLUDED */

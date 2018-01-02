@@ -6,8 +6,8 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#ifndef AD_IME_INCLUDE
-#define AD_IME_INCLUDE
+#ifndef AD_IME_H_INCLUDED
+#define AD_IME_H_INCLUDED
 
 #include "adio.h"
 #ifdef HAVE_IME_NATIVE_H
@@ -62,4 +62,4 @@ void ADIOI_IME_SetInfo(ADIO_File fd,
 
 int  ADIOI_IME_Feature(ADIO_File fd,
                       int flag);
-#endif
+#endif /* AD_IME_H_INCLUDED */

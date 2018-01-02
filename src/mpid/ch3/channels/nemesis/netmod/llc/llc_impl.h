@@ -1,8 +1,8 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /* vim: set ts=8 sts=4 sw=4 noexpandtab : */
 
-#ifndef	LLC_MODULE_IMPL_H
-#define LLC_MODULE_IMPL_H
+#ifndef LLC_IMPL_H_INCLUDED
+#define LLC_IMPL_H_INCLUDED
 
 #ifdef USE_PMI2_API
 #include "pmi2.h"
@@ -136,4 +136,4 @@ typedef struct MPID_nem_llc_netmod_hdr {
 
 #define MPID_nem_llc_segv printf("%d\n", *(int32_t*)0);
 
-#endif /* LLC_MODULE_IMPL_H */
+#endif /* LLC_IMPL_H_INCLUDED */

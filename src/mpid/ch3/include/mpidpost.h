@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPIDPOST_H_INCLUDED)
+#ifndef MPIDPOST_H_INCLUDED
 #define MPIDPOST_H_INCLUDED
 
 #include "mpid_coll.h"
@@ -208,4 +208,4 @@ int MPIDI_CH3I_Progress_deactivate_hook(int id);
 #define MPID_Progress_activate_hook(id_) MPIDI_CH3I_Progress_activate_hook(id_)
 #define MPID_Progress_deactivate_hook(id_) MPIDI_CH3I_Progress_deactivate_hook(id_)
 
-#endif /* !defined(MPIDPOST_H_INCLUDED) */
+#endif /* MPIDPOST_H_INCLUDED */

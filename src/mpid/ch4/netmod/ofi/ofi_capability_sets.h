@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_OFI_CAPABILITY_SETS_H_INCLUDED
-#define NETMOD_OFI_CAPABILITY_SETS_H_INCLUDED
+#ifndef OFI_CAPABILITY_SETS_H_INCLUDED
+#define OFI_CAPABILITY_SETS_H_INCLUDED
 
 #define MPIDI_OFI_OFF     0
 #define MPIDI_OFI_ON      1
@@ -479,4 +479,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_CONTEXT_STRUCTS           2 /* Compile time configurable only */
 #endif
 
-#endif
+#endif /* OFI_CAPABILITY_SETS_H_INCLUDED */

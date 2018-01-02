@@ -13,8 +13,8 @@
  *
  */
 
-#ifndef AD_GPFS_AGGRS_H_
-#define AD_GPFS_AGGRS_H_
+#ifndef AD_GPFS_AGGRS_H_INCLUDED
+#define AD_GPFS_AGGRS_H_INCLUDED
 
 #include "adio.h"
 #include <sys/stat.h>
@@ -83,4 +83,4 @@
 				    ADIOI_Access **others_req_ptr);
 
 
-#endif  /* AD_GPFS_AGGRS_H_ */
+#endif /* AD_GPFS_AGGRS_H_INCLUDED */

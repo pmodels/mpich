@@ -51,7 +51,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#if !defined(UTLIST_H_INCLUDED)
+#ifndef UTLIST_H_INCLUDED
 #define UTLIST_H_INCLUDED
 
 #define UTLIST_VERSION 1.9.5
@@ -571,4 +571,4 @@ do {                                                                            
     }                                                                                          \
 } while(0)
 
-#endif /* !defined(UTLIST_H_INCLUDED) */
+#endif /* UTLIST_H_INCLUDED */

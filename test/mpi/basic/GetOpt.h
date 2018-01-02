@@ -4,8 +4,8 @@
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#ifndef GETOPT_H
-#define GETOPT_H
+#ifndef GETOPT_H_INCLUDED
+#define GETOPT_H_INCLUDED
 
 #include <string.h>
 #include <stdlib.h>
@@ -28,4 +28,4 @@ bool GetOptLong(int *argc, char ***argv, const char *flag, long *n);
 bool GetOptDouble(int *argc, char ***argv, const char *flag, double *d);
 bool GetOptString(int *argc, char ***argv, const char *flag, char *str);
 
-#endif
+#endif /* GETOPT_H_INCLUDED */

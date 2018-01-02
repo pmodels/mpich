@@ -5,8 +5,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPIR_BSEND_H_INCLUDED
-#define MPIR_BSEND_H_INCLUDED
+#ifndef MPII_BSEND_H_INCLUDED
+#define MPII_BSEND_H_INCLUDED
 
 /* This file is separated out as it is used by the configure script to
  * find the Bsend overhead value. */
@@ -73,4 +73,4 @@ typedef struct MPII_Bsend_data {
                                           shares double alignment */
 } MPII_Bsend_data_t;
 
-#endif /* MPIR_BSEND_H_INCLUDED */
+#endif /* MPII_BSEND_H_INCLUDED */

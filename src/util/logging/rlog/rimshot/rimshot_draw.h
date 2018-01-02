@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef RIMSHOT_DRAW_H
-#define RIMSHOT_DRAW_H
+#ifndef RIMSHOT_DRAW_H_INCLUDED
+#define RIMSHOT_DRAW_H_INCLUDED
 
 #include "RimshotDoc.h"
 
@@ -48,4 +48,4 @@ struct RimshotDrawStruct
 
 void RimshotDrawThread(RimshotDrawStruct *pArg);
 
-#endif
+#endif /* RIMSHOT_DRAW_H_INCLUDED */

@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef LOOPUTIL_H
-#define LOOPUTIL_H
+#ifndef LOOPUTIL_H_INCLUDED
+#define LOOPUTIL_H_INCLUDED
 
 #include "mpichconf.h"
 
@@ -412,4 +412,4 @@ static inline void BASIC_convert128(char *src, char *dest)
 #error "Cannot detect a float type that is 8 bytes long"
 #endif
 
-#endif /* LOOPUTIL_H */
+#endif /* LOOPUTIL_H_INCLUDED */

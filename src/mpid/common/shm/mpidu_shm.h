@@ -5,8 +5,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPIDU_SHM_H
-#define MPIDU_SHM_H
+#ifndef MPIDU_SHM_H_INCLUDED
+#define MPIDU_SHM_H_INCLUDED
 
 #define MPIDU_SHM_MAX_FNAME_LEN 256
 #define MPIDU_SHM_CACHE_LINE_LEN 64
@@ -45,4 +45,4 @@ int MPIDU_shm_barrier_init(MPIDU_shm_barrier_t *barrier_region,
                            MPIDU_shm_barrier_t **barrier, int init_values);
 int MPIDU_shm_barrier(MPIDU_shm_barrier_t *barrier, int num_local);
 
-#endif /* MPIDU_SHM_H */
+#endif /* MPIDU_SHM_H_INCLUDED */

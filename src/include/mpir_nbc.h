@@ -151,4 +151,4 @@ int MPIR_Sched_cb_free_buf(MPIR_Comm *comm, int tag, void *state);
         }                                                                                      \
     } while (0)
 
-#endif /* !defined(MPIR_NBC_H_INCLUDED) */
+#endif /* MPIR_NBC_H_INCLUDED */

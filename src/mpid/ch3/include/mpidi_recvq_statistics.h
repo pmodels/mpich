@@ -4,12 +4,12 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef _MPIDI_RECVQ_STATISTICS_H_
-#define _MPIDI_RECVQ_STATISTICS_H_
+#ifndef MPIDI_RECVQ_STATISTICS_H_INCLUDED
+#define MPIDI_RECVQ_STATISTICS_H_INCLUDED
 
 #include "mpit.h"
 
 /* from ch3u_recvq.c */
 extern unsigned long long PVAR_LEVEL_unexpected_recvq_buffer_size ATTRIBUTE((unused));
 
-#endif  /* _MPIDI_RECVQ_STATISTICS_H_ */
+#endif /* MPIDI_RECVQ_STATISTICS_H_INCLUDED */

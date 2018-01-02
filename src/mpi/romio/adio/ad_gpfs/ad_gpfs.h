@@ -12,8 +12,8 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#ifndef AD_GPFS_INCLUDE
-#define AD_GPFS_INCLUDE
+#ifndef AD_GPFS_H_INCLUDED
+#define AD_GPFS_H_INCLUDED
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -71,4 +71,4 @@ void ADIOI_GPFS_Flush(ADIO_File fd, int *error_code);
 #include "ad_gpfs_tuning.h"
 
 
-#endif
+#endif /* AD_GPFS_H_INCLUDED */

@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPL_TRMEM_H_INCLUDED)
+#ifndef MPL_TRMEM_H_INCLUDED
 #define MPL_TRMEM_H_INCLUDED
 
 #if defined MPL_NEEDS_STRDUP_DECL && !defined strdup
@@ -352,4 +352,4 @@ void *MPL_traligned_alloc(size_t alignment, size_t length, MPL_memory_class, int
 void MPL_trdump(FILE *, int);
 void MPL_trcategorydump(FILE *fp);
 
-#endif /* !defined(MPL_TRMEM_H_INCLUDED) */
+#endif /* MPL_TRMEM_H_INCLUDED */
