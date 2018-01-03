@@ -179,7 +179,7 @@ int MPIR_Reduce_intra_auto (
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int is_commutative, comm_size, type_size, pof2;
+    int is_commutative, type_size, pof2;
     int nbytes = 0;
 
     if (count == 0) return MPI_SUCCESS;
@@ -207,8 +207,6 @@ int MPIR_Reduce_intra_auto (
 
         goto fn_exit;
     }
-
-    comm_size = comm_ptr->local_size;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
