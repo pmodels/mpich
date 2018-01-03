@@ -33,8 +33,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * req
         MPIR_Request *const preq = requests[i];
 
         switch (MPIDI_OFI_REQUEST(preq, util.persist.type)) {
-#ifdef MPIDI_BUILD_CH4_SHM
         case MPIDI_PTYPE_RECV:
+#ifdef MPIDI_BUILD_CH4_SHM
             mpi_errno = MPIDI_NM_mpi_irecv(MPIDI_OFI_REQUEST(preq,util.persist.buf),
                                            MPIDI_OFI_REQUEST(preq,util.persist.count),
                                            MPIDI_OFI_REQUEST(preq,datatype),
@@ -47,7 +47,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * req
                                            &preq->u.persist.real_request);
             break;
 #else
-        case MPIDI_PTYPE_RECV:
             mpi_errno = MPID_Irecv(MPIDI_OFI_REQUEST(preq,util.persist.buf),
                                    MPIDI_OFI_REQUEST(preq,util.persist.count),
                                    MPIDI_OFI_REQUEST(preq,datatype),
@@ -59,8 +58,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * req
             break;
 #endif
 
-#ifdef MPIDI_BUILD_CH4_SHM
         case MPIDI_PTYPE_SEND:
+#ifdef MPIDI_BUILD_CH4_SHM
             mpi_errno = MPIDI_NM_mpi_isend(MPIDI_OFI_REQUEST(preq,util.persist.buf),
                                            MPIDI_OFI_REQUEST(preq,util.persist.count),
                                            MPIDI_OFI_REQUEST(preq,datatype),
@@ -73,7 +72,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * req
                                            &preq->u.persist.real_request);
             break;
 #else
-        case MPIDI_PTYPE_SEND:
             mpi_errno = MPID_Isend(MPIDI_OFI_REQUEST(preq,util.persist.buf),
                                    MPIDI_OFI_REQUEST(preq,util.persist.count),
                                    MPIDI_OFI_REQUEST(preq,datatype),
