@@ -80,7 +80,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size, is_homogeneous, pof2, type_size;
+    int is_homogeneous, pof2, type_size;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
@@ -95,8 +95,6 @@ int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int cou
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
     }
-
-    comm_size = comm_ptr->local_size;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
