@@ -13,7 +13,7 @@
 
 #include "posix_impl.h"
 
-static inline void MPIDI_POSIX_am_request_init(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_am_request_init(MPIR_Request * req)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_REQUEST_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_REQUEST_INIT);
@@ -23,7 +23,7 @@ static inline void MPIDI_POSIX_am_request_init(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_REQUEST_INIT);
 }
 
-static inline void MPIDI_POSIX_am_request_finalize(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_am_request_finalize(MPIR_Request * req)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_REQUEST_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_REQUEST_FINALIZE);

@@ -18,7 +18,7 @@
 /* ----------------------------------------------------- */
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_POSIX_progress_recv)
-static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t data_sz;
@@ -261,7 +261,7 @@ static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
 /* ----------------------------------------------------- */
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_POSIX_progress_send)
-static inline int MPIDI_POSIX_progress_send(int blocking, int *completion_count)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int blocking, int *completion_count)
 {
     int mpi_errno = MPI_SUCCESS;
     int dest;
@@ -368,7 +368,7 @@ static inline int MPIDI_POSIX_progress_send(int blocking, int *completion_count)
 
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_POSIX_progress)
-static inline int MPIDI_POSIX_progress(int blocking)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int blocking)
 {
     int complete = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_PROGRESS);
@@ -392,55 +392,55 @@ static inline int MPIDI_POSIX_progress(int blocking)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_POSIX_progress_test(void)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_test(void)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_POSIX_progress_poke(void)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_poke(void)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline void MPIDI_POSIX_progress_start(MPID_Progress_state * state)
+MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_progress_start(MPID_Progress_state * state)
 {
     MPIR_Assert(0);
     return;
 }
 
-static inline void MPIDI_POSIX_progress_end(MPID_Progress_state * state)
+MPL_STATIC_INLINE_PREFIX void MPIDI_POSIX_progress_end(MPID_Progress_state * state)
 {
     MPIR_Assert(0);
     return;
 }
 
-static inline int MPIDI_POSIX_progress_wait(MPID_Progress_state * state)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_wait(MPID_Progress_state * state)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_POSIX_progress_register(int (*progress_fn) (int *))
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_register(int (*progress_fn) (int *))
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_POSIX_progress_deregister(int id)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_deregister(int id)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_POSIX_progress_activate(int id)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_activate(int id)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_POSIX_progress_deactivate(int id)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_deactivate(int id)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

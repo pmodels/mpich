@@ -239,7 +239,7 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
 
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_POSIX_mpi_finalize_hook)
-static inline int MPIDI_POSIX_mpi_finalize_hook(void)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_FINALIZE);
@@ -273,61 +273,62 @@ static inline int MPIDI_POSIX_mpi_finalize_hook(void)
     goto fn_exit;
 }
 
-static inline int MPIDI_POSIX_get_vni_attr(int vni)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_get_vni_attr(int vni)
 {
     MPIR_Assert(0 <= vni && vni < 1);
     return MPIDI_VNI_TX | MPIDI_VNI_RX;
 }
 
-static inline void *MPIDI_POSIX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr,
-                                              MPL_memory_class class)
+MPL_STATIC_INLINE_PREFIX void *MPIDI_POSIX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr,
+                                                         MPL_memory_class class)
 {
     MPIR_Assert(0);
     return NULL;
 }
 
-static inline int MPIDI_POSIX_mpi_free_mem(void *ptr)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_free_mem(void *ptr)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_POSIX_comm_get_lpid(MPIR_Comm * comm_ptr,
-                                            int idx, int *lpid_ptr, MPL_bool is_remote)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_comm_get_lpid(MPIR_Comm * comm_ptr,
+                                                       int idx, int *lpid_ptr, MPL_bool is_remote)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_POSIX_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {
     *id_p = (int) 0;
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_POSIX_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
 {
     *max_id_p = (int) 0;
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_POSIX_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
-                                              char **local_upids)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_get_local_upids(MPIR_Comm * comm,
+                                                         size_t ** local_upid_size,
+                                                         char **local_upids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_POSIX_upids_to_lupids(int size,
-                                              size_t * remote_upid_size,
-                                              char *remote_upids, int **remote_lupids)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_upids_to_lupids(int size,
+                                                         size_t * remote_upid_size,
+                                                         char *remote_upids, int **remote_lupids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_POSIX_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
-                                                          int size, const int lpids[])
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
+                                                                     int size, const int lpids[])
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
@@ -337,7 +338,7 @@ static inline int MPIDI_POSIX_create_intercomm_from_lpids(MPIR_Comm * newcomm_pt
 #define FUNCNAME MPIDI_POSIX_mpi_type_commit_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_POSIX_mpi_type_commit_hook(MPIR_Datatype * type)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_type_commit_hook(MPIR_Datatype * type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_TYPE_CREATE_HOOK);
@@ -351,7 +352,7 @@ static inline int MPIDI_POSIX_mpi_type_commit_hook(MPIR_Datatype * type)
 #define FUNCNAME MPIDI_POSIX_mpi_type_free_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_POSIX_mpi_type_free_hook(MPIR_Datatype * type)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_type_free_hook(MPIR_Datatype * type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_TYPE_FREE_HOOK);
@@ -365,7 +366,7 @@ static inline int MPIDI_POSIX_mpi_type_free_hook(MPIR_Datatype * type)
 #define FUNCNAME MPIDI_POSIX_mpi_op_commit_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_POSIX_mpi_op_commit_hook(MPIR_Op * op)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_op_commit_hook(MPIR_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_OP_CREATE_HOOK);
@@ -379,7 +380,7 @@ static inline int MPIDI_POSIX_mpi_op_commit_hook(MPIR_Op * op)
 #define FUNCNAME MPIDI_POSIX_mpi_op_free_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_POSIX_mpi_op_free_hook(MPIR_Op * op)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_op_free_hook(MPIR_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_OP_FREE_HOOK);
