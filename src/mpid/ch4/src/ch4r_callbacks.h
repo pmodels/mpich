@@ -490,7 +490,16 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
         MPIDI_CH4U_REQUEST(rreq, rank) = hdr->src_rank;
         MPIDI_CH4U_REQUEST(rreq, tag) = hdr->tag;
         MPIDI_CH4U_REQUEST(rreq, context_id) = hdr->context_id;
-        mpi_errno = MPIDI_NM_am_recv(rreq);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        if (MPIDI_CH4I_REQUEST(rreq, is_local))
+            mpi_errno = MPIDI_SHM_am_recv(rreq);
+        else
+#endif
+        {
+            mpi_errno = MPIDI_NM_am_recv(rreq);
+        }
+
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -613,13 +622,27 @@ static inline int MPIDI_send_long_ack_target_msg_cb(int handler_id, void *am_hdr
 
     /* Start the main data transfer */
     send_hdr.rreq_ptr = msg_hdr->rreq_ptr;
-    mpi_errno =
-        MPIDI_NM_am_isend_reply(MPIDI_CH4U_REQUEST(sreq, req->lreq).context_id,
-                                MPIDI_CH4U_REQUEST(sreq, rank), MPIDI_CH4U_SEND_LONG_LMT, &send_hdr,
-                                sizeof(send_hdr), MPIDI_CH4U_REQUEST(sreq, req->lreq).src_buf,
-                                MPIDI_CH4U_REQUEST(sreq, req->lreq).count, MPIDI_CH4U_REQUEST(sreq,
-                                                                                              req->lreq).datatype,
-                                sreq);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (MPIDI_CH4I_REQUEST(sreq, is_local))
+        mpi_errno =
+            MPIDI_SHM_am_isend_reply(MPIDI_CH4U_REQUEST(sreq, req->lreq).context_id,
+                                     MPIDI_CH4U_REQUEST(sreq, rank), MPIDI_CH4U_SEND_LONG_LMT,
+                                     &send_hdr, sizeof(send_hdr),
+                                     MPIDI_CH4U_REQUEST(sreq, req->lreq).src_buf,
+                                     MPIDI_CH4U_REQUEST(sreq, req->lreq).count,
+                                     MPIDI_CH4U_REQUEST(sreq, req->lreq).datatype, sreq);
+    else
+#endif
+    {
+        mpi_errno =
+            MPIDI_NM_am_isend_reply(MPIDI_CH4U_REQUEST(sreq, req->lreq).context_id,
+                                    MPIDI_CH4U_REQUEST(sreq, rank), MPIDI_CH4U_SEND_LONG_LMT,
+                                    &send_hdr, sizeof(send_hdr),
+                                    MPIDI_CH4U_REQUEST(sreq, req->lreq).src_buf,
+                                    MPIDI_CH4U_REQUEST(sreq, req->lreq).count,
+                                    MPIDI_CH4U_REQUEST(sreq, req->lreq).datatype, sreq);
+    }
+
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
