@@ -170,7 +170,6 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, int count,
     char *readbuf, *tmp_buf, *value;
     int info_flag;
     unsigned max_bufsize, readbuf_len;
-    ADIO_Status status1;
 
     static char myname[] = "ADIOI_NFS_READSTRIDED";
 
