@@ -27,23 +27,24 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
 #else
     int i;
     for (i = 0; i < count; i++) {
+        MPIR_Request *req = requests[i];
         /* This is sub-optimal, can we do better? */
-        if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(requests[i])) {
-            mpi_errno = MPIDI_SHM_mpi_startall(1, &requests[i]);
+        if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)) {
+            mpi_errno = MPIDI_SHM_mpi_startall(1, &req);
             if (mpi_errno == MPI_SUCCESS) {
                 mpi_errno =
-                    MPIDI_NM_mpi_startall(1, &MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(requests[i]));
-                MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(requests[i]->u.persist.real_request) =
-                    MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(requests[i])->u.persist.real_request;
+                    MPIDI_NM_mpi_startall(1, &MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
+                MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req->u.persist.real_request) =
+                    MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)->u.persist.real_request;
                 MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER
-                                                     (requests[i])->u.persist.real_request) =
-                    requests[i]->u.persist.real_request;
+                                                     (req)->u.persist.real_request) =
+                    req->u.persist.real_request;
             }
         }
-        else if (MPIDI_CH4I_REQUEST(requests[i], is_local))
-            mpi_errno = MPIDI_SHM_mpi_startall(1, &requests[i]);
+        else if (MPIDI_CH4I_REQUEST(req, is_local))
+            mpi_errno = MPIDI_SHM_mpi_startall(1, &req);
         else
-            mpi_errno = MPIDI_NM_mpi_startall(1, &requests[i]);
+            mpi_errno = MPIDI_NM_mpi_startall(1, &req);
     }
 #endif
     if (mpi_errno != MPI_SUCCESS) {
