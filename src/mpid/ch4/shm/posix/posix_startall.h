@@ -27,43 +27,49 @@ static inline int MPIDI_POSIX_mpi_startall(int count, MPIR_Request * requests[])
     for (i = 0; i < count; i++) {
         MPIR_Request *preq = requests[i];
 
-        if (preq->kind == MPIR_REQUEST_KIND__PREQUEST_SEND) {
-            if (MPIDI_POSIX_REQUEST(preq)->type != MPIDI_POSIX_TYPEBUFFERED) {
-                mpi_errno =
-                    MPIDI_POSIX_do_isend(MPIDI_POSIX_REQUEST(preq)->user_buf,
+        switch (preq->kind) {
+            case MPIR_REQUEST_KIND__PREQUEST_SEND:
+                if (MPIDI_POSIX_REQUEST(preq)->type != MPIDI_POSIX_TYPEBUFFERED) {
+                    mpi_errno =
+                        MPIDI_POSIX_do_isend(MPIDI_POSIX_REQUEST(preq)->user_buf,
+                                             MPIDI_POSIX_REQUEST(preq)->user_count,
+                                             MPIDI_POSIX_REQUEST(preq)->datatype,
+                                             MPIDI_POSIX_REQUEST(preq)->dest,
+                                             MPIDI_POSIX_REQUEST(preq)->tag, preq->comm,
+                                             MPIDI_POSIX_REQUEST(preq)->context_id -
+                                             preq->comm->context_id, &preq->u.persist.real_request,
+                                             MPIDI_POSIX_REQUEST(preq)->type);
+                }
+                else {
+                    MPI_Request sreq_handle;
+                    mpi_errno =
+                        MPIR_Ibsend_impl(MPIDI_POSIX_REQUEST(preq)->user_buf,
                                          MPIDI_POSIX_REQUEST(preq)->user_count,
                                          MPIDI_POSIX_REQUEST(preq)->datatype,
                                          MPIDI_POSIX_REQUEST(preq)->dest,
-                                         MPIDI_POSIX_REQUEST(preq)->tag, preq->comm,
-                                         MPIDI_POSIX_REQUEST(preq)->context_id -
-                                         preq->comm->context_id, &preq->u.persist.real_request,
-                                         MPIDI_POSIX_REQUEST(preq)->type);
-            }
-            else {
-                MPI_Request sreq_handle;
-                mpi_errno =
-                    MPIR_Ibsend_impl(MPIDI_POSIX_REQUEST(preq)->user_buf,
-                                     MPIDI_POSIX_REQUEST(preq)->user_count,
-                                     MPIDI_POSIX_REQUEST(preq)->datatype,
-                                     MPIDI_POSIX_REQUEST(preq)->dest,
-                                     MPIDI_POSIX_REQUEST(preq)->tag, preq->comm, &sreq_handle);
+                                         MPIDI_POSIX_REQUEST(preq)->tag, preq->comm, &sreq_handle);
 
-                if (mpi_errno == MPI_SUCCESS)
-                    MPIR_Request_get_ptr(sreq_handle, preq->u.persist.real_request);
-            }
-        }
-        else if (preq->kind == MPIR_REQUEST_KIND__PREQUEST_RECV) {
-            mpi_errno =
-                MPIDI_POSIX_do_irecv(MPIDI_POSIX_REQUEST(preq)->user_buf,
-                                     MPIDI_POSIX_REQUEST(preq)->user_count,
-                                     MPIDI_POSIX_REQUEST(preq)->datatype,
-                                     MPIDI_POSIX_REQUEST(preq)->rank,
-                                     MPIDI_POSIX_REQUEST(preq)->tag, preq->comm,
-                                     MPIDI_POSIX_REQUEST(preq)->context_id - preq->comm->context_id,
-                                     &preq->u.persist.real_request);
-        }
-        else {
-            MPIR_Assert(0);
+                    if (mpi_errno == MPI_SUCCESS)
+                        MPIR_Request_get_ptr(sreq_handle, preq->u.persist.real_request);
+                }
+
+                break;
+
+            case MPIR_REQUEST_KIND__PREQUEST_RECV:
+                mpi_errno =
+                    MPIDI_POSIX_do_irecv(MPIDI_POSIX_REQUEST(preq)->user_buf,
+                                         MPIDI_POSIX_REQUEST(preq)->user_count,
+                                         MPIDI_POSIX_REQUEST(preq)->datatype,
+                                         MPIDI_POSIX_REQUEST(preq)->rank,
+                                         MPIDI_POSIX_REQUEST(preq)->tag, preq->comm,
+                                         MPIDI_POSIX_REQUEST(preq)->context_id - preq->comm->context_id,
+                                         &preq->u.persist.real_request);
+
+                break;
+
+            default:
+                MPIR_Assert(0);
+                break;
         }
 
         if (mpi_errno == MPI_SUCCESS) {
