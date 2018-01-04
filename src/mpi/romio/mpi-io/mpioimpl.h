@@ -61,8 +61,9 @@ void MPIR_MPIOInit(int * error_code);
 
 #include "mpiu_external32.h"
 
-
+#ifdef MPIO_BUILD_PROFILING
 #include "mpioprof.h"
+#endif /* MPIO_BUILD_PROFILING */
 
 #ifdef MPI_hpux
 #  include "mpioinst.h"

@@ -25,7 +25,9 @@
 #include <time.h>
 
 #include "../../mpi-io/mpioimpl.h"
+#ifdef MPIO_BUILD_PROFILING
 #include "../../mpi-io/mpioprof.h"
+#endif
 #include "mpiu_greq.h"
 /* Workaround for incomplete set of definitions if __REDIRECT is not 
    defined and large file support is used in aio.h */
