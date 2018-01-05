@@ -132,7 +132,7 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 	MPIR_Segment rseg;
 	intptr_t rfirst;
 
-        MPIR_CHKLMEM_MALLOC(buf, char *, COPY_BUFFER_SZ, mpi_errno, "buf");
+        MPIR_CHKLMEM_MALLOC(buf, char *, COPY_BUFFER_SZ, mpi_errno, "buf", MPL_MEM_BUFFER);
 
 	MPIR_Segment_init(sendbuf, sendcount, sendtype, &sseg, 0);
 	MPIR_Segment_init(recvbuf, recvcount, recvtype, &rseg, 0);
@@ -234,7 +234,7 @@ int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t *errflag)
     MPIR_TAG_CLEAR_ERROR_BITS(request_ptr->status.MPI_TAG);
 
  fn_exit:
-    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
+    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", (int) *errflag);
     MPIR_FUNC_VERBOSE_PT2PT_EXIT(MPID_STATE_MPIC_WAIT);
     return mpi_errno;
  fn_fail:
@@ -278,7 +278,7 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_SEND);
 
-    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", *errflag);
+    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
@@ -288,6 +288,7 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
+            break;
         default:
             MPIR_TAG_SET_ERROR_BIT(tag);
     }
@@ -305,7 +306,7 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
     }
 
  fn_exit:
-    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
+    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", (int) *errflag);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_SEND);
     return mpi_errno;
  fn_fail:
@@ -337,7 +338,7 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_RECV);
 
-    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", *errflag);
+    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
@@ -370,7 +371,7 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
     }
 
  fn_exit:
-    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
+    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", (int) *errflag);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_RECV);
     return mpi_errno;
  fn_fail:
@@ -394,7 +395,7 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_SSEND);
 
-    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", *errflag);
+    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
             "**countneg", "**countneg %d", count);
@@ -407,6 +408,7 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
+            break;
         default:
             MPIR_TAG_SET_ERROR_BIT(tag);
     }
@@ -421,7 +423,7 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     }
 
  fn_exit:
-    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
+    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", (int) *errflag);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_SSEND);
     return mpi_errno;
  fn_fail:
@@ -471,6 +473,7 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(sendtag);
+            break;
         default:
             MPIR_TAG_SET_ERROR_BIT(sendtag);
     }
@@ -501,7 +504,7 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
     MPIR_Request_free(recv_req_ptr);
 
  fn_exit:
-    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
+    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", (int) *errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_SENDRECV);
     return mpi_errno;
@@ -538,7 +541,7 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_SENDRECV_REPLACE);
 
-    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", *errflag);
+    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
@@ -549,6 +552,7 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(sendtag);
+            MPL_FALLTHROUGH;
         default:
             MPIR_TAG_SET_ERROR_BIT(sendtag);
     }
@@ -558,7 +562,7 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 
     if (count > 0 && dest != MPI_PROC_NULL) {
         MPIR_Pack_size_impl(count, datatype, &tmpbuf_size);
-        MPIR_CHKLMEM_MALLOC(tmpbuf, void *, tmpbuf_size, mpi_errno, "temporary send buffer");
+        MPIR_CHKLMEM_MALLOC(tmpbuf, void *, tmpbuf_size, mpi_errno, "temporary send buffer", MPL_MEM_BUFFER);
 
         mpi_errno = MPIR_Pack_impl(buf, count, datatype, tmpbuf, tmpbuf_size, &tmpbuf_count);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -599,7 +603,7 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 
  fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
+    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", (int) *errflag);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_SENDRECV_REPLACE);
     return mpi_errno;
  fn_fail:
@@ -623,7 +627,7 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_ISEND);
 
-    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", *errflag);
+    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
@@ -633,6 +637,7 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
+            break;
         default:
             MPIR_TAG_SET_ERROR_BIT(tag);
     }
@@ -664,7 +669,7 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_ISSEND);
 
-    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", *errflag);
+    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
@@ -674,6 +679,7 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
+            break;
         default:
             MPIR_TAG_SET_ERROR_BIT(tag);
     }
@@ -747,8 +753,8 @@ int MPIC_Waitall(int numreq, MPIR_Request *requests[], MPI_Status statuses[], MP
     }
 
     if (numreq > MPIC_REQUEST_PTR_ARRAY_SIZE) {
-        MPIR_CHKLMEM_MALLOC(request_ptrs, MPI_Request *, numreq * sizeof(MPI_Request), mpi_errno, "request pointers");
-        MPIR_CHKLMEM_MALLOC(status_array, MPI_Status *, numreq * sizeof(MPI_Status), mpi_errno, "status objects");
+        MPIR_CHKLMEM_MALLOC(request_ptrs, MPI_Request *, numreq * sizeof(MPI_Request), mpi_errno, "request pointers", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(status_array, MPI_Status *, numreq * sizeof(MPI_Status), mpi_errno, "status objects", MPL_MEM_BUFFER);
     }
 
     for (i = 0; i < numreq; ++i) {
@@ -777,7 +783,7 @@ int MPIC_Waitall(int numreq, MPIR_Request *requests[], MPI_Status statuses[], MP
     if (numreq > MPIC_REQUEST_PTR_ARRAY_SIZE)
         MPIR_CHKLMEM_FREEALL();
 
-    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
+    MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", (int) *errflag);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_WAITALL);
     return mpi_errno;
  fn_fail:

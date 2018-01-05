@@ -54,6 +54,8 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
                       file_name, line_num, cond));
     MPL_DBG_MSG_FMT(MPIR_DBG_ASSERT, TERSE, (MPL_DBG_FDEST,"%s",msg));
 
+    va_end(vl);
+
     MPID_Abort(NULL, MPI_SUCCESS, 1, NULL);
     return MPI_ERR_INTERN; /* never get here, abort should kill us */
 }

@@ -46,33 +46,13 @@ ProgHomeDir() {
     eval $2=$proghome
 }
 
-########################################################################
-## Run any local pre-update hooks
-########################################################################
-if test -d maint/hooks/pre ; then
-    for hook in `ls maint/hooks/pre/* 2>/dev/null` ; do
-        if test -x "$hook" ; then
-            echo_n "executing pre-update hook '$hook'... "
-            ./$hook
-            echo done
-        else
-            warn "unable to execute pre-update hook: '$hook'"
-        fi
-    done
-fi
-
-########################################################################
-# This used to be an optionally installed hook to help with git-svn
-# versions of the old SVN repo.  Now that we are using git, this is our
-# mechanism that replaces relative svn:externals paths, such as for
-# "confdb" and "mpl". The basic plan is to delete the destdir and then
-# copy all of the files, warts and all, from the source directory to the
-# destination directory.
-echo
-echo "####################################"
-echo "## Replicating confdb (and similar)"
-echo "####################################"
-echo
+# checking and patching submodules
+check_submodule_presence() {
+    if test ! -f "$SRCROOTDIR/$1/configure.ac"; then
+        error "Submodule $1 is not checked out"
+        exit 1
+    fi
+}
 
 sync_external () {
     srcdir=$1
@@ -85,42 +65,6 @@ sync_external () {
     rm -rf "$destdir"
     cp -pPR "$srcdir" "$destdir"
 }
-
-confdb_dirs=
-confdb_dirs="${confdb_dirs} src/mpi/romio/confdb"
-confdb_dirs="${confdb_dirs} src/mpi/romio/mpl/confdb"
-confdb_dirs="${confdb_dirs} src/mpl/confdb"
-confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
-confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
-confdb_dirs="${confdb_dirs} test/mpi/confdb"
-
-# hydra's copy of mpl
-sync_external src/mpl src/pm/hydra/mpl
-
-# ROMIO's copy of mpl
-sync_external src/mpl src/mpi/romio/mpl
-
-# all the confdb directories, by various names
-for destdir in $confdb_dirs ; do
-    sync_external confdb "$destdir"
-done
-
-# a couple of other random files
-if [ -f maint/version.m4 ] ; then
-    cp -pPR maint/version.m4 src/pm/hydra/version.m4
-    cp -pPR maint/version.m4 src/mpi/romio/version.m4
-    cp -pPR maint/version.m4 test/mpi/version.m4
-fi
-
-# Now sanity check that some of the above sync was successful
-f="aclocal_cc.m4"
-for d in $confdb_dirs ; do
-    if [ -f "$d/$f" ] ; then :
-    else
-        error "expected to find '$f' in '$d'"
-        exit 1
-    fi
-done
 
 ########################################################################
 echo
@@ -138,8 +82,9 @@ if [ ! -d maint -o ! -s maint/version.m4 ] ; then
     echo "must execute at top level directory for now"
     exit 1
 fi
+# Set the SRCROOTDIR to be used later and avoid "cd ../../"-like usage.
+SRCROOTDIR=$PWD
 echo "done"
-
 
 ########################################################################
 ## Initialize variables to default values (possibly from the environment)
@@ -156,17 +101,14 @@ do_genstates=yes
 do_atdir_check=no
 do_atver_check=yes
 do_subcfg_m4=yes
+do_izem=yes
+do_ofi=yes
+do_ucx=yes
 
 export do_build_configure
 
 # Allow MAKE to be set from the environment
 MAKE=${MAKE-make}
-
-# external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/mpi/romio src/openpa"
-if [ -e src/mpid/ch4/netmod/ofi/libfabric ]; then
-    externals="${externals} src/mpid/ch4/netmod/ofi/libfabric"
-fi
 
 # amdirs are the directories that make use of autoreconf
 amdirs=". src/mpl src/util/logging/rlog"
@@ -273,6 +215,18 @@ for arg in "$@" ; do
 	    autotoolsdir=`echo "A$arg" | sed -e 's/.*=//'`
 	    ;;
 
+    -without-izem|--without-izem)
+        do_izem=no
+        ;;
+
+    -without-ofi|--without-ofi|-without-libfabric|--without-libfabric)
+        do_ofi=no
+        ;;
+
+    -without-ucx|--without-ucx)
+        do_ucx=no
+        ;;
+
 	-help|--help|-usage|--usage)
 	    cat <<EOF
    ./autogen.sh [ --with-autotools=dir ] \\
@@ -320,12 +274,27 @@ EOF
 done
 
 ########################################################################
-## Check for the location of autotools
+## Set up external packages
 ########################################################################
 
-if [ -z "$autotoolsdir" ] ; then
-    autotoolsdir=$MPICH_AUTOTOOLS_DIR
+# external packages that require autogen.sh to be run for each of them
+externals="src/pm/hydra src/mpi/romio src/openpa src/hwloc"
+
+if [ "yes" = "$do_izem" ] ; then
+    externals="${externals} src/izem"
 fi
+
+if [ "yes" = "$do_ucx" ] ; then
+    externals="${externals} src/mpid/ch4/netmod/ucx/ucx"
+fi
+
+if [ "yes" = "$do_ofi" ] ; then
+    externals="${externals} src/mpid/ch4/netmod/ofi/libfabric"
+fi
+
+########################################################################
+## Check for the location of autotools
+########################################################################
 
 if [ -n "$autotoolsdir" ] ; then
     if [ -x $autotoolsdir/autoconf -a -x $autotoolsdir/autoheader ] ; then
@@ -618,7 +587,88 @@ else
     fi
 fi
 
+########################################################################
+## Set up submodules
+########################################################################
 
+echo
+echo "###########################################################"
+echo "## Checking submodules"
+echo "###########################################################"
+echo
+
+# hwloc is always required
+check_submodule_presence src/hwloc
+
+# external packages that require autogen.sh to be run for each of them
+externals="src/pm/hydra src/mpi/romio src/openpa src/hwloc"
+
+if [ "yes" = "$do_izem" ] ; then
+    check_submodule_presence src/izem
+    externals="${externals} src/izem"
+fi
+
+if [ "yes" = "$do_ucx" ] ; then
+    check_submodule_presence src/mpid/ch4/netmod/ucx/ucx
+    externals="${externals} src/mpid/ch4/netmod/ucx/ucx"
+fi
+
+if [ "yes" = "$do_ofi" ] ; then
+    check_submodule_presence src/mpid/ch4/netmod/ofi/libfabric
+    externals="${externals} src/mpid/ch4/netmod/ofi/libfabric"
+fi
+
+########################################################################
+# This used to be an optionally installed hook to help with git-svn
+# versions of the old SVN repo.  Now that we are using git, this is our
+# mechanism that replaces relative svn:externals paths, such as for
+# "confdb" and "mpl". The basic plan is to delete the destdir and then
+# copy all of the files, warts and all, from the source directory to the
+# destination directory.
+echo
+echo "####################################"
+echo "## Replicating confdb (and similar)"
+echo "####################################"
+echo
+
+confdb_dirs=
+confdb_dirs="${confdb_dirs} src/mpi/romio/confdb"
+confdb_dirs="${confdb_dirs} src/mpi/romio/mpl/confdb"
+confdb_dirs="${confdb_dirs} src/mpl/confdb"
+confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
+confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
+confdb_dirs="${confdb_dirs} test/mpi/confdb"
+
+# hydra's copies of mpl and hwloc
+sync_external src/mpl src/pm/hydra/mpl
+
+# ROMIO's copy of mpl
+sync_external src/mpl src/mpi/romio/mpl
+
+# all the confdb directories, by various names
+for destdir in $confdb_dirs ; do
+    sync_external confdb "$destdir"
+done
+
+# Copying hwloc to hydra
+sync_external src/hwloc src/pm/hydra/tools/topo/hwloc/hwloc
+
+# a couple of other random files
+if [ -f maint/version.m4 ] ; then
+    cp -pPR maint/version.m4 src/pm/hydra/version.m4
+    cp -pPR maint/version.m4 src/mpi/romio/version.m4
+    cp -pPR maint/version.m4 test/mpi/version.m4
+fi
+
+# Now sanity check that some of the above sync was successful
+f="aclocal_cc.m4"
+for d in $confdb_dirs ; do
+    if [ -f "$d/$f" ] ; then :
+    else
+        error "expected to find '$f' in '$d'"
+        exit 1
+    fi
+done
 
 echo
 echo
@@ -936,7 +986,7 @@ if [ "$do_build_configure" = "yes" ] ; then
                 ifort_patch_requires_rebuild=no
                 if [ $do_bindings = "yes" ] ; then
                     echo_n "Patching libtool.m4 for compatibility with ifort on OSX... "
-                    patch -N -s -l $amdir/confdb/libtool.m4 maint/darwin-ifort.patch
+                    patch -N -s -l $amdir/confdb/libtool.m4 maint/patches/optional/confdb/darwin-ifort.patch
                     if [ $? -eq 0 ] ; then
                         ifort_patch_requires_rebuild=yes
                         # Remove possible leftovers, which don't imply a failure

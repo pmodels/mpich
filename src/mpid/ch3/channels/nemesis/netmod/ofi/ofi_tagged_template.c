@@ -142,7 +142,7 @@ static inline int ADD_SUFFIX(send_normal)(struct MPIDI_VC *vc,
     sreq->dev.match.parts.tag = match_bits;
     send_buffer = (char *) buf + dt_true_lb;
     if (!dt_contig) {
-        send_buffer = (char *) MPL_malloc(data_sz);
+        send_buffer = (char *) MPL_malloc(data_sz, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP1(send_buffer == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send buffer alloc");
         MPIDI_CH3U_Buffer_copy(buf, count, datatype, &err0,
@@ -415,7 +415,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPIR_Reques
         recv_buffer = (char *) rreq->dev.user_buf + dt_true_lb;
     }
     else {
-        recv_buffer = (char *) MPL_malloc(data_sz);
+        recv_buffer = (char *) MPL_malloc(data_sz, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP1(recv_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
                              "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
         REQ_OFI(rreq)->pack_buffer = recv_buffer;

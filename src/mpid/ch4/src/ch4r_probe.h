@@ -57,13 +57,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_iprobe(int source,
     }
     else {
         *flag = 0;
-        MPID_Progress_test();
+        MPIDI_CH4R_PROGRESS();
     }
     /* MPIDI_CS_EXIT(); */
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_MPI_IPROBE);
     return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -121,13 +124,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_improbe(int source,
     }
     else {
         *flag = 0;
-        MPID_Progress_test();
+        MPIDI_CH4R_PROGRESS();
     }
     /* MPIDI_CS_EXIT(); */
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_MPI_IMPROBE);
     return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME

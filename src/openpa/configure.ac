@@ -209,6 +209,9 @@ AC_ARG_WITH([atomic-primitives], [AC_HELP_STRING([--with-atomic-primitives],
     [with_atomic_primitives=auto]
 )
 
+AC_ARG_ENABLE(embedded,
+        [AC_HELP_STRING([--enable-embedded],[Enable embedded mode])])
+AM_CONDITIONAL([EMBEDDED], [test "x${enable_embedded}" = "xyes"])
 
 # is set to yes by the macro below if any test ever succeeds
 non_emulated_primitives_available=no

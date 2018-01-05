@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "mpl_utlist.h"
+#include "utlist.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_T_pvar_session_free */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -42,8 +42,8 @@ int MPIR_T_pvar_session_free_impl(MPI_T_pvar_session *session)
      * outstanding handles attached to this session.  A more relaxed
      * interpretation puts that burden on the user.  We choose the conservative
      * view.*/
-    MPL_DL_FOREACH_SAFE((*session)->hlist, hnd, tmp) {
-        MPL_DL_DELETE((*session)->hlist, hnd);
+    DL_FOREACH_SAFE((*session)->hlist, hnd, tmp) {
+        DL_DELETE((*session)->hlist, hnd);
         MPL_free(hnd);
     }
     MPL_free(*session);

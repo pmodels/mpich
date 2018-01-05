@@ -7,6 +7,7 @@
 #include "mpiimpl.h"
 #include "mpicomm.h"
 #include <stdint.h>
+#include "../coll/include/coll_util.h"
 
 /* This function has multiple phases.
  *
@@ -78,7 +79,7 @@ int MPIR_Comm_shrink(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr)
             MPIR_Comm_release(*newcomm_ptr);
         }
 
-        mpi_errno = MPIR_Allreduce_group(MPI_IN_PLACE, &errflag, 1, MPI_INT, MPI_MAX, comm_ptr,
+        mpi_errno = MPII_Allreduce_group(MPI_IN_PLACE, &errflag, 1, MPI_INT, MPI_MAX, comm_ptr,
             new_group_ptr, MPIR_SHRINK_TAG, &errflag);
         MPIR_Group_release(new_group_ptr);
 

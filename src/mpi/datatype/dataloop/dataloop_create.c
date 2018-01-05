@@ -5,10 +5,11 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "mpiimpl.h"
+
 #include <stdlib.h>
 #include <limits.h>
 
-#include "mpiimpl.h"
 
 static void DLOOP_Dataloop_create_named(MPI_Datatype type,
 					DLOOP_Dataloop **dlp_p,
@@ -210,7 +211,7 @@ void MPIR_Dataloop_create(MPI_Datatype type,
 							 flag);
 	    break;
 	case MPI_COMBINER_HINDEXED_BLOCK:
-            disps = (MPI_Aint *) DLOOP_Malloc(ints[0] * sizeof(MPI_Aint));
+            disps = (MPI_Aint *) DLOOP_Malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
             for (i = 0; i < ints[0]; i++)
                 disps[i] = aints[i];
 	    MPIR_Dataloop_create_blockindexed(ints[0] /* count */,
@@ -224,7 +225,7 @@ void MPIR_Dataloop_create(MPI_Datatype type,
             DLOOP_Free(disps);
 	    break;
 	case MPI_COMBINER_INDEXED:
-            blklen = (DLOOP_Size *) DLOOP_Malloc(ints[0] * sizeof(DLOOP_Size));
+            blklen = (DLOOP_Size *) DLOOP_Malloc(ints[0] * sizeof(DLOOP_Size), MPL_MEM_DATATYPE);
             for (i = 0; i < ints[0]; i++)
                 blklen[i] = ints[1+i];
 	    MPIR_Dataloop_create_indexed(ints[0] /* count */,
@@ -239,7 +240,7 @@ void MPIR_Dataloop_create(MPI_Datatype type,
 	case MPI_COMBINER_HINDEXED_INTEGER:
 	case MPI_COMBINER_HINDEXED:
 	    if (combiner == MPI_COMBINER_HINDEXED_INTEGER) {
-		disps = (MPI_Aint *) DLOOP_Malloc(ints[0] * sizeof(MPI_Aint));
+		disps = (MPI_Aint *) DLOOP_Malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
 
 		for (i=0; i < ints[0]; i++) {
 		    disps[i] = (MPI_Aint) ints[ints[0] + 1 + i];
@@ -249,7 +250,7 @@ void MPIR_Dataloop_create(MPI_Datatype type,
 		disps = aints;
 	    }
 
-	    blklen = (DLOOP_Size *) DLOOP_Malloc(ints[0] * sizeof(DLOOP_Size));
+	    blklen = (DLOOP_Size *) DLOOP_Malloc(ints[0] * sizeof(DLOOP_Size), MPL_MEM_DATATYPE);
 	    for (i=0; i< ints[0]; i++)
 		blklen[i] = (DLOOP_Size) ints[1+i];
 	    MPIR_Dataloop_create_indexed(ints[0] /* count */,
@@ -292,7 +293,7 @@ void MPIR_Dataloop_create(MPI_Datatype type,
 		}
 	    }
 	    if (combiner == MPI_COMBINER_STRUCT_INTEGER) {
-		disps = (MPI_Aint *) DLOOP_Malloc(ints[0] * sizeof(MPI_Aint));
+		disps = (MPI_Aint *) DLOOP_Malloc(ints[0] * sizeof(MPI_Aint), MPL_MEM_DATATYPE);
 
 		for (i=0; i < ints[0]; i++) {
 		    disps[i] = (MPI_Aint) ints[ints[0] + 1 + i];

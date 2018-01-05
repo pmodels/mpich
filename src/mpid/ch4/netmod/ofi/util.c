@@ -34,79 +34,6 @@ int MPIDI_OFI_progress_test_no_inline()
     return MPID_Progress_test();
 }
 
-typedef struct {
-    uint64_t key;
-    void *value;
-    MPL_UT_hash_handle hh;      /* makes this structure hashable */
-} MPIDI_OFI_map_entry_t;
-
-typedef struct MPIDI_OFI_map_t {
-    MPIDI_OFI_map_entry_t *head;
-
-} MPIDI_OFI_map_t;
-
-void MPIDI_OFI_map_create(void **out_map)
-{
-    MPIDI_OFI_map_t *map;
-    map = MPL_malloc(sizeof(MPIDI_OFI_map_t));
-    MPIR_Assert(map != NULL);
-    map->head = NULL;
-    *out_map = map;
-}
-
-void MPIDI_OFI_map_destroy(void *in_map)
-{
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-    MPIDI_OFI_map_t *map = in_map;
-    MPL_HASH_CLEAR(hh, map->head);
-    MPL_free(map);
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-}
-
-void MPIDI_OFI_map_set(void *in_map, uint64_t id, void *val)
-{
-    MPIDI_OFI_map_t *map;
-    MPIDI_OFI_map_entry_t *map_entry;
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-    map = (MPIDI_OFI_map_t *) in_map;
-    map_entry = MPL_malloc(sizeof(MPIDI_OFI_map_entry_t));
-    MPIR_Assert(map_entry != NULL);
-    map_entry->key = id;
-    map_entry->value = val;
-    MPL_HASH_ADD(hh, map->head, key, sizeof(uint64_t), map_entry);
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-}
-
-void MPIDI_OFI_map_erase(void *in_map, uint64_t id)
-{
-    MPIDI_OFI_map_t *map;
-    MPIDI_OFI_map_entry_t *map_entry;
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-    map = (MPIDI_OFI_map_t *) in_map;
-    MPL_HASH_FIND(hh, map->head, &id, sizeof(uint64_t), map_entry);
-    MPIR_Assert(map_entry != NULL);
-    MPL_HASH_DELETE(hh, map->head, map_entry);
-    MPL_free(map_entry);
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-}
-
-void *MPIDI_OFI_map_lookup(void *in_map, uint64_t id)
-{
-    void *rc;
-    MPIDI_OFI_map_t *map;
-    MPIDI_OFI_map_entry_t *map_entry;
-
-    MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-    map = (MPIDI_OFI_map_t *) in_map;
-    MPL_HASH_FIND(hh, map->head, &id, sizeof(uint64_t), map_entry);
-    if (map_entry == NULL)
-        rc = MPIDI_OFI_MAP_NOT_FOUND;
-    else
-        rc = map_entry->value;
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-    return rc;
-}
-
 typedef struct MPIDI_OFI_index_allocator_t {
     int chunk_size;
     int num_ints;
@@ -115,16 +42,16 @@ typedef struct MPIDI_OFI_index_allocator_t {
     uint64_t *bitmask;
 } MPIDI_OFI_index_allocator_t;
 
-void MPIDI_OFI_index_allocator_create(void **indexmap, int start)
+void MPIDI_OFI_index_allocator_create(void **indexmap, int start, MPL_memory_class class)
 {
     MPIDI_OFI_index_allocator_t *allocator;
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
-    allocator = MPL_malloc(sizeof(MPIDI_OFI_index_allocator_t));
+    allocator = MPL_malloc(sizeof(MPIDI_OFI_index_allocator_t), class);
     allocator->chunk_size = 128;
     allocator->num_ints = allocator->chunk_size;
     allocator->start = start;
     allocator->last_free_index = 0;
-    allocator->bitmask = MPL_malloc(sizeof(uint64_t) * allocator->num_ints);
+    allocator->bitmask = MPL_malloc(sizeof(uint64_t) * allocator->num_ints, class);
     memset(allocator->bitmask, 0xFF, sizeof(uint64_t) * allocator->num_ints);
     assert(allocator != NULL);
     *indexmap = allocator;
@@ -136,7 +63,7 @@ void MPIDI_OFI_index_allocator_create(void **indexmap, int start)
         val >>= shift##ULL;                               \
         nval += shift;                                    \
     }
-int MPIDI_OFI_index_allocator_alloc(void *indexmap)
+int MPIDI_OFI_index_allocator_alloc(void *indexmap, MPL_memory_class class)
 {
     int i;
     MPIDI_OFI_index_allocator_t *allocator = indexmap;
@@ -160,7 +87,8 @@ int MPIDI_OFI_index_allocator_alloc(void *indexmap)
         if (i == allocator->num_ints - 1) {
             allocator->num_ints += allocator->chunk_size;
             allocator->bitmask = MPL_realloc(allocator->bitmask,
-                                             sizeof(uint64_t) * allocator->num_ints);
+                                             sizeof(uint64_t) * allocator->num_ints, class);
+            MPIR_Assert(allocator->bitmask);
             memset(&allocator->bitmask[i + 1], 0xFF, sizeof(uint64_t) * allocator->chunk_size);
         }
     }
@@ -192,163 +120,6 @@ void MPIDI_OFI_index_allocator_destroy(void *indexmap)
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_UTIL_MUTEX);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_win_lock_advance
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_win_lock_advance(MPIR_Win * win)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH4U_win_lock_recvd_t *lock_recvd_q = &MPIDI_CH4U_WIN(win, sync).lock_recvd;
-
-    if ((lock_recvd_q->head != NULL) && ((lock_recvd_q->count == 0) ||
-         ((lock_recvd_q->type == MPI_LOCK_SHARED) &&
-                 (lock_recvd_q->head->type == MPI_LOCK_SHARED)))) {
-        struct MPIDI_CH4U_win_lock *lock = lock_recvd_q->head;
-        lock_recvd_q->head = lock->next;
-
-        if (lock_recvd_q->head == NULL)
-            lock_recvd_q->tail = NULL;
-
-        ++lock_recvd_q->count;
-        lock_recvd_q->type = lock->type;
-
-        if (lock->mtype == MPIDI_OFI_REQUEST_LOCK) {
-            MPIDI_OFI_win_control_t info;
-            info.type = MPIDI_OFI_CTRL_LOCKACK;
-            mpi_errno = MPIDI_OFI_do_control_win(&info, lock->rank, win, 1, 0);
-
-            if (mpi_errno != MPI_SUCCESS)
-                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-
-        }
-        else if (lock->mtype == MPIDI_OFI_REQUEST_LOCKALL) {
-            MPIDI_OFI_win_control_t info;
-            info.type = MPIDI_OFI_CTRL_LOCKALLACK;
-            mpi_errno = MPIDI_OFI_do_control_win(&info, lock->rank, win, 1, 0);
-
-            if (mpi_errno != MPI_SUCCESS)
-                MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-        }
-        else
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-
-        MPL_free(lock);
-        mpi_errno = MPIDI_OFI_win_lock_advance(win);
-
-        if (mpi_errno != MPI_SUCCESS)
-            MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static inline int MPIDI_OFI_win_lock_request_proc(const MPIDI_OFI_win_control_t * info,
-                                                  MPIR_Win * win, unsigned peer)
-{
-    int mpi_errno;
-    struct MPIDI_CH4U_win_lock *lock =
-        (struct MPIDI_CH4U_win_lock *) MPL_calloc(1, sizeof(struct MPIDI_CH4U_win_lock));
-
-    if (info->type == MPIDI_OFI_CTRL_LOCKREQ)
-        lock->mtype = MPIDI_OFI_REQUEST_LOCK;
-    else if (info->type == MPIDI_OFI_CTRL_LOCKALLREQ)
-        lock->mtype = MPIDI_OFI_REQUEST_LOCKALL;
-
-    lock->rank = info->origin_rank;
-    lock->type = info->lock_type;
-    MPIDI_CH4U_win_lock_recvd_t *lock_recvd_q = &MPIDI_CH4U_WIN(win, sync).lock_recvd;
-    MPIR_Assert((lock_recvd_q->head != NULL) ^ (lock_recvd_q->tail == NULL));
-
-    if (lock_recvd_q->tail == NULL)
-        lock_recvd_q->head = lock;
-    else
-        lock_recvd_q->tail->next = lock;
-
-    lock_recvd_q->tail = lock;
-
-    mpi_errno = MPIDI_OFI_win_lock_advance(win);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static inline void MPIDI_OFI_win_lock_ack_proc(const MPIDI_OFI_win_control_t * info,
-                                               MPIR_Win * win, unsigned peer)
-{
-    if (info->type == MPIDI_OFI_CTRL_LOCKACK) {
-        MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
-
-        MPIR_Assert((int ) target_ptr->sync.lock.locked == 0);
-        target_ptr->sync.lock.locked = 1;
-    }
-    else if (info->type == MPIDI_OFI_CTRL_LOCKALLACK)
-        MPIDI_CH4U_WIN(win, sync).lockall.allLocked += 1;
-}
-
-
-static inline int MPIDI_OFI_win_unlock_proc(const MPIDI_OFI_win_control_t * info,
-                                            MPIR_Win * win, unsigned peer)
-{
-    int mpi_errno;
-
-    /* NOTE: origin blocking waits in lock or lockall call till lock granted.*/
-    --MPIDI_CH4U_WIN(win, sync).lock_recvd.count;
-    MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lock_recvd.count >= 0);
-    mpi_errno = MPIDI_OFI_win_lock_advance(win);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-
-    MPIDI_OFI_win_control_t new_info;
-    new_info.type = MPIDI_OFI_CTRL_UNLOCKACK;
-    mpi_errno = MPIDI_OFI_do_control_win(&new_info, peer, win, 1, 0);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-static inline void MPIDI_OFI_win_complete_proc(const MPIDI_OFI_win_control_t * info,
-                                               MPIR_Win * win, unsigned peer)
-{
-    ++MPIDI_CH4U_WIN(win, sync).sc.count;
-}
-
-static inline void MPIDI_OFI_win_post_proc(const MPIDI_OFI_win_control_t * info,
-                                           MPIR_Win * win, unsigned peer)
-{
-    ++MPIDI_CH4U_WIN(win, sync).pw.count;
-}
-
-
-static inline void MPIDI_OFI_win_unlock_done_proc(const MPIDI_OFI_win_control_t * info,
-                                                  MPIR_Win * win, unsigned peer)
-{
-    if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK) {
-        MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
-
-        MPIR_Assert((int ) target_ptr->sync.lock.locked == 1);
-        target_ptr->sync.lock.locked = 0;
-    }
-    else if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK_ALL) {
-        MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lockall.allLocked > 0);
-        MPIDI_CH4U_WIN(win, sync).lockall.allLocked -= 1;
-    }
-    else {
-        MPIR_Assert(0);
-    }
-
-}
-
 /* Translate the control message to get a huge message into a request to
  * actually perform the data transfer. */
 static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
@@ -369,15 +140,15 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 
         MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "SEARCHING POSTED LIST: (%d, %d, %d)", info->comm_id, info->origin_rank, info->tag));
 
-        MPL_LL_FOREACH(MPIDI_posted_huge_recv_head, list_ptr) {
+        LL_FOREACH(MPIDI_posted_huge_recv_head, list_ptr) {
             if (list_ptr->comm_id == info->comm_id &&
                     list_ptr->rank == info->origin_rank &&
                     list_ptr->tag == info->tag) {
                 MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "MATCHED POSTED LIST: (%d, %d, %d, %d)", info->comm_id, info->origin_rank, info->tag, list_ptr->rreq->handle));
 
-                MPL_LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
+                LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
 
-                recv = (MPIDI_OFI_huge_recv_t *) MPIDI_OFI_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
+                recv = (MPIDI_OFI_huge_recv_t *) MPIDI_CH4U_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
                             list_ptr->rreq->handle);
 
                 MPL_free(list_ptr);
@@ -391,10 +162,10 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
         MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "CREATING UNEXPECTED HUGE RECV: (%d, %d, %d)", info->comm_id, info->origin_rank, info->tag));
 
         /* If this is unexpected, create a new tracker and put it in the unexpected list. */
-        recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1);
+        recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1, MPL_MEM_COMM);
         if (!recv) MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-        MPL_LL_APPEND(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, recv);
+        LL_APPEND(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, recv);
     }
 
     recv->event_id = MPIDI_OFI_EVENT_GET_HUGE;
@@ -418,65 +189,26 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               int *is_contig,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
 {
-    int senderrank;
     int mpi_errno = MPI_SUCCESS;
-    void *buf = am_hdr;
-    MPIDI_OFI_win_control_t *control = (MPIDI_OFI_win_control_t *) buf;
+    MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) am_hdr;
     *req = NULL;
     *target_cmpl_cb = NULL;
 
-    switch (control->type) {
+    switch (ctrlsend->type) {
     case MPIDI_OFI_CTRL_HUGEACK:{
-            MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) buf;
             mpi_errno = MPIDI_OFI_dispatch_function(NULL, ctrlsend->ackreq, 0);
             goto fn_exit;
         }
         break;
 
     case MPIDI_OFI_CTRL_HUGE:{
-            MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) buf;
             mpi_errno = MPIDI_OFI_get_huge(ctrlsend);
             goto fn_exit;
         }
         break;
-    }
 
-    MPIR_Win *win;
-    senderrank = control->origin_rank;
-    win = (MPIR_Win *) MPIDI_OFI_map_lookup(MPIDI_Global.win_map, control->win_id);
-    MPIR_Assert(win != MPIDI_OFI_MAP_NOT_FOUND);
-
-    switch (control->type) {
-    case MPIDI_OFI_CTRL_LOCKREQ:
-    case MPIDI_OFI_CTRL_LOCKALLREQ:
-        mpi_errno = MPIDI_OFI_win_lock_request_proc(control, win, senderrank);
-        break;
-
-    case MPIDI_OFI_CTRL_LOCKACK:
-    case MPIDI_OFI_CTRL_LOCKALLACK:
-        MPIDI_OFI_win_lock_ack_proc(control, win, senderrank);
-        break;
-
-    case MPIDI_OFI_CTRL_UNLOCK:
-    case MPIDI_OFI_CTRL_UNLOCKALL:
-        mpi_errno = MPIDI_OFI_win_unlock_proc(control, win, senderrank);
-        break;
-
-    case MPIDI_OFI_CTRL_UNLOCKACK:
-    case MPIDI_OFI_CTRL_UNLOCKALLACK:
-        MPIDI_OFI_win_unlock_done_proc(control, win, senderrank);
-        break;
-
-    case MPIDI_OFI_CTRL_COMPLETE:
-        MPIDI_OFI_win_complete_proc(control, win, senderrank);
-        break;
-
-    case MPIDI_OFI_CTRL_POST:
-        MPIDI_OFI_win_post_proc(control, win, senderrank);
-        break;
-
-    default:
-        fprintf(stderr, "Bad control type: 0x%08x  %d\n", control->type, control->type);
+     default:
+        fprintf(stderr, "Bad control type: 0x%08x  %d\n", ctrlsend->type, ctrlsend->type);
         MPIR_Assert(0);
     }
 

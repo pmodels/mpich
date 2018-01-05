@@ -65,7 +65,7 @@ static inline int MPIDI_UCX_noncontig_put(const void *origin_addr,
     segment_first = 0;
     last = size;
 
-    buffer = MPL_malloc(size);
+    buffer = MPL_malloc(size, MPL_MEM_BUFFER);
     MPIR_Assert(buffer);
     MPIR_Segment_pack(segment_ptr, segment_first, &last, buffer);
     MPIR_Segment_free(segment_ptr);

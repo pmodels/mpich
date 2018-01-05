@@ -97,7 +97,7 @@ static int open_knem_dev(void)
 
     knem_has_dma = (info.features & KNEM_FEATURE_DMA);
 
-    knem_status = mmap(NULL, KNEM_STATUS_NR, PROT_READ|PROT_WRITE, MAP_SHARED, knem_fd, KNEM_STATUS_ARRAY_FILE_OFFSET);
+    knem_status = MPL_mmap(NULL, KNEM_STATUS_NR, PROT_READ|PROT_WRITE, MAP_SHARED, knem_fd, KNEM_STATUS_ARRAY_FILE_OFFSET, MPL_MEM_SHM);
     MPIR_ERR_CHKANDJUMP1(knem_status == MAP_FAILED, mpi_errno, MPI_ERR_OTHER, "**mmap",
                          "**mmap %d", errno);
     for (i = 0; i < KNEM_STATUS_NR; ++i) {
@@ -329,7 +329,7 @@ int MPID_nem_lmt_dma_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIR_Req
     
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_INITIATE_LMT);
 
-    MPIR_CHKPMEM_MALLOC(sreq->ch.s_cookie, knem_cookie_t *, sizeof(knem_cookie_t), mpi_errno, "s_cookie");
+    MPIR_CHKPMEM_MALLOC(sreq->ch.s_cookie, knem_cookie_t *, sizeof(knem_cookie_t), mpi_errno, "s_cookie", MPL_MEM_BUFFER);
 
     mpi_errno = send_sreq_data(vc, sreq, sreq->ch.s_cookie);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -443,7 +443,7 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPIR_Request *rreq, MPL_IOV s_co
 
     /* XXX DJG FIXME this looks like it always pushes! */
     /* push request if not complete for progress checks later */
-    node = MPL_malloc(sizeof(struct lmt_dma_node));
+    node = MPL_malloc(sizeof(struct lmt_dma_node), MPL_MEM_OTHER);
     node->vc = vc;
     node->req = rreq;
     node->status_p = status;

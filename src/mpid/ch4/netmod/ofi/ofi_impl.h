@@ -268,15 +268,10 @@ int MPIDI_OFI_progress_test_no_inline(void);
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               void **data, size_t * data_sz, int *is_contig,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
-void MPIDI_OFI_map_create(void **map);
-void MPIDI_OFI_map_destroy(void *map);
-void MPIDI_OFI_map_set(void *_map, uint64_t id, void *val);
-void MPIDI_OFI_map_erase(void *_map, uint64_t id);
-void *MPIDI_OFI_map_lookup(void *_map, uint64_t id);
 int MPIDI_OFI_control_dispatch(void *buf);
 void MPIDI_OFI_index_datatypes(void);
-void MPIDI_OFI_index_allocator_create(void **_indexmap, int start);
-int MPIDI_OFI_index_allocator_alloc(void *_indexmap);
+void MPIDI_OFI_index_allocator_create(void **_indexmap, int start, MPL_memory_class class);
+int MPIDI_OFI_index_allocator_alloc(void *_indexmap, MPL_memory_class class);
 void MPIDI_OFI_index_allocator_free(void *_indexmap, int index);
 void MPIDI_OFI_index_allocator_destroy(void *_indexmap);
 
@@ -290,26 +285,17 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_alloc_an
     memset((char *) req + MPIDI_REQUEST_HDR_SIZE, 0,
            sizeof(MPIDI_OFI_win_request_t) - MPIDI_REQUEST_HDR_SIZE);
     req->noncontig =
-        (MPIDI_OFI_win_noncontig_t *) MPL_calloc(1, (extra) + sizeof(*(req->noncontig)));
+        (MPIDI_OFI_win_noncontig_t *) MPL_calloc(1, (extra) + sizeof(*(req->noncontig)), MPL_MEM_BUFFER);
     return req;
-}
-
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_datatype_unmap(MPIDI_OFI_win_datatype_t * dt)
-{
-    if (dt && dt->map && (dt->map != &dt->__map))
-        MPL_free(dt->map);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * req)
 {
-    int count;
+    int in_use;
     MPIR_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);
-    MPIR_Object_release_ref(req, &count);
-    MPIR_Assert(count >= 0);
-    if (count == 0) {
-        MPIDI_OFI_win_datatype_unmap(&req->noncontig->target_dt);
-        MPIDI_OFI_win_datatype_unmap(&req->noncontig->origin_dt);
-        MPIDI_OFI_win_datatype_unmap(&req->noncontig->result_dt);
+    MPIR_Object_release_ref(req, &in_use);
+    MPIR_Assert(in_use >= 0);
+    if (!in_use) {
         MPL_free(req->noncontig);
         MPIR_Handle_obj_free(&MPIR_Request_mem, (req));
     }
@@ -466,7 +452,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn,
         old_max = MPIDI_Global.conn_mgr.max_n_conn;
         new_max = old_max + 1;
         MPIDI_Global.conn_mgr.free_conn_id =
-            (int *) MPL_realloc(MPIDI_Global.conn_mgr.free_conn_id, new_max * sizeof(int));
+            (int *) MPL_realloc(MPIDI_Global.conn_mgr.free_conn_id, new_max * sizeof(int), MPL_MEM_ADDRESS);
         for (i = old_max; i < new_max - 1; ++i) {
             MPIDI_Global.conn_mgr.free_conn_id[i] = i + 1;
         }
@@ -487,7 +473,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn,
     MPIDI_Global.conn_mgr.conn_list[conn_id].state = state;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, " new_conn_id=%d for conn=%lu rank=%d state=%d",
+                    (MPL_DBG_FDEST, " new_conn_id=%d for conn=%" PRIu64 " rank=%d state=%d",
                      conn_id, conn, rank,
                      MPIDI_Global.conn_mgr.conn_list[conn_id].state));
 
@@ -577,5 +563,162 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
   fn_fail:
     goto fn_exit;
 }
+
+struct MPIDI_OFI_contig_blocks_params {
+    size_t max_pipe;
+    DLOOP_Count count;
+    DLOOP_Offset last_loc;
+    DLOOP_Offset start_loc;
+    size_t       last_chunk;
+};
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_contig_count_block
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+    int MPIDI_OFI_contig_count_block(DLOOP_Offset * blocks_p,
+                                     DLOOP_Type el_type,
+                                     DLOOP_Offset rel_off, DLOOP_Buffer bufp, void *v_paramp)
+{
+    DLOOP_Offset size, el_size;
+    size_t rem, num;
+    struct MPIDI_OFI_contig_blocks_params *paramp = v_paramp;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONTIG_COUNT_BLOCK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONTIG_COUNT_BLOCK);
+
+    DLOOP_Assert(*blocks_p > 0);
+
+    DLOOP_Handle_get_size_macro(el_type, el_size);
+    size = *blocks_p * el_size;
+    if (paramp->count > 0 && rel_off == paramp->last_loc) {
+        /* this region is adjacent to the last */
+        paramp->last_loc += size;
+        /* If necessary, recalculate the number of chunks in this block */
+        if(paramp->last_loc - paramp->start_loc > paramp->max_pipe) {
+            paramp->count -= paramp->last_chunk;
+            num = (paramp->last_loc - paramp->start_loc) / paramp->max_pipe;
+            rem = (paramp->last_loc - paramp->start_loc) % paramp->max_pipe;
+            if(rem) num++;
+            paramp->last_chunk = num;
+            paramp->count += num;
+        }
+    }
+    else {
+         /* new region */
+        num  = size / paramp->max_pipe;
+        rem  = size % paramp->max_pipe;
+        if(rem) num++;
+
+        paramp->last_chunk = num;
+        paramp->last_loc   = rel_off + size;
+        paramp->start_loc  = rel_off;
+        paramp->count     += num;
+    }
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONTIG_COUNT_BLOCK);
+    return 0;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_count_iov
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+    size_t MPIDI_OFI_count_iov(int dt_count, MPI_Datatype dt_datatype, size_t max_pipe)
+{
+    struct MPIDI_OFI_contig_blocks_params params;
+    MPIR_Segment dt_seg;
+    ssize_t dt_size, num, rem;
+    size_t dtc, count, count1, count2;;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_COUNT_IOV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_COUNT_IOV);
+
+    count = 0;
+    dtc = MPL_MIN(2, dt_count);
+    params.max_pipe = max_pipe;
+    MPIDI_Datatype_check_size(dt_datatype, dtc, dt_size);
+    if (dtc) {
+        params.count = 0;
+        params.last_loc = 0;
+        params.start_loc = 0;
+        params.last_chunk = 0;
+        MPIR_Segment_init(NULL, 1, dt_datatype, &dt_seg, 0);
+        MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
+                                 MPIDI_OFI_contig_count_block,
+                                 NULL, NULL, NULL, NULL, (void *) &params);
+        count1 = params.count;
+        params.count = 0;
+        params.last_loc = 0;
+        params.start_loc = 0;
+        params.last_chunk = 0;
+        MPIR_Segment_init(NULL, dtc, dt_datatype, &dt_seg, 0);
+        MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
+                                 MPIDI_OFI_contig_count_block,
+                                 NULL, NULL, NULL, NULL, (void *) &params);
+        count2 = params.count;
+        if (count2 == 1) {      /* Contiguous */
+            num = (dt_size * dt_count) / max_pipe;
+            rem = (dt_size * dt_count) % max_pipe;
+            if (rem)
+                num++;
+            count += num;
+        }
+        else if (count2 < count1 * 2)
+            /* The commented calculation assumes merged blocks  */
+            /* The iov processor will not merge adjacent blocks */
+            /* When the iov state machine adds this capability  */
+            /* we should switch to use the optimized calcultion */
+            /* count += (count1*dt_count) - (dt_count-1);       */
+             count += count1 * dt_count;
+        else
+            count += count1 * dt_count;
+    }
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_COUNT_IOV);
+    return count;
+}
+
+/* Find the nearest length of iov that meets alignment requirement */
+#undef  FUNCNAME
+#define FUNCNAME MPIDI_OFI_align_iov_len
+#undef  FCNAME
+#define FCNAME   MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_align_iov_len(size_t len)
+{
+    size_t pad  = MPIDI_OFI_IOVEC_ALIGN - 1;
+    size_t mask = ~pad;
+
+    return (len + pad) & mask;
+}
+
+/* Find the minimum address that is >= ptr && meets alignment requirement */
+#undef  FUNCNAME
+#define FUNCNAME MPIDI_OFI_aligned_next_iov
+#undef  FCNAME
+#define FCNAME   MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX void* MPIDI_OFI_aligned_next_iov(void *ptr)
+{
+    return (void *) (uintptr_t) MPIDI_OFI_align_iov_len((size_t) ptr);
+}
+
+#undef  FUNCNAME
+#define FUNCNAME MPIDI_OFI_request_util_iov
+#undef  FCNAME
+#define FCNAME   MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX struct iovec *MPIDI_OFI_request_util_iov(MPIR_Request *req)
+{
+#if defined (MPL_HAVE_VAR_ATTRIBUTE_ALIGNED)
+    return &MPIDI_OFI_REQUEST(req, util.iov);
+#else
+    return (struct iovec *) MPIDI_OFI_aligned_next_iov(&MPIDI_OFI_REQUEST(req, util.iov_store));
+#endif
+}
+
+/* Make sure `p` is properly aligned */
+#define MPIDI_OFI_ASSERT_IOVEC_ALIGN(p)                                 \
+    do {                                                                \
+        MPIR_Assert((((uintptr_t)(void *) p) & (MPIDI_OFI_IOVEC_ALIGN - 1)) == 0); \
+    } while (0)
 
 #endif /* OFI_IMPL_H_INCLUDED */

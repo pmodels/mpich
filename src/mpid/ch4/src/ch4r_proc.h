@@ -11,7 +11,9 @@
 #ifndef CH4R_PROC_H_INCLUDED
 #define CH4R_PROC_H_INCLUDED
 
+#ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
+#endif
 
 #include "ch4_types.h"
 #include "build_nodemap.h"
@@ -260,7 +262,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rank_to_lpid(int rank, MPIR_Comm * comm)
     return ret;
 }
 
-static inline int MPIDI_CH4U_get_node_id(MPIR_Comm * comm, int rank, MPID_Node_id_t * id_p)
+static inline int MPIDI_CH4U_get_node_id(MPIR_Comm * comm, int rank, int * id_p)
 {
     int mpi_errno = MPI_SUCCESS;
     int avtid = 0, lpid = 0;
@@ -275,7 +277,7 @@ static inline int MPIDI_CH4U_get_node_id(MPIR_Comm * comm, int rank, MPID_Node_i
     return mpi_errno;
 }
 
-static inline int MPIDI_CH4U_get_max_node_id(MPIR_Comm * comm, MPID_Node_id_t * max_id_p)
+static inline int MPIDI_CH4U_get_max_node_id(MPIR_Comm * comm, int * max_id_p)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -295,7 +297,7 @@ static inline int MPIDI_CH4U_get_max_node_id(MPIR_Comm * comm, MPID_Node_id_t * 
 static inline int MPIDI_CH4U_build_nodemap(int myrank,
                                            MPIR_Comm * comm,
                                            int sz,
-                                           MPID_Node_id_t * out_nodemap, MPID_Node_id_t * sz_out)
+                                           int * out_nodemap, int * sz_out)
 {
     int ret;
 
@@ -354,12 +356,12 @@ static inline int MPIDIU_get_avt_size(int avtid)
 static inline int MPIDIU_alloc_globals_for_avtid(int avtid)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Node_id_t *new_node_map = NULL;
+    int *new_node_map = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_ALLOC_GLOBALS_FOR_AVTID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_ALLOC_GLOBALS_FOR_AVTID);
 
     new_node_map =
-        (MPID_Node_id_t *) MPL_malloc(MPIDI_av_table[avtid]->size * sizeof(MPID_Node_id_t));
+        (int *) MPL_malloc(MPIDI_av_table[avtid]->size * sizeof(int), MPL_MEM_ADDRESS);
     MPIR_ERR_CHKANDJUMP(new_node_map == NULL, mpi_errno, MPI_ERR_NO_MEM, "**nomem");
     MPIDI_CH4_Global.node_map[avtid] = new_node_map;
 
@@ -394,7 +396,7 @@ static inline int MPIDIU_get_next_avtid(int *avtid)
         old_max = MPIDI_CH4_Global.avt_mgr.max_n_avts;
         new_max = old_max + 1;
         MPIDI_CH4_Global.avt_mgr.free_avtid =
-            (int *) MPL_realloc(MPIDI_CH4_Global.avt_mgr.free_avtid, new_max * sizeof(int));
+            (int *) MPL_realloc(MPIDI_CH4_Global.avt_mgr.free_avtid, new_max * sizeof(int), MPL_MEM_ADDRESS);
         for (i = old_max; i < new_max - 1; i++) {
             MPIDI_CH4_Global.avt_mgr.free_avtid[i] = i + 1;
         }
@@ -451,7 +453,7 @@ static inline int MPIDIU_new_avt(int size, int *avtid)
     MPIDIU_get_next_avtid(avtid);
 
     new_av_table = (MPIDI_av_table_t *) MPL_malloc(size * sizeof(MPIDI_av_entry_t)
-                                                   + sizeof(MPIDI_av_table_t));
+                                                   + sizeof(MPIDI_av_table_t), MPL_MEM_ADDRESS);
     new_av_table->size = size;
     MPIDI_av_table[*avtid] = new_av_table;
 
@@ -494,15 +496,15 @@ static inline int MPIDIU_avt_add_ref(int avtid)
 
 static inline int MPIDIU_avt_release_ref(int avtid)
 {
-    int count;
+    int in_use;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AVT_RELEASE_REF);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_AVT_RELEASE_REF);
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, " decr avtid=%d", avtid));
-    MPIR_Object_release_ref(MPIDIU_get_av_table(avtid), &count);
-    if (count == 0) {
+    MPIR_Object_release_ref(MPIDIU_get_av_table(avtid), &in_use);
+    if (!in_use) {
         MPIDIU_free_avt(avtid);
         MPIDIU_free_globals_for_avtid(avtid);
     }
@@ -524,19 +526,19 @@ static inline int MPIDIU_avt_init()
     MPIDI_CH4_Global.avt_mgr.n_avts = 0;
 
     MPIDI_av_table = (MPIDI_av_table_t **)
-                      mmap(NULL, MPIDI_CH4_Global.avt_mgr.mmapped_size,
-                           PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+                      MPL_mmap(NULL, MPIDI_CH4_Global.avt_mgr.mmapped_size,
+                               PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0, MPL_MEM_ADDRESS);
     MPIR_ERR_CHKANDSTMT(MPIDI_av_table == MAP_FAILED, mpi_errno, MPI_ERR_NO_MEM,
                         goto fn_fail, "**nomem");
 
-    MPIDI_CH4_Global.node_map = (MPID_Node_id_t **)
-                                mmap(NULL, MPIDI_CH4_Global.avt_mgr.mmapped_size,
-                                     PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+    MPIDI_CH4_Global.node_map = (int **)
+                                MPL_mmap(NULL, MPIDI_CH4_Global.avt_mgr.mmapped_size,
+                                         PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0, MPL_MEM_ADDRESS);
     MPIR_ERR_CHKANDSTMT(MPIDI_CH4_Global.node_map == MAP_FAILED, mpi_errno,
                         MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
     MPIDI_CH4_Global.avt_mgr.free_avtid =
-        (int *) MPL_malloc(MPIDI_CH4_Global.avt_mgr.max_n_avts * sizeof(int));
+        (int *) MPL_malloc(MPIDI_CH4_Global.avt_mgr.max_n_avts * sizeof(int), MPL_MEM_ADDRESS);
     MPIR_ERR_CHKANDSTMT(MPIDI_CH4_Global.avt_mgr.free_avtid == NULL, mpi_errno,
                         MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
 
@@ -557,8 +559,8 @@ static inline int MPIDIU_avt_destroy()
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_AVT_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_AVT_DESTROY);
 
-    munmap((void *)MPIDI_CH4_Global.node_map, MPIDI_CH4_Global.avt_mgr.mmapped_size);
-    munmap((void *)MPIDI_av_table, MPIDI_CH4_Global.avt_mgr.mmapped_size);
+    MPL_munmap((void *)MPIDI_CH4_Global.node_map, MPIDI_CH4_Global.avt_mgr.mmapped_size, MPL_MEM_ADDRESS);
+    MPL_munmap((void *)MPIDI_av_table, MPIDI_CH4_Global.avt_mgr.mmapped_size, MPL_MEM_ADDRESS);
     MPL_free(MPIDI_CH4_Global.avt_mgr.free_avtid);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_AVT_DESTROY);

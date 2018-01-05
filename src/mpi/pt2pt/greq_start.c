@@ -91,7 +91,7 @@ int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
     (*request_ptr)->cc_ptr               = &(*request_ptr)->cc;
     MPIR_cc_set((*request_ptr)->cc_ptr, 1);
     (*request_ptr)->comm                 = NULL;
-    MPIR_CHKPMEM_MALLOC((*request_ptr)->u.ureq.greq_fns, struct MPIR_Grequest_fns *, sizeof(struct MPIR_Grequest_fns), mpi_errno, "greq_fns");
+    MPIR_CHKPMEM_MALLOC((*request_ptr)->u.ureq.greq_fns, struct MPIR_Grequest_fns *, sizeof(struct MPIR_Grequest_fns), mpi_errno, "greq_fns", MPL_MEM_GREQ);
     (*request_ptr)->u.ureq.greq_fns->cancel_fn            = cancel_fn;
     (*request_ptr)->u.ureq.greq_fns->free_fn              = free_fn;
     (*request_ptr)->u.ureq.greq_fns->query_fn             = query_fn;

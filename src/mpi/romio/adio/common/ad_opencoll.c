@@ -127,13 +127,13 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank,
 	     * info object about the file configuration.  deferred open,
 	     * though, skips that step for non-aggregators.  we do the
 	     * info-setting here */
-	    sprintf(value, "%d", fd->hints->striping_unit);
+	    MPL_snprintf(value, sizeof(value), "%d", fd->hints->striping_unit);
 	    ADIOI_Info_set(fd->info, "striping_unit", value);
 
-	    sprintf(value, "%d", fd->hints->striping_factor);
+	    MPL_snprintf(value, sizeof(value), "%d", fd->hints->striping_factor);
 	    ADIOI_Info_set(fd->info, "striping_factor", value);
 
-	    sprintf(value, "%d", fd->hints->start_iodevice);
+	    MPL_snprintf(value, sizeof(value), "%d", fd->hints->start_iodevice);
 	    ADIOI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
 
 	    *error_code = MPI_SUCCESS;

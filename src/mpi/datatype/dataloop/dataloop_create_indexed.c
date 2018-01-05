@@ -5,9 +5,9 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include <stdlib.h>
-
 #include "mpiimpl.h"
+
+#include <stdlib.h>
 
 static void DLOOP_Type_indexed_array_copy(DLOOP_Count count,
 					  DLOOP_Count contig_count,

@@ -7,18 +7,27 @@
    and POSIX shared memory. Thanks to Intel, Mellanox, and RIKEN AICS for
    participating in the CH4 coding effort.
 
+ # Added support for splitting communicators based on hardware
+   topology using info hints.
+
+ # Fixed SLURM integration in Hydra for new node list format.
+
+ # Better organization of collectives in the MPI layer. The new
+   scheme, which de-couples implementation from selection logic,
+   enables easier integration of additional algorithms.
+
  # Removed the PAMI device and poe PMI client.
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
 
    A full list of changes is available at the following link:
 
-     http://git.mpich.org/mpich.git/shortlog/v3.2..v3.3a1
+     http://git.mpich.org/mpich.git/shortlog/v3.2..v3.3a3
 
-   A full list of bugs that have been fixed is available at the
-   following link:
+   A list of bugs that have been fixed is available at the following
+   link:
 
-     https://trac.mpich.org/projects/mpich/query?status=closed&group=resolution&milestone=mpich-3.3
+     https://github.com/pmodels/mpich/milestone/25?closed=1
 
 ===============================================================================
                                Changes in 3.2

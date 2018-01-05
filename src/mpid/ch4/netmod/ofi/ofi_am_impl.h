@@ -104,7 +104,7 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
         if (req_hdr->am_hdr != &req_hdr->am_hdr_buf[0])
             MPL_free(req_hdr->am_hdr);
 
-        req_hdr->am_hdr = MPL_malloc(am_hdr_sz);
+        req_hdr->am_hdr = MPL_malloc(am_hdr_sz, MPL_MEM_BUFFER);
         MPIR_Assert(req_hdr->am_hdr);
         req_hdr->am_hdr_sz = am_hdr_sz;
     }
@@ -162,18 +162,20 @@ static inline int MPIDI_OFI_progress_do_queue(int vni_idx)
         goto fn_fail;
     }
 
-    if (((MPIDI_Global.cq_buff_head + 1) %
-         MPIDI_OFI_NUM_CQ_BUFFERED == MPIDI_Global.cq_buff_tail) ||
-        !slist_empty(&MPIDI_Global.cq_buff_list)) {
+    /* If the statically allocated buffered list is full or we've already
+     * started using the dynamic list, continue using it. */
+    if (((MPIDI_Global.cq_buffered_static_head + 1) %
+         MPIDI_OFI_NUM_CQ_BUFFERED == MPIDI_Global.cq_buffered_static_tail) ||
+        (NULL != MPIDI_Global.cq_buffered_dynamic_head)) {
         MPIDI_OFI_cq_list_t *list_entry =
-            (MPIDI_OFI_cq_list_t *) MPL_malloc(sizeof(MPIDI_OFI_cq_list_t));
+            (MPIDI_OFI_cq_list_t *) MPL_malloc(sizeof(MPIDI_OFI_cq_list_t), MPL_MEM_BUFFER);
         MPIR_Assert(list_entry);
         list_entry->cq_entry = cq_entry;
-        slist_insert_tail(&list_entry->entry, &MPIDI_Global.cq_buff_list);
+        LL_APPEND(MPIDI_Global.cq_buffered_dynamic_head, MPIDI_Global.cq_buffered_dynamic_tail, list_entry);
     }
     else {
-        MPIDI_Global.cq_buffered[MPIDI_Global.cq_buff_head].cq_entry = cq_entry;
-        MPIDI_Global.cq_buff_head = (MPIDI_Global.cq_buff_head + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
+        MPIDI_Global.cq_buffered_static_list[MPIDI_Global.cq_buffered_static_head].cq_entry = cq_entry;
+        MPIDI_Global.cq_buffered_static_head = (MPIDI_Global.cq_buffered_static_head + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
     }
 
     if ((cq_entry.flags & FI_RECV) && (cq_entry.flags & FI_MULTI_RECV)) {
@@ -237,6 +239,7 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
     iov[1].iov_base = MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr);
     iov[1].iov_len = am_hdr_sz;
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
+    MPIDI_OFI_ASSERT_IOVEC_ALIGN(iov);
     MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_Global.ctx[0].tx, iov, NULL, 2,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
@@ -287,8 +290,8 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     /* Always allocates RMA ID from COMM_WORLD as the actual associated communicator
      * is not available here */
     index =
-        MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(MPIR_Process.comm_world).rma_id_allocator);
-    MPIR_Assert(index < MPIDI_Global.max_huge_rmas);
+        MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(MPIR_Process.comm_world).rma_id_allocator, MPL_MEM_RMA);
+    MPIR_Assert((int) index < MPIDI_Global.max_huge_rmas);
     lmt_info->rma_key = MPIDI_OFI_ENABLE_MR_SCALABLE ? index << MPIDI_Global.huge_rma_shift : 0;
 
     MPIR_cc_incr(sreq->cc_ptr, &c);     /* send completion */
@@ -330,6 +333,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     iov[2].iov_base = lmt_info;
     iov[2].iov_len = sizeof(*lmt_info);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
+    MPIDI_OFI_ASSERT_IOVEC_ALIGN(iov);
     MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_Global.ctx[0].tx, iov, NULL, 3,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
@@ -383,6 +387,7 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
 
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
+    MPIDI_OFI_ASSERT_IOVEC_ALIGN(iov);
     MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_Global.ctx[0].tx, iov, NULL, 3,
                                      MPIDI_OFI_comm_to_phys(comm, rank),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
@@ -453,7 +458,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
         MPIR_Segment_init(buf, count, datatype, segment_ptr, 0);
         segment_first = 0;
         last = data_sz;
-        MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = (char *) MPL_malloc(data_sz);
+        MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = (char *) MPL_malloc(data_sz, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
         MPIR_Segment_pack(segment_ptr, segment_first, &last,
@@ -503,7 +508,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
     MPIR_Assert(sreq);
     len = am_hdr_sz + sizeof(*msg_hdrp);
-    ibuf = (char *) MPL_malloc(len);
+    ibuf = (char *) MPL_malloc(len, MPL_MEM_BUFFER);
     MPIR_Assert(ibuf);
     memcpy(ibuf, msg_hdrp, sizeof(*msg_hdrp));
     memcpy(ibuf + sizeof(*msg_hdrp), am_hdr, am_hdr_sz);

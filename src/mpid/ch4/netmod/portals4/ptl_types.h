@@ -29,8 +29,8 @@ typedef struct {
 
 typedef struct {
     MPIDI_PTL_addr_t *addr_table;
-    MPID_Node_id_t *node_map;
-    MPID_Node_id_t max_node_id;
+    int *node_map;
+    int max_node_id;
     char *kvsname;
     char pname[MPI_MAX_PROCESSOR_NAME];
     void *overflow_bufs[MPIDI_PTL_NUM_OVERFLOW_BUFFERS];

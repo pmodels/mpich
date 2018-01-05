@@ -9,11 +9,11 @@
 #include <execinfo.h>
 #endif
 
-#ifdef MPL_HAVE_BACKTRACE_H
+#ifdef MPL_HAVE_LIBBACKTRACE
 #include <backtrace.h>
 #endif
 
-#ifdef MPL_HAVE_LIBUNWIND_H
+#ifdef MPL_HAVE_LIBUNWIND
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 #endif
@@ -48,7 +48,7 @@ static inline void backtrace_libback(FILE *output)
  * context), so tighten up when we take the libunwind path.  Thanks
  * Siegmar.Gross@informatik.hs-fulda.de for the bug report about systems with
  * libunwind libraries but no libunwind development headers */
-#elif defined MPL_HAVE_LIBUNWIND && defined(MPL_HAVE_LIBUNWIND_H)
+#elif defined MPL_HAVE_LIBUNWIND
 static inline void backtrace_libunwind(FILE *output)
 {
     unw_cursor_t cursor;
@@ -122,7 +122,7 @@ void MPL_backtrace_show(FILE *output)
 {
 #ifdef MPL_HAVE_LIBBACKTRACE
     backtrace_libback(output);
-#elif defined MPL_HAVE_LIBUNWIND && defined(MPL_HAVE_LIBUNWIND_H)
+#elif defined MPL_HAVE_LIBUNWIND
     /* libunwind is not able to get line numbers without forking off to
      * addr2line (?)*/
     backtrace_libunwind(output);

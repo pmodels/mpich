@@ -12,7 +12,7 @@
 #endif
 #undef utarray_oom
 #define utarray_oom() do { goto fn_oom; } while (0)
-#include "mpir_utarray.h"
+#include "utarray.h"
 
 /* Count the number of outstanding close requests */
 static volatile int MPIDI_Outstanding_close_ops = 0;
@@ -467,7 +467,7 @@ int MPIDI_CH3U_Get_failed_group(int last_rank, MPIR_Group **failed_group)
         goto fn_exit;
     }
 
-    utarray_new(failed_procs, &ut_int_icd);
+    utarray_new(failed_procs, &ut_int_icd, MPL_MEM_OTHER);
 
     /* parse list of failed processes.  This is a comma separated list
        of ranks or ranges of ranks (e.g., "1, 3-5, 11") */
@@ -477,7 +477,7 @@ int MPIDI_CH3U_Get_failed_group(int last_rank, MPIR_Group **failed_group)
         parse_rank(&rank);
         ++i;
         MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER, VERBOSE, "Found failed rank: %d", rank);
-        utarray_push_back(failed_procs, &rank);
+        utarray_push_back(failed_procs, &rank, MPL_MEM_OTHER);
         MPIDI_last_known_failed = rank;
         MPIR_ERR_CHKINTERNAL(*c != ',' && *c != '\0', mpi_errno, "error parsing failed process list");
         if (*c == '\0' || last_rank == rank)

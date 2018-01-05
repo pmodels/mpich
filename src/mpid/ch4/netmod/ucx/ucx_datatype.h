@@ -25,7 +25,7 @@ static inline void *MPIDI_UCX_Start_pack(void *context, const void *buffer, size
     struct MPIDI_UCX_pack_state *state;
     MPI_Aint packsize;
 
-    state = MPL_malloc(sizeof(struct MPIDI_UCX_pack_state));
+    state = MPL_malloc(sizeof(struct MPIDI_UCX_pack_state), MPL_MEM_DATATYPE);
     segment_ptr = MPIR_Segment_alloc();
     MPIR_Pack_size_impl(count, *datatype, &packsize);
     /* Todo: Add error handling */
@@ -43,7 +43,7 @@ static inline void *MPIDI_UCX_Start_unpack(void *context, void *buffer, size_t c
     struct MPIDI_UCX_pack_state *state;
     MPI_Aint packsize;
 
-    state = MPL_malloc(sizeof(struct MPIDI_UCX_pack_state));
+    state = MPL_malloc(sizeof(struct MPIDI_UCX_pack_state), MPL_MEM_DATATYPE);
     MPIR_Pack_size_impl(count, *datatype, &packsize);
     segment_ptr = MPIR_Segment_alloc();
     /* Todo: Add error handling */

@@ -71,7 +71,7 @@ int MPI_T_category_get_index(const char *name, int *cat_index)
     name2index_hash_t *hash_entry;
 
     /* Do hash lookup by the name */
-    MPL_HASH_FIND_STR(cat_hash, name, hash_entry);
+    HASH_FIND_STR(cat_hash, name, hash_entry);
     if (hash_entry != NULL) {
         *cat_index = hash_entry->idx;
     } else {

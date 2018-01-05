@@ -53,10 +53,10 @@ typedef union {
     } STUBNM_reduce_empty_parameters;
 } MPIDI_STUBNM_reduce_params_t;
 
-#define MPIDI_STUBNM_BARRIER_PARAMS_DECL MPIDI_STUBNM_barrier_params_t stubnm_barrier_params;
-#define MPIDI_STUBNM_BCAST_PARAMS_DECL MPIDI_STUBNM_bcast_params_t stubnm_bcast_params;
-#define MPIDI_STUBNM_REDUCE_PARAMS_DECL MPIDI_STUBNM_reduce_params_t stubnm_reduce_params;
-#define MPIDI_STUBNM_ALLREDUCE_PARAMS_DECL MPIDI_STUBNM_allreduce_params_t stubnm_allreduce_params;
+#define MPIDI_STUBNM_BARRIER_PARAMS_DECL MPIDI_STUBNM_barrier_params_t stubnm_barrier_params
+#define MPIDI_STUBNM_BCAST_PARAMS_DECL MPIDI_STUBNM_bcast_params_t stubnm_bcast_params
+#define MPIDI_STUBNM_REDUCE_PARAMS_DECL MPIDI_STUBNM_reduce_params_t stubnm_reduce_params
+#define MPIDI_STUBNM_ALLREDUCE_PARAMS_DECL MPIDI_STUBNM_allreduce_params_t stubnm_allreduce_params
 
 typedef union {
     MPIDI_STUBNM_BARRIER_PARAMS_DECL;

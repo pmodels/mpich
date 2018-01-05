@@ -80,7 +80,7 @@ int MPIE_InitForDebugger( ProcessWorld *pWorld )
     static char myhostname[MAX_HOST_NAME+1];
 
     MPIR_proctable = (struct MPIR_PROCDESC *)
-	MPL_malloc( np * sizeof(struct MPIR_PROCDESC) );
+	MPL_malloc( np * sizeof(struct MPIR_PROCDESC), MPL_MEM_PM );
 
     i = 0;
     while (apps && i < np) {

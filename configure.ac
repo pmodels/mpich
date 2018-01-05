@@ -602,6 +602,8 @@ AC_ARG_ENABLE(dbg-nolocal, AC_HELP_STRING([--enable-dbg-nolocal], [enables debug
 AC_ARG_ENABLE(dbg-localoddeven, AC_HELP_STRING([--enable-dbg-localoddeven], [enables debugging mode where shared-memory communication is enabled only between even processes or odd processes on a node]),
     AC_DEFINE(ENABLED_ODD_EVEN_CLIQUES, 1, [Define to enable debugging mode where shared-memory communication is done only between even procs or odd procs]))
 
+AC_CANONICAL_TARGET
+
 # Find a C compiler.
 # We also need to do this before the F77 and FC test to ensure that we
 # find the C preprocessor reliably.
@@ -619,6 +621,10 @@ if test "$pac_cross_compiling" = "yes" -a "$ac_cv_prog_cc_cross" = "no" ; then
     ac_cv_prog_cxx_cross=yes
 fi
 PAC_POP_FLAG([CFLAGS])
+
+# also needed by hwloc in embedded mode, must also come early for expansion
+# ordering reasons
+AC_USE_SYSTEM_EXTENSIONS
 
 dnl now that autoconf and core compilers are setup, init automake and libtool
 dnl
@@ -1253,7 +1259,7 @@ if test "$with_openpa_prefix" = "embedded" ; then
                                      for more info.])],
                     [],[with_atomic_primitives=not_specified])
         # no need for libtool versioning when embedding OPA
-        opa_subdir_args="--disable-versioning"
+        opa_subdir_args="--disable-versioning --enable-embedded"
         if test "$with_atomic_primitives" = "not_specified" ; then
             PAC_APPEND_FLAG([--with-atomic-primitives=auto_allow_emulation], [opa_subdir_args])
         fi
@@ -1282,6 +1288,223 @@ else
     fi
     PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib],[WRAPPER_LDFLAGS])
 fi
+
+# Izem
+
+AC_ARG_ENABLE([izem],
+[  --enable-izem@<:@=ARGS@:>@   Enable features from the Izem library.
+                          "ARGS" is a list of comma separated features.
+                          Accepted arguments are:
+			  sync     - use the Izem interface for sychronization objects
+                                     (locks and condition variables) instead of the MPL interface
+                          yes/all  - all of the above features are enabled
+                          no/none  - none of the above features are enabled],,
+[enable_izem=no])
+
+# strip off multiple options, separated by commas
+save_IFS="$IFS"
+IFS=","
+for option in $enable_izem ; do
+    case "$option" in
+        sync)
+            izem_sync=yes
+        ;;
+        yes|all)
+            izem_sync=yes
+        ;;
+        no|none)
+        ;;
+        *)
+            IFS=$save_IFS
+            AC_MSG_WARN([Unknown value $option for enable-debug])
+            IFS=","
+        ;;
+    esac
+done
+IFS="$save_IFS"
+
+if test "$izem_sync" = "yes" ; then
+    AC_DEFINE(ENABLE_IZEM_SYNC,1,[Define to enable using Izem locks and condition variables])
+fi
+
+AC_ARG_VAR([ZMLIBNAME],[can be used to override the name of the Izem library (default: "zm")])
+ZMLIBNAME=${ZMLIBNAME:-"zm"}
+export ZMLIBNAME
+AC_SUBST(ZMLIBNAME)
+AC_ARG_WITH([zm-prefix],
+[  --with-zm-prefix@<:@=ARG@:>@
+                          specify the Izem library to use. No argument implies "yes".
+                          Accepted values for ARG are:
+                          yes|embedded - use the embedded Izem
+                          system       - search system paths for an Izem installation
+                          no           - disable Izem
+                          <PATH>       - use the Izem at PATH],,
+[with_zm_prefix=no])
+
+zmsrcdir=""
+AC_SUBST([zmsrcdir])
+zmlibdir=""
+AC_SUBST([zmlibdir])
+zmlib=""
+AC_SUBST([zmlib])
+
+if test "$enable_izem" != "no" && test "$enable_izem" != "none"; then
+    if test "$with_zm_prefix" = "yes" || test "$with_zm_prefix" = "embedded"; then
+        if test -e "${use_top_srcdir}/src/izem" ; then
+            zm_subdir_args="--enable-embedded"
+            PAC_CONFIG_SUBDIR_ARGS([src/izem],[$zm_subdir_args],[],[AC_MSG_ERROR(Izem configure failed)])
+            zmsrcdir="${master_top_builddir}/src/izem"
+            zmlib="${master_top_builddir}/src/izem/src/lib${ZMLIBNAME}.la"
+            PAC_APPEND_FLAG([-I${use_top_srcdir}/src/izem/src/include],[CPPFLAGS])
+            PAC_APPEND_FLAG([-I${master_top_builddir}/src/izem/src/include],[CPPFLAGS])
+        else
+            AC_MSG_WARN([Attempted to use the embedded Izem source tree in "src/izem", but it is missing.  Configuration or compilation may fail later.])
+        fi
+    elif test "$with_zm_prefix" = "system"; then
+        # check if an Izem installation exists on this system
+        PAC_PUSH_FLAG([LIBS])
+        PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[LIBS])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "lock/zm_ticket.h"
+                                        ],
+                                        [zm_ticket_t lock;
+                                         zm_ticket_init(&lock);
+                                         zm_ticket_acquire(&lock);
+                                         zm_ticket_release(&lock);])],
+                       [AC_MSG_ERROR([No usable Izem installation was found on this system])],
+                       [PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[WRAPPER_LIBS])])
+        PAC_POP_FLAG([LIBS])
+    elif test "$with_zm_prefix" = "no"; then
+        AC_MSG_ERROR([Izem features were requested with --enable-izem but Izem was disabled.])
+    else
+        # The user specified an already-installed Izem; just sanity check, don't
+        # subconfigure it
+
+        AS_IF([test -s "${with_zm_prefix}/include/lock/zm_lock.h" -a -s "${with_zm_prefix}/include/cond/zm_cond.h"],
+              [:],[AC_MSG_ERROR([Izem headers at "${with_zm_prefix}/include" are missing])])
+        PAC_APPEND_FLAG([-I${with_zm_prefix}/include],[CPPFLAGS])
+
+        PAC_PUSH_FLAG([LIBS])
+        PAC_PUSH_FLAG([LDFLAGS])
+        PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[LIBS])
+        PAC_APPEND_FLAG([-L${with_zm_prefix}/lib],[LDFLAGS])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([#include "lock/zm_ticket.h"
+                                        ],
+                                        [zm_ticket_t lock;
+                                         zm_ticket_init(&lock);
+                                         zm_ticket_acquire(&lock);
+                                         zm_ticket_release(&lock);])],
+                       [],[AC_MSG_ERROR([The Izem installation at "${with_zm_prefix}" seems broken])])
+        PAC_POP_FLAG([LIBS])
+        PAC_POP_FLAG([LDFLAGS])
+        PAC_APPEND_FLAG([-L${with_zm_prefix}/lib],[WRAPPER_LDFLAGS])
+        PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[WRAPPER_LIBS])
+        zmlibdir="-L${with_zm_prefix}/lib"
+    fi
+fi
+
+
+# Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
+# and -lp$MPILIBNAME.
+NEEDSPLIB=yes
+if test $enable_weak_symbols = yes ; then
+    # Turn off weak symbols if they aren't available
+    PAC_PROG_C_WEAK_SYMBOLS(,enable_weak_symbols=no)
+fi
+if test $enable_weak_symbols = "yes" ; then
+    AC_DEFINE(USE_WEAK_SYMBOLS,1,[Define if weak symbols should be used])
+    NEEDSPLIB=no
+    # Check for the ability to support multiple weak symbols
+    if test "$pac_cv_prog_c_weak_symbols" = "pragma weak" ; then
+       PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS(AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined]))
+    fi
+fi
+export NEEDSPLIB
+
+AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "$NEEDSPLIB" = "yes"])
+
+
+# ----------------------------------------------------------------------------
+# HWLOC
+# ----------------------------------------------------------------------------
+# Allow the user to override the hwloc location (from embedded to user
+# path)
+# HWLOC
+AC_ARG_WITH([hwloc-prefix],
+            [AS_HELP_STRING([[--with-hwloc-prefix[=DIR]]],
+                            [use the HWLOC library installed in DIR,
+                             rather than the one included in src/hwloc.  Pass
+                             "embedded" to force usage of the HWLOC source
+                             distributed with MPICH.])],
+            [],dnl action-if-given
+            [with_hwloc_prefix=embedded]) dnl action-if-not-given
+hwlocsrcdir=""
+AC_SUBST([hwlocsrcdir])
+hwloclibdir=""
+AC_SUBST([hwloclibdir])
+hwloclib=""
+AC_SUBST([hwloclib])
+
+# Unconditionally include the hwloc macros, even if we are using an
+# external hwloc (or hwloc is disabled). This is needed for the
+# AM_CONDITIONALS that we will set later.
+m4_include([src/hwloc/config/hwloc.m4])
+m4_include([src/hwloc/config/hwloc_check_attributes.m4])
+m4_include([src/hwloc/config/hwloc_check_visibility.m4])
+m4_include([src/hwloc/config/hwloc_check_vendor.m4])
+m4_include([src/hwloc/config/hwloc_components.m4])
+m4_include([src/hwloc/config/hwloc_pkg.m4])
+
+if test "$with_hwloc_prefix" = "embedded" ; then
+   HWLOC_SETUP_CORE([src/hwloc],[have_hwloc=yes],[have_hwloc=no],[1])
+   # Only build hwloc in embedded mode
+   if test "$have_hwloc" = "yes" ; then
+      use_embedded_hwloc=yes
+      CFLAGS="$HWLOC_EMBEDDED_CFLAGS $CFLAGS"
+      CPPFLAGS="$HWLOC_EMBEDDED_CPPFLAGS $CPPFLAGS"
+      LIBS="$HWLOC_EMBEDDED_LIBS $LIBS"
+      # disable visibility if building profiling library
+      if test "$NEEDSPLIB" != "yes" ; then
+         CFLAGS="$HWLOC_EMBEDDED_VISIBILITY_CFLAGS $CFLAGS"
+      fi
+      hwlocsrcdir="src/hwloc"
+      hwloclib="src/hwloc/src/libhwloc_embedded.la"
+   fi
+else
+   AC_CHECK_HEADERS([hwloc.h])
+   # hwloc_topology_set_pid was added in hwloc-1.0.0, which is our
+   # minimum required version
+   AC_CHECK_LIB([hwloc],[hwloc_topology_set_pid])
+   AC_MSG_CHECKING([if non-embedded hwloc works])
+   if test "$ac_cv_header_hwloc_h" = "yes" -a "$ac_cv_lib_hwloc_hwloc_topology_set_pid" = "yes" ; then
+      have_hwloc=yes
+   else
+      have_hwloc=no
+   fi
+   AC_MSG_RESULT([$have_hwloc])
+
+   # FIXME: Disable hwloc on Cygwin for now. The hwloc package,
+   # atleast as of 1.0.2, does not install correctly on Cygwin
+   AS_CASE([$host], [*-*-cygwin], [have_hwloc=no])
+
+   if test "$have_hwloc" = "yes" ; then
+      hwloclib="-lhwloc"
+      if test -d ${with_hwloc_prefix}/lib64 ; then
+         PAC_APPEND_FLAG([-L${with_hwloc_prefix}/lib64],[WRAPPER_LDFLAGS])
+         hwloclibdir="-L${with_hwloc_prefix}/lib64"
+      else
+	 hwloclibdir="-L${with_hwloc_prefix}/lib"
+      fi
+   fi
+fi
+
+if test "$have_hwloc" = "yes" ; then
+   AC_DEFINE(HAVE_HWLOC,1,[Define if hwloc is available])
+fi
+
+HWLOC_DO_AM_CONDITIONALS
+AM_CONDITIONAL([have_hwloc], [test "${have_hwloc}" = "yes"])
+AM_CONDITIONAL([use_embedded_hwloc], [test "${use_embedded_hwloc}" = "yes"])
+
 
 # ----------------------------------------------------------------------------
 # Threads
@@ -1747,25 +1970,6 @@ if test -n "$MPI_DEFAULT_COPTS" ; then
     fi
 fi
 
-# Set NEEDSPLIB to yes if link commands need both -l$MPILIBNAME
-# and -lp$MPILIBNAME.
-NEEDSPLIB=yes
-if test $enable_weak_symbols = yes ; then
-    # Turn off weak symbols if they aren't available
-    PAC_PROG_C_WEAK_SYMBOLS(,enable_weak_symbols=no)
-fi
-if test $enable_weak_symbols = "yes" ; then
-    AC_DEFINE(USE_WEAK_SYMBOLS,1,[Define if weak symbols should be used])
-    NEEDSPLIB=no
-    # Check for the ability to support multiple weak symbols
-    if test "$pac_cv_prog_c_weak_symbols" = "pragma weak" ; then
-       PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS(AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined]))
-    fi
-fi
-export NEEDSPLIB
-
-AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "$NEEDSPLIB" = "yes"])
-
 # ---------------------------------------------------------------------------
 # determine rpath and other shared library flags for CC
 # src/env may not exist yet in a vpath build
@@ -2172,7 +2376,7 @@ if test "$enable_fc" = "yes" ; then
 fi
 AM_CONDITIONAL([BUILD_F08_BINDING], [test "$f08_works" = "yes"])
 
-if test -n "$f08_works" ; then
+if test "$f08_works" = "yes" ; then
     status_f08_works=1
     bindings="$bindings f08"
 else

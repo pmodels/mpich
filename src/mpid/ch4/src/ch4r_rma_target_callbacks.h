@@ -20,27 +20,26 @@
  * function are named with suffix "_target_cmpl_cb". */
 
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_winlock_getlocallock ATTRIBUTE((unused));
-
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_put ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_put_ack ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_ack ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_cas ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_cas_ack ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc_ack ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_ack ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_win_ctrl ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_put_iov ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_put_iov_ack ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_put_data ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc_iov ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_iov ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc_iov_ack ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_iov_ack ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc_data ATTRIBUTE((unused));
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_data ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_put ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_put_ack ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_ack ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_cas ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_cas_ack ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc_ack ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_ack ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_win_ctrl ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_put_iov ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_put_iov_ack ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_put_data ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc_iov ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_iov ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc_iov_ack ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_iov_ack ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_acc_data ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_data ATTRIBUTE((unused));
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH4_RMA_Init_targetcb_pvars
@@ -418,7 +417,7 @@ static inline void MPIDI_win_lock_req_proc(int handler_id,
 
     MPIR_T_PVAR_TIMER_START(RMA, rma_winlock_getlocallock);
     struct MPIDI_CH4U_win_lock *lock = (struct MPIDI_CH4U_win_lock *)
-        MPL_calloc(1, sizeof(struct MPIDI_CH4U_win_lock));
+        MPL_calloc(1, sizeof(struct MPIDI_CH4U_win_lock), MPL_MEM_RMA);
 
     lock->mtype = handler_id;
     lock->rank = info->origin_rank;
@@ -450,7 +449,8 @@ static inline void MPIDI_win_lock_ack_proc(int handler_id,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_LOCK_ACK_PROC);
 
     if (handler_id == MPIDI_CH4U_WIN_LOCK_ACK) {
-        MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
+        MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, info->origin_rank);
+        MPIR_Assert(target_ptr);
 
         MPIR_Assert((int) target_ptr->sync.lock.locked == 0);
         target_ptr->sync.lock.locked = 1;
@@ -536,7 +536,8 @@ static inline void MPIDI_win_unlock_done(const MPIDI_CH4U_win_cntrl_msg_t * info
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_UNLOCK_DONE);
 
     if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK) {
-        MPIDI_CH4U_win_target_t *target_ptr = &MPIDI_CH4U_WIN(win, targets)[info->origin_rank];
+        MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, info->origin_rank);
+        MPIR_Assert(target_ptr);
 
         MPIR_Assert((int) target_ptr->sync.lock.locked == 1);
         target_ptr->sync.lock.locked = 0;
@@ -640,7 +641,7 @@ static inline int MPIDI_do_accumulate_op(void *source_buf, int source_count,
         vec_len = dtp->max_contig_blocks * target_count + 1;
         /* +1 needed because Rob says so */
         dloop_vec = (DLOOP_VECTOR *)
-            MPL_malloc(vec_len * sizeof(DLOOP_VECTOR));
+            MPL_malloc(vec_len * sizeof(DLOOP_VECTOR), MPL_MEM_RMA);
         /* --BEGIN ERROR HANDLING-- */
         if (!dloop_vec) {
             mpi_errno =
@@ -716,6 +717,7 @@ static inline int MPIDI_handle_acc_cmpl(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_HANDLE_ACC_CMPL);
 
     MPIR_Datatype_get_size_macro(MPIDI_CH4U_REQUEST(rreq, req->areq.target_datatype), basic_sz);
+    MPIR_ERR_CHKANDJUMP(basic_sz == 0, mpi_errno, MPI_ERR_OTHER, "**dtype");
     data_sz = MPIDI_CH4U_REQUEST(rreq, req->areq.data_sz);
 
     /* MPIDI_CS_ENTER(); */
@@ -789,11 +791,12 @@ static inline int MPIDI_handle_get_acc_cmpl(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_HANDLE_GET_ACC_CMPL);
 
     MPIR_Datatype_get_size_macro(MPIDI_CH4U_REQUEST(rreq, req->areq.target_datatype), basic_sz);
+    MPIR_Assert(basic_sz);
     data_sz = MPIDI_CH4U_REQUEST(rreq, req->areq.data_sz);
 
     /* MPIDI_CS_ENTER(); */
 
-    original = (char *) MPL_malloc(data_sz);
+    original = (char *) MPL_malloc(data_sz, MPL_MEM_RMA);
     MPIR_Assert(original);
 
     if (MPIDI_CH4U_REQUEST(rreq, req->areq.op) == MPI_NO_OP) {
@@ -877,7 +880,7 @@ static inline void MPIDI_handle_acc_data(void **data, size_t * p_data_sz, int *i
     MPIDI_Datatype_check_size(MPIDI_CH4U_REQUEST(rreq, req->areq.origin_datatype),
                               MPIDI_CH4U_REQUEST(rreq, req->areq.origin_count), data_sz);
     if (data_sz) {
-        p_data = MPL_malloc(data_sz);
+        p_data = MPL_malloc(data_sz, MPL_MEM_RMA);
         MPIR_Assert(p_data);
     }
 
@@ -943,7 +946,7 @@ static inline int MPIDI_get_target_cmpl_cb(MPIR_Request * req)
         data_sz += iov[i].iov_len;
     }
 
-    p_data = (char *) MPL_malloc(data_sz);
+    p_data = (char *) MPL_malloc(data_sz, MPL_MEM_RMA);
     MPIR_Assert(p_data);
 
     offset = 0;
@@ -1416,7 +1419,7 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
         n_iov = (int) num_iov;
         MPIR_Assert(n_iov > 0);
         MPIDI_CH4U_REQUEST(areq, req->iov) =
-            (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec));
+            (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_RMA);
         MPIR_Assert(MPIDI_CH4U_REQUEST(areq, req->iov));
 
         last = data_sz;
@@ -1491,8 +1494,7 @@ static inline int MPIDI_win_ctrl_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_WIN_CTRL_TARGET_MSG_CB);
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_win_ctrl);
 
-    MPL_HASH_FIND(dev.ch4u.hash_handle, MPIDI_CH4_Global.win_hash,
-                  &msg_hdr->win_id, sizeof(uint64_t), win);
+    win = (MPIR_Win *) MPIDI_CH4U_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
     /* TODO: check output win ptr */
 
     switch (handler_id) {
@@ -1576,8 +1578,7 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_CH4U_REQUEST(*req, req->preq.preq_ptr) = msg_hdr->preq_ptr;
     MPIDI_CH4U_REQUEST(*req, rank) = msg_hdr->src_rank;
 
-    MPL_HASH_FIND(dev.ch4u.hash_handle, MPIDI_CH4_Global.win_hash,
-                  &msg_hdr->win_id, sizeof(uint64_t), win);
+    win = (MPIR_Win *) MPIDI_CH4U_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
     base = MPIDI_CH4I_win_base_at_target(win);
@@ -1590,7 +1591,7 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
     offset = win->disp_unit * msg_hdr->target_disp;
     if (msg_hdr->n_iov) {
         int i;
-        dt_iov = (struct iovec *) MPL_malloc(sizeof(struct iovec) * msg_hdr->n_iov);
+        dt_iov = (struct iovec *) MPL_malloc(sizeof(struct iovec) * msg_hdr->n_iov, MPL_MEM_RMA);
         MPIR_Assert(dt_iov);
 
         iov = (struct iovec *) ((char *) am_hdr + sizeof(*msg_hdr));
@@ -1625,7 +1626,7 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
         n_iov = (int) num_iov;
         MPIR_Assert(n_iov > 0);
         MPIDI_CH4U_REQUEST(rreq, req->iov) =
-            (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec));
+            (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_RMA);
         MPIR_Assert(MPIDI_CH4U_REQUEST(rreq, req->iov));
 
         last = data_sz;
@@ -1672,8 +1673,7 @@ static inline int MPIDI_put_iov_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_CH4U_REQUEST(*req, req->preq.preq_ptr) = msg_hdr->preq_ptr;
     MPIDI_CH4U_REQUEST(*req, rank) = msg_hdr->src_rank;
 
-    MPL_HASH_FIND(dev.ch4u.hash_handle, MPIDI_CH4_Global.win_hash,
-                  &msg_hdr->win_id, sizeof(uint64_t), win);
+    win = (MPIR_Win *) MPIDI_CH4U_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
     MPIDI_CH4U_REQUEST(rreq, req->preq.win_ptr) = win;
@@ -1684,7 +1684,7 @@ static inline int MPIDI_put_iov_target_msg_cb(int handler_id, void *am_hdr,
     /* Base adjustment for iov will be done after we get the entire iovs,
      * at MPIDI_CH4U_put_data_target_msg_cb */
     MPIR_Assert(msg_hdr->n_iov);
-    dt_iov = (struct iovec *) MPL_malloc(sizeof(struct iovec) * msg_hdr->n_iov);
+    dt_iov = (struct iovec *) MPL_malloc(sizeof(struct iovec) * msg_hdr->n_iov, MPL_MEM_RMA);
     MPIR_Assert(dt_iov);
 
     MPIDI_CH4U_REQUEST(rreq, req->preq.dt_iov) = dt_iov;
@@ -1987,8 +1987,7 @@ static inline int MPIDI_cswap_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_Datatype_check_contig_size(msg_hdr->datatype, 1, dt_contig, data_sz);
     *is_contig = dt_contig;
 
-    MPL_HASH_FIND(dev.ch4u.hash_handle, MPIDI_CH4_Global.win_hash,
-                  &msg_hdr->win_id, sizeof(uint64_t), win);
+    win = (MPIR_Win *) MPIDI_CH4U_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
     base = MPIDI_CH4I_win_base_at_target(win);
@@ -2001,7 +2000,7 @@ static inline int MPIDI_cswap_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_CH4U_REQUEST(*req, rank) = msg_hdr->src_rank;
 
     MPIR_Assert(dt_contig == 1);
-    p_data = MPL_malloc(data_sz * 2);
+    p_data = MPL_malloc(data_sz * 2, MPL_MEM_RMA);
     MPIR_Assert(p_data);
 
     *p_data_sz = data_sz * 2;
@@ -2045,7 +2044,7 @@ static inline int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIDI_Datatype_check_size(msg_hdr->origin_datatype, msg_hdr->origin_count, data_sz);
     if (data_sz) {
-        p_data = MPL_malloc(data_sz);
+        p_data = MPL_malloc(data_sz, MPL_MEM_RMA);
         MPIR_Assert(p_data);
     }
 
@@ -2058,8 +2057,7 @@ static inline int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
         *data = p_data;
     }
 
-    MPL_HASH_FIND(dev.ch4u.hash_handle, MPIDI_CH4_Global.win_hash,
-                  &msg_hdr->win_id, sizeof(uint64_t), win);
+    win = (MPIR_Win *) MPIDI_CH4U_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
     base = MPIDI_CH4I_win_base_at_target(win);
@@ -2083,7 +2081,7 @@ static inline int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
         goto fn_exit;
     }
 
-    dt_iov = (struct iovec *) MPL_malloc(sizeof(struct iovec) * msg_hdr->n_iov);
+    dt_iov = (struct iovec *) MPL_malloc(sizeof(struct iovec) * msg_hdr->n_iov, MPL_MEM_RMA);
     MPIR_Assert(dt_iov);
 
     iov = (struct iovec *) ((char *) msg_hdr + sizeof(*msg_hdr));
@@ -2156,8 +2154,7 @@ static inline int MPIDI_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_Assert(rreq);
     *req = rreq;
 
-    MPL_HASH_FIND(dev.ch4u.hash_handle, MPIDI_CH4_Global.win_hash,
-                  &msg_hdr->win_id, sizeof(uint64_t), win);
+    win = (MPIR_Win *) MPIDI_CH4U_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
     base = MPIDI_CH4I_win_base_at_target(win);
@@ -2175,7 +2172,7 @@ static inline int MPIDI_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_CH4U_REQUEST(*req, req->areq.data_sz) = msg_hdr->result_data_sz;
     MPIDI_CH4U_REQUEST(*req, rank) = msg_hdr->src_rank;
 
-    dt_iov = (struct iovec *) MPL_malloc(sizeof(struct iovec) * msg_hdr->n_iov);
+    dt_iov = (struct iovec *) MPL_malloc(sizeof(struct iovec) * msg_hdr->n_iov, MPL_MEM_RMA);
     MPIDI_CH4U_REQUEST(rreq, req->areq.dt_iov) = dt_iov;
     MPIR_Assert(dt_iov);
 
@@ -2251,8 +2248,7 @@ static inline int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
     *target_cmpl_cb = MPIDI_get_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
 
-    MPL_HASH_FIND(dev.ch4u.hash_handle, MPIDI_CH4_Global.win_hash,
-                  &msg_hdr->win_id, sizeof(uint64_t), win);
+    win = (MPIR_Win *) MPIDI_CH4U_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
     MPIR_Assert(win);
 
     base = MPIDI_CH4I_win_base_at_target(win);
@@ -2268,7 +2264,7 @@ static inline int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
     MPIDI_CH4U_REQUEST(rreq, rank) = msg_hdr->src_rank;
 
     if (msg_hdr->n_iov) {
-        iov = (struct iovec *) MPL_malloc(msg_hdr->n_iov * sizeof(*iov));
+        iov = (struct iovec *) MPL_malloc(msg_hdr->n_iov * sizeof(*iov), MPL_MEM_RMA);
         MPIR_Assert(iov);
 
         *data = (void *) iov;
@@ -2344,7 +2340,7 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
         n_iov = (int) num_iov;
         MPIR_Assert(n_iov > 0);
         MPIDI_CH4U_REQUEST(rreq, req->iov) =
-            (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec));
+            (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_RMA);
         MPIR_Assert(MPIDI_CH4U_REQUEST(rreq, req->iov));
 
         last = data_sz;

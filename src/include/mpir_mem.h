@@ -91,6 +91,13 @@ extern MPL_dbg_class MPIR_DBG_STRING;
 #define calloc(a,b)       'Error use MPL_calloc' :::
 #define free(a)           'Error use MPL_free'   :::
 #define realloc(a)        'Error use MPL_realloc' :::
+/* These two functions can't be guarded because we use #include <sys/mman.h>
+ * throughout the code to be able to use other symbols in that header file.
+ * Because we include that header directly, we bypass this guard and cause
+ * compile problems.
+ * #define mmap(a,b,c,d,e,f) 'Error use MPL_mmap'   :::
+ * #define munmap(a,b)       'Error use MPL_munmap' :::
+ */
 #if defined(strdup) || defined(__strdup)
 #undef strdup
 #endif
@@ -128,7 +135,7 @@ extern MPL_dbg_class MPIR_DBG_STRING;
    imposed by C) */
 #define MPIR_CHKLMEM_DECL(n_) int dummy_ ATTRIBUTE((unused))
 #define MPIR_CHKLMEM_FREEALL()
-#define MPIR_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) \
+#define MPIR_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,stmt_) \
 {pointer_ = (type_)alloca(nbytes_); \
     if (!(pointer_) && (nbytes_ > 0)) {	   \
     MPIR_CHKMEM_SETERR(rc_,nbytes_,name_); \
@@ -140,8 +147,8 @@ extern MPL_dbg_class MPIR_DBG_STRING;
  int mpiu_chklmem_stk_sp_=0;\
  MPIR_AssertDeclValue(const int mpiu_chklmem_stk_sz_,n_)
 
-#define MPIR_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) \
-{pointer_ = (type_)MPL_malloc(nbytes_); \
+#define MPIR_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,stmt_) \
+{pointer_ = (type_)MPL_malloc(nbytes_,class_); \
 if (pointer_) { \
     MPIR_Assert(mpiu_chklmem_stk_sp_<mpiu_chklmem_stk_sz_);\
     mpiu_chklmem_stk_[mpiu_chklmem_stk_sp_++] = pointer_;\
@@ -153,18 +160,18 @@ if (pointer_) { \
     do { while (mpiu_chklmem_stk_sp_ > 0) {\
        MPL_free( mpiu_chklmem_stk_[--mpiu_chklmem_stk_sp_] ); } } while(0)
 #endif /* HAVE_ALLOCA */
-#define MPIR_CHKLMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_) \
-    MPIR_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)
-#define MPIR_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_) \
-    MPIR_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,goto fn_fail)
+#define MPIR_CHKLMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_,class_) \
+    MPIR_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_)
+#define MPIR_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_) \
+    MPIR_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,goto fn_fail)
 
 /* Persistent memory that we may want to recover if something goes wrong */
 #define MPIR_CHKPMEM_DECL(n_) \
  void *(mpiu_chkpmem_stk_[n_]) = { NULL };     \
  int mpiu_chkpmem_stk_sp_=0;\
  MPIR_AssertDeclValue(const int mpiu_chkpmem_stk_sz_,n_)
-#define MPIR_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) \
-{pointer_ = (type_)MPL_malloc(nbytes_); \
+#define MPIR_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,stmt_) \
+{pointer_ = (type_)MPL_malloc(nbytes_,class_); \
 if (pointer_) { \
     MPIR_Assert(mpiu_chkpmem_stk_sp_<mpiu_chkpmem_stk_sz_);\
     mpiu_chkpmem_stk_[mpiu_chkpmem_stk_sp_++] = pointer_;\
@@ -180,19 +187,19 @@ if (pointer_) { \
        MPL_free( mpiu_chkpmem_stk_[--mpiu_chkpmem_stk_sp_] ); } }
 #define MPIR_CHKPMEM_COMMIT() \
     mpiu_chkpmem_stk_sp_ = 0
-#define MPIR_CHKPMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_) \
-    MPIR_CHKPMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)
-#define MPIR_CHKPMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_) \
-    MPIR_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,goto fn_fail)
+#define MPIR_CHKPMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_,class_) \
+    MPIR_CHKPMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_)
+#define MPIR_CHKPMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_) \
+    MPIR_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,goto fn_fail)
 
 /* now the CALLOC version for zeroed memory */
-#define MPIR_CHKPMEM_CALLOC(pointer_,type_,nbytes_,rc_,name_) \
-    MPIR_CHKPMEM_CALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)
-#define MPIR_CHKPMEM_CALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_) \
-    MPIR_CHKPMEM_CALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,goto fn_fail)
-#define MPIR_CHKPMEM_CALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) \
+#define MPIR_CHKPMEM_CALLOC(pointer_,type_,nbytes_,rc_,name_,class_) \
+    MPIR_CHKPMEM_CALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_)
+#define MPIR_CHKPMEM_CALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_,class_) \
+    MPIR_CHKPMEM_CALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,goto fn_fail)
+#define MPIR_CHKPMEM_CALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,class_,stmt_) \
     do {                                                                   \
-        pointer_ = (type_)MPL_calloc(1, (nbytes_));                       \
+        pointer_ = (type_)MPL_calloc(1, (nbytes_), (class_));                       \
         if (pointer_) {                                                    \
             MPIR_Assert(mpiu_chkpmem_stk_sp_<mpiu_chkpmem_stk_sz_);        \
             mpiu_chkpmem_stk_[mpiu_chkpmem_stk_sp_++] = pointer_;          \
@@ -204,8 +211,8 @@ if (pointer_) { \
     } while (0)
 
 /* A special version for routines that only allocate one item */
-#define MPIR_CHKPMEM_MALLOC1(pointer_,type_,nbytes_,rc_,name_,stmt_) \
-{pointer_ = (type_)MPL_malloc(nbytes_); \
+#define MPIR_CHKPMEM_MALLOC1(pointer_,type_,nbytes_,rc_,name_,class_,stmt_) \
+{pointer_ = (type_)MPL_malloc(nbytes_,class_); \
     if (!(pointer_) && (nbytes_ > 0)) {	   \
     MPIR_CHKMEM_SETERR(rc_,nbytes_,name_); \
     stmt_;\
@@ -214,9 +221,9 @@ if (pointer_) { \
 /* Provides a easy way to use realloc safely and avoid the temptation to use
  * realloc unsafely (direct ptr assignment).  Zero-size reallocs returning NULL
  * are handled and are not considered an error. */
-#define MPIR_REALLOC_ORJUMP(ptr_,size_,rc_) do { \
-    void *realloc_tmp_ = MPL_realloc((ptr_), (size_)); \
-    if (size_) \
+#define MPIR_REALLOC_ORJUMP(ptr_,size_,class_,rc_) do { \
+    void *realloc_tmp_ = MPL_realloc((ptr_), (size_), (class_)); \
+    if (size_ != 0) \
         MPIR_ERR_CHKANDJUMP2(!realloc_tmp_,rc_,MPI_ERR_OTHER,"**nomem2","**nomem2 %d %s",(size_),MPL_QUOTE(ptr_)); \
     (ptr_) = realloc_tmp_; \
 } while (0)
@@ -242,7 +249,7 @@ if (pointer_) { \
    the checks fail. */
 #define CHECK_MEMCPY(dst_,src_,len_)                                                                   \
     do {                                                                                                        \
-        if (len_) {                                                                                             \
+        if (len_ != 0) {                                                \
             MPL_VG_CHECK_MEM_IS_ADDRESSABLE((dst_),(len_));                                                     \
             MPL_VG_CHECK_MEM_IS_ADDRESSABLE((src_),(len_));                                                     \
             if (MPIR_MEM_RANGES_OVERLAP((dst_),(len_),(src_),(len_))) {                                          \

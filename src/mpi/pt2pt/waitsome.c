@@ -136,7 +136,7 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
     /* Convert MPI request handles to a request object pointers */
     if (incount > MPIR_REQUEST_PTR_ARRAY_SIZE)
     {
-	MPIR_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPIR_Request **, incount * sizeof(MPIR_Request *), mpi_errno, "request pointers");
+        MPIR_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPIR_Request **, incount * sizeof(MPIR_Request *), mpi_errno, "request pointers", MPL_MEM_OBJECT);
     }
     
     n_inactive = 0;
@@ -277,7 +277,7 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
 	    break;
 	}
 
-	mpi_errno = MPID_Progress_wait(&progress_state);
+	mpi_errno = MPID_Progress_test();
 	if (mpi_errno != MPI_SUCCESS)
 	{
 	    /* --BEGIN ERROR HANDLING-- */
@@ -285,6 +285,8 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
 	    goto fn_fail;
 	    /* --END ERROR HANDLING-- */
 	}
+    /* Avoid blocking other threads since I am inside an infinite loop */
+    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
     MPID_Progress_end(&progress_state);
 

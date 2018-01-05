@@ -60,7 +60,7 @@ int MPII_Comm_create_calculate_mapping(MPIR_Group  *group_ptr,
     *mapping_comm = comm_ptr;
 
     n = group_ptr->size;
-    MPIR_CHKPMEM_MALLOC(mapping,int*,n*sizeof(int),mpi_errno,"mapping");
+    MPIR_CHKPMEM_MALLOC(mapping,int*,n*sizeof(int),mpi_errno,"mapping",MPL_MEM_ADDRESS);
 
     /* Make sure that the processes for this group are contained within
        the input communicator.  Also identify the mapping from the ranks of
@@ -364,7 +364,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr
 
         MPIR_CHKLMEM_MALLOC(remote_mapping,int*,
                             remote_size*sizeof(int),
-                            mpi_errno,"remote_mapping");
+                            mpi_errno,"remote_mapping",MPL_MEM_ADDRESS);
 
         /* Populate and exchange the ranks */
         mpi_errno = MPIC_Sendrecv( mapping, group_ptr->size, MPI_INT, 0, 0,
@@ -394,7 +394,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr
         remote_size = rinfo[1];
         MPIR_CHKLMEM_MALLOC(remote_mapping,int*,
                             remote_size*sizeof(int),
-                            mpi_errno,"remote_mapping");
+                            mpi_errno,"remote_mapping",MPL_MEM_ADDRESS);
         mpi_errno = MPID_Bcast( remote_mapping, remote_size, MPI_INT, 0,
                                      comm_ptr->local_comm, &errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);

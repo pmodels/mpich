@@ -527,7 +527,7 @@ int MPI_Type_create_darray(int size,
 
 /* calculate position in Cartesian grid as MPI would (row-major
    ordering) */
-    MPIR_CHKLMEM_MALLOC_ORJUMP(coords, int *, ndims * sizeof(int), mpi_errno, "position is Cartesian grid");
+    MPIR_CHKLMEM_MALLOC_ORJUMP(coords, int *, ndims * sizeof(int), mpi_errno, "position is Cartesian grid", MPL_MEM_COMM);
 
     procs = size;
     tmp_rank = rank;
@@ -537,7 +537,7 @@ int MPI_Type_create_darray(int size,
 	tmp_rank = tmp_rank % procs;
     }
 
-    MPIR_CHKLMEM_MALLOC_ORJUMP(st_offsets, MPI_Aint *, ndims * sizeof(MPI_Aint), mpi_errno, "st_offsets");
+    MPIR_CHKLMEM_MALLOC_ORJUMP(st_offsets, MPI_Aint *, ndims * sizeof(MPI_Aint), mpi_errno, "st_offsets", MPL_MEM_COMM);
 
     type_old = oldtype;
 
@@ -707,7 +707,7 @@ int MPI_Type_create_darray(int size,
      */
 
     /* Save contents */
-    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (4 * ndims + 4) * sizeof(int), mpi_errno, "content description");
+    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (4 * ndims + 4) * sizeof(int), mpi_errno, "content description", MPL_MEM_BUFFER);
 
     ints[0] = size;
     ints[1] = rank;

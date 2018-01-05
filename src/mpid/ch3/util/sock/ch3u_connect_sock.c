@@ -171,7 +171,7 @@ int MPIDI_CH3I_Connection_alloc(MPIDI_CH3I_Connection_t ** connp)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONNECTION_ALLOC);
 
     MPIR_CHKPMEM_MALLOC(conn,MPIDI_CH3I_Connection_t*,
-			sizeof(MPIDI_CH3I_Connection_t),mpi_errno,"conn");
+			sizeof(MPIDI_CH3I_Connection_t),mpi_errno,"conn", MPL_MEM_DYNAMIC);
 
     /* FIXME: This size is unchanging, so get it only once (at most); 
        we might prefer for connections to simply point at the single process
@@ -184,7 +184,7 @@ int MPIDI_CH3I_Connection_alloc(MPIDI_CH3I_Connection_t ** connp)
 			     "**pmi_get_id_length_max",
 			     "**pmi_get_id_length_max %d", pmi_errno);
 #endif
-    MPIR_CHKPMEM_MALLOC(conn->pg_id,char*,id_sz + 1,mpi_errno,"conn->pg_id");
+    MPIR_CHKPMEM_MALLOC(conn->pg_id,char*,id_sz + 1,mpi_errno,"conn->pg_id", MPL_MEM_DYNAMIC);
     conn->pg_id[0] = 0;           /* Be careful about pg_id in case a later 
 				     error */
     *connp = conn;
@@ -223,7 +223,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
 
     /* First, create a new vc (we may use this to pass to a generic
        connection routine) */
-    MPIR_CHKPMEM_MALLOC(vc,MPIDI_VC_t *,sizeof(MPIDI_VC_t),mpi_errno,"vc");
+    MPIR_CHKPMEM_MALLOC(vc,MPIDI_VC_t *,sizeof(MPIDI_VC_t),mpi_errno,"vc", MPL_MEM_DYNAMIC);
     /* FIXME - where does this vc get freed? */
 
     *new_vc = vc;
@@ -757,7 +757,7 @@ int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
 	MPIDI_CH3I_Pkt_sc_open_resp_t *openresp = 
 	    (MPIDI_CH3I_Pkt_sc_open_resp_t *)&conn->pkt.type;
 
-	vc = (MPIDI_VC_t *) MPL_malloc(sizeof(MPIDI_VC_t));
+	vc = (MPIDI_VC_t *) MPL_malloc(sizeof(MPIDI_VC_t), MPL_MEM_ADDRESS);
 	/* --BEGIN ERROR HANDLING-- */
 	if (vc == NULL) {
 	    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER,

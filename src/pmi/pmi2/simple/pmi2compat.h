@@ -6,7 +6,7 @@
 
 #include "mpiimpl.h"
 
-#define PMI2U_Malloc MPL_malloc
+#define PMI2U_Malloc(size_) MPL_malloc(size_, MPL_MEM_PM)
 #define PMI2U_Free MPL_free
 #define PMI2U_Strdup MPL_strdup
 #define PMI2U_Strnapp MPL_strnapp

@@ -9,7 +9,7 @@
 
 #include "mpidimpl.h"
 #include "mpidu_generic_queue.h"
-#include "mpl_utlist.h"
+#include "utlist.h"
 
 #if defined(HAVE_ASSERT_H)
 #include <assert.h>
@@ -216,12 +216,12 @@ static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPIR_
 
     /* FIXME: We should use a pool allocator here */
     MPIR_CHKPMEM_MALLOC(tmp_ptr, MPIDI_SHM_Win_t *, sizeof(MPIDI_SHM_Win_t),
-                        mpi_errno, "SHM window entry");
+                        mpi_errno, "SHM window entry", MPL_MEM_SHM);
 
     tmp_ptr->next = NULL;
     tmp_ptr->win = win;
 
-    MPL_DL_APPEND(*list, tmp_ptr);
+    DL_APPEND(*list, tmp_ptr);
 
   fn_exit:
     MPIR_CHKPMEM_COMMIT();
@@ -245,10 +245,10 @@ static inline void MPIDI_CH3I_SHM_Wins_unlink(MPIDI_SHM_Wins_list_t * list, MPIR
     MPIDI_SHM_Win_t *elem = NULL;
     MPIDI_SHM_Win_t *tmp_elem = NULL;
 
-    MPL_LL_SEARCH_SCALAR(*list, elem, win, shm_win);
+    LL_SEARCH_SCALAR(*list, elem, win, shm_win);
     if (elem != NULL) {
         tmp_elem = elem;
-        MPL_DL_DELETE(*list, elem);
+        DL_DELETE(*list, elem);
         MPL_free(tmp_elem);
     }
 }

@@ -117,7 +117,7 @@ static int GetLocalIPs(int32_t *pIP, int max)
 	struct ifconf			ifconf;
 	int				rc;
 
-	buf_ptr = (char *) MPL_malloc(buf_len);
+	buf_ptr = (char *) MPL_malloc(buf_len, MPL_MEM_BUFFER);
 	if (buf_ptr == NULL)
 	    return 0;
 	

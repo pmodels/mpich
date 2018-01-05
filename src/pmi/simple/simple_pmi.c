@@ -1125,15 +1125,36 @@ static int PMII_singinit(void)
 
     /* Create a socket on which to allow an mpiexec to connect back to
        us */
+    memset(&sin, 0, sizeof(sin));
     sin.sin_family	= AF_INET;
     sin.sin_addr.s_addr	= INADDR_ANY;
     sin.sin_port	= htons(0);    /* anonymous port */
+
     singinit_listen_sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (singinit_listen_sock == -1) {
+        perror("PMII_singinit: socket creation failed");
+        return PMI_FAIL;
+    }
+
     rc = bind(singinit_listen_sock, (struct sockaddr *)&sin ,sizeof(sin));
+    if (rc == -1) {
+        perror("PMII_singinit: socket bind failed");
+        return PMI_FAIL;
+    }
+
     len = sizeof(struct sockaddr_in);
     rc = getsockname( singinit_listen_sock, (struct sockaddr *) &sin, &len ); 
+    if (rc == -1) {
+        perror("PMII_singinit: getsockname failed");
+        return PMI_FAIL;
+    }
+
     MPL_snprintf(port_c, sizeof(port_c), "%d",ntohs(sin.sin_port));
     rc = listen(singinit_listen_sock, 5);
+    if (rc == -1) {
+        perror("PMII_singinit: listen failed");
+        return PMI_FAIL;
+    }
 
     PMIU_printf( PMI_debug_init, "Starting mpiexec with %s\n", port_c );
 

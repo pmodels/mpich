@@ -49,11 +49,42 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
     AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch4:ucx])
 
-    PAC_SET_HEADER_LIB_PATH(ucx)
-    PAC_PUSH_FLAG(LIBS)
-    PAC_CHECK_HEADER_LIB_FATAL(ucx, ucp/api/ucp.h, ucp, ucp_config_read)
-    PAC_POP_FLAG(LIBS)
-    PAC_APPEND_FLAG([-lucp],[WRAPPER_LIBS])
+    ucxdir=""
+    AC_SUBST([ucxdir])
+    ucxlib=""
+    AC_SUBST([ucxlib])
+
+    ucx_embedded=""
+    dnl Use embedded libfabric if we specify to do so or we didn't specify and the source is present
+    if test "${with_ucx}" = "embedded" ; then
+        ucx_embedded="yes"
+    elif test -z ${with_ucx} ; then
+        if test -f ${use_top_srcdir}/src/mpid/ch4/netmod/ucx/ucx/configure ; then
+            ucx_embedded="yes"
+        else
+            ucx_embedded="no"
+            PAC_SET_HEADER_LIB_PATH(ucx)
+        fi
+    else
+        ucx_embedded="no"
+        PAC_SET_HEADER_LIB_PATH(ucx)
+    fi
+
+    if test "${ucx_embedded}" = "yes" ; then
+        PAC_PUSH_FLAG(CPPFLAGS)
+        PAC_CONFIG_SUBDIR_ARGS([src/mpid/ch4/netmod/ucx/ucx],[--disable-static --enable-embedded],[],[AC_MSG_ERROR(ucx configure failed)])
+        PAC_POP_FLAG(CPPFLAGS)
+        PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ucx/ucx/src], [CPPFLAGS])
+        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ucx/ucx/src], [CPPFLAGS])
+
+        ucxdir="src/mpid/ch4/netmod/ucx/ucx"
+        ucxlib="src/mpid/ch4/netmod/ucx/ucx/src/ucp/libucp.la"
+    else
+        PAC_PUSH_FLAG(LIBS)
+        PAC_CHECK_HEADER_LIB_FATAL(ucx, ucp/api/ucp.h, ucp, ucp_config_read)
+        PAC_POP_FLAG(LIBS)
+        PAC_APPEND_FLAG([-lucp -lucs],[WRAPPER_LIBS])
+    fi
 
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_OFI,...)
 ])dnl end _BODY

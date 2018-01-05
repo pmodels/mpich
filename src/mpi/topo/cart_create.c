@@ -71,7 +71,7 @@ int MPIR_Cart_create( MPIR_Comm *comm_ptr, int ndims, const int dims[],
 	    
 	    /* Create the topology structure */
 	    MPIR_CHKPMEM_MALLOC(cart_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
-				mpi_errno, "cart_ptr" );
+				mpi_errno, "cart_ptr" , MPL_MEM_COMM);
 	    
 	    cart_ptr->kind               = MPI_CART;
 	    cart_ptr->topo.cart.nnodes   = 1;
@@ -81,11 +81,11 @@ int MPIR_Cart_create( MPIR_Comm *comm_ptr, int ndims, const int dims[],
 	       normal free mechanism */
 	    
 	    MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.dims,int*,sizeof(int),
-				mpi_errno, "cart.dims");
+				mpi_errno, "cart.dims", MPL_MEM_COMM);
 	    MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.periodic,int*,sizeof(int),
-				mpi_errno, "cart.periodic");
+				mpi_errno, "cart.periodic", MPL_MEM_COMM);
 	    MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.position,int*,sizeof(int),
-				mpi_errno, "cart.position");
+				mpi_errno, "cart.position", MPL_MEM_COMM);
 	}
 	else {
 	    *comm_cart = MPI_COMM_NULL;
@@ -127,17 +127,17 @@ int MPIR_Cart_create( MPIR_Comm *comm_ptr, int ndims, const int dims[],
 	
 	/* Create the topololgy structure */
 	MPIR_CHKPMEM_MALLOC(cart_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
-			    mpi_errno, "cart_ptr" );
+			    mpi_errno, "cart_ptr", MPL_MEM_COMM );
 	
 	cart_ptr->kind               = MPI_CART;
 	cart_ptr->topo.cart.nnodes   = newsize;
 	cart_ptr->topo.cart.ndims    = ndims;
 	MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.dims,int*,ndims*sizeof(int),
-			    mpi_errno, "cart.dims");
+			    mpi_errno, "cart.dims", MPL_MEM_COMM);
 	MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.periodic,int*,ndims*sizeof(int),
-			    mpi_errno, "cart.periodic");
+			    mpi_errno, "cart.periodic", MPL_MEM_COMM);
 	MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.position,int*,ndims*sizeof(int),
-			    mpi_errno, "cart.position");
+			    mpi_errno, "cart.position", MPL_MEM_COMM);
 	nranks = newsize;
 	for (i=0; i<ndims; i++)
 	{

@@ -256,7 +256,7 @@ static int my_rank(rte_grp_handle_t grp_h)
 static int ec_on_local_node(rte_ec_handle_t ec, rte_grp_handle_t group)
 {
     MPIR_Comm *comm;
-    MPID_Node_id_t nodeid, my_nodeid;
+    int nodeid, my_nodeid;
     int my_rank;
     comm = (MPIR_Comm *) group;
     MPID_Get_node_id(comm, ec.rank, &nodeid);

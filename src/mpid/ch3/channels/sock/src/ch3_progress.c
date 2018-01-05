@@ -7,7 +7,7 @@
 #include "mpidi_ch3_impl.h"
 #include "pmi.h"
 #include "mpidu_sock.h"
-#include "mpl_utlist.h"
+#include "utlist.h"
 
 #ifdef HAVE_STRING_H
 #include <string.h>

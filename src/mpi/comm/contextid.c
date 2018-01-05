@@ -7,8 +7,9 @@
 #include "mpiimpl.h"
 #include "mpicomm.h"
 #include "mpir_info.h"    /* MPIR_Info_free */
+#include "../coll/include/coll_util.h"
 
-#include "mpl_utlist.h"
+#include "utlist.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -123,7 +124,7 @@ static char *context_mask_to_str(void)
 static void context_mask_stats(int *free_ids, int *total_ids)
 {
     if (free_ids) {
-        int i, j;
+        unsigned int i, j;
         *free_ids = 0;
 
         /* if this ever needs to be fast, use a lookup table to do a per-nibble
@@ -487,7 +488,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
          */
         if (group_ptr != NULL) {
             int coll_tag = tag | MPIR_Process.tagged_coll_mask; /* Shift tag into the tagged coll space */
-            mpi_errno = MPIR_Allreduce_group(MPI_IN_PLACE, st.local_mask, MPIR_MAX_CONTEXT_MASK + 1,
+            mpi_errno = MPII_Allreduce_group(MPI_IN_PLACE, st.local_mask, MPIR_MAX_CONTEXT_MASK + 1,
                                              MPI_INT, MPI_BAND, comm_ptr, group_ptr, coll_tag,
                                              &errflag);
         }
@@ -594,7 +595,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
 
             if (group_ptr != NULL) {
                 int coll_tag = tag | MPIR_Process.tagged_coll_mask;     /* Shift tag into the tagged coll space */
-                mpi_errno = MPIR_Allreduce_group(MPI_IN_PLACE, &minfree, 1, MPI_INT, MPI_MIN,
+                mpi_errno = MPII_Allreduce_group(MPI_IN_PLACE, &minfree, 1, MPI_INT, MPI_MIN,
                                                  comm_ptr, group_ptr, coll_tag, &errflag);
             }
             else {
@@ -703,9 +704,9 @@ static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
             MPIR_SCHED_BARRIER(st->s);
         }
 
-        mpi_errno = st->comm_ptr->coll_fns->Ibcast_sched(st->ctx1, 1,
-                                                         MPIR_CONTEXT_ID_T_DATATYPE, 0,
-                                                         st->comm_ptr, st->s);
+        mpi_errno = MPID_Ibcast_sched(st->ctx1, 1,
+                                      MPIR_CONTEXT_ID_T_DATATYPE, 0,
+                                      st->comm_ptr, st->s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(st->s);
@@ -897,10 +898,9 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
         }
     }
 
-    mpi_errno =
-        st->comm_ptr->coll_fns->Iallreduce_sched(MPI_IN_PLACE, st->local_mask,
-                                                 MPIR_MAX_CONTEXT_MASK + 1, MPI_UINT32_T, MPI_BAND,
-                                                 st->comm_ptr, st->s);
+    mpi_errno = MPID_Iallreduce_sched(MPI_IN_PLACE, st->local_mask,
+                                      MPIR_MAX_CONTEXT_MASK + 1, MPI_UINT32_T, MPI_BAND,
+                                      st->comm_ptr, st->s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     MPIR_SCHED_BARRIER(st->s);
@@ -967,7 +967,7 @@ static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
         context_id_init();
     }
 
-    MPIR_CHKPMEM_MALLOC(st, struct gcn_state *, sizeof(struct gcn_state), mpi_errno, "gcn_state");
+    MPIR_CHKPMEM_MALLOC(st, struct gcn_state *, sizeof(struct gcn_state), mpi_errno, "gcn_state", MPL_MEM_COMM);
     st->ctx0 = ctx0;
     st->ctx1 = ctx1;
     if (gcn_cid_kind == MPIR_COMM_KIND__INTRACOMM) {

@@ -21,7 +21,7 @@
 #include "mpid_timers_fallback.h"
 #include "netmodpre.h"
 #include "shmpre.h"
-#include "mpl_uthash.h"
+#include "uthash.h"
 #include "ch4_coll_params.h"
 
 typedef struct {
@@ -264,12 +264,16 @@ typedef struct MPIDI_CH4U_win_sync_pscw {
 typedef struct MPIDI_CH4U_win_target_sync {
     int access_epoch_type;      /* NONE, LOCK. */
     MPIDI_CH4U_win_target_sync_lock_t lock;
+    uint32_t assert_mode;       /* bit-vector OR of zero or more of the following integer constant:
+                                 * MPI_MODE_NOCHECK, MPI_MODE_NOSTORE, MPI_MODE_NOPUT, MPI_MODE_NOPRECEDE, MPI_MODE_NOSUCCEED. */
 } MPIDI_CH4U_win_target_sync_t;
 
 typedef struct MPIDI_CH4U_win_sync {
     int access_epoch_type;      /* NONE, FENCE, LOCKALL, START,
                                  * LOCK (refer to target_sync). */
     int exposure_epoch_type;    /* NONE, FENCE, POST. */
+    uint32_t assert_mode;       /* bit-vector OR of zero or more of the following integer constant:
+                                 * MPI_MODE_NOCHECK, MPI_MODE_NOSTORE, MPI_MODE_NOPUT, MPI_MODE_NOPRECEDE, MPI_MODE_NOSUCCEED. */
 
     /* access epochs */
     /* TODO: Can we put access epochs in union,
@@ -287,6 +291,8 @@ typedef struct MPIDI_CH4U_win_target {
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
     MPIDI_CH4U_win_target_sync_t sync;
+    int rank;
+    UT_hash_handle hash_handle;
 } MPIDI_CH4U_win_target_t;
 
 typedef struct MPIDI_CH4U_win_t {
@@ -305,8 +311,6 @@ typedef struct MPIDI_CH4U_win_t {
 
     /* per-target structure for sync and OP completion. */
     MPIDI_CH4U_win_target_t *targets;
-
-    MPL_UT_hash_handle hash_handle;
 } MPIDI_CH4U_win_t;
 
 typedef struct {
@@ -317,7 +321,6 @@ typedef struct {
 
 #define MPIDI_CH4U_WIN(win,field)        (((win)->dev.ch4u).field)
 #define MPIDI_CH4U_WINFO(win,rank) (MPIDI_CH4U_win_info_t*) &(MPIDI_CH4U_WIN(win, info_table)[rank])
-#define MPIDI_CH4U_WIN_TARGET(win,rank,field) ((((win)->dev.ch4u).targets)[rank].field)
 
 typedef unsigned MPIDI_locality_t;
 
@@ -408,10 +411,6 @@ typedef struct MPIDI_Devcomm_t {
 } MPIDI_Devcomm_t;
 #define MPIDI_CH4U_COMM(comm,field) ((comm)->dev.ch4.ch4u).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field
-
-
-#define MPID_USE_NODE_IDS
-typedef int16_t MPID_Node_id_t;
 
 typedef struct {
     union {

@@ -5,11 +5,11 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "mpiimpl.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "mpiimpl.h"
 
 #undef DEBUG_DLOOP_SIZE
 #undef DLOOP_DEBUG_MEMORY
@@ -346,9 +346,11 @@ void MPIR_Dataloop_alloc_and_copy(int kind,
 	    /* need space for dataloop pointers and extents */
 	    ptr_sz = count * sizeof(DLOOP_Dataloop *);
 	    extent_sz = count * sizeof(DLOOP_Offset);
+            MPL_FALLTHROUGH;
 	case DLOOP_KIND_INDEXED:
 	    /* need space for block sizes */
 	    blk_sz = count * sizeof(DLOOP_Count);
+            MPL_FALLTHROUGH;
 	case DLOOP_KIND_BLOCKINDEXED:
 	    /* need space for block offsets */
 	    off_sz = count * sizeof(DLOOP_Offset);
@@ -379,7 +381,7 @@ void MPIR_Dataloop_alloc_and_copy(int kind,
 	extent_sz + old_loop_sz;
 
     /* allocate space */
-    new_loop = (DLOOP_Dataloop *) DLOOP_Malloc(new_loop_sz);
+    new_loop = (DLOOP_Dataloop *) DLOOP_Malloc(new_loop_sz, MPL_MEM_DATATYPE);
     if (new_loop == NULL) {
 	*new_loop_p = NULL;
 	return;
@@ -560,7 +562,7 @@ void MPIR_Dataloop_struct_alloc(DLOOP_Count count,
 	extent_sz + (basic_ct * basic_sz) + old_loop_sz;
 
     /* allocate space */
-    new_loop = (DLOOP_Dataloop *) DLOOP_Malloc(new_loop_sz);
+    new_loop = (DLOOP_Dataloop *) DLOOP_Malloc(new_loop_sz, MPL_MEM_DATATYPE);
     if (new_loop == NULL) {
 	*new_loop_p = NULL;
 	return;
@@ -611,7 +613,7 @@ void MPIR_Dataloop_dup(DLOOP_Dataloop *old_loop,
     DLOOP_Assert(old_loop != NULL);
     DLOOP_Assert(old_loop_sz > 0);
 
-    new_loop = (DLOOP_Dataloop *) DLOOP_Malloc(old_loop_sz);
+    new_loop = (DLOOP_Dataloop *) DLOOP_Malloc(old_loop_sz, MPL_MEM_DATATYPE);
     if (new_loop == NULL) {
 	*new_loop_p = NULL;
 	return;

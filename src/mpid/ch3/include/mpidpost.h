@@ -169,7 +169,12 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPIR_Comm * comm_ptr,
 #define MPID_Progress_start(progress_state_) MPIDI_CH3_Progress_start(progress_state_)
 #define MPID_Progress_wait(progress_state_)  MPIDI_CH3_Progress_wait(progress_state_)
 #define MPID_Progress_end(progress_state_)   MPIDI_CH3_Progress_end(progress_state_)
-#define MPID_Progress_test()                 MPIDI_CH3_Progress_test()
+/* This is static inline instead of macro because otherwise MPID_Progress_test will
+ * be a chain of macros and therefore can not be used as a callback function */
+static inline int MPID_Progress_test(void)
+{
+    return MPIDI_CH3_Progress_test();
+}
 #define MPID_Progress_poke()		     MPIDI_CH3_Progress_poke()
 
 /* Dynamic process support */

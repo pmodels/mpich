@@ -82,23 +82,23 @@ static inline int MPIDI_STUBSHM_comm_get_lpid(MPIR_Comm * comm_ptr,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_get_node_id(MPIR_Comm * comm, int rank, MPID_Node_id_t * id_p)
+static inline int MPIDI_STUBSHM_get_node_id(MPIR_Comm * comm, int rank, int * id_p)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_GET_NODE_ID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_GET_NODE_ID);
 
-    *id_p = (MPID_Node_id_t) 0;
+    *id_p = (int) 0;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_GET_NODE_ID);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_get_max_node_id(MPIR_Comm * comm, MPID_Node_id_t * max_id_p)
+static inline int MPIDI_STUBSHM_get_max_node_id(MPIR_Comm * comm, int * max_id_p)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_GET_MAX_NODE_ID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_GET_MAX_NODE_ID);
 
-    *max_id_p = (MPID_Node_id_t) 0;
+    *max_id_p = 0;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_GET_MAX_NODE_ID);
     return MPI_SUCCESS;

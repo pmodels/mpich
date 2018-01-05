@@ -81,7 +81,7 @@ RLOG_IOStruct *RLOG_CreateInputStruct(const char *filename)
     int type, length;
 
     /* allocate an input structure */
-    pInput = (RLOG_IOStruct*)MPL_malloc(sizeof(RLOG_IOStruct));
+    pInput = (RLOG_IOStruct*)MPL_malloc(sizeof(RLOG_IOStruct), MPL_MEM_DEBUG);
     if (pInput == NULL)
     {
 	MPL_error_printf("malloc failed - %s\n", strerror(errno));
@@ -125,14 +125,14 @@ RLOG_IOStruct *RLOG_CreateInputStruct(const char *filename)
 	    pInput->nNumRanks = pInput->header.nMaxRank + 1 - pInput->header.nMinRank;
 	    min_rank = pInput->header.nMinRank;
 	    
-	    pInput->pRank = (int*)MPL_malloc(pInput->nNumRanks * sizeof(int));
-	    pInput->pNumEventRecursions = (int*)MPL_malloc(pInput->nNumRanks * sizeof(int));
-	    pInput->ppNumEvents = (int**)MPL_malloc(pInput->nNumRanks * sizeof(int*));
-	    pInput->ppCurEvent = (int**)MPL_malloc(pInput->nNumRanks * sizeof(int*));
-	    pInput->ppCurGlobalEvent = (int**)MPL_malloc(pInput->nNumRanks * sizeof(int*));
-	    pInput->gppCurEvent = (RLOG_EVENT**)MPL_malloc(pInput->nNumRanks * sizeof(RLOG_EVENT*));
-	    pInput->gppPrevEvent = (RLOG_EVENT**)MPL_malloc(pInput->nNumRanks * sizeof(RLOG_EVENT*));
-	    pInput->ppEventOffset = (long**)MPL_malloc(pInput->nNumRanks * sizeof(long*));
+	    pInput->pRank = (int*)MPL_malloc(pInput->nNumRanks * sizeof(int), MPL_MEM_DEBUG);
+	    pInput->pNumEventRecursions = (int*)MPL_malloc(pInput->nNumRanks * sizeof(int), MPL_MEM_DEBUG);
+	    pInput->ppNumEvents = (int**)MPL_malloc(pInput->nNumRanks * sizeof(int*), MPL_MEM_DEBUG);
+	    pInput->ppCurEvent = (int**)MPL_malloc(pInput->nNumRanks * sizeof(int*), MPL_MEM_DEBUG);
+	    pInput->ppCurGlobalEvent = (int**)MPL_malloc(pInput->nNumRanks * sizeof(int*), MPL_MEM_DEBUG);
+	    pInput->gppCurEvent = (RLOG_EVENT**)MPL_malloc(pInput->nNumRanks * sizeof(RLOG_EVENT*), MPL_MEM_DEBUG);
+	    pInput->gppPrevEvent = (RLOG_EVENT**)MPL_malloc(pInput->nNumRanks * sizeof(RLOG_EVENT*), MPL_MEM_DEBUG);
+	    pInput->ppEventOffset = (long**)MPL_malloc(pInput->nNumRanks * sizeof(long*), MPL_MEM_DEBUG);
 	    for (i=0; i<pInput->nNumRanks; i++)
 	    {
 		pInput->pRank[i] = -1;
@@ -171,12 +171,12 @@ RLOG_IOStruct *RLOG_CreateInputStruct(const char *filename)
 	    /*printf("levels: %d\n", pInput->nNumEventRecursions);*/
 	    if (pInput->pNumEventRecursions[rank_index])
 	    {
-		pInput->ppCurEvent[rank_index] = (int*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(int));
-		pInput->ppCurGlobalEvent[rank_index] = (int*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(int));
-		pInput->gppCurEvent[rank_index] = (RLOG_EVENT*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(RLOG_EVENT));
-		pInput->gppPrevEvent[rank_index] = (RLOG_EVENT*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(RLOG_EVENT));
-		pInput->ppNumEvents[rank_index] = (int*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(int));
-		pInput->ppEventOffset[rank_index] = (long*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(long));
+		pInput->ppCurEvent[rank_index] = (int*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(int), MPL_MEM_DEBUG);
+		pInput->ppCurGlobalEvent[rank_index] = (int*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(int), MPL_MEM_DEBUG);
+		pInput->gppCurEvent[rank_index] = (RLOG_EVENT*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(RLOG_EVENT), MPL_MEM_DEBUG);
+		pInput->gppPrevEvent[rank_index] = (RLOG_EVENT*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(RLOG_EVENT), MPL_MEM_DEBUG);
+		pInput->ppNumEvents[rank_index] = (int*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(int), MPL_MEM_DEBUG);
+		pInput->ppEventOffset[rank_index] = (long*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(long), MPL_MEM_DEBUG);
 	    }
 	    for (i=0; i<pInput->pNumEventRecursions[rank_index]; i++)
 	    {
@@ -234,7 +234,7 @@ static int ModifyArrows(FILE *f, int nNumArrows, int nMin, double *pOffsets, int
     arrow_pos = ftell(f);
     if (arrow_pos == -1)
 	return errno;
-    pArray = (RLOG_ARROW*)MPL_malloc(nNumArrows * sizeof(RLOG_ARROW));
+    pArray = (RLOG_ARROW*)MPL_malloc(nNumArrows * sizeof(RLOG_ARROW), MPL_MEM_DEBUG);
     if (pArray)
     {
 	MPL_msg_printf("Modifying %d arrows\n", nNumArrows);
@@ -344,7 +344,7 @@ int RLOG_ModifyEvents(const char *filename, double *pOffsets, int n)
     int error;
 
     /* allocate an input structure */
-    pInput = (RLOG_IOStruct*)MPL_malloc(sizeof(RLOG_IOStruct));
+    pInput = (RLOG_IOStruct*)MPL_malloc(sizeof(RLOG_IOStruct), MPL_MEM_DEBUG);
     if (pInput == NULL)
     {
 	MPL_error_printf("malloc failed - %s\n", strerror(errno));
@@ -388,14 +388,14 @@ int RLOG_ModifyEvents(const char *filename, double *pOffsets, int n)
 	    pInput->nNumRanks = pInput->header.nMaxRank + 1 - pInput->header.nMinRank;
 	    min_rank = pInput->header.nMinRank;
 	    
-	    pInput->pRank = (int*)MPL_malloc(pInput->nNumRanks * sizeof(int));
-	    pInput->pNumEventRecursions = (int*)MPL_malloc(pInput->nNumRanks * sizeof(int));
-	    pInput->ppNumEvents = (int**)MPL_malloc(pInput->nNumRanks * sizeof(int*));
-	    pInput->ppCurEvent = (int**)MPL_malloc(pInput->nNumRanks * sizeof(int*));
-	    pInput->ppCurGlobalEvent = (int**)MPL_malloc(pInput->nNumRanks * sizeof(int*));
-	    pInput->gppCurEvent = (RLOG_EVENT**)MPL_malloc(pInput->nNumRanks * sizeof(RLOG_EVENT*));
-	    pInput->gppPrevEvent = (RLOG_EVENT**)MPL_malloc(pInput->nNumRanks * sizeof(RLOG_EVENT*));
-	    pInput->ppEventOffset = (long**)MPL_malloc(pInput->nNumRanks * sizeof(long*));
+	    pInput->pRank = (int*)MPL_malloc(pInput->nNumRanks * sizeof(int), MPL_MEM_DEBUG);
+	    pInput->pNumEventRecursions = (int*)MPL_malloc(pInput->nNumRanks * sizeof(int), MPL_MEM_DEBUG);
+	    pInput->ppNumEvents = (int**)MPL_malloc(pInput->nNumRanks * sizeof(int*), MPL_MEM_DEBUG);
+	    pInput->ppCurEvent = (int**)MPL_malloc(pInput->nNumRanks * sizeof(int*), MPL_MEM_DEBUG);
+	    pInput->ppCurGlobalEvent = (int**)MPL_malloc(pInput->nNumRanks * sizeof(int*), MPL_MEM_DEBUG);
+	    pInput->gppCurEvent = (RLOG_EVENT**)MPL_malloc(pInput->nNumRanks * sizeof(RLOG_EVENT*), MPL_MEM_DEBUG);
+	    pInput->gppPrevEvent = (RLOG_EVENT**)MPL_malloc(pInput->nNumRanks * sizeof(RLOG_EVENT*), MPL_MEM_DEBUG);
+	    pInput->ppEventOffset = (long**)MPL_malloc(pInput->nNumRanks * sizeof(long*), MPL_MEM_DEBUG);
 	    for (i=0; i<pInput->nNumRanks; i++)
 	    {
 		pInput->pRank[i] = -1;
@@ -441,12 +441,12 @@ int RLOG_ModifyEvents(const char *filename, double *pOffsets, int n)
 	    /*printf("levels: %d\n", pInput->nNumEventRecursions);*/
 	    if (pInput->pNumEventRecursions[rank_index])
 	    {
-		pInput->ppCurEvent[rank_index] = (int*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(int));
-		pInput->ppCurGlobalEvent[rank_index] = (int*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(int));
-		pInput->gppCurEvent[rank_index] = (RLOG_EVENT*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(RLOG_EVENT));
-		pInput->gppPrevEvent[rank_index] = (RLOG_EVENT*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(RLOG_EVENT));
-		pInput->ppNumEvents[rank_index] = (int*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(int));
-		pInput->ppEventOffset[rank_index] = (long*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(long));
+		pInput->ppCurEvent[rank_index] = (int*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(int), MPL_MEM_DEBUG);
+		pInput->ppCurGlobalEvent[rank_index] = (int*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(int), MPL_MEM_DEBUG);
+		pInput->gppCurEvent[rank_index] = (RLOG_EVENT*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(RLOG_EVENT), MPL_MEM_DEBUG);
+		pInput->gppPrevEvent[rank_index] = (RLOG_EVENT*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(RLOG_EVENT), MPL_MEM_DEBUG);
+		pInput->ppNumEvents[rank_index] = (int*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(int), MPL_MEM_DEBUG);
+		pInput->ppEventOffset[rank_index] = (long*)MPL_malloc(pInput->pNumEventRecursions[rank_index] * sizeof(long), MPL_MEM_DEBUG);
 	    }
 	    for (i=0; i<pInput->pNumEventRecursions[rank_index]; i++)
 	    {

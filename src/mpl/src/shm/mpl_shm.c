@@ -35,7 +35,7 @@ int MPL_shm_hnd_deserialize(MPL_shm_hnd_t hnd, const char *str_hnd, size_t str_h
 {
     int rc = -1;
     MPLI_shm_hnd_reset_val(hnd);
-    rc = MPLI_shm_ghnd_alloc(hnd);
+    rc = MPLI_shm_ghnd_alloc(hnd, MPL_MEM_SHM);
     rc = MPLI_shm_ghnd_set_by_val(hnd, "%s", str_hnd);
     rc = MPL_shm_seg_open(hnd, 0);
     return rc;
@@ -86,7 +86,7 @@ int MPL_shm_hnd_deserialize_by_ref(MPL_shm_hnd_t hnd, char **ser_hnd_ptr)
 int MPL_shm_hnd_init(MPL_shm_hnd_t *hnd_ptr)
 {
     int rc = -1;
-    rc = MPLI_shm_hnd_alloc(hnd_ptr);
+    rc = MPLI_shm_hnd_alloc(hnd_ptr, MPL_MEM_SHM);
     MPLI_shm_hnd_reset_val(*hnd_ptr);
     return rc;
 }

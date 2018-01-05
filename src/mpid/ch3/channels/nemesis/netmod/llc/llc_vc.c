@@ -200,7 +200,7 @@ static int MPID_nem_llc_vc_prnt(MPIDI_VC_t * vc)
     /* struct MPIDI_PG *pg; */
     /* int pg_rank; */
     /* int lpid; */
-    /* MPID_Node_id_t node_id; */
+    /* int node_id; */
     /* int port_name_tag; */
     /* MPID_Seqnum_t seqnum_send; *//* MPID_USE_SEQUENCE_NUMBERS */
     /* MPID_Seqnum_t seqnum_recv; *//* MPID_CH3_MSGS_UNORDERED */

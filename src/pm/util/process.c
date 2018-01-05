@@ -114,8 +114,7 @@ int MPIE_ForkProcesses( ProcessWorld *pWorld, char *envp[],
     while (app) {
 	/* Allocate process state if necessary */
 	if (!app->pState) {
-            pState = (ProcessState *)MPL_malloc(
-		app->nProcess * sizeof(ProcessState) );
+            pState = (ProcessState *)MPL_malloc( app->nProcess * sizeof(ProcessState), MPL_MEM_PM );
 	    if (!pState) {
 		return -1;
 	    }
@@ -255,8 +254,8 @@ int MPIE_ExecProgram( ProcessState *pState, char *envp[] )
     char pathstring[MAXPATHLEN+10];
     /* We allocate these on the heap to help catch array overrun errors
        such as those in ticket #719.  */
-    char **client_env = MPL_malloc(MAX_CLIENT_ENV * sizeof(char *));
-    char **client_arg = MPL_malloc(MAX_CLIENT_ARG * sizeof(char *));
+    char **client_env = MPL_malloc(MAX_CLIENT_ENV * sizeof(char *), MPL_MEM_PM);
+    char **client_arg = MPL_malloc(MAX_CLIENT_ARG * sizeof(char *), MPL_MEM_PM);
 
     app = pState->app;
 
@@ -992,7 +991,7 @@ int MPIE_SetupSingleton( ProcessUniverse *mypUniv )
 
     pWorld		  = &mypUniv->worlds[0];
     pWorld->nProcess      = 1;
-    pApp		  = (ProcessApp *) MPL_malloc( sizeof(ProcessApp) );
+    pApp		  = (ProcessApp *) MPL_malloc( sizeof(ProcessApp), MPL_MEM_PM );
     pApp->nextApp	  = 0;
     pWorld->nApps	  = 1;
     pWorld->apps          = pApp;
@@ -1006,7 +1005,7 @@ int MPIE_SetupSingleton( ProcessUniverse *mypUniv )
     pApp->args		  = 0;
     pApp->nArgs		  = 0;
     pApp->myAppNum	  = 0;
-    pState		  = (ProcessState *) MPL_malloc( sizeof(ProcessState) );
+    pState		  = (ProcessState *) MPL_malloc( sizeof(ProcessState), MPL_MEM_PM );
     pApp->pState	  = pState;
 
     pState[0].app	  = pApp;

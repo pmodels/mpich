@@ -49,7 +49,7 @@ static int  mpi_to_pmi_keyvals( MPIR_Info *info_ptr, PMI_keyval_t **kv_ptr,
     if (nkeys == 0) {
 	goto fn_exit;
     }
-    kv = (PMI_keyval_t *)MPL_malloc( nkeys * sizeof(PMI_keyval_t) );
+    kv = (PMI_keyval_t *)MPL_malloc( nkeys * sizeof(PMI_keyval_t), MPL_MEM_DYNAMIC );
     if (!kv) { MPIR_ERR_POP(mpi_errno); }
 
     for (i=0; i<nkeys; i++) {
@@ -59,7 +59,7 @@ static int  mpi_to_pmi_keyvals( MPIR_Info *info_ptr, PMI_keyval_t **kv_ptr,
         MPIR_ERR_CHKANDJUMP1(!flag, mpi_errno, MPI_ERR_OTHER,"**infonokey", "**infonokey %s", key);
 
 	kv[i].key = MPL_strdup(key);
-	kv[i].val = MPL_malloc( vallen + 1 );
+	kv[i].val = MPL_malloc( vallen + 1, MPL_MEM_DYNAMIC );
 	if (!kv[i].key || !kv[i].val) { 
 	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem" );
 	}
@@ -124,7 +124,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 	for (i=0; i<count; i++) {
 	    total_num_processes += maxprocs[i];
 	}
-	pmi_errcodes = (int*)MPL_malloc(sizeof(int) * total_num_processes);
+	pmi_errcodes = (int*)MPL_malloc(sizeof(int) * total_num_processes, MPL_MEM_DYNAMIC);
 	if (pmi_errcodes == NULL) {
 	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 	}
@@ -144,13 +144,13 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 #ifdef USE_PMI2_API
         MPIR_Assert(count > 0);
         {
-            int *argcs = MPL_malloc(count*sizeof(int));
+            int *argcs = MPL_malloc(count*sizeof(int), MPL_MEM_DYNAMIC);
             struct MPIR_Info preput;
             struct MPIR_Info *preput_p[1] = { &preput };
 
             MPIR_Assert(argcs);
             /*
-            info_keyval_sizes = MPL_malloc(count * sizeof(int));
+            info_keyval_sizes = MPL_malloc(count * sizeof(int), MPL_MEM_DYNAMIC);
             */
 
             /* FIXME cheating on constness */
@@ -199,9 +199,9 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
            the necessary arrays of key/value pairs */
 
         /* convert the infos into PMI keyvals */
-        info_keyval_sizes   = (int *) MPL_malloc(count * sizeof(int));
+        info_keyval_sizes   = (int *) MPL_malloc(count * sizeof(int), MPL_MEM_DYNAMIC);
         info_keyval_vectors = 
-            (PMI_keyval_t**) MPL_malloc(count * sizeof(PMI_keyval_t*));
+            (PMI_keyval_t**) MPL_malloc(count * sizeof(PMI_keyval_t*), MPL_MEM_DYNAMIC);
         if (!info_keyval_sizes || !info_keyval_vectors) { 
             MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
         }
@@ -257,13 +257,13 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 
     if (errcodes != MPI_ERRCODES_IGNORE) {
         MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-        mpi_errno = MPIR_Bcast_impl(&should_accept, 1, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPID_Bcast(&should_accept, 1, MPI_INT, root, comm_ptr, &errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPIR_Bcast_impl(&total_num_processes, 1, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPID_Bcast(&total_num_processes, 1, MPI_INT, root, comm_ptr, &errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         
-        mpi_errno = MPIR_Bcast_impl(errcodes, total_num_processes, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPID_Bcast(errcodes, total_num_processes, MPI_INT, root, comm_ptr, &errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");

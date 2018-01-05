@@ -61,7 +61,7 @@ static int handle_mprobe(const ptl_event_t *e)
     MPIR_STATUS_SET_COUNT(req->status, NPTL_HEADER_GET_LENGTH(e->hdr_data));
     MPIDI_Request_set_sync_send_flag(req, e->hdr_data & NPTL_SSEND);
 
-    MPIR_CHKPMEM_MALLOC(req->dev.tmpbuf, void *, e->mlength, mpi_errno, "tmpbuf");
+    MPIR_CHKPMEM_MALLOC(req->dev.tmpbuf, void *, e->mlength, mpi_errno, "tmpbuf", MPL_MEM_BUFFER);
     MPIR_Memcpy((char *)req->dev.tmpbuf, e->start, e->mlength);
     req->dev.recv_data_sz = e->mlength;
 

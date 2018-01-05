@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "mpl_utlist.h" /* For MPL_DL_FOREACH */
+#include "utlist.h" /* For DL_FOREACH */
 
 /* -- Begin Profiling Symbol Block for routine MPI_T_pvar_start */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -125,7 +125,7 @@ int MPI_T_pvar_start(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 
     if (handle == MPI_T_PVAR_ALL_HANDLES) {
         MPIR_T_pvar_handle_t *hnd;
-        MPL_DL_FOREACH(session->hlist, hnd) {
+        DL_FOREACH(session->hlist, hnd) {
             if (!MPIR_T_pvar_is_continuous(hnd) && !MPIR_T_pvar_is_started(hnd))
                 mpi_errno = MPIR_T_pvar_start_impl(session, hnd);
         }

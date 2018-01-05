@@ -50,6 +50,11 @@ extern struct ADIOI_Fns_struct ADIO_GPFS_operations;
 /* prototypes are in adio/ad_gpfs/ad_gpfs.h */
 #endif
 
+#ifdef ROMIO_IME
+/* prototypes are in adio/ad_im/ad_im.h */
+extern struct ADIOI_Fns_struct ADIO_IME_operations;
+#endif
+
 #ifdef ROMIO_DAOS
 /* prototypes are in adio/ad_daos/ad_daos.h */
 extern struct ADIOI_Fns_struct ADIO_DAOS_operations;
@@ -110,6 +115,4 @@ handle_share(daos_handle_t *hdl, int type, int rank, daos_handle_t poh,
 	free(ghdl.iov_buf);
 	MPI_Barrier(comm);
 }
-#endif
-
 #endif

@@ -91,7 +91,7 @@ int hcoll_initialize(void)
     hcoll_init_opts_t *init_opts;
     mpi_errno = MPI_SUCCESS;
 
-    hcoll_enable = MPIR_CVAR_ENABLE_HCOLL | MPIR_CVAR_CH3_ENABLE_HCOLL;
+    hcoll_enable = (MPIR_CVAR_ENABLE_HCOLL | MPIR_CVAR_CH3_ENABLE_HCOLL) && !MPIR_ThreadInfo.isThreaded;
     if (0 >= hcoll_enable) {
         goto fn_exit;
     }
@@ -203,7 +203,7 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
         MPIR_ERR_POP(mpi_errno);
     }
     comm_ptr->hcoll_priv.hcoll_origin_coll_fns = comm_ptr->coll_fns;
-    comm_ptr->coll_fns = (MPIR_Collops *) MPL_malloc(sizeof(MPIR_Collops));
+    comm_ptr->coll_fns = (MPIR_Collops *) MPL_malloc(sizeof(MPIR_Collops), MPL_MEM_COMM);
     memset(comm_ptr->coll_fns, 0, sizeof(MPIR_Collops));
     if (comm_ptr->hcoll_priv.hcoll_origin_coll_fns != 0) {
         memcpy(comm_ptr->coll_fns, comm_ptr->hcoll_priv.hcoll_origin_coll_fns,

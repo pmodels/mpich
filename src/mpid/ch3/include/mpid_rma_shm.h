@@ -7,7 +7,7 @@
 #if !defined(MPID_RMA_SHM_H_INCLUDED)
 #define MPID_RMA_SHM_H_INCLUDED
 
-#include "mpl_utlist.h"
+#include "utlist.h"
 #include "mpid_rma_types.h"
 
 static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datatype source_dtp,
@@ -374,7 +374,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
         first = stream_offset;
         last = stream_offset + stream_size;
 
-        packed_buf = MPL_malloc(stream_size);
+        packed_buf = MPL_malloc(stream_size, MPL_MEM_BUFFER);
 
         seg = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
@@ -386,7 +386,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
         MPIR_Datatype_is_contig(basic_type, &is_predef_contig);
 
         if (!is_predef_contig) {
-            void *tmpbuf = MPL_malloc(stream_count * predefined_dtp_extent);
+            void *tmpbuf = MPL_malloc(stream_count * predefined_dtp_extent, MPL_MEM_BUFFER);
             mpi_errno = MPIR_Localcopy(tmpbuf, stream_count, basic_type,
                                        packed_buf, stream_size, MPI_BYTE);
             if (mpi_errno != MPI_SUCCESS)
@@ -521,7 +521,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
         first = stream_offset;
         last = stream_offset + stream_size;
 
-        packed_buf = MPL_malloc(stream_size);
+        packed_buf = MPL_malloc(stream_size, MPL_MEM_BUFFER);
 
         seg = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
@@ -533,7 +533,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
         MPIR_Datatype_is_contig(basic_type, &is_predef_contig);
 
         if (!is_predef_contig) {
-            void *tmpbuf = MPL_malloc(stream_count * predefined_dtp_extent);
+            void *tmpbuf = MPL_malloc(stream_count * predefined_dtp_extent, MPL_MEM_BUFFER);
             mpi_errno = MPIR_Localcopy(tmpbuf, stream_count, basic_type,
                                        packed_buf, stream_size, MPI_BYTE);
             if (mpi_errno != MPI_SUCCESS)

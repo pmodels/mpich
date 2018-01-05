@@ -35,7 +35,10 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
  * assertion fails.  Also, for Windows, it doesn't popup a
  * mesage box on a remote machine.
  */
-#if (!defined(NDEBUG) && defined(HAVE_ERROR_CHECKING))
+#if (defined(__COVERITY__) || defined(__KLOCWORK__))
+#include <assert.h>
+#   define MPIR_Assert(a_) assert(a_);
+#elif (!defined(NDEBUG) && defined(HAVE_ERROR_CHECKING))
 #   define MPIR_AssertDeclValue(_a,_b) _a = _b
 #   define MPIR_Assert(a_)                             \
     do {                                               \

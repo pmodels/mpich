@@ -335,7 +335,7 @@ static inline int enqueue_lock_origin(MPIR_Win * win_ptr, MPIDI_VC_t * vc,
     if (new_ptr != NULL) {
         MPIDI_RMA_Target_lock_entry_t **head_ptr =
             (MPIDI_RMA_Target_lock_entry_t **) (&(win_ptr->target_lock_queue_head));
-        MPL_DL_APPEND((*head_ptr), new_ptr);
+        DL_APPEND((*head_ptr), new_ptr);
         new_ptr->vc = vc;
     }
     else {
@@ -410,7 +410,7 @@ static inline int enqueue_lock_origin(MPIR_Win * win_ptr, MPIDI_VC_t * vc,
         if (new_ptr != NULL) {
             if (win_ptr->current_target_lock_data_bytes + buf_size <
                 MPIR_CVAR_CH3_RMA_TARGET_LOCK_DATA_BYTES) {
-                new_ptr->data = MPL_malloc(buf_size);
+                new_ptr->data = MPL_malloc(buf_size, MPL_MEM_BUFFER);
             }
 
             if (new_ptr->data == NULL) {
@@ -834,7 +834,7 @@ static inline int acquire_local_lock(MPIR_Win * win_ptr, int lock_type)
                 MPIR_ERR_POP(mpi_errno);
             goto fn_exit;
         }
-        MPL_DL_APPEND((*head_ptr), new_ptr);
+        DL_APPEND((*head_ptr), new_ptr);
         MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &my_vc);
         new_ptr->vc = my_vc;
 
@@ -965,7 +965,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         vec_len = dtp->max_contig_blocks * target_count + 1;
         /* +1 needed because Rob says so */
         dloop_vec = (DLOOP_VECTOR *)
-            MPL_malloc(vec_len * sizeof(DLOOP_VECTOR));
+            MPL_malloc(vec_len * sizeof(DLOOP_VECTOR), MPL_MEM_DATATYPE);
         /* --BEGIN ERROR HANDLING-- */
         if (!dloop_vec) {
             mpi_errno =
@@ -1159,7 +1159,7 @@ static inline int fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group * group_p
     MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_FILL_RANKS_IN_WIN_GRP);
 
     MPIR_CHKLMEM_MALLOC(ranks_in_grp, int *, group_ptr->size * sizeof(int),
-                        mpi_errno, "ranks_in_grp");
+                        mpi_errno, "ranks_in_grp", MPL_MEM_RMA);
     for (i = 0; i < group_ptr->size; i++)
         ranks_in_grp[i] = i;
 

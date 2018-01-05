@@ -23,25 +23,41 @@ static int nemesis_initialized = 0;
 #define FUNCNAME split_type
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int split_type(MPIR_Comm * comm_ptr, int stype, int key,
+static int split_type(MPIR_Comm * user_comm_ptr, int stype, int key,
                       MPIR_Info *info_ptr, MPIR_Comm ** newcomm_ptr)
 {
-    MPID_Node_id_t id;
-    MPIDI_Rank_t nid;
+    MPIR_Comm *comm_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIDI_CH3I_Shm_supported()) {
-        mpi_errno = MPID_Get_node_id(comm_ptr, comm_ptr->rank, &id);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else
-        id = comm_ptr->rank;
+    mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, stype == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
+                                     key, &comm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
-    nid = (stype == MPI_COMM_TYPE_SHARED) ? id : MPI_UNDEFINED;
-    mpi_errno = MPIR_Comm_split_impl(comm_ptr, nid, key, newcomm_ptr);
+    if (stype == MPI_UNDEFINED) {
+        *newcomm_ptr = NULL;
+        goto fn_exit;
+    }
+
+    if (stype != MPI_COMM_TYPE_SHARED) {
+        /* we don't know how to handle other split types; hand it back
+         * to the upper layer */
+        mpi_errno = MPIR_Comm_split_type(comm_ptr, stype, key, info_ptr, newcomm_ptr);
+        goto fn_exit;
+    }
+
+    if (MPIDI_CH3I_Shm_supported()) {
+        mpi_errno = MPIR_Comm_split_type_node_topo(comm_ptr, stype, key, info_ptr, newcomm_ptr);
+    }
+    else {
+        mpi_errno = MPIR_Comm_split_type_self(comm_ptr, stype, key, newcomm_ptr);
+    }
+
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
+    if (comm_ptr)
+        MPIR_Comm_free_impl(comm_ptr);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
@@ -235,7 +251,7 @@ int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
 
     *new_vc = NULL; /* so that the err handling knows to cleanup */
 
-    MPIR_CHKPMEM_MALLOC (vc, MPIDI_VC_t *, sizeof(MPIDI_VC_t), mpi_errno, "vc");
+    MPIR_CHKPMEM_MALLOC (vc, MPIDI_VC_t *, sizeof(MPIDI_VC_t), mpi_errno, "vc", MPL_MEM_ADDRESS);
     /* FIXME - where does this vc get freed?
        ANSWER (goodell@) - ch3u_port.c FreeNewVC
                            (but the VC_Destroy is in this file) */
@@ -324,7 +340,7 @@ int MPID_nem_register_initcomp_cb(int (* callback)(void))
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_REGISTER_INITCOMP_CB);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_REGISTER_INITCOMP_CB);
-    MPIR_CHKPMEM_MALLOC(ep, initcomp_cb_t *, sizeof(*ep), mpi_errno, "initcomp callback element");
+    MPIR_CHKPMEM_MALLOC(ep, initcomp_cb_t *, sizeof(*ep), mpi_errno, "initcomp callback element", MPL_MEM_OTHER);
 
     ep->callback = callback;
     INITCOMP_S_PUSH(ep);

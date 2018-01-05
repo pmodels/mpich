@@ -243,7 +243,7 @@ static inline int MPIDI_OFI_dynproc_handshake(int root,
         msg.data = 0;
 
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,
-                        (MPL_DBG_FDEST, "connecting port_id %d, conn %lu, waiting for MPIDI_OFI_dynproc_handshake",
+                        (MPL_DBG_FDEST, "connecting port_id %d, conn %" PRIu64 ", waiting for MPIDI_OFI_dynproc_handshake",
                          port_id, *conn));
         time_gap = 0.0;
         MPID_Wtime(&time_sta);
@@ -263,7 +263,7 @@ static inline int MPIDI_OFI_dynproc_handshake(int root,
             if ((int) time_gap >= timeout) {
                 /* connection is timed out */
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,
-                                (MPL_DBG_FDEST, "connection to port_id %d, conn %lu ack timed out",
+                                (MPL_DBG_FDEST, "connection to port_id %d, conn %" PRIu64 " ack timed out",
                                  port_id, *conn));
                 mpi_errno = MPI_ERR_PORT;
                 goto fn_fail;
@@ -293,7 +293,7 @@ static inline int MPIDI_OFI_dynproc_handshake(int root,
         if ((int) time_gap >= timeout) {
             /* connection is mismatched */
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,
-                            (MPL_DBG_FDEST, "connection to port_id %d, conn %lu ack mismatched",
+                            (MPL_DBG_FDEST, "connection to port_id %d, conn %" PRIu64 " ack mismatched",
                              port_id, *conn));
             mpi_errno = MPI_ERR_PORT;
             goto fn_fail;
@@ -344,7 +344,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
                                                  int *remote_size,
                                                  size_t **remote_upid_size,
                                                  char **remote_upids,
-                                                 MPID_Node_id_t **remote_node_ids)
+                                                 int **remote_node_ids)
 {
     int i, mpi_errno = MPI_SUCCESS;
 
@@ -391,9 +391,9 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
         *remote_size = req[0].msglen / sizeof(size_t);
         *out_root = req[0].tag;
         MPIR_CHKPMEM_MALLOC((*remote_upid_size), size_t*,
-                            (*remote_size) * sizeof(size_t), mpi_errno, "remote_upid_size");
-        MPIR_CHKPMEM_MALLOC((*remote_node_ids), MPID_Node_id_t*,
-                            (*remote_size) * sizeof(MPID_Node_id_t), mpi_errno, "remote_node_ids");
+                            (*remote_size) * sizeof(size_t), mpi_errno, "remote_upid_size", MPL_MEM_ADDRESS);
+        MPIR_CHKPMEM_MALLOC((*remote_node_ids), int*,
+                            (*remote_size) * sizeof(int), mpi_errno, "remote_node_ids", MPL_MEM_ADDRESS);
 
         req[0].done = 0;
         req[0].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
@@ -413,7 +413,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
 
         for (i = 0; i < (*remote_size); i++) remote_upid_recvsize += (*remote_upid_size)[i];
         MPIR_CHKPMEM_MALLOC((*remote_upids), char*, remote_upid_recvsize,
-                            mpi_errno, "remote_upids");
+                            mpi_errno, "remote_upids", MPL_MEM_ADDRESS);
 
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_Global.ctx[0].rx,
                                       *remote_upids,
@@ -425,7 +425,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
 
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_Global.ctx[0].rx,
                                       *remote_node_ids,
-                                      (*remote_size) * sizeof(MPID_Node_id_t),
+                                      (*remote_size) * sizeof(int),
                                       NULL,
                                       FI_ADDR_UNSPEC,
                                       match_bits,
@@ -446,12 +446,12 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
         size_t *local_upid_size = NULL;
         size_t local_upid_sendsize = 0;
         char *local_upids = NULL;
-        MPID_Node_id_t *local_node_ids = NULL;
+        int *local_node_ids = NULL;
 
         /* Step 1: get local upids (with size) and node ids for sending */
         MPIDI_NM_get_local_upids(comm_ptr, &local_upid_size, &local_upids);
         for (i = 0; i < local_size; i++) local_upid_sendsize += local_upid_size[i];
-        local_node_ids = (MPID_Node_id_t*) MPL_malloc(local_size * sizeof(MPID_Node_id_t));
+        local_node_ids = (int*) MPL_malloc(local_size * sizeof(int), MPL_MEM_ADDRESS);
         for (i = 0; i < comm_ptr->local_size; i++)
             MPIDI_CH4U_get_node_id(comm_ptr, i, &local_node_ids[i]);
 
@@ -497,7 +497,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
                                MPIDI_OFI_CALL_LOCK);
         MPIDI_OFI_send_handler(MPIDI_Global.ctx[0].tx,
                                local_node_ids,
-                               local_size * sizeof(MPID_Node_id_t),
+                               local_size * sizeof(int),
                                NULL,
                                comm_ptr->rank,
                                *conn,
@@ -540,7 +540,7 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
     size_t *remote_upid_size;
     char *remote_upids = NULL;
     int *remote_lupids = NULL;
-    MPID_Node_id_t *remote_node_ids = NULL;
+    int *remote_node_ids = NULL;
     int is_low_group = -1;
     int parent_root = -1;
     int rank = comm_ptr->rank;
@@ -551,11 +551,12 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_CONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMM_CONNECT);
 
+    MPIR_CHKLMEM_DECL(1);
+
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         MPIR_Assert(0);
         goto fn_exit;
     }
-    MPIR_CHKLMEM_DECL(1);
 
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_SPAWN_MUTEX);
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_get_tag_from_port(port_name, &port_id));
@@ -590,7 +591,7 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
                                 &remote_size, &remote_upid_size, &remote_upids,
                                 &remote_node_ids));
         MPIR_CHKLMEM_MALLOC(remote_lupids, int*, remote_size * sizeof(int),
-                            mpi_errno, "remote_lupids");
+                            mpi_errno, "remote_lupids", MPL_MEM_ADDRESS);
 
         MPIDIU_upids_to_lupids(remote_size, remote_upid_size, remote_upids, &remote_lupids,
                                remote_node_ids);
@@ -738,7 +739,7 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
     size_t *remote_upid_size;
     char *remote_upids = NULL;
     int *remote_lupids = NULL;
-    MPID_Node_id_t *remote_node_ids = NULL;
+    int *remote_node_ids = NULL;
     int child_root = -1;
     int is_low_group = -1;
     int conn_id;
@@ -747,11 +748,12 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_ACCEPT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMM_ACCEPT);
 
+    MPIR_CHKLMEM_DECL(1);
+
     if (!MPIDI_OFI_ENABLE_TAGGED) {
         MPIR_Assert(0);
         goto fn_exit;
     }
-    MPIR_CHKLMEM_DECL(1);
 
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_SPAWN_MUTEX);
 
@@ -778,7 +780,7 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
                                 &remote_node_ids));
         MPIDI_OFI_CALL(fi_av_remove(MPIDI_Global.av, &conn, 1, 0ULL), avmap);
         MPIR_CHKLMEM_MALLOC(remote_lupids, int*, remote_size * sizeof(int),
-                            mpi_errno, "remote_lupids");
+                            mpi_errno, "remote_lupids", MPL_MEM_ADDRESS);
         MPIDIU_upids_to_lupids(remote_size, remote_upid_size, remote_upids, &remote_lupids,
                                remote_node_ids);
         /* the parent comm group is alawys the low group */

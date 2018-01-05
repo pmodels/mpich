@@ -200,7 +200,10 @@ typedef struct ADIOI_FileD {
     int is_agg;              /* bool: if I am an aggregator */
     char *filename;          
     int file_system;         /* type of file system */
-    int access_mode;         /* Access mode (sequential, append, etc.) */
+    int access_mode;         /* Access mode (sequential, append, etc.),
+				possibly modified to deal with
+				data sieving or deferred open*/
+    int orig_access_mode;    /* Access mode provided by user: unmodified */
     ADIO_Offset disp;        /* reqd. for MPI-IO */
     MPI_Datatype etype;      /* reqd. for MPI-IO */
     MPI_Datatype filetype;   /* reqd. for MPI-IO */
@@ -286,7 +289,8 @@ typedef struct {
 #define ADIO_PANFS               161   /* Panasas FS */
 #define ADIO_LUSTRE              163   /* Lustre */
 #define ADIO_GPFS                168
-#define ADIO_DAOS                169
+#define ADIO_IME                 169   /* IME burst buffer */
+#define ADIO_DAOS                170
 
 #define ADIO_SEEK_SET            SEEK_SET
 #define ADIO_SEEK_CUR            SEEK_CUR

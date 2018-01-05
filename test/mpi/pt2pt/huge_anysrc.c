@@ -1,5 +1,5 @@
 /*
- *  (C) 2017 by Argonne National Laboratory.
+ *  (C) 2016 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  *
  *  Portions of this code were written by Intel Corporation.

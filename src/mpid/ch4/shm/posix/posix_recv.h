@@ -82,7 +82,7 @@ static inline int MPIDI_POSIX_do_irecv(void *buf,
                     (MPL_DBG_FDEST,
                      "Enqueued from grank %d to %d (comm_kind %d) in recv %d,%d,%d\n",
                      MPIDI_CH4U_rank_to_lpid(rank, comm), MPIDI_POSIX_mem_region.rank,
-                     comm->comm_kind, rank, tag, comm->recvcontext_id + context_offset));
+                     (int) comm->comm_kind, rank, tag, comm->recvcontext_id + context_offset));
     *request = rreq;
 
   fn_exit:

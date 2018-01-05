@@ -1,9 +1,4 @@
 #!/bin/sh
 
-if [ -n "$MPICH_AUTOTOOLS_DIR" ] ; then
-    autoreconf=${MPICH_AUTOTOOLS_DIR}/autoreconf
-else
-    autoreconf=${AUTORECONF:-autoreconf}
-fi
-
+autoreconf=${AUTORECONF:-autoreconf}
 $autoreconf ${autoreconf_args:-"-vif"} || exit 1

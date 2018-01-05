@@ -39,7 +39,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     dnl Use embedded libfabric if we specify to do so or we didn't specify and the source is present
     if test "${with_libfabric}" = "embedded" ; then
         ofi_embedded="yes"
-    elif test -z ${with_libfabric} ; then
+    elif test -z "${with_libfabric}" ; then
         if test -f ${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/configure ; then
             ofi_embedded="yes"
         else
@@ -226,6 +226,18 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             AC_MSG_ERROR([Provided libfabric installation (--with-libfabric=${with_libfabric}) could not be configured.])
         fi
     fi
+
+    # Check for required functions
+
+    # Does MPL provide MPL_aligned_malloc?
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <mplconfig.h>]],
+                                       [[
+                                       #ifndef MPL_DEFINE_ALIGNED_ALLOC
+                                       # error
+                                       #endif
+                                       ]])],
+                                       [],
+                                       [AC_MSG_ERROR(MPL_aligned_alloc is required to build OFI netmod)])
 
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_OFI,...)
 ])dnl end _BODY

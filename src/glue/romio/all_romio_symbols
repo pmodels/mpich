@@ -72,9 +72,9 @@ print OUTFD <<EOT;
  * have shown up when Fortran support is disabled.
  */
 
-#include <stdio.h>
-#include "mpi.h"
 #include "mpiimpl.h"
+
+#include <stdio.h>
 
 void MPIR_All_romio_symbols(void);
 void MPIR_All_romio_symbols(void)
