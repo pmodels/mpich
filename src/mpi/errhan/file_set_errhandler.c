@@ -163,6 +163,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
    to get the PMPI and MPI versions without weak symbols */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Get_file_error_routine
+#undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Get_file_error_routine(MPI_Errhandler e, void (**c) (MPI_File *, int *, ...), int *kind)
 {
