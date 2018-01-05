@@ -48,7 +48,7 @@ int MPIR_Allreduce_inter_reduce_exchange_bcast ( const void *sendbuf, void *recv
     newcomm_ptr = comm_ptr->local_comm;
 
     /* Do a local reduce on this intracommunicator */
-    mpi_errno = MPID_Reduce(sendbuf, tmp_buf, count, datatype,
+    mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype,
                             op, 0, newcomm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
@@ -71,7 +71,7 @@ int MPIR_Allreduce_inter_reduce_exchange_bcast ( const void *sendbuf, void *recv
     }
 
     /* Do a local broadcast on this intracommunicator */
-    mpi_errno = MPID_Bcast(recvbuf, count, datatype,
+    mpi_errno = MPIR_Bcast(recvbuf, count, datatype,
                                 0, newcomm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */

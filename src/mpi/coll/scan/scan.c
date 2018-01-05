@@ -93,8 +93,6 @@ int MPIR_Scan_intra_auto (const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-/* MPIR_Scan performs an scan using point-to-point messages.  This is
-   intended to be used by device-specific implementations of scan. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scan_impl
 #undef FCNAME

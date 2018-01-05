@@ -83,7 +83,7 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcoun
 
         /* now do the a local gather on this intracommunicator */
         mpi_errno =
-            MPID_Gather(sendbuf, sendcount, sendtype, tmp_buf, sendcount, sendtype, 0, newcomm_ptr,
+            MPIR_Gather(sendbuf, sendcount, sendtype, tmp_buf, sendcount, sendtype, 0, newcomm_ptr,
                         errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */

@@ -93,7 +93,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, int sendco
 
         /* now do the usual scatter on this intracommunicator */
         mpi_errno =
-            MPID_Scatter(tmp_buf, recvcount, recvtype, recvbuf, recvcount, recvtype, 0, newcomm_ptr,
+            MPIR_Scatter(tmp_buf, recvcount, recvtype, recvbuf, recvcount, recvtype, 0, newcomm_ptr,
                          errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */

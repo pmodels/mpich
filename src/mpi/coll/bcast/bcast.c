@@ -266,9 +266,6 @@ int MPIR_Bcast_inter_auto (
     return mpi_errno;
 }
 
-/* MPIR_Bcast performs an broadcast using point-to-point messages.
-   This is intended to be used by device-specific implementations of
-   broadcast. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bcast_impl
 #undef FCNAME

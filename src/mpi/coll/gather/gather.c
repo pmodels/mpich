@@ -151,10 +151,6 @@ int MPIR_Gather_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype send
     goto fn_exit;
 }
 
-
-/* MPIR_Gather performs an gather using point-to-point messages.  This
-   is intended to be used by device-specific implementations of
-   gather. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Gather_impl
 #undef FCNAME

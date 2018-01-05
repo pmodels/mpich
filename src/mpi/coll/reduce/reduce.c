@@ -261,10 +261,6 @@ int MPIR_Reduce_inter_auto (
     return mpi_errno;
 }
 
-
-/* MPIR_Reduce performs an reduce using point-to-point messages.
-   This is intended to be used by device-specific implementations of
-   reduce. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_impl
 #undef FCNAME

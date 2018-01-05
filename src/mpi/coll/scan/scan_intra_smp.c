@@ -53,7 +53,7 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, int count,
        one process, just copy the raw data. */
     if (comm_ptr->node_comm != NULL)
     {
-        mpi_errno = MPID_Scan(sendbuf, recvbuf, count, datatype,
+        mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype,
                 op, comm_ptr->node_comm, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
@@ -109,7 +109,7 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, int count,
        process of node 3. */
     if (comm_ptr->node_roots_comm != NULL)
     {
-        mpi_errno = MPID_Scan(localfulldata, prefulldata, count, datatype,
+        mpi_errno = MPIR_Scan(localfulldata, prefulldata, count, datatype,
                 op, comm_ptr->node_roots_comm, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
@@ -153,7 +153,7 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, int count,
        reduce it with recvbuf to get final result if nessesary. */
 
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno = MPID_Bcast(&noneed, 1, MPI_INT, 0, comm_ptr->node_comm, errflag);
+        mpi_errno = MPIR_Bcast(&noneed, 1, MPI_INT, 0, comm_ptr->node_comm, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -164,7 +164,7 @@ int MPIR_Scan_intra_smp(const void *sendbuf, void *recvbuf, int count,
 
     if (noneed == 0) {
         if (comm_ptr->node_comm != NULL) {
-            mpi_errno = MPID_Bcast(tempbuf, count, datatype, 0,
+            mpi_errno = MPIR_Bcast(tempbuf, count, datatype, 0,
                     comm_ptr->node_comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */

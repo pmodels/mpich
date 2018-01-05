@@ -207,10 +207,6 @@ int MPIR_Reduce_scatter_block_inter_auto (
     return mpi_errno;
 }
 
-
-/* MPIR_Reduce_scatter_block performs a reduce_scatter_block using
-   point-to-point messages.  This is intended to be used by
-   device-specific implementations of reduce_scatter_block. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_scatter_block_impl
 #undef FCNAME
