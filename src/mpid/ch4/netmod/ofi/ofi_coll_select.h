@@ -26,7 +26,7 @@ int MPIDI_OFI_Barrier_call(MPIR_Comm * comm_ptr,
             MPIDI_OFI_Barrier_recursive_doubling(comm_ptr, errflag, ch4_algo_parameters_container);
         break;
     default:
-        mpi_errno = MPIR_Barrier(comm_ptr, errflag);
+        mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
         break;
     }
 
@@ -85,7 +85,8 @@ int MPIDI_OFI_Bcast_call(void *buffer, int count, MPI_Datatype datatype,
                                                    ch4_algo_parameters_container);
         break;
     default:
-        mpi_errno = MPIR_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr,
+                                    errflag);
         break;
     }
 
@@ -134,7 +135,8 @@ int MPIDI_OFI_Allreduce_call(const void *sendbuf, void *recvbuf, int count,
                                                          ch4_algo_parameters_container);
         break;
     default:
-        mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+        mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op,
+                                        comm_ptr, errflag);
         break;
     }
 
@@ -184,7 +186,8 @@ int MPIDI_OFI_Reduce_call(const void *sendbuf, void *recvbuf, int count,
                                       errflag, ch4_algo_parameters_container);
         break;
     default:
-        mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+        mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op,
+                                     root, comm_ptr, errflag);
         break;
     }
 

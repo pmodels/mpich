@@ -124,13 +124,13 @@ int MPIR_Ialltoallv_sched_inter_auto(const void *sendbuf, const int sendcounts[]
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallv_sched
+#define FUNCNAME MPIR_Ialltoallv_sched_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoallv_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
-                          MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
-                          const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
-                          MPIR_Sched_t s)
+int MPIR_Ialltoallv_sched_impl(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                               MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                               const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
+                               MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -172,10 +172,32 @@ int MPIR_Ialltoallv_sched(const void *sendbuf, const int sendcounts[], const int
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallv
+#define FUNCNAME MPIR_Ialltoallv_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Ialltoallv_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                          MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                          const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
+                          MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_IALLTOALLV_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Ialltoallv_sched(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                                          recvcounts, rdispls, recvtype, comm_ptr, s);
+    } else {
+        mpi_errno = MPIR_Ialltoallv_sched_impl(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                                               recvcounts, rdispls, recvtype, comm_ptr, s);
+    }
+
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Ialltoallv_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int sdispls[],
                          MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
                          const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
                          MPIR_Request **request)
@@ -191,7 +213,7 @@ int MPIR_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdisp
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_Ialltoallv_sched(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
+    mpi_errno = MPIR_Ialltoallv_sched(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
@@ -201,6 +223,28 @@ fn_exit:
     return mpi_errno;
 fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Ialltoallv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                    MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                    const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
+                    MPIR_Request **request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_IALLTOALLV_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                                    recvcounts, rdispls, recvtype, comm_ptr, request);
+    } else {
+        mpi_errno = MPIR_Ialltoallv_impl(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                                         recvcounts, rdispls, recvtype, comm_ptr, request);
+    }
+
+    return mpi_errno;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */
@@ -312,13 +356,8 @@ int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispl
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_IALLTOALLV_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
-                    recvcounts, rdispls, recvtype, comm_ptr, &request_ptr);
-    } else {
-        mpi_errno = MPIR_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
-                    recvcounts, rdispls, recvtype, comm_ptr, &request_ptr);
-    }
+    mpi_errno = MPIR_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                                recvcounts, rdispls, recvtype, comm_ptr, &request_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* return the handle of the request to the user */

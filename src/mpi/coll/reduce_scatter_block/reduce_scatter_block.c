@@ -212,12 +212,13 @@ int MPIR_Reduce_scatter_block_inter_auto (
    point-to-point messages.  This is intended to be used by
    device-specific implementations of reduce_scatter_block. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block
+#define FUNCNAME MPIR_Reduce_scatter_block_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf, 
-                              int recvcount, MPI_Datatype datatype,
-                              MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
+                                   int recvcount, MPI_Datatype datatype,
+                                   MPI_Op op, MPIR_Comm *comm_ptr,
+                                   MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -276,6 +277,28 @@ int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
     return mpi_errno;
  fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Reduce_scatter_block
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
+                              int recvcount, MPI_Datatype datatype,
+                              MPI_Op op, MPIR_Comm *comm_ptr,
+                              MPIR_Errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_REDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr,
+                                              errflag);
+    } else {
+        mpi_errno = MPIR_Reduce_scatter_block_impl(sendbuf, recvbuf, recvcount, datatype, op,
+                                                   comm_ptr, errflag);
+    }
+
+    return mpi_errno;
 }
 
 #endif
@@ -391,13 +414,8 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_REDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Reduce_scatter_block(sendbuf, recvbuf, recvcount,
-                    datatype, op, comm_ptr, &errflag);
-    } else {
-        mpi_errno = MPIR_Reduce_scatter_block(sendbuf, recvbuf, recvcount,
-                    datatype, op, comm_ptr, &errflag);
-    }
+    mpi_errno = MPIR_Reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr,
+                                          &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

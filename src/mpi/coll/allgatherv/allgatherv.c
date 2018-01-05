@@ -183,12 +183,12 @@ int MPIR_Allgatherv_inter_auto (
    messages.  This is intended to be used by device-specific
    implementations of allgatherv. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allgatherv
+#define FUNCNAME MPIR_Allgatherv_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                    void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype,
-                    MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                         void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype,
+                         MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -252,6 +252,29 @@ int MPIR_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
  fn_fail:
 
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Allgatherv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                    void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype,
+                    MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_ALLGATHERV_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Allgatherv(sendbuf, sendcount, sendtype,
+                                     recvbuf, recvcounts, displs, recvtype,
+                                     comm_ptr, errflag);
+    } else {
+        mpi_errno = MPIR_Allgatherv_impl(sendbuf, sendcount, sendtype,
+                                         recvbuf, recvcounts, displs, recvtype,
+                                         comm_ptr, errflag);
+    }
+
+    return mpi_errno;
 }
 
 #endif
@@ -404,15 +427,9 @@ int MPI_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_ALLGATHERV_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Allgatherv(sendbuf, sendcount, sendtype,
-                                     recvbuf, recvcounts, displs, recvtype,
-                                     comm_ptr, &errflag);
-    } else {
-        mpi_errno = MPIR_Allgatherv(sendbuf, sendcount, sendtype,
-                                     recvbuf, recvcounts, displs, recvtype,
-                                     comm_ptr, &errflag);
-    }
+    mpi_errno = MPIR_Allgatherv(sendbuf, sendcount, sendtype,
+                                recvbuf, recvcounts, displs, recvtype,
+                                comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */
