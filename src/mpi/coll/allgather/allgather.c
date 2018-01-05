@@ -170,16 +170,16 @@ int MPIR_Allgather_inter_auto (
 }
 
 
-/* MPIR_Allgather performs an allgather using point-to-point messages.
+/* MPIR_Allgather_impl performs an allgather using point-to-point messages.
    This is intended to be used by device-specific implementations of
    allgather. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allgather
+#define FUNCNAME MPIR_Allgather_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                   MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Allgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                        MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -226,6 +226,27 @@ fn_exit:
     return mpi_errno;
 fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Allgather
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                   MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_ALLGATHER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                   comm_ptr, errflag);
+    } else {
+        mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                        comm_ptr, errflag);
+    }
+
+    return mpi_errno;
 }
 
 #endif
@@ -361,16 +382,9 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-
-    if (MPIR_CVAR_ALLGATHER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Allgather(sendbuf, sendcount, sendtype,
-                                   recvbuf, recvcount, recvtype,
-                                   comm_ptr, &errflag);
-    } else {
-        mpi_errno = MPIR_Allgather(sendbuf, sendcount, sendtype,
-                                   recvbuf, recvcount, recvtype,
-                                   comm_ptr, &errflag);
-    }
+    mpi_errno = MPIR_Allgather(sendbuf, sendcount, sendtype,
+                               recvbuf, recvcount, recvtype,
+                               comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
     
     /* ... end of body of routine ... */

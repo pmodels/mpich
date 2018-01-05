@@ -96,17 +96,12 @@ int MPIR_Scan_intra_auto (const void *sendbuf, void *recvbuf, int count,
 /* MPIR_Scan performs an scan using point-to-point messages.  This is
    intended to be used by device-specific implementations of scan. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scan
+#define FUNCNAME MPIR_Scan_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scan(
-    const void *sendbuf,
-    void *recvbuf,
-    int count,
-    MPI_Datatype datatype,
-    MPI_Op op,
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag )
+int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count,
+                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                   MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -130,6 +125,25 @@ fn_exit:
 
 fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Scan
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Scan(const void *sendbuf, void *recvbuf, int count,
+              MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+              MPIR_Errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_SCAN_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    } else {
+        mpi_errno = MPIR_Scan_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    }
+
+    return mpi_errno;
 }
 
 #endif
@@ -242,11 +256,8 @@ int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_SCAN_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
-    } else {
-        mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
-    }
+    mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                          &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

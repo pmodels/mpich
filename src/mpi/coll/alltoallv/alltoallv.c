@@ -130,12 +130,12 @@ int MPIR_Alltoallv_inter_auto(const void *sendbuf, const int *sendcounts, const 
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallv
+#define FUNCNAME MPIR_Alltoallv_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispls,
-                   MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls,
-                   MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Alltoallv_impl(const void *sendbuf, const int *sendcounts, const int *sdispls,
+                        MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls,
+                        MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -193,6 +193,27 @@ int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispl
     return mpi_errno;
  fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Alltoallv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispls,
+                   MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls,
+                   MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_ALLTOALLV_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Alltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
+                                   rdispls, recvtype, comm_ptr, errflag);
+    } else {
+        mpi_errno = MPIR_Alltoallv_impl(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
+                                        rdispls, recvtype, comm_ptr, errflag);
+    }
+
+    return mpi_errno;
 }
 
 #endif
@@ -332,15 +353,9 @@ int MPI_Alltoallv(const void *sendbuf, const int *sendcounts,
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_ALLTOALLV_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Alltoallv(sendbuf, sendcounts, sdispls,
-                                    sendtype, recvbuf, recvcounts,
-                                    rdispls, recvtype, comm_ptr, &errflag);
-    } else {
-        mpi_errno = MPIR_Alltoallv(sendbuf, sendcounts, sdispls,
-                                    sendtype, recvbuf, recvcounts,
-                                    rdispls, recvtype, comm_ptr, &errflag);
-    }
+    mpi_errno = MPIR_Alltoallv(sendbuf, sendcounts, sdispls,
+                               sendtype, recvbuf, recvcounts,
+                               rdispls, recvtype, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

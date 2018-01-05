@@ -273,11 +273,11 @@ int MPIR_Allreduce_inter_auto (
    This is intended to be used by device-specific implementations of
    allreduce. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allreduce
+#define FUNCNAME MPIR_Allreduce_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                   MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                        MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -329,6 +329,24 @@ fn_exit:
 fn_fail:
 
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Allreduce
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                   MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    } else {
+        mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    }
+
+    return mpi_errno;
 }
 
 #endif
@@ -443,11 +461,7 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
-    } else {
-        mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
-    }
+    mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

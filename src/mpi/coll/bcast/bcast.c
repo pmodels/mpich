@@ -270,10 +270,10 @@ int MPIR_Bcast_inter_auto (
    This is intended to be used by device-specific implementations of
    broadcast. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Bcast
+#define FUNCNAME MPIR_Bcast_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -320,6 +320,23 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Co
     return mpi_errno;
  fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Bcast
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_BCAST_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Bcast( buffer, count, datatype, root, comm_ptr, errflag );
+    } else {
+        mpi_errno = MPIR_Bcast_impl( buffer, count, datatype, root, comm_ptr, errflag );
+    }
+
+    return mpi_errno;
 }
 
 
@@ -417,11 +434,7 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
 
     /* ... body of routine ...  */
     
-    if (MPIR_CVAR_BCAST_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Bcast( buffer, count, datatype, root, comm_ptr, &errflag );
-    } else {
-        mpi_errno = MPIR_Bcast( buffer, count, datatype, root, comm_ptr, &errflag );
-    }
+    mpi_errno = MPIR_Bcast( buffer, count, datatype, root, comm_ptr, &errflag );
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
