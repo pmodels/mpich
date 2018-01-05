@@ -55,7 +55,7 @@ int MPI_Start(MPI_Request * request)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_PT2PT_ENTER(MPID_STATE_MPI_START);
+    MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_START);
 
     /* Validate handle parameters needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -96,7 +96,7 @@ int MPI_Start(MPI_Request * request)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_START);
+    MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_START);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

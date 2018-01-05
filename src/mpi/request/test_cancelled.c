@@ -56,7 +56,7 @@ int MPI_Test_cancelled(const MPI_Status * status, int *flag)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIR_FUNC_TERSE_PT2PT_ENTER(MPID_STATE_MPI_TEST_CANCELLED);
+    MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_TEST_CANCELLED);
 
     /* Validate parameters if error checking is enabled */
 #ifdef HAVE_ERROR_CHECKING
@@ -78,7 +78,7 @@ int MPI_Test_cancelled(const MPI_Status * status, int *flag)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_TEST_CANCELLED);
+    MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_TEST_CANCELLED);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
