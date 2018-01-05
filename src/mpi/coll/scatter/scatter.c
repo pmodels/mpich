@@ -151,10 +151,6 @@ int MPIR_Scatter_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sen
     goto fn_exit;
 }
 
-
-/* MPIR_Scatter performs an scatter using point-to-point messages.
-   This is intended to be used by device-specific implementations of
-   scatter. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scatter_impl
 #undef FCNAME

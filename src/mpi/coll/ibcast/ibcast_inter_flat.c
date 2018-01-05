@@ -48,7 +48,7 @@ int MPIR_Ibcast_sched_inter_flat(void *buffer, int count, MPI_Datatype datatype,
 
         /* now do the usual broadcast on this intracommunicator
            with rank 0 as root. */
-        mpi_errno = MPID_Ibcast_sched(buffer, count, datatype, root, comm_ptr->local_comm, s);
+        mpi_errno = MPIR_Ibcast_sched(buffer, count, datatype, root, comm_ptr->local_comm, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 

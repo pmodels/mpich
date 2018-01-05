@@ -39,7 +39,7 @@ int MPIR_Allgatherv_inter_remote_gather_local_bcast ( const void *sendbuf, int s
     if (comm_ptr->is_low_group) {
         /* gatherv from right group */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPID_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
+        mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
                 recvcounts, displs, recvtype, root,
                 comm_ptr, errflag);
         if (mpi_errno) {
@@ -50,7 +50,7 @@ int MPIR_Allgatherv_inter_remote_gather_local_bcast ( const void *sendbuf, int s
         }
         /* gatherv to right group */
         root = 0;
-        mpi_errno = MPID_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
+        mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
                 recvcounts, displs, recvtype, root,
                 comm_ptr, errflag);
         if (mpi_errno) {
@@ -63,7 +63,7 @@ int MPIR_Allgatherv_inter_remote_gather_local_bcast ( const void *sendbuf, int s
     else {
         /* gatherv to left group  */
         root = 0;
-        mpi_errno = MPID_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
+        mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
                 recvcounts, displs, recvtype, root,
                 comm_ptr, errflag);
         if (mpi_errno) {
@@ -74,7 +74,7 @@ int MPIR_Allgatherv_inter_remote_gather_local_bcast ( const void *sendbuf, int s
         }
         /* gatherv from left group */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPID_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
+        mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype, recvbuf,
                 recvcounts, displs, recvtype, root,
                 comm_ptr, errflag);
         if (mpi_errno) {

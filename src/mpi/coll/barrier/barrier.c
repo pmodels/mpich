@@ -130,9 +130,6 @@ int MPIR_Barrier_inter_auto( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
     return mpi_errno;
 }
 
-/* MPIR_Barrier performs an barrier using point-to-point messages.
-   This is intended to be used by device-specific implementations of
-   barrier. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Barrier_impl
 #undef FCNAME

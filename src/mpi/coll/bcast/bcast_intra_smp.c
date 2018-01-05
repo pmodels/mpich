@@ -99,7 +99,7 @@ int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int ro
         /* perform the internode broadcast */
         if (comm_ptr->node_roots_comm != NULL)
         {
-            mpi_errno = MPID_Bcast(buffer, count, datatype,
+            mpi_errno = MPIR_Bcast(buffer, count, datatype,
                     MPIR_Get_internode_rank(comm_ptr, root),
                     comm_ptr->node_roots_comm, errflag);
             if (mpi_errno) {
@@ -113,7 +113,7 @@ int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int ro
         /* perform the intranode broadcast on all except for the root's node */
         if (comm_ptr->node_comm != NULL)
         {
-            mpi_errno = MPID_Bcast(buffer, count, datatype, 0,
+            mpi_errno = MPIR_Bcast(buffer, count, datatype, 0,
                     comm_ptr->node_comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -137,7 +137,7 @@ int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int ro
                 /* FIXME binomial may not be the best algorithm for on-node
                    bcast.  We need a more comprehensive system for selecting the
                    right algorithms here. */
-                mpi_errno = MPID_Bcast(buffer, count, datatype,
+                mpi_errno = MPIR_Bcast(buffer, count, datatype,
                         MPIR_Get_intranode_rank(comm_ptr, root),
                         comm_ptr->node_comm, errflag);
                 if (mpi_errno) {
@@ -151,7 +151,7 @@ int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int ro
             /* perform the internode broadcast */
             if (comm_ptr->node_roots_comm != NULL)
             {
-                mpi_errno = MPID_Bcast(buffer, count, datatype,
+                mpi_errno = MPIR_Bcast(buffer, count, datatype,
                         MPIR_Get_internode_rank(comm_ptr, root),
                         comm_ptr->node_roots_comm, errflag);
                 if (mpi_errno) {
@@ -169,7 +169,7 @@ int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int ro
                 /* FIXME binomial may not be the best algorithm for on-node
                    bcast.  We need a more comprehensive system for selecting the
                    right algorithms here. */
-                mpi_errno = MPID_Bcast(buffer, count, datatype, 0,
+                mpi_errno = MPIR_Bcast(buffer, count, datatype, 0,
                         comm_ptr->node_comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */

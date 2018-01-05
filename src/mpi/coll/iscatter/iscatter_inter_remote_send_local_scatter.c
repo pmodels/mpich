@@ -83,7 +83,7 @@ int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int
 
         /* now do the usual scatter on this intracommunicator */
         mpi_errno =
-            MPID_Iscatter_sched(tmp_buf, recvcount, recvtype, recvbuf, recvcount, recvtype, 0,
+            MPIR_Iscatter_sched(tmp_buf, recvcount, recvtype, recvbuf, recvcount, recvtype, 0,
                                 newcomm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
