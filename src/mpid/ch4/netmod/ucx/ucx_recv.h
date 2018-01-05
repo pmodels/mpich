@@ -85,7 +85,7 @@ static inline void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
             /* FIXME: we have no way of passing the tag bits back in this case */
             ucp_request->req = (void *)UCS_ERR_MESSAGE_TRUNCATED;
         } else {
-            ucp_request->req = MPL_malloc(sizeof(ucp_tag_recv_info_t));
+            ucp_request->req = MPL_malloc(sizeof(ucp_tag_recv_info_t), MPL_MEM_BUFFER);
             memcpy(ucp_request->req, info, sizeof(ucp_tag_recv_info_t));
         }
     }
@@ -138,7 +138,7 @@ static inline int MPIDI_UCX_recv(void *buf,
                                                        ucp_tag, tag_mask,
                                                        &MPIDI_UCX_recv_cmpl_cb);
     }
-    MPIDI_CH4_UCX_REQUEST(ucp_request);
+    MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     if (ucp_request->req) {
         req = ucp_request->req;
@@ -189,7 +189,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                            MPIDI_UCX_REQ(message).a.message_handler,
                                                            &MPIDI_UCX_mrecv_cmpl_cb);
     }
-    MPIDI_CH4_UCX_REQUEST(ucp_request);
+    MPIDI_UCX_CHK_REQUEST(ucp_request);
 
     if (ucp_request->req) {
         if (unlikely((ucs_status_t)ucp_request->req == UCS_ERR_MESSAGE_TRUNCATED)) {

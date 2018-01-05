@@ -164,7 +164,7 @@ my $local_git_clone = "${tdir}/mpich-clone";
 
 # clone git repo
 print("===> Cloning git repo... ");
-run_cmd("git clone ${git_repo} ${local_git_clone}");
+run_cmd("git clone --recursive ${git_repo} ${local_git_clone}");
 print("done\n");
 
 # chdirs to $local_git_clone if valid
@@ -199,6 +199,7 @@ print("===> Exporting code from git... ");
 run_cmd("rm -rf ${expdir}");
 run_cmd("mkdir -p ${expdir}");
 run_cmd("git archive ${branch} --prefix='mpich-${version}/' | tar -x -C $tdir");
+run_cmd("git submodule foreach --recursive \'git archive HEAD --prefix='' | tar -x -C `echo \${toplevel}/\${path} | sed -e s/clone/${version}/`'");
 print("done\n");
 
 print("===> Create release date and version information... ");

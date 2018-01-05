@@ -263,6 +263,7 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
 	case MPIR_REQUEST_KIND__SEND:
 	case MPIR_REQUEST_KIND__RECV:
         case MPIR_REQUEST_KIND__COLL:
+        case MPIR_REQUEST_KIND__RMA:
 	{
 	    mpi_errno = request_ptr->status.MPI_ERROR;
 	    break;
@@ -545,40 +546,22 @@ int MPIR_Grequest_progress_poke(int count,
 		MPIR_Request **request_ptrs,
 		MPI_Status array_of_statuses[] )
 {
-    MPIX_Grequest_wait_function *wait_fn = NULL;
     void ** state_ptrs;
-    int i, j, n_classes, n_native, n_greq;
+    int i;
     int mpi_errno = MPI_SUCCESS;
+    int made_progress = 0;
     MPIR_CHKLMEM_DECL(1);
 
-    MPIR_CHKLMEM_MALLOC(state_ptrs, void **, sizeof(void*) * count, mpi_errno, "state_ptrs");
+    MPIR_CHKLMEM_MALLOC(state_ptrs, void **, sizeof(void*) * count, mpi_errno, "state_ptrs", MPL_MEM_GREQ);
 
-    /* This somewhat messy for-loop computes how many requests are native
-     * requests and how many are generalized requests, and how many generalized
-     * request classes those grequests are members of */
-    for (i=0, j=0, n_classes=1, n_native=0, n_greq=0; i< count; i++)
-    {
-	if (request_ptrs[i] == NULL || MPIR_Request_is_complete(request_ptrs[i])) continue;
-	if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST)
-	{
-	    n_greq += 1;
-	    wait_fn = request_ptrs[i]->u.ureq.greq_fns->wait_fn;
-	    state_ptrs[j] = request_ptrs[i]->u.ureq.greq_fns->grequest_extra_state;
-	    j++;
-	    if (i+1 < count) {
-	        if (request_ptrs[i+1] == NULL ||
-			(request_ptrs[i]->u.ureq.greq_fns->greq_class !=
-				request_ptrs[i+1]->u.ureq.greq_fns->greq_class) )
-	            n_classes += 1;
-	    }
-	} else {
-	    n_native += 1;
-	}
-    }
+    /* TODO: Implement the class-wise completion optimization described in:
+    Latham, Robert, et al. "Extending the MPI-2 generalized request interface."
+    PVM/MPI 4757 (2007): 223-232.
+    This was implemented previously using a class counter and doing a class-wise completion
+    with wait_fn, but it made progress_poke potentially blocking and might hang, especially
+    in multithreading environments. This optimization would be benificial but needs to be
+    implemented correctly.*/
 
-    if (j > 0 && n_classes == 1 && wait_fn != NULL) {
-        mpi_errno = (wait_fn)(j, state_ptrs, 0, NULL);
-    } else {
 	for (i = 0; i< count; i++ )
 	{
 	    if (request_ptrs[i] != NULL && 
@@ -588,9 +571,15 @@ int MPIR_Grequest_progress_poke(int count,
             {
 		mpi_errno = (request_ptrs[i]->u.ureq.greq_fns->poll_fn)(request_ptrs[i]->u.ureq.greq_fns->grequest_extra_state, &(array_of_statuses[i]));
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+		if (MPIR_Request_is_complete(request_ptrs[i])) made_progress = 1;
 	    }
 	}
-    }
+
+	if (!made_progress) {
+	    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+	    MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+	}
+
 fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
@@ -613,7 +602,7 @@ int MPIR_Grequest_waitall(int count, MPIR_Request * const * request_ptrs)
     MPID_Progress_state progress_state;
     MPIR_CHKLMEM_DECL(1);
 
-    MPIR_CHKLMEM_MALLOC(state_ptrs, void *, sizeof(void*)*count, mpi_error, "state_ptrs");
+    MPIR_CHKLMEM_MALLOC(state_ptrs, void *, sizeof(void*)*count, mpi_error, "state_ptrs", MPL_MEM_GREQ);
     
         /* DISABLED CODE: The greq wait_fn function returns when ANY
            of the requests completes, rather than all.  Also, once a

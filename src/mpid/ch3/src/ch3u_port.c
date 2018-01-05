@@ -655,7 +655,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
 	   and rank */
 	MPIR_CHKLMEM_MALLOC(local_translation,pg_translation*,
 			    local_comm_size*sizeof(pg_translation),
-			    mpi_errno,"local_translation");
+			    mpi_errno,"local_translation", MPL_MEM_DYNAMIC);
 
 	/* Make a list of the local communicator's process groups and encode 
 	   them in strings to be sent to the other side.
@@ -702,10 +702,10 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
 
     MPIR_CHKLMEM_MALLOC(remote_pg,MPIDI_PG_t**,
 			n_remote_pgs * sizeof(MPIDI_PG_t*),
-			mpi_errno,"remote_pg");
+			mpi_errno,"remote_pg", MPL_MEM_DYNAMIC);
     MPIR_CHKLMEM_MALLOC(remote_translation,pg_translation*,
 			remote_comm_size * sizeof(pg_translation),
-			mpi_errno,"remote_translation");
+			mpi_errno,"remote_translation", MPL_MEM_DYNAMIC);
     MPL_DBG_MSG(MPIDI_CH3_DBG_CONNECT,VERBOSE,"allocated remote process groups");
 
     /* Exchange the process groups and their corresponding KVSes */
@@ -888,7 +888,7 @@ static int ExtractLocalPGInfo( MPIR_Comm *comm_p,
     
     cur_index = 0;
     MPIR_CHKPMEM_MALLOC(pg_list,pg_node*,sizeof(pg_node),mpi_errno,
-			"pg_list");
+			"pg_list", MPL_MEM_ADDRESS);
     
     pg_list->pg_id = MPL_strdup(comm_p->dev.vcrt->vcr_table[0]->pg->id);
     pg_list->index = cur_index++;
@@ -923,7 +923,7 @@ static int ExtractLocalPGInfo( MPIR_Comm *comm_p,
 	if (pg_iter == NULL) {
 	    /* We use MPL_malloc directly because we do not know in
 	       advance how many nodes we may allocate */
-	    pg_iter = (pg_node*)MPL_malloc(sizeof(pg_node));
+	    pg_iter = (pg_node*)MPL_malloc(sizeof(pg_node), MPL_MEM_DYNAMIC);
 	    if (!pg_iter) {
 		MPIR_ERR_POP(mpi_errno);
 	    }
@@ -994,7 +994,7 @@ static int ReceivePGAndDistribute( MPIR_Comm *tmp_comm, MPIR_Comm *comm_ptr,
 	    if (mpi_errno != MPI_SUCCESS) {
 		MPIR_ERR_POP(mpi_errno);
 	    }
-	    pg_str = (char*)MPL_malloc(j);
+	    pg_str = (char*)MPL_malloc(j, MPL_MEM_DYNAMIC);
 	    if (pg_str == NULL) {
 		MPIR_ERR_POP(mpi_errno);
 	    }
@@ -1014,7 +1014,7 @@ static int ReceivePGAndDistribute( MPIR_Comm *tmp_comm, MPIR_Comm *comm_ptr,
 
 	if (rank != root) {
 	    /* The root has already allocated this string */
-	    pg_str = (char*)MPL_malloc(j);
+	    pg_str = (char*)MPL_malloc(j, MPL_MEM_DYNAMIC);
 	    if (pg_str == NULL) {
 		MPIR_ERR_POP(mpi_errno);
 	    }
@@ -1063,7 +1063,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
 
     MPIR_CHKLMEM_MALLOC(local_translation,pg_translation*,
 			peer_comm_size*sizeof(pg_translation),
-			mpi_errno,"local_translation");
+			mpi_errno,"local_translation", MPL_MEM_DYNAMIC);
     
     if (rank == root) {
 	/* Get the process groups known to the *peercomm* */
@@ -1072,7 +1072,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
     }
 
     /* Now, broadcast the number of local pgs */
-    mpi_errno = MPIR_Bcast_impl( &n_local_pgs, 1, MPI_INT, root, comm_p, &errflag);
+    mpi_errno = MPID_Bcast( &n_local_pgs, 1, MPI_INT, root, comm_p, &errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
@@ -1093,17 +1093,17 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
 	    len     = pg_list->lenStr;
 	    pg_list = pg_list->next;
 	}
-	mpi_errno = MPIR_Bcast_impl( &len, 1, MPI_INT, root, comm_p, &errflag);
+	mpi_errno = MPID_Bcast( &len, 1, MPI_INT, root, comm_p, &errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	if (rank != root) {
-	    pg_str = (char *)MPL_malloc(len);
+	    pg_str = (char *)MPL_malloc(len, MPL_MEM_DYNAMIC);
             if (!pg_str) {
                 MPIR_CHKMEM_SETERR(mpi_errno, len, "pg_str");
                 goto fn_exit;
             }
 	}
-	mpi_errno = MPIR_Bcast_impl( pg_str, len, MPI_CHAR, root, comm_p, &errflag);
+	mpi_errno = MPID_Bcast( pg_str, len, MPI_CHAR, root, comm_p, &errflag);
         if (mpi_errno) {
             if (rank != root)
                 MPL_free( pg_str );
@@ -1262,7 +1262,7 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
 	   rank */
 	MPIR_CHKLMEM_MALLOC(local_translation,pg_translation*,
 			    local_comm_size*sizeof(pg_translation),
-			    mpi_errno,"local_translation");
+			    mpi_errno,"local_translation", MPL_MEM_DYNAMIC);
 
 	/* Make a list of the local communicator's process groups and encode 
 	   them in strings to be sent to the other side.
@@ -1300,10 +1300,10 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
     context_id       = recv_ints[2];
     MPIR_CHKLMEM_MALLOC(remote_pg,MPIDI_PG_t**,
 			n_remote_pgs * sizeof(MPIDI_PG_t*),
-			mpi_errno,"remote_pg");
+			mpi_errno,"remote_pg", MPL_MEM_DYNAMIC);
     MPIR_CHKLMEM_MALLOC(remote_translation,pg_translation*,
 			remote_comm_size * sizeof(pg_translation),
-			mpi_errno, "remote_translation");
+			mpi_errno, "remote_translation", MPL_MEM_DYNAMIC);
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,TERSE,(MPL_DBG_FDEST,"[%d]accept:remote process groups: %d\nremote comm size: %d\n", rank, n_remote_pgs, remote_comm_size));
 
     /* Exchange the process groups and their corresponding KVSes */
@@ -1455,7 +1455,6 @@ static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
     intercomm->remote_group = NULL;
     intercomm->comm_kind    = MPIR_COMM_KIND__INTERCOMM;
     intercomm->local_comm   = NULL;
-    intercomm->coll_fns     = NULL;
 
     /* Point local vcrt at those of incoming intracommunicator */
     intercomm->dev.local_vcrt = comm_ptr->dev.vcrt;
@@ -1557,7 +1556,7 @@ int MPIDI_CH3I_Acceptq_enqueue(MPIDI_VC_t * vc, int port_name_tag )
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_ACCEPTQ_ENQUEUE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_ACCEPTQ_ENQUEUE);
 
-    MPL_LL_SEARCH_SCALAR(active_portq.head, port, port_name_tag, port_name_tag);
+    LL_SEARCH_SCALAR(active_portq.head, port, port_name_tag, port_name_tag);
 
     /* Find port object by using port_name_tag. */
     mpi_errno = MPIDI_CH3I_Port_connreq_create(vc, &connreq);
@@ -1621,7 +1620,7 @@ int MPIDI_CH3I_Acceptq_dequeue(MPIDI_CH3I_Port_connreq_t ** connreq_ptr, int por
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_ACCEPTQ_DEQUEUE);
 
     /* Find port object by using port_name_tag. */
-    MPL_LL_SEARCH_SCALAR(active_portq.head, port, port_name_tag, port_name_tag);
+    LL_SEARCH_SCALAR(active_portq.head, port, port_name_tag, port_name_tag);
     MPIR_Assert(port != NULL);  /* Port is always initialized in open_port. */
 
     MPIDI_CH3I_Port_connreq_q_dequeue(&port->accept_connreq_q, connreq_ptr);
@@ -1649,7 +1648,7 @@ static int MPIDI_CH3I_Acceptq_cleanup(MPIDI_CH3I_Port_connreq_q_t * accept_connr
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_Port_connreq_t *connreq = NULL, *connreq_tmp = NULL;
 
-    MPL_LL_FOREACH_SAFE(accept_connreq_q->head, connreq, connreq_tmp) {
+    LL_FOREACH_SAFE(accept_connreq_q->head, connreq, connreq_tmp) {
         MPIDI_CH3I_Port_connreq_q_delete(accept_connreq_q, connreq);
 
         /* Notify connecting client. */
@@ -1694,7 +1693,7 @@ static int MPIDI_CH3I_Revokeq_cleanup(void)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_Port_connreq_t *connreq = NULL, *connreq_tmp = NULL;
 
-    MPL_LL_FOREACH_SAFE(revoked_connreq_q.head, connreq, connreq_tmp) {
+    LL_FOREACH_SAFE(revoked_connreq_q.head, connreq, connreq_tmp) {
         MPID_Progress_state progress_state;
         MPIDI_CH3I_Port_connreq_q_delete(&revoked_connreq_q, connreq);
 
@@ -1867,7 +1866,7 @@ static int MPIDI_CH3I_Port_connreq_create(MPIDI_VC_t * vc, MPIDI_CH3I_Port_connr
 
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKPMEM_MALLOC(connreq, MPIDI_CH3I_Port_connreq_t *, sizeof(MPIDI_CH3I_Port_connreq_t),
-                        mpi_errno, "comm_conn");
+                        mpi_errno, "comm_conn", MPL_MEM_DYNAMIC);
 
     connreq->vc = vc;
     MPIDI_CH3I_PORT_CONNREQ_SET_STAT(connreq, INITED);
@@ -1937,14 +1936,14 @@ int MPIDI_CH3I_Port_init(int port_name_tag)
 
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKPMEM_MALLOC(port, MPIDI_CH3I_Port_t *, sizeof(MPIDI_CH3I_Port_t),
-                        mpi_errno, "comm_port");
+                        mpi_errno, "comm_port", MPL_MEM_DYNAMIC);
 
     port->port_name_tag = port_name_tag;
     port->accept_connreq_q.head = port->accept_connreq_q.tail = 0;
     port->accept_connreq_q.size = 0;
     port->next = NULL;
 
-    MPL_LL_APPEND(active_portq.head, active_portq.tail, port);
+    LL_APPEND(active_portq.head, active_portq.tail, port);
     active_portq.size++;
 
   fn_exit:
@@ -1969,9 +1968,9 @@ int MPIDI_CH3I_Port_destroy(int port_name_tag)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PORT_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PORT_DESTROY);
 
-    MPL_LL_SEARCH_SCALAR(active_portq.head, port, port_name_tag, port_name_tag);
+    LL_SEARCH_SCALAR(active_portq.head, port, port_name_tag, port_name_tag);
     if (port != NULL) {
-        MPL_LL_DELETE(active_portq.head, active_portq.tail, port);
+        LL_DELETE(active_portq.head, active_portq.tail, port);
 
         mpi_errno = MPIDI_CH3I_Acceptq_cleanup(&port->accept_connreq_q);
         if (mpi_errno)
@@ -2009,9 +2008,9 @@ int MPIDI_Port_finalize(void)
     {
         MPIDI_CH3I_Port_t *port = NULL, *port_tmp = NULL;
 
-        MPL_LL_FOREACH_SAFE(active_portq.head, port, port_tmp) {
+        LL_FOREACH_SAFE(active_portq.head, port, port_tmp) {
             /* destroy all opening ports. */
-            MPL_LL_DELETE(active_portq.head, active_portq.tail, port);
+            LL_DELETE(active_portq.head, active_portq.tail, port);
 
             mpi_errno = MPIDI_CH3I_Acceptq_cleanup(&port->accept_connreq_q);
             MPL_free(port);
@@ -2026,7 +2025,7 @@ int MPIDI_Port_finalize(void)
     {
         MPIDI_CH3I_Port_connreq_t *connreq = NULL, *connreq_tmp = NULL;
 
-        MPL_LL_FOREACH_SAFE(unexpt_connreq_q.head, connreq, connreq_tmp) {
+        LL_FOREACH_SAFE(unexpt_connreq_q.head, connreq, connreq_tmp) {
             MPIDI_CH3I_Port_connreq_q_delete(&unexpt_connreq_q, connreq);
             mpi_errno = MPIDI_CH3I_Port_connreq_free(connreq);
             if (mpi_errno)

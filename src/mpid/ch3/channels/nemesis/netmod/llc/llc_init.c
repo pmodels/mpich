@@ -60,10 +60,10 @@ int MPID_nem_llc_kvs_put_binary(int from, const char *postfix, const uint8_t * b
     MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPIDI_PG_GetConnKVSname");
     dprintf("kvs_put_binary,kvs_name=%s\n", kvs_name);
 
-    sprintf(key, "bc/%d/%s", from, postfix);
+    MPL_snprintf(key, sizeof(key), "bc/%d/%s", from, postfix);
     val[0] = 0;
     for (j = 0; j < length; j++) {
-        sprintf(str, "%02x", buf[j]);
+        MPL_snprintf(str, sizeof(str), "%02x", buf[j]);
         strcat(val, str);
     }
     dprintf("kvs_put_binary,rank=%d,from=%d,PMI_KVS_Put(%s, %s, %s)\n",
@@ -96,7 +96,7 @@ int MPID_nem_llc_kvs_get_binary(int from, const char *postfix, char *buf, int le
     dprintf("kvs_get_binary,kvs_name=%s\n", kvs_name);
     MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPIDI_PG_GetConnKVSname");
 
-    sprintf(key, "bc/%d/%s", from, postfix);
+    MPL_snprintf(key, sizeof(key), "bc/%d/%s", from, postfix);
     dprintf("kvs_put_binary,rank=%d,from=%d,PMI_KVS_Get(%s, %s, %s)\n",
             MPIDI_Process.my_pg_rank, from, kvs_name, key, val);
     pmi_errno = PMI_KVS_Get(kvs_name, key, val, 256);

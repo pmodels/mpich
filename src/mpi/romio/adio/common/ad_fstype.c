@@ -34,6 +34,10 @@
 #include "gpfs.h"
 #endif
 
+#ifdef HAVE_IM_CLIENT_NATIVE2_H
+#include "im_client_native2.h"
+#endif
+
 /* Notes on detection process:
  *
  * There are three more "general" mechanisms that we use for detecting
@@ -538,6 +542,10 @@ static void ADIO_FileSysType_prefix(const char *filename, int *fstype, int *erro
     else if (!strncmp(filename, "pvfs2:", 6)||!strncmp(filename, "PVFS2:", 6)) {
 	*fstype = ADIO_PVFS2;
     } 
+    else if (!strncmp(filename, "ime:", 4)||
+                    !strncmp(filename, "IME:", 4)) {
+            *fstype = ADIO_IME;
+    } 
     else if (!strncmp(filename, "testfs:", 7) 
 	     || !strncmp(filename, "TESTFS:", 7))
     {
@@ -757,6 +765,17 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
 	return;
 #else
 	*ops = &ADIO_LUSTRE_operations;
+#endif
+    }
+    if (file_system == ADIO_IME)
+    {
+#ifndef ROMIO_IME
+        *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                           myname, __LINE__, MPI_ERR_IO,
+                                           "**iofstypeunsupported", 0);
+        return;
+#else
+        *ops = &ADIO_IME_operations;
 #endif
     }
     *error_code = MPI_SUCCESS;

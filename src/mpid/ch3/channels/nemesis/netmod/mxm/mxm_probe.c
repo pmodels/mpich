@@ -150,7 +150,7 @@ int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
         req->status.MPI_SOURCE = mxm_req.completion.sender_imm;
         req->dev.recv_data_sz = mxm_req.completion.sender_len;
         MPIR_STATUS_SET_COUNT(req->status, req->dev.recv_data_sz);
-        req->dev.tmpbuf = MPL_malloc(req->dev.recv_data_sz);
+        req->dev.tmpbuf = MPL_malloc(req->dev.recv_data_sz, MPL_MEM_BUFFER);
         MPIR_Assert(req->dev.tmpbuf);
 
         mxm_req.base.completed_cb = NULL;

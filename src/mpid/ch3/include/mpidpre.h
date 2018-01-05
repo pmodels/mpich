@@ -75,12 +75,6 @@ typedef int16_t MPIDI_Rank_t;
 typedef int32_t MPIDI_Rank_t;
 #endif /* CH3_RANK_BITS */
 
-/* Indicates that this device is topology aware and implements the
-   MPID_Get_node_id function (and friends). */
-#define MPID_USE_NODE_IDS
-typedef MPIDI_Rank_t MPID_Node_id_t;
-
-
 /* For the typical communication system for which the ch3 channel is
    appropriate, 16 bits is sufficient for the rank.  By also using 16
    bits for the context, we can reduce the size of the match
@@ -713,7 +707,6 @@ int MPID_Win_sync(MPIR_Win *win);
 void MPID_Progress_start(MPID_Progress_state * state);
 int MPID_Progress_wait(MPID_Progress_state * state);
 void MPID_Progress_end(MPID_Progress_state * stae);
-int MPID_Progress_test(void);
 int MPID_Progress_poke(void);
 
 int MPID_Get_processor_name( char *name, int namelen, int *resultlen);
@@ -725,15 +718,12 @@ void MPID_Request_free_hook(MPIR_Request *);
 void MPID_Request_destroy_hook(MPIR_Request *);
 int MPID_Request_complete(MPIR_Request *);
 
-void *MPID_Alloc_mem( size_t size, MPIR_Info *info );
+void *MPID_Alloc_mem( size_t size, MPIR_Info *info, MPL_memory_class class );
 int MPID_Free_mem( void *ptr );
 
 /* Prototypes and definitions for the node ID code.  This is used to support
    hierarchical collectives in a (mostly) device-independent way. */
-#if defined(MPID_USE_NODE_IDS)
-/* MPID_Node_id_t is a signed integer type defined by the device in mpidpre.h. */
-int MPID_Get_node_id(MPIR_Comm *comm, int rank, MPID_Node_id_t *id_p);
-int MPID_Get_max_node_id(MPIR_Comm *comm, MPID_Node_id_t *max_id_p);
-#endif
+int MPID_Get_node_id(MPIR_Comm *comm, int rank, int *id_p);
+int MPID_Get_max_node_id(MPIR_Comm *comm, int *max_id_p);
 
 #endif /* !defined(MPIDPRE_H_INCLUDED) */

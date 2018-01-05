@@ -129,7 +129,7 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
         intptr_t segment_size = data_sz;
         intptr_t last = segment_size;
         MPIR_Assert(last > 0);
-        REQ_FIELD(sreq, pack_buf) = MPL_malloc((size_t) data_sz);
+        REQ_FIELD(sreq, pack_buf) = MPL_malloc((size_t) data_sz, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, pack_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
         MPIR_Segment_pack(segment_ptr, segment_first, &last, (char *) (REQ_FIELD(sreq, pack_buf)));
         MPIR_Assert(last == data_sz);
@@ -363,7 +363,7 @@ int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr,
 
     data_sz = sreq->dev.segment_size;
     if (data_sz > 0) {
-        REQ_FIELD(sreq, rma_buf) = MPL_malloc((size_t) sreq->dev.segment_size);
+        REQ_FIELD(sreq, rma_buf) = MPL_malloc((size_t) sreq->dev.segment_size, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, rma_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
         MPIR_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &data_sz,
                           (char *) REQ_FIELD(sreq, rma_buf));
@@ -547,14 +547,14 @@ ssize_t llc_writev(void *endpt, uint64_t raddr,
             }
 #ifdef	notdef_hsiz_hack
             if (bsiz > 0) {
-                buff = MPL_malloc(bsiz + sizeof(MPID_nem_llc_netmod_hdr_t));
+                buff = MPL_malloc(bsiz + sizeof(MPID_nem_llc_netmod_hdr_t), MPL_MEM_BUFFER);
                 if (buff == 0) {
                     nw = -1;    /* ENOMEM */
                     goto bad;
                 }
             }
 #else /* notdef_hsiz_hack */
-            buff = MPL_malloc(bsiz + sizeof(MPID_nem_llc_netmod_hdr_t));
+            buff = MPL_malloc(bsiz + sizeof(MPID_nem_llc_netmod_hdr_t), MPL_MEM_BUFFER);
             if (buff == 0) {
                 nw = -1;        /* ENOMEM */
                 goto bad;
@@ -1050,7 +1050,7 @@ int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
         intptr_t segment_size = data_sz;
         intptr_t last = segment_size;
         MPIR_Assert(last > 0);
-        REQ_FIELD(sreq, pack_buf) = MPL_malloc((size_t) data_sz);
+        REQ_FIELD(sreq, pack_buf) = MPL_malloc((size_t) data_sz, MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, pack_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
         MPIR_Segment_pack(segment_ptr, segment_first, &last, (char *) (REQ_FIELD(sreq, pack_buf)));
         MPIR_Assert(last == data_sz);

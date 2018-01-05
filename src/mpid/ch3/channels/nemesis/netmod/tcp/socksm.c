@@ -159,9 +159,9 @@ static int alloc_sc_plfd_tbls (void)
     MPIR_Assert(MPID_nem_tcp_plfd_tbl == NULL);
 
     MPIR_CHKPMEM_MALLOC (g_sc_tbl, sockconn_t *, g_tbl_capacity * sizeof(sockconn_t),
-                         mpi_errno, "connection table");
+                         mpi_errno, "connection table", MPL_MEM_ADDRESS);
     MPIR_CHKPMEM_MALLOC (MPID_nem_tcp_plfd_tbl, struct pollfd *, g_tbl_capacity * sizeof(struct pollfd),
-                         mpi_errno, "pollfd table");
+                         mpi_errno, "pollfd table", MPL_MEM_ADDRESS);
 #if defined(MPICH_DEBUG_MEMINIT)
     /* We initialize the arrays in order to eliminate spurious valgrind errors
        that occur when poll(2) returns 0.  See valgrind bugzilla#158425 and
@@ -228,9 +228,9 @@ static int expand_sc_plfd_tbls (void)
     MPL_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE, (MPL_DBG_FDEST, "expand_sc_plfd_tbls Entry"));
     MPL_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE, (MPL_DBG_FDEST, "expand_sc_plfd_tbls b4 g_sc_tbl[0].fd=%d", g_sc_tbl[0].fd));
     MPIR_CHKPMEM_MALLOC (new_sc_tbl, sockconn_t *, new_capacity * sizeof(sockconn_t),
-                         mpi_errno, "expanded connection table");
+                         mpi_errno, "expanded connection table", MPL_MEM_ADDRESS);
     MPIR_CHKPMEM_MALLOC (new_plfd_tbl, struct pollfd *, new_capacity * sizeof(struct pollfd),
-                         mpi_errno, "expanded pollfd table");
+                         mpi_errno, "expanded pollfd table", MPL_MEM_ADDRESS);
 
     MPIR_Memcpy (new_sc_tbl, g_sc_tbl, g_tbl_capacity * sizeof(sockconn_t));
     MPIR_Memcpy (new_plfd_tbl, MPID_nem_tcp_plfd_tbl, g_tbl_capacity * sizeof(struct pollfd));
@@ -605,7 +605,7 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
 	iov[0].iov_len = sizeof(sc->pg_rank);
 	pg_id_len = hdr.datalen - sizeof(MPIDI_nem_tcp_idinfo_t);
 	if (pg_id_len != 0) {
-	    MPIR_CHKLMEM_MALLOC (pg_id, char *, pg_id_len, mpi_errno, "sockconn pg_id");
+	    MPIR_CHKLMEM_MALLOC (pg_id, char *, pg_id_len, mpi_errno, "sockconn pg_id", MPL_MEM_OTHER);
 	    iov[1].iov_base = (void *)pg_id;
 	    iov[1].iov_len = pg_id_len;
 	    ++iov_cnt;
@@ -648,7 +648,7 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
 
         MPL_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE, (MPL_DBG_FDEST, "PKT_TMPVC_INFO: sc->fd=%d", sc->fd));
         /* create a new VC */
-        MPIR_CHKPMEM_MALLOC (vc, MPIDI_VC_t *, sizeof(MPIDI_VC_t), mpi_errno, "real vc from tmp vc");
+        MPIR_CHKPMEM_MALLOC (vc, MPIDI_VC_t *, sizeof(MPIDI_VC_t), mpi_errno, "real vc from tmp vc", MPL_MEM_ADDRESS);
         /* --BEGIN ERROR HANDLING-- */
         if (vc == NULL) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", NULL);
@@ -845,7 +845,7 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
             pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
             MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
 #endif
-            MPIR_CHKLMEM_MALLOC(bc, char *, val_max_sz, mpi_errno, "bc");
+            MPIR_CHKLMEM_MALLOC(bc, char *, val_max_sz, mpi_errno, "bc", MPL_MEM_OTHER);
             
             sc->is_tmpvc = FALSE;
             
@@ -970,7 +970,7 @@ static int cleanup_and_free_sc_plfd(sockconn_t *const sc)
     INIT_SC_ENTRY(sc, idx);
     INIT_POLLFD_ENTRY(plfd);
 
-    MPIR_CHKPMEM_MALLOC(node, freenode_t *, sizeof(freenode_t), mpi_errno, "free node");
+    MPIR_CHKPMEM_MALLOC(node, freenode_t *, sizeof(freenode_t), mpi_errno, "free node", MPL_MEM_OTHER);
     node->index = idx;
     Q_ENQUEUE(&freeq, node);
 
@@ -1750,7 +1750,7 @@ int MPID_nem_tcp_sm_init(void)
     MPID_nem_tcp_plfd_tbl = NULL;
     alloc_sc_plfd_tbls();
     
-    MPIR_CHKPMEM_MALLOC(recv_buf, char*, MPID_NEM_TCP_RECV_MAX_PKT_LEN, mpi_errno, "TCP temporary buffer");
+    MPIR_CHKPMEM_MALLOC(recv_buf, char*, MPID_NEM_TCP_RECV_MAX_PKT_LEN, mpi_errno, "TCP temporary buffer", MPL_MEM_BUFFER);
     MPIR_CHKPMEM_COMMIT();
 
  fn_exit:

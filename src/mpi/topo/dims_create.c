@@ -326,7 +326,7 @@ static int factor_to_divisors(int nf, Factors *factors, int ndiv, int divs[])
         int *divs2;
         int *restrict d1, *restrict d2;
 
-        MPIR_CHKLMEM_MALLOC(divs2, int *, nd*sizeof(int), mpi_errno, "divs2");
+        MPIR_CHKLMEM_MALLOC(divs2, int *, nd*sizeof(int), mpi_errno, "divs2", MPL_MEM_COMM);
 
         MPIR_T_PVAR_TIMER_START(DIMS, dims_sort);
         /* handling the first set of pairs separately saved about 20%;
@@ -448,7 +448,7 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
     if (idx > 1) {
         MPIR_CHKLMEM_DECL(1);
         int *newdivs;
-        MPIR_CHKLMEM_MALLOC(newdivs,int*,ndivs*sizeof(int),mpi_errno,"divs");
+        MPIR_CHKLMEM_MALLOC(newdivs,int*,ndivs*sizeof(int),mpi_errno,"divs", MPL_MEM_COMM);
         if (mpi_errno) return mpi_errno;
 
         /* At least 3 divisors to set (0...idx).  We try all choices
@@ -777,7 +777,7 @@ PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
      * have already trimmed off some large factors */
     /* First, find all of the divisors given by the remaining factors */
     ndivs = ndivisors_from_factor(nf, (const Factors *)f);
-    MPIR_CHKLMEM_MALLOC(divs, int*, (ndivs)*sizeof(int), mpi_errno, "divs");
+    MPIR_CHKLMEM_MALLOC(divs, int*, (ndivs)*sizeof(int), mpi_errno, "divs", MPL_MEM_COMM);
     ndivs = factor_to_divisors(nf, f, ndivs, divs);
     if (MPIR_CVAR_DIMS_VERBOSE) {
         for (i=0; i<ndivs; i++) {

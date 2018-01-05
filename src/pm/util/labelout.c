@@ -90,7 +90,7 @@ int IOLabelSetupFinishInServer( IOLabelSetup *iofds, ProcessState *pState )
     close( iofds->readErr[1] );
 
     /* We need dedicated storage for the private data */
-    leader = (IOLabel *)MPL_malloc( sizeof(IOLabel) );
+    leader = (IOLabel *)MPL_malloc( sizeof(IOLabel), MPL_MEM_PM );
     if (useLabels) {
 	IOLabelSetLabelText( outLabelPattern, 
 			     leader->label, sizeof(leader->label),
@@ -101,7 +101,7 @@ int IOLabelSetupFinishInServer( IOLabelSetup *iofds, ProcessState *pState )
     }
     leader->lastNL = 1;
     leader->dest   = stdout;
-    leadererr = (IOLabel *)MPL_malloc( sizeof(IOLabel) );
+    leadererr = (IOLabel *)MPL_malloc( sizeof(IOLabel), MPL_MEM_PM );
     if (useLabels) {
 	IOLabelSetLabelText( errLabelPattern, 
 			     leadererr->label, sizeof(leadererr->label),

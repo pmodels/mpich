@@ -78,8 +78,8 @@ static int initialized = 0;   /* keep track of the first call to any
 /* Forward references */
 static void MPIR_Bsend_retry_pending( void );
 static int MPIR_Bsend_check_active ( void );
-static MPII_Bsend_data_t *MPIR_Bsend_find_buffer( int );
-static void MPIR_Bsend_take_buffer( MPII_Bsend_data_t *, int );
+static MPII_Bsend_data_t *MPIR_Bsend_find_buffer( size_t );
+static void MPIR_Bsend_take_buffer( MPII_Bsend_data_t *, size_t);
 static int MPIR_Bsend_finalize( void * );
 static void MPIR_Bsend_free_segment( MPII_Bsend_data_t * );
 
@@ -168,6 +168,8 @@ int MPIR_Bsend_attach( void *buffer, int buffer_size )
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bsend_detach( void *bufferp, int *size )
 {
+    int mpi_errno = MPI_SUCCESS;
+
     if (BsendBuffer.pending) {
 	/* FIXME: Process pending bsend requests in detach */
 	return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, 
@@ -179,7 +181,8 @@ int MPIR_Bsend_detach( void *bufferp, int *size )
 
 	while (p) {
 	    MPI_Request r = p->request->handle;
-	    MPIR_Wait_impl( &r, MPI_STATUS_IGNORE );
+	    mpi_errno = MPIR_Wait_impl( &r, MPI_STATUS_IGNORE );
+	    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    p = p->next;
 	}
     }
@@ -197,7 +200,10 @@ int MPIR_Bsend_detach( void *bufferp, int *size )
     BsendBuffer.active  = 0;
     BsendBuffer.pending = 0;
 
-    return MPI_SUCCESS;
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 /*
@@ -527,7 +533,7 @@ static void MPIR_Bsend_retry_pending( void )
  * Find a slot in the avail buffer that can hold size bytes.  Does *not*
  * remove the slot from the avail buffer (see MPIR_Bsend_take_buffer) 
  */
-static MPII_Bsend_data_t *MPIR_Bsend_find_buffer( int size )
+static MPII_Bsend_data_t *MPIR_Bsend_find_buffer( size_t size )
 {
     MPII_Bsend_data_t *p = BsendBuffer.avail;
 
@@ -549,10 +555,10 @@ static MPII_Bsend_data_t *MPIR_Bsend_find_buffer( int size )
  * If there isn't enough left of p, remove the entire segment from
  * the avail list.
  */
-static void MPIR_Bsend_take_buffer( MPII_Bsend_data_t *p, int size  )
+static void MPIR_Bsend_take_buffer( MPII_Bsend_data_t *p, size_t size  )
 {
     MPII_Bsend_data_t *prev;
-    int         alloc_size;
+    size_t alloc_size;
 
     /* Compute the remaining size.  This must include any padding 
        that must be added to make the new block properly aligned */
@@ -563,11 +569,11 @@ static void MPIR_Bsend_take_buffer( MPII_Bsend_data_t *p, int size  )
        allocate for this buffer. */
 
     MPL_DBG_MSG_FMT(MPIR_DBG_BSEND,TYPICAL,(MPL_DBG_FDEST,
-                                    "Taking %d bytes from a block with %llu bytes\n",
+                                    "Taking %lu bytes from a block with %llu bytes\n",
                                     alloc_size, (unsigned long long) p->total_size ));
 
     /* Is there enough space left to create a new block? */
-    if (alloc_size + (int)BSENDDATA_HEADER_TRUE_SIZE + MIN_BUFFER_BLOCK <= p->size) {
+    if (alloc_size + BSENDDATA_HEADER_TRUE_SIZE + MIN_BUFFER_BLOCK <= p->size) {
 	/* Yes, the available space (p->size) is large enough to 
 	   carve out a new block */
 	MPII_Bsend_data_t *newp;

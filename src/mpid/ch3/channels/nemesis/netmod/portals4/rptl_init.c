@@ -115,7 +115,7 @@ int MPID_nem_ptl_rptl_drain_eq(int eq_count, ptl_handle_eq_t *eq)
 
         while (target->op_segment_list) {
             op_segment = target->op_segment_list;
-            MPL_DL_DELETE(target->op_segment_list, op_segment);
+            DL_DELETE(target->op_segment_list, op_segment);
             MPL_free(op_segment);
         }
 
@@ -153,8 +153,8 @@ int MPID_nem_ptl_rptl_ptinit(ptl_handle_ni_t ni_handle, ptl_handle_eq_t eq_handl
 
     /* setup the parts of rptls that can be done before world size or
      * target information */
-    MPIR_CHKPMEM_MALLOC(rptl, struct rptl *, sizeof(struct rptl), mpi_errno, "rptl");
-    MPL_DL_APPEND(rptl_info.rptl_list, rptl);
+    MPIR_CHKPMEM_MALLOC(rptl, struct rptl *, sizeof(struct rptl), mpi_errno, "rptl", MPL_MEM_ADDRESS);
+    DL_APPEND(rptl_info.rptl_list, rptl);
 
     rptl->local_state = RPTL_LOCAL_STATE_ACTIVE;
     rptl->pause_ack_counter = 0;
@@ -180,7 +180,7 @@ int MPID_nem_ptl_rptl_ptinit(ptl_handle_ni_t ni_handle, ptl_handle_eq_t eq_handl
     if (rptl->control.pt != PTL_PT_ANY) {
         MPIR_CHKPMEM_MALLOC(rptl->control.me, ptl_handle_me_t *,
                             2 * rptl_info.world_size * sizeof(ptl_handle_me_t), mpi_errno,
-                            "rptl target info");
+                            "rptl target info", MPL_MEM_BUFFER);
         for (i = 0; i < 2 * rptl_info.world_size; i++) {
             ret = rptli_post_control_buffer(rptl->ni, rptl->control.pt, &rptl->control.me[i]);
             RPTLU_ERR_POP(ret, "Error in rptli_post_control_buffer\n");
@@ -227,7 +227,7 @@ int MPID_nem_ptl_rptl_ptfini(ptl_pt_index_t pt_index)
         MPL_free(rptl->control.me);
     }
 
-    MPL_DL_DELETE(rptl_info.rptl_list, rptl);
+    DL_DELETE(rptl_info.rptl_list, rptl);
     MPL_free(rptl);
 
   fn_exit:

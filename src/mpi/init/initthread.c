@@ -324,6 +324,28 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     int exit_init_cs_on_failure = 0;
     MPIR_Info *info_ptr;
 
+#if (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS)
+    int rc = ABT_initialized();
+    if (rc != ABT_SUCCESS) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                         "MPI_Init_thread", __LINE__, MPI_ERR_OTHER,
+                                         "**argobots_uninitialized", 0);
+        goto fn_fail;
+    }
+#endif
+
+#ifdef HAVE_HWLOC
+    MPIR_Process.bindset = hwloc_bitmap_alloc();
+    hwloc_topology_init(&MPIR_Process.topology);
+    hwloc_topology_set_flags(MPIR_Process.topology, HWLOC_TOPOLOGY_FLAG_WHOLE_IO|HWLOC_TOPOLOGY_FLAG_IO_BRIDGES);
+    MPIR_Process.bindset_is_valid = 0;
+    if (!hwloc_topology_load(MPIR_Process.topology)) {
+        MPIR_Process.bindset_is_valid =
+            !hwloc_get_proc_cpubind(MPIR_Process.topology, getpid(), MPIR_Process.bindset,
+                                    HWLOC_CPUBIND_PROCESS);
+    }
+#endif
+
     /* For any code in the device that wants to check for runtime 
        decisions on the value of isThreaded, set a provisional
        value here. We could let the MPID_Init routine override this */
@@ -495,7 +517,11 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     info_ptr->next  = NULL;
     info_ptr->key   = NULL;
     info_ptr->value = NULL;
-    
+
+#ifdef USE_MEMORY_TRACING
+    MPL_trinit();
+#endif
+
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided, 
 			  &has_args, &has_env);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -528,9 +554,9 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 		    MPIR_Process.comm_world->local_size);
 #ifdef USE_MEMORY_TRACING
 #ifdef MPICH_IS_THREADED
-    MPL_trinit( MPIR_Process.comm_world->rank, MPIR_ThreadInfo.isThreaded );
+    MPL_trconfig( MPIR_Process.comm_world->rank, MPIR_ThreadInfo.isThreaded );
 #else
-    MPL_trinit( MPIR_Process.comm_world->rank, 0 );
+    MPL_trconfig( MPIR_Process.comm_world->rank, 0 );
 #endif
     /* Indicate that we are near the end of the init step; memory 
        allocated already will have an id of zero; this helps 
@@ -702,6 +728,10 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     if (MPIR_CVAR_ASYNC_PROGRESS) {
+#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS
+        printf("WARNING: Asynchronous progress is not supported with Argobots\n");
+        goto fn_fail;
+#else
         if (*provided == MPI_THREAD_MULTIPLE) {
             mpi_errno = MPIR_Init_async_thread();
             if (mpi_errno) goto fn_fail;
@@ -711,6 +741,7 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
         else {
             printf("WARNING: No MPI_THREAD_MULTIPLE support (needed for async progress)\n");
         }
+#endif
     }
 
     /* ... end of body of routine ... */

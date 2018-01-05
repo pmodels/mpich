@@ -16,7 +16,7 @@ struct HYD_proxy *HYD_pmcd_pmi_find_proxy(int fd)
 {
     struct HYD_proxy *proxy;
 
-    MPL_HASH_FIND_INT(HYD_server_info.proxy_hash, &fd, proxy);
+    HASH_FIND_INT(HYD_server_info.proxy_hash, &fd, proxy);
 
     return proxy;
 }

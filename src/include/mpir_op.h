@@ -106,6 +106,9 @@ typedef struct MPIR_Op {
      MPIR_Op_kind       kind;
      MPIR_Lang_t        language;
      MPIR_User_function function;
+#ifdef MPID_DEV_OP_DECL
+     MPID_DEV_OP_DECL
+#endif
   } MPIR_Op;
 #define MPIR_OP_N_BUILTIN 15
 extern MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN];
@@ -165,5 +168,7 @@ extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];
 
 #define MPIR_OP_HDL_TO_FN(op) MPIR_Op_table[((op)&0xf) - 1]
 #define MPIR_OP_HDL_TO_DTYPE_FN(op) MPIR_Op_check_dtype_table[((op)&0xf) - 1]
+
+int MPIR_Op_commutative(MPIR_Op *op_ptr, int *commute);
 
 #endif /* MPIR_OP_H_INCLUDED */

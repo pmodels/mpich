@@ -120,8 +120,6 @@
 
 /* ------------------------------------------------------------------------- */
 
-/* mpi.h includes the definitions of MPI_Fint */
-#include "mpi.h"
 #include "mpiimpl.h"
 
 /* If there is no MPI I/O support, and we are still using MPIO_Request,

@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "mpl_utlist.h"
+#include "utlist.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_T_pvar_handle_alloc */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -81,7 +81,7 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
 
     /* Allocate memory and bzero it */
     MPIR_CHKPMEM_CALLOC(hnd, MPIR_T_pvar_handle_t*, sizeof(*hnd) + extra,
-                        mpi_errno, "performance variable handle");
+                        mpi_errno, "performance variable handle", MPL_MEM_MPIT);
 #ifdef HAVE_ERROR_CHECKING
     hnd->kind = MPIR_T_PVAR_HANDLE;
 #endif
@@ -159,7 +159,7 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
     }
 
     /* Link the handle in its session and return it */
-    MPL_DL_APPEND(session->hlist, hnd);
+    DL_APPEND(session->hlist, hnd);
     *handle = hnd;
     *count = cnt;
 

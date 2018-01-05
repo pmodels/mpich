@@ -139,7 +139,7 @@ int MPI_Type_hindexed(int count,
 				  &new_handle);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    MPIR_CHKLMEM_MALLOC(ints, int *, (count + 1) * sizeof(int), mpi_errno, "contents integer array");
+    MPIR_CHKLMEM_MALLOC(ints, int *, (count + 1) * sizeof(int), mpi_errno, "contents integer array", MPL_MEM_BUFFER);
 
     /* copy ints into temporary buffer (count and blocklengths) */
     ints[0] = count;

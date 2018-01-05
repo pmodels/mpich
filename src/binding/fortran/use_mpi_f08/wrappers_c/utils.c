@@ -56,7 +56,7 @@ extern int MPIR_Fortran_array_of_string_f2c(const char* strs_f, char*** strs_c, 
     }
 
     /* Allocate memory for pointers to strings and the strings themself */
-    buf = (char*) MPL_malloc(sizeof(char*) * num_strs + sizeof(char) * (num_chars + num_strs)); /* Add \0 for each string */
+    buf = (char*) MPL_malloc(sizeof(char*) * num_strs + sizeof(char) * (num_chars + num_strs), MPL_MEM_STRINGS); /* Add \0 for each string */
     if (buf == NULL) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     }

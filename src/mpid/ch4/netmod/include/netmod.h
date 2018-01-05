@@ -94,7 +94,7 @@ typedef int (*MPIDI_NM_mpi_irecv_t) (void *buf, int count, MPI_Datatype datatype
 typedef int (*MPIDI_NM_mpi_imrecv_t) (void *buf, int count, MPI_Datatype datatype,
                                       MPIR_Request * message, MPIR_Request ** rreqp);
 typedef int (*MPIDI_NM_mpi_cancel_recv_t) (MPIR_Request * rreq);
-typedef void *(*MPIDI_NM_mpi_alloc_mem_t) (size_t size, MPIR_Info * info_ptr);
+typedef void *(*MPIDI_NM_mpi_alloc_mem_t) (size_t size, MPIR_Info * info_ptr, MPL_memory_class class);
 typedef int (*MPIDI_NM_mpi_free_mem_t) (void *ptr);
 typedef int (*MPIDI_NM_mpi_improbe_t) (int source, int tag, MPIR_Comm * comm, int context_offset, MPIDI_av_entry_t *addr,
                                        int *flag, MPIR_Request ** message, MPI_Status * status);
@@ -180,12 +180,12 @@ typedef int (*MPIDI_NM_mpi_get_accumulate_t) (const void *origin_addr, int origi
 typedef int (*MPIDI_NM_mpi_win_lock_all_t) (int assert, MPIR_Win * win);
 typedef int (*MPIDI_NM_rank_is_local_t) (int target, MPIR_Comm * comm);
 typedef int (*MPIDI_NM_av_is_local_t) (MPIDI_av_entry_t *av);
-typedef int (*MPIDI_NM_mpi_barrier_t) (MPIR_Comm * comm, MPIR_Errflag_t * errflag);
+typedef int (*MPIDI_NM_mpi_barrier_t) (MPIR_Comm * comm, MPIR_Errflag_t * errflag, void * algo_parameters_ptr);
 typedef int (*MPIDI_NM_mpi_bcast_t) (void *buffer, int count, MPI_Datatype datatype, int root,
-                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag);
+                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag, void * algo_parameters_ptr);
 typedef int (*MPIDI_NM_mpi_allreduce_t) (const void *sendbuf, void *recvbuf, int count,
                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                         MPIR_Errflag_t * errflag);
+                                         MPIR_Errflag_t * errflag, void * algo_parameters_ptr);
 typedef int (*MPIDI_NM_mpi_allgather_t) (const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                          MPIR_Comm * comm, MPIR_Errflag_t * errflag);
@@ -222,7 +222,7 @@ typedef int (*MPIDI_NM_mpi_alltoallw_t) (const void *sendbuf, const int *sendcou
                                          MPIR_Errflag_t * errflag);
 typedef int (*MPIDI_NM_mpi_reduce_t) (const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
-                                      MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
+                                      MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag, void * algo_parameters_ptr);
 typedef int (*MPIDI_NM_mpi_reduce_scatter_t) (const void *sendbuf, void *recvbuf,
                                               const int *recvcounts, MPI_Datatype datatype,
                                               MPI_Op op, MPIR_Comm * comm_ptr,
@@ -339,6 +339,80 @@ typedef int (*MPIDI_NM_mpi_iscatterv_t) (const void *sendbuf, const int *sendcou
                                          const int *displs, MPI_Datatype sendtype, void *recvbuf,
                                          int recvcount, MPI_Datatype recvtype, int root,
                                          MPIR_Comm * comm_ptr, MPI_Request * req);
+typedef int (*MPIDI_NM_mpi_ibarrier_sched_t)(MPIR_Comm * comm, MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_ibcast_sched_t)(void *buffer, int count, MPI_Datatype datatype, int root,
+                                         MPIR_Comm * comm, MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_iallgather_sched_t)(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                             void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                             MPIR_Comm * comm, MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_iallgatherv_sched_t)(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                              void *recvbuf, const int *recvcounts, const int *displs,
+                                              MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_iallreduce_sched_t)(const void *sendbuf, void *recvbuf, int count,
+                                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                             MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_ialltoall_sched_t)(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                            void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                            MPIR_Comm * comm, MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_ialltoallv_sched_t)(const void *sendbuf, const int sendcounts[],
+                                             const int sdispls[], MPI_Datatype sendtype,
+                                             void *recvbuf, const int recvcounts[],
+                                             const int rdispls[], MPI_Datatype recvtype,
+                                             MPIR_Comm * comm, MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_ialltoallw_sched_t)(const void *sendbuf, const int sendcounts[],
+                                             const int sdispls[], const MPI_Datatype sendtypes[],
+                                             void *recvbuf, const int recvcounts[],
+                                             const int rdispls[], const MPI_Datatype recvtypes[],
+                                             MPIR_Comm * comm, MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_iexscan_sched_t)(const void *sendbuf, void *recvbuf, int count,
+                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                          MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_igather_sched_t)(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                          int root, MPIR_Comm * comm, MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_igatherv_sched_t)(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                           void *recvbuf, const int *recvcounts, const int *displs,
+                                           MPI_Datatype recvtype, int root, MPIR_Comm * comm,
+                                           MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_ireduce_scatter_block_sched_t)(const void *sendbuf, void *recvbuf, int recvcount,
+                                                        MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                                        MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_ireduce_scatter_sched_t)(const void *sendbuf, void *recvbuf, const int recvcounts[],
+                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                       MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_ireduce_sched_t)(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                                          MPI_Op op, int root, MPIR_Comm * comm, MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_iscan_sched_t)(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                                        MPI_Op op, MPIR_Comm * comm, MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_iscatter_sched_t)(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                           void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                           int root, MPIR_Comm * comm, MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_iscatterv_sched_t)(const void *sendbuf, const int *sendcounts,
+                                            const int *displs, MPI_Datatype sendtype,
+                                            void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                            int root, MPIR_Comm * comm, MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_ineighbor_allgather_sched_t)(const void *sendbuf, int sendcount,
+                                                      MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                                                      MPI_Datatype recvtype, MPIR_Comm * comm,
+                                                      MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_ineighbor_allgatherv_sched_t)(const void *sendbuf, int sendcount,
+                                                       MPI_Datatype sendtype, void *recvbuf,
+                                                       const int recvcounts[], const int displs[],
+                                                       MPI_Datatype recvtype, MPIR_Comm * comm,
+                                                       MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_ineighbor_alltoall_sched_t)(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                                     MPIR_Comm * comm, MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_ineighbor_alltoallv_sched_t)(const void *sendbuf, const int sendcounts[],
+                                                      const int sdispls[], MPI_Datatype sendtype,
+                                                      void *recvbuf, const int recvcounts[],
+                                                      const int rdispls[], MPI_Datatype recvtype,
+                                                      MPIR_Comm * comm, MPIR_Sched_t s);
+typedef int (*MPIDI_NM_mpi_ineighbor_alltoallw_sched_t)(const void *sendbuf, const int sendcounts[],
+                                                      const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                                      void *recvbuf, const int recvcounts[],
+                                                      const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                                      MPIR_Comm * comm, MPIR_Sched_t s);
 typedef int (*MPIDI_NM_mpi_type_commit_hook_t) (MPIR_Datatype * datatype_p);
 typedef int (*MPIDI_NM_mpi_type_free_hook_t) (MPIR_Datatype * datatype_p);
 typedef int (*MPIDI_NM_mpi_op_commit_hook_t) (MPIR_Op * op_p);
@@ -476,6 +550,28 @@ typedef struct MPIDI_NM_native_funcs {
     MPIDI_NM_mpi_iscan_t mpi_iscan;
     MPIDI_NM_mpi_iscatter_t mpi_iscatter;
     MPIDI_NM_mpi_iscatterv_t mpi_iscatterv;
+    MPIDI_NM_mpi_ibarrier_sched_t mpi_ibarrier_sched;
+    MPIDI_NM_mpi_ibcast_sched_t mpi_ibcast_sched;
+    MPIDI_NM_mpi_iallgather_sched_t mpi_iallgather_sched;
+    MPIDI_NM_mpi_iallgatherv_sched_t mpi_iallgatherv_sched;
+    MPIDI_NM_mpi_iallreduce_sched_t mpi_iallreduce_sched;
+    MPIDI_NM_mpi_ialltoall_sched_t mpi_ialltoall_sched;
+    MPIDI_NM_mpi_ialltoallv_sched_t mpi_ialltoallv_sched;
+    MPIDI_NM_mpi_ialltoallw_sched_t mpi_ialltoallw_sched;
+    MPIDI_NM_mpi_iexscan_sched_t mpi_iexscan_sched;
+    MPIDI_NM_mpi_igather_sched_t mpi_igather_sched;
+    MPIDI_NM_mpi_igatherv_sched_t mpi_igatherv_sched;
+    MPIDI_NM_mpi_ireduce_scatter_block_sched_t mpi_ireduce_scatter_block_sched;
+    MPIDI_NM_mpi_ireduce_scatter_sched_t mpi_ireduce_scatter_sched;
+    MPIDI_NM_mpi_ireduce_sched_t mpi_ireduce_sched;
+    MPIDI_NM_mpi_iscan_sched_t mpi_iscan_sched;
+    MPIDI_NM_mpi_iscatter_sched_t mpi_iscatter_sched;
+    MPIDI_NM_mpi_iscatterv_sched_t mpi_iscatterv_sched;
+    MPIDI_NM_mpi_ineighbor_allgather_sched_t mpi_ineighbor_allgather_sched;
+    MPIDI_NM_mpi_ineighbor_allgatherv_sched_t mpi_ineighbor_allgatherv_sched;
+    MPIDI_NM_mpi_ineighbor_alltoall_sched_t mpi_ineighbor_alltoall_sched;
+    MPIDI_NM_mpi_ineighbor_alltoallv_sched_t mpi_ineighbor_alltoallv_sched;
+    MPIDI_NM_mpi_ineighbor_alltoallw_sched_t mpi_ineighbor_alltoallw_sched;
     /* Datatype hooks */
     MPIDI_NM_mpi_type_commit_hook_t mpi_type_commit_hook;
     MPIDI_NM_mpi_type_free_hook_t mpi_type_free_hook;
@@ -610,9 +706,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf, int count, MPI_Datat
                                                  MPIR_Request * message,
                                                  MPIR_Request ** rreqp) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX void *MPIDI_NM_mpi_alloc_mem(size_t size,
-                                                      MPIR_Info *
-                                                      info_ptr) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr,
+                                                      MPL_memory_class class) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_free_mem(void *ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source, int tag, MPIR_Comm * comm,
                                                   int context_offset, MPIDI_av_entry_t *addr, int *flag,
@@ -987,6 +1082,80 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iscatterv(const void *sendbuf, const i
                                                     MPI_Datatype recvtype, int root,
                                                     MPIR_Comm * comm_ptr,
                                                     MPI_Request * req) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm, MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast_sched(void *buffer, int count, MPI_Datatype datatype, int root,
+                                         MPIR_Comm * comm, MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallgather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                             void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                             MPIR_Comm * comm, MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                              void *recvbuf, const int *recvcounts, const int *displs,
+                                              MPI_Datatype recvtype, MPIR_Comm * comm, MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallreduce_sched(const void *sendbuf, void *recvbuf, int count,
+                                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                             MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ialltoall_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                            void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                            MPIR_Comm * comm, MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ialltoallv_sched(const void *sendbuf, const int sendcounts[],
+                                             const int sdispls[], MPI_Datatype sendtype,
+                                             void *recvbuf, const int recvcounts[],
+                                             const int rdispls[], MPI_Datatype recvtype,
+                                             MPIR_Comm * comm, MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ialltoallw_sched(const void *sendbuf, const int sendcounts[],
+                                             const int sdispls[], const MPI_Datatype sendtypes[],
+                                             void *recvbuf, const int recvcounts[],
+                                             const int rdispls[], const MPI_Datatype recvtypes[],
+                                             MPIR_Comm * comm, MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iexscan_sched(const void *sendbuf, void *recvbuf, int count,
+                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                          MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_igather_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                          int root, MPIR_Comm * comm, MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_igatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                           void *recvbuf, const int *recvcounts, const int *displs,
+                                           MPI_Datatype recvtype, int root, MPIR_Comm * comm,
+                                           MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int recvcount,
+                                                        MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                                        MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ireduce_scatter_sched(const void *sendbuf, void *recvbuf, const int recvcounts[],
+                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                       MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ireduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                                          MPI_Op op, int root, MPIR_Comm * comm, MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iscan_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                                        MPI_Op op, MPIR_Comm * comm, MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iscatter_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                           void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                           int root, MPIR_Comm * comm, MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iscatterv_sched(const void *sendbuf, const int *sendcounts,
+                                            const int *displs, MPI_Datatype sendtype,
+                                            void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                            int root, MPIR_Comm * comm, MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_allgather_sched(const void *sendbuf, int sendcount,
+                                                      MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                                                      MPI_Datatype recvtype, MPIR_Comm * comm,
+                                                      MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_allgatherv_sched(const void *sendbuf, int sendcount,
+                                                       MPI_Datatype sendtype, void *recvbuf,
+                                                       const int recvcounts[], const int displs[],
+                                                       MPI_Datatype recvtype, MPIR_Comm * comm,
+                                                       MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_alltoall_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                                     MPIR_Comm * comm, MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_alltoallv_sched(const void *sendbuf, const int sendcounts[],
+                                                      const int sdispls[], MPI_Datatype sendtype,
+                                                      void *recvbuf, const int recvcounts[],
+                                                      const int rdispls[], MPI_Datatype recvtype,
+                                                      MPIR_Comm * comm, MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ineighbor_alltoallw_sched(const void *sendbuf, const int sendcounts[],
+                                                      const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                                                      void *recvbuf, const int recvcounts[],
+                                                      const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
+                                                      MPIR_Comm * comm, MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_commit_hook(MPIR_Datatype *
                                                            datatype_p) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype *

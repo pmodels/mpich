@@ -50,7 +50,7 @@ int MPIR_Type_create_indexed_block_impl(int count,
 				       &new_handle);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 2) * sizeof(int), mpi_errno, "content description");
+    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 2) * sizeof(int), mpi_errno, "content description", MPL_MEM_BUFFER);
 
     ints[0] = count;
     ints[1] = blocklength;

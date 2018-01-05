@@ -112,28 +112,48 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_get_all_failed_procs(MPIR_Comm * comm_ptr
 #define FUNCNAME MPIDI_Comm_split_type
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_split_type(MPIR_Comm * comm_ptr,
+MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr,
                                                    int split_type,
                                                    int key, MPIR_Info * info_ptr,
                                                    MPIR_Comm ** newcomm_ptr)
 {
+    MPIR_Comm *comm_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
-    int idx;
-    MPID_Node_id_t node_id;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_SPLIT_TYPE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_SPLIT_TYPE);
 
-    if (split_type == MPI_COMM_TYPE_SHARED) {
-        MPID_Comm_get_lpid(comm_ptr, comm_ptr->rank, &idx, FALSE);
-        MPID_Get_node_id(comm_ptr, comm_ptr->rank, &node_id);
-        mpi_errno = MPIR_Comm_split_impl(comm_ptr, node_id, key, newcomm_ptr);
-    }
-    else
-        mpi_errno = MPIR_Comm_split_impl(comm_ptr, MPI_UNDEFINED, key, newcomm_ptr);
+    mpi_errno = MPIR_Comm_split_impl(user_comm_ptr, split_type == MPI_UNDEFINED ? MPI_UNDEFINED : 0,
+                                     key, &comm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
+    if (split_type == MPI_UNDEFINED) {
+        *newcomm_ptr = NULL;
+        goto fn_exit;
+    }
+
+    if (split_type != MPI_COMM_TYPE_SHARED) {
+        /* we don't know how to handle other split types; hand it back
+         * to the upper layer */
+        mpi_errno = MPIR_Comm_split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
+        goto fn_exit;
+    }
+
+    mpi_errno = MPIR_Comm_split_type_node_topo(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+fn_exit:
+    if (comm_ptr)
+        MPIR_Comm_free_impl(comm_ptr);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_SPLIT_TYPE);
     return mpi_errno;
+
+    /* --BEGIN ERROR HANDLING-- */
+fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 #undef FUNCNAME
@@ -157,7 +177,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
             break;
         case MPIDI_RANK_MAP_MLUT:
             max_n_avts = MPIDIU_get_max_n_avts();
-            uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
+            uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int), MPL_MEM_ADDRESS);
             memset(uniq_avtids, 0, max_n_avts * sizeof(int));
             for (i = 0; i < MPIDI_COMM(comm, map).size; i++) {
                 if (uniq_avtids[MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid] == 0) {
@@ -176,7 +196,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
             break;
         case MPIDI_RANK_MAP_MLUT:
             max_n_avts = MPIDIU_get_max_n_avts();
-            uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
+            uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int), MPL_MEM_ADDRESS);
             memset(uniq_avtids, 0, max_n_avts * sizeof(int));
             for (i = 0; i < MPIDI_COMM(comm, local_map).size; i++) {
                 if (uniq_avtids[MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] == 0) {
@@ -226,7 +246,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
         break;
     case MPIDI_RANK_MAP_MLUT:
         max_n_avts = MPIDIU_get_max_n_avts();
-        uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
+        uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int), MPL_MEM_ADDRESS);
         memset(uniq_avtids, 0, max_n_avts * sizeof(int));
         for (i = 0; i < MPIDI_COMM(comm, map).size; i++) {
             if (uniq_avtids[MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid] == 0) {
@@ -245,7 +265,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
         break;
     case MPIDI_RANK_MAP_MLUT:
         max_n_avts = MPIDIU_get_max_n_avts();
-        uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
+        uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int), MPL_MEM_ADDRESS);
         memset(uniq_avtids, 0, max_n_avts * sizeof(int));
         for (i = 0; i < MPIDI_COMM(comm, local_map).size; i++) {
             if (uniq_avtids[MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] == 0) {
@@ -305,14 +325,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    int avtid = 0, lpid;
+    int avtid = 0, lpid = -1;
     int local_avtid = 0, remote_avtid = 0;
     int local_size_send = 0, remote_size_recv = 0;
     int cts_tag = 0;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int pure_intracomm = 0;
     int local_size = 0;
-    MPID_Node_id_t *local_node_ids = NULL, *remote_node_ids = NULL;
+    int *local_node_ids = NULL, *remote_node_ids = NULL;
     int *local_lupids = NULL;
     size_t *local_upid_size = NULL, *remote_upid_size = NULL;
     int upid_send_size = 0, upid_recv_size = 0;
@@ -366,9 +386,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
                          local_size, *remote_size, pure_intracomm));
 
         MPIR_CHKPMEM_MALLOC((*remote_lupids), int *, (*remote_size) * sizeof(int),
-                            mpi_errno, "remote_lupids");
+                            mpi_errno, "remote_lupids", MPL_MEM_ADDRESS);
         MPIR_CHKLMEM_MALLOC(local_lupids, int *, local_size * sizeof(int),
-                            mpi_errno, "local_lupids");
+                            mpi_errno, "local_lupids", MPL_MEM_ADDRESS);
         for (i = 0; i < local_size; i++) {
             MPIDIU_comm_rank_to_pid(local_comm, i, &lpid, &avtid);
             local_lupids[i] = MPIDIU_LUPID_CREATE(avtid, lpid);
@@ -379,7 +399,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
         if (!pure_intracomm) {
             /* Stage 1.1 UPID exchange between leaders */
             MPIR_CHKLMEM_MALLOC(remote_upid_size, size_t *, (*remote_size) * sizeof(size_t),
-                                mpi_errno, "remote_upid_size");
+                                mpi_errno, "remote_upid_size", MPL_MEM_ADDRESS);
 
             mpi_errno = MPIDI_NM_get_local_upids(local_comm, &local_upid_size, &local_upids);
             if (mpi_errno)
@@ -398,7 +418,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
             for (i = 0; i < *remote_size; i++)
                 upid_recv_size += remote_upid_size[i];
             MPIR_CHKLMEM_MALLOC(remote_upids, char *, upid_recv_size * sizeof(char),
-                                mpi_errno, "remote_upids");
+                                mpi_errno, "remote_upids", MPL_MEM_ADDRESS);
             mpi_errno = MPIC_Sendrecv(local_upids, upid_send_size, MPI_BYTE,
                                       remote_leader, cts_tag,
                                       remote_upids, upid_recv_size, MPI_BYTE,
@@ -407,17 +427,17 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
-            MPIR_CHKLMEM_MALLOC(local_node_ids, MPID_Node_id_t *,
-                                local_size * sizeof(MPID_Node_id_t), mpi_errno, "local_node_ids");
-            MPIR_CHKLMEM_MALLOC(remote_node_ids, MPID_Node_id_t *,
-                                (*remote_size) * sizeof(MPID_Node_id_t),
-                                mpi_errno, "remote_node_ids");
+            MPIR_CHKLMEM_MALLOC(local_node_ids, int *,
+                                local_size * sizeof(int), mpi_errno, "local_node_ids", MPL_MEM_ADDRESS);
+            MPIR_CHKLMEM_MALLOC(remote_node_ids, int *,
+                                (*remote_size) * sizeof(int),
+                                mpi_errno, "remote_node_ids", MPL_MEM_ADDRESS);
             for (i = 0; i < local_size; i++) {
                 MPIDI_CH4U_get_node_id(local_comm, i, &local_node_ids[i]);
             }
-            mpi_errno = MPIC_Sendrecv(local_node_ids, local_size * sizeof(MPID_Node_id_t), MPI_BYTE,
+            mpi_errno = MPIC_Sendrecv(local_node_ids, local_size * sizeof(int), MPI_BYTE,
                                       remote_leader, cts_tag,
-                                      remote_node_ids, (*remote_size) * sizeof(MPID_Node_id_t),
+                                      remote_node_ids, (*remote_size) * sizeof(int),
                                       MPI_BYTE, remote_leader, cts_tag, peer_comm,
                                       MPI_STATUS_IGNORE, &errflag);
             if (mpi_errno)

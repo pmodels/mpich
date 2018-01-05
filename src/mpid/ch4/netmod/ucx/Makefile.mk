@@ -12,4 +12,7 @@ mpi_core_sources   += src/mpid/ch4/netmod/ucx/func_table.c\
 
 errnames_txt_files += src/mpid/ch4/netmod/ucx/errnames.txt
 
+external_subdirs   += @ucxdir@
+pmpi_convenience_libs += @ucxlib@
+
 endif

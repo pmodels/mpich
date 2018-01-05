@@ -44,7 +44,7 @@ void *ADIOI_Malloc_fn(size_t size, int lineno, const char *fname)
 #ifdef ROMIO_XFS
     new = (void *) memalign(XFS_MEMALIGN, size);
 #else
-    new = (void *) MPL_malloc(size);
+    new = (void *) MPL_malloc(size, MPL_MEM_IO);
 #endif
     if (!new && size) {
 	FPRINTF(stderr, "Out of memory in file %s, line %d\n", fname, lineno);
@@ -60,7 +60,7 @@ void *ADIOI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname
 {
     void *new;
 
-    new = (void *) MPL_calloc(nelem, elsize);
+    new = (void *) MPL_calloc(nelem, elsize, MPL_MEM_IO);
     if (!new && nelem) {
 	FPRINTF(stderr, "Out of memory in file %s, line %d\n", fname, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
@@ -74,7 +74,7 @@ void *ADIOI_Realloc_fn(void *ptr, size_t size, int lineno, const char *fname)
 {
     void *new;
 
-    new = (void *) MPL_realloc(ptr, size);
+    new = (void *) MPL_realloc(ptr, size, MPL_MEM_IO);
     if (!new && size) {
 	FPRINTF(stderr, "realloc failed in file %s, line %d\n", fname, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);

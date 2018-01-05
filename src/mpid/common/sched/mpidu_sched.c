@@ -5,7 +5,7 @@
  */
 
 #include "mpidimpl.h"
-#include "mpl_utlist.h"
+#include "utlist.h"
 
 /* A random guess at an appropriate value, we can tune it later.  It could also
  * be a real tunable parameter. */
@@ -158,7 +158,7 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
         end = tag_ub / 2;
     }
     if (start != MPI_UNDEFINED) {
-        MPL_DL_FOREACH(all_schedules.head, elt) {
+        DL_FOREACH(all_schedules.head, elt) {
             if (elt->tag >= start && elt->tag < end) {
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanynbc");
             }
@@ -257,7 +257,7 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
     case MPIDU_SCHED_ENTRY_REDUCE:
         MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "starting REDUCE entry %d\n", (int) idx);
         mpi_errno =
-            MPIR_Reduce_local_impl(e->u.reduce.inbuf, e->u.reduce.inoutbuf, e->u.reduce.count,
+            MPIR_Reduce_local(e->u.reduce.inbuf, e->u.reduce.inoutbuf, e->u.reduce.count,
                                    e->u.reduce.datatype, e->u.reduce.op);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -401,7 +401,7 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp)
 
     /* this mem will be freed by the progress engine when the request is completed */
     MPIR_CHKPMEM_MALLOC(s, struct MPIDU_Sched *, sizeof(struct MPIDU_Sched), mpi_errno,
-                        "schedule object");
+                        "schedule object", MPL_MEM_COMM);
 
     s->size = MPIDU_SCHED_INITIAL_ENTRIES;
     s->idx = 0;
@@ -415,7 +415,7 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp)
     /* this mem will be freed by the progress engine when the request is completed */
     MPIR_CHKPMEM_MALLOC(s->entries, struct MPIDU_Sched_entry *,
                         MPIDU_SCHED_INITIAL_ENTRIES * sizeof(struct MPIDU_Sched_entry), mpi_errno,
-                        "schedule entries vector");
+                        "schedule entries vector", MPL_MEM_COMM);
 
     /* TODO in a debug build, defensively mark all entries as status=INVALID */
 
@@ -497,7 +497,7 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
 
         MPID_Progress_activate_hook(nbc_progress_hook_id);
     }
-    MPL_DL_APPEND(all_schedules.head, s);
+    DL_APPEND(all_schedules.head, s);
 
     MPL_DBG_MSG_P(MPIR_DBG_COMM, TYPICAL, "started schedule s=%p\n", s);
     if (MPIR_CVAR_COLL_SCHED_DUMP)
@@ -533,7 +533,7 @@ static int MPIDU_Sched_add_entry(struct MPIDU_Sched *s, int *idx, struct MPIDU_S
 
     if (s->num_entries == s->size) {
         /* need to grow the entries array */
-        s->entries = MPL_realloc(s->entries, 2 * s->size * sizeof(struct MPIDU_Sched_entry));
+        s->entries = MPL_realloc(s->entries, 2 * s->size * sizeof(struct MPIDU_Sched_entry), MPL_MEM_COMM);
         if (s->entries == NULL)
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
         s->size *= 2;
@@ -935,7 +935,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
     if (made_progress)
         *made_progress = FALSE;
 
-    MPL_DL_FOREACH_SAFE(state->head, s, tmp) {
+    DL_FOREACH_SAFE(state->head, s, tmp) {
         if (MPIR_CVAR_COLL_SCHED_DUMP)
 	    sched_dump(s, stderr);
 
@@ -1007,7 +1007,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                              (MPL_DBG_FDEST, "completing and dequeuing s=%p r=%p\n", s, s->req));
 
             /* dequeue this schedule from the state, it's complete */
-            MPL_DL_DELETE(state->head, s);
+            DL_DELETE(state->head, s);
 
             /* TODO refactor into a sched_complete routine? */
             switch (s->req->u.nbc.errflag) {

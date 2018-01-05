@@ -41,7 +41,7 @@ static inline int MPIDI_check_cmpl_order(MPIR_Request * req,
     MPIDI_CH4U_REQUEST(req, req->target_cmpl_cb) = (void *) target_cmpl_cb;
     MPIDI_CH4U_REQUEST(req, req->request) = (uint64_t) req;
     /* MPIDI_CS_ENTER(); */
-    MPL_DL_APPEND(MPIDI_CH4_Global.cmpl_list, req->dev.ch4.am.req);
+    DL_APPEND(MPIDI_CH4_Global.cmpl_list, req->dev.ch4.am.req);
     /* MPIDI_CS_EXIT(); */
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHECK_CMPL_ORDER);
@@ -63,9 +63,9 @@ static inline void MPIDI_progress_cmpl_list(void)
 
     /* MPIDI_CS_ENTER(); */
   do_check_again:
-    MPL_DL_FOREACH_SAFE(MPIDI_CH4_Global.cmpl_list, curr, tmp) {
+    DL_FOREACH_SAFE(MPIDI_CH4_Global.cmpl_list, curr, tmp) {
         if (curr->seq_no == (uint64_t) OPA_load_int(&MPIDI_CH4_Global.exp_seq_no)) {
-            MPL_DL_DELETE(MPIDI_CH4_Global.cmpl_list, curr);
+            DL_DELETE(MPIDI_CH4_Global.cmpl_list, curr);
             req = (MPIR_Request *) curr->request;
             target_cmpl_cb = (MPIDIG_am_target_cmpl_cb) curr->target_cmpl_cb;
             target_cmpl_cb(req);
@@ -82,7 +82,7 @@ static inline void MPIDI_progress_cmpl_list(void)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS, in_use;
     MPIR_Comm *root_comm;
     MPIR_Request *match_req = NULL;
     uint64_t msg_tag;
@@ -140,6 +140,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
                             MPIDI_CH4U_REQUEST(match_req, datatype),
                             dt_contig, dt_sz, dt_ptr, dt_true_lb);
     MPIR_Datatype_get_size_macro(MPIDI_CH4U_REQUEST(match_req, datatype), dt_sz);
+    MPIR_ERR_CHKANDJUMP(dt_sz == 0, mpi_errno, MPI_ERR_OTHER, "**dtype");
 
     if (MPIDI_CH4U_REQUEST(rreq, count) > dt_sz * MPIDI_CH4U_REQUEST(match_req, count)) {
         rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
@@ -184,7 +185,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
 
     dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(match_req, datatype));
     MPL_free(MPIDI_CH4U_REQUEST(rreq, buffer));
-    MPIR_Object_release_ref(rreq, &c);
+    MPIR_Object_release_ref(rreq, &in_use);
     MPID_Request_complete(rreq);
     MPID_Request_complete(match_req);
   fn_exit:
@@ -246,7 +247,7 @@ static inline int MPIDI_do_send_target(void **data,
         n_iov = (int) num_iov;
         MPIR_Assert(n_iov > 0);
         MPIDI_CH4U_REQUEST(rreq, req->iov) =
-            (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec));
+            (struct iovec *) MPL_malloc(n_iov * sizeof(struct iovec), MPL_MEM_BUFFER);
         MPIR_Assert(MPIDI_CH4U_REQUEST(rreq, req->iov));
 
         last = *p_data_sz;
@@ -395,7 +396,7 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
         rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV, 2);
         MPIDI_CH4U_REQUEST(rreq, datatype) = MPI_BYTE;
         if (p_data_sz) {
-            MPIDI_CH4U_REQUEST(rreq, buffer) = (char *) MPL_malloc(*p_data_sz);
+            MPIDI_CH4U_REQUEST(rreq, buffer) = (char *) MPL_malloc(*p_data_sz, MPL_MEM_BUFFER);
             MPIDI_CH4U_REQUEST(rreq, count) = *p_data_sz;
         }
         else {

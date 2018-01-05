@@ -20,7 +20,6 @@
 #include "ofi_pre.h"
 #include "ch4_types.h"
 #include "mpidch4r.h"
-#include "fi_list.h"
 
 #define __SHORT_FILE__                          \
     (strrchr(__FILE__,'/')                      \
@@ -39,12 +38,13 @@
 #define MPIDI_OFI_INTERNAL_HANDLER_CONTROL (MPIDI_AM_HANDLERS_MAX-1)
 #define MPIDI_OFI_INTERNAL_HANDLER_NEXT    (MPIDI_AM_HANDLERS_MAX-2)
 
-#define MPIDI_OFI_PROTOCOL_MASK (0xF000000000000000ULL)
-#define MPIDI_OFI_SYNC_SEND     (0x1000000000000000ULL)
-#define MPIDI_OFI_SYNC_SEND_ACK (0x2000000000000000ULL)
-#define MPIDI_OFI_DYNPROC_SEND  (0x4000000000000000ULL)
+#define MPIDI_OFI_PROTOCOL_BITS (3)
 
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS == MPIDI_OFI_ON
+#define MPIDI_OFI_SYNC_SEND          (1ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
+#define MPIDI_OFI_SYNC_SEND_ACK      (2ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
+#define MPIDI_OFI_DYNPROC_SEND       (4ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
+#define MPIDI_OFI_PROTOCOL_MASK      (((1ULL << MPIDI_OFI_PROTOCOL_BITS) - 1) << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
 #define MPIDI_OFI_CONTEXT_MASK       (((1ULL << MPIDI_OFI_CONTEXT_BITS) - 1) << (MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
 #define MPIDI_OFI_SOURCE_MASK        (((1ULL << MPIDI_OFI_SOURCE_BITS) - 1) << MPIDI_OFI_TAG_BITS)
 #define MPIDI_OFI_TAG_MASK           ((1ULL << MPIDI_OFI_TAG_BITS) - 1)
@@ -53,9 +53,6 @@
  * from the OFI provider for its immediate data field. */
 #define MPIDI_OFI_MAX_RANK_BITS      (MPIDI_OFI_SOURCE_BITS > 0 ? MPIDI_OFI_SOURCE_BITS : 32)
 #else
-#define MPIDI_OFI_CONTEXT_MASK       MPIDI_OFI_CONTEXT_MASK_CAPSET
-#define MPIDI_OFI_SOURCE_MASK        MPIDI_OFI_SOURCE_MASK_CAPSET
-#define MPIDI_OFI_TAG_MASK           MPIDI_OFI_TAG_MASK_CAPSET
 #if MPIDI_OFI_SOURCE_BITS == 0
 /* This value comes from the fact that we use a uint32_t in
  * MPIDI_OFI_send_handler to define the dest and that is the size we expect
@@ -199,7 +196,11 @@ enum {
     MPIDI_OFI_EVENT_AM_MULTI,
     MPIDI_OFI_EVENT_PEEK,
     MPIDI_OFI_EVENT_RECV_HUGE,
+    MPIDI_OFI_EVENT_RECV_PACK,
+    MPIDI_OFI_EVENT_RECV_NOPACK,
     MPIDI_OFI_EVENT_SEND_HUGE,
+    MPIDI_OFI_EVENT_SEND_PACK,
+    MPIDI_OFI_EVENT_SEND_NOPACK,
     MPIDI_OFI_EVENT_SSEND_ACK,
     MPIDI_OFI_EVENT_GET_HUGE,
     MPIDI_OFI_EVENT_CHUNK_DONE,
@@ -272,12 +273,12 @@ typedef struct {
 typedef union {
     MPID_Thread_mutex_t m;
     char cacheline[MPIDI_OFI_CACHELINE_SIZE];
-} MPIDI_OFI_cacheline_mutex_t __attribute__ ((aligned(MPIDI_OFI_CACHELINE_SIZE)));
+} MPIDI_OFI_cacheline_mutex_t MPL_ATTR_ALIGNED(MPIDI_OFI_CACHELINE_SIZE);
 
-typedef struct {
+typedef struct MPIDI_OFI_cq_list_t {
     struct fi_cq_tagged_entry cq_entry;
     fi_addr_t source;
-    struct slist_entry entry;
+    struct MPIDI_OFI_cq_list_t *next;
 } MPIDI_OFI_cq_list_t;
 
 typedef struct {
@@ -294,14 +295,14 @@ typedef struct {
     unsigned enable_am:1;
     unsigned enable_rma:1;
     unsigned enable_atomics:1;
+    unsigned enable_pt2pt_nopack:1;
+    unsigned enable_data_auto_progress:1;
+    unsigned enable_control_auto_progress:1;
 
     int max_endpoints;
     int max_endpoints_bits;
 
     int fetch_atomic_iovecs;
-
-    int enable_data_auto_progress;
-    int enable_control_auto_progress;
 
     int context_bits;
     int source_bits;
@@ -353,7 +354,8 @@ typedef struct {
     uint64_t max_huge_rmas;
     int huge_rma_shift;
     int context_shift;
-    size_t iov_limit;
+    size_t tx_iov_limit;
+    size_t rx_iov_limit;
     size_t rma_iov_limit;
     int max_ch4_vnis;
 
@@ -371,7 +373,7 @@ typedef struct {
     MPIDI_OFI_atomic_valid_t win_op_table[MPIDI_OFI_DT_SIZES][MPIDI_OFI_OP_SIZES];
 
     /* Active Message Globals */
-    struct iovec am_iov[MPIDI_OFI_NUM_AM_BUFFERS];
+    struct iovec am_iov[MPIDI_OFI_NUM_AM_BUFFERS] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
     struct fi_msg am_msg[MPIDI_OFI_NUM_AM_BUFFERS];
     void *am_bufs[MPIDI_OFI_NUM_AM_BUFFERS];
     MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_NUM_AM_BUFFERS];
@@ -380,10 +382,10 @@ typedef struct {
     OPA_int_t am_inflight_rma_send_mrs;
 
     /* Completion queue buffering */
-    MPIDI_OFI_cq_buff_entry_t cq_buffered[MPIDI_OFI_NUM_CQ_BUFFERED];
-    struct slist cq_buff_list;
-    int cq_buff_head;
-    int cq_buff_tail;
+    MPIDI_OFI_cq_buff_entry_t cq_buffered_static_list[MPIDI_OFI_NUM_CQ_BUFFERED];
+    int cq_buffered_static_head;
+    int cq_buffered_static_tail;
+    MPIDI_OFI_cq_list_t *cq_buffered_dynamic_head, *cq_buffered_dynamic_tail;
 
     /* Process management and PMI globals */
     int pname_set;
@@ -409,14 +411,6 @@ typedef struct {
 typedef struct {
     uint32_t index;
 } MPIDI_OFI_datatype_t;
-/* These control structures have to be the same size */
-typedef struct {
-    int16_t type;
-    int16_t lock_type;
-    int origin_rank;
-    uint64_t win_id;
-    int dummy[8];
-} MPIDI_OFI_win_control_t;
 
 typedef struct {
     int16_t type;
@@ -436,40 +430,38 @@ typedef struct {
     void *pad;
 } MPIDI_OFI_offset_checker_t;
 
-typedef struct {
-    uintptr_t target_base_addr;
-    uintptr_t origin_base_addr;
-    uintptr_t result_base_addr;
-    size_t target_count;
-    size_t origin_count;
-    size_t result_count;
-    struct iovec *target_iov;
-    struct iovec *origin_iov;
-    struct iovec *result_iov;
-    size_t target_idx;
-    uintptr_t target_addr;
-    uintptr_t target_size;
-    size_t origin_idx;
-    uintptr_t origin_addr;
-    uintptr_t origin_size;
-    size_t result_idx;
-    uintptr_t result_addr;
-    uintptr_t result_size;
-    size_t buf_limit;
-    size_t buf_limit_left;
-} MPIDI_OFI_iovec_state_t;
+typedef struct MPIDI_OFI_seg_state {
+    DLOOP_Count   buf_limit;        /* Maximum data size in bytes which a single OFI call can handle.
+                                     * This value remains constant once seg_state is initialized. */
+    DLOOP_Count   buf_limit_left;   /* Buffer length left for a single OFI call */
 
-typedef struct {
-    MPIR_Datatype *pointer;
-    MPI_Datatype type;
-    int count;
-    int contig;
-    MPI_Aint true_lb;
-    size_t size;
-    int num_contig;
-    DLOOP_VECTOR *map;
-    DLOOP_VECTOR __map;
-} MPIDI_OFI_win_datatype_t;
+    MPIR_Segment  origin_seg;       /* Segment structure */
+    size_t        origin_cursor;    /* First byte to pack */
+    size_t        origin_end;       /* Last byte to pack */
+    size_t        origin_iov_len;   /* Length of data actually packed */
+    DLOOP_VECTOR  origin_iov;       /* IOVEC returned after pack */
+    uintptr_t     origin_addr;      /* Address of data actually packed */
+
+    MPIR_Segment  target_seg;
+    size_t        target_cursor;
+    size_t        target_end;
+    size_t        target_iov_len;
+    DLOOP_VECTOR  target_iov;
+    uintptr_t     target_addr;
+
+    MPIR_Segment  result_seg;
+    size_t        result_cursor;
+    size_t        result_end;
+    size_t        result_iov_len;
+    DLOOP_VECTOR  result_iov;
+    uintptr_t     result_addr;
+} MPIDI_OFI_seg_state_t;
+
+typedef enum MPIDI_OFI_segment_side {
+    MPIDI_OFI_SEGMENT_ORIGIN = 0,
+    MPIDI_OFI_SEGMENT_TARGET,
+    MPIDI_OFI_SEGMENT_RESULT,
+} MPIDI_OFI_segment_side_t;
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
@@ -498,14 +490,6 @@ typedef struct {
         } get_accumulate;
     } iov;
     char iov_store[0];          /* Flexible array, do not move */
-} MPIDI_OFI_iovec_array_t;
-
-typedef struct {
-    MPIDI_OFI_iovec_state_t iovs;
-    MPIDI_OFI_win_datatype_t origin_dt;
-    MPIDI_OFI_win_datatype_t target_dt;
-    MPIDI_OFI_win_datatype_t result_dt;
-    MPIDI_OFI_iovec_array_t buf;        /* Do not move me, flexible array */
 } MPIDI_OFI_win_noncontig_t;
 
 typedef struct MPIDI_OFI_win_request {
@@ -529,7 +513,7 @@ typedef struct MPIDI_OFI_huge_recv {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
-    int (*done_fn) (struct fi_cq_tagged_entry * wc, MPIR_Request * req);
+    int (*done_fn) (struct fi_cq_tagged_entry * wc, MPIR_Request * req, int event_id);
     MPIDI_OFI_send_control_t remote_info;
     size_t cur_offset;
     MPIR_Comm *comm_ptr;

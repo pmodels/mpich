@@ -86,12 +86,18 @@ static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
                 if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)) {
                     MPIDI_CH4R_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req),
                                                  MPIDI_CH4R_SHM, &continue_matching);
-                    MPIR_Request_free(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
 
-                    /* Decouple requests */
-                    MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req))
-                        = NULL;
-                    MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req) = NULL;
+                    /* The request might have been freed during
+                     * MPIDI_CH4R_anysource_matched. Double check that it still
+                     * exists. */
+                    if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)) {
+                        MPIR_Request_free(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
+
+                        /* Decouple requests */
+                        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req))
+                            = NULL;
+                        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req) = NULL;
+                    }
 
                     if (continue_matching)
                         break;
@@ -202,7 +208,7 @@ static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
             MPIDI_POSIX_REQUEST(rreq)->type = cell->pkt.mpich.type;
 
             if (data_sz > 0) {
-                MPIDI_POSIX_REQUEST(rreq)->user_buf = (char *) MPL_malloc(data_sz);
+                MPIDI_POSIX_REQUEST(rreq)->user_buf = (char *) MPL_malloc(data_sz, MPL_MEM_SHM);
                 MPIR_Memcpy(MPIDI_POSIX_REQUEST(rreq)->user_buf, (void *) cell->pkt.mpich.p.payload,
                             data_sz);
             }

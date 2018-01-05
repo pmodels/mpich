@@ -782,7 +782,7 @@ static int MPIDI_CH3I_Socki_sock_alloc(struct MPIDI_CH3I_Sock_set * sock_set, st
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_SOCKI_SOCK_ALLOC);
 
     /* FIXME: Should this use the CHKPMEM macros (perm malloc)? */
-    sock = MPL_malloc(sizeof(struct MPIDI_CH3I_Sock));
+    sock = MPL_malloc(sizeof(struct MPIDI_CH3I_Sock), MPL_MEM_ADDRESS);
     /* --BEGIN ERROR HANDLING-- */
     if (sock == NULL)
     {
@@ -815,7 +815,7 @@ static int MPIDI_CH3I_Socki_sock_alloc(struct MPIDI_CH3I_Sock_set * sock_set, st
     {
 	int elem;
 
-	pollfds = MPL_malloc((sock_set->poll_array_sz + MPIDI_CH3I_SOCK_SET_DEFAULT_SIZE) * sizeof(struct pollfd));
+	pollfds = MPL_malloc((sock_set->poll_array_sz + MPIDI_CH3I_SOCK_SET_DEFAULT_SIZE) * sizeof(struct pollfd), MPL_MEM_ADDRESS);
 	/* --BEGIN ERROR HANDLING-- */
 	if (pollfds == NULL)
 	{
@@ -824,7 +824,7 @@ static int MPIDI_CH3I_Socki_sock_alloc(struct MPIDI_CH3I_Sock_set * sock_set, st
 	    goto fn_fail;
 	}
 	/* --END ERROR HANDLING-- */
-	pollinfos = MPL_malloc((sock_set->poll_array_sz + MPIDI_CH3I_SOCK_SET_DEFAULT_SIZE) * sizeof(struct pollinfo));
+	pollinfos = MPL_malloc((sock_set->poll_array_sz + MPIDI_CH3I_SOCK_SET_DEFAULT_SIZE) * sizeof(struct pollinfo), MPL_MEM_ADDRESS);
 	/* --BEGIN ERROR HANDLING-- */
 	if (pollinfos == NULL)
 	{
@@ -1058,7 +1058,7 @@ static int MPIDI_CH3I_Socki_event_enqueue(struct pollinfo * pollinfo, MPIDI_CH3I
 	int i;
 	struct MPIDI_CH3I_Socki_eventq_table *eventq_table;
 
-	eventq_table = MPL_malloc(sizeof(struct MPIDI_CH3I_Socki_eventq_table));
+	eventq_table = MPL_malloc(sizeof(struct MPIDI_CH3I_Socki_eventq_table), MPL_MEM_OTHER);
 	/* --BEGIN ERROR HANDLING-- */
 	if (eventq_table == NULL)
 	{
@@ -1343,7 +1343,7 @@ int MPIDI_CH3I_Sock_create_set(struct MPIDI_CH3I_Sock_set ** sock_setp)
     /*
      * Allocate and initialized a new sock set structure
      */
-    sock_set = MPL_malloc(sizeof(struct MPIDI_CH3I_Sock_set));
+    sock_set = MPL_malloc(sizeof(struct MPIDI_CH3I_Sock_set), MPL_MEM_ADDRESS);
     /* --BEGIN ERROR HANDLING-- */
     if (sock_set == NULL)
     {

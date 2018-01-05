@@ -88,8 +88,8 @@ static inline int check_and_switch_target_state(MPIR_Win * win_ptr, MPIDI_RMA_Ta
             if (target->pending_net_ops_list_head == NULL)
                 win_ptr->num_targets_with_pending_net_ops++;
 
-            MPL_DL_DELETE(target->pending_user_ops_list_head, user_op);
-            MPL_DL_APPEND(target->pending_net_ops_list_head, user_op);
+            DL_DELETE(target->pending_user_ops_list_head, user_op);
+            DL_APPEND(target->pending_net_ops_list_head, user_op);
 
             if (target->next_op_to_issue == NULL)
                 target->next_op_to_issue = user_op;

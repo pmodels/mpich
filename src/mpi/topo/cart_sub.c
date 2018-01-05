@@ -155,18 +155,18 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm *newcomm)
 	
 	/* Save the topology of this new communicator */
 	MPIR_CHKPMEM_MALLOC(toponew_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
-			    mpi_errno,"toponew_ptr");
+			    mpi_errno,"toponew_ptr", MPL_MEM_COMM);
 	
 	toponew_ptr->kind		  = MPI_CART;
 	toponew_ptr->topo.cart.ndims  = ndims_in_subcomm;
 	toponew_ptr->topo.cart.nnodes = nnodes_in_subcomm;
 	if (ndims_in_subcomm) {
 	    MPIR_CHKPMEM_MALLOC(toponew_ptr->topo.cart.dims,int*,
-				ndims_in_subcomm*sizeof(int),mpi_errno,"cart.dims");
+				ndims_in_subcomm*sizeof(int),mpi_errno,"cart.dims", MPL_MEM_COMM);
 	    MPIR_CHKPMEM_MALLOC(toponew_ptr->topo.cart.periodic,int*,
-				ndims_in_subcomm*sizeof(int),mpi_errno,"cart.periodic");
+				ndims_in_subcomm*sizeof(int),mpi_errno,"cart.periodic", MPL_MEM_COMM);
 	    MPIR_CHKPMEM_MALLOC(toponew_ptr->topo.cart.position,int*,
-				ndims_in_subcomm*sizeof(int),mpi_errno,"cart.position");
+				ndims_in_subcomm*sizeof(int),mpi_errno,"cart.position", MPL_MEM_COMM);
 	}
 	else {
 	    toponew_ptr->topo.cart.dims     = 0;

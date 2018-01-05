@@ -125,7 +125,7 @@ if test "$pac_cv_have___typeof" = "yes" ; then
 fi
 
 dnl Check if the necessary headers are available
-AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h sys/types.h sys/uio.h execinfo.h backtrace.h libunwind.h unistd.h errno.h windows.h)
+AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h sys/types.h sys/uio.h execinfo.h unistd.h errno.h windows.h sys/mman.h)
 
 # A C99 compliant compiler should have inttypes.h for fixed-size int types
 AC_CHECK_HEADERS(inttypes.h stdint.h)
@@ -617,6 +617,7 @@ AC_ARG_WITH([thread-package],
 [  --with-thread-package=package     Thread package to use. Supported thread packages include:
         posix or pthreads - POSIX threads (default, if required)
         solaris - Solaris threads (Solaris OS only)
+        abt or argobots - Argobots threads
         win - windows threads
         uti - POSIX threads plus Utility Thread Offloading library
         none - no threads
@@ -735,6 +736,18 @@ void f1(void *a) { return; }],
         THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_WIN
         AC_MSG_ERROR([The 'win' thread package is not supported via autoconf builds at this time.])
         ;;
+    abt|argobots)
+        with_thread_package=argobots
+        AC_CHECK_HEADERS(abt.h)
+        AC_CHECK_LIB([abt],[abt_key_create],have_abt=yes)
+        if test "$have_abt" = "yes"; then
+           PAC_PREPEND_FLAG([-labt],[LIBS])
+        fi
+        AC_CHECK_FUNCS(ABT_thread_yield)
+        AC_CHECK_FUNC([abt_key_create],[],[AC_MSG_ERROR([unable to find Argobots library])])
+        AC_CHECK_FUNCS(abt_cleanup_push)
+        THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_ARGOBOTS
+        ;;
     no|none)
 	with_thread_package=none
         THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_NONE
@@ -749,7 +762,9 @@ esac
 AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name of the thread package])
 
 # check for compiler-support for thread-local storage (MPL_TLS_SPECIFIER)
-AX_TLS
+if test "${with_thread_package}" != "argobots" ; then
+    AX_TLS
+fi
 
 #######################################################################
 ## END OF THREADS CODE
@@ -855,14 +870,69 @@ if test "$ac_cv_func_usleep" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <unistd.h>],usleep)
 fi
 
-AC_CHECK_FUNCS(backtrace_symbols)
-AC_CHECK_LIB(backtrace, backtrace_create_state)
-AC_CHECK_LIB(unwind, unw_backtrace)
+# Check if we can implement MPL_aligned_alloc
+AC_CHECK_FUNCS(posix_memalign)
+AC_CHECK_FUNCS(aligned_alloc)
+if test "$ac_cv_func_aligned_alloc" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],aligned_alloc)
+fi
+if test "$ac_cv_func_posix_memalign" = "yes" -o "$ac_cv_func_aligned_alloc" = "yes"; then
+   AC_DEFINE([DEFINE_ALIGNED_ALLOC],[1],[Define to 1 if MPL enables MPL_aligned_alloc.])
+fi
 
+AC_CHECK_FUNCS(backtrace_symbols)
+
+# Check for libbacktrace support
+PAC_PUSH_FLAG([LIBS])
+PAC_PREPEND_FLAG([-lbacktrace],[LIBS])
+AC_LINK_IFELSE([
+    AC_LANG_PROGRAM([
+#include <backtrace.h>
+],[
+backtrace_create_state(0, 0, 0, 0);
+backtrace_print(0, 0, 0);
+])],
+    [ac_cv_lib_backtrace=yes],
+    [ac_cv_lib_backtrace=no]
+)
+PAC_POP_FLAG([LIBS])
+
+if test "$ac_cv_lib_backtrace" = "yes" ; then
+    AC_DEFINE([HAVE_LIBBACKTRACE],[1],[Define to 1 if you have the backtrace header (backtrace.h) and library (-lbacktrace)])
+    PAC_PREPEND_FLAG([-lbacktrace],[LIBS])
+fi
 AC_CHECK_DECLS([backtrace_create_state, backtrace_print])
+
+# Check for libunwind support
+PAC_PUSH_FLAG([LIBS])
+PAC_PREPEND_FLAG([-lunwind],[LIBS])
+AC_LINK_IFELSE([
+    AC_LANG_PROGRAM([
+#include<libunwind.h>
+],[
+unw_backtrace(0, 0);
+])],
+    [ac_cv_lib_libunwind=yes],
+    [ac_cv_lib_libunwind=no]
+)
+PAC_POP_FLAG([LIBS])
+
+if test "$ac_cv_lib_libunwind" = "yes" ; then
+    AC_DEFINE([HAVE_LIBUNWIND],[1],[Define to 1 if you have the libunwind header (libunwind.h) and library (-lunwind)])
+    PAC_PREPEND_FLAG([-lunwind],[LIBS])
+fi
 
 dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
+AX_GCC_VAR_ATTRIBUTE(aligned)
+
+dnl Check for fallthrough attribute
+PAC_PUSH_ALL_FLAGS
+dnl This check requires removing -Wall and -Wextra first or it will fail. Just
+dnl clear them all.
+CFLAGS=""
+AX_GCC_FUNC_ATTRIBUTE(fallthrough)
+PAC_POP_ALL_FLAGS
 
 dnl Final output
 AC_CONFIG_FILES([Makefile localdefs include/mpl_timer.h])

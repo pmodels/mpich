@@ -7,7 +7,8 @@
 #define CH4I_COMM_H_INCLUDED
 
 #include "ch4_types.h"
-#include "mpl_utlist.h"
+#include "ch4r_comm.h"
+#include "utlist.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_map_size
@@ -314,7 +315,6 @@ static inline int MPIDI_src_mlut_to_mlut(MPIDI_rank_map_t * src,
         dest->size = total_mapper_size;
     }
 
-    dest->mode = MPIDI_RANK_MAP_MLUT;
     dest->mode = src->mode;
     dest->irreg.mlut.t = mlut;
     dest->irreg.mlut.gpid = mlut->gpid;
@@ -890,7 +890,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_CREATE_RANK_MAP);
 
     /* do some sanity checks */
-    MPL_LL_FOREACH(comm->mapper_head, mapper) {
+    LL_FOREACH(comm->mapper_head, mapper) {
         if (mapper->src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
             MPIR_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
                         mapper->dir == MPIR_COMM_MAP_DIR__L2R);
@@ -905,14 +905,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
     /* First, handle all the mappers that contribute to the local part
      * of the comm */
     total_mapper_size = 0;
-    MPL_LL_FOREACH(comm->mapper_head, mapper) {
+    LL_FOREACH(comm->mapper_head, mapper) {
         if (mapper->dir == MPIR_COMM_MAP_DIR__L2R || mapper->dir == MPIR_COMM_MAP_DIR__R2R)
             continue;
 
         total_mapper_size += MPIDI_map_size(*mapper);
     }
     mapper_offset = 0;
-    MPL_LL_FOREACH(comm->mapper_head, mapper) {
+    LL_FOREACH(comm->mapper_head, mapper) {
         src_comm = mapper->src_comm;
 
         if (mapper->dir == MPIR_COMM_MAP_DIR__L2R || mapper->dir == MPIR_COMM_MAP_DIR__R2R)
@@ -983,14 +983,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
      * of the comm (only valid for intercomms)
      */
     total_mapper_size = 0;
-    MPL_LL_FOREACH(comm->mapper_head, mapper) {
+    LL_FOREACH(comm->mapper_head, mapper) {
         if (mapper->dir == MPIR_COMM_MAP_DIR__L2L || mapper->dir == MPIR_COMM_MAP_DIR__R2L)
             continue;
 
         total_mapper_size += MPIDI_map_size(*mapper);
     }
     mapper_offset = 0;
-    MPL_LL_FOREACH(comm->mapper_head, mapper) {
+    LL_FOREACH(comm->mapper_head, mapper) {
         src_comm = mapper->src_comm;
 
         if (mapper->dir == MPIR_COMM_MAP_DIR__L2L || mapper->dir == MPIR_COMM_MAP_DIR__R2L)
@@ -1059,7 +1059,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
 
 #ifdef MPL_USE_DBG_LOGGING
     int rank_;
-    int avtid_, lpid_;
+    int avtid_, lpid_ = -1;
     if (comm->remote_size < 16) {
         for (rank_ = 0; rank_ < comm->remote_size; ++rank_) {
             MPIDIU_comm_rank_to_pid(comm, rank_, &lpid_, &avtid_);
@@ -1107,7 +1107,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_check_disjoint_lupids(int lupids1[], int n1,
 
     if (mask_size > 128) {
         MPIR_CHKLMEM_MALLOC(lupidmask, uint32_t *, mask_size * sizeof(uint32_t),
-                            mpi_errno, "lupidmask");
+                            mpi_errno, "lupidmask", MPL_MEM_COMM);
     }
     else {
         lupidmask = lupidmaskPrealloc;

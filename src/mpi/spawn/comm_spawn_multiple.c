@@ -127,7 +127,7 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
     /* ... body of routine ...  */
     
     if (comm_ptr->rank == root) {
-	MPIR_CHKLMEM_MALLOC(array_of_info_ptrs, MPIR_Info **, count * sizeof(MPIR_Info*), mpi_errno, "array of info pointers");
+        MPIR_CHKLMEM_MALLOC(array_of_info_ptrs, MPIR_Info **, count * sizeof(MPIR_Info*), mpi_errno, "array of info pointers", MPL_MEM_BUFFER);
 	for (i=0; i<count; i++)
 	{
 	    MPIR_Info_get_ptr(array_of_info[i], array_of_info_ptrs[i]);

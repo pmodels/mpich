@@ -14,30 +14,6 @@
 #include "ofi_am_impl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_do_control_win
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_do_control_win(MPIDI_OFI_win_control_t * control,
-                                           int rank, MPIR_Win * win, int use_comm, int use_lock)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_CONTROL_WIN);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_CONTROL_WIN);
-
-    control->win_id = MPIDI_OFI_WIN(win).win_id;
-    control->origin_rank = win->comm_ptr->rank;
-
-    mpi_errno = MPIDI_OFI_do_inject(rank,
-                                    win->comm_ptr,
-                                    MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
-                                    (void *) control,
-                                    sizeof(*control), FALSE, use_comm, use_lock);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_CONTROL_WIN);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_OFI_do_control_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)

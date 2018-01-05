@@ -674,7 +674,7 @@ cvars:
 
 #define MPIR_ERRTEST_CAT_INDEX(index_,err_)  \
     do {   \
-        if ((index_) < 0 || (index_) >= utarray_len(cat_table)) \
+        if ((index_) < 0 || ((unsigned) index_) >= utarray_len(cat_table)) \
         {  \
             MPIR_ERR_SETANDSTMT(err_, MPI_T_ERR_INVALID_INDEX, goto fn_fail, "**catindex");  \
         }  \
@@ -694,7 +694,7 @@ cvars:
 
 #define MPIR_ERRTEST_ENUM_ITEM(enum_, index_, err_)  \
     do {   \
-        if ((index_) < 0 || (index_) >= utarray_len((enum_)->items)) \
+        if ((index_) < 0 || ((unsigned) index_) >= utarray_len((enum_)->items)) \
         {  \
             MPIR_ERR_SETANDSTMT(err_, MPI_T_ERR_INVALID_ITEM, goto fn_fail, "**itemindex");  \
         }  \
@@ -702,7 +702,7 @@ cvars:
 
 #define MPIR_ERRTEST_CVAR_INDEX(index_,err_)  \
     do {   \
-        if ((index_) < 0 || (index_) >= utarray_len(cvar_table)) \
+        if ((index_) < 0 || ((unsigned) index_) >= utarray_len(cvar_table)) \
         {  \
             MPIR_ERR_SETANDSTMT(err_, MPI_T_ERR_INVALID_INDEX, goto fn_fail, "**cvarindex");  \
         }  \
@@ -722,7 +722,7 @@ cvars:
 
 #define MPIR_ERRTEST_PVAR_INDEX(index_,err_)  \
     do {   \
-        if ((index_) < 0 || (index_) >= utarray_len(pvar_table)) \
+        if ((index_) < 0 || ((unsigned) index_) >= utarray_len(pvar_table)) \
         {  \
             MPIR_ERR_SETANDSTMT(err_, MPI_T_ERR_INVALID_INDEX, goto fn_fail, "**pvarindex");  \
         }  \

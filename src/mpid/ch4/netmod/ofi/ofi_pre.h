@@ -101,7 +101,7 @@ typedef struct {
     MPIDI_OFI_am_header_t msg_hdr;
     uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE];
     /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
-    struct iovec iov[3];
+    struct iovec iov[3] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
 } MPIDI_OFI_am_request_header_t;
 
 typedef struct {
@@ -111,10 +111,10 @@ typedef struct {
 } MPIDI_OFI_am_request_t;
 
 
-typedef struct MPIDI_OFI_noncontig_t {
+typedef struct {
     struct MPIR_Segment segment;
     char pack_buffer[0];
-} MPIDI_OFI_noncontig_t;
+} MPIDI_OFI_pack_t;
 
 typedef struct {
     struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
@@ -122,7 +122,10 @@ typedef struct {
     int util_id;
     struct MPIR_Comm *util_comm;
     MPI_Datatype datatype;
-    MPIDI_OFI_noncontig_t *noncontig;
+    union {
+        MPIDI_OFI_pack_t *pack;
+        struct iovec *nopack;
+    } noncontig;
     /* persistent send fields */
     union {
         struct {
@@ -132,7 +135,11 @@ typedef struct {
             int count;
             void *buf;
         } persist;
-        struct iovec iov;
+#if defined (MPL_HAVE_VAR_ATTRIBUTE_ALIGNED)
+        struct iovec iov MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
+#else
+        char iov_store[sizeof(struct iovec) + MPIDI_OFI_IOVEC_ALIGN - 1];
+#endif
         void *inject_buf;       /* Internal buffer for inject emulation */
     } util;
 } MPIDI_OFI_request_t;
@@ -162,7 +169,6 @@ typedef struct {
     struct fid_mr *mr;
     uint64_t mr_key;
     struct fid_ep *ep;          /* EP with counter & completion */
-    struct fid_ep *ep_nocmpl;   /* EP with counter only (no completion) */
     uint64_t *issued_cntr;
     uint64_t issued_cntr_v;     /* main body of an issued counter,
                                  * if we are to use per-window counter */

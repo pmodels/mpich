@@ -288,7 +288,7 @@ int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPIR_Request *rreq, MPL_IOV
 
     /* push request if not complete for progress checks later */
     if (!complete) {
-        node = MPL_malloc(sizeof(struct lmt_vmsplice_node));
+        node = MPL_malloc(sizeof(struct lmt_vmsplice_node), MPL_MEM_OTHER);
         node->pipe_fd = pipe_fd;
         node->req = rreq;
         node->next = outstanding_head;
@@ -408,7 +408,7 @@ int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV
 
     if (!complete) {
         /* push for later progress */
-        node = MPL_malloc(sizeof(struct lmt_vmsplice_node));
+        node = MPL_malloc(sizeof(struct lmt_vmsplice_node), MPL_MEM_OTHER);
         node->pipe_fd = pipe_fd;
         node->req = sreq;
         node->next = outstanding_head;

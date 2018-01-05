@@ -50,6 +50,7 @@ typedef enum MPIR_Lang_t {
 
 extern const char MPII_Version_string[] MPICH_API_PUBLIC;
 extern const char MPII_Version_date[] MPICH_API_PUBLIC;
+extern const char MPII_Version_ABI[] MPICH_API_PUBLIC;
 extern const char MPII_Version_configure[] MPICH_API_PUBLIC;
 extern const char MPII_Version_device[] MPICH_API_PUBLIC;
 extern const char MPII_Version_CC[] MPICH_API_PUBLIC;

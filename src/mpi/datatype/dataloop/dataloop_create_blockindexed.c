@@ -5,9 +5,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "mpiimpl.h"
+
 #include <stdio.h>
 
-#include "mpiimpl.h"
 
 static void DLOOP_Type_blockindexed_array_copy(DLOOP_Count count,
 					       const void *disp_array,

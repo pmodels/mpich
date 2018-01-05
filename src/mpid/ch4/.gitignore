@@ -1,5 +1,4 @@
 # ch4 ignore files
 src/mpid_ch4_net_array.c
-
-# for embedded libfabric
-netmod/ofi/libfabric/
+src/ch4_coll_globals_default.c
+include/coll_algo_params.h

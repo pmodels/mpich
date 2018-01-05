@@ -9,7 +9,7 @@
 #include "bsci.h"
 #include "demux.h"
 #include "topo.h"
-#include "mpl_uthash.h"
+#include "uthash.h"
 
 #define debug(...)                              \
     {                                           \
@@ -32,7 +32,7 @@ static struct {
 struct cache_elem {
     char *key;
     char *val;
-    MPL_UT_hash_handle hh;
+    UT_hash_handle hh;
 };
 
 static struct cache_elem *cache_get = NULL, *hash_get = NULL;
@@ -382,9 +382,9 @@ static HYD_status fn_get_usize(int fd, char *args[])
 static HYD_status fn_get(int fd, char *args[])
 {
     struct HYD_string_stash stash;
-    char *cmd, *key, *val;
+    char *cmd, *key;
     struct HYD_pmcd_token *tokens;
-    int token_count, i;
+    int token_count;
     struct cache_elem *found = NULL;
     HYD_status status = HYD_SUCCESS;
 
@@ -410,7 +410,7 @@ static HYD_status fn_get(int fd, char *args[])
         MPL_free(cmd);
     }
     else {
-        MPL_HASH_FIND_STR(hash_get, key, found);
+        HASH_FIND_STR(hash_get, key, found);
         if (found) {
             HYD_STRING_STASH_INIT(stash);
             HYD_STRING_STASH(stash, MPL_strdup("cmd=get_result rc="), status);
@@ -500,18 +500,18 @@ static HYD_status fn_keyval_cache(int fd, char *args[])
 
     /* allocate a larger space for the cached keyvals, copy over the
      * older keyvals and add the new ones in */
-    MPL_HASH_CLEAR(hh, hash_get);
+    HASH_CLEAR(hh, hash_get);
     HYDU_REALLOC_OR_JUMP(cache_get, struct cache_elem *,
                          (sizeof(struct cache_elem) * (num_elems + token_count)), status);
     for (i = 0; i < num_elems; i++) {
         struct cache_elem *elem = cache_get + i;
-        MPL_HASH_ADD_STR(hash_get, key, elem);
+        HASH_ADD_STR(hash_get, key, elem, MPL_MEM_PM);
     }
     for (; i < num_elems + token_count; i++) {
         struct cache_elem *elem = cache_get + i;
         elem->key = MPL_strdup(tokens[i - num_elems].key);
         elem->val = MPL_strdup(tokens[i - num_elems].val);
-        MPL_HASH_ADD_STR(hash_get, key, elem);
+        HASH_ADD_STR(hash_get, key, elem, MPL_MEM_PM);
     }
     num_elems += token_count;
 

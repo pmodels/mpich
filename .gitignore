@@ -120,6 +120,7 @@ apply-xfail.sh
 /src/pm/hydra/confdb
 /src/pm/hydra/mpl
 /src/pm/hydra/mpl/confdb
+/src/pm/hydra/tools/topo/hwloc/hwloc
 /src/mpi/romio/mpl
 /src/mpi/romio/mpl/confdb
 /src/mpi/romio/version.m4

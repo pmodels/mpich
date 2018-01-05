@@ -1145,7 +1145,7 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
                    have completed.  */
                 vc_term_element_t *ep;
                 MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Shm send queue not empty, waiting to terminate");
-                MPIR_CHKPMEM_MALLOC(ep, vc_term_element_t *, sizeof(vc_term_element_t), mpi_errno, "vc_term_element");
+                MPIR_CHKPMEM_MALLOC(ep, vc_term_element_t *, sizeof(vc_term_element_t), mpi_errno, "vc_term_element", MPL_MEM_ADDRESS);
                 ep->vc = vc;
                 ep->req = MPIDI_CH3I_shm_sendq.tail;
                 MPIR_Request_add_ref(ep->req); /* make sure this doesn't get released before we can check it */
@@ -1250,7 +1250,7 @@ int MPIDI_CH3I_Register_anysource_notification(void (*enqueue_fn)(MPIR_Request *
     qn_ent_t *ent;
     MPIR_CHKPMEM_DECL(1);
 
-    MPIR_CHKPMEM_MALLOC(ent, qn_ent_t *, sizeof(qn_ent_t), mpi_errno, "queue entry");
+    MPIR_CHKPMEM_MALLOC(ent, qn_ent_t *, sizeof(qn_ent_t), mpi_errno, "queue entry", MPL_MEM_BUFFER);
 
     ent->enqueue_fn = enqueue_fn;
     ent->dequeue_fn = dequeue_fn;
