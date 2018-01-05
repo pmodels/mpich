@@ -53,7 +53,7 @@ int MPIDI_CH4_Barrier_call(MPIR_Comm * comm,
         mpi_errno = MPIDI_Barrier_intercomm(comm, errflag, ch4_algo_parameters_container);
         break;
     default:
-        mpi_errno = MPIR_Barrier(comm, errflag);
+        mpi_errno = MPIR_Barrier_impl(comm, errflag);
         break;
     }
 
@@ -121,7 +121,8 @@ int MPIDI_CH4_Bcast_call(void *buffer, int count, MPI_Datatype datatype,
                                   ch4_algo_parameters_container);
         break;
     default:
-        mpi_errno = MPIR_Bcast(buffer, count, datatype, root, comm, errflag);
+        mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm,
+                                    errflag);
         break;
     }
 
@@ -184,7 +185,8 @@ int MPIDI_CH4_Allreduce_call(const void *sendbuf, void *recvbuf, int count,
                                       ch4_algo_parameters_container);
         break;
     default:
-        mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+        mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op,
+                                        comm, errflag);
         break;
     }
     return mpi_errno;
@@ -246,7 +248,8 @@ int MPIDI_CH4_Reduce_call(const void *sendbuf, void *recvbuf, int count,
                                    ch4_algo_parameters_container);
         break;
     default:
-        mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm, errflag);
+        mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op,
+                                     root, comm, errflag);
         break;
     }
     return mpi_errno;

@@ -116,22 +116,16 @@ int MPIR_Gatherv_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sen
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Gatherv
+#define FUNCNAME MPIR_Gatherv_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gatherv ( 
-	const void *sendbuf,
-	int sendcount,
-	MPI_Datatype sendtype,
-	void *recvbuf,
-	const int *recvcounts,
-	const int *displs,
-	MPI_Datatype recvtype,
-	int root,
-	MPIR_Comm *comm_ptr,
-        MPIR_Errflag_t *errflag )
+int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
+                      MPI_Datatype sendtype, void *recvbuf,
+                      const int *recvcounts, const int *displs,
+                      MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
+                      MPIR_Errflag_t *errflag)
 {
-    int        mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_Gatherv_intra_algo_choice) {
@@ -171,6 +165,28 @@ fn_exit:
     return mpi_errno;
 fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Gatherv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                 void *recvbuf, const int *recvcounts, const int *displs,
+                 MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
+                 MPIR_Errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Gatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
+                                 recvtype, root, comm_ptr, errflag);
+    } else {
+        mpi_errno = MPIR_Gatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
+                                      recvtype, root, comm_ptr, errflag);
+    }
+
+    return mpi_errno;
 }
 
 #endif
@@ -346,15 +362,9 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Gatherv(sendbuf, sendcount, sendtype,
-                                 recvbuf, recvcounts, displs, recvtype,
-                                 root, comm_ptr, &errflag);
-    } else {
-        mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype,
-                                 recvbuf, recvcounts, displs, recvtype,
-                                 root, comm_ptr, &errflag);
-    }
+    mpi_errno = MPIR_Gatherv(sendbuf, sendcount, sendtype,
+                             recvbuf, recvcounts, displs, recvtype,
+                             root, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

@@ -139,12 +139,12 @@ int MPIR_Ireduce_scatter_block_sched_inter_auto(const void *sendbuf, void *recvb
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_sched
+#define FUNCNAME MPIR_Ireduce_scatter_block_sched_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int recvcount,
-                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-                                     MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_sched_impl(const void *sendbuf, void *recvbuf, int recvcount,
+                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                                          MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -193,10 +193,34 @@ int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int rec
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block
+#define FUNCNAME MPIR_Ireduce_scatter_block_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Request **request)
+int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int recvcount,
+                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                                     MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_IREDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Ireduce_scatter_block_sched(sendbuf, recvbuf, recvcount, datatype, op,
+                                                     comm_ptr, s);
+    } else {
+        mpi_errno = MPIR_Ireduce_scatter_block_sched_impl(sendbuf, recvbuf, recvcount, datatype, op,
+                                                          comm_ptr, s);
+    }
+
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Ireduce_scatter_block_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
+                                    int recvcount, MPI_Datatype datatype,
+                                    MPI_Op op, MPIR_Comm *comm_ptr,
+                                    MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
@@ -209,7 +233,7 @@ int MPIR_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_Ireduce_scatter_block_sched(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
+    mpi_errno = MPIR_Ireduce_scatter_block_sched(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
@@ -219,6 +243,28 @@ fn_exit:
     return mpi_errno;
 fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Ireduce_scatter_block
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
+                               int recvcount, MPI_Datatype datatype,
+                               MPI_Op op, MPIR_Comm *comm_ptr,
+                               MPIR_Request **request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_IREDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr,
+                                               request);
+    } else {
+        mpi_errno = MPIR_Ireduce_scatter_block_impl(sendbuf, recvbuf, recvcount, datatype, op,
+                                                    comm_ptr, request);
+    }
+
+    return mpi_errno;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */
@@ -316,13 +362,8 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_IREDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype,
-                    op, comm_ptr, &request_ptr);
-    } else {
-        mpi_errno = MPIR_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype,
-                    op, comm_ptr, &request_ptr);
-    }
+    mpi_errno = MPIR_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr,
+                                           &request_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* return the handle of the request to the user */

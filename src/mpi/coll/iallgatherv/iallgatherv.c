@@ -175,12 +175,12 @@ int MPIR_Iallgatherv_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Da
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv_sched
+#define FUNCNAME MPIR_Iallgatherv_sched_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                           void *recvbuf, const int recvcounts[], const int displs[],
-                           MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iallgatherv_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                void *recvbuf, const int recvcounts[], const int displs[],
+                                MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -226,10 +226,31 @@ int MPIR_Iallgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype send
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv
+#define FUNCNAME MPIR_Iallgatherv_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                           void *recvbuf, const int recvcounts[], const int displs[],
+                           MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_IALLGATHERV_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Iallgatherv_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                           displs, recvtype, comm_ptr, s);
+    } else {
+        mpi_errno = MPIR_Iallgatherv_sched_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                                displs, recvtype, comm_ptr, s);
+    }
+
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iallgatherv_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                           void *recvbuf, const int recvcounts[], const int displs[],
                           MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Request **request)
 {
@@ -244,7 +265,7 @@ int MPIR_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_Iallgatherv_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm_ptr, s);
+    mpi_errno = MPIR_Iallgatherv_sched(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
@@ -254,6 +275,27 @@ fn_exit:
     return mpi_errno;
 fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iallgatherv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                          void *recvbuf, const int recvcounts[], const int displs[],
+                          MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Request **request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_IALLGATHERV_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Iallgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                     displs, recvtype, comm_ptr, request);
+    } else {
+        mpi_errno = MPIR_Iallgatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                          displs, recvtype, comm_ptr, request);
+    }
+
+    return mpi_errno;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */
@@ -367,14 +409,9 @@ int MPI_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, v
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_IALLGATHERV_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Iallgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                    displs, recvtype, comm_ptr, &request_ptr);
-        } else {
-        mpi_errno = MPIR_Iallgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                    displs, recvtype, comm_ptr, &request_ptr);
-        }
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Iallgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                 displs, recvtype, comm_ptr, &request_ptr);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* return the handle of the request to the user */
     if(request_ptr)

@@ -146,12 +146,12 @@ int MPIR_Iscatter_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datat
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatter_sched
+#define FUNCNAME MPIR_Iscatter_sched_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatter_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                        int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iscatter_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                             void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                             int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -193,10 +193,34 @@ int MPIR_Iscatter_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatter
+#define FUNCNAME MPIR_Iscatter_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Request **request)
+int MPIR_Iscatter_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                        int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_ISCATTER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Iscatter_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                        root, comm_ptr, s);
+    } else {
+        mpi_errno = MPIR_Iscatter_sched_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                             recvtype, root, comm_ptr, s);
+    }
+
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iscatter_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Iscatter_impl(const void *sendbuf, int sendcount,
+                       MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                       MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
+                       MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
@@ -209,7 +233,7 @@ int MPIR_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, voi
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_Iscatter_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+    mpi_errno = MPIR_Iscatter_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
@@ -219,6 +243,27 @@ fn_exit:
     return mpi_errno;
 fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iscatter
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                  int root, MPIR_Comm *comm_ptr, MPIR_Request **request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_ISCATTER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Iscatter(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                  recvtype, root, comm_ptr, request);
+    } else {
+        mpi_errno = MPIR_Iscatter_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                       recvtype, root, comm_ptr, request);
+    }
+
+    return mpi_errno;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */
@@ -362,13 +407,8 @@ int MPI_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_ISCATTER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Iscatter(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                    recvtype, root, comm_ptr, &request_ptr);
-    } else {
-        mpi_errno = MPIR_Iscatter(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                    recvtype, root, comm_ptr, &request_ptr);
-    }
+    mpi_errno = MPIR_Iscatter(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root,
+                              comm_ptr, &request_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* return the handle of the request to the user */

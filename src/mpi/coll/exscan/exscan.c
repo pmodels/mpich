@@ -82,17 +82,12 @@ int MPIR_Exscan_intra_auto(const void *sendbuf, void *recvbuf, int count, MPI_Da
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Exscan
+#define FUNCNAME MPIR_Exscan_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Exscan ( 
-    const void *sendbuf,
-    void *recvbuf,
-    int count,
-    MPI_Datatype datatype,
-    MPI_Op op,
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag )
+int MPIR_Exscan_impl(const void *sendbuf, void *recvbuf, int count,
+                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                     MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -117,6 +112,25 @@ fn_exit:
     return mpi_errno;
 fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Exscan
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Exscan(const void *sendbuf, void *recvbuf, int count,
+                MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                MPIR_Errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_EXSCAN_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    } else {
+        mpi_errno = MPIR_Exscan_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    }
+
+    return mpi_errno;
 }
 
 #endif
@@ -241,11 +255,7 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_EXSCAN_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
-    } else {
-        mpi_errno = MPIR_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
-    }
+    mpi_errno = MPIR_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

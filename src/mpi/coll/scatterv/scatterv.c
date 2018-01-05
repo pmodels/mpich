@@ -120,12 +120,13 @@ int MPIR_Scatterv_inter_auto(const void *sendbuf, const int *sendcounts, const i
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scatterv
+#define FUNCNAME MPIR_Scatterv_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
-                  MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                  int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts,
+                       const int *displs, MPI_Datatype sendtype, void *recvbuf,
+                       int recvcount, MPI_Datatype recvtype, int root,
+                       MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -166,6 +167,28 @@ fn_exit:
     return mpi_errno;
 fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Scatterv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Scatterv(const void *sendbuf, const int *sendcounts,
+                  const int *displs, MPI_Datatype sendtype, void *recvbuf,
+                  int recvcount, MPI_Datatype recvtype, int root,
+                  MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Scatterv(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
+                                  recvtype, root, comm_ptr, errflag);
+    } else {
+        mpi_errno = MPIR_Scatterv_impl(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
+                                       recvtype, root, comm_ptr, errflag);
+    }
+
+    return mpi_errno;
 }
 
 #endif
@@ -344,15 +367,8 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Scatterv(sendbuf, sendcounts, displs, sendtype,
-                                  recvbuf, recvcount, recvtype,
-                                  root, comm_ptr, &errflag);
-    } else {
-        mpi_errno = MPIR_Scatterv(sendbuf, sendcounts, displs, sendtype,
-                                  recvbuf, recvcount, recvtype,
-                                  root, comm_ptr, &errflag);
-    }
+    mpi_errno = MPIR_Scatterv(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype,
+                              root, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

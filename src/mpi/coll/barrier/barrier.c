@@ -134,10 +134,10 @@ int MPIR_Barrier_inter_auto( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
    This is intended to be used by device-specific implementations of
    barrier. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Barrier
+#define FUNCNAME MPIR_Barrier_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Barrier_impl(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -178,6 +178,23 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
     return mpi_errno;
  fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Barrier
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Barrier(comm_ptr, errflag);
+    } else {
+        mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
+    }
+
+    return mpi_errno;
 }
 
 #endif
@@ -252,11 +269,7 @@ int MPI_Barrier( MPI_Comm comm )
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Barrier(comm_ptr, &errflag);
-    } else {
-        mpi_errno = MPIR_Barrier(comm_ptr, &errflag);
-    }
+    mpi_errno = MPIR_Barrier(comm_ptr, &errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     /* ... end of body of routine ... */
