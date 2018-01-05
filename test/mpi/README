@@ -151,7 +151,7 @@ strict=bool : If bool is false, only build and run the program if
               --enable-strictmpi was not used in configuring the test suite.
 	      That is, a line such as 
 
-              neighb_coll 4 strict=false
+              bcast 4 env=MPIR_CVAR_ENABLE_FT=1 strict=false
 
               Says that this test is not valid for a strict MPI implementation;
               it contains extensions to the standard, or in the case of some
