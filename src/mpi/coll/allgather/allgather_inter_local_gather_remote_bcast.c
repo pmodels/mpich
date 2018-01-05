@@ -56,7 +56,7 @@ int MPIR_Allgather_inter_local_gather_remote_bcast (const void *sendbuf, int sen
     newcomm_ptr = comm_ptr->local_comm;
 
     if (sendcount != 0) {
-        mpi_errno = MPID_Gather(sendbuf, sendcount, sendtype, tmp_buf, sendcount,
+        mpi_errno = MPIR_Gather(sendbuf, sendcount, sendtype, tmp_buf, sendcount,
                 sendtype, 0, newcomm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
@@ -72,7 +72,7 @@ int MPIR_Allgather_inter_local_gather_remote_bcast (const void *sendbuf, int sen
         /* bcast to right*/
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-            mpi_errno = MPID_Bcast(tmp_buf, sendcount*local_size,
+            mpi_errno = MPIR_Bcast(tmp_buf, sendcount*local_size,
                     sendtype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -85,7 +85,7 @@ int MPIR_Allgather_inter_local_gather_remote_bcast (const void *sendbuf, int sen
         /* receive bcast from right */
         if (recvcount != 0) {
             root = 0;
-            mpi_errno = MPID_Bcast(recvbuf, recvcount*remote_size,
+            mpi_errno = MPIR_Bcast(recvbuf, recvcount*remote_size,
                     recvtype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -99,7 +99,7 @@ int MPIR_Allgather_inter_local_gather_remote_bcast (const void *sendbuf, int sen
         /* receive bcast from left */
         if (recvcount != 0) {
             root = 0;
-            mpi_errno = MPID_Bcast(recvbuf, recvcount*remote_size,
+            mpi_errno = MPIR_Bcast(recvbuf, recvcount*remote_size,
                     recvtype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -112,7 +112,7 @@ int MPIR_Allgather_inter_local_gather_remote_bcast (const void *sendbuf, int sen
         /* bcast to left */
         if (sendcount != 0) {
             root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-            mpi_errno = MPID_Bcast(tmp_buf, sendcount*local_size,
+            mpi_errno = MPIR_Bcast(tmp_buf, sendcount*local_size,
                     sendtype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */

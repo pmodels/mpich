@@ -106,7 +106,7 @@ int MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter (
 
     newcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPID_Scatter(tmp_buf, recvcount, datatype, recvbuf,
+    mpi_errno = MPIR_Scatter(tmp_buf, recvcount, datatype, recvbuf,
             recvcount, datatype, 0, newcomm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */

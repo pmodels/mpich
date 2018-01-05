@@ -232,10 +232,6 @@ int MPIR_Reduce_scatter_inter_auto(const void *sendbuf, void *recvbuf, const int
     return mpi_errno;
 }
 
-
-/* MPIR_Reduce_Scatter performs an reduce_scatter using point-to-point
-   messages.  This is intended to be used by device-specific
-   implementations of reduce_scatter. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Reduce_scatter_impl
 #undef FCNAME

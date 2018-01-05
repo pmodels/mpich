@@ -196,7 +196,7 @@ int MPIR_Allreduce_intra_auto (
     if (!is_homogeneous) {
         /* heterogeneous. To get the same result on all processes, we
            do a reduce to 0 and then broadcast. */
-        mpi_errno = MPID_Reduce( sendbuf, recvbuf, count, datatype,
+        mpi_errno = MPIR_Reduce( sendbuf, recvbuf, count, datatype,
                                        op, 0, comm_ptr, errflag );
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
@@ -205,7 +205,7 @@ int MPIR_Allreduce_intra_auto (
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
 
-        mpi_errno = MPID_Bcast( recvbuf, count, datatype, 0, comm_ptr, errflag );
+        mpi_errno = MPIR_Bcast( recvbuf, count, datatype, 0, comm_ptr, errflag );
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -269,9 +269,6 @@ int MPIR_Allreduce_inter_auto (
     return mpi_errno;
 }
 
-/* MPIR_Allreduce performs an allreduce using point-to-point messages.
-   This is intended to be used by device-specific implementations of
-   allreduce. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allreduce_impl
 #undef FCNAME

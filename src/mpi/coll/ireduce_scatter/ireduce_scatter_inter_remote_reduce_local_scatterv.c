@@ -62,7 +62,7 @@ int MPIR_Ireduce_scatter_sched_inter_remote_reduce_local_scatterv(const void *se
     if (comm_ptr->is_low_group) {
         /* reduce from right group to rank 0*/
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPID_Ireduce_sched(sendbuf, tmp_buf, total_count,
+        mpi_errno = MPIR_Ireduce_sched(sendbuf, tmp_buf, total_count,
                                        datatype, op, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
@@ -71,14 +71,14 @@ int MPIR_Ireduce_scatter_sched_inter_remote_reduce_local_scatterv(const void *se
 
         /* reduce to rank 0 of right group */
         root = 0;
-        mpi_errno = MPID_Ireduce_sched(sendbuf, tmp_buf, total_count,
+        mpi_errno = MPIR_Ireduce_sched(sendbuf, tmp_buf, total_count,
                                        datatype, op, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
         /* reduce to rank 0 of right group */
         root = 0;
-        mpi_errno = MPID_Ireduce_sched(sendbuf, tmp_buf, total_count,
+        mpi_errno = MPIR_Ireduce_sched(sendbuf, tmp_buf, total_count,
                                        datatype, op, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
@@ -87,7 +87,7 @@ int MPIR_Ireduce_scatter_sched_inter_remote_reduce_local_scatterv(const void *se
 
         /* reduce from right group to rank 0*/
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPID_Ireduce_sched(sendbuf, tmp_buf, total_count,
+        mpi_errno = MPIR_Ireduce_sched(sendbuf, tmp_buf, total_count,
                                        datatype, op, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
@@ -101,7 +101,7 @@ int MPIR_Ireduce_scatter_sched_inter_remote_reduce_local_scatterv(const void *se
 
     newcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPID_Iscatterv_sched(tmp_buf, recvcounts, disps, datatype,
+    mpi_errno = MPIR_Iscatterv_sched(tmp_buf, recvcounts, disps, datatype,
                                      recvbuf, recvcounts[rank], datatype, 0,
                                      newcomm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

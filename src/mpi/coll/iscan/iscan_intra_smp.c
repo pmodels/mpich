@@ -61,7 +61,7 @@ int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MP
     /* perform intranode scan to get temporary result in recvbuf. if there is only
        one process, just copy the raw data. */
     if (node_comm != NULL) {
-        mpi_errno = MPID_Iscan_sched(sendbuf, recvbuf, count, datatype, op, node_comm, s);
+        mpi_errno = MPIR_Iscan_sched(sendbuf, recvbuf, count, datatype, op, node_comm, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
@@ -100,7 +100,7 @@ int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MP
         int roots_rank = MPIR_Get_internode_rank(comm_ptr, rank);
         MPIR_Assert(roots_rank == roots_comm->rank);
 
-        mpi_errno = MPID_Iscan_sched(localfulldata, prefulldata, count, datatype, op, roots_comm, s);
+        mpi_errno = MPIR_Iscan_sched(localfulldata, prefulldata, count, datatype, op, roots_comm, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
 
@@ -127,7 +127,7 @@ int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MP
          * "prefulldata" from another leader into "tempbuf" */
 
         if (node_comm != NULL) {
-            mpi_errno = MPID_Ibcast_sched(tempbuf, count, datatype, 0, node_comm, s);
+            mpi_errno = MPIR_Ibcast_sched(tempbuf, count, datatype, 0, node_comm, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }

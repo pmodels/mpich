@@ -178,10 +178,6 @@ int MPIR_Allgatherv_inter_auto (
     return mpi_errno;
 }
 
-
-/* MPIR_Allgatherv performs an allgatherv using point-to-point
-   messages.  This is intended to be used by device-specific
-   implementations of allgatherv. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Allgatherv_impl
 #undef FCNAME

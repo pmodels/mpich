@@ -28,7 +28,7 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, int count,
              * allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
 
             mpi_errno =
-                MPID_Reduce(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm, errflag);
+                MPIR_Reduce(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -37,7 +37,7 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, int count,
             }
         } else {
             mpi_errno =
-                MPID_Reduce(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm, errflag);
+                MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -57,7 +57,7 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, int count,
     /* now do an IN_PLACE allreduce among the local roots of all nodes */
     if (comm_ptr->node_roots_comm != NULL) {
         mpi_errno =
-            MPID_Allreduce(MPI_IN_PLACE, recvbuf, count, datatype, op, comm_ptr->node_roots_comm,
+            MPIR_Allreduce(MPI_IN_PLACE, recvbuf, count, datatype, op, comm_ptr->node_roots_comm,
                            errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
@@ -69,7 +69,7 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, int count,
 
     /* now broadcast the result among local processes */
     if (comm_ptr->node_comm != NULL) {
-        mpi_errno = MPID_Bcast(recvbuf, count, datatype, 0, comm_ptr->node_comm, errflag);
+        mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, comm_ptr->node_comm, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

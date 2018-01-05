@@ -82,7 +82,7 @@ int MPIR_Reduce_inter_local_reduce_remote_send (
         newcomm_ptr = comm_ptr->local_comm;
 
         /* now do a local reduce on this intracommunicator */
-        mpi_errno = MPID_Reduce(sendbuf, tmp_buf, count, datatype,
+        mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype,
                 op, 0, newcomm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */

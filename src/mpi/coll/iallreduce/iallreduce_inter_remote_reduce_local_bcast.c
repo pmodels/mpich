@@ -36,27 +36,27 @@ int MPIR_Iallreduce_sched_inter_remote_reduce_local_bcast(const void *sendbuf, v
     if (comm_ptr->is_low_group) {
         /* reduce from right group to rank 0*/
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPID_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+        mpi_errno = MPIR_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         /* no barrier, these reductions can be concurrent */
 
         /* reduce to rank 0 of right group */
         root = 0;
-        mpi_errno = MPID_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+        mpi_errno = MPIR_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
         /* reduce to rank 0 of left group */
         root = 0;
-        mpi_errno = MPID_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+        mpi_errno = MPIR_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         /* no barrier, these reductions can be concurrent */
 
         /* reduce from right group to rank 0 */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPID_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+        mpi_errno = MPIR_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
@@ -71,7 +71,7 @@ int MPIR_Iallreduce_sched_inter_remote_reduce_local_bcast(const void *sendbuf, v
     }
     lcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPID_Ibcast_sched(recvbuf, count, datatype, 0, lcomm_ptr, s);
+    mpi_errno = MPIR_Ibcast_sched(recvbuf, count, datatype, 0, lcomm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
