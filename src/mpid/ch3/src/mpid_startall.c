@@ -101,6 +101,15 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 		break;
 	    }
 
+        case MPIDI_REQUEST_TYPE_PERSISTENT_BCAST:
+        {
+             /* the bcast arguments. Retrieve the arguments from mpir level request data */
+            rc = MPIR_Ibcast(preq->u.persist.coll_args.bcast.buffer, preq->u.persist.coll_args.bcast.count,
+                    preq->u.persist.coll_args.bcast.datatype, preq->u.persist.coll_args.bcast.root,
+                    preq->u.persist.coll_args.bcast.comm, &preq->u.persist.real_request);
+            break;
+        }
+
 	    case MPIDI_REQUEST_TYPE_BSEND:
 	    {
 		MPI_Request sreq_handle;
@@ -329,4 +338,22 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RECV_INIT);
     return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Bcast_init
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPID_Bcast_init( void *buffer, int count, MPI_Datatype datatype, int root,
+               MPIR_Comm *comm_ptr, MPIR_Info* info_ptr, MPIR_Request **request )
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Bcast_init(buffer, count, datatype, root, comm_ptr, info_ptr, request);
+    MPIDI_Request_set_type(*request, MPIDI_REQUEST_TYPE_PERSISTENT_BCAST);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }

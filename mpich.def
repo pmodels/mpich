@@ -66,6 +66,8 @@ EXPORTS
     MPI_Barrier=PMPI_Barrier
     PMPI_Bcast
     MPI_Bcast=PMPI_Bcast
+    PMPIX_Bcast_init
+    MPIX_Bcast_init=PMPIX_Bcast_init
     PMPI_Bsend
     MPI_Bsend=PMPI_Bsend
     PMPI_Bsend_init

@@ -78,6 +78,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
                     break;
                 }
 
+            case MPIDI_PTYPE_BCAST:
+                mpi_errno = MPIR_Ibcast(preq->u.persist.coll_args.bcast.buffer,
+                                        preq->u.persist.coll_args.bcast.count,
+                                        preq->u.persist.coll_args.bcast.datatype,
+                                        preq->u.persist.coll_args.bcast.root,
+                                        preq->u.persist.coll_args.bcast.comm,
+                                        &preq->u.persist.real_request);
+
+                break;
+
             default:
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __FUNCTION__,
                                                  __LINE__, MPI_ERR_INTERN, "**ch3|badreqtype",
@@ -104,6 +114,30 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_STARTALL);
     return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDIG_mpi_bcast_init
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_bcast_init(void *buffer, int count, MPI_Datatype datatype,
+                                                   int root, MPIR_Comm * comm_ptr,
+                                                   MPIR_Info * info_ptr, MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_BCAST_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_BCAST_INIT);
+
+    mpi_errno = MPIR_Bcast_init(buffer, count, datatype, root, comm_ptr, info_ptr, request);
+    MPIDI_CH4U_REQUEST((*request), p_type) = MPIDI_PTYPE_BCAST;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_BCAST_INIT);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #endif /* MPIDIG_STARTALL_H_INCLUDED */
