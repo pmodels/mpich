@@ -87,7 +87,7 @@ int MPIR_Ireduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
-    /* get nearest power-of-two less than or equal to comm_size */
+    /* get nearest power-of-two less than or equal to number of ranks in the communicator */
     pof2 = comm_ptr->pof2;
 
     if ((count * type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
