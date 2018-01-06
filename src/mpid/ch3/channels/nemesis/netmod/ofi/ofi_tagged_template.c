@@ -33,7 +33,7 @@ ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
     MPI_Aint dt_true_lb;
     intptr_t data_sz;
     MPIR_Datatype *dt_ptr;
-    BEGIN_FUNC(__func__);
+    MPIR_BEGIN_FUNC_VERBOSE(__func__);
 
     VC_READY_CHECK(vc);
     *request = NULL;
@@ -55,7 +55,7 @@ ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
                                 context_offset, request, dt_contig,
                                 data_sz, dt_ptr, dt_true_lb, send_type);
 
-    END_FUNC_RC(MPID_STATE_DO_ISEND);
+    MPIR_END_FUNC_VERBOSE_RC(MPID_STATE_DO_ISEND);
 }
 
 int ADD_SUFFIX(MPID_nem_ofi_send)(struct MPIDI_VC *vc,
@@ -67,10 +67,10 @@ int ADD_SUFFIX(MPID_nem_ofi_send)(struct MPIDI_VC *vc,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    BEGIN_FUNC(__func__);
+    MPIR_BEGIN_FUNC_VERBOSE(__func__);
     mpi_errno = ADD_SUFFIX(do_isend)(vc, buf, count, datatype, dest, tag,
                          comm, context_offset, request, MPID_DONT_CREATE_REQ, MPID_NORMAL_SEND);
-    END_FUNC(__func__);
+    MPIR_END_FUNC_VERBOSE(__func__);
     return mpi_errno;
 }
 
@@ -82,10 +82,10 @@ int ADD_SUFFIX(MPID_nem_ofi_isend)(struct MPIDI_VC *vc,
                        int tag, MPIR_Comm * comm, int context_offset, struct MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
-    BEGIN_FUNC(__func__);
+    MPIR_BEGIN_FUNC_VERBOSE(__func__);
     mpi_errno = ADD_SUFFIX(do_isend)(vc, buf, count, datatype, dest,
                          tag, comm, context_offset, request, MPID_CREATE_REQ, MPID_NORMAL_SEND);
-    END_FUNC(__func__);
+    MPIR_END_FUNC_VERBOSE(__func__);
     return mpi_errno;
 }
 
@@ -97,10 +97,10 @@ int ADD_SUFFIX(MPID_nem_ofi_ssend)(struct MPIDI_VC *vc,
                        int tag, MPIR_Comm * comm, int context_offset, struct MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
-    BEGIN_FUNC(__func__);
+    MPIR_BEGIN_FUNC_VERBOSE(__func__);
     mpi_errno = ADD_SUFFIX(do_isend)(vc, buf, count, datatype, dest,
                          tag, comm, context_offset, request, MPID_CREATE_REQ, MPID_SYNC_SEND);
-    END_FUNC(__func__);
+    MPIR_END_FUNC_VERBOSE(__func__);
     return mpi_errno;
 }
 
@@ -114,7 +114,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPIR_Reques
     MPIR_Datatype*dt_ptr;
     MPIR_Context_id_t context_id;
     char *recv_buffer;
-    BEGIN_FUNC(__func__);
+    MPIR_BEGIN_FUNC_VERBOSE(__func__);
 
     /* ------------------------ */
     /* Initialize the request   */
@@ -174,15 +174,15 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPIR_Reques
     msg.context   = (void *) &(REQ_OFI(rreq)->ofi_context);
     msg.data      = 0;
     FI_RC_RETRY(fi_trecvmsg(gl_data.endpoint,&msg,msgflags), trecv);
-    END_FUNC_RC(__func__);
+    MPIR_END_FUNC_VERBOSE_RC(__func__);
 }
 
 
 void ADD_SUFFIX(MPID_nem_ofi_anysource_posted)(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    BEGIN_FUNC(__func__);
+    MPIR_BEGIN_FUNC_VERBOSE(__func__);
     mpi_errno = ADD_SUFFIX(MPID_nem_ofi_recv_posted)(NULL, rreq);
     MPIR_Assert(mpi_errno == MPI_SUCCESS);
-    END_FUNC(__func__);
+    MPIR_END_FUNC_VERBOSE(__func__);
 }

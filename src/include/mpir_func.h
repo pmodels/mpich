@@ -130,4 +130,16 @@
 
 #endif /* ! defined(MPL_USE_DBG_LOGGING) && ! defined(MPICH_DEBUG_MEMARENA) */
 
+#define MPIR_BEGIN_FUNC_VERBOSE(FUNCNAME)                    \
+  MPIR_FUNC_VERBOSE_STATE_DECL(FUNCNAME);                   \
+  MPIR_FUNC_VERBOSE_ENTER(FUNCNAME);
+#define MPIR_END_FUNC_VERBOSE(FUNCNAME)                      \
+  MPIR_FUNC_VERBOSE_EXIT(FUNCNAME);
+#define MPIR_END_FUNC_VERBOSE_RC(FUNCNAME) \
+  fn_exit:                    \
+  MPIR_FUNC_VERBOSE_EXIT(FUNCNAME);  \
+  return mpi_errno;           \
+fn_fail:                      \
+  goto fn_exit;
+
 #endif /* MPIR_FUNC_H_INCLUDED */

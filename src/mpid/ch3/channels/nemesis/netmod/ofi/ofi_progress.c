@@ -40,7 +40,7 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
     MPIDI_VC_t *vc;
     MPIR_Request *req;
     req_fn reqFn;
-    BEGIN_FUNC(__func__);
+    MPIR_BEGIN_FUNC_VERBOSE(__func__);
     do {
         /* ----------------------------------------------------- */
         /* Poll the completion queue                             */
@@ -123,5 +123,5 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
             }
         }
     } while (in_blocking_poll && (ret > 0));
-    END_FUNC_RC(__func__);
+    MPIR_END_FUNC_VERBOSE_RC(__func__);
 }

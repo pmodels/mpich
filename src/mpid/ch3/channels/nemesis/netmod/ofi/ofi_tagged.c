@@ -40,13 +40,13 @@ static inline int MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBU
 {
     int mpi_errno = MPI_SUCCESS;
 
-    BEGIN_FUNC(__func__);
+    MPIR_BEGIN_FUNC_VERBOSE(__func__);
 
     MPIDI_CH3U_Recvq_DP(REQ_OFI(rreq)->parent);
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(REQ_OFI(rreq)->parent));
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(rreq));
 
-    END_FUNC_RC(__func__);
+    MPIR_END_FUNC_VERBOSE_RC(__func__);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -57,7 +57,7 @@ int MPID_nem_ofi_anysource_matched(MPIR_Request * rreq)
 {
     int matched = FALSE;
     int ret;
-    BEGIN_FUNC(__func__);
+    MPIR_BEGIN_FUNC_VERBOSE(__func__);
     /* ----------------------------------------------------- */
     /* Netmod has notified us that it has matched an any     */
     /* source request on another device.  We have the chance */
@@ -82,6 +82,6 @@ int MPID_nem_ofi_anysource_matched(MPIR_Request * rreq)
          */
         matched = TRUE;
     }
-    END_FUNC(__func__);
+    MPIR_END_FUNC_VERBOSE(__func__);
     return matched;
 }
