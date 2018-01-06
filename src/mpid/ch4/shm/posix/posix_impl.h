@@ -142,7 +142,6 @@ typedef struct {
 /*
  * Helper routines and macros for request completion
  */
-#define DECL_FUNC(FUNCNAME)  MPL_QUOTE(FUNCNAME)
 
 #undef FUNCNAME
 #define FUNCNAME nothing

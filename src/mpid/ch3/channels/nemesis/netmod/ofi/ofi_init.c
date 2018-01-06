@@ -43,7 +43,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_init)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_init)
 int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int ret, fi_version, i, len, pmi_errno;
@@ -302,7 +302,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_finalize)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_finalize)
 int MPID_nem_ofi_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -328,7 +328,7 @@ int MPID_nem_ofi_finalize(void)
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_get_ordering)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_get_ordering)
 int MPID_nem_ofi_get_ordering(int *ordering)
 {
     (*ordering) = 1;
