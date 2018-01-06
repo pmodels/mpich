@@ -116,7 +116,7 @@
 /* set for these events, so we must use the TAG stored in the sreq.         */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_data_callback)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_data_callback)
 static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPIR_Request * sreq)
 {
     int complete = 0, mpi_errno = MPI_SUCCESS;
@@ -165,7 +165,7 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPIR_Request * sre
 /* these events.                                                            */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_cts_recv_callback)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_cts_recv_callback)
 static int MPID_nem_ofi_cts_recv_callback(cq_tagged_entry_t * wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -212,7 +212,7 @@ static int MPID_nem_ofi_cts_recv_callback(cq_tagged_entry_t * wc, MPIR_Request *
 /* Use packing if iovecs are not supported by the OFI provider              */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_iSendContig)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_iSendContig)
 int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
                              MPIR_Request * sreq,
                              void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz)
@@ -270,7 +270,7 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_SendNoncontig)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_SendNoncontig)
 int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
                                MPIR_Request * sreq, void *hdr, intptr_t hdr_sz)
 {
@@ -306,7 +306,7 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_iStartContigMsg)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_iStartContigMsg)
 int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
                                  void *hdr,
                                  intptr_t hdr_sz,

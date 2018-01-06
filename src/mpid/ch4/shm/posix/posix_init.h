@@ -22,7 +22,7 @@ extern MPIDI_POSIX_mem_region_t MPIDI_POSIX_mem_region;
 extern char *MPIDI_POSIX_asym_base_addr;
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_mpi_init_hook)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_init_hook)
 static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_provided, int *tag_ub)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -238,7 +238,7 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_mpi_finalize_hook)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_finalize_hook)
 static inline int MPIDI_POSIX_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
