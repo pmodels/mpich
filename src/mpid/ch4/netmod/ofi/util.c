@@ -264,7 +264,7 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
 #undef FUNCNAME
 #define FUNCNAME mpi_to_ofi
 #undef FCNAME
-#define FCNAME DECL_FUNC(mpi_to_ofi)
+#define FCNAME MPL_QUOTE(mpi_to_ofi)
 static inline int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op, enum fi_op *fi_op)
 {
     *fi_dt = FI_DATATYPE_LAST;

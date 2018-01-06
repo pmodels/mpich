@@ -26,7 +26,7 @@
 /* MPIDI_POSIX_do_isend                                             */
 /* ---------------------------------------------------- */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_do_isend)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_do_isend)
 static inline int MPIDI_POSIX_do_isend(const void *buf,
                                        MPI_Aint count,
                                        MPI_Datatype datatype,
@@ -89,7 +89,7 @@ static inline int MPIDI_POSIX_do_isend(const void *buf,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_SEND)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_SEND)
 static inline int MPIDI_POSIX_mpi_send(const void *buf,
                                        MPI_Aint count,
                                        MPI_Datatype datatype,
@@ -167,7 +167,7 @@ static inline int MPIDI_POSIX_irsend(const void *buf,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_SSEND)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_SSEND)
 static inline int MPIDI_POSIX_mpi_ssend(const void *buf,
                                         MPI_Aint count,
                                         MPI_Datatype datatype,
@@ -190,7 +190,7 @@ static inline int MPIDI_POSIX_mpi_ssend(const void *buf,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_SEND_INIT)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_SEND_INIT)
 static inline int MPIDI_POSIX_mpi_send_init(const void *buf,
                                             int count,
                                             MPI_Datatype datatype,
@@ -224,7 +224,7 @@ static inline int MPIDI_POSIX_mpi_send_init(const void *buf,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_SSEND_INIT)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_SSEND_INIT)
 static inline int MPIDI_POSIX_mpi_ssend_init(const void *buf,
                                              int count,
                                              MPI_Datatype datatype,
@@ -320,7 +320,7 @@ static inline int MPIDI_POSIX_mpi_rsend_init(const void *buf,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_mpi_isend)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_isend)
 static inline int MPIDI_POSIX_mpi_isend(const void *buf,
                                         MPI_Aint count,
                                         MPI_Datatype datatype,
