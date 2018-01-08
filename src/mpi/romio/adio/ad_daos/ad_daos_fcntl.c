@@ -19,17 +19,18 @@ void ADIOI_DAOS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct,
 					       MPIR_ERR_RECOVERABLE,
 					       myname, __LINE__,
 					       ADIOI_DAOS_error_convert(ret),
-					       "Error in daos_array_get_size", 0);
+					       "Error in daos_array_get_size",
+                                               0);
 	    /* --END ERROR HANDLING-- */
 	}
-	else {
-	    *error_code = MPI_SUCCESS;
-	}
-	return;
+        else {
+            *error_code = MPI_SUCCESS;
+        }
+        break;
 
     case ADIO_FCNTL_SET_DISKSPACE:
-        *error_code = MPI_SUCCESS;
-        return;
+	ADIOI_GEN_Prealloc(fd, fcntl_struct->diskspace, error_code);
+	break;
 
     case ADIO_FCNTL_SET_ATOMICITY:
     default:

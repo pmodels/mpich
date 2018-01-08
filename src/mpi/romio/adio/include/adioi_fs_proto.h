@@ -116,3 +116,4 @@ handle_share(daos_handle_t *hdl, int type, int rank, daos_handle_t poh,
 	MPI_Barrier(comm);
 }
 #endif
+#endif

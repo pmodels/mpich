@@ -55,17 +55,17 @@ static void my_consensus(void *invec, void *inoutvec, int *len, MPI_Datatype *da
 
 #ifdef ROMIO_DAOS
 /* MSC - Make a generic DAOS function instead */
-static daos_rank_list_t *
+static d_rank_list_t *
 daos_rank_list_parse(const char *str, const char *sep)
 {
-    daos_rank_t	       *buf;
+    d_rank_t	       *buf;
     int			cap = 8;
-    daos_rank_list_t   *ranks = NULL;
+    d_rank_list_t   *ranks = NULL;
     char	       *s;
     char	       *p;
     int			n = 0;
 
-    buf = ADIOI_Malloc(sizeof(daos_rank_t) * cap);
+    buf = ADIOI_Malloc(sizeof(d_rank_t) * cap);
     if (buf == NULL)
         goto out;
     s = strdup(str);
@@ -74,15 +74,15 @@ daos_rank_list_parse(const char *str, const char *sep)
 
     while ((s = strtok_r(s, sep, &p)) != NULL) {
         if (n == cap) {
-            daos_rank_t    *buf_new;
+            d_rank_t    *buf_new;
             int		cap_new;
 
             /* Double the buffer. */
             cap_new = cap * 2;
-            buf_new = ADIOI_Malloc(sizeof(daos_rank_t) * cap_new);
+            buf_new = ADIOI_Malloc(sizeof(d_rank_t) * cap_new);
             if (buf_new == NULL)
                 goto out_s;
-            memcpy(buf_new, buf, sizeof(daos_rank_t) * n);
+            memcpy(buf_new, buf, sizeof(d_rank_t) * n);
             ADIOI_Free(buf);
             buf = buf_new;
             cap = cap_new;
@@ -92,7 +92,7 @@ daos_rank_list_parse(const char *str, const char *sep)
         s = NULL;
     }
 
-    ranks = crt_rank_list_alloc(n);
+    ranks = d_rank_list_alloc(n);
     if (ranks == NULL)
         goto out_s;
     memcpy(ranks->rl_ranks, buf, sizeof(*buf) * n);
@@ -143,7 +143,7 @@ void ADIO_Init(int *argc, char ***argv, int *error_code)
     char *group = NULL;
     uuid_t pool_uuid;
     daos_pool_info_t pool_info;
-    daos_rank_list_t *svcl = NULL;
+    d_rank_list_t *svcl = NULL;
     int rc;
 
     rc = daos_init();
