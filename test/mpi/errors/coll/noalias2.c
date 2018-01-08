@@ -4,11 +4,6 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-/* This is a very weak sanity test that all nonblocking collectives specified by
- * MPI-3 are present in the library and take arguments as expected.  This test
- * does not check for progress, matching issues, or sensible output buffer
- * values. */
-
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
