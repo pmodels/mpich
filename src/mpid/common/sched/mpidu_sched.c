@@ -236,11 +236,7 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
                                   e->u.reduce.datatype, e->u.reduce.op);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
-            if (HANDLE_GET_KIND(e->u.reduce.op) != HANDLE_KIND_BUILTIN) {
-                MPIR_Op *op_ptr = NULL;
-                MPIR_Op_get_ptr(e->u.reduce.op, op_ptr);
-                MPIR_Op_ptr_release(op_ptr);
-            }
+            MPIR_Op_release_if_not_builtin(e->u.reduce.op);
             MPIR_Datatype_release_if_not_builtin(e->u.reduce.datatype);
             e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
             break;
@@ -748,11 +744,7 @@ int MPIDU_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Da
     reduce->op = op;
 
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
-    if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
-        MPIR_Op *op_ptr = NULL;
-        MPIR_Op_get_ptr(op, op_ptr);
-        MPIR_Op_ptr_add_ref(op_ptr);
-    }
+    MPIR_Op_add_ref_if_not_builtin(op);
 
   fn_exit:
     return mpi_errno;
