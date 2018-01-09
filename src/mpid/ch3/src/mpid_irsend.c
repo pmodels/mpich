@@ -127,7 +127,7 @@ int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, in
             /* If we're not complete, then add a reference to the datatype */
             if (sreq) {
                 sreq->dev.datatype_ptr = dt_ptr;
-                MPIR_Datatype_add_ref(dt_ptr);
+                MPIR_Datatype_ptr_add_ref(dt_ptr);
             }
         }
     } else {
@@ -140,7 +140,7 @@ int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, in
                                      context_offset );
 	if (sreq && dt_ptr != NULL) {
 	    sreq->dev.datatype_ptr = dt_ptr;
-	    MPIR_Datatype_add_ref(dt_ptr);
+        MPIR_Datatype_ptr_add_ref(dt_ptr);
 	}
     }
 

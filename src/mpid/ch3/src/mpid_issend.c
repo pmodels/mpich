@@ -96,7 +96,7 @@ int MPID_Issend(const void * buf, int count, MPI_Datatype datatype, int rank, in
          * communication, then add a reference to the datatype */
 	if (sreq && (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)) {
 	    sreq->dev.datatype_ptr = dt_ptr;
-	    MPIR_Datatype_add_ref(dt_ptr);
+        MPIR_Datatype_ptr_add_ref(dt_ptr);
 	}
     }
     else
@@ -116,7 +116,7 @@ int MPID_Issend(const void * buf, int count, MPI_Datatype datatype, int rank, in
 	if (sreq && dt_ptr != NULL)
 	{
 	    sreq->dev.datatype_ptr = dt_ptr;
-	    MPIR_Datatype_add_ref(dt_ptr);
+        MPIR_Datatype_ptr_add_ref(dt_ptr);
 	}
     }
 

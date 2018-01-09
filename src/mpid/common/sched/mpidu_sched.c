@@ -88,7 +88,7 @@ static void sched_dump(struct MPIDU_Sched *s, FILE * fh)
         {                                                          \
             MPIR_Datatype *dtp_ = NULL;                            \
             MPIR_Datatype_get_ptr((datatype_), dtp_);              \
-            MPIR_Datatype_add_ref(dtp_);                           \
+            MPIR_Datatype_ptr_add_ref(dtp_);                           \
         }                                                          \
     } while (0)
 #endif
@@ -100,7 +100,7 @@ static void sched_dump(struct MPIDU_Sched *s, FILE * fh)
         {                                                          \
             MPIR_Datatype *dtp_ = NULL;                            \
             MPIR_Datatype_get_ptr((datatype_), dtp_);              \
-            MPIR_Datatype_release(dtp_);                           \
+            MPIR_Datatype_ptr_release(dtp_);                           \
         }                                                          \
     } while (0)
 #endif

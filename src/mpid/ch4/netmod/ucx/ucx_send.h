@@ -71,7 +71,7 @@ static inline int MPIDI_UCX_send(const void *buf,
                                                                  data_sz, ucp_dt_make_contig(1),
                                                                  ucx_tag, &MPIDI_UCX_send_cmpl_cb);
         } else {
-            MPIR_Datatype_add_ref(dt_ptr);
+            MPIR_Datatype_ptr_add_ref(dt_ptr);
             ucp_request =
                 (MPIDI_UCX_ucp_request_t *) ucp_tag_send_sync_nb(ep, buf, count,
                                                                  dt_ptr->dev.netmod.
@@ -85,7 +85,7 @@ static inline int MPIDI_UCX_send(const void *buf,
                                                             ucp_dt_make_contig(1), ucx_tag,
                                                             &MPIDI_UCX_send_cmpl_cb);
         } else {
-            MPIR_Datatype_add_ref(dt_ptr);
+            MPIR_Datatype_ptr_add_ref(dt_ptr);
             ucp_request =
                 (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, buf, count,
                                                             dt_ptr->dev.netmod.ucx.ucp_datatype,

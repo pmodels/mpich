@@ -465,7 +465,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_persistent_send(const void *buf, int coun
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
         MPIR_Datatype *dt_ptr;
         MPIR_Datatype_get_ptr(datatype, dt_ptr);
-        MPIR_Datatype_add_ref(dt_ptr);
+        MPIR_Datatype_ptr_add_ref(dt_ptr);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PERSISTENT_SEND);
