@@ -113,10 +113,10 @@ extern MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN];
 extern MPIR_Op MPIR_Op_direct[];
 extern MPIR_Object_alloc_t MPIR_Op_mem;
 
-#define MPIR_Op_add_ref(_op) \
-    do { MPIR_Object_add_ref(_op); } while (0)
-#define MPIR_Op_release_ref(_op, _inuse) \
-    do { MPIR_Object_release_ref(_op, _inuse); } while (0)
+#define MPIR_Op_add_ref(op_p_) \
+    do { MPIR_Object_add_ref(op_p_); } while (0)
+#define MPIR_Op_release_ref(op_p_, inuse_) \
+    do { MPIR_Object_release_ref(op_p_, inuse_); } while (0)
 
 /* release and free-if-not-in-use helper */
 #define MPIR_Op_release(op_p_)                           \
