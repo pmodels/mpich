@@ -373,7 +373,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
         MPIR_Datatype *dt_ptr;
         MPIR_Datatype_get_ptr(datatype, dt_ptr);
-        MPIR_Datatype_add_ref(dt_ptr);
+        MPIR_Datatype_ptr_add_ref(dt_ptr);
     }
 
   fn_exit:

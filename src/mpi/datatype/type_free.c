@@ -34,7 +34,7 @@ void MPIR_Type_free_impl(MPI_Datatype * datatype)
     MPIR_Datatype *datatype_ptr = NULL;
 
     MPIR_Datatype_get_ptr(*datatype, datatype_ptr);
-    MPIR_Datatype_release(datatype_ptr);
+    MPIR_Datatype_ptr_release(datatype_ptr);
     *datatype = MPI_DATATYPE_NULL;
 }
 

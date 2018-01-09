@@ -92,7 +92,7 @@ static inline void MPIDI_UCX_Finish_pack(void *state)
     struct MPIDI_UCX_pack_state *pack_state = (struct MPIDI_UCX_pack_state *) state;
     MPIR_Datatype_get_ptr(pack_state->segment_ptr->handle, dt_ptr);
     MPIR_Segment_free(pack_state->segment_ptr);
-    MPIR_Datatype_release(dt_ptr);
+    MPIR_Datatype_ptr_release(dt_ptr);
     MPL_free(pack_state);
 }
 

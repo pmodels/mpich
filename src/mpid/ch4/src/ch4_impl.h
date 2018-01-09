@@ -256,7 +256,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_hash_clear(MPIR_Win * win)
         {                                                               \
             MPIR_Datatype *dtp_ = NULL;                                 \
             MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
-            MPIR_Datatype_add_ref(dtp_);                                \
+            MPIR_Datatype_ptr_add_ref(dtp_);                            \
         }                                                               \
     } while (0)
 #endif
@@ -269,7 +269,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_hash_clear(MPIR_Win * win)
         {                                                               \
             MPIR_Datatype *dtp_ = NULL;                                 \
             MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
-            MPIR_Datatype_release(dtp_);                                \
+            MPIR_Datatype_ptr_release(dtp_);                            \
         }                                                               \
     } while (0)
 #endif
