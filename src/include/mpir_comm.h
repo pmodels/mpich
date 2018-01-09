@@ -204,10 +204,10 @@ extern MPIR_Object_alloc_t MPIR_Comm_mem;
 /* this function should not be called by normal code! */
 int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr);
 
-#define MPIR_Comm_add_ref(_comm) \
-    do { MPIR_Object_add_ref((_comm)); } while (0)
-#define MPIR_Comm_release_ref(_comm, _inuse) \
-    do { MPIR_Object_release_ref(_comm, _inuse); } while (0)
+#define MPIR_Comm_add_ref(comm_p_) \
+    do { MPIR_Object_add_ref((comm_p_)); } while (0)
+#define MPIR_Comm_release_ref(comm_p_, inuse_) \
+    do { MPIR_Object_release_ref(comm_p_, inuse_); } while (0)
 
 
 /* Release a reference to a communicator.  If there are no pending
