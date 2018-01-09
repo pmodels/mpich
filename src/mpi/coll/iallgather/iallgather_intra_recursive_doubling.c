@@ -26,7 +26,7 @@ static int get_count(MPIR_Comm * comm, int tag, void *state)
 static int dtp_release_ref(MPIR_Comm * comm, int tag, void *state)
 {
     MPIR_Datatype *recv_dtp = state;
-    MPIR_Datatype_release(recv_dtp);
+    MPIR_Datatype_ptr_release(recv_dtp);
     return MPI_SUCCESS;
 }
 
@@ -98,7 +98,7 @@ int MPIR_Iallgather_sched_intra_recursive_doubling(const void *sendbuf, int send
     ss->recvtype = recvtype;
     /* ensure that recvtype doesn't disappear immediately after last _recv but before _cb */
     if (recv_dtp)
-        MPIR_Datatype_add_ref(recv_dtp);
+        MPIR_Datatype_ptr_add_ref(recv_dtp);
 
     mask = 0x1;
     i = 0;
