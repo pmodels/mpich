@@ -158,6 +158,25 @@ int MPIR_MINLOC_check_dtype(MPI_Datatype);
 int MPIR_REPLACE_check_dtype(MPI_Datatype);
 int MPIR_NO_OP_check_dtype(MPI_Datatype);
 
+#define MPIR_Op_add_ref_if_not_builtin(op)               \
+    do {                                                 \
+        if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {\
+            MPIR_Op *op_ptr = NULL;                      \
+            MPIR_Op_get_ptr(op, op_ptr);                 \
+            MPIR_Op_ptr_add_ref(op_ptr);                 \
+        }                                                \
+    } while (0)                                          \
+
+
+#define MPIR_Op_release_if_not_builtin(op)               \
+    do {                                                 \
+        if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {\
+            MPIR_Op *op_ptr = NULL;                      \
+            MPIR_Op_get_ptr(op, op_ptr);                 \
+            MPIR_Op_ptr_release(op_ptr);                 \
+        }                                                \
+    } while (0)                                          \
+
 #define MPIR_PREDEF_OP_COUNT 14
 extern MPI_User_function *MPIR_Op_table[];
 
