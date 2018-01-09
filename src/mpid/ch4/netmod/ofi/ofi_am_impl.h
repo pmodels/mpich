@@ -435,7 +435,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
         lreq_hdr.sreq_ptr = (uint64_t) sreq;
         MPIDI_CH4U_REQUEST(sreq, req->lreq).src_buf = buf;
         MPIDI_CH4U_REQUEST(sreq, req->lreq).count = count;
-        dtype_add_ref_if_not_builtin(datatype);
+        MPIR_Datatype_add_ref_if_not_builtin(datatype);
         MPIDI_CH4U_REQUEST(sreq, req->lreq).datatype = datatype;
         MPIDI_CH4U_REQUEST(sreq, req->lreq).protocol = lreq_hdr.hdr.protocol;
         MPIDI_CH4U_REQUEST(sreq, req->lreq).tag = lreq_hdr.hdr.tag;

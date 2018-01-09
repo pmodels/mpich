@@ -1243,7 +1243,7 @@ static inline int MPIDI_get_acc_ack_target_cmpl_cb(MPIR_Request * areq)
     MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
     MPIDI_win_remote_acc_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
 
-    dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype));
     MPID_Request_complete(areq);
 
     MPIDI_progress_cmpl_list();
@@ -1723,7 +1723,7 @@ static inline int MPIDI_put_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
                                         rreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(origin_req, req->preq.origin_datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(origin_req, req->preq.origin_datatype));
 
     *target_cmpl_cb = NULL;
     *req = NULL;
@@ -1773,7 +1773,7 @@ static inline int MPIDI_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
                                         rreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(origin_req, req->areq.origin_datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(origin_req, req->areq.origin_datatype));
 
     *target_cmpl_cb = NULL;
     *req = NULL;
@@ -1823,7 +1823,7 @@ static inline int MPIDI_get_acc_iov_ack_target_msg_cb(int handler_id, void *am_h
                                         rreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(origin_req, req->areq.origin_datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(origin_req, req->areq.origin_datatype));
 
     *target_cmpl_cb = NULL;
     *req = NULL;

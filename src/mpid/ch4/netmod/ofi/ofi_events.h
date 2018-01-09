@@ -141,7 +141,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
     }
 
-    dtype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, datatype));
 
     /* If syncronous, ack and complete when the ack is done */
     if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
@@ -284,7 +284,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(struct fi_cq_tagged_entry *wc,
                  MPIDI_OFI_REQUEST(sreq, noncontig.nopack))
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
 
-        dtype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
+        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
         MPIR_Request_free(sreq);
     }
     /* c != 0, ssend */
@@ -335,7 +335,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
         if (MPIDI_OFI_REQUEST(sreq, noncontig.pack))
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack));
 
-        dtype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
+        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
         MPIR_Request_free(sreq);
     }
     /* c != 0, ssend */
