@@ -10,7 +10,6 @@
 #define UCX_PROBE_H_INCLUDED
 
 #include "ucx_impl.h"
-#include "mpidch4.h"
 
 static inline int MPIDI_NM_mpi_improbe(int source,
                                        int tag,
