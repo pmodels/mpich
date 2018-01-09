@@ -439,6 +439,30 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     }                                                               \
 } while (0)
 
+/* we pessimistically assume that MPI_DATATYPE_NULL may be passed as a "valid" type
+ * for send/recv when MPI_PROC_NULL is the destination/src */
+#define MPIR_Datatype_add_ref_if_not_builtin(datatype_)             \
+    do {                                                            \
+    if ((datatype_) != MPI_DATATYPE_NULL &&                         \
+        HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)        \
+    {                                                               \
+        MPIR_Datatype *dtp_ = NULL;                                 \
+        MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
+        MPIR_Datatype_ptr_add_ref(dtp_);                            \
+    }                                                               \
+    } while (0)
+
+#define MPIR_Datatype_release_if_not_builtin(datatype_)             \
+    do {                                                            \
+    if ((datatype_) != MPI_DATATYPE_NULL &&                         \
+        HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)        \
+    {                                                               \
+        MPIR_Datatype *dtp_ = NULL;                                 \
+        MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
+        MPIR_Datatype_ptr_release(dtp_);                            \
+    }                                                               \
+    } while (0)
+
 static inline void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
 {
     int i, struct_sz = sizeof(MPIR_Datatype_contents);

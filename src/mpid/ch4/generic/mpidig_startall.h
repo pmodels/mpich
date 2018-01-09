@@ -99,7 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
             preq->cc_ptr = &preq->cc;
             MPID_Request_set_completed(preq);
         }
-        dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(preq, datatype));
+        MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(preq, datatype));
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_STARTALL);

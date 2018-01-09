@@ -107,7 +107,7 @@ static inline int MPIDI_psend_init(const void *buf,
     sreq->u.persist.real_request = NULL;
     MPID_Request_complete(sreq);
 
-    dtype_add_ref_if_not_builtin(datatype);
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PSEND_INIT);
     return MPI_SUCCESS;

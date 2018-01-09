@@ -75,7 +75,7 @@ static inline int MPIDI_POSIX_do_irecv(void *buf,
         MPIDI_POSIX_REQUEST(rreq)->segment_size = data_sz;
     }
 
-    dtype_add_ref_if_not_builtin(datatype);
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
     /* enqueue rreq */
     MPIDI_POSIX_REQUEST_ENQUEUE(rreq, MPIDI_POSIX_recvq_posted);
     MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE, TYPICAL,

@@ -133,7 +133,7 @@ static inline int MPIDI_do_put(const void *origin_addr,
         MPIDI_CH4U_REQUEST(sreq, req->preq.origin_addr) = (void *) origin_addr;
         MPIDI_CH4U_REQUEST(sreq, req->preq.origin_count) = origin_count;
         MPIDI_CH4U_REQUEST(sreq, req->preq.origin_datatype) = origin_datatype;
-        dtype_add_ref_if_not_builtin(origin_datatype);
+        MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
 
         /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_PUT_IOV_REQ,
@@ -403,7 +403,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_addr) = (void *) origin_addr;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_count) = origin_count;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_datatype) = origin_datatype;
-        dtype_add_ref_if_not_builtin(origin_datatype);
+        MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
 
         /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_IOV_REQ,
@@ -478,7 +478,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     MPIDI_CH4U_REQUEST(sreq, req->areq.result_addr) = result_addr;
     MPIDI_CH4U_REQUEST(sreq, req->areq.result_count) = result_count;
     MPIDI_CH4U_REQUEST(sreq, req->areq.result_datatype) = result_datatype;
-    dtype_add_ref_if_not_builtin(result_datatype);
+    MPIR_Datatype_add_ref_if_not_builtin(result_datatype);
     MPIR_cc_incr(sreq->cc_ptr, &c);
 
     /* TODO: have common routine for accumulate/get_accumulate */
@@ -564,7 +564,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_addr) = (void *) origin_addr;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_count) = origin_count;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_datatype) = origin_datatype;
-        dtype_add_ref_if_not_builtin(origin_datatype);
+        MPIR_Datatype_add_ref_if_not_builtin(origin_datatype);
 
         /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_GET_ACC_IOV_REQ,

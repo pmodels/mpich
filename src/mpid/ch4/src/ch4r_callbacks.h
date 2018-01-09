@@ -182,7 +182,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
             MPIR_ERR_POP(mpi_errno);
     }
 
-    dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(match_req, datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(match_req, datatype));
     MPL_free(MPIDI_CH4U_REQUEST(rreq, buffer));
     MPIR_Object_release_ref(rreq, &in_use);
     MPID_Request_complete(rreq);
@@ -308,7 +308,7 @@ static inline int MPIDI_recv_target_cmpl_cb(MPIR_Request * rreq)
     }
 #endif
 
-    dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(rreq, datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(rreq, datatype));
     MPID_Request_complete(rreq);
   fn_exit:
     MPIDI_progress_cmpl_list();
@@ -341,7 +341,7 @@ static inline int MPIDI_send_long_lmt_origin_cb(MPIR_Request * sreq)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SEND_LONG_LMT_ORIGIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SEND_LONG_LMT_ORIGIN_CB);
-    dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(sreq, req->lreq).datatype);
+    MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(sreq, req->lreq).datatype);
     MPID_Request_complete(sreq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SEND_LONG_LMT_ORIGIN_CB);
     return mpi_errno;

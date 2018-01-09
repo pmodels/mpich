@@ -71,7 +71,7 @@ static inline int MPIDI_POSIX_do_isend(const void *buf,
         MPIDI_POSIX_REQUEST(sreq)->segment_size = data_sz;
     }
 
-    dtype_add_ref_if_not_builtin(datatype);
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
     /* enqueue sreq */
     MPIDI_POSIX_REQUEST_ENQUEUE(sreq, MPIDI_POSIX_sendq);
     *request = sreq;
