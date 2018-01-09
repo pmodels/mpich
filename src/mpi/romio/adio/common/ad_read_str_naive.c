@@ -300,6 +300,9 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, int count,
     		ADIO_Offset new_brd_size = brd_size, new_frd_size = frd_size;
 
 		size = MPL_MIN(frd_size, brd_size);
+                /* keep max of a single read amount <= INT_MAX */
+                size = MPL_MIN(size, INT_MAX);
+
 		if (size) {
 		    req_off = off;
 		    req_len = size;
