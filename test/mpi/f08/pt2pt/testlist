@@ -1,4 +1,14 @@
-allpairf08 2
 greqf08 1
 statusesf08 1
-mprobef08 2
+mprobef08 2 mpiversion=3.0
+allpair_sendf08 2
+allpair_rsendf08 2
+allpair_ssendf08 2
+allpair_isendf08 2
+allpair_irsendf08 2
+allpair_issendf08 2
+allpair_psendf08 2
+allpair_prsendf08 2
+allpair_pssendf08 2
+allpair_sendrecvf08 2
+allpair_sendrecvreplf08 2
