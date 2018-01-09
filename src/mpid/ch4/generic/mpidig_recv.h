@@ -138,7 +138,7 @@ static inline int MPIDI_do_irecv(void *buf,
             MPIDI_CH4U_REQUEST(unexp_req, req->status) |= MPIDI_CH4U_REQ_MATCHED;
         } else if (MPIDI_CH4U_REQUEST(unexp_req, req->status) & MPIDI_CH4U_REQ_LONG_RTS) {
             /* Matching receive is now posted, tell the netmod */
-            dtype_add_ref_if_not_builtin(datatype);
+            MPIR_Datatype_add_ref_if_not_builtin(datatype);
             MPIDI_CH4U_REQUEST(unexp_req, datatype) = datatype;
             MPIDI_CH4U_REQUEST(unexp_req, buffer) = (char *) buf;
             MPIDI_CH4U_REQUEST(unexp_req, count) = count;
@@ -174,7 +174,7 @@ static inline int MPIDI_do_irecv(void *buf,
         goto fn_exit;
     }
 
-    dtype_add_ref_if_not_builtin(datatype);
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
     MPIDI_CH4U_REQUEST(rreq, rank) = rank;
     MPIDI_CH4U_REQUEST(rreq, protocol) = 0;
     MPIDI_CH4U_REQUEST(rreq, tag) = tag;
@@ -265,7 +265,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv_init(void *buf,
     rreq->u.persist.real_request = NULL;
     MPID_Request_complete(rreq);
     MPIDI_CH4U_REQUEST(rreq, p_type) = MPIDI_PTYPE_RECV;
-    dtype_add_ref_if_not_builtin(datatype);
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_RECV_INIT);
     return mpi_errno;
@@ -304,7 +304,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     } else if (MPIDI_CH4U_REQUEST(message, req->status) & MPIDI_CH4U_REQ_LONG_RTS) {
         /* Matching receive is now posted, tell the netmod */
         message->kind = MPIR_REQUEST_KIND__RECV;
-        dtype_add_ref_if_not_builtin(datatype);
+        MPIR_Datatype_add_ref_if_not_builtin(datatype);
         MPIDI_CH4U_REQUEST(message, datatype) = datatype;
         MPIDI_CH4U_REQUEST(message, buffer) = (char *) buf;
         MPIDI_CH4U_REQUEST(message, count) = count;

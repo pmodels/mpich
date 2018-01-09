@@ -63,7 +63,7 @@ typedef struct {
     {                                                                   \
         int incomplete__;                                               \
         MPIR_cc_decr((req_)->cc_ptr, &incomplete__);                    \
-        dtype_release_if_not_builtin(MPIDI_POSIX_REQUEST(req_)->datatype); \
+        MPIR_Datatype_release_if_not_builtin(MPIDI_POSIX_REQUEST(req_)->datatype); \
         if (!incomplete__)                                              \
             MPIR_Request_free(req_);                                    \
     }

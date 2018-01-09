@@ -248,32 +248,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_hash_clear(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_WIN_HASH_CLEAR);
 }
 
-#ifndef dtype_add_ref_if_not_builtin
-#define dtype_add_ref_if_not_builtin(datatype_)                         \
-    do {                                                                \
-        if ((datatype_) != MPI_DATATYPE_NULL &&                         \
-            HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)        \
-        {                                                               \
-            MPIR_Datatype *dtp_ = NULL;                                 \
-            MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
-            MPIR_Datatype_ptr_add_ref(dtp_);                            \
-        }                                                               \
-    } while (0)
-#endif
-
-#ifndef dtype_release_if_not_builtin
-#define dtype_release_if_not_builtin(datatype_)                         \
-    do {                                                                \
-        if ((datatype_) != MPI_DATATYPE_NULL &&                         \
-            HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)        \
-        {                                                               \
-            MPIR_Datatype *dtp_ = NULL;                                 \
-            MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
-            MPIR_Datatype_ptr_release(dtp_);                            \
-        }                                                               \
-    } while (0)
-#endif
-
 #define MPIDI_Datatype_get_info(_count, _datatype,              \
                                 _dt_contig_out, _data_sz_out,   \
                                 _dt_ptr, _dt_true_lb)           \
