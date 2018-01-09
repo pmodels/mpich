@@ -89,7 +89,7 @@ int MPI_Op_free(MPI_Op * op)
 
     /* ... body of routine ...  */
 
-    MPIR_Op_release_ref(op_ptr, &in_use);
+    MPIR_Op_ptr_release_ref(op_ptr, &in_use);
     if (!in_use) {
         MPIR_Handle_obj_free(&MPIR_Op_mem, op_ptr);
 #ifdef MPID_Op_free_hook
