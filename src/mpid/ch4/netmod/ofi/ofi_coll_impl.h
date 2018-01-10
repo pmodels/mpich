@@ -14,11 +14,11 @@
 #include "ofi_coll_params.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Barrier_recursive_doubling
+#define FUNCNAME MPIDI_OFI_Barrier__recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Barrier_recursive_doubling(MPIR_Comm * comm_ptr,
+int MPIDI_OFI_Barrier__recursive_doubling(MPIR_Comm * comm_ptr,
                                          MPIR_Errflag_t * errflag,
                                          MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
@@ -30,11 +30,11 @@ int MPIDI_OFI_Barrier_recursive_doubling(MPIR_Comm * comm_ptr,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Bcast_binomial
+#define FUNCNAME MPIDI_OFI_Bcast__binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Bcast_binomial(void *buffer,
+int MPIDI_OFI_Bcast__binomial(void *buffer,
                              int count,
                              MPI_Datatype datatype,
                              int root,
@@ -50,11 +50,11 @@ int MPIDI_OFI_Bcast_binomial(void *buffer,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Bcast_scatter_recursive_doubling_allgather
+#define FUNCNAME MPIDI_OFI_Bcast__scatter_recursive_doubling_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Bcast_scatter_recursive_doubling_allgather(void *buffer,
+int MPIDI_OFI_Bcast__scatter_recursive_doubling_allgather(void *buffer,
                                                int count,
                                                MPI_Datatype datatype,
                                                int root,
@@ -70,11 +70,11 @@ int MPIDI_OFI_Bcast_scatter_recursive_doubling_allgather(void *buffer,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Bcast_scatter_ring_allgather
+#define FUNCNAME MPIDI_OFI_Bcast__scatter_ring_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Bcast_scatter_ring_allgather(void *buffer,
+int MPIDI_OFI_Bcast__scatter_ring_allgather(void *buffer,
                                            int count,
                                            MPI_Datatype datatype,
                                            int root,
@@ -90,11 +90,11 @@ int MPIDI_OFI_Bcast_scatter_ring_allgather(void *buffer,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_allreduce_recursive_doubling
+#define FUNCNAME MPIDI_OFI_allreduce__recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_allreduce_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
+int MPIDI_OFI_allreduce__recursive_doubling(const void *sendbuf, void *recvbuf, int count,
                                            MPI_Datatype datatype, MPI_Op op,
                                            MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
                                            MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
@@ -107,11 +107,11 @@ int MPIDI_OFI_allreduce_recursive_doubling(const void *sendbuf, void *recvbuf, i
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_allreduce_reduce_scatter_allgather
+#define FUNCNAME MPIDI_OFI_allreduce__reduce_scatter_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_allreduce_reduce_scatter_allgather(const void *sendbuf, void *recvbuf, int count,
+int MPIDI_OFI_allreduce__reduce_scatter_allgather(const void *sendbuf, void *recvbuf, int count,
                                                  MPI_Datatype datatype, MPI_Op op,
                                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
                                                  MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
@@ -124,11 +124,11 @@ int MPIDI_OFI_allreduce_reduce_scatter_allgather(const void *sendbuf, void *recv
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_reduce_reduce_scatter_gather
+#define FUNCNAME MPIDI_OFI_reduce__reduce_scatter_gather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_reduce_reduce_scatter_gather(const void *sendbuf, void *recvbuf, int count,
+int MPIDI_OFI_reduce__reduce_scatter_gather(const void *sendbuf, void *recvbuf, int count,
                                     MPI_Datatype datatype, MPI_Op op, int root,
                                     MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
                                     MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
@@ -141,11 +141,11 @@ int MPIDI_OFI_reduce_reduce_scatter_gather(const void *sendbuf, void *recvbuf, i
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_reduce_binomial
+#define FUNCNAME MPIDI_OFI_reduce__binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_reduce_binomial(const void *sendbuf, void *recvbuf, int count,
+int MPIDI_OFI_reduce__binomial(const void *sendbuf, void *recvbuf, int count,
                               MPI_Datatype datatype, MPI_Op op, int root,
                               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
                               MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
