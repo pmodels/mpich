@@ -81,6 +81,8 @@ noinst_PROGRAMS =      \
     opminloc           \
     opprod             \
     opsum              \
+    p_bcast            \
+    p_bcast2           \
     red3               \
     red4               \
     red_scat_block     \
