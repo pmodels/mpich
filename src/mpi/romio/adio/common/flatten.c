@@ -22,6 +22,7 @@ static ADIOI_Flatlist_node *flatlist_node_new(MPI_Datatype datatype, MPI_Count c
     flat->lb_idx = flat->ub_idx = -1;
     flat->refct = 1;
     flat->count = count;
+    flat->flag = 0;
 
     flat->blocklens = (ADIO_Offset *) ADIOI_Malloc(flat->count * sizeof(ADIO_Offset));
     flat->indices = (ADIO_Offset *) ADIOI_Malloc(flat->count * sizeof(ADIO_Offset));
@@ -757,7 +758,7 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node * flat,
              * upper type.  check both lb and ub to prevent mixing updates */
             if (flat->lb_idx == -1 && flat->ub_idx == -1) {
                 flat->indices[j] = st_offset + adds[0];
-                /* this zero-length blocklens[] element, unlike eleswhere in the
+                /* this zero-length blocklens[] element, unlike elsewhere in the
                  * flattening code, is correct and is used to indicate a lower bound
                  * marker */
                 flat->blocklens[j] = 0;
@@ -1147,10 +1148,32 @@ void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type)
 
     opt_blocks = 1;
 
-    /* save number of noncontiguous blocks in opt_blocks */
-    for (i = 0; i < (flat_type->count - 1); i++) {
-        if ((flat_type->indices[i] + flat_type->blocklens[i] != flat_type->indices[i + 1]))
+    for (j = -1, i = 0; i < flat_type->count; i++) {
+        /* save number of noncontiguous blocks in opt_blocks */
+        if (i < flat_type->count - 1 &&
+            (flat_type->indices[i] + flat_type->blocklens[i] != flat_type->indices[i + 1]))
             opt_blocks++;
+
+        /* Check if any of the displacements is negative */
+        if (flat_type->blocklens[i] > 0 && flat_type->indices[i] < 0)
+            flat_type->flag |= ADIOI_TYPE_NEGATIVE;
+
+        if (flat_type->blocklens[i] == 0)       /* skip zero-length block */
+            continue;
+        else if (j == -1) {
+            j = i;      /* set j the first non-zero-length block index */
+            continue;
+        }
+
+        /* Check if displacements are in a monotonic nondecreasing order */
+        if (flat_type->indices[j] > flat_type->indices[i])
+            flat_type->flag |= ADIOI_TYPE_DECREASE;
+
+        /* Check for overlapping regions */
+        if (flat_type->indices[j] + flat_type->blocklens[j] > flat_type->indices[i])
+            flat_type->flag |= ADIOI_TYPE_OVERLAP;
+
+        j = i;  /* j is the previous non-zero-length block index */
     }
 
     /* if we can't reduce the number of blocks, quit now */
