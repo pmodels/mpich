@@ -16,7 +16,7 @@
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_STUBSHM_mpi_recv)
 static inline int MPIDI_STUBSHM_mpi_recv(void *buf,
-                                     int count,
+                                     MPI_Aint count,
                                      MPI_Datatype datatype,
                                      int rank,
                                      int tag,
@@ -52,7 +52,7 @@ static inline int MPIDI_STUBSHM_mpi_recv_init(void *buf,
 
 
 static inline int MPIDI_STUBSHM_mpi_imrecv(void *buf,
-                                       int count,
+                                       MPI_Aint count,
                                        MPI_Datatype datatype,
                                        MPIR_Request * message, MPIR_Request ** rreqp)
 {
@@ -68,7 +68,7 @@ static inline int MPIDI_STUBSHM_mpi_imrecv(void *buf,
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_STUBSHM_mpi_irecv)
 static inline int MPIDI_STUBSHM_mpi_irecv(void *buf,
-                                      int count,
+                                      MPI_Aint count,
                                       MPI_Datatype datatype,
                                       int rank,
                                       int tag,

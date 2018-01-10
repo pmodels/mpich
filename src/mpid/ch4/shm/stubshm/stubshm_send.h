@@ -14,7 +14,7 @@
 #include "stubshm_impl.h"
 
 static inline int MPIDI_STUBSHM_mpi_send(const void *buf,
-                                     int count,
+                                     MPI_Aint count,
                                      MPI_Datatype datatype,
                                      int rank,
                                      int tag,
@@ -33,7 +33,7 @@ static inline int MPIDI_STUBSHM_mpi_send(const void *buf,
 
 
 static inline int MPIDI_STUBSHM_irsend(const void *buf,
-                                   int count,
+                                   MPI_Aint count,
                                    MPI_Datatype datatype,
                                    int rank,
                                    int tag,
@@ -49,7 +49,7 @@ static inline int MPIDI_STUBSHM_irsend(const void *buf,
 }
 
 static inline int MPIDI_STUBSHM_mpi_ssend(const void *buf,
-                                      int count,
+                                      MPI_Aint count,
                                       MPI_Datatype datatype,
                                       int rank,
                                       int tag,
@@ -146,7 +146,7 @@ static inline int MPIDI_STUBSHM_mpi_rsend_init(const void *buf,
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_STUBSHM_mpi_isend)
 static inline int MPIDI_STUBSHM_mpi_isend(const void *buf,
-                                      int count,
+                                      MPI_Aint count,
                                       MPI_Datatype datatype,
                                       int rank,
                                       int tag,
@@ -162,7 +162,7 @@ static inline int MPIDI_STUBSHM_mpi_isend(const void *buf,
 }
 
 static inline int MPIDI_STUBSHM_mpi_issend(const void *buf,
-                                       int count,
+                                       MPI_Aint count,
                                        MPI_Datatype datatype,
                                        int rank,
                                        int tag,

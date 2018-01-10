@@ -20,7 +20,7 @@
 #define FUNCNAME MPIDI_prepare_recv_req
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_prepare_recv_req(void *buf, int count, MPI_Datatype datatype,
+static inline int MPIDI_prepare_recv_req(void *buf, MPI_Aint count, MPI_Datatype datatype,
                                          MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -40,7 +40,7 @@ static inline int MPIDI_prepare_recv_req(void *buf, int count, MPI_Datatype data
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_handle_unexpected(void *buf,
-                                          int count,
+                                          MPI_Aint count,
                                           MPI_Datatype datatype,
                                           MPIR_Comm * comm, int context_offset, MPIR_Request * rreq)
 {
@@ -115,7 +115,7 @@ static inline int MPIDI_handle_unexpected(void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_do_irecv(void *buf,
-                                 int count,
+                                 MPI_Aint count,
                                  MPI_Datatype datatype,
                                  int rank,
                                  int tag,
@@ -214,7 +214,7 @@ static inline int MPIDI_do_irecv(void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv(void *buf,
-                                             int count,
+                                             MPI_Aint count,
                                              MPI_Datatype datatype,
                                              int rank,
                                              int tag,
@@ -282,7 +282,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv_init(void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
-                                               int count,
+                                               MPI_Aint count,
                                                MPI_Datatype datatype,
                                                MPIR_Request * message, MPIR_Request ** rreqp)
 {
@@ -335,7 +335,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mrecv(void *buf,
-                                          int count,
+                                          MPI_Aint count,
                                           MPI_Datatype datatype,
                                           MPIR_Request * message, MPI_Status * status)
 {
@@ -372,7 +372,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mrecv(void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
-                                              int count,
+                                              MPI_Aint count,
                                               MPI_Datatype datatype,
                                               int rank,
                                               int tag,

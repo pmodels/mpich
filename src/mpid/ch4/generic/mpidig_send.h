@@ -19,7 +19,7 @@
 #define FUNCNAME MPIDI_am_isend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_am_isend(const void *buf, int count, MPI_Datatype datatype,
+static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                  int rank, int tag, MPIR_Comm * comm, int context_offset,
                                  MPIR_Request ** request, int is_blocking, int type)
 {
@@ -121,7 +121,7 @@ static inline int MPIDI_psend_init(const void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_send(const void *buf,
-                                             int count,
+                                             MPI_Aint count,
                                              MPI_Datatype datatype,
                                              int rank,
                                              int tag, MPIR_Comm * comm, int context_offset,
@@ -143,7 +143,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_send(const void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_isend(const void *buf,
-                                              int count,
+                                              MPI_Aint count,
                                               MPI_Datatype datatype,
                                               int rank,
                                               int tag, MPIR_Comm * comm, int context_offset,
@@ -166,7 +166,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_isend(const void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rsend(const void *buf,
-                                              int count,
+                                              MPI_Aint count,
                                               MPI_Datatype datatype,
                                               int rank,
                                               int tag, MPIR_Comm * comm, int context_offset,
@@ -189,7 +189,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_rsend(const void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irsend(const void *buf,
-                                               int count,
+                                               MPI_Aint count,
                                                MPI_Datatype datatype,
                                                int rank,
                                                int tag, MPIR_Comm * comm, int context_offset,
@@ -211,7 +211,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irsend(const void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_ssend(const void *buf,
-                                              int count,
+                                              MPI_Aint count,
                                               MPI_Datatype datatype,
                                               int rank,
                                               int tag, MPIR_Comm * comm, int context_offset,
@@ -233,7 +233,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_ssend(const void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_issend(const void *buf,
-                                               int count,
+                                               MPI_Aint count,
                                                MPI_Datatype datatype,
                                                int rank,
                                                int tag, MPIR_Comm * comm, int context_offset,
