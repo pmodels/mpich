@@ -83,7 +83,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
 #define FUNCNAME MPIDI_OFI_send_normal
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, MPI_Datatype datatype,
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint count, MPI_Datatype datatype,
                                                    int rank, int tag, MPIR_Comm *comm, int context_offset,
                                                    MPIDI_av_entry_t *addr, MPIR_Request **request,
                                                    int dt_contig,
@@ -363,7 +363,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
 #define FUNCNAME MPIDI_OFI_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, int count, MPI_Datatype datatype, int rank,
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
                                             int tag, MPIR_Comm *comm, int context_offset, MPIDI_av_entry_t *addr,
                                             MPIR_Request **request, int noreq, uint64_t syncflag)
 {
@@ -435,7 +435,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_persistent_send(const void *buf, int coun
 #define FUNCNAME MPIDI_NM_mpi_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, int count, MPI_Datatype datatype, int rank, int tag,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
                                                MPIR_Comm *comm, int context_offset, MPIDI_av_entry_t *addr,
                                                MPIR_Request **request)
 {
@@ -460,7 +460,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, int count, MPI_D
 #define FUNCNAME MPIDI_NM_mpi_ssend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, int count, MPI_Datatype datatype, int rank, int tag,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm *comm, int context_offset, MPIDI_av_entry_t *addr,
                                                 MPIR_Request **request)
 {
@@ -487,7 +487,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, int count, MPI_
 #define FUNCNAME MPIDI_NM_mpi_isend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, int count, MPI_Datatype datatype, int rank, int tag,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
                                                 MPIR_Comm *comm, int context_offset, MPIDI_av_entry_t *addr,
                                                 MPIR_Request **request)
 {
@@ -512,7 +512,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, int count, MPI_
 #define FUNCNAME MPIDI_NM_mpi_issend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, int count, MPI_Datatype datatype, int rank, int tag,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
                                                  MPIR_Comm *comm, int context_offset, MPIDI_av_entry_t *addr,
                                                  MPIR_Request **request)
 {

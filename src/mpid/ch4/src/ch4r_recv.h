@@ -56,7 +56,7 @@ static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
     size_t data_sz, dt_sz;
     MPIR_Segment *segment_ptr;
     void *buf;
-    int count;
+    MPI_Aint count;
     MPI_Datatype datatype;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_HANDLE_UNEXP_MRECV);

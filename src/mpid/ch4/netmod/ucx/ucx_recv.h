@@ -98,7 +98,7 @@ static inline void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_UCX_recv(void *buf,
-                                 int count,
+                                 MPI_Aint count,
                                  MPI_Datatype datatype,
                                  int rank,
                                  int tag, MPIR_Comm * comm,
@@ -160,7 +160,7 @@ static inline int MPIDI_UCX_recv(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
-                                                 int count,
+                                                 MPI_Aint count,
                                                  MPI_Datatype datatype,
                                                  MPIR_Request * message, MPIR_Request ** rreqp)
 {
@@ -219,7 +219,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
-                                               int count,
+                                               MPI_Aint count,
                                                MPI_Datatype datatype,
                                                int rank,
                                                int tag,
@@ -233,7 +233,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
-                                                int count,
+                                                MPI_Aint count,
                                                 MPI_Datatype datatype,
                                                 int rank,
                                                 int tag,
