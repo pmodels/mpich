@@ -1445,15 +1445,19 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                                   &cq_attr, &MPIDI_Global.ctx[index].cq, NULL), opencq);
 
         tx_attr = *prov_use->tx_attr;
-        tx_attr.op_flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
+        tx_attr.op_flags = FI_COMPLETION;
+        if (MPIDI_OFI_ENABLE_RMA)
+            tx_attr.op_flags |= FI_DELIVERY_COMPLETE;
         tx_attr.caps = 0;
 
         if (MPIDI_OFI_ENABLE_TAGGED)
             tx_attr.caps = FI_TAGGED | FI_SEND;
 
         /* RMA */
-        tx_attr.caps |= FI_RMA | FI_WRITE | FI_READ;
-        tx_attr.caps |= FI_ATOMICS;
+        if (MPIDI_OFI_ENABLE_RMA)
+            tx_attr.caps |= FI_RMA | FI_WRITE | FI_READ;
+        if (MPIDI_OFI_ENABLE_ATOMICS)
+            tx_attr.caps |= FI_ATOMICS;
         /* MSG */
         tx_attr.caps |= FI_MSG | FI_SEND;
 
@@ -1472,8 +1476,10 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         if (MPIDI_OFI_ENABLE_DATA)
             rx_attr.caps |= FI_DIRECTED_RECV;
 
-        rx_attr.caps |= FI_RMA | FI_REMOTE_READ | FI_REMOTE_WRITE;
-        rx_attr.caps |= FI_ATOMICS;
+        if (MPIDI_OFI_ENABLE_RMA)
+            rx_attr.caps |= FI_RMA | FI_REMOTE_READ | FI_REMOTE_WRITE;
+        if (MPIDI_OFI_ENABLE_ATOMICS)
+            rx_attr.caps |= FI_ATOMICS;
         rx_attr.caps |= FI_MSG | FI_RECV;
         rx_attr.caps |= FI_MULTI_RECV;
 
