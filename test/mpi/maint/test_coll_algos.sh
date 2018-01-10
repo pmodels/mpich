@@ -43,6 +43,8 @@ for algo_name in ${algo_names}; do
 
                 echo "bcasttest 10 ${env}" >> ${testlist_cvar}
                 echo "bcastzerotype 5 ${env}" >> ${testlist_cvar}
+                echo "p_bcast 4 ${env}" >> ${testlist_cvar}
+                echo "p_bcast2 8 ${env}" >> ${testlist_cvar}
                 env=""
             done
         else
@@ -52,6 +54,8 @@ for algo_name in ${algo_names}; do
 
             echo "bcasttest 10 ${env}" >> ${testlist_cvar}
             echo "bcastzerotype 5 ${env}" >> ${testlist_cvar}
+            echo "p_bcast 4 ${env}" >> ${testlist_cvar}
+            echo "p_bcast2 8 ${env}" >> ${testlist_cvar}
             env=""
         fi
     done
