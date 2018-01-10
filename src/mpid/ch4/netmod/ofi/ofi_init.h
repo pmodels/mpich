@@ -1446,7 +1446,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
 
         tx_attr = *prov_use->tx_attr;
         tx_attr.op_flags = FI_COMPLETION;
-        if (MPIDI_OFI_ENABLE_RMA)
+        if (MPIDI_OFI_ENABLE_RMA || MPIDI_OFI_ENABLE_ATOMICS)
             tx_attr.op_flags |= FI_DELIVERY_COMPLETE;
         tx_attr.caps = 0;
 
@@ -1834,7 +1834,7 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
     hints->tx_attr->msg_order = FI_ORDER_SAS;
     /* direct RMA operations supported only with delivery complete mode,
      * else (AM mode) delivery complete is not required */
-    if (MPIDI_OFI_ENABLE_RMA) {
+    if (MPIDI_OFI_ENABLE_RMA || MPIDI_OFI_ENABLE_ATOMICS) {
         hints->tx_attr->op_flags |= FI_DELIVERY_COMPLETE;
         /* Apply most restricted msg order in hints for RMA ATOMICS. */
         if (MPIDI_OFI_ENABLE_ATOMICS)
