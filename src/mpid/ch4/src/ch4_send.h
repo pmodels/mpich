@@ -18,7 +18,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
-                                        int count,
+                                        MPI_Aint count,
                                         MPI_Datatype datatype,
                                         int rank,
                                         int tag,
@@ -68,7 +68,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
-                                         int count,
+                                         MPI_Aint count,
                                          MPI_Datatype datatype,
                                          int rank,
                                          int tag,
@@ -119,7 +119,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
-                                         int count,
+                                         MPI_Aint count,
                                          MPI_Datatype datatype,
                                          int rank,
                                          int tag,
@@ -170,7 +170,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
-                                          int count,
+                                          MPI_Aint count,
                                           MPI_Datatype datatype,
                                           int rank,
                                           int tag,
@@ -220,7 +220,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Ssend(const void *buf,
-                                         int count,
+                                         MPI_Aint count,
                                          MPI_Datatype datatype,
                                          int rank,
                                          int tag,
@@ -270,7 +270,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend(const void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Issend(const void *buf,
-                                          int count,
+                                          MPI_Aint count,
                                           MPI_Datatype datatype,
                                           int rank,
                                           int tag,
