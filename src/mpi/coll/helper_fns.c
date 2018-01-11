@@ -71,7 +71,8 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 
 #if defined(HAVE_ERROR_CHECKING)
     if (sdata_sz > rdata_sz) {
-        MPIR_ERR_SET2(mpi_errno, MPI_ERR_TRUNCATE, "**truncate", "**truncate %d %d", sdata_sz, rdata_sz);
+        MPIR_ERR_SET2(mpi_errno, MPI_ERR_TRUNCATE, "**truncate", "**truncate " MPI_AINT_FMT_DEC_SPEC " " MPI_AINT_FMT_DEC_SPEC, \
+                                sdata_sz, rdata_sz);
         copy_sz = rdata_sz;
     }
     else
@@ -281,7 +282,7 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
+                         "**countneg", "**countneg " MPI_AINT_FMT_DEC_SPEC, count);
 
     switch(*errflag) {
         case MPIR_ERR_NONE:
@@ -341,7 +342,7 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
+                         "**countneg", "**countneg " MPI_AINT_FMT_DEC_SPEC, count);
 
     context_id = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
@@ -398,7 +399,7 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-            "**countneg", "**countneg %d", count);
+            "**countneg", "**countneg " MPI_AINT_FMT_DEC_SPEC, count);
 
     context_id = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
@@ -460,9 +461,9 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
     MPL_DBG_MSG_S(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
 
     MPIR_ERR_CHKANDJUMP1((sendcount < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", sendcount);
+                         "**countneg", "**countneg " MPI_AINT_FMT_DEC_SPEC, sendcount);
     MPIR_ERR_CHKANDJUMP1((recvcount < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", recvcount);
+                         "**countneg", "**countneg " MPI_AINT_FMT_DEC_SPEC, recvcount);
 
     context_id = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
@@ -630,7 +631,7 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
+                         "**countneg", "**countneg " MPI_AINT_FMT_DEC_SPEC, count);
 
     switch(*errflag) {
         case MPIR_ERR_NONE:
@@ -672,7 +673,7 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %d", (int) *errflag);
 
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
+                         "**countneg", "**countneg " MPI_AINT_FMT_DEC_SPEC, count);
 
     switch(*errflag) {
         case MPIR_ERR_NONE:
@@ -712,7 +713,7 @@ int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIC_IRECV);
 
     MPIR_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
+                         "**countneg", "**countneg " MPI_AINT_FMT_DEC_SPEC, count);
 
     context_id = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) ?
         MPIR_CONTEXT_INTRA_COLL : MPIR_CONTEXT_INTER_COLL;
