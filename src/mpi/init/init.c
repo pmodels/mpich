@@ -195,6 +195,9 @@ int MPI_Init( int *argc, char ***argv )
 #endif
     }
 
+    MPIR_MPIOInit(&mpi_errno);
+    if (mpi_errno) goto fn_fail;
+
     /* ... end of body of routine ... */
     MPIR_FUNC_TERSE_INIT_EXIT(MPID_STATE_MPI_INIT);
     return mpi_errno;

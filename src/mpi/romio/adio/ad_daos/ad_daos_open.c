@@ -172,7 +172,6 @@ parse_filename(const char *path, char **_obj_name, char **_cont_name)
         char cwd[1024];
 
         getcwd(cwd, 1024);
-        fprintf(stderr, "CWD = %s\n", cwd);
 
         if (strcmp(cont_name, ".") == 0) {
             cont_name = strdup(cwd);
@@ -263,11 +262,12 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 
     /* check & Fail if object exists for EXCL mode */
     if (fd->access_mode & ADIO_EXCL) {
-        daos_size_t elem_size;
+        daos_size_t elem_size, block_size;
 
         rc = daos_array_open(cont->coh, cont->oid, cont->epoch, DAOS_OO_RW,
-                             &elem_size, &cont->block_size, &cont->oh, NULL);
+                             &elem_size, &block_size, &cont->oh, NULL);
         if (rc == 0) {
+            PRINT_MSG(stderr, "Array exists (EXCL mode) (%d)\n", rc);
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                MPIR_ERR_RECOVERABLE,
                                                myname, __LINE__,
@@ -364,6 +364,11 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
     uuid_t tmp_uuid;
     cont->oid.hi = 0;
     duuid_hash128(cont->obj_name, &tmp_uuid, &cont->oid.mid, &cont->oid.lo);
+
+    /* MSC - add hint for object class */
+    daos_obj_id_generate(&cont->oid, DAOS_OC_REPL_MAX_RW);
+
+#if 0
     {
         char uuid_str[37];
         uuid_unparse(cont->uuid, uuid_str);
@@ -372,11 +377,8 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
         fprintf(stderr, "File %s OID %" PRIx64".%" PRIx64".%" PRIx64"\n",
                 cont->obj_name, cont->oid.hi , cont->oid.mid, cont->oid.lo);
     }
-
-    /* MSC - add hint for object class */
-    daos_obj_id_generate(&cont->oid, DAOS_OC_REPL_MAX_RW);
-
     fprintf(stderr, "block_size  = %d\n", fd->hints->fs_hints.daos.block_size);
+#endif
 
     cont->block_size = fd->hints->fs_hints.daos.block_size;
 
@@ -497,13 +499,15 @@ void ADIOI_DAOS_Delete(const char *filename, int *error_code)
     /* Hash container name to container uuid */
     duuid_hash128(cont_name, &uuid, NULL, NULL);
 
-    /* MSC for now, just destory the container. need to just punch the object
-     * when punch is available */
+#if 0
     {
         char uuid_str[37];
         uuid_unparse(uuid, uuid_str);
         fprintf(stderr, "File Delete %s %s\n", cont_name, uuid_str);
     }
+#endif
+    /* MSC for now, just destory the container. need to just punch the object
+     * when object punch is available */
 
     ret = daos_cont_destroy(daos_pool_oh, uuid, 1, NULL);
     if (ret != 0) {

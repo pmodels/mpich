@@ -91,15 +91,13 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
     int total_blks_to_write;
     int f_data_wrote;
     int n_write_lists;
-
     struct ADIO_DAOS_cont *cont = fd->fs_ptr;
     struct ADIO_DAOS_req *aio_req;
     static char myname[] = "ADIOI_DAOS_StridedListIO";
     int err_flag=0, ret;
-
     int mpi_rank;
-    MPI_Comm_rank(fd->comm, &mpi_rank);
 
+    MPI_Comm_rank(fd->comm, &mpi_rank);
     *error_code = MPI_SUCCESS;
 
     ADIOI_Datatype_iscontig(datatype, &buftype_is_contig);

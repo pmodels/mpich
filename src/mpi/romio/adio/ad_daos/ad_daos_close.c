@@ -11,12 +11,13 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
 
     /* Need a barrier before closing the container handle */
     MPI_Barrier(fd->comm);
+#if 0
     {
         char uuid_str[37];
         uuid_unparse(cont->uuid, uuid_str);
         fprintf(stderr, "File Close %s %s\n", fd->filename, uuid_str);
     }
-
+#endif
     if (cont->amode == DAOS_COO_RW) {
         MPI_Comm_rank(fd->comm, &rank);
         if (rank == 0)

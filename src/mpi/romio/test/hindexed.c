@@ -42,7 +42,7 @@ char compare_buf[XLEN*4][YLEN*4] = {
 /* set this if you want a dump of the global array 
 #define VERBOSE 1
 */
-
+#define VERBOSE 1
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
     int          i, j, err, rank, np, num_io;
@@ -139,6 +139,8 @@ int main(int argc, char **argv) {
     for (i=0; i<array_of_subsizes[0]*array_of_subsizes[1]; i++)
         buf[i] = '0' + rank*20  + i%79;
 
+    /* MSC - no overwrites for now */
+#if 0
     /* zero file contents ---------------------------------------------------*/
     if (rank == 0) {
         char *wr_buf = (char*) calloc(num_io*global_array_size,1);
@@ -148,6 +150,7 @@ int main(int argc, char **argv) {
         MPI_File_close(&fh);
         free(wr_buf);
     }
+#endif
     /* open the file --------------------------------------------------------*/
     err = MPI_File_open(MPI_COMM_WORLD, filename,
                         MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh);
@@ -206,7 +209,7 @@ int main(int argc, char **argv) {
 	    for(j=0; j<2*XLEN; j++) {
 		if( *ptr != compare_buf[i][j]) {
 			fprintf(stderr, "expected %c got %c at [%d][%d]\n", 
-					*ptr, compare_buf[i][j], i, j);
+                                compare_buf[i][j], *ptr, i, j);
 			nr_errors++;
 		}
 		ptr++;
