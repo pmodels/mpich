@@ -316,12 +316,6 @@ L:  while (<FD>) {
 	    $missed_lines++;
 	    $executableLines++;  # This missed line is executable 
 		
-	    # The char\s+.* allows char or const char (or other 
-	    # things, but nothing else should use FCNAME).
-	    if (/static\s+char\s+.*FCNAME\[\]\s*=\s*\"(.*)\"/) {
-		# Add this to a list of functions never called.
-		$UnCalled[$#UnCalled + 1] = $1;
-	    }
 	    if ($outputUncovered) {
 		if (!$headerOutput) {
 		    print "\nUncovered lines in $filename\n";
