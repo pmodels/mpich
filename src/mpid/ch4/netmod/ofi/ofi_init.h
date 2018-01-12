@@ -42,7 +42,7 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        Enable immidiate data fields in OFI to transmit source rank outside of the match bits
+        Enable immediate data fields in OFI to transmit source rank outside of the match bits
 
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE
       category    : CH4_OFI
@@ -217,7 +217,7 @@ cvars:
       description : >-
         Specifies the major version of the OFI library. The default is the
         major version of the OFI library used with MPICH. If using this CVAR,
-        it is recommeded that the user also specifies a specific OFI provider.
+        it is recommended that the user also specifies a specific OFI provider.
 
     - name        : MPIR_CVAR_CH4_OFI_MINOR_VERSION
       category    : CH4_OFI
@@ -229,7 +229,7 @@ cvars:
       description : >-
         Specifies the major version of the OFI library. The default is the
         minor version of the OFI library used with MPICH. If using this CVAR,
-        it is recommeded that the user also specifies a specific OFI provider.
+        it is recommended that the user also specifies a specific OFI provider.
 
     - name        : MPIR_CVAR_CH4_OFI_MAX_VNIS
       category    : CH4_OFI
