@@ -73,7 +73,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request * request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPIR_Request ** request_ptrs = request_ptr_array;
-    MPI_Status * status_ptr;
+    MPI_Status * status_ptr = NULL;
     MPID_Progress_state progress_state;
     int i, j;
     int n_completed;

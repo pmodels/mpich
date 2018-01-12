@@ -596,7 +596,7 @@ fn_fail:
 PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
 {
     Factors f[MAX_FACTORS];
-    int     nf, nprimes, i, j, k, val, nextidx;
+    int     nf, nprimes = 0, i, j, k, val, nextidx;
     int     ndivs, curbal;
     int     trydims[MAX_DIMS];
     int     dims_needed, dims_product, mpi_errno;
