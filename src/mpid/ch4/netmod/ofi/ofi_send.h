@@ -280,7 +280,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
     send_buf = (char *) buf + dt_true_lb;
 
     if (!dt_contig) {
-        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK) {
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_Global.max_send) {
             mpi_errno = MPIDI_OFI_send_iov(buf, count, rank, match_bits, comm, sreq, dt_ptr);
             if (mpi_errno == MPI_SUCCESS) /* Send posted using iov */
                 goto fn_exit;
