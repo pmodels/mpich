@@ -4,12 +4,12 @@
 #     See COPYRIGHT in top-level directory.
 #
 
-ACLOCAL_AMFLAGS = -I confdb
+ACLOCAL_AMFLAGS = -I confdb -I src/hwloc/config
 
 # automake requires that we initialize variables to something, even just empty,
 # before appending to them with "+="
-AM_CFLAGS = @VISIBILITY_CFLAGS@
-AM_CPPFLAGS =
+AM_CFLAGS = @VISIBILITY_CFLAGS@ @HWLOC_EMBEDDED_CFLAGS@
+AM_CPPFLAGS = @HWLOC_EMBEDDED_CPPFLAGS@
 AM_FFLAGS =
 AM_FCFLAGS =
 include_HEADERS =

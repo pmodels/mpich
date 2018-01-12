@@ -1444,31 +1444,19 @@ AC_SUBST([hwloclibdir])
 hwloclib=""
 AC_SUBST([hwloclib])
 
-# Unconditionally include the hwloc macros, even if we are using an
-# external hwloc (or hwloc is disabled). This is needed for the
-# AM_CONDITIONALS that we will set later.
-m4_include([src/hwloc/config/hwloc.m4])
-m4_include([src/hwloc/config/hwloc_check_attributes.m4])
-m4_include([src/hwloc/config/hwloc_check_visibility.m4])
-m4_include([src/hwloc/config/hwloc_check_vendor.m4])
-m4_include([src/hwloc/config/hwloc_components.m4])
-m4_include([src/hwloc/config/hwloc_pkg.m4])
-
 if test "$with_hwloc_prefix" = "embedded" ; then
+   # Disable visibility when setting up hwloc
+   PAC_PUSH_FLAG([enable_visibility])
+   enable_visibility=no;
    HWLOC_SETUP_CORE([src/hwloc],[have_hwloc=yes],[have_hwloc=no],[1])
    # Only build hwloc in embedded mode
    if test "$have_hwloc" = "yes" ; then
       use_embedded_hwloc=yes
-      CFLAGS="$HWLOC_EMBEDDED_CFLAGS $CFLAGS"
-      CPPFLAGS="$HWLOC_EMBEDDED_CPPFLAGS $CPPFLAGS"
-      LIBS="$HWLOC_EMBEDDED_LIBS $LIBS"
-      # disable visibility if building profiling library
-      if test "$NEEDSPLIB" != "yes" ; then
-         CFLAGS="$HWLOC_EMBEDDED_VISIBILITY_CFLAGS $CFLAGS"
-      fi
       hwlocsrcdir="src/hwloc"
-      hwloclib="src/hwloc/src/libhwloc_embedded.la"
+      hwloclib="$HWLOC_EMBEDDED_LDADD"
+      PAC_PREPEND_FLAG([$HWLOC_EMBEDDED_LIBS], [WRAPPER_LIBS])
    fi
+   PAC_POP_FLAG([enable_visibility])
 else
    AC_CHECK_HEADERS([hwloc.h])
    # hwloc_topology_set_pid was added in hwloc-1.0.0, which is our
