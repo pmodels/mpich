@@ -74,7 +74,6 @@ static void dump_context_id(MPIR_Context_id_t context_id, char *out_str, int len
                   subcomm_type_name,
                   (MPIR_CONTEXT_READ_FIELD(SUFFIX, context_id) ? "coll" : "pt2pt"));
 }
-#endif
 
 /* Create a string that contains the context mask.  This is
    used only with the logging interface, and must be used by one thread at
@@ -106,6 +105,7 @@ static char *context_mask_to_str(void)
     }
     return bufstr;
 }
+#endif
 
 /* Returns useful debugging information about the context ID mask bit-vector.
  * This includes the total number of possibly valid IDs (the size of the ID
