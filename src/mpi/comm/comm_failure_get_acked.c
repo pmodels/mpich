@@ -57,7 +57,7 @@ int MPIX_Comm_failure_get_acked( MPI_Comm comm, MPI_Group *failedgrp )
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_Group *group_ptr;
+    MPIR_Group *group_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIX_COMM_FAILURE_GET_ACKED);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

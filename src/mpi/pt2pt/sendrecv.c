@@ -76,8 +76,8 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     static const char FCNAME[] = "MPI_Sendrecv";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_Request * sreq;
-    MPIR_Request * rreq;
+    MPIR_Request * sreq = NULL;
+    MPIR_Request * rreq = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_SENDRECV);
     
     MPIR_ERRTEST_INITIALIZED_ORDIE();

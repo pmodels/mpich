@@ -39,7 +39,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Context_id_t final_context_id, recvcontext_id;
-    int remote_size, *remote_lpids=NULL;
+    int remote_size = 0, *remote_lpids = NULL;
     int comm_info[3];
     int is_low_group = 0;
     int cts_tag;
