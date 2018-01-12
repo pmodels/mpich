@@ -33,7 +33,7 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag) __attribute__((weak,alias("PMPIX_C
 int MPIR_Comm_agree(MPIR_Comm *comm_ptr, int *flag)
 {
     int mpi_errno = MPI_SUCCESS, mpi_errno_tmp = MPI_SUCCESS;
-    MPIR_Group *comm_grp, *failed_grp, *new_group_ptr, *global_failed;
+    MPIR_Group *comm_grp = NULL, *failed_grp = NULL, *new_group_ptr = NULL, *global_failed = NULL;
     int result, success = 1;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int values[2];

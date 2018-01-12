@@ -320,7 +320,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     int mpi_errno = MPI_SUCCESS;
     int has_args;
     int has_env;
-    int thread_provided;
+    int thread_provided = 0;
     int exit_init_cs_on_failure = 0;
     MPIR_Info *info_ptr;
 

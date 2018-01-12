@@ -49,7 +49,7 @@ int MPIX_Comm_shrink(MPI_Comm comm, MPI_Comm *newcomm) __attribute__((weak,alias
 int MPIR_Comm_shrink(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Group *global_failed, *comm_grp, *new_group_ptr;
+    MPIR_Group *global_failed = NULL, *comm_grp = NULL, *new_group_ptr = NULL;
     int attempts = 0;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 

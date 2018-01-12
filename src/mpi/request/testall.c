@@ -44,7 +44,7 @@ int MPIR_Testall_impl(int count, MPI_Request array_of_requests[], int *flag,
     int i;
     int n_completed;
     int active_flag;
-    int rc;
+    int rc = MPI_SUCCESS;
     int proc_failure = FALSE;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);

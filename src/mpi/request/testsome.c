@@ -77,7 +77,7 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
     int n_active;
     int n_inactive;
     int active_flag;
-    int rc;
+    int rc = MPI_SUCCESS;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TESTSOME);
