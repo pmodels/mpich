@@ -347,7 +347,7 @@ typedef struct {
     struct fid_stx *stx_ctx;    /* shared TX context for RMA */
 
     /* Queryable limits */
-    uint64_t max_buffered_send;
+    uint16_t max_buffered_send;
     uint64_t max_buffered_write;
     uint64_t max_send;
     uint64_t max_write;
