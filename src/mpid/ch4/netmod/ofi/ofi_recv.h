@@ -220,7 +220,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     recv_buf = (char *) buf + dt_true_lb;
 
     if (!dt_contig) {
-        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK) {
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_Global.max_send) {
             mpi_errno = MPIDI_OFI_recv_iov(buf, count, rank, match_bits, mask_bits, comm, context_id, rreq, dt_ptr, flags);
             if (mpi_errno == MPI_SUCCESS) /* Receive posted using iov */
                 goto fn_exit;
