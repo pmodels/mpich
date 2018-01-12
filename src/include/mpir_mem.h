@@ -143,7 +143,7 @@ extern MPL_dbg_class MPIR_DBG_STRING;
 }}
 #else
 #define MPIR_CHKLMEM_DECL(n_) \
- void *(mpiu_chklmem_stk_[n_]); \
+ void *(mpiu_chklmem_stk_[n_]) = { NULL }; \
  int mpiu_chklmem_stk_sp_=0;\
  MPIR_AssertDeclValue(const int mpiu_chklmem_stk_sz_,n_)
 
