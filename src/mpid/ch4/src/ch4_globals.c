@@ -100,14 +100,6 @@ int MPID_Abort(MPIR_Comm * comm,
     return 0;
 }
 
-/* Another weird ADI that doesn't follow convention */
-static void init_comm() __attribute__ ((constructor));
-static void init_comm()
-{
-    MPIR_Comm_fns = &MPIDI_CH4_Global.MPIR_Comm_fns_store;
-    MPIR_Comm_fns->split_type = MPIDI_Comm_split_type;
-}
-
 MPL_dbg_class MPIDI_CH4_DBG_GENERAL;
 
 #ifdef MPL_USE_DBG_LOGGING
