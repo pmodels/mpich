@@ -538,7 +538,7 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
     int mpi_errno = MPI_SUCCESS, root_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int remote_size = 0;
-    size_t *remote_upid_size;
+    size_t *remote_upid_size = NULL;
     char *remote_upids = NULL;
     int *remote_lupids = NULL;
     int *remote_node_ids = NULL;
@@ -737,7 +737,7 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int remote_size = 0;
-    size_t *remote_upid_size;
+    size_t *remote_upid_size = 0;
     char *remote_upids = NULL;
     int *remote_lupids = NULL;
     int *remote_node_ids = NULL;
@@ -745,6 +745,7 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
     int is_low_group = -1;
     int conn_id;
     fi_addr_t conn;
+    int rank = comm_ptr->rank;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_ACCEPT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMM_ACCEPT);
@@ -757,8 +758,6 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
     }
 
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_SPAWN_MUTEX);
-
-    int rank = comm_ptr->rank;
 
     if (rank == root) {
         char conname[FI_NAME_MAX];
