@@ -965,10 +965,9 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    shm_key = (char *) MPL_malloc(sizeof(char), MPL_MEM_SHM);
-    shm_key_size = snprintf(shm_key, 1, "/mpi-%s-%X-%" PRIx64,
+    shm_key_size = snprintf(NULL, 0, "/mpi-%s-%X-%" PRIx64,
                             MPIDI_CH4_Global.jobid, root_rank, MPIDI_CH4U_WIN(win, win_id));
-    shm_key = (char *) MPL_realloc(shm_key, shm_key_size, MPL_MEM_SHM);
+    shm_key = (char *) MPL_malloc(shm_key_size, MPL_MEM_SHM);
     MPIR_Assert(shm_key);
     snprintf(shm_key, shm_key_size, "/mpi-%s-%X-%" PRIx64,
              MPIDI_CH4_Global.jobid, root_rank, MPIDI_CH4U_WIN(win, win_id));
