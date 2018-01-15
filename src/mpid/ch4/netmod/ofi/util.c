@@ -31,7 +31,10 @@ int MPIDI_OFI_handle_cq_error_util(int vni_idx, ssize_t ret)
 
 int MPIDI_OFI_progress_test_no_inline()
 {
-    return MPID_Progress_test();
+    /* We do not call progress on hooks form netmod level
+     * because it is not reentrant safe.
+     */
+    return MPIDI_Progress_test(MPIDI_PROGRESS_NM|MPIDI_PROGRESS_SHM);
 }
 
 typedef struct MPIDI_OFI_index_allocator_t {
