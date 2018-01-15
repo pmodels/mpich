@@ -22,8 +22,6 @@
 MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * requests[])
 {
     int mpi_errno = MPI_SUCCESS, i;
-    int rank, tag, context_offset;
-    MPI_Datatype datatype;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_STARTALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_STARTALL);

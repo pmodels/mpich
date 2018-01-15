@@ -153,9 +153,8 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Reduce_select(const void *sendbuf,
                                                           MPIR_Errflag_t * errflag,
                                                           MPIDI_OFI_coll_algo_container_t * ch4_algo_parameters_container_in ATTRIBUTE((unused)))
 {
-    int comm_size, type_size, pof2;
+    int type_size, pof2;
 
-    comm_size = comm_ptr->local_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
     pof2 = comm_ptr->pof2;
     if ((count * type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
