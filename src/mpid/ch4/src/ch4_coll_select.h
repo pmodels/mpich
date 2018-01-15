@@ -203,7 +203,6 @@ MPIDI_coll_algo_container_t *MPIDI_CH4_Reduce_select(const void *sendbuf,
 {
     int is_commutative, type_size;
     int nbytes = 0;
-    MPIR_Op *op_ptr;
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         return (MPIDI_coll_algo_container_t *) &CH4_reduce_intercomm_cnt;
