@@ -272,7 +272,7 @@ MPIDI_coll_algo_container_t * MPIDI_CH4_Allgather_select(const void *sendbuf, in
 }
 
 MPL_STATIC_INLINE_PREFIX
-MPIDI_coll_algo_container_t * MPIDI_CH4_Allgatherv_select(const void *sendbuf, int sendcount, 
+MPIDI_coll_algo_container_t * MPIDI_CH4_Allgatherv_select(const void *sendbuf, int sendcount,
                                                           MPI_Datatype sendtype, void *recvbuf,
                                                           const int *recvcounts, const int *displs,
                                                           MPI_Datatype recvtype, MPIR_Comm *comm,
@@ -284,4 +284,37 @@ MPIDI_coll_algo_container_t * MPIDI_CH4_Allgatherv_select(const void *sendbuf, i
 
     return (MPIDI_coll_algo_container_t *) &CH4_Allgatherv_composition_alpha_cnt;
 }
+
+MPL_STATIC_INLINE_PREFIX
+MPIDI_coll_algo_container_t * MPIDI_CH4_Reduce_scatter_select(const void *sendbuf,
+                                                              void *recvbuf,
+                                                              const int recvcounts[],
+                                                              MPI_Datatype datatype,
+                                                              MPI_Op op, MPIR_Comm * comm,
+                                                              MPIR_Errflag_t * errflag)
+{
+
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_Reduce_scatter_intercomm_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_Reduce_scatter_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+MPIDI_coll_algo_container_t * MPIDI_CH4_Reduce_scatter_block_select(const void *sendbuf,
+                                                                    void *recvbuf,
+                                                                    int recvcount,
+                                                                    MPI_Datatype datatype,
+                                                                    MPI_Op op, MPIR_Comm * comm,
+                                                                    MPIR_Errflag_t * errflag)
+{
+
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_Reduce_scatter_block_intercomm_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_Reduce_scatter_block_composition_alpha_cnt;
+}
+
 #endif /* CH4_COLL_SELECT_H_INCLUDED */

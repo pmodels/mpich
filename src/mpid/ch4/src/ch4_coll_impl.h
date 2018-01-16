@@ -1340,4 +1340,176 @@ fn_exit:
 fn_fail:
     goto fn_exit;
 }
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Reduce_scatter_intercomm
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_intercomm(const void *sendbuf,
+                                                            void *recvbuf,
+                                                            const int recvcounts[],
+                                                            MPI_Datatype datatype,
+                                                            MPI_Op op,
+                                                            MPIR_Comm * comm_ptr,
+                                                            MPIR_Errflag_t * errflag,
+                                                            MPIDI_coll_algo_container_t *
+                                                            ch4_algo_parameters_container
+                                                            ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Reduce_scatter_inter(sendbuf, recvbuf, recvcounts, datatype,
+                                          op, comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Reduce_scatter_composition_alpha
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_composition_alpha(const void *sendbuf,
+                                                                    void *recvbuf,
+                                                                    const int recvcounts[],
+                                                                    MPI_Datatype datatype,
+                                                                    MPI_Op op,
+                                                                    MPIR_Comm * comm_ptr,
+                                                                    MPIR_Errflag_t * errflag,
+                                                                    MPIDI_coll_algo_container_t *
+                                                                    ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void * reduce_scatter_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno =
+        MPIDI_NM_mpi_reduce_scatter(sendbuf, recvbuf, recvcounts, datatype,
+                                    op, comm_ptr, errflag, reduce_scatter_container);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#ifdef MPIDI_BUILD_CH4_SHM
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Reduce_scatter_composition_beta
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_composition_beta(const void *sendbuf,
+                                                                   void *recvbuf,
+                                                                   const int recvcounts[],
+                                                                   MPI_Datatype datatype,
+                                                                   MPI_Op op, MPIR_Comm * comm_ptr,
+                                                                   MPIR_Errflag_t * errflag,
+                                                                   MPIDI_coll_algo_container_t *
+                                                                   ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void * reduce_scatter_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno =
+        MPIDI_SHM_mpi_reduce_scatter(sendbuf, recvbuf, recvcounts, datatype,
+                                     op, comm_ptr, errflag, reduce_scatter_container);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+#endif /*MPIDI_BUILD_CH4_SHM */
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Reduce_scatter_block_intercomm
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_intercomm(const void *sendbuf,
+                                                                  void *recvbuf,
+                                                                  int recvcount,
+                                                                  MPI_Datatype datatype,
+                                                                  MPI_Op op,
+                                                                  MPIR_Comm * comm_ptr,
+                                                                  MPIR_Errflag_t * errflag,
+                                                                  MPIDI_coll_algo_container_t *
+                                                                  ch4_algo_parameters_container
+                                                                  ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Reduce_scatter_block_inter(sendbuf, recvbuf, recvcount, datatype,
+                                                op, comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Reduce_scatter_block_composition_alpha
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_composition_alpha(const void *sendbuf,
+                                                                          void *recvbuf,
+                                                                          int recvcount,
+                                                                          MPI_Datatype datatype,
+                                                                          MPI_Op op,
+                                                                          MPIR_Comm * comm_ptr,
+                                                                          MPIR_Errflag_t * errflag,
+                                                                          MPIDI_coll_algo_container_t *
+                                                                          ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void * reduce_scatter_block_container =
+        MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno =
+        MPIDI_NM_mpi_reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype,
+                                          op, comm_ptr, errflag, reduce_scatter_block_container);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#ifdef MPIDI_BUILD_CH4_SHM
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Reduce_scatter_block_composition_beta
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_composition_beta(const void *sendbuf,
+                                                                         void *recvbuf,
+                                                                         int recvcount,
+                                                                         MPI_Datatype datatype,
+                                                                         MPI_Op op,
+                                                                         MPIR_Comm * comm_ptr,
+                                                                         MPIR_Errflag_t * errflag,
+                                                                         MPIDI_coll_algo_container_t *
+                                                                         ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void * reduce_scatter_block_container =
+        MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno =
+        MPIDI_SHM_mpi_reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype,
+                                           op, comm_ptr, errflag, reduce_scatter_block_container);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+#endif /*MPIDI_BUILD_CH4_SHM */
+
 #endif /* CH4_COLL_IMPL_H_INCLUDED */

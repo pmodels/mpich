@@ -115,6 +115,22 @@ typedef union MPIDI_Scatterv_algo_params {
     /* *INDENT-ON* */
 } MPIDI_SCATTERV_ALGO_params_t;
 
+typedef union MPIDI_Reduce_scatter_algo_params {
+    /* *INDENT-OFF* */
+    MPIDI_CH4_REDUCE_SCATTER_PARAMS_DECL;
+    @ch4_netmod_reduce_scatter_params_decl@
+    @ch4_shm_reduce_scatter_params_decl@
+    /* *INDENT-ON* */
+} MPIDI_REDUCE_SCATTER_ALGO_params_t;
+
+typedef union MPIDI_Reduce_scatter_block_algo_params {
+    /* *INDENT-OFF* */
+    MPIDI_CH4_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
+    @ch4_netmod_reduce_scatter_block_params_decl@
+    @ch4_shm_reduce_scatter_block_params_decl@
+    /* *INDENT-ON* */
+} MPIDI_REDUCE_SCATTER_BLOCK_ALGO_params_t;
+
 #define MPIDI_BARRIER_PARAMS_DECL MPIDI_BARRIER_ALGO_params_t barrier_params;
 #define MPIDI_BCAST_PARAMS_DECL MPIDI_BCAST_ALGO_params_t bcast_params;
 #define MPIDI_REDUCE_PARAMS_DECL MPIDI_REDUCE_ALGO_params_t reduce_params;
@@ -128,6 +144,8 @@ typedef union MPIDI_Scatterv_algo_params {
 #define MPIDI_GATHERV_PARAMS_DECL MPIDI_GATHERV_ALGO_params_t gatherv_params;
 #define MPIDI_SCATTER_PARAMS_DECL MPIDI_SCATTER_ALGO_params_t scatter_params;
 #define MPIDI_SCATTERV_PARAMS_DECL MPIDI_SCATTERV_ALGO_params_t scatterv_params;
+#define MPIDI_REDUCE_SCATTER_PARAMS_DECL MPIDI_REDUCE_SCATTER_ALGO_params_t reduce_scatter_params;
+#define MPIDI_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDI_REDUCE_SCATTER_BLOCK_ALGO_params_t reduce_scatter_block_params;
 
 typedef union MPIDI_coll_algo_generic_params {
     MPIDI_BARRIER_PARAMS_DECL;
@@ -143,6 +161,8 @@ typedef union MPIDI_coll_algo_generic_params {
     MPIDI_GATHERV_PARAMS_DECL;
     MPIDI_SCATTER_PARAMS_DECL;
     MPIDI_SCATTERV_PARAMS_DECL;
+    MPIDI_REDUCE_SCATTER_PARAMS_DECL;
+    MPIDI_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
 } MPIDI_coll_algo_generic_params_t;
 
 typedef struct MPIDI_coll_algo_generic_container {

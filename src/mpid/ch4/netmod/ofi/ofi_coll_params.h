@@ -163,6 +163,34 @@ typedef union {
     } ofi_scatterv_empty_parameters;
 } MPIDI_OFI_Scatterv_params_t;
 
+typedef enum {
+    MPIDI_OFI_Reduce_scatter_intra_noncomm_id,
+    MPIDI_OFI_Reduce_scatter_intra_pairwise_id,
+    MPIDI_OFI_Reduce_scatter_intra_recursive_doubling_id,
+    MPIDI_OFI_Reduce_scatter_intra_recursive_halving_id,
+} MPIDI_OFI_Reduce_scatter_id_t;
+
+typedef union {
+    /* reserved for parameters related to NETMOD specific collectives */
+    struct MPIDI_OFI_Reduce_scatter_empty_parameters {
+        int empty;
+    } ofi_reduce_scatter_empty_parameters;
+} MPIDI_OFI_Reduce_scatter_params_t;
+
+typedef enum {
+    MPIDI_OFI_Reduce_scatter_block_intra_noncomm_id,
+    MPIDI_OFI_Reduce_scatter_block_intra_pairwise_id,
+    MPIDI_OFI_Reduce_scatter_block_intra_recursive_doubling_id,
+    MPIDI_OFI_Reduce_scatter_block_intra_recursive_halving_id,
+} MPIDI_OFI_Reduce_scatter_block_id_t;
+
+typedef union {
+    /* reserved for parameters related to NETMOD specific collectives */
+    struct MPIDI_OFI_Reduce_scatter_block_empty_parameters {
+        int empty;
+    } ofi_reduce_scatter_block_empty_parameters;
+} MPIDI_OFI_Reduce_scatter_block_params_t;
+
 #define MPIDI_OFI_BARRIER_PARAMS_DECL MPIDI_OFI_Barrier_params_t ofi_barrier_params;
 #define MPIDI_OFI_BCAST_PARAMS_DECL MPIDI_OFI_Bcast_params_t ofi_bcast_params;
 #define MPIDI_OFI_REDUCE_PARAMS_DECL MPIDI_OFI_Reduce_params_t ofi_reduce_params;
@@ -176,6 +204,8 @@ typedef union {
 #define MPIDI_OFI_GATHERV_PARAMS_DECL MPIDI_OFI_Gatherv_params_t ofi_gatherv_params;
 #define MPIDI_OFI_SCATTER_PARAMS_DECL MPIDI_OFI_Scatter_params_t ofi_scatter_params;
 #define MPIDI_OFI_SCATTERV_PARAMS_DECL MPIDI_OFI_Scatterv_params_t ofi_scatterv_params;
+#define MPIDI_OFI_REDUCE_SCATTER_PARAMS_DECL MPIDI_OFI_Reduce_scatter_params_t ofi_reduce_scatter_params;
+#define MPIDI_OFI_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDI_OFI_Reduce_scatter_block_params_t ofi_reduce_scatter_block_params;
 
 typedef union {
     MPIDI_OFI_BARRIER_PARAMS_DECL;
@@ -191,6 +221,8 @@ typedef union {
     MPIDI_OFI_GATHERV_PARAMS_DECL;
     MPIDI_OFI_SCATTER_PARAMS_DECL;
     MPIDI_OFI_SCATTERV_PARAMS_DECL;
+    MPIDI_OFI_REDUCE_SCATTER_PARAMS_DECL;
+    MPIDI_OFI_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
 } MPIDI_OFI_coll_params_t;
 
 typedef struct MPIDI_OFI_coll_algo_container {

@@ -262,7 +262,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce_scatter(const void *sendbuf, v
                                                           const int *recvcounts,
                                                           MPI_Datatype datatype, MPI_Op op,
                                                           MPIR_Comm * comm_ptr,
-                                                          MPIR_Errflag_t * errflag)
+                                                          MPIR_Errflag_t * errflag,
+                                                          void * algo_parameters_ctr)
 {
     int ret;
 
@@ -270,7 +271,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce_scatter(const void *sendbuf, v
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_REDUCE_SCATTER);
 
     ret = MPIDI_POSIX_mpi_reduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op,
-                                         comm_ptr, errflag);
+                                         comm_ptr, errflag,
+                                         (MPIDI_POSIX_coll_algo_container_t *) algo_parameters_ctr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_REDUCE_SCATTER);
     return ret;
@@ -280,7 +282,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce_scatter_block(const void *send
                                                                 void *recvbuf, int recvcount,
                                                                 MPI_Datatype datatype, MPI_Op op,
                                                                 MPIR_Comm * comm_ptr,
-                                                                MPIR_Errflag_t * errflag)
+                                                                MPIR_Errflag_t * errflag,
+                                                                void * algo_parameters_ctr)
 {
     int ret;
 
@@ -288,7 +291,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce_scatter_block(const void *send
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_REDUCE_SCATTER_BLOCK);
 
     ret = MPIDI_POSIX_mpi_reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype,
-                                               op, comm_ptr, errflag);
+                                               op, comm_ptr, errflag,
+                                               (MPIDI_POSIX_coll_algo_container_t *)
+                                               algo_parameters_ctr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_REDUCE_SCATTER_BLOCK);
     return ret;

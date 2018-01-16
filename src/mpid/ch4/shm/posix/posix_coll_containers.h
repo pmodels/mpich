@@ -55,4 +55,16 @@ extern const MPIDI_POSIX_coll_algo_container_t POSIX_Scatter_intra_binomial_cnt;
 /* Scatterv POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_Scatterv_intra_linear_cnt;
 
+/* Reduce_scatter POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_intra_noncomm_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_intra_pairwise_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_intra_recursive_doubling_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_intra_recursive_halving_cnt;
+
+/* Reduce_scatter_block POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block_intra_noncomm_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block_intra_pairwise_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block_intra_recursive_doubling_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block_intra_recursive_halving_cnt;
+
 #endif /* SHM_COLL_CONTAINERS_H_INCLUDED */

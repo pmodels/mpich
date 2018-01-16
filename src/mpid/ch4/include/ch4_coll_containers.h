@@ -97,4 +97,18 @@ extern const MPIDI_coll_algo_container_t CH4_Scatterv_composition_beta_cnt;
 #endif /* MPIDI_BUILD_CH4_SHM */
 extern const MPIDI_coll_algo_container_t CH4_Scatterv_intercomm_cnt;
 
+/* Reduce_scatter CH4 level containers declaration */
+extern const MPIDI_coll_algo_container_t CH4_Reduce_scatter_composition_alpha_cnt;
+#ifdef MPIDI_BUILD_CH4_SHM
+extern const MPIDI_coll_algo_container_t CH4_Reduce_scatter_composition_beta_cnt;
+#endif /* MPIDI_BUILD_CH4_SHM */
+extern const MPIDI_coll_algo_container_t CH4_Reduce_scatter_intercomm_cnt;
+
+/* Reduce_scatter_block CH4 level containers declaration */
+extern const MPIDI_coll_algo_container_t CH4_Reduce_scatter_block_composition_alpha_cnt;
+#ifdef MPIDI_BUILD_CH4_SHM
+extern const MPIDI_coll_algo_container_t CH4_Reduce_scatter_block_composition_beta_cnt;
+#endif /* MPIDI_BUILD_CH4_SHM */
+extern const MPIDI_coll_algo_container_t CH4_Reduce_scatter_block_intercomm_cnt;
+
 #endif /* CH4_COLL_CONTAINERS_H_INCLUDED */

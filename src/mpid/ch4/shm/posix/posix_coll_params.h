@@ -163,6 +163,34 @@ typedef union {
     } POSIX_scatterv_empty_parameters;
 } MPIDI_POSIX_Scatterv_params_t;
 
+typedef enum {
+    MPIDI_POSIX_Reduce_scatter_intra_noncomm_id,
+    MPIDI_POSIX_Reduce_scatter_intra_pairwise_id,
+    MPIDI_POSIX_Reduce_scatter_intra_recursive_doubling_id,
+    MPIDI_POSIX_Reduce_scatter_intra_recursive_halving_id,
+} MPIDI_POSIX_Reduce_scatter_id_t;
+
+typedef union {
+    /* reserved for parameters related to NETMOD specific collectives */
+    struct MPIDI_POSIX_Reduce_scatter_empty_parameters {
+        int empty;
+    } POSIX_reduce_scatter_empty_parameters;
+} MPIDI_POSIX_Reduce_scatter_params_t;
+
+typedef enum {
+    MPIDI_POSIX_Reduce_scatter_block_intra_noncomm_id,
+    MPIDI_POSIX_Reduce_scatter_block_intra_pairwise_id,
+    MPIDI_POSIX_Reduce_scatter_block_intra_recursive_doubling_id,
+    MPIDI_POSIX_Reduce_scatter_block_intra_recursive_halving_id,
+} MPIDI_POSIX_Reduce_scatter_block_id_t;
+
+typedef union {
+    /* reserved for parameters related to NETMOD specific collectives */
+    struct MPIDI_POSIX_Reduce_scatter_block_empty_parameters {
+        int empty;
+    } POSIX_reduce_scatter_block_empty_parameters;
+} MPIDI_POSIX_Reduce_scatter_block_params_t;
+
 #define MPIDI_POSIX_BARRIER_PARAMS_DECL MPIDI_POSIX_Barrier_params_t posix_barrier_params;
 #define MPIDI_POSIX_BCAST_PARAMS_DECL MPIDI_POSIX_Bcast_params_t posix_bcast_params;
 #define MPIDI_POSIX_REDUCE_PARAMS_DECL MPIDI_POSIX_Reduce_params_t posix_reduce_params;
@@ -176,6 +204,8 @@ typedef union {
 #define MPIDI_POSIX_GATHERV_PARAMS_DECL MPIDI_POSIX_Gatherv_params_t posix_gatherv_params;
 #define MPIDI_POSIX_SCATTER_PARAMS_DECL MPIDI_POSIX_Scatter_params_t posix_scatter_params;
 #define MPIDI_POSIX_SCATTERV_PARAMS_DECL MPIDI_POSIX_Scatterv_params_t posix_scatterv_params;
+#define MPIDI_POSIX_REDUCE_SCATTER_PARAMS_DECL MPIDI_POSIX_Reduce_scatter_params_t posix_reduce_scatter_params;
+#define MPIDI_POSIX_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDI_POSIX_Reduce_scatter_block_params_t posix_reduce_scatter_block_params;
 
 typedef union {
     MPIDI_POSIX_BARRIER_PARAMS_DECL;
@@ -191,6 +221,8 @@ typedef union {
     MPIDI_POSIX_GATHERV_PARAMS_DECL;
     MPIDI_POSIX_SCATTER_PARAMS_DECL;
     MPIDI_POSIX_SCATTERV_PARAMS_DECL;
+    MPIDI_POSIX_REDUCE_SCATTER_PARAMS_DECL;
+    MPIDI_POSIX_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
 } MPIDI_POSIX_coll_params_t;
 
 typedef struct MPIDI_POSIX_coll_algo_container {

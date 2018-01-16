@@ -278,6 +278,44 @@ typedef union {
 #endif /* MPIDI_BUILD_CH4_SH */
 } MPIDI_CH4_Scatterv_params_t;
 
+typedef enum {
+    MPIDI_CH4_Reduce_scatter_composition_alpha_id,
+#ifdef MPIDI_BUILD_CH4_SHM
+    MPIDI_CH4_Reduce_scatter_composition_beta_id,
+#endif /* MPIDI_BUILD_CH4_SHM */
+    MPIDI_CH4_Reduce_scatter_intercomm_id
+} MPIDI_CH4_Reduce_scatter_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Reduce_scatter_alpha {
+        int reduce_scatter;
+    } ch4_reduce_scatter_alpha;
+#ifdef MPIDI_BUILD_CH4_SHM
+    struct MPIDI_CH4_Reduce_scatter_beta {
+        int reduce_scatter;
+    } ch4_reduce_scatter_beta;
+#endif /* MPIDI_BUILD_CH4_SHM */
+} MPIDI_CH4_Reduce_scatter_params_t;
+
+typedef enum {
+    MPIDI_CH4_Reduce_scatter_block_composition_alpha_id,
+#ifdef MPIDI_BUILD_CH4_SHM
+    MPIDI_CH4_Reduce_scatter_block_composition_beta_id,
+#endif /* MPIDI_BUILD_CH4_SHM */
+    MPIDI_CH4_Reduce_scatter_block_intercomm_id
+} MPIDI_CH4_Reduce_scatter_block_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Reduce_scatter_block_alpha {
+        int reduce_scatter_block;
+    } ch4_reduce_scatter_block_alpha;
+#ifdef MPIDI_BUILD_CH4_SHM
+    struct MPIDI_CH4_Reduce_scatter_block_beta {
+        int reduce_scatter_block;
+    } ch4_reduce_scatter_block_beta;
+#endif /* MPIDI_BUILD_CH4_SHM */
+} MPIDI_CH4_Reduce_scatter_block_params_t;
+
 #define MPIDI_CH4_BARRIER_PARAMS_DECL MPIDI_CH4_Barrier_params_t ch4_barrier_params;
 #define MPIDI_CH4_BCAST_PARAMS_DECL MPIDI_CH4_Bcast_params_t ch4_bcast_params;
 #define MPIDI_CH4_REDUCE_PARAMS_DECL MPIDI_CH4_Reduce_params_t ch4_reduce_params;
@@ -291,6 +329,8 @@ typedef union {
 #define MPIDI_CH4_GATHERV_PARAMS_DECL MPIDI_CH4_Gatherv_params_t ch4_gatherv_params;
 #define MPIDI_CH4_SCATTER_PARAMS_DECL MPIDI_CH4_Scatter_params_t ch4_scatter_params;
 #define MPIDI_CH4_SCATTERV_PARAMS_DECL MPIDI_CH4_Scatterv_params_t ch4_scatterv_params;
+#define MPIDI_CH4_REDUCE_SCATTER_PARAMS_DECL MPIDI_CH4_Reduce_scatter_params_t ch4_reduce_scatter_params
+#define MPIDI_CH4_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDI_CH4_Reduce_scatter_block_params_t ch4_reduce_scatter_block_params
 
 typedef union {
     MPIDI_CH4_BARRIER_PARAMS_DECL;
@@ -306,6 +346,8 @@ typedef union {
     MPIDI_CH4_GATHERV_PARAMS_DECL;
     MPIDI_CH4_SCATTER_PARAMS_DECL;
     MPIDI_CH4_SCATTERV_PARAMS_DECL;
+    MPIDI_CH4_REDUCE_SCATTER_PARAMS_DECL;
+    MPIDI_CH4_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
 } MPIDI_CH4_coll_params_t;
 
 typedef struct MPIDI_coll_algo_container {

@@ -150,3 +150,46 @@ const MPIDI_POSIX_coll_algo_container_t POSIX_Scatterv_intra_linear_cnt =
     {
         .id = MPIDI_POSIX_Scatterv_intra_linear_id
     };
+
+/* Reduce_scatter default POSIX containers initialization*/
+const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_intra_noncomm_cnt =
+    {
+        .id = MPIDI_POSIX_Reduce_scatter_intra_noncomm_id
+    };
+
+const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_intra_pairwise_cnt =
+    {
+        .id = MPIDI_POSIX_Reduce_scatter_intra_pairwise_id
+    };
+
+const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_intra_recursive_doubling_cnt =
+    {
+        .id = MPIDI_POSIX_Reduce_scatter_intra_recursive_doubling_id
+    };
+
+const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_intra_recursive_halving_cnt =
+    {
+        .id = MPIDI_POSIX_Reduce_scatter_intra_recursive_halving_id
+    };
+
+/* Reduce_scatter_block default POSIX containers initialization*/
+const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block_intra_noncomm_cnt =
+    {
+        .id = MPIDI_POSIX_Reduce_scatter_block_intra_noncomm_id
+    };
+
+const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block_intra_pairwise_cnt =
+    {
+        .id = MPIDI_POSIX_Reduce_scatter_block_intra_pairwise_id
+    };
+
+const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block_intra_recursive_doubling_cnt =
+    {
+        .id = MPIDI_POSIX_Reduce_scatter_block_intra_recursive_doubling_id
+    };
+
+const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block_intra_recursive_halving_cnt =
+    {
+        .id = MPIDI_POSIX_Reduce_scatter_block_intra_recursive_halving_id
+    };
+

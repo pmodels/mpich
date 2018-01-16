@@ -345,4 +345,141 @@ MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Allgatherv_select(const void *se
         return (MPIDI_POSIX_coll_algo_container_t *) &POSIX_Allgatherv_intra_ring_cnt;
     }
 }
+
+MPL_STATIC_INLINE_PREFIX
+MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Reduce_scatter_select(const void *sendbuf,
+                                                                      void *recvbuf,
+                                                                      const int recvcounts[],
+                                                                      MPI_Datatype datatype,
+                                                                      MPI_Op op,
+                                                                      MPIR_Comm * comm,
+                                                                      MPIR_Errflag_t * errflag,
+                                                                      MPIDI_POSIX_coll_algo_container_t *
+                                                                      ch4_algo_parameters_container_in
+                                                                      ATTRIBUTE((unused)))
+{
+    int comm_size = 0;
+    int i = 0;
+    int type_size = 0;
+    int total_count = 0;
+    int nbytes = 0;
+    int pof2 = 0;
+    int is_commutative = 0;
+    MPIR_Op * op_ptr = NULL;
+
+    comm_size = comm->local_size;
+
+    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+        is_commutative = 1;
+    } else {
+        MPIR_Op_get_ptr(op, op_ptr);
+        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE) {
+            is_commutative = 0;
+        } else {
+            is_commutative = 1;
+        }
+    }
+
+    total_count = 0;
+    for (i = 0; i < comm_size; i++) {
+        total_count += recvcounts[i];
+    }
+
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+    nbytes = total_count * type_size;
+
+    if ((is_commutative) && (nbytes < MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+        /* commutative and short. use recursive halving algorithm */
+        return (MPIDI_POSIX_coll_algo_container_t *) &
+            POSIX_Reduce_scatter_intra_recursive_halving_cnt;
+    }
+    if (is_commutative && (nbytes >= MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+        /* commutative and long message, or noncommutative and long message.
+         * use (p-1) pairwise exchanges */
+        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_Reduce_scatter_intra_pairwise_cnt;
+    }
+    if (!is_commutative) {
+        int is_block_regular = 1;
+        for (i = 0; i < (comm_size - 1); ++i) {
+            if (recvcounts[i] != recvcounts[i + 1]) {
+                is_block_regular = 0;
+                break;
+            }
+        }
+        /* slightly retask pof2 to mean pof2 equal or greater, not always greater as it is above */
+        pof2 = MPIU_pof2(comm_size);
+        if (pof2 == comm_size && is_block_regular) {
+            /* noncommutative, pof2 size, and block regular */
+            return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_Reduce_scatter_intra_noncomm_cnt;
+        } else {
+            /* noncommutative and (non-pof2 or block irregular), use recursive doubling. */
+            return (MPIDI_POSIX_coll_algo_container_t *) &
+                POSIX_Reduce_scatter_intra_recursive_doubling_cnt;
+        }
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX
+MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Reduce_scatter_block_select(const void *sendbuf,
+                                                                            void *recvbuf,
+                                                                            int recvcount,
+                                                                            MPI_Datatype
+                                                                            datatype, MPI_Op op,
+                                                                            MPIR_Comm * comm,
+                                                                            MPIR_Errflag_t *
+                                                                            errflag,
+                                                                            MPIDI_POSIX_coll_algo_container_t *
+                                                                            ch4_algo_parameters_container_in
+                                                                            ATTRIBUTE((unused)))
+{
+    int comm_size = 0;
+    int type_size = 0;
+    int total_count = 0;
+    int nbytes = 0;
+    int is_commutative = 0;
+    MPIR_Op * op_ptr = NULL;
+
+    comm_size = comm->local_size;
+
+    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+        is_commutative = 1;
+    } else {
+        MPIR_Op_get_ptr(op, op_ptr);
+        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE) {
+            is_commutative = 0;
+        } else {
+            is_commutative = 1;
+        }
+    }
+
+    total_count = comm_size * recvcount;
+
+    MPIR_Datatype_get_size_macro(datatype, type_size);
+    nbytes = total_count * type_size;
+
+    if ((is_commutative) && (nbytes < MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+        /* commutative and short. use recursive halving algorithm */
+        return (MPIDI_POSIX_coll_algo_container_t *) &
+            POSIX_Reduce_scatter_block_intra_recursive_halving_cnt;
+    }
+    if (is_commutative && (nbytes >= MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+        /* commutative and long message, or noncommutative and long message.
+         * use (p-1) pairwise exchanges */
+        return (MPIDI_POSIX_coll_algo_container_t *) &
+            POSIX_Reduce_scatter_block_intra_pairwise_cnt;
+    }
+    if (!is_commutative) {
+        /* power of two check */
+        if (!(comm_size & (comm_size - 1))) {
+            /* noncommutative, pof2 size */
+            return (MPIDI_POSIX_coll_algo_container_t *) &
+                POSIX_Reduce_scatter_block_intra_noncomm_cnt;
+        } else {
+            /* noncommutative and non-pof2, use recursive doubling. */
+            return (MPIDI_POSIX_coll_algo_container_t *) &
+                POSIX_Reduce_scatter_block_intra_recursive_doubling_cnt;
+        }
+    }
+}
+
 #endif /* SHM_POSIX_COLL_SELECT_H_INCLUDED */

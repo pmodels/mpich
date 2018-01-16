@@ -55,4 +55,16 @@ extern const MPIDI_OFI_coll_algo_container_t OFI_Scatter_intra_binomial_cnt;
 /* Scatterv OFI containers declaration */
 extern const MPIDI_OFI_coll_algo_container_t OFI_Scatterv_intra_linear_cnt;
 
+/* Reduce_scatter OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_intra_noncomm_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_intra_pairwise_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_intra_recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_intra_recursive_halving_cnt;
+
+/* Reduce_scatter_block OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_block_intra_noncomm_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_block_intra_pairwise_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_block_intra_recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_block_intra_recursive_halving_cnt;
+
 #endif /* OFI_COLL_CONTAINERS_H_INCLUDED */

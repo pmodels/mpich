@@ -715,18 +715,62 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_POSIX_mpi_reduce_scatter(const void *sendbuf, void *recvbuf,
-                                               const int recvcounts[], MPI_Datatype datatype,
-                                               MPI_Op op, MPIR_Comm * comm_ptr,
-                                               MPIR_Errflag_t * errflag)
+                                                 const int recvcounts[], MPI_Datatype datatype,
+                                                 MPI_Op op, MPIR_Comm * comm_ptr,
+                                                 MPIR_Errflag_t * errflag,
+                                                 MPIDI_POSIX_coll_algo_container_t *
+                                                 ch4_algo_parameters_container_in)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_POSIX_coll_algo_container_t * shm_algo_parameters_container_out = NULL;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_REDUCE_SCATTER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_REDUCE_SCATTER);
 
-    mpi_errno = MPIR_Reduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
+    shm_algo_parameters_container_out =
+        MPIDI_POSIX_Reduce_scatter_select(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr,
+                                          errflag, (MPIDI_POSIX_coll_algo_container_t *)
+                                          ch4_algo_parameters_container_in);
+
+    switch (shm_algo_parameters_container_out->id) {
+    case MPIDI_POSIX_Reduce_scatter_intra_noncomm_id:
+        mpi_errno =
+            MPIDI_POSIX_Reduce_scatter_intra_noncomm(sendbuf, recvbuf, recvcounts, datatype, op,
+                                                     comm_ptr, errflag,
+                                                     shm_algo_parameters_container_out);
+        break;
+    case MPIDI_POSIX_Reduce_scatter_intra_pairwise_id:
+        mpi_errno =
+            MPIDI_POSIX_Reduce_scatter_intra_pairwise(sendbuf, recvbuf, recvcounts, datatype, op,
+                                                      comm_ptr, errflag,
+                                                      shm_algo_parameters_container_out);
+        break;
+    case MPIDI_POSIX_Reduce_scatter_intra_recursive_doubling_id:
+        mpi_errno =
+            MPIDI_POSIX_Reduce_scatter_intra_recursive_doubling(sendbuf, recvbuf, recvcounts,
+                                                                datatype, op, comm_ptr, errflag,
+                                                                shm_algo_parameters_container_out);
+        break;
+    case MPIDI_POSIX_Reduce_scatter_intra_recursive_halving_id:
+        mpi_errno =
+            MPIDI_POSIX_Reduce_scatter_intra_recursive_halving(sendbuf, recvbuf, recvcounts,
+                                                               datatype, op, comm_ptr, errflag,
+                                                               shm_algo_parameters_container_out);
+        break;
+    default:
+        mpi_errno =
+            MPIR_Reduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
+        break;
+    }
+
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_REDUCE_SCATTER);
+
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -734,19 +778,64 @@ static inline int MPIDI_POSIX_mpi_reduce_scatter(const void *sendbuf, void *recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_POSIX_mpi_reduce_scatter_block(const void *sendbuf, void *recvbuf,
-                                                     int recvcount, MPI_Datatype datatype,
-                                                     MPI_Op op, MPIR_Comm * comm_ptr,
-                                                     MPIR_Errflag_t * errflag)
+                                                       int recvcount, MPI_Datatype datatype,
+                                                       MPI_Op op, MPIR_Comm * comm_ptr,
+                                                       MPIR_Errflag_t * errflag,
+                                                       MPIDI_POSIX_coll_algo_container_t *
+                                                       ch4_algo_parameters_container_in)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_POSIX_coll_algo_container_t * shm_algo_parameters_container_out = NULL;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_REDUCE_SCATTER_BLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_REDUCE_SCATTER_BLOCK);
 
-    mpi_errno = MPIR_Reduce_scatter_block(sendbuf, recvbuf, recvcount,
-                                          datatype, op, comm_ptr, errflag);
+    shm_algo_parameters_container_out =
+        MPIDI_POSIX_Reduce_scatter_block_select(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr,
+                                                errflag, (MPIDI_POSIX_coll_algo_container_t *)
+                                                ch4_algo_parameters_container_in);
+
+    switch (shm_algo_parameters_container_out->id) {
+    case MPIDI_POSIX_Reduce_scatter_block_intra_noncomm_id:
+        mpi_errno =
+            MPIDI_POSIX_Reduce_scatter_block_intra_noncomm(sendbuf, recvbuf, recvcount, datatype,
+                                                           op, comm_ptr, errflag,
+                                                           shm_algo_parameters_container_out);
+        break;
+    case MPIDI_POSIX_Reduce_scatter_block_intra_pairwise_id:
+        mpi_errno =
+            MPIDI_POSIX_Reduce_scatter_block_intra_pairwise(sendbuf, recvbuf, recvcount, datatype,
+                                                            op, comm_ptr, errflag,
+                                                            shm_algo_parameters_container_out);
+        break;
+    case MPIDI_POSIX_Reduce_scatter_block_intra_recursive_doubling_id:
+        mpi_errno =
+            MPIDI_POSIX_Reduce_scatter_block_intra_recursive_doubling(sendbuf, recvbuf, recvcount,
+                                                                      datatype, op, comm_ptr,
+                                                                      errflag,
+                                                                      shm_algo_parameters_container_out);
+        break;
+    case MPIDI_POSIX_Reduce_scatter_block_intra_recursive_halving_id:
+        mpi_errno =
+            MPIDI_POSIX_Reduce_scatter_block_intra_recursive_halving(sendbuf, recvbuf, recvcount,
+                                                                     datatype, op, comm_ptr,
+                                                                     errflag,
+                                                                     shm_algo_parameters_container_out);
+        break;
+    default:
+        mpi_errno =
+            MPIR_Reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
+        break;
+    }
+
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_REDUCE_SCATTER_BLOCK);
+
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME

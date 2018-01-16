@@ -164,7 +164,7 @@ static inline int MPIDI_NM_mpi_allgather(const void *sendbuf, int sendcount, MPI
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLGATHER);
 
     nm_algo_parameters_ptr_out =
-        MPIDI_OFI_Allgather_select(sendbuf, sendcount, sendtype, recvbuf, 
+        MPIDI_OFI_Allgather_select(sendbuf, sendcount, sendtype, recvbuf,
                                    recvcount, recvtype, comm_ptr, errflag,
                                    (MPIDI_OFI_coll_algo_container_t *)ch4_algo_parameters_ptr_in);
 
@@ -490,31 +490,31 @@ static inline int MPIDI_NM_mpi_alltoall(const void *sendbuf, int sendcount, MPI_
     switch (nm_algo_parameters_container_out->id) {
     case MPIDI_OFI_Alltoall_intra_brucks_id:
         mpi_errno =
-            MPIDI_OFI_Alltoall_intra_brucks(sendbuf, sendcount, sendtype, 
-                                            recvbuf, recvcount, recvtype, 
+            MPIDI_OFI_Alltoall_intra_brucks(sendbuf, sendcount, sendtype,
+                                            recvbuf, recvcount, recvtype,
                                             comm_ptr, errflag, nm_algo_parameters_container_out);
         break;
     case MPIDI_OFI_Alltoall_intra_scattered_id:
         mpi_errno =
-            MPIDI_OFI_Alltoall_intra_scattered(sendbuf, sendcount, sendtype, 
-                                               recvbuf, recvcount, recvtype, 
+            MPIDI_OFI_Alltoall_intra_scattered(sendbuf, sendcount, sendtype,
+                                               recvbuf, recvcount, recvtype,
                                                comm_ptr, errflag, nm_algo_parameters_container_out);
         break;
     case MPIDI_OFI_Alltoall_intra_pairwise_id:
         mpi_errno =
-            MPIDI_OFI_Alltoall_intra_pairwise(sendbuf, sendcount, sendtype, 
-                                              recvbuf, recvcount, recvtype, 
+            MPIDI_OFI_Alltoall_intra_pairwise(sendbuf, sendcount, sendtype,
+                                              recvbuf, recvcount, recvtype,
                                               comm_ptr, errflag, nm_algo_parameters_container_out);
         break;
     case MPIDI_OFI_Alltoall_intra_pairwise_sendrecv_replace_id:
         mpi_errno =
-            MPIDI_OFI_Alltoall_intra_pairwise_sendrecv_replace(sendbuf, sendcount, sendtype, 
-                                                               recvbuf, recvcount, recvtype, 
+            MPIDI_OFI_Alltoall_intra_pairwise_sendrecv_replace(sendbuf, sendcount, sendtype,
+                                                               recvbuf, recvcount, recvtype,
                                                                comm_ptr, errflag, nm_algo_parameters_container_out);
         break;
     default:
-        mpi_errno = MPIR_Alltoall(sendbuf, sendcount, sendtype, 
-                                  recvbuf, recvcount, recvtype, 
+        mpi_errno = MPIR_Alltoall(sendbuf, sendcount, sendtype,
+                                  recvbuf, recvcount, recvtype,
                                   comm_ptr, errflag);
         break;
     }
@@ -550,7 +550,7 @@ static inline int MPIDI_NM_mpi_alltoallv(const void *sendbuf, const int *sendcou
 
     nm_algo_parameters_container_out =
         MPIDI_OFI_Alltoallv_select(sendbuf, sendcounts, sdispls,
-                                   sendtype, recvbuf, recvcounts, 
+                                   sendtype, recvbuf, recvcounts,
                                    rdispls, recvtype, comm_ptr, errflag,
                                    (MPIDI_OFI_coll_algo_container_t *)ch4_algo_parameters_container_in);
 
@@ -633,7 +633,7 @@ static inline int MPIDI_NM_mpi_alltoallw(const void *sendbuf, const int sendcoun
         break;
     }
 
-    if (mpi_errno) { 
+    if (mpi_errno) {
         MPIR_ERR_POP(mpi_errno);
     }
 
@@ -697,16 +697,59 @@ fn_fail:
 static inline int MPIDI_NM_mpi_reduce_scatter(const void *sendbuf, void *recvbuf,
                                               const int recvcounts[], MPI_Datatype datatype,
                                               MPI_Op op, MPIR_Comm * comm_ptr,
-                                              MPIR_Errflag_t * errflag)
+                                              MPIR_Errflag_t * errflag,
+                                              void * ch4_algo_parameters_container_in)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_OFI_coll_algo_container_t * nm_algo_parameters_container_out = NULL;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_REDUCE_SCATTER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_REDUCE_SCATTER);
 
-    mpi_errno = MPIR_Reduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
+    nm_algo_parameters_container_out =
+        MPIDI_OFI_Reduce_scatter_select(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr,
+                                        errflag, (MPIDI_OFI_coll_algo_container_t *)
+                                        ch4_algo_parameters_container_in);
+
+    switch (nm_algo_parameters_container_out->id) {
+    case MPIDI_OFI_Reduce_scatter_intra_noncomm_id:
+        mpi_errno =
+            MPIDI_OFI_Reduce_scatter_intra_noncomm(sendbuf, recvbuf, recvcounts, datatype, op,
+                                                   comm_ptr, errflag,
+                                                   nm_algo_parameters_container_out);
+        break;
+    case MPIDI_OFI_Reduce_scatter_intra_pairwise_id:
+        mpi_errno =
+            MPIDI_OFI_Reduce_scatter_intra_pairwise(sendbuf, recvbuf, recvcounts, datatype, op,
+                                                    comm_ptr, errflag,
+                                                    nm_algo_parameters_container_out);
+        break;
+    case MPIDI_OFI_Reduce_scatter_intra_recursive_doubling_id:
+        mpi_errno =
+            MPIDI_OFI_Reduce_scatter_intra_recursive_doubling(sendbuf, recvbuf, recvcounts,
+                                                              datatype, op, comm_ptr, errflag,
+                                                              nm_algo_parameters_container_out);
+        break;
+    case MPIDI_OFI_Reduce_scatter_intra_recursive_halving_id:
+        mpi_errno =
+            MPIDI_OFI_Reduce_scatter_intra_recursive_halving(sendbuf, recvbuf, recvcounts, datatype,
+                                                             op, comm_ptr, errflag,
+                                                             nm_algo_parameters_container_out);
+        break;
+    default:
+        mpi_errno =
+            MPIR_Reduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
+        break;
+    }
+
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_REDUCE_SCATTER);
+
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -716,17 +759,59 @@ static inline int MPIDI_NM_mpi_reduce_scatter(const void *sendbuf, void *recvbuf
 static inline int MPIDI_NM_mpi_reduce_scatter_block(const void *sendbuf, void *recvbuf,
                                                     int recvcount, MPI_Datatype datatype,
                                                     MPI_Op op, MPIR_Comm * comm_ptr,
-                                                    MPIR_Errflag_t * errflag)
+                                                    MPIR_Errflag_t * errflag,
+                                                    void * ch4_algo_parameters_container_in)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_OFI_coll_algo_container_t * nm_algo_parameters_container_out = NULL;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_REDUCE_SCATTER_BLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_REDUCE_SCATTER_BLOCK);
 
-    mpi_errno = MPIR_Reduce_scatter_block(sendbuf, recvbuf, recvcount,
-                                          datatype, op, comm_ptr, errflag);
+    nm_algo_parameters_container_out =
+        MPIDI_OFI_Reduce_scatter_block_select(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr,
+                                              errflag, (MPIDI_OFI_coll_algo_container_t *)
+                                              ch4_algo_parameters_container_in);
+
+    switch (nm_algo_parameters_container_out->id) {
+    case MPIDI_OFI_Reduce_scatter_block_intra_noncomm_id:
+        mpi_errno =
+            MPIDI_OFI_Reduce_scatter_block_intra_noncomm(sendbuf, recvbuf, recvcount, datatype, op,
+                                                         comm_ptr, errflag,
+                                                         nm_algo_parameters_container_out);
+        break;
+    case MPIDI_OFI_Reduce_scatter_block_intra_pairwise_id:
+        mpi_errno =
+            MPIDI_OFI_Reduce_scatter_block_intra_pairwise(sendbuf, recvbuf, recvcount, datatype, op,
+                                                          comm_ptr, errflag,
+                                                          nm_algo_parameters_container_out);
+        break;
+    case MPIDI_OFI_Reduce_scatter_block_intra_recursive_doubling_id:
+        mpi_errno =
+            MPIDI_OFI_Reduce_scatter_block_intra_recursive_doubling(sendbuf, recvbuf, recvcount,
+                                                                    datatype, op, comm_ptr, errflag,
+                                                                    nm_algo_parameters_container_out);
+        break;
+    case MPIDI_OFI_Reduce_scatter_block_intra_recursive_halving_id:
+        mpi_errno =
+            MPIDI_OFI_Reduce_scatter_block_intra_recursive_halving(sendbuf, recvbuf, recvcount,
+                                                                   datatype, op, comm_ptr, errflag,
+                                                                   nm_algo_parameters_container_out);
+        break;
+    default:
+        mpi_errno =
+            MPIR_Reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
+        break;
+    }
+
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_REDUCE_SCATTER_BLOCK);
+
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME

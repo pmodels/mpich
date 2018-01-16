@@ -209,7 +209,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, int sendcount,
     case MPIDI_CH4_Allgatherv_composition_alpha_id:
         mpi_errno =
             MPIDI_Allgatherv_composition_alpha(sendbuf, sendcount, sendtype,
-                                               recvbuf, recvcounts, displs, 
+                                               recvbuf, recvcounts, displs,
                                                recvtype, comm, errflag,
                                                ch4_algo_parameters_container);
         break;
@@ -623,34 +623,87 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recvbuf,
-                                                  const int recvcounts[], MPI_Datatype datatype,
-                                                  MPI_Op op, MPIR_Comm * comm_ptr,
-                                                  MPIR_Errflag_t * errflag)
+                                                 const int recvcounts[], MPI_Datatype datatype,
+                                                 MPI_Op op, MPIR_Comm * comm_ptr,
+                                                 MPIR_Errflag_t * errflag)
 {
-    int ret;
+    int ret = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t * ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REDUCE_SCATTER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE_SCATTER);
 
-    ret = MPIDI_NM_mpi_reduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr,
-                                      errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Reduce_scatter_select(sendbuf, recvbuf, recvcounts, datatype,
+                                        op, comm_ptr, errflag);
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_CH4_Reduce_scatter_composition_alpha_id:
+        ret =
+            MPIDI_Reduce_scatter_composition_alpha(sendbuf, recvbuf, recvcounts, datatype, op,
+                                                   comm_ptr, errflag,
+                                                   ch4_algo_parameters_container);
+        break;
+#ifdef MPIDI_BUILD_CH4_SHM
+    case MPIDI_CH4_Reduce_scatter_composition_beta_id:
+        ret =
+            MPIDI_Reduce_scatter_composition_beta(sendbuf, recvbuf, recvcounts, datatype, op,
+                                                  comm_ptr, errflag, ch4_algo_parameters_container);
+        break;
+#endif /* MPIDI_BUILD_CH4_SHM */
+    case MPIDI_CH4_Reduce_scatter_intercomm_id:
+        ret =
+            MPIDI_Reduce_scatter_intercomm(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr,
+                                           errflag, ch4_algo_parameters_container);
+        break;
+    default:
+        MPIR_Reduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
+        break;
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REDUCE_SCATTER);
     return ret;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
-                                                        int recvcount, MPI_Datatype datatype,
-                                                        MPI_Op op, MPIR_Comm * comm_ptr,
-                                                        MPIR_Errflag_t * errflag)
+                                                       int recvcount, MPI_Datatype datatype,
+                                                       MPI_Op op, MPIR_Comm * comm_ptr,
+                                                       MPIR_Errflag_t * errflag)
 {
-    int ret;
+    int ret = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t * ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REDUCE_SCATTER_BLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE_SCATTER_BLOCK);
 
-    ret = MPIDI_NM_mpi_reduce_scatter_block(sendbuf, recvbuf, recvcount,
-                                            datatype, op, comm_ptr, errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Reduce_scatter_block_select(sendbuf, recvbuf, recvcount, datatype,
+                                              op, comm_ptr, errflag);
+
+    switch (ch4_algo_parameters_container->id) {
+    case MPIDI_CH4_Reduce_scatter_block_composition_alpha_id:
+        ret =
+            MPIDI_Reduce_scatter_block_composition_alpha(sendbuf, recvbuf, recvcount, datatype, op,
+                                                         comm_ptr, errflag,
+                                                         ch4_algo_parameters_container);
+        break;
+#ifdef MPIDI_BUILD_CH4_SHM
+    case MPIDI_CH4_Reduce_scatter_block_composition_beta_id:
+        ret =
+            MPIDI_Reduce_scatter_block_composition_beta(sendbuf, recvbuf, recvcount, datatype, op,
+                                                        comm_ptr, errflag,
+                                                        ch4_algo_parameters_container);
+        break;
+#endif /* MPIDI_BUILD_CH4_SHM */
+    case MPIDI_CH4_Reduce_scatter_block_intercomm_id:
+        ret =
+            MPIDI_Reduce_scatter_block_intercomm(sendbuf, recvbuf, recvcount, datatype, op,
+                                                 comm_ptr, errflag, ch4_algo_parameters_container);
+        break;
+    default:
+        MPIR_Reduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
+        break;
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REDUCE_SCATTER_BLOCK);
     return ret;
