@@ -61,13 +61,9 @@ int MPIR_Scatter_inter_linear(const void *sendbuf, int sendcount, MPI_Datatype s
         }
     }
 
-  fn_exit:
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }

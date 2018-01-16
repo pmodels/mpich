@@ -94,10 +94,7 @@ int MPIR_Ialltoallw_sched_intra_auto(const void *sendbuf, const int sendcounts[]
                                                   rdispls, recvtypes, comm_ptr, s);
     }
 
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME

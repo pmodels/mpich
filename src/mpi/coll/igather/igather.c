@@ -126,8 +126,6 @@ int MPIR_Igather_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Dataty
 
 fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME

@@ -814,9 +814,5 @@ int MPII_COLL_finalize(void)
     /* deregister non blocking collectives progress hook */
     MPID_Progress_deregister_hook(MPIR_Nbc_progress_hook_id);
 
-  fn_exit:
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
