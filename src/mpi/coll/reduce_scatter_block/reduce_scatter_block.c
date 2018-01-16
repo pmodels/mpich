@@ -183,8 +183,6 @@ fn_exit:
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     /* --END ERROR HANDLING-- */
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME
