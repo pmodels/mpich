@@ -243,9 +243,6 @@ int MPIR_Allreduce_intra_auto (
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     return (mpi_errno);
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
