@@ -128,10 +128,10 @@ MPIR_Scatter_intra_algo_t MPIR_Scatter_intra_algo_choice = MPIR_SCATTER_INTRA_AL
 MPIR_Scatter_inter_algo_t MPIR_Scatter_inter_algo_choice = MPIR_SCATTER_INTER_ALGO_AUTO;
 
 #undef FUNCNAME
-#define FUNCNAME MPII_COLL_init
+#define FUNCNAME MPII_Coll_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_COLL_init(void)
+int MPII_Coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -805,10 +805,10 @@ int MPII_COLL_init(void)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPII_COLL_finalize
+#define FUNCNAME MPII_Coll_finalize
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_COLL_finalize(void)
+int MPII_Coll_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
