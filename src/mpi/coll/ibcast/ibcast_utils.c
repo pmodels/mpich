@@ -8,10 +8,10 @@
 #include "ibcast.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPII_sched_test_length
+#define FUNCNAME MPII_Ibcast_sched_test_length
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_sched_test_length(MPIR_Comm * comm, int tag, void *state)
+int MPII_Ibcast_sched_test_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     int recv_size;
@@ -27,10 +27,10 @@ int MPII_sched_test_length(MPIR_Comm * comm, int tag, void *state)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPII_sched_test_curr_length
+#define FUNCNAME MPII_Ibcast_sched_test_curr_length
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_sched_test_curr_length(MPIR_Comm * comm, int tag, void *state)
+int MPII_Ibcast_sched_test_curr_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     struct  MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state*) state;
@@ -44,10 +44,10 @@ int MPII_sched_test_curr_length(MPIR_Comm * comm, int tag, void *state)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPII_sched_add_length
+#define FUNCNAME MPII_Ibcast_sched_add_length
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_sched_add_length(MPIR_Comm * comm, int tag, void *state)
+int MPII_Ibcast_sched_add_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     int recv_size;
