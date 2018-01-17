@@ -230,6 +230,18 @@ MPIDI_${net_upper}_reduce_scatter_params_t ${net};"
         ch4_netmod_reduce_scatter_block_params_decl="${ch4_netmod_reduce_scatter_block_params_decl} \\
 MPIDI_${net_upper}_reduce_scatter_block_params_t ${net};"
     fi
+    if test -z "$ch4_netmod_scan_params_decl" ; then
+        ch4_netmod_scan_params_decl="MPIDI_${net_upper}_SCAN_PARAMS_DECL;"
+    else
+        ch4_netmod_scan_params_decl="${ch4_netmod_scan_params_decl} \\
+MPIDI_${net_upper}_scan_params_t ${net};"
+    fi
+    if test -z "$ch4_netmod_exscan_params_decl" ; then
+        ch4_netmod_exscan_params_decl="MPIDI_${net_upper}_EXSCAN_PARAMS_DECL;"
+    else
+        ch4_netmod_exscan_params_decl="${ch4_netmod_exscan_params_decl} \\
+MPIDI_${net_upper}_exscan_params_t ${net};"
+    fi
     if test -z "$ch4_netmod_win_decl" ; then
         ch4_netmod_win_decl="MPIDI_${net_upper}_win_t ${net};"
     else
@@ -284,6 +296,8 @@ AC_SUBST(ch4_netmod_scatter_params_decl)
 AC_SUBST(ch4_netmod_scatterv_params_decl)
 AC_SUBST(ch4_netmod_reduce_scatter_params_decl)
 AC_SUBST(ch4_netmod_reduce_scatter_block_params_decl)
+AC_SUBST(ch4_netmod_scan_params_decl)
+AC_SUBST(ch4_netmod_exscan_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_pre_include)
 AM_SUBST_NOTMAKE(ch4_netmod_coll_globals_default)
 AM_SUBST_NOTMAKE(ch4_netmod_coll_params_include)
@@ -309,6 +323,8 @@ AM_SUBST_NOTMAKE(ch4_netmod_scatter_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_scatterv_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_reduce_scatter_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_reduce_scatter_block_params_decl)
+AM_SUBST_NOTMAKE(ch4_netmod_scan_params_decl)
+AM_SUBST_NOTMAKE(ch4_netmod_exscan_params_decl)
 
 AC_ARG_ENABLE(ch4-netmod-direct,
     [--enable-ch4-netmod-direct
@@ -559,6 +575,18 @@ MPIDI_${shm_upper}_reduce_scatter_params_t ${shm};"
         ch4_shm_reduce_scatter_block_params_decl="${ch4_shm_reduce_scatter_block_params_decl} \\
 MPIDI_${shm_upper}_reduce_scatter_block_params_t ${shm};"
     fi
+    if test -z "$ch4_shm_exscan_params_decl" ; then
+        ch4_shm_exscan_params_decl="MPIDI_${shm_upper}_EXSCAN_PARAMS_DECL;"
+    else
+        ch4_shm_exscan_params_decl="${ch4_shm_exscan_params_decl} \\
+MPIDI_${shm_upper}_exscan_params_t ${shm};"
+    fi
+    if test -z "$ch4_shm_scan_params_decl" ; then
+        ch4_shm_scan_params_decl="MPIDI_${shm_upper}_SCAN_PARAMS_DECL;"
+    else
+        ch4_shm_scan_params_decl="${ch4_shm_scan_params_decl} \\
+MPIDI_${shm_upper}_scan_params_t ${shm};"
+    fi
     shm_index=`expr $shm_index + 1`
 done
 ch4_shm_array_sz=$shm_index
@@ -591,6 +619,8 @@ AC_SUBST(ch4_shm_scatter_params_decl)
 AC_SUBST(ch4_shm_scatterv_params_decl)
 AC_SUBST(ch4_shm_reduce_scatter_params_decl)
 AC_SUBST(ch4_shm_reduce_scatter_block_params_decl)
+AC_SUBST(ch4_shm_scan_params_decl)
+AC_SUBST(ch4_shm_exscan_params_decl)
 AM_SUBST_NOTMAKE(ch4_shm_pre_include)
 AM_SUBST_NOTMAKE(ch4_shm_coll_globals_default)
 AM_SUBST_NOTMAKE(ch4_shm_coll_params_include)
@@ -611,6 +641,8 @@ AM_SUBST_NOTMAKE(ch4_shm_scatter_params_decl)
 AM_SUBST_NOTMAKE(ch4_shm_scatterv_params_decl)
 AM_SUBST_NOTMAKE(ch4_shm_reduce_scatter_params_decl)
 AM_SUBST_NOTMAKE(ch4_shm_reduce_scatter_block_params_decl)
+AM_SUBST_NOTMAKE(ch4_shm_scan_params_decl)
+AM_SUBST_NOTMAKE(ch4_shm_exscan_params_decl)
 
 if test "$ch4_shm_array_sz" = "1"  && test "$enable_ch4_shm_direct" = "yes" ;  then
    PAC_APPEND_FLAG([-DSHM_DIRECT=__shm_direct_${ch4_shm}__], [CPPFLAGS])

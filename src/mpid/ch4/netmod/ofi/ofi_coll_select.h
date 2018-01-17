@@ -462,4 +462,36 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Reduce_scatter_block_select(const vo
     }
 }
 
+MPL_STATIC_INLINE_PREFIX
+MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Scan_select(const void *sendbuf,
+                                                        void *recvbuf,
+                                                        int count,
+                                                        MPI_Datatype datatype,
+                                                        MPI_Op op,
+                                                        MPIR_Comm * comm,
+                                                        MPIR_Errflag_t *
+                                                        errflag,
+                                                        MPIDI_OFI_coll_algo_container_t *
+                                                        ch4_algo_parameters_container_in
+                                                        ATTRIBUTE((unused)))
+{
+    return (MPIDI_OFI_coll_algo_container_t *) & OFI_Scan_intra_generic_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Exscan_select(const void *sendbuf,
+                                                          void *recvbuf,
+                                                          int count,
+                                                          MPI_Datatype datatype,
+                                                          MPI_Op op,
+                                                          MPIR_Comm * comm,
+                                                          MPIR_Errflag_t *
+                                                          errflag,
+                                                          MPIDI_OFI_coll_algo_container_t *
+                                                          ch4_algo_parameters_container_in
+                                                          ATTRIBUTE((unused)))
+{
+    return (MPIDI_OFI_coll_algo_container_t *) & OFI_Exscan_intra_recursive_doubling_cnt;
+}
+
 #endif /* NETMOD_OFI_COLL_SELECT_H_INCLUDED */

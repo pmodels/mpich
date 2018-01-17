@@ -193,3 +193,15 @@ const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_block_intra_recursive_h
         .id = MPIDI_OFI_Reduce_scatter_block_intra_recursive_halving_id
     };
 
+/* Scan default OFI containers initialization*/
+const MPIDI_OFI_coll_algo_container_t OFI_Scan_intra_generic_cnt =
+    {
+        .id = MPIDI_OFI_Scan_intra_generic_id
+    };
+
+/* Exscan default OFI containers initialization*/
+const MPIDI_OFI_coll_algo_container_t OFI_Exscan_intra_recursive_doubling_cnt =
+    {
+        .id = MPIDI_OFI_Exscan_intra_recursive_doubling_id
+    };
+

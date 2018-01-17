@@ -111,4 +111,17 @@ extern const MPIDI_coll_algo_container_t CH4_Reduce_scatter_block_composition_be
 #endif /* MPIDI_BUILD_CH4_SHM */
 extern const MPIDI_coll_algo_container_t CH4_Reduce_scatter_block_intercomm_cnt;
 
+/* Scan CH4 level containers declaration */
+extern const MPIDI_coll_algo_container_t CH4_Scan_composition_alpha_cnt;
+extern const MPIDI_coll_algo_container_t CH4_Scan_composition_beta_cnt;
+#ifdef MPIDI_BUILD_CH4_SHM
+extern const MPIDI_coll_algo_container_t CH4_Scan_composition_gamma_cnt;
+#endif /* MPIDI_BUILD_CH4_SHM */
+
+/* Exscan CH4 level containers declaration */
+extern const MPIDI_coll_algo_container_t CH4_Exscan_composition_alpha_cnt;
+#ifdef MPIDI_BUILD_CH4_SHM
+extern const MPIDI_coll_algo_container_t CH4_Exscan_composition_beta_cnt;
+#endif /* MPIDI_BUILD_CH4_SHM */
+
 #endif /* CH4_COLL_CONTAINERS_H_INCLUDED */

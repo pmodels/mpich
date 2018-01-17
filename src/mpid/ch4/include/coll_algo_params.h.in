@@ -131,6 +131,22 @@ typedef union MPIDI_Reduce_scatter_block_algo_params {
     /* *INDENT-ON* */
 } MPIDI_REDUCE_SCATTER_BLOCK_ALGO_params_t;
 
+typedef union MPIDI_Scan_algo_params {
+    /* *INDENT-OFF* */
+    MPIDI_CH4_SCAN_PARAMS_DECL;
+    @ch4_netmod_scan_params_decl@
+    @ch4_shm_scan_params_decl@
+    /* *INDENT-ON* */
+} MPIDI_SCAN_ALGO_params_t;
+
+typedef union MPIDI_Exscan_algo_params {
+    /* *INDENT-OFF* */
+    MPIDI_CH4_EXSCAN_PARAMS_DECL;
+    @ch4_netmod_exscan_params_decl@
+    @ch4_shm_exscan_params_decl@
+    /* *INDENT-ON* */
+} MPIDI_EXSCAN_ALGO_params_t;
+
 #define MPIDI_BARRIER_PARAMS_DECL MPIDI_BARRIER_ALGO_params_t barrier_params;
 #define MPIDI_BCAST_PARAMS_DECL MPIDI_BCAST_ALGO_params_t bcast_params;
 #define MPIDI_REDUCE_PARAMS_DECL MPIDI_REDUCE_ALGO_params_t reduce_params;
@@ -146,6 +162,8 @@ typedef union MPIDI_Reduce_scatter_block_algo_params {
 #define MPIDI_SCATTERV_PARAMS_DECL MPIDI_SCATTERV_ALGO_params_t scatterv_params;
 #define MPIDI_REDUCE_SCATTER_PARAMS_DECL MPIDI_REDUCE_SCATTER_ALGO_params_t reduce_scatter_params;
 #define MPIDI_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDI_REDUCE_SCATTER_BLOCK_ALGO_params_t reduce_scatter_block_params;
+#define MPIDI_SCAN_PARAMS_DECL MPIDI_SCAN_ALGO_params_t scan_params;
+#define MPIDI_EXSCAN_PARAMS_DECL MPIDI_EXSCAN_ALGO_params_t exscan_params;
 
 typedef union MPIDI_coll_algo_generic_params {
     MPIDI_BARRIER_PARAMS_DECL;
@@ -163,6 +181,8 @@ typedef union MPIDI_coll_algo_generic_params {
     MPIDI_SCATTERV_PARAMS_DECL;
     MPIDI_REDUCE_SCATTER_PARAMS_DECL;
     MPIDI_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
+    MPIDI_SCAN_PARAMS_DECL;
+    MPIDI_EXSCAN_PARAMS_DECL;
 } MPIDI_coll_algo_generic_params_t;
 
 typedef struct MPIDI_coll_algo_generic_container {

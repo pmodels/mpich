@@ -482,4 +482,36 @@ MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Reduce_scatter_block_select(cons
     }
 }
 
+MPL_STATIC_INLINE_PREFIX
+MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Scan_select(const void *sendbuf,
+                                                            void *recvbuf,
+                                                            int count,
+                                                            MPI_Datatype datatype,
+                                                            MPI_Op op,
+                                                            MPIR_Comm * comm,
+                                                            MPIR_Errflag_t *
+                                                            errflag,
+                                                            MPIDI_POSIX_coll_algo_container_t *
+                                                            ch4_algo_parameters_container_in
+                                                            ATTRIBUTE((unused)))
+{
+    return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_Scan_intra_generic_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Exscan_select(const void *sendbuf,
+                                                              void *recvbuf,
+                                                              int count,
+                                                              MPI_Datatype datatype,
+                                                              MPI_Op op,
+                                                              MPIR_Comm * comm,
+                                                              MPIR_Errflag_t *
+                                                              errflag,
+                                                              MPIDI_POSIX_coll_algo_container_t *
+                                                              ch4_algo_parameters_container_in
+                                                              ATTRIBUTE((unused)))
+{
+    return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_Exscan_intra_recursive_doubling_cnt;
+}
+
 #endif /* SHM_POSIX_COLL_SELECT_H_INCLUDED */

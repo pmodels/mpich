@@ -317,4 +317,30 @@ MPIDI_coll_algo_container_t * MPIDI_CH4_Reduce_scatter_block_select(const void *
     return (MPIDI_coll_algo_container_t *) & CH4_Reduce_scatter_block_composition_alpha_cnt;
 }
 
+MPL_STATIC_INLINE_PREFIX
+MPIDI_coll_algo_container_t * MPIDI_CH4_Scan_select(const void *sendbuf,
+                                                    void *recvbuf,
+                                                    int count,
+                                                    MPI_Datatype datatype,
+                                                    MPI_Op op, MPIR_Comm * comm,
+                                                    MPIR_Errflag_t * errflag)
+{
+    if (MPII_Comm_is_node_consecutive(comm)) {
+        return (MPIDI_coll_algo_container_t *) & CH4_Scan_composition_alpha_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_Scan_composition_beta_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+MPIDI_coll_algo_container_t * MPIDI_CH4_Exscan_select(const void *sendbuf,
+                                                      void *recvbuf,
+                                                      int count,
+                                                      MPI_Datatype datatype,
+                                                      MPI_Op op, MPIR_Comm * comm,
+                                                      MPIR_Errflag_t * errflag)
+{
+    return (MPIDI_coll_algo_container_t *) & CH4_Exscan_composition_alpha_cnt;
+}
+
 #endif /* CH4_COLL_SELECT_H_INCLUDED */

@@ -316,6 +316,48 @@ typedef union {
 #endif /* MPIDI_BUILD_CH4_SHM */
 } MPIDI_CH4_Reduce_scatter_block_params_t;
 
+typedef enum {
+    MPIDI_CH4_Scan_composition_alpha_id,
+    MPIDI_CH4_Scan_composition_beta_id,
+#ifdef MPIDI_BUILD_CH4_SHM
+    MPIDI_CH4_Scan_composition_gamma_id,
+#endif /* MPIDI_BUILD_CH4_SHM */
+} MPIDI_CH4_Scan_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Scan_alpha {
+        int node_scan;
+        int roots_scan;
+        int node_bcast;
+    } ch4_scan_alpha;
+    struct MPIDI_CH4_Scan_beta {
+        int scan;
+    } ch4_scan_beta;
+#ifdef MPIDI_BUILD_CH4_SHM
+    struct MPIDI_CH4_Scan_gamma {
+        int scan;
+    } ch4_scan_gamma;
+#endif /* MPIDI_BUILD_CH4_SHM */
+} MPIDI_CH4_Scan_params_t;
+
+typedef enum {
+    MPIDI_CH4_Exscan_composition_alpha_id,
+#ifdef MPIDI_BUILD_CH4_SHM
+    MPIDI_CH4_Exscan_composition_beta_id,
+#endif /* MPIDI_BUILD_CH4_SHM */
+} MPIDI_CH4_Exscan_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Exscan_alpha {
+        int exscan;
+    } ch4_exscan_alpha;
+#ifdef MPIDI_BUILD_CH4_SHM
+    struct MPIDI_CH4_Exscan_beta {
+        int exscan;
+    } ch4_exscan_beta;
+#endif /* MPIDI_BUILD_CH4_SHM */
+} MPIDI_CH4_Exscan_params_t;
+
 #define MPIDI_CH4_BARRIER_PARAMS_DECL MPIDI_CH4_Barrier_params_t ch4_barrier_params;
 #define MPIDI_CH4_BCAST_PARAMS_DECL MPIDI_CH4_Bcast_params_t ch4_bcast_params;
 #define MPIDI_CH4_REDUCE_PARAMS_DECL MPIDI_CH4_Reduce_params_t ch4_reduce_params;
@@ -331,6 +373,8 @@ typedef union {
 #define MPIDI_CH4_SCATTERV_PARAMS_DECL MPIDI_CH4_Scatterv_params_t ch4_scatterv_params;
 #define MPIDI_CH4_REDUCE_SCATTER_PARAMS_DECL MPIDI_CH4_Reduce_scatter_params_t ch4_reduce_scatter_params
 #define MPIDI_CH4_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDI_CH4_Reduce_scatter_block_params_t ch4_reduce_scatter_block_params
+#define MPIDI_CH4_SCAN_PARAMS_DECL MPIDI_CH4_Scan_params_t ch4_scan_params
+#define MPIDI_CH4_EXSCAN_PARAMS_DECL MPIDI_CH4_Exscan_params_t ch4_exscan_params
 
 typedef union {
     MPIDI_CH4_BARRIER_PARAMS_DECL;
@@ -348,6 +392,8 @@ typedef union {
     MPIDI_CH4_SCATTERV_PARAMS_DECL;
     MPIDI_CH4_REDUCE_SCATTER_PARAMS_DECL;
     MPIDI_CH4_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
+    MPIDI_CH4_SCAN_PARAMS_DECL;
+    MPIDI_CH4_EXSCAN_PARAMS_DECL;
 } MPIDI_CH4_coll_params_t;
 
 typedef struct MPIDI_coll_algo_container {

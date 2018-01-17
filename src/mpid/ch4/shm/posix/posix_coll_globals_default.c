@@ -193,3 +193,15 @@ const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block_intra_recursi
         .id = MPIDI_POSIX_Reduce_scatter_block_intra_recursive_halving_id
     };
 
+/* Scan default POSIX containers initialization*/
+const MPIDI_POSIX_coll_algo_container_t POSIX_Scan_intra_generic_cnt =
+    {
+        .id = MPIDI_POSIX_Scan_intra_generic_id
+    };
+
+/* Exscan default POSIX containers initialization*/
+const MPIDI_POSIX_coll_algo_container_t POSIX_Exscan_intra_recursive_doubling_cnt =
+    {
+        .id = MPIDI_POSIX_Exscan_intra_recursive_doubling_id
+    };
+

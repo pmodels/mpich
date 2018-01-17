@@ -820,16 +820,41 @@ fn_fail:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_scan(const void *sendbuf, void *recvbuf, int count,
                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                    MPIR_Errflag_t * errflag)
+                                    MPIR_Errflag_t * errflag,
+                                    void * ch4_algo_parameters_container_in)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_OFI_coll_algo_container_t * nm_algo_parameters_container_out = NULL;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SCAN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SCAN);
 
-    mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    nm_algo_parameters_container_out =
+        MPIDI_OFI_Scan_select(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                              errflag, (MPIDI_OFI_coll_algo_container_t *)
+                              ch4_algo_parameters_container_in);
+
+    switch (nm_algo_parameters_container_out->id) {
+    case MPIDI_OFI_Scan_intra_generic_id:
+        mpi_errno =
+            MPIDI_OFI_Scan_intra_generic(sendbuf, recvbuf, count, datatype, op,
+                                         comm_ptr, errflag, nm_algo_parameters_container_out);
+        break;
+    default:
+        mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+        break;
+    }
+
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SCAN);
+
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -838,16 +863,42 @@ static inline int MPIDI_NM_mpi_scan(const void *sendbuf, void *recvbuf, int coun
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_exscan(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                      MPIR_Errflag_t * errflag)
+                                      MPIR_Errflag_t * errflag,
+                                      void * ch4_algo_parameters_container_in)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_OFI_coll_algo_container_t * nm_algo_parameters_container_out = NULL;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_EXSCAN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_EXSCAN);
 
-    mpi_errno = MPIR_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    nm_algo_parameters_container_out =
+        MPIDI_OFI_Exscan_select(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                                errflag, (MPIDI_OFI_coll_algo_container_t *)
+                                ch4_algo_parameters_container_in);
+
+    switch (nm_algo_parameters_container_out->id) {
+    case MPIDI_OFI_Exscan_intra_recursive_doubling_id:
+        mpi_errno =
+            MPIDI_OFI_Exscan_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
+                                                      comm_ptr, errflag,
+                                                      nm_algo_parameters_container_out);
+        break;
+    default:
+        mpi_errno = MPIR_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+        break;
+    }
+
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_EXSCAN);
+
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME

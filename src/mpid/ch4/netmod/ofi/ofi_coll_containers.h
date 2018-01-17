@@ -67,4 +67,10 @@ extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_block_intra_pair
 extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_block_intra_recursive_doubling_cnt;
 extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_block_intra_recursive_halving_cnt;
 
+/* Scan OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Scan_intra_generic_cnt;
+
+/* Exscan OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Exscan_intra_recursive_doubling_cnt;
+
 #endif /* OFI_COLL_CONTAINERS_H_INCLUDED */

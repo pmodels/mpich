@@ -927,10 +927,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_reduce_scatter_block(const void *sendb
                                                                void * algo_parameters_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_scan(const void *sendbuf, void *recvbuf, int count,
                                                MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                               MPIR_Errflag_t * errflag) MPL_STATIC_INLINE_SUFFIX;
+                                               MPIR_Errflag_t * errflag,
+                                               void * algo_parameters_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_exscan(const void *sendbuf, void *recvbuf, int count,
                                                  MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                                 MPIR_Errflag_t * errflag) MPL_STATIC_INLINE_SUFFIX;
+                                                 MPIR_Errflag_t * errflag,
+                                                 void * algo_parameters_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_neighbor_allgather(const void *sendbuf, int sendcount,
                                                              MPI_Datatype sendtype, void *recvbuf,
                                                              int recvcount, MPI_Datatype recvtype,

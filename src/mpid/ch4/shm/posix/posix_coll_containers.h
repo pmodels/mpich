@@ -67,4 +67,10 @@ extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block_intra_
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block_intra_recursive_doubling_cnt;
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block_intra_recursive_halving_cnt;
 
+/* Scan POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Scan_intra_generic_cnt;
+
+/* Exscan POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Exscan_intra_recursive_doubling_cnt;
+
 #endif /* SHM_COLL_CONTAINERS_H_INCLUDED */

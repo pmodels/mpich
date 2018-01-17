@@ -710,4 +710,46 @@ int MPIDI_OFI_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_Scan_intra_generic
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_OFI_Scan_intra_generic(const void *sendbuf,
+                                 void *recvbuf,
+                                 int count,
+                                 MPI_Datatype datatype,
+                                 MPI_Op op, MPIR_Comm * comm_ptr,
+                                 MPIR_Errflag_t * errflag,
+                                 MPIDI_OFI_coll_algo_container_t *
+                                 params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Scan_intra_generic(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_Exscan_intra_recursive_doubling
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_OFI_Exscan_intra_recursive_doubling(const void *sendbuf,
+                                              void *recvbuf,
+                                              int count,
+                                              MPI_Datatype datatype,
+                                              MPI_Op op, MPIR_Comm * comm_ptr,
+                                              MPIR_Errflag_t * errflag,
+                                              MPIDI_OFI_coll_algo_container_t *
+                                              params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno =
+        MPIR_Exscan_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                                             errflag);
+    return mpi_errno;
+}
+
 #endif /* OFI_COLL_IMPL_H_INCLUDED */

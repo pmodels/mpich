@@ -191,6 +191,28 @@ typedef union {
     } POSIX_reduce_scatter_block_empty_parameters;
 } MPIDI_POSIX_Reduce_scatter_block_params_t;
 
+typedef enum {
+    MPIDI_POSIX_Scan_intra_generic_id,
+} MPIDI_POSIX_Scan_id_t;
+
+typedef union {
+    /* reserved for parameters related to NETMOD specific collectives */
+    struct MPIDI_POSIX_Scan_empty_parameters {
+        int empty;
+    } POSIX_scan_empty_parameters;
+} MPIDI_POSIX_Scan_params_t;
+
+typedef enum {
+    MPIDI_POSIX_Exscan_intra_recursive_doubling_id,
+} MPIDI_POSIX_Exscan_id_t;
+
+typedef union {
+    /* reserved for parameters related to NETMOD specific collectives */
+    struct MPIDI_POSIX_Exscan_empty_parameters {
+        int empty;
+    } POSIX_exscan_empty_parameters;
+} MPIDI_POSIX_Exscan_params_t;
+
 #define MPIDI_POSIX_BARRIER_PARAMS_DECL MPIDI_POSIX_Barrier_params_t posix_barrier_params;
 #define MPIDI_POSIX_BCAST_PARAMS_DECL MPIDI_POSIX_Bcast_params_t posix_bcast_params;
 #define MPIDI_POSIX_REDUCE_PARAMS_DECL MPIDI_POSIX_Reduce_params_t posix_reduce_params;
@@ -206,6 +228,8 @@ typedef union {
 #define MPIDI_POSIX_SCATTERV_PARAMS_DECL MPIDI_POSIX_Scatterv_params_t posix_scatterv_params;
 #define MPIDI_POSIX_REDUCE_SCATTER_PARAMS_DECL MPIDI_POSIX_Reduce_scatter_params_t posix_reduce_scatter_params;
 #define MPIDI_POSIX_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDI_POSIX_Reduce_scatter_block_params_t posix_reduce_scatter_block_params;
+#define MPIDI_POSIX_SCAN_PARAMS_DECL MPIDI_POSIX_Scan_params_t posix_scan_params;
+#define MPIDI_POSIX_EXSCAN_PARAMS_DECL MPIDI_POSIX_Exscan_params_t posix_exscan_params;
 
 typedef union {
     MPIDI_POSIX_BARRIER_PARAMS_DECL;
@@ -223,6 +247,8 @@ typedef union {
     MPIDI_POSIX_SCATTERV_PARAMS_DECL;
     MPIDI_POSIX_REDUCE_SCATTER_PARAMS_DECL;
     MPIDI_POSIX_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
+    MPIDI_POSIX_SCAN_PARAMS_DECL;
+    MPIDI_POSIX_EXSCAN_PARAMS_DECL;
 } MPIDI_POSIX_coll_params_t;
 
 typedef struct MPIDI_POSIX_coll_algo_container {
