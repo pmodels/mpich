@@ -127,14 +127,14 @@ int MPIR_Ibcast_sched_intra_scatter_ring_allgather(void *buffer, int count, MPI_
                                     left_count, MPI_BYTE, left, comm_ptr, &ibcast_state->status, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
-        mpi_errno = MPIR_Sched_cb(&MPII_sched_add_length, ibcast_state, s);
+        mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
 
         j     = jnext;
         jnext = (comm_size + jnext - 1) % comm_size;
     }
-    mpi_errno = MPIR_Sched_cb(&MPII_sched_test_curr_length, ibcast_state, s);
+    mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_curr_length, ibcast_state, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (!is_contig && rank != root) {

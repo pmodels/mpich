@@ -119,7 +119,7 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
 
             MPIR_SCHED_BARRIER(s);
             if(is_homogeneous){
-                mpi_errno = MPIR_Sched_cb(&MPII_sched_test_length, ibcast_state, s);
+                mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_length, ibcast_state, s);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }
