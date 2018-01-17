@@ -1292,7 +1292,7 @@ static inline int MPIDI_NM_upids_to_lupids(int size,
                              avtid, i, MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest));
             /* highest bit is marked as 1 to indicate this is a new process */
             (*remote_lupids)[new_avt_procs[i]] = MPIDIU_LUPID_CREATE(avtid, i);
-            MPIDIU_LUPID_SET_NEW_AVT_MARK((*remote_lupids)[i]);
+            MPIDIU_LUPID_SET_NEW_AVT_MARK((*remote_lupids)[new_avt_procs[i]]);
         }
     }
 
