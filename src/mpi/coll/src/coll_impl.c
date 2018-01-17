@@ -131,7 +131,8 @@ MPIR_Scatter_inter_algo_t MPIR_Scatter_inter_algo_choice = MPIR_SCATTER_INTER_AL
 #define FUNCNAME MPII_COLL_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_COLL_init(void) {
+int MPII_COLL_init(void)
+{
     int mpi_errno = MPI_SUCCESS;
 
     /* =========================================================================== */

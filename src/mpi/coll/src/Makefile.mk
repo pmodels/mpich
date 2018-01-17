@@ -4,4 +4,3 @@
 
 mpi_core_sources += \
     src/mpi/coll/src/coll_impl.c
-
