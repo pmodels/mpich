@@ -10,7 +10,7 @@
 #include "mpiimpl.h"
 
 
-struct MPII_Ibcast_status{
+struct MPII_Ibcast_state{
     int curr_bytes;
     int n_bytes;
     MPI_Status status;

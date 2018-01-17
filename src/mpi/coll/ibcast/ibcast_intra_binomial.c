@@ -26,7 +26,7 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
     MPI_Aint nbytes, type_size;
     int relative_rank;
     int src, dst;
-    struct MPII_Ibcast_status *status;
+    struct MPII_Ibcast_state *ibcast_state;
     void *tmp_buf = NULL;
     MPIR_SCHED_CHKPMEM_DECL(2);
 
@@ -45,8 +45,8 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
     if (comm_ptr->is_hetero)
         is_homogeneous = 0;
 #endif
-    MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPII_Ibcast_status *,
-                              sizeof(struct MPII_Ibcast_status), mpi_errno, "MPI_Stauts", MPL_MEM_BUFFER);
+    MPIR_SCHED_CHKPMEM_MALLOC(ibcast_state, struct MPII_Ibcast_state *,
+                              sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Stauts", MPL_MEM_BUFFER);
 
 
     /* MPI_Type_size() might not give the accurate size of the packed
@@ -63,7 +63,7 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
 
     nbytes = type_size * count;
 
-    status->n_bytes = nbytes;
+    ibcast_state->n_bytes = nbytes;
 
     if (!is_contig || !is_homogeneous)
     {
@@ -111,15 +111,15 @@ int MPIR_Ibcast_sched_intra_binomial(void *buffer, int count, MPI_Datatype datat
             if (src < 0) src += comm_size;
             if (!is_contig || !is_homogeneous)
                 mpi_errno = MPIR_Sched_recv_status(tmp_buf, nbytes, MPI_BYTE, src,
-                                                    comm_ptr, &status->status, s);
+                                                    comm_ptr, &ibcast_state->status, s);
             else
                 mpi_errno = MPIR_Sched_recv_status(buffer, count, datatype, src,
-                                                   comm_ptr, &status->status, s);
+                                                   comm_ptr, &ibcast_state->status, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
             MPIR_SCHED_BARRIER(s);
             if(is_homogeneous){
-                mpi_errno = MPIR_Sched_cb(&MPII_sched_test_length, status, s);
+                mpi_errno = MPIR_Sched_cb(&MPII_sched_test_length, ibcast_state, s);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }
