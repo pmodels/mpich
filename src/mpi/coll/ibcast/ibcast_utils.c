@@ -15,13 +15,13 @@ int MPII_sched_test_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     int recv_size;
-    struct  MPII_Ibcast_status *status = (struct MPII_Ibcast_status*) state;
-    MPIR_Get_count_impl(&status->status, MPI_BYTE, &recv_size);
-    if(status->n_bytes != recv_size || status->status.MPI_ERROR != MPI_SUCCESS) {
+    struct  MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state*) state;
+    MPIR_Get_count_impl(&ibcast_state->status, MPI_BYTE, &recv_size);
+    if(ibcast_state->n_bytes != recv_size || ibcast_state->status.MPI_ERROR != MPI_SUCCESS) {
         mpi_errno = MPIR_Err_create_code( mpi_errno, MPIR_ERR_RECOVERABLE,
                 FCNAME, __LINE__, MPI_ERR_OTHER,
                 "**collective_size_mismatch",
-                "**collective_size_mismatch %d %d", status->n_bytes, recv_size);
+                "**collective_size_mismatch %d %d", ibcast_state->n_bytes, recv_size);
     }
     return mpi_errno;
 }
@@ -33,12 +33,12 @@ int MPII_sched_test_length(MPIR_Comm * comm, int tag, void *state)
 int MPII_sched_test_curr_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct  MPII_Ibcast_status *status = (struct MPII_Ibcast_status*) state;
-    if(status->n_bytes != status->curr_bytes) {
+    struct  MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state*) state;
+    if(ibcast_state->n_bytes != ibcast_state->curr_bytes) {
         mpi_errno = MPIR_Err_create_code( mpi_errno, MPIR_ERR_RECOVERABLE,
                 FCNAME, __LINE__, MPI_ERR_OTHER,
                 "**collective_size_mismatch",
-                "**collective_size_mismatch %d %d", status->n_bytes, status->curr_bytes);
+                "**collective_size_mismatch %d %d", ibcast_state->n_bytes, ibcast_state->curr_bytes);
     }
     return mpi_errno;
 }
@@ -51,9 +51,9 @@ int MPII_sched_add_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     int recv_size;
-    struct  MPII_Ibcast_status *status = (struct MPII_Ibcast_status*) state;
-    MPIR_Get_count_impl(&status->status, MPI_BYTE, &recv_size);
-    status->curr_bytes+= recv_size;
+    struct  MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state*) state;
+    MPIR_Get_count_impl(&ibcast_state->status, MPI_BYTE, &recv_size);
+    ibcast_state->curr_bytes+= recv_size;
     return mpi_errno;
 }
 
