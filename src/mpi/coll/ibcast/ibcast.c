@@ -74,8 +74,9 @@ int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Com
 
 /* any non-MPI functions go here, especially non-static ones */
 
-/* Provides a "flat" broadcast that doesn't know anything about hierarchy.  It will choose
- * between several different algorithms based on the given parameters. */
+/* Provides a "flat" broadcast that doesn't know anything about
+ * hierarchy.  It will choose between several different algorithms
+ * based on the given parameters. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ibcast_sched_intra_auto
 #undef FCNAME
@@ -124,9 +125,9 @@ fn_fail:
     goto fn_exit;
 }
 
-/* Provides a "flat" broadcast for intercommunicators that doesn't know
- * anything about hierarchy.  It will choose between several different
- * algorithms based on the given parameters. */
+/* Provides a "flat" broadcast for intercommunicators that doesn't
+ * know anything about hierarchy.  It will choose between several
+ * different algorithms based on the given parameters. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ibcast_sched_inter_auto
 #undef FCNAME
