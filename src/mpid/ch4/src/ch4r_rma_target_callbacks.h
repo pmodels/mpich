@@ -1241,6 +1241,7 @@ static inline int MPIDI_get_acc_ack_target_cmpl_cb(MPIR_Request * areq)
 
     win = MPIDI_CH4U_REQUEST(areq, req->areq.win_ptr);
     MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
+    MPIDI_win_remote_acc_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
 
     dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype));
     MPID_Request_complete(areq);
@@ -1267,6 +1268,7 @@ static inline int MPIDI_cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
 
     win = MPIDI_CH4U_REQUEST(rreq, req->creq.win_ptr);
     MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(rreq, rank));
+    MPIDI_win_remote_acc_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(rreq, rank));
 
     MPL_free(MPIDI_CH4U_REQUEST(rreq, req->creq.data));
     MPID_Request_complete(rreq);
@@ -1343,6 +1345,7 @@ static inline int MPIDI_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
     }
 
     MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
+    MPIDI_win_remote_acc_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
 
     MPID_Request_complete(areq);
 

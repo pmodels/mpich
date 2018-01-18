@@ -345,6 +345,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     /* Increase local and remote completion counters and set the local completion
      * counter in request, thus it can be decreased at request completion. */
     MPIDI_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
+    /* Increase remote completion counter for acc. */
+    MPIDI_win_remote_acc_cmpl_cnt_incr(win, target_rank);
 
     MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
     MPIDI_CH4U_REQUEST(sreq, req->areq.data_sz) = data_sz;
@@ -504,6 +506,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     /* Increase local and remote completion counters and set the local completion
      * counter in request, thus it can be decreased at request completion. */
     MPIDI_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
+    /* Increase remote completion counter for acc. */
+    MPIDI_win_remote_acc_cmpl_cnt_incr(win, target_rank);
 
     MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
     MPIDI_CH4U_REQUEST(sreq, req->areq.data_sz) = data_sz;
@@ -947,6 +951,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
     MPIDI_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
+    /* Increase remote completion counter for acc. */
+    MPIDI_win_remote_acc_cmpl_cnt_incr(win, target_rank);
 
     /* FIXIME: we need to choose between NM and SHM */
     mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_CSWAP_REQ,
