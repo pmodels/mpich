@@ -107,8 +107,10 @@ static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
         } else if (!strcmp(curr_ptr->key, "accumulate_ordering")) {
             save_ordering = MPIDI_CH4U_WIN(win, info_args).accumulate_ordering;
             MPIDI_CH4U_WIN(win, info_args).accumulate_ordering = 0;
-            if (!strcmp(curr_ptr->value, "none"))
+            if (!strcmp(curr_ptr->value, "none")) {
+                /* For MPI-3, "none" means no ordering and is not default. */
                 goto next;
+            }
             value = curr_ptr->value;
             token = (char *) strtok_r(value, ",", &savePtr);
 
