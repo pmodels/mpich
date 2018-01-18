@@ -701,7 +701,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
     enum fi_op fi_op;
     enum fi_datatype fi_dt;
-    size_t offset, max_size, dt_size, bytes;
+    size_t offset, max_count, max_size, dt_size, bytes;
     MPI_Aint true_lb;
     void *buffer, *tbuffer, *rbuffer;
     struct fi_ioc originv, resultv, comparev;
@@ -737,8 +737,15 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     rbuffer = (char *) result_addr + true_lb;
     tbuffer = (void *) (MPIDI_OFI_winfo_base(win, target_rank) + offset);
 
-    max_size = MPIDI_OFI_QUERY_COMPARE_ATOMIC_COUNT;
-    MPIDI_OFI_query_datatype(datatype, &fi_dt, MPI_OP_NULL, &fi_op, &max_size, &dt_size);
+    max_count = MPIDI_OFI_QUERY_COMPARE_ATOMIC_COUNT;
+    MPIDI_OFI_query_datatype(datatype, &fi_dt, MPI_OP_NULL, &fi_op, &max_count, &dt_size);
+    max_size = MPIDI_OFI_check_acc_order_size(win, dt_size);
+    /* It's impossible to transfer data if buffer size is smaller than basic datatype size. */
+    if (max_size < dt_size)
+        goto am_fallback;
+    /* Compare_and_swap is READ and WRITE. */
+    MPIDI_CH4U_wait_am_acc(win, target_rank,
+        (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR | MPIDI_CH4I_ACCU_ORDER_WAW));
 
     originv.addr = (void *) buffer;
     originv.count = 1;
@@ -771,6 +778,15 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+  am_fallback:
+    if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering &
+        (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAW | MPIDI_CH4I_ACCU_ORDER_WAR)) {
+        /* Wait for OFI cas to complete.
+         * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
+        MPIDI_OFI_win_progress_fence(win);
+    }
+    return MPIDI_CH4U_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
+                                           datatype, target_rank, target_disp, win);
 }
 
 #undef FUNCNAME
@@ -889,7 +905,15 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     MPIDI_OFI_query_datatype(basic_type, &fi_dt, op, &fi_op, &max_count, &dt_size);
     if (max_count == 0)
         goto am_fallback;
-    max_size = MPL_MIN(max_count * dt_size, MPIDI_Global.max_write / dt_size * dt_size);
+    max_size = MPIDI_OFI_check_acc_order_size(win, max_count * dt_size);
+    max_size = MPL_MIN(max_size, MPIDI_Global.max_write);
+    /* round down to multiple of dt_size */
+    max_size = max_size / dt_size * dt_size;
+    /* It's impossible to chunk data if buffer size is smaller than basic datatype size. */
+    if (max_size < dt_size)
+        goto am_fallback;
+    /* Accumulate is WRITE. */
+    MPIDI_CH4U_wait_am_acc(win, target_rank, (MPIDI_CH4I_ACCU_ORDER_WAW | MPIDI_CH4I_ACCU_ORDER_WAR));
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_accumulate
                            (win, origin_count, target_count, target_rank, origin_datatype,
                             target_datatype, max_size, &req, &flags, &ep, sigreq));
@@ -952,6 +976,11 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
   fn_fail:
     goto fn_exit;
   am_fallback:
+    if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & (MPIDI_CH4I_ACCU_ORDER_WAW | MPIDI_CH4I_ACCU_ORDER_WAR)) {
+        /* Wait for OFI acc to complete.
+         * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
+        MPIDI_OFI_win_progress_fence(win);
+    }
     return MPIDI_CH4U_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count, target_datatype, op,
                                      win);
@@ -1029,7 +1058,20 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     if (max_count == 0)
         goto am_fallback;
 
-    max_size = MPL_MIN(max_count * dt_size, MPIDI_Global.max_write / dt_size * dt_size);
+    max_size = MPIDI_OFI_check_acc_order_size(win, max_count * dt_size);
+    max_size = MPL_MIN(max_size, MPIDI_Global.max_write);
+    /* round down to multiple of dt_size */
+    max_size = max_size / dt_size * dt_size;
+    /* It's impossible to chunk data if buffer size is smaller than basic datatype size. */
+    if (max_size < dt_size)
+        goto am_fallback;
+    if (unlikely(op == MPI_NO_OP)) {
+        /* Get_accumulate is READ and WRITE, except NO_OP (it is READ only). */
+        MPIDI_CH4U_wait_am_acc(win, target_rank, MPIDI_CH4I_ACCU_ORDER_RAW);
+    } else {
+        MPIDI_CH4U_wait_am_acc(win, target_rank,
+            (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR | MPIDI_CH4I_ACCU_ORDER_WAW));
+    }
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_get_accumulate
                            (win, origin_count, target_count, result_count, target_rank, op,
                             origin_datatype, target_datatype, result_datatype, max_size, &req,
@@ -1118,6 +1160,18 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
   fn_fail:
     goto fn_exit;
   am_fallback:
+    if (unlikely(op == MPI_NO_OP)) {
+        if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW) {
+            /* Wait for OFI acc to complete.
+             * For now, there is no FI flag to track atomic only ops, we use RMA level cntr. */
+            MPIDI_OFI_win_progress_fence(win);
+        }
+    } else {
+        if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering &
+            (MPIDI_CH4I_ACCU_ORDER_RAW | MPIDI_CH4I_ACCU_ORDER_WAR | MPIDI_CH4I_ACCU_ORDER_WAW)) {
+            MPIDI_OFI_win_progress_fence(win);
+        }
+    }
     return MPIDI_CH4U_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                          result_addr, result_count, result_datatype,
                                          target_rank, target_disp, target_count,
