@@ -240,6 +240,7 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
 
     MPIR_cc_set(&MPIDI_CH4U_WIN(win, local_cmpl_cnts), 0);
     MPIR_cc_set(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), 0);
+    MPIR_cc_set(&MPIDI_CH4U_WIN(win, remote_acc_cmpl_cnts), 0);
 
     MPIDI_CH4U_WIN(win, win_id) = MPIDI_CH4U_generate_win_id(comm_ptr);
     MPIDI_CH4U_map_set(MPIDI_CH4_Global.win_map, MPIDI_CH4U_WIN(win, win_id), win, MPL_MEM_RMA);
