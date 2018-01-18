@@ -278,6 +278,29 @@ void MPIDI_OFI_index_allocator_destroy(void *_indexmap);
 /* Common Utility functions used by the
  * C and C++ components
  */
+/* Set max size based on OFI acc ordering limit. */
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_check_acc_order_size(MPIR_Win * win, size_t max_size)
+{
+    /* Check ordering limit, a value of -1 guarantees ordering for any data size. */
+    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAR)
+        && MPIDI_Global.max_order_war != -1) {
+        /* An order size value of 0 indicates that ordering is not guaranteed. */
+        MPIR_Assert(MPIDI_Global.max_order_war != 0);
+        max_size = MPL_MIN(max_size, MPIDI_Global.max_order_war);
+    }
+    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAW)
+        && MPIDI_Global.max_order_waw != -1) {
+        MPIR_Assert(MPIDI_Global.max_order_waw != 0);
+        max_size = MPL_MIN(max_size, MPIDI_Global.max_order_waw);
+    }
+    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW)
+        && MPIDI_Global.max_order_raw != -1) {
+        MPIR_Assert(MPIDI_Global.max_order_raw != 0);
+        max_size = MPL_MIN(max_size, MPIDI_Global.max_order_raw);
+    }
+    return max_size;
+}
+
 MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_alloc_and_init(int extra)
 {
     MPIDI_OFI_win_request_t *req;
