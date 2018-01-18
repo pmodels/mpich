@@ -132,6 +132,7 @@ mutex_bench_shm_ordered 4 mpiversion=3.0
 rma-contig 2 mpiversion=3.0 timeLimit=720
 badrma 2 mpiversion=3.0
 acc-loc 4
+acc_ordering 2 mpiversion=3.0
 fence_shm 2 mpiversion=3.0
 win_shared_zerobyte 4 mpiversion=3.0
 win_shared_put_flush_get 4 mpiversion=3.0
