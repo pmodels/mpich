@@ -928,16 +928,16 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* ---------------------------------- */
     /* Initialize Active Message          */
     /* ---------------------------------- */
+    mpi_errno = MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
     if (MPIDI_OFI_ENABLE_AM) {
         /* Maximum possible message size for short message send (=eager send)
          * See MPIDI_OFI_do_am_isend for short/long switching logic */
         MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_Global.max_send);
         MPIDI_Global.am_buf_pool =
             MPIDI_CH4U_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
-        mpi_errno = MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
-
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
 
         MPIDI_Global.cq_buffered_dynamic_head = MPIDI_Global.cq_buffered_dynamic_tail = NULL;
         MPIDI_Global.cq_buffered_static_head = MPIDI_Global.cq_buffered_static_tail = 0;
