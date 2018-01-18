@@ -156,7 +156,25 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
         MPIR_Assert(finfo);
         finfo->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
         finfo->tx_attr->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
-        finfo->rx_attr->caps = 0ULL;    /* RX capabilities not needed */
+        /* Update msg_order by accumulate ordering in window info.
+         * Accumulate ordering cannot easily be changed once the window has been created.
+         * OFI implementation ignores acc ordering hints issued in MPI_WIN_SET_INFO()
+         * after window is created. */
+        finfo->tx_attr->msg_order = FI_ORDER_NONE;  /* FI_ORDER_NONE is an alias for the value 0 */
+        if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAR) ==
+                MPIDI_CH4I_ACCU_ORDER_RAR )
+            finfo->tx_attr->msg_order |= FI_ORDER_RAR;
+        if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW) ==
+                MPIDI_CH4I_ACCU_ORDER_RAW )
+            finfo->tx_attr->msg_order |= FI_ORDER_RAW;
+        if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAR) ==
+                MPIDI_CH4I_ACCU_ORDER_WAR )
+            finfo->tx_attr->msg_order |= FI_ORDER_WAR;
+        if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAW) ==
+                MPIDI_CH4I_ACCU_ORDER_WAW )
+            finfo->tx_attr->msg_order |= FI_ORDER_WAW;
+
+        finfo->rx_attr->caps = 0ULL; /* RX capabilities not needed */
 
         finfo->ep_attr->tx_ctx_cnt = FI_SHARED_CONTEXT; /* Request a shared context */
         finfo->ep_attr->rx_ctx_cnt = 0; /* We don't need RX contexts */

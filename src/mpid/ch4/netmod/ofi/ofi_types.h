@@ -362,6 +362,9 @@ typedef struct {
     size_t rx_iov_limit;
     size_t rma_iov_limit;
     int max_ch4_vnis;
+    size_t max_order_raw;
+    size_t max_order_war;
+    size_t max_order_waw;
 
     /* Mutexex and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[4];
