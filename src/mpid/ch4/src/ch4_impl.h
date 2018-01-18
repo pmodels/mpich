@@ -206,6 +206,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_add(MPIR
     target_ptr->rank = rank;
     MPIR_cc_set(&target_ptr->local_cmpl_cnts, 0);
     MPIR_cc_set(&target_ptr->remote_cmpl_cnts, 0);
+    MPIR_cc_set(&target_ptr->remote_acc_cmpl_cnts, 0);
     target_ptr->sync.lock.locked = 0;
     target_ptr->sync.access_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
     target_ptr->sync.assert_mode = 0;
@@ -805,6 +806,54 @@ static inline void MPIDI_win_cmpl_cnts_incr(MPIR_Win * win, int target_rank,
     }
 }
 
+/* Increase counter for active message acc ops. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_win_remote_acc_cmpl_cnt_incr
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX void MPIDI_win_remote_acc_cmpl_cnt_incr(MPIR_Win * win, int target_rank)
+{
+    int c = 0;
+    switch (MPIDI_CH4U_WIN(win, sync).access_epoch_type) {
+    case MPIDI_CH4U_EPOTYPE_LOCK:
+    case MPIDI_CH4U_EPOTYPE_LOCK_ALL:
+    case MPIDI_CH4U_EPOTYPE_START:
+        {
+            MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_get(win, target_rank);
+            MPIR_cc_incr(&target_ptr->remote_acc_cmpl_cnts, &c);
+            break;
+        }
+    default:
+        MPIR_cc_incr(&MPIDI_CH4U_WIN(win, remote_acc_cmpl_cnts), &c);
+        break;
+    }
+}
+
+/* Decrease counter for active message acc ops. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_win_remote_acc_cmpl_cnt_decr
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX void MPIDI_win_remote_acc_cmpl_cnt_decr(MPIR_Win * win, int target_rank)
+{
+    int c = 0;
+    switch (MPIDI_CH4U_WIN(win, sync).access_epoch_type) {
+    case MPIDI_CH4U_EPOTYPE_LOCK:
+    case MPIDI_CH4U_EPOTYPE_LOCK_ALL:
+    case MPIDI_CH4U_EPOTYPE_START:
+        {
+            MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, target_rank);
+            MPIR_Assert(target_ptr);
+            MPIR_cc_decr(&target_ptr->remote_acc_cmpl_cnts, &c);
+            break;
+        }
+    default:
+        MPIR_cc_decr(&MPIDI_CH4U_WIN(win, remote_acc_cmpl_cnts), &c);
+        break;
+    }
+
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_win_remote_cmpl_cnt_decr
 #undef FCNAME
@@ -981,4 +1030,24 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_map_lookup(void *in_map, uint64_t id)
     return rc;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4U_map_lookup
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+/* Wait until active message acc ops are done. */
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_wait_am_acc(MPIR_Win * win, int target_rank, int order_needed)
+{
+    int mpi_errno = MPI_SUCCESS;
+    if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & order_needed) {
+        MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, target_rank);
+        while ((target_ptr && MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0) || MPIR_cc_get(MPIDI_CH4U_WIN(win, remote_acc_cmpl_cnts)) != 0) {
+            MPIDI_CH4R_PROGRESS();
+        }
+    }
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
 #endif /* CH4_IMPL_H_INCLUDED */
