@@ -145,6 +145,7 @@ noinst_PROGRAMS =          \
     badrma                 \
     nb_test                \
     acc-loc                \
+    acc_ordering           \
     fence_shm              \
     get-struct             \
     rput_local_comp        \
