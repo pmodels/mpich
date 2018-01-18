@@ -431,16 +431,6 @@ AC_MSG_RESULT([$hydra_topolib_list])
 
 hydra_topolibs="`echo $hydra_topolib_list | sed -e 's/:/ /g' -e 's/,/ /g'`"
 
-# Unconditionally include the hwloc macros, even if we are using an
-# external hwloc (or hwloc is disabled). This is needed for the
-# AM_CONDITIONALS that we will set later.
-m4_include([tools/topo/hwloc/hwloc/config/hwloc.m4])
-m4_include([tools/topo/hwloc/hwloc/config/hwloc_check_attributes.m4])
-m4_include([tools/topo/hwloc/hwloc/config/hwloc_check_visibility.m4])
-m4_include([tools/topo/hwloc/hwloc/config/hwloc_check_vendor.m4])
-m4_include([tools/topo/hwloc/hwloc/config/hwloc_components.m4])
-m4_include([tools/topo/hwloc/hwloc/config/hwloc_pkg.m4])
-
 have_hwloc=no
 for hydra_topolib in ${hydra_topolibs}; do
     case "$hydra_topolib" in
@@ -450,9 +440,6 @@ for hydra_topolib in ${hydra_topolibs}; do
 		   # Only build hwloc in embedded mode
 		   if test "$have_hwloc" = "yes" ; then
 		      hydra_use_embedded_hwloc=yes
-		      CFLAGS="$HWLOC_EMBEDDED_CFLAGS $CFLAGS"
-		      CPPFLAGS="$HWLOC_EMBEDDED_CPPFLAGS $CPPFLAGS"
-		      LIBS="$HWLOC_EMBEDDED_LIBS $LIBS"
 		   fi
                 else
                     AC_CHECK_HEADERS([hwloc.h])
