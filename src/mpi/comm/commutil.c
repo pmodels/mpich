@@ -193,6 +193,7 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
     /* Set the sizes and ranks */
     localcomm_ptr->remote_size = intercomm_ptr->local_size;
     localcomm_ptr->local_size = intercomm_ptr->local_size;
+    localcomm_ptr->pof2       = intercomm_ptr->pof2;
     localcomm_ptr->rank = intercomm_ptr->rank;
 
     MPIR_Comm_map_dup(localcomm_ptr, intercomm_ptr, MPIR_COMM_MAP_DIR__L2L);
@@ -352,6 +353,8 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
     MPIR_Comm_map_free(comm);
 
+    comm->pof2 = MPL_pof2(comm->local_size);
+
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
             !MPIR_CONTEXT_READ_FIELD(SUBCOMM,comm->context_id)) {  /*make sure this is not a subcomm*/
 
@@ -405,6 +408,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Create node_comm=%p\n", comm->node_comm);
 
             comm->node_comm->local_size = num_local;
+            comm->node_comm->pof2 = MPL_pof2(comm->node_comm->local_size);
             comm->node_comm->remote_size = num_local;
 
             MPIR_Comm_map_irregular(comm->node_comm, comm, local_procs,
@@ -435,6 +439,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Create node_roots_comm=%p\n", comm->node_roots_comm);
 
             comm->node_roots_comm->local_size = num_external;
+            comm->node_roots_comm->pof2 = MPL_pof2(comm->node_roots_comm->local_size);
             comm->node_roots_comm->remote_size = num_external;
 
             MPIR_Comm_map_irregular(comm->node_roots_comm, comm,
@@ -601,6 +606,7 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
         newcomm_ptr->local_size = size;
         newcomm_ptr->remote_size = size;
     }
+    newcomm_ptr->pof2 = MPL_pof2(newcomm_ptr->local_size);
 
     /* Inherit the error handler (if any) */
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
@@ -678,6 +684,7 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
     /* Set the sizes and ranks */
     newcomm_ptr->rank = comm_ptr->rank;
     newcomm_ptr->local_size = comm_ptr->local_size;
+    newcomm_ptr->pof2 = comm_ptr->pof2;
     newcomm_ptr->remote_size = comm_ptr->remote_size;
     newcomm_ptr->is_low_group = comm_ptr->is_low_group; /* only relevant for intercomms */
 

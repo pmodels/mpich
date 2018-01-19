@@ -6,10 +6,9 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_intra_recursive_halving
+#define FUNCNAME MPIR_Reduce_scatter__intra__recursive_halving
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
@@ -41,7 +40,7 @@
  *
  * Cost = (p-1).alpha + n.((p-1)/p).beta + n.((p-1)/p).gamma
  */
-int MPIR_Reduce_scatter_intra_recursive_halving (const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Reduce_scatter__intra__recursive_halving (const void *sendbuf, void *recvbuf, const int recvcounts[],
                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int   rank, comm_size, i;
@@ -59,6 +58,14 @@ int MPIR_Reduce_scatter_intra_recursive_halving (const void *sendbuf, void *recv
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
+
+#ifdef HAVE_ERROR_CHECKING
+    {
+        int is_commutative;
+        is_commutative = MPIR_Op_is_commutative(op);
+        MPIR_Assert(is_commutative);
+    }
+#endif /* HAVE_ERROR_CHECKING */
 
     /* set op_errno to 0. stored in perthread structure */
     {
@@ -113,9 +120,7 @@ int MPIR_Reduce_scatter_intra_recursive_halving (const void *sendbuf, void *recv
     
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
+    pof2 = comm_ptr->pof2;
 
     rem = comm_size - pof2;
 

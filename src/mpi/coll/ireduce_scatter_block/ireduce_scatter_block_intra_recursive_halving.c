@@ -5,15 +5,14 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* A recursive halving MPI_Ireduce_scatter_block algorithm.  Requires that op is
  * commutative.  Typically yields better performance for shorter messages. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_block_intra_recursive_halving_sched
+#define FUNCNAME MPIR_Ireduce_scatter_block_sched__intra__recursive_halving
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_intra_recursive_halving_sched(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_sched__intra__recursive_halving(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, i;
@@ -33,7 +32,9 @@ int MPIR_Ireduce_scatter_block_intra_recursive_halving_sched(const void *sendbuf
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
+#ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(MPIR_Op_is_commutative(op));
+#endif
 
     MPIR_SCHED_CHKPMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
 

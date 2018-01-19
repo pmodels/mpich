@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef HAVE_MPIDPKT_H
-#define HAVE_MPIDPKT_H
+#ifndef MPIDPKT_H_INCLUDED
+#define MPIDPKT_H_INCLUDED
 
 #include "mpir_op_util.h"
 
@@ -978,4 +978,4 @@ typedef struct MPIDI_CH3_Pkt_send_container {
 } MPIDI_CH3_Pkt_send_container_t;
 #endif
 
-#endif
+#endif /* MPIDPKT_H_INCLUDED */

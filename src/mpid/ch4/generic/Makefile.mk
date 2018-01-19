@@ -14,6 +14,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch4/generic
 
 noinst_HEADERS += src/mpid/ch4/generic/mpidig_send.h \
                   src/mpid/ch4/generic/mpidig_recv.h \
+                  src/mpid/ch4/generic/mpidig_startall.h \
                   src/mpid/ch4/generic/mpidig.h
 
 mpi_core_sources += src/mpid/ch4/generic/mpidig_globals.c \

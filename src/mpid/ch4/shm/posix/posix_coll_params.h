@@ -2,20 +2,20 @@
 #define POSIX_COLL_PARAMS_H_INCLUDED
 
 typedef enum {
-    MPIDI_POSIX_Barrier_intra_recursive_doubling_id,
+    MPIDI_POSIX_Barrier__intra__dissemination_id,
 } MPIDI_POSIX_Barrier_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Barrier_empty_parameters {
         int empty;
-    } POSIX_barrier_empty_parameters;
+    } posix_barrier_empty_parameters;
 } MPIDI_POSIX_Barrier_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Bcast_intra_binomial_id,
-    MPIDI_POSIX_Bcast_intra_scatter_doubling_allgather_id,
-    MPIDI_POSIX_Bcast_intra_scatter_ring_allgather_id,
+    MPIDI_POSIX_Bcast__intra__binomial_id,
+    MPIDI_POSIX_Bcast__intra__scatter_recursive_doubling_allgather_id,
+    MPIDI_POSIX_Bcast__intra__scatter_ring_allgather_id,
 } MPIDI_POSIX_Bcast_id_t;
 
 typedef union {
@@ -23,194 +23,194 @@ typedef union {
     struct MPIDI_POSIX_Bcast_knomial_parameters {
         int radix;
         int block_size;
-    } POSIX_bcast_knomial_parameters;
+    } posix_bcast_knomial_parameters;
     struct MPIDI_POSIX_Bcast_empty_parameters {
         int empty;
-    } POSIX_bcast_empty_parameters;
+    } posix_bcast_empty_parameters;
 } MPIDI_POSIX_Bcast_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Allreduce_intra_recursive_doubling_id,
-    MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather_id
+    MPIDI_POSIX_Allreduce__intra__recursive_doubling_id,
+    MPIDI_POSIX_Allreduce__intra__reduce_scatter_allgather_id
 } MPIDI_POSIX_Allreduce_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Allreduce_empty_parameters {
         int empty;
-    } POSIX_allreduce_empty_parameters;
+    } posix_allreduce_empty_parameters;
 } MPIDI_POSIX_Allreduce_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Reduce_intra_redscat_gather_id,
-    MPIDI_POSIX_Reduce_intra_binomial_id
+    MPIDI_POSIX_Reduce__intra__reduce_scatter_gather_id,
+    MPIDI_POSIX_Reduce__intra__binomial_id
 } MPIDI_POSIX_Reduce_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Reduce_empty_parameters {
         int empty;
-    } POSIX_reduce_empty_parameters;
+    } posix_reduce_empty_parameters;
 } MPIDI_POSIX_Reduce_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Alltoall_intra_brucks_id,
-    MPIDI_POSIX_Alltoall_intra_scattered_id,
-    MPIDI_POSIX_Alltoall_intra_pairwise_id,
-    MPIDI_POSIX_Alltoall_intra_pairwise_sendrecv_replace_id
+    MPIDI_POSIX_Alltoall__intra__brucks_id,
+    MPIDI_POSIX_Alltoall__intra__scattered_id,
+    MPIDI_POSIX_Alltoall__intra__pairwise_id,
+    MPIDI_POSIX_Alltoall__intra__pairwise_sendrecv_replace_id
 } MPIDI_POSIX_Alltoall_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Alltoall_empty_parameters {
         int empty;
-    } POSIX_alltoall_empty_parameters;
+    } posix_alltoall_empty_parameters;
 } MPIDI_POSIX_Alltoall_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Alltoallv_intra_pairwise_sendrecv_replace_id,
-    MPIDI_POSIX_Alltoallv_intra_scattered_id
+    MPIDI_POSIX_Alltoallv__intra__pairwise_sendrecv_replace_id,
+    MPIDI_POSIX_Alltoallv__intra__scattered_id
 } MPIDI_POSIX_Alltoallv_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Alltoallv_empty_parameters {
         int empty;
-    } POSIX_alltoallv_empty_parameters;
+    } posix_alltoallv_empty_parameters;
 } MPIDI_POSIX_Alltoallv_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Alltoallw_intra_pairwise_sendrecv_replace_id,
-    MPIDI_POSIX_Alltoallw_intra_scattered_id
+    MPIDI_POSIX_Alltoallw__intra__pairwise_sendrecv_replace_id,
+    MPIDI_POSIX_Alltoallw__intra__scattered_id
 } MPIDI_POSIX_Alltoallw_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Alltoallw_empty_parameters {
         int empty;
-    } POSIX_alltoallw_empty_parameters;
+    } posix_alltoallw_empty_parameters;
 } MPIDI_POSIX_Alltoallw_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Allgather_intra_recursive_doubling_id,
-    MPIDI_POSIX_Allgather_intra_brucks_id,
-    MPIDI_POSIX_Allgather_intra_ring_id
+    MPIDI_POSIX_Allgather__intra__recursive_doubling_id,
+    MPIDI_POSIX_Allgather__intra__brucks_id,
+    MPIDI_POSIX_Allgather__intra__ring_id
 } MPIDI_POSIX_Allgather_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Allgather_empty_parameters {
         int empty;
-    } POSIX_allgather_empty_parameters;
+    } posix_allgather_empty_parameters;
 } MPIDI_POSIX_Allgather_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Allgatherv_intra_recursive_doubling_id,
-    MPIDI_POSIX_Allgatherv_intra_brucks_id,
-    MPIDI_POSIX_Allgatherv_intra_ring_id
+    MPIDI_POSIX_Allgatherv__intra__recursive_doubling_id,
+    MPIDI_POSIX_Allgatherv__intra__brucks_id,
+    MPIDI_POSIX_Allgatherv__intra__ring_id
 } MPIDI_POSIX_Allgatherv_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Allgatherv_empty_parameters {
         int empty;
-    } POSIX_allgatherv_empty_parameters;
+    } posix_allgatherv_empty_parameters;
 } MPIDI_POSIX_Allgatherv_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Gather_intra_binomial_id,
-    MPIDI_POSIX_Gather_intra_binomial_indexed_id
+    MPIDI_POSIX_Gather__intra__binomial_id,
+    MPIDI_POSIX_Gather__intra__binomial_indexed_id
 } MPIDI_POSIX_Gather_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Gather_empty_parameters {
         int empty;
-    } POSIX_gather_empty_parameters;
+    } posix_gather_empty_parameters;
 } MPIDI_POSIX_Gather_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Gatherv_intra_linear_ssend_id,
-    MPIDI_POSIX_Gatherv_intra_linear_id
+    MPIDI_POSIX_Gatherv__intra__linear_ssend_id,
+    MPIDI_POSIX_Gatherv__intra__linear_id
 } MPIDI_POSIX_Gatherv_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Gatherv_empty_parameters {
         int empty;
-    } POSIX_gatherv_empty_parameters;
+    } posix_gatherv_empty_parameters;
 } MPIDI_POSIX_Gatherv_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Scatter_intra_binomial_id,
+    MPIDI_POSIX_Scatter__intra__binomial_id,
 } MPIDI_POSIX_Scatter_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Scatter_empty_parameters {
         int empty;
-    } POSIX_scatter_empty_parameters;
+    } posix_scatter_empty_parameters;
 } MPIDI_POSIX_Scatter_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Scatterv_intra_linear_id,
+    MPIDI_POSIX_Scatterv__intra__linear_id,
 } MPIDI_POSIX_Scatterv_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Scatterv_empty_parameters {
         int empty;
-    } POSIX_scatterv_empty_parameters;
+    } posix_scatterv_empty_parameters;
 } MPIDI_POSIX_Scatterv_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Reduce_scatter_intra_noncomm_id,
-    MPIDI_POSIX_Reduce_scatter_intra_pairwise_id,
-    MPIDI_POSIX_Reduce_scatter_intra_recursive_doubling_id,
-    MPIDI_POSIX_Reduce_scatter_intra_recursive_halving_id,
+    MPIDI_POSIX_Reduce_scatter__intra__noncommutative_id,
+    MPIDI_POSIX_Reduce_scatter__intra__pairwise_id,
+    MPIDI_POSIX_Reduce_scatter__intra__recursive_doubling_id,
+    MPIDI_POSIX_Reduce_scatter__intra__recursive_halving_id,
 } MPIDI_POSIX_Reduce_scatter_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Reduce_scatter_empty_parameters {
         int empty;
-    } POSIX_reduce_scatter_empty_parameters;
+    } posix_reduce_scatter_empty_parameters;
 } MPIDI_POSIX_Reduce_scatter_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Reduce_scatter_block_intra_noncomm_id,
-    MPIDI_POSIX_Reduce_scatter_block_intra_pairwise_id,
-    MPIDI_POSIX_Reduce_scatter_block_intra_recursive_doubling_id,
-    MPIDI_POSIX_Reduce_scatter_block_intra_recursive_halving_id,
+    MPIDI_POSIX_Reduce_scatter_block__intra__noncommutative_id,
+    MPIDI_POSIX_Reduce_scatter_block__intra__pairwise_id,
+    MPIDI_POSIX_Reduce_scatter_block__intra__recursive_doubling_id,
+    MPIDI_POSIX_Reduce_scatter_block__intra__recursive_halving_id,
 } MPIDI_POSIX_Reduce_scatter_block_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Reduce_scatter_block_empty_parameters {
         int empty;
-    } POSIX_reduce_scatter_block_empty_parameters;
+    } posix_reduce_scatter_block_empty_parameters;
 } MPIDI_POSIX_Reduce_scatter_block_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Scan_intra_generic_id,
+    MPIDI_POSIX_Scan__intra__recursive_doubling_id,
 } MPIDI_POSIX_Scan_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Scan_empty_parameters {
         int empty;
-    } POSIX_scan_empty_parameters;
+    } posix_scan_empty_parameters;
 } MPIDI_POSIX_Scan_params_t;
 
 typedef enum {
-    MPIDI_POSIX_Exscan_intra_recursive_doubling_id,
+    MPIDI_POSIX_Exscan__intra__recursive_doubling_id,
 } MPIDI_POSIX_Exscan_id_t;
 
 typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_POSIX_Exscan_empty_parameters {
         int empty;
-    } POSIX_exscan_empty_parameters;
+    } posix_exscan_empty_parameters;
 } MPIDI_POSIX_Exscan_params_t;
 
 #define MPIDI_POSIX_BARRIER_PARAMS_DECL MPIDI_POSIX_Barrier_params_t posix_barrier_params;

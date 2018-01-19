@@ -3,6 +3,10 @@
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
+
+#ifndef MPIO_ERROR_H_INCLUDED
+#define MPIO_ERROR_H_INCLUDED
+
 /* MPI_ERR_FILE */
 #define MPIR_ERR_FILE_NULL 3
 #define MPIR_ERR_FILE_CORRUPT 5
@@ -70,3 +74,4 @@
 /* MPI_ERR_UNSUPPORTED_DATAREP */
 #define MPIR_ERR_NOT_NATIVE_DATAREP 3
 
+#endif /* MPIO_ERROR_H_INCLUDED */

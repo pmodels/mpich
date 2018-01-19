@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPID_NEM_FBOX_H
-#define MPID_NEM_FBOX_H
+#ifndef MPID_NEM_FBOX_H_INCLUDED
+#define MPID_NEM_FBOX_H_INCLUDED
 
 typedef struct MPID_nem_fboxq_elem
 {
@@ -101,6 +101,6 @@ static inline int poll_every_fbox(MPID_nem_cell_ptr_t *cell)
         MPID_nem_curr_fbox_all_poll = MPID_nem_fboxq_elem_list;                                     \
     } while(0)
 
-#endif /* MPID_NEM_FBOX_H */
+#endif /* MPID_NEM_FBOX_H_INCLUDED */
 
 

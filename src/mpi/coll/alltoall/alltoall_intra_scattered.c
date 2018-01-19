@@ -30,10 +30,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoall_intra_scattered
+#define FUNCNAME MPIR_Alltoall__intra__scattered
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoall_intra_scattered(
+int MPIR_Alltoall__intra__scattered(
     const void *sendbuf,
     int sendcount, 
     MPI_Datatype sendtype, 
@@ -56,6 +56,10 @@ int MPIR_Alltoall_intra_scattered(
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
+
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_Assert(sendbuf != MPI_IN_PLACE);
+#endif /* HAVE_ERROR_CHECKING */
 
     /* Get extent of send and recv types */
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);

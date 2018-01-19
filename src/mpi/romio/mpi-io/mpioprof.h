@@ -10,6 +10,16 @@
    building the profiling interface
  */
 
+/* This file is a no-op without MPIO_BUILD_PROFILING defined.
+ * Do not allow erroneous inclusion as that will falsely define
+ * MPIO_PROF_H_INCLUDED */
+#ifndef MPIO_BUILD_PROFILING
+#error "The file must be included only when MPIO_BUILD_PROFILING is defined"
+#endif
+
+#ifndef MPIO_PROF_H_INCLUDED
+#define MPIO_PROF_H_INCLUDED
+
 #ifdef MPIO_BUILD_PROFILING
 
 #undef MPI_File_open
@@ -212,3 +222,5 @@
 #define MPIX_Grequest_class_create PMPIX_Grequest_class_create
 
 #endif
+
+#endif /* MPIO_PROF_H_INCLUDED */

@@ -6,10 +6,9 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_intra_pairwise
+#define FUNCNAME MPIR_Reduce_scatter__intra__pairwise
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
@@ -20,7 +19,7 @@
  * process sends n/p amount of data to (rank+i) and receives n/p amount of data
  * from (rank-i).
  */
-int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Reduce_scatter__intra__pairwise(const void *sendbuf, void *recvbuf, const int recvcounts[],
                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int   rank, comm_size, i;
@@ -30,8 +29,6 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int total_count, src, dst;
-    int is_commutative;
-    MPIR_Op *op_ptr;
     MPIR_CHKLMEM_DECL(5);
 
     comm_size = comm_ptr->local_size;
@@ -51,16 +48,14 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     
-    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-        is_commutative = 1;
+
+#ifdef HAVE_ERROR_CHECKING
+    {
+        int is_commutative;
+        is_commutative = MPIR_Op_is_commutative(op);
+        MPIR_Assert(is_commutative);
     }
-    else {
-        MPIR_Op_get_ptr(op, op_ptr);
-        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
-            is_commutative = 0;
-        else
-            is_commutative = 1;
-    }
+#endif /* HAVE_ERROR_CHECKING */
 
     MPIR_CHKLMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
 
@@ -123,45 +118,20 @@ int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
         
-        if (is_commutative || (src < rank)) {
-            if (sendbuf != MPI_IN_PLACE) {
-        mpi_errno = MPIR_Reduce_local( 
-               tmp_recvbuf, recvbuf, recvcounts[rank],
-                           datatype, op ); 
-            }
-            else {
-        mpi_errno = MPIR_Reduce_local( 
-        tmp_recvbuf, ((char *)recvbuf+disps[rank]*extent), 
-        recvcounts[rank], datatype, op);
-                /* we can't store the result at the beginning of
-                   recvbuf right here because there is useful data
-                   there that other process/processes need. at the
-                   end, we will copy back the result to the
-                   beginning of recvbuf. */
-            }
+        if (sendbuf != MPI_IN_PLACE) {
+            mpi_errno = MPIR_Reduce_local(
+                   tmp_recvbuf, recvbuf, recvcounts[rank],
+                               datatype, op );
         }
         else {
-            if (sendbuf != MPI_IN_PLACE) {
-        mpi_errno = MPIR_Reduce_local( 
-           recvbuf, tmp_recvbuf, recvcounts[rank], datatype, op);
-                /* copy result back into recvbuf */
-                mpi_errno = MPIR_Localcopy(tmp_recvbuf, recvcounts[rank],
-                                           datatype, recvbuf,
-                                           recvcounts[rank], datatype);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            }
-            else {
-        mpi_errno = MPIR_Reduce_local( 
-                    ((char *)recvbuf+disps[rank]*extent),
-        tmp_recvbuf, recvcounts[rank], datatype, op);
-                /* copy result back into recvbuf */
-                mpi_errno = MPIR_Localcopy(tmp_recvbuf, recvcounts[rank],
-                                           datatype, 
-                                           ((char *)recvbuf +
-                                            disps[rank]*extent), 
-                                           recvcounts[rank], datatype);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            }
+            mpi_errno = MPIR_Reduce_local(
+            tmp_recvbuf, ((char *)recvbuf+disps[rank]*extent),
+            recvcounts[rank], datatype, op);
+            /* we can't store the result at the beginning of
+               recvbuf right here because there is useful data
+               there that other process/processes need. at the
+               end, we will copy back the result to the
+               beginning of recvbuf. */
         }
     }
     

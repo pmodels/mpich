@@ -28,6 +28,30 @@ int MPI_Op_commutative(MPI_Op op, int *commute) __attribute__((weak,alias("PMPI_
 #endif
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Op_is_commutative
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+/* TODO with a modest amount of work in the handle allocator code we should be
+ * able to encode commutativity in the handle value and greatly simplify this
+ * routine */
+/* returns TRUE iff the given op is commutative */
+int MPIR_Op_is_commutative(MPI_Op op)
+{
+    MPIR_Op *op_ptr;
+
+    if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+        return TRUE;
+    }
+    else {
+        MPIR_Op_get_ptr(op, op_ptr);
+        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
+            return FALSE;
+        else
+            return TRUE;
+    }
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Op_commutative
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -35,7 +59,7 @@ int MPIR_Op_commutative(MPIR_Op *op_ptr, int *commute)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* Build-in op */
+    /* Built-in op */
     if (MPIR_OP_KIND__USER_NONCOMMUTE > op_ptr->kind) {
         *commute = 1;
     }

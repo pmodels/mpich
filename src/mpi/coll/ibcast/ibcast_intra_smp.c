@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 #include "ibcast.h"
 
 struct ibcast_status{
@@ -36,7 +35,7 @@ static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
 /* This routine purely handles the hierarchical version of bcast, and does not
  * currently make any decision about which particular algorithm to use for any
  * subcommunicator. */
-int MPIR_Ibcast_intra_smp_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_sched__intra__smp(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_homogeneous;
@@ -44,7 +43,9 @@ int MPIR_Ibcast_intra_smp_sched(void *buffer, int count, MPI_Datatype datatype, 
     struct ibcast_status *status;
     MPIR_SCHED_CHKPMEM_DECL(1);
 
+#ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(MPIR_Comm_is_node_aware(comm_ptr));
+#endif
     MPIR_SCHED_CHKPMEM_MALLOC(status, struct ibcast_status*,
                               sizeof(struct ibcast_status), mpi_errno, "MPI_Status", MPL_MEM_BUFFER);
 
@@ -84,7 +85,6 @@ int MPIR_Ibcast_intra_smp_sched(void *buffer, int count, MPI_Datatype datatype, 
         }
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
-        MPIR_SCHED_BARRIER(s);
         mpi_errno = MPIR_Sched_cb(&sched_test_length, status, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
@@ -93,7 +93,7 @@ int MPIR_Ibcast_intra_smp_sched(void *buffer, int count, MPI_Datatype datatype, 
     /* perform the internode broadcast */
     if (comm_ptr->node_roots_comm != NULL)
     {
-        mpi_errno = MPID_Ibcast_sched(buffer, count, datatype,
+        mpi_errno = MPIR_Ibcast_sched(buffer, count, datatype,
                                       MPIR_Get_internode_rank(comm_ptr, root),
                                       comm_ptr->node_roots_comm, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -104,7 +104,7 @@ int MPIR_Ibcast_intra_smp_sched(void *buffer, int count, MPI_Datatype datatype, 
     /* perform the intranode broadcast on all except for the root's node */
     if (comm_ptr->node_comm != NULL)
     {
-        mpi_errno = MPID_Ibcast_sched(buffer, count, datatype, 0, comm_ptr->node_comm, s);
+        mpi_errno = MPIR_Ibcast_sched(buffer, count, datatype, 0, comm_ptr->node_comm, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 

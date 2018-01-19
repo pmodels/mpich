@@ -19,10 +19,10 @@
  * best solution for the MPI_IN_PLACE scenario.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_intra_inplace_sched
+#define FUNCNAME MPIR_Ialltoallw_sched__intra__inplace
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoallw_intra_inplace_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Ialltoallw_sched__intra__inplace(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                           const int rdispls[], const MPI_Datatype recvtypes[],
                           MPIR_Comm *comm_ptr, MPIR_Sched_t s)

@@ -13,8 +13,8 @@
  * functional debugging.
  *---------------------------------------------------------------------*/
 
-#ifndef AD_GPFS_TUNING_H_
-#define AD_GPFS_TUNING_H_
+#ifndef AD_GPFS_TUNING_H_INCLUDED
+#define AD_GPFS_TUNING_H_INCLUDED
 
 #include "adio.h"
 
@@ -110,4 +110,4 @@ void ad_gpfs_timing_crw_report( int rw, ADIO_File fd, int myrank, int nprocs );
 	 if ( ISGET ) gpfsmpio_prof_c##RW [ VAR2 ] = temp - gpfsmpio_prof_c##RW [ VAR2 ] ;\
 	 }
 
-#endif  /* AD_GPFS_TUNING_H_ */
+#endif /* AD_GPFS_TUNING_H_INCLUDED */

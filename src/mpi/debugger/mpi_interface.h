@@ -103,8 +103,8 @@
  * compiler warnings.
  */
 
-#ifndef _MPI_INTERFACE_INCLUDED
-#define _MPI_INTERFACE_INCLUDED
+#ifndef MPI_INTERFACE_H_INCLUDED
+#define MPI_INTERFACE_H_INCLUDED
 
 #include <stdio.h>			/* For FILENAME_MAX */
 
@@ -616,6 +616,6 @@ extern int mqs_set_process_identity (mqs_process *, int);
 #ifdef	__cplusplus
 }
 #endif
-#endif /* defined (_MPI_INTERFACE_INCLUDED) */
+#endif /* MPI_INTERFACE_H_INCLUDED */
 
 

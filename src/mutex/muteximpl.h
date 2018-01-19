@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined MUTEXIMPL_H_INCLUDED
+#ifndef MUTEXIMPL_H_INCLUDED
 #define MUTEXIMPL_H_INCLUDED
 
 #include <mpi.h>

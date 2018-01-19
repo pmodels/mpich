@@ -7,7 +7,7 @@
 /* FIXME: This header should contain only the definitions exported to the
    mpiimpl.h level */
 
-#if !defined(MPIDPRE_H_INCLUDED)
+#ifndef MPIDPRE_H_INCLUDED
 #define MPIDPRE_H_INCLUDED
 
 /* Tell the compiler that we're going to declare struct MPIR_Request later */
@@ -726,4 +726,4 @@ int MPID_Free_mem( void *ptr );
 int MPID_Get_node_id(MPIR_Comm *comm, int rank, int *id_p);
 int MPID_Get_max_node_id(MPIR_Comm *comm, int *max_id_p);
 
-#endif /* !defined(MPIDPRE_H_INCLUDED) */
+#endif /* MPIDPRE_H_INCLUDED */

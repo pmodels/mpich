@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* Algorithm: Recursive Halving
  *
@@ -36,10 +35,10 @@
  * Cost = (p-1).alpha + n.((p-1)/p).beta + n.((p-1)/p).gamma
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_intra_recursive_halving_sched
+#define FUNCNAME MPIR_Ireduce_scatter_sched__intra__recursive_halving
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_intra_recursive_halving_sched(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Ireduce_scatter_sched__intra__recursive_halving(const void *sendbuf, void *recvbuf, const int recvcounts[],
                                  MPI_Datatype datatype, MPI_Op op,
                                  MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
@@ -61,7 +60,9 @@ int MPIR_Ireduce_scatter_intra_recursive_halving_sched(const void *sendbuf, void
     MPIR_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
+#ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(MPIR_Op_is_commutative(op));
+#endif
 
     MPIR_SCHED_CHKPMEM_MALLOC(disps, int *, comm_size * sizeof(int), mpi_errno, "disps", MPL_MEM_BUFFER);
 
@@ -98,9 +99,7 @@ int MPIR_Ireduce_scatter_intra_recursive_halving_sched(const void *sendbuf, void
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIR_SCHED_BARRIER(s);
 
-    pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
+    pof2 = comm_ptr->pof2;
 
     rem = comm_size - pof2;
 

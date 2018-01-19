@@ -25,10 +25,10 @@
  * other processes.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoall_intra_pairwise
+#define FUNCNAME MPIR_Alltoall__intra__pairwise
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoall_intra_pairwise(
+int MPIR_Alltoall__intra__pairwise(
     const void *sendbuf,
     int sendcount, 
     MPI_Datatype sendtype, 
@@ -43,12 +43,15 @@ int MPIR_Alltoall_intra_pairwise(
     int mpi_errno=MPI_SUCCESS, src, dst, rank;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    MPI_Datatype newtype = MPI_DATATYPE_NULL;
 
     if (recvcount == 0) return MPI_SUCCESS;
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
+
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_Assert(sendbuf != MPI_IN_PLACE);
+#endif /* HAVE_ERROR_CHECKING */
 
     /* Get extent of send and recv types */
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
@@ -107,7 +110,5 @@ int MPIR_Alltoall_intra_pairwise(
 
     return mpi_errno;
  fn_fail:
-    if (newtype != MPI_DATATYPE_NULL)
-        MPIR_Type_free_impl(&newtype);
     goto fn_exit;
 }

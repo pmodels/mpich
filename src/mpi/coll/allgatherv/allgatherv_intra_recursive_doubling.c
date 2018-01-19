@@ -21,10 +21,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allgatherv_intra_recursive_doubling
+#define FUNCNAME MPIR_Allgatherv__intra__recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgatherv_intra_recursive_doubling (
+int MPIR_Allgatherv__intra__recursive_doubling (
     const void *sendbuf,
     int sendcount,
     MPI_Datatype sendtype,
@@ -53,7 +53,13 @@ int MPIR_Allgatherv_intra_recursive_doubling (
     
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
-    
+
+#ifdef HAVE_ERROR_CHECKING
+    /* Currently this algorithm can only handle power-of-2 comm_size.
+     * Non power-of-2 comm_size is still experimental */
+    MPIR_Assert(!(comm_size & (comm_size-1)));
+#endif /* HAVE_ERROR_CHECKING */
+
     total_count = 0;
     for (i=0; i<comm_size; i++)
         total_count += recvcounts[i];

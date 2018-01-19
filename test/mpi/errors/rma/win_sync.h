@@ -28,4 +28,4 @@
         }                                                                               \
     } while (0)
 
-#endif
+#endif /* WIN_SYNC_H_INCLUDED */

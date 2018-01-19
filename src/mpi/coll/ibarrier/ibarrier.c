@@ -17,9 +17,9 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select ibarrier algorithm
-        auto - Internal algorithm selection
+        auto               - Internal algorithm selection
         recursive_doubling - Force recursive doubling algorithm
 
     - name        : MPIR_CVAR_IBARRIER_INTER_ALGORITHM
@@ -29,9 +29,9 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select ibarrier algorithm
-        auto - Internal algorithm selection
+        auto  - Internal algorithm selection
         bcast - Force bcast algorithm
 
     - name        : MPIR_CVAR_IBARRIER_DEVICE_COLLECTIVE
@@ -72,14 +72,14 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request) __attribute__((weak,alias(
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_intra_sched
+#define FUNCNAME MPIR_Ibarrier_sched__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_intra_sched(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_sched__intra__auto(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ibarrier_intra_recursive_doubling_sched(comm_ptr, s);
+    mpi_errno = MPIR_Ibarrier_sched__intra__recursive_doubling(comm_ptr, s);
 
     return mpi_errno;
 }
@@ -87,14 +87,51 @@ int MPIR_Ibarrier_intra_sched(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 /* It will choose between several different algorithms based on the given
  * parameters. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_inter_sched
+#define FUNCNAME MPIR_Ibarrier_sched__inter__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_inter_sched(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_sched__inter__auto(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno;
 
-    mpi_errno = MPIR_Ibarrier_intra_bcast_sched(comm_ptr, s);
+    mpi_errno = MPIR_Ibarrier_sched__inter__bcast(comm_ptr, s);
+
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Ibarrier_sched_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Ibarrier_sched_impl(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        /* intracommunicator */
+        switch (MPIR_Ibarrier_intra_algo_choice) {
+            case MPIR_IBARRIER_INTRA_ALGO_RECURSIVE_DOUBLING:
+                mpi_errno = MPIR_Ibarrier_sched__intra__recursive_doubling(comm_ptr, s);
+                break;
+            case MPIR_BARRIER_INTRA_ALGO_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Ibarrier_sched__intra__auto(comm_ptr, s);
+                break;
+        }
+    } else {
+        /* intercommunicator */
+        switch (MPIR_Ibarrier_inter_algo_choice) {
+            case MPIR_IBARRIER_INTER_ALGO_BCAST:
+                mpi_errno = MPIR_Ibarrier_sched__inter__bcast(comm_ptr, s);
+                break;
+            case MPIR_IBARRIER_INTER_ALGO_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Ibarrier_sched__inter__auto(comm_ptr, s);
+                break;
+        }
+    }
 
     return mpi_errno;
 }
@@ -107,47 +144,26 @@ int MPIR_Ibarrier_sched(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        /* intracommunicator */
-        switch (MPIR_Ibarrier_intra_algo_choice) {
-            case MPIR_IBARRIER_INTRA_ALGO_RECURSIVE_DOUBLING:
-                mpi_errno = MPIR_Ibarrier_intra_recursive_doubling_sched(comm_ptr, s);
-                break;
-            case MPIR_BARRIER_INTRA_ALGO_AUTO:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Ibarrier_intra_sched(comm_ptr, s);
-                break;
-        }
+    if (MPIR_CVAR_IBARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+         mpi_errno = MPID_Ibarrier_sched(comm_ptr, s);
     } else {
-        /* intercommunicator */
-        switch (MPIR_Ibarrier_inter_algo_choice) {
-            case MPIR_IBARRIER_INTER_ALGO_BCAST:
-                mpi_errno = MPIR_Ibarrier_intra_bcast_sched(comm_ptr, s);
-                break;
-            case MPIR_IBARRIER_INTER_ALGO_AUTO:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Ibarrier_inter_sched(comm_ptr, s);
-                break;
-        }
+         mpi_errno = MPIR_Ibarrier_sched_impl(comm_ptr, s);
     }
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier
+#define FUNCNAME MPIR_Ibarrier_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier(MPIR_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Ibarrier_impl(MPIR_Comm *comm_ptr, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *reqp = NULL;
     int tag = -1;
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
-    *request = MPI_REQUEST_NULL;
+    *request = NULL;
 
     if (comm_ptr->local_size != 1 || comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
@@ -155,12 +171,10 @@ int MPIR_Ibarrier(MPIR_Comm *comm_ptr, MPI_Request *request)
         mpi_errno = MPIR_Sched_create(&s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPID_Ibarrier_sched(comm_ptr, s);
+        mpi_errno = MPIR_Ibarrier_sched(comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);
-        if (reqp)
-            *request = reqp->handle;
+        mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
@@ -168,6 +182,23 @@ fn_exit:
     return mpi_errno;
 fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Ibarrier
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Ibarrier(MPIR_Comm *comm_ptr, MPIR_Request **request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_IBARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+         mpi_errno = MPID_Ibarrier(comm_ptr, request);
+    } else {
+         mpi_errno = MPIR_Ibarrier_impl(comm_ptr, request);
+    }
+
+    return mpi_errno;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */
@@ -206,6 +237,7 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IBARRIER);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -243,12 +275,13 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request)
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_IBARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-         mpi_errno = MPID_Ibarrier(comm_ptr, request);
-    } else {
-         mpi_errno = MPIR_Ibarrier(comm_ptr, request);
-    }
+    mpi_errno = MPIR_Ibarrier(comm_ptr, &request_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+    /* return the handle of the request to the user */
+    if(request_ptr)
+        *request = request_ptr->handle;
+    else *request = MPI_REQUEST_NULL;
 
     /* ... end of body of routine ... */
 

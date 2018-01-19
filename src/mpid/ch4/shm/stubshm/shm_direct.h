@@ -16,6 +16,7 @@
 #include "stubshm_recv.h"
 #include "stubshm_request.h"
 #include "stubshm_send.h"
+#include "stubshm_startall.h"
 #include "stubshm_win.h"
 #include "stubshm_rma.h"
 #include "stubshm_am.h"

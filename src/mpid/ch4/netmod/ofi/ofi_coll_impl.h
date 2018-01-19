@@ -14,423 +14,423 @@
 #include "ofi_coll_params.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Barrier_intra_recursive_doubling
+#define FUNCNAME MPIDI_OFI_Barrier__intra__recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Barrier_intra_recursive_doubling(MPIR_Comm * comm_ptr,
-                                               MPIR_Errflag_t * errflag,
-                                               MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Barrier__intra__dissemination(MPIR_Comm * comm_ptr,
+                                            MPIR_Errflag_t * errflag,
+                                            MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Barrier_intra_recursive_doubling(comm_ptr, errflag);
+    mpi_errno = MPIR_Barrier__intra__dissemination(comm_ptr, errflag);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Bcast_intra_binomial
+#define FUNCNAME MPIDI_OFI_Bcast__intra__binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Bcast_intra_binomial(void *buffer,
-                                   int count,
-                                   MPI_Datatype datatype,
-                                   int root,
-                                   MPIR_Comm * comm_ptr,
-                                   MPIR_Errflag_t * errflag,
-                                   MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Bcast__intra__binomial(void *buffer,
+                                     int count,
+                                     MPI_Datatype datatype,
+                                     int root,
+                                     MPIR_Comm * comm_ptr,
+                                     MPIR_Errflag_t * errflag,
+                                     MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast_intra_binomial(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Bcast__intra__binomial(buffer, count, datatype, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Bcast_intra_scatter_doubling_allgather
+#define FUNCNAME MPIDI_OFI_Bcast__intra__scatter_recursive_doubling_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Bcast_intra_scatter_doubling_allgather(void *buffer,
-                                                     int count,
-                                                     MPI_Datatype datatype,
-                                                     int root,
-                                                     MPIR_Comm * comm_ptr,
-                                                     MPIR_Errflag_t * errflag,
-                                                     MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Bcast__intra__scatter_recursive_doubling_allgather(void *buffer,
+                                                                 int count,
+                                                                 MPI_Datatype datatype,
+                                                                 int root,
+                                                                 MPIR_Comm * comm_ptr,
+                                                                 MPIR_Errflag_t * errflag,
+                                                                 MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Bcast__intra__scatter_recursive_doubling_allgather(buffer, count, datatype, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Bcast_intra_scatter_ring_allgather
+#define FUNCNAME MPIDI_OFI_Bcast__intra__scatter_ring_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Bcast_intra_scatter_ring_allgather(void *buffer,
-                                                 int count,
-                                                 MPI_Datatype datatype,
-                                                 int root,
-                                                 MPIR_Comm * comm_ptr,
-                                                 MPIR_Errflag_t * errflag,
-                                                 MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Bcast__intra__scatter_ring_allgather(void *buffer,
+                                                   int count,
+                                                   MPI_Datatype datatype,
+                                                   int root,
+                                                   MPIR_Comm * comm_ptr,
+                                                   MPIR_Errflag_t * errflag,
+                                                   MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Bcast__intra__scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Allreduce_intra_recursive_doubling
+#define FUNCNAME MPIDI_OFI_Allreduce__intra__recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Allreduce_intra_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
-                                                 MPI_Datatype datatype, MPI_Op op,
-                                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                                 MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Allreduce__intra__recursive_doubling(const void *sendbuf, void *recvbuf, int count,
+                                                   MPI_Datatype datatype, MPI_Op op,
+                                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                                   MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    mpi_errno = MPIR_Allreduce__intra__recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Allreduce_intra_reduce_scatter_allgather
+#define FUNCNAME MPIDI_OFI_Allreduce__intra__reduce_scatter_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf, void *recvbuf, int count,
-                                                       MPI_Datatype datatype, MPI_Op op,
-                                                       MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                                       MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Allreduce__intra__reduce_scatter_allgather(const void *sendbuf, void *recvbuf, int count,
+                                                         MPI_Datatype datatype, MPI_Op op,
+                                                         MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                                         MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Allreduce_intra_reduce_scatter_allgather(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    mpi_errno = MPIR_Allreduce__intra__reduce_scatter_allgather(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Reduce_intra_redscat_gather
+#define FUNCNAME MPIDI_OFI_Reduce__intra__redscat_gather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Reduce_intra_redscat_gather(const void *sendbuf, void *recvbuf, int count,
-                                          MPI_Datatype datatype, MPI_Op op, int root,
-                                          MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                          MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Reduce__intra__reduce_scatter_gather(const void *sendbuf, void *recvbuf, int count,
+                                                   MPI_Datatype datatype, MPI_Op op, int root,
+                                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                                   MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_intra_redscat_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Reduce__intra__reduce_scatter_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Reduce_intra_binomial
+#define FUNCNAME MPIDI_OFI_Reduce__intra__binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Reduce_intra_binomial(const void *sendbuf, void *recvbuf, int count,
-                                    MPI_Datatype datatype, MPI_Op op, int root,
-                                    MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                    MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Reduce__intra__binomial(const void *sendbuf, void *recvbuf, int count,
+                                      MPI_Datatype datatype, MPI_Op op, int root,
+                                      MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                      MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_intra_binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Reduce__intra__binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Alltoall_intra_brucks
+#define FUNCNAME MPIDI_OFI_Alltoall__intra__brucks
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Alltoall_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                    MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
-                                    MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Alltoall_intra_brucks(sendbuf, sendcount, sendtype,
-                                           recvbuf, recvcount, recvtype,
-                                           comm_ptr, errflag);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Alltoall_intra_scattered
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Alltoall_intra_scattered(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                       MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
-                                       MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Alltoall_intra_scattered(sendbuf, sendcount, sendtype,
-                                              recvbuf, recvcount, recvtype,
-                                              comm_ptr, errflag);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Alltoall_intra_pairwise
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Alltoall_intra_pairwise(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIDI_OFI_Alltoall__intra__brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                       MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
                                       MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Alltoall_intra_pairwise(sendbuf, sendcount, sendtype,
+    mpi_errno = MPIR_Alltoall__intra__brucks(sendbuf, sendcount, sendtype,
                                              recvbuf, recvcount, recvtype,
                                              comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Alltoall_intra_pairwise_sendrecv_replace
+#define FUNCNAME MPIDI_OFI_Alltoall__intra__scattered
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Alltoall_intra_pairwise_sendrecv_replace(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                                       MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
-                                                       MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Alltoall__intra__scattered(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                         MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                         MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Alltoall_intra_pairwise_sendrecv_replace(sendbuf, sendcount, sendtype,
-                                                              recvbuf, recvcount, recvtype,
-                                                              comm_ptr, errflag);
+    mpi_errno = MPIR_Alltoall__intra__scattered(sendbuf, sendcount, sendtype,
+                                                recvbuf, recvcount, recvtype,
+                                                comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Alltoallv_intra_pairwise_sendrecv_replace
+#define FUNCNAME MPIDI_OFI_Alltoall__intra__pairwise
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const int *sendcounts,
-                                                        const int *sdispls, MPI_Datatype sendtype,
-                                                        void *recvbuf, const int *recvcounts,
-                                                        const int *rdispls, MPI_Datatype recvtype,
-                                                        MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
-                                                        MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Alltoallv_intra_pairwise_sendrecv_replace(sendbuf, sendcounts, sdispls, sendtype,
-                                                               recvbuf, recvcounts, rdispls, recvtype,
-                                                               comm_ptr, errflag);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Alltoallv_intra_scattered
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Alltoallv_intra_scattered(const void *sendbuf, const int *sendcounts,
-                                        const int *sdispls, MPI_Datatype sendtype,
-                                        void *recvbuf, const int *recvcounts,
-                                        const int *rdispls, MPI_Datatype recvtype,
+int MPIDI_OFI_Alltoall__intra__pairwise(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                         MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
                                         MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Alltoallv_intra_scattered(sendbuf, sendcounts, sdispls, sendtype,
-                                               recvbuf, recvcounts, rdispls, recvtype,
+    mpi_errno = MPIR_Alltoall__intra__pairwise(sendbuf, sendcount, sendtype,
+                                               recvbuf, recvcount, recvtype,
                                                comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Alltoallw_intra_pairwise_sendrecv_replace
+#define FUNCNAME MPIDI_OFI_Alltoall__intra__pairwise_sendrecv_replace
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Alltoallw_intra_pairwise_sendrecv_replace(const void *sendbuf, const int sendcounts[], const int sdispls[],
-                                                        const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                                                        const int rdispls[], const MPI_Datatype recvtypes[],
-                                                        MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
-                                                        MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Alltoall__intra__pairwise_sendrecv_replace(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                                         MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                                         MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Alltoallw_intra_pairwise_sendrecv_replace(sendbuf, sendcounts, sdispls, sendtypes,
-                                                               recvbuf, recvcounts, rdispls, recvtypes,
-                                                               comm_ptr, errflag);
+    mpi_errno = MPIR_Alltoall__intra__pairwise_sendrecv_replace(sendbuf, sendcount, sendtype,
+                                                                recvbuf, recvcount, recvtype,
+                                                                comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Alltoallw_intra_scattered
+#define FUNCNAME MPIDI_OFI_Alltoallv__intra__pairwise_sendrecv_replace
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Alltoallw_intra_scattered(const void *sendbuf, const int sendcounts[], const int sdispls[],
-                                        const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                                        const int rdispls[], const MPI_Datatype recvtypes[],
-                                        MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
-                                        MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Alltoallv__intra__pairwise_sendrecv_replace(const void *sendbuf, const int *sendcounts,
+                                                          const int *sdispls, MPI_Datatype sendtype,
+                                                          void *recvbuf, const int *recvcounts,
+                                                          const int *rdispls, MPI_Datatype recvtype,
+                                                          MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                                          MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Alltoallw_intra_scattered(sendbuf, sendcounts, sdispls, sendtypes,
-                                               recvbuf, recvcounts, rdispls, recvtypes,
-                                               comm_ptr, errflag);
+    mpi_errno = MPIR_Alltoallv__intra__pairwise_sendrecv_replace(sendbuf, sendcounts, sdispls, sendtype,
+                                                                 recvbuf, recvcounts, rdispls, recvtype,
+                                                                 comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Allgather_intra_recursive_doubling
+#define FUNCNAME MPIDI_OFI_Alltoallv__intra__scattered
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Allgather_intra_recursive_doubling(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                                 void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                                 MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                                 MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Alltoallv__intra__scattered(const void *sendbuf, const int *sendcounts,
+                                          const int *sdispls, MPI_Datatype sendtype,
+                                          void *recvbuf, const int *recvcounts,
+                                          const int *rdispls, MPI_Datatype recvtype,
+                                          MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                          MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Allgather_intra_recursive_doubling(sendbuf, sendcount, sendtype,
-                                                        recvbuf, recvcount, recvtype,
-                                                        comm_ptr, errflag);
+    mpi_errno = MPIR_Alltoallv__intra__scattered(sendbuf, sendcounts, sdispls, sendtype,
+                                                 recvbuf, recvcounts, rdispls, recvtype,
+                                                 comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Allgather_intra_brucks
+#define FUNCNAME MPIDI_OFI_Alltoallw__intra__pairwise_sendrecv_replace
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Allgather_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIDI_OFI_Alltoallw__intra__pairwise_sendrecv_replace(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                                                          const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
+                                                          const int rdispls[], const MPI_Datatype recvtypes[],
+                                                          MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                                          MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Alltoallw__intra__pairwise_sendrecv_replace(sendbuf, sendcounts, sdispls, sendtypes,
+                                                                 recvbuf, recvcounts, rdispls, recvtypes,
+                                                                 comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_Alltoallw__intra__scattered
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_OFI_Alltoallw__intra__scattered(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                                          const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
+                                          const int rdispls[], const MPI_Datatype recvtypes[],
+                                          MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                          MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Alltoallw__intra__scattered(sendbuf, sendcounts, sdispls, sendtypes,
+                                                 recvbuf, recvcounts, rdispls, recvtypes,
+                                                 comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_Allgather__intra__recursive_doubling
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_OFI_Allgather__intra__recursive_doubling(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                                   MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Allgather__intra__recursive_doubling(sendbuf, sendcount, sendtype,
+                                                          recvbuf, recvcount, recvtype,
+                                                          comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_Allgather__intra__brucks
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_OFI_Allgather__intra__brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                       MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                       MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Allgather__intra__brucks(sendbuf, sendcount, sendtype,
+                                              recvbuf, recvcount, recvtype,
+                                              comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_Allgather__intra__ring
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_OFI_Allgather__intra__ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                      MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
                                      MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Allgather_intra_brucks(sendbuf, sendcount, sendtype,
+    mpi_errno = MPIR_Allgather__intra__ring(sendbuf, sendcount, sendtype,
                                             recvbuf, recvcount, recvtype,
                                             comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Allgather_intra_ring
+#define FUNCNAME MPIDI_OFI_Allgatherv__intra__recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Allgather_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                   MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Allgatherv__intra__recursive_doubling(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                                    void *recvbuf, const int *recvcounts, const int *displs,
+                                                    MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                                    MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Allgather_intra_ring(sendbuf, sendcount, sendtype,
-                                          recvbuf, recvcount, recvtype,
-                                          comm_ptr, errflag);
+    mpi_errno = MPIR_Allgatherv__intra__recursive_doubling(sendbuf, sendcount, sendtype,
+                                                           recvbuf, recvcounts, displs,
+                                                           recvtype, comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Allgatherv_intra_recursive_doubling
+#define FUNCNAME MPIDI_OFI_Allgatherv__intra__brucks
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Allgatherv_intra_recursive_doubling(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                                  void *recvbuf, const int *recvcounts, const int *displs,
-                                                  MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
-                                                  MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Allgatherv__intra__brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                        void *recvbuf, const int *recvcounts, const int *displs,
+                                        MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
+                                        MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Allgatherv_intra_recursive_doubling(sendbuf, sendcount, sendtype,
-                                                         recvbuf, recvcounts, displs,
-                                                         recvtype, comm_ptr, errflag);
+    mpi_errno = MPIR_Allgatherv__intra__brucks(sendbuf, sendcount, sendtype,
+                                               recvbuf, recvcounts, displs,
+                                               recvtype, comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Allgatherv_intra_brucks
+#define FUNCNAME MPIDI_OFI_Allgatherv__intra__ring
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Allgatherv_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIDI_OFI_Allgatherv__intra__ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, const int *recvcounts, const int *displs,
                                       MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
                                       MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Allgatherv_intra_brucks(sendbuf, sendcount, sendtype,
+    mpi_errno = MPIR_Allgatherv__intra__ring(sendbuf, sendcount, sendtype,
                                              recvbuf, recvcounts, displs,
                                              recvtype, comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Allgatherv_intra_ring
+#define FUNCNAME MPIDI_OFI_Gather__intra__binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Allgatherv_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                                    void *recvbuf, const int *recvcounts, const int *displs,
-                                    MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag,
-                                    MPIDI_OFI_coll_algo_container_t * params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Gather__intra__binomial(const void *sendbuf, int sendcount,
+                                      MPI_Datatype sendtype, void *recvbuf,
+                                      int recvcount, MPI_Datatype recvtype,
+                                      int root, MPIR_Comm * comm,
+                                      MPIR_Errflag_t * errflag,
+                                      MPIDI_OFI_coll_algo_container_t *
+                                      params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Allgatherv_intra_ring(sendbuf, sendcount, sendtype,
-                                           recvbuf, recvcounts, displs,
-                                           recvtype, comm_ptr, errflag);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Gather_intra_binomial
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Gather_intra_binomial(const void *sendbuf, int sendcount,
-                                    MPI_Datatype sendtype, void *recvbuf,
-                                    int recvcount, MPI_Datatype recvtype,
-                                    int root, MPIR_Comm * comm,
-                                    MPIR_Errflag_t * errflag,
-                                    MPIDI_OFI_coll_algo_container_t *
-                                    params_container ATTRIBUTE((unused)))
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Gather_intra_binomial(sendbuf, sendcount, sendtype,
+    mpi_errno = MPIR_Gather__intra__binomial(sendbuf, sendcount, sendtype,
                                            recvbuf, recvcount, recvtype,
                                            root, comm, errflag);
 
@@ -438,304 +438,284 @@ int MPIDI_OFI_Gather_intra_binomial(const void *sendbuf, int sendcount,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Gather_intra_binomial_indexed
+#define FUNCNAME MPIDI_OFI_Gather__intra__binomial_indexed
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Gather_intra_binomial_indexed(const void *sendbuf, int sendcount,
-                                            MPI_Datatype sendtype, void *recvbuf,
-                                            int recvcount, MPI_Datatype recvtype,
-                                            int root, MPIR_Comm * comm,
-                                            MPIR_Errflag_t * errflag,
-                                            MPIDI_OFI_coll_algo_container_t *
-                                            params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Gather__intra__binomial_indexed(const void *sendbuf, int sendcount,
+                                              MPI_Datatype sendtype, void *recvbuf,
+                                              int recvcount, MPI_Datatype recvtype,
+                                              int root, MPIR_Comm * comm,
+                                              MPIR_Errflag_t * errflag,
+                                              MPIDI_OFI_coll_algo_container_t *
+                                              params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Gather_intra_binomial_indexed(sendbuf, sendcount, sendtype,
-                                                   recvbuf, recvcount, recvtype,
-                                                   root, comm, errflag);
+    mpi_errno = MPIR_Gather__intra__binomial_indexed(sendbuf, sendcount, sendtype,
+                                                     recvbuf, recvcount, recvtype,
+                                                     root, comm, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Gatherv_intra_linear_ssend
+#define FUNCNAME MPIDI_OFI_Gatherv__intra__linear_ssend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Gatherv_intra_linear_ssend(const void *sendbuf, int sendcount,
-                                         MPI_Datatype sendtype, void *recvbuf,
-                                         const int *recvcounts, const int *displs,
-                                         MPI_Datatype recvtype, int root,
-                                         MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                         MPIDI_OFI_coll_algo_container_t *
-                                         params_container ATTRIBUTE((unused)))
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Gatherv_intra_linear_ssend(sendbuf, sendcount, sendtype, recvbuf,
-                                                recvcounts, displs, recvtype, root,
-                                                comm_ptr, errflag);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Gatherv_intra_linear
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Gatherv_intra_linear(const void *sendbuf, int sendcount,
-                                   MPI_Datatype sendtype, void *recvbuf,
-                                   const int *recvcounts, const int *displs,
-                                   MPI_Datatype recvtype, int root,
-                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                   MPIDI_OFI_coll_algo_container_t *
-                                   params_container ATTRIBUTE((unused)))
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Gatherv_intra_linear(sendbuf, sendcount, sendtype, recvbuf,
-                                          recvcounts, displs, recvtype, root, comm_ptr, errflag);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Scatter_intra_binomial
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Scatter_intra_binomial(const void *sendbuf, int sendcount,
-                                     MPI_Datatype sendtype, void *recvbuf,
-                                     int recvcount, MPI_Datatype recvtype,
-                                     int root, MPIR_Comm * comm_ptr,
-                                     MPIR_Errflag_t * errflag,
-                                     MPIDI_OFI_coll_algo_container_t *
-                                     params_container ATTRIBUTE((unused)))
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Scatter_intra_binomial(sendbuf, sendcount, sendtype, recvbuf,
-                                            recvcount, recvtype, root, comm_ptr, errflag);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Scatterv_intra_linear
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Scatterv_intra_linear(const void *sendbuf, const int *sendcounts,
-                                    const int *displs, MPI_Datatype sendtype,
-                                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                    int root, MPIR_Comm * comm_ptr,
-                                    MPIR_Errflag_t * errflag,
-                                    MPIDI_OFI_coll_algo_container_t *
-                                    params_container ATTRIBUTE((unused)))
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Scatterv_intra_linear(sendbuf, sendcounts, displs, sendtype,
-                                           recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Reduce_scatter_intra_noncomm
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Reduce_scatter_intra_noncomm(const void *sendbuf,
-                                           void *recvbuf,
-                                           const int recvcounts[],
-                                           MPI_Datatype datatype,
-                                           MPI_Op op, MPIR_Comm * comm_ptr,
-                                           MPIR_Errflag_t * errflag,
+int MPIDI_OFI_Gatherv__intra__linear_ssend(const void *sendbuf, int sendcount,
+                                           MPI_Datatype sendtype, void *recvbuf,
+                                           const int *recvcounts, const int *displs,
+                                           MPI_Datatype recvtype, int root,
+                                           MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
                                            MPIDI_OFI_coll_algo_container_t *
                                            params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_scatter_intra_noncomm(sendbuf, recvbuf, recvcounts, datatype,
-                                                  op, comm_ptr, errflag);
+    mpi_errno = MPIR_Gatherv__intra__linear_ssend(sendbuf, sendcount, sendtype, recvbuf,
+                                                  recvcounts, displs, recvtype, root,
+                                                  comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Reduce_scatter_intra_pairwise
+#define FUNCNAME MPIDI_OFI_Gatherv__intra__linear
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Reduce_scatter_intra_pairwise(const void *sendbuf,
-                                            void *recvbuf,
-                                            const int recvcounts[],
-                                            MPI_Datatype datatype,
-                                            MPI_Op op, MPIR_Comm * comm_ptr,
-                                            MPIR_Errflag_t * errflag,
-                                            MPIDI_OFI_coll_algo_container_t *
-                                            params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Gatherv__intra__linear(const void *sendbuf, int sendcount,
+                                     MPI_Datatype sendtype, void *recvbuf,
+                                     const int *recvcounts, const int *displs,
+                                     MPI_Datatype recvtype, int root,
+                                     MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                     MPIDI_OFI_coll_algo_container_t *
+                                     params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_scatter_intra_pairwise(sendbuf, recvbuf, recvcounts, datatype,
-                                                   op, comm_ptr, errflag);
+    mpi_errno = MPIR_Gatherv__intra__linear(sendbuf, sendcount, sendtype, recvbuf,
+                                            recvcounts, displs, recvtype, root, comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Reduce_scatter_intra_recursive_doubling
+#define FUNCNAME MPIDI_OFI_Scatter__intra__binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Reduce_scatter_intra_recursive_doubling(const void *sendbuf,
-                                                      void *recvbuf,
-                                                      const int recvcounts[],
-                                                      MPI_Datatype datatype,
-                                                      MPI_Op op, MPIR_Comm * comm_ptr,
-                                                      MPIR_Errflag_t * errflag,
-                                                      MPIDI_OFI_coll_algo_container_t *
-                                                      params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Scatter__intra__binomial(const void *sendbuf, int sendcount,
+                                       MPI_Datatype sendtype, void *recvbuf,
+                                       int recvcount, MPI_Datatype recvtype,
+                                       int root, MPIR_Comm * comm_ptr,
+                                       MPIR_Errflag_t * errflag,
+                                       MPIDI_OFI_coll_algo_container_t *
+                                       params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_scatter_intra_recursive_doubling(sendbuf, recvbuf, recvcounts, datatype,
-                                                             op, comm_ptr, errflag);
+    mpi_errno = MPIR_Scatter__intra__binomial(sendbuf, sendcount, sendtype, recvbuf,
+                                              recvcount, recvtype, root, comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Reduce_scatter_intra_recursive_halving
+#define FUNCNAME MPIDI_OFI_Scatterv__intra__linear
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Reduce_scatter_intra_recursive_halving(const void *sendbuf,
-                                                     void *recvbuf,
-                                                     const int recvcounts[],
-                                                     MPI_Datatype datatype,
-                                                     MPI_Op op, MPIR_Comm * comm_ptr,
-                                                     MPIR_Errflag_t * errflag,
-                                                     MPIDI_OFI_coll_algo_container_t *
-                                                     params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Scatterv__intra__linear(const void *sendbuf, const int *sendcounts,
+                                      const int *displs, MPI_Datatype sendtype,
+                                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                      int root, MPIR_Comm * comm_ptr,
+                                      MPIR_Errflag_t * errflag,
+                                      MPIDI_OFI_coll_algo_container_t *
+                                      params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_scatter_intra_recursive_halving(sendbuf, recvbuf, recvcounts, datatype,
-                                                            op, comm_ptr, errflag);
+    mpi_errno = MPIR_Scatterv__intra__linear(sendbuf, sendcounts, displs, sendtype,
+                                             recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Reduce_scatter_block_intra_noncomm
+#define FUNCNAME MPIDI_OFI_Reduce_scatter__intra__noncommutative
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Reduce_scatter_block_intra_noncomm(const void *sendbuf,
-                                                 void *recvbuf,
-                                                 int recvcount,
-                                                 MPI_Datatype datatype,
-                                                 MPI_Op op, MPIR_Comm * comm_ptr,
-                                                 MPIR_Errflag_t * errflag,
-                                                 MPIDI_OFI_coll_algo_container_t *
-                                                 params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Reduce_scatter__intra__noncommutative(const void *sendbuf,
+                                                    void *recvbuf,
+                                                    const int recvcounts[],
+                                                    MPI_Datatype datatype,
+                                                    MPI_Op op, MPIR_Comm * comm_ptr,
+                                                    MPIR_Errflag_t * errflag,
+                                                    MPIDI_OFI_coll_algo_container_t *
+                                                    params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_scatter_block_intra_noncomm(sendbuf, recvbuf, recvcount, datatype,
-                                                        op, comm_ptr, errflag);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Reduce_scatter_block_intra_pairwise
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Reduce_scatter_block_intra_pairwise(const void *sendbuf,
-                                                  void *recvbuf,
-                                                  int recvcount,
-                                                  MPI_Datatype datatype,
-                                                  MPI_Op op, MPIR_Comm * comm_ptr,
-                                                  MPIR_Errflag_t * errflag,
-                                                  MPIDI_OFI_coll_algo_container_t *
-                                                  params_container ATTRIBUTE((unused)))
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno = MPIR_Reduce_scatter_block_intra_pairwise(sendbuf, recvbuf, recvcount, datatype,
-                                                         op, comm_ptr, errflag);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Reduce_scatter_block_intra_recursive_doubling
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Reduce_scatter_block_intra_recursive_doubling(const void *sendbuf,
-                                                            void *recvbuf,
-                                                            int recvcount,
-                                                            MPI_Datatype datatype,
-                                                            MPI_Op op, MPIR_Comm * comm_ptr,
-                                                            MPIR_Errflag_t * errflag,
-                                                            MPIDI_OFI_coll_algo_container_t *
-                                                            params_container
-                                                            ATTRIBUTE((unused)))
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    mpi_errno =
-        MPIR_Reduce_scatter_block_intra_recursive_doubling(sendbuf, recvbuf, recvcount, datatype,
+    mpi_errno = MPIR_Reduce_scatter__intra__noncommutative(sendbuf, recvbuf, recvcounts, datatype,
                                                            op, comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Reduce_scatter_block_intra_recursive_halving
+#define FUNCNAME MPIDI_OFI_Reduce_scatter__intra__pairwise
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Reduce_scatter_block_intra_recursive_halving(const void *sendbuf,
-                                                           void *recvbuf,
-                                                           int recvcount,
-                                                           MPI_Datatype datatype,
-                                                           MPI_Op op, MPIR_Comm * comm_ptr,
-                                                           MPIR_Errflag_t * errflag,
-                                                           MPIDI_OFI_coll_algo_container_t *
-                                                           params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Reduce_scatter__intra__pairwise(const void *sendbuf,
+                                              void *recvbuf,
+                                              const int recvcounts[],
+                                              MPI_Datatype datatype,
+                                              MPI_Op op, MPIR_Comm * comm_ptr,
+                                              MPIR_Errflag_t * errflag,
+                                              MPIDI_OFI_coll_algo_container_t *
+                                              params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Reduce_scatter__intra__pairwise(sendbuf, recvbuf, recvcounts, datatype,
+                                                     op, comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_Reduce_scatter__intra__recursive_doubling
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_OFI_Reduce_scatter__intra__recursive_doubling(const void *sendbuf,
+                                                        void *recvbuf,
+                                                        const int recvcounts[],
+                                                        MPI_Datatype datatype,
+                                                        MPI_Op op, MPIR_Comm * comm_ptr,
+                                                        MPIR_Errflag_t * errflag,
+                                                        MPIDI_OFI_coll_algo_container_t *
+                                                        params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Reduce_scatter__intra__recursive_doubling(sendbuf, recvbuf, recvcounts, datatype,
+                                                               op, comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_Reduce_scatter__intra__recursive_halving
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_OFI_Reduce_scatter__intra__recursive_halving(const void *sendbuf,
+                                                       void *recvbuf,
+                                                       const int recvcounts[],
+                                                       MPI_Datatype datatype,
+                                                       MPI_Op op, MPIR_Comm * comm_ptr,
+                                                       MPIR_Errflag_t * errflag,
+                                                       MPIDI_OFI_coll_algo_container_t *
+                                                       params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Reduce_scatter__intra__recursive_halving(sendbuf, recvbuf, recvcounts, datatype,
+                                                              op, comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_Reduce_scatter_block__intra__noncommutative
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_OFI_Reduce_scatter_block__intra__noncommutative(const void *sendbuf,
+                                                          void *recvbuf,
+                                                          int recvcount,
+                                                          MPI_Datatype datatype,
+                                                          MPI_Op op, MPIR_Comm * comm_ptr,
+                                                          MPIR_Errflag_t * errflag,
+                                                          MPIDI_OFI_coll_algo_container_t *
+                                                          params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Reduce_scatter_block__intra__noncommutative(sendbuf, recvbuf, recvcount, datatype,
+                                                                 op, comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_Reduce_scatter_block__intra__pairwise
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_OFI_Reduce_scatter_block__intra__pairwise(const void *sendbuf,
+                                                    void *recvbuf,
+                                                    int recvcount,
+                                                    MPI_Datatype datatype,
+                                                    MPI_Op op, MPIR_Comm * comm_ptr,
+                                                    MPIR_Errflag_t * errflag,
+                                                    MPIDI_OFI_coll_algo_container_t *
+                                                    params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Reduce_scatter_block__intra__pairwise(sendbuf, recvbuf, recvcount, datatype,
+                                                           op, comm_ptr, errflag);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_Reduce_scatter_block__intra__recursive_doubling
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_OFI_Reduce_scatter_block__intra__recursive_doubling(const void *sendbuf,
+                                                              void *recvbuf,
+                                                              int recvcount,
+                                                              MPI_Datatype datatype,
+                                                              MPI_Op op, MPIR_Comm * comm_ptr,
+                                                              MPIR_Errflag_t * errflag,
+                                                              MPIDI_OFI_coll_algo_container_t *
+                                                              params_container
+                                                              ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPIR_Reduce_scatter_block_intra_recursive_halving(sendbuf, recvbuf, recvcount, datatype, op,
-                                                          comm_ptr, errflag);
+        MPIR_Reduce_scatter_block__intra__recursive_doubling(sendbuf, recvbuf, recvcount, datatype,
+                                                             op, comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Scan_intra_generic
+#define FUNCNAME MPIDI_OFI_Reduce_scatter_block__intra__recursive_halving
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Scan_intra_generic(const void *sendbuf,
-                                 void *recvbuf,
-                                 int count,
-                                 MPI_Datatype datatype,
-                                 MPI_Op op, MPIR_Comm * comm_ptr,
-                                 MPIR_Errflag_t * errflag,
-                                 MPIDI_OFI_coll_algo_container_t *
-                                 params_container ATTRIBUTE((unused)))
+int MPIDI_OFI_Reduce_scatter_block__intra__recursive_halving(const void *sendbuf,
+                                                             void *recvbuf,
+                                                             int recvcount,
+                                                             MPI_Datatype datatype,
+                                                             MPI_Op op, MPIR_Comm * comm_ptr,
+                                                             MPIR_Errflag_t * errflag,
+                                                             MPIDI_OFI_coll_algo_container_t *
+                                                             params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Scan_intra_generic(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    mpi_errno =
+        MPIR_Reduce_scatter_block__intra__recursive_halving(sendbuf, recvbuf, recvcount, datatype, op,
+                                                            comm_ptr, errflag);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_Exscan_intra_recursive_doubling
+#define FUNCNAME MPIDI_OFI_Scan__intra__recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-int MPIDI_OFI_Exscan_intra_recursive_doubling(const void *sendbuf,
+int MPIDI_OFI_Scan__intra__recursive_doubling(const void *sendbuf,
                                               void *recvbuf,
                                               int count,
                                               MPI_Datatype datatype,
@@ -746,10 +726,29 @@ int MPIDI_OFI_Exscan_intra_recursive_doubling(const void *sendbuf,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno =
-        MPIR_Exscan_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr,
-                                             errflag);
+    mpi_errno = MPIR_Scan__intra__recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_Exscan__intra__recursive_doubling
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX
+int MPIDI_OFI_Exscan__intra__recursive_doubling(const void *sendbuf,
+                                                void *recvbuf,
+                                                int count,
+                                                MPI_Datatype datatype,
+                                                MPI_Op op, MPIR_Comm * comm_ptr,
+                                                MPIR_Errflag_t * errflag,
+                                                MPIDI_OFI_coll_algo_container_t *
+                                                params_container ATTRIBUTE((unused)))
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno =
+        MPIR_Exscan__intra__recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                                               errflag);
+    return mpi_errno;
+}
 #endif /* OFI_COLL_IMPL_H_INCLUDED */

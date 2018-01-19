@@ -29,4 +29,4 @@ int MPIE_EnvInitData( EnvData *, int );
 int MPIE_Putenv( ProcessWorld *, const char * );
 int MPIE_UnsetAllEnv( char *[] );
 
-#endif
+#endif /* ENV_H_INCLUDED */

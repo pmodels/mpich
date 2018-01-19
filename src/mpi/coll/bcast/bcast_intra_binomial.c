@@ -6,7 +6,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* Algorithm: Binomial bcast
  *
@@ -14,10 +13,10 @@
  * Cost = lgp.alpha + n.lgp.beta
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Bcast_intra_binomial
+#define FUNCNAME MPIR_Bcast__intra__binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Bcast_intra_binomial(
+int MPIR_Bcast__intra__binomial(
     void *buffer, 
     int count, 
     MPI_Datatype datatype, 

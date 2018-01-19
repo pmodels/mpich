@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* Algorithm: Nonblocking all-to-all for sendbuf==MPI_IN_PLACE.
  *
@@ -20,10 +19,10 @@
  * Something like MADRE is probably the best solution for the MPI_IN_PLACE
  * scenario. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoall_intra_inplace_sched
+#define FUNCNAME MPIR_Ialltoall_sched__intra__inplace
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoall_intra_inplace_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ialltoall_sched__intra__inplace(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     void *tmp_buf = NULL;
@@ -34,7 +33,9 @@ int MPIR_Ialltoall_intra_inplace_sched(const void *sendbuf, int sendcount, MPI_D
     int peer;
     MPIR_SCHED_CHKPMEM_DECL(1);
 
+#ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(sendbuf == MPI_IN_PLACE);
+#endif
 
     if (recvcount == 0)
         goto fn_exit;

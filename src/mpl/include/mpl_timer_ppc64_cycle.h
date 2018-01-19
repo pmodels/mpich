@@ -36,4 +36,4 @@ static inline int MPL_wtime(MPL_time_t *timeval)
     return MPL_TIMER_SUCCESS;
 }
 
-#endif
+#endif /* MPL_TIMER_PPC64_CYCLE_H_INCLUDED */

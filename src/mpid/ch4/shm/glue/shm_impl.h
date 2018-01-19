@@ -17,6 +17,7 @@
 #include "shm_mem.h"
 #include "shm_misc.h"
 #include "shm_p2p.h"
+#include "shm_startall.h"
 #include "shm_rma.h"
 
 #endif /* SHM_IMPL_H_INCLUDED */

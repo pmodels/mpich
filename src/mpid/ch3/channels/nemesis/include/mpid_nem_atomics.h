@@ -4,10 +4,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPID_NEM_ATOMICS_H
-#define MPID_NEM_ATOMICS_H
+#ifndef MPID_NEM_ATOMICS_H_INCLUDED
+#define MPID_NEM_ATOMICS_H_INCLUDED
 
 #include "mpichconf.h"
 #include "opa_primitives.h"
 
-#endif /* MPID_NEM_ATOMICS_H */
+#endif /* MPID_NEM_ATOMICS_H_INCLUDED */

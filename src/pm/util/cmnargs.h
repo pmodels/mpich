@@ -18,4 +18,4 @@ int MPIE_StdioSetMode( FILE *, const char * );
 const char *MPIE_ArgDescription( void );
 void MPIE_PrintProcessUniverse( FILE *, ProcessUniverse * );
 void MPIE_PrintProcessWorld( FILE *, ProcessWorld * );
-#endif
+#endif /* CMNARGS_H_INCLUDED */

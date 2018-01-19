@@ -20,10 +20,10 @@
    Cost = (p-1).alpha + n.((p-1)/p).beta
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scatterv_intra_linear
+#define FUNCNAME MPIR_Scatterv__intra__linear
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scatterv_intra_linear(const void *sendbuf,
+int MPIR_Scatterv__intra__linear(const void *sendbuf,
                                const int *sendcounts,
                                const int *displs,
                                MPI_Datatype sendtype,

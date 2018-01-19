@@ -158,7 +158,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp_strict(uint64_t 
         MPIR_T_PVAR_COUNTER_INC(RECVQ, unexpected_recvq_match_attempts, 1);
         req = (MPIR_Request *) curr->request;
         if (!(MPIDI_CH4U_REQUEST(req, req->status) & MPIDI_CH4U_REQ_BUSY) &&
-            ((tag & ~ignore) == (MPIDI_CH4U_REQUEST(req, tag) & ~ignore))) {
+            ((tag & ~ignore) == (MPIDI_CH4U_REQUEST(req, match_bits) & ~ignore))) {
             DL_DELETE(*list, curr);
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
             break;
@@ -186,7 +186,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp(uint64_t tag, ui
     DL_FOREACH_SAFE(*list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, unexpected_recvq_match_attempts, 1);
         req = (MPIR_Request *) curr->request;
-        if ((tag & ~ignore) == (MPIDI_CH4U_REQUEST(req, tag) & ~ignore)) {
+        if ((tag & ~ignore) == (MPIDI_CH4U_REQUEST(req, match_bits) & ~ignore)) {
             DL_DELETE(*list, curr);
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
             break;
@@ -214,7 +214,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_find_unexp(uint64_t tag, uint6
     DL_FOREACH_SAFE(*list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, unexpected_recvq_match_attempts, 1);
         req = (MPIR_Request *) curr->request;
-        if ((tag & ~ignore) == (MPIDI_CH4U_REQUEST(req, tag) & ~ignore)) {
+        if ((tag & ~ignore) == (MPIDI_CH4U_REQUEST(req, match_bits) & ~ignore)) {
             break;
         }
         req = NULL;
@@ -241,7 +241,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_posted(uint64_t tag,
         MPIR_T_PVAR_COUNTER_INC(RECVQ, posted_recvq_match_attempts, 1);
         req = (MPIR_Request *) curr->request;
         if ((tag & ~(MPIDI_CH4U_REQUEST(req, req->rreq.ignore))) ==
-            (MPIDI_CH4U_REQUEST(req, tag) & ~(MPIDI_CH4U_REQUEST(req, req->rreq.ignore)))) {
+            (MPIDI_CH4U_REQUEST(req, match_bits) & ~(MPIDI_CH4U_REQUEST(req, req->rreq.ignore)))) {
             DL_DELETE(*list, curr);
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
             break;
@@ -348,7 +348,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp_strict(uint64_t 
         MPIR_T_PVAR_COUNTER_INC(RECVQ, unexpected_recvq_match_attempts, 1);
         req = (MPIR_Request *) curr->request;
         if (!(MPIDI_CH4U_REQUEST(req, req->status) & MPIDI_CH4U_REQ_BUSY) &&
-            ((tag & ~ignore) == (MPIDI_CH4U_REQUEST(req, tag) & ~ignore))) {
+            ((tag & ~ignore) == (MPIDI_CH4U_REQUEST(req, match_bits) & ~ignore))) {
             DL_DELETE(MPIDI_CH4_Global.unexp_list, curr);
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
             break;
@@ -376,7 +376,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp(uint64_t tag, ui
     DL_FOREACH_SAFE(MPIDI_CH4_Global.unexp_list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, unexpected_recvq_match_attempts, 1);
         req = (MPIR_Request *) curr->request;
-        if ((tag & ~ignore) == (MPIDI_CH4U_REQUEST(req, tag) & ~ignore)) {
+        if ((tag & ~ignore) == (MPIDI_CH4U_REQUEST(req, match_bits) & ~ignore)) {
             DL_DELETE(MPIDI_CH4_Global.unexp_list, curr);
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
             break;
@@ -404,7 +404,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_find_unexp(uint64_t tag, uint6
     DL_FOREACH_SAFE(MPIDI_CH4_Global.unexp_list, curr, tmp) {
         MPIR_T_PVAR_COUNTER_INC(RECVQ, unexpected_recvq_match_attempts, 1);
         req = (MPIR_Request *) curr->request;
-        if ((tag & ~ignore) == (MPIDI_CH4U_REQUEST(req, tag) & ~ignore)) {
+        if ((tag & ~ignore) == (MPIDI_CH4U_REQUEST(req, match_bits) & ~ignore)) {
             break;
         }
         req = NULL;
@@ -431,7 +431,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_posted(uint64_t tag,
         MPIR_T_PVAR_COUNTER_INC(RECVQ, posted_recvq_match_attempts, 1);
         req = (MPIR_Request *) curr->request;
         if ((tag & ~MPIDI_CH4U_REQUEST(req, req->rreq.ignore)) ==
-            (MPIDI_CH4U_REQUEST(req, tag) & ~MPIDI_CH4U_REQUEST(req, req->rreq.ignore))) {
+            (MPIDI_CH4U_REQUEST(req, match_bits) & ~MPIDI_CH4U_REQUEST(req, req->rreq.ignore))) {
             DL_DELETE(MPIDI_CH4_Global.posted_list, curr);
             MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
             break;

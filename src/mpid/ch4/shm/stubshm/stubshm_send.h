@@ -14,7 +14,7 @@
 #include "stubshm_impl.h"
 
 static inline int MPIDI_STUBSHM_mpi_send(const void *buf,
-                                     int count,
+                                     MPI_Aint count,
                                      MPI_Datatype datatype,
                                      int rank,
                                      int tag,
@@ -33,7 +33,7 @@ static inline int MPIDI_STUBSHM_mpi_send(const void *buf,
 
 
 static inline int MPIDI_STUBSHM_irsend(const void *buf,
-                                   int count,
+                                   MPI_Aint count,
                                    MPI_Datatype datatype,
                                    int rank,
                                    int tag,
@@ -49,7 +49,7 @@ static inline int MPIDI_STUBSHM_irsend(const void *buf,
 }
 
 static inline int MPIDI_STUBSHM_mpi_ssend(const void *buf,
-                                      int count,
+                                      MPI_Aint count,
                                       MPI_Datatype datatype,
                                       int rank,
                                       int tag,
@@ -61,17 +61,6 @@ static inline int MPIDI_STUBSHM_mpi_ssend(const void *buf,
     MPIR_Assert(0);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_SSEND);
-    return MPI_SUCCESS;
-}
-
-static inline int MPIDI_STUBSHM_mpi_startall(int count, MPIR_Request * requests[])
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_STARTALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_STARTALL);
-
-    MPIR_Assert(0);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_STARTALL);
     return MPI_SUCCESS;
 }
 
@@ -146,7 +135,7 @@ static inline int MPIDI_STUBSHM_mpi_rsend_init(const void *buf,
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_STUBSHM_mpi_isend)
 static inline int MPIDI_STUBSHM_mpi_isend(const void *buf,
-                                      int count,
+                                      MPI_Aint count,
                                       MPI_Datatype datatype,
                                       int rank,
                                       int tag,
@@ -162,7 +151,7 @@ static inline int MPIDI_STUBSHM_mpi_isend(const void *buf,
 }
 
 static inline int MPIDI_STUBSHM_mpi_issend(const void *buf,
-                                       int count,
+                                       MPI_Aint count,
                                        MPI_Datatype datatype,
                                        int rank,
                                        int tag,

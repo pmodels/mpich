@@ -5,6 +5,9 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
+#ifndef ADIO_CB_CONFIG_LIST_H_INCLUDED
+#define ADIO_CB_CONFIG_LIST_H_INCLUDED
+
 /* I have no idea what the "D" stands for; it's how things are done in adio.h 
  */
 struct ADIO_cb_name_arrayD {
@@ -25,3 +28,5 @@ int ADIOI_cb_delete_name_array(MPI_Comm comm, int keyval, void *attr_val,
 int ADIOI_cb_config_list_parse(char *config_list, ADIO_cb_name_array array, 
 			       int ranklist[], int cb_nodes);
 int ADIOI_cb_bcast_rank_map(ADIO_File fd);
+
+#endif /* ADIO_CB_CONFIG_LIST_H_INCLUDED */

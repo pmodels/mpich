@@ -35,4 +35,4 @@ typedef MPLI_shm_lghnd_t *MPL_shm_hnd_t;
 /* Nothing to be done at close */
 #define MPLI_shm_lhnd_close(hnd)    0
 
-#endif /* ifndef MPL_SHM_SYSV_H_INCLUDED */
+#endif /* MPL_SHM_SYSV_H_INCLUDED */

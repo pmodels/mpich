@@ -5,13 +5,12 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_intra_recursive_doubling_sched
+#define FUNCNAME MPIR_Iallreduce_sched__intra__recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_intra_recursive_doubling_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iallreduce_sched__intra__recursive_doubling(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int pof2, rem, comm_size, is_commutative, rank;
@@ -43,10 +42,8 @@ int MPIR_Iallreduce_intra_recursive_doubling_sched(const void *sendbuf, void *re
         MPIR_SCHED_BARRIER(s);
     }
 
-    /* find nearest power-of-two less than or equal to comm_size */
-    pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
+    /* get nearest power-of-two less than or equal to comm_size */
+    pof2 = comm_ptr->pof2;
 
     rem = comm_size - pof2;
 

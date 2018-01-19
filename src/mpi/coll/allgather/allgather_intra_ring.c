@@ -23,10 +23,10 @@
  * Myrinet and IBM SP).
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allgather_intra_ring
+#define FUNCNAME MPIR_Allgather__intra__ring
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgather_intra_ring (
+int MPIR_Allgather__intra__ring (
     const void *sendbuf,
     int sendcount,
     MPI_Datatype sendtype,

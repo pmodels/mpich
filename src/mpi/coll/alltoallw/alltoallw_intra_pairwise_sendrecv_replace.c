@@ -20,10 +20,10 @@
  * best solution for the MPI_IN_PLACE scenario.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallw_intra_pairwise_sendrecv_replace
+#define FUNCNAME MPIR_Alltoallw__intra__pairwise_sendrecv_replace
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoallw_intra_pairwise_sendrecv_replace(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Alltoallw__intra__pairwise_sendrecv_replace(const void *sendbuf, const int sendcounts[], const int sdispls[],
                          const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                          const int rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm *comm_ptr,
                          MPIR_Errflag_t *errflag)
@@ -37,7 +37,10 @@ int MPIR_Alltoallw_intra_pairwise_sendrecv_replace(const void *sendbuf, const in
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
     
+#ifdef HAVE_ERROR_CHECKING
     MPIR_Assert (sendbuf == MPI_IN_PLACE);
+#endif
+
     /* We use pair-wise sendrecv_replace in order to conserve memory usage,
      * which is keeping with the spirit of the MPI-2.2 Standard.  But
      * because of this approach all processes must agree on the global

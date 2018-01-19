@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef TCP_QUEUE_H
-#define TCP_QUEUE_H
+#ifndef TCP_QUEUE_H_INCLUDED
+#define TCP_QUEUE_H_INCLUDED
 
 /* Generic queue macros -- "next_field" should be set to the name of
    the next pointer field in the element (e.g., "ch.tcp_sendq_next") */
@@ -131,4 +131,4 @@
         *(ep) = (sp)->top;                      \
         (sp)->top = (*(ep))->next_field;        \
     } while (0)
-#endif /* TCP_QUEUE_H */
+#endif /* TCP_QUEUE_H_INCLUDED */

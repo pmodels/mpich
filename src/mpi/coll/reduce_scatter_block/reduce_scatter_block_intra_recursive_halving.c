@@ -12,10 +12,9 @@
 
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_intra_recursive_halving
+#define FUNCNAME MPIR_Reduce_scatter_block__intra__recursive_halving
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
@@ -42,7 +41,7 @@
  * some imbalance in the amount of work each process does because some
  * processes do the work of their neighbors as well.
  */
-int MPIR_Reduce_scatter_block_intra_recursive_halving (
+int MPIR_Reduce_scatter_block__intra__recursive_halving (
     const void *sendbuf, 
     void *recvbuf, 
     int recvcount, 
@@ -66,6 +65,14 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving (
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
+
+#ifdef HAVE_ERROR_CHECKING
+    {
+        int is_commutative;
+        is_commutative = MPIR_Op_is_commutative(op);
+        MPIR_Assert(is_commutative);
+    }
+#endif /* HAVE_ERROR_CHECKING */
 
     /* set op_errno to 0. stored in perthread structure */
     {
@@ -119,9 +126,7 @@ int MPIR_Reduce_scatter_block_intra_recursive_halving (
     
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
+    pof2 = comm_ptr->pof2;
 
     rem = comm_size - pof2;
 

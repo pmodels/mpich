@@ -233,6 +233,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     comm->rank        = pg_rank;
     comm->remote_size = pg_size;
     comm->local_size  = pg_size;
+    comm->pof2        = MPL_pof2(comm->local_size);
     
     mpi_errno = MPIDI_VCRT_Create(comm->remote_size, &comm->dev.vcrt);
     if (mpi_errno != MPI_SUCCESS)
@@ -258,6 +259,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     comm->rank        = 0;
     comm->remote_size = 1;
     comm->local_size  = 1;
+    comm->pof2        = 0;
     
     mpi_errno = MPIDI_VCRT_Create(comm->remote_size, &comm->dev.vcrt);
     if (mpi_errno != MPI_SUCCESS)
@@ -282,6 +284,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     comm->rank        = pg_rank;
     comm->remote_size = pg_size;
     comm->local_size  = pg_size;
+    comm->pof2        = MPL_pof2(comm->local_size);
     MPIDI_VCRT_Add_ref( MPIR_Process.comm_world->dev.vcrt );
     comm->dev.vcrt = MPIR_Process.comm_world->dev.vcrt;
     
@@ -303,7 +306,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 	char * parent_port;
 
 	/* FIXME: To allow just the "root" process to 
-	   request the port and then use MPIR_Bcast_intra to 
+	   request the port and then use MPIR_Bcast_intra_auto to
 	   distribute it to the rest of the processes,
 	   we need to perform the Bcast after MPI is
 	   otherwise initialized.  We could do this

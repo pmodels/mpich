@@ -64,4 +64,4 @@ int MPIR_Err_add_code( int );
 /* These must correspond to the masks defined above */
 #define ERROR_MAX_NCLASS ERROR_CLASS_SIZE
 #define ERROR_MAX_NCODE  8192
-#endif
+#endif /* ERRCODES_H_INCLUDED */

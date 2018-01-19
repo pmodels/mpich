@@ -7,6 +7,6 @@ mpi_sources +=                                  \
 mpi_core_sources +=                             \
     src/mpi/coll/ialltoall/ialltoall_intra_inplace.c  \
     src/mpi/coll/ialltoall/ialltoall_intra_brucks.c   \
-    src/mpi/coll/ialltoall/ialltoall_intra_perm_sr.c  \
+    src/mpi/coll/ialltoall/ialltoall_intra_permuted_sendrecv.c  \
     src/mpi/coll/ialltoall/ialltoall_intra_pairwise.c \
-    src/mpi/coll/ialltoall/ialltoall_inter_generic.c
+    src/mpi/coll/ialltoall/ialltoall_inter_pairwise_exchange.c

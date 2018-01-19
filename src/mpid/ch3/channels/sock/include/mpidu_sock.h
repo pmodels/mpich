@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPIDI_CH3I_SOCK_H_INCLUDED)
-#define MPIDI_CH3I_SOCK_H_INCLUDED
+#ifndef MPIDU_SOCK_H_INCLUDED
+#define MPIDU_SOCK_H_INCLUDED
 
 #if defined(__cplusplus)
 #if !defined(CPLUSPLUS_BEGIN)
@@ -1127,4 +1127,4 @@ int MPIDI_CH3I_Sock_get_error_class_string(int error, char *error_string, size_t
 
 CPLUSPLUS_END
 
-#endif /* !defined(MPIDI_CH3I_SOCK_H_INCLUDED) */
+#endif /* MPIDU_SOCK_H_INCLUDED */

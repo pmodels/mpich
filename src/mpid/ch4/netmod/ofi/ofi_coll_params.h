@@ -2,7 +2,7 @@
 #define OFI_COLL_PARAMS_H_INCLUDED
 
 typedef enum {
-    MPIDI_OFI_Barrier_intra_recursive_doubling_id,
+    MPIDI_OFI_Barrier__intra__dissemination_id,
 } MPIDI_OFI_Barrier_id_t;
 
 typedef union {
@@ -13,9 +13,9 @@ typedef union {
 } MPIDI_OFI_Barrier_params_t;
 
 typedef enum {
-    MPIDI_OFI_Bcast_intra_binomial_id,
-    MPIDI_OFI_Bcast_intra_scatter_doubling_allgather_id,
-    MPIDI_OFI_Bcast_intra_scatter_ring_allgather_id,
+    MPIDI_OFI_Bcast__intra__binomial_id,
+    MPIDI_OFI_Bcast__intra__scatter_recursive_doubling_allgather_id,
+    MPIDI_OFI_Bcast__intra__scatter_ring_allgather_id,
 } MPIDI_OFI_Bcast_id_t;
 
 typedef union {
@@ -30,8 +30,8 @@ typedef union {
 } MPIDI_OFI_Bcast_params_t;
 
 typedef enum {
-    MPIDI_OFI_Allreduce_intra_recursive_doubling_id,
-    MPIDI_OFI_Allreduce_intra_reduce_scatter_allgather_id
+    MPIDI_OFI_Allreduce__intra__recursive_doubling_id,
+    MPIDI_OFI_Allreduce__intra__reduce_scatter_allgather_id
 } MPIDI_OFI_Allreduce_id_t;
 
 typedef union {
@@ -42,8 +42,8 @@ typedef union {
 } MPIDI_OFI_Allreduce_params_t;
 
 typedef enum {
-    MPIDI_OFI_Reduce_intra_redscat_gather_id,
-    MPIDI_OFI_Reduce_intra_binomial_id
+    MPIDI_OFI_Reduce__intra__reduce_scatter_gather_id,
+    MPIDI_OFI_Reduce__intra__binomial_id
 } MPIDI_OFI_Reduce_id_t;
 
 typedef union {
@@ -54,10 +54,10 @@ typedef union {
 } MPIDI_OFI_Reduce_params_t;
 
 typedef enum {
-    MPIDI_OFI_Alltoall_intra_brucks_id,
-    MPIDI_OFI_Alltoall_intra_scattered_id,
-    MPIDI_OFI_Alltoall_intra_pairwise_id,
-    MPIDI_OFI_Alltoall_intra_pairwise_sendrecv_replace_id
+    MPIDI_OFI_Alltoall__intra__brucks_id,
+    MPIDI_OFI_Alltoall__intra__scattered_id,
+    MPIDI_OFI_Alltoall__intra__pairwise_id,
+    MPIDI_OFI_Alltoall__intra__pairwise_sendrecv_replace_id
 } MPIDI_OFI_Alltoall_id_t;
 
 typedef union {
@@ -68,8 +68,8 @@ typedef union {
 } MPIDI_OFI_Alltoall_params_t;
 
 typedef enum {
-    MPIDI_OFI_Alltoallv_intra_pairwise_sendrecv_replace_id,
-    MPIDI_OFI_Alltoallv_intra_scattered_id
+    MPIDI_OFI_Alltoallv__intra__pairwise_sendrecv_replace_id,
+    MPIDI_OFI_Alltoallv__intra__scattered_id
 } MPIDI_OFI_Alltoallv_id_t;
 
 typedef union {
@@ -80,8 +80,8 @@ typedef union {
 } MPIDI_OFI_Alltoallv_params_t;
 
 typedef enum {
-    MPIDI_OFI_Alltoallw_intra_pairwise_sendrecv_replace_id,
-    MPIDI_OFI_Alltoallw_intra_scattered_id
+    MPIDI_OFI_Alltoallw__intra__pairwise_sendrecv_replace_id,
+    MPIDI_OFI_Alltoallw__intra__scattered_id
 } MPIDI_OFI_Alltoallw_id_t;
 
 typedef union {
@@ -92,9 +92,9 @@ typedef union {
 } MPIDI_OFI_Alltoallw_params_t;
 
 typedef enum {
-    MPIDI_OFI_Allgather_intra_recursive_doubling_id,
-    MPIDI_OFI_Allgather_intra_brucks_id,
-    MPIDI_OFI_Allgather_intra_ring_id
+    MPIDI_OFI_Allgather__intra__recursive_doubling_id,
+    MPIDI_OFI_Allgather__intra__brucks_id,
+    MPIDI_OFI_Allgather__intra__ring_id
 } MPIDI_OFI_Allgather_id_t;
 
 typedef union {
@@ -105,9 +105,9 @@ typedef union {
 } MPIDI_OFI_Allgather_params_t;
 
 typedef enum {
-    MPIDI_OFI_Allgatherv_intra_recursive_doubling_id,
-    MPIDI_OFI_Allgatherv_intra_brucks_id,
-    MPIDI_OFI_Allgatherv_intra_ring_id
+    MPIDI_OFI_Allgatherv__intra__recursive_doubling_id,
+    MPIDI_OFI_Allgatherv__intra__brucks_id,
+    MPIDI_OFI_Allgatherv__intra__ring_id
 } MPIDI_OFI_Allgatherv_id_t;
 
 typedef union {
@@ -118,8 +118,8 @@ typedef union {
 } MPIDI_OFI_Allgatherv_params_t;
 
 typedef enum {
-    MPIDI_OFI_Gather_intra_binomial_id,
-    MPIDI_OFI_Gather_intra_binomial_indexed_id
+    MPIDI_OFI_Gather__intra__binomial_id,
+    MPIDI_OFI_Gather__intra__binomial_indexed_id
 } MPIDI_OFI_Gather_id_t;
 
 typedef union {
@@ -130,8 +130,8 @@ typedef union {
 } MPIDI_OFI_Gather_params_t;
 
 typedef enum {
-    MPIDI_OFI_Gatherv_intra_linear_ssend_id,
-    MPIDI_OFI_Gatherv_intra_linear_id
+    MPIDI_OFI_Gatherv__intra__linear_ssend_id,
+    MPIDI_OFI_Gatherv__intra__linear_id
 } MPIDI_OFI_Gatherv_id_t;
 
 typedef union {
@@ -142,7 +142,7 @@ typedef union {
 } MPIDI_OFI_Gatherv_params_t;
 
 typedef enum {
-    MPIDI_OFI_Scatter_intra_binomial_id,
+    MPIDI_OFI_Scatter__intra__binomial_id,
 } MPIDI_OFI_Scatter_id_t;
 
 typedef union {
@@ -153,7 +153,7 @@ typedef union {
 } MPIDI_OFI_Scatter_params_t;
 
 typedef enum {
-    MPIDI_OFI_Scatterv_intra_linear_id,
+    MPIDI_OFI_Scatterv__intra__linear_id,
 } MPIDI_OFI_Scatterv_id_t;
 
 typedef union {
@@ -164,10 +164,10 @@ typedef union {
 } MPIDI_OFI_Scatterv_params_t;
 
 typedef enum {
-    MPIDI_OFI_Reduce_scatter_intra_noncomm_id,
-    MPIDI_OFI_Reduce_scatter_intra_pairwise_id,
-    MPIDI_OFI_Reduce_scatter_intra_recursive_doubling_id,
-    MPIDI_OFI_Reduce_scatter_intra_recursive_halving_id,
+    MPIDI_OFI_Reduce_scatter__intra__noncommutative_id,
+    MPIDI_OFI_Reduce_scatter__intra__pairwise_id,
+    MPIDI_OFI_Reduce_scatter__intra__recursive_doubling_id,
+    MPIDI_OFI_Reduce_scatter__intra__recursive_halving_id,
 } MPIDI_OFI_Reduce_scatter_id_t;
 
 typedef union {
@@ -178,10 +178,10 @@ typedef union {
 } MPIDI_OFI_Reduce_scatter_params_t;
 
 typedef enum {
-    MPIDI_OFI_Reduce_scatter_block_intra_noncomm_id,
-    MPIDI_OFI_Reduce_scatter_block_intra_pairwise_id,
-    MPIDI_OFI_Reduce_scatter_block_intra_recursive_doubling_id,
-    MPIDI_OFI_Reduce_scatter_block_intra_recursive_halving_id,
+    MPIDI_OFI_Reduce_scatter_block__intra__noncommutative_id,
+    MPIDI_OFI_Reduce_scatter_block__intra__pairwise_id,
+    MPIDI_OFI_Reduce_scatter_block__intra__recursive_doubling_id,
+    MPIDI_OFI_Reduce_scatter_block__intra__recursive_halving_id,
 } MPIDI_OFI_Reduce_scatter_block_id_t;
 
 typedef union {
@@ -192,7 +192,7 @@ typedef union {
 } MPIDI_OFI_Reduce_scatter_block_params_t;
 
 typedef enum {
-    MPIDI_OFI_Scan_intra_generic_id,
+    MPIDI_OFI_Scan__intra__recursive_doubling_id,
 } MPIDI_OFI_Scan_id_t;
 
 typedef union {
@@ -203,7 +203,7 @@ typedef union {
 } MPIDI_OFI_Scan_params_t;
 
 typedef enum {
-    MPIDI_OFI_Exscan_intra_recursive_doubling_id,
+    MPIDI_OFI_Exscan__intra__recursive_doubling_id,
 } MPIDI_OFI_Exscan_id_t;
 
 typedef union {

@@ -38,7 +38,7 @@ static inline void MPIDI_UCX_send_cmpl_cb(void *request, ucs_status_t status)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_UCX_send(const void *buf,
-                                 int count,
+                                 MPI_Aint count,
                                  MPI_Datatype datatype,
                                  int rank,
                                  int tag,
@@ -123,7 +123,7 @@ static inline int MPIDI_UCX_send(const void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_send(const void *buf,
-                                    int count,
+                                    MPI_Aint count,
                                     MPI_Datatype datatype,
                                     int rank,
                                     int tag,
@@ -139,7 +139,7 @@ static inline int MPIDI_NM_mpi_send(const void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_ssend(const void *buf,
-                                     int count,
+                                     MPI_Aint count,
                                      MPI_Datatype datatype,
                                      int rank,
                                      int tag,
@@ -148,15 +148,6 @@ static inline int MPIDI_NM_mpi_ssend(const void *buf,
 {
     return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset,
                           addr, request, 0, 1);
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_startall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_startall(int count, MPIR_Request * requests[])
-{
-    return MPIDIG_mpi_startall(count, requests);
 }
 
 #undef FUNCNAME
@@ -228,7 +219,7 @@ static inline int MPIDI_NM_mpi_rsend_init(const void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_isend(const void *buf,
-                                     int count,
+                                     MPI_Aint count,
                                      MPI_Datatype datatype,
                                      int rank,
                                      int tag,
@@ -244,7 +235,7 @@ static inline int MPIDI_NM_mpi_isend(const void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_issend(const void *buf,
-                                      int count,
+                                      MPI_Aint count,
                                       MPI_Datatype datatype,
                                       int rank,
                                       int tag,

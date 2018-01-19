@@ -2,7 +2,7 @@
 #define UCX_COLL_PARAMS_H_INCLUDED
 
 typedef enum {
-    MPIDI_UCX_barrier_recursive_doubling_id,
+    MPIDI_UCX_barrier__recursive_doubling_id,
 } MPIDI_UCX_barrier_id_t;
 
 typedef union {
@@ -13,9 +13,9 @@ typedef union {
 } MPIDI_UCX_barrier_params_t;
 
 typedef enum {
-    MPIDI_UCX_bcast_binomial_id,
-    MPIDI_UCX_bcast_scatter_doubling_allgather_id,
-    MPIDI_UCX_bcast_scatter_ring_allgather_id,
+    MPIDI_UCX_bcast__binomial_id,
+    MPIDI_UCX_bcast__scatter_recursive_doubling_allgather_id,
+    MPIDI_UCX_bcast__scatter_ring_allgather_id,
 } MPIDI_UCX_bcast_id_t;
 
 typedef union {
@@ -30,8 +30,8 @@ typedef union {
 } MPIDI_UCX_bcast_params_t;
 
 typedef enum {
-    MPIDI_UCX_allreduce_recursive_doubling_id,
-    MPIDI_UCX_allreduce_reduce_scatter_allgather_id
+    MPIDI_UCX_allreduce__recursive_doubling_id,
+    MPIDI_UCX_allreduce__reduce_scatter_allgather_id
 } MPIDI_UCX_allreduce_id_t;
 
 typedef union {
@@ -42,8 +42,8 @@ typedef union {
 } MPIDI_UCX_allreduce_params_t;
 
 typedef enum {
-    MPIDI_UCX_reduce_redscat_gather_id,
-    MPIDI_UCX_reduce_binomial_id
+    MPIDI_UCX_reduce__reduce_scatter_gather_id,
+    MPIDI_UCX_reduce__binomial_id
 } MPIDI_UCX_reduce_id_t;
 
 typedef union {

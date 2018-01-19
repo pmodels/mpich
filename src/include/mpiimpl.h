@@ -237,4 +237,4 @@ typedef struct MPIR_Topology MPIR_Topology;
 #undef FUNCNAME
 #undef FCNAME
 
-#endif /* MPIIMPL_INCLUDED */
+#endif /* MPIIMPL_H_INCLUDED */

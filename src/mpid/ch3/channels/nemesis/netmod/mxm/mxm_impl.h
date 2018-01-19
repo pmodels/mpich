@@ -10,8 +10,8 @@
 
 
 
-#ifndef MX_MODULE_IMPL_H
-#define MX_MODULE_IMPL_H
+#ifndef MXM_IMPL_H_INCLUDED
+#define MXM_IMPL_H_INCLUDED
 #include "mpid_nem_impl.h"
 #include "pmi.h"
 #include <mxm/api/mxm_api.h>
@@ -444,4 +444,4 @@ static inline void _dbg_mxm_req(MPIR_Request * req)
 #define _dbg_mxm_output(level, ...)     ((void)0)
 #endif
 
-#endif
+#endif /* MXM_IMPL_H_INCLUDED */

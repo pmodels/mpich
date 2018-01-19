@@ -196,4 +196,4 @@ static mpl_inline void MPL_VG_printf_do_nothing_func(char *fmt, ...)
 #endif
 
 
-#endif /* !defined(MPL_VALGRIND_H_INCLUDED) */
+#endif /* MPL_VALGRIND_H_INCLUDED */

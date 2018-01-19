@@ -251,6 +251,9 @@ int MPI_Finalize( void )
     MPIR_Debugger_set_aborting( (char *)0 );
 #endif
 
+    mpi_errno = MPII_COLL_finalize();
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
     mpi_errno = MPID_Finalize();
     if (mpi_errno) {
 	MPIR_ERR_POP(mpi_errno);

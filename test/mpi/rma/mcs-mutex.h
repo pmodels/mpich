@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined MCSMUTEX_H_INCLUDED
-#define MCSMUTEX_H_INCLUDED
+#ifndef MCS-MUTEX_H_INCLUDED
+#define MCS-MUTEX_H_INCLUDED
 
 #include <mpi.h>
 
@@ -36,4 +36,4 @@ int MCS_Mutex_lock(MCS_Mutex hdl);
 int MCS_Mutex_trylock(MCS_Mutex hdl, int *success);
 int MCS_Mutex_unlock(MCS_Mutex hdl);
 
-#endif /* MCSMUTEX_H_INCLUDED */
+#endif /* MCS-MUTEX_H_INCLUDED */

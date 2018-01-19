@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef _HCOLL_H_
-#define _HCOLL_H_
+#ifndef HCOLL_H_INCLUDED
+#define HCOLL_H_INCLUDED
 
 #include "mpidimpl.h"
 #include "hcoll/api/hcoll_api.h"
@@ -41,4 +41,4 @@ int hcoll_Iallreduce_req(const void *sendbuf, void *recvbuf, int count, MPI_Data
 
 int hcoll_do_progress(int *made_progress);
 
-#endif
+#endif /* HCOLL_H_INCLUDED */

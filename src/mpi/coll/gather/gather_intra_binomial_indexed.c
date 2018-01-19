@@ -25,10 +25,10 @@
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Gather_intra_binomial_indexed
+#define FUNCNAME MPIR_Gather__intra__binomial_indexed
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gather_intra_binomial_indexed(const void *sendbuf,
+int MPIR_Gather__intra__binomial_indexed(const void *sendbuf,
                                        int sendcount,
                                        MPI_Datatype sendtype,
                                        void *recvbuf,

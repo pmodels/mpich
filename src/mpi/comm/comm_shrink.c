@@ -7,7 +7,6 @@
 #include "mpiimpl.h"
 #include "mpicomm.h"
 #include <stdint.h>
-#include "../coll/include/coll_util.h"
 
 /* This function has multiple phases.
  *

@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef _MPID_NEM_INLINE_H
-#define _MPID_NEM_INLINE_H
+#ifndef MPID_NEM_INLINE_H_INCLUDED
+#define MPID_NEM_INLINE_H_INCLUDED
 
 #include "my_papi_defs.h"
 #include "mpl.h"
@@ -1085,5 +1085,5 @@ MPID_nem_mpich_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc)
     return mpi_errno;
 }
 
-#endif /*_MPID_NEM_INLINE_H*/
+#endif /* MPID_NEM_INLINE_H_INCLUDED */
 

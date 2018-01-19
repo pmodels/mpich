@@ -8,8 +8,8 @@
  *   Copyright (C) 2008 Sun Microsystems, Lustre group
  */
 
-#ifndef AD_UNIX_INCLUDE
-#define AD_UNIX_INCLUDE
+#ifndef AD_LUSTRE_H_INCLUDED
+#define AD_LUSTRE_H_INCLUDED
 
 /* temp*/
 #define HAVE_ASM_TYPES_H 1
@@ -93,4 +93,4 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
 
 int ADIOI_LUSTRE_Calc_aggregator(ADIO_File fd, ADIO_Offset off,
                                  ADIO_Offset *len, int *striping_info);
-#endif /* End of AD_UNIX_INCLUDE */
+#endif /* AD_LUSTRE_H_INCLUDED */

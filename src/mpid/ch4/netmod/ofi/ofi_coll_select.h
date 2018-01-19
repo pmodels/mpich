@@ -10,7 +10,7 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Barrier_select(MPIR_Comm * comm_ptr,
                                                            MPIR_Errflag_t * errflag,
                                                            MPIDI_OFI_coll_algo_container_t * ch4_algo_parameters_container_in ATTRIBUTE((unused)))
 {
-    return (MPIDI_OFI_coll_algo_container_t *) &OFI_Barrier_intra_recursive_doubling_cnt;
+    return (MPIDI_OFI_coll_algo_container_t *) &OFI_Barrier__intra__dissemination_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -30,12 +30,12 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Bcast_select(void *buffer, int count
 
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
         (comm_ptr->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Bcast_intra_binomial_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Bcast__intra__binomial_cnt;
     } else {
-        if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPIU_is_pof2(comm_ptr->local_size, NULL)) {
-            return (MPIDI_OFI_coll_algo_container_t *) &OFI_Bcast_intra_scatter_doubling_allgather_cnt;
+        if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm_ptr->local_size, NULL)) {
+            return (MPIDI_OFI_coll_algo_container_t *) &OFI_Bcast__intra__scatter_recursive_doubling_allgather_cnt;
         } else {
-            return (MPIDI_OFI_coll_algo_container_t *) &OFI_Bcast_intra_scatter_ring_allgather_cnt;
+            return (MPIDI_OFI_coll_algo_container_t *) &OFI_Bcast__intra__scatter_ring_allgather_cnt;
         }
     }
 }
@@ -53,12 +53,12 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Allreduce_select(const void *sendbuf
     int pof2 = 0;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
-    pof2 = MPIU_pof2(comm_ptr->local_size);
+    pof2 = comm_ptr->pof2;
     if ((count * type_size <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
         (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allreduce_intra_recursive_doubling_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allreduce__intra__recursive_doubling_cnt;
     } else {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allreduce_intra_reduce_scatter_allgather_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allreduce__intra__reduce_scatter_allgather_cnt;
     }
 }
 
@@ -76,12 +76,12 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Reduce_select(const void *sendbuf,
 
     comm_size = comm_ptr->local_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
-    pof2 = MPIU_pof2(comm_size);
+    pof2 = comm_ptr->pof2;
     if ((count * type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
         (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) && (count >= pof2)) {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Reduce_intra_redscat_gather_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Reduce__intra__reduce_scatter_gather_cnt;
     } else {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Reduce_intra_binomial_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Reduce__intra__binomial_cnt;
     }
 }
 
@@ -116,9 +116,9 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Gather_select(const void *sendbuf,
     }
 
     if (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE) {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Gather_intra_binomial_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Gather__intra__binomial_cnt;
     } else {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Gather_intra_binomial_indexed_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Gather__intra__binomial_indexed_cnt;
     }
 
 }
@@ -150,9 +150,9 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Gatherv_select(const void *sendbuf,
         MPIR_CVAR_GET_DEFAULT_INT(MPIR_CVAR_GATHERV_INTER_SSEND_MIN_PROCS, &min_procs);
     }
     if (comm_size >= min_procs) {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Gatherv_intra_linear_ssend_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Gatherv__intra__linear_ssend_cnt;
     } else {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Gatherv_intra_linear_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Gatherv__intra__linear_cnt;
     }
 }
 
@@ -170,7 +170,7 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Scatter_select(const void *sendbuf,
                                                            ch4_algo_parameters_container_in
                                                            ATTRIBUTE((unused)))
 {
-    return (MPIDI_OFI_coll_algo_container_t *) & OFI_Scatter_intra_binomial_cnt;
+    return (MPIDI_OFI_coll_algo_container_t *) & OFI_Scatter__intra__binomial_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -188,7 +188,7 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Scatterv_select(const void *sendbuf,
                                                             ch4_algo_parameters_container_in
                                                             ATTRIBUTE((unused)))
 {
-    return (MPIDI_OFI_coll_algo_container_t *) &OFI_Scatterv_intra_linear_cnt;
+    return (MPIDI_OFI_coll_algo_container_t *) &OFI_Scatterv__intra__linear_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -210,16 +210,16 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Alltoall_select(const void *sendbuf,
     nbytes = sendcount * type_size;
 
     if (sendbuf == MPI_IN_PLACE) {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoall_intra_pairwise_sendrecv_replace_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoall__intra__pairwise_sendrecv_replace_cnt;
     }
     else if ((nbytes <= MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE) && (comm_ptr->local_size >= 8)) {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoall_intra_brucks_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoall__intra__brucks_cnt;
     }
     else if (nbytes <= MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE) {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoall_intra_scattered_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoall__intra__scattered_cnt;
     }
     else {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoall_intra_pairwise_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoall__intra__pairwise_cnt;
     }
 }
 
@@ -238,10 +238,10 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Alltoallv_select(const void *sendbuf
                                                              ch4_algo_parameters_container_in ATTRIBUTE((unused)))
 {
     if (sendbuf == MPI_IN_PLACE) {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoallv_intra_pairwise_sendrecv_replace_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoallv__intra__pairwise_sendrecv_replace_cnt;
     }
     else {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoallv_intra_scattered_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoallv__intra__scattered_cnt;
     }
 }
 
@@ -260,10 +260,10 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Alltoallw_select(const void *sendbuf
                                                              ch4_algo_parameters_container_in ATTRIBUTE((unused)))
 {
     if (sendbuf == MPI_IN_PLACE) {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoallw_intra_pairwise_sendrecv_replace_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoallw__intra__pairwise_sendrecv_replace_cnt;
     }
     else {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoallw_intra_scattered_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Alltoallw__intra__scattered_cnt;
     }
 }
 
@@ -284,13 +284,13 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Allgather_select(const void *sendbuf
     nbytes = (MPI_Aint) recvcount * comm_size * type_size;
 
     if ((nbytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allgather_intra_recursive_doubling_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allgather__intra__recursive_doubling_cnt;
     }
     else if (nbytes < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allgather_intra_brucks_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allgather__intra__brucks_cnt;
     }
     else {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allgather_intra_ring_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allgather__intra__ring_cnt;
     }
 }
 
@@ -320,13 +320,13 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Allgatherv_select(const void *sendbu
 
     if ((nbytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) &&
         !(comm_size & (comm_size - 1))) {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allgatherv_intra_recursive_doubling_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allgatherv__intra__recursive_doubling_cnt;
     }
     else if (nbytes < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allgatherv_intra_brucks_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allgatherv__intra__brucks_cnt;
     }
     else {
-        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allgatherv_intra_ring_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Allgatherv__intra__ring_cnt;
     }
 }
 
@@ -371,14 +371,14 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Reduce_scatter_select(const void *se
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = total_count * type_size;
 
-    if ((is_commutative) && (nbytes < MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+    if ((is_commutative) && (nbytes < MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         /* commutative and short. use recursive halving algorithm */
-        return (MPIDI_OFI_coll_algo_container_t *) & OFI_Reduce_scatter_intra_recursive_halving_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Reduce_scatter__intra__recursive_halving_cnt;
     }
-    if (is_commutative && (nbytes >= MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+    if (is_commutative && (nbytes >= MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         /* commutative and long message, or noncommutative and long message.
          * use (p-1) pairwise exchanges */
-        return (MPIDI_OFI_coll_algo_container_t *) & OFI_Reduce_scatter_intra_pairwise_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Reduce_scatter__intra__pairwise_cnt;
     }
     if (!is_commutative) {
         int is_block_regular = 1;
@@ -389,14 +389,13 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Reduce_scatter_select(const void *se
             }
         }
         /* slightly retask pof2 to mean pof2 equal or greater, not always greater as it is above */
-        pof2 = MPIU_pof2(comm_size);
+        pof2 = MPL_pof2(comm_size);
         if (pof2 == comm_size && is_block_regular) {
             /* noncommutative, pof2 size, and block regular */
-            return (MPIDI_OFI_coll_algo_container_t *) & OFI_Reduce_scatter_intra_noncomm_cnt;
+            return (MPIDI_OFI_coll_algo_container_t *) &OFI_Reduce_scatter__intra__noncommutative_cnt;
         } else {
             /* noncommutative and (non-pof2 or block irregular), use recursive doubling. */
-            return (MPIDI_OFI_coll_algo_container_t *) &
-                OFI_Reduce_scatter_intra_recursive_doubling_cnt;
+            return (MPIDI_OFI_coll_algo_container_t *) &OFI_Reduce_scatter__intra__recursive_doubling_cnt;
         }
     }
 }
@@ -439,25 +438,23 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Reduce_scatter_block_select(const vo
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = total_count * type_size;
 
-    if ((is_commutative) && (nbytes < MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+    if ((is_commutative) && (nbytes < MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         /* commutative and short. use recursive halving algorithm */
-        return (MPIDI_OFI_coll_algo_container_t *) &
-            OFI_Reduce_scatter_block_intra_recursive_halving_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Reduce_scatter_block__intra__recursive_halving_cnt;
     }
-    if (is_commutative && (nbytes >= MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+    if (is_commutative && (nbytes >= MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         /* commutative and long message, or noncommutative and long message.
          * use (p-1) pairwise exchanges */
-        return (MPIDI_OFI_coll_algo_container_t *) & OFI_Reduce_scatter_block_intra_pairwise_cnt;
+        return (MPIDI_OFI_coll_algo_container_t *) &OFI_Reduce_scatter_block__intra__pairwise_cnt;
     }
     if (!is_commutative) {
         /* power of two check */
         if (!(comm_size & (comm_size - 1))) {
             /* noncommutative, pof2 size */
-            return (MPIDI_OFI_coll_algo_container_t *) & OFI_Reduce_scatter_block_intra_noncomm_cnt;
+            return (MPIDI_OFI_coll_algo_container_t *) &OFI_Reduce_scatter_block__intra__noncommutative_cnt;
         } else {
             /* noncommutative and non-pof2, use recursive doubling. */
-            return (MPIDI_OFI_coll_algo_container_t *) &
-                OFI_Reduce_scatter_block_intra_recursive_doubling_cnt;
+            return (MPIDI_OFI_coll_algo_container_t *) &OFI_Reduce_scatter_block__intra__recursive_doubling_cnt;
         }
     }
 }
@@ -475,7 +472,7 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Scan_select(const void *sendbuf,
                                                         ch4_algo_parameters_container_in
                                                         ATTRIBUTE((unused)))
 {
-    return (MPIDI_OFI_coll_algo_container_t *) & OFI_Scan_intra_generic_cnt;
+    return (MPIDI_OFI_coll_algo_container_t *) &OFI_Scan__intra__recursive_doubling_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -491,7 +488,7 @@ MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Exscan_select(const void *sendbuf,
                                                           ch4_algo_parameters_container_in
                                                           ATTRIBUTE((unused)))
 {
-    return (MPIDI_OFI_coll_algo_container_t *) & OFI_Exscan_intra_recursive_doubling_cnt;
+    return (MPIDI_OFI_coll_algo_container_t *) &OFI_Exscan__intra__recursive_doubling_cnt;
 }
 
 #endif /* NETMOD_OFI_COLL_SELECT_H_INCLUDED */

@@ -31,10 +31,10 @@
 
 /* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scatter_intra_binomial
+#define FUNCNAME MPIR_Scatter__intra__binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scatter_intra_binomial(const void *sendbuf,
+int MPIR_Scatter__intra__binomial(const void *sendbuf,
                                 int sendcount,
                                 MPI_Datatype sendtype,
                                 void *recvbuf,

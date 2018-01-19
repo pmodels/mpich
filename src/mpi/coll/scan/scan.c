@@ -18,11 +18,11 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select allgather algorithm
-        auto - Internal algorithm selection
-        generic - Force generic algorithm
-        nb - Force nonblocking algorithm
+        auto               - Internal algorithm selection
+        nb                 - Force nonblocking algorithm
+        recursive_doubling - Force recursive doubling algorithm
 
     - name        : MPIR_CVAR_SCAN_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -62,15 +62,14 @@ int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 #define MPI_Scan PMPI_Scan
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scan_intra
+#define FUNCNAME MPIR_Scan__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scan_intra (const void *sendbuf, void *recvbuf, int count,
+int MPIR_Scan__intra__auto (const void *sendbuf, void *recvbuf, int count,
                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                      MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
 
     /* In order to use the SMP-aware algorithm, the "op" can be
        either commutative or non-commutative, but we require a
@@ -78,17 +77,15 @@ int MPIR_Scan_intra (const void *sendbuf, void *recvbuf, int count,
        consecutive ranks. */
 
     if (MPII_Comm_is_node_consecutive(comm_ptr)) {
-        mpi_errno = MPIR_Scan_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+        mpi_errno = MPIR_Scan__intra__smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
     } else {
-        mpi_errno = MPIR_Scan_intra_generic(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+        mpi_errno = MPIR_Scan__intra__recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
     }
 
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
   fn_exit:
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
+    if (*errflag != MPIR_ERR_NONE)
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     return mpi_errno;
 
@@ -96,27 +93,19 @@ int MPIR_Scan_intra (const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-/* not declared static because a machine-specific function may call this one in some cases */
-/* MPIR_Scan performs an scan using point-to-point messages.  This is
-   intended to be used by device-specific implementations of scan. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scan
+#define FUNCNAME MPIR_Scan_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scan(
-    const void *sendbuf,
-    void *recvbuf,
-    int count,
-    MPI_Datatype datatype,
-    MPI_Op op,
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag )
+int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count,
+                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                   MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
     switch (MPIR_Scan_intra_algo_choice) {
-        case MPIR_SCAN_INTRA_ALGO_GENERIC:
-            mpi_errno = MPIR_Scan_intra_generic(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+        case MPIR_SCAN_INTRA_ALGO_RECURSIVE_DOUBLING:
+            mpi_errno = MPIR_Scan__intra__recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
         case MPIR_SCAN_INTRA_ALGO_NB:
             mpi_errno = MPIR_Scan_nb(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
@@ -124,7 +113,7 @@ int MPIR_Scan(
         case MPIR_SCAN_INTRA_ALGO_AUTO:
             MPL_FALLTHROUGH;
         default:
-            mpi_errno = MPIR_Scan_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+            mpi_errno = MPIR_Scan__intra__auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
     }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -134,6 +123,25 @@ fn_exit:
 
 fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Scan
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Scan(const void *sendbuf, void *recvbuf, int count,
+              MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+              MPIR_Errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_SCAN_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    } else {
+        mpi_errno = MPIR_Scan_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    }
+
+    return mpi_errno;
 }
 
 #endif
@@ -246,11 +254,8 @@ int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_SCAN_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
-    } else {
-        mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
-    }
+    mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                          &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPIR_SCHED_H_INCLUDED
-#define MPIR_SCHED_H_INCLUDED
+#ifndef MPID_SCHED_H_INCLUDED
+#define MPID_SCHED_H_INCLUDED
 #include "mpidu_sched.h"
 
 #define MPIR_Sched_cb MPIDU_Sched_cb
@@ -23,4 +23,4 @@
 #define MPIR_Sched_copy MPIDU_Sched_copy
 #define MPIR_Sched_barrier MPIDU_Sched_barrier
 
-#endif /* MPIR_SCHED_H_INCLUDED */
+#endif /* MPID_SCHED_H_INCLUDED */

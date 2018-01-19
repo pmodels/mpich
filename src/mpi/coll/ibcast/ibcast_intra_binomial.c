@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 #include "ibcast.h"
 
 /* A binomial tree broadcast algorithm.  Good for short messages,
@@ -15,10 +14,10 @@
  * to build up a larger hierarchical broadcast from multiple invocations of this
  * function. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_intra_binomial_sched
+#define FUNCNAME MPIR_Ibcast_sched__intra__binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_intra_binomial_sched(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_sched__intra__binomial(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int mask;
@@ -151,7 +150,7 @@ int MPIR_Ibcast_intra_binomial_sched(void *buffer, int count, MPI_Datatype datat
                 mpi_errno = MPIR_Sched_send(buffer, count, datatype, dst, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-            /* NOTE: This is departure from MPIR_Bcast_intra_binomial.  A true analog
+            /* NOTE: This is departure from MPIR_Bcast__intra__binomial.  A true analog
              * would put an MPIR_Sched_barrier here after every send. */
         }
         mask >>= 1;

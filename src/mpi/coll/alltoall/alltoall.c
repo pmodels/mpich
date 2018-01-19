@@ -59,14 +59,14 @@ cvars:
      class       : device
      verbosity   : MPI_T_VERBOSITY_USER_BASIC
      scope       : MPI_T_SCOPE_ALL_EQ
-     description : >-
+     description : |-
        Variable to select alltoall algorithm
-       auto - Internal algorithm selection
-       brucks - Force brucks algorithm
-       pairwise - Force pairwise algorithm
+       auto                      - Internal algorithm selection
+       brucks                    - Force brucks algorithm
+       nb                        - Force nonblocking algorithm
+       pairwise                  - Force pairwise algorithm
        pairwise_sendrecv_replace - Force pairwise sendrecv replace algorithm
-       scattered - Force scattered algorithm
-       nb - Force nonblocking algorithm
+       scattered                 - Force scattered algorithm
 
    - name        : MPIR_CVAR_ALLTOALL_INTER_ALGORITHM
      category    : COLLECTIVE
@@ -75,11 +75,11 @@ cvars:
      class       : device
      verbosity   : MPI_T_VERBOSITY_USER_BASIC
      scope       : MPI_T_SCOPE_ALL_EQ
-     description : >-
+     description : |-
        Variable to select alltoall algorithm
-       auto - Internal algorithm selection
-       generic - Force generic algorithm
-       nb - Force nonblocking algorithm
+       auto              - Internal algorithm selection
+       nb                - Force nonblocking algorithm
+       pairwise_exchange - Force pairwise exchange algorithm
 
    - name        : MPIR_CVAR_ALLTOALL_DEVICE_COLLECTIVE
      category    : COLLECTIVE
@@ -118,12 +118,11 @@ int MPI_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
 #undef MPI_Alltoall
 #define MPI_Alltoall PMPI_Alltoall
 
-/* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoall_intra
+#define FUNCNAME MPIR_Alltoall__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoall_intra( 
+int MPIR_Alltoall__intra__auto(
     const void *sendbuf,
     int sendcount, 
     MPI_Datatype sendtype, 
@@ -135,9 +134,7 @@ int MPIR_Alltoall_intra(
 {
     int comm_size;
     int mpi_errno=MPI_SUCCESS, nbytes;
-    int mpi_errno_ret = MPI_SUCCESS;
     int sendtype_size;
-    MPI_Datatype newtype = MPI_DATATYPE_NULL;
 
     if (recvcount == 0) return MPI_SUCCESS;
 
@@ -147,37 +144,31 @@ int MPIR_Alltoall_intra(
     nbytes = sendtype_size * sendcount;
 
     if (sendbuf == MPI_IN_PLACE) {
-        mpi_errno = MPIR_Alltoall_intra_pairwise_sendrecv_replace (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
+        mpi_errno = MPIR_Alltoall__intra__pairwise_sendrecv_replace (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
     } else if ((nbytes <= MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE) && (comm_size >= 8)) {
-        mpi_errno = MPIR_Alltoall_intra_brucks (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
+        mpi_errno = MPIR_Alltoall__intra__brucks (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
     } else if (nbytes <= MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE) {
-        mpi_errno = MPIR_Alltoall_intra_scattered (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
+        mpi_errno = MPIR_Alltoall__intra__scattered (sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
     } else {
-        mpi_errno = MPIR_Alltoall_intra_pairwise(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
+        mpi_errno = MPIR_Alltoall__intra__pairwise(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, errflag);
     }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
-    if (mpi_errno_ret)
-        mpi_errno = mpi_errno_ret;
-    else if (*errflag != MPIR_ERR_NONE)
+    if (*errflag != MPIR_ERR_NONE)
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
 
     return mpi_errno;
  fn_fail:
-    if (newtype != MPI_DATATYPE_NULL)
-        MPIR_Type_free_impl(&newtype);
     goto fn_exit;
 }
 
 
-
-/* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoall_inter
+#define FUNCNAME MPIR_Alltoall__inter__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoall_inter( 
+int MPIR_Alltoall__inter__auto(
     const void *sendbuf,
     int sendcount, 
     MPI_Datatype sendtype, 
@@ -189,19 +180,19 @@ int MPIR_Alltoall_inter(
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Alltoall_inter_generic(sendbuf, sendcount, sendtype,
+    mpi_errno = MPIR_Alltoall__inter__pairwise_exchange(sendbuf, sendcount, sendtype,
             recvbuf, recvcount, recvtype, comm_ptr, errflag);
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoall
+#define FUNCNAME MPIR_Alltoall_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                  MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Alltoall_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                       MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -209,22 +200,22 @@ int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         /* intracommunicator */
         switch (MPIR_Alltoall_intra_algo_choice) {
             case MPIR_ALLTOALL_INTRA_ALGO_BRUCKS:
-                mpi_errno = MPIR_Alltoall_intra_brucks(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Alltoall__intra__brucks(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;
             case MPIR_ALLTOALL_INTRA_ALGO_PAIRWISE:
-                mpi_errno = MPIR_Alltoall_intra_pairwise(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Alltoall__intra__pairwise(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;
             case MPIR_ALLTOALL_INTRA_ALGO_PAIRWISE_SENDRECV_REPLACE:
-                mpi_errno = MPIR_Alltoall_intra_pairwise_sendrecv_replace(sendbuf, sendcount,
+                mpi_errno = MPIR_Alltoall__intra__pairwise_sendrecv_replace(sendbuf, sendcount,
                                         sendtype, recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;
             case MPIR_ALLTOALL_INTRA_ALGO_SCATTERED:
-                mpi_errno = MPIR_Alltoall_intra_scattered(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Alltoall__intra__scattered(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;
@@ -236,7 +227,7 @@ int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             case MPIR_ALLTOALL_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Alltoall_intra(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Alltoall__intra__auto(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;
@@ -244,8 +235,8 @@ int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     } else {
         /* intercommunicator */
         switch (MPIR_Alltoall_inter_algo_choice) {
-            case MPIR_ALLTOALL_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Alltoall_inter_generic(sendbuf, sendcount, sendtype,
+            case MPIR_ALLTOALL_INTER_ALGO_PAIRWISE_EXCHANGE:
+                mpi_errno = MPIR_Alltoall__inter__pairwise_exchange(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;
@@ -257,7 +248,7 @@ int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             case MPIR_ALLTOALL_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Alltoall_inter(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Alltoall__inter__auto(sendbuf, sendcount, sendtype,
                                         recvbuf, recvcount, recvtype,
                                         comm_ptr, errflag);
                 break;
@@ -269,6 +260,27 @@ int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     return mpi_errno;
  fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Alltoall
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                  MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_ALLTOALL_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                  comm_ptr, errflag);
+    } else {
+        mpi_errno = MPIR_Alltoall_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                       comm_ptr, errflag);
+    }
+
+    return mpi_errno;
 }
 
 #endif
@@ -381,13 +393,8 @@ int MPI_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_ALLTOALL_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                     comm_ptr, &errflag);
-    } else {
-        mpi_errno = MPIR_Alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                     comm_ptr, &errflag);
-    }
+    mpi_errno = MPIR_Alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                              comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

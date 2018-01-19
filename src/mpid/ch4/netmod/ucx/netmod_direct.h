@@ -14,12 +14,14 @@
 #include "ucx_init.h"
 #ifdef MPICH_UCX_AM_ONLY
 #include "ucx_am_send.h"
+#include "ucx_am_startall.h"
 #include "ucx_am_recv.h"
 #include "ucx_am_win.h"
 #include "ucx_am_rma.h"
 #include "ucx_am_probe.h"
 #else
 #include "ucx_send.h"
+#include "ucx_startall.h"
 #include "ucx_recv.h"
 #include "ucx_win.h"
 #include "ucx_rma.h"

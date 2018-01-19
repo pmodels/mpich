@@ -64,10 +64,10 @@ static int calc_curr_count(MPIR_Comm *comm, int tag, void *state)
    End Algorithm: MPI_Scatter
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatter_intra_binomial_sched
+#define FUNCNAME MPIR_Iscatter_sched__intra__binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatter_intra_binomial_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iscatter_sched__intra__binomial(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                         int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {

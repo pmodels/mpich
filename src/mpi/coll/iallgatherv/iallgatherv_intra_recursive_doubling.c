@@ -7,10 +7,10 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv_intra_recursive_doubling_sched
+#define FUNCNAME MPIR_Iallgatherv_sched__intra__recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgatherv_intra_recursive_doubling_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Iallgatherv_sched__intra__recursive_doubling(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                              void *recvbuf, const int recvcounts[], const int displs[],
                              MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
@@ -25,6 +25,12 @@ int MPIR_Iallgatherv_intra_recursive_doubling_sched(const void *sendbuf, int sen
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
+
+#ifdef HAVE_ERROR_CHECKING
+    /* Currently this algorithm can only handle power-of-2 comm_size.
+     * Non power-of-2 comm_size is still experimental */
+    MPIR_Assert(!(comm_size & (comm_size-1)));
+#endif /* HAVE_ERROR_CHECKING */
 
     is_homogeneous = 1;
 #ifdef MPID_HAS_HETERO

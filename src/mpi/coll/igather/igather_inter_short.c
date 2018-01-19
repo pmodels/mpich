@@ -15,10 +15,10 @@
  * Cost: (lgp+1).alpha + n.((p-1)/p).beta + n.beta
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Igather_inter_short_sched
+#define FUNCNAME MPIR_Igather_sched__inter__short
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Igather_inter_short_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Igather_sched__inter__short(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
@@ -63,7 +63,7 @@ int MPIR_Igather_inter_short_sched(const void *sendbuf, int sendcount, MPI_Datat
         newcomm_ptr = comm_ptr->local_comm;
 
         /* now do the a local gather on this intracommunicator */
-        mpi_errno = MPID_Igather_sched(sendbuf, sendcount, sendtype,
+        mpi_errno = MPIR_Igather_sched(sendbuf, sendcount, sendtype,
                 tmp_buf, sendcount, sendtype, 0,
                 newcomm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);

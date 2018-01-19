@@ -61,6 +61,38 @@ static inline int MPIDI_CH4U_get_context_index(uint64_t context_id)
     return gen_id;
 }
 
+static inline int MPIDI_CH4U_request_get_tag(MPIR_Request *req)
+{
+    int tag;
+    uint64_t match_bits;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_REQUEST_GET_TAG);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_REQUEST_GET_TAG);
+
+    match_bits = MPIDI_CH4U_REQUEST(req, match_bits);
+    tag = MPIDI_CH4U_get_tag(match_bits);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_REQUEST_GET_TAG);
+
+    return tag;
+}
+
+static inline int MPIDI_CH4U_request_get_context_offset(MPIR_Request *req)
+{
+    int context_offset;
+    uint64_t match_bits;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_REQUEST_GET_CONTEXT_OFFSET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_REQUEST_GET_CONTEXT_OFFSET);
+
+    match_bits = MPIDI_CH4U_REQUEST(req, match_bits);
+    context_offset = MPIDI_CH4U_get_context(match_bits) - req->comm->context_id;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_REQUEST_GET_CONTEXT_OFFSET);
+
+    return context_offset;
+}
+
 static inline MPIR_Comm *MPIDI_CH4U_context_id_to_comm(uint64_t context_id)
 {
     int comm_idx = MPIDI_CH4U_get_context_index(context_id);

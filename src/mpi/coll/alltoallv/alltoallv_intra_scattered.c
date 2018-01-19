@@ -24,10 +24,10 @@
  * at a time and wait on them as suggested by Tony Ladd. ***
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallv_intra_scattered
+#define FUNCNAME MPIR_Alltoallv__intra__scattered
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const int *sendcounts, const int *sdispls,
+int MPIR_Alltoallv__intra__scattered(const void *sendbuf, const int *sendcounts, const int *sdispls,
                              MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
                              const int *rdispls, MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
                              MPIR_Errflag_t *errflag)
@@ -50,7 +50,9 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const int *sendcounts, c
     /* Get extent of recv type, but send type is only valid if (sendbuf!=MPI_IN_PLACE) */
     MPIR_Datatype_get_extent_macro(recvtype, recv_extent);
 
+#ifdef HAVE_ERROR_CHECKING
     MPIR_Assert (sendbuf != MPI_IN_PLACE); /* call the pairwise_sendrecv_algo */
+#endif
 
     bblock = MPIR_CVAR_ALLTOALL_THROTTLE;
     if (bblock == 0) bblock = comm_size;

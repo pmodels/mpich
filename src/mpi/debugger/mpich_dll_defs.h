@@ -4,6 +4,9 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#ifndef MPICH_DLL_DEFS_H_INCLUDED
+#define MPICH_DLL_DEFS_H_INCLUDED
+
 /***********************************************************************
  * Information associated with a specific executable image
  */
@@ -88,7 +91,4 @@ typedef struct
   mqs_op_class  what;				/* What queue are we looking on */
 } mpich_process_info;
 
-
-
-
-
+#endif /* MPICH_DLL_DEFS_H_INCLUDED */

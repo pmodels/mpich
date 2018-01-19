@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /*
  * Algorithm: Recursive Doubling
@@ -20,10 +19,10 @@
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allreduce_intra_recursive_doubling
+#define FUNCNAME MPIR_Allreduce__intra__recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allreduce_intra_recursive_doubling(
+int MPIR_Allreduce__intra__recursive_doubling(
     const void *sendbuf,
     void *recvbuf,
     int count,
@@ -66,10 +65,8 @@ int MPIR_Allreduce_intra_recursive_doubling(
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
-    /* find nearest power-of-two less than or equal to comm_size */
-    pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
+    /* get nearest power-of-two less than or equal to comm_size */
+    pof2 = comm_ptr->pof2;
 
     rem = comm_size - pof2;
 

@@ -19,10 +19,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allgatherv_intra_brucks
+#define FUNCNAME MPIR_Allgatherv__intra__brucks
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgatherv_intra_brucks (
+int MPIR_Allgatherv__intra__brucks (
     const void *sendbuf,
     int sendcount,
     MPI_Datatype sendtype,

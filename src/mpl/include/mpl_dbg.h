@@ -145,4 +145,4 @@ int MPL_dbg_outevent(const char *, int, int, int, const char *, ...) ATTRIBUTE((
 int MPL_dbg_init(int *, char ***, int, int, int, int, int);
 int MPL_dbg_pre_init(int *, char ***, int);
 
-#endif
+#endif /* MPL_DBG_H_INCLUDED */

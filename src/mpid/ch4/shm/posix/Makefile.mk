@@ -29,6 +29,7 @@ noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_queue.h     \
                   src/mpid/ch4/shm/posix/posix_request.h   \
                   src/mpid/ch4/shm/posix/posix_send.h      \
+                  src/mpid/ch4/shm/posix/posix_startall.h  \
                   src/mpid/ch4/shm/posix/posix_unimpl.h
 
 mpi_core_sources += src/mpid/ch4/shm/posix/globals.c    \

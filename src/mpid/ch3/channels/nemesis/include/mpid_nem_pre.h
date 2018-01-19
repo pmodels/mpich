@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPID_NEM_PRE_H
-#define MPID_NEM_PRE_H
+#ifndef MPID_NEM_PRE_H_INCLUDED
+#define MPID_NEM_PRE_H_INCLUDED
 
 #include "mpid_nem_net_module_defs.h"
 #include "mpid_nem_defs.h"
@@ -29,4 +29,4 @@ typedef pthread_mutex_t MPIDI_CH3I_SHM_MUTEX;
     MPI_Aint info_shm_segment_len; /* size of shared memory region for window info */             \
     MPL_shm_hnd_t info_shm_segment_handle; /* handle to shared memory region for window info */ \
 
-#endif /* MPID_NEM_PRE_H */
+#endif /* MPID_NEM_PRE_H_INCLUDED */

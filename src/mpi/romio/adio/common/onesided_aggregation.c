@@ -937,7 +937,7 @@ printf("romio_onesided_always_rmw - first buffer pre-read for file offsets %ld t
       MPI_Aint *targetAggDisplacements=NULL, *sourceBufferDisplacements=NULL;
       MPI_Datatype *targetAggDataTypes=NULL;
 
-      char *derivedTypePackedSourceBuffer=NULL;
+      char *derivedTypePackedSourceBuffer = NULL;
       int derivedTypePackedSourceBufferOffset = 0;
       int allocatedDerivedTypeArrays = 0;
       ADIO_Offset amountOfDataWrittenThisRoundAgg = 0;
@@ -1033,7 +1033,7 @@ printf("romio_onesided_always_rmw - first buffer pre-read for file offsets %ld t
 
           if (romio_write_aggmethod == 1) {
             MPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0, write_buf_window);
-            char *putSourceData;
+            char *putSourceData = NULL;
             if (bufTypeIsContig) {
               MPI_Put(((char*)buf) + currentFDSourceBufferState[aggIter].sourceBufferOffset,bufferAmountToSend, MPI_BYTE,targetAggsForMyData[aggIter],targetDisplacementToUseThisRound, bufferAmountToSend,MPI_BYTE,write_buf_window);
               currentFDSourceBufferState[aggIter].sourceBufferOffset += (ADIO_Offset)bufferAmountToSend;
@@ -2092,7 +2092,7 @@ printf("iAmUsedAgg - currentRoundFDStart initialized "
       int *sourceAggBlockLengths=NULL;
       MPI_Aint *sourceAggDisplacements=NULL, *recvBufferDisplacements=NULL;
       MPI_Datatype *sourceAggDataTypes=NULL;
-      char *derivedTypePackedSourceBuffer;
+      char *derivedTypePackedSourceBuffer=NULL;
       int derivedTypePackedSourceBufferOffset = 0;
       int allocatedDerivedTypeArrays = 0;
       ADIO_Offset amountOfDataReadThisRoundAgg = 0;

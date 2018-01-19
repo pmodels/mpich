@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPICH_MPIDI_CH3_PRE_H_INCLUDED)
-#define MPICH_MPIDI_CH3_PRE_H_INCLUDED
+#ifndef MPIDI_CH3_PRE_H_INCLUDED
+#define MPIDI_CH3_PRE_H_INCLUDED
 
 /* These macros unlock shared code */
 #define MPIDI_CH3_USES_SOCK
@@ -90,4 +90,4 @@ extern volatile unsigned int MPIDI_CH3I_progress_completion_count;
     } while (0)
 #endif
 
-#endif /* !defined(MPICH_MPIDI_CH3_PRE_H_INCLUDED) */
+#endif /* MPIDI_CH3_PRE_H_INCLUDED */

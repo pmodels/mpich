@@ -20,10 +20,10 @@
 */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Gatherv_intra_linear_ssend
+#define FUNCNAME MPIR_Gatherv__intra__linear_ssend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gatherv_intra_linear_ssend(const void *sendbuf,
+int MPIR_Gatherv__intra__linear_ssend(const void *sendbuf,
                                     int sendcount,
                                     MPI_Datatype sendtype,
                                     void *recvbuf,

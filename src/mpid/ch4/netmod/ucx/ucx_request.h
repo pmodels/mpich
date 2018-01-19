@@ -10,9 +10,6 @@
 #define UCX_REQUEST_H_INCLUDED
 
 #include "ucx_impl.h"
-#include "mpidch4.h"
-#include <ucp/api/ucp.h>
-#include "mpidch4r.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_am_request_init

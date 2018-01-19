@@ -17,10 +17,10 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select neighbor_alltoallw algorithm
         auto - Internal algorithm selection
-        generic - Force generic algorithm
+        nb   - Force nb algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLTOALLW_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -29,10 +29,10 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select neighbor_alltoallw algorithm
         auto - Internal algorithm selection
-        generic - Force generic algorithm
+        nb   - Force nb algorithm
 
     - name        : MPIR_CVAR_NEIGHBOR_ALLTOALLW_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -74,10 +74,52 @@ int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MP
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Neighbor_alltoallw
+#define FUNCNAME MPIR_Neighbor_alltoallw__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm *comm_ptr)
+int MPIR_Neighbor_alltoallw__intra__auto(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Neighbor_alltoallw_nb(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Neighbor_alltoallw__inter__auto
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Neighbor_alltoallw__inter__auto(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Neighbor_alltoallw_nb(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Neighbor_alltoallw_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Neighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[],
+                                 const MPI_Aint sdispls[],
+                                 const MPI_Datatype sendtypes[], void *recvbuf,
+                                 const int recvcounts[],
+                                 const MPI_Aint rdispls[],
+                                 const MPI_Datatype recvtypes[],
+                                 MPIR_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -89,7 +131,7 @@ int MPIR_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const M
             case MPIR_NEIGHBOR_ALLTOALLW_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Neighbor_alltoallw_nb(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr);
+                mpi_errno = MPIR_Neighbor_alltoallw__intra__auto(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr);
                 break;
         }
     } else {
@@ -100,7 +142,7 @@ int MPIR_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const M
             case MPIR_NEIGHBOR_ALLTOALLW_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Neighbor_alltoallw_nb(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr);
+                mpi_errno = MPIR_Neighbor_alltoallw__inter__auto(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr);
                 break;
         }
     }
@@ -110,6 +152,33 @@ fn_exit:
     return mpi_errno;
 fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Neighbor_alltoallw
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[],
+                            const MPI_Aint sdispls[],
+                            const MPI_Datatype sendtypes[], void *recvbuf,
+                            const int recvcounts[], const MPI_Aint rdispls[],
+                            const MPI_Datatype recvtypes[],
+                            MPIR_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Neighbor_alltoallw(sendbuf, sendcounts, sdispls,
+                                            sendtypes, recvbuf, recvcounts,
+                                            rdispls, recvtypes, comm_ptr);
+    } else {
+        mpi_errno = MPIR_Neighbor_alltoallw_impl(sendbuf, sendcounts, sdispls,
+                                                 sendtypes, recvbuf,
+                                                 recvcounts, rdispls,
+                                                 recvtypes, comm_ptr);
+    }
+
+    return mpi_errno;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */
@@ -182,11 +251,9 @@ int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MP
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Neighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr);
-    } else {
-        mpi_errno = MPIR_Neighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr);
-    }
+    mpi_errno = MPIR_Neighbor_alltoallw_impl(sendbuf, sendcounts, sdispls,
+                                             sendtypes, recvbuf, recvcounts,
+                                             rdispls, recvtypes, comm_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

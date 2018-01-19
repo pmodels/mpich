@@ -20,10 +20,10 @@
  * PVM/MPI 2003).
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allgather_intra_recursive_doubling
+#define FUNCNAME MPIR_Allgather__intra__recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgather_intra_recursive_doubling (
+int MPIR_Allgather__intra__recursive_doubling (
     const void *sendbuf,
     int sendcount,
     MPI_Datatype sendtype,
@@ -54,6 +54,12 @@ int MPIR_Allgather_intra_recursive_doubling (
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
+
+#ifdef HAVE_ERROR_CHECKING
+    /* Currently this algorithm can only handle power-of-2 comm_size.
+     * Non power-of-2 comm_size is still experimental */
+    MPIR_Assert(!(comm_size & (comm_size-1)));
+#endif /* HAVE_ERROR_CHECKING */
 
     MPIR_Datatype_get_extent_macro( recvtype, recvtype_extent );
 

@@ -25,10 +25,10 @@
 
 #ifdef MPID_HAS_HETERO
 #undef FUNCNAME
-#define FUNCNAME MPIR_Gather_intra_heterogeneous
+#define FUNCNAME MPIR_Gather__intra__heterogeneous
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gather_intra_heterogeneous(const void *sendbuf,
+int MPIR_Gather__intra__heterogeneous(const void *sendbuf,
                                     int sendcount,
                                     MPI_Datatype sendtype,
                                     void *recvbuf,

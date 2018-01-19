@@ -4,6 +4,9 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#ifndef ADIOI_ERROR_H_INCLUDED
+#define ADIOI_ERROR_H_INCLUDED
+
 #include <string.h> /* for strerror() */
 
 /* MPIO_CHECK_XXX macros are used to clean up error checking and
@@ -181,3 +184,5 @@ then the dup operation will succeed */
         MPI_Info_free(&dupinfo);                \
     }                                           \
 }
+
+#endif /* ADIOI_ERROR_H_INCLUDED */

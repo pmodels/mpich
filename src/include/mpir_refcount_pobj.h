@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPIR_REFCOUNT_POBJ_H_INCLUDED)
+#ifndef MPIR_REFCOUNT_POBJ_H_INCLUDED
 #define MPIR_REFCOUNT_POBJ_H_INCLUDED
 
 /* define a type for the completion counter */
@@ -108,4 +108,4 @@ static inline int MPIR_cc_is_complete(MPIR_cc_t * cc_ptr)
         }                                                               \
     } while (0)
 
-#endif /* !defined(MPIR_REFCOUNT_POBJ_H_INCLUDED) */
+#endif /* MPIR_REFCOUNT_POBJ_H_INCLUDED */

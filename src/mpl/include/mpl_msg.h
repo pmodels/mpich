@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPL_MSG_H_INCLUDED)
+#ifndef MPL_MSG_H_INCLUDED
 #define MPL_MSG_H_INCLUDED
 
 #include "mpl.h"
@@ -25,4 +25,4 @@ int MPL_internal_sys_error_printf(mpl_const char *, int, mpl_const char *str,
                                   ...) ATTRIBUTE((format(printf, 3, 4)));
 void MPL_exit(int);
 
-#endif /* !defined(MPL_MSG_H_INCLUDED) */
+#endif /* MPL_MSG_H_INCLUDED */

@@ -5,8 +5,8 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#ifndef AD_TESTFS_INCLUDE
-#define AD_TESTFS_INCLUDE
+#ifndef AD_TESTFS_H_INCLUDED
+#define AD_TESTFS_H_INCLUDED
 
 #include "adio.h"
 #include <unistd.h>
@@ -78,7 +78,7 @@ void ADIOI_TESTFS_Set_shared_fp(ADIO_File fd, ADIO_Offset offset,
 				int *error_code);
 void ADIOI_TESTFS_Delete(const char *filename, int *error_code);
 
-#endif
+#endif /* AD_TESTFS_H_INCLUDED */
 
 
 

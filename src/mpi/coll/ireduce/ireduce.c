@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -18,11 +17,11 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select ireduce algorithm
-        auto - Internal algorithm selection
-        binomial - Force binomial algorithm
-        redscat_gather - Force redscat gather algorithm
+        auto                  - Internal algorithm selection
+        binomial              - Force binomial algorithm
+        reduce_scatter_gather - Force reduce scatter gather algorithm
 
     - name        : MPIR_CVAR_IREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -31,10 +30,10 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select ireduce algorithm
-        auto - Internal algorithm selection
-        generic - Force generic algorithm
+        auto                     - Internal algorithm selection
+        local_reduce_remote_send - Force local-reduce-remote-send algorithm
 
     - name        : MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -74,36 +73,32 @@ int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 #define MPI_Ireduce PMPI_Ireduce
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_intra_sched
+#define FUNCNAME MPIR_Ireduce_sched__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_intra_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_sched__intra__auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int pof2, type_size, comm_size;
+    int pof2, type_size;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
-    comm_size = comm_ptr->local_size;
-
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
-    /* find nearest power-of-two less than or equal to comm_size */
-    pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
+    /* get nearest power-of-two less than or equal to comm_size */
+    pof2 = comm_ptr->pof2;
 
     if ((count*type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
         (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) &&
         (count >= pof2))
     {
         /* do a reduce-scatter followed by gather to root. */
-        mpi_errno = MPIR_Ireduce_intra_redscat_gather_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+        mpi_errno = MPIR_Ireduce_sched__intra__reduce_scatter_gather(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
         /* use a binomial tree algorithm */
-        mpi_errno = MPIR_Ireduce_intra_binomial_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+        mpi_errno = MPIR_Ireduce_sched__intra__binomial(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
@@ -114,17 +109,69 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_inter_sched
+#define FUNCNAME MPIR_Ireduce_sched__inter__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_inter_sched(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_sched__inter__auto(const void *sendbuf, void *recvbuf,
         int count, MPI_Datatype datatype, MPI_Op op, int root,
         MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ireduce_inter_generic_sched(sendbuf, recvbuf, count,
+    mpi_errno = MPIR_Ireduce_sched__inter__local_reduce_remote_send(sendbuf, recvbuf, count,
             datatype, op, root, comm_ptr, s);
+
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Ireduce_sched_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Ireduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                            MPI_Op op, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT &&
+                MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_REDUCE) {
+            mpi_errno = MPIR_Ireduce_sched__intra__smp(sendbuf, recvbuf, count,
+                        datatype, op, root, comm_ptr, s);
+        } else {
+            /* intracommunicator */
+            switch (MPIR_Ireduce_intra_algo_choice) {
+                case MPIR_IREDUCE_INTRA_ALGO_BINOMIAL:
+                    mpi_errno = MPIR_Ireduce_sched__intra__binomial(sendbuf, recvbuf, count,
+                                datatype, op, root, comm_ptr, s);
+                    break;
+                case MPIR_IREDUCE_INTRA_ALGO_REDUCE_SCATTER_GATHER:
+                    mpi_errno = MPIR_Ireduce_sched__intra__reduce_scatter_gather(sendbuf, recvbuf, count,
+                                datatype, op, root, comm_ptr, s);
+                    break;
+                case MPIR_IREDUCE_INTRA_ALGO_AUTO:
+                    MPL_FALLTHROUGH;
+                default:
+                    mpi_errno = MPIR_Ireduce_sched__intra__auto(sendbuf, recvbuf, count,
+                                datatype, op, root, comm_ptr, s);
+                    break;
+             }
+        }
+    } else {
+        /* intercommunicator */
+        switch (MPIR_Ireduce_inter_algo_choice) {
+            case MPIR_IREDUCE_INTER_ALGO_LOCAL_REDUCE_REMOTE_SEND:
+               mpi_errno = MPIR_Ireduce_sched__inter__local_reduce_remote_send(sendbuf, recvbuf, count,
+                           datatype, op, root, comm_ptr, s);
+               break;
+            case MPIR_IREDUCE_INTER_ALGO_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+               mpi_errno = MPIR_Ireduce_sched__inter__auto(sendbuf, recvbuf, count,
+                           datatype, op, root, comm_ptr, s);
+               break;
+        }
+    }
 
     return mpi_errno;
 }
@@ -137,79 +184,65 @@ int MPIR_Ireduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT &&
-                MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_REDUCE) {
-            mpi_errno = MPIR_Ireduce_intra_smp_sched(sendbuf, recvbuf, count,
-                        datatype, op, root, comm_ptr, s);
-        } else {
-            /* intracommunicator */
-            switch (MPIR_Ireduce_intra_algo_choice) {
-                case MPIR_IREDUCE_INTRA_ALGO_BINOMIAL:
-                    mpi_errno = MPIR_Ireduce_intra_binomial_sched(sendbuf, recvbuf, count,
-                                datatype, op, root, comm_ptr, s);
-                    break;
-                case MPIR_IREDUCE_INTRA_ALGO_REDSCAT_GATHER:
-                    mpi_errno = MPIR_Ireduce_intra_redscat_gather_sched(sendbuf, recvbuf, count,
-                                datatype, op, root, comm_ptr, s);
-                    break;
-                case MPIR_IREDUCE_INTRA_ALGO_AUTO:
-                    MPL_FALLTHROUGH;
-                default:
-                    mpi_errno = MPIR_Ireduce_intra_sched(sendbuf, recvbuf, count,
-                                datatype, op, root, comm_ptr, s);
-                    break;
-             }
-        }
+    if (MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
     } else {
-        /* intercommunicator */
-        switch (MPIR_Ireduce_inter_algo_choice) {
-            case MPIR_IREDUCE_INTER_ALGO_GENERIC:
-               mpi_errno = MPIR_Ireduce_inter_generic_sched(sendbuf, recvbuf, count,
-                           datatype, op, root, comm_ptr, s);
-               break;
-            case MPIR_IREDUCE_INTER_ALGO_AUTO:
-                MPL_FALLTHROUGH;
-            default:
-               mpi_errno = MPIR_Ireduce_inter_sched(sendbuf, recvbuf, count,
-                           datatype, op, root, comm_ptr, s);
-               break;
-        }
+        mpi_errno = MPIR_Ireduce_sched_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
+                                            s);
     }
 
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce
+#define FUNCNAME MPIR_Ireduce_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
+                      MPI_Datatype datatype, MPI_Op op, int root,
+                      MPIR_Comm *comm_ptr, MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *reqp = NULL;
     int tag = -1;
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
-    *request = MPI_REQUEST_NULL;
+    *request = NULL;
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+    mpi_errno = MPIR_Ireduce_sched(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);
-    if (reqp)
-        *request = reqp->handle;
+    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;
 fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Ireduce
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Ireduce(const void *sendbuf, void *recvbuf, int count,
+                 MPI_Datatype datatype, MPI_Op op, int root,
+                 MPIR_Comm *comm_ptr, MPIR_Request **request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Ireduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, request);
+    } else {
+        mpi_errno = MPIR_Ireduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
+                                      request);
+    }
+
+    return mpi_errno;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */
@@ -245,6 +278,7 @@ int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IREDUCE);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -322,14 +356,14 @@ int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Ireduce(sendbuf, recvbuf, count, datatype, op, root,
-                    comm_ptr, request);
-    } else {
-        mpi_errno = MPIR_Ireduce(sendbuf, recvbuf, count, datatype, op, root,
-                    comm_ptr, request);
-    }
+    mpi_errno = MPIR_Ireduce(sendbuf, recvbuf, count, datatype, op, root,
+                             comm_ptr, &request_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+    /* return the handle of the request to the user */
+    if(request_ptr)
+        *request = request_ptr->handle;
+    else *request = MPI_REQUEST_NULL;
 
     /* ... end of body of routine ... */
 

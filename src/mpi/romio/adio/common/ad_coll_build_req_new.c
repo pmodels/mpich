@@ -11,7 +11,7 @@
 #ifdef AGGREGATION_PROFILE
 #include "mpe.h"
 #endif
-#include "heap-sort.h"
+#include "heap_sort.h"
 
 /*
 #define DEBUG1

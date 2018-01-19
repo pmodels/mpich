@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef _HCOLL_DTYPES_H_
-#define _HCOLL_DTYPES_H_
+#ifndef HCOLL_DTYPES_H_INCLUDED
+#define HCOLL_DTYPES_H_INCLUDED
 #include "hcoll/api/hcoll_dte.h"
 
 static dte_data_representation_t mpi_dtype_2_dte_dtype(MPI_Datatype datatype)
@@ -71,4 +71,4 @@ static hcoll_dte_op_t *mpi_op_2_dte_op(MPI_Op op)
         return &hcoll_dte_op_null;
     }
 }
-#endif
+#endif /* HCOLL_DTYPES_H_INCLUDED */

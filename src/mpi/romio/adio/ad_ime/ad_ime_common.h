@@ -6,8 +6,8 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#ifndef _AD_IME_COMMON_H
-#define _AD_IME_COMMON_H
+#ifndef AD_IME_COMMON_H_INCLUDED
+#define AD_IME_COMMON_H_INCLUDED
 #include "ad_ime.h"
 
 struct ADIOI_IME_fs_s {
@@ -25,4 +25,4 @@ int ADIOI_IME_End_call(MPI_Comm comm,
                       void *extra_state);
 
 char *ADIOI_IME_Add_prefix(const char *filename);
-#endif
+#endif /* AD_IME_COMMON_H_INCLUDED */

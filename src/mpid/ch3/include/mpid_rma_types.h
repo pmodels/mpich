@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPID_RMA_TYPES_H_INCLUDED)
+#ifndef MPID_RMA_TYPES_H_INCLUDED
 #define MPID_RMA_TYPES_H_INCLUDED
 
 #include "mpidi_ch3_impl.h"

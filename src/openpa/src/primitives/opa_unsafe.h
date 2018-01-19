@@ -149,4 +149,4 @@ static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
 #define OPA_read_write_barrier() do {} while (0)
 #define OPA_compiler_barrier()   do {} while (0)
 
-#endif /* !defined(OPA_UNSAFE_H_INCLUDED) */
+#endif /* OPA_UNSAFE_H_INCLUDED */

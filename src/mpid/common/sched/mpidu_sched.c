@@ -113,8 +113,6 @@ struct MPIDU_Sched_state {
 /* holds on to all incomplete schedules on which progress should be made */
 struct MPIDU_Sched_state all_schedules = { NULL };
 
-static int nbc_progress_hook_id = 0;
-
 /* returns TRUE if any schedules are currently pending completion by the
  * progress engine, FALSE otherwise */
 #undef FUNCNAME
@@ -141,6 +139,8 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
     int end = MPI_UNDEFINED;
     struct MPIDU_Sched *elt = NULL;
 #endif
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SCHED_NEXT_TAG);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SCHED_NEXT_TAG);
 
     *tag = comm_ptr->next_sched_tag;
     ++comm_ptr->next_sched_tag;
@@ -173,6 +173,7 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
     }
 
   fn_fail:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SCHED_NEXT_TAG);
     return mpi_errno;
 }
 
@@ -188,6 +189,9 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
     int mpi_errno = MPI_SUCCESS, ret_errno = MPI_SUCCESS;
     MPIR_Request *r = s->req;
     MPIR_Comm *comm;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SCHED_START_ENTRY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SCHED_START_ENTRY);
 
     MPIR_Assert(e->status == MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED);
 
@@ -336,6 +340,7 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
     }
 
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SCHED_START_ENTRY);
     return mpi_errno;
   fn_fail:
     e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
@@ -355,6 +360,9 @@ static int MPIDU_Sched_continue(struct MPIDU_Sched *s)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t i;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SCHED_CONTINUE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SCHED_CONTINUE);
 
     for (i = s->idx; i < s->num_entries; ++i) {
         struct MPIDU_Sched_entry *e = &s->entries[i];
@@ -381,6 +389,7 @@ static int MPIDU_Sched_continue(struct MPIDU_Sched *s)
         }
     }
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SCHED_CONTINUE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -396,6 +405,9 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp)
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched *s;
     MPIR_CHKPMEM_DECL(2);
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SCHED_CREATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SCHED_CREATE);
 
     *sp = NULL;
 
@@ -422,6 +434,7 @@ int MPIDU_Sched_create(MPIR_Sched_t * sp)
     MPIR_CHKPMEM_COMMIT();
     *sp = s;
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SCHED_CREATE);
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
@@ -453,6 +466,9 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *r;
     struct MPIDU_Sched *s = *sp;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SCHED_START);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SCHED_START);
 
     *req = NULL;
     *sp = MPIR_SCHED_NULL;
@@ -490,13 +506,9 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
 
     /* finally, enqueue in the list of all pending schedules so that the
      * progress engine can make progress on it */
-    if (all_schedules.head == NULL) {
-        mpi_errno = MPID_Progress_register_hook(MPIDU_Sched_progress, &nbc_progress_hook_id);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+    if (all_schedules.head == NULL)
+        MPID_Progress_activate_hook(MPIR_Nbc_progress_hook_id);
 
-        MPID_Progress_activate_hook(nbc_progress_hook_id);
-    }
     DL_APPEND(all_schedules.head, s);
 
     MPL_DBG_MSG_P(MPIR_DBG_COMM, TYPICAL, "started schedule s=%p\n", s);
@@ -504,6 +516,7 @@ int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
         sched_dump(s, stderr);
 
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SCHED_START);
     return mpi_errno;
   fn_fail:
     if (*req)
@@ -1052,10 +1065,8 @@ int MPIDU_Sched_progress(int *made_progress)
     int mpi_errno;
 
     mpi_errno = MPIDU_Sched_progress_state(&all_schedules, made_progress);
-    if (!mpi_errno && all_schedules.head == NULL) {
-        MPID_Progress_deactivate_hook(nbc_progress_hook_id);
-        MPID_Progress_deregister_hook(nbc_progress_hook_id);
-    }
+    if (!mpi_errno && all_schedules.head == NULL)
+        MPID_Progress_deactivate_hook(MPIR_Nbc_progress_hook_id);
 
     return mpi_errno;
 }

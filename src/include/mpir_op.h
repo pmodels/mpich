@@ -171,4 +171,5 @@ extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];
 
 int MPIR_Op_commutative(MPIR_Op *op_ptr, int *commute);
 
+int MPIR_Op_is_commutative(MPI_Op);
 #endif /* MPIR_OP_H_INCLUDED */

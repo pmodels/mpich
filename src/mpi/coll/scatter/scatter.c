@@ -29,11 +29,11 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select scatter algorithm
-        auto - Internal algorithm selection
+        auto     - Internal algorithm selection
         binomial - Force binomial algorithm
-        nb - Force nonblocking algorithm
+        nb       - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_SCATTER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -42,11 +42,12 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select scatter algorithm
-        auto - Internal algorithm selection
-        generic - Force generic algorithm
-        nb - Force nonblocking algorithm
+        auto                      - Internal algorithm selection
+        linear                    - Force linear algorithm
+        nb                        - Force nonblocking algorithm
+        remote_send_local_scatter - Force remote-send-local-scatter algorithm
 
     - name        : MPIR_CVAR_SCATTER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -85,137 +86,128 @@ int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void 
 #undef MPI_Scatter
 #define MPI_Scatter PMPI_Scatter
 
-/* not declared static because a machine-specific function may call this one in some cases */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scatter_intra
+#define FUNCNAME MPIR_Scatter__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Scatter__intra__auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                        void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                        MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
-    int rank = 0;
-    int is_homogeneous = 1;
-    int mpi_errno = MPI_SUCCESS;
-    int mpi_errno_ret = MPI_SUCCESS;
+    int        mpi_errno = MPI_SUCCESS;
+    
+    mpi_errno = MPIR_Scatter__intra__binomial(sendbuf, sendcount, sendtype,
+                                recvbuf, recvcount, recvtype, root,
+                                comm_ptr, errflag);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIR_CHKLMEM_DECL(4);
-
-    rank = comm_ptr->rank;
-
-    if (((rank == root) && (sendcount == 0)) || ((rank != root) && (recvcount == 0))) {
-        return MPI_SUCCESS;
-    }
-
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero) {
-        is_homogeneous = 0;
-    }
-#endif
-
-    if (is_homogeneous) {
-        /* communicator is homogeneous */
-        mpi_errno = MPIR_Scatter_intra_binomial(sendbuf, sendcount, sendtype, recvbuf,
-                                                recvcount, recvtype, root, comm_ptr, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
-    }
-#ifdef MPID_HAS_HETERO
-    else {      /* communicator is heterogeneous */
-        mpi_errno = MPIR_Scatter_intra_heterogeneous(sendbuf, sendcount, sendtype, recvbuf,
-                                                     recvcount, recvtype, root, comm_ptr, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
-    }
-#endif /* MPID_HAS_HETERO */
-
-  fn_exit:
-    MPIR_CHKLMEM_FREEALL();
-    if (mpi_errno_ret) {
-        mpi_errno = mpi_errno_ret;
-    } else if (*errflag != MPIR_ERR_NONE) {
+ fn_exit:
+    if (*errflag != MPIR_ERR_NONE)
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
-    }
     return mpi_errno;
-  fn_fail:
+ fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scatter_inter
+#define FUNCNAME MPIR_Scatter__inter__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
-                       int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                       MPIR_Errflag_t * errflag)
+int MPIR_Scatter__inter__auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                       int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
+                       MPIR_Errflag_t *errflag)
 {
+    int sendtype_size, recvtype_size, nbytes;
+    int local_size, remote_size;
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Scatter_inter_generic(sendbuf, sendcount, sendtype, recvbuf,
-                                           recvcount, recvtype, root, comm_ptr, errflag);
+    local_size = comm_ptr->local_size;
+    remote_size = comm_ptr->remote_size;
 
+    if (root == MPI_ROOT) {
+        MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
+        nbytes = sendtype_size * sendcount * remote_size;
+    }
+    else {
+        MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
+        nbytes = recvtype_size * recvcount * local_size;
+    }
+
+    if (nbytes < MPIR_CVAR_SCATTER_INTER_SHORT_MSG_SIZE) {
+        mpi_errno = MPIR_Scatter__inter__remote_send_local_scatter(sendbuf, sendcount, sendtype, recvbuf,
+                                                                 recvcount, recvtype, root, comm_ptr, errflag);
+    }
+    else {
+        mpi_errno = MPIR_Scatter__inter__linear(sendbuf, sendcount, sendtype, recvbuf,
+                                              recvcount, recvtype, root, comm_ptr, errflag);
+    }
+
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+ fn_exit:
     return mpi_errno;
+
+ fn_fail:
+    goto fn_exit;
 }
 
-
-/* MPIR_Scatter performs an scatter using point-to-point messages.
-   This is intended to be used by device-specific implementations of
-   scatter. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scatter
+#define FUNCNAME MPIR_Scatter_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                 void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                 int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+int MPIR_Scatter_impl(const void *sendbuf, int sendcount,
+                      MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                      MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
+                      MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
         switch (MPIR_Scatter_intra_algo_choice) {
-        case MPIR_SCATTER_INTRA_ALGO_BINOMIAL:
-            mpi_errno = MPIR_Scatter_intra(sendbuf, sendcount, sendtype,
-                                           recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-            break;
-        case MPIR_SCATTER_INTRA_ALGO_NB:
-            mpi_errno = MPIR_Scatter_nb(sendbuf, sendcount, sendtype,
-                                        recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-            break;
-        case MPIR_SCATTER_INTRA_ALGO_AUTO:
-            MPL_FALLTHROUGH;
-        default:
-            mpi_errno = MPIR_Scatter_intra(sendbuf, sendcount, sendtype,
-                                           recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-            break;
+            case MPIR_SCATTER_INTRA_ALGO_BINOMIAL:
+                mpi_errno = MPIR_Scatter__intra__binomial(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcount, recvtype, root,
+                                       comm_ptr, errflag);
+                break;
+            case MPIR_SCATTER_INTRA_ALGO_NB:
+                mpi_errno = MPIR_Scatter_nb(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcount, recvtype, root,
+                                       comm_ptr, errflag);
+                break;
+            case MPIR_SCATTER_INTRA_ALGO_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Scatter__intra__auto(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcount, recvtype, root,
+                                       comm_ptr, errflag);
+                break;
         }
     } else {
         /* intercommunicator */
         switch (MPIR_Scatter_inter_algo_choice) {
-        case MPIR_SCATTER_INTER_ALGO_GENERIC:
-            mpi_errno = MPIR_Scatter_inter_generic(sendbuf, sendcount, sendtype,
-                                                   recvbuf, recvcount, recvtype, root,
-                                                   comm_ptr, errflag);
-            break;
-        case MPIR_SCATTER_INTER_ALGO_NB:
-            mpi_errno = MPIR_Scatter_nb(sendbuf, sendcount, sendtype,
-                                        recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-            break;
-        case MPIR_SCATTER_INTER_ALGO_AUTO:
-            MPL_FALLTHROUGH;
-        default:
-            mpi_errno = MPIR_Scatter_inter(sendbuf, sendcount, sendtype,
-                                           recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
-            break;
+            case MPIR_SCATTER_INTER_ALGO_LINEAR:
+                mpi_errno = MPIR_Scatter__inter__linear(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcount, recvtype, root,
+                                       comm_ptr, errflag);
+                break;
+            case MPIR_SCATTER_INTER_ALGO_NB:
+                mpi_errno = MPIR_Scatter_nb(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcount, recvtype, root,
+                                       comm_ptr, errflag);
+                break;
+            case MPIR_SCATTER_INTER_ALGO_REMOTE_SEND_LOCAL_SCATTER:
+                mpi_errno = MPIR_Scatter__inter__remote_send_local_scatter(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcount, recvtype, root,
+                                       comm_ptr, errflag);
+                break;
+            case MPIR_SCATTER_INTER_ALGO_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Scatter__inter__auto(sendbuf, sendcount, sendtype,
+                                       recvbuf, recvcount, recvtype, root,
+                                       comm_ptr, errflag);
+                break;
         }
     }
     if (mpi_errno)
@@ -226,6 +218,27 @@ int MPIR_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
   fn_fail:
 
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Scatter
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                 void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
+                 MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_SCATTER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Scatter(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root,
+                                 comm_ptr, errflag);
+    } else {
+        mpi_errno = MPIR_Scatter_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
+                                      root, comm_ptr, errflag);
+    }
+
+    return mpi_errno;
 }
 
 #endif
@@ -382,15 +395,8 @@ int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_SCATTER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Scatter(sendbuf, sendcount, sendtype,
-                                  recvbuf, recvcount, recvtype, root,
-                                  comm_ptr, &errflag);
-    } else {
-        mpi_errno = MPIR_Scatter(sendbuf, sendcount, sendtype,
-                                  recvbuf, recvcount, recvtype, root,
-                                  comm_ptr, &errflag);
-    }
+    mpi_errno = MPIR_Scatter(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root,
+                             comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

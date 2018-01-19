@@ -523,7 +523,7 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
 #define FUNCNAME MPIC_Sendrecv_replace
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
+int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
                              int dest, int sendtag,
                              int source, int recvtag,
                              MPIR_Comm *comm_ptr, MPI_Status *status, MPIR_Errflag_t *errflag)

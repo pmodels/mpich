@@ -5,8 +5,8 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#ifndef AD_PVFS2_INCLUDE
-#define AD_PVFS2_INCLUDE
+#ifndef AD_PVFS2_H_INCLUDED
+#define AD_PVFS2_H_INCLUDED
 
 #include "adio.h"
 #ifdef HAVE_PVFS2_H
@@ -73,4 +73,4 @@ int ADIOI_PVFS2_WriteStridedDtypeIO(ADIO_File fd, const void *buf, int count,
 				    ADIO_Offset offset, ADIO_Status *status,
 				    int *error_code);
 
-#endif
+#endif /* AD_PVFS2_H_INCLUDED */

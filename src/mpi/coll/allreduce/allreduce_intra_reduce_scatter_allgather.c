@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* Algorithm: Rabenseifner's Algorithm
  *
@@ -41,10 +40,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allreduce_intra_reduce_scatter_allgather
+#define FUNCNAME MPIR_Allreduce__intra__reduce_scatter_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allreduce_intra_reduce_scatter_allgather(
+int MPIR_Allreduce__intra__reduce_scatter_allgather(
     const void *sendbuf,
     void *recvbuf,
     int count,
@@ -86,10 +85,8 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
-    /* find nearest power-of-two less than or equal to comm_size */
-    pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
+    /* get nearest power-of-two less than or equal to comm_size */
+    pof2 = comm_ptr->pof2;
 
     rem = comm_size - pof2;
 
@@ -149,6 +146,11 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(
        the type maps are the same. Breaking up derived
        datatypes to do the reduce-scatter is tricky, therefore
        using recursive doubling in that case.) */
+
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_Assert(HANDLE_GET_KIND(op)==HANDLE_KIND_BUILTIN);
+    MPIR_Assert(count >= pof2);
+#endif /* HAVE_ERROR_CHECKING */
 
     if (newrank != -1) {
       MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts", MPL_MEM_BUFFER);

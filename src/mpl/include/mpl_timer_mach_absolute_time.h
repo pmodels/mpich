@@ -11,4 +11,4 @@
 
 #include <mach/mach_time.h>
 
-#endif
+#endif /* MPL_TIMER_MACH_ABSOLUTE_TIME_H_INCLUDED */

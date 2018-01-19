@@ -537,4 +537,4 @@ fn_fail:
     goto fn_exit;
 }
 
-#endif /* ifndef BUILD_NODEMAP_H_INCLUDED */
+#endif /* BUILD_NODEMAP_H_INCLUDED */

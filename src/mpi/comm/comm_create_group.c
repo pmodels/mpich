@@ -83,6 +83,7 @@ int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag
         MPIR_Group_add_ref( group_ptr );
         (*newcomm_ptr)->context_id     = (*newcomm_ptr)->recvcontext_id;
         (*newcomm_ptr)->remote_size    = (*newcomm_ptr)->local_size = n;
+        (*newcomm_ptr)->pof2           = MPL_pof2(n);
 
         /* Setup the communicator's vc table.  This is for the remote group,
            which is the same as the local group for intracommunicators */

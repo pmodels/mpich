@@ -6,7 +6,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* FIXME This function uses some heuristsics based off of some testing on a
  * cluster at Argonne.  We need a better system for detrmining and controlling
@@ -14,10 +13,10 @@
  * be able to make changes along these lines almost exclusively in this function
  * and some new functions. [goodell@ 2008/01/07] */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Bcast_intra_smp
+#define FUNCNAME MPIR_Bcast__intra__smp
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_Bcast__intra__smp( void *buffer, int count, MPI_Datatype datatype, int root,
         MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -27,10 +26,12 @@ int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int ro
     MPI_Status status;
     int recvd_size;
 
+#ifdef HAVE_ERROR_CHECKING
     if (!MPIR_CVAR_ENABLE_SMP_COLLECTIVES || !MPIR_CVAR_ENABLE_SMP_BCAST) {
         MPIR_Assert(0);
     }
     MPIR_Assert(MPIR_Comm_is_node_aware(comm_ptr));
+#endif
 
     is_homogeneous = 1;
 #ifdef MPID_HAS_HETERO
@@ -98,7 +99,7 @@ int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int ro
         /* perform the internode broadcast */
         if (comm_ptr->node_roots_comm != NULL)
         {
-            mpi_errno = MPID_Bcast(buffer, count, datatype,
+            mpi_errno = MPIR_Bcast(buffer, count, datatype,
                     MPIR_Get_internode_rank(comm_ptr, root),
                     comm_ptr->node_roots_comm, errflag);
             if (mpi_errno) {
@@ -112,7 +113,7 @@ int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int ro
         /* perform the intranode broadcast on all except for the root's node */
         if (comm_ptr->node_comm != NULL)
         {
-            mpi_errno = MPID_Bcast(buffer, count, datatype, 0,
+            mpi_errno = MPIR_Bcast(buffer, count, datatype, 0,
                     comm_ptr->node_comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -125,7 +126,7 @@ int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int ro
         /* supposedly...
            smp+doubling good for pof2
            reg+ring better for non-pof2 */
-        if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPIU_is_pof2(comm_ptr->local_size, NULL))
+        if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm_ptr->local_size, NULL))
         {
             /* medium-sized msg and pof2 np */
 
@@ -136,7 +137,7 @@ int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int ro
                 /* FIXME binomial may not be the best algorithm for on-node
                    bcast.  We need a more comprehensive system for selecting the
                    right algorithms here. */
-                mpi_errno = MPID_Bcast(buffer, count, datatype,
+                mpi_errno = MPIR_Bcast(buffer, count, datatype,
                         MPIR_Get_intranode_rank(comm_ptr, root),
                         comm_ptr->node_comm, errflag);
                 if (mpi_errno) {
@@ -150,7 +151,7 @@ int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int ro
             /* perform the internode broadcast */
             if (comm_ptr->node_roots_comm != NULL)
             {
-                mpi_errno = MPID_Bcast(buffer, count, datatype,
+                mpi_errno = MPIR_Bcast(buffer, count, datatype,
                         MPIR_Get_internode_rank(comm_ptr, root),
                         comm_ptr->node_roots_comm, errflag);
                 if (mpi_errno) {
@@ -168,7 +169,7 @@ int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int ro
                 /* FIXME binomial may not be the best algorithm for on-node
                    bcast.  We need a more comprehensive system for selecting the
                    right algorithms here. */
-                mpi_errno = MPID_Bcast(buffer, count, datatype, 0,
+                mpi_errno = MPIR_Bcast(buffer, count, datatype, 0,
                         comm_ptr->node_comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
@@ -181,7 +182,7 @@ int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int ro
             /* FIXME It would be good to have an SMP-aware version of this
                algorithm that (at least approximately) minimized internode
                communication. */
-            mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+            mpi_errno = MPIR_Bcast__intra__scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

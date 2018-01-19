@@ -5,7 +5,6 @@
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -18,12 +17,12 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select iallreduce algorithm
-        auto - Internal algorithm selection
-        naive - Force naive algorithm
-        recursive_doubling - Force recursive doubling algorithm
-        redscat_allgather - Force redscat allgather algorithm
+        auto                     - Internal algorithm selection
+        naive                    - Force naive algorithm
+        recursive_doubling       - Force recursive doubling algorithm
+        reduce_scatter_allgather - Force reduce scatter allgather algorithm
 
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -32,10 +31,10 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select iallreduce algorithm
-        auto - Internal algorithm selection
-        generic - Force generic algorithm
+        auto                      - Internal algorithm selection
+        remote_reduce_local_bcast - Force remote-reduce-local-bcast algorithm
 
     - name        : MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -75,13 +74,13 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 #define MPI_Iallreduce PMPI_Iallreduce
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_intra_sched
+#define FUNCNAME MPIR_Iallreduce_sched__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_intra_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iallreduce_sched__intra__auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size, is_homogeneous, pof2, type_size;
+    int is_homogeneous, pof2, type_size;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
@@ -92,19 +91,15 @@ int MPIR_Iallreduce_intra_sched(const void *sendbuf, void *recvbuf, int count, M
 #endif
 
     if (!is_homogeneous) {
-        mpi_errno = MPIR_Iallreduce_intra_naive_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Iallreduce_sched__intra__naive(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
     }
 
-    comm_size = comm_ptr->local_size;
-
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
-    /* find nearest power-of-two less than or equal to comm_size */
-    pof2 = 1;
-    while (pof2 <= comm_size) pof2 <<= 1;
-    pof2 >>=1;
+    /* get nearest power-of-two less than or equal to comm_size */
+    pof2 = comm_ptr->pof2;
 
     /* If op is user-defined or count is less than pof2, use
        recursive doubling algorithm. Otherwise do a reduce-scatter
@@ -120,12 +115,12 @@ int MPIR_Iallreduce_intra_sched(const void *sendbuf, void *recvbuf, int count, M
         (count < pof2))
     {
         /* use recursive doubling */
-        mpi_errno = MPIR_Iallreduce_intra_recursive_doubling_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Iallreduce_sched__intra__recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
         /* do a reduce-scatter followed by allgather */
-        mpi_errno = MPIR_Iallreduce_intra_redscat_allgather_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Iallreduce_sched__intra__reduce_scatter_allgather(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
@@ -136,20 +131,75 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_inter_sched
+#define FUNCNAME MPIR_Iallreduce_sched__inter__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_inter_sched(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iallreduce_sched__inter__auto(const void *sendbuf, void *recvbuf, int count,
         MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Iallreduce_inter_generic_sched(sendbuf, recvbuf, count,
+    mpi_errno = MPIR_Iallreduce_sched__inter__remote_reduce_local_bcast(sendbuf, recvbuf, count,
             datatype, op, comm_ptr, s);
 
     return mpi_errno;
 }
 
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iallreduce_sched_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Iallreduce_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                               MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT &&
+                MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_ALLREDUCE) {
+            mpi_errno = MPIR_Iallreduce_sched__intra__smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        } else {
+            /* intracommunicator */
+            switch (MPIR_Iallreduce_intra_algo_choice) {
+                case MPIR_IALLREDUCE_INTRA_ALGO_NAIVE:
+                    mpi_errno = MPIR_Iallreduce_sched__intra__naive(sendbuf, recvbuf, count,
+                                datatype, op, comm_ptr, s);
+                    break;
+                case MPIR_IALLREDUCE_INTRA_ALGO_RECURSIVE_DOUBLING:
+                    mpi_errno = MPIR_Iallreduce_sched__intra__recursive_doubling(sendbuf, recvbuf, count,
+                                datatype, op, comm_ptr, s);
+                    break;
+                case MPIR_IALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER:
+                    mpi_errno = MPIR_Iallreduce_sched__intra__reduce_scatter_allgather(sendbuf, recvbuf, count,
+                                datatype, op, comm_ptr, s);
+                    break;
+                case MPIR_IALLREDUCE_INTRA_ALGO_AUTO:
+                    MPL_FALLTHROUGH;
+                default:
+                    mpi_errno = MPIR_Iallreduce_sched__intra__auto(sendbuf, recvbuf, count,
+                            datatype, op, comm_ptr, s);
+                    break;
+            }
+        }
+    } else {
+        /* intercommunicator */
+        switch (MPIR_Iallreduce_inter_algo_choice) {
+            case MPIR_IALLREDUCE_INTER_ALGO_REMOTE_REDUCE_LOCAL_BCAST:
+                mpi_errno = MPIR_Iallreduce_sched__inter__remote_reduce_local_bcast(sendbuf, recvbuf, count,
+                            datatype, op, comm_ptr, s);
+                break;
+            case MPIR_IALLREDUCE_INTER_ALGO_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Iallreduce_sched__inter__auto(sendbuf, recvbuf, count,
+                            datatype, op, comm_ptr, s);
+                break;
+        }
+
+    }
+    return mpi_errno;
+}
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Iallreduce_sched
@@ -159,82 +209,63 @@ int MPIR_Iallreduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dat
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
-        if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT &&
-                MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_ALLREDUCE) {
-            mpi_errno = MPIR_Iallreduce_intra_smp_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-        } else {
-            /* intracommunicator */
-            switch (MPIR_Iallreduce_intra_algo_choice) {
-                case MPIR_IALLREDUCE_INTRA_ALGO_NAIVE:
-                    mpi_errno = MPIR_Iallreduce_intra_naive_sched(sendbuf, recvbuf, count,
-                                datatype, op, comm_ptr, s);
-                    break;
-                case MPIR_IALLREDUCE_INTRA_ALGO_RECURSIVE_DOUBLING:
-                    mpi_errno = MPIR_Iallreduce_intra_recursive_doubling_sched(sendbuf, recvbuf, count,
-                                datatype, op, comm_ptr, s);
-                    break;
-                case MPIR_IALLREDUCE_INTRA_ALGO_REDSCAT_ALLGATHER:
-                    mpi_errno = MPIR_Iallreduce_intra_redscat_allgather_sched(sendbuf, recvbuf, count,
-                                datatype, op, comm_ptr, s);
-                    break;
-                case MPIR_IALLREDUCE_INTRA_ALGO_AUTO:
-                    MPL_FALLTHROUGH;
-                default:
-                    mpi_errno = MPIR_Iallreduce_intra_sched(sendbuf, recvbuf, count,
-                            datatype, op, comm_ptr, s);
-                    break;
-            }
-        }
+    if (MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Iallreduce_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     } else {
-        /* intercommunicator */
-        switch (MPIR_Iallreduce_inter_algo_choice) {
-            case MPIR_IALLREDUCE_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Iallreduce_inter_generic_sched(sendbuf, recvbuf, count,
-                            datatype, op, comm_ptr, s);
-                break;
-            case MPIR_IALLREDUCE_INTER_ALGO_AUTO:
-                MPL_FALLTHROUGH;
-            default:
-                mpi_errno = MPIR_Iallreduce_inter_sched(sendbuf, recvbuf, count,
-                            datatype, op, comm_ptr, s);
-                break;
-        }
-
+        mpi_errno = MPIR_Iallreduce_sched_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     }
+
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce
+#define FUNCNAME MPIR_Iallreduce_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
+                         MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                         MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *reqp = NULL;
     int tag = -1;
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
-    *request = MPI_REQUEST_NULL;
+    *request = NULL;
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_Iallreduce_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+    mpi_errno = MPIR_Iallreduce_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);
-    if (reqp)
-        *request = reqp->handle;
+    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;
 fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Iallreduce
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Iallreduce(const void *sendbuf, void *recvbuf, int count,
+                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                    MPIR_Request **request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
+    } else {
+        mpi_errno = MPIR_Iallreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
+    }
+
+    return mpi_errno;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */
@@ -270,6 +301,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IALLREDUCE);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -338,12 +370,13 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
-    } else {
-        mpi_errno = MPIR_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
-    }
+    mpi_errno = MPIR_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, &request_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+    /* return the handle of the request to the user */
+    if(request_ptr)
+        *request = request_ptr->handle;
+    else *request = MPI_REQUEST_NULL;
 
     /* ... end of body of routine ... */
 

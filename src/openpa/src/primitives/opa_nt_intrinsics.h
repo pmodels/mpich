@@ -151,4 +151,4 @@ static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
 
 #include "opa_emulated.h"
 
-#endif /* defined(OPA_NT_INTRINSICS_H_INCLUDED) */
+#endif /* OPA_NT_INTRINSICS_H_INCLUDED */

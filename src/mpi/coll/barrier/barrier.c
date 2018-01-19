@@ -27,11 +27,11 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select barrier algorithm
-        auto - Internal algorithm selection
+        auto               - Internal algorithm selection
+        nb                 - Force nonblocking algorithm
         recursive_doubling - Force recursive doubling algorithm
-        nb - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_BARRIER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -40,11 +40,11 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
+      description : |-
         Variable to select barrier algorithm
-        auto - Internal algorithm selection
-        generic - Force generic algorithm
-        nb - Force nonblocking algorithm
+        auto  - Internal algorithm selection
+        bcast - Force bcast algorithm
+        nb    - Force nonblocking algorithm
 
     - name        : MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE
       category    : COLLECTIVE
@@ -81,12 +81,11 @@ int MPI_Barrier(MPI_Comm comm) __attribute__((weak,alias("PMPI_Barrier")));
 #undef MPI_Barrier
 #define MPI_Barrier PMPI_Barrier
 
-/* not declared static because it is called in ch3_comm_connect/accept */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Barrier_intra
+#define FUNCNAME MPIR_Barrier__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier_intra( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
+int MPIR_Barrier__intra__auto( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int size, mpi_errno=MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -98,9 +97,9 @@ int MPIR_Barrier_intra( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES &&
             MPIR_CVAR_ENABLE_SMP_BARRIER &&
             MPIR_Comm_is_node_aware(comm_ptr)) {
-        mpi_errno = MPIR_Barrier_intra_smp(comm_ptr, errflag);
+        mpi_errno = MPIR_Barrier__intra__smp(comm_ptr, errflag);
     } else {
-        mpi_errno = MPIR_Barrier_intra_recursive_doubling(comm_ptr, errflag);
+        mpi_errno = MPIR_Barrier__intra__dissemination(comm_ptr, errflag);
     }
 
     if (mpi_errno) {
@@ -119,26 +118,23 @@ int MPIR_Barrier_intra( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Barrier_inter
+#define FUNCNAME MPIR_Barrier__inter__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier_inter( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
+int MPIR_Barrier__inter__auto( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Barrier_inter_generic(comm_ptr, errflag);
+    mpi_errno = MPIR_Barrier__inter__bcast(comm_ptr, errflag);
 
     return mpi_errno;
 }
 
-/* MPIR_Barrier performs an barrier using point-to-point messages.
-   This is intended to be used by device-specific implementations of
-   barrier. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Barrier
+#define FUNCNAME MPIR_Barrier_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Barrier_impl(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -146,7 +142,7 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
         /* intracommunicator */
         switch (MPIR_Barrier_intra_algo_choice) {
             case MPIR_BARRIER_INTRA_ALGO_RECURSIVE_DOUBLING:
-                mpi_errno = MPIR_Barrier_intra_recursive_doubling(comm_ptr, errflag);
+                mpi_errno = MPIR_Barrier__intra__dissemination(comm_ptr, errflag);
                 break;
             case MPIR_BARRIER_INTRA_ALGO_NB:
                 mpi_errno = MPIR_Barrier_nb(comm_ptr, errflag);
@@ -154,14 +150,14 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
             case MPIR_BARRIER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Barrier_intra(comm_ptr, errflag);
+                mpi_errno = MPIR_Barrier__intra__auto(comm_ptr, errflag);
                 break;
         }
     } else {
         /* intercommunicator */
         switch (MPIR_Barrier_inter_algo_choice) {
-            case MPIR_BARRIER_INTER_ALGO_GENERIC:
-                mpi_errno = MPIR_Barrier_inter_generic(comm_ptr, errflag);
+            case MPIR_BARRIER_INTER_ALGO_BCAST:
+                mpi_errno = MPIR_Barrier__inter__bcast(comm_ptr, errflag);
                 break;
             case MPIR_BARRIER_INTER_ALGO_NB:
                 mpi_errno = MPIR_Barrier_nb(comm_ptr, errflag);
@@ -169,7 +165,7 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
             case MPIR_BARRIER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Barrier_inter(comm_ptr, errflag);
+                mpi_errno = MPIR_Barrier__inter__auto(comm_ptr, errflag);
                 break;
         }
     }
@@ -179,6 +175,23 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
     return mpi_errno;
  fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Barrier
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+        mpi_errno = MPID_Barrier(comm_ptr, errflag);
+    } else {
+        mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
+    }
+
+    return mpi_errno;
 }
 
 #endif
@@ -253,11 +266,7 @@ int MPI_Barrier( MPI_Comm comm )
 
     /* ... body of routine ...  */
 
-    if (MPIR_CVAR_BARRIER_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Barrier(comm_ptr, &errflag);
-    } else {
-        mpi_errno = MPIR_Barrier(comm_ptr, &errflag);
-    }
+    mpi_errno = MPIR_Barrier(comm_ptr, &errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     /* ... end of body of routine ... */

@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPL_ENV_H_INCLUDED)
+#ifndef MPL_ENV_H_INCLUDED
 #define MPL_ENV_H_INCLUDED
 
 #include "mplconfig.h"
@@ -33,4 +33,4 @@ int MPL_putenv(char *name_val);
 #endif
 /* *INDENT-OFF* */
 
-#endif /* !defined(MPL_ENV_H_INCLUDED) */
+#endif /* MPL_ENV_H_INCLUDED */

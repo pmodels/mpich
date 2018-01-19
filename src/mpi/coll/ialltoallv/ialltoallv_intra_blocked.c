@@ -7,10 +7,10 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallv_intra_blocked_sched
+#define FUNCNAME MPIR_Ialltoallv_sched__intra__blocked
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoallv_intra_blocked_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Ialltoallv_sched__intra__blocked(const void *sendbuf, const int sendcounts[], const int sdispls[],
                                   MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
                                   const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
                                   MPIR_Sched_t s)
@@ -21,6 +21,10 @@ int MPIR_Ialltoallv_intra_blocked_sched(const void *sendbuf, const int sendcount
     int ii, ss, bblock;
     MPI_Aint send_extent, recv_extent, sendtype_size, recvtype_size;
     int dst, rank;
+
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_Assert(sendbuf != MPI_IN_PLACE);
+#endif /* HAVE_ERROR_CHECKING */
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
