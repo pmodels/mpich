@@ -940,7 +940,6 @@ static void bind_to_help_fn(void)
     printf("            nexttouch         -- closest to process that next touches memory\n");
     printf("            bind:<list>       -- bind to memory node list\n");
     printf("            interleave:<list> -- interleave among memory node list\n");
-    printf("            replicate:<list>  -- replicate among memory node list\n");
 }
 
 static HYD_status bind_to_fn(char *arg, char ***argv)
