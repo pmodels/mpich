@@ -6,7 +6,8 @@ extern const MPIDI_POSIX_coll_algo_container_t POSIX_Barrier__intra__disseminati
 
 /* Bcast POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_Bcast__intra__binomial_cnt;
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_Bcast__intra__scatter_recursive_doubling_allgather_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t
+    POSIX_Bcast__intra__scatter_recursive_doubling_allgather_cnt;
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_Bcast__intra__scatter_ring_allgather_cnt;
 
 /* Reduce POSIX containers declaration */
@@ -25,11 +26,13 @@ extern const MPIDI_POSIX_coll_algo_container_t POSIX_Alltoall__intra__pairwise_s
 
 /* Alltoallv POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_Alltoallv__intra__scattered_cnt;
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_Alltoallv__intra__pairwise_sendrecv_replace_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t
+    POSIX_Alltoallv__intra__pairwise_sendrecv_replace_cnt;
 
 /* Alltoallw POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_Alltoallw__intra__scattered_cnt;
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_Alltoallw__intra__pairwise_sendrecv_replace_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t
+    POSIX_Alltoallw__intra__pairwise_sendrecv_replace_cnt;
 
 /* Allgather POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_Allgather__intra__recursive_doubling_cnt;
@@ -62,10 +65,13 @@ extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter__intra__recu
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter__intra__recursive_halving_cnt;
 
 /* Reduce_scatter_block POSIX containers declaration */
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block__intra__noncommutative_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t
+    POSIX_Reduce_scatter_block__intra__noncommutative_cnt;
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block__intra__pairwise_cnt;
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block__intra__recursive_doubling_cnt;
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block__intra__recursive_halving_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t
+    POSIX_Reduce_scatter_block__intra__recursive_doubling_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t
+    POSIX_Reduce_scatter_block__intra__recursive_halving_cnt;
 
 /* Scan POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_Scan__intra__recursive_doubling_cnt;

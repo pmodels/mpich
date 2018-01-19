@@ -6,7 +6,8 @@ extern const MPIDI_OFI_coll_algo_container_t OFI_Barrier__intra__dissemination_c
 
 /* Bcast OFI containers declaration */
 extern const MPIDI_OFI_coll_algo_container_t OFI_Bcast__intra__binomial_cnt;
-extern const MPIDI_OFI_coll_algo_container_t OFI_Bcast__intra__scatter_recursive_doubling_allgather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t
+    OFI_Bcast__intra__scatter_recursive_doubling_allgather_cnt;
 extern const MPIDI_OFI_coll_algo_container_t OFI_Bcast__intra__scatter_ring_allgather_cnt;
 
 /* Reduce OFI containers declaration */
@@ -64,7 +65,8 @@ extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter__intra__recursiv
 /* Reduce_scatter_block OFI containers declaration */
 extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_block__intra__noncommutative_cnt;
 extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_block__intra__pairwise_cnt;
-extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_block__intra__recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t
+    OFI_Reduce_scatter_block__intra__recursive_doubling_cnt;
 extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_block__intra__recursive_halving_cnt;
 
 /* Scan OFI containers declaration */
