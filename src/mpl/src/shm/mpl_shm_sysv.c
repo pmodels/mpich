@@ -31,8 +31,8 @@ static inline int MPL_shm_seg_create_attach_templ(
 
     if(flag & MPLI_SHM_FLAG_SHM_CREATE){
         lhnd = shmget(IPC_PRIVATE, seg_sz, IPC_CREAT | S_IRWXU);
-        MPL_shm_lhnd_set(hnd, lhnd);
-        rc = MPLI_shm_ghnd_alloc(hnd);
+        MPLI_shm_lhnd_set(hnd, lhnd);
+        rc = MPLI_shm_ghnd_alloc(hnd, MPL_MEM_SHM);
         rc = MPLI_shm_ghnd_set_by_val(hnd, "%d", lhnd);
     }
     else{
@@ -143,7 +143,7 @@ int  MPL_shm_seg_remove(MPL_shm_hnd_t hnd)
     struct shmid_ds ds;
     int rc = -1;
 
-    rc = shmctl(MPL_shm_lhnd_get(hnd), IPC_RMID, &ds);
+    rc = shmctl(MPLI_shm_lhnd_get(hnd), IPC_RMID, &ds);
 
 fn_exit:
     return rc;

@@ -51,46 +51,6 @@ typedef struct MPID_nem_mpich_win
 }
 MPID_nem_mpich_win_t;
 
-int MPID_nem_mpich_alloc_win (void **buf, int len, MPID_nem_mpich_win_t **win);
-int MPID_nem_mpich_free_win (MPID_nem_mpich_win_t *win);
-int MPID_nem_mpich_attach_win (void **buf, MPID_nem_mpich_win_t *remote_win);
-int MPID_nem_mpich_detach_win (MPID_nem_mpich_win_t *remote_win);
-int MPID_nem_mpich_serialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t *win, int *len);
-int MPID_nem_mpich_deserialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t **win);
-
-int MPID_nem_mpich_win_put (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t *remote_win);
-int MPID_nem_mpich_win_putv (MPL_IOV **s_iov, int *s_niov, MPL_IOV **d_iov, int *d_niov, MPID_nem_mpich_win_t *remote_win);
-int MPID_nem_mpich_win_get (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t *remote_win);
-int MPID_nem_mpich_win_getv (MPL_IOV **s_iov, int *s_niov, MPL_IOV **d_iov, int *d_niov, MPID_nem_mpich_win_t *remote_win);
-
-int MPID_nem_mpich_register_memory (void *buf, int len);
-int MPID_nem_mpich_deregister_memory (void *buf, int len);
-
-int MPID_nem_mpich_put (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr);
-int MPID_nem_mpich_putv (MPL_IOV **s_iov, int *s_niov, MPL_IOV **d_iov, int *d_niov, int proc,
-		       int *completion_ctr);
-int MPID_nem_mpich_get (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr);
-int MPID_nem_mpich_getv (MPL_IOV **s_iov, int *s_niov, MPL_IOV **d_iov, int *d_niov, int proc,
-		       int *completion_ctr);
-
-     
-#define MPID_nem_mpich_win_put_val(val, d_buf, remote_win) do {			\
-    char *_d_buf = d_buf;								\
-											\
-    _d_buf += (char *)(remote_win)->local_address - (char *)(remote_win)->home_address;	\
-											\
-    *(typeof (val) *)_d_buf = val;							\
-} while (0)
-     
-#define MPID_nem_mpich_win_get_val(s_buf, val, remote_win) do {			\
-    char *_s_buf = s_buf;								\
-											\
-    _s_buf += (char *)(remote_win)->local_address - (char *)(remote_win)->home_address;	\
-											\
-    *(val) = *(typeof (*(val)) *)_s_buf;						\
-} while (0)
-
-
 #if !defined (MPID_NEM_INLINE) || !MPID_NEM_INLINE
 int MPID_nem_mpich_send_header(void* buf, int size, struct MPIDI_VC *vc, int *again);
 int MPID_nem_mpich_sendv(MPL_IOV **iov, int *n_iov, struct MPIDI_VC *vc, int *again);

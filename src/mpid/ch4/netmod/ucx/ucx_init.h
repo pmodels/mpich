@@ -392,7 +392,7 @@ static inline int MPIDI_NMI_allocate_address_table()
             p = 0;
             while (p < string_addr_len) {
                 val = string_addr + p;
-                MPL_snprintf(keyS, sizeof(keyS), "UCX-%d-%d", i, p);
+                MPL_snprintf(keyS, key_max_sz*sizeof(char), "UCX-%d-%d", i, p);
                 pmi_errno = PMI_KVS_Get(MPIDI_UCX_global.kvsname, keyS, val, val_max_sz);
                 MPIDI_UCX_PMI_ERROR(pmi_errno);
                 p += val_max_sz - 1;

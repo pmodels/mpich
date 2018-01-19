@@ -79,6 +79,154 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
     goto fn_exit;
 }
 
+#define MPIDI_OFI_SEND_NEEDS_PACK (-1) /* Could not use iov; needs packing */
+
+/*
+  Tries to send non-contiguous datatype using iovec.
+
+  Return value:
+  MPI_SUCCESS: Message was sent successfully using iovec
+  MPIDI_OFI_SEND_NEEDS_PACK: There was no error but send was not initiated
+      due to limitations with iovec. Needs to fall back to the pack path.
+  Other: An error occurred as indicated in the code.
+*/
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_send_iov
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
+                                                int rank, uint64_t match_bits, MPIR_Comm *comm,
+                                                MPIR_Request *sreq, MPIR_Datatype *dt_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct iovec *originv = NULL, *originv_huge = NULL;
+    size_t countp = MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(sreq, datatype), INT64_MAX);
+    size_t omax = MPIDI_Global.tx_iov_limit;
+    size_t o_size = sizeof(struct iovec);
+    size_t cur_o = 0;
+    struct fi_msg_tagged msg;
+    uint64_t flags;
+    unsigned map_size;
+    int num_contig, size, j = 0, k = 0, huge = 0, length = 0;
+    size_t oout = 0;
+    size_t l = 0;
+    size_t countp_huge = 0;
+    MPIR_Segment seg;
+    DLOOP_Offset last_byte = dt_ptr->size * count;
+    size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_IOV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_IOV);
+
+    /* If the number of iovecs is greater than the supported hardware limit (to transfer in a single send),
+     *  fallback to the pack path */
+    if (countp > omax) {
+        goto pack;
+    }
+
+    flags = FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0);
+    MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_NOPACK;
+
+    map_size = dt_ptr->max_contig_blocks * count + 1;
+    num_contig = map_size;  /* map_size is the maximum number of iovecs that can be generated */
+
+    size = o_size*num_contig + sizeof(*(MPIDI_OFI_REQUEST(sreq, noncontig.nopack)));
+
+    MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = MPL_aligned_alloc(iov_align, size, MPL_MEM_BUFFER);
+    memset(MPIDI_OFI_REQUEST(sreq, noncontig.nopack), 0, size);
+
+    MPIR_Segment_init(buf, count, MPIDI_OFI_REQUEST(sreq, datatype), &seg, 0);
+    MPIR_Segment_pack_vector(&seg, 0, &last_byte, MPIDI_OFI_REQUEST(sreq, noncontig.nopack), &num_contig);
+
+    originv = &(MPIDI_OFI_REQUEST(sreq, noncontig.nopack[cur_o]));
+    oout = num_contig;  /* num_contig is the actual number of iovecs returned by the Segment_pack_vector function */
+
+    if (oout > omax) {
+        MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
+        goto pack;
+    }
+
+    /* check if the length of any iovec in the current iovec array exceeds the huge message threshold
+     * and calculate the total number of iovecs */
+    for (j = 0; j < num_contig; j++) {
+        if (originv[j].iov_len > MPIDI_Global.max_send) {
+            huge = 1;
+            countp_huge += originv[j].iov_len / MPIDI_Global.max_send;
+            if (originv[j].iov_len % MPIDI_Global.max_send) {
+                countp_huge++;
+            }
+        } else {
+            countp_huge++;
+        }
+    }
+
+    if (countp_huge > omax && huge) {
+        MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
+        goto pack;
+    }
+
+    if (countp_huge >= 1 && huge) {
+        originv_huge = MPL_aligned_alloc(iov_align, sizeof(struct iovec) * countp_huge, MPL_MEM_BUFFER);
+
+        for (j=0; j<num_contig; j++) {
+            l = 0;
+            if (originv[j].iov_len > MPIDI_Global.max_send) {
+                while (l < originv[j].iov_len) {
+                    length = originv[j].iov_len - l;
+                    if (length > MPIDI_Global.max_send)
+                        length = MPIDI_Global.max_send;
+                    originv_huge[k].iov_base = (char *) originv[j].iov_base + l;
+                    originv_huge[k].iov_len = length;
+                    k++;
+                    l += length;
+                }
+
+            } else {
+                originv_huge[k].iov_base = originv[j].iov_base;
+                originv_huge[k].iov_len = originv[j].iov_len;
+                k++;
+            }
+        }
+    }
+
+    if (huge && k > omax) {
+        MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
+        MPL_free(originv_huge);
+        goto pack;
+    }
+
+    if (huge) {
+        MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
+        MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = originv_huge;
+        originv = &(MPIDI_OFI_REQUEST(sreq, noncontig.nopack[cur_o]));
+        oout = k;
+    }
+
+    MPIDI_OFI_ASSERT_IOVEC_ALIGN(originv);
+    msg.msg_iov = originv;
+    msg.desc = NULL;
+    msg.iov_count = oout;
+    msg.tag = match_bits;
+    msg.ignore = 0ULL;
+    msg.context = (void *) &(MPIDI_OFI_REQUEST(sreq, context));
+    msg.data = MPIDI_OFI_ENABLE_DATA ? comm->rank : 0;
+    msg.addr = MPIDI_OFI_comm_to_phys(comm, rank);
+
+    MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_Global.ctx[0].tx, &msg, flags), tsendv,
+                         MPIDI_OFI_CALL_LOCK);
+
+fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND_IOV);
+    return mpi_errno;
+
+pack:
+    mpi_errno = MPIDI_OFI_SEND_NEEDS_PACK;
+    goto fn_exit;
+
+fn_fail:
+    goto fn_exit;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_OFI_send_normal
 #undef FCNAME
@@ -96,9 +244,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     MPI_Aint last;
     char *send_buf;
     uint64_t match_bits;
-
-    struct iovec *originv = NULL, *originv_huge = NULL;
-    size_t countp = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
@@ -135,122 +280,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     send_buf = (char *) buf + dt_true_lb;
 
     if (!dt_contig) {
-        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK) {
-            size_t omax = MPIDI_Global.tx_iov_limit;
-
-            countp = MPIDI_OFI_count_iov(count, MPIDI_OFI_REQUEST(sreq, datatype), INT64_MAX);
-            size_t o_size = sizeof(struct iovec);
-            size_t cur_o = 0;
-            struct fi_msg_tagged msg;
-            uint64_t flags;
-            unsigned map_size;
-            int num_contig, size, j = 0, k = 0, huge = 0, length = 0;
-            size_t oout = 0;
-            size_t l = 0;
-            size_t countp_huge = 0;
-            MPIR_Segment seg;
-            DLOOP_Offset last_byte = dt_ptr->size * count;
-            size_t iov_align = MPL_MAX(MPIDI_OFI_IOVEC_ALIGN, sizeof(void *));
-
-            /* If the number of iovecs is greater than the supported hardware limit (to transfer in a single send),
-             *  fallback to the pack path */
-            if (countp > omax) {
-                goto pack;
-            }
-
-            flags = FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0);
-            MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_NOPACK;
-
-            map_size = dt_ptr->max_contig_blocks * count + 1;
-            num_contig = map_size;  /* map_size is the maximum number of iovecs that can be generated */
-
-            size = o_size*num_contig + sizeof(*(MPIDI_OFI_REQUEST(sreq, noncontig.nopack)));
-
-            MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = MPL_aligned_alloc(iov_align, size, MPL_MEM_BUFFER);
-            memset(MPIDI_OFI_REQUEST(sreq, noncontig.nopack), 0, size);
-
-            MPIR_Segment_init(buf, count, datatype, &seg, 0);
-            MPIR_Segment_pack_vector(&seg, 0, &last_byte, MPIDI_OFI_REQUEST(sreq, noncontig.nopack), &num_contig);
-
-            originv = &(MPIDI_OFI_REQUEST(sreq, noncontig.nopack[cur_o]));
-            oout = num_contig;  /* num_contig is the actual number of iovecs returned by the Segment_pack_vector function */
-
-            if (oout > omax) {
-                MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
-                goto pack;
-            }
-
-            /* check if the length of any iovec in the current iovec array exceeds the huge message threshold
-             * and calculate the total number of iovecs */
-            for (j = 0; j < num_contig; j++) {
-                if (originv[j].iov_len > MPIDI_Global.max_send) {
-                    huge = 1;
-                    countp_huge += originv[j].iov_len / MPIDI_Global.max_send;
-                    if (originv[j].iov_len % MPIDI_Global.max_send) {
-                        countp_huge++;
-                    }
-                } else {
-                    countp_huge++;
-                }
-            }
-
-            if (countp_huge > omax && huge) {
-                MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
-                goto pack;
-            }
-
-            if (countp_huge >= 1 && huge) {
-                originv_huge = MPL_aligned_alloc(iov_align, sizeof(struct iovec) * countp_huge, MPL_MEM_BUFFER);
-
-                for (j=0; j<num_contig; j++) {
-                    l = 0;
-                    if (originv[j].iov_len > MPIDI_Global.max_send) {
-                        while (l < originv[j].iov_len) {
-                            length = originv[j].iov_len - l;
-                            if (length > MPIDI_Global.max_send)
-                                length = MPIDI_Global.max_send;
-                            originv_huge[k].iov_base = (char *) originv[j].iov_base + l;
-                            originv_huge[k].iov_len = length;
-                            k++;
-                            l += length;
-                        }
-
-                    } else {
-                        originv_huge[k].iov_base = originv[j].iov_base;
-                        originv_huge[k].iov_len = originv[j].iov_len;
-                        k++;
-                    }
-                }
-            }
-
-            if (huge && k > omax) {
-                MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
-                MPL_free(originv_huge);
-                goto pack;
-            }
-
-            if (huge) {
-                MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
-                MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = originv_huge;
-                originv = &(MPIDI_OFI_REQUEST(sreq, noncontig.nopack[cur_o]));
-                oout = k;
-            }
-
-            MPIDI_OFI_ASSERT_IOVEC_ALIGN(originv);
-            msg.msg_iov = originv;
-            msg.desc = NULL;
-            msg.iov_count = oout;
-            msg.tag = match_bits;
-            msg.ignore = 0ULL;
-            msg.context = (void *) &(MPIDI_OFI_REQUEST(sreq, context));
-            msg.data = MPIDI_OFI_ENABLE_DATA ? comm->rank : 0;
-            msg.addr = MPIDI_OFI_comm_to_phys(comm, rank);
-
-            MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_Global.ctx[0].tx, &msg, flags), tsendv,
-                                                     MPIDI_OFI_CALL_LOCK);
-            goto fn_exit;
+        if (MPIDI_OFI_ENABLE_PT2PT_NOPACK && data_sz <= MPIDI_Global.max_send) {
+            mpi_errno = MPIDI_OFI_send_iov(buf, count, rank, match_bits, comm, sreq, dt_ptr);
+            if (mpi_errno == MPI_SUCCESS) /* Send posted using iov */
+                goto fn_exit;
+            else if (mpi_errno != MPIDI_OFI_SEND_NEEDS_PACK)
+                goto fn_fail;
+            /* send_iov returned MPIDI_OFI_SEND_NEEDS_PACK -- indicating
+               that there was no error but it couldn't initiate the send
+               due to iov limitations. We need to fall back to the pack
+               path below. Simply falling through. */
+            mpi_errno = MPI_SUCCESS; /* Reset error code */
         }
-  pack:
+        /* Pack */
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_PACK;
 
         MPIDI_OFI_REQUEST(sreq, noncontig.pack) =
