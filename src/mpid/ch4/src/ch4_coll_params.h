@@ -4,12 +4,12 @@
 #include "mpichconf.h"
 
 typedef enum {
-    MPIDI_CH4_Barrier__composition_alpha_id,
-    MPIDI_CH4_Barrier__composition_beta_id,
+    MPIDI_CH4_Barrier__intra__composition_alpha_id,
+    MPIDI_CH4_Barrier__intra__composition_beta_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Barrier__composition_gamma_id,
+    MPIDI_CH4_Barrier__intra__composition_gamma_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
-    MPIDI_CH4_Barrier__intercomm_id,
+    MPIDI_CH4_Barrier__inter__composition_alpha_id,
 } MPIDI_CH4_Barrier_id_t;
 
 typedef union {
@@ -29,13 +29,13 @@ typedef union {
 } MPIDI_CH4_Barrier_params_t;
 
 typedef enum {
-    MPIDI_CH4_Bcast__composition_alpha_id,
-    MPIDI_CH4_Bcast__composition_beta_id,
-    MPIDI_CH4_Bcast__composition_gamma_id,
+    MPIDI_CH4_Bcast__intra__composition_alpha_id,
+    MPIDI_CH4_Bcast__intra__composition_beta_id,
+    MPIDI_CH4_Bcast__intra__composition_gamma_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Bcast__composition_delta_id,
+    MPIDI_CH4_Bcast__intra__composition_delta_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
-    MPIDI_CH4_Bcast__intercomm_id,
+    MPIDI_CH4_Bcast__inter__composition_alpha_id,
 } MPIDI_CH4_Bcast_id_t;
 
 typedef union {
@@ -59,12 +59,12 @@ typedef union {
 } MPIDI_CH4_Bcast_params_t;
 
 typedef enum {
-    MPIDI_CH4_Reduce__composition_alpha_id,
-    MPIDI_CH4_Reduce__composition_beta_id,
+    MPIDI_CH4_Reduce__intra__composition_alpha_id,
+    MPIDI_CH4_Reduce__intra__composition_beta_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Reduce__composition_gamma_id,
+    MPIDI_CH4_Reduce__intra__composition_gamma_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
-    MPIDI_CH4_Reduce__intercomm_id,
+    MPIDI_CH4_Reduce__inter__composition_alpha_id,
 } MPIDI_CH4_Reduce_id_t;
 
 typedef union {
@@ -83,12 +83,12 @@ typedef union {
 } MPIDI_CH4_Reduce_params_t;
 
 typedef enum {
-    MPIDI_CH4_Allreduce__composition_alpha_id,
-    MPIDI_CH4_Allreduce__composition_beta_id,
+    MPIDI_CH4_Allreduce__intra__composition_alpha_id,
+    MPIDI_CH4_Allreduce__intra__composition_beta_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Allreduce__composition_gamma_id,
+    MPIDI_CH4_Allreduce__intra__composition_gamma_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
-    MPIDI_CH4_Allreduce__intercomm_id,
+    MPIDI_CH4_Allreduce__inter__composition_alpha_id,
 } MPIDI_CH4_Allreduce_id_t;
 
 typedef union {
@@ -108,11 +108,11 @@ typedef union {
 } MPIDI_CH4_Allreduce_params_t;
 
 typedef enum {
-    MPIDI_CH4_Alltoall__composition_alpha_id,
+    MPIDI_CH4_Alltoall__intra__composition_alpha_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Alltoall__composition_beta_id,
+    MPIDI_CH4_Alltoall__intra__composition_beta_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
-    MPIDI_CH4_Alltoall__intercomm_id
+    MPIDI_CH4_Alltoall__inter__composition_alpha_id
 } MPIDI_CH4_Alltoall_id_t;
 
 typedef union {
@@ -127,11 +127,11 @@ typedef union {
 } MPIDI_CH4_Alltoall_params_t;
 
 typedef enum {
-    MPIDI_CH4_Alltoallv__composition_alpha_id,
+    MPIDI_CH4_Alltoallv__intra__composition_alpha_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Alltoallv__composition_beta_id,
+    MPIDI_CH4_Alltoallv__intra__composition_beta_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
-    MPIDI_CH4_Alltoallv__intercomm_id
+    MPIDI_CH4_Alltoallv__inter__composition_alpha_id
 } MPIDI_CH4_Alltoallv_id_t;
 
 typedef union {
@@ -146,11 +146,11 @@ typedef union {
 } MPIDI_CH4_Alltoallv_params_t;
 
 typedef enum {
-    MPIDI_CH4_Alltoallw__composition_alpha_id,
+    MPIDI_CH4_Alltoallw__intra__composition_alpha_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Alltoallw__composition_beta_id,
+    MPIDI_CH4_Alltoallw__intra__composition_beta_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
-    MPIDI_CH4_Alltoallw__intercomm_id
+    MPIDI_CH4_Alltoallw__inter__composition_alpha_id
 } MPIDI_CH4_Alltoallw_id_t;
 
 typedef union {
@@ -165,11 +165,11 @@ typedef union {
 } MPIDI_CH4_Alltoallw_params_t;
 
 typedef enum {
-    MPIDI_CH4_Allgather__composition_alpha_id,
+    MPIDI_CH4_Allgather__intra__composition_alpha_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Allgather__composition_beta_id,
+    MPIDI_CH4_Allgather__intra__composition_beta_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
-    MPIDI_CH4_Allgather__intercomm_id
+    MPIDI_CH4_Allgather__inter__composition_alpha_id
 } MPIDI_CH4_Allgather_id_t;
 
 typedef union {
@@ -184,11 +184,11 @@ typedef union {
 } MPIDI_CH4_Allgather_params_t;
 
 typedef enum {
-    MPIDI_CH4_Allgatherv__composition_alpha_id,
+    MPIDI_CH4_Allgatherv__intra__composition_alpha_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Allgatherv__composition_beta_id,
+    MPIDI_CH4_Allgatherv__intra__composition_beta_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
-    MPIDI_CH4_Allgatherv__intercomm_id
+    MPIDI_CH4_Allgatherv__inter__composition_alpha_id
 } MPIDI_CH4_allgatherv_id_t;
 
 typedef union {
@@ -203,11 +203,11 @@ typedef union {
 } MPIDI_CH4_Allgatherv_params_t;
 
 typedef enum {
-    MPIDI_CH4_Gather__composition_alpha_id,
+    MPIDI_CH4_Gather__intra__composition_alpha_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Gather__composition_beta_id,
+    MPIDI_CH4_Gather__intra__composition_beta_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
-    MPIDI_CH4_Gather__intercomm_id
+    MPIDI_CH4_Gather__inter__composition_alpha_id
 } MPIDI_CH4_Gather_id_t;
 
 typedef union {
@@ -222,11 +222,11 @@ typedef union {
 } MPIDI_CH4_Gather_params_t;
 
 typedef enum {
-    MPIDI_CH4_Gatherv__composition_alpha_id,
+    MPIDI_CH4_Gatherv__intra__composition_alpha_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Gatherv__composition_beta_id,
+    MPIDI_CH4_Gatherv__intra__composition_beta_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
-    MPIDI_CH4_Gatherv__intercomm_id
+    MPIDI_CH4_Gatherv__inter__composition_alpha_id
 } MPIDI_CH4_Gatherv_id_t;
 
 typedef union {
@@ -241,11 +241,11 @@ typedef union {
 } MPIDI_CH4_Gatherv_params_t;
 
 typedef enum {
-    MPIDI_CH4_Scatter__composition_alpha_id,
+    MPIDI_CH4_Scatter__intra__composition_alpha_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Scatter__composition_beta_id,
+    MPIDI_CH4_Scatter__intra__composition_beta_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
-    MPIDI_CH4_Scatter__intercomm_id
+    MPIDI_CH4_Scatter__inter__composition_alpha_id
 } MPIDI_CH4_Scatter_id_t;
 
 typedef union {
@@ -260,11 +260,11 @@ typedef union {
 } MPIDI_CH4_Scatter_params_t;
 
 typedef enum {
-    MPIDI_CH4_Scatterv__composition_alpha_id,
+    MPIDI_CH4_Scatterv__intra__composition_alpha_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Scatterv__composition_beta_id,
+    MPIDI_CH4_Scatterv__intra__composition_beta_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
-    MPIDI_CH4_Scatterv__intercomm_id
+    MPIDI_CH4_Scatterv__inter__composition_alpha_id
 } MPIDI_CH4_Scatterv_id_t;
 
 typedef union {
@@ -279,11 +279,11 @@ typedef union {
 } MPIDI_CH4_Scatterv_params_t;
 
 typedef enum {
-    MPIDI_CH4_Reduce_scatter__composition_alpha_id,
+    MPIDI_CH4_Reduce_scatter__intra__composition_alpha_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Reduce_scatter__composition_beta_id,
+    MPIDI_CH4_Reduce_scatter__intra__composition_beta_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
-    MPIDI_CH4_Reduce_scatter__intercomm_id
+    MPIDI_CH4_Reduce_scatter__inter__composition_alpha_id
 } MPIDI_CH4_Reduce_scatter__id_t;
 
 typedef union {
@@ -298,11 +298,11 @@ typedef union {
 } MPIDI_CH4_Reduce_scatter_params_t;
 
 typedef enum {
-    MPIDI_CH4_Reduce_scatter_block__composition_alpha_id,
+    MPIDI_CH4_Reduce_scatter_block__intra__composition_alpha_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Reduce_scatter_block__composition_beta_id,
+    MPIDI_CH4_Reduce_scatter_block__intra__composition_beta_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
-    MPIDI_CH4_Reduce_scatter_block__intercomm_id
+    MPIDI_CH4_Reduce_scatter_block__inter__composition_alpha_id
 } MPIDI_CH4_Reduce_scatter_block__id_t;
 
 typedef union {
@@ -317,10 +317,10 @@ typedef union {
 } MPIDI_CH4_Reduce_scatter_block_params_t;
 
 typedef enum {
-    MPIDI_CH4_Scan__composition_alpha_id,
-    MPIDI_CH4_Scan__composition_beta_id,
+    MPIDI_CH4_Scan__intra__composition_alpha_id,
+    MPIDI_CH4_Scan__intra__composition_beta_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Scan__composition_gamma_id,
+    MPIDI_CH4_Scan__intra__composition_gamma_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
 } MPIDI_CH4_Scan_id_t;
 
@@ -341,9 +341,9 @@ typedef union {
 } MPIDI_CH4_Scan_params_t;
 
 typedef enum {
-    MPIDI_CH4_Exscan__composition_alpha_id,
+    MPIDI_CH4_Exscan__intra__composition_alpha_id,
 #ifdef MPIDI_BUILD_CH4_SHM
-    MPIDI_CH4_Exscan__composition_beta_id,
+    MPIDI_CH4_Exscan__intra__composition_beta_id,
 #endif                          /* MPIDI_BUILD_CH4_SHM */
 } MPIDI_CH4_Exscan_id_t;
 

@@ -25,15 +25,15 @@ MPL_STATIC_INLINE_PREFIX
                                                            MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Barrier__intercomm_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Barrier__inter__composition_alpha_cnt;
     }
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BARRIER &&
         MPIR_Comm_is_node_aware(comm)) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Barrier__composition_alpha_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Barrier__intra__composition_alpha_cnt;
     }
 
-    return (MPIDI_coll_algo_container_t *) & CH4_Barrier__composition_beta_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Barrier__intra__composition_beta_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -49,7 +49,7 @@ MPL_STATIC_INLINE_PREFIX
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Bcast__intercomm_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Bcast__inter__composition_alpha_cnt;
     }
 
     nbytes = MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE ? type_size * count : 0;
@@ -57,14 +57,14 @@ MPL_STATIC_INLINE_PREFIX
         nbytes <= MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE && MPIR_Comm_is_node_aware(comm)) {
         if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
             (comm->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
-            return (MPIDI_coll_algo_container_t *) & CH4_Bcast__composition_alpha_cnt;
+            return (MPIDI_coll_algo_container_t *) & CH4_Bcast__intra__composition_alpha_cnt;
         } else {
             if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm->local_size, NULL)) {
-                return (MPIDI_coll_algo_container_t *) & CH4_Bcast__composition_beta_cnt;
+                return (MPIDI_coll_algo_container_t *) & CH4_Bcast__intra__composition_beta_cnt;
             }
         }
     }
-    return (MPIDI_coll_algo_container_t *) & CH4_Bcast__composition_gamma_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Bcast__intra__composition_gamma_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -83,7 +83,7 @@ MPL_STATIC_INLINE_PREFIX
 
     is_commutative = MPIR_Op_is_commutative(op);
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Allreduce__intercomm_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Allreduce__inter__composition_alpha_cnt;
     }
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_ALLREDUCE) {
@@ -92,10 +92,10 @@ MPL_STATIC_INLINE_PREFIX
         nbytes = MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE ? type_size * count : 0;
         if (MPIR_Comm_is_node_aware(comm) && is_commutative &&
             nbytes <= MPIR_CVAR_MAX_SMP_ALLREDUCE_MSG_SIZE) {
-            return (MPIDI_coll_algo_container_t *) & CH4_Allreduce__composition_alpha_cnt;
+            return (MPIDI_coll_algo_container_t *) & CH4_Allreduce__intra__composition_alpha_cnt;
         }
     }
-    return (MPIDI_coll_algo_container_t *) & CH4_Allreduce__composition_beta_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Allreduce__intra__composition_beta_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -113,7 +113,7 @@ MPL_STATIC_INLINE_PREFIX
     MPIR_Op *op_ptr = NULL;
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Reduce__intercomm_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Reduce__inter__composition_alpha_cnt;
     }
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_REDUCE) {
@@ -124,10 +124,10 @@ MPL_STATIC_INLINE_PREFIX
         nbytes = MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE ? type_size * count : 0;
         if (MPIR_Comm_is_node_aware(comm) && is_commutative &&
             nbytes <= MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE) {
-            return (MPIDI_coll_algo_container_t *) & CH4_Reduce__composition_alpha_cnt;
+            return (MPIDI_coll_algo_container_t *) & CH4_Reduce__intra__composition_alpha_cnt;
         }
     }
-    return (MPIDI_coll_algo_container_t *) & CH4_Reduce__composition_beta_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Reduce__intra__composition_beta_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -142,10 +142,10 @@ MPL_STATIC_INLINE_PREFIX
                                                           MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Gather__intercomm_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Gather__inter__composition_alpha_cnt;
     }
 
-    return (MPIDI_coll_algo_container_t *) & CH4_Gather__composition_alpha_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Gather__intra__composition_alpha_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -161,10 +161,10 @@ MPL_STATIC_INLINE_PREFIX
                                                            MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Gatherv__intercomm_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Gatherv__inter__composition_alpha_cnt;
     }
 
-    return (MPIDI_coll_algo_container_t *) & CH4_Gatherv__composition_alpha_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Gatherv__intra__composition_alpha_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -180,10 +180,10 @@ MPL_STATIC_INLINE_PREFIX
 {
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Scatter__intercomm_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Scatter__inter__composition_alpha_cnt;
     }
 
-    return (MPIDI_coll_algo_container_t *) & CH4_Scatter__composition_alpha_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Scatter__intra__composition_alpha_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -200,10 +200,10 @@ MPL_STATIC_INLINE_PREFIX
 {
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Scatterv__intercomm_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Scatterv__inter__composition_alpha_cnt;
     }
 
-    return (MPIDI_coll_algo_container_t *) & CH4_Scatterv__composition_alpha_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Scatterv__intra__composition_alpha_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -217,10 +217,10 @@ MPL_STATIC_INLINE_PREFIX
                                                             MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Alltoall__intercomm_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Alltoall__inter__composition_alpha_cnt;
     }
 
-    return (MPIDI_coll_algo_container_t *) & CH4_Alltoall__composition_alpha_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Alltoall__intra__composition_alpha_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -235,10 +235,10 @@ MPL_STATIC_INLINE_PREFIX
                                                              MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Alltoallv__intercomm_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Alltoallv__inter__composition_alpha_cnt;
     }
 
-    return (MPIDI_coll_algo_container_t *) & CH4_Alltoallv__composition_alpha_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Alltoallv__intra__composition_alpha_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -253,10 +253,10 @@ MPL_STATIC_INLINE_PREFIX
                                                              MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Alltoallw__intercomm_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Alltoallw__inter__composition_alpha_cnt;
     }
 
-    return (MPIDI_coll_algo_container_t *) & CH4_Alltoallw__composition_alpha_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Alltoallw__intra__composition_alpha_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -267,10 +267,10 @@ MPL_STATIC_INLINE_PREFIX
                                                              MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Allgather__intercomm_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Allgather__inter__composition_alpha_cnt;
     }
 
-    return (MPIDI_coll_algo_container_t *) & CH4_Allgather__composition_alpha_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Allgather__intra__composition_alpha_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -283,10 +283,10 @@ MPL_STATIC_INLINE_PREFIX
                                                               MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Allgatherv__intercomm_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Allgatherv__inter__composition_alpha_cnt;
     }
 
-    return (MPIDI_coll_algo_container_t *) & CH4_Allgatherv__composition_alpha_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Allgatherv__intra__composition_alpha_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -299,10 +299,10 @@ MPL_STATIC_INLINE_PREFIX
 {
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Reduce_scatter__intercomm_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Reduce_scatter__inter__composition_alpha_cnt;
     }
 
-    return (MPIDI_coll_algo_container_t *) & CH4_Reduce_scatter__composition_alpha_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Reduce_scatter__intra__composition_alpha_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -315,10 +315,11 @@ MPL_STATIC_INLINE_PREFIX
 {
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Reduce_scatter_block__intercomm_cnt;
+        return (MPIDI_coll_algo_container_t *) &
+            CH4_Reduce_scatter_block__inter__composition_alpha_cnt;
     }
 
-    return (MPIDI_coll_algo_container_t *) & CH4_Reduce_scatter_block__composition_alpha_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Reduce_scatter_block__intra__composition_alpha_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -330,10 +331,10 @@ MPL_STATIC_INLINE_PREFIX
                                                         MPIR_Errflag_t * errflag)
 {
     if (MPII_Comm_is_node_consecutive(comm)) {
-        return (MPIDI_coll_algo_container_t *) & CH4_Scan__composition_alpha_cnt;
+        return (MPIDI_coll_algo_container_t *) & CH4_Scan__intra__composition_alpha_cnt;
     }
 
-    return (MPIDI_coll_algo_container_t *) & CH4_Scan__composition_beta_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Scan__intra__composition_beta_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -344,7 +345,7 @@ MPL_STATIC_INLINE_PREFIX
                                                           MPI_Op op, MPIR_Comm * comm,
                                                           MPIR_Errflag_t * errflag)
 {
-    return (MPIDI_coll_algo_container_t *) & CH4_Exscan__composition_alpha_cnt;
+    return (MPIDI_coll_algo_container_t *) & CH4_Exscan__intra__composition_alpha_cnt;
 }
 
 #endif /* CH4_COLL_SELECT_H_INCLUDED */
