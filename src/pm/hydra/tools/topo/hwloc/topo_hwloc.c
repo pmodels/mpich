@@ -424,9 +424,6 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const 
     else if (!strncmp(membind, "interleave:", strlen("interleave:"))) {
         HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_INTERLEAVE;
     }
-    else if (!strncmp(membind, "replicate:", strlen("replicate:"))) {
-        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_REPLICATE;
-    }
     else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "unrecognized membind policy \"%s\"\n", membind);
