@@ -35,12 +35,12 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scatter__intra__binomial(const void *sendbuf,
-                                int sendcount,
-                                MPI_Datatype sendtype,
-                                void *recvbuf,
-                                int recvcount,
-                                MPI_Datatype recvtype,
-                                int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                  int sendcount,
+                                  MPI_Datatype sendtype,
+                                  void *recvbuf,
+                                  int recvcount,
+                                  MPI_Datatype recvtype,
+                                  int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     MPI_Status status;
     MPI_Aint extent = 0;

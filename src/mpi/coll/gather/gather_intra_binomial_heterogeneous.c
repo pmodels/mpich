@@ -25,16 +25,17 @@
 
 #ifdef MPID_HAS_HETERO
 #undef FUNCNAME
-#define FUNCNAME MPIR_Gather__intra__heterogeneous
+#define FUNCNAME MPIR_Gather__intra__binomial_heterogeneous
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gather__intra__heterogeneous(const void *sendbuf,
-                                    int sendcount,
-                                    MPI_Datatype sendtype,
-                                    void *recvbuf,
-                                    int recvcount,
-                                    MPI_Datatype recvtype,
-                                    int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+int MPIR_Gather__intra__binomial_heterogeneous(const void *sendbuf,
+                                               int sendcount,
+                                               MPI_Datatype sendtype,
+                                               void *recvbuf,
+                                               int recvcount,
+                                               MPI_Datatype recvtype,
+                                               int root, MPIR_Comm * comm_ptr,
+                                               MPIR_Errflag_t * errflag)
 {
     int comm_size = 0;
     int rank = -1;
@@ -54,7 +55,7 @@ int MPIR_Gather__intra__heterogeneous(const void *sendbuf,
     MPI_Aint tmp_buf_size = 0;
     void *tmp_buf = NULL;
     MPI_Status status;
-    MPI_Aint extent = 0; /* Datatype extent */
+    MPI_Aint extent = 0;        /* Datatype extent */
     int blocks[2];
     int displs[2];
     MPI_Aint struct_displs[2];

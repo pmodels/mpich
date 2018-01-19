@@ -29,12 +29,12 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Gather__intra__binomial_indexed(const void *sendbuf,
-                                       int sendcount,
-                                       MPI_Datatype sendtype,
-                                       void *recvbuf,
-                                       int recvcount,
-                                       MPI_Datatype recvtype,
-                                       int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                         int sendcount,
+                                         MPI_Datatype sendtype,
+                                         void *recvbuf,
+                                         int recvcount,
+                                         MPI_Datatype recvtype,
+                                         int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int comm_size = 0;
     int rank = -1;
@@ -54,7 +54,7 @@ int MPIR_Gather__intra__binomial_indexed(const void *sendbuf,
     MPI_Aint tmp_buf_size = 0;
     void *tmp_buf = NULL;
     MPI_Status status;
-    MPI_Aint extent = 0; /* Datatype extent */
+    MPI_Aint extent = 0;        /* Datatype extent */
     int blocks[2];
     int displs[2];
     MPI_Aint struct_displs[2];
@@ -148,8 +148,8 @@ int MPIR_Gather__intra__binomial_indexed(const void *sendbuf,
                          * should cover the case where the root is
                          * rank 0. */
                         mpi_errno = MPIC_Recv(((char *) recvbuf +
-                                              (((rank + mask) % comm_size) * (MPI_Aint) recvcount *
-                                              extent)), (MPI_Aint) recvblks * recvcount, recvtype,
+                                               (((rank + mask) % comm_size) * (MPI_Aint) recvcount *
+                                                extent)), (MPI_Aint) recvblks * recvcount, recvtype,
                                               src, MPIR_GATHER_TAG, comm_ptr, &status, errflag);
                         if (mpi_errno) {
                             /* for communication errors, just record the error but continue */
@@ -184,7 +184,7 @@ int MPIR_Gather__intra__binomial_indexed(const void *sendbuf,
 
                         MPIR_Type_free_impl(&tmp_type);
                     }
-                } else { /* Intermediate nodes store in temporary buffer */
+                } else {        /* Intermediate nodes store in temporary buffer */
                     MPI_Aint offset;
 
                     /* Estimate the amount of data that is going to come in */

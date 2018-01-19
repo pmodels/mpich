@@ -107,8 +107,6 @@ int MPIR_Gather__intra__auto(const void *sendbuf, int sendcount, MPI_Datatype se
                       int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
                       MPIR_Errflag_t *errflag)
 {
-    int comm_size = 0;
-    int rank = -1;
     int mpi_errno = MPI_SUCCESS;
     
     mpi_errno = MPIR_Gather__intra__binomial(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);

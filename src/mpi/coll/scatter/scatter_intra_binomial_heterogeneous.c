@@ -10,7 +10,7 @@
 
 /* This is the machine-independent implementation of scatter. The algorithm is:
 
-   Algorithm: Binomial
+   Algorithm: MPI_Scatter
 
    We use a binomial tree algorithm for both short and
    long messages. At nodes other than leaf nodes we need to allocate
@@ -31,16 +31,17 @@
 
 #ifdef MPID_HAS_HETERO
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scatter__intra__heterogeneous
+#define FUNCNAME MPIR_Scatter__intra__binomial_heterogeneous
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scatter__intra__heterogeneous(const void *sendbuf,
-                                     int sendcount,
-                                     MPI_Datatype sendtype,
-                                     void *recvbuf,
-                                     int recvcount,
-                                     MPI_Datatype recvtype,
-                                     int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+int MPIR_Scatter__intra__binomial_heterogeneous(const void *sendbuf,
+                                                int sendcount,
+                                                MPI_Datatype sendtype,
+                                                void *recvbuf,
+                                                int recvcount,
+                                                MPI_Datatype recvtype,
+                                                int root, MPIR_Comm * comm_ptr,
+                                                MPIR_Errflag_t * errflag)
 {
     MPI_Status status;
     MPI_Aint extent = 0;

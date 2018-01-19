@@ -6,7 +6,7 @@ mpi_sources +=                     		\
 	src/mpi/coll/scatter/scatter.c
 
 mpi_core_sources +=									\
-	src/mpi/coll/scatter/scatter_intra_heterogeneous.c			\
+	src/mpi/coll/scatter/scatter_intra_binomial_heterogeneous.c			\
 	src/mpi/coll/scatter/scatter_nb.c			\
 	src/mpi/coll/scatter/scatter_intra_binomial.c			\
 	src/mpi/coll/scatter/scatter_inter_linear.c \

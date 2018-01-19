@@ -19,7 +19,7 @@
  * (i - 2^k + p) % p.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Barrier__intra__recursive_doubling
+#define FUNCNAME MPIR_Barrier__intra__dissemination
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Barrier__intra__dissemination(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)

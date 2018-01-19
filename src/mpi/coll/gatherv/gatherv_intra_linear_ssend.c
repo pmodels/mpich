@@ -24,13 +24,13 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Gatherv__intra__linear_ssend(const void *sendbuf,
-                                    int sendcount,
-                                    MPI_Datatype sendtype,
-                                    void *recvbuf,
-                                    const int *recvcounts,
-                                    const int *displs,
-                                    MPI_Datatype recvtype,
-                                    int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                      int sendcount,
+                                      MPI_Datatype sendtype,
+                                      void *recvbuf,
+                                      const int *recvcounts,
+                                      const int *displs,
+                                      MPI_Datatype recvtype,
+                                      int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int comm_size = 0;
     int rank = -1;

@@ -24,13 +24,13 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scatterv__intra__linear(const void *sendbuf,
-                               const int *sendcounts,
-                               const int *displs,
-                               MPI_Datatype sendtype,
-                               void *recvbuf,
-                               int recvcount,
-                               MPI_Datatype recvtype,
-                               int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                 const int *sendcounts,
+                                 const int *displs,
+                                 MPI_Datatype sendtype,
+                                 void *recvbuf,
+                                 int recvcount,
+                                 MPI_Datatype recvtype,
+                                 int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int rank = -1;
     int comm_size = 0;
@@ -106,8 +106,7 @@ int MPIR_Scatterv__intra__linear(const void *sendbuf,
             }
         }
         /* --END ERROR HANDLING-- */
-    }
-    else if (root != MPI_PROC_NULL) { /* non-root nodes */
+    } else if (root != MPI_PROC_NULL) { /* non-root nodes */
         if (recvcount) {
             mpi_errno = MPIC_Recv(recvbuf, recvcount, recvtype, root,
                                   MPIR_SCATTERV_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
