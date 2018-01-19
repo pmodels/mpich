@@ -14,7 +14,7 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_intra_pairwise
+#define FUNCNAME MPIR_Reduce_scatter_block__intra__pairwise
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
@@ -26,7 +26,7 @@
  *
  * Cost = (p-1).alpha + n.((p-1)/p).beta + n.((p-1)/p).gamma
  */
-int MPIR_Reduce_scatter_block_intra_pairwise (
+int MPIR_Reduce_scatter_block__intra__pairwise (
     const void *sendbuf, 
     void *recvbuf, 
     int recvcount, 

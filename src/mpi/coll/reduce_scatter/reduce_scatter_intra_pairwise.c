@@ -8,7 +8,7 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_intra_pairwise
+#define FUNCNAME MPIR_Reduce_scatter__intra__pairwise
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
@@ -19,7 +19,7 @@
  * process sends n/p amount of data to (rank+i) and receives n/p amount of data
  * from (rank-i).
  */
-int MPIR_Reduce_scatter_intra_pairwise(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Reduce_scatter__intra__pairwise(const void *sendbuf, void *recvbuf, const int recvcounts[],
                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int   rank, comm_size, i;

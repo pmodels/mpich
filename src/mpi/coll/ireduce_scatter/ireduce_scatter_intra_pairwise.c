@@ -14,10 +14,10 @@
  * from (rank-i).
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_sched_intra_pairwise
+#define FUNCNAME MPIR_Ireduce_scatter_sched__intra__pairwise
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_sched_intra_pairwise(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Ireduce_scatter_sched__intra__pairwise(const void *sendbuf, void *recvbuf, const int recvcounts[],
                                   MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                                   MPIR_Sched_t s)
 {

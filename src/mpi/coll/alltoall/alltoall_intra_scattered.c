@@ -30,10 +30,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoall_intra_scattered
+#define FUNCNAME MPIR_Alltoall__intra__scattered
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoall_intra_scattered(
+int MPIR_Alltoall__intra__scattered(
     const void *sendbuf,
     int sendcount, 
     MPI_Datatype sendtype, 

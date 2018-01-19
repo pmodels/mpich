@@ -14,10 +14,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_sched_inter_remote_reduce_local_scatterv
+#define FUNCNAME MPIR_Ireduce_scatter_sched__inter__remote_reduce_local_scatterv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_sched_inter_remote_reduce_local_scatterv(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Ireduce_scatter_sched__inter__remote_reduce_local_scatterv(const void *sendbuf, void *recvbuf, const int recvcounts[],
                                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                                              MPIR_Sched_t s)
 {

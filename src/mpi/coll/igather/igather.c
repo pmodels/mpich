@@ -74,14 +74,14 @@ int MPI_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void 
 #define MPI_Igather PMPI_Igather
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Igather_sched_intra_auto
+#define FUNCNAME MPIR_Igather_sched__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Igather_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Igather_sched__intra__auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Igather_sched_intra_binomial(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+    mpi_errno = MPIR_Igather_sched__intra__binomial(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
@@ -91,10 +91,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Igather_sched_inter_auto
+#define FUNCNAME MPIR_Igather_sched__inter__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Igather_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Igather_sched__inter__auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint local_size, remote_size;
@@ -119,9 +119,9 @@ int MPIR_Igather_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Dataty
     }
 
     if (nbytes < MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE) {
-        mpi_errno = MPIR_Igather_sched_inter_short(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+        mpi_errno = MPIR_Igather_sched__inter__short(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Igather_sched_inter_long(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+        mpi_errno = MPIR_Igather_sched__inter__long(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
     }
 
 fn_exit:
@@ -144,13 +144,13 @@ int MPIR_Igather_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sen
         /* intracommunicator */
         switch (MPIR_Igather_intra_algo_choice) {
             case MPIR_IGATHER_INTRA_ALGO_BINOMIAL:
-                mpi_errno = MPIR_Igather_sched_intra_binomial(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Igather_sched__intra__binomial(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, root, comm_ptr, s);
                 break;
            case MPIR_IGATHER_INTRA_ALGO_AUTO:
                MPL_FALLTHROUGH;
            default:
-                mpi_errno = MPIR_Igather_sched_intra_auto(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Igather_sched__intra__auto(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, root, comm_ptr, s);
                 break;
         }
@@ -158,17 +158,17 @@ int MPIR_Igather_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype sen
         /* intercommunicator */
         switch (MPIR_Igather_inter_algo_choice) {
             case MPIR_IGATHER_INTER_ALGO_LONG:
-                mpi_errno = MPIR_Igather_sched_inter_long(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Igather_sched__inter__long(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, root, comm_ptr, s);
                 break;
             case MPIR_IGATHER_INTER_ALGO_SHORT:
-                mpi_errno = MPIR_Igather_sched_inter_short(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Igather_sched__inter__short(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype, root, comm_ptr, s);
                 break;
             case MPIR_IGATHER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Igather_sched_inter_auto(sendbuf, sendcount, sendtype, recvbuf,
+                mpi_errno = MPIR_Igather_sched__inter__auto(sendbuf, sendcount, sendtype, recvbuf,
                             recvcount, recvtype, root, comm_ptr, s);
         }
     }

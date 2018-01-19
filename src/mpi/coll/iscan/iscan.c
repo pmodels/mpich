@@ -60,17 +60,17 @@ int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dataty
 #define MPI_Iscan PMPI_Iscan
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscan_sched_intra_auto
+#define FUNCNAME MPIR_Iscan_sched__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iscan_sched__intra__auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (comm_ptr->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT) {
-        mpi_errno = MPIR_Iscan_sched_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Iscan_sched__intra__smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Iscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Iscan_sched__intra__recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     }
 
     return mpi_errno;
@@ -87,12 +87,12 @@ int MPIR_Iscan_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Dat
 
     switch (MPIR_Iscan_intra_algo_choice) {
         case MPIR_ISCAN_INTRA_ALGO_RECURSIVE_DOUBLING:
-            mpi_errno = MPIR_Iscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+            mpi_errno = MPIR_Iscan_sched__intra__recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
             break;
         case MPIR_ISCAN_INTRA_ALGO_AUTO:
             MPL_FALLTHROUGH;
         default:
-            mpi_errno = MPIR_Iscan_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+            mpi_errno = MPIR_Iscan_sched__intra__auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
             break;
     }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

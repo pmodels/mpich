@@ -6,6 +6,8 @@ mpi_sources +=                     		\
 	src/mpi/coll/gather/gather.c
 
 mpi_core_sources +=									\
+	src/mpi/coll/gather/gather_intra_binomial_indexed.c			\
+	src/mpi/coll/gather/gather_intra_binomial_heterogeneous.c			\
 	src/mpi/coll/gather/gather_nb.c			\
 	src/mpi/coll/gather/gather_intra_binomial.c			\
 	src/mpi/coll/gather/gather_inter_linear.c \

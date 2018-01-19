@@ -20,10 +20,10 @@
  * other processes.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoall_sched_intra_brucks
+#define FUNCNAME MPIR_Ialltoall_sched__intra__brucks
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoall_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ialltoall_sched__intra__brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;

@@ -48,10 +48,10 @@
  * implement the recursive doubling algorithm here.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather
+#define FUNCNAME MPIR_Ibcast_sched__intra__scatter_recursive_doubling_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_sched__intra__scatter_recursive_doubling_allgather(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, dst;

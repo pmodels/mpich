@@ -8,7 +8,7 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_intra_recursive_halving
+#define FUNCNAME MPIR_Reduce_scatter__intra__recursive_halving
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
@@ -40,7 +40,7 @@
  *
  * Cost = (p-1).alpha + n.((p-1)/p).beta + n.((p-1)/p).gamma
  */
-int MPIR_Reduce_scatter_intra_recursive_halving (const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Reduce_scatter__intra__recursive_halving (const void *sendbuf, void *recvbuf, const int recvcounts[],
                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int   rank, comm_size, i;

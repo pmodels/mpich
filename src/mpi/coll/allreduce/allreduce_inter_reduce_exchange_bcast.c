@@ -15,10 +15,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allreduce_inter_reduce_exchange_bcast
+#define FUNCNAME MPIR_Allreduce__inter__reduce_exchange_bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allreduce_inter_reduce_exchange_bcast ( const void *sendbuf, void *recvbuf, int
+int MPIR_Allreduce__inter__reduce_exchange_bcast ( const void *sendbuf, void *recvbuf, int
         count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
         MPIR_Errflag_t *errflag )
 {

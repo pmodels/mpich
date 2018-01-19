@@ -62,10 +62,10 @@ int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 #define MPI_Scan PMPI_Scan
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scan_intra_auto
+#define FUNCNAME MPIR_Scan__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scan_intra_auto (const void *sendbuf, void *recvbuf, int count,
+int MPIR_Scan__intra__auto (const void *sendbuf, void *recvbuf, int count,
                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                      MPIR_Errflag_t *errflag)
 {
@@ -77,9 +77,9 @@ int MPIR_Scan_intra_auto (const void *sendbuf, void *recvbuf, int count,
        consecutive ranks. */
 
     if (MPII_Comm_is_node_consecutive(comm_ptr)) {
-        mpi_errno = MPIR_Scan_intra_smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+        mpi_errno = MPIR_Scan__intra__smp(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
     } else {
-        mpi_errno = MPIR_Scan_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+        mpi_errno = MPIR_Scan__intra__recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
     }
 
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -105,7 +105,7 @@ int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count,
 
     switch (MPIR_Scan_intra_algo_choice) {
         case MPIR_SCAN_INTRA_ALGO_RECURSIVE_DOUBLING:
-            mpi_errno = MPIR_Scan_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+            mpi_errno = MPIR_Scan__intra__recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
         case MPIR_SCAN_INTRA_ALGO_NB:
             mpi_errno = MPIR_Scan_nb(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
@@ -113,7 +113,7 @@ int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count,
         case MPIR_SCAN_INTRA_ALGO_AUTO:
             MPL_FALLTHROUGH;
         default:
-            mpi_errno = MPIR_Scan_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+            mpi_errno = MPIR_Scan__intra__auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
     }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

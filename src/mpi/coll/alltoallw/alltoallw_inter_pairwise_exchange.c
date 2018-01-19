@@ -22,10 +22,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoallw_inter_pairwise_exchange
+#define FUNCNAME MPIR_Alltoallw__inter__pairwise_exchange
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoallw_inter_pairwise_exchange(const void *sendbuf, const int sendcounts[], const int sdispls[],
+int MPIR_Alltoallw__inter__pairwise_exchange(const void *sendbuf, const int sendcounts[], const int sdispls[],
                                  const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                                  const int rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm *comm_ptr,
                                  MPIR_Errflag_t *errflag)

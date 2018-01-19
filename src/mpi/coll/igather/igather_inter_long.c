@@ -14,10 +14,10 @@
  * Cost: p.alpha + n.beta
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Igather_sched_inter_long
+#define FUNCNAME MPIR_Igather_sched__inter__long
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Igather_sched_inter_long(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Igather_sched__inter__long(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint remote_size;

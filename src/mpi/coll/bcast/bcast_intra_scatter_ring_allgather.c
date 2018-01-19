@@ -24,10 +24,10 @@
  * Total Cost = (lgp+p-1).alpha + 2.n.((p-1)/p).beta
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Bcast_intra_scatter_ring_allgather
+#define FUNCNAME MPIR_Bcast__intra__scatter_ring_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Bcast_intra_scatter_ring_allgather(
+int MPIR_Bcast__intra__scatter_ring_allgather(
     void *buffer, 
     int count, 
     MPI_Datatype datatype, 

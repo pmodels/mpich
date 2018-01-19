@@ -22,10 +22,10 @@
  * Cost = lgp.alpha + n.(lgp-(p-1)/p).beta + n.(lgp-(p-1)/p).gamma
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_scatter_sched_intra_noncommutative
+#define FUNCNAME MPIR_Ireduce_scatter_sched__intra__noncommutative
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_sched_intra_noncommutative(const void *sendbuf, void *recvbuf,
+int MPIR_Ireduce_scatter_sched__intra__noncommutative(const void *sendbuf, void *recvbuf,
                                         const int recvcounts[], MPI_Datatype datatype, MPI_Op op,
                                         MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {

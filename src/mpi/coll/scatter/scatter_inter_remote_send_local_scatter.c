@@ -16,10 +16,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scatter_inter_remote_send_local_scatter
+#define FUNCNAME MPIR_Scatter__inter__remote_send_local_scatter
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, int sendcount,
+int MPIR_Scatter__inter__remote_send_local_scatter(const void *sendbuf, int sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  int recvcount, MPI_Datatype recvtype, int root,
                                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)

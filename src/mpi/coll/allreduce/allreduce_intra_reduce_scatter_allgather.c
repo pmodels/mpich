@@ -40,10 +40,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allreduce_intra_reduce_scatter_allgather
+#define FUNCNAME MPIR_Allreduce__intra__reduce_scatter_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allreduce_intra_reduce_scatter_allgather(
+int MPIR_Allreduce__intra__reduce_scatter_allgather(
     const void *sendbuf,
     void *recvbuf,
     int count,

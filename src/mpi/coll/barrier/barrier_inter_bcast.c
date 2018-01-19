@@ -20,10 +20,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Barrier_inter_bcast
+#define FUNCNAME MPIR_Barrier__inter__bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier_inter_bcast( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
+int MPIR_Barrier__inter__bcast( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int rank, mpi_errno = MPI_SUCCESS, root;
     int mpi_errno_ret = MPI_SUCCESS;

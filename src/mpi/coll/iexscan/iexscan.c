@@ -60,14 +60,14 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 #define MPI_Iexscan PMPI_Iexscan
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iexscan_sched_intra_auto
+#define FUNCNAME MPIR_Iexscan_sched__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iexscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iexscan_sched__intra__auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Iexscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+    mpi_errno = MPIR_Iexscan_sched__intra__recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
@@ -88,12 +88,12 @@ int MPIR_Iexscan_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_D
     /* intracommunicator */
     switch (MPIR_Iexscan_intra_algo_choice) {
         case MPIR_IEXSCAN_INTRA_ALGO_RECURSIVE_DOUBLING:
-            mpi_errno = MPIR_Iexscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+            mpi_errno = MPIR_Iexscan_sched__intra__recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
             break;
         case MPIR_IEXSCAN_INTRA_ALGO_AUTO:
             MPL_FALLTHROUGH;
         default:
-            mpi_errno = MPIR_Iexscan_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+            mpi_errno = MPIR_Iexscan_sched__intra__auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
             break;
     }
 

@@ -6,5 +6,6 @@ mpi_sources +=                     		\
 	src/mpi/coll/scatterv/scatterv.c
 
 mpi_core_sources +=							\
+	src/mpi/coll/scatterv/scatterv_inter_linear.c \
 	src/mpi/coll/scatterv/scatterv_nb.c \
-	src/mpi/coll/scatterv/scatterv_linear.c
+	src/mpi/coll/scatterv/scatterv_intra_linear.c

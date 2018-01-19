@@ -13,7 +13,6 @@
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
-
 cvars:
     - name        : MPIR_CVAR_DEVICE_COLLECTIVES
       category    : COLLECTIVE
@@ -27,7 +26,6 @@ cvars:
         the MPIR-level collective algorithms. The device still has the
         option to call the MPIR-level algorithms manually.  If set to false,
         the device-level collective function will not be called.
-
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 

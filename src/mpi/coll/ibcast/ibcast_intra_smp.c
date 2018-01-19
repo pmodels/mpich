@@ -35,7 +35,7 @@ static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
 /* This routine purely handles the hierarchical version of bcast, and does not
  * currently make any decision about which particular algorithm to use for any
  * subcommunicator. */
-int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_sched__intra__smp(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_homogeneous;

@@ -8,10 +8,10 @@
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_sched_intra_smp
+#define FUNCNAME MPIR_Iallreduce_sched__intra__smp
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Iallreduce_sched__intra__smp(const void *sendbuf, void *recvbuf, int count,
                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                     MPIR_Sched_t s)
 {
@@ -30,7 +30,7 @@ int MPIR_Iallreduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int coun
     /* is the op commutative? We do SMP optimizations only if it is. */
     if (!is_commutative) {
         /* use flat fallback */
-        mpi_errno = MPIR_Iallreduce_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno = MPIR_Iallreduce_sched__intra__auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;

@@ -11,6 +11,19 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
+    - name        : MPIR_CVAR_GATHERV_INTER_SSEND_MIN_PROCS
+      category    : COLLECTIVE
+      type        : int
+      default     : 32
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Use Ssend (synchronous send) for intercommunicator MPI_Gatherv if the
+        "group B" size is >= this value.  Specifying "-1" always avoids using
+        Ssend.  For backwards compatibility, specifying "0" uses the default
+        value.
+
     - name        : MPIR_CVAR_GATHERV_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
@@ -76,14 +89,14 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void 
 #define MPI_Gatherv PMPI_Gatherv
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Gatherv_intra_auto
+#define FUNCNAME MPIR_Gatherv__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gatherv_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Gatherv__intra__auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Gatherv_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Gatherv__intra__linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
@@ -96,14 +109,14 @@ int MPIR_Gatherv_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sen
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Gatherv_inter_auto
+#define FUNCNAME MPIR_Gatherv__inter__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gatherv_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Gatherv__inter__auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Gatherv_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Gatherv__inter__linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
@@ -130,7 +143,7 @@ int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_Gatherv_intra_algo_choice) {
             case MPIR_GATHERV_INTRA_ALGO_LINEAR:
-                mpi_errno = MPIR_Gatherv_linear (sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
+                mpi_errno = MPIR_Gatherv__intra__linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_GATHERV_INTRA_ALGO_NB:
                 mpi_errno = MPIR_Gatherv_nb(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
@@ -138,13 +151,13 @@ int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
             case MPIR_GATHERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Gatherv_intra_auto(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
+                mpi_errno = MPIR_Gatherv__intra__auto(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
                 break;
         }
     } else {
         switch (MPIR_Gatherv_inter_algo_choice) {
             case MPIR_GATHERV_INTER_ALGO_LINEAR:
-                mpi_errno = MPIR_Gatherv_linear (sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
+                mpi_errno = MPIR_Gatherv__inter__linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_GATHERV_INTER_ALGO_NB:
                 mpi_errno = MPIR_Gatherv_nb(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
@@ -152,18 +165,20 @@ int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
             case MPIR_GATHERV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Gatherv_inter_auto(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
+                mpi_errno = MPIR_Gatherv__inter__auto(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm_ptr, errflag);
                 break;
         }
     }
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
 
 
 fn_exit:
     if (*errflag != MPIR_ERR_NONE)
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 

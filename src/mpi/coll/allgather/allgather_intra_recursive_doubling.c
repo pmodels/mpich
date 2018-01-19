@@ -20,10 +20,10 @@
  * PVM/MPI 2003).
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allgather_intra_recursive_doubling
+#define FUNCNAME MPIR_Allgather__intra__recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgather_intra_recursive_doubling (
+int MPIR_Allgather__intra__recursive_doubling (
     const void *sendbuf,
     int sendcount,
     MPI_Datatype sendtype,

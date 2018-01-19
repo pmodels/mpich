@@ -15,10 +15,10 @@
  * Cost: (lgp+1).alpha + n.((p-1)/p).beta + n.beta
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Igather_sched_inter_short
+#define FUNCNAME MPIR_Igather_sched__inter__short
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Igather_sched_inter_short(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Igather_sched__inter__short(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;

@@ -93,10 +93,10 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
 */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_intra_auto
+#define FUNCNAME MPIR_Reduce_scatter_block__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_block_intra_auto (
+int MPIR_Reduce_scatter_block__intra__auto (
     const void *sendbuf, 
     void *recvbuf, 
     int recvcount, 
@@ -140,20 +140,20 @@ int MPIR_Reduce_scatter_block_intra_auto (
 
     if ((is_commutative) && (nbytes < MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         /* commutative and short. use recursive halving algorithm */
-        mpi_errno = MPIR_Reduce_scatter_block_intra_recursive_halving(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
+        mpi_errno = MPIR_Reduce_scatter_block__intra__recursive_halving(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
     }
     else if (is_commutative && (nbytes >= MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         /* commutative and long message, or noncommutative and long message.
            use (p-1) pairwise exchanges */ 
-        mpi_errno = MPIR_Reduce_scatter_block_intra_pairwise(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
+        mpi_errno = MPIR_Reduce_scatter_block__intra__pairwise(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
     }
     else if (!(comm_size & (comm_size - 1))) {     /* power of two check */
         /* noncommutative, pof2 size */
-        mpi_errno = MPIR_Reduce_scatter_block_intra_noncommutative(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
+        mpi_errno = MPIR_Reduce_scatter_block__intra__noncommutative(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
     }
     else {
         /* noncommutative and non-pof2, use recursive doubling. */
-        mpi_errno = MPIR_Reduce_scatter_block_intra_recursive_doubling(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
+        mpi_errno = MPIR_Reduce_scatter_block__intra__recursive_doubling(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
     }
 
     if (mpi_errno) {
@@ -188,10 +188,10 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_inter_auto
+#define FUNCNAME MPIR_Reduce_scatter_block__inter__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_block_inter_auto (
+int MPIR_Reduce_scatter_block__inter__auto (
     const void *sendbuf, 
     void *recvbuf, 
     int recvcount, 
@@ -201,7 +201,7 @@ int MPIR_Reduce_scatter_block_inter_auto (
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter(sendbuf, recvbuf,
+    mpi_errno = MPIR_Reduce_scatter_block__inter__remote_reduce_local_scatter(sendbuf, recvbuf,
             recvcount, datatype, op, comm_ptr, errflag);
 
     return mpi_errno;
@@ -222,19 +222,19 @@ int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
         switch (MPIR_Reduce_scatter_block_intra_algo_choice) {
         /* intracommunicator */
             case MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_NONCOMMUTATIVE:
-                mpi_errno = MPIR_Reduce_scatter_block_intra_noncommutative(sendbuf, recvbuf,
+                mpi_errno = MPIR_Reduce_scatter_block__intra__noncommutative(sendbuf, recvbuf,
                             recvcount, datatype, op, comm_ptr, errflag);
                 break;
             case MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_PAIRWISE:
-                mpi_errno = MPIR_Reduce_scatter_block_intra_pairwise(sendbuf, recvbuf,
+                mpi_errno = MPIR_Reduce_scatter_block__intra__pairwise(sendbuf, recvbuf,
                             recvcount, datatype, op, comm_ptr, errflag);
                 break;
             case MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_HALVING:
-                mpi_errno = MPIR_Reduce_scatter_block_intra_recursive_halving(sendbuf, recvbuf,
+                mpi_errno = MPIR_Reduce_scatter_block__intra__recursive_halving(sendbuf, recvbuf,
                             recvcount, datatype, op, comm_ptr, errflag);
                 break;
             case MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_DOUBLING:
-                mpi_errno = MPIR_Reduce_scatter_block_intra_recursive_doubling(sendbuf, recvbuf,
+                mpi_errno = MPIR_Reduce_scatter_block__intra__recursive_doubling(sendbuf, recvbuf,
                             recvcount, datatype, op, comm_ptr, errflag);
                 break;
             case MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_NB:
@@ -244,7 +244,7 @@ int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
             case MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Reduce_scatter_block_intra_auto(sendbuf, recvbuf,
+                mpi_errno = MPIR_Reduce_scatter_block__intra__auto(sendbuf, recvbuf,
                             recvcount, datatype, op, comm_ptr, errflag);
                 break;
         }
@@ -252,7 +252,7 @@ int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
         /* intercommunicator */
         switch (MPIR_Reduce_scatter_block_intra_algo_choice) {
             case MPIR_REDUCE_SCATTER_BLOCK_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTER:
-                mpi_errno = MPIR_Reduce_scatter_block_inter_remote_reduce_local_scatter(sendbuf, recvbuf, recvcount,
+                mpi_errno = MPIR_Reduce_scatter_block__inter__remote_reduce_local_scatter(sendbuf, recvbuf, recvcount,
                           datatype, op, comm_ptr, errflag);
                 break;
             case MPIR_REDUCE_SCATTER_BLOCK_INTER_ALGO_NB:
@@ -262,7 +262,7 @@ int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
             case MPIR_REDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Reduce_scatter_block_inter_auto(sendbuf, recvbuf, recvcount,
+                mpi_errno = MPIR_Reduce_scatter_block__inter__auto(sendbuf, recvbuf, recvcount,
                           datatype, op, comm_ptr, errflag);
                 break;
         }

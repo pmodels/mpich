@@ -8,10 +8,10 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_intra_smp
+#define FUNCNAME MPIR_Reduce__intra__smp
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Reduce__intra__smp(const void *sendbuf, void *recvbuf, int count,
                           MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
                           MPIR_Errflag_t * errflag)
 {

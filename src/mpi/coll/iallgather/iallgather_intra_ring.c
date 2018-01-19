@@ -22,10 +22,10 @@
  * Myrinet and IBM SP).
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_sched_intra_ring
+#define FUNCNAME MPIR_Iallgather_sched__intra__ring
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgather_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype
+int MPIR_Iallgather_sched__intra__ring(const void *sendbuf, int sendcount, MPI_Datatype
         sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
         MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {

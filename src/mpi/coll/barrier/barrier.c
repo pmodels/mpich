@@ -82,10 +82,10 @@ int MPI_Barrier(MPI_Comm comm) __attribute__((weak,alias("PMPI_Barrier")));
 #define MPI_Barrier PMPI_Barrier
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Barrier_intra_auto
+#define FUNCNAME MPIR_Barrier__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier_intra_auto( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
+int MPIR_Barrier__intra__auto( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int size, mpi_errno=MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -97,9 +97,9 @@ int MPIR_Barrier_intra_auto( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES &&
             MPIR_CVAR_ENABLE_SMP_BARRIER &&
             MPIR_Comm_is_node_aware(comm_ptr)) {
-        mpi_errno = MPIR_Barrier_intra_smp(comm_ptr, errflag);
+        mpi_errno = MPIR_Barrier__intra__smp(comm_ptr, errflag);
     } else {
-        mpi_errno = MPIR_Barrier_intra_recursive_doubling(comm_ptr, errflag);
+        mpi_errno = MPIR_Barrier__intra__dissemination(comm_ptr, errflag);
     }
 
     if (mpi_errno) {
@@ -118,14 +118,14 @@ int MPIR_Barrier_intra_auto( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Barrier_inter_auto
+#define FUNCNAME MPIR_Barrier__inter__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier_inter_auto( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
+int MPIR_Barrier__inter__auto( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Barrier_inter_bcast(comm_ptr, errflag);
+    mpi_errno = MPIR_Barrier__inter__bcast(comm_ptr, errflag);
 
     return mpi_errno;
 }
@@ -142,7 +142,7 @@ int MPIR_Barrier_impl(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
         /* intracommunicator */
         switch (MPIR_Barrier_intra_algo_choice) {
             case MPIR_BARRIER_INTRA_ALGO_RECURSIVE_DOUBLING:
-                mpi_errno = MPIR_Barrier_intra_recursive_doubling(comm_ptr, errflag);
+                mpi_errno = MPIR_Barrier__intra__dissemination(comm_ptr, errflag);
                 break;
             case MPIR_BARRIER_INTRA_ALGO_NB:
                 mpi_errno = MPIR_Barrier_nb(comm_ptr, errflag);
@@ -150,14 +150,14 @@ int MPIR_Barrier_impl(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
             case MPIR_BARRIER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Barrier_intra_auto(comm_ptr, errflag);
+                mpi_errno = MPIR_Barrier__intra__auto(comm_ptr, errflag);
                 break;
         }
     } else {
         /* intercommunicator */
         switch (MPIR_Barrier_inter_algo_choice) {
             case MPIR_BARRIER_INTER_ALGO_BCAST:
-                mpi_errno = MPIR_Barrier_inter_bcast(comm_ptr, errflag);
+                mpi_errno = MPIR_Barrier__inter__bcast(comm_ptr, errflag);
                 break;
             case MPIR_BARRIER_INTER_ALGO_NB:
                 mpi_errno = MPIR_Barrier_nb(comm_ptr, errflag);
@@ -165,7 +165,7 @@ int MPIR_Barrier_impl(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
             case MPIR_BARRIER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Barrier_inter_auto(comm_ptr, errflag);
+                mpi_errno = MPIR_Barrier__inter__auto(comm_ptr, errflag);
                 break;
         }
     }

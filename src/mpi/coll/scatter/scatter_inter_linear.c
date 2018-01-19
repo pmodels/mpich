@@ -15,10 +15,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scatter_inter_linear
+#define FUNCNAME MPIR_Scatter__inter__linear
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scatter_inter_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIR_Scatter__inter__linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                               void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {

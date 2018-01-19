@@ -11,6 +11,18 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
+    - name        : MPIR_CVAR_GATHER_VSMALL_MSG_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 1024
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        use a temporary buffer for intracommunicator MPI_Gather if the send
+        buffer size is < this value (in bytes)
+        (See also: MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE)
+
     - name        : MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE
       category    : COLLECTIVE
       type        : int
@@ -88,32 +100,32 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *
 #define MPI_Gather PMPI_Gather
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Gather_intra_auto
+#define FUNCNAME MPIR_Gather__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gather_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+int MPIR_Gather__intra__auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                       int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
                       MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     
-    mpi_errno = MPIR_Gather_intra_binomial(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
+    mpi_errno = MPIR_Gather__intra__binomial(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
  fn_exit:
     if (*errflag != MPIR_ERR_NONE)
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     return mpi_errno;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Gather_inter_auto
+#define FUNCNAME MPIR_Gather__inter__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gather_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+int MPIR_Gather__inter__auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                       int recvcount, MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
                       MPIR_Errflag_t *errflag)
 {
@@ -133,12 +145,12 @@ int MPIR_Gather_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype send
     }
 
     if (nbytes < MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE) {
-        mpi_errno = MPIR_Gather_inter_local_gather_remote_send(sendbuf, sendcount, sendtype,
+        mpi_errno = MPIR_Gather__inter__local_gather_remote_send(sendbuf, sendcount, sendtype,
                                                                recvbuf, recvcount, recvtype,
                                                                root, comm_ptr, errflag);
     }
     else {
-        mpi_errno = MPIR_Gather_inter_linear(sendbuf, sendcount, sendtype,
+        mpi_errno = MPIR_Gather__inter__linear(sendbuf, sendcount, sendtype,
                                              recvbuf, recvcount, recvtype,
                                              root, comm_ptr, errflag);
     }
@@ -160,12 +172,12 @@ int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                      int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-        
+
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
         switch (MPIR_Gather_intra_algo_choice) {
             case MPIR_GATHER_INTRA_ALGO_BINOMIAL:
-                mpi_errno = MPIR_Gather_intra_binomial(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Gather__intra__binomial(sendbuf, sendcount, sendtype,
                                       recvbuf, recvcount, recvtype, root,
                                       comm_ptr, errflag);
                 break;
@@ -177,7 +189,7 @@ int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             case MPIR_GATHER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Gather_intra_auto(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Gather__intra__auto(sendbuf, sendcount, sendtype,
                                       recvbuf, recvcount, recvtype, root,
                                       comm_ptr, errflag);
                 break;
@@ -186,12 +198,12 @@ int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         /* intercommunicator */
         switch (MPIR_Gather_inter_algo_choice) {
             case MPIR_GATHER_INTER_ALGO_LINEAR:
-                mpi_errno = MPIR_Gather_inter_linear(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Gather__inter__linear(sendbuf, sendcount, sendtype,
                                       recvbuf, recvcount, recvtype, root,
                                       comm_ptr, errflag);
                 break;
             case MPIR_GATHER_INTER_ALGO_LOCAL_GATHER_REMOTE_SEND:
-                mpi_errno = MPIR_Gather_inter_local_gather_remote_send(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Gather__inter__local_gather_remote_send(sendbuf, sendcount, sendtype,
                                       recvbuf, recvcount, recvtype, root,
                                       comm_ptr, errflag);
                 break;
@@ -203,17 +215,19 @@ int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             case MPIR_GATHER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Gather_inter_auto(sendbuf, sendcount, sendtype,
+                mpi_errno = MPIR_Gather__inter__auto(sendbuf, sendcount, sendtype,
                                       recvbuf, recvcount, recvtype, root,
                                       comm_ptr, errflag);
                 break;
         }
     }
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
 
- fn_exit:
+  fn_exit:
     return mpi_errno;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 

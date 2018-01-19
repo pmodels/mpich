@@ -14,7 +14,7 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_intra_recursive_halving
+#define FUNCNAME MPIR_Reduce_scatter_block__intra__recursive_halving
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
@@ -41,7 +41,7 @@
  * some imbalance in the amount of work each process does because some
  * processes do the work of their neighbors as well.
  */
-int MPIR_Reduce_scatter_block_intra_recursive_halving (
+int MPIR_Reduce_scatter_block__intra__recursive_halving (
     const void *sendbuf, 
     void *recvbuf, 
     int recvcount, 

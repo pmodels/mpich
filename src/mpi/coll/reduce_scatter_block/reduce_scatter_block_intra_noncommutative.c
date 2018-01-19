@@ -25,10 +25,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_intra_noncommutative
+#define FUNCNAME MPIR_Reduce_scatter_block__intra__noncommutative
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_block_intra_noncommutative (
+int MPIR_Reduce_scatter_block__intra__noncommutative (
     const void *sendbuf,
     void *recvbuf,
     int recvcount,

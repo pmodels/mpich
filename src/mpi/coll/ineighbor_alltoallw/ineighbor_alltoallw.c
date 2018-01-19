@@ -73,10 +73,10 @@ int MPI_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[],
 #define MPI_Ineighbor_alltoallw PMPI_Ineighbor_alltoallw
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_alltoallw_sched_intra_auto
+#define FUNCNAME MPIR_Ineighbor_alltoallw_sched__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ineighbor_alltoallw_sched_intra_auto(const void *sendbuf, const int sendcounts[],
+int MPIR_Ineighbor_alltoallw_sched__intra__auto(const void *sendbuf, const int sendcounts[],
                                    const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                    void *recvbuf, const int recvcounts[],
                                    const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
@@ -97,10 +97,10 @@ int MPIR_Ineighbor_alltoallw_sched_intra_auto(const void *sendbuf, const int sen
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_alltoallw_sched_inter_auto
+#define FUNCNAME MPIR_Ineighbor_alltoallw_sched__inter__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ineighbor_alltoallw_sched_inter_auto(const void *sendbuf, const int sendcounts[],
+int MPIR_Ineighbor_alltoallw_sched__inter__auto(const void *sendbuf, const int sendcounts[],
                                    const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
                                    void *recvbuf, const int recvcounts[],
                                    const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
@@ -142,7 +142,7 @@ int MPIR_Ineighbor_alltoallw_sched_impl(const void *sendbuf, const int sendcount
             case MPIR_INEIGHBOR_ALLTOALLW_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ineighbor_alltoallw_sched_intra_auto(sendbuf, sendcounts, sdispls, sendtypes,
+                mpi_errno = MPIR_Ineighbor_alltoallw_sched__intra__auto(sendbuf, sendcounts, sdispls, sendtypes,
                                                recvbuf, recvcounts, rdispls, recvtypes,
                                                comm_ptr, s);
                 break;
@@ -157,7 +157,7 @@ int MPIR_Ineighbor_alltoallw_sched_impl(const void *sendbuf, const int sendcount
             case MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ineighbor_alltoallw_sched_inter_auto(sendbuf, sendcounts, sdispls, sendtypes,
+                mpi_errno = MPIR_Ineighbor_alltoallw_sched__inter__auto(sendbuf, sendcounts, sdispls, sendtypes,
                                                recvbuf, recvcounts, rdispls, recvtypes,
                                                comm_ptr, s);
                 break;

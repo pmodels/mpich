@@ -16,10 +16,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_inter_local_reduce_remote_send
+#define FUNCNAME MPIR_Reduce__inter__local_reduce_remote_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_inter_local_reduce_remote_send (
+int MPIR_Reduce__inter__local_reduce_remote_send (
     const void *sendbuf,
     void *recvbuf,
     int count,

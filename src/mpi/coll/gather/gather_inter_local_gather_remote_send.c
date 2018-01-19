@@ -16,10 +16,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Gather_inter_local_gather_remote_send
+#define FUNCNAME MPIR_Gather__inter__local_gather_remote_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcount,
+int MPIR_Gather__inter__local_gather_remote_send(const void *sendbuf, int sendcount,
                                                MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                                MPI_Datatype recvtype, int root,
                                                MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)

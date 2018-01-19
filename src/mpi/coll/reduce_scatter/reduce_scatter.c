@@ -100,10 +100,10 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[
 */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_intra_auto
+#define FUNCNAME MPIR_Reduce_scatter__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_intra_auto(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Reduce_scatter__intra__auto(const void *sendbuf, void *recvbuf, const int recvcounts[],
                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int comm_size, i;
@@ -151,7 +151,7 @@ int MPIR_Reduce_scatter_intra_auto(const void *sendbuf, void *recvbuf, const int
     if ((is_commutative) && (nbytes < MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
         /* commutative and short. use recursive halving algorithm */
         
-        mpi_errno = MPIR_Reduce_scatter_intra_recursive_halving (sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
+        mpi_errno = MPIR_Reduce_scatter__intra__recursive_halving (sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     
@@ -159,7 +159,7 @@ int MPIR_Reduce_scatter_intra_auto(const void *sendbuf, void *recvbuf, const int
 
         /* commutative and long message, or noncommutative and long message.
            use (p-1) pairwise exchanges */ 
-        mpi_errno = MPIR_Reduce_scatter_intra_pairwise (sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
+        mpi_errno = MPIR_Reduce_scatter__intra__pairwise (sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     }
@@ -179,11 +179,11 @@ int MPIR_Reduce_scatter_intra_auto(const void *sendbuf, void *recvbuf, const int
 
         if (pof2 == comm_size && is_block_regular) {
             /* noncommutative, pof2 size, and block regular */
-            mpi_errno = MPIR_Reduce_scatter_intra_noncommutative(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
+            mpi_errno = MPIR_Reduce_scatter__intra__noncommutative(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
         }
         else {
             /* noncommutative and (non-pof2 or block irregular), use recursive doubling. */
-            mpi_errno = MPIR_Reduce_scatter_intra_recursive_doubling (sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
+            mpi_errno = MPIR_Reduce_scatter__intra__recursive_doubling (sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
         }
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
@@ -217,16 +217,16 @@ fn_fail:
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_inter_auto
+#define FUNCNAME MPIR_Reduce_scatter__inter__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_inter_auto(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Reduce_scatter__inter__auto(const void *sendbuf, void *recvbuf, const int recvcounts[],
                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                               MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(sendbuf, recvbuf, recvcounts, datatype,
+    MPIR_Reduce_scatter__inter__remote_reduce_local_scatter(sendbuf, recvbuf, recvcounts, datatype,
             op, comm_ptr, errflag);
 
     return mpi_errno;
@@ -247,19 +247,19 @@ int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf,
         /* intracommunicator */
         switch (MPIR_Reduce_scatter_intra_algo_choice) {
             case MPIR_REDUCE_SCATTER_INTRA_ALGO_NONCOMMUTATIVE:
-                mpi_errno = MPIR_Reduce_scatter_intra_noncommutative(sendbuf, recvbuf,
+                mpi_errno = MPIR_Reduce_scatter__intra__noncommutative(sendbuf, recvbuf,
                             recvcounts, datatype, op, comm_ptr, errflag);
                 break;
             case MPIR_REDUCE_SCATTER_INTRA_ALGO_PAIRWISE:
-                mpi_errno = MPIR_Reduce_scatter_intra_pairwise(sendbuf, recvbuf,
+                mpi_errno = MPIR_Reduce_scatter__intra__pairwise(sendbuf, recvbuf,
                             recvcounts, datatype, op, comm_ptr, errflag);
                 break;
             case MPIR_REDUCE_SCATTER_INTRA_ALGO_RECURSIVE_HALVING:
-                mpi_errno = MPIR_Reduce_scatter_intra_recursive_halving(sendbuf, recvbuf,
+                mpi_errno = MPIR_Reduce_scatter__intra__recursive_halving(sendbuf, recvbuf,
                             recvcounts, datatype, op, comm_ptr, errflag);
                 break;
             case MPIR_REDUCE_SCATTER_INTRA_ALGO_RECURSIVE_DOUBLING:
-                mpi_errno = MPIR_Reduce_scatter_intra_recursive_doubling(sendbuf, recvbuf,
+                mpi_errno = MPIR_Reduce_scatter__intra__recursive_doubling(sendbuf, recvbuf,
                             recvcounts, datatype, op, comm_ptr, errflag);
                 break;
             case MPIR_REDUCE_SCATTER_INTRA_ALGO_NB:
@@ -269,7 +269,7 @@ int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf,
             case MPIR_REDUCE_SCATTER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Reduce_scatter_intra_auto(sendbuf, recvbuf,
+                mpi_errno = MPIR_Reduce_scatter__intra__auto(sendbuf, recvbuf,
                             recvcounts, datatype, op, comm_ptr, errflag);
                 break;
         }
@@ -277,7 +277,7 @@ int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf,
         /* intercommunicator */
         switch (MPIR_Reduce_scatter_intra_algo_choice) {
             case MPIR_REDUCE_SCATTER_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTER:
-                mpi_errno = MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(sendbuf, recvbuf, recvcounts,
+                mpi_errno = MPIR_Reduce_scatter__inter__remote_reduce_local_scatter(sendbuf, recvbuf, recvcounts,
                           datatype, op, comm_ptr, errflag);
                 break;
             case MPIR_REDUCE_SCATTER_INTER_ALGO_NB:
@@ -287,7 +287,7 @@ int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf,
             case MPIR_REDUCE_SCATTER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Reduce_scatter_inter_auto(sendbuf, recvbuf, recvcounts,
+                mpi_errno = MPIR_Reduce_scatter__inter__auto(sendbuf, recvbuf, recvcounts,
                           datatype, op, comm_ptr, errflag);
                 break;
         }

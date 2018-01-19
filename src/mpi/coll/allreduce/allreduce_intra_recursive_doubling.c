@@ -19,10 +19,10 @@
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Allreduce_intra_recursive_doubling
+#define FUNCNAME MPIR_Allreduce__intra__recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allreduce_intra_recursive_doubling(
+int MPIR_Allreduce__intra__recursive_doubling(
     const void *sendbuf,
     void *recvbuf,
     int count,

@@ -8,10 +8,10 @@
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscan_sched_intra_smp
+#define FUNCNAME MPIR_Iscan_sched__intra__smp
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iscan_sched__intra__smp(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank = comm_ptr->rank;
@@ -30,7 +30,7 @@ int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MP
 
     if (!MPII_Comm_is_node_consecutive(comm_ptr)) {
         /* We can't use the SMP-aware algorithm, use the generic one */
-        return MPIR_Iscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        return MPIR_Iscan_sched__intra__recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     }
 
     node_comm = comm_ptr->node_comm;

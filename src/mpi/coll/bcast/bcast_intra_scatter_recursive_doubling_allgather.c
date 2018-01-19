@@ -28,10 +28,10 @@
  * Total Cost = 2.lgp.alpha + 2.n.((p-1)/p).beta
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Bcast_intra_scatter_recursive_doubling_allgather
+#define FUNCNAME MPIR_Bcast__intra__scatter_recursive_doubling_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(
+int MPIR_Bcast__intra__scatter_recursive_doubling_allgather(
     void *buffer, 
     int count, 
     MPI_Datatype datatype, 

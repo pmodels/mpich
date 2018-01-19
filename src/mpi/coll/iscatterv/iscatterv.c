@@ -75,10 +75,10 @@ int MPI_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatterv_sched_intra_auto
+#define FUNCNAME MPIR_Iscatterv_sched__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatterv_sched_intra_auto(const void *sendbuf, const int sendcounts[], const int displs[],
+int MPIR_Iscatterv_sched__intra__auto(const void *sendbuf, const int sendcounts[], const int displs[],
                          MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
                          int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
@@ -95,10 +95,10 @@ int MPIR_Iscatterv_sched_intra_auto(const void *sendbuf, const int sendcounts[],
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iscatterv_sched_inter_auto
+#define FUNCNAME MPIR_Iscatterv_sched__inter__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscatterv_sched_inter_auto(const void *sendbuf, const int sendcounts[], const int displs[],
+int MPIR_Iscatterv_sched__inter__auto(const void *sendbuf, const int sendcounts[], const int displs[],
                          MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
                          int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
@@ -132,7 +132,7 @@ int MPIR_Iscatterv_sched_impl(const void *sendbuf, const int sendcounts[], const
             case MPIR_ISCATTERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Iscatterv_sched_intra_auto(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+                mpi_errno = MPIR_Iscatterv_sched__intra__auto(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
                 break;
         }
     } else {
@@ -143,7 +143,7 @@ int MPIR_Iscatterv_sched_impl(const void *sendbuf, const int sendcounts[], const
             case MPIR_ISCATTERV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Iscatterv_sched_inter_auto(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+                mpi_errno = MPIR_Iscatterv_sched__inter__auto(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
                 break;
         }
     }

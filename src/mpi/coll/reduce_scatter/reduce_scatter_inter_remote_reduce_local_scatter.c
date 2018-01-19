@@ -15,10 +15,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_inter_remote_reduce_local_scatter
+#define FUNCNAME MPIR_Reduce_scatter__inter__remote_reduce_local_scatter
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
+int MPIR_Reduce_scatter__inter__remote_reduce_local_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                               MPIR_Errflag_t *errflag)
 {
@@ -62,7 +62,7 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
     if (comm_ptr->is_low_group) {
         /* reduce from right group to rank 0*/
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Reduce_inter_auto(sendbuf, tmp_buf, total_count, datatype, op,
+        mpi_errno = MPIR_Reduce__inter__auto(sendbuf, tmp_buf, total_count, datatype, op,
                 root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
@@ -73,7 +73,7 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
 
         /* reduce to rank 0 of right group */
         root = 0;
-        mpi_errno = MPIR_Reduce_inter_auto(sendbuf, tmp_buf, total_count, datatype, op,
+        mpi_errno = MPIR_Reduce__inter__auto(sendbuf, tmp_buf, total_count, datatype, op,
                 root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
@@ -85,7 +85,7 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
     else {
         /* reduce to rank 0 of left group */
         root = 0;
-        mpi_errno = MPIR_Reduce_inter_auto(sendbuf, tmp_buf, total_count, datatype, op,
+        mpi_errno = MPIR_Reduce__inter__auto(sendbuf, tmp_buf, total_count, datatype, op,
                 root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
@@ -96,7 +96,7 @@ int MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(const void *sendbuf, v
 
         /* reduce from right group to rank 0 */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Reduce_inter_auto(sendbuf, tmp_buf, total_count, datatype, op,
+        mpi_errno = MPIR_Reduce__inter__auto(sendbuf, tmp_buf, total_count, datatype, op,
                 root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */

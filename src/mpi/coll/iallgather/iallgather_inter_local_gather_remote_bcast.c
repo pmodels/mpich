@@ -13,10 +13,10 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_sched_inter_local_gather_remote_bcast
+#define FUNCNAME MPIR_Iallgather_sched__inter__local_gather_remote_bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgather_sched_inter_local_gather_remote_bcast(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iallgather_sched__inter__local_gather_remote_bcast(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, local_size, remote_size, root;

@@ -7,10 +7,10 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ireduce_sched_intra_smp
+#define FUNCNAME MPIR_Ireduce_sched__intra__smp
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int count,
+int MPIR_Ireduce_sched__intra__smp(const void *sendbuf, void *recvbuf, int count,
                                  MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
                                  MPIR_Sched_t s)
 {
@@ -32,7 +32,7 @@ int MPIR_Ireduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int count,
     is_commutative = MPIR_Op_is_commutative(op);
     if (!is_commutative) {
         mpi_errno =
-            MPIR_Ireduce_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
+            MPIR_Ireduce_sched__intra__auto(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;

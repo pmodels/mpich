@@ -62,14 +62,14 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 #define MPI_Exscan PMPI_Exscan
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Exscan_intra_auto
+#define FUNCNAME MPIR_Exscan__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Exscan_intra_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
+int MPIR_Exscan__intra__auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Exscan_intra_recursive_doubling (sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    mpi_errno = MPIR_Exscan__intra__recursive_doubling (sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
@@ -93,7 +93,7 @@ int MPIR_Exscan_impl(const void *sendbuf, void *recvbuf, int count,
 
     switch (MPIR_Exscan_intra_algo_choice) {
         case MPIR_EXSCAN_INTRA_ALGO_RECURSIVE_DOUBLING:
-            mpi_errno = MPIR_Exscan_intra_recursive_doubling (sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+            mpi_errno = MPIR_Exscan__intra__recursive_doubling (sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
         case MPIR_EXSCAN_INTRA_ALGO_NB:
             mpi_errno = MPIR_Exscan_nb(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
@@ -101,7 +101,7 @@ int MPIR_Exscan_impl(const void *sendbuf, void *recvbuf, int count,
         case MPIR_EXSCAN_INTRA_ALGO_AUTO:
             MPL_FALLTHROUGH;
         default:
-            mpi_errno = MPIR_Exscan_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+            mpi_errno = MPIR_Exscan__intra__auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             break;
     }
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

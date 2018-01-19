@@ -2,19 +2,81 @@
 #define POSIX_COLL_CONTAINERS_H_INCLUDED
 
 /* Barrier POSIX containers declaration */
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_barrier__recursive_doubling_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Barrier__intra__dissemination_cnt;
 
 /* Bcast POSIX containers declaration */
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_bcast__binomial_cnt;
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_bcast__scatter_recursive_doubling_allgather_cnt;
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_bcast__scatter_ring_allgather_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Bcast__intra__binomial_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t
+    POSIX_Bcast__intra__scatter_recursive_doubling_allgather_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Bcast__intra__scatter_ring_allgather_cnt;
 
 /* Reduce POSIX containers declaration */
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_reduce__binomial_cnt;
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_reduce__reduce_scatter_gather_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce__intra__binomial_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce__intra__reduce_scatter_gather_cnt;
 
 /* Allreduce POSIX containers declaration */
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_allreduce__recursive_doubling_cnt;
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_allreduce__reduce_scatter_allgather_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Allreduce__intra__recursive_doubling_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Allreduce__intra__reduce_scatter_allgather_cnt;
+
+/* Alltoall POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Alltoall__intra__brucks_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Alltoall__intra__scattered_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Alltoall__intra__pairwise_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Alltoall__intra__pairwise_sendrecv_replace_cnt;
+
+/* Alltoallv POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Alltoallv__intra__scattered_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t
+    POSIX_Alltoallv__intra__pairwise_sendrecv_replace_cnt;
+
+/* Alltoallw POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Alltoallw__intra__scattered_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t
+    POSIX_Alltoallw__intra__pairwise_sendrecv_replace_cnt;
+
+/* Allgather POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Allgather__intra__recursive_doubling_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Allgather__intra__brucks_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Allgather__intra__ring_cnt;
+
+/* Allgatherv POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Allgatherv__intra__recursive_doubling_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Allgatherv__intra__brucks_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Allgatherv__intra__ring_cnt;
+
+/* Gather POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Gather__intra__binomial_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Gather__intra__binomial_indexed_cnt;
+
+/* Gatherv POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Gatherv__intra__linear_ssend_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Gatherv__intra__linear_cnt;
+
+/* Scatter POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Scatter__intra__binomial_cnt;
+
+/* Scatterv POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Scatterv__intra__linear_cnt;
+
+/* Reduce_scatter POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter__intra__noncommutative_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter__intra__pairwise_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter__intra__recursive_doubling_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter__intra__recursive_halving_cnt;
+
+/* Reduce_scatter_block POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t
+    POSIX_Reduce_scatter_block__intra__noncommutative_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Reduce_scatter_block__intra__pairwise_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t
+    POSIX_Reduce_scatter_block__intra__recursive_doubling_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t
+    POSIX_Reduce_scatter_block__intra__recursive_halving_cnt;
+
+/* Scan POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Scan__intra__recursive_doubling_cnt;
+
+/* Exscan POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Exscan__intra__recursive_doubling_cnt;
 
 #endif /* POSIX_COLL_CONTAINERS_H_INCLUDED */

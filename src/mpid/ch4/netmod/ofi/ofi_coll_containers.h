@@ -2,19 +2,77 @@
 #define OFI_COLL_CONTAINERS_H_INCLUDED
 
 /* Barrier OFI containers declaration */
-extern const MPIDI_OFI_coll_algo_container_t OFI_barrier__recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Barrier__intra__dissemination_cnt;
 
 /* Bcast OFI containers declaration */
-extern const MPIDI_OFI_coll_algo_container_t OFI_bcast__binomial_cnt;
-extern const MPIDI_OFI_coll_algo_container_t OFI_bcast__scatter_recursive_doubling_allgather_cnt;
-extern const MPIDI_OFI_coll_algo_container_t OFI_bcast__scatter_ring_allgather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Bcast__intra__binomial_cnt;
+extern const MPIDI_OFI_coll_algo_container_t
+    OFI_Bcast__intra__scatter_recursive_doubling_allgather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Bcast__intra__scatter_ring_allgather_cnt;
 
 /* Reduce OFI containers declaration */
-extern const MPIDI_OFI_coll_algo_container_t OFI_reduce__binomial_cnt;
-extern const MPIDI_OFI_coll_algo_container_t OFI_reduce__reduce_scatter_gather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce__intra__binomial_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce__intra__reduce_scatter_gather_cnt;
 
 /* Allreduce OFI containers declaration */
-extern const MPIDI_OFI_coll_algo_container_t OFI_allreduce__recursive_doubling_cnt;
-extern const MPIDI_OFI_coll_algo_container_t OFI_allreduce__reduce_scatter_allgather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allreduce__intra__recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allreduce__intra__reduce_scatter_allgather_cnt;
+
+/* Alltoall OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoall__intra__brucks_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoall__intra__scattered_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoall__intra__pairwise_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoall__intra__pairwise_sendrecv_replace_cnt;
+
+/* Alltoallv OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoallv__intra__scattered_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoallv__intra__pairwise_sendrecv_replace_cnt;
+
+/* Alltoallw OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoallw__intra__scattered_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Alltoallw__intra__pairwise_sendrecv_replace_cnt;
+
+/* Allgather OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allgather__intra__recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allgather__intra__brucks_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allgather__intra__ring_cnt;
+
+/* Allgatherv OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allgatherv__intra__recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allgatherv__intra__brucks_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Allgatherv__intra__ring_cnt;
+
+/* Gather OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Gather__intra__binomial_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Gather__intra__binomial_indexed_cnt;
+
+/* Gatherv OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Gatherv__intra__linear_ssend_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Gatherv__intra__linear_cnt;
+
+/* Scatter OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Scatter__intra__binomial_cnt;
+
+/* Scatterv OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Scatterv__intra__linear_cnt;
+
+/* Reduce_scatter OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter__intra__noncommutative_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter__intra__pairwise_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter__intra__recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter__intra__recursive_halving_cnt;
+
+/* Reduce_scatter_block OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_block__intra__noncommutative_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_block__intra__pairwise_cnt;
+extern const MPIDI_OFI_coll_algo_container_t
+    OFI_Reduce_scatter_block__intra__recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Reduce_scatter_block__intra__recursive_halving_cnt;
+
+/* Scan OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Scan__intra__recursive_doubling_cnt;
+
+/* Exscan OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t OFI_Exscan__intra__recursive_doubling_cnt;
 
 #endif /* OFI_COLL_CONTAINERS_H_INCLUDED */

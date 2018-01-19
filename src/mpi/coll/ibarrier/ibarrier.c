@@ -72,14 +72,14 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request) __attribute__((weak,alias(
 /* any non-MPI functions go here, especially non-static ones */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_sched_intra_auto
+#define FUNCNAME MPIR_Ibarrier_sched__intra__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_sched_intra_auto(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_sched__intra__auto(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ibarrier_sched_intra_recursive_doubling(comm_ptr, s);
+    mpi_errno = MPIR_Ibarrier_sched__intra__recursive_doubling(comm_ptr, s);
 
     return mpi_errno;
 }
@@ -87,14 +87,14 @@ int MPIR_Ibarrier_sched_intra_auto(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 /* It will choose between several different algorithms based on the given
  * parameters. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ibarrier_sched_inter_auto
+#define FUNCNAME MPIR_Ibarrier_sched__inter__auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_sched_inter_auto(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibarrier_sched__inter__auto(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno;
 
-    mpi_errno = MPIR_Ibarrier_sched_inter_bcast(comm_ptr, s);
+    mpi_errno = MPIR_Ibarrier_sched__inter__bcast(comm_ptr, s);
 
     return mpi_errno;
 }
@@ -111,24 +111,24 @@ int MPIR_Ibarrier_sched_impl(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
         /* intracommunicator */
         switch (MPIR_Ibarrier_intra_algo_choice) {
             case MPIR_IBARRIER_INTRA_ALGO_RECURSIVE_DOUBLING:
-                mpi_errno = MPIR_Ibarrier_sched_intra_recursive_doubling(comm_ptr, s);
+                mpi_errno = MPIR_Ibarrier_sched__intra__recursive_doubling(comm_ptr, s);
                 break;
             case MPIR_BARRIER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ibarrier_sched_intra_auto(comm_ptr, s);
+                mpi_errno = MPIR_Ibarrier_sched__intra__auto(comm_ptr, s);
                 break;
         }
     } else {
         /* intercommunicator */
         switch (MPIR_Ibarrier_inter_algo_choice) {
             case MPIR_IBARRIER_INTER_ALGO_BCAST:
-                mpi_errno = MPIR_Ibarrier_sched_inter_bcast(comm_ptr, s);
+                mpi_errno = MPIR_Ibarrier_sched__inter__bcast(comm_ptr, s);
                 break;
             case MPIR_IBARRIER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
-                mpi_errno = MPIR_Ibarrier_sched_inter_auto(comm_ptr, s);
+                mpi_errno = MPIR_Ibarrier_sched__inter__auto(comm_ptr, s);
                 break;
         }
     }

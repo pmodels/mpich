@@ -7,4 +7,6 @@ mpi_sources +=                     		\
 
 mpi_core_sources +=									\
 	src/mpi/coll/gatherv/gatherv_nb.c \
-	src/mpi/coll/gatherv/gatherv_linear.c
+	src/mpi/coll/gatherv/gatherv_inter_linear.c \
+	src/mpi/coll/gatherv/gatherv_intra_linear.c \
+	src/mpi/coll/gatherv/gatherv_intra_linear_ssend.c

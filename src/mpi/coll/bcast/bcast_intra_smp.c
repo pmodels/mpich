@@ -13,10 +13,10 @@
  * be able to make changes along these lines almost exclusively in this function
  * and some new functions. [goodell@ 2008/01/07] */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Bcast_intra_smp
+#define FUNCNAME MPIR_Bcast__intra__smp
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int root,
+int MPIR_Bcast__intra__smp( void *buffer, int count, MPI_Datatype datatype, int root,
         MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -182,7 +182,7 @@ int MPIR_Bcast_intra_smp( void *buffer, int count, MPI_Datatype datatype, int ro
             /* FIXME It would be good to have an SMP-aware version of this
                algorithm that (at least approximately) minimized internode
                communication. */
-            mpi_errno = MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
+            mpi_errno = MPIR_Bcast__intra__scatter_ring_allgather(buffer, count, datatype, root, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

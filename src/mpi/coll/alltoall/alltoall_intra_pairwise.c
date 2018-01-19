@@ -25,10 +25,10 @@
  * other processes.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Alltoall_intra_pairwise
+#define FUNCNAME MPIR_Alltoall__intra__pairwise
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoall_intra_pairwise(
+int MPIR_Alltoall__intra__pairwise(
     const void *sendbuf,
     int sendcount, 
     MPI_Datatype sendtype, 
