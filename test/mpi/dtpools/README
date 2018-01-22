@@ -1,0 +1,326 @@
+            DTPools Release 0.0
+
+DTPools is a datatype library used to test MPI communication routines with
+different datatype combinations. DTPools' interface is used to create pools
+of datatypes, each having a specified signature (i.e., native type + count).
+Every pool supports different datatype layouts (defined internally by the
+library). For a list of the available layouts, go to section: "4. Supported
+Derived Datatype layouts".
+
+This README is organized as follows:
+
+1. DTPools API
+2. Testing with DTPools
+3. Supported Derived Datatypes
+4. Supported Derived Datatype layouts
+5. Extending DTPools
+6. TODOs
+
+----------------------------------------------------------------------------
+
+1. DTPools API
+==============
+
+Follows a list of DTPools interfaces used for datatype testing:
+
+* int DTP_pool_create(MPI_Datatype basic_type, int basic_count, DTP_t *dtp)
+  Create a new basic pool with defined datatype signature.
+  - basic_type:   native datatype part of signature
+  - basic_count:  native datatype count part of signature
+  - dtp:          datatype pool object
+
+* int DTP_pool_create_struct(int basic_type_count, MPI_Datatype *basic_types, int *basic_counts, DTP_t *dtp)
+  Create a new struct pool with defined signature.
+  - basic_type_count:  number of native datatypes in struct
+  - basic_type:        array of native datatypes
+  - basic_counts:      array of native datatype counts
+  - dtp:               datatype pool object
+
+* int DTP_pool_free(DTP_t dtp)
+  Free a previously created datatype pool.
+  - dtp:  datatype pool object
+
+* int DTP_obj_create(DTP_t dtp, int obj_idx, int val_start, int val_stride, int val_count)
+  Create a datatype object (at index obj_idx) inside the specified pool. Also initialize
+  the buffer elements using start, stride and count.
+  - dtp:         datatype pool object
+  - obj_idx:     number of datatype inside the pool to be created
+  - val_start:   start of initialization value for buffer at index obj_idx
+  - val_stride:  increment for next element in buffer
+  - val_count:   total number of elements to be initialized in buffer
+
+* int DTP_obj_free(DTP_t dtp, int obj_idx)
+  Free a previously created datatype object inside the specified pool.
+  - dtp:      datatype pool object
+  - obj_idx:  number of datatype inside the pool to be freed
+
+* int DTP_obj_buf_check(DTP_t dtp, int obj_idx, int val_start, int val_stride, int val_count)
+  Checks whether the received buffer (used in communication routine) matches the sent buffer.
+  - dtp:         datatype pool object
+  - obj_idx:     number of datatype inside the pool to be checked
+  - val_start:   start of checking value for buffer at index obj_idx
+  - val_stride:  increment for next checked element in buffer
+  - val_count:   total number of elements to be checked in buffer
+
+
+----------------------------------------------------------------------------
+
+2. Testing with DTPools
+=======================
+
+Follows a simple test application that uses DTPools:
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "mpi.h"
+#include "dtpools.h"
+
+#define BASIC_TYPE_MAX_COUNT (1024)
+
+int main(int argc, char *argv[]) {
+    int i, j, err;
+    int num_err = 0;
+    int basic_type_count;
+    int myrank = 0;
+    MPI_Request req;
+    DTP_t send_dtp, recv_dtp;
+
+    MPI_Init(NULL, NULL);
+
+    basic_type_count = BASIC_TYPE_MAX_COUNT;
+
+    err = DTP_pool_create(MPI_INT, basic_type_count, &send_dtp);
+    if (err != DTP_SUCCESS) {
+        /* error hanling */;
+    }
+
+    err = DTP_pool_create(MPI_INT, basic_type_count * 2, &recv_dtp);
+    if (err != DTP_SUCCESS) {
+        /* error hanling */;
+    }
+
+    for (i = 0; i < send_dtp->DTP_num_objs; i++) {
+        err = DTP_obj_create(send_dtp, i, 0, 2, basic_type_count);
+        if (err != DTP_SUCCESS) {
+            /* error handling */;
+        }
+
+        for (j = 0; j < recv_dtp->DTP_num_objs; j++) {
+            err = DTP_obj_create(recv_dtp, j, 0, 0, 0);
+            if (err != DTP_SUCCESS) {
+                /* error handling */;
+            }
+
+            MPI_Irecv(recv_dtp->DTP_obj_array[j].DTP_obj_buf,
+                      recv_dtp->DTP_obj_array[j].DTP_obj_count,
+                      recv_dtp->DTP_obj_array[j].DTP_obj_type,
+                      myrank, 0, MPI_COMM_WORLD, &req);
+
+            MPI_Send(send_dtp->DTP_obj_array[i].DTP_obj_buf,
+                     send_dtp->DTP_obj_array[i].DTP_obj_count,
+                     send_dtp->DTP_obj_array[i].DTP_obj_type,
+                     myrank, 0, MPI_COMM_WORLD);
+
+            MPI_Wait(&req, MPI_STATUS_IGNORE);
+
+            if (DTP_obj_buf_check(recv_dtp, j, 0, 2, basic_type_count) != DTP_SUCCESS) {
+                num_err++;
+            }
+            DTP_obj_free(recv_dtp, j);
+        }
+        DTP_obj_free(send_dtp, i);
+    }
+
+    DTP_pool_free(send_dtp);
+    DTP_pool_free(recv_dtp);
+
+    if (num_err > 0) {
+        fprintf(stdout, " No Errors\n");
+        fflush(stdout);
+    }
+
+    MPI_Finalize();
+
+    return err;
+}
+
+
+----------------------------------------------------------------------------
+
+3. Supported Derived Datatypes
+==============================
+
+Currently the following derived datatype are supported:
+
+* MPI_Type_contiguous
+* MPI_Type_vector
+* MPI_Type_create_hvector
+* MPI_Type_indexed
+* MPI_Type_create_hindexed
+* MPI_Type_create_indexed_block
+* MPI_Type_create_hindexed_block
+* MPI_Type_create_subarray
+* MPI_Type_create_struct
+
+The following native datatypes are also supported:
+
+* MPI_CHAR,
+* MPI_WCHAR,
+* MPI_SHORT,
+* MPI_INT,
+* MPI_LONG,
+* MPI_LONG_LONG_INT,
+* MPI_UNSIGNED_CHAR,
+* MPI_UNSIGNED_SHORT,
+* MPI_UNSIGNED,
+* MPI_UNSIGNED_LONG,
+* MPI_UNSIGNED_LONG_LONG,
+* MPI_FLOAT,
+* MPI_DOUBLE,
+* MPI_LONG_DOUBLE,
+* MPI_INT8_T,
+* MPI_INT16_T,
+* MPI_INT32_T,
+* MPI_INT64_T,
+* MPI_UINT8_T,
+* MPI_UINT16_T,
+* MPI_UINT32_T,
+* MPI_UINT64_T,
+* MPI_C_COMPLEX,
+* MPI_C_FLOAT_COMPLEX,
+* MPI_C_DOUBLE_COMPLEX,
+* MPI_C_LONG_DOUBLE_COMPLEX,
+* MPI_FLOAT_INT,
+* MPI_DOUBLE_INT,
+* MPI_LONG_INT,
+* MPI_2INT,
+* MPI_SHORT_INT,
+* MPI_LONG_DOUBLE_INT
+
+
+----------------------------------------------------------------------------
+
+4. Supported Derived Datatype layouts
+=====================================
+
+The following layouts for derived datatypes are currently supported:
+
+* Simple layout
+  - DTPI_OBJ_LAYOUT_SIMPLE__CONTIG:                  type_count = 1; type_stride = -; type_blklen = basic_type_count;
+  - DTPI_OBJ_LAYOUT_SIMPLE__VECTOR:                  type_count = basic_type_count; type_stride = 2; type_blklen = 1;
+  - DTPI_OBJ_LAYOUT_SIMPLE__HVECTOR:                 type_count = basic_type_count; type_stride = 2; type_blklen = 1;
+  - DTPI_OBJ_LAYOUT_SIMPLE__INDEXED:                 type_count = basic_type_count; type_stride = 2; type_blklen = 1;
+  - DTPI_OBJ_LAYOUT_SIMPLE__HINDEXED:                type_count = basic_type_count; type_stride = 2; type_blklen = 1;
+  - DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_INDEXED:           type_count = basic_type_count; type_stride = 2; type_blklen = 1;
+  - DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_HINDEXED:          type_count = basic_type_count; type_stride = 2; type_blklen = 1;
+
+* Complex layout
+  - DTPI_OBJ_LAYOUT_LARGE_BLK__VECTOR:               type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_BLK__HVECTOR:              type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_BLK__INDEXED:              type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_BLK__HINDEXED:             type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_INDEXED:        type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_HINDEXED:       type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_C:           type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_F:           type_count = small; type_blklen = large; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT__VECTOR:               type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT__HVECTOR:              type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT__INDEXED:              type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT__HINDEXED:             type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_INDEXED:        type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_HINDEXED:       type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_C:           type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_F:           type_count = large; type_blklen = small; type_stride = type_blklen + 1;
+  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__VECTOR:          type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HVECTOR:         type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__INDEXED:         type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HINDEXED:        type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_INDEXED:   type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_HINDEXED:  type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_C:      type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_F:      type_count = small; type_blklen = large; type_stride = type_blklen * 2;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__VECTOR:          type_count = large; type_blklen = small; type_stride = type_count  * 2;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HVECTOR:         type_count = large; type_blklen = small; type_stride = type_count  * 2;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__INDEXED:         type_count = large; type_blklen = small; type_stride = type_count  * 2;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HINDEXED:        type_count = large; type_blklen = small; type_stride = type_count  * 2;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_INDEXED:   type_count = large; type_blklen = small; type_stride = type_count  * 2;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_HINDEXED:  type_count = large; type_blklen = small; type_stride = type_count  * 2;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_C:      type_count = large; type_blklen = small; type_stride = type_count  * 2;
+  - DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_F:      type_count = large; type_blklen = small; type_stride = type_count  * 2;
+
+
+----------------------------------------------------------------------------
+
+5. Extending DTPools
+====================
+
+Extending DTPools with new datatype layouts is as simple as adding the
+type descriptor in `test/mpi/dtpools/include/dtpools_internal.h`, the
+corresponding type create and buf check functions in
+`test/mpi/dtpools/src/dtpools_internal.c`, and including the new layout to
+the pool create function in `test/mpi/dtpools/src/dtpools.c`.
+Additionally the type create function should also be added to creators
+function vector `DTPI_Init_creators`.
+
+Example:
+/* dtpools_internal.h */
+enum {
+    ...,
+    DTPI_OBJ_LAYOUT_MYLAYOUT__NESTED_VECTOR,
+    ...
+};
+
+int DTPI_Nested_vector_create(struct DTPI_Par *par, DTP_t dtp);
+int DTPI_Nested_vector_check_buf(struct DTPI_Par *par, DTP_t dtp);
+
+/* dtpools_internal.c */
+void DTPI_Init_creators(DTPI_Creator * creators) {
+    ...
+    creators[DTPI_OBJ_LAYOUT_MYLAYOUT__NESTED_VECTOR] = DTPI_Nested_vector_create;
+}
+
+int DTPI_Nested_vector_create(struct DTPI_Par *par, DTP_t dtp) {
+    ...
+}
+
+int DTPI_Nested_vector_check_buf(struct DTPI_Par *par, DTP_t dtp) {
+    ...
+}
+
+/* dtpools.c */
+int DTP_obj_create(DTP_t dtp, int obj_idx, int val_start, int var_stride, int val_count) {
+    ...
+
+    switch(obj_idx) {
+        case XXX:
+            ...
+            break;
+        case DTPI_OBJ_LAYOUT_MYLAYOUT__NESTED_VECTOR:
+            /* set up parameters for create function */
+            par.core.type_count  = X(count); /* signature count */
+            par.core.type_blklen = Y(count);
+            par.core.type_stride = Z(count);
+            break;
+        default:;
+    }
+    ...
+}
+
+
+----------------------------------------------------------------------------
+
+6. TODOs
+========
+
+Follows a list of known issues that should be fixed in a future release:
+
+1. Resized datatypes (using MPI_TYPE_CREATE_RESIZED) are not currently supported.
+2. The framework does not provide an interface to reset the type buffer:
+   `DTP_obj_reset(DTP_t dtp, int obj_idx, int val_start, int val_stride, int val_count)`
+3. The interface should return an object handle that can be used to directly
+   reference the created datatype, its count, and buffer instead of accessing
+   directly the object array:
+   `DTP_obj_create(DTP_t dtp, int obj_idx, int val_start, int val_stride, int val_count, DTP_Obj_t *obj)`
+4. Currently datatypes in the pools have count of 1. The framework should be extended
+   to support counts > 1.
