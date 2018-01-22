@@ -14,6 +14,10 @@
 AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
 LDADD = $(top_builddir)/cxx/util/mtest.o
 
+# Add libdtpools support
+AM_CPPFLAGS += -I$(top_builddir)/dtpoos/include -I$(top_srcdir)/dtpools/include
+LDADD += $(top_builddir)/dtpools/src/.libs/libdtpools.a
+
 ## FIXME "DEPADD" is a simplemake concept, which we can handle on a per-target
 ## prog_DEPENDENCIES variable, but it would be better to figure out the right
 ## way to do this
@@ -21,6 +25,9 @@ LDADD = $(top_builddir)/cxx/util/mtest.o
 
 $(top_builddir)/cxx/util/mtest.o: $(top_srcdir)/cxx/util/mtest.cxx
 	(cd $(top_builddir)/cxx/util && $(MAKE) mtest.o)
+
+$(top_builddir)/dtpools/src/.libs/libdtpools.a: $(top_srcdir)/dtpools/src/*.c
+	(cd $(top_builddir)/dtpools && $(MAKE))
 
 testing:
 	$(top_builddir)/runtests -srcdir=$(srcdir) -tests=testlist \
