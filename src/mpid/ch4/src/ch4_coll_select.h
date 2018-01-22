@@ -27,6 +27,7 @@ MPL_STATIC_INLINE_PREFIX
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         return (MPIDI_coll_algo_container_t *) & CH4_Barrier_inter_composition_alpha_cnt;
     }
+
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BARRIER &&
         MPIR_Comm_is_node_aware(comm)) {
         return (MPIDI_coll_algo_container_t *) & CH4_Barrier_intra_composition_alpha_cnt;
@@ -50,6 +51,7 @@ MPL_STATIC_INLINE_PREFIX
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         return (MPIDI_coll_algo_container_t *) & CH4_Bcast_inter_composition_alpha_cnt;
     }
+
     nbytes = MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE ? type_size * count : 0;
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BCAST &&
         nbytes <= MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE && MPIR_Comm_is_node_aware(comm)) {
@@ -112,6 +114,7 @@ MPL_STATIC_INLINE_PREFIX
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         return (MPIDI_coll_algo_container_t *) & CH4_Reduce_inter_composition_alpha_cnt;
     }
+
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_REDUCE) {
         /* is the op commutative? We do SMP optimizations only if it is. */
         is_commutative = MPIR_Op_is_commutative(op);
@@ -124,6 +127,224 @@ MPL_STATIC_INLINE_PREFIX
         }
     }
     return (MPIDI_coll_algo_container_t *) & CH4_Reduce_intra_composition_beta_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Gather_select(const void *sendbuf,
+                                                          int sendcount,
+                                                          MPI_Datatype sendtype,
+                                                          void *recvbuf,
+                                                          int recvcount,
+                                                          MPI_Datatype recvtype,
+                                                          int root,
+                                                          MPIR_Comm * comm,
+                                                          MPIR_Errflag_t * errflag)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_Gather_inter_composition_alpha_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_Gather_intra_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Gatherv_select(const void *sendbuf,
+                                                           int sendcount,
+                                                           MPI_Datatype sendtype,
+                                                           void *recvbuf,
+                                                           const int *recvcounts,
+                                                           const int *displs,
+                                                           MPI_Datatype recvtype,
+                                                           int root,
+                                                           MPIR_Comm * comm,
+                                                           MPIR_Errflag_t * errflag)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_Gatherv_inter_composition_alpha_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_Gatherv_intra_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Scatter_select(const void *sendbuf,
+                                                           int sendcount,
+                                                           MPI_Datatype sendtype,
+                                                           void *recvbuf,
+                                                           int recvcount,
+                                                           MPI_Datatype recvtype,
+                                                           int root,
+                                                           MPIR_Comm * comm,
+                                                           MPIR_Errflag_t * errflag)
+{
+
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_Scatter_inter_composition_alpha_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_Scatter_intra_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Scatterv_select(const void *sendbuf,
+                                                            const int *sendcounts,
+                                                            const int *displs,
+                                                            MPI_Datatype sendtype,
+                                                            void *recvbuf,
+                                                            int recvcount,
+                                                            MPI_Datatype recvtype,
+                                                            int root,
+                                                            MPIR_Comm * comm,
+                                                            MPIR_Errflag_t * errflag)
+{
+
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_Scatterv_inter_composition_alpha_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_Scatterv_intra_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Alltoall_select(const void *sendbuf,
+                                                            int sendcount,
+                                                            MPI_Datatype sendtype,
+                                                            void *recvbuf,
+                                                            int recvcount,
+                                                            MPI_Datatype recvtype,
+                                                            MPIR_Comm * comm,
+                                                            MPIR_Errflag_t * errflag)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_Alltoall_inter_composition_alpha_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_Alltoall_intra_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Alltoallv_select(const void *sendbuf,
+                                                             const int *sendcounts,
+                                                             const int *sdispls,
+                                                             MPI_Datatype sendtype, void *recvbuf,
+                                                             const int *recvcounts,
+                                                             const int *rdispls,
+                                                             MPI_Datatype recvtype,
+                                                             MPIR_Comm * comm,
+                                                             MPIR_Errflag_t * errflag)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_Alltoallv_inter_composition_alpha_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_Alltoallv_intra_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Alltoallw_select(const void *sendbuf,
+                                                             const int sendcounts[],
+                                                             const int sdispls[],
+                                                             const MPI_Datatype sendtypes[],
+                                                             void *recvbuf, const int recvcounts[],
+                                                             const int rdispls[],
+                                                             const MPI_Datatype recvtypes[],
+                                                             MPIR_Comm * comm,
+                                                             MPIR_Errflag_t * errflag)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_Alltoallw_inter_composition_alpha_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_Alltoallw_intra_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Allgather_select(const void *sendbuf, int sendcount,
+                                                             MPI_Datatype sendtype, void *recvbuf,
+                                                             int recvcount, MPI_Datatype recvtype,
+                                                             MPIR_Comm * comm,
+                                                             MPIR_Errflag_t * errflag)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_Allgather_inter_composition_alpha_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_Allgather_intra_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Allgatherv_select(const void *sendbuf, int sendcount,
+                                                              MPI_Datatype sendtype, void *recvbuf,
+                                                              const int *recvcounts,
+                                                              const int *displs,
+                                                              MPI_Datatype recvtype,
+                                                              MPIR_Comm * comm,
+                                                              MPIR_Errflag_t * errflag)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_Allgatherv_inter_composition_alpha_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_Allgatherv_intra_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Reduce_scatter_select(const void *sendbuf,
+                                                                  void *recvbuf,
+                                                                  const int recvcounts[],
+                                                                  MPI_Datatype datatype,
+                                                                  MPI_Op op, MPIR_Comm * comm,
+                                                                  MPIR_Errflag_t * errflag)
+{
+
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) & CH4_Reduce_scatter_inter_composition_alpha_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_Reduce_scatter_intra_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Reduce_scatter_block_select(const void *sendbuf,
+                                                                        void *recvbuf,
+                                                                        int recvcount,
+                                                                        MPI_Datatype datatype,
+                                                                        MPI_Op op, MPIR_Comm * comm,
+                                                                        MPIR_Errflag_t * errflag)
+{
+
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return (MPIDI_coll_algo_container_t *) &
+            CH4_Reduce_scatter_block_inter_composition_alpha_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_Reduce_scatter_block_intra_composition_alpha_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Scan_select(const void *sendbuf,
+                                                        void *recvbuf,
+                                                        int count,
+                                                        MPI_Datatype datatype,
+                                                        MPI_Op op, MPIR_Comm * comm,
+                                                        MPIR_Errflag_t * errflag)
+{
+    if (MPII_Comm_is_node_consecutive(comm)) {
+        return (MPIDI_coll_algo_container_t *) & CH4_Scan_intra_composition_alpha_cnt;
+    }
+
+    return (MPIDI_coll_algo_container_t *) & CH4_Scan_intra_composition_beta_cnt;
+}
+
+MPL_STATIC_INLINE_PREFIX
+    MPIDI_coll_algo_container_t * MPIDI_CH4_Exscan_select(const void *sendbuf,
+                                                          void *recvbuf,
+                                                          int count,
+                                                          MPI_Datatype datatype,
+                                                          MPI_Op op, MPIR_Comm * comm,
+                                                          MPIR_Errflag_t * errflag)
+{
+    return (MPIDI_coll_algo_container_t *) & CH4_Exscan_intra_composition_alpha_cnt;
 }
 
 #endif /* CH4_COLL_SELECT_H_INCLUDED */
