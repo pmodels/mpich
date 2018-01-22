@@ -11,7 +11,7 @@ include $(top_srcdir)/Makefile.mtest
 ACLOCAL_AMFLAGS = -I confdb
 
 static_subdirs = util attr basic datatype coll comm errhan group info init \
-                 pt2pt rma topo errors manual perf mpi_t impls ckpoint ft
+                 pt2pt rma topo errors manual perf mpi_t impls ckpoint ft dtpools
 all_lang_subdirs = f77 cxx f90 f08
 
 # DIST_SUBDIRS must be a superset of SUBDIRS, and automake must be able to
