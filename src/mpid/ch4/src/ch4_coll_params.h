@@ -73,16 +73,189 @@ typedef union {
     } ch4_allreduce_beta;
 } MPIDI_CH4_Allreduce_params_t;
 
-#define MPIDI_CH4_BARRIER_PARAMS_DECL MPIDI_CH4_Barrier_params_t ch4_barrier_params
-#define MPIDI_CH4_BCAST_PARAMS_DECL MPIDI_CH4_Bcast_params_t ch4_bcast_params
-#define MPIDI_CH4_REDUCE_PARAMS_DECL MPIDI_CH4_Reduce_params_t ch4_reduce_params
-#define MPIDI_CH4_ALLREDUCE_PARAMS_DECL MPIDI_CH4_Allreduce_params_t ch4_allreduce_params
+typedef enum {
+    MPIDI_CH4_Alltoall_intra_composition_alpha_id,
+    MPIDI_CH4_Alltoall_inter_composition_alpha_id
+} MPIDI_CH4_Alltoall_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Alltoall_alpha {
+        int alltoall;
+    } ch4_alltoall_alpha;
+} MPIDI_CH4_Alltoall_params_t;
+
+typedef enum {
+    MPIDI_CH4_Alltoallv_intra_composition_alpha_id,
+    MPIDI_CH4_Alltoallv_inter_composition_alpha_id
+} MPIDI_CH4_Alltoallv_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Alltoallv_alpha {
+        int alltoallv;
+    } ch4_alltoallv_alpha;
+} MPIDI_CH4_Alltoallv_params_t;
+
+typedef enum {
+    MPIDI_CH4_Alltoallw_intra_composition_alpha_id,
+    MPIDI_CH4_Alltoallw_inter_composition_alpha_id
+} MPIDI_CH4_Alltoallw_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Alltoallw_alpha {
+        int alltoallw;
+    } ch4_alltoallw_alpha;
+} MPIDI_CH4_Alltoallw_params_t;
+
+typedef enum {
+    MPIDI_CH4_Allgather_intra_composition_alpha_id,
+    MPIDI_CH4_Allgather_inter_composition_alpha_id
+} MPIDI_CH4_Allgather_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Allgather_alpha {
+        int allgather;
+    } ch4_allgather_alpha;
+} MPIDI_CH4_Allgather_params_t;
+
+typedef enum {
+    MPIDI_CH4_Allgatherv_intra_composition_alpha_id,
+    MPIDI_CH4_Allgatherv_inter_composition_alpha_id
+} MPIDI_CH4_allgatherv_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Allgatherv_alpha {
+        int allgatherv;
+    } ch4_allgatherv_alpha;
+} MPIDI_CH4_Allgatherv_params_t;
+
+typedef enum {
+    MPIDI_CH4_Gather_intra_composition_alpha_id,
+    MPIDI_CH4_Gather_inter_composition_alpha_id
+} MPIDI_CH4_Gather_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Gather_alpha {
+        int gather;
+    } ch4_gather_alpha;
+} MPIDI_CH4_Gather_params_t;
+
+typedef enum {
+    MPIDI_CH4_Gatherv_intra_composition_alpha_id,
+    MPIDI_CH4_Gatherv_inter_composition_alpha_id
+} MPIDI_CH4_Gatherv_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Gatherv_alpha {
+        int gatherv;
+    } ch4_gatherv_alpha;
+} MPIDI_CH4_Gatherv_params_t;
+
+typedef enum {
+    MPIDI_CH4_Scatter_intra_composition_alpha_id,
+    MPIDI_CH4_Scatter_inter_composition_alpha_id
+} MPIDI_CH4_Scatter_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Scatter_alpha {
+        int scatter;
+    } ch4_scatter_alpha;
+} MPIDI_CH4_Scatter_params_t;
+
+typedef enum {
+    MPIDI_CH4_Scatterv_intra_composition_alpha_id,
+    MPIDI_CH4_Scatterv_inter_composition_alpha_id
+} MPIDI_CH4_Scatterv_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Scatterv_alpha {
+        int scatterv;
+    } ch4_scatterv_alpha;
+} MPIDI_CH4_Scatterv_params_t;
+
+typedef enum {
+    MPIDI_CH4_Reduce_scatter_intra_composition_alpha_id,
+    MPIDI_CH4_Reduce_scatter_inter_composition_alpha_id
+} MPIDI_CH4_Reduce_scatter_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Reduce_scatter_alpha {
+        int reduce_scatter;
+    } ch4_reduce_scatter_alpha;
+} MPIDI_CH4_Reduce_scatter_params_t;
+
+typedef enum {
+    MPIDI_CH4_Reduce_scatter_block_intra_composition_alpha_id,
+    MPIDI_CH4_Reduce_scatter_block_inter_composition_alpha_id
+} MPIDI_CH4_Reduce_scatter_block__id_t;
+
+typedef union {
+    struct MPIDI_CH4_Reduce_scatter_block_alpha {
+        int reduce_scatter_block;
+    } ch4_reduce_scatter_block_alpha;
+} MPIDI_CH4_Reduce_scatter_block_params_t;
+
+typedef enum {
+    MPIDI_CH4_Scan_intra_composition_alpha_id,
+    MPIDI_CH4_Scan_intra_composition_beta_id
+} MPIDI_CH4_Scan_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Scan_alpha {
+        int node_scan;
+        int roots_scan;
+        int node_bcast;
+    } ch4_scan_alpha;
+    struct MPIDI_CH4_Scan_beta {
+        int scan;
+    } ch4_scan_beta;
+} MPIDI_CH4_Scan_params_t;
+
+typedef enum {
+    MPIDI_CH4_Exscan_intra_composition_alpha_id,
+} MPIDI_CH4_Exscan_id_t;
+
+typedef union {
+    struct MPIDI_CH4_Exscan_alpha {
+        int exscan;
+    } ch4_exscan_alpha;
+} MPIDI_CH4_Exscan_params_t;
+
+#define MPIDI_CH4_BARRIER_PARAMS_DECL MPIDI_CH4_Barrier_params_t ch4_barrier_params;
+#define MPIDI_CH4_BCAST_PARAMS_DECL MPIDI_CH4_Bcast_params_t ch4_bcast_params;
+#define MPIDI_CH4_REDUCE_PARAMS_DECL MPIDI_CH4_Reduce_params_t ch4_reduce_params;
+#define MPIDI_CH4_ALLREDUCE_PARAMS_DECL MPIDI_CH4_Allreduce_params_t ch4_allreduce_params;
+#define MPIDI_CH4_ALLTOALL_PARAMS_DECL MPIDI_CH4_Alltoall_params_t ch4_alltoall_params;
+#define MPIDI_CH4_ALLTOALLV_PARAMS_DECL MPIDI_CH4_Alltoallv_params_t ch4_alltoallv_params;
+#define MPIDI_CH4_ALLTOALLW_PARAMS_DECL MPIDI_CH4_Alltoallw_params_t ch4_alltoallw_params;
+#define MPIDI_CH4_ALLGATHER_PARAMS_DECL MPIDI_CH4_Allgather_params_t ch4_allgather_params;
+#define MPIDI_CH4_ALLGATHERV_PARAMS_DECL MPIDI_CH4_Allgatherv_params_t ch4_allgatherv_params;
+#define MPIDI_CH4_GATHER_PARAMS_DECL MPIDI_CH4_Gather_params_t ch4_gather_params;
+#define MPIDI_CH4_GATHERV_PARAMS_DECL MPIDI_CH4_Gatherv_params_t ch4_gatherv_params;
+#define MPIDI_CH4_SCATTER_PARAMS_DECL MPIDI_CH4_Scatter_params_t ch4_scatter_params;
+#define MPIDI_CH4_SCATTERV_PARAMS_DECL MPIDI_CH4_Scatterv_params_t ch4_scatterv_params;
+#define MPIDI_CH4_REDUCE_SCATTER_PARAMS_DECL MPIDI_CH4_Reduce_scatter_params_t ch4_reduce_scatter_params
+#define MPIDI_CH4_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDI_CH4_Reduce_scatter_block_params_t ch4_reduce_scatter_block_params
+#define MPIDI_CH4_SCAN_PARAMS_DECL MPIDI_CH4_Scan_params_t ch4_scan_params
+#define MPIDI_CH4_EXSCAN_PARAMS_DECL MPIDI_CH4_Exscan_params_t ch4_exscan_params
 
 typedef union {
     MPIDI_CH4_BARRIER_PARAMS_DECL;
     MPIDI_CH4_BCAST_PARAMS_DECL;
     MPIDI_CH4_REDUCE_PARAMS_DECL;
     MPIDI_CH4_ALLREDUCE_PARAMS_DECL;
+    MPIDI_CH4_ALLTOALL_PARAMS_DECL;
+    MPIDI_CH4_ALLTOALLV_PARAMS_DECL;
+    MPIDI_CH4_ALLTOALLW_PARAMS_DECL;
+    MPIDI_CH4_ALLGATHER_PARAMS_DECL;
+    MPIDI_CH4_ALLGATHERV_PARAMS_DECL;
+    MPIDI_CH4_GATHER_PARAMS_DECL;
+    MPIDI_CH4_GATHERV_PARAMS_DECL;
+    MPIDI_CH4_SCATTER_PARAMS_DECL;
+    MPIDI_CH4_SCATTERV_PARAMS_DECL;
+    MPIDI_CH4_REDUCE_SCATTER_PARAMS_DECL;
+    MPIDI_CH4_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
+    MPIDI_CH4_SCAN_PARAMS_DECL;
+    MPIDI_CH4_EXSCAN_PARAMS_DECL;
 } MPIDI_CH4_coll_params_t;
 
 typedef struct MPIDI_coll_algo_container {
