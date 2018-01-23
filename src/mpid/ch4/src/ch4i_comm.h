@@ -822,7 +822,7 @@ static inline int MPIDI_set_map(MPIDI_rank_map_t * src_rmap,
              mapper->src_mapping_size == total_mapper_size) {
         /* check if new comm has the same mapping as src_comm */
         /* detect src_mapping_offset for direct_to_direct and offset_to_offset */
-        int mode_detected, offset, blocksize, stride;
+        int mode_detected, offset = 0, blocksize, stride;
         mode_detected = MPIDI_detect_regular_model(mapper->src_mapping, mapper->src_mapping_size,
                                                    &offset, &blocksize, &stride);
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
