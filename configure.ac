@@ -1467,7 +1467,7 @@ if test "$with_hwloc_prefix" = "embedded" ; then
          CFLAGS="$HWLOC_EMBEDDED_VISIBILITY_CFLAGS $CFLAGS"
       fi
       hwlocsrcdir="src/hwloc"
-      hwloclib="src/hwloc/src/libhwloc_embedded.la"
+      hwloclib="src/hwloc/hwloc/libhwloc_embedded.la"
    fi
 else
    AC_CHECK_HEADERS([hwloc.h])

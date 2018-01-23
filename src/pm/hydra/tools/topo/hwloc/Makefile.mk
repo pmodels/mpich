@@ -15,6 +15,6 @@ AM_CPPFLAGS += -I$(top_srcdir)/tools/topo/hwloc/hwloc/include \
 # Append hwloc to the external subdirs, so it gets built first
 external_subdirs += tools/topo/hwloc/hwloc
 external_dist_subdirs += tools/topo/hwloc/hwloc
-external_ldflags += -L$(top_builddir)/tools/topo/hwloc/hwloc/src
+external_ldflags += -L$(top_builddir)/tools/topo/hwloc/hwloc/hwloc
 external_libs += -lhwloc_embedded
 endif
