@@ -540,8 +540,9 @@ static inline int MPIDI_OFI_do_inject(int rank,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t msg_hdr;
     fi_addr_t addr;
-    char buff[MPIDI_Global.max_buffered_send];
+    char *buff;
     size_t buff_len;
+    MPIR_CHKLMEM_DECL(1);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_INJECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_INJECT);
@@ -565,14 +566,16 @@ static inline int MPIDI_OFI_do_inject(int rank,
         goto fn_exit;
     }
 
+    buff_len = sizeof(msg_hdr) + am_hdr_sz;
+    MPIR_CHKLMEM_MALLOC(buff, char *, buff_len, mpi_errno, "buff", MPL_MEM_BUFFER);
     memcpy(buff, &msg_hdr, sizeof(msg_hdr));
     memcpy(buff + sizeof(msg_hdr), am_hdr, am_hdr_sz);
-    buff_len = sizeof(msg_hdr) + am_hdr_sz;
 
     MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_Global.ctx[0].tx, buff, buff_len, addr),
                             need_lock, inject);
 
   fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_INJECT);
     return mpi_errno;
   fn_fail:
