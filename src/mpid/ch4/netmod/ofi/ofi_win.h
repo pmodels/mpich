@@ -126,7 +126,7 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
 {
     int mpi_errno = MPI_SUCCESS;
     uint64_t window_instance;
-    MPIR_Win *win;
+    MPIR_Win *win = NULL;
     struct fi_info *finfo;
     struct fi_cntr_attr cntr_attr;
 
