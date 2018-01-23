@@ -613,7 +613,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIDI_Global.prov_use = fi_dupinfo(prov_use);
     MPIR_Assert(MPIDI_Global.prov_use);
 
-    MPIDI_Global.max_buffered_send = MPL_MIN(prov_use->tx_attr->inject_size, UINT16_MAX);
+    MPIDI_Global.max_buffered_send = prov_use->tx_attr->inject_size;
     MPIDI_Global.max_buffered_write = prov_use->tx_attr->inject_size;
     MPIDI_Global.max_send = prov_use->ep_attr->max_msg_size;
     MPIDI_Global.max_write = prov_use->ep_attr->max_msg_size;
