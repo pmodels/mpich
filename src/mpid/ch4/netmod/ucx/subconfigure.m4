@@ -72,7 +72,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_UCX],[
 
     if test "${ucx_embedded}" = "yes" ; then
         PAC_PUSH_FLAG(CPPFLAGS)
-        PAC_CONFIG_SUBDIR_ARGS([src/mpid/ch4/netmod/ucx/ucx],[--disable-static --enable-embedded],[],[AC_MSG_ERROR(ucx configure failed)])
+        PAC_CONFIG_SUBDIR_ARGS([src/mpid/ch4/netmod/ucx/ucx],[--enable-embedded],[],[AC_MSG_ERROR(ucx configure failed)])
         PAC_POP_FLAG(CPPFLAGS)
         PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ucx/ucx/src], [CPPFLAGS])
         PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ucx/ucx/src], [CPPFLAGS])
