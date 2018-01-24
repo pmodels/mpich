@@ -7,6 +7,8 @@
 
 /* style: allow:fprintf:4 sig:0 */
 
+#include "mpiimpl.h"
+
 /* stdarg is required to handle the variable argument lists for 
    MPIR_Err_create_code */
 #include <stdarg.h>
@@ -16,7 +18,6 @@
    is used in only a few places, here and potentially in ROMIO) */
 #define USE_ERR_CODE_VALIST
 
-#include "mpiimpl.h"
 /* errcodes.h contains the macros used to access fields within an error
    code and a description of the bits in an error code.  A brief
    version of that description is included below */
