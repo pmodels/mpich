@@ -14,7 +14,7 @@
 #include "stubnm_impl.h"
 
 static inline int MPIDI_NM_mpi_recv(void *buf,
-                                    int count,
+                                    MPI_Aint count,
                                     MPI_Datatype datatype,
                                     int rank,
                                     int tag,
@@ -43,7 +43,7 @@ static inline int MPIDI_NM_mpi_recv_init(void *buf,
 }
 
 static inline int MPIDI_NM_mpi_imrecv(void *buf,
-                                      int count,
+                                      MPI_Aint count,
                                       MPI_Datatype datatype,
                                       MPIR_Request * message, MPIR_Request ** rreqp)
 {
@@ -52,7 +52,7 @@ static inline int MPIDI_NM_mpi_imrecv(void *buf,
 }
 
 static inline int MPIDI_NM_mpi_irecv(void *buf,
-                                     int count,
+                                     MPI_Aint count,
                                      MPI_Datatype datatype,
                                      int rank,
                                      int tag,

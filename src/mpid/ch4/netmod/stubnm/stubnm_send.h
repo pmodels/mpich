@@ -14,7 +14,7 @@
 #include "stubnm_impl.h"
 
 static inline int MPIDI_NM_mpi_send(const void *buf,
-                                    int count,
+                                    MPI_Aint count,
                                     MPI_Datatype datatype,
                                     int rank,
                                     int tag,
@@ -25,7 +25,7 @@ static inline int MPIDI_NM_mpi_send(const void *buf,
 }
 
 static inline int MPIDI_NM_mpi_ssend(const void *buf,
-                                     int count,
+                                     MPI_Aint count,
                                      MPI_Datatype datatype,
                                      int rank,
                                      int tag,
@@ -89,7 +89,7 @@ static inline int MPIDI_NM_mpi_rsend_init(const void *buf,
 }
 
 static inline int MPIDI_NM_mpi_isend(const void *buf,
-                                     int count,
+                                     MPI_Aint count,
                                      MPI_Datatype datatype,
                                      int rank,
                                      int tag,
@@ -100,7 +100,7 @@ static inline int MPIDI_NM_mpi_isend(const void *buf,
 }
 
 static inline int MPIDI_NM_mpi_issend(const void *buf,
-                                      int count,
+                                      MPI_Aint count,
                                       MPI_Datatype datatype,
                                       int rank,
                                       int tag,
