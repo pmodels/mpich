@@ -260,7 +260,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
     }
 
     /* compute the number of peers I will recv from */
-    mpi_errno = MPID_Reduce_scatter_block(rs, in_out_peers, 2, MPI_INT, MPI_SUM, comm_ptr, &errflag);
+    mpi_errno = MPIR_Reduce_scatter_block(rs, in_out_peers, 2, MPI_INT, MPI_SUM, comm_ptr, &errflag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 

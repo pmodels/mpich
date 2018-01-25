@@ -90,7 +90,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
            along with the final context id */
         comm_info[0] = final_context_id;
         MPL_DBG_MSG(MPIR_DBG_COMM,VERBOSE,"About to bcast on local_comm");
-        mpi_errno = MPID_Bcast( comm_info, 1, MPI_INT, local_leader, local_comm_ptr, &errflag );
+        mpi_errno = MPIR_Bcast( comm_info, 1, MPI_INT, local_leader, local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         MPL_DBG_MSG_D(MPIR_DBG_COMM,VERBOSE,"end of bcast on local_comm of size %d",
@@ -100,7 +100,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
     {
         /* we're the other processes */
         MPL_DBG_MSG(MPIR_DBG_COMM,VERBOSE,"About to receive bcast on local_comm");
-        mpi_errno = MPID_Bcast( comm_info, 1, MPI_INT, local_leader, local_comm_ptr, &errflag );
+        mpi_errno = MPIR_Bcast( comm_info, 1, MPI_INT, local_leader, local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 

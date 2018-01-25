@@ -17,7 +17,7 @@ int MPIR_Neighbor_allgather_nb(const void *sendbuf, int sendcount, MPI_Datatype 
     MPIR_Request *req_ptr = NULL;
 
     /* just call the nonblocking version and wait on it */
-    mpi_errno = MPID_Ineighbor_allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, &req_ptr);
+    mpi_errno = MPIR_Ineighbor_allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, &req_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     if(req_ptr)
         req = req_ptr->handle;
