@@ -232,14 +232,14 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
     /* even if we did not give an info key, do an allreduce since
      * other processes might have given an info key */
     mpi_errno =
-        MPID_Allreduce(&obj_type, &obj_type_global, sizeof(obj_type), MPI_BYTE, MPI_BAND, comm_ptr,
+        MPIR_Allreduce(&obj_type, &obj_type_global, sizeof(obj_type), MPI_BYTE, MPI_BAND, comm_ptr,
                        &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     info_args_are_equal = (obj_type == obj_type_global);
 	mpi_errno =
-        MPID_Allreduce(MPI_IN_PLACE, &info_args_are_equal, 1, MPI_INT, MPI_MIN, comm_ptr, &errflag);
+        MPIR_Allreduce(MPI_IN_PLACE, &info_args_are_equal, 1, MPI_INT, MPI_MIN, comm_ptr, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

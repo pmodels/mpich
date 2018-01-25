@@ -17,7 +17,7 @@ int MPIR_Neighbor_alltoall_nb(const void *sendbuf, int sendcount, MPI_Datatype s
     MPIR_Request *req_ptr = NULL;
 
     /* just call the nonblocking version and wait on it */
-    mpi_errno = MPID_Ineighbor_alltoall(sendbuf, sendcount, sendtype,
+    mpi_errno = MPIR_Ineighbor_alltoall(sendbuf, sendcount, sendtype,
                                              recvbuf, recvcount, recvtype,
                                              comm_ptr, &req_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

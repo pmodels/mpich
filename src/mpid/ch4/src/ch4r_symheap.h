@@ -227,7 +227,7 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
 
     maxloc.sz = size;
     maxloc.loc = comm->rank;
-    mpi_errno = MPID_Allreduce(&maxloc,
+    mpi_errno = MPIR_Allreduce(&maxloc,
                                &maxloc_result, 1, MPI_LONG_INT, MPI_MAXLOC, comm, &errflag);
 
     if (mpi_errno != MPI_SUCCESS)
@@ -248,7 +248,7 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
                                  PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0, MPL_MEM_RMA);
             }
 
-            mpi_errno = MPID_Bcast(&map_pointer,
+            mpi_errno = MPIR_Bcast(&map_pointer,
                                    1, MPI_UNSIGNED_LONG, maxloc_result.loc, comm, &errflag);
 
             if (mpi_errno != MPI_SUCCESS)
@@ -269,7 +269,7 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
                 baseP = (void *) map_pointer;
 
             test = ((uintptr_t) baseP != -1ULL) ? 1 : 0;
-            mpi_errno = MPID_Allreduce(&test,
+            mpi_errno = MPIR_Allreduce(&test,
                                        &result, 1, MPI_UNSIGNED, MPI_BAND, comm, &errflag);
 
             if (mpi_errno != MPI_SUCCESS)
