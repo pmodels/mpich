@@ -119,6 +119,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int blocking)
                 curr_rreq_hdr->iov_num_total = 1;
 
                 recv_data_sz = p_data_sz;
+
+                curr_rreq_hdr->iov_ptr = curr_rreq_hdr->iov;
             } else {
                 for (i = 0; i < p_data_sz; i++) {
                     curr_rreq_hdr->iov[i] = ((struct iovec *) p_data)[i];
@@ -126,11 +128,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int blocking)
                     recv_data_sz += curr_rreq_hdr->iov[i].iov_len;
                 }
 
+                curr_rreq_hdr->iov_ptr = p_data;
                 curr_rreq_hdr->iov_num = p_data_sz;
                 curr_rreq_hdr->iov_num_total = p_data_sz;
             }
-
-            curr_rreq_hdr->iov_ptr = curr_rreq_hdr->iov;
 
             /* Set final request status */
 

@@ -21,7 +21,7 @@
 #define MPIDI_POSIX_AM_DATA_SZ_BITS     (48)
 
 #define MPIDI_POSIX_AM_MSG_HEADER_SIZE  (sizeof(MPIDI_POSIX_am_header_t))
-#define MPIDI_POSIX_MAX_IOV_NUM         (8)
+#define MPIDI_POSIX_MAX_IOV_NUM         (2)
 
 typedef enum {
     MPIDI_POSIX_EAGER_RECV_POSTED_HOOK_STATE_INITIALIZED,
