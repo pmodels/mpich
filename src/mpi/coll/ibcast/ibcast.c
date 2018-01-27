@@ -24,7 +24,7 @@ cvars:
     - name        : MPIR_CVAR_IBCAST_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
-      default     : auto
+      default     : tree_knomial
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ

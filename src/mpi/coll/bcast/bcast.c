@@ -95,7 +95,7 @@ cvars:
     - name        : MPIR_CVAR_BCAST_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
-      default     : auto
+      default     : nb
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
