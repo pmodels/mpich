@@ -35,7 +35,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 #define FUNCNAME MPIR_Testall_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Testall_impl(int count, MPI_Request array_of_requests[], int *flag,
+int MPIR_Testall_impl(int count, MPIR_Request *request_ptrs[], int *flag,
                       MPI_Status array_of_statuses[])
 {
     int i;
@@ -187,7 +187,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
         }
     }
 
-    mpi_errno = MPID_Progress_test();
+    mpi_errno = MPID_Testall(count, request_ptrs, flag, array_of_statuses);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     for (i = 0; i < count; i++)
