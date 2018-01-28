@@ -30,10 +30,48 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx, int *flag
 #undef MPI_Testany
 #define MPI_Testany PMPI_Testany
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Testany_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Testany_impl(int count, MPIR_Request *request_ptrs[], int *indx,
+                      int *flag, MPI_Status *status)
+{
+    int i;
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPID_Progress_test();
+    /* --BEGIN ERROR HANDLING-- */
+    if (mpi_errno != MPI_SUCCESS)
+    {
+        goto fn_fail;
+    }
+    /* --END ERROR HANDLING-- */
+
+    for (i = 0; i < count; i++)
+    {
+        if (request_ptrs[i] != NULL &&
+            request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
+            request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL)
+        {
+            mpi_errno = (request_ptrs[i]->u.ureq.greq_fns->poll_fn)(request_ptrs[i]->u.ureq.greq_fns->grequest_extra_state,
+                                                             status);
+            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+        }
+    }
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Testany
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
     MPI_Testany - Tests for completion of any previdously initiated 
@@ -67,7 +105,6 @@ program to unexecpectedly terminate or produce incorrect results.
 int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
 		int *flag, MPI_Status *status)
 {
-    static const char FCNAME[] = "MPI_Testany";
     MPIR_Request * request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPIR_Request ** request_ptrs = request_ptr_array;
     int i;
@@ -151,7 +188,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     *flag = FALSE;
     *indx = MPI_UNDEFINED;
     
-    mpi_errno = MPID_Progress_test();
+    mpi_errno = MPIR_Testany_impl(count, request_ptrs, flag, indx, status);
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
     {
@@ -161,14 +198,6 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
 	
     for (i = 0; i < count; i++)
     {
-	if (request_ptrs[i] != NULL && 
-            request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
-            request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL)
-	{
-            mpi_errno = (request_ptrs[i]->u.ureq.greq_fns->poll_fn)(request_ptrs[i]->u.ureq.greq_fns->grequest_extra_state,
-                                                             status);
-	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-	}
         if (request_ptrs[i] != NULL)
         {
             if (MPIR_Request_is_complete(request_ptrs[i]))
