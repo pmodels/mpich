@@ -30,8 +30,6 @@ int MPI_Type_get_contents(MPI_Datatype datatype, int max_integers, int max_addre
 #undef MPI_Type_get_contents
 #define MPI_Type_get_contents PMPI_Type_get_contents
 
-#endif
-
 /*@
   MPIR_Type_get_contents - get content information from datatype
 
@@ -111,6 +109,8 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
 
     return MPI_SUCCESS;
 }
+
+#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_get_contents
