@@ -388,9 +388,9 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
         /* check whether the communicator resides inside a node */
         if (comm->local_size == num_local) {
-            comm->is_single_node = (char)1;
+            comm->is_single_node = 1;
         } else {
-            comm->is_single_node = (char)0;
+            comm->is_single_node = 0;
         }
         /* if the node_roots_comm and comm would be the same size, then creating
          * the second communicator is useless and wasteful. */
@@ -411,7 +411,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             comm->node_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
             comm->node_comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__NODE;
             comm->node_comm->local_comm = NULL;
-            comm->node_comm->is_single_node = (char)1;
+            comm->node_comm->is_single_node = 1;
             MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Create node_comm=%p\n", comm->node_comm);
 
             comm->node_comm->local_size = num_local;
@@ -445,7 +445,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             comm->node_roots_comm->local_comm = NULL;
             MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Create node_roots_comm=%p\n", comm->node_roots_comm);
 
-            comm->node_roots_comm->is_single_node = (char)0;
+            comm->node_roots_comm->is_single_node = 0;
             comm->node_roots_comm->local_size = num_external;
             comm->node_roots_comm->pof2 = MPL_pof2(comm->node_roots_comm->local_size);
             comm->node_roots_comm->remote_size = num_external;
