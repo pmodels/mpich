@@ -154,6 +154,7 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, hwloc_obj_type_t 
 
     obj_containing_cpuset =
         hwloc_get_obj_covering_cpuset(MPIR_Process.topology, MPIR_Process.bindset);
+    MPIR_Assert(obj_containing_cpuset != NULL);
     if (obj_containing_cpuset->type == query_obj_type) {
         color = obj_containing_cpuset->logical_index;
     }
