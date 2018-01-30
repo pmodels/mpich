@@ -508,7 +508,9 @@ static int MPIR_Bsend_check_active(void)
                 MPIR_ERR_POP(mpi_errno);
         }
         if (flag) {
-            mpi_errno = MPIR_Request_completion_processing(&r, active->request, MPI_STATUS_IGNORE, &active_flag);
+            mpi_errno =
+                MPIR_Request_completion_processing(&r, active->request, MPI_STATUS_IGNORE,
+                                                   &active_flag);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             /* We're done.  Remove this segment */

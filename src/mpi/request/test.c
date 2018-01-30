@@ -30,7 +30,7 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
 #define FUNCNAME MPIR_Test_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Test_impl(MPIR_Request *request_ptr, int *flag, MPI_Status *status)
+int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     *flag = FALSE;
@@ -146,7 +146,8 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Test_impl(request_ptr, flag, status);
-    if (mpi_errno) goto fn_fail;
+    if (mpi_errno)
+        goto fn_fail;
 
     if (*flag != FALSE) {
         mpi_errno = MPIR_Request_completion_processing(request_ptr, status,

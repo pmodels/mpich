@@ -146,8 +146,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[], MPI_Status arr
     }
 
     if (unlikely(disabled_anysource)) {
-        mpi_errno =
-            MPIR_Testall_impl(count, array_of_requests, &disabled_anysource, array_of_statuses);
+        mpi_errno = MPIR_Testall_impl(count, request_ptrs, &disabled_anysource, array_of_statuses);
         goto fn_exit;
     }
 
