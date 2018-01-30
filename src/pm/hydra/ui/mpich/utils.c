@@ -899,7 +899,7 @@ static void bind_to_help_fn(void)
     printf("            user:0+2,1+4,3,2 -- user specified binding\n");
     printf("\n");
     printf("        Architecture aware options (part within the {} braces are optional):\n");
-    printf("            board{:<n>}      -- bind to 'n' motherboards\n");
+    printf("            machine          -- bind to machine\n");
     printf("            numa{:<n>}       -- bind to 'n' numa domains\n");
     printf("            socket{:<n>}     -- bind to 'n' sockets\n");
     printf("            core{:<n>}       -- bind to 'n' cores\n");
@@ -915,7 +915,7 @@ static void bind_to_help_fn(void)
     printf("        Default: <same option as binding>\n");
     printf("\n");
     printf("        Architecture aware options:\n");
-    printf("            board            -- map to motherboard\n");
+    printf("            machine          -- map to machine\n");
     printf("            numa             -- map to numa domain\n");
     printf("            socket           -- map to socket\n");
     printf("            core             -- map to core\n");

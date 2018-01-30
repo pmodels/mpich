@@ -179,7 +179,7 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
 
 
     /* get the binding object */
-    if (!strcmp(bind_str, "board"))
+    if (!strcmp(bind_str, "machine"))
         bind_depth = hwloc_get_type_or_above_depth(topology, HWLOC_OBJ_MACHINE);
     else if (!strcmp(bind_str, "numa"))
         bind_depth = hwloc_get_type_or_above_depth(topology, HWLOC_OBJ_NODE);
@@ -200,7 +200,7 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
     }
 
     /* get the mapping */
-    if (!strcmp(map_str, "board"))
+    if (!strcmp(map_str, "machine"))
         map_depth = hwloc_get_type_or_above_depth(topology, HWLOC_OBJ_MACHINE);
     else if (!strcmp(map_str, "numa"))
         map_depth = hwloc_get_type_or_above_depth(topology, HWLOC_OBJ_NODE);
