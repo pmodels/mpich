@@ -816,6 +816,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         int ret;
         struct fi_tx_attr tx_attr;
         memset(&tx_attr, 0, sizeof(tx_attr));
+        /* A shared transmit context’s attributes must be a union of all associated
+         * endpoints' transmit capabilities. */
+        tx_attr.caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
+        tx_attr.msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
         tx_attr.op_flags = FI_DELIVERY_COMPLETE | FI_COMPLETION;
         MPIDI_OFI_CALL_RETURN(fi_stx_context(MPIDI_Global.domain,
                                              &tx_attr,
