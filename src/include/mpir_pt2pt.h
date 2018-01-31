@@ -18,6 +18,9 @@ int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[], int *outcount
 int MPIR_Testall_impl(int count, MPIR_Request * array_of_request_ptrs[], int *flag,
                       MPI_Status array_of_statuses[]);
 int MPIR_Wait_impl(MPI_Request * request, MPI_Status * status);
-int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[], MPI_Status array_of_statuses[]);
+int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_statuses[]);
+
+int MPIR_Waitall_post(int count, MPI_Request array_of_requests[],
+                      MPIR_Request * request_ptrs[], MPI_Status array_of_statuses[]);
 
 #endif /* MPIR_PT2PT_H_INCLUDED */
