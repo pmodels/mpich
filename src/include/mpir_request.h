@@ -166,6 +166,18 @@ static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
             req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_RECV);
 }
 
+/* Return whether a request is active.
+ * A persistent request and the handle to it are "inactive"
+ * if the request is not associated with any ongoing communication.
+ * A handle is "active" if it is neither null nor "inactive". */
+static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
+{
+    if (req_ptr == NULL)
+        return 0;
+    else
+        return (!MPIR_Request_is_persistent(req_ptr) || (req_ptr)->u.persist.real_request != NULL);
+}
+
 static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 {
     MPIR_Request *req;
