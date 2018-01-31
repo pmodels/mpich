@@ -160,6 +160,20 @@ extern MPIR_Object_alloc_t MPIR_Request_mem;
 /* Preallocated request objects */
 extern MPIR_Request MPIR_Request_direct[];
 
+
+/* Return whether a request is active.
+ * A persistent request and the handle to it are "inactive"
+ * if the request is not associated with any ongoing communication.
+ * A handle is "active" if it is neither null nor "inactive". */
+static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
+{
+    if (req_ptr == NULL)
+        return 0;
+    return (((req_ptr)->kind != MPIR_REQUEST_KIND__PREQUEST_SEND &&
+             (req_ptr)->kind != MPIR_REQUEST_KIND__PREQUEST_RECV) ||
+            (req_ptr)->u.persist.real_request != NULL);
+}
+
 static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
 {
     return (req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_SEND ||
