@@ -16,7 +16,8 @@
 #include "pmi.h"
 #endif
 
-/* style: allow:fprintf:1 sig:0 */   /* For writing the name/service pair */
+/* style: allow:fprintf:1 sig:0 */
+/* For writing the name/service pair */
 
 /* Define the name service handle */
 #define MPID_MAX_NAMEPUB 64

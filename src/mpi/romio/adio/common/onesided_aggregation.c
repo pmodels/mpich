@@ -2200,7 +2200,7 @@ printf("iAmUsedAgg - currentRoundFDStart initialized "
               sourceAggBlockLengths[sourceAggContigAccessCount]= bufferAmountToRecv;
               sourceAggDataTypes[sourceAggContigAccessCount] = MPI_BYTE;
               sourceAggDisplacements[sourceAggContigAccessCount] = sourceDisplacementToUseThisRound;
-              recvBufferDisplacements[sourceAggContigAccessCount] = (MPI_Aint)currentFDSourceBufferState[aggIter].sourceBufferOffset;
+              recvBufferDisplacements[sourceAggContigAccessCount] = (MPI_Aint) currentFDSourceBufferState[aggIter].sourceBufferOffset;
               currentFDSourceBufferState[aggIter].sourceBufferOffset += (ADIO_Offset)bufferAmountToRecv;
               sourceAggContigAccessCount++;
             }
@@ -2208,7 +2208,7 @@ printf("iAmUsedAgg - currentRoundFDStart initialized "
               sourceAggBlockLengths[sourceAggContigAccessCount]= bufferAmountToRecv;
               sourceAggDataTypes[sourceAggContigAccessCount] = MPI_BYTE;
               sourceAggDisplacements[sourceAggContigAccessCount] = sourceDisplacementToUseThisRound;
-              recvBufferDisplacements[sourceAggContigAccessCount] = (MPI_Aint)derivedTypePackedSourceBufferOffset;
+              recvBufferDisplacements[sourceAggContigAccessCount] = (MPI_Aint) derivedTypePackedSourceBufferOffset;
               derivedTypePackedSourceBufferOffset += (ADIO_Offset)bufferAmountToRecv;
               sourceAggContigAccessCount++;
             }
