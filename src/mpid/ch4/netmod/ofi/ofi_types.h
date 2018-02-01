@@ -345,6 +345,7 @@ typedef struct {
     struct fid_cq *p2p_cq;
     struct fid_cntr *rma_cmpl_cntr;
     struct fid_stx *rma_stx_ctx;        /* shared TX context for RMA */
+    struct fid_ep *rma_sep;     /* dedicated scalable EP for RMA */
 
     /* Queryable limits */
     uint64_t max_buffered_send;
@@ -362,6 +363,7 @@ typedef struct {
     size_t rx_iov_limit;
     size_t rma_iov_limit;
     int max_ch4_vnis;
+    int max_rma_sep_tx_cnt;     /* Max number of transmit context on one RMA scalable EP */
     size_t max_order_raw;
     size_t max_order_war;
     size_t max_order_waw;
@@ -378,6 +380,7 @@ typedef struct {
     void *win_map;
     uint64_t rma_issued_cntr;
     MPIDI_OFI_atomic_valid_t win_op_table[MPIDI_OFI_DT_SIZES][MPIDI_OFI_OP_SIZES];
+    UT_array *rma_sep_idx_array;        /* Array of available indexes of transmit contexts on sep */
 
     /* Active Message Globals */
     struct iovec am_iov[MPIDI_OFI_NUM_AM_BUFFERS] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);

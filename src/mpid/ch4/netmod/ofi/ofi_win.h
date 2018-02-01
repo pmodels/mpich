@@ -167,6 +167,127 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_set_per_win_sync(MPIR_Win * win)
 }
 
 /*
+ * Initialize endpoint using scalable endpoint.
+ *
+ * Return value:
+ * MPI_SUCCESS: Endpoint is successfully initialized.
+ * MPIDI_OFI_ENAVAIL: OFI resource is not available.
+ * MPIDI_OFI_EPERROR: OFI endpoint related failures.
+ * MPI_ERR_OTHER: Other error occurs.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_win_init_sep
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init_sep(MPIR_Win * win)
+{
+    int i, ret, mpi_errno = MPI_SUCCESS;
+    struct fi_info *finfo;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT_SEP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_INIT_SEP);
+
+    finfo = fi_dupinfo(MPIDI_Global.prov_use);
+    MPIR_Assert(finfo);
+
+    /* Initialize scalable EP when first window is created. */
+    if (MPIDI_Global.rma_sep == NULL) {
+        /* Specify number of transmit context according user input and provider limit. */
+        MPIDI_Global.max_rma_sep_tx_cnt = MPL_MIN(MPIDI_Global.prov_use->domain_attr->max_ep_tx_ctx,
+                                                  MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX);
+        finfo->ep_attr->tx_ctx_cnt = MPIDI_Global.max_rma_sep_tx_cnt;
+
+        MPIDI_OFI_CALL_RETURN(fi_scalable_ep
+                              (MPIDI_Global.domain, finfo, &MPIDI_Global.rma_sep, NULL), ret);
+        if (ret < 0) {
+            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to create scalable endpoint.\n");
+            MPIDI_Global.rma_sep = NULL;
+            mpi_errno = MPIDI_OFI_ENAVAIL;
+            goto fn_fail;
+        }
+
+        MPIDI_OFI_CALL_RETURN(fi_scalable_ep_bind(MPIDI_Global.rma_sep, &(MPIDI_Global.av->fid), 0),
+                              ret);
+        if (ret < 0) {
+            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        "Failed to bind scalable endpoint to address vector.\n");
+            MPIDI_Global.rma_sep = NULL;
+            mpi_errno = MPIDI_OFI_ENAVAIL;
+            goto fn_fail;
+        }
+
+        /* Allocate and initilize tx index array. */
+        utarray_new(MPIDI_Global.rma_sep_idx_array, &ut_int_icd, MPL_MEM_RMA);
+        for (i = 0; i < MPIDI_Global.max_rma_sep_tx_cnt; i++) {
+            utarray_push_back(MPIDI_Global.rma_sep_idx_array, &i, MPL_MEM_RMA);
+        }
+    }
+    /* Set per window transmit attributes. */
+    MPIDI_OFI_set_rma_fi_info(win, finfo);
+    /* Get available transmit context index. */
+    int *index = (int *) utarray_back(MPIDI_Global.rma_sep_idx_array);
+    if (index == NULL) {
+        mpi_errno = MPIDI_OFI_ENAVAIL;
+        goto fn_fail;
+    }
+    /* Retrieve transmit context on scalable EP. */
+    MPIDI_OFI_CALL_RETURN(fi_tx_context
+                          (MPIDI_Global.rma_sep, *index, finfo->tx_attr, &(MPIDI_OFI_WIN(win).ep),
+                           NULL), ret);
+    if (ret < 0) {
+        MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    "Failed to retrieve transmit context from scalable endpoint.\n");
+        mpi_errno = MPIDI_OFI_ENAVAIL;
+        goto fn_fail;
+    }
+
+    MPIDI_OFI_WIN(win).sep_tx_idx = *index;
+    /* Pop this index out of reserving array. */
+    utarray_pop_back(MPIDI_Global.rma_sep_idx_array);
+
+    MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep,
+                                     &MPIDI_Global.ctx[0].cq->fid,
+                                     FI_TRANSMIT | FI_SELECTIVE_COMPLETION), ret);
+    if (ret < 0) {
+        MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    "Failed to bind endpoint to completion queue.\n");
+        mpi_errno = MPIDI_OFI_EPERROR;
+        goto fn_fail;
+    }
+
+    if (MPIDI_OFI_win_set_per_win_sync(win) == MPI_SUCCESS) {
+        MPIDI_OFI_CALL_RETURN(fi_enable(MPIDI_OFI_WIN(win).ep), ret);
+        if (ret < 0) {
+            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to activate endpoint.\n");
+            mpi_errno = MPIDI_OFI_EPERROR;
+            goto fn_fail;
+        }
+    } else {
+        /* Fail in per-window sync initialization,
+         * we are not using scalable endpoint without per-win sync support. */
+        mpi_errno = MPIDI_OFI_EPERROR;
+        goto fn_fail;
+    }
+
+  fn_exit:
+    fi_freeinfo(finfo);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT_SEP);
+    return mpi_errno;
+  fn_fail:
+    if (MPIDI_OFI_WIN(win).sep_tx_idx != -1) {
+        /* Push tx idx back into available pool. */
+        utarray_push_back(MPIDI_Global.rma_sep_idx_array, &i, MPL_MEM_RMA);
+        MPIDI_OFI_WIN(win).sep_tx_idx = -1;
+    }
+    if (MPIDI_OFI_WIN(win).ep != NULL) {
+        /* Close an endpoint and release all resources associated with it. */
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
+        MPIDI_OFI_WIN(win).ep = NULL;
+    }
+    goto fn_exit;
+}
+
+/*
  * Initialize endpoint using shared transmit context.
  *
  * Return value:
@@ -335,14 +456,23 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
     MPIDI_OFI_WIN(win).win_id = ((uint64_t) comm_ptr->context_id) | (window_instance << 32);
     MPIDI_CH4U_map_set(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id, win, MPL_MEM_RMA);
 
-    if (MPIR_CVAR_CH4_OFI_ENABLE_PER_WIN_SYNC) {
-        /* Create tx using shared transmit context. */
-        if (MPIDI_OFI_win_init_stx(win) == MPI_SUCCESS) {
+    MPIDI_OFI_WIN(win).sep_tx_idx = -1; /* By default, -1 means not using scalable EP. */
+
+    /* First, try to enable scalable EP. */
+    if (MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS && MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX > 0) {
+        /* Create tx based on scalable EP. */
+        if (MPIDI_OFI_win_init_sep(win) == MPI_SUCCESS) {
             goto fn_exit;
         }
     }
 
-    /* Fall back to use global EP. */
+    /* If scalable EP is not available, try shared transmit context next. */
+    /* Create tx using shared transmit context. */
+    if (MPIDI_OFI_win_init_stx(win) == MPI_SUCCESS) {
+        goto fn_exit;
+    }
+
+    /* Fall back to use global EP, without per-window sync support. */
     MPIDI_OFI_win_init_global(win);
 
   fn_exit:
@@ -609,6 +739,11 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
 
     MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator, window_instance);
     MPIDI_CH4U_map_erase(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id);
+    /* For scalable EP: push transmit context index back into available pool. */
+    if (MPIDI_OFI_WIN(win).sep_tx_idx != -1) {
+        utarray_push_back(MPIDI_Global.rma_sep_idx_array, &(MPIDI_OFI_WIN(win).sep_tx_idx),
+                          MPL_MEM_RMA);
+    }
     if (MPIDI_OFI_WIN(win).ep != MPIDI_Global.ctx[0].tx)
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
     if (MPIDI_OFI_WIN(win).cmpl_cntr != MPIDI_Global.rma_cmpl_cntr)
