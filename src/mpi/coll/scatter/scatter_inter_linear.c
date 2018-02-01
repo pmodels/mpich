@@ -48,8 +48,7 @@ int MPIR_Scatter_inter_linear(const void *sendbuf, int sendcount, MPI_Datatype s
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
         }
-    }
-    else {
+    } else {
         mpi_errno =
             MPIC_Recv(recvbuf, recvcount, recvtype, root, MPIR_SCATTER_TAG, comm_ptr, &status,
                       errflag);

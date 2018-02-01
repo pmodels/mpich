@@ -39,8 +39,7 @@ int main(int argc, char **argv)
         if (errclass == MPIX_ERR_PROC_FAILED) {
             printf(" No Errors\n");
             fflush(stdout);
-        }
-        else {
+        } else {
             fprintf(stderr, "Wrong error code (%d) returned. Expected MPIX_ERR_PROC_FAILED\n",
                     errclass);
         }
@@ -48,8 +47,7 @@ int main(int argc, char **argv)
         if (err) {
             printf(" No Errors\n");
             fflush(stdout);
-        }
-        else {
+        } else {
             fprintf(stderr, "Program reported MPI_SUCCESS, but an error code was expected.\n");
         }
 #endif

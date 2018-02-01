@@ -46,7 +46,7 @@
 #endif
 
 /* MPI_ERR_IO */
-#define MPIR_ADIO_ERROR 1  /* used for strerror(errno) */
+#define MPIR_ADIO_ERROR 1       /* used for strerror(errno) */
 #define MPIR_ERR_ETYPE_FRACTIONAL 3
 #define MPIR_ERR_NO_FSTYPE 5
 #define MPIR_ERR_NO_UFS 11
@@ -59,7 +59,7 @@
 #define MPIR_ERR_ASYNC_OUTSTANDING 27
 #define MPIR_READ_PERM 29
 #define MPIR_PREALLOC_PERM 31
-#define MPIR_ERR_FILETYPE 33 
+#define MPIR_ERR_FILETYPE 33
 #define MPIR_ERR_NO_TESTFS 36
 #define MPIR_ERR_NO_LUSTRE 37
 #define MPIR_ERR_NO_GPFS 38
@@ -68,7 +68,7 @@
 /* MPI_ERR_COMM */
 #ifndef MPIR_ERR_COMM_NULL
 #define MPIR_ERR_COMM_NULL 3
-#define MPIR_ERR_COMM_INTER 5 
+#define MPIR_ERR_COMM_INTER 5
 #endif
 
 /* MPI_ERR_UNSUPPORTED_DATAREP */

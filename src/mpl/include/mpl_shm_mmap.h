@@ -9,7 +9,7 @@
 
 typedef intptr_t MPLI_shm_lhnd_t;
 
-typedef char * MPLI_shm_ghnd_t;
+typedef char *MPLI_shm_ghnd_t;
 /* The local handle, lhnd, is valid only for the current process,
  * The global handle, ghnd, is valid across multiple processes
  * The handle flag, flag, is used to set various attributes of the

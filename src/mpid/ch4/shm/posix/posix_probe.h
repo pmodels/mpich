@@ -15,10 +15,10 @@
 
 
 static inline int MPIDI_POSIX_mpi_improbe(int source,
-                                        int tag,
-                                        MPIR_Comm * comm,
-                                        int context_offset,
-                                        int *flag, MPIR_Request ** message, MPI_Status * status)
+                                          int tag,
+                                          MPIR_Comm * comm,
+                                          int context_offset,
+                                          int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req, *matched_req = NULL;
@@ -69,8 +69,7 @@ static inline int MPIDI_POSIX_mpi_improbe(int source,
 
                 if (req && MPIDI_POSIX_REQUEST(req)->type == MPIDI_POSIX_TYPEEAGER)
                     break;
-            }
-            else
+            } else
                 prev_req = req;
 
             req = next_req;
@@ -83,8 +82,7 @@ static inline int MPIDI_POSIX_mpi_improbe(int source,
         status->MPI_TAG = matched_req->status.MPI_TAG;
         status->MPI_SOURCE = matched_req->status.MPI_SOURCE;
         MPIR_STATUS_SET_COUNT(*status, count);
-    }
-    else {
+    } else {
         *flag = 0;
         MPID_Progress_test();
     }
@@ -96,9 +94,9 @@ static inline int MPIDI_POSIX_mpi_improbe(int source,
 }
 
 static inline int MPIDI_POSIX_mpi_iprobe(int source,
-                                       int tag,
-                                       MPIR_Comm * comm,
-                                       int context_offset, int *flag, MPI_Status * status)
+                                         int tag,
+                                         MPIR_Comm * comm,
+                                         int context_offset, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req, *matched_req = NULL;
@@ -130,8 +128,7 @@ static inline int MPIDI_POSIX_mpi_iprobe(int source,
         status->MPI_TAG = matched_req->status.MPI_TAG;
         status->MPI_SOURCE = matched_req->status.MPI_SOURCE;
         MPIR_STATUS_SET_COUNT(*status, count);
-    }
-    else {
+    } else {
         *flag = 0;
         MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
         MPID_Progress_test();

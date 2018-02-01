@@ -84,8 +84,7 @@ int main(int argc, char *argv[])
                 errs++;
                 fprintf(stderr, "Count value %d should be 2\n", count);
             }
-        }
-        else {
+        } else {
             errs++;
             fprintf(stderr, "Unexpected flag value from get_status\n");
         }

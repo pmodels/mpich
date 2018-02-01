@@ -41,7 +41,7 @@
 
 /* VNI attributes */
 enum {
-    MPIDI_VNI_TX = 0x1, /* Can send */
+    MPIDI_VNI_TX = 0x1,         /* Can send */
     MPIDI_VNI_RX = 0x2, /* Can receive */
 };
 
@@ -259,7 +259,7 @@ typedef struct {
 typedef struct {
     uint64_t key;
     void *value;
-    UT_hash_handle hh;      /* makes this structure hashable */
+    UT_hash_handle hh;          /* makes this structure hashable */
 } MPIDI_CH4U_map_entry_t;
 
 typedef struct MPIDI_CH4U_map_t {

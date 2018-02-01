@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_get_name as PMPI_Win_get_name
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Win_get_name(MPI_Win win, char *win_name, int *resultlen) __attribute__((weak,alias("PMPI_Win_get_name")));
+int MPI_Win_get_name(MPI_Win win, char *win_name, int *resultlen)
+    __attribute__ ((weak, alias("PMPI_Win_get_name")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -36,12 +37,12 @@ int MPI_Win_get_name(MPI_Win win, char *win_name, int *resultlen) __attribute__(
    MPI_Win_get_name - Get the print name associated with the MPI RMA window
 
 Input Parameters:
-. win - window whose name is to be returned (handle) 
+. win - window whose name is to be returned (handle)
 
 Output Parameters:
-+ win_name - the name previously stored on the window, or a empty string if 
-  no such name exists (string) 
-- resultlen - length of returned name (integer) 
++ win_name - the name previously stored on the window, or a empty string if
+  no such name exists (string)
+- resultlen - length of returned name (integer)
 
 .N ThreadSafeNoUpdate
 
@@ -60,45 +61,46 @@ int MPI_Win_get_name(MPI_Win win, char *win_name, int *resultlen)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_GET_NAME);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WIN_GET_NAME);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_WIN(win, mpi_errno);
+            MPIR_ERRTEST_WIN(win, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
-    
+#endif
+
     /* Convert MPI object handles to object pointers */
-    MPIR_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr(win, win_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate win_ptr */
-            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
-            if (mpi_errno) goto fn_fail;
-	    /* If win_ptr is not valid, it will be reset to null */
+            MPIR_Win_valid_ptr(win_ptr, mpi_errno);
+            if (mpi_errno)
+                goto fn_fail;
+            /* If win_ptr is not valid, it will be reset to null */
 
-	    MPIR_ERRTEST_ARGNULL(win_name, "win_name", mpi_errno);
-	    MPIR_ERRTEST_ARGNULL(resultlen, "resultlen", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(win_name, "win_name", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(resultlen, "resultlen", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    MPL_strncpy( win_name, win_ptr->name, MPI_MAX_OBJECT_NAME );
-    *resultlen = (int)strlen( win_name );
-    
+
+    MPL_strncpy(win_name, win_ptr->name, MPI_MAX_OBJECT_NAME);
+    *resultlen = (int) strlen(win_name);
+
     /* ... end of body of routine ... */
 
   fn_exit:
@@ -107,15 +109,15 @@ int MPI_Win_get_name(MPI_Win win, char *win_name, int *resultlen)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
-	    "**mpi_win_get_name", 
-	    "**mpi_win_get_name %W %p %p", win, win_name, resultlen);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_win_get_name", "**mpi_win_get_name %W %p %p", win, win_name,
+                                 resultlen);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

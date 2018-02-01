@@ -7,7 +7,7 @@
 #ifndef OPA_GCC_INTEL_32_64_P3BARRIER_H_INCLUDED
 #define OPA_GCC_INTEL_32_64_P3BARRIER_H_INCLUDED
 
-#define OPA_compiler_barrier() __asm__ __volatile__ ( "" ::: "memory" )
+#define OPA_compiler_barrier() __asm__ __volatile__ ("" ::: "memory")
 
 /* For all regular memory (write-back cacheable, not driver/graphics
  * memory), there is only one general ordering relaxation permitted by
@@ -28,7 +28,7 @@
 static inline void OPA_read_write_barrier(void)
 {
     int a = 0;
-    __asm__ __volatile__ ("lock orl $0, %0" : "+m" (a) : /*no outputs*/ : "memory");
+    __asm__ __volatile__("lock orl $0, %0":"+m"(a): /*no outputs */ :"memory");
 }
 
 #endif /* OPA_GCC_INTEL_32_64_P3BARRIER_H_INCLUDED */

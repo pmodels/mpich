@@ -44,11 +44,10 @@ int main(int argc, char **argv)
     for (i = 0; i < MAX_NCOMM; i++) {
         /* Note: the comms we create are all dups of MPI_COMM_WORLD */
         MPI_Comm_idup(MPI_COMM_WORLD, &comm_hdls[i], &req);
-        mpi_errno = MPI_Wait(&req,MPI_STATUSES_IGNORE);
+        mpi_errno = MPI_Wait(&req, MPI_STATUSES_IGNORE);
         if (mpi_errno == MPI_SUCCESS) {
             ncomm++;
-        }
-        else {
+        } else {
             if (verbose)
                 printf("%d: Error creating comm %d\n", rank, i);
             errors = 0;

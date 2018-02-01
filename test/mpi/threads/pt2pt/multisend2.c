@@ -96,8 +96,7 @@ int main(int argc, char **argv)
             MTest_Start_thread(run_test_send, (void *) (long) i);
         MTest_Join_threads();
         MTest_thread_barrier_free();
-    }
-    else {
+    } else {
         run_test_recv();
     }
 

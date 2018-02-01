@@ -17,13 +17,11 @@
 #define FUNCNAME MPIR_Bcast_inter_remote_send_local_bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Bcast_inter_remote_send_local_bcast (
-        void *buffer, 
-        int count, 
-        MPI_Datatype datatype, 
-        int root, 
-        MPIR_Comm *comm_ptr,
-        MPIR_Errflag_t *errflag)
+int MPIR_Bcast_inter_remote_send_local_bcast(void *buffer,
+                                             int count,
+                                             MPI_Datatype datatype,
+                                             int root,
+                                             MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int rank, mpi_errno;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -34,33 +32,26 @@ int MPIR_Bcast_inter_remote_send_local_bcast (
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_BCAST_INTER);
 
 
-    if (root == MPI_PROC_NULL)
-    {
+    if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */
         mpi_errno = MPI_SUCCESS;
-    }
-    else if (root == MPI_ROOT)
-    {
+    } else if (root == MPI_ROOT) {
         /* root sends to rank 0 on remote group and returns */
-        mpi_errno =  MPIC_Send(buffer, count, datatype, 0,
-                MPIR_BCAST_TAG, comm_ptr, errflag);
+        mpi_errno = MPIC_Send(buffer, count, datatype, 0, MPIR_BCAST_TAG, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
-    }
-    else
-    {
+    } else {
         /* remote group. rank 0 on remote group receives from root */
 
         rank = comm_ptr->rank;
 
-        if (rank == 0)
-        {
+        if (rank == 0) {
             mpi_errno = MPIC_Recv(buffer, count, datatype, root,
-                    MPIR_BCAST_TAG, comm_ptr, &status, errflag);
+                                  MPIR_BCAST_TAG, comm_ptr, &status, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -71,12 +62,12 @@ int MPIR_Bcast_inter_remote_send_local_bcast (
 
         /* Get the local intracommunicator */
         if (!comm_ptr->local_comm)
-            MPII_Setup_intercomm_localcomm( comm_ptr );
+            MPII_Setup_intercomm_localcomm(comm_ptr);
 
         newcomm_ptr = comm_ptr->local_comm;
 
         /* now do the usual broadcast on this intracommunicator
-           with rank 0 as root. */
+         * with rank 0 as root. */
         mpi_errno = MPIR_Bcast_intra_auto(buffer, count, datatype, 0, newcomm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */

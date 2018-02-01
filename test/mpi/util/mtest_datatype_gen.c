@@ -170,8 +170,7 @@ void MTestInitFullDatatypes(void)
         MTEST_DATATYPE_TEST_LEVEL = MTEST_DATATYPE_TEST_LEVEL_FULL;
         MTestTypeCreatorInit((MTestDdtCreator *) mtestDdtCreators);
         MTestInitDatatypeGen(MTEST_BDT_MAX, MTEST_DDT_MAX);
-    }
-    else {
+    } else {
         printf("Warning: trying to reinitialize mtest datatype during " "datatype iteration!");
     }
 }
@@ -186,8 +185,7 @@ void MTestInitMinDatatypes(void)
         MTEST_DATATYPE_TEST_LEVEL = MTEST_DATATYPE_TEST_LEVEL_MIN;
         MTestTypeMinCreatorInit((MTestDdtCreator *) mtestDdtCreators);
         MTestInitDatatypeGen(MTEST_BDT_MAX, MTEST_MIN_DDT_MAX);
-    }
-    else {
+    } else {
         printf("Warning: trying to reinitialize mtest datatype during " "datatype iteration!");
     }
 }
@@ -201,8 +199,7 @@ void MTestInitBasicDatatypes(void)
     if (!MTestIsDatatypeGenInited()) {
         MTEST_DATATYPE_TEST_LEVEL = MTEST_DATATYPE_TEST_LEVEL_BASIC;
         MTestInitDatatypeGen(MTEST_BDT_MAX, 0);
-    }
-    else {
+    } else {
         printf("Warning: trying to reinitialize mtest datatype during " "datatype iteration!");
     }
 }
@@ -225,12 +222,10 @@ static inline void MTestInitDatatypeEnv()
         if (!strncmp(envval, "min", strlen("min"))) {
             MTEST_DATATYPE_TEST_LEVEL_ENV = MTEST_DATATYPE_TEST_LEVEL_MIN;
             MTestInitDefaultTestFunc = MTestInitMinDatatypes;
-        }
-        else if (!strncmp(envval, "basic", strlen("basic"))) {
+        } else if (!strncmp(envval, "basic", strlen("basic"))) {
             MTEST_DATATYPE_TEST_LEVEL_ENV = MTEST_DATATYPE_TEST_LEVEL_BASIC;
             MTestInitDefaultTestFunc = MTestInitBasicDatatypes;
-        }
-        else if (strncmp(envval, "full", strlen("full"))) {
+        } else if (strncmp(envval, "full", strlen("full"))) {
             fprintf(stderr, "Unknown MPITEST_DATATYPE_TEST_LEVEL %s\n", envval);
         }
     }
@@ -256,64 +251,62 @@ static inline int MTestDdtStructDefine(int ddt_index, MPI_Aint tot_count, MPI_Ai
      * for large-count structure. */
     if (tot_count < 2) {
         _short = 1;
-    }
-    else if (tot_count < 64) {
+    } else if (tot_count < 64) {
         _short = 2;
-    }
-    else {
+    } else {
         _short = 64;
     }
     _align_tot_count = (tot_count + _short - 1) & ~(_short - 1);
 
     switch (ddt_c_st) {
-    case 0:
-        /* Large block length. */
-        _count = _short;
-        _blen = _align_tot_count / _short;
-        _stride = _blen * 2;
-        break;
-    case 1:
-        /* Large count */
-        _count = _align_tot_count / _short;
-        _blen = _short;
-        _stride = _blen * 2;
-        break;
-    case 2:
-        /* Large block length and large stride */
-        _count = _short;
-        _blen = _align_tot_count / _short;
-        _stride = _blen * 10;
-        break;
-    case 3:
-        /* Large count and large stride */
-        _count = _align_tot_count / _short;
-        _blen = _short;
-        _stride = _blen * 10;
-        break;
-    case 4:
-        /* Large block length with lb */
-        _count = _short;
-        _blen = _align_tot_count / _short;
-        _stride = _blen * 2;
-        _lb = _short / 2;       /* make sure lb < blen */
-        break;
-    case 5:
-        /* Contig ddt (stride = block length) without lb */
-        _count = _align_tot_count / _short;
-        _blen = _short;
-        _stride = _blen;
-        break;
-    case 6:
-        /* Contig ddt (stride = block length) with lb */
-        _count = _short;
-        _blen = _align_tot_count / _short;
-        _stride = _blen;
-        _lb = _short / 2;       /* make sure lb < blen */
-        break;
-    default:
-        /* Undefined index */
-        merr = 1;
-        break;
+        case 0:
+            /* Large block length. */
+            _count = _short;
+            _blen = _align_tot_count / _short;
+            _stride = _blen * 2;
+            break;
+        case 1:
+            /* Large count */
+            _count = _align_tot_count / _short;
+            _blen = _short;
+            _stride = _blen * 2;
+            break;
+        case 2:
+            /* Large block length and large stride */
+            _count = _short;
+            _blen = _align_tot_count / _short;
+            _stride = _blen * 10;
+            break;
+        case 3:
+            /* Large count and large stride */
+            _count = _align_tot_count / _short;
+            _blen = _short;
+            _stride = _blen * 10;
+            break;
+        case 4:
+            /* Large block length with lb */
+            _count = _short;
+            _blen = _align_tot_count / _short;
+            _stride = _blen * 2;
+            _lb = _short / 2;   /* make sure lb < blen */
+            break;
+        case 5:
+            /* Contig ddt (stride = block length) without lb */
+            _count = _align_tot_count / _short;
+            _blen = _short;
+            _stride = _blen;
+            break;
+        case 6:
+            /* Contig ddt (stride = block length) with lb */
+            _count = _short;
+            _blen = _align_tot_count / _short;
+            _stride = _blen;
+            _lb = _short / 2;   /* make sure lb < blen */
+            break;
+        default:
+            /* Undefined index */
+            merr = 1;
+            break;
     }
 
     *align_tot_count = _align_tot_count;
@@ -341,42 +334,42 @@ static inline int MTestGetBasicDatatypes(MTestDatatype * sendtype,
     }
 
     switch (bdt_index) {
-    case MTEST_BDT_INT:
-        merr = MTestTypeBasicCreate(MPI_INT, sendtype);
-        merr = MTestTypeBasicCreate(MPI_INT, recvtype);
-        break;
-    case MTEST_BDT_DOUBLE:
-        merr = MTestTypeBasicCreate(MPI_DOUBLE, sendtype);
-        merr = MTestTypeBasicCreate(MPI_DOUBLE, recvtype);
-        break;
-    case MTEST_BDT_FLOAT_INT:
-        merr = MTestTypeBasicCreate(MPI_FLOAT_INT, sendtype);
-        merr = MTestTypeBasicCreate(MPI_FLOAT_INT, recvtype);
-        break;
-    case MTEST_BDT_SHORT:
-        merr = MTestTypeBasicCreate(MPI_SHORT, sendtype);
-        merr = MTestTypeBasicCreate(MPI_SHORT, recvtype);
-        break;
-    case MTEST_BDT_LONG:
-        merr = MTestTypeBasicCreate(MPI_LONG, sendtype);
-        merr = MTestTypeBasicCreate(MPI_LONG, recvtype);
-        break;
-    case MTEST_BDT_CHAR:
-        merr = MTestTypeBasicCreate(MPI_CHAR, sendtype);
-        merr = MTestTypeBasicCreate(MPI_CHAR, recvtype);
-        break;
-    case MTEST_BDT_UINT64_T:
-        merr = MTestTypeBasicCreate(MPI_UINT64_T, sendtype);
-        merr = MTestTypeBasicCreate(MPI_UINT64_T, recvtype);
-        break;
-    case MTEST_BDT_FLOAT:
-        merr = MTestTypeBasicCreate(MPI_FLOAT, sendtype);
-        merr = MTestTypeBasicCreate(MPI_FLOAT, recvtype);
-        break;
-    case MTEST_BDT_BYTE:
-        merr = MTestTypeBasicCreate(MPI_BYTE, sendtype);
-        merr = MTestTypeBasicCreate(MPI_BYTE, recvtype);
-        break;
+        case MTEST_BDT_INT:
+            merr = MTestTypeBasicCreate(MPI_INT, sendtype);
+            merr = MTestTypeBasicCreate(MPI_INT, recvtype);
+            break;
+        case MTEST_BDT_DOUBLE:
+            merr = MTestTypeBasicCreate(MPI_DOUBLE, sendtype);
+            merr = MTestTypeBasicCreate(MPI_DOUBLE, recvtype);
+            break;
+        case MTEST_BDT_FLOAT_INT:
+            merr = MTestTypeBasicCreate(MPI_FLOAT_INT, sendtype);
+            merr = MTestTypeBasicCreate(MPI_FLOAT_INT, recvtype);
+            break;
+        case MTEST_BDT_SHORT:
+            merr = MTestTypeBasicCreate(MPI_SHORT, sendtype);
+            merr = MTestTypeBasicCreate(MPI_SHORT, recvtype);
+            break;
+        case MTEST_BDT_LONG:
+            merr = MTestTypeBasicCreate(MPI_LONG, sendtype);
+            merr = MTestTypeBasicCreate(MPI_LONG, recvtype);
+            break;
+        case MTEST_BDT_CHAR:
+            merr = MTestTypeBasicCreate(MPI_CHAR, sendtype);
+            merr = MTestTypeBasicCreate(MPI_CHAR, recvtype);
+            break;
+        case MTEST_BDT_UINT64_T:
+            merr = MTestTypeBasicCreate(MPI_UINT64_T, sendtype);
+            merr = MTestTypeBasicCreate(MPI_UINT64_T, recvtype);
+            break;
+        case MTEST_BDT_FLOAT:
+            merr = MTestTypeBasicCreate(MPI_FLOAT, sendtype);
+            merr = MTestTypeBasicCreate(MPI_FLOAT, recvtype);
+            break;
+        case MTEST_BDT_BYTE:
+            merr = MTestTypeBasicCreate(MPI_BYTE, sendtype);
+            merr = MTestTypeBasicCreate(MPI_BYTE, recvtype);
+            break;
     }
     sendtype->count = tot_count;
     recvtype->count = tot_count;
@@ -501,16 +494,13 @@ int MTestGetDatatypes(MTestDatatype * sendtype, MTestDatatype * recvtype, MPI_Ai
     if (datatype_index < MTEST_BDT_RANGE) {
         merr = MTestGetBasicDatatypes(sendtype, recvtype, tot_count);
 
-    }
-    else if (datatype_index < MTEST_SEND_DDT_RANGE) {
+    } else if (datatype_index < MTEST_SEND_DDT_RANGE) {
         merr = MTestGetSendDerivedDatatypes(sendtype, recvtype, tot_count);
 
-    }
-    else if (datatype_index < MTEST_RECV_DDT_RANGE) {
+    } else if (datatype_index < MTEST_RECV_DDT_RANGE) {
         merr = MTestGetRecvDerivedDatatypes(sendtype, recvtype, tot_count);
 
-    }
-    else {
+    } else {
         /* out of range */
         datatype_index = -1;
         MTestResetDatatypeGen();

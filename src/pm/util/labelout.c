@@ -6,8 +6,8 @@
 
 /*
  * This file defines routines that can be called by the pre and postamble
- * functions in MPIE_ForkProcesses to add output line labeling to stdout 
- * and to stderr. 
+ * functions in MPIE_ForkProcesses to add output line labeling to stdout
+ * and to stderr.
  *
  * These functions are very simple and assume that either stdout/err won't
  * block, or that causing mpiexec to block until stdout/err unblock is
@@ -43,140 +43,146 @@ int snprintf(char *, size_t, const char *, ...);
 
 #define MAX_LABEL 32
 
-typedef struct { char label[MAX_LABEL]; int lastNL; FILE *dest; } IOLabel;
+typedef struct {
+    char label[MAX_LABEL];
+    int lastNL;
+    FILE *dest;
+} IOLabel;
 
-static int IOLabelWriteLine( int, int, void * );
-static int IOLabelSetLabelText( const char [], char [], int, int, int );
+static int IOLabelWriteLine(int, int, void *);
+static int IOLabelSetLabelText(const char[], char[], int, int, int);
 
 /* labels for stdout and stderr, initialized to the default values */
 static char outLabelPattern[MAX_LABEL] = "%W@[%w]@%d>";
 static char errLabelPattern[MAX_LABEL] = "%W@[%w]@%d(err)>";
 /* By default, labels are turned off */
-static int  useLabels = 0;
+static int useLabels = 0;
 
-void IOLabelSetDefault( int flag )
+void IOLabelSetDefault(int flag)
 {
     useLabels = 1;
 }
 
 /* Redirect stdout and stderr to a handler */
-int IOLabelSetupFDs( IOLabelSetup *iofds )
+int IOLabelSetupFDs(IOLabelSetup * iofds)
 {
     /* Each pipe call creates 2 fds, 0 for reading, 1 for writing */
-    if (pipe(iofds->readOut)) return -1;
-    if (pipe(iofds->readErr)) return -1;
+    if (pipe(iofds->readOut))
+        return -1;
+    if (pipe(iofds->readErr))
+        return -1;
     return 0;
 }
 
 /* Close one side of each pipe pair and replace stdout/err with the pipes */
-int IOLabelSetupInClient( IOLabelSetup *iofds )
+int IOLabelSetupInClient(IOLabelSetup * iofds)
 {
-    close( iofds->readOut[0] );
+    close(iofds->readOut[0]);
     close(1);
-    dup2( iofds->readOut[1], 1 );
-    close( iofds->readErr[0] );
+    dup2(iofds->readOut[1], 1);
+    close(iofds->readErr[0]);
     close(2);
-    dup2( iofds->readErr[1], 2 );
+    dup2(iofds->readErr[1], 2);
 
     return 0;
 }
 
 /* Close one side of the pipe pair and register a handler for the I/O */
-int IOLabelSetupFinishInServer( IOLabelSetup *iofds, ProcessState *pState )
+int IOLabelSetupFinishInServer(IOLabelSetup * iofds, ProcessState * pState)
 {
     IOLabel *leader, *leadererr;
 
-    close( iofds->readOut[1] );
-    close( iofds->readErr[1] );
+    close(iofds->readOut[1]);
+    close(iofds->readErr[1]);
 
     /* We need dedicated storage for the private data */
-    leader = (IOLabel *)MPL_malloc( sizeof(IOLabel), MPL_MEM_PM );
+    leader = (IOLabel *) MPL_malloc(sizeof(IOLabel), MPL_MEM_PM);
     if (useLabels) {
-	IOLabelSetLabelText( outLabelPattern, 
-			     leader->label, sizeof(leader->label),
-			     pState->wRank, pState->app->pWorld->worldNum );
-    } 
-    else {
-	leader->label[0] = 0;
+        IOLabelSetLabelText(outLabelPattern,
+                            leader->label, sizeof(leader->label),
+                            pState->wRank, pState->app->pWorld->worldNum);
+    } else {
+        leader->label[0] = 0;
     }
     leader->lastNL = 1;
-    leader->dest   = stdout;
-    leadererr = (IOLabel *)MPL_malloc( sizeof(IOLabel), MPL_MEM_PM );
+    leader->dest = stdout;
+    leadererr = (IOLabel *) MPL_malloc(sizeof(IOLabel), MPL_MEM_PM);
     if (useLabels) {
-	IOLabelSetLabelText( errLabelPattern, 
-			     leadererr->label, sizeof(leadererr->label),
-			     pState->wRank, pState->app->pWorld->worldNum );
-    }
-    else {
-	leadererr->label[0] = 0;
+        IOLabelSetLabelText(errLabelPattern,
+                            leadererr->label, sizeof(leadererr->label),
+                            pState->wRank, pState->app->pWorld->worldNum);
+    } else {
+        leadererr->label[0] = 0;
     }
     leadererr->lastNL = 1;
-    leadererr->dest   = stderr;
-    MPIE_IORegister( iofds->readOut[0], IO_READ, IOLabelWriteLine, leader );
-    MPIE_IORegister( iofds->readErr[0], IO_READ, IOLabelWriteLine, leadererr );
+    leadererr->dest = stderr;
+    MPIE_IORegister(iofds->readOut[0], IO_READ, IOLabelWriteLine, leader);
+    MPIE_IORegister(iofds->readErr[0], IO_READ, IOLabelWriteLine, leadererr);
 
     /* subsequent forks should not get these fds */
-    fcntl( iofds->readOut[0], F_SETFD, FD_CLOEXEC );
-    fcntl( iofds->readErr[0], F_SETFD, FD_CLOEXEC );
+    fcntl(iofds->readOut[0], F_SETFD, FD_CLOEXEC);
+    fcntl(iofds->readErr[0], F_SETFD, FD_CLOEXEC);
 
     return 0;
 }
 
-static int IOLabelWriteLine( int fd, int rdwr, void *data )
+static int IOLabelWriteLine(int fd, int rdwr, void *data)
 {
-    IOLabel *label = (IOLabel *)data;
+    IOLabel *label = (IOLabel *) data;
     char buf[1024], *p;
     int n;
 
-    MPIE_SYSCALL(n,read,( fd, buf, 1024 ));
+    MPIE_SYSCALL(n, read, (fd, buf, 1024));
     if (n == 0) {
-	/* If read blocks, then returning a 0 is end-of-file */
-	return 1;  /* ? EOF */
+        /* If read blocks, then returning a 0 is end-of-file */
+        return 1;       /* ? EOF */
     }
 
     p = buf;
     while (n > 0) {
-	int c;
-	if (label->lastNL) {
-	    if (label->label[0]) {
-		fprintf( label->dest, "%s", label->label );
-	    }
-	    label->lastNL = 0;
-	}
-	c = *p++; n--;
-	if (fputc( c, label->dest ) != c) return 1;
-	label->lastNL = (c == '\n');
+        int c;
+        if (label->lastNL) {
+            if (label->label[0]) {
+                fprintf(label->dest, "%s", label->label);
+            }
+            label->lastNL = 0;
+        }
+        c = *p++;
+        n--;
+        if (fputc(c, label->dest) != c)
+            return 1;
+        label->lastNL = (c == '\n');
     }
     return 0;
 }
 
-/* 
-   Get the prefix to use on output lines from the environment. 
+/*
+   Get the prefix to use on output lines from the environment.
    This is a common routine so that the same environment variables
    and effects can be used by many versions of mpiexec
-   
+
    The choices are these:
    MPIEXEC_PREFIX_DEFAULT set:
        stdout gets "rank>"
        stderr gets "rank(err)>"
    MPIEXEX_PREFIX_STDOUT and MPIEXEC_PREFIX_STDERR replace those
    choices.
-   
+
    The value can contain %d for the rank and eventually %w for the
-   number of MPI_COMM_WORLD (e.g., 0 for the original one and > 0 
-   for any subsequent spawned processes.  
+   number of MPI_COMM_WORLD (e.g., 0 for the original one and > 0
+   for any subsequent spawned processes.
    The syntax %W@...@ means:
-   use @...@ as the syntax if world num is > 0, use NULL (i.e., no 
-   characters) if world num is 0.  Thus, 
-   
+   use @...@ as the syntax if world num is > 0, use NULL (i.e., no
+   characters) if world num is 0.  Thus,
+
    %W@[%w]:@%d>
 
-   for process 1 in the original MPI_COMM_WORLD gives 
+   for process 1 in the original MPI_COMM_WORLD gives
 
    1>
 
    and for process 3 in a the second spawned process gives
-   
+
    [2]:3>
 
    (%W takes the following char and uses that character to deliniate the
@@ -185,93 +191,92 @@ static int IOLabelWriteLine( int fd, int rdwr, void *data )
 
 */
 /* Internal routine used to set the label text */
-static int IOLabelSetLabelText( const char pattern[], char label[], 
-				int maxlabel, int rank, int worldnum )
+static int IOLabelSetLabelText(const char pattern[], char label[],
+                               int maxlabel, int rank, int worldnum)
 {
     const char *pin = pattern;
-    char       *pout = label;
-    int         dlen;
-    int         lenleft = maxlabel-1;
-    char        rankAsChar[12];
-    char        worldnumAsChar[12];
+    char *pout = label;
+    int dlen;
+    int lenleft = maxlabel - 1;
+    char rankAsChar[12];
+    char worldnumAsChar[12];
 
     /* Convert the rank in world to characters */
-    MPL_snprintf( rankAsChar, sizeof(rankAsChar), "%d", rank );
+    MPL_snprintf(rankAsChar, sizeof(rankAsChar), "%d", rank);
     /* Convert the world number to characters */
-    MPL_snprintf( worldnumAsChar, sizeof(worldnumAsChar), "%d", worldnum );
+    MPL_snprintf(worldnumAsChar, sizeof(worldnumAsChar), "%d", worldnum);
 
     pout[0] = 0;
     /* Copy the pattern looking for format commands */
     while (lenleft > 0 && *pin) {
-	if (*pin == '%') {
-	    pin++;
-	    /* Get the control */
-	    switch (*pin) {
-	    case '%': *pout++ = '%'; lenleft--; break;
-	    case 'd': 
-		dlen = (int)strlen( rankAsChar );
-		if (dlen < lenleft) {
-		    MPL_strncpy( pout, rankAsChar, lenleft );
-		    pout += dlen;
-		    lenleft -= dlen;
-		}
-		else {
-		    *pout++ = '*';
-		    lenleft--;
-		}
-		break;
-	    case 'w':
-		dlen = (int)strlen(worldnumAsChar);
-		if (dlen < lenleft) {
-		    MPL_strncpy( pout, worldnumAsChar, lenleft );
-		    pout += dlen;
-		    lenleft -= dlen;
-		}
-		else {
-		    *pout++ = '*';
-		    lenleft--;
-		}
-		break;
-	    case 'W':
-		{
-		    char        delim = *++pin;
-		    char        wPattern[MAX_LABEL], wLabel[MAX_LABEL];
-		    char       *wptr = wPattern;
+        if (*pin == '%') {
+            pin++;
+            /* Get the control */
+            switch (*pin) {
+                case '%':
+                    *pout++ = '%';
+                    lenleft--;
+                    break;
+                case 'd':
+                    dlen = (int) strlen(rankAsChar);
+                    if (dlen < lenleft) {
+                        MPL_strncpy(pout, rankAsChar, lenleft);
+                        pout += dlen;
+                        lenleft -= dlen;
+                    } else {
+                        *pout++ = '*';
+                        lenleft--;
+                    }
+                    break;
+                case 'w':
+                    dlen = (int) strlen(worldnumAsChar);
+                    if (dlen < lenleft) {
+                        MPL_strncpy(pout, worldnumAsChar, lenleft);
+                        pout += dlen;
+                        lenleft -= dlen;
+                    } else {
+                        *pout++ = '*';
+                        lenleft--;
+                    }
+                    break;
+                case 'W':
+                    {
+                        char delim = *++pin;
+                        char wPattern[MAX_LABEL], wLabel[MAX_LABEL];
+                        char *wptr = wPattern;
 
-		    pin++;
-		    while (*pin && *pin != delim && 
-			   (wptr - wPattern) < MAX_LABEL) {
-			*wptr++ = *pin++;
-		    }
-		    *wptr = 0;
-		    if (worldnum > 0) {
-			/* Recursively invoke the label routine */
-			IOLabelSetLabelText( wPattern, wLabel, sizeof(wLabel), 
-					     rank, worldnum );
-			dlen = (int)strlen(wLabel);
-			if (dlen < lenleft) {
-			    MPL_strncpy( pout, wLabel, lenleft );
-			    pout    += dlen;
-			    lenleft -= dlen;
-			}
-			else {
-			    *pout++ = '*';
-			    lenleft--;
-			}
-		    }
-		}
-		break;
-	    default:
-		/* Ignore the control */
-		*pout++ = '%'; lenleft--; 
-		if (lenleft--) *pout++ = *pin;
-	    }
-	    pin++;
-	}
-	else {
-	    *pout++ = *pin++;
-	    lenleft--;
-	}
+                        pin++;
+                        while (*pin && *pin != delim && (wptr - wPattern) < MAX_LABEL) {
+                            *wptr++ = *pin++;
+                        }
+                        *wptr = 0;
+                        if (worldnum > 0) {
+                            /* Recursively invoke the label routine */
+                            IOLabelSetLabelText(wPattern, wLabel, sizeof(wLabel), rank, worldnum);
+                            dlen = (int) strlen(wLabel);
+                            if (dlen < lenleft) {
+                                MPL_strncpy(pout, wLabel, lenleft);
+                                pout += dlen;
+                                lenleft -= dlen;
+                            } else {
+                                *pout++ = '*';
+                                lenleft--;
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    /* Ignore the control */
+                    *pout++ = '%';
+                    lenleft--;
+                    if (lenleft--)
+                        *pout++ = *pin;
+            }
+            pin++;
+        } else {
+            *pout++ = *pin++;
+            lenleft--;
+        }
     }
     *pout = 0;
 
@@ -281,28 +286,28 @@ static int IOLabelSetLabelText( const char pattern[], char label[],
 /* Check the environment for label control
    If either prefix is set, the labels are enabled.  If only one prefix
    is set, the default prefix is used for the other label */
-int IOLabelCheckEnv( void )
+int IOLabelCheckEnv(void)
 {
     char *envval;
-    envval = getenv( "MPIEXEC_PREFIX_STDOUT" );
+    envval = getenv("MPIEXEC_PREFIX_STDOUT");
     if (envval) {
-	if (strlen(envval) < MAX_LABEL) {
-	    MPL_strncpy( outLabelPattern, envval, MAX_LABEL );
-	    useLabels = 1;
-	}
-	else {
-	    MPL_error_printf( "Pattern for stdout label specified by MPIEXEC_PREFIX_STROUT is too long" );
-	}
+        if (strlen(envval) < MAX_LABEL) {
+            MPL_strncpy(outLabelPattern, envval, MAX_LABEL);
+            useLabels = 1;
+        } else {
+            MPL_error_printf
+                ("Pattern for stdout label specified by MPIEXEC_PREFIX_STROUT is too long");
+        }
     }
-    envval = getenv( "MPIEXEC_PREFIX_STDERR" );
+    envval = getenv("MPIEXEC_PREFIX_STDERR");
     if (envval) {
-	if (strlen(envval) < MAX_LABEL) {
-	    MPL_strncpy( errLabelPattern, envval, MAX_LABEL );
-	    useLabels = 1;
-	}
-	else {
-	    MPL_error_printf( "Pattern for stderr label specified by MPIEXEC_PREFIX_STRERR is too long" );
-	}
+        if (strlen(envval) < MAX_LABEL) {
+            MPL_strncpy(errLabelPattern, envval, MAX_LABEL);
+            useLabels = 1;
+        } else {
+            MPL_error_printf
+                ("Pattern for stderr label specified by MPIEXEC_PREFIX_STRERR is too long");
+        }
     }
 
     return 0;

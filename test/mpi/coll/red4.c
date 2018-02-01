@@ -140,8 +140,7 @@ static int isPermutedIdentity(MPI_Comm comm, int mat[])
                 printf("mat(%d,%d) = %d, should = 1\n", i, j, mat[j]);
                 errs++;
             }
-        }
-        else {
+        } else {
             if (mat[j] != 0) {
                 printf("mat(%d,%d) = %d, should = 0\n", i, j, mat[j]);
                 errs++;
@@ -155,8 +154,7 @@ static int isPermutedIdentity(MPI_Comm comm, int mat[])
                 printf("mat(%d,%d) = %d, should = 1\n", i, j, mat[j + i * size]);
                 errs++;
             }
-        }
-        else {
+        } else {
             if (mat[j + i * size] != 0) {
                 printf("mat(%d,%d) = %d, should = 0\n", i, j, mat[j + i * size]);
                 errs++;
@@ -171,8 +169,7 @@ static int isPermutedIdentity(MPI_Comm comm, int mat[])
                     printf("mat(%d,%d) = %d, should = 1\n", i, j, mat[j + i * size]);
                     errs++;
                 }
-            }
-            else {
+            } else {
                 if (mat[j + i * size] != 0) {
                     printf("mat(%d,%d) = %d, should = 0\n", i, j, mat[j + i * size]);
                     errs++;
@@ -234,8 +231,7 @@ int main(int argc, char *argv[])
             initMat(comm, bufout);
             if (rank == root) {
                 MPI_Reduce(MPI_IN_PLACE, bufout, count, mattype, op, root, comm);
-            }
-            else {
+            } else {
                 MPI_Reduce(bufout, NULL, count, mattype, op, root, comm);
             }
             if (rank == root) {

@@ -51,8 +51,7 @@ int MPIR_Gather_inter_local_gather_remote_send(const void *sendbuf, int sendcoun
             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
-    }
-    else {
+    } else {
         /* remote group. Rank 0 allocates temporary buffer, does
          * local intracommunicator gather, and then sends the data
          * to root. */

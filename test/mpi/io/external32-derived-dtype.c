@@ -21,8 +21,7 @@ static void read_file(const char *name, void *buf, MPI_Datatype dt)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* open file */
-    rc = MPI_File_open(MPI_COMM_WORLD, (char *) name,
-	    amode, MPI_INFO_NULL, &fh);
+    rc = MPI_File_open(MPI_COMM_WORLD, (char *) name, amode, MPI_INFO_NULL, &fh);
     if (rc != MPI_SUCCESS) {
         printf("Rank %d: Failed to open file %s\n", rank, name);
         fflush(stdout);

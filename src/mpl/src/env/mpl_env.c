@@ -91,8 +91,7 @@ int MPL_env2bool(const char *envName, int *val)
             strcmp(val_ptr, "yes") == 0 ||
             strcmp(val_ptr, "TRUE") == 0 ||
             strcmp(val_ptr, "true") == 0 ||
-            strcmp(val_ptr, "ON") == 0 ||
-            strcmp(val_ptr, "on") == 0 || strcmp(val_ptr, "1") == 0) {
+            strcmp(val_ptr, "ON") == 0 || strcmp(val_ptr, "on") == 0 || strcmp(val_ptr, "1") == 0) {
             *val = 1;
             return 1;
         }
@@ -151,12 +150,10 @@ int MPL_env2double(const char *envName, double *val)
         if (tmp == 0.0 && val_ptr == end_ptr) {
             /* no conversion was performed by strtod */
             return -1;
-        }
-        else {
+        } else {
             *val = tmp;
             return 1;
         }
     }
     return 0;
 }
-

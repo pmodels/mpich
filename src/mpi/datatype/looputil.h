@@ -60,9 +60,9 @@
 /* FIXME: "BLENDIAN" is a non-conforming name - it could conflict with some
    other definition in a non-mpich header file */
 #if ((defined(_BIG_ENDIAN) && !defined(ntohl)) || (__BYTE_ORDER == __BIG_ENDIAN))
-#define BLENDIAN 0 /* detected host arch byte order is big endian */
+#define BLENDIAN 0      /* detected host arch byte order is big endian */
 #else
-#define BLENDIAN 1 /* detected host arch byte order is little endian */
+#define BLENDIAN 1      /* detected host arch byte order is little endian */
 #endif
 #endif
 
@@ -131,15 +131,15 @@ static inline void BASIC_convert64(char *src, char *dest)
     uint32_t tmp_src[2];
     uint32_t tmp_dest[2];
 
-    tmp_src[0] = (uint32_t)(*((uint64_t *)src) >> 32);
-    tmp_src[1] = (uint32_t)((*((uint64_t *)src) << 32) >> 32);
+    tmp_src[0] = (uint32_t) (*((uint64_t *) src) >> 32);
+    tmp_src[1] = (uint32_t) ((*((uint64_t *) src) << 32) >> 32);
 
     BASIC_convert32(tmp_src[0], tmp_dest[0]);
     BASIC_convert32(tmp_src[1], tmp_dest[1]);
 
-    *((uint64_t *)dest) = (uint64_t)tmp_dest[0];
-    *((uint64_t *)dest) <<= 32;
-    *((uint64_t *)dest) |= (uint64_t)tmp_dest[1];
+    *((uint64_t *) dest) = (uint64_t) tmp_dest[0];
+    *((uint64_t *) dest) <<= 32;
+    *((uint64_t *) dest) |= (uint64_t) tmp_dest[1];
 }
 
 static inline void BASIC_convert96(char *src, char *dest)
@@ -148,20 +148,20 @@ static inline void BASIC_convert96(char *src, char *dest)
     uint32_t tmp_dest[3];
     char *ptr = dest;
 
-    tmp_src[0] = (uint32_t)(*((uint64_t *)src) >> 32);
-    tmp_src[1] = (uint32_t)((*((uint64_t *)src) << 32) >> 32);
+    tmp_src[0] = (uint32_t) (*((uint64_t *) src) >> 32);
+    tmp_src[1] = (uint32_t) ((*((uint64_t *) src) << 32) >> 32);
     tmp_src[2] = (uint32_t)
-        (*((uint32_t *)((char *)src + sizeof(uint64_t))));
+        (*((uint32_t *) ((char *) src + sizeof(uint64_t))));
 
     BASIC_convert32(tmp_src[0], tmp_dest[0]);
     BASIC_convert32(tmp_src[1], tmp_dest[1]);
     BASIC_convert32(tmp_src[2], tmp_dest[2]);
 
-    *((uint32_t *)ptr) = tmp_dest[0];
+    *((uint32_t *) ptr) = tmp_dest[0];
     ptr += sizeof(uint32_t);
-    *((uint32_t *)ptr) = tmp_dest[1];
+    *((uint32_t *) ptr) = tmp_dest[1];
     ptr += sizeof(uint32_t);
-    *((uint32_t *)ptr) = tmp_dest[2];
+    *((uint32_t *) ptr) = tmp_dest[2];
 }
 
 static inline void BASIC_convert128(char *src, char *dest)
@@ -170,15 +170,15 @@ static inline void BASIC_convert128(char *src, char *dest)
     uint64_t tmp_dest[2];
     char *ptr = dest;
 
-    tmp_src[0] = *((uint64_t *)src);
-    tmp_src[1] = *((uint64_t *)((char *)src + sizeof(uint64_t)));
+    tmp_src[0] = *((uint64_t *) src);
+    tmp_src[1] = *((uint64_t *) ((char *) src + sizeof(uint64_t)));
 
     BASIC_convert64((char *) &tmp_src[0], (char *) &tmp_dest[0]);
     BASIC_convert64((char *) &tmp_src[1], (char *) &tmp_dest[1]);
 
-    *((uint64_t *)ptr) = tmp_dest[0];
+    *((uint64_t *) ptr) = tmp_dest[0];
     ptr += sizeof(uint64_t);
-    *((uint64_t *)ptr) = tmp_dest[1];
+    *((uint64_t *) ptr) = tmp_dest[1];
 }
 
 #if (BLENDIAN == 1)
@@ -209,7 +209,7 @@ static inline void BASIC_convert128(char *src, char *dest)
   When converting a larger size integer to a smaller size integer,
   only the less significant bytes are moved. Care must be taken to
   preserve the sign bit value. This allows no conversion errors if the
-  data range is within the range of the smaller size integer. ( End of
+  data range is within the range of the smaller size integer. (End of
   advice to implementors.)
 */
 #define BASIC_mixed_convert(src, dest)

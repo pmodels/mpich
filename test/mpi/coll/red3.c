@@ -76,8 +76,7 @@ static void initMat(MPI_Comm comm, int mat[])
                 mat[((i + size - 1) % size) + i * size] = 1;
             else
                 mat[i + i * size] = 1;
-        }
-        else {
+        } else {
             mat[i + i * size] = 1;
         }
     }
@@ -98,8 +97,7 @@ static int isIdentity(MPI_Comm comm, int mat[])
                 if (mat[j + i * size] != 1) {
                     errs++;
                 }
-            }
-            else {
+            } else {
                 if (mat[j + i * size] != 0) {
                     errs++;
                 }
@@ -124,8 +122,7 @@ static int isShiftLeft(MPI_Comm comm, int mat[])
                 if (mat[j + i * size] != 1) {
                     errs++;
                 }
-            }
-            else {
+            } else {
                 if (mat[j + i * size] != 0) {
                     errs++;
                 }
@@ -182,8 +179,7 @@ int main(int argc, char *argv[])
             initMat(comm, bufout);
             if (rank == root) {
                 MPI_Reduce(MPI_IN_PLACE, bufout, count, mattype, op, root, comm);
-            }
-            else {
+            } else {
                 MPI_Reduce(bufout, NULL, count, mattype, op, root, comm);
             }
             if (rank == root) {

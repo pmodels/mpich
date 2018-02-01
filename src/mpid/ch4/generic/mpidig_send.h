@@ -56,12 +56,10 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
         MPIR_cc_incr(sreq->cc_ptr, &c);
 
         mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SSEND_REQ,
-                                      &ssend_req, sizeof(ssend_req),
-                                      buf, count, datatype, sreq);
+                                      &ssend_req, sizeof(ssend_req), buf, count, datatype, sreq);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-    }
-    else {
+    } else {
         mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SEND,
                                       &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
         if (mpi_errno)

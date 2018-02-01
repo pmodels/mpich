@@ -60,8 +60,7 @@ static inline int MPIDI_handle_unexpected(void *buf,
     if (in_data_sz > dt_sz * count) {
         rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
         nbytes = dt_sz * count;
-    }
-    else {
+    } else {
         rreq->status.MPI_ERROR = MPI_SUCCESS;
         nbytes = in_data_sz;
     }
@@ -86,8 +85,7 @@ static inline int MPIDI_handle_unexpected(void *buf,
                                              MPI_ERR_TYPE, "**dtypemismatch", 0);
             rreq->status.MPI_ERROR = mpi_errno;
         }
-    }
-    else {
+    } else {
         MPIR_Memcpy((char *) buf + dt_true_lb, MPIDI_CH4U_REQUEST(rreq, buffer), nbytes);
     }
 
@@ -140,8 +138,7 @@ static inline int MPIDI_do_irecv(void *buf,
         MPIR_Comm_release(root_comm);   /* -1 for removing from unexp_list */
         if (MPIDI_CH4U_REQUEST(unexp_req, req->status) & MPIDI_CH4U_REQ_BUSY) {
             MPIDI_CH4U_REQUEST(unexp_req, req->status) |= MPIDI_CH4U_REQ_MATCHED;
-        }
-        else if (MPIDI_CH4U_REQUEST(unexp_req, req->status) & MPIDI_CH4U_REQ_LONG_RTS) {
+        } else if (MPIDI_CH4U_REQUEST(unexp_req, req->status) & MPIDI_CH4U_REQ_LONG_RTS) {
             /* Matching receive is now posted, tell the netmod */
             dtype_add_ref_if_not_builtin(datatype);
             MPIDI_CH4U_REQUEST(unexp_req, datatype) = datatype;
@@ -152,8 +149,7 @@ static inline int MPIDI_do_irecv(void *buf,
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             goto fn_exit;
-        }
-        else {
+        } else {
             *request = unexp_req;
             mpi_errno =
                 MPIDI_handle_unexpected(buf, count, datatype, root_comm, context_id, unexp_req);
@@ -165,8 +161,7 @@ static inline int MPIDI_do_irecv(void *buf,
 
     if (alloc_req) {
         rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV, 2);
-    }
-    else {
+    } else {
         rreq = *request;
         MPIR_Assert(0);
     }
@@ -198,8 +193,7 @@ static inline int MPIDI_do_irecv(void *buf,
         MPIR_Comm_add_ref(root_comm);
         MPIDI_CH4U_enqueue_posted(rreq, &MPIDI_CH4U_COMM(root_comm, posted_list));
         /* MPIDI_CS_EXIT(); */
-    }
-    else {
+    } else {
         MPIDI_CH4U_REQUEST(unexp_req, req->rreq.match_req) = (uint64_t) rreq;
     }
   fn_exit:
@@ -306,8 +300,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     /* MPIDI_CS_ENTER(); */
     if (MPIDI_CH4U_REQUEST(message, req->status) & MPIDI_CH4U_REQ_BUSY) {
         MPIDI_CH4U_REQUEST(message, req->status) |= MPIDI_CH4U_REQ_UNEXP_CLAIMED;
-    }
-    else if (MPIDI_CH4U_REQUEST(message, req->status) & MPIDI_CH4U_REQ_LONG_RTS) {
+    } else if (MPIDI_CH4U_REQUEST(message, req->status) & MPIDI_CH4U_REQ_LONG_RTS) {
         /* Matching receive is now posted, tell the netmod */
         message->kind = MPIR_REQUEST_KIND__RECV;
         dtype_add_ref_if_not_builtin(datatype);
@@ -315,8 +308,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
         MPIDI_CH4U_REQUEST(message, buffer) = (char *) buf;
         MPIDI_CH4U_REQUEST(message, count) = count;
         mpi_errno = MPIDI_NM_am_recv(message);
-    }
-    else {
+    } else {
         mpi_errno = MPIDI_handle_unexp_mrecv(message);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -421,8 +413,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
         MPIR_STATUS_SET_COUNT(rreq->status, 0);
         MPIR_Comm_release(root_comm);   /* -1 for posted_list */
         MPID_Request_complete(rreq);
-    }
-    else {
+    } else {
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, FALSE);
     }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_CANCEL_RECV);

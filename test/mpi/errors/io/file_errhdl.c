@@ -20,8 +20,7 @@ int main(int argc, char *argv[])
     ierr = MPI_File_call_errhandler(fh, MPI_ERR_FILE);
     if (ierr != MPI_SUCCESS) {
         fprintf(stderr, "ierr: %d, expected: %d\n", ierr, (int) MPI_SUCCESS);
-    }
-    else {
+    } else {
         printf(" No Errors\n");
     }
     MPI_File_close(&fh);

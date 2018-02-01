@@ -30,8 +30,7 @@ static MPI_Datatype make_largexfer_type_struct(MPI_Offset nbytes)
     if (remainder == 0) {
         MPI_Type_contiguous(chunk_count, chunktype, &memtype);
         MPI_Type_free(&chunktype);
-    }
-    else {
+    } else {
         if (sizeof(MPI_Aint) <= sizeof(int)) {
             return MPI_DATATYPE_NULL;
         }
@@ -151,8 +150,7 @@ int main(int argc, char **argv)
     if (rank == 0) {
         if (nerrors) {
             printf("found %d errors\n", nerrors);
-        }
-        else {
+        } else {
             printf(" No errors\n");
         }
     }

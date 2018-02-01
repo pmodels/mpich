@@ -20,41 +20,43 @@ MTEST_THREAD_RETURN_TYPE run_test(void *arg)
 {
     int i;
     int *local_b;
-    int id =  *((int*) arg);
+    int id = *((int *) arg);
     int result;
     thread_errs[id] = 0;
 
     MPI_Alloc_mem(COUNT * sizeof(int), MPI_INFO_NULL, &local_b);
     for (i = 0; i < COUNT; i++) {
-         local_b[i] = rank*100 + id;
+        local_b[i] = rank * 100 + id;
     }
     MPI_Win_fence(0, win[id]);
-    if(rank == 1) {
+    if (rank == 1) {
         MPI_Put(local_b, COUNT, MPI_INT, 0, 0, COUNT, MPI_INT, win[id]);
     }
     MPI_Win_fence(0, win[id]);
-    if(rank == 0) {
+    if (rank == 0) {
         result = 100 + id;
-        for(i = 0; i< COUNT; i++) {
-            if (win_mem[id][i] != result){
+        for (i = 0; i < COUNT; i++) {
+            if (win_mem[id][i] != result) {
                 thread_errs[id]++;
                 if (thread_errs[id] < 10) {
-                    fprintf(stderr, "win_mem[%d][%d] = %d expected %d\n",id, i,win_mem[id][i], result);
+                    fprintf(stderr, "win_mem[%d][%d] = %d expected %d\n", id, i, win_mem[id][i],
+                            result);
                 }
             }
         }
     }
-    if(rank == 2) {
+    if (rank == 2) {
         MPI_Get(local_b, COUNT, MPI_INT, 0, 0, COUNT, MPI_INT, win[id]);
     }
     MPI_Win_fence(0, win[id]);
-    if(rank == 2) {
+    if (rank == 2) {
         result = id + 100;
-        for(i = 0; i< COUNT; i++) {
-            if (local_b[i] != result){
+        for (i = 0; i < COUNT; i++) {
+            if (local_b[i] != result) {
                 thread_errs[id]++;
                 if (thread_errs[id] < 10) {
-                    fprintf(stderr, "thread %d: local_b[%d] = %d expected %d\n",id, i,local_b[i], result);
+                    fprintf(stderr, "thread %d: local_b[%d] = %d expected %d\n", id, i, local_b[i],
+                            result);
                 }
             }
         }
@@ -67,7 +69,7 @@ MTEST_THREAD_RETURN_TYPE run_test(void *arg)
 int main(int argc, char *argv[])
 {
     int errs = 0;
-    int  i, pmode;
+    int i, pmode;
     int thread_args[NUM_THREADS];
 
     MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &pmode);
@@ -84,23 +86,23 @@ int main(int argc, char *argv[])
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    for(i = 0; i<NUM_THREADS; i++){
+    for (i = 0; i < NUM_THREADS; i++) {
         errs += MPI_Win_allocate(COUNT * sizeof(int), sizeof(int),
                                  MPI_INFO_NULL, MPI_COMM_WORLD, &win_mem[i], &win[i]);
     }
 
 
-    for (i = 0; i < NUM_THREADS; i++){
+    for (i = 0; i < NUM_THREADS; i++) {
         thread_args[i] = i;
         errs += MTest_Start_thread(run_test, &thread_args[i]);
     }
 
     errs += MTest_Join_threads();
 
-    for (i = 0; i < NUM_THREADS; i++){
-        errs+=thread_errs[i];
+    for (i = 0; i < NUM_THREADS; i++) {
+        errs += thread_errs[i];
     }
-    for(i = 0; i<NUM_THREADS; i++){
+    for (i = 0; i < NUM_THREADS; i++) {
         errs += MPI_Win_free(&win[i]);
     }
     MTest_Finalize(errs);

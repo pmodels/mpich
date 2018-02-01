@@ -7,7 +7,7 @@
 #ifndef MPL_TIMER_GCC_IA64_CYCLE_H_INCLUDED
 #define MPL_TIMER_GCC_IA64_CYCLE_H_INCLUDED
 
-static inline void MPL_wtime(MPL_time_t *timeval)
+static inline void MPL_wtime(MPL_time_t * timeval)
 {
     MPL_time_t t_val;
 
@@ -15,7 +15,7 @@ static inline void MPL_wtime(MPL_time_t *timeval)
 #include "ia64regs.h"
     t_val = __getReg(_IA64_REG_AR_ITC);
 #else
-    __asm__ __volatile__("mov %0=ar.itc" : "=r" (t_val));
+    __asm__ __volatile__("mov %0=ar.itc":"=r"(t_val));
 #endif
 
     *timeval = t_val;

@@ -119,8 +119,7 @@ static void *MTestTypeContigInit(MTestDatatype * mtype)
         for (i = 0; i < totsize; i++) {
             p[i] = (unsigned char) (0xff ^ (i & 0xff));
         }
-    }
-    else {
+    } else {
         if (mtype->buf) {
             free(mtype->buf);
         }
@@ -216,8 +215,7 @@ static void *MTestTypeVectorInit(MTestDatatype * mtype)
             }
             dt_offset += size;
         }
-    }
-    else {
+    } else {
         mtype->buf = 0;
     }
     return mtype->buf;
@@ -329,8 +327,7 @@ static void *MTestTypeIndexedInit(MTestDatatype * mtype)
             }
             dt_offset += size;
         }
-    }
-    else {
+    } else {
         /* count == 0 */
         if (mtype->buf) {
             free(mtype->buf);
@@ -443,8 +440,7 @@ static void *MTestTypeIndexedBlockInit(MTestDatatype * mtype)
             }
             dt_offset += size;
         }
-    }
-    else {
+    } else {
         /* count == 0 */
         if (mtype->buf) {
             free(mtype->buf);
@@ -564,8 +560,7 @@ static void *MTestTypeSubarrayInit(MTestDatatype * mtype)
             }
             dt_offset += size;
         }
-    }
-    else {
+    } else {
         /* count == 0 */
         if (mtype->buf) {
             free(mtype->buf);
@@ -1309,8 +1304,7 @@ void *MTestTypeInitRecv(MTestDatatype * mtype)
         for (i = 0; i < totsize; i++) {
             p[i] = 0xff;
         }
-    }
-    else {
+    } else {
         if (mtype->buf) {
             free(mtype->buf);
         }

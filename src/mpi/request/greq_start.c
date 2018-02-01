@@ -14,9 +14,9 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Grequest_start as PMPI_Grequest_start
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Grequest_start(MPI_Grequest_query_function *query_fn, MPI_Grequest_free_function *free_fn,
-                       MPI_Grequest_cancel_function *cancel_fn, void *extra_state,
-                       MPI_Request *request) __attribute__((weak,alias("PMPI_Grequest_start")));
+int MPI_Grequest_start(MPI_Grequest_query_function * query_fn, MPI_Grequest_free_function * free_fn,
+                       MPI_Grequest_cancel_function * cancel_fn, void *extra_state,
+                       MPI_Request * request) __attribute__ ((weak, alias("PMPI_Grequest_start")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -34,12 +34,13 @@ PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data);
 #define MPIR_GREQ_CLASS_PREALLOC 2
 #endif
 
-MPIR_Grequest_class MPIR_Grequest_class_direct[MPIR_GREQ_CLASS_PREALLOC] =
-                                              { {0} };
-MPIR_Object_alloc_t MPIR_Grequest_class_mem = {0, 0, 0, 0, MPIR_GREQ_CLASS,
-	                                       sizeof(MPIR_Grequest_class),
-					       MPIR_Grequest_class_direct,
-					       MPIR_GREQ_CLASS_PREALLOC, };
+MPIR_Grequest_class MPIR_Grequest_class_direct[MPIR_GREQ_CLASS_PREALLOC] = { {0} };
+
+MPIR_Object_alloc_t MPIR_Grequest_class_mem = { 0, 0, 0, 0, MPIR_GREQ_CLASS,
+    sizeof(MPIR_Grequest_class),
+    MPIR_Grequest_class_direct,
+    MPIR_GREQ_CLASS_PREALLOC,
+};
 
 /* We jump through some minor hoops to manage the list of classes ourselves and
  * only register a single finalizer to avoid hitting limitations in the current
@@ -50,7 +51,7 @@ int MPIR_Grequest_registered_finalizer = 0;
 MPIR_Grequest_class *MPIR_Grequest_class_list = NULL;
 
 /* Any internal routines can go here.  Make them static if possible.  If they
-   are used by both the MPI and PMPI versions, use PMPI_LOCAL instead of 
+   are used by both the MPI and PMPI versions, use PMPI_LOCAL instead of
    static; this macro expands into "static" if weak symbols are supported and
    into nothing otherwise. */
 PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data ATTRIBUTE((unused)))
@@ -74,31 +75,33 @@ PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data ATTRIBUTE
 #define FUNCNAME MPIR_Grequest_start
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
-                             MPI_Grequest_free_function *free_fn,
-                             MPI_Grequest_cancel_function *cancel_fn,
-                             void *extra_state, MPIR_Request **request_ptr)
+int MPIR_Grequest_start_impl(MPI_Grequest_query_function * query_fn,
+                             MPI_Grequest_free_function * free_fn,
+                             MPI_Grequest_cancel_function * cancel_fn,
+                             void *extra_state, MPIR_Request ** request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKPMEM_DECL(1);
 
     /* MT FIXME this routine is not thread-safe in the non-global case */
-    
+
     *request_ptr = MPIR_Request_create(MPIR_REQUEST_KIND__GREQUEST);
-    MPIR_ERR_CHKANDJUMP1(request_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "generalized request");
-    
-    MPIR_Object_set_ref( *request_ptr, 1 );
-    (*request_ptr)->cc_ptr               = &(*request_ptr)->cc;
+    MPIR_ERR_CHKANDJUMP1(request_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
+                         "generalized request");
+
+    MPIR_Object_set_ref(*request_ptr, 1);
+    (*request_ptr)->cc_ptr = &(*request_ptr)->cc;
     MPIR_cc_set((*request_ptr)->cc_ptr, 1);
-    (*request_ptr)->comm                 = NULL;
-    MPIR_CHKPMEM_MALLOC((*request_ptr)->u.ureq.greq_fns, struct MPIR_Grequest_fns *, sizeof(struct MPIR_Grequest_fns), mpi_errno, "greq_fns", MPL_MEM_GREQ);
-    (*request_ptr)->u.ureq.greq_fns->cancel_fn            = cancel_fn;
-    (*request_ptr)->u.ureq.greq_fns->free_fn              = free_fn;
-    (*request_ptr)->u.ureq.greq_fns->query_fn             = query_fn;
-    (*request_ptr)->u.ureq.greq_fns->poll_fn              = NULL;
-    (*request_ptr)->u.ureq.greq_fns->wait_fn              = NULL;
+    (*request_ptr)->comm = NULL;
+    MPIR_CHKPMEM_MALLOC((*request_ptr)->u.ureq.greq_fns, struct MPIR_Grequest_fns *,
+                        sizeof(struct MPIR_Grequest_fns), mpi_errno, "greq_fns", MPL_MEM_GREQ);
+    (*request_ptr)->u.ureq.greq_fns->cancel_fn = cancel_fn;
+    (*request_ptr)->u.ureq.greq_fns->free_fn = free_fn;
+    (*request_ptr)->u.ureq.greq_fns->query_fn = query_fn;
+    (*request_ptr)->u.ureq.greq_fns->poll_fn = NULL;
+    (*request_ptr)->u.ureq.greq_fns->wait_fn = NULL;
     (*request_ptr)->u.ureq.greq_fns->grequest_extra_state = extra_state;
-    (*request_ptr)->u.ureq.greq_fns->greq_lang            = MPIR_LANG__C;
+    (*request_ptr)->u.ureq.greq_fns->greq_lang = MPIR_LANG__C;
 
     /* Add an additional reference to the greq.  One of them will be
      * released when we complete the request, and the second one, when
@@ -106,9 +109,9 @@ int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
     MPIR_Request_add_ref((*request_ptr));
 
     MPIR_CHKPMEM_COMMIT();
- fn_exit:
+  fn_exit:
     return mpi_errno;
- fn_fail:
+  fn_fail:
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
@@ -129,9 +132,9 @@ extern MPIR_Grequest_class *MPIR_Grequest_class_list;
    MPI_Grequest_start - Create and return a user-defined request
 
 Input Parameters:
-+ query_fn - callback function invoked when request status is queried (function)  
-. free_fn - callback function invoked when request is freed (function) 
-. cancel_fn - callback function invoked when request is cancelled (function) 
++ query_fn - callback function invoked when request status is queried (function)
+. free_fn - callback function invoked when request is freed (function)
+. cancel_fn - callback function invoked when request is cancelled (function)
 - extra_state - Extra state passed to the above functions.
 
 Output Parameters:
@@ -140,28 +143,28 @@ Output Parameters:
  Notes on the callback functions:
  The return values from the callback functions must be a valid MPI error code
  or class.  This value may either be the return value from any MPI routine
- (with one exception noted below) or any of the MPI error classes. 
- For portable programs, 'MPI_ERR_OTHER' may be used; to provide more 
- specific information, create a new MPI error class or code with 
+ (with one exception noted below) or any of the MPI error classes.
+ For portable programs, 'MPI_ERR_OTHER' may be used; to provide more
+ specific information, create a new MPI error class or code with
  'MPI_Add_error_class' or 'MPI_Add_error_code' and return that value.
 
  The MPI standard is not clear on the return values from the callback routines.
  However, there are notes in the standard that imply that these are MPI error
  codes.  For example, pages 169 line 46 through page 170, line 1 require that
  the 'free_fn' return an MPI error code that may be used in the MPI completion
- functions when they return 'MPI_ERR_IN_STATUS'.  
+ functions when they return 'MPI_ERR_IN_STATUS'.
 
  The one special case is the error value returned by 'MPI_Comm_dup' when
  the attribute callback routine returns a failure.  The MPI standard is not
  clear on what values may be used to indicate an error return.  Further,
- the Intel MPI test suite made use of non-zero values to indicate failure, 
- and expected these values to be returned by the 'MPI_Comm_dup' when the 
- attribute routines encountered an error.  Such error values may not be valid 
+ the Intel MPI test suite made use of non-zero values to indicate failure,
+ and expected these values to be returned by the 'MPI_Comm_dup' when the
+ attribute routines encountered an error.  Such error values may not be valid
  MPI error codes or classes.  Because of this, it is the user''s responsibility
  to either use valid MPI error codes in return from the attribute callbacks,
  if those error codes are to be returned by a generalized request callback,
  or to detect and convert those error codes to valid MPI error codes (recall
- that MPI error classes are valid error codes).  
+ that MPI error classes are valid error codes).
 
 .N ThreadSafe
 
@@ -171,36 +174,37 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_ARG
 @*/
-int MPI_Grequest_start( MPI_Grequest_query_function *query_fn, 
-			MPI_Grequest_free_function *free_fn, 
-			MPI_Grequest_cancel_function *cancel_fn, 
-			void *extra_state, MPI_Request *request )
+int MPI_Grequest_start(MPI_Grequest_query_function * query_fn,
+                       MPI_Grequest_free_function * free_fn,
+                       MPI_Grequest_cancel_function * cancel_fn,
+                       void *extra_state, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GREQUEST_START);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GREQUEST_START);
 
     /* Validate parameters if error checking is enabled */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_ARGNULL(request,"request",mpi_errno);
+            MPIR_ERRTEST_ARGNULL(request, "request", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
     mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, extra_state, &request_ptr);
-    if (mpi_errno) goto fn_fail;
-    
+    if (mpi_errno)
+        goto fn_fail;
+
     MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
 
     /* ... end of body of routine ... */
@@ -209,19 +213,18 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GREQUEST_START);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-    
+
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
-	    "**mpi_grequest_start",
-	    "**mpi_grequest_start %p %p %p %p %p", 
-	    query_fn, free_fn, cancel_fn, extra_state, request);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_grequest_start", "**mpi_grequest_start %p %p %p %p %p",
+                                 query_fn, free_fn, cancel_fn, extra_state, request);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -234,12 +237,13 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Grequest_class_create as PMPIX_Grequest_class_create
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
-        MPI_Grequest_free_function *free_fn,
-        MPI_Grequest_cancel_function *cancel_fn,
-        MPIX_Grequest_poll_function *poll_fn,
-        MPIX_Grequest_wait_function *wait_fn,
-        MPIX_Grequest_class *greq_class) __attribute__((weak,alias("PMPIX_Grequest_class_create")));
+int MPIX_Grequest_class_create(MPI_Grequest_query_function * query_fn,
+                               MPI_Grequest_free_function * free_fn,
+                               MPI_Grequest_cancel_function * cancel_fn,
+                               MPIX_Grequest_poll_function * poll_fn,
+                               MPIX_Grequest_wait_function * wait_fn,
+                               MPIX_Grequest_class * greq_class)
+    __attribute__ ((weak, alias("PMPIX_Grequest_class_create")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -255,70 +259,67 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* extensions for Generalized Request redesign paper */
-int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
-		               MPI_Grequest_free_function *free_fn,
-			       MPI_Grequest_cancel_function *cancel_fn,
-			       MPIX_Grequest_poll_function *poll_fn,
-			       MPIX_Grequest_wait_function *wait_fn,
-			       MPIX_Grequest_class *greq_class)
+int MPIX_Grequest_class_create(MPI_Grequest_query_function * query_fn,
+                               MPI_Grequest_free_function * free_fn,
+                               MPI_Grequest_cancel_function * cancel_fn,
+                               MPIX_Grequest_poll_function * poll_fn,
+                               MPIX_Grequest_wait_function * wait_fn,
+                               MPIX_Grequest_class * greq_class)
 {
-	MPIR_Grequest_class *class_ptr;
-	int mpi_errno = MPI_SUCCESS;
+    MPIR_Grequest_class *class_ptr;
+    int mpi_errno = MPI_SUCCESS;
 
-	class_ptr = (MPIR_Grequest_class *)
-		MPIR_Handle_obj_alloc(&MPIR_Grequest_class_mem);
-        /* --BEGIN ERROR HANDLING-- */
-	if (!class_ptr)
-	{
-	    mpi_errno = MPIR_Err_create_code (MPI_SUCCESS, 
-			    MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 
-			    MPI_ERR_OTHER, "**nomem", 
-			    "**nomem %s", "MPIX_Grequest_class");
-	    goto fn_fail;
-	} 
-	/* --END ERROR HANDLING-- */
-
-	class_ptr->query_fn = query_fn;
-	class_ptr->free_fn = free_fn;
-	class_ptr->cancel_fn = cancel_fn;
-	class_ptr->poll_fn = poll_fn;
-	class_ptr->wait_fn = wait_fn;
-
-	MPIR_Object_set_ref(class_ptr, 1);
-
-        if (MPIR_Grequest_class_list == NULL) {
-            class_ptr->next = NULL;
-        }
-        else {
-            class_ptr->next = MPIR_Grequest_class_list;
-        }
-        MPIR_Grequest_class_list = class_ptr;
-        if (!MPIR_Grequest_registered_finalizer) {
-            /* must run before (w/ higher priority than) the handle check
-             * finalizer in order avoid being flagged as a leak */
-            MPIR_Add_finalize(&MPIR_Grequest_free_classes_on_finalize,
-                              NULL,
-                              MPIR_FINALIZE_CALLBACK_HANDLE_CHECK_PRIO+1);
-            MPIR_Grequest_registered_finalizer = 1;
-        }
-
-        MPIR_OBJ_PUBLISH_HANDLE(*greq_class, class_ptr->handle);
-
-	/* ... end of body of routine ... */
-fn_exit:
-	return mpi_errno;
-fn_fail:
+    class_ptr = (MPIR_Grequest_class *)
+        MPIR_Handle_obj_alloc(&MPIR_Grequest_class_mem);
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
-	    "**mpix_grequest_class_create",
-	    "**mpix_grequest_class_create %p %p %p %p %p", 
-	    query_fn, free_fn, cancel_fn, poll_fn, wait_fn);
+    if (!class_ptr) {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
+                                         MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                         MPI_ERR_OTHER, "**nomem",
+                                         "**nomem %s", "MPIX_Grequest_class");
+        goto fn_fail;
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
+    /* --END ERROR HANDLING-- */
+
+    class_ptr->query_fn = query_fn;
+    class_ptr->free_fn = free_fn;
+    class_ptr->cancel_fn = cancel_fn;
+    class_ptr->poll_fn = poll_fn;
+    class_ptr->wait_fn = wait_fn;
+
+    MPIR_Object_set_ref(class_ptr, 1);
+
+    if (MPIR_Grequest_class_list == NULL) {
+        class_ptr->next = NULL;
+    } else {
+        class_ptr->next = MPIR_Grequest_class_list;
+    }
+    MPIR_Grequest_class_list = class_ptr;
+    if (!MPIR_Grequest_registered_finalizer) {
+        /* must run before (w/ higher priority than) the handle check
+         * finalizer in order avoid being flagged as a leak */
+        MPIR_Add_finalize(&MPIR_Grequest_free_classes_on_finalize,
+                          NULL, MPIR_FINALIZE_CALLBACK_HANDLE_CHECK_PRIO + 1);
+        MPIR_Grequest_registered_finalizer = 1;
+    }
+
+    MPIR_OBJ_PUBLISH_HANDLE(*greq_class, class_ptr->handle);
+
+    /* ... end of body of routine ... */
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
+#ifdef HAVE_ERROR_CHECKING
+    {
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpix_grequest_class_create",
+                                 "**mpix_grequest_class_create %p %p %p %p %p", query_fn, free_fn,
+                                 cancel_fn, poll_fn, wait_fn);
+    }
+#endif
+    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -331,7 +332,9 @@ fn_fail:
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Grequest_class_allocate as PMPIX_Grequest_class_allocate
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class, void *extra_state, MPI_Request *request) __attribute__((weak,alias("PMPIX_Grequest_class_allocate")));
+int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class, void *extra_state,
+                                 MPI_Request * request)
+    __attribute__ ((weak, alias("PMPIX_Grequest_class_allocate")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -345,27 +348,24 @@ int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class, void *extra_sta
 #undef FUNCNAME
 #define FUNCNAME MPIX_Grequest_class_allocate
 
-int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class, 
-		                void *extra_state, 
-				MPI_Request *request)
+int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class,
+                                 void *extra_state, MPI_Request * request)
 {
-	int mpi_errno;
-	MPIR_Request *lrequest_ptr;
-	MPIR_Grequest_class *class_ptr;
+    int mpi_errno;
+    MPIR_Request *lrequest_ptr;
+    MPIR_Grequest_class *class_ptr;
 
-        *request = MPI_REQUEST_NULL;
-	MPIR_Grequest_class_get_ptr(greq_class, class_ptr);
-        mpi_errno = MPIR_Grequest_start_impl(class_ptr->query_fn, class_ptr->free_fn,
-                                             class_ptr->cancel_fn, extra_state,
-                                             &lrequest_ptr);
-	if (mpi_errno == MPI_SUCCESS)
-	{
-            *request = lrequest_ptr->handle;
-            lrequest_ptr->u.ureq.greq_fns->poll_fn     = class_ptr->poll_fn;
-            lrequest_ptr->u.ureq.greq_fns->wait_fn     = class_ptr->wait_fn;
-            lrequest_ptr->u.ureq.greq_fns->greq_class  = greq_class;
-	}
-	return mpi_errno;
+    *request = MPI_REQUEST_NULL;
+    MPIR_Grequest_class_get_ptr(greq_class, class_ptr);
+    mpi_errno = MPIR_Grequest_start_impl(class_ptr->query_fn, class_ptr->free_fn,
+                                         class_ptr->cancel_fn, extra_state, &lrequest_ptr);
+    if (mpi_errno == MPI_SUCCESS) {
+        *request = lrequest_ptr->handle;
+        lrequest_ptr->u.ureq.greq_fns->poll_fn = class_ptr->poll_fn;
+        lrequest_ptr->u.ureq.greq_fns->wait_fn = class_ptr->wait_fn;
+        lrequest_ptr->u.ureq.greq_fns->greq_class = greq_class;
+    }
+    return mpi_errno;
 }
 
 /* -- Begin Profiling Symbol Block for routine MPIX_Grequest_start */
@@ -376,13 +376,13 @@ int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class,
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Grequest_start as PMPIX_Grequest_start
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPIX_Grequest_start( MPI_Grequest_query_function *query_fn,
-        MPI_Grequest_free_function *free_fn,
-        MPI_Grequest_cancel_function *cancel_fn,
-        MPIX_Grequest_poll_function *poll_fn,
-        MPIX_Grequest_wait_function *wait_fn,
-        void *extra_state,
-        MPI_Request *request ) __attribute__((weak,alias("PMPIX_Grequest_start")));
+int MPIX_Grequest_start(MPI_Grequest_query_function * query_fn,
+                        MPI_Grequest_free_function * free_fn,
+                        MPI_Grequest_cancel_function * cancel_fn,
+                        MPIX_Grequest_poll_function * poll_fn,
+                        MPIX_Grequest_wait_function * wait_fn,
+                        void *extra_state, MPI_Request * request)
+    __attribute__ ((weak, alias("PMPIX_Grequest_start")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -396,18 +396,20 @@ int MPIX_Grequest_start( MPI_Grequest_query_function *query_fn,
 #undef FUNCNAME
 #define FUNCNAME MPIX_Grequest_start
 
-int MPIX_Grequest_start( MPI_Grequest_query_function *query_fn,
-			MPI_Grequest_free_function *free_fn,
-			MPI_Grequest_cancel_function *cancel_fn,
-			MPIX_Grequest_poll_function *poll_fn,
-			MPIX_Grequest_wait_function *wait_fn,
-			void *extra_state, MPI_Request *request )
+int MPIX_Grequest_start(MPI_Grequest_query_function * query_fn,
+                        MPI_Grequest_free_function * free_fn,
+                        MPI_Grequest_cancel_function * cancel_fn,
+                        MPIX_Grequest_poll_function * poll_fn,
+                        MPIX_Grequest_wait_function * wait_fn,
+                        void *extra_state, MPI_Request * request)
 {
     int mpi_errno;
     MPIR_Request *lrequest_ptr;
 
     *request = MPI_REQUEST_NULL;
-    mpi_errno = MPIX_Grequest_start_impl(query_fn, free_fn, cancel_fn, poll_fn, wait_fn, extra_state, &lrequest_ptr);
+    mpi_errno =
+        MPIX_Grequest_start_impl(query_fn, free_fn, cancel_fn, poll_fn, wait_fn, extra_state,
+                                 &lrequest_ptr);
 
     if (mpi_errno == MPI_SUCCESS) {
         *request = lrequest_ptr->handle;
@@ -423,12 +425,12 @@ int MPIX_Grequest_start( MPI_Grequest_query_function *query_fn,
 #define FUNCNAME MPIX_Grequest_start_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIX_Grequest_start_impl( MPI_Grequest_query_function *query_fn,
-                              MPI_Grequest_free_function *free_fn,
-                              MPI_Grequest_cancel_function *cancel_fn,
-                              MPIX_Grequest_poll_function *poll_fn,
-                              MPIX_Grequest_wait_function *wait_fn,
-                              void *extra_state, MPIR_Request **request )
+int MPIX_Grequest_start_impl(MPI_Grequest_query_function * query_fn,
+                             MPI_Grequest_free_function * free_fn,
+                             MPI_Grequest_cancel_function * cancel_fn,
+                             MPIX_Grequest_poll_function * poll_fn,
+                             MPIX_Grequest_wait_function * wait_fn,
+                             void *extra_state, MPIR_Request ** request)
 {
     int mpi_errno;
 

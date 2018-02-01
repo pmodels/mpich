@@ -86,15 +86,12 @@ int main(int argc, char **argv)
 
         if (0 == strcmp(name, "posted_recvq_length")) {
             pq_idx = i;
-        }
-        else if (0 == strcmp(name, "unexpected_recvq_length")) {
+        } else if (0 == strcmp(name, "unexpected_recvq_length")) {
             uq_idx = i;
-        }
-        else if (0 == strcmp(name, "posted_recvq_match_attempts")) {
+        } else if (0 == strcmp(name, "posted_recvq_match_attempts")) {
             pqm_idx = i;
             pqm_writable = !readonly;
-        }
-        else if (0 == strcmp(name, "unexpected_recvq_match_attempts")) {
+        } else if (0 == strcmp(name, "unexpected_recvq_match_attempts")) {
             uqm_idx = i;
             uqm_writable = !readonly;
         }

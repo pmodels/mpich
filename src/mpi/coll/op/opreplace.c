@@ -12,12 +12,14 @@
 #define FUNCNAME MPIR_REPLACE
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIR_REPLACE( void *invec, void *inoutvec, int *Len, MPI_Datatype *type )
+void MPIR_REPLACE(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Localcopy(invec, *Len, *type, inoutvec, *Len, *type);
-    if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
+    if (mpi_errno) {
+        MPIR_ERR_POP(mpi_errno);
+    }
 
   fn_exit:
     return;
@@ -32,7 +34,7 @@ void MPIR_REPLACE( void *invec, void *inoutvec, int *Len, MPI_Datatype *type )
 #define FUNCNAME MPIR_REPLACE_check_dtype
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_REPLACE_check_dtype( MPI_Datatype type )
+int MPIR_REPLACE_check_dtype(MPI_Datatype type)
 {
     return MPI_SUCCESS;
 }

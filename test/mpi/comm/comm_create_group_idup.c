@@ -32,8 +32,7 @@ int main(int argc, char *argv[])
     if (rank % 2 == 0) {
         MPI_Comm_create_group(MPI_COMM_WORLD, world_group, 0, &group_comm);
         MPI_Comm_idup(MPI_COMM_WORLD, &idup_comm, &req);
-    }
-    else {
+    } else {
         MPI_Comm_idup(MPI_COMM_WORLD, &idup_comm, &req);
         MPI_Comm_create_group(MPI_COMM_WORLD, world_group, 0, &group_comm);
     }

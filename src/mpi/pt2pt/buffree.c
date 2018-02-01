@@ -16,7 +16,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Buffer_detach as PMPI_Buffer_detach
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Buffer_detach(void *buffer_addr, int *size) __attribute__((weak,alias("PMPI_Buffer_detach")));
+int MPI_Buffer_detach(void *buffer_addr, int *size)
+    __attribute__ ((weak, alias("PMPI_Buffer_detach")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -36,7 +37,7 @@ int MPI_Buffer_detach(void *buffer_addr, int *size) __attribute__((weak,alias("P
 
 Output Parameters:
 + buffer_addr - initial buffer address (choice)
-- size - buffer size, in bytes (integer) 
+- size - buffer size, in bytes (integer)
 
 Notes:
     The reason that 'MPI_Buffer_detach' returns the address and size of the
@@ -45,14 +46,14 @@ the buffer.  For example, consider
 
 .vb
     int size, mysize, idummy;
-    void *ptr, *myptr, *dummy;     
-    MPI_Buffer_detach( &ptr, &size );
-    MPI_Buffer_attach( myptr, mysize );
+    void *ptr, *myptr, *dummy;
+    MPI_Buffer_detach(&ptr, &size);
+    MPI_Buffer_attach(myptr, mysize);
     ...
     ... library code ...
     ...
-    MPI_Buffer_detach( &dummy, &idummy );
-    MPI_Buffer_attach( ptr, size );
+    MPI_Buffer_detach(&dummy, &idummy);
+    MPI_Buffer_attach(ptr, size);
 .ve
 
 This is much like the action of the Unix signal routine and has the same
@@ -64,30 +65,30 @@ zero.  The MPI 1.1 standard for 'MPI_BUFFER_DETACH' contains the text
 
 .vb
    The statements made in this section describe the behavior of MPI for
-   buffered-mode sends. When no buffer is currently associated, MPI behaves 
+   buffered-mode sends. When no buffer is currently associated, MPI behaves
    as if a zero-sized buffer is associated with the process.
 .ve
 
-This could be read as applying only to the various Bsend routines.  This 
+This could be read as applying only to the various Bsend routines.  This
 implementation takes the position that this applies to 'MPI_BUFFER_DETACH'
 as well.
 
 .N NotThreadSafe
 Because the buffer for buffered sends (e.g., 'MPI_Bsend') is shared by all
 threads in a process, the user is responsible for ensuring that only
-one thread at a time calls this routine or 'MPI_Buffer_attach'.  
+one thread at a time calls this routine or 'MPI_Buffer_attach'.
 
 .N Fortran
 
-    The Fortran binding for this routine is different.  Because Fortran 
+    The Fortran binding for this routine is different.  Because Fortran
     does not have pointers, it is impossible to provide a way to use the
     output of this routine to exchange buffers.  In this case, only the
     size field is set.
 
 Notes for C:
     Even though the 'bufferptr' argument is declared as 'void *', it is
-    really the address of a void pointer.  See the rationale in the 
-    standard for more details. 
+    really the address of a void pointer.  See the rationale in the
+    standard for more details.
 
 .seealso: MPI_Buffer_attach
 @*/
@@ -98,27 +99,28 @@ int MPI_Buffer_detach(void *buffer_addr, int *size)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_BUFFER_DETACH);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_BUFFER_DETACH);
-    
-#   ifdef HAVE_ERROR_CHECKING
+
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_ARGNULL(size,"size",mpi_errno);
+            MPIR_ERRTEST_ARGNULL(size, "size", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    mpi_errno = MPIR_Bsend_detach( buffer_addr, size );
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+
+    mpi_errno = MPIR_Bsend_detach(buffer_addr, size);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     /* ... end of body of routine ... */
-    
+
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_BUFFER_DETACH);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -126,15 +128,15 @@ int MPI_Buffer_detach(void *buffer_addr, int *size)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_buffer_detach",
-	    "**mpi_buffer_detach %p %p", buffer_addr, size);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_buffer_detach", "**mpi_buffer_detach %p %p", buffer_addr,
+                                 size);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-

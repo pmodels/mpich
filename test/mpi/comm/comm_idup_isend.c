@@ -47,8 +47,7 @@ int main(int argc, char **argv)
                 for (i = 1; i < size; i++)
                     MPI_Isend(&out[j], 1, MPI_INT, i, 0, testcomm, &sreq[cnt++]);
                 MPI_Comm_idup(testcomm, &newcomm[j], &sreq[cnt++]);
-            }
-            else {
+            } else {
                 out[j] = 0;
                 in[j] = 0;
                 sol[j] = 815;
@@ -82,8 +81,7 @@ int main(int argc, char **argv)
                 for (i = 1; i < rsize; i++)
                     MPI_Isend(&out[j], 1, MPI_INT, i, 0, testcomm, &sreq[cnt++]);
                 MPI_Comm_idup(testcomm, &newcomm[j], &sreq[cnt++]);
-            }
-            else {
+            } else {
                 out[j] = 0;
                 in[j] = 0;
                 sol[j] = 815;

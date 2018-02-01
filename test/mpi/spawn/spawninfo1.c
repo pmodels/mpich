@@ -62,8 +62,7 @@ int main(int argc, char *argv[])
             MPI_Comm_spawn((char *) "spawninfo1", MPI_ARGV_NULL, np,
                            spawninfo, 0, MPI_COMM_WORLD, &intercomm, errcodes);
             MPI_Info_free(&spawninfo);
-        }
-        else
+        } else
             intercomm = parentcomm;
 
         /* We now have a valid intercomm */
@@ -98,8 +97,7 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-        }
-        else {
+        } else {
             /* Child */
             char cname[MPI_MAX_OBJECT_NAME];
             int rlen;
@@ -118,8 +116,7 @@ int main(int argc, char *argv[])
                 printf("Name of parent is not correct\n");
                 if (rlen > 0 && cname[0]) {
                     printf(" Got %s but expected MPI_COMM_PARENT\n", cname);
-                }
-                else {
+                } else {
                     printf(" Expected MPI_COMM_PARENT but no name set\n");
                 }
             }
@@ -144,8 +141,7 @@ int main(int argc, char *argv[])
         if (parentcomm == MPI_COMM_NULL) {
             MTest_Finalize(errs);
         }
-    }
-    else {
+    } else {
         MTest_Finalize(errs);
     }
 

@@ -181,39 +181,39 @@ int MPL_dbg_outevent(const char *file, int line, int class, int kind, const char
 
     /* The kind values are used with the macros to simplify these cases */
     switch (kind) {
-    case 0:
-        va_start(list, fmat);
-        str = va_arg(list, char *);
-        fprintf(dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
-                world_num, world_rank, threadID, pid, class, curtime, file, line, str);
-        va_end(list);
-        break;
-    case 1:
-        va_start(list, fmat);
-        str = va_arg(list, char *);
-        MPL_snprintf(stmp, sizeof(stmp), fmat, str);
-        va_end(list);
-        fprintf(dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
-                world_num, world_rank, threadID, pid, class, curtime, file, line, stmp);
-        break;
-    case 2:
-        va_start(list, fmat);
-        i = va_arg(list, int);
-        MPL_snprintf(stmp, sizeof(stmp), fmat, i);
-        va_end(list);
-        fprintf(dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
-                world_num, world_rank, threadID, pid, class, curtime, file, line, stmp);
-        break;
-    case 3:
-        va_start(list, fmat);
-        p = va_arg(list, void *);
-        MPL_snprintf(stmp, sizeof(stmp), fmat, p);
-        va_end(list);
-        fprintf(dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
-                world_num, world_rank, threadID, pid, class, curtime, file, line, stmp);
-        break;
-    default:
-        break;
+        case 0:
+            va_start(list, fmat);
+            str = va_arg(list, char *);
+            fprintf(dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
+                    world_num, world_rank, threadID, pid, class, curtime, file, line, str);
+            va_end(list);
+            break;
+        case 1:
+            va_start(list, fmat);
+            str = va_arg(list, char *);
+            MPL_snprintf(stmp, sizeof(stmp), fmat, str);
+            va_end(list);
+            fprintf(dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
+                    world_num, world_rank, threadID, pid, class, curtime, file, line, stmp);
+            break;
+        case 2:
+            va_start(list, fmat);
+            i = va_arg(list, int);
+            MPL_snprintf(stmp, sizeof(stmp), fmat, i);
+            va_end(list);
+            fprintf(dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
+                    world_num, world_rank, threadID, pid, class, curtime, file, line, stmp);
+            break;
+        case 3:
+            va_start(list, fmat);
+            p = va_arg(list, void *);
+            MPL_snprintf(stmp, sizeof(stmp), fmat, p);
+            va_end(list);
+            fprintf(dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
+                    world_num, world_rank, threadID, pid, class, curtime, file, line, stmp);
+            break;
+        default:
+            break;
     }
     fflush(dbg_fp);
 
@@ -318,8 +318,7 @@ static int dbg_process_args(int *argc_p, char ***argv_p)
                     /* Just -mpich-dbg */
                     MPL_dbg_max_level = MPL_DBG_TYPICAL;
                     MPL_dbg_active_classes = MPL_DBG_ALL;
-                }
-                else if (*s == '=') {
+                } else if (*s == '=') {
                     /* look for file */
                     MPL_dbg_max_level = MPL_DBG_TYPICAL;
                     MPL_dbg_active_classes = MPL_DBG_ALL;
@@ -327,8 +326,7 @@ static int dbg_process_args(int *argc_p, char ***argv_p)
                     if (strncmp(s, "file", 4) == 0) {
                         file_pattern = default_file_pattern;
                     }
-                }
-                else if (strncmp(s, "-level", 6) == 0) {
+                } else if (strncmp(s, "-level", 6) == 0) {
                     char *p = s + 6;
                     if (*p == '=') {
                         p++;
@@ -336,8 +334,7 @@ static int dbg_process_args(int *argc_p, char ***argv_p)
                         if (rc)
                             dbg_usage("-mpich-dbg-level", "terse, typical, verbose");
                     }
-                }
-                else if (strncmp(s, "-class", 6) == 0) {
+                } else if (strncmp(s, "-class", 6) == 0) {
                     char *p = s + 6;
                     if (*p == '=') {
                         p++;
@@ -345,8 +342,7 @@ static int dbg_process_args(int *argc_p, char ***argv_p)
                         if (rc)
                             dbg_usage("-mpich-dbg-class", 0);
                     }
-                }
-                else if (strncmp(s, "-filename", 9) == 0) {
+                } else if (strncmp(s, "-filename", 9) == 0) {
                     char *p = s + 9;
                     if (*p == '=') {
                         p++;
@@ -354,14 +350,12 @@ static int dbg_process_args(int *argc_p, char ***argv_p)
                          * use the predefined default pattern */
                         if (strcmp(p, "-default") == 0) {
                             file_pattern = default_file_pattern;
-                        }
-                        else {
+                        } else {
                             strncpy(file_pattern_buf, p, sizeof(file_pattern_buf));
                             file_pattern = file_pattern_buf;
                         }
                     }
-                }
-                else if (strncmp(s, "-rank", 5) == 0) {
+                } else if (strncmp(s, "-rank", 5) == 0) {
                     char *p = s + 5;
                     if (*p == '=' && p[1] != 0) {
                         char *sOut;
@@ -372,8 +366,7 @@ static int dbg_process_args(int *argc_p, char ***argv_p)
                             which_rank = -1;
                         }
                     }
-                }
-                else {
+                } else {
                     dbg_usage((*argv_p)[i], 0);
                 }
 
@@ -391,7 +384,7 @@ static int dbg_process_args(int *argc_p, char ***argv_p)
 static char *getenv_either(const char *env_a, const char *env_b)
 {
     char *s;
-    if ( (s = getenv(env_a)) == NULL)
+    if ((s = getenv(env_a)) == NULL)
         s = getenv(env_b);
 
     return s;
@@ -561,8 +554,7 @@ int MPL_dbg_init(int *argc_p, char ***argv_p, int has_args, int has_env,
             if (ret) {
                 MPL_error_printf("Could not rename temp log file to %s\n", filename);
                 goto fn_fail;
-            }
-            else {
+            } else {
                 dbg_fp = fopen(filename, "a+");
                 set_fp(dbg_fp);
                 if (dbg_fp == NULL) {
@@ -587,8 +579,7 @@ static int dbg_usage(const char *cmd, const char *vals)
 {
     if (vals) {
         fprintf(stderr, "Incorrect value for %s, should be one of %s\n", cmd, vals);
-    }
-    else {
+    } else {
         fprintf(stderr, "Incorrect value for %s\n", cmd);
     }
     fprintf(stderr, "Command line for debug switches\n\
@@ -779,34 +770,28 @@ static int dbg_get_filename(char *filename, int len)
             if (withinMworld) {
                 withinMworld = 0;
                 p++;
-            }
-            else if (withinMthread) {
+            } else if (withinMthread) {
                 withinMthread = 0;
                 p++;
-            }
-            else {
+            } else {
                 /* Look for command */
                 p++;
                 if (*p == 'W') {
                     p++;
                     withinMworld = 1;
-                }
-                else if (*p == 'T') {
+                } else if (*p == 'T') {
                     p++;
                     withinMthread = 1;
-                }
-                else {
+                } else {
                     /* Unrecognized char */
                     *pDest++ = *p++;
                 }
             }
-        }
-        else if ((withinMworld && world_num == 0) || (withinMthread && nThread == 1)) {
+        } else if ((withinMworld && world_num == 0) || (withinMthread && nThread == 1)) {
             /* Simply skip this character since we're not showing
              * this string */
             p++;
-        }
-        else if (*p == '%') {
+        } else if (*p == '%') {
             p++;
             if (*p == 'd') {
                 char rankAsChar[20];
@@ -814,8 +799,7 @@ static int dbg_get_filename(char *filename, int len)
                 *pDest = 0;
                 MPL_strnapp(filename, rankAsChar, len);
                 pDest += strlen(rankAsChar);
-            }
-            else if (*p == 't') {
+            } else if (*p == 't') {
 #if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
                 char threadIDAsChar[30];
                 MPL_thread_id_t tid;
@@ -829,14 +813,12 @@ static int dbg_get_filename(char *filename, int len)
 #else
                 *pDest++ = '0';
 #endif /* MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE */
-            }
-            else if (*p == 'w') {
+            } else if (*p == 'w') {
                 /* *pDest++ = '0'; */
                 *pDest = 0;
                 MPL_strnapp(filename, world_numAsChar, len);
                 pDest += strlen(world_numAsChar);
-            }
-            else if (*p == 'p') {
+            } else if (*p == 'p') {
                 /* Appends the pid of the proceess to the file name. */
                 char pidAsChar[20];
 #if defined(MPL_HAVE_GETPID)
@@ -848,14 +830,12 @@ static int dbg_get_filename(char *filename, int len)
                 *pDest = 0;
                 MPL_strnapp(filename, pidAsChar, len);
                 pDest += strlen(pidAsChar);
-            }
-            else {
+            } else {
                 *pDest++ = '%';
                 *pDest++ = *p;
             }
             p++;
-        }
-        else {
+        } else {
             *pDest++ = *p++;
         }
     }
@@ -871,11 +851,9 @@ static int dbg_openfile(FILE ** dbg_fp)
     int mpl_errno = MPL_DBG_SUCCESS;
     if (!file_pattern || *file_pattern == 0 || strcmp(file_pattern, "-stdout-") == 0) {
         *dbg_fp = stdout;
-    }
-    else if (strcmp(file_pattern, "-stderr-") == 0) {
+    } else if (strcmp(file_pattern, "-stderr-") == 0) {
         *dbg_fp = stderr;
-    }
-    else {
+    } else {
         char filename[MAXPATHLEN];
 
         /* if we're not at DBG_INITIALIZED, we don't know our
@@ -884,8 +862,7 @@ static int dbg_openfile(FILE ** dbg_fp)
             mpl_errno = dbg_open_tmpfile(dbg_fp);
             if (mpl_errno)
                 goto fn_fail;
-        }
-        else {
+        } else {
             mpl_errno = dbg_get_filename(filename, MAXPATHLEN);
             if (mpl_errno)
                 goto fn_fail;

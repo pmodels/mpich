@@ -12,7 +12,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibcast_sched_inter_flat(void *buffer, int count, MPI_Datatype datatype,
-                           int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+                                 int root, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -21,40 +21,38 @@ int MPIR_Ibcast_sched_inter_flat(void *buffer, int count, MPI_Datatype datatype,
     /* Intercommunicator broadcast.
      * Root sends to rank 0 in remote group. Remote group does local
      * intracommunicator broadcast. */
-    if (root == MPI_PROC_NULL)
-    {
+    if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */
         mpi_errno = MPI_SUCCESS;
-    }
-    else if (root == MPI_ROOT)
-    {
+    } else if (root == MPI_ROOT) {
         /* root sends to rank 0 on remote group and returns */
         mpi_errno = MPIR_Sched_send(buffer, count, datatype, 0, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else
-    {
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    } else {
         /* remote group. rank 0 on remote group receives from root */
         if (comm_ptr->rank == 0) {
             mpi_errno = MPIR_Sched_recv(buffer, count, datatype, root, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }
 
         if (comm_ptr->local_comm == NULL) {
             mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
         }
 
         /* now do the usual broadcast on this intracommunicator
-           with rank 0 as root. */
+         * with rank 0 as root. */
         mpi_errno = MPIR_Ibcast_sched(buffer, count, datatype, root, comm_ptr->local_comm, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
     }
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
-

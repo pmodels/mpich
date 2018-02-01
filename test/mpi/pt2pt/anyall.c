@@ -45,8 +45,7 @@ int main(int argc, char *argv[])
         for (i = 0; i < MAX_MSGS; i++) {
             MPI_Send(buf[i], MAX_MSGS - i, MPI_INT, worker, 3, comm);
         }
-    }
-    else if (wrank == worker) {
+    } else if (wrank == worker) {
         /* Initialize the recv buffer */
         for (i = 0; i < MAX_MSGS; i++) {
             for (j = 0; j < MAX_MSGS; j++) {
@@ -63,8 +62,7 @@ int main(int argc, char *argv[])
             MPI_Get_count(&status, MPI_INT, &count);
             if (count != MAX_MSGS - idx) {
                 errs++;
-            }
-            else {
+            } else {
                 /* Check for the correct answers */
                 for (j = 0; j < MAX_MSGS - idx; j++) {
                     if (buf[idx][j] != idx * MAX_MSGS + j) {
@@ -75,8 +73,7 @@ int main(int argc, char *argv[])
                 }
             }
         }
-    }
-    else {
+    } else {
         MPI_Barrier(MPI_COMM_WORLD);
     }
 

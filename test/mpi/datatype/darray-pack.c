@@ -118,8 +118,7 @@ int darray_2d_c_test1(void)
                 if (verbose)
                     fprintf(stderr, "[2d array rank=%d]:array[%d] = %d; should be %d\n",
                             rank, i, array[i], rank);
-            }
-            else if ((i != rank) && (array[i] != 0)) {
+            } else if ((i != rank) && (array[i] != 0)) {
                 errs++;
                 if (verbose)
                     fprintf(stderr, "[2d array rank=%d]:array[%d] = %d; should be %d\n",

@@ -71,8 +71,7 @@ int main(int argc, char *argv[])
                 errs++;
 
         free(results);
-    }
-    else {
+    } else {
         blens[0] = rank;
         disps[0] = 0;
         blens[1] = nprocs - rank - 1;

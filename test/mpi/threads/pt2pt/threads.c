@@ -69,22 +69,19 @@ MTEST_THREAD_RETURN_TYPE run_test(void *arg)
             for (i = 0; i < LOOPS; i++)
                 for (j = 0; j < WINDOW; j++)
                     MPI_Send(sbuf, tp[thread_id].msg_size, MPI_CHAR, peer, 0, MPI_COMM_WORLD);
-        }
-        else {
+        } else {
             for (i = 0; i < LOOPS; i++)
                 for (j = 0; j < WINDOW; j++)
                     MPI_Recv(rbuf, tp[thread_id].msg_size, MPI_CHAR, peer, 0, MPI_COMM_WORLD,
                              &status[0]);
         }
-    }
-    else {
+    } else {
         for (i = 0; i < LOOPS; i++) {
             if ((rank % 2) == 0) {
                 for (j = 0; j < WINDOW; j++)
                     MPI_Isend(sbuf, tp[thread_id].msg_size, MPI_CHAR, peer, 0, MPI_COMM_WORLD,
                               &req[j]);
-            }
-            else {
+            } else {
                 for (j = 0; j < WINDOW; j++)
                     MPI_Irecv(rbuf, tp[thread_id].msg_size, MPI_CHAR, peer, 0, MPI_COMM_WORLD,
                               &req[j]);

@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Win_create as PMPI_Win_create
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Win_create(void *base, MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm,
-                   MPI_Win *win) __attribute__((weak,alias("PMPI_Win_create")));
+                   MPI_Win * win) __attribute__ ((weak, alias("PMPI_Win_create")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -96,8 +96,8 @@ usage pattern of the window. The following info keys are predefined.
 
 .seealso: MPI_Win_allocate MPI_Win_allocate_shared MPI_Win_create_dynamic MPI_Win_free
 @*/
-int MPI_Win_create(void *base, MPI_Aint size, int disp_unit, MPI_Info info, 
-		   MPI_Comm comm, MPI_Win *win)
+int MPI_Win_create(void *base, MPI_Aint size, int disp_unit, MPI_Info info,
+                   MPI_Comm comm, MPI_Win * win)
 {
     static const char FCNAME[] = "MPI_Win_create";
     int mpi_errno = MPI_SUCCESS;
@@ -107,71 +107,70 @@ int MPI_Win_create(void *base, MPI_Aint size, int disp_unit, MPI_Info info,
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_WIN_CREATE);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_COMM(comm, mpi_errno);
+            MPIR_ERRTEST_COMM(comm, mpi_errno);
             MPIR_ERRTEST_INFO_OR_NULL(info, mpi_errno);
             MPIR_ERRTEST_ARGNULL(win, "win", mpi_errno);
-	}
+        }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPIR_Comm_get_ptr( comm, comm_ptr );
-    MPIR_Info_get_ptr( info, info_ptr );
+    MPIR_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Info_get_ptr(info, info_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate pointers */
-	    MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, FALSE);
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
             if (size < 0)
-                mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
-						  MPIR_ERR_RECOVERABLE, 
-						  FCNAME, __LINE__, 
-						  MPI_ERR_SIZE,
-                                                  "**rmasize",
-                                                  "**rmasize %d", size);  
+                mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
+                                                 MPIR_ERR_RECOVERABLE,
+                                                 FCNAME, __LINE__,
+                                                 MPI_ERR_SIZE, "**rmasize", "**rmasize %d", size);
             if (disp_unit <= 0)
-                mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
-						  MPIR_ERR_RECOVERABLE, 
-						  FCNAME, __LINE__, 
-						  MPI_ERR_ARG,
-                                                 "**arg", "**arg %s", 
-                                                 "disp_unit must be positive");
+                mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
+                                                 MPIR_ERR_RECOVERABLE,
+                                                 FCNAME, __LINE__,
+                                                 MPI_ERR_ARG,
+                                                 "**arg", "**arg %s", "disp_unit must be positive");
             if (size > 0 && base == NULL)
-                mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
-                                                  MPIR_ERR_RECOVERABLE, 
-                                                  FCNAME, __LINE__, 
-                                                  MPI_ERR_ARG,
-                                                  "**nullptr",
-                                                  "**nullptr %s",
-                                                  "NULL base pointer is invalid when size is nonzero");  
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
+                                                 MPIR_ERR_RECOVERABLE,
+                                                 FCNAME, __LINE__,
+                                                 MPI_ERR_ARG,
+                                                 "**nullptr",
+                                                 "**nullptr %s",
+                                                 "NULL base pointer is invalid when size is nonzero");
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    mpi_errno = MPID_Win_create(base, size, disp_unit, info_ptr, 
-				comm_ptr, &win_ptr);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+
+    mpi_errno = MPID_Win_create(base, size, disp_unit, info_ptr, comm_ptr, &win_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     /* Initialize a few fields that have specific defaults */
-    win_ptr->name[0]    = 0;
+    win_ptr->name[0] = 0;
     win_ptr->errhandler = 0;
 
     /* return the handle of the window object to the user */
@@ -186,14 +185,15 @@ int MPI_Win_create(void *base, MPI_Aint size, int disp_unit, MPI_Info info,
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_win_create", 
-	    "**mpi_win_create %p %d %d %I %C %p", base, size, disp_unit, info, comm, win);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_win_create", "**mpi_win_create %p %d %d %I %C %p", base,
+                                 size, disp_unit, info, comm, win);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

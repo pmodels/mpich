@@ -37,8 +37,7 @@ int main(int argc, char *argv[])
         if (rank == 0) {
             for (i = 0; i < SIZE; i++)
                 A[i] = B[i] = i;
-        }
-        else {
+        } else {
             for (i = 0; i < SIZE; i++) {
                 A[i] = (-3) * i;
                 B[i] = (-4) * i;
@@ -55,8 +54,7 @@ int main(int argc, char *argv[])
         if (rank == 0) {
             for (i = 0; i < SIZE - 2; i += 2)
                 MPI_Put(A + i, 2, MPI_INT, 1, i, 1, contig_2ints, win);
-        }
-        else {
+        } else {
             for (i = 0; i < SIZE - 2; i += 2)
                 MPI_Get(A + i, 2, MPI_INT, 0, i, 1, contig_2ints, win);
 
@@ -71,8 +69,7 @@ int main(int argc, char *argv[])
                     errs++;
                 }
             }
-        }
-        else {
+        } else {
             if (B[SIZE - 1] != SIZE - 1 - 3 * (SIZE - 1)) {
                 SQUELCH(printf
                         ("Accumulate Error: B[SIZE-1] is %d, should be %d\n", B[SIZE - 1],

@@ -23,11 +23,11 @@ typedef enum MPIR_Comm_kind_t {
 /* ideally we could add these to MPIR_Comm_kind_t, but there's too much existing
  * code that assumes that the only valid values are INTRACOMM or INTERCOMM */
 typedef enum MPIR_Comm_hierarchy_kind_t {
-    MPIR_COMM_HIERARCHY_KIND__FLAT = 0,        /* no hierarchy */
-    MPIR_COMM_HIERARCHY_KIND__PARENT = 1,      /* has subcommunicators */
-    MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS = 2,  /* is the subcomm for node roots */
-    MPIR_COMM_HIERARCHY_KIND__NODE = 3,        /* is the subcomm for a node */
-    MPIR_COMM_HIERARCHY_KIND__SIZE             /* cardinality of this enum */
+    MPIR_COMM_HIERARCHY_KIND__FLAT = 0, /* no hierarchy */
+    MPIR_COMM_HIERARCHY_KIND__PARENT = 1,       /* has subcommunicators */
+    MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS = 2,   /* is the subcomm for node roots */
+    MPIR_COMM_HIERARCHY_KIND__NODE = 3, /* is the subcomm for a node */
+    MPIR_COMM_HIERARCHY_KIND__SIZE      /* cardinality of this enum */
 } MPIR_Comm_hierarchy_kind_t;
 
 typedef enum {
@@ -56,15 +56,14 @@ typedef struct MPIR_Comm_map {
     /* only valid for irregular map type */
     int src_mapping_size;
     int *src_mapping;
-    int free_mapping;       /* we allocated the mapping */
+    int free_mapping;           /* we allocated the mapping */
 
     struct MPIR_Comm_map *next;
 } MPIR_Comm_map_t;
 
 int MPIR_Comm_map_irregular(struct MPIR_Comm *newcomm, struct MPIR_Comm *src_comm,
                             int *src_mapping, int src_mapping_size,
-                            MPIR_Comm_map_dir_t dir,
-                            MPIR_Comm_map_t **map);
+                            MPIR_Comm_map_dir_t dir, MPIR_Comm_map_t ** map);
 int MPIR_Comm_map_dup(struct MPIR_Comm *newcomm, struct MPIR_Comm *src_comm,
                       MPIR_Comm_map_dir_t dir);
 int MPIR_Comm_map_free(struct MPIR_Comm *comm);
@@ -131,55 +130,55 @@ int MPIR_Comm_map_free(struct MPIR_Comm *comm);
   communicator have acked.
   S*/
 struct MPIR_Comm {
-    MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
+    MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
     MPID_Thread_mutex_t mutex;
-    MPIR_Context_id_t context_id; /* Send context id.  See notes */
-    MPIR_Context_id_t recvcontext_id; /* Send context id.  See notes */
-    int           remote_size;   /* Value of MPI_Comm_(remote)_size */
-    int           rank;          /* Value of MPI_Comm_rank */
-    MPIR_Attribute *attributes;  /* List of attributes */
-    int           local_size;    /* Value of MPI_Comm_size for local group */
-    int           pof2;          /* Nearest (smaller than or equal to) power of 2
-                                    to the number of ranks in the communicator.
-                                    To be used during collective communication */
-    MPIR_Group   *local_group,   /* Groups in communicator. */
-                 *remote_group;  /* The local and remote groups are the
-                                    same for intra communicators */
-    MPIR_Comm_kind_t comm_kind;  /* MPIR_COMM_KIND__INTRACOMM or MPIR_COMM_KIND__INTERCOMM */
-    char          name[MPI_MAX_OBJECT_NAME];  /* Required for MPI-2 */
-    MPIR_Errhandler *errhandler; /* Pointer to the error handler structure */
-    struct MPIR_Comm    *local_comm; /* Defined only for intercomms, holds
-				        an intracomm for the local group */
+    MPIR_Context_id_t context_id;       /* Send context id.  See notes */
+    MPIR_Context_id_t recvcontext_id;   /* Send context id.  See notes */
+    int remote_size;            /* Value of MPI_Comm_(remote)_size */
+    int rank;                   /* Value of MPI_Comm_rank */
+    MPIR_Attribute *attributes; /* List of attributes */
+    int local_size;             /* Value of MPI_Comm_size for local group */
+    int pof2;                   /* Nearest (smaller than or equal to) power of 2
+                                 * to the number of ranks in the communicator.
+                                 * To be used during collective communication */
+    MPIR_Group *local_group,    /* Groups in communicator. */
+    *remote_group;              /* The local and remote groups are the
+                                 * same for intra communicators */
+    MPIR_Comm_kind_t comm_kind; /* MPIR_COMM_KIND__INTRACOMM or MPIR_COMM_KIND__INTERCOMM */
+    char name[MPI_MAX_OBJECT_NAME];     /* Required for MPI-2 */
+    MPIR_Errhandler *errhandler;        /* Pointer to the error handler structure */
+    struct MPIR_Comm *local_comm;       /* Defined only for intercomms, holds
+                                         * an intracomm for the local group */
 
-    MPIR_Comm_hierarchy_kind_t hierarchy_kind; /* flat, parent, node, or node_roots */
-    struct MPIR_Comm *node_comm; /* Comm of processes in this comm that are on
-                                    the same node as this process. */
-    struct MPIR_Comm *node_roots_comm; /* Comm of root processes for other nodes. */
-    int *intranode_table;        /* intranode_table[i] gives the rank in
-                                    node_comm of rank i in this comm or -1 if i
-                                    is not in this process' node_comm.
-                                    It is of size 'local_size'. */
-    int *internode_table;        /* internode_table[i] gives the rank in
-                                    node_roots_comm of rank i in this comm.
-                                    It is of size 'local_size'. */
+    MPIR_Comm_hierarchy_kind_t hierarchy_kind;  /* flat, parent, node, or node_roots */
+    struct MPIR_Comm *node_comm;        /* Comm of processes in this comm that are on
+                                         * the same node as this process. */
+    struct MPIR_Comm *node_roots_comm;  /* Comm of root processes for other nodes. */
+    int *intranode_table;       /* intranode_table[i] gives the rank in
+                                 * node_comm of rank i in this comm or -1 if i
+                                 * is not in this process' node_comm.
+                                 * It is of size 'local_size'. */
+    int *internode_table;       /* internode_table[i] gives the rank in
+                                 * node_roots_comm of rank i in this comm.
+                                 * It is of size 'local_size'. */
 
-    int is_low_group;/* For intercomms only, this boolean is
-                        set for all members of one of the
-                        two groups of processes and clear for
-                        the other.  It enables certain
-                        intercommunicator collective operations
-                        that wish to use half-duplex operations
-                        to implement a full-duplex operation */
+    int is_low_group;           /* For intercomms only, this boolean is
+                                 * set for all members of one of the
+                                 * two groups of processes and clear for
+                                 * the other.  It enables certain
+                                 * intercommunicator collective operations
+                                 * that wish to use half-duplex operations
+                                 * to implement a full-duplex operation */
 
-    struct MPIR_Comm     *comm_next;/* Provides a chain through all active
-				       communicators */
-    struct MPII_Topo_ops  *topo_fns; /* Pointer to a table of functions
-				       implementting the topology routines */
-    int next_sched_tag;             /* used by the NBC schedule code to allocate tags */
+    struct MPIR_Comm *comm_next;        /* Provides a chain through all active
+                                         * communicators */
+    struct MPII_Topo_ops *topo_fns;     /* Pointer to a table of functions
+                                         * implementting the topology routines */
+    int next_sched_tag;         /* used by the NBC schedule code to allocate tags */
 
-    int revoked;                    /* Flag to track whether the communicator
-                                     * has been revoked */
-    MPIR_Info *info;                /* Hints to the communicator */
+    int revoked;                /* Flag to track whether the communicator
+                                 * has been revoked */
+    MPIR_Info *info;            /* Hints to the communicator */
 
 #ifdef MPID_HAS_HETERO
     int is_hetero;
@@ -187,7 +186,7 @@ struct MPIR_Comm {
 
 #if defined HAVE_LIBHCOLL
     hcoll_comm_priv_t hcoll_priv;
-#endif /* HAVE_LIBHCOLL */
+#endif                          /* HAVE_LIBHCOLL */
 
     /* the mapper is temporarily filled out in order to allow the
      * device to setup its network addresses.  it will be freed after
@@ -195,9 +194,9 @@ struct MPIR_Comm {
     MPIR_Comm_map_t *mapper_head;
     MPIR_Comm_map_t *mapper_tail;
 
-  /* Other, device-specific information */
+    /* Other, device-specific information */
 #ifdef MPID_DEV_COMM_DECL
-    MPID_DEV_COMM_DECL
+     MPID_DEV_COMM_DECL
 #endif
 };
 extern MPIR_Object_alloc_t MPIR_Comm_mem;
@@ -207,8 +206,8 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr);
 
 #define MPIR_Comm_add_ref(_comm) \
     do { MPIR_Object_add_ref((_comm)); } while (0)
-#define MPIR_Comm_release_ref( _comm, _inuse ) \
-    do { MPIR_Object_release_ref( _comm, _inuse ); } while (0)
+#define MPIR_Comm_release_ref(_comm, _inuse) \
+    do { MPIR_Object_release_ref(_comm, _inuse); } while (0)
 
 
 /* Release a reference to a communicator.  If there are no pending
@@ -238,80 +237,83 @@ static inline int MPIR_Comm_release(MPIR_Comm * comm_ptr)
 
     return mpi_errno;
 }
+
 #undef FUNCNAME
 #undef FCNAME
 
 /* MPIR_Comm_release_always is the same as MPIR_Comm_release except it uses
    MPIR_Comm_release_ref_always instead.
 */
-int MPIR_Comm_release_always(MPIR_Comm *comm_ptr);
+int MPIR_Comm_release_always(MPIR_Comm * comm_ptr);
 
-int MPIR_Comm_create( MPIR_Comm ** );
+int MPIR_Comm_create(MPIR_Comm **);
 int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
                            MPIR_Comm ** newcomm);
 
 /* implements the logic for MPI_Comm_create for intracommunicators only */
-int MPIR_Comm_create_intra(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr,
-                           MPIR_Comm **newcomm_ptr);
+int MPIR_Comm_create_intra(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, MPIR_Comm ** newcomm_ptr);
 
 
-int MPIR_Comm_commit( MPIR_Comm * );
+int MPIR_Comm_commit(MPIR_Comm *);
 
-int MPIR_Comm_is_node_aware( MPIR_Comm * );
+int MPIR_Comm_is_node_aware(MPIR_Comm *);
 
-int MPIR_Comm_idup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm, MPIR_Request **reqp);
+int MPIR_Comm_idup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm, MPIR_Request ** reqp);
 
-int MPIR_Comm_shrink(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr);
-int MPIR_Comm_agree(MPIR_Comm *comm_ptr, int *flag);
+int MPIR_Comm_shrink(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_agree(MPIR_Comm * comm_ptr, int *flag);
 
 #if defined(HAVE_ROMIO)
-int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm *newcomm);
+int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm);
 #endif
 
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
 
 /* Communicator info hint functions */
-typedef int (*MPIR_Comm_hint_fn_t)(MPIR_Comm *, MPIR_Info *, void *);
+typedef int (*MPIR_Comm_hint_fn_t) (MPIR_Comm *, MPIR_Info *, void *);
 int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *state);
 
-int MPIR_Comm_delete_attr_impl(MPIR_Comm *comm_ptr, MPII_Keyval *keyval_ptr);
-int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
-                                 MPI_Comm_delete_attr_function *comm_delete_attr_fn,
+int MPIR_Comm_delete_attr_impl(MPIR_Comm * comm_ptr, MPII_Keyval * keyval_ptr);
+int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
+                                 MPI_Comm_delete_attr_function * comm_delete_attr_fn,
                                  int *comm_keyval, void *extra_state);
-int MPIR_Comm_accept_impl(const char * port_name, MPIR_Info * info_ptr, int root,
+int MPIR_Comm_accept_impl(const char *port_name, MPIR_Info * info_ptr, int root,
                           MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_connect_impl(const char * port_name, MPIR_Info * info_ptr, int root,
+int MPIR_Comm_connect_impl(const char *port_name, MPIR_Info * info_ptr, int root,
                            MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *function,
-                                     MPI_Errhandler *errhandler);
-int MPIR_Comm_dup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr);
-int MPIR_Comm_dup_with_info_impl(MPIR_Comm *comm_ptr, MPIR_Info *info_ptr, MPIR_Comm **newcomm_ptr);
-int MPIR_Comm_get_info_impl(MPIR_Comm *comm_ptr, MPIR_Info **info_ptr);
-int MPIR_Comm_set_info_impl(MPIR_Comm *comm_ptr, MPIR_Info *info_ptr);
+int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function * function,
+                                     MPI_Errhandler * errhandler);
+int MPIR_Comm_dup_impl(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
+                                 MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_ptr);
+int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr);
 int MPIR_Comm_free_impl(MPIR_Comm * comm_ptr);
 void MPIR_Comm_free_keyval_impl(int keyval);
-void MPIR_Comm_get_errhandler_impl(MPIR_Comm *comm_ptr, MPIR_Errhandler **errhandler_ptr);
-void MPIR_Comm_set_errhandler_impl(MPIR_Comm *comm_ptr, MPIR_Errhandler *errhandler_ptr);
-void MPIR_Comm_get_name_impl(MPIR_Comm *comm, char *comm_name, int *resultlen);
-int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_intracomm_ptr);
-int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
-                               MPIR_Comm *peer_comm_ptr, int remote_leader, int tag,
-                               MPIR_Comm **new_intercomm_ptr);
-int MPIR_Comm_group_impl(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr);
-int MPIR_Comm_remote_group_impl(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr);
-int MPIR_Comm_group_failed_impl(MPIR_Comm *comm, MPIR_Group **failed_group_ptr);
-int MPIR_Comm_remote_group_failed_impl(MPIR_Comm *comm, MPIR_Group **failed_group_ptr);
-int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **newcomm_ptr);
-int MPIR_Comm_split_type_self(MPIR_Comm *comm_ptr, int split_type, int key, MPIR_Comm **newcomm_ptr);
-int MPIR_Comm_split_type_node(MPIR_Comm *comm_ptr, int split_type, int key, MPIR_Comm **newcomm_ptr);
-int MPIR_Comm_split_type_node_topo(MPIR_Comm *comm_ptr, int split_type, int key, MPIR_Info * info_ptr,
-                                   MPIR_Comm **newcomm_ptr);
-int MPIR_Comm_split_type(MPIR_Comm *comm_ptr, int split_type, int key, MPIR_Info *info_ptr,
-                         MPIR_Comm **newcomm_ptr);
-int MPIR_Comm_split_type_impl(MPIR_Comm *comm_ptr, int split_type, int key, MPIR_Info *info_ptr,
-                              MPIR_Comm **newcomm_ptr);
-int MPIR_Comm_set_attr_impl(MPIR_Comm *comm_ptr, int comm_keyval, void *attribute_val,
+void MPIR_Comm_get_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler ** errhandler_ptr);
+void MPIR_Comm_set_errhandler_impl(MPIR_Comm * comm_ptr, MPIR_Errhandler * errhandler_ptr);
+void MPIR_Comm_get_name_impl(MPIR_Comm * comm, char *comm_name, int *resultlen);
+int MPIR_Intercomm_merge_impl(MPIR_Comm * comm_ptr, int high, MPIR_Comm ** new_intracomm_ptr);
+int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
+                               MPIR_Comm * peer_comm_ptr, int remote_leader, int tag,
+                               MPIR_Comm ** new_intercomm_ptr);
+int MPIR_Comm_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr);
+int MPIR_Comm_remote_group_impl(MPIR_Comm * comm_ptr, MPIR_Group ** group_ptr);
+int MPIR_Comm_group_failed_impl(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr);
+int MPIR_Comm_remote_group_failed_impl(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr);
+int MPIR_Comm_split_impl(MPIR_Comm * comm_ptr, int color, int key, MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type_self(MPIR_Comm * comm_ptr, int split_type, int key,
+                              MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type_node(MPIR_Comm * comm_ptr, int split_type, int key,
+                              MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type_node_topo(MPIR_Comm * comm_ptr, int split_type, int key,
+                                   MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type(MPIR_Comm * comm_ptr, int split_type, int key, MPIR_Info * info_ptr,
+                         MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key, MPIR_Info * info_ptr,
+                              MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_val,
                             MPIR_Attr_type attrType);
 
 
@@ -327,36 +329,33 @@ extern MPIR_Comm MPIR_Comm_direct[];
 #define MPIR_ICOMM_WORLD  ((MPI_Comm)0x44000002)
 
 typedef struct MPIR_Commops {
-    int (*split_type)(MPIR_Comm *, int, int, MPIR_Info *, MPIR_Comm **);
+    int (*split_type) (MPIR_Comm *, int, int, MPIR_Info *, MPIR_Comm **);
 } MPIR_Commops;
-extern struct MPIR_Commops  *MPIR_Comm_fns; /* Communicator creation functions */
+extern struct MPIR_Commops *MPIR_Comm_fns;      /* Communicator creation functions */
 
 
 /* internal functions */
 
 int MPII_Comm_init(MPIR_Comm *);
 
-int MPII_Comm_is_node_consecutive( MPIR_Comm *);
+int MPII_Comm_is_node_consecutive(MPIR_Comm *);
 
 /* applies the specified info chain to the specified communicator */
-int MPII_Comm_apply_hints(MPIR_Comm *comm_ptr, MPIR_Info *info_ptr);
+int MPII_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr);
 
-int MPII_Comm_copy( MPIR_Comm *, int, MPIR_Comm ** );
-int MPII_Comm_copy_data(MPIR_Comm *comm_ptr, MPIR_Comm **outcomm_ptr);
+int MPII_Comm_copy(MPIR_Comm *, int, MPIR_Comm **);
+int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr);
 
-int MPII_Setup_intercomm_localcomm( MPIR_Comm * );
+int MPII_Setup_intercomm_localcomm(MPIR_Comm *);
 
 /* comm_create helper functions, used by both comm_create and comm_create_group */
-int MPII_Comm_create_calculate_mapping(MPIR_Group  *group_ptr,
-                                       MPIR_Comm   *comm_ptr,
-                                       int        **mapping_out,
-                                       MPIR_Comm **mapping_comm);
+int MPII_Comm_create_calculate_mapping(MPIR_Group * group_ptr,
+                                       MPIR_Comm * comm_ptr,
+                                       int **mapping_out, MPIR_Comm ** mapping_comm);
 
 int MPII_Comm_create_map(int local_n,
                          int remote_n,
                          int *local_mapping,
-                         int *remote_mapping,
-                         MPIR_Comm *mapping_comm,
-                         MPIR_Comm *newcomm);
+                         int *remote_mapping, MPIR_Comm * mapping_comm, MPIR_Comm * newcomm);
 
 #endif /* MPIR_COMM_H_INCLUDED */

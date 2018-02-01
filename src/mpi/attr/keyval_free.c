@@ -16,7 +16,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Keyval_free as PMPI_Keyval_free
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Keyval_free(int *keyval) __attribute__((weak,alias("PMPI_Keyval_free")));
+int MPI_Keyval_free(int *keyval) __attribute__ ((weak, alias("PMPI_Keyval_free")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -36,7 +36,7 @@ int MPI_Keyval_free(int *keyval) __attribute__((weak,alias("PMPI_Keyval_free")))
 MPI_Keyval_free - Frees an attribute key for communicators
 
 Input Parameters:
-. keyval - Frees the integer key value (integer) 
+. keyval - Frees the integer key value (integer)
 
 Note:
 Key values are global (they can be used with any and all communicators)
@@ -62,41 +62,42 @@ int MPI_Keyval_free(int *keyval)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_KEYVAL_FREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_KEYVAL_FREE);
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_ARGNULL(keyval, "keyval", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(keyval, "keyval", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPII_Keyval *keyval_ptr = NULL;
 
             /* Convert MPI object handles to object pointers */
-            MPII_Keyval_get_ptr( *keyval, keyval_ptr );
+            MPII_Keyval_get_ptr(*keyval, keyval_ptr);
 
-	    MPII_Keyval_valid_ptr( keyval_ptr, mpi_errno );
-            if (mpi_errno) goto fn_fail;
+            MPII_Keyval_valid_ptr(keyval_ptr, mpi_errno);
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
     MPIR_Comm_free_keyval_impl(*keyval);
     *keyval = MPI_KEYVAL_INVALID;
-    
+
     /* ... end of body of routine ... */
 
   fn_exit:
@@ -106,13 +107,14 @@ int MPI_Keyval_free(int *keyval)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_keyval_free", "**mpi_keyval_free %p", keyval);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_keyval_free", "**mpi_keyval_free %p", keyval);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

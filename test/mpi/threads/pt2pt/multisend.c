@@ -24,8 +24,7 @@ MTEST_THREAD_RETURN_TYPE run_test(void *arg)
                 MPI_Send(NULL, 0, MPI_CHAR, peer, j, MPI_COMM_WORLD);
             for (i = 0; i < 16; i++)
                 MPI_Recv(NULL, 0, MPI_CHAR, peer, j, MPI_COMM_WORLD, &reqstat);
-        }
-        else {
+        } else {
             for (i = 0; i < 16; i++)
                 MPI_Recv(NULL, 0, MPI_CHAR, peer, j, MPI_COMM_WORLD, &reqstat);
             for (i = 0; i < 16; i++)

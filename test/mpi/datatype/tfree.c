@@ -81,8 +81,7 @@ int main(int argc, char *argv[])
             MPI_Type_free(&tmpType[i]);
         }
         free(buf);
-    }
-    else if (rank == source) {
+    } else if (rank == source) {
         buf = (int *) malloc(VEC_NELM * sizeof(int));
         for (i = 0; i < VEC_NELM; i++)
             buf[i] = i;

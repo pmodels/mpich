@@ -108,8 +108,7 @@ int main(int argc, char *argv[])
         }
         error = MPI_Comm_disconnect(&comm);
         check_error(error, "MPI_Comm_disconnect");
-    }
-    else if (rank == 1) {
+    } else if (rank == 1) {
         if (verbose) {
             printf("recv.\n");
             fflush(stdout);

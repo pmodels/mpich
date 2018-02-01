@@ -19,13 +19,13 @@
 #define MPL_THREAD_PACKAGE_ARGOBOTS 6
 
 #if defined(MPL_THREAD_PACKAGE_NAME) && (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_POSIX || MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_UTI)
-#  include "mpl_thread_posix.h"
+#include "mpl_thread_posix.h"
 #elif defined(MPL_THREAD_PACKAGE_NAME) && (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_SOLARIS)
-#  include "mpl_thread_solaris.h"
+#include "mpl_thread_solaris.h"
 #elif defined(MPL_THREAD_PACKAGE_NAME) && (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_WIN)
-#  include "mpl_thread_win.h"
+#include "mpl_thread_win.h"
 #elif defined(MPL_THREAD_PACKAGE_NAME) && (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS)
-#  include "mpl_thread_argobots.h"
+#include "mpl_thread_argobots.h"
 #elif defined(MPL_THREAD_PACKAGE_NAME) && (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_NONE)
 typedef int MPL_thread_mutex_t;
 typedef int MPL_thread_cond_t;
@@ -35,7 +35,7 @@ typedef void (*MPL_thread_func_t) (void *data);
 #define MPL_thread_mutex_create(mutex_ptr_, err_ptr_)  { *((int*)err_ptr_) = 0;}
 #define MPL_thread_mutex_destroy(mutex_ptr_, err_ptr_) { *((int*)err_ptr_) = 0;}
 #else
-#  error "thread package (MPL_THREAD_PACKAGE_NAME) not defined or unknown"
+#error "thread package (MPL_THREAD_PACKAGE_NAME) not defined or unknown"
 #endif
 
 /* Error values */

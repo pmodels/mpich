@@ -64,8 +64,7 @@ int main(int argc, char *argv[])
                     MPI_Win_unlock(target, win);
                     MPI_Barrier(comm);
                     free(resbuf);
-                }
-                else {  /* Target checks the result */
+                } else {        /* Target checks the result */
                     int err;
                     MPI_Barrier(comm);
                     MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);

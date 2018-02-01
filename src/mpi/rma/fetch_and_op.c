@@ -16,9 +16,9 @@
 #pragma _CRI duplicate MPI_Fetch_and_op as PMPI_Fetch_and_op
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
-                      MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
-                      MPI_Op op, MPI_Win win)
-                      __attribute__((weak,alias("PMPI_Fetch_and_op")));
+                     MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
+                     MPI_Op op, MPI_Win win)
+    __attribute__ ((weak, alias("PMPI_Fetch_and_op")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -78,8 +78,8 @@ datatype argument must be a predefined datatype.
 .seealso: MPI_Get_accumulate
 @*/
 int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
-        MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
-        MPI_Op op, MPI_Win win)
+                     MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
+                     MPI_Op op, MPI_Win win)
 {
     static const char FCNAME[] = "MPI_Fetch_and_op";
     int mpi_errno = MPI_SUCCESS;
@@ -87,12 +87,12 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FETCH_AND_OP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_FETCH_AND_OP);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -100,21 +100,22 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
-    
+#endif /* HAVE_ERROR_CHECKING */
+
     /* Convert MPI object handles to object pointers */
-    MPIR_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr(win, win_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_Comm *comm_ptr;
-            
+
             /* Validate win_ptr */
-            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
-            if (mpi_errno) goto fn_fail;
+            MPIR_Win_valid_ptr(win_ptr, mpi_errno);
+            if (mpi_errno)
+                goto fn_fail;
 
             if (op != MPI_NO_OP) {
                 /* NOTE: when op is MPI_NO_OP, origin_addr is allowed to be NULL.
@@ -125,8 +126,7 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
             MPIR_ERRTEST_ARGNULL(result_addr, "result_addr", mpi_errno);
             MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
 
-            if (!MPIR_DATATYPE_IS_PREDEFINED(datatype))
-            {
+            if (!MPIR_DATATYPE_IS_PREDEFINED(datatype)) {
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_TYPE, "**typenotpredefined");
             }
 
@@ -138,22 +138,20 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
             MPIR_ERRTEST_OP_GACC(op, mpi_errno);
 
-            if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN)
-            {
+            if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OP, "**opnotpredefined");
             }
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
     mpi_errno = MPID_Fetch_and_op(origin_addr,
-                                  result_addr, datatype,
-                                  target_rank, target_disp,
-                                  op, win_ptr);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                                  result_addr, datatype, target_rank, target_disp, op, win_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     /* ... end of body of routine ... */
 
@@ -164,16 +162,16 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_fetch_and_op",
-            "**mpi_fetch_and_op %p %p %D %d %d %O %W", origin_addr,
-            result_addr, datatype, target_rank, target_disp, op, win);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_fetch_and_op", "**mpi_fetch_and_op %p %p %D %d %d %O %W",
+                                 origin_addr, result_addr, datatype, target_rank, target_disp, op,
+                                 win);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-

@@ -11,7 +11,7 @@
 #define FUNCNAME hcoll_Barrier
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int hcoll_Barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t *err)
+int hcoll_Barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
 {
     int rc;
     MPI_Comm comm = comm_ptr->handle;
@@ -35,7 +35,7 @@ int hcoll_Barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t *err)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
-                MPIR_Comm * comm_ptr, MPIR_Errflag_t *err)
+                MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
 {
     dte_data_representation_t dtype;
     int rc;
@@ -53,8 +53,7 @@ int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
         /* Now use fallback */
         MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "unsupported data layout, calling fallback bcast.");
         use_fallback = 1;
-    }
-    else {
+    } else {
         rc = hcoll_collectives.coll_bcast(buffer, count, dtype, root,
                                           comm_ptr->hcoll_priv.hcoll_context);
         if (HCOLL_SUCCESS != rc) {
@@ -79,7 +78,7 @@ int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                    MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t *err)
+                    MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * err)
 {
     dte_data_representation_t Dtype;
     hcoll_dte_op_t *Op;
@@ -99,11 +98,11 @@ int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
     }
     if (HCOL_DTE_IS_COMPLEX(Dtype) || HCOL_DTE_IS_ZERO(Dtype) || (0 == is_homogeneous) ||
         (HCOL_DTE_OP_NULL == Op->id)) {
-        MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "unsupported data layout, calling fallback allreduce.");
+        MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE,
+                    "unsupported data layout, calling fallback allreduce.");
         use_fallback = 1;
-    }
-    else {
-        rc = hcoll_collectives.coll_allreduce((void *)sendbuf, recvbuf, count, Dtype, Op,
+    } else {
+        rc = hcoll_collectives.coll_allreduce((void *) sendbuf, recvbuf, count, Dtype, Op,
                                               comm_ptr->hcoll_priv.hcoll_context);
         if (HCOLL_SUCCESS != rc) {
             use_fallback = 1;
@@ -130,7 +129,8 @@ int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
-                    void *rbuf, int rcount, MPI_Datatype rdtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t *err)
+                    void *rbuf, int rcount, MPI_Datatype rdtype, MPIR_Comm * comm_ptr,
+                    MPIR_Errflag_t * err)
 {
     int is_homogeneous = 1, use_fallback = 0;
     MPI_Comm comm = comm_ptr->handle;
@@ -151,11 +151,11 @@ int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
     }
     if (HCOL_DTE_IS_COMPLEX(stype) || HCOL_DTE_IS_ZERO(stype) || HCOL_DTE_IS_ZERO(rtype) ||
         HCOL_DTE_IS_COMPLEX(rtype) || is_homogeneous == 0) {
-        MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "unsupported data layout; calling fallback allgather.");
+        MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE,
+                    "unsupported data layout; calling fallback allgather.");
         use_fallback = 1;
-    }
-    else {
-        rc = hcoll_collectives.coll_allgather((void *)sbuf, scount, stype, rbuf, rcount, rtype,
+    } else {
+        rc = hcoll_collectives.coll_allgather((void *) sbuf, scount, stype, rbuf, rcount, rtype,
                                               comm_ptr->hcoll_priv.hcoll_context);
         if (HCOLL_SUCCESS != rc) {
             use_fallback = 1;
@@ -233,8 +233,7 @@ int hcoll_Ibcast_req(void *buffer, int count, MPI_Datatype datatype, int root,
         /* Now use fallback */
         MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "unsupported data layout, calling fallback ibcast.");
         use_fallback = 1;
-    }
-    else {
+    } else {
         rc = hcoll_collectives.coll_ibcast(buffer, count, dtype, root, rt_handle,
                                            comm_ptr->hcoll_priv.hcoll_context);
         if (HCOLL_SUCCESS != rc) {
@@ -286,12 +285,13 @@ int hcoll_Iallgather_req(const void *sendbuf, int sendcount, MPI_Datatype sendty
     }
     if (HCOL_DTE_IS_COMPLEX(stype) || HCOL_DTE_IS_ZERO(stype) || HCOL_DTE_IS_ZERO(rtype) ||
         HCOL_DTE_IS_COMPLEX(rtype) || is_homogeneous == 0) {
-        MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "unsupported data layout; calling fallback iallgather.");
+        MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE,
+                    "unsupported data layout; calling fallback iallgather.");
         use_fallback = 1;
-    }
-    else {
-        rc = hcoll_collectives.coll_iallgather((void *)sendbuf, sendcount, stype, recvbuf, recvcount, rtype,
-                                               comm_ptr->hcoll_priv.hcoll_context, rt_handle);
+    } else {
+        rc = hcoll_collectives.coll_iallgather((void *) sendbuf, sendcount, stype, recvbuf,
+                                               recvcount, rtype, comm_ptr->hcoll_priv.hcoll_context,
+                                               rt_handle);
         if (HCOLL_SUCCESS != rc) {
             use_fallback = 1;
         }
@@ -341,11 +341,11 @@ int hcoll_Iallreduce_req(const void *sendbuf, void *recvbuf, int count, MPI_Data
     }
     if (HCOL_DTE_IS_COMPLEX(Dtype) || HCOL_DTE_IS_ZERO(Dtype) || (0 == is_homogeneous) ||
         (HCOL_DTE_OP_NULL == Op->id)) {
-        MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "unsupported data layout, calling fallback iallreduce.");
+        MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE,
+                    "unsupported data layout, calling fallback iallreduce.");
         use_fallback = 1;
-    }
-    else {
-        rc = hcoll_collectives.coll_iallreduce((void *)sendbuf, recvbuf, count, Dtype, Op,
+    } else {
+        rc = hcoll_collectives.coll_iallreduce((void *) sendbuf, recvbuf, count, Dtype, Op,
                                                comm_ptr->hcoll_priv.hcoll_context, rt_handle);
         if (HCOLL_SUCCESS != rc) {
             use_fallback = 1;

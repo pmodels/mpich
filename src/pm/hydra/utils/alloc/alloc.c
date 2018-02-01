@@ -317,8 +317,7 @@ static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *pro
         proxy->exec_list->env_prop = exec->env_prop ? MPL_strdup(exec->env_prop) : NULL;
         proxy->exec_list->user_env = HYDU_env_list_dup(exec->user_env);
         proxy->exec_list->appnum = exec->appnum;
-    }
-    else {
+    } else {
         for (texec = proxy->exec_list; texec->next; texec = texec->next);
         status = HYDU_alloc_exec(&texec->next);
         HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
@@ -414,8 +413,7 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
             status = add_exec_to_proxy(exec, pg->proxy_list, exec->proc_count);
             HYDU_ERR_POP(status, "unable to add executable to proxy\n");
         }
-    }
-    else {
+    } else {
         exec = exec_list;
 
         filler_round = 1;
@@ -473,8 +471,7 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
             proxy->next = proxy->next->next;
             tmp->next = NULL;
             HYDU_free_proxy_list(tmp);
-        }
-        else {
+        } else {
             proxy = proxy->next;
         }
     }
@@ -500,8 +497,7 @@ HYD_status HYDU_correct_wdir(char **wdir)
 
     if (*wdir == NULL) {
         *wdir = HYDU_getcwd();
-    }
-    else if (*wdir[0] != '/') {
+    } else if (*wdir[0] != '/') {
         tmp[0] = HYDU_getcwd();
         tmp[1] = MPL_strdup("/");
         tmp[2] = MPL_strdup(*wdir);

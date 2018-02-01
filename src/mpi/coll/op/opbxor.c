@@ -20,40 +20,39 @@
 #define FUNCNAME MPIR_BXOR
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIR_BXOR (
-    void *invec,
-    void *inoutvec,
-    int *Len,
-    MPI_Datatype *type )
+void MPIR_BXOR(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 {
     int i, len = *Len;
 
     switch (*type) {
 #undef MPIR_OP_TYPE_MACRO
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, MPIR_LBXOR)
-        /* no semicolons by necessity */
-        MPIR_OP_TYPE_GROUP(C_INTEGER)
-        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
-        MPIR_OP_TYPE_GROUP(BYTE)
-        /* extra types that are not required to be supported by the MPI Standard */
-        MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
-        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
-        MPIR_OP_TYPE_GROUP(BYTE_EXTRA)
+            /* no semicolons by necessity */
+            MPIR_OP_TYPE_GROUP(C_INTEGER)
+                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
+                MPIR_OP_TYPE_GROUP(BYTE)
+                /* extra types that are not required to be supported by the MPI Standard */
+                MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
+                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
+                MPIR_OP_TYPE_GROUP(BYTE_EXTRA)
 #undef MPIR_OP_TYPE_MACRO
-	/* --BEGIN ERROR HANDLING-- */
-        default: {
-            {
-                MPIR_Per_thread_t *per_thread = NULL;
-                int err = 0;
+                /* --BEGIN ERROR HANDLING-- */
+        default:{
+                {
+                    MPIR_Per_thread_t *per_thread = NULL;
+                    int err = 0;
 
-                MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                             MPIR_Per_thread, per_thread, &err);
-                MPIR_Assert(err == 0);
-                per_thread->op_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_BXOR" );
+                    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                                 MPIR_Per_thread, per_thread, &err);
+                    MPIR_Assert(err == 0);
+                    per_thread->op_errno =
+                        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                             MPI_ERR_OP, "**opundefined", "**opundefined %s",
+                                             "MPI_BXOR");
+                }
+                break;
             }
-            break;
-        }
-	/* --END ERROR HANDLING-- */
+            /* --END ERROR HANDLING-- */
     }
 }
 
@@ -62,24 +61,25 @@ void MPIR_BXOR (
 #define FUNCNAME MPIR_BXOR
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_BXOR_check_dtype ( MPI_Datatype type )
+int MPIR_BXOR_check_dtype(MPI_Datatype type)
 {
     switch (type) {
 #undef MPIR_OP_TYPE_MACRO
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) case (mpi_type_):
-        MPIR_OP_TYPE_GROUP(C_INTEGER)
-        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
-        MPIR_OP_TYPE_GROUP(BYTE)
-        /* extra types that are not required to be supported by the MPI Standard */
-        MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
-        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
-        MPIR_OP_TYPE_GROUP(BYTE_EXTRA)
+            MPIR_OP_TYPE_GROUP(C_INTEGER)
+                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
+                MPIR_OP_TYPE_GROUP(BYTE)
+                /* extra types that are not required to be supported by the MPI Standard */
+                MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
+                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
+                MPIR_OP_TYPE_GROUP(BYTE_EXTRA)
 #undef MPIR_OP_TYPE_MACRO
-            return MPI_SUCCESS;
-	/* --BEGIN ERROR HANDLING-- */
+                return MPI_SUCCESS;
+            /* --BEGIN ERROR HANDLING-- */
         default:
-            return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_BXOR" );
-	/* --END ERROR HANDLING-- */
+            return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                        MPI_ERR_OP, "**opundefined", "**opundefined %s",
+                                        "MPI_BXOR");
+            /* --END ERROR HANDLING-- */
     }
 }
-

@@ -61,8 +61,7 @@ int main(int argc, char **argv)
     if (rank == a || rank == b) {
         remote_leader = c;
         MPI_Intercomm_create(c0, 0, MPI_COMM_WORLD, remote_leader, tag, &ic);
-    }
-    else if (rank == c || rank == d) {
+    } else if (rank == c || rank == d) {
         remote_leader = a;
         MPI_Intercomm_create(c1, 0, MPI_COMM_WORLD, remote_leader, tag, &ic);
     }
@@ -83,8 +82,7 @@ int main(int argc, char **argv)
     if (rank == 0) {
         if (errs) {
             printf("found %d errors\n", errs);
-        }
-        else {
+        } else {
             printf(" No errors\n");
         }
     }

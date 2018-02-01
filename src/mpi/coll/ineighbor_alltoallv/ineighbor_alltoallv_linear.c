@@ -17,11 +17,15 @@
 #define FUNCNAME MPIR_Ineighbor_alltoallv_sched_linear
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ineighbor_alltoallv_sched_linear(const void *sendbuf, const int sendcounts[], const int sdispls[], MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int rdispls[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ineighbor_alltoallv_sched_linear(const void *sendbuf, const int sendcounts[],
+                                          const int sdispls[], MPI_Datatype sendtype, void *recvbuf,
+                                          const int recvcounts[], const int rdispls[],
+                                          MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                          MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;
-    int i, k,l;
+    int i, k, l;
     int *srcs, *dsts;
     int comm_size;
     MPI_Aint sendtype_extent, recvtype_extent;
@@ -40,32 +44,35 @@ int MPIR_Ineighbor_alltoallv_sched_linear(const void *sendbuf, const int sendcou
     }
 
     mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    MPIR_CHKLMEM_MALLOC(srcs, int *, indegree*sizeof(int), mpi_errno, "srcs", MPL_MEM_COMM);
-    MPIR_CHKLMEM_MALLOC(dsts, int *, outdegree*sizeof(int), mpi_errno, "dsts", MPL_MEM_COMM);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    MPIR_CHKLMEM_MALLOC(srcs, int *, indegree * sizeof(int), mpi_errno, "srcs", MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(dsts, int *, outdegree * sizeof(int), mpi_errno, "dsts", MPL_MEM_COMM);
     mpi_errno = MPIR_Topo_canon_nhb(comm_ptr,
                                     indegree, srcs, MPI_UNWEIGHTED,
                                     outdegree, dsts, MPI_UNWEIGHTED);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     for (k = 0; k < outdegree; ++k) {
-        char *sb = ((char *)sendbuf) + sdispls[k] * sendtype_extent;
+        char *sb = ((char *) sendbuf) + sdispls[k] * sendtype_extent;
         mpi_errno = MPIR_Sched_send(sb, sendcounts[k], sendtype, dsts[k], comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
     }
 
     for (l = 0; l < indegree; ++l) {
-        char *rb = ((char *)recvbuf) + rdispls[l] * recvtype_extent;
+        char *rb = ((char *) recvbuf) + rdispls[l] * recvtype_extent;
         mpi_errno = MPIR_Sched_recv(rb, recvcounts[l], recvtype, srcs[l], comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
     }
 
     MPIR_SCHED_BARRIER(s);
 
-fn_exit:
+  fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
-

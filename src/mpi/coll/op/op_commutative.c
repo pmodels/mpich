@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Op_commutative as PMPI_Op_commutative
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Op_commutative(MPI_Op op, int *commute) __attribute__((weak,alias("PMPI_Op_commutative")));
+int MPI_Op_commutative(MPI_Op op, int *commute)
+    __attribute__ ((weak, alias("PMPI_Op_commutative")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -41,8 +42,7 @@ int MPIR_Op_is_commutative(MPI_Op op)
 
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
         return TRUE;
-    }
-    else {
+    } else {
         MPIR_Op_get_ptr(op, op_ptr);
         if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
             return FALSE;
@@ -55,15 +55,14 @@ int MPIR_Op_is_commutative(MPI_Op op)
 #define FUNCNAME MPIR_Op_commutative
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Op_commutative(MPIR_Op *op_ptr, int *commute)
+int MPIR_Op_commutative(MPIR_Op * op_ptr, int *commute)
 {
     int mpi_errno = MPI_SUCCESS;
 
     /* Built-in op */
     if (MPIR_OP_KIND__USER_NONCOMMUTE > op_ptr->kind) {
         *commute = 1;
-    }
-    else {
+    } else {
         if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
             *commute = 0;
         else
@@ -109,18 +108,19 @@ int MPI_Op_commutative(MPI_Op op, int *commute)
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_OP_COMMUTATIVE);
 
-    MPIR_Op_get_ptr( op, op_ptr );
+    MPIR_Op_get_ptr(op, op_ptr);
 
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Op_valid_ptr( op_ptr, mpi_errno );
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPIR_Op_valid_ptr(op_ptr, mpi_errno);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
@@ -128,21 +128,20 @@ int MPI_Op_commutative(MPI_Op op, int *commute)
 
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_OP_COMMUTATIVE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_op_commutative",
-            "**mpi_op_commutative %O %p", op, commute);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_op_commutative", "**mpi_op_commutative %O %p", op, commute);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-

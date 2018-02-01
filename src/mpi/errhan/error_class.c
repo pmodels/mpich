@@ -16,7 +16,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Error_class as PMPI_Error_class
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Error_class(int errorcode, int *errorclass) __attribute__((weak,alias("PMPI_Error_class")));
+int MPI_Error_class(int errorcode, int *errorclass)
+    __attribute__ ((weak, alias("PMPI_Error_class")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -35,7 +36,7 @@ int MPI_Error_class(int errorcode, int *errorclass) __attribute__((weak,alias("P
    MPI_Error_class - Converts an error code into an error class
 
 Input Parameters:
-. errorcode - Error code returned by an MPI routine 
+. errorcode - Error code returned by an MPI routine
 
 Output Parameters:
 . errorclass - Error class associated with 'errorcode'
@@ -56,26 +57,26 @@ int MPI_Error_class(int errorcode, int *errorclass)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ERROR_CLASS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_ERROR_CLASS);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_ARGNULL(errorclass,"errorclass",mpi_errno);
+            MPIR_ERRTEST_ARGNULL(errorclass, "errorclass", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
     /* We include the dynamic bit because this is needed to fully
-       describe the dynamic error classes */
+     * describe the dynamic error classes */
     *errorclass = errorcode & (ERROR_CLASS_MASK | ERROR_DYN_MASK);
-    
+
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING
@@ -85,17 +86,16 @@ int MPI_Error_class(int errorcode, int *errorclass)
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
   fn_fail:
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
-	    "**mpi_error_class",
-	    "**mpi_error_class %d %p", errorcode, errorclass);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_error_class", "**mpi_error_class %d %p", errorcode,
+                                 errorclass);
     }
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
-#   endif
+#endif
     /* --END ERROR HANDLING-- */
 }
-

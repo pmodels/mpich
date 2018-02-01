@@ -15,9 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Reduce_local as PMPI_Reduce_local
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype,
-                     MPI_Op op)
-                     __attribute__((weak,alias("PMPI_Reduce_local")));
+int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
+    __attribute__ ((weak, alias("PMPI_Reduce_local")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -33,7 +32,8 @@ int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype 
 #define FUNCNAME MPIR_Reduce_local
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
+int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype,
+                      MPI_Op op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Op *op_ptr;
@@ -45,7 +45,8 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype
     int is_f77_uop = 0;
 #endif
 
-    if (count == 0) goto fn_exit;
+    if (count == 0)
+        goto fn_exit;
 
     {
         MPIR_Per_thread_t *per_thread = NULL;
@@ -60,22 +61,19 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
         /* get the function by indexing into the op table */
         uop = MPIR_OP_HDL_TO_FN(op);
-    }
-    else {
+    } else {
         MPIR_Op_get_ptr(op, op_ptr);
 
 #ifdef HAVE_CXX_BINDING
         if (op_ptr->language == MPIR_LANG__CXX) {
             uop = (MPI_User_function *) op_ptr->function.c_function;
             is_cxx_uop = 1;
-        }
-        else
+        } else
 #endif
         {
             if (op_ptr->language == MPIR_LANG__C) {
                 uop = (MPI_User_function *) op_ptr->function.c_function;
-            }
-            else {
+            } else {
                 uop = (MPI_User_function *) op_ptr->function.f77_function;
 #if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
                 is_f77_uop = 1;
@@ -87,24 +85,22 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype
     /* actually perform the reduction */
 #ifdef HAVE_CXX_BINDING
     if (is_cxx_uop) {
-        (*MPIR_Process.cxx_call_op_fn)(inbuf, inoutbuf, count, datatype, uop);
-    }
-    else
+        (*MPIR_Process.cxx_call_op_fn) (inbuf, inoutbuf, count, datatype, uop);
+    } else
 #endif
     {
 #if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
         if (is_f77_uop) {
-            MPI_Fint lcount = (MPI_Fint)count;
-            MPI_Fint ldtype = (MPI_Fint)datatype;
-            MPII_F77_User_function *uop_f77 = (MPII_F77_User_function *)uop;
+            MPI_Fint lcount = (MPI_Fint) count;
+            MPI_Fint ldtype = (MPI_Fint) datatype;
+            MPII_F77_User_function *uop_f77 = (MPII_F77_User_function *) uop;
 
-            (*uop_f77)((void *) inbuf, inoutbuf, &lcount, &ldtype);
-        }
-        else {
-            (*uop)((void *) inbuf, inoutbuf, &count, &datatype);
+            (*uop_f77) ((void *) inbuf, inoutbuf, &lcount, &ldtype);
+        } else {
+            (*uop) ((void *) inbuf, inoutbuf, &count, &datatype);
         }
 #else
-        (*uop)((void *) inbuf, inoutbuf, &count, &datatype);
+        (*uop) ((void *) inbuf, inoutbuf, &count, &datatype);
 #endif
     }
 
@@ -121,7 +117,7 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype
     }
     /* --END ERROR HANDLING-- */
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
 }
 
@@ -167,7 +163,7 @@ int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype 
     MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_REDUCE_LOCAL);
 
     /* Validate parameters */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -176,12 +172,14 @@ int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype 
             if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
                 MPIR_Op *op_ptr;
                 MPIR_Op_get_ptr(op, op_ptr);
-                MPIR_Op_valid_ptr( op_ptr, mpi_errno );
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                MPIR_Op_valid_ptr(op_ptr, mpi_errno);
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
             }
             if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-                mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op))(datatype);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (datatype);
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
             }
             if (count != 0) {
                 MPIR_ERRTEST_ALIAS_COLL(inbuf, inoutbuf, mpi_errno);
@@ -191,7 +189,7 @@ int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype 
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
 
     /* ... body of routine ...  */
@@ -207,15 +205,15 @@ int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype 
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_reduce_local",
-            "**mpi_reduce_local %p %p %d %D %O", inbuf, inoutbuf, count, datatype, op);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_reduce_local", "**mpi_reduce_local %p %p %d %D %O", inbuf,
+                                 inoutbuf, count, datatype, op);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-

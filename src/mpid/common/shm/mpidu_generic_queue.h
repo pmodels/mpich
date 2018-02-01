@@ -11,9 +11,9 @@
    the next pointer field in the element (e.g., "ch.tcp_sendq_next") */
 
 #define PRINT_QUEUE(qp, next_field) do {        \
-    } while(0)
+    } while (0)
 #define PRINTM_QUEUE(qp, next_field_macro, next_field) do {     \
-    } while(0)
+    } while (0)
 
 #define GENERIC_Q_DECL(type) struct { type *head, *tail; }
 

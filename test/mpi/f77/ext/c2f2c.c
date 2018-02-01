@@ -177,8 +177,7 @@ MPI_Fint c2frequest_(MPI_Fint * request)
     if (!flag) {
         fprintf(stderr, "Request: Wrong value for flag\n");
         return 1;
-    }
-    else {
+    } else {
         *request = MPI_Request_c2f(req);
     }
     return 0;

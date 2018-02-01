@@ -57,8 +57,7 @@ int main(int argc, char *argv[])
     if (err) {
         errs++;
         MTestPrintErrorMsg("MPI_LOR and MPI_CHAR", err);
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (!coutbuf[0]) {
                 errs++;
@@ -89,8 +88,7 @@ int main(int argc, char *argv[])
     if (err) {
         errs++;
         MTestPrintErrorMsg("MPI_LOR and MPI_SIGNED_CHAR", err);
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (!scoutbuf[0]) {
                 errs++;
@@ -120,8 +118,7 @@ int main(int argc, char *argv[])
     if (err) {
         errs++;
         MTestPrintErrorMsg("MPI_LOR and MPI_UNSIGNED_CHAR", err);
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (!ucoutbuf[0]) {
                 errs++;
@@ -152,8 +149,7 @@ int main(int argc, char *argv[])
     if (err) {
         errs++;
         MTestPrintErrorMsg("MPI_LOR and MPI_FLOAT", err);
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (!foutbuf[0]) {
                 errs++;
@@ -183,8 +179,7 @@ int main(int argc, char *argv[])
     if (err) {
         errs++;
         MTestPrintErrorMsg("MPI_LOR and MPI_DOUBLE", err);
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (!doutbuf[0]) {
                 errs++;
@@ -205,7 +200,7 @@ int main(int argc, char *argv[])
     {
         long double ldinbuf[3], ldoutbuf[3];
         /* long double */
-        MTEST_VG_MEM_INIT(ldinbuf, 3* sizeof(ldinbuf[0]));
+        MTEST_VG_MEM_INIT(ldinbuf, 3 * sizeof(ldinbuf[0]));
         ldinbuf[0] = 1;
         ldinbuf[1] = 0;
         ldinbuf[2] = (rank > 0);
@@ -219,8 +214,7 @@ int main(int argc, char *argv[])
             if (err) {
                 errs++;
                 MTestPrintErrorMsg("MPI_LOR and MPI_LONG_DOUBLE", err);
-            }
-            else {
+            } else {
                 if (rank == 0) {
                     if (!ldoutbuf[0]) {
                         errs++;
@@ -258,8 +252,7 @@ int main(int argc, char *argv[])
             if (err) {
                 errs++;
                 MTestPrintErrorMsg("MPI_LOR and MPI_LONG_LONG", err);
-            }
-            else {
+            } else {
                 if (rank == 0) {
                     if (!lloutbuf[0]) {
                         errs++;

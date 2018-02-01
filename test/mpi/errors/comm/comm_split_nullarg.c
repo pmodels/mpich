@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     MPI_Comm comm;
     int rank, size, color;
@@ -28,4 +28,3 @@ int main(int argc, char* argv[])
     MPI_Finalize();
     return 0;
 }
-

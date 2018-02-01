@@ -39,14 +39,14 @@ static inline int test(MPI_Comm comm, int rank, int source, int dest,
     MPI_Type_extent(sendtype->datatype, &extent);
     MPI_Type_lb(sendtype->datatype, &lb);
     disp_unit = extent < INT_MAX ? extent : 1;
-    MPI_Win_create(sendtype->buf, sendtype->count * extent + lb, disp_unit, MPI_INFO_NULL, comm, &win);
+    MPI_Win_create(sendtype->buf, sendtype->count * extent + lb, disp_unit, MPI_INFO_NULL, comm,
+                   &win);
     MPI_Win_fence(0, win);
     if (rank == source) {
         /* The source does not need to do anything besides the
          * fence */
         MPI_Win_fence(0, win);
-    }
-    else if (rank == dest) {
+    } else if (rank == dest) {
         /* To improve reporting of problems about operations, we
          * change the error handler to errors return */
         MPI_Win_set_errhandler(win, MPI_ERRORS_RETURN);
@@ -72,8 +72,7 @@ static inline int test(MPI_Comm comm, int rank, int source, int dest,
         if (err) {
             errs += err;
         }
-    }
-    else {
+    } else {
         MPI_Win_fence(0, win);
     }
     MPI_Win_free(&win);

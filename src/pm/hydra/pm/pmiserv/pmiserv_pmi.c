@@ -87,8 +87,7 @@ HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
             for (r = HYD_pmcd_pmi_publish_list; r->next; r = r->next);
             r->next = publish;
         }
-    }
-    else {
+    } else {
         int len, recvd, closed;
         char *resp;
 
@@ -171,8 +170,7 @@ HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
             HYD_pmcd_pmi_free_publish(publish);
             MPL_free(publish);
             *success = 1;
-        }
-        else {
+        } else {
             publish = HYD_pmcd_pmi_publish_list;
             do {
                 if (publish->next == NULL)
@@ -185,13 +183,11 @@ HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
                     HYD_pmcd_pmi_free_publish(r);
                     MPL_free(r);
                     *success = 1;
-                }
-                else
+                } else
                     publish = publish->next;
             } while (1);
         }
-    }
-    else {
+    } else {
         int len, recvd, closed;
         char *resp;
 
@@ -263,8 +259,7 @@ HYD_status HYD_pmcd_pmi_lookup(char *name, char **value)
 
         if (publish)
             *value = MPL_strdup(publish->port);
-    }
-    else {
+    } else {
         int len, recvd, closed;
         char *resp = NULL;
 

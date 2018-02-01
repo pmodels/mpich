@@ -147,8 +147,7 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
         if (filler_round && proxy == NULL) {
             proxy = pg->proxy_list;
             filler_round = 0;
-        }
-        else if (proxy == NULL)
+        } else if (proxy == NULL)
             break;
 
         if (filler_round && proxy->filler_processes == 0)
@@ -165,15 +164,12 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
             block->next = NULL;
 
             blocklist_tail = blocklist_head = block;
-        }
-        else if (blocklist_tail->start_idx + blocklist_tail->num_nodes == node->node_id &&
-                 blocklist_tail->core_count == core_count) {
+        } else if (blocklist_tail->start_idx + blocklist_tail->num_nodes == node->node_id &&
+                   blocklist_tail->core_count == core_count) {
             blocklist_tail->num_nodes++;
-        }
-        else if (blocklist_tail->start_idx == node->node_id && blocklist_tail->num_nodes == 1) {
+        } else if (blocklist_tail->start_idx == node->node_id && blocklist_tail->num_nodes == 1) {
             blocklist_tail->core_count += core_count;
-        }
-        else {
+        } else {
             HYDU_MALLOC_OR_JUMP(blocklist_tail->next, struct block *, sizeof(struct block), status);
             blocklist_tail = blocklist_tail->next;
             blocklist_tail->start_idx = node->node_id;
@@ -356,8 +352,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         if (proxy->node->local_binding) {
             HYD_STRING_STASH(exec_stash, MPL_strdup("--binding"), status);
             HYD_STRING_STASH(exec_stash, MPL_strdup(proxy->node->local_binding), status);
-        }
-        else if (HYD_server_info.user_global.binding) {
+        } else if (HYD_server_info.user_global.binding) {
             HYD_STRING_STASH(exec_stash, MPL_strdup("--binding"), status);
             HYD_STRING_STASH(exec_stash, MPL_strdup(HYD_server_info.user_global.binding), status);
         }

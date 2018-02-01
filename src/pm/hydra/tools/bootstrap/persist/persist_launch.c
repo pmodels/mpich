@@ -35,15 +35,13 @@ static HYD_status persist_cb(int fd, HYD_event_t events, void *userp)
             HYDU_ERR_POP(status, "stdout forwarding error\n");
             HYDU_ASSERT(!closed, status);
             HYDU_ASSERT(sent == hdr.buflen, status);
-        }
-        else {
+        } else {
             HYDU_sock_write(STDERR_FILENO, buf, hdr.buflen, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "stderr forwarding error\n");
             HYDU_ASSERT(!closed, status);
             HYDU_ASSERT(sent == hdr.buflen, status);
         }
-    }
-    else {
+    } else {
         status = HYDT_dmx_deregister_fd(fd);
         HYDU_ERR_POP(status, "error deregistering fd\n");
 

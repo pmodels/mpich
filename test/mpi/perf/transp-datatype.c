@@ -73,8 +73,7 @@ int main(int argc, char *argv[])
     for (i = 0; i < ITER; i++) {
         if (myrank == 0) {
             MPI_Send(&a[0][0], sizeof(a), MPI_BYTE, 1, 0, MPI_COMM_WORLD);
-        }
-        else {
+        } else {
             MPI_Recv(&b[0][0], sizeof(b), MPI_BYTE, 0, 0, MPI_COMM_WORLD, &status);
         }
     }
@@ -88,8 +87,7 @@ int main(int argc, char *argv[])
     for (k = 0; k < ITER; k++) {
         if (myrank == 0) {
             MPI_Send(&a[0][0], sizeof(a), MPI_BYTE, 1, 0, MPI_COMM_WORLD);
-        }
-        else {
+        } else {
             MPI_Recv(&b[0][0], sizeof(b), MPI_BYTE, 0, 0, MPI_COMM_WORLD, &status);
             for (i = 0; i < SIZE; i++)
                 for (j = i; j < SIZE; j++) {

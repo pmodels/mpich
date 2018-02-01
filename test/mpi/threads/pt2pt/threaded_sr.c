@@ -55,8 +55,7 @@ MTEST_THREAD_RETURN_TYPE send_thread(void *p)
                MSG_SIZE, rank, rank == 0 ? 1 : 0, buffer);
         fflush(stdout);
         sendok = 0;
-    }
-    else {
+    } else {
         sendok = 1;
     }
     free(buffer);

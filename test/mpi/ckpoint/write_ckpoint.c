@@ -30,11 +30,9 @@ int main(int argc, char *argv[])
     if (myid == 0) {
         if (stat("/tmp/context-num2-0-0", &fileStat) < 0) {
             printf("failed to find ckpoint file\n");
-        }
-        else if (fileStat.st_size == 0) {
+        } else if (fileStat.st_size == 0) {
             printf("ckpoint file is empty\n");
-        }
-        else {
+        } else {
             printf("No Errors\n");
         }
     }

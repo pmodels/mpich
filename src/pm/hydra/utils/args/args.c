@@ -127,8 +127,7 @@ static HYD_status match_arg(char ***argv_p, struct HYD_arg_match_table *match_ta
         /* Found an '='; use the rest of the argument as a separate
          * argument */
         **argv_p = val + 1;
-    }
-    else {
+    } else {
         /* Move to the next argument */
         (*argv_p)++;
     }
@@ -141,8 +140,7 @@ static HYD_status match_arg(char ***argv_p, struct HYD_arg_match_table *match_ta
                              !strcmp(**argv_p, "--help"))) {
                 if (m->help_fn == NULL) {
                     HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "No help message available\n");
-                }
-                else {
+                } else {
                     m->help_fn();
                     HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "%s", "");
                 }
@@ -239,8 +237,7 @@ char *HYDU_getcwd(void)
         /* PWD and getcwd() match; use the PWD value */
         retval = MPL_strdup(pwdval);
         MPL_free(cwdval);
-    }
-    else
+    } else
 #endif /* HAVE_STAT */
     {
         /* PWD and getcwd() don't match; use the getcwd value and hope
@@ -269,8 +266,7 @@ HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **
 
         status = HYDU_add_to_node_list(hostname, num_procs, node_list);
         HYDU_ERR_POP(status, "unable to add to node list\n");
-    }
-    else {      /* Not a new line */
+    } else {    /* Not a new line */
         tmp = strtok_r(token, "=", &saveptr);
         if (!strcmp(tmp, "binding")) {
             binding = strtok_r(NULL, "=", &saveptr);
@@ -281,8 +277,7 @@ HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **
                                     "duplicate local binding setting\n");
 
             node->local_binding = MPL_strdup(binding);
-        }
-        else if (!strcmp(tmp, "user")) {
+        } else if (!strcmp(tmp, "user")) {
             user = strtok_r(NULL, "=", &saveptr);
 
             for (node = *node_list; node->next; node = node->next);
@@ -290,8 +285,7 @@ HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate username setting\n");
 
             node->user = MPL_strdup(user);
-        }
-        else {
+        } else {
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                 "token %s not supported at this time\n", token);
         }

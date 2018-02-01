@@ -24,7 +24,7 @@ static inline int MPIDI_STUBSHM_rank_is_local(int rank, MPIR_Comm * comm)
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_av_is_local(MPIDI_av_entry_t *av)
+static inline int MPIDI_STUBSHM_av_is_local(MPIDI_av_entry_t * av)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_AV_IS_LOCAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_AV_IS_LOCAL);

@@ -49,56 +49,56 @@ void MPL_thread_cond_signal(MPL_thread_cond_t * cond, int *err);
  * Thread Local Storage
  */
 
-#define MPL_thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_)	\
+#define MPL_thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_)       \
     do {                                                                \
         *(tls_ptr_) = TlsAlloc();                                       \
         if ((err_ptr_) != NULL) {                                       \
             if (*(tls_ptr_) == TLS_OUT_OF_INDEXES) {                    \
-                *(int *)(err_ptr_) = GetLastError();			\
-            }								\
+                *(int *)(err_ptr_) = GetLastError();                    \
+            }                                                           \
             else {                                                      \
-                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;               \
+                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;                \
             }                                                           \
         }                                                               \
     } while (0)
 
-#define MPL_thread_tls_destroy(tls_ptr_, err_ptr_)		\
+#define MPL_thread_tls_destroy(tls_ptr_, err_ptr_)              \
     do {                                                        \
         BOOL result__;                                          \
         result__ = TlsFree(*(tls_ptr_));                        \
         if ((err_ptr_) != NULL) {                               \
             if (result__) {                                     \
-                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;       \
+                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;        \
             }                                                   \
             else {                                              \
-                *(int *)(err_ptr_) = GetLastError();		\
-            }							\
+                *(int *)(err_ptr_) = GetLastError();            \
+            }                                                   \
         }                                                       \
     } while (0)
 
-#define MPL_thread_tls_set(tls_ptr_, value_, err_ptr_)		\
+#define MPL_thread_tls_set(tls_ptr_, value_, err_ptr_)          \
     do {                                                        \
         BOOL result__;                                          \
-        result__ = TlsSetValue(*(tls_ptr_), (value_));		\
+        result__ = TlsSetValue(*(tls_ptr_), (value_));          \
         if ((err_ptr_) != NULL) {                               \
             if (result__) {                                     \
-                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;       \
+                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;        \
             }                                                   \
             else {                                              \
-                *(int *)(err_ptr_) = GetLastError();		\
-            }							\
+                *(int *)(err_ptr_) = GetLastError();            \
+            }                                                   \
         }                                                       \
     } while (0)
 
-#define MPL_thread_tls_get(tls_ptr_, value_ptr_, err_ptr_)             \
-    do {								\
+#define MPL_thread_tls_get(tls_ptr_, value_ptr_, err_ptr_)              \
+    do {                                                                \
         *((void **)value_ptr_) = TlsGetValue(*(tls_ptr_));              \
         if ((err_ptr_) != NULL) {                                       \
             if (*(value_ptr_) == 0 && GetLastError() != NO_ERROR) {     \
                 *(int *)(err_ptr_) = GetLastError();                    \
             }                                                           \
             else {                                                      \
-                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;               \
+                *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;                \
             }                                                           \
         }                                                               \
     } while (0)

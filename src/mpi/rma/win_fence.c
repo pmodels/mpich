@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_fence as PMPI_Win_fence
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Win_fence(int assert, MPI_Win win) __attribute__((weak,alias("PMPI_Win_fence")));
+int MPI_Win_fence(int assert, MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_fence")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -34,25 +34,25 @@ int MPI_Win_fence(int assert, MPI_Win win) __attribute__((weak,alias("PMPI_Win_f
    MPI_Win_fence - Perform an MPI fence synchronization on a MPI window
 
 Input Parameters:
-+ assert - program assertion (integer) 
-- win - window object (handle) 
++ assert - program assertion (integer)
+- win - window object (handle)
 
    Notes:
    The 'assert' argument is used to indicate special conditions for the
-   fence that an implementation may use to optimize the 'MPI_Win_fence' 
+   fence that an implementation may use to optimize the 'MPI_Win_fence'
    operation.  The value zero is always correct.  Other assertion values
    may be or''ed together.  Assertions that are valid for 'MPI_Win_fence' are\:
 
-+ MPI_MODE_NOSTORE - the local window was not updated by local stores 
-  (or local get or receive calls) since last synchronization. 
-. MPI_MODE_NOPUT - the local window will not be updated by put or accumulate 
-  calls after the fence call, until the ensuing (fence) synchronization. 
-. MPI_MODE_NOPRECEDE - the fence does not complete any sequence of locally 
-  issued RMA calls. If this assertion is given by any process in the window 
-  group, then it must be given by all processes in the group. 
-- MPI_MODE_NOSUCCEED - the fence does not start any sequence of locally 
-  issued RMA calls. If the assertion is given by any process in the window 
-  group, then it must be given by all processes in the group. 
++ MPI_MODE_NOSTORE - the local window was not updated by local stores
+  (or local get or receive calls) since last synchronization.
+. MPI_MODE_NOPUT - the local window will not be updated by put or accumulate
+  calls after the fence call, until the ensuing (fence) synchronization.
+. MPI_MODE_NOPRECEDE - the fence does not complete any sequence of locally
+  issued RMA calls. If this assertion is given by any process in the window
+  group, then it must be given by all processes in the group.
+- MPI_MODE_NOSUCCEED - the fence does not start any sequence of locally
+  issued RMA calls. If the assertion is given by any process in the window
+  group, then it must be given by all processes in the group.
 
 .N ThreadSafe
 
@@ -71,45 +71,47 @@ int MPI_Win_fence(int assert, MPI_Win win)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_FENCE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_WIN_FENCE);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_WIN(win, mpi_errno);
+            MPIR_ERRTEST_WIN(win, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
-    
+#endif /* HAVE_ERROR_CHECKING */
+
     /* Convert MPI object handles to object pointers */
-    MPIR_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr(win, win_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate win_ptr */
-            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
+            MPIR_Win_valid_ptr(win_ptr, mpi_errno);
 
             /* TODO: validate window is not in passive mode */
             /* TODO: validate assert argument */
 
-            if (mpi_errno) goto fn_fail;
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
     mpi_errno = MPID_Win_fence(assert, win_ptr);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     /* ... end of body of routine ... */
 
@@ -120,15 +122,14 @@ int MPI_Win_fence(int assert, MPI_Win win)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_win_fence",
-	    "**mpi_win_fence %A %W", assert, win);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_win_fence", "**mpi_win_fence %A %W", assert, win);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-

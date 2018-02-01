@@ -66,7 +66,6 @@ int main(int argc, char **argv)
     if (err) {
         fprintf(stderr, "Found %d errors in indexed of vectors test.\n", err);
     }
-
 #ifdef HAVE_MPI_TYPE_CREATE_STRUCT
     err = struct_of_basics_test();
     errs += err;
@@ -75,8 +74,7 @@ int main(int argc, char **argv)
     /* print message and exit */
     if (errs) {
         fprintf(stderr, "Found %d errors\n", errs);
-    }
-    else {
+    } else {
         printf(" No Errors\n");
     }
     MPI_Finalize();
@@ -841,9 +839,9 @@ int parse_args(int argc, char **argv)
 
     while ((ret = getopt(argc, argv, "v")) >= 0) {
         switch (ret) {
-        case 'v':
-            verbose = 1;
-            break;
+            case 'v':
+                verbose = 1;
+                break;
         }
     }
 #else

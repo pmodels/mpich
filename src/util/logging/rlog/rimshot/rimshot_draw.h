@@ -14,16 +14,14 @@
 
 #define DRAW_COMPLETE_MSG     WM_USER + 1
 
-struct CursorRank
-{
+struct CursorRank {
     int rank;
     bool active;
     CRect rect;
 };
 
-struct RimshotDrawStruct
-{
-    CRimshotDoc* pDoc;
+struct RimshotDrawStruct {
+    CRimshotDoc *pDoc;
     CSize rect_size, copy_size;
     CSize max_rect_size, max_copy_size;
     HWND hWnd;
@@ -46,6 +44,6 @@ struct RimshotDrawStruct
     CBitmap *pCopyBitmap, *pCopyOriginalBmp;
 };
 
-void RimshotDrawThread(RimshotDrawStruct *pArg);
+void RimshotDrawThread(RimshotDrawStruct * pArg);
 
 #endif /* RIMSHOT_DRAW_H_INCLUDED */

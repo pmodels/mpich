@@ -19,21 +19,19 @@
 #define FUNCNAME MPIR_Reduce_inter_local_reduce_remote_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Reduce_inter_local_reduce_remote_send (
-    const void *sendbuf,
-    void *recvbuf,
-    int count,
-    MPI_Datatype datatype,
-    MPI_Op op,
-    int root,
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag )
+int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
+                                               void *recvbuf,
+                                               int count,
+                                               MPI_Datatype datatype,
+                                               MPI_Op op,
+                                               int root,
+                                               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int rank, mpi_errno;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     MPI_Aint true_extent, true_lb, extent;
-    void *tmp_buf=NULL;
+    void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_CHKLMEM_DECL(1);
 
@@ -45,18 +43,17 @@ int MPIR_Reduce_inter_local_reduce_remote_send (
     if (root == MPI_ROOT) {
         /* root receives data from rank 0 on remote group */
         mpi_errno = MPIC_Recv(recvbuf, count, datatype, 0,
-                MPIR_REDUCE_TAG, comm_ptr, &status, errflag);
+                              MPIR_REDUCE_TAG, comm_ptr, &status, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
-    }
-    else {
+    } else {
         /* remote group. Rank 0 allocates temporary buffer, does
-           local intracommunicator reduce, and then sends the data
-           to root. */
+         * local intracommunicator reduce, and then sends the data
+         * to root. */
 
         rank = comm_ptr->rank;
 
@@ -64,26 +61,27 @@ int MPIR_Reduce_inter_local_reduce_remote_send (
             MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
             MPIR_Datatype_get_extent_macro(datatype, extent);
-            /* I think this is the worse case, so we can avoid an assert() 
+            /* I think this is the worse case, so we can avoid an assert()
              * inside the for loop */
             /* Should MPIR_CHKLMEM_MALLOC do this? */
             MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent, true_extent)), mpi_errno,
+                                "temporary buffer", MPL_MEM_BUFFER);
             /* adjust for potential negative lower bound in datatype */
-            tmp_buf = (void *)((char*)tmp_buf - true_lb);
+            tmp_buf = (void *) ((char *) tmp_buf - true_lb);
         }
 
         /* Get the local intracommunicator */
         if (!comm_ptr->local_comm) {
-            mpi_errno = MPII_Setup_intercomm_localcomm( comm_ptr );
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
         }
 
         newcomm_ptr = comm_ptr->local_comm;
 
         /* now do a local reduce on this intracommunicator */
-        mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype,
-                op, 0, newcomm_ptr, errflag);
+        mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype, op, 0, newcomm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -91,10 +89,9 @@ int MPIR_Reduce_inter_local_reduce_remote_send (
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
 
-        if (rank == 0)
-        {
+        if (rank == 0) {
             mpi_errno = MPIC_Send(tmp_buf, count, datatype, root,
-                    MPIR_REDUCE_TAG, comm_ptr, errflag);
+                                  MPIR_REDUCE_TAG, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -104,7 +101,7 @@ int MPIR_Reduce_inter_local_reduce_remote_send (
         }
     }
 
-fn_exit:
+  fn_exit:
     MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
@@ -112,6 +109,6 @@ fn_exit:
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

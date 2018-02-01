@@ -86,8 +86,7 @@ int main(int argc, char *argv[])
         errs++;
         fprintf(stderr, "Comm_dup did not fail\n");
         MPI_Comm_free(&dup2);
-    }
-    else {
+    } else {
         int eclass, resultLen;
         char msg[MPI_MAX_ERROR_STRING];
         /* Check for expected error class */
@@ -96,8 +95,7 @@ int main(int argc, char *argv[])
             errs++;
             fprintf(stderr, "Unexpected error class = %d, expected user-defined class %d\n", eclass,
                     myErrClass);
-        }
-        else {
+        } else {
             MPI_Error_string(err, msg, &resultLen);
             if (strcmp(msg, "My error class") != 0) {
                 errs++;
@@ -111,8 +109,7 @@ int main(int argc, char *argv[])
         errs++;
         fprintf(stderr, "Comm_dup did not fail (2)\n");
         MPI_Comm_free(&dup2);
-    }
-    else {
+    } else {
         int eclass, resultLen;
         char msg[MPI_MAX_ERROR_STRING];
         /* Check for expected error class */
@@ -126,8 +123,7 @@ int main(int argc, char *argv[])
             errs++;
             fprintf(stderr, "Unexpected error code = %d, expected user-defined code %d\n", err,
                     myErrCode);
-        }
-        else {
+        } else {
             MPI_Error_string(err, msg, &resultLen);
             if (strcmp(msg, "My error code") != 0) {
                 errs++;

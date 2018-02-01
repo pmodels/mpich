@@ -15,13 +15,13 @@ int MPIR_Bcast_nb(void *buffer, int count, MPI_Datatype datatype, int root, MPIR
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Request req = MPI_REQUEST_NULL;
-    MPIR_Request * req_ptr = NULL;
+    MPIR_Request *req_ptr = NULL;
 
     /* just call the nonblocking version and wait on it */
     mpi_errno = MPIR_Ibcast(buffer, count, datatype, root, comm_ptr, &req_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    if(req_ptr)
+    if (req_ptr)
         req = req_ptr->handle;
 
     mpi_errno = MPIR_Wait_impl(&req, MPI_STATUS_IGNORE);

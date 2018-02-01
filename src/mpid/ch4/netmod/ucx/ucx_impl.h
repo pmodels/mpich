@@ -80,69 +80,67 @@ static inline int MPIDI_UCX_get_source(uint64_t match_bits)
     return ((int) ((match_bits & MPIDI_UCX_SOURCE_MASK) >> MPIDI_UCX_TAG_SHIFT));
 }
 
-
-
-#define MPIDI_UCX_CHK_STATUS(STATUS)                \
-  do {								\
-    MPIR_ERR_CHKANDJUMP4((STATUS!=UCS_OK && STATUS!=UCS_INPROGRESS),\
-			  mpi_errno,				\
-			  MPI_ERR_OTHER,			\
-			  "**ucx_nm_status",                  \
-			  "**ucx_nm_status %s %d %s %s",    \
-			  __SHORT_FILE__,			\
-			  __LINE__,				\
-			  FCNAME,				\
-			  ucs_status_string(STATUS));		\
+#define MPIDI_UCX_CHK_STATUS(STATUS)                                    \
+    do {                                                                \
+        MPIR_ERR_CHKANDJUMP4((STATUS!=UCS_OK && STATUS!=UCS_INPROGRESS), \
+                             mpi_errno,                                 \
+                             MPI_ERR_OTHER,                             \
+                             "**ucx_nm_status",                         \
+                             "**ucx_nm_status %s %d %s %s",             \
+                             __SHORT_FILE__,                            \
+                             __LINE__,                                  \
+                             FCNAME,                                    \
+                             ucs_status_string(STATUS));                \
     } while (0)
 
 
-#define MPIDI_UCX_PMI_ERROR(_errno)				\
-  do									\
-    {									\
-       MPIR_ERR_CHKANDJUMP4(_errno!=PMI_SUCCESS,			\
-			    mpi_errno,					\
-			    MPI_ERR_OTHER,				\
-			    "**ucx_nm_pmi_error",			\
-			    "**ucx_nm_pmi_error %s %d %s %s",	\
-			    __SHORT_FILE__,				\
-			    __LINE__,					\
-			    FCNAME,					\
-			    "pmi_error");					\
+#define MPIDI_UCX_PMI_ERROR(_errno)                             \
+    do                                                          \
+    {                                                           \
+        MPIR_ERR_CHKANDJUMP4(_errno!=PMI_SUCCESS,               \
+                             mpi_errno,                         \
+                             MPI_ERR_OTHER,                     \
+                             "**ucx_nm_pmi_error",              \
+                             "**ucx_nm_pmi_error %s %d %s %s",  \
+                             __SHORT_FILE__,                    \
+                             __LINE__,                          \
+                             FCNAME,                            \
+                             "pmi_error");                      \
     } while (0)
 
-#define MPIDI_UCX_MPI_ERROR(_errno)				     \
-  do								     \
-    {								     \
-      if (unlikely(_errno!=MPI_SUCCESS)) MPIR_ERR_POP(mpi_errno);    \
+#define MPIDI_UCX_MPI_ERROR(_errno)                                     \
+    do                                                                  \
+    {                                                                   \
+        if (unlikely(_errno!=MPI_SUCCESS)) MPIR_ERR_POP(mpi_errno);     \
     } while (0)
 
-#define MPIDI_UCX_STR_ERRCHK(_errno)				\
-  do									\
-    {									\
-       MPIR_ERR_CHKANDJUMP4(_errno!=MPL_STR_SUCCESS,			\
-			    mpi_errno,					\
-			    MPI_ERR_OTHER,				\
-			    "**ucx_nm_str_error",			\
-			    "**ucx_nm_str_error %s %d %s %s",		\
-			    __SHORT_FILE__,				\
-			    __LINE__,					\
-			    FCNAME,					\
-			    "strng_error");					\
+#define MPIDI_UCX_STR_ERRCHK(_errno)                            \
+    do                                                          \
+    {                                                           \
+        MPIR_ERR_CHKANDJUMP4(_errno!=MPL_STR_SUCCESS,           \
+                             mpi_errno,                         \
+                             MPI_ERR_OTHER,                     \
+                             "**ucx_nm_str_error",              \
+                             "**ucx_nm_str_error %s %d %s %s",  \
+                             __SHORT_FILE__,                    \
+                             __LINE__,                          \
+                             FCNAME,                            \
+                             "strng_error");                    \
     } while (0)
 
 
 
-#define MPIDI_UCX_CHK_REQUEST(_req)				\
-  do {									\
-   MPIR_ERR_CHKANDJUMP4(UCS_PTR_IS_ERR(_req),				\
-			  mpi_errno,					\
-			  MPI_ERR_OTHER,				\
-			  "**ucx_nm_rq_error",				\
-			  "**ucx_nm_rq_error %s %d %s %s",		\
-			  __SHORT_FILE__,				\
-			  __LINE__,					\
-			  FCNAME,					\
-			  ucs_status_string(UCS_PTR_STATUS(_req)));	\
-  } while (0)
+#define MPIDI_UCX_CHK_REQUEST(_req)                                     \
+    do {                                                                \
+        MPIR_ERR_CHKANDJUMP4(UCS_PTR_IS_ERR(_req),                      \
+                             mpi_errno,                                 \
+                             MPI_ERR_OTHER,                             \
+                             "**ucx_nm_rq_error",                       \
+                             "**ucx_nm_rq_error %s %d %s %s",           \
+                             __SHORT_FILE__,                            \
+                             __LINE__,                                  \
+                             FCNAME,                                    \
+                             ucs_status_string(UCS_PTR_STATUS(_req)));  \
+    } while (0)
 
 #endif /* UCX_IMPL_H_INCLUDED */

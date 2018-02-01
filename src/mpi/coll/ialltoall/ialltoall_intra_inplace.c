@@ -22,7 +22,9 @@
 #define FUNCNAME MPIR_Ialltoall_sched_intra_inplace
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoall_sched_intra_inplace(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ialltoall_sched_intra_inplace(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                       MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     void *tmp_buf = NULL;
@@ -53,36 +55,36 @@ int MPIR_Ialltoall_sched_intra_inplace(const void *sendbuf, int sendcount, MPI_D
         for (j = i; j < comm_size; ++j) {
             if (rank == i && rank == j) {
                 /* no need to "sendrecv_replace" for ourselves */
-            }
-            else if (rank == i || rank == j) {
+            } else if (rank == i || rank == j) {
                 if (rank == i)
                     peer = j;
                 else
                     peer = i;
 
                 /* pack to tmp_buf */
-                mpi_errno = MPIR_Sched_copy(((char *)recvbuf + peer*recvcount*recvtype_extent),
-                                            recvcount, recvtype,
-                                            tmp_buf, nbytes, MPI_BYTE, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                mpi_errno = MPIR_Sched_copy(((char *) recvbuf + peer * recvcount * recvtype_extent),
+                                            recvcount, recvtype, tmp_buf, nbytes, MPI_BYTE, s);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
                 /* now simultaneously send from tmp_buf and recv to recvbuf */
                 mpi_errno = MPIR_Sched_send(tmp_buf, nbytes, MPI_BYTE, peer, comm_ptr, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                mpi_errno = MPIR_Sched_recv(((char *)recvbuf + peer*recvcount*recvtype_extent),
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                mpi_errno = MPIR_Sched_recv(((char *) recvbuf + peer * recvcount * recvtype_extent),
                                             recvcount, recvtype, peer, comm_ptr, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }
         }
     }
 
     MPIR_SCHED_CHKPMEM_COMMIT(s);
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
-

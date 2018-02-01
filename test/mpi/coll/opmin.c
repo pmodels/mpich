@@ -110,12 +110,11 @@ int main(int argc, char *argv[])
             fprintf(stderr, "unsigned char MIN(>) test failed\n");
         }
     }
-
 #ifdef HAVE_LONG_DOUBLE
     {
         long double ldinbuf[3], ldoutbuf[3];
         /* long double */
-        MTEST_VG_MEM_INIT(ldinbuf, 3* sizeof(ldinbuf[0]));
+        MTEST_VG_MEM_INIT(ldinbuf, 3 * sizeof(ldinbuf[0]));
         ldinbuf[0] = 1;
         ldinbuf[1] = 0;
         ldinbuf[2] = rank;

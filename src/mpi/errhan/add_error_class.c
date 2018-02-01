@@ -16,7 +16,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Add_error_class as PMPI_Add_error_class
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Add_error_class(int *errorclass) __attribute__((weak,alias("PMPI_Add_error_class")));
+int MPI_Add_error_class(int *errorclass) __attribute__ ((weak, alias("PMPI_Add_error_class")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -53,31 +53,31 @@ int MPI_Add_error_class(int *errorclass)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ADD_ERROR_CLASS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_ADD_ERROR_CLASS);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_ARGNULL(errorclass, "errorclass", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(errorclass, "errorclass", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
-    
+#endif /* HAVE_ERROR_CHECKING */
+
     /* ... body of routine ...  */
-    
-    new_class = MPIR_Err_add_class( );
-    MPIR_ERR_CHKANDJUMP(new_class<0,mpi_errno,MPI_ERR_OTHER,"**noerrclasses");
+
+    new_class = MPIR_Err_add_class();
+    MPIR_ERR_CHKANDJUMP(new_class < 0, mpi_errno, MPI_ERR_OTHER, "**noerrclasses");
 
     *errorclass = ERROR_DYN_MASK | new_class;
 
     /* FIXME why isn't this done in MPIR_Err_add_class? */
     if (*errorclass > MPIR_Process.attrs.lastusedcode) {
-       MPIR_Process.attrs.lastusedcode = *errorclass;
+        MPIR_Process.attrs.lastusedcode = *errorclass;
     }
 
     /* ... end of body of routine ... */
@@ -89,15 +89,14 @@ int MPI_Add_error_class(int *errorclass)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_add_error_class",
-	    "**mpi_add_error_class %p", errorclass);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_add_error_class", "**mpi_add_error_class %p", errorclass);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-

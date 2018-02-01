@@ -66,8 +66,7 @@ int main(int argc, char *argv[])
                     MPI_Win_unlock(dest, win);
                     MPI_Barrier(comm);
                     free(resbuf);
-                }
-                else if (rank == dest) {
+                } else if (rank == dest) {
                     int err;
                     MPI_Barrier(comm);
                     MPI_Win_lock(MPI_LOCK_SHARED, dest, 0, win);

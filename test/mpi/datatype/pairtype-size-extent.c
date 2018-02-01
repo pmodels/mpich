@@ -42,40 +42,35 @@ MPI_Aint pairtype_displacement(MPI_Datatype type, int *out_size_p)
         } foo;
         disp = (MPI_Aint) ((char *) &foo.b - (char *) &foo.a);
         *out_size_p = sizeof(foo);
-    }
-    else if (type == MPI_DOUBLE_INT) {
+    } else if (type == MPI_DOUBLE_INT) {
         struct {
             double a;
             int b;
         } foo;
         disp = (MPI_Aint) ((char *) &foo.b - (char *) &foo.a);
         *out_size_p = sizeof(foo);
-    }
-    else if (type == MPI_LONG_INT) {
+    } else if (type == MPI_LONG_INT) {
         struct {
             long a;
             int b;
         } foo;
         disp = (MPI_Aint) ((char *) &foo.b - (char *) &foo.a);
         *out_size_p = sizeof(foo);
-    }
-    else if (type == MPI_SHORT_INT) {
+    } else if (type == MPI_SHORT_INT) {
         struct {
             short a;
             int b;
         } foo;
         disp = (MPI_Aint) ((char *) &foo.b - (char *) &foo.a);
         *out_size_p = sizeof(foo);
-    }
-    else if (type == MPI_LONG_DOUBLE_INT && type != MPI_DATATYPE_NULL) {
+    } else if (type == MPI_LONG_DOUBLE_INT && type != MPI_DATATYPE_NULL) {
         struct {
             long double a;
             int b;
         } foo;
         disp = (MPI_Aint) ((char *) &foo.b - (char *) &foo.a);
         *out_size_p = sizeof(foo);
-    }
-    else {
+    } else {
         disp = -1;
     }
     return disp;
@@ -140,8 +135,7 @@ int main(int argc, char *argv[])
     /* print message and exit */
     if (errs) {
         fprintf(stderr, "Found %d errors\n", errs);
-    }
-    else {
+    } else {
         printf(" No Errors\n");
     }
     MPI_Finalize();

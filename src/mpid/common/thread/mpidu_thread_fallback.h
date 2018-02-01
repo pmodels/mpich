@@ -68,18 +68,18 @@ typedef struct {
     MPL_thread_mutex_t mutex;
     OPA_int_t num_queued_threads;
 } MPIDU_Thread_mutex_t;
-typedef MPL_thread_cond_t  MPIDU_Thread_cond_t;
+typedef MPL_thread_cond_t MPIDU_Thread_cond_t;
 #else
 typedef struct {
     zm_lock_t mutex;
     OPA_int_t num_queued_threads;
 } MPIDU_Thread_mutex_t;
-typedef zm_cond_t  MPIDU_Thread_cond_t;
+typedef zm_cond_t MPIDU_Thread_cond_t;
 #endif
 
-typedef MPL_thread_id_t    MPIDU_Thread_id_t;
-typedef MPL_thread_tls_t   MPIDU_Thread_tls_t;
-typedef MPL_thread_func_t  MPIDU_Thread_func_t;
+typedef MPL_thread_id_t MPIDU_Thread_id_t;
+typedef MPL_thread_tls_t MPIDU_Thread_tls_t;
+typedef MPL_thread_func_t MPIDU_Thread_func_t;
 
 /*M MPIDU_THREAD_CS_ENTER - Enter a named critical section
 
@@ -130,9 +130,9 @@ M*/
     } while (0)
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex) do {} while (0)
 
-#endif  /* MPICH_THREAD_GRANULARITY */
+#endif /* MPICH_THREAD_GRANULARITY */
 
-#else  /* !defined(MPICH_IS_THREADED) */
+#else /* !defined(MPICH_IS_THREADED) */
 
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
@@ -191,9 +191,9 @@ M*/
     } while (0)
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex) do {} while (0)
 
-#endif  /* MPICH_THREAD_GRANULARITY */
+#endif /* MPICH_THREAD_GRANULARITY */
 
-#else  /* !defined(MPICH_IS_THREADED) */
+#else /* !defined(MPICH_IS_THREADED) */
 
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
@@ -241,9 +241,9 @@ M*/
     } while (0)
 #define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex) do {} while (0)
 
-#endif  /* MPICH_THREAD_GRANULARITY */
+#endif /* MPICH_THREAD_GRANULARITY */
 
-#else  /* !defined(MPICH_IS_THREADED) */
+#else /* !defined(MPICH_IS_THREADED) */
 
 #define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_YIELD_POBJ(mutex) do {} while (0)
@@ -315,7 +315,7 @@ M*/
 
 /* Internal utility layer to choose between MPL and Izem */
 
-#if !defined(ENABLE_IZEM_SYNC) /* Use the MPL interface*/
+#if !defined(ENABLE_IZEM_SYNC)  /* Use the MPL interface */
 
 #define MPIDUI_thread_mutex_create(mutex_ptr_, err_ptr_)                \
     MPL_thread_mutex_create(mutex_ptr_, err_ptr_)
@@ -381,7 +381,7 @@ do {                                                                    \
     *err_ptr_ = zm_cond_bcast(cond_ptr_);                               \
 } while (0)
 
-#endif  /* ENABLE_IZEM_SYNC */
+#endif /* ENABLE_IZEM_SYNC */
 
 /*
  *    Mutexes
@@ -641,7 +641,7 @@ do {                                                                    \
         MPL_THREADPRIV_KEY_DESTROY(MPIR_Per_thread_key, &err_);  \
         MPIR_Assert(err_ == 0);                                 \
     } while (0)
-#else  /* !defined(MPICH_IS_THREADED) */
+#else /* !defined(MPICH_IS_THREADED) */
 
 #define MPIDU_THREADPRIV_KEY_CREATE(key, var, err_ptr_)
 #define MPIDU_THREADPRIV_KEY_GET_ADDR(is_threaded, key, var, addr, err_ptr_) \

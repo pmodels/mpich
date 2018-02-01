@@ -31,13 +31,12 @@
 #define FUNCNAME MPIR_Bcast_intra_scatter_recursive_doubling_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(
-    void *buffer, 
-    int count, 
-    MPI_Datatype datatype, 
-    int root, 
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag)
+int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
+                                                          int count,
+                                                          MPI_Datatype datatype,
+                                                          int root,
+                                                          MPIR_Comm * comm_ptr,
+                                                          MPIR_Errflag_t * errflag)
 {
     MPI_Status status;
     int rank, comm_size, dst;
@@ -59,7 +58,8 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(
     relative_rank = (rank >= root) ? rank - root : rank - root + comm_size;
 
     /* If there is only one process, return */
-    if (comm_size == 1) goto fn_exit;
+    if (comm_size == 1)
+        goto fn_exit;
 
 #ifdef HAVE_ERROR_CHECKING
     /* This algorithm can currently handle only power of 2 cases,
@@ -91,37 +91,34 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(
     else
         /* --BEGIN HETEROGENEOUS-- */
         MPIR_Pack_size_impl(1, datatype, &type_size);
-        /* --END HETEROGENEOUS-- */
+    /* --END HETEROGENEOUS-- */
 
     nbytes = type_size * count;
     if (nbytes == 0)
-        goto fn_exit; /* nothing to do */
+        goto fn_exit;   /* nothing to do */
 
-    if (is_contig && is_homogeneous)
-    {
+    if (is_contig && is_homogeneous) {
         /* contiguous and homogeneous. no need to pack. */
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
         tmp_buf = (char *) buffer + true_lb;
-    }
-    else
-    {
+    } else {
         MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* TODO: Pipeline the packing and communication */
         position = 0;
         if (rank == root) {
-            mpi_errno = MPIR_Pack_impl(buffer, count, datatype, tmp_buf, nbytes,
-                                       &position);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            mpi_errno = MPIR_Pack_impl(buffer, count, datatype, tmp_buf, nbytes, &position);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
         }
     }
 
 
-    scatter_size = (nbytes + comm_size - 1)/comm_size; /* ceiling division */
+    scatter_size = (nbytes + comm_size - 1) / comm_size;        /* ceiling division */
 
     mpi_errno = MPII_Scatter_for_bcast(buffer, count, datatype, root, comm_ptr,
-                                  nbytes, tmp_buf, is_contig, is_homogeneous, errflag);
+                                       nbytes, tmp_buf, is_contig, is_homogeneous, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -139,17 +136,16 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(
 
     mask = 0x1;
     i = 0;
-    while (mask < comm_size)
-    {
+    while (mask < comm_size) {
         relative_dst = relative_rank ^ mask;
 
-        dst = (relative_dst + root) % comm_size; 
+        dst = (relative_dst + root) % comm_size;
 
         /* find offset into send and recv buffers.
-           zero out the least significant "i" bits of relative_rank and
-           relative_dst to find root of src and dst
-           subtrees. Use ranks of roots as index to send from
-           and recv into  buffer */ 
+         * zero out the least significant "i" bits of relative_rank and
+         * relative_dst to find root of src and dst
+         * subtrees. Use ranks of roots as index to send from
+         * and recv into  buffer */
 
         dst_tree_root = relative_dst >> i;
         dst_tree_root <<= i;
@@ -160,53 +156,50 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(
         send_offset = my_tree_root * scatter_size;
         recv_offset = dst_tree_root * scatter_size;
 
-        if (relative_dst < comm_size)
-        {
-            mpi_errno = MPIC_Sendrecv(((char *)tmp_buf + send_offset),
-                                         curr_size, MPI_BYTE, dst, MPIR_BCAST_TAG, 
-                                         ((char *)tmp_buf + recv_offset),
-                                         (nbytes-recv_offset < 0 ? 0 : nbytes-recv_offset), 
-                                         MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
+        if (relative_dst < comm_size) {
+            mpi_errno = MPIC_Sendrecv(((char *) tmp_buf + send_offset),
+                                      curr_size, MPI_BYTE, dst, MPIR_BCAST_TAG,
+                                      ((char *) tmp_buf + recv_offset),
+                                      (nbytes - recv_offset < 0 ? 0 : nbytes - recv_offset),
+                                      MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
             if (mpi_errno) {
-		/* --BEGIN ERROR HANDLING-- */
+                /* --BEGIN ERROR HANDLING-- */
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
                 MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 recv_size = 0;
-		/* --END ERROR HANDLING-- */
+                /* --END ERROR HANDLING-- */
             } else
                 MPIR_Get_count_impl(&status, MPI_BYTE, &recv_size);
             curr_size += recv_size;
         }
 
         /* if some processes in this process's subtree in this step
-           did not have any destination process to communicate with
-           because of non-power-of-two, we need to send them the
-           data that they would normally have received from those
-           processes. That is, the haves in this subtree must send to
-           the havenots. We use a logarithmic recursive-halfing algorithm
-           for this. */
+         * did not have any destination process to communicate with
+         * because of non-power-of-two, we need to send them the
+         * data that they would normally have received from those
+         * processes. That is, the haves in this subtree must send to
+         * the havenots. We use a logarithmic recursive-halfing algorithm
+         * for this. */
 
         /* This part of the code will not currently be
-           executed because we are not using recursive
-           doubling for non power of two. Mark it as experimental
-           so that it doesn't show up as red in the coverage tests. */  
+         * executed because we are not using recursive
+         * doubling for non power of two. Mark it as experimental
+         * so that it doesn't show up as red in the coverage tests. */
 
         /* --BEGIN EXPERIMENTAL-- */
-        if (dst_tree_root + mask > comm_size)
-        {
+        if (dst_tree_root + mask > comm_size) {
             nprocs_completed = comm_size - my_tree_root - mask;
             /* nprocs_completed is the number of processes in this
-               subtree that have all the data. Send data to others
-               in a tree fashion. First find root of current tree
-               that is being divided into two. k is the number of
-               least-significant bits in this process's rank that
-               must be zeroed out to find the rank of the root */ 
+             * subtree that have all the data. Send data to others
+             * in a tree fashion. First find root of current tree
+             * that is being divided into two. k is the number of
+             * least-significant bits in this process's rank that
+             * must be zeroed out to find the rank of the root */
             j = mask;
             k = 0;
-            while (j)
-            {
+            while (j) {
                 j >>= 1;
                 k++;
             }
@@ -215,35 +208,32 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(
             offset = scatter_size * (my_tree_root + mask);
             tmp_mask = mask >> 1;
 
-            while (tmp_mask)
-            {
+            while (tmp_mask) {
                 relative_dst = relative_rank ^ tmp_mask;
-                dst = (relative_dst + root) % comm_size; 
+                dst = (relative_dst + root) % comm_size;
 
                 tree_root = relative_rank >> k;
                 tree_root <<= k;
 
                 /* send only if this proc has data and destination
-                   doesn't have data. */
+                 * doesn't have data. */
 
-                /* if (rank == 3) { 
-                   printf("rank %d, dst %d, root %d, nprocs_completed %d\n", relative_rank, relative_dst, tree_root, nprocs_completed);
-                   fflush(stdout);
-                   }*/
+                /* if (rank == 3) {
+                 * printf("rank %d, dst %d, root %d, nprocs_completed %d\n", relative_rank, relative_dst, tree_root, nprocs_completed);
+                 * fflush(stdout);
+                 * } */
 
-                if ((relative_dst > relative_rank) && 
-                    (relative_rank < tree_root + nprocs_completed)
-                    && (relative_dst >= tree_root + nprocs_completed))
-                {
+                if ((relative_dst > relative_rank) && (relative_rank < tree_root + nprocs_completed)
+                    && (relative_dst >= tree_root + nprocs_completed)) {
 
                     /* printf("Rank %d, send to %d, offset %d, size %d\n", rank, dst, offset, recv_size);
-                       fflush(stdout); */
-                    mpi_errno = MPIC_Send(((char *)tmp_buf + offset),
-                                             recv_size, MPI_BYTE, dst,
-                                             MPIR_BCAST_TAG, comm_ptr, errflag);
+                     * fflush(stdout); */
+                    mpi_errno = MPIC_Send(((char *) tmp_buf + offset),
+                                          recv_size, MPI_BYTE, dst,
+                                          MPIR_BCAST_TAG, comm_ptr, errflag);
                     /* recv_size was set in the previous
-                       receive. that's the amount of data to be
-                       sent now. */
+                     * receive. that's the amount of data to be
+                     * sent now. */
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
                         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -252,32 +242,31 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(
                     }
                 }
                 /* recv only if this proc. doesn't have data and sender
-                   has data */
-                else if ((relative_dst < relative_rank) && 
+                 * has data */
+                else if ((relative_dst < relative_rank) &&
                          (relative_dst < tree_root + nprocs_completed) &&
-                         (relative_rank >= tree_root + nprocs_completed))
-                {
+                         (relative_rank >= tree_root + nprocs_completed)) {
                     /* printf("Rank %d waiting to recv from rank %d\n",
-                       relative_rank, dst); */
-                    mpi_errno = MPIC_Recv(((char *)tmp_buf + offset),
-                                             nbytes - offset, 
-                                             MPI_BYTE, dst, MPIR_BCAST_TAG,
-                                             comm_ptr, &status, errflag);
+                     * relative_rank, dst); */
+                    mpi_errno = MPIC_Recv(((char *) tmp_buf + offset),
+                                          nbytes - offset,
+                                          MPI_BYTE, dst, MPIR_BCAST_TAG,
+                                          comm_ptr, &status, errflag);
                     /* nprocs_completed is also equal to the no. of processes
-                       whose data we don't have */
+                     * whose data we don't have */
                     if (mpi_errno) {
-			/* --BEGIN ERROR HANDLING-- */
+                        /* --BEGIN ERROR HANDLING-- */
                         /* for communication errors, just record the error but continue */
                         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
                         MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                         recv_size = 0;
-			/* --END ERROR HANDLING-- */
+                        /* --END ERROR HANDLING-- */
                     } else
                         MPIR_Get_count_impl(&status, MPI_BYTE, &recv_size);
                     curr_size += recv_size;
                     /* printf("Rank %d, recv from %d, offset %d, size %d\n", rank, dst, offset, recv_size);
-                       fflush(stdout);*/
+                     * fflush(stdout); */
                 }
                 tmp_mask >>= 1;
                 k--;
@@ -292,25 +281,24 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(
     /* check that we received as much as we expected */
     /* recvd_size may not be accurate for packed heterogeneous data */
     if (is_homogeneous && curr_size != nbytes) {
-        if (*errflag == MPIR_ERR_NONE) *errflag = MPIR_ERR_OTHER;
+        if (*errflag == MPIR_ERR_NONE)
+            *errflag = MPIR_ERR_OTHER;
         MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
-		      "**collective_size_mismatch",
-		      "**collective_size_mismatch %d %d", curr_size, nbytes );
+                      "**collective_size_mismatch",
+                      "**collective_size_mismatch %d %d", curr_size, nbytes);
         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
 
-    if (!is_contig || !is_homogeneous)
-    {
-        if (rank != root)
-        {
+    if (!is_contig || !is_homogeneous) {
+        if (rank != root) {
             position = 0;
-            mpi_errno = MPIR_Unpack_impl(tmp_buf, nbytes, &position, buffer,
-                                         count, datatype);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            mpi_errno = MPIR_Unpack_impl(tmp_buf, nbytes, &position, buffer, count, datatype);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
         }
     }
 
-fn_exit:
+  fn_exit:
     MPIR_CHKLMEM_FREEALL();
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno_ret)
@@ -319,6 +307,6 @@ fn_exit:
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     /* --END ERROR HANDLING-- */
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

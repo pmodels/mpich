@@ -56,8 +56,7 @@ int main(int argc, char *argv[])
 
             MPI_Win_unlock(1, win);
             MPI_Win_free(&win);
-        }
-        else {  /* rank=1 */
+        } else {        /* rank=1 */
             for (i = 0; i < NROWS; i++)
                 for (j = 0; j < NCOLS; j++)
                     A[i][j] = -1;

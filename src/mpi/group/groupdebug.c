@@ -14,31 +14,32 @@
  * This file contains routines that are used only to perform testing
  * and debugging of the group routines
  */
-void MPITEST_Group_create( int, int, MPI_Group * );
-void MPITEST_Group_print( MPI_Group );
+void MPITEST_Group_create(int, int, MPI_Group *);
+void MPITEST_Group_print(MPI_Group);
 
 /* --BEGIN DEBUG-- */
-void MPITEST_Group_create( int nproc, int myrank, MPI_Group *new_group )
+void MPITEST_Group_create(int nproc, int myrank, MPI_Group * new_group)
 {
     MPIR_Group *new_group_ptr;
     int i;
 
-    new_group_ptr = (MPIR_Group *)MPIR_Handle_obj_alloc( &MPIR_Group_mem );
+    new_group_ptr = (MPIR_Group *) MPIR_Handle_obj_alloc(&MPIR_Group_mem);
     if (!new_group_ptr) {
-	fprintf( stderr, "Could not create a new group\n" );
-	PMPI_Abort( MPI_COMM_WORLD, 1 );
+        fprintf(stderr, "Could not create a new group\n");
+        PMPI_Abort(MPI_COMM_WORLD, 1);
     }
-    MPIR_Object_set_ref( new_group_ptr, 1 );
-    new_group_ptr->lrank_to_lpid = (MPII_Group_pmap_t *)MPL_malloc( nproc * sizeof(MPII_Group_pmap_t), MPL_MEM_DEBUG );
+    MPIR_Object_set_ref(new_group_ptr, 1);
+    new_group_ptr->lrank_to_lpid =
+        (MPII_Group_pmap_t *) MPL_malloc(nproc * sizeof(MPII_Group_pmap_t), MPL_MEM_DEBUG);
     if (!new_group_ptr->lrank_to_lpid) {
-	fprintf( stderr, "Could not create lrank map for new group\n" );
-	PMPI_Abort( MPI_COMM_WORLD, 1 );
+        fprintf(stderr, "Could not create lrank map for new group\n");
+        PMPI_Abort(MPI_COMM_WORLD, 1);
     }
 
     new_group_ptr->rank = MPI_UNDEFINED;
-    for (i=0; i<nproc; i++) {
-	new_group_ptr->lrank_to_lpid[i].lrank = i;
-	new_group_ptr->lrank_to_lpid[i].lpid  = i;
+    for (i = 0; i < nproc; i++) {
+        new_group_ptr->lrank_to_lpid[i].lrank = i;
+        new_group_ptr->lrank_to_lpid[i].lpid = i;
     }
     new_group_ptr->size = nproc;
     new_group_ptr->rank = myrank;
@@ -47,32 +48,31 @@ void MPITEST_Group_create( int nproc, int myrank, MPI_Group *new_group )
     *new_group = new_group_ptr->handle;
 }
 
-void MPITEST_Group_print( MPI_Group g )
+void MPITEST_Group_print(MPI_Group g)
 {
     MPIR_Group *g_ptr;
     int g_idx, size, i;
 
-    MPIR_Group_get_ptr( g, g_ptr );
+    MPIR_Group_get_ptr(g, g_ptr);
 
     g_idx = g_ptr->idx_of_first_lpid;
-    if (g_idx < 0) { 
-	MPII_Group_setup_lpid_list( g_ptr );
-	g_idx = g_ptr->idx_of_first_lpid;
+    if (g_idx < 0) {
+        MPII_Group_setup_lpid_list(g_ptr);
+        g_idx = g_ptr->idx_of_first_lpid;
     }
-    
+
     /* Loop through these, printing the lpids by rank and in order */
     size = g_ptr->size;
-    fprintf( stdout, "Lpids in rank order\n" );
-    for (i=0; i<size; i++) {
-	fprintf( stdout, "Rank %d has lpid %d\n", 
-		 i, g_ptr->lrank_to_lpid[i].lpid );
+    fprintf(stdout, "Lpids in rank order\n");
+    for (i = 0; i < size; i++) {
+        fprintf(stdout, "Rank %d has lpid %d\n", i, g_ptr->lrank_to_lpid[i].lpid);
     }
-    
-    fprintf( stdout, "Ranks in lpid order\n" );
+
+    fprintf(stdout, "Ranks in lpid order\n");
     while (g_idx >= 0) {
-	fprintf( stdout, "Rank %d has lpid %d\n", g_idx, 
-		 g_ptr->lrank_to_lpid[g_idx].lpid );
-	g_idx = g_ptr->lrank_to_lpid[g_idx].next_lpid;
+        fprintf(stdout, "Rank %d has lpid %d\n", g_idx, g_ptr->lrank_to_lpid[g_idx].lpid);
+        g_idx = g_ptr->lrank_to_lpid[g_idx].next_lpid;
     }
 }
+
 /* --END DEBUG-- */

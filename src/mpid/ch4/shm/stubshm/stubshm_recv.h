@@ -16,13 +16,13 @@
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_STUBSHM_mpi_recv)
 static inline int MPIDI_STUBSHM_mpi_recv(void *buf,
-                                     MPI_Aint count,
-                                     MPI_Datatype datatype,
-                                     int rank,
-                                     int tag,
-                                     MPIR_Comm * comm,
-                                     int context_offset, MPI_Status * status,
-                                     MPIR_Request ** request)
+                                         MPI_Aint count,
+                                         MPI_Datatype datatype,
+                                         int rank,
+                                         int tag,
+                                         MPIR_Comm * comm,
+                                         int context_offset, MPI_Status * status,
+                                         MPIR_Request ** request)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_RECV);
@@ -34,12 +34,12 @@ static inline int MPIDI_STUBSHM_mpi_recv(void *buf,
 }
 
 static inline int MPIDI_STUBSHM_mpi_recv_init(void *buf,
-                                          int count,
-                                          MPI_Datatype datatype,
-                                          int rank,
-                                          int tag,
-                                          MPIR_Comm * comm, int context_offset,
-                                          MPIR_Request ** request)
+                                              int count,
+                                              MPI_Datatype datatype,
+                                              int rank,
+                                              int tag,
+                                              MPIR_Comm * comm, int context_offset,
+                                              MPIR_Request ** request)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_RECV_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_RECV_INIT);
@@ -52,9 +52,9 @@ static inline int MPIDI_STUBSHM_mpi_recv_init(void *buf,
 
 
 static inline int MPIDI_STUBSHM_mpi_imrecv(void *buf,
-                                       MPI_Aint count,
-                                       MPI_Datatype datatype,
-                                       MPIR_Request * message, MPIR_Request ** rreqp)
+                                           MPI_Aint count,
+                                           MPI_Datatype datatype,
+                                           MPIR_Request * message, MPIR_Request ** rreqp)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_IMRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_IMRECV);
@@ -68,11 +68,12 @@ static inline int MPIDI_STUBSHM_mpi_imrecv(void *buf,
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_STUBSHM_mpi_irecv)
 static inline int MPIDI_STUBSHM_mpi_irecv(void *buf,
-                                      MPI_Aint count,
-                                      MPI_Datatype datatype,
-                                      int rank,
-                                      int tag,
-                                      MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
+                                          MPI_Aint count,
+                                          MPI_Datatype datatype,
+                                          int rank,
+                                          int tag,
+                                          MPIR_Comm * comm, int context_offset,
+                                          MPIR_Request ** request)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_IRECV);

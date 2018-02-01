@@ -51,8 +51,7 @@ int main(int argc, char **argv)
     /* print message and exit */
     if (errs) {
         fprintf(stderr, "Found %d errors\n", errs);
-    }
-    else {
+    } else {
         printf(" No Errors\n");
     }
     MPI_Finalize();
@@ -151,21 +150,21 @@ int vector_of_vectors_test(void)
     for (i = 0; i < 9; i++) {
         int goodval;
         switch (i) {
-        case 0:
-            goodval = 1;
-            break;
-        case 2:
-            goodval = 2;
-            break;
-        case 6:
-            goodval = 3;
-            break;
-        case 8:
-            goodval = 4;
-            break;
-        default:
-            goodval = 0;
-            break;
+            case 0:
+                goodval = 1;
+                break;
+            case 2:
+                goodval = 2;
+                break;
+            case 6:
+                goodval = 3;
+                break;
+            case 8:
+                goodval = 4;
+                break;
+            default:
+                goodval = 0;
+                break;
         }
         if (array[i] != goodval) {
             errs++;

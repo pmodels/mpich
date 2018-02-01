@@ -46,33 +46,37 @@
 /* Open question: should tag allocation be rolled into Sched_start?  Keeping it
  * separate potentially allows more parallelism in the future, but it also
  * pushes more work onto the clients of this interface. */
-int MPIR_Sched_next_tag(MPIR_Comm *comm_ptr, int *tag);
+int MPIR_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag);
 
 /* the device must provide a typedef for MPIR_Sched_t in mpidpre.h */
 
 /* creates a new opaque schedule object and returns a handle to it in (*sp) */
-int MPIR_Sched_create(MPIR_Sched_t *sp);
+int MPIR_Sched_create(MPIR_Sched_t * sp);
 /* clones orig and returns a handle to the new schedule in (*cloned) */
-int MPIR_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t *cloned);
+int MPIR_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t * cloned);
 /* sets (*sp) to MPIR_SCHED_NULL and gives you back a request pointer in (*req).
  * The caller is giving up ownership of the opaque schedule object.
  *
  * comm should be the primary (user) communicator with which this collective is
  * associated, even if other hidden communicators are used for a subset of the
  * operations.  It will be used for error handling and similar operations. */
-int MPIR_Sched_start(MPIR_Sched_t *sp, MPIR_Comm *comm, int tag, MPIR_Request **req);
+int MPIR_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request ** req);
 
 /* send and recv take a comm ptr to enable hierarchical collectives */
-int MPIR_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, MPIR_Comm *comm, MPIR_Sched_t s);
-int MPIR_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPIR_Comm *comm, MPIR_Sched_t s);
+int MPIR_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+                    MPIR_Comm * comm, MPIR_Sched_t s);
+int MPIR_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPIR_Comm * comm,
+                    MPIR_Sched_t s);
 
 /* just like MPI_Issend, can't complete until the matching recv is posted */
-int MPIR_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, MPIR_Comm *comm, MPIR_Sched_t s);
+int MPIR_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+                     MPIR_Comm * comm, MPIR_Sched_t s);
 
-int MPIR_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype, MPI_Op op, MPIR_Sched_t s);
+int MPIR_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
+                      MPI_Op op, MPIR_Sched_t s);
 /* packing/unpacking can be accomplished by passing MPI_PACKED as either intype
  * or outtype */
-int MPIR_Sched_copy(const void *inbuf,  MPI_Aint incount,  MPI_Datatype intype,
+int MPIR_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
                     void *outbuf, MPI_Aint outcount, MPI_Datatype outtype, MPIR_Sched_t s);
 /* require that all previously added ops are complete before subsequent ops
  * may begin to execute */
@@ -94,21 +98,23 @@ int MPIR_Sched_barrier(MPIR_Sched_t s);
  * A corresponding _recv_defer function is not currently provided because there
  * is no known use case.  The recv count is just an upper bound, not an exact
  * amount to be received, so an oversized recv is used instead of deferral. */
-int MPIR_Sched_send_defer(const void *buf, const MPI_Aint *count, MPI_Datatype datatype, int dest, MPIR_Comm *comm, MPIR_Sched_t s);
+int MPIR_Sched_send_defer(const void *buf, const MPI_Aint * count, MPI_Datatype datatype, int dest,
+                          MPIR_Comm * comm, MPIR_Sched_t s);
 /* Just like MPIR_Sched_recv except it populates the given status object with
  * the received count and error information, much like a normal recv.  Often
  * useful in conjunction with MPIR_Sched_send_defer. */
-int MPIR_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPIR_Comm *comm, MPI_Status *status, MPIR_Sched_t s);
+int MPIR_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, int src,
+                           MPIR_Comm * comm, MPI_Status * status, MPIR_Sched_t s);
 
 /* buffer management, fancy reductions, etc */
-int MPIR_Sched_cb(MPIR_Sched_cb_t *cb_p, void *cb_state, MPIR_Sched_t s);
-int MPIR_Sched_cb2(MPIR_Sched_cb2_t *cb_p, void *cb_state, void *cb_state2, MPIR_Sched_t s);
+int MPIR_Sched_cb(MPIR_Sched_cb_t * cb_p, void *cb_state, MPIR_Sched_t s);
+int MPIR_Sched_cb2(MPIR_Sched_cb2_t * cb_p, void *cb_state, void *cb_state2, MPIR_Sched_t s);
 
 /* TODO: develop a caching infrastructure for use by the upper level as well,
  * hopefully s.t. uthash can be used somehow */
 
 /* common callback utility functions */
-int MPIR_Sched_cb_free_buf(MPIR_Comm *comm, int tag, void *state);
+int MPIR_Sched_cb_free_buf(MPIR_Comm * comm, int tag, void *state);
 
 /* an upgraded version of MPIR_CHKPMEM_MALLOC/_DECL/_REAP/_COMMIT that adds
  * corresponding cleanup callbacks to the given schedule at _COMMIT time */

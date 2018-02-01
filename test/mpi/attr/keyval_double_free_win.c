@@ -41,14 +41,13 @@ int main(int argc, char **argv)
     MPI_Win_set_attr(windows[0], keyval, NULL);
     MPI_Win_set_attr(windows[1], keyval, NULL);
 
-    MPI_Win_free(&windows[0]);      /* first MPI_Win_free_keyval */
+    MPI_Win_free(&windows[0]);  /* first MPI_Win_free_keyval */
     MPI_Free_mem(base_ptr[0]);
-    MPI_Win_free_keyval(&keyval);   /* second MPI_Win_free_keyval */
-    MPI_Win_free_keyval(&keyval_copy);      /* third MPI_Win_free_keyval */
-    MPI_Win_free(&windows[1]);      /* fourth MPI_Win_free_keyval */
+    MPI_Win_free_keyval(&keyval);       /* second MPI_Win_free_keyval */
+    MPI_Win_free_keyval(&keyval_copy);  /* third MPI_Win_free_keyval */
+    MPI_Win_free(&windows[1]);  /* fourth MPI_Win_free_keyval */
     MPI_Free_mem(base_ptr[1]);
     MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }
-

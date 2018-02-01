@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_pvar_stop as PMPI_T_pvar_stop
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_T_pvar_stop(MPI_T_pvar_session session, MPI_T_pvar_handle handle) __attribute__((weak,alias("PMPI_T_pvar_stop")));
+int MPI_T_pvar_stop(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
+    __attribute__ ((weak, alias("PMPI_T_pvar_stop")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -44,58 +45,55 @@ int MPIR_T_pvar_stop_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
         if (handle->get_value == NULL) {
             MPIR_Memcpy(handle->current, handle->addr, handle->bytes * handle->count);
         } else {
-            handle->get_value(handle->addr, handle->obj_handle,
-                              handle->count, handle->current);
+            handle->get_value(handle->addr, handle->obj_handle, handle->count, handle->current);
         }
 
         /* Substract offset from current, and accumulate the result to accum */
         switch (handle->datatype) {
-        case MPI_UNSIGNED_LONG_LONG:
-            for (i = 0; i < handle->count; i++) {
-                ((unsigned long long *)handle->accum)[i] +=
-                    ((unsigned long long *)handle->current)[i]
-                    - ((unsigned long long *)handle->offset)[i];
-            }
-            break;
-        case MPI_DOUBLE:
-            for (i = 0; i < handle->count; i++) {
-                ((double *)handle->accum)[i] +=
-                    ((double *)handle->current)[i]
-                    - ((double *)handle->offset)[i];
-            }
-            break;
-        case MPI_UNSIGNED:
-            for (i = 0; i < handle->count; i++) {
-                ((unsigned *)handle->accum)[i] +=
-                    ((unsigned *)handle->current)[i]
-                    - ((unsigned *)handle->offset)[i];
-            }
-            break;
-        case MPI_UNSIGNED_LONG:
-            for (i = 0; i < handle->count; i++) {
-                ((unsigned long *)handle->accum)[i] +=
-                    ((unsigned long *)handle->current)[i]
-                    - ((unsigned long *)handle->offset)[i];
-            }
-            break;
-        default:
-            /* Code should never come here */
-            mpi_errno = MPI_ERR_INTERN; goto fn_fail;
-            break;
+            case MPI_UNSIGNED_LONG_LONG:
+                for (i = 0; i < handle->count; i++) {
+                    ((unsigned long long *) handle->accum)[i] +=
+                        ((unsigned long long *) handle->current)[i]
+                        - ((unsigned long long *) handle->offset)[i];
+                }
+                break;
+            case MPI_DOUBLE:
+                for (i = 0; i < handle->count; i++) {
+                    ((double *) handle->accum)[i] += ((double *) handle->current)[i]
+                        - ((double *) handle->offset)[i];
+                }
+                break;
+            case MPI_UNSIGNED:
+                for (i = 0; i < handle->count; i++) {
+                    ((unsigned *) handle->accum)[i] += ((unsigned *) handle->current)[i]
+                        - ((unsigned *) handle->offset)[i];
+                }
+                break;
+            case MPI_UNSIGNED_LONG:
+                for (i = 0; i < handle->count; i++) {
+                    ((unsigned long *) handle->accum)[i] += ((unsigned long *) handle->current)[i]
+                        - ((unsigned long *) handle->offset)[i];
+                }
+                break;
+            default:
+                /* Code should never come here */
+                mpi_errno = MPI_ERR_INTERN;
+                goto fn_fail;
+                break;
         }
 
     } else if (MPIR_T_pvar_is_watermark(handle)) {
         /* When handle is first, clear the flag in pvar too */
         if (MPIR_T_pvar_is_first(handle)) {
-            mark = (MPIR_T_pvar_watermark_t *)handle->addr;
+            mark = (MPIR_T_pvar_watermark_t *) handle->addr;
             MPIR_Assert(mark->first_used);
             mark->first_started = FALSE;
         }
     }
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -142,7 +140,7 @@ int MPI_T_pvar_stop(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_STOP);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -151,7 +149,7 @@ int MPI_T_pvar_stop(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
@@ -163,7 +161,8 @@ int MPI_T_pvar_stop(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
         DL_FOREACH(session->hlist, hnd) {
             if (!MPIR_T_pvar_is_continuous(hnd) && MPIR_T_pvar_is_started(hnd)) {
                 mpi_errno = MPIR_T_pvar_stop_impl(session, hnd);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
             }
         }
     } else {
@@ -178,26 +177,27 @@ int MPI_T_pvar_stop(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 
         if (MPIR_T_pvar_is_started(handle)) {
             mpi_errno = MPIR_T_pvar_stop_impl(session, handle);
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
         }
     }
 
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_PVAR_STOP);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_pvar_stop", "**mpi_t_pvar_stop %p %p", session, handle);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_t_pvar_stop", "**mpi_t_pvar_stop %p %p", session, handle);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

@@ -183,7 +183,6 @@ int main(int argc, char **argv)
         errs++;
         fprintf(stderr, "Expected int but got :%s:\n", name);
     }
-
 #ifndef HAVE_MPI_INTEGER16
     errs++;
     fprintf(stderr, "MPI_INTEGER16 is not available\n");

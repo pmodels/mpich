@@ -81,8 +81,7 @@ int main(int argc, char *argv[])
             MPI_Comm_free(&tmpComm[i]);
         }
         free(buf);
-    }
-    else if (rank == source) {
+    } else if (rank == source) {
         buf = (int *) malloc(NELM * sizeof(int));
         for (i = 0; i < NELM; i++)
             buf[i] = i;
@@ -94,8 +93,7 @@ int main(int argc, char *argv[])
         MPI_Sendrecv(NULL, 0, MPI_INT, dest, 1, NULL, 0, MPI_INT, dest, 1, MPI_COMM_WORLD, &status);
         MPI_Send(buf, NELM, MPI_INT, dest, 0, comm);
         free(buf);
-    }
-    else {
+    } else {
         for (i = 0; i < NCOMM; i++) {
             MPI_Comm_split(MPI_COMM_WORLD, 0, size - rank, &tmpComm[i]);
         }

@@ -18,13 +18,13 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
-                                        MPI_Aint count,
-                                        MPI_Datatype datatype,
-                                        int rank,
-                                        int tag,
-                                        MPIR_Comm * comm,
-                                        int context_offset, MPI_Status * status,
-                                        MPIR_Request ** request)
+                                       MPI_Aint count,
+                                       MPI_Datatype datatype,
+                                       int rank,
+                                       int tag,
+                                       MPIR_Comm * comm,
+                                       int context_offset, MPI_Status * status,
+                                       MPIR_Request ** request)
 {
     int mpi_errno;
     MPIDI_av_entry_t *av = NULL;
@@ -45,7 +45,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
     av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno =
-        MPIDI_NM_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, av, status, request);
+        MPIDI_NM_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, av, status,
+                          request);
 #else
     if (unlikely(rank == MPI_ANY_SOURCE)) {
         mpi_errno =
@@ -77,8 +78,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
 
         MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)) =
             *request;
-    }
-    else {
+    } else {
         int r;
         if ((r = MPIDI_av_is_local(av)))
             mpi_errno =
@@ -110,12 +110,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
-                                             int count,
-                                             MPI_Datatype datatype,
-                                             int rank,
-                                             int tag,
-                                             MPIR_Comm * comm, int context_offset,
-                                             MPIR_Request ** request)
+                                            int count,
+                                            MPI_Datatype datatype,
+                                            int rank,
+                                            int tag,
+                                            MPIR_Comm * comm, int context_offset,
+                                            MPIR_Request ** request)
 {
     int mpi_errno;
     MPIDI_av_entry_t *av = NULL;
@@ -135,8 +135,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
             MPIR_ERR_POP(mpi_errno);
         }
 
-        mpi_errno = MPIDI_NM_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, av,
-                                           &(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)));
+        mpi_errno =
+            MPIDI_NM_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, av,
+                                   &(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)));
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
@@ -147,8 +148,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
 
         MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)) =
             *request;
-    }
-    else {
+    } else {
         int r;
         if ((r = MPIDI_av_is_local(av)))
             mpi_errno = MPIDI_SHM_mpi_recv_init(buf, count, datatype, rank, tag,
@@ -179,9 +179,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
-                                         MPI_Aint count,
-                                         MPI_Datatype datatype, MPIR_Request * message,
-                                         MPI_Status * status)
+                                        MPI_Aint count,
+                                        MPI_Datatype datatype, MPIR_Request * message,
+                                        MPI_Status * status)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_MRECV);
@@ -197,7 +197,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
         mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
-
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, &rreq);
 #else
@@ -228,9 +227,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf,
-                                          MPI_Aint count,
-                                          MPI_Datatype datatype,
-                                          MPIR_Request * message, MPIR_Request ** rreqp)
+                                         MPI_Aint count,
+                                         MPI_Datatype datatype,
+                                         MPIR_Request * message, MPIR_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IMRECV);
@@ -240,7 +239,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf,
         MPIDI_Request_create_null_rreq(*rreqp, mpi_errno, goto fn_fail);
         goto fn_exit;
     }
-
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, rreqp);
 #else
@@ -264,12 +262,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
-                                         MPI_Aint count,
-                                         MPI_Datatype datatype,
-                                         int rank,
-                                         int tag,
-                                         MPIR_Comm * comm, int context_offset,
-                                         MPIR_Request ** request)
+                                        MPI_Aint count,
+                                        MPI_Datatype datatype,
+                                        int rank,
+                                        int tag,
+                                        MPIR_Comm * comm, int context_offset,
+                                        MPIR_Request ** request)
 {
     int mpi_errno;
     MPIDI_av_entry_t *av = NULL;
@@ -289,7 +287,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
 
     av = MPIDIU_comm_rank_to_av(comm, rank);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
-    mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, av, request);
+    mpi_errno =
+        MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, av, request);
 #else
     if (unlikely(rank == MPI_ANY_SOURCE)) {
         mpi_errno =
@@ -304,23 +303,22 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
-        }
-        else if (*request) {
+        } else if (*request) {
             MPIDI_CH4I_REQUEST(*request, is_local) = 1;
             MPIDI_CH4I_REQUEST(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request), is_local) = 0;
         }
 
         MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)) =
             *request;
-    }
-    else {
+    } else {
         int r;
         if ((r = MPIDI_av_is_local(av)))
             mpi_errno =
                 MPIDI_SHM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
         else
             mpi_errno =
-                MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, av, request);
+                MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, av,
+                                   request);
         if (mpi_errno == MPI_SUCCESS && *request) {
             MPIDI_CH4I_REQUEST(*request, is_local) = r;
             MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;

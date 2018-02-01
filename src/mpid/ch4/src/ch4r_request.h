@@ -80,8 +80,7 @@ static inline int MPIDI_CH4R_anysource_matched(MPIR_Request * rreq, int caller,
         }
 #endif
         *continue_matching = 0;
-    }
-    else if (MPIDI_CH4R_SHM == caller) {
+    } else if (MPIDI_CH4R_SHM == caller) {
         mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
 
         /* If the netmod has already matched this request, shared memory will

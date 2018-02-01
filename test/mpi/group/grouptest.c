@@ -75,8 +75,7 @@ int main(int argc, char *argv[])
         if (i == myrank && rout[i] != 0) {
             fprintf(stderr, "translated world to self of %d is %d\n", i, rout[i]);
             errs++;
-        }
-        else if (i != myrank && rout[i] != MPI_UNDEFINED) {
+        } else if (i != myrank && rout[i] != MPI_UNDEFINED) {
             fprintf(stderr, "translated world to self of %d should be undefined, is %d\n",
                     i, rout[i]);
             errs++;
@@ -169,8 +168,7 @@ int main(int argc, char *argv[])
     if (myrank == 0) {
         if (errs == 0) {
             printf(" No Errors\n");
-        }
-        else {
+        } else {
             printf("Found %d errors\n", errs);
         }
     }
