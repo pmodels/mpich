@@ -296,6 +296,21 @@ int MPIR_Request_completion_processing(MPIR_Request *, MPI_Status *, int *);
 int MPIR_Request_get_error(MPIR_Request *);
 int MPIR_Progress_wait_request(MPIR_Request * req);
 
+static inline int MPIR_Request_wait_and_complete(MPIR_Request * req_ptr)
+{
+    if (req_ptr == NULL)
+        return MPI_SUCCESS;
+
+    int active_flag;
+    int mpi_errno = MPIR_Wait_impl(req_ptr, MPI_STATUS_IGNORE);
+    if (mpi_errno != MPI_SUCCESS)
+        return mpi_errno;
+    mpi_errno = MPIR_Request_completion_processing(req_ptr, MPI_STATUS_IGNORE,
+                                                   &active_flag);
+    MPIR_Request_free(req_ptr);
+    return mpi_errno;
+}
+
 /* The following routines perform the callouts to the user routines registered
    as part of a generalized request.  They handle any language binding issues
    that are necessary. They are used when completing, freeing, cancelling or

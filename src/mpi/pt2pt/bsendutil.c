@@ -183,8 +183,7 @@ int MPIR_Bsend_detach(void *bufferp, int *size)
         MPII_Bsend_data_t *p = BsendBuffer.active;
 
         while (p) {
-            MPI_Request r = p->request->handle;
-            mpi_errno = MPIR_Wait_impl(&r, MPI_STATUS_IGNORE);
+            mpi_errno = MPIR_Request_wait_and_complete(p->request);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             p = p->next;
@@ -474,7 +473,6 @@ static int MPIR_Bsend_check_active(void)
 
     MPL_DBG_MSG_P(MPIR_DBG_BSEND, TYPICAL, "Checking active starting at %p", active);
     while (active) {
-        MPI_Request r = active->request->handle;
         int flag;
 
         next_active = active->next;
@@ -509,8 +507,9 @@ static int MPIR_Bsend_check_active(void)
         }
         if (flag) {
             mpi_errno =
-                MPIR_Request_completion_processing(&r, active->request, MPI_STATUS_IGNORE,
+                MPIR_Request_completion_processing(active->request, MPI_STATUS_IGNORE,
                                                    &active_flag);
+            MPIR_Request_free(active->request);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             /* We're done.  Remove this segment */

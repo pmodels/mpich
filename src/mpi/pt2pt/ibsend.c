@@ -62,7 +62,7 @@ PMPI_LOCAL int MPIR_Ibsend_cancel(void *extra, int complete)
     ibsend_req_info *ibsend_info = (ibsend_req_info *) extra;
     MPI_Status status;
     MPIR_Request *req = ibsend_info->req;
-    MPI_Request req_hdl = req->handle;
+    int active_flag;
 
     /* FIXME: There should be no unreferenced args! */
     /* Note that this value should always be 1 because
@@ -75,9 +75,13 @@ PMPI_LOCAL int MPIR_Ibsend_cancel(void *extra, int complete)
     mpi_errno = MPIR_Cancel_impl(req);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Wait_impl(&req_hdl, &status);
+    mpi_errno = MPIR_Wait_impl(req, &status);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Request_completion_processing(req, &status, &active_flag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
     ibsend_info->cancelled = MPIR_STATUS_GET_CANCEL_BIT(status);
 
     /* If the cancelation is successful, free the memory in the

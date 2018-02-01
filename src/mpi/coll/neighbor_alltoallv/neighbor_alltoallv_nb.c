@@ -15,7 +15,6 @@ int MPIR_Neighbor_alltoallv_nb(const void *sendbuf, const int sendcounts[], cons
                                const int rdispls[], MPI_Datatype recvtype, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Request req = MPI_REQUEST_NULL;
     MPIR_Request *req_ptr = NULL;
 
     /* just call the nonblocking version and wait on it */
@@ -24,10 +23,7 @@ int MPIR_Neighbor_alltoallv_nb(const void *sendbuf, const int sendcounts[], cons
                                  rdispls, recvtype, comm_ptr, &req_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    if (req_ptr)
-        req = req_ptr->handle;
-
-    mpi_errno = MPIR_Wait_impl(&req, MPI_STATUS_IGNORE);
+    mpi_errno = MPIR_Request_wait_and_complete(req_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

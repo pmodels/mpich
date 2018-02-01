@@ -14,17 +14,13 @@ int MPIR_Scan_nb(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dat
                  MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Request req = MPI_REQUEST_NULL;
     MPIR_Request *req_ptr = NULL;
 
     /* just call the nonblocking version and wait on it */
     mpi_errno = MPIR_Iscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, &req_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    if (req_ptr)
-        req = req_ptr->handle;
-
-    mpi_errno = MPIR_Wait_impl(&req, MPI_STATUS_IGNORE);
+    mpi_errno = MPIR_Request_wait_and_complete(req_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

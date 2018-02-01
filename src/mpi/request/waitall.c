@@ -165,7 +165,6 @@ static inline int do_waitall_post(int count, MPI_Request array_of_requests[],
     int rc = MPI_SUCCESS;
     const int ignoring_statuses = (array_of_statuses == MPI_STATUSES_IGNORE);
     MPI_Status *status_ptr;
-    MPI_Request *req_hndl_ptr;
 
     for (i = 0; i < count; i++) {
         if (request_ptrs[i] == NULL) {
@@ -181,7 +180,7 @@ static inline int do_waitall_post(int count, MPI_Request array_of_requests[],
             rc = MPIR_Request_completion_processing(request_ptrs[i], status_ptr, &active_flag);
             if (!MPIR_Request_is_persistent(request_ptrs[i])) {
                 MPIR_Request_free(request_ptrs[i]);
-                array_of_requests[i] = MPI_REQUEST_NULL;
+                if (array_of_requests) array_of_requests[i] = MPI_REQUEST_NULL;
             }
         }
 
