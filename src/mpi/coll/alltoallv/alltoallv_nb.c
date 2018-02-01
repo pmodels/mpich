@@ -21,7 +21,7 @@ int MPIR_Alltoallv_nb(const void *sendbuf, const int *sendcounts, const int *sdi
 
     /* just call the nonblocking version and wait on it */
     mpi_errno =
-        MPID_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
+        MPIR_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls,
                         recvtype, comm_ptr, &req_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

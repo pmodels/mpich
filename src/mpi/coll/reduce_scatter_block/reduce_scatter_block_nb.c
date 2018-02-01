@@ -20,7 +20,7 @@ int MPIR_Reduce_scatter_block_nb(const void *sendbuf, void *recvbuf, int recvcou
 
     /* just call the nonblocking version and wait on it */
     mpi_errno =
-        MPID_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, &req_ptr);
+        MPIR_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, &req_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     if(req_ptr)

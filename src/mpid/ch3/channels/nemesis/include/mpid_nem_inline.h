@@ -90,6 +90,7 @@ cvars:
      !MPIDI_CH3I_shm_active_send &&             \
      !MPIDI_CH3I_Sendq_head(MPIDI_CH3I_shm_sendq) &&       \
      !MPIDU_Sched_are_pending() &&              \
+     MPIR_Coll_safe_to_block() &&  \
      !MPIDI_RMA_Win_active_list_head)
 
 #undef FUNCNAME

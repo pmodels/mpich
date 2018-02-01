@@ -56,6 +56,12 @@ include $(top_srcdir)/src/mpi/coll/reduce_local/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/allreduce_group/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/src/Makefile.mk
 
+# build collectives transport
+include $(top_srcdir)/src/mpi/coll/transports/Makefile.mk
+
+# build collectives algorithms
+include $(top_srcdir)/src/mpi/coll/algorithms/Makefile.mk
+
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/coll/include/
 
 mpi_core_sources += \

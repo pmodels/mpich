@@ -14,6 +14,12 @@
 #ifndef COLL_IMPL_H_INCLUDED
 #define COLL_IMPL_H_INCLUDED
 
+#include "stubtran_impl.h"
+#include "gentran_impl.h"
+
+#include "../algorithms/stubalgo/stubalgo.h"
+#include "../algorithms/treealgo/treealgo.h"
+
 extern int MPIR_Nbc_progress_hook_id;
 
 /* Enumerate the list of algorithms */
@@ -279,6 +285,8 @@ typedef enum MPIR_Ibcast_intra_algo_t {
     MPIR_IBCAST_INTRA_ALGO_BINOMIAL,
     MPIR_IBCAST_INTRA_ALGO_SCATTER_RECURSIVE_DOUBLING_ALLGATHER,
     MPIR_IBCAST_INTRA_ALGO_SCATTER_RING_ALLGATHER,
+    MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KNOMIAL,
+    MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KARY
 } MPIR_Ibcast_intra_algo_t;
 extern MPIR_Ibcast_intra_algo_t MPIR_Ibcast_intra_algo_choice;
 
@@ -598,7 +606,17 @@ typedef enum MPIR_Scatterv_inter_algo_t {
 } MPIR_Scatterv_inter_algo_t;
 extern MPIR_Scatterv_inter_algo_t MPIR_Scatterv_inter_algo_choice;
 
-int MPII_COLL_init(void);
-int MPII_COLL_finalize(void);
+/* Function to initialze communicators for collectives */
+int MPIR_Coll_comm_init(MPIR_Comm * comm);
+
+/* Function to cleanup any communicators for collectives */
+int MPII_Coll_comm_cleanup(MPIR_Comm * comm);
+
+/* Hook for any collective algorithms related initialization */
+int MPII_Coll_init(void);
+
+int MPIR_Coll_safe_to_block(void);
+
+int MPII_Coll_finalize(void);
 
 #endif /* COLL_IMPL_H_INCLUDED */

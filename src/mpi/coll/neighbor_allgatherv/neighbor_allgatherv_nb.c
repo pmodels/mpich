@@ -1,6 +1,6 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2012 by Argonne National Laboratory.
+ *  (C) 2017 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 
@@ -18,7 +18,7 @@ int MPIR_Neighbor_allgatherv_nb(const void *sendbuf, int sendcount, MPI_Datatype
     MPIR_Request *req_ptr = NULL;
 
     /* just call the nonblocking version and wait on it */
-    mpi_errno = MPID_Ineighbor_allgatherv(sendbuf, sendcount, sendtype,
+    mpi_errno = MPIR_Ineighbor_allgatherv(sendbuf, sendcount, sendtype,
                                                recvbuf, recvcounts, displs, recvtype,
                                                comm_ptr, &req_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

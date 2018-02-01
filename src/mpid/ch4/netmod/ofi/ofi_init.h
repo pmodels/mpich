@@ -1039,7 +1039,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
 
     /* Barrier over allreduce, but force non-immediate send */
     MPIDI_Global.max_buffered_send = 0;
-    MPIDI_OFI_MPI_CALL_POP(MPID_Allreduce(&barrier[0], &barrier[1], 1, MPI_INT,
+    MPIDI_OFI_MPI_CALL_POP(MPIR_Allreduce(&barrier[0], &barrier[1], 1, MPI_INT,
                                           MPI_SUM, MPIR_Process.comm_world, &errflag));
 
     /* Progress until we drain all inflight injection emulation requests */

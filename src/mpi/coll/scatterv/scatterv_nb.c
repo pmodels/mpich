@@ -20,7 +20,7 @@ int MPIR_Scatterv_nb(const void *sendbuf, const int *sendcounts, const int *disp
 
     /* just call the nonblocking version and wait on it */
     mpi_errno =
-        MPID_Iscatterv(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root,
+        MPIR_Iscatterv(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root,
                        comm_ptr, &req_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

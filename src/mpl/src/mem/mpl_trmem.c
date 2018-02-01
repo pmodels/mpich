@@ -129,6 +129,7 @@ static const char *allocation_class_strings[] = {
     "MPL_MEM_MPIT",
     "MPL_MEM_DEBUG",
     "MPL_MEM_PM",
+    "MPL_MEM_COLL",
     "MPL_MEM_OTHER"
 };
 
