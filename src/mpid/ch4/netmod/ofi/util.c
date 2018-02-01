@@ -151,8 +151,9 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 
                 LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
 
-                recv = (MPIDI_OFI_huge_recv_t *) MPIDI_CH4U_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
-                            list_ptr->rreq->handle);
+                recv = (MPIDI_OFI_huge_recv_t *)
+                    MPIDI_CH4U_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
+                                          list_ptr->rreq->handle);
 
                 MPL_free(list_ptr);
                 break;

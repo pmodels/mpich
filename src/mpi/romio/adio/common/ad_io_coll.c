@@ -14,7 +14,8 @@
 /* #define ALLTOALL */
 
 /* #define DEBUG */
-/* #define DEBUG2 */  /* print buffers */
+/* #define DEBUG2 */
+/* print buffers */
 
 #define USE_PRE_REQ
 
