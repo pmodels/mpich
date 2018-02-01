@@ -15,26 +15,24 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 static double seconds_per_tick = 0.0;
 static uint64_t clockMHz = 0;
 
-static uint64_t timeGetTime( void )
+static uint64_t timeGetTime(void)
 {
     struct timeval tv;
-    gettimeofday( &tv, 0 );
+    gettimeofday(&tv, 0);
     return tv.tv_sec * 1000000ULL + tv.tv_usec;
 }
 
 static inline uint64_t getClockMHz()
 {
-    if (clockMHz == 0)
-    {
-        uint64_t sampleTime = 100ULL; //sample time in usec
+    if (clockMHz == 0) {
+        uint64_t sampleTime = 100ULL;   //sample time in usec
         uint64_t timeStart = 0ULL, timeStop = 0ULL;
         uint64_t startBase = 0ULL, endBase = 0ULL;
         uint64_t overhead = 0ULL, tbf = 0ULL, tbi = 0ULL;
         uint64_t ticks = 0ULL;
-        int      iter = 0ULL;
+        int iter = 0ULL;
 
-        do
-        {
+        do {
             tbi = tb();
             tbf = tb();
             tbi = tb();
@@ -46,12 +44,10 @@ static inline uint64_t getClockMHz()
             while (timeGetTime() == timeStart)
                 timeStart = timeGetTime();
 
-            while (1)
-            {
+            while (1) {
                 timeStop = timeGetTime();
 
-                if ((timeStop - timeStart) > 1)
-                {
+                if ((timeStop - timeStart) > 1) {
                     startBase = tb();
                     break;
                 }
@@ -59,12 +55,10 @@ static inline uint64_t getClockMHz()
 
             timeStart = timeStop;
 
-            while (1)
-            {
+            while (1) {
                 timeStop = timeGetTime();
 
-                if ((timeStop - timeStart) > sampleTime)
-                {
+                if ((timeStop - timeStart) > sampleTime) {
                     endBase = tb();
                     break;
                 }
@@ -73,17 +67,15 @@ static inline uint64_t getClockMHz()
             ticks = ((endBase - startBase) + (overhead));
             iter++;
 
-            if (iter == 10ULL)
-            {
+            if (iter == 10ULL) {
                 fprintf(stderr, "Warning: unable to initialize high resolution timer.\n");
                 return -1;
             }
         }
         while (endBase <= startBase);
 
-        return  (uint64_t) (ticks / sampleTime);
-    }
-    else
+        return (uint64_t) (ticks / sampleTime);
+    } else
         return clockMHz;
 }
 
@@ -96,8 +88,8 @@ int MPL_wtick(double *wtick)
 
 int MPL_wtime_init(void)
 {
-    clockMHz      = getClockMHz();
-    seconds_per_tick = 1.0 / ((double)clockMHz * 1000000.0);
+    clockMHz = getClockMHz();
+    seconds_per_tick = 1.0 / ((double) clockMHz * 1000000.0);
     if (clockMHz == -1ULL)
         return MPL_TIMER_ERR_NOT_INITIALIZED;
     else

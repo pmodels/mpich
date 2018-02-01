@@ -38,8 +38,7 @@ int main(int argc, char **argv)
             fprintf(stderr, "%s\n", msg);
             n = i + 1;
             break;
-        }
-        else {
+        } else {
             /* Check that the group was created (and that any errors were
              * caught) */
             rc = MPI_Group_size(group_array[i], &group_size);
@@ -72,8 +71,7 @@ int main(int argc, char **argv)
             printf("This MPI implementation limits the number of groups that can be created\n\
 This is allowed by the standard and is not a bug, but is a limit on the\n\
 implementation\n");
-        }
-        else {
+        } else {
             printf(" No Errors\n");
         }
     }

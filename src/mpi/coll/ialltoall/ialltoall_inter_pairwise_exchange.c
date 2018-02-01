@@ -21,7 +21,10 @@
 #define FUNCNAME MPIR_Ialltoall_sched_inter_pairwise_exchange
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoall_sched_inter_pairwise_exchange(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ialltoall_sched_inter_pairwise_exchange(const void *sendbuf, int sendcount,
+                                                 MPI_Datatype sendtype, void *recvbuf,
+                                                 int recvcount, MPI_Datatype recvtype,
+                                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int local_size, remote_size, max_size, i;
@@ -40,36 +43,36 @@ int MPIR_Ialltoall_sched_inter_pairwise_exchange(const void *sendbuf, int sendco
     /* Do the pairwise exchanges */
     max_size = MPL_MAX(local_size, remote_size);
     MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-            max_size*recvcount*recvtype_extent);
+                                     max_size * recvcount * recvtype_extent);
     MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
-            max_size*sendcount*sendtype_extent);
+                                     max_size * sendcount * sendtype_extent);
     for (i = 0; i < max_size; i++) {
         src = (rank - i + max_size) % max_size;
         dst = (rank + i) % max_size;
         if (src >= remote_size) {
             src = MPI_PROC_NULL;
             recvaddr = NULL;
-        }
-        else {
-            recvaddr = (char *)recvbuf + src*recvcount*recvtype_extent;
+        } else {
+            recvaddr = (char *) recvbuf + src * recvcount * recvtype_extent;
         }
         if (dst >= remote_size) {
             dst = MPI_PROC_NULL;
             sendaddr = NULL;
-        }
-        else {
-            sendaddr = (char *)sendbuf + dst*sendcount*sendtype_extent;
+        } else {
+            sendaddr = (char *) sendbuf + dst * sendcount * sendtype_extent;
         }
 
         mpi_errno = MPIR_Sched_send(sendaddr, sendcount, sendtype, dst, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         mpi_errno = MPIR_Sched_recv(recvaddr, recvcount, recvtype, src, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

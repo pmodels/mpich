@@ -52,8 +52,7 @@ int MPIR_Scatter_inter_remote_send_local_scatter(const void *sendbuf, int sendco
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
         goto fn_exit;
-    }
-    else {
+    } else {
         /* remote group. rank 0 receives data from root. need to
          * allocate temporary buffer to store this data. */
 

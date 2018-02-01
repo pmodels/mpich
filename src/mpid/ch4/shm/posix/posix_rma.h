@@ -14,11 +14,12 @@
 #include "posix_impl.h"
 
 static inline int MPIDI_POSIX_mpi_put(const void *origin_addr,
-                                    int origin_count,
-                                    MPI_Datatype origin_datatype,
-                                    int target_rank,
-                                    MPI_Aint target_disp,
-                                    int target_count, MPI_Datatype target_datatype, MPIR_Win * win)
+                                      int origin_count,
+                                      MPI_Datatype origin_datatype,
+                                      int target_rank,
+                                      MPI_Aint target_disp,
+                                      int target_count, MPI_Datatype target_datatype,
+                                      MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_PUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_PUT);
@@ -30,11 +31,12 @@ static inline int MPIDI_POSIX_mpi_put(const void *origin_addr,
 }
 
 static inline int MPIDI_POSIX_mpi_get(void *origin_addr,
-                                    int origin_count,
-                                    MPI_Datatype origin_datatype,
-                                    int target_rank,
-                                    MPI_Aint target_disp,
-                                    int target_count, MPI_Datatype target_datatype, MPIR_Win * win)
+                                      int origin_count,
+                                      MPI_Datatype origin_datatype,
+                                      int target_rank,
+                                      MPI_Aint target_disp,
+                                      int target_count, MPI_Datatype target_datatype,
+                                      MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_GET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_GET);
@@ -46,13 +48,13 @@ static inline int MPIDI_POSIX_mpi_get(void *origin_addr,
 }
 
 static inline int MPIDI_POSIX_mpi_rput(const void *origin_addr,
-                                     int origin_count,
-                                     MPI_Datatype origin_datatype,
-                                     int target_rank,
-                                     MPI_Aint target_disp,
-                                     int target_count,
-                                     MPI_Datatype target_datatype,
-                                     MPIR_Win * win, MPIR_Request ** request)
+                                       int origin_count,
+                                       MPI_Datatype origin_datatype,
+                                       int target_rank,
+                                       MPI_Aint target_disp,
+                                       int target_count,
+                                       MPI_Datatype target_datatype,
+                                       MPIR_Win * win, MPIR_Request ** request)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_RPUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_RPUT);
@@ -65,11 +67,11 @@ static inline int MPIDI_POSIX_mpi_rput(const void *origin_addr,
 
 
 static inline int MPIDI_POSIX_mpi_compare_and_swap(const void *origin_addr,
-                                                 const void *compare_addr,
-                                                 void *result_addr,
-                                                 MPI_Datatype datatype,
-                                                 int target_rank, MPI_Aint target_disp,
-                                                 MPIR_Win * win)
+                                                   const void *compare_addr,
+                                                   void *result_addr,
+                                                   MPI_Datatype datatype,
+                                                   int target_rank, MPI_Aint target_disp,
+                                                   MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_COMPARE_AND_SWAP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_COMPARE_AND_SWAP);
@@ -81,13 +83,13 @@ static inline int MPIDI_POSIX_mpi_compare_and_swap(const void *origin_addr,
 }
 
 static inline int MPIDI_POSIX_mpi_raccumulate(const void *origin_addr,
-                                            int origin_count,
-                                            MPI_Datatype origin_datatype,
-                                            int target_rank,
-                                            MPI_Aint target_disp,
-                                            int target_count,
-                                            MPI_Datatype target_datatype,
-                                            MPI_Op op, MPIR_Win * win, MPIR_Request ** request)
+                                              int origin_count,
+                                              MPI_Datatype origin_datatype,
+                                              int target_rank,
+                                              MPI_Aint target_disp,
+                                              int target_count,
+                                              MPI_Datatype target_datatype,
+                                              MPI_Op op, MPIR_Win * win, MPIR_Request ** request)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_RACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_RACCUMULATE);
@@ -99,16 +101,17 @@ static inline int MPIDI_POSIX_mpi_raccumulate(const void *origin_addr,
 }
 
 static inline int MPIDI_POSIX_mpi_rget_accumulate(const void *origin_addr,
-                                                int origin_count,
-                                                MPI_Datatype origin_datatype,
-                                                void *result_addr,
-                                                int result_count,
-                                                MPI_Datatype result_datatype,
-                                                int target_rank,
-                                                MPI_Aint target_disp,
-                                                int target_count,
-                                                MPI_Datatype target_datatype,
-                                                MPI_Op op, MPIR_Win * win, MPIR_Request ** request)
+                                                  int origin_count,
+                                                  MPI_Datatype origin_datatype,
+                                                  void *result_addr,
+                                                  int result_count,
+                                                  MPI_Datatype result_datatype,
+                                                  int target_rank,
+                                                  MPI_Aint target_disp,
+                                                  int target_count,
+                                                  MPI_Datatype target_datatype,
+                                                  MPI_Op op, MPIR_Win * win,
+                                                  MPIR_Request ** request)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_RGET_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_RGET_ACCUMULATE);
@@ -120,10 +123,10 @@ static inline int MPIDI_POSIX_mpi_rget_accumulate(const void *origin_addr,
 }
 
 static inline int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_addr,
-                                             void *result_addr,
-                                             MPI_Datatype datatype,
-                                             int target_rank,
-                                             MPI_Aint target_disp, MPI_Op op, MPIR_Win * win)
+                                               void *result_addr,
+                                               MPI_Datatype datatype,
+                                               int target_rank,
+                                               MPI_Aint target_disp, MPI_Op op, MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_FETCH_AND_OP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_FETCH_AND_OP);
@@ -136,13 +139,13 @@ static inline int MPIDI_POSIX_mpi_fetch_and_op(const void *origin_addr,
 
 
 static inline int MPIDI_POSIX_mpi_rget(void *origin_addr,
-                                     int origin_count,
-                                     MPI_Datatype origin_datatype,
-                                     int target_rank,
-                                     MPI_Aint target_disp,
-                                     int target_count,
-                                     MPI_Datatype target_datatype,
-                                     MPIR_Win * win, MPIR_Request ** request)
+                                       int origin_count,
+                                       MPI_Datatype origin_datatype,
+                                       int target_rank,
+                                       MPI_Aint target_disp,
+                                       int target_count,
+                                       MPI_Datatype target_datatype,
+                                       MPIR_Win * win, MPIR_Request ** request)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_RGET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_RGET);
@@ -155,16 +158,16 @@ static inline int MPIDI_POSIX_mpi_rget(void *origin_addr,
 
 
 static inline int MPIDI_POSIX_mpi_get_accumulate(const void *origin_addr,
-                                               int origin_count,
-                                               MPI_Datatype origin_datatype,
-                                               void *result_addr,
-                                               int result_count,
-                                               MPI_Datatype result_datatype,
-                                               int target_rank,
-                                               MPI_Aint target_disp,
-                                               int target_count,
-                                               MPI_Datatype target_datatype, MPI_Op op,
-                                               MPIR_Win * win)
+                                                 int origin_count,
+                                                 MPI_Datatype origin_datatype,
+                                                 void *result_addr,
+                                                 int result_count,
+                                                 MPI_Datatype result_datatype,
+                                                 int target_rank,
+                                                 MPI_Aint target_disp,
+                                                 int target_count,
+                                                 MPI_Datatype target_datatype, MPI_Op op,
+                                                 MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_GET_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_GET_ACCUMULATE);
@@ -176,12 +179,13 @@ static inline int MPIDI_POSIX_mpi_get_accumulate(const void *origin_addr,
 }
 
 static inline int MPIDI_POSIX_mpi_accumulate(const void *origin_addr,
-                                           int origin_count,
-                                           MPI_Datatype origin_datatype,
-                                           int target_rank,
-                                           MPI_Aint target_disp,
-                                           int target_count,
-                                           MPI_Datatype target_datatype, MPI_Op op, MPIR_Win * win)
+                                             int origin_count,
+                                             MPI_Datatype origin_datatype,
+                                             int target_rank,
+                                             MPI_Aint target_disp,
+                                             int target_count,
+                                             MPI_Datatype target_datatype, MPI_Op op,
+                                             MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_ACCUMULATE);

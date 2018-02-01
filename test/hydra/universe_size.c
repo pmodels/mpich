@@ -20,14 +20,12 @@ int main(int argc, char **argv)
     if (rc) {
         fprintf(stderr, "MPI_UNIVERSE_SIZE missing\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
-    }
-    else {
+    } else {
         /* MPI_UNIVERSE_SIZE need not be set */
         if (flag) {
             vval = *(int *) v;
             if (vval < 5) {
-                fprintf(stderr, "MPI_UNIVERSE_SIZE = %d, less than expected (%d)\n", vval,
-                        size);
+                fprintf(stderr, "MPI_UNIVERSE_SIZE = %d, less than expected (%d)\n", vval, size);
                 MPI_Abort(MPI_COMM_WORLD, 1);
             }
         }

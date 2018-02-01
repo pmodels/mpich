@@ -1,13 +1,13 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-/* 
+/*
  *
- *   Copyright (C) 1997 University of Chicago. 
+ *   Copyright (C) 1997 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
  */
 
 
 /* header file for MPI-IO implementation. not intended to be
-   user-visible */ 
+   user-visible */
 
 #ifndef MPIOIMPL_H_INCLUDED
 #define MPIOIMPL_H_INCLUDED
@@ -30,8 +30,8 @@
 
 #else /* not ROMIO_INSIDE_MPICH */
 /* Any MPI implementation that wishes to follow the thread-safety and
-   error reporting features provided by MPICH must implement these 
-   four functions.  Defining these as empty should not change the behavior 
+   error reporting features provided by MPICH must implement these
+   four functions.  Defining these as empty should not change the behavior
    of correct programs */
 #define ROMIO_THREAD_CS_ENTER()
 #define ROMIO_THREAD_CS_EXIT()
@@ -51,7 +51,7 @@ struct MPIR_Info {
 MPI_Delete_function ADIOI_End_call;
 
 /* common initialization routine */
-void MPIR_MPIOInit(int * error_code);
+void MPIR_MPIOInit(int *error_code);
 
 #ifdef HAVE_MPIIO_CONST
 #define ROMIO_CONST const
@@ -66,8 +66,7 @@ void MPIR_MPIOInit(int * error_code);
 #endif /* MPIO_BUILD_PROFILING */
 
 #ifdef MPI_hpux
-#  include "mpioinst.h"
+#include "mpioinst.h"
 #endif /* MPI_hpux */
 
 #endif /* MPIOIMPL_H_INCLUDED */
-

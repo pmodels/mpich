@@ -36,14 +36,14 @@
 /* A Handle is valid if it is initialized/init and has a value
  * different from the default/invalid value assigned during init
  */
-#define MPLI_shm_hnd_is_valid(hnd) (                               \
+#define MPLI_shm_hnd_is_valid(hnd) (\
     ((hnd) &&                                                       \
         MPLI_shm_lhnd_is_valid(hnd) &&                             \
         MPLI_shm_ghnd_is_valid(hnd))                               \
 )
 
 /* With MMAP_SHM, NT_SHM & SYSV_SHM local handle is always init'ed */
-#define MPLI_shm_hnd_is_init(hnd) (                                \
+#define MPLI_shm_hnd_is_init(hnd) (\
     ((hnd) && /* MPL_shm_lhnd_is_init(hnd) && */                  \
         MPLI_shm_ghnd_is_init(hnd))                                \
 )
@@ -56,7 +56,7 @@
 
 /* Allocate mem for references within the handle */
 /* Returns 0 on success, -1 on error */
-#define MPL_shm_hnd_ref_alloc(hnd)(                               \
+#define MPL_shm_hnd_ref_alloc(hnd)(\
     ((hnd)->ghnd = (MPLI_shm_ghnd_t)                               \
                     MPL_malloc(MPLI_SHM_GHND_SZ, MPL_MEM_SHM)) ? 0 : -1 \
 )
@@ -66,36 +66,38 @@
 #define MPLI_shm_ghnd_get_by_ref(hnd)   ((hnd)->ghnd)
 
 /* Returns -1 on error, 0 on success */
-#define MPLI_shm_ghnd_get_by_val(hnd, str, strlen)  (              \
+#define MPLI_shm_ghnd_get_by_val(hnd, str, strlen)  (\
     (MPL_snprintf(str, strlen, "%s",                               \
         MPLI_shm_ghnd_get_by_ref(hnd))) ? 0 : -1                   \
 )
 #define MPLI_shm_ghnd_set_by_ref(hnd, val) ((hnd)->ghnd = val)
 /* Returns -1 on error, 0 on success */
 /* FIXME: What if val is a non-null terminated string ? */
-#define MPLI_shm_ghnd_set_by_val(hnd, fmt, val) (                  \
+#define MPLI_shm_ghnd_set_by_val(hnd, fmt, val) (\
     (MPL_snprintf(MPLI_shm_ghnd_get_by_ref(hnd),                  \
         MPLI_SHM_GHND_SZ, fmt, val)) ? 0 : -1                      \
 )
 
-#define MPLI_shm_ghnd_is_valid(hnd) (                              \
+#define MPLI_shm_ghnd_is_valid(hnd) (\
     (((hnd)->ghnd == MPLI_SHM_GHND_INVALID) ||                     \
         (strlen((hnd)->ghnd) == 0)) ? 0 : 1                         \
 )
-#define MPLI_shm_ghnd_is_init(hnd) (                               \
+#define MPLI_shm_ghnd_is_init(hnd) (\
     ((hnd)->flag & MPLI_SHM_FLAG_GHND_STATIC) ?                    \
     1 :                                                             \
     (((hnd)->ghnd != MPLI_SHM_GHND_INVALID) ? 1 : 0)               \
 )
 
 /* Allocate mem for global handle.
- * Returns 0 on success, -1 on failure 
+ * Returns 0 on success, -1 on failure
  */
 static inline int MPLI_shm_ghnd_alloc(MPL_shm_hnd_t hnd, MPL_memory_class class)
 {
-    if(!(hnd->ghnd)){
-        hnd->ghnd = (MPLI_shm_ghnd_t)MPL_malloc(MPLI_SHM_GHND_SZ, class);
-        if(!(hnd->ghnd)){ return -1; }
+    if (!(hnd->ghnd)) {
+        hnd->ghnd = (MPLI_shm_ghnd_t) MPL_malloc(MPLI_SHM_GHND_SZ, class);
+        if (!(hnd->ghnd)) {
+            return -1;
+        }
     }
     /* Global handle is no longer static */
     hnd->flag &= ~MPLI_SHM_FLAG_GHND_STATIC;
@@ -105,13 +107,12 @@ static inline int MPLI_shm_ghnd_alloc(MPL_shm_hnd_t hnd, MPL_memory_class class)
 
 /* Allocate mem for handle. Lazy allocation for global handle */
 /* Returns 0 on success, -1 on error */
-static inline int MPLI_shm_hnd_alloc(MPL_shm_hnd_t *hnd_ptr, MPL_memory_class class)
+static inline int MPLI_shm_hnd_alloc(MPL_shm_hnd_t * hnd_ptr, MPL_memory_class class)
 {
     *hnd_ptr = (MPL_shm_hnd_t) MPL_malloc(MPL_SHM_HND_SZ, class);
-    if(*hnd_ptr){
+    if (*hnd_ptr) {
         (*hnd_ptr)->flag = MPLI_SHM_FLAG_GHND_STATIC;
-    }
-    else{
+    } else {
         return -1;
     }
     return 0;
@@ -123,18 +124,17 @@ static inline int MPLI_shm_hnd_alloc(MPL_shm_hnd_t *hnd_ptr, MPL_memory_class cl
 static inline void MPLI_shm_hnd_reset_val(MPL_shm_hnd_t hnd)
 {
     MPLI_shm_lhnd_set(hnd, MPLI_SHM_LHND_INIT_VAL);
-    if(hnd->flag & MPLI_SHM_FLAG_GHND_STATIC){
+    if (hnd->flag & MPLI_SHM_FLAG_GHND_STATIC) {
         hnd->ghnd = MPLI_SHM_GHND_INVALID;
-    }
-    else{
+    } else {
         (hnd->ghnd)[0] = MPLI_SHM_GHND_INIT_VAL;
     }
 }
 
 static inline void MPLI_shm_hnd_free(MPL_shm_hnd_t hnd)
 {
-    if(MPLI_shm_hnd_is_init(hnd)){
-        if(!(hnd->flag & MPLI_SHM_FLAG_GHND_STATIC)){
+    if (MPLI_shm_hnd_is_init(hnd)) {
+        if (!(hnd->flag & MPLI_SHM_FLAG_GHND_STATIC)) {
             MPL_free(hnd->ghnd);
         }
         MPL_free(hnd);
@@ -146,14 +146,13 @@ int MPL_shm_hnd_serialize(char *str, MPL_shm_hnd_t hnd, int str_len);
 int MPL_shm_hnd_deserialize(MPL_shm_hnd_t hnd, const char *str_hnd, size_t str_hnd_len);
 int MPL_shm_hnd_get_serialized_by_ref(MPL_shm_hnd_t hnd, char **str_ptr);
 int MPL_shm_hnd_deserialize_by_ref(MPL_shm_hnd_t hnd, char **ser_hnd_ptr);
-int MPL_shm_hnd_init(MPL_shm_hnd_t *hnd_ptr);
-int MPL_shm_hnd_finalize(MPL_shm_hnd_t *hnd_ptr);
+int MPL_shm_hnd_init(MPL_shm_hnd_t * hnd_ptr);
+int MPL_shm_hnd_finalize(MPL_shm_hnd_t * hnd_ptr);
 int MPL_shm_seg_create(MPL_shm_hnd_t hnd, intptr_t seg_sz);
 int MPL_shm_seg_open(MPL_shm_hnd_t hnd, intptr_t seg_sz);
 int MPL_shm_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
                                   char **shm_addr_ptr, int offset);
-int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, char **shm_addr_ptr,
-                       int offset);
+int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, char **shm_addr_ptr, int offset);
 int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, char **shm_addr_ptr, intptr_t seg_sz);
 int MPL_shm_seg_remove(MPL_shm_hnd_t hnd);
 

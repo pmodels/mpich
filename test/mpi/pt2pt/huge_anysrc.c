@@ -40,12 +40,12 @@ int main(int argc, char *argv[])
 
     if (rank == 0) {
         for (i = 0; i < N_TRY; i++)
-            MPI_Isend(buff + BLKSIZE*i, BLKSIZE, MPI_BYTE, dest, 0, MPI_COMM_WORLD, &reqs[i]);
+            MPI_Isend(buff + BLKSIZE * i, BLKSIZE, MPI_BYTE, dest, 0, MPI_COMM_WORLD, &reqs[i]);
         MPI_Waitall(N_TRY, reqs, MPI_STATUSES_IGNORE);
-    }
-    else if (rank == dest) {
+    } else if (rank == dest) {
         for (i = 0; i < N_TRY; i++)
-            MPI_Irecv(buff + BLKSIZE*i, BLKSIZE, MPI_BYTE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &reqs[i]);
+            MPI_Irecv(buff + BLKSIZE * i, BLKSIZE, MPI_BYTE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD,
+                      &reqs[i]);
         MPI_Waitall(N_TRY, reqs, MPI_STATUSES_IGNORE);
     }
 

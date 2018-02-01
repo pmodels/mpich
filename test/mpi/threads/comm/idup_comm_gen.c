@@ -80,8 +80,7 @@ MTEST_THREAD_RETURN_TYPE test_idup(void *arg)
 
     if (rank % 2 == 0) {
         MPI_Comm_create_group(incomm, even_group, 0, &outcomm);
-    }
-    else {
+    } else {
         outcomm = MPI_COMM_NULL;
     }
     MPI_Group_free(&even_group);
@@ -92,11 +91,9 @@ MTEST_THREAD_RETURN_TYPE test_idup(void *arg)
     MPI_Comm_split(incomm, (rank < size / 2), rank, &local_comm);
     if (rank == 0) {
         rleader = size / 2;
-    }
-    else if (rank == size / 2) {
+    } else if (rank == size / 2) {
         rleader = 0;
-    }
-    else {
+    } else {
         rleader = -1;
     }
     isLeft = rank < size / 2;

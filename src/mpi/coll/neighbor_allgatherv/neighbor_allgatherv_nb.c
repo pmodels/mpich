@@ -10,7 +10,9 @@
 #define FUNCNAME MPIR_Neighbor_allgatherv_nb
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Neighbor_allgatherv_nb(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr)
+int MPIR_Neighbor_allgatherv_nb(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                void *recvbuf, const int recvcounts[], const int displs[],
+                                MPI_Datatype recvtype, MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -19,18 +21,19 @@ int MPIR_Neighbor_allgatherv_nb(const void *sendbuf, int sendcount, MPI_Datatype
 
     /* just call the nonblocking version and wait on it */
     mpi_errno = MPIR_Ineighbor_allgatherv(sendbuf, sendcount, sendtype,
-                                               recvbuf, recvcounts, displs, recvtype,
-                                               comm_ptr, &req_ptr);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    if(req_ptr)
+                                          recvbuf, recvcounts, displs, recvtype,
+                                          comm_ptr, &req_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    if (req_ptr)
         req = req_ptr->handle;
 
     mpi_errno = MPIR_Wait_impl(&req, MPI_STATUS_IGNORE);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
-

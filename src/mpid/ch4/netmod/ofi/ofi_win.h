@@ -57,8 +57,7 @@ static inline int MPIDI_OFI_win_allgather(MPIR_Win * win, void *base, int disp_u
     if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
         /* Context id in lower bits, instance in upper bits */
         MPIDI_OFI_WIN(win).mr_key = (gen_id << MPIDI_Global.context_shift) | window_instance;
-    }
-    else {
+    } else {
         MPIDI_OFI_WIN(win).mr_key = 0;
     }
 
@@ -120,9 +119,7 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
                                      int disp_unit,
                                      MPIR_Win ** win_ptr,
                                      MPIR_Info * info,
-                                     MPIR_Comm * comm_ptr,
-                                     int create_flavor,
-                                     int model)
+                                     MPIR_Comm * comm_ptr, int create_flavor, int model)
 {
     int mpi_errno = MPI_SUCCESS;
     uint64_t window_instance;
@@ -146,7 +143,8 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
 
     /* context id lower bits, window instance upper bits */
     window_instance =
-        MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator, MPL_MEM_RMA);
+        MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator,
+                                        MPL_MEM_RMA);
     MPIDI_OFI_WIN(win).win_id = ((uint64_t) comm_ptr->context_id) | (window_instance << 32);
     MPIDI_CH4U_map_set(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id, win, MPL_MEM_RMA);
 
@@ -158,7 +156,7 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
         MPIR_Assert(finfo);
         finfo->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
         finfo->tx_attr->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
-        finfo->rx_attr->caps = 0ULL; /* RX capabilities not needed */
+        finfo->rx_attr->caps = 0ULL;    /* RX capabilities not needed */
 
         finfo->ep_attr->tx_ctx_cnt = FI_SHARED_CONTEXT; /* Request a shared context */
         finfo->ep_attr->rx_ctx_cnt = 0; /* We don't need RX contexts */
@@ -182,8 +180,8 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
 
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.stx_ctx->fid, 0), bind);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep,
-                                  &MPIDI_Global.ctx[0].cq->fid, FI_TRANSMIT | FI_SELECTIVE_COMPLETION),
-                       bind);
+                                  &MPIDI_Global.ctx[0].cq->fid,
+                                  FI_TRANSMIT | FI_SELECTIVE_COMPLETION), bind);
         MPIDI_OFI_CALL(fi_ep_bind
                        (MPIDI_OFI_WIN(win).ep, &MPIDI_OFI_WIN(win).cmpl_cntr->fid,
                         FI_READ | FI_WRITE), bind);
@@ -192,8 +190,7 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
         fi_freeinfo(finfo);
 
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_WIN(win).ep), ep_enable);
-    }
-    else {
+    } else {
       fallback_global:
 
         /* Fallback for the traditional global EP/counter model */
@@ -620,8 +617,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
                                0,
                                MPI_DATATYPE_NULL,
                                shared_table,
-                               sizeof(MPIDI_CH4U_win_shared_info_t),
-                               MPI_BYTE, comm_ptr, &errflag);
+                               sizeof(MPIDI_CH4U_win_shared_info_t), MPI_BYTE, comm_ptr, &errflag);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;

@@ -155,21 +155,21 @@ int vector_of_vectors_test(void)
     for (i = 0; i < 9; i++) {
         int goodval;
         switch (i) {
-        case 0:
-            goodval = 1;
-            break;
-        case 2:
-            goodval = 2;
-            break;
-        case 6:
-            goodval = 3;
-            break;
-        case 8:
-            goodval = 4;
-            break;
-        default:
-            goodval = 0;
-            break;
+            case 0:
+                goodval = 1;
+                break;
+            case 2:
+                goodval = 2;
+                break;
+            case 6:
+                goodval = 3;
+                break;
+            case 8:
+                goodval = 4;
+                break;
+            default:
+                goodval = 0;
+                break;
         }
         if (array[i] != goodval) {
             errs++;
@@ -360,9 +360,9 @@ int parse_args(int argc, char **argv)
 
     while ((ret = getopt(argc, argv, "v")) >= 0) {
         switch (ret) {
-        case 'v':
-            verbose = 1;
-            break;
+            case 'v':
+                verbose = 1;
+                break;
         }
     }
     return 0;

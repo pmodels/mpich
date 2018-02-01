@@ -64,13 +64,11 @@ int main(int argc, char *argv[])
             orig_buf[0] = 1;
             compare_buf[0] = 0;
             result_buf[0] = 0;
-        }
-        else if (rank == origin_am) {
+        } else if (rank == origin_am) {
             orig_buf[0] = 0;
             compare_buf[0] = 1;
             result_buf[0] = 0;
-        }
-        else {
+        } else {
             MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
             target_buf[0] = 0;
             MPI_Win_unlock(rank, win);
@@ -91,8 +89,7 @@ int main(int argc, char *argv[])
         /* check results */
         if (rank != dest) {
             MPI_Gather(result_buf, 1, MPI_INT, check_buf, 1, MPI_INT, dest, MPI_COMM_WORLD);
-        }
-        else {
+        } else {
             MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
             target_value = target_buf[0];
             MPI_Win_unlock(rank, win);

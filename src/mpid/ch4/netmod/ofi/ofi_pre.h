@@ -105,7 +105,7 @@ typedef struct {
 } MPIDI_OFI_am_request_header_t;
 
 typedef struct {
-    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     MPIDI_OFI_am_request_header_t *req_hdr;
 } MPIDI_OFI_am_request_t;
@@ -117,7 +117,7 @@ typedef struct {
 } MPIDI_OFI_pack_t;
 
 typedef struct {
-    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     int util_id;
     struct MPIR_Comm *util_comm;
@@ -182,8 +182,8 @@ typedef struct {
     fi_addr_t dest;
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
     unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
-#else /* This is necessary for older GCC compilers that don't properly detect
-       * elif statements */
+#else                           /* This is necessary for older GCC compilers that don't properly detect
+                                 * elif statements */
 #if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
     unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
 #endif

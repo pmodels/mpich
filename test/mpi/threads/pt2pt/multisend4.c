@@ -59,8 +59,7 @@ MTEST_THREAD_RETURN_TYPE run_test_sendrecv(void *arg)
             /* Wait for all threads to start the sends */
             if (ownerWaits) {
                 MPI_Waitall(2, &r[myrloc], MPI_STATUSES_IGNORE);
-            }
-            else {
+            } else {
                 /* Wait for all threads to create their requests */
                 MTest_thread_barrier(nthreads);
                 if (thread_num == 1)

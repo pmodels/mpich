@@ -16,7 +16,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_get_errhandler as PMPI_File_get_errhandler
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler) __attribute__((weak,alias("PMPI_File_get_errhandler")));
+int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler * errhandler)
+    __attribute__ ((weak, alias("PMPI_File_get_errhandler")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -35,10 +36,10 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler) __attribu
    MPI_File_get_errhandler - Get the error handler attached to a file
 
 Input Parameters:
-. file - MPI file (handle) 
+. file - MPI file (handle)
 
 Output Parameters:
-. errhandler - handler currently associated with file (handle) 
+. errhandler - handler currently associated with file (handle)
 
 .N ThreadSafeNoUpdate
 
@@ -47,7 +48,7 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler)
+int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler * errhandler)
 {
 #ifdef HAVE_ERROR_CHECKING
     static const char FCNAME[] = "MPI_File_get_errhandler";
@@ -60,44 +61,44 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FILE_GET_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_FILE_GET_ERRHANDLER);
 
 #ifdef MPI_MODE_RDONLY
     /* Validate parameters, especially handles needing to be converted */
     /* FIXME: check for a valid file handle (fh) before converting to a pointer */
-    
+
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_ARGNULL(errhandler,"errhandler",mpi_errno);
+            MPIR_ERRTEST_ARGNULL(errhandler, "errhandler", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    MPIR_ROMIO_Get_file_errhand( file, &eh );
+
+    MPIR_ROMIO_Get_file_errhand(file, &eh);
     if (!eh) {
-	MPIR_Errhandler_get_ptr( MPI_ERRORS_RETURN, e );
+        MPIR_Errhandler_get_ptr(MPI_ERRORS_RETURN, e);
+    } else {
+        MPIR_Errhandler_get_ptr(eh, e);
     }
-    else {
-	MPIR_Errhandler_get_ptr( eh, e );
-    }
-    MPIR_Errhandler_add_ref( e );
+    MPIR_Errhandler_add_ref(e);
     *errhandler = e->handle;
 
 #else
     /* Dummy in case ROMIO is not defined */
     mpi_errno = MPI_ERR_INTERN;
 #ifdef HAVE_ERROR_CHECKING
-    if (0) goto fn_fail; /* quiet compiler warning about unused label */
+    if (0)
+        goto fn_fail;   /* quiet compiler warning about unused label */
 #endif
-#endif    
+#endif
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING
@@ -108,20 +109,19 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler)
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
   fn_fail:
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
-	    "**mpi_file_get_errhandler",
-	    "**mpi_file_get_errhandler %F %p", file, errhandler);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_file_get_errhandler", "**mpi_file_get_errhandler %F %p",
+                                 file, errhandler);
     }
     /* FIXME: Is this obsolete now? */
 #ifdef MPI_MODE_RDONLY
-    mpi_errno = MPIO_Err_return_file( file, mpi_errno );
+    mpi_errno = MPIO_Err_return_file(file, mpi_errno);
 #endif
     goto fn_exit;
-#   endif
+#endif
     /* --END ERROR HANDLING-- */
 }
-

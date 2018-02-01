@@ -47,8 +47,7 @@ int MTest_Start_thread(MTEST_THREAD_RETURN_TYPE(*fn) (void *p), void *arg)
     threads[nthreads] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) fn, (LPVOID) arg, 0, NULL);
     if (threads[nthreads] == NULL) {
         return GetLastError();
-    }
-    else {
+    } else {
         nthreads++;
     }
     return 0;
@@ -62,8 +61,7 @@ int MTest_Join_threads(void)
             if (WaitForSingleObject(threads[i], INFINITE) == WAIT_FAILED) {
                 err = GetLastError();
                 fprintf(stderr, "Error WaitForSingleObject(), err = %d\n", err);
-            }
-            else {
+            } else {
                 CloseHandle(threads[i]);
             }
         }

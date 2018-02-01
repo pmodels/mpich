@@ -89,8 +89,7 @@ void f2cfile_(int *file)
                        MPI_INFO_NULL, &cFile);
     if (rc) {
         *file = 0;
-    }
-    else {
+    } else {
         *file = MPI_File_c2f(cFile);
     }
 }

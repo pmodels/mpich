@@ -18,9 +18,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int appnum,
                                          int *tag_ub,
                                          MPIR_Comm * comm_world,
-                                         MPIR_Comm * comm_self,
-                                         int spawned,
-                                         int *n_vnis_provided)
+                                         MPIR_Comm * comm_self, int spawned, int *n_vnis_provided)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -76,7 +74,8 @@ static inline int MPIDI_NM_mpi_free_mem(void *ptr)
     return MPIDI_CH4U_mpi_free_mem(ptr);
 }
 
-static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr, MPL_memory_class class)
+static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr,
+                                           MPL_memory_class class)
 {
     return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr, class);
 }

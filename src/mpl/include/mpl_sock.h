@@ -18,7 +18,7 @@
 #include <limits.h>
 
 #ifdef MPL_HAVE_SYS_TYPES_H
-#include <sys/types.h> /* macs need sys/types.h before uio.h can be included */
+#include <sys/types.h>  /* macs need sys/types.h before uio.h can be included */
 #endif
 #ifdef MPL_HAVE_SYS_UIO_H
 #include <sys/uio.h>

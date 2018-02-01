@@ -141,7 +141,7 @@ int MPL_wtime(MPL_time_t * timeval);
   Module:
   Timer
   @*/
-int MPL_wtime_diff( MPL_time_t *t1, MPL_time_t *t2, double *diff );
+int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff);
 
 /*@
   MPL_wtime_acc - Accumulate time values
@@ -163,7 +163,7 @@ int MPL_wtime_diff( MPL_time_t *t1, MPL_time_t *t2, double *diff );
   Module:
   Timer
   @*/
-int MPL_wtime_acc( MPL_time_t *t1, MPL_time_t *t2, MPL_time_t *t3 );
+int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3);
 
 /*@
   MPL_wtime_todouble - Converts a timestamp to a double
@@ -179,7 +179,7 @@ int MPL_wtime_acc( MPL_time_t *t1, MPL_time_t *t2, MPL_time_t *t3 );
   suitable for 'MPI_Wtime'.
 
   @*/
-int MPL_wtime_todouble( MPL_time_t *timeval, double *seconds );
+int MPL_wtime_todouble(MPL_time_t * timeval, double *seconds);
 
 /*@
   MPL_wtick - Provide the resolution of the 'MPL_wtime' timer
@@ -246,4 +246,4 @@ static void init_wtick(void)
     }
 }
 
-#endif  /* !defined(MPL_TIMER_H_INCLUDED) */
+#endif /* !defined(MPL_TIMER_H_INCLUDED) */

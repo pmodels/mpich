@@ -54,8 +54,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_iprobe(int source,
         status->MPI_TAG = unexp_req->status.MPI_TAG;
         status->MPI_SOURCE = unexp_req->status.MPI_SOURCE;
         MPIR_STATUS_SET_COUNT(*status, MPIDI_CH4U_REQUEST(unexp_req, count));
-    }
-    else {
+    } else {
         *flag = 0;
         MPIDI_CH4R_PROGRESS();
     }
@@ -121,8 +120,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_improbe(int source,
         status->MPI_TAG = unexp_req->status.MPI_TAG;
         status->MPI_SOURCE = unexp_req->status.MPI_SOURCE;
         MPIR_STATUS_SET_COUNT(*status, MPIDI_CH4U_REQUEST(unexp_req, count));
-    }
-    else {
+    } else {
         *flag = 0;
         MPIDI_CH4R_PROGRESS();
     }

@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Get_library_version as PMPI_Get_library_version
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Get_library_version(char *version, int *resultlen) __attribute__((weak,alias("PMPI_Get_library_version")));
+int MPI_Get_library_version(char *version, int *resultlen)
+    __attribute__ ((weak, alias("PMPI_Get_library_version")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -82,7 +83,7 @@ int MPI_Get_library_version(char *version, int *resultlen)
                  MPII_Version_configure, MPII_Version_CC, MPII_Version_CXX,
                  MPII_Version_F77, MPII_Version_FC);
 
-    *resultlen = (int)strlen(version);
+    *resultlen = (int) strlen(version);
 
     /* ... end of body of routine ... */
 

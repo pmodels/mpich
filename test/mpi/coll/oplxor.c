@@ -54,8 +54,7 @@ int main(int argc, char *argv[])
     if (rc) {
         MTestPrintErrorMsg("MPI_LXOR and MPI_CHAR", rc);
         errs++;
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (coutbuf[0] != (size % 2)) {
                 errs++;
@@ -86,8 +85,7 @@ int main(int argc, char *argv[])
     if (rc) {
         MTestPrintErrorMsg("MPI_LXOR and MPI_SIGNED_CHAR", rc);
         errs++;
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (scoutbuf[0] != (size % 2)) {
                 errs++;
@@ -117,8 +115,7 @@ int main(int argc, char *argv[])
     if (rc) {
         MTestPrintErrorMsg("MPI_LXOR and MPI_UNSIGNED_CHAR", rc);
         errs++;
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (ucoutbuf[0] != (size % 2)) {
                 errs++;
@@ -149,8 +146,7 @@ int main(int argc, char *argv[])
     if (rc) {
         MTestPrintErrorMsg("MPI_LXOR and MPI_FLOAT", rc);
         errs++;
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (foutbuf[0] != (size % 2)) {
                 errs++;
@@ -180,8 +176,7 @@ int main(int argc, char *argv[])
     if (rc) {
         MTestPrintErrorMsg("MPI_LXOR and MPI_DOUBLE", rc);
         errs++;
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (doutbuf[0] != (size % 2)) {
                 errs++;
@@ -202,7 +197,7 @@ int main(int argc, char *argv[])
     {
         long double ldinbuf[3], ldoutbuf[3];
         /* long double */
-        MTEST_VG_MEM_INIT(ldinbuf, 3* sizeof(ldinbuf[0]));
+        MTEST_VG_MEM_INIT(ldinbuf, 3 * sizeof(ldinbuf[0]));
         ldinbuf[0] = 1;
         ldinbuf[1] = 0;
         ldinbuf[2] = (rank > 0);
@@ -216,8 +211,7 @@ int main(int argc, char *argv[])
             if (rc) {
                 MTestPrintErrorMsg("MPI_LXOR and MPI_LONG_DOUBLE", rc);
                 errs++;
-            }
-            else {
+            } else {
                 if (rank == 0) {
                     if (ldoutbuf[0] != (size % 2)) {
                         errs++;
@@ -255,8 +249,7 @@ int main(int argc, char *argv[])
             if (rc) {
                 MTestPrintErrorMsg("MPI_LXOR and MPI_LONG_LONG", rc);
                 errs++;
-            }
-            else {
+            } else {
                 if (rank == 0) {
                     if (lloutbuf[0] != (size % 2)) {
                         errs++;

@@ -16,9 +16,9 @@
 #pragma _CRI duplicate MPI_Compare_and_swap as PMPI_Compare_and_swap
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
-                          void *result_addr, MPI_Datatype datatype, int target_rank,
-                          MPI_Aint target_disp, MPI_Win win)
-                          __attribute__((weak,alias("PMPI_Compare_and_swap")));
+                         void *result_addr, MPI_Datatype datatype, int target_rank,
+                         MPI_Aint target_disp, MPI_Win win)
+    __attribute__ ((weak, alias("PMPI_Compare_and_swap")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -73,8 +73,8 @@ buffers (origin_addr and result_addr) must be disjoint.
 .N MPI_ERR_WIN
 @*/
 int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
-        void *result_addr, MPI_Datatype datatype, int target_rank,
-        MPI_Aint target_disp, MPI_Win win)
+                         void *result_addr, MPI_Datatype datatype, int target_rank,
+                         MPI_Aint target_disp, MPI_Win win)
 {
     static const char FCNAME[] = "MPI_Compare_and_swap";
     int mpi_errno = MPI_SUCCESS;
@@ -82,12 +82,12 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMPARE_AND_SWAP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_COMPARE_AND_SWAP);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -95,21 +95,22 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
-    
+#endif /* HAVE_ERROR_CHECKING */
+
     /* Convert MPI object handles to object pointers */
-    MPIR_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr(win, win_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_Comm *comm_ptr;
-            
+
             /* Validate win_ptr */
-            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
-            if (mpi_errno) goto fn_fail;
+            MPIR_Win_valid_ptr(win_ptr, mpi_errno);
+            if (mpi_errno)
+                goto fn_fail;
 
             MPIR_ERRTEST_ARGNULL(origin_addr, "origin_addr", mpi_errno);
             MPIR_ERRTEST_ARGNULL(compare_addr, "compare_addr", mpi_errno);
@@ -118,7 +119,7 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
             MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
 
             /* Check if datatype is a C integer, Fortran Integer,
-               logical, or byte, per the classes given on page 165. */
+             * logical, or byte, per the classes given on page 165. */
             MPIR_ERRTEST_TYPE_RMA_ATOMIC(datatype, mpi_errno);
 
             if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC)
@@ -129,15 +130,15 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
     mpi_errno = MPID_Compare_and_swap(origin_addr,
                                       compare_addr, result_addr,
-                                      datatype, target_rank,
-                                      target_disp, win_ptr);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                                      datatype, target_rank, target_disp, win_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     /* ... end of body of routine ... */
 
@@ -148,16 +149,17 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_compare_and_swap",
-            "**mpi_compare_and_swap %p %p %p %D %d %d %W", origin_addr, compare_addr,
-            result_addr, datatype, target_rank, target_disp, win);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_compare_and_swap",
+                                 "**mpi_compare_and_swap %p %p %p %D %d %d %W", origin_addr,
+                                 compare_addr, result_addr, datatype, target_rank, target_disp,
+                                 win);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-

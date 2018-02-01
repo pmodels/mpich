@@ -81,8 +81,7 @@ int main(int argc, char *argv[])
                     MPI_Accumulate(orig_buf, 1, MPI_LONG_DOUBLE_INT,
                                    0, 0, 1, MPI_LONG_DOUBLE_INT, MPI_REPLACE, win);
                 }
-            }
-            else {
+            } else {
                 /* Work with GACC test (Test #3 to Test #6) */
                 for (i = 0; i < OPS_NUM / GACC_SZ; i++) {
 
@@ -96,8 +95,7 @@ int main(int argc, char *argv[])
                                    0, 0, GACC_SZ, MPI_LONG_DOUBLE_INT, MPI_REPLACE, win);
                 }
             }
-        }
-        else if (rank == 1) {
+        } else if (rank == 1) {
             /* equals to an atomic GET */
             if (j < LOOP) {
                 for (i = 0; i < DATA_SIZE; i++) {
@@ -105,39 +103,34 @@ int main(int argc, char *argv[])
                     MPI_Fetch_and_op(orig_buf, &(result_buf[i]), MPI_LONG_DOUBLE_INT,
                                      0, 0, MPI_NO_OP, win);
                 }
-            }
-            else if (j < 2 * LOOP) {
+            } else if (j < 2 * LOOP) {
                 for (i = 0; i < DATA_SIZE; i++) {
                     /* Test #2: FOP + MPI_NO_OP + NULL origin buffer address */
                     MPI_Fetch_and_op(NULL, &(result_buf[i]), MPI_LONG_DOUBLE_INT,
                                      0, 0, MPI_NO_OP, win);
                 }
-            }
-            else if (j < 3 * LOOP) {
+            } else if (j < 3 * LOOP) {
                 for (i = 0; i < DATA_SIZE / GACC_SZ; i++) {
                     /* Test #3: GACC + MPI_NO_OP */
                     MPI_Get_accumulate(orig_buf, GACC_SZ, MPI_LONG_DOUBLE_INT,
                                        &(result_buf[i * GACC_SZ]), GACC_SZ, MPI_LONG_DOUBLE_INT,
                                        0, 0, GACC_SZ, MPI_LONG_DOUBLE_INT, MPI_NO_OP, win);
                 }
-            }
-            else if (j < 4 * LOOP) {
+            } else if (j < 4 * LOOP) {
                 for (i = 0; i < DATA_SIZE / GACC_SZ; i++) {
                     /* Test #4: GACC + MPI_NO_OP + NULL origin buffer address */
                     MPI_Get_accumulate(NULL, GACC_SZ, MPI_LONG_DOUBLE_INT,
                                        &(result_buf[i * GACC_SZ]), GACC_SZ, MPI_LONG_DOUBLE_INT,
                                        0, 0, GACC_SZ, MPI_LONG_DOUBLE_INT, MPI_NO_OP, win);
                 }
-            }
-            else if (j < 5 * LOOP) {
+            } else if (j < 5 * LOOP) {
                 for (i = 0; i < DATA_SIZE / GACC_SZ; i++) {
                     /* Test #5: GACC + MPI_NO_OP + zero origin count */
                     MPI_Get_accumulate(orig_buf, 0, MPI_LONG_DOUBLE_INT,
                                        &(result_buf[i * GACC_SZ]), GACC_SZ, MPI_LONG_DOUBLE_INT,
                                        0, 0, GACC_SZ, MPI_LONG_DOUBLE_INT, MPI_NO_OP, win);
                 }
-            }
-            else if (j < 6 * LOOP) {
+            } else if (j < 6 * LOOP) {
                 for (i = 0; i < DATA_SIZE / GACC_SZ; i++) {
                     /* Test #5: GACC + MPI_NO_OP + NULL origin datatype */
                     MPI_Get_accumulate(orig_buf, GACC_SZ, MPI_DATATYPE_NULL,

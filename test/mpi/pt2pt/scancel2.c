@@ -55,19 +55,16 @@ int main(int argc, char *argv[])
                 errs++;
                 printf("Cancelled a matched Isend request (msg size = %d)!\n", n);
                 fflush(stdout);
-            }
-            else {
+            } else {
                 n = 0;
             }
             /* Send the size, zero for not cancelled (success) */
             MPI_Send(&n, 1, MPI_INT, dest, 123, comm);
-        }
-        else if (rank == dest) {
+        } else if (rank == dest) {
             MPI_Recv(buf, n, MPI_CHAR, source, cs + n + 1, comm, &status);
             MPI_Barrier(comm);
             MPI_Recv(&n, 1, MPI_INT, source, 123, comm, &status);
-        }
-        else {
+        } else {
             MPI_Barrier(comm);
         }
 

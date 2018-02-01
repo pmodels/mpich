@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Get_elements as PMPI_Get_elements
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *count) __attribute__((weak,alias("PMPI_Get_elements")));
+int MPI_Get_elements(const MPI_Status * status, MPI_Datatype datatype, int *count)
+    __attribute__ ((weak, alias("PMPI_Get_elements")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -55,7 +56,7 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *count)
+int MPI_Get_elements(const MPI_Status * status, MPI_Datatype datatype, int *count)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Count count_x, byte_count;
@@ -67,49 +68,52 @@ int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *count
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GET_ELEMENTS);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
+            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
+#endif
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_Datatype *datatype_ptr = NULL;
 
-	    MPIR_ERRTEST_ARGNULL(status, "status", mpi_errno);
-	    MPIR_ERRTEST_ARGNULL(count, "count", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(status, "status", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(count, "count", mpi_errno);
             /* Convert MPI object handles to object pointers */
             MPIR_Datatype_get_ptr(datatype, datatype_ptr);
             /* Validate datatype_ptr */
-	    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-		MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-		MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
+                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
+                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
 
                 MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-	    }
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
+            }
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
+#endif
 
     /* ... body of routine ...  */
 
     byte_count = MPIR_STATUS_GET_COUNT(*status);
     mpi_errno = MPIR_Get_elements_x_impl(&byte_count, datatype, &count_x);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* clip the value if it cannot be correctly returned to the user */
-    *count = (count_x > INT_MAX) ? MPI_UNDEFINED : (int)count_x;
+    *count = (count_x > INT_MAX) ? MPI_UNDEFINED : (int) count_x;
 
     /* ... end of body of routine ... */
 
@@ -120,10 +124,10 @@ int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *count
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-	    "**mpi_get_elements",
-	    "**mpi_get_elements %p %D %p", status, datatype, count);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_get_elements", "**mpi_get_elements %p %D %p", status,
+                                 datatype, count);
     }
     mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
     goto fn_exit;

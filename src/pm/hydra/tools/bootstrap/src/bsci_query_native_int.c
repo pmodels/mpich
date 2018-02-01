@@ -17,8 +17,7 @@ HYD_status HYDT_bsci_query_native_int(int *ret)
     if (HYDT_bsci_fns.query_native_int) {
         status = HYDT_bsci_fns.query_native_int(ret);
         HYDU_ERR_POP(status, "RMK returned error querying native integration\n");
-    }
-    else {
+    } else {
         *ret = 0;
     }
 

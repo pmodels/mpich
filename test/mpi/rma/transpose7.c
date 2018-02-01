@@ -78,8 +78,7 @@ int main(int argc, char *argv[])
             if (errs >= 50) {
                 printf("Total number of errors: %d\n", errs);
             }
-        }
-        else {
+        } else {
             for (i = 0; i < NROWS; i++)
                 for (j = 0; j < NCOLS; j++)
                     A[i][j] = i * NCOLS + j;

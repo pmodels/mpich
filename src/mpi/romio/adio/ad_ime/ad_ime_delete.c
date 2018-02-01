@@ -21,13 +21,11 @@ void ADIOI_IME_Delete(const char *filename, int *error_code)
     ADIOI_Free(ime_filename);
     if (ret)
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                 MPIR_ERR_RECOVERABLE,
-                 myname, __LINE__,
-                 MPI_ERR_FILE,
-                 "Error in ime_native_unlink", 0);
+                                           MPIR_ERR_RECOVERABLE,
+                                           myname, __LINE__,
+                                           MPI_ERR_FILE, "Error in ime_native_unlink", 0);
     else
         *error_code = MPI_SUCCESS;
 
     return;
 }
-

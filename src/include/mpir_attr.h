@@ -32,30 +32,25 @@
 
   E*/
 int
-MPII_Attr_copy_c_proxy(
-    MPI_Comm_copy_attr_function* user_function,
-    int handle,
-    int keyval,
-    void* extra_state,
-    MPIR_Attr_type attrib_type,
-    void* attrib,
-    void** attrib_copy,
-    int* flag
-    );
+MPII_Attr_copy_c_proxy(MPI_Comm_copy_attr_function * user_function,
+                       int handle,
+                       int keyval,
+                       void *extra_state,
+                       MPIR_Attr_type attrib_type, void *attrib, void **attrib_copy, int *flag);
 
 typedef struct copy_function {
-  int  (*C_CopyFunction)( int, int, void *, void *, void *, int * );
-  void (*F77_CopyFunction)  ( MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *,
-                              MPI_Fint *, MPI_Fint *, MPI_Fint * );
-  void (*F90_CopyFunction)  ( MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,
-                              MPI_Aint *, MPI_Fint *, MPI_Fint * );
-  /* The generic lang-independent user_function and proxy will
-   * replace the lang dependent copy funcs above
-   * Currently the lang-indpendent funcs are used only for keyvals
-   */
-  MPI_Comm_copy_attr_function *user_function;
-  MPII_Attr_copy_proxy *proxy;
-  /* The C++ function is the same as the C function */
+    int (*C_CopyFunction) (int, int, void *, void *, void *, int *);
+    void (*F77_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *,
+                              MPI_Fint *, MPI_Fint *, MPI_Fint *);
+    void (*F90_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,
+                              MPI_Aint *, MPI_Fint *, MPI_Fint *);
+    /* The generic lang-independent user_function and proxy will
+     * replace the lang dependent copy funcs above
+     * Currently the lang-indpendent funcs are used only for keyvals
+     */
+    MPI_Comm_copy_attr_function *user_function;
+    MPII_Attr_copy_proxy *proxy;
+    /* The C++ function is the same as the C function */
 } copy_function;
 
 /*E
@@ -78,27 +73,20 @@ typedef struct copy_function {
 
   E*/
 int
-MPII_Attr_delete_c_proxy(
-    MPI_Comm_delete_attr_function* user_function,
-    int handle,
-    int keyval,
-    MPIR_Attr_type attrib_type,
-    void* attrib,
-    void* extra_state
-    );
+MPII_Attr_delete_c_proxy(MPI_Comm_delete_attr_function * user_function,
+                         int handle,
+                         int keyval, MPIR_Attr_type attrib_type, void *attrib, void *extra_state);
 
 typedef struct delete_function {
-  int  (*C_DeleteFunction)  ( int, int, void *, void * );
-  void (*F77_DeleteFunction)( MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *,
-                              MPI_Fint * );
-  void (*F90_DeleteFunction)( MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *,
-                              MPI_Fint * );
-  /* The generic lang-independent user_function and proxy will
-   * replace the lang dependent copy funcs above
-   * Currently the lang-indpendent funcs are used only for keyvals
-   */
-  MPI_Comm_delete_attr_function *user_function;
-  MPII_Attr_delete_proxy *proxy;
+    int (*C_DeleteFunction) (int, int, void *, void *);
+    void (*F77_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *);
+    void (*F90_DeleteFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, MPI_Aint *, MPI_Fint *);
+    /* The generic lang-independent user_function and proxy will
+     * replace the lang dependent copy funcs above
+     * Currently the lang-indpendent funcs are used only for keyvals
+     */
+    MPI_Comm_delete_attr_function *user_function;
+    MPII_Attr_delete_proxy *proxy;
 } delete_function;
 
 /*S
@@ -109,27 +97,27 @@ typedef struct delete_function {
 
   S*/
 typedef struct MPII_Keyval {
-    MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
-    MPII_Object_kind     kind;
-    int                  was_freed;
-    void                 *extra_state;
-    copy_function   copyfn;
+    MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
+    MPII_Object_kind kind;
+    int was_freed;
+    void *extra_state;
+    copy_function copyfn;
     delete_function delfn;
-  /* other, device-specific information */
+    /* other, device-specific information */
 #ifdef MPID_DEV_KEYVAL_DECL
-    MPID_DEV_KEYVAL_DECL
+     MPID_DEV_KEYVAL_DECL
 #endif
 } MPII_Keyval;
 
-#define MPII_Keyval_add_ref( _keyval )                                  \
+#define MPII_Keyval_add_ref(_keyval)                                  \
     do {                                                                \
-        MPIR_Object_add_ref( _keyval );                                 \
-    } while(0)
+        MPIR_Object_add_ref(_keyval);                                 \
+    } while (0)
 
-#define MPII_Keyval_release_ref( _keyval, _inuse )                      \
+#define MPII_Keyval_release_ref(_keyval, _inuse)                      \
     do {                                                                \
-        MPIR_Object_release_ref( _keyval, _inuse );                     \
-    } while(0)
+        MPIR_Object_release_ref(_keyval, _inuse);                     \
+    } while (0)
 
 
 /* Attribute values in C/C++ are void * and in Fortran are ADDRESS_SIZED
@@ -140,7 +128,7 @@ typedef struct MPII_Keyval {
 #ifdef USE_AINT_FOR_ATTRVAL
 typedef MPI_Aint MPII_Attr_val_t;
 #else
-typedef void * MPII_Attr_val_t;
+typedef void *MPII_Attr_val_t;
 #endif
 
 /* Attributes need no ref count or handle, but since we want to use the
@@ -185,20 +173,20 @@ typedef void * MPII_Attr_val_t;
 
  S*/
 typedef struct MPIR_Attribute {
-    MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
-    MPII_Keyval  *keyval;           /* Keyval structure for this attribute */
+    MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
+    MPII_Keyval *keyval;        /* Keyval structure for this attribute */
 
-    struct MPIR_Attribute *next;    /* Pointer to next in the list */
-    MPIR_Attr_type attrType;         /* Type of the attribute */
-    long        pre_sentinal;       /* Used to detect user errors in accessing
-				       the value */
-    MPII_Attr_val_t value;           /* Stored value. An Aint must be at least
-				       as large as an address - some builds
-				       may make an Aint larger than a void * */
-    long        post_sentinal;      /* Like pre_sentinal */
+    struct MPIR_Attribute *next;        /* Pointer to next in the list */
+    MPIR_Attr_type attrType;    /* Type of the attribute */
+    long pre_sentinal;          /* Used to detect user errors in accessing
+                                 * the value */
+    MPII_Attr_val_t value;      /* Stored value. An Aint must be at least
+                                 * as large as an address - some builds
+                                 * may make an Aint larger than a void * */
+    long post_sentinal;         /* Like pre_sentinal */
     /* other, device-specific information */
 #ifdef MPID_DEV_ATTR_DECL
-    MPID_DEV_ATTR_DECL
+     MPID_DEV_ATTR_DECL
 #endif
 } MPIR_Attribute;
 

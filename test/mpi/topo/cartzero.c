@@ -75,8 +75,7 @@ int main(int argc, char *argv[])
 
         MPI_Comm_free(&comm);
         MPI_Comm_free(&newcomm);
-    }
-    else if (rank == 0) {
+    } else if (rank == 0) {
         errs++;
         fprintf(stderr, "Communicator returned is null!");
     }

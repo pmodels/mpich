@@ -87,8 +87,7 @@ int main(int argc, char *argv[])
             if (isprint((int) (s1[j].c))) {
                 fprintf(stderr, "Got s[%d].c = %c; expected %c\n",
                         j, s1[j].c, j + status.MPI_SOURCE + 'a');
-            }
-            else {
+            } else {
                 fprintf(stderr, "Got s[%d].c = %x; expected %c\n",
                         j, (int) s1[j].c, j + status.MPI_SOURCE + 'a');
             }

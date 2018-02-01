@@ -183,8 +183,7 @@ char *HYDU_int_to_str_pad(int x, int maxlen)
     if (x < 0) {
         len++;
         y = -x;
-    }
-    else
+    } else
         y = x;
 
     while (y >= max) {

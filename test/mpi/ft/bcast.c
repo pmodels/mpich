@@ -79,8 +79,7 @@ int main(int argc, char **argv)
     if (rank == 0) {
         if (toterrs) {
             printf(" Found %d errors\n", toterrs);
-        }
-        else {
+        } else {
             printf(" No Errors\n");
         }
         fflush(stdout);

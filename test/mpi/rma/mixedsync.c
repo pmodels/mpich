@@ -84,8 +84,7 @@ int main(int argc, char *argv[])
             MPI_Put(buf2, count2, MPI_INT, dest, count0 + count1, count2, MPI_INT, win);
             MPI_Win_unlock(dest, win);
             MTestPrintfMsg(3, "Released exclusive lock\n");
-        }
-        else if (crank == dest) {
+        } else if (crank == dest) {
             /* Just delay a bit */
             delay(0.0001);
         }
@@ -136,8 +135,7 @@ int main(int argc, char *argv[])
             MPI_Accumulate(buf1, count1, MPI_INT, dest, count0, count1, MPI_INT, MPI_SUM, win);
             MPI_Put(buf2, count2, MPI_INT, dest, count0 + count1, count2, MPI_INT, win);
             MPI_Win_unlock(dest, win);
-        }
-        else if (crank == dest) {
+        } else if (crank == dest) {
             /* Just delay a bit */
             delay(0.0001);
         }
@@ -181,8 +179,7 @@ int main(int argc, char *argv[])
             MPI_Put(buf1, count1, MPI_INT, dest, count0, count1, MPI_INT, win);
             MPI_Get(inbuf2, count2, MPI_INT, dest, count0 + count1, count2, MPI_INT, win);
             MPI_Win_unlock(dest, win);
-        }
-        else if (crank == dest) {
+        } else if (crank == dest) {
             /* Just delay a bit */
             delay(0.0001);
         }

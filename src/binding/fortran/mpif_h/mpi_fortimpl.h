@@ -19,7 +19,7 @@
 #include "mpichconf.h"
 
 /* Handle different mechanisms for passing Fortran CHARACTER to routines.
- * 
+ *
  * In the case where MPI_Fint is a different size from int, it appears that
  * compilers use an int, rather than an MPI_Fint, for the length.  However,
  * there is no standard for this, so some compiler may choose to use
@@ -60,13 +60,13 @@
 /* ------------------------------------------------------------------------- */
 /* The following definitions are used to support the Microsoft compilers
 
-   The following C preprocessor macros are not discoved by configure.  
-   Instead, they must be defined separately; this is normally done as part of 
+   The following C preprocessor macros are not discoved by configure.
+   Instead, they must be defined separately; this is normally done as part of
    the Windows-specific configuration process.
 
    USE_FORT_STDCALL - Use __stdcall for the calling convention
    USE_FORT_CDECL   - Use __cdelc for the calling convention
-       These define the macro FORT_CALL ; for other systems, FORT_CALL is 
+       These define the macro FORT_CALL ; for other systems, FORT_CALL is
        empty
 
        Note: It may be that these should be USE_MSC_xxx to indicate that
@@ -74,13 +74,13 @@
 
    USE_MSC_DLLSPEC - Use __declspec to control the import or export of
                      symbols in a generated dynamic link library (DLL)
-       This defines the macros FORT_DECL_SPEC and FORT_C_DECL_SPEC ; for 
+       This defines the macros FORT_DECL_SPEC and FORT_C_DECL_SPEC ; for
        other systems, these names both expand to empty
        If USE_MSC_DLLSPEC is defined, then the macros FORTRAN_EXPORTS and
-       FORTRAN_FROM_C_EXPORTS controls whether dllexport or dllimport is 
-       specified.       
+       FORTRAN_FROM_C_EXPORTS controls whether dllexport or dllimport is
+       specified.
 
-       The name (USE_MSC_xxx) here indicates that the MS C compiler is 
+       The name (USE_MSC_xxx) here indicates that the MS C compiler is
        required for this.
 
  */
@@ -102,13 +102,13 @@
 #endif
 
 #ifdef USE_MSC_DLLSPEC
-# ifdef FORTRAN_EXPORTS
-#  define FORT_DLL_SPEC __declspec(dllexport)
-# else
-#  define FORT_DLL_SPEC __declspec(dllimport)
-# endif
+#ifdef FORTRAN_EXPORTS
+#define FORT_DLL_SPEC __declspec(dllexport)
 #else
-# define FORT_DLL_SPEC MPICH_API_PUBLIC
+#define FORT_DLL_SPEC __declspec(dllimport)
+#endif
+#else
+#define FORT_DLL_SPEC MPICH_API_PUBLIC
 #endif
 
 
@@ -132,8 +132,8 @@
 #define MPIO_Request MPI_Request
 #endif
 
-/* MPI_FAint is used as the C type corresponding to the Fortran type 
-   used for addresses.  For now, we make this the same as MPI_Aint.  
+/* MPI_FAint is used as the C type corresponding to the Fortran type
+   used for addresses.  For now, we make this the same as MPI_Aint.
    Note that since this is defined only for this private include file,
    we can get away with calling MPI_xxx */
 typedef MPI_Aint MPI_FAint;
@@ -143,30 +143,30 @@ typedef MPI_Aint MPI_FAint;
 /* Define the internal values needed for Fortran support */
 
 /* Fortran logicals */
-/* The definitions for the Fortran logical values are also needed 
-   by the reduction operations in mpi/coll/opland, oplor, and oplxor, 
+/* The definitions for the Fortran logical values are also needed
+   by the reduction operations in mpi/coll/opland, oplor, and oplxor,
    so they are defined in src/include/mpii_fortlogical.h */
 #include "mpii_fortlogical.h"
 
 
 /* MPIR_F_MPI_BOTTOM is the address of the Fortran MPI_BOTTOM value */
-extern FORT_DLL_SPEC int  MPIR_F_NeedInit;
+extern FORT_DLL_SPEC int MPIR_F_NeedInit;
 extern FORT_DLL_SPEC void *MPIR_F_MPI_BOTTOM;
 extern FORT_DLL_SPEC void *MPIR_F_MPI_IN_PLACE;
 extern FORT_DLL_SPEC void *MPIR_F_MPI_UNWEIGHTED;
 extern FORT_DLL_SPEC void *MPIR_F_MPI_WEIGHTS_EMPTY;
-/* MPI_F_STATUS(ES)_IGNORE are defined in mpi.h and are intended for C 
+/* MPI_F_STATUS(ES)_IGNORE are defined in mpi.h and are intended for C
    programs. */
 /*
 extern FORT_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE;
 extern FORT_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE;
 */
-/* MPI_F_ERRCODES_IGNORE is defined as a Fortran INTEGER type, so must 
+/* MPI_F_ERRCODES_IGNORE is defined as a Fortran INTEGER type, so must
    be declared as MPI_Fint */
-extern FORT_DLL_SPEC MPI_Fint  *MPI_F_ERRCODES_IGNORE;
+extern FORT_DLL_SPEC MPI_Fint *MPI_F_ERRCODES_IGNORE;
 extern FORT_DLL_SPEC void *MPI_F_ARGVS_NULL;
-/* MPIR_F_PTR checks for the Fortran MPI_BOTTOM and provides the value 
-   MPI_BOTTOM if found 
+/* MPIR_F_PTR checks for the Fortran MPI_BOTTOM and provides the value
+   MPI_BOTTOM if found
    See src/pt2pt/addressf.c for why MPIR_F_PTR(a) is just (a)
 */
 /*  #define MPIR_F_PTR(a) (((a)==(MPIR_F_MPI_BOTTOM))?MPI_BOTTOM:a) */
@@ -182,18 +182,18 @@ extern FORT_DLL_SPEC void *MPI_F_ARGVS_NULL;
 #define mpirinitf_ mpirinitf
 #endif
 /* Provide a prototype for the mpirinitf function */
-extern void mpirinitf_( void );
+extern void mpirinitf_(void);
 
-/*  
+/*
  * These are hooks for Fortran characters.
  * MPID_FCHAR_T is the type of a Fortran character argument
  * MPID_FCHAR_LARG is the "other" argument that some Fortran compilers use
  * MPID_FCHAR_STR gives the pointer to the characters
  */
 #ifdef MPID_CHARACTERS_ARE_CRAYPVP
-typedef <whatever> MPID_FCHAR_T;
+typedef <whatever > MPID_FCHAR_T;
 #define MPID_FCHAR_STR(a) (a)->characters   <or whatever>
-#define MPID_FCHAR_LARG(d) 
+#define MPID_FCHAR_LARG(d)
 #else
 typedef char *MPID_FCHAR_T;
 #define MPID_FCHAR_STR(a) a
@@ -211,8 +211,8 @@ typedef char *MPID_FCHAR_T;
 #endif
 
 /* Undefine the names that are used in mpi.h for the predefined keyval
-   copy and delete functions.  This is necessary in case the Fortran 
-   compiler uses uppercase names, because in that case there would be 
+   copy and delete functions.  This is necessary in case the Fortran
+   compiler uses uppercase names, because in that case there would be
    a conflict in the names */
 #ifdef MPI_DUP_FN
 #undef MPI_DUP_FN

@@ -19,8 +19,7 @@
 
 #include "rlog.h"
 
-struct StateNode
-{
+struct StateNode {
     RLOG_STATE state;
     int id;
     COLORREF color;
@@ -28,50 +27,48 @@ struct StateNode
     StateNode *pNext;
 };
 
-class CRimshotDoc : public CDocument
-{
-protected: // create from serialization only
-	CRimshotDoc();
-	DECLARE_DYNCREATE(CRimshotDoc)
-
+class CRimshotDoc:public CDocument {
+  protected:                   // create from serialization only
+    CRimshotDoc();
+    DECLARE_DYNCREATE(CRimshotDoc)
 // Attributes
-public:
-    RLOG_IOStruct *m_pInput;
+  public:
+    RLOG_IOStruct * m_pInput;
     double m_dFirst, m_dLast;
     double m_dLeft, m_dRight;
     StateNode *m_pStateList;
 
 // Operations
-public:
+  public:
 
 // Overrides
-	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CRimshotDoc)
-	public:
-	virtual BOOL OnNewDocument();
-	virtual void Serialize(CArchive& ar);
-	virtual BOOL OnOpenDocument(LPCTSTR lpszPathName);
-	//}}AFX_VIRTUAL
+    // ClassWizard generated virtual function overrides
+    //{{AFX_VIRTUAL(CRimshotDoc)
+  public:
+     virtual BOOL OnNewDocument();
+    virtual void Serialize(CArchive & ar);
+    virtual BOOL OnOpenDocument(LPCTSTR lpszPathName);
+    //}}AFX_VIRTUAL
 
 // Implementation
-public:
-	CString GetEventDescription(int event);
-	CBrush* GetEventBrush(int event);
-	COLORREF GetEventColor(int event);
-	virtual ~CRimshotDoc();
+  public:
+     CString GetEventDescription(int event);
+    CBrush *GetEventBrush(int event);
+    COLORREF GetEventColor(int event);
+     virtual ~ CRimshotDoc();
 #ifdef _DEBUG
-	virtual void AssertValid() const;
-	virtual void Dump(CDumpContext& dc) const;
+    virtual void AssertValid() const;
+    virtual void Dump(CDumpContext & dc) const;
 #endif
 
-protected:
+  protected:
 
 // Generated message map functions
-protected:
-	//{{AFX_MSG(CRimshotDoc)
-	afx_msg void OnFileOpen();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+  protected:
+    //{{AFX_MSG(CRimshotDoc)
+     afx_msg void OnFileOpen();
+    //}}AFX_MSG
+     DECLARE_MESSAGE_MAP()
 };
 
 /////////////////////////////////////////////////////////////////////////////

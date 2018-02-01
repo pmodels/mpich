@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Cart_map as PMPI_Cart_map
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[], int *newrank) __attribute__((weak,alias("PMPI_Cart_map")));
+int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[], int *newrank)
+    __attribute__ ((weak, alias("PMPI_Cart_map")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -29,8 +30,8 @@ int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[]
 #define FUNCNAME MPIR_Cart_map
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Cart_map( const MPIR_Comm *comm_ptr, int ndims, const int dims[],
-		   const int periodic[], int *newrank )
+int MPIR_Cart_map(const MPIR_Comm * comm_ptr, int ndims, const int dims[],
+                  const int periodic[], int *newrank)
 {
     int rank, nranks, i, size, mpi_errno = MPI_SUCCESS;
 
@@ -38,30 +39,30 @@ int MPIR_Cart_map( const MPIR_Comm *comm_ptr, int ndims, const int dims[],
 
     /* Determine number of processes needed for topology */
     if (ndims == 0) {
-	nranks = 1;
+        nranks = 1;
     } else {
-	nranks = dims[0];
-	for ( i=1; i<ndims; i++ )
-	    nranks *= dims[i];
+        nranks = dims[0];
+        for (i = 1; i < ndims; i++)
+            nranks *= dims[i];
     }
     size = comm_ptr->remote_size;
-    
+
     /* Test that the communicator is large enough */
     MPIR_ERR_CHKANDJUMP2(size < nranks, mpi_errno, MPI_ERR_DIMS, "**topotoolarge",
                          "**topotoolarge %d %d", size, nranks);
 
     /* Am I in this range? */
     rank = comm_ptr->rank;
-    if ( rank < nranks )
-	/* This relies on the ranks *not* being reordered by the current
-	   Cartesian routines */
-	*newrank = rank;
+    if (rank < nranks)
+        /* This relies on the ranks *not* being reordered by the current
+         * Cartesian routines */
+        *newrank = rank;
     else
-	*newrank = MPI_UNDEFINED;
+        *newrank = MPI_UNDEFINED;
 
- fn_exit:
+  fn_exit:
     return mpi_errno;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -69,29 +70,28 @@ int MPIR_Cart_map( const MPIR_Comm *comm_ptr, int ndims, const int dims[],
 #define FUNCNAME MPIR_Cart_map_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Cart_map_impl(const MPIR_Comm *comm_ptr, int ndims, const int dims[],
+int MPIR_Cart_map_impl(const MPIR_Comm * comm_ptr, int ndims, const int dims[],
                        const int periods[], int *newrank)
 {
     int mpi_errno = MPI_SUCCESS;
-        
+
     if (comm_ptr->topo_fns != NULL && comm_ptr->topo_fns->cartMap != NULL) {
-	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->topo_fns->cartMap( comm_ptr, ndims,
-						 (const int*) dims,
-						 (const int*) periods,
-						 newrank );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	/* --END USEREXTENSION-- */
+        /* --BEGIN USEREXTENSION-- */
+        mpi_errno = comm_ptr->topo_fns->cartMap(comm_ptr, ndims,
+                                                (const int *) dims, (const int *) periods, newrank);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        /* --END USEREXTENSION-- */
     } else {
-	mpi_errno = MPIR_Cart_map( comm_ptr, ndims,
-				   (const int*) dims,
-				   (const int*) periods, newrank );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPIR_Cart_map(comm_ptr, ndims,
+                                  (const int *) dims, (const int *) periods, newrank);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
     }
 
- fn_exit:
+  fn_exit:
     return mpi_errno;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -102,19 +102,19 @@ int MPIR_Cart_map_impl(const MPIR_Comm *comm_ptr, int ndims, const int dims[],
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
-MPI_Cart_map - Maps process to Cartesian topology information 
+MPI_Cart_map - Maps process to Cartesian topology information
 
 Input Parameters:
-+ comm - input communicator (handle) 
-. ndims - number of dimensions of Cartesian structure (integer) 
-. dims - integer array of size 'ndims' specifying the number of processes in 
-  each coordinate direction 
-- periods - logical array of size 'ndims' specifying the periodicity 
-  specification in each coordinate direction 
++ comm - input communicator (handle)
+. ndims - number of dimensions of Cartesian structure (integer)
+. dims - integer array of size 'ndims' specifying the number of processes in
+  each coordinate direction
+- periods - logical array of size 'ndims' specifying the periodicity
+  specification in each coordinate direction
 
 Output Parameters:
-. newrank - reordered rank of the calling process; 'MPI_UNDEFINED' if 
-  calling process does not belong to grid (integer) 
+. newrank - reordered rank of the calling process; 'MPI_UNDEFINED' if
+  calling process does not belong to grid (integer)
 
 .N SignalSafe
 
@@ -126,60 +126,60 @@ Output Parameters:
 .N MPI_ERR_DIMS
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[],
-		 int *newrank)
+int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[], int *newrank)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_CART_MAP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_CART_MAP);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_COMM(comm, mpi_errno);
+            MPIR_ERRTEST_COMM(comm, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
-    
+#endif
+
     /* Convert MPI object handles to object pointers */
-    MPIR_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
-            if (mpi_errno) goto fn_fail;
-	    /* If comm_ptr is not valid, it will be reset to null */
-	    MPIR_ERRTEST_ARGNULL(newrank,"newrank",mpi_errno);
-	    MPIR_ERRTEST_ARGNULL(dims,"dims",mpi_errno);
-	    /* As of MPI 2.1, 0-dimensional cartesian topologies are valid */
-	    if (ndims < 0) {
-		mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
-				  MPIR_ERR_RECOVERABLE, 
-				  FCNAME, __LINE__, MPI_ERR_DIMS,
-				  "**dims", "**dims %d", ndims );
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, TRUE);
+            if (mpi_errno)
+                goto fn_fail;
+            /* If comm_ptr is not valid, it will be reset to null */
+            MPIR_ERRTEST_ARGNULL(newrank, "newrank", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(dims, "dims", mpi_errno);
+            /* As of MPI 2.1, 0-dimensional cartesian topologies are valid */
+            if (ndims < 0) {
+                mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
+                                                 MPIR_ERR_RECOVERABLE,
+                                                 FCNAME, __LINE__, MPI_ERR_DIMS,
+                                                 "**dims", "**dims %d", ndims);
                 goto fn_fail;
             }
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    mpi_errno = MPIR_Cart_map_impl( comm_ptr, ndims, 
-                                    (const int*) dims,
-                                    (const int*) periods, newrank );
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Cart_map_impl(comm_ptr, ndims,
+                                   (const int *) dims, (const int *) periods, newrank);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
     /* ... end of body of routine ... */
 
   fn_exit:
@@ -188,16 +188,15 @@ int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[]
 
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
-	    "**mpi_cart_map",
-	    "**mpi_cart_map %C %d %p %p %p", comm, ndims, dims, periods,
-	    newrank);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_cart_map", "**mpi_cart_map %C %d %p %p %p", comm, ndims,
+                                 dims, periods, newrank);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

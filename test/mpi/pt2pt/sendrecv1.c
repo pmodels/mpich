@@ -55,8 +55,7 @@ int main(int argc, char *argv[])
                             MTestPrintError(err);
                         }
                     }
-                }
-                else if (rank == dest) {
+                } else if (rank == dest) {
                     err = MPI_Recv(recvtype.buf, recvtype.count,
                                    recvtype.datatype, source, 0, comm, MPI_STATUS_IGNORE);
                     if (err) {

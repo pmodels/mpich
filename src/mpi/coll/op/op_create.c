@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Op_create as PMPI_Op_create
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op) __attribute__((weak,alias("PMPI_Op_create")));
+int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
+    __attribute__ ((weak, alias("PMPI_Op_create")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -32,20 +33,22 @@ int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op) __attribu
 /* Preallocated op objects */
 MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN] = { {0} };
 MPIR_Op MPIR_Op_direct[MPIR_OP_PREALLOC] = { {0} };
+
 MPIR_Object_alloc_t MPIR_Op_mem = { 0, 0, 0, 0, MPIR_OP,
-					    sizeof(MPIR_Op),
-					    MPIR_Op_direct,
-					    MPIR_OP_PREALLOC, };
+    sizeof(MPIR_Op),
+    MPIR_Op_direct,
+    MPIR_OP_PREALLOC,
+};
 
 #ifdef HAVE_CXX_BINDING
-void MPII_Op_set_cxx( MPI_Op op, void (*opcall)(void) )
+void MPII_Op_set_cxx(MPI_Op op, void (*opcall) (void))
 {
     MPIR_Op *op_ptr;
-    
-    MPIR_Op_get_ptr( op, op_ptr );
-    op_ptr->language		= MPIR_LANG__CXX;
-    MPIR_Process.cxx_call_op_fn	= (void (*)(const void *, void *, int,
-				    MPI_Datatype, MPI_User_function *))opcall;
+
+    MPIR_Op_get_ptr(op, op_ptr);
+    op_ptr->language = MPIR_LANG__CXX;
+    MPIR_Process.cxx_call_op_fn = (void (*)(const void *, void *, int,
+                                            MPI_Datatype, MPI_User_function *)) opcall;
 }
 #endif
 #if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
@@ -53,11 +56,11 @@ void MPII_Op_set_cxx( MPI_Op op, void (*opcall)(void) )
    MPI Standard.  However, if MPI_Fint and int are not the same size (e.g.,
    MPI_Fint was made 8 bytes but int is 4 bytes), then the C and Fortran
    versions must be distinquished. */
-void MPII_Op_set_fc( MPI_Op op )
+void MPII_Op_set_fc(MPI_Op op)
 {
     MPIR_Op *op_ptr;
-    
-    MPIR_Op_get_ptr( op, op_ptr );
+
+    MPIR_Op_get_ptr(op, op_ptr);
     op_ptr->language = MPIR_LANG__FORTRAN;
 }
 #endif
@@ -75,16 +78,16 @@ Input Parameters:
 - commute -  true if commutative;  false otherwise. (logical)
 
 Output Parameters:
-. op - operation (handle) 
+. op - operation (handle)
 
   Notes on the user function:
   The calling list for the user function type is
 .vb
- typedef void (MPI_User_function) ( void * a, 
-               void * b, int * len, MPI_Datatype * ); 
+ typedef void (MPI_User_function) (void * a,
+               void * b, int * len, MPI_Datatype *);
 .ve
   where the operation is 'b[i] = a[i] op b[i]', for 'i=0,...,len-1'.  A pointer
-  to the datatype given to the MPI collective computation routine (i.e., 
+  to the datatype given to the MPI collective computation routine (i.e.,
   'MPI_Reduce', 'MPI_Allreduce', 'MPI_Scan', or 'MPI_Reduce_scatter') is also
   passed to the user-specified routine.
 
@@ -99,7 +102,7 @@ Output Parameters:
 
 .seealso: MPI_Op_free
 @*/
-int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op)
+int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
 {
     static const char FCNAME[] = "MPI_Op_create";
     MPIR_Op *op_ptr;
@@ -107,27 +110,27 @@ int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_OP_CREATE);
 
     /* ... body of routine ...  */
-    
-    op_ptr = (MPIR_Op *)MPIR_Handle_obj_alloc( &MPIR_Op_mem );
+
+    op_ptr = (MPIR_Op *) MPIR_Handle_obj_alloc(&MPIR_Op_mem);
     /* --BEGIN ERROR HANDLING-- */
-    if (!op_ptr)
-    {
-	mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem",
-					  "**nomem %s", "MPI_Op" );
-	goto fn_fail;
+    if (!op_ptr) {
+        mpi_errno =
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**nomem", "**nomem %s", "MPI_Op");
+        goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
 
     op_ptr->language = MPIR_LANG__C;
-    op_ptr->kind     = commute ? MPIR_OP_KIND__USER : MPIR_OP_KIND__USER_NONCOMMUTE;
-    op_ptr->function.c_function = (void (*)(const void *, void *, 
-				   const int *, const MPI_Datatype *))user_fn;
-    MPIR_Object_set_ref(op_ptr,1);
+    op_ptr->kind = commute ? MPIR_OP_KIND__USER : MPIR_OP_KIND__USER_NONCOMMUTE;
+    op_ptr->function.c_function = (void (*)(const void *, void *,
+                                            const int *, const MPI_Datatype *)) user_fn;
+    MPIR_Object_set_ref(op_ptr, 1);
 
     MPIR_OBJ_PUBLISH_HANDLE(*op, op_ptr->handle);
 
@@ -140,18 +143,18 @@ int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op)
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_OP_CREATE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-    
+
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_op_create",
-	    "**mpi_op_create %p %d %p", user_fn, commute, op);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_op_create", "**mpi_op_create %p %d %p", user_fn, commute,
+                                 op);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-

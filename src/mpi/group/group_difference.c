@@ -16,7 +16,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Group_difference as PMPI_Group_difference
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup) __attribute__((weak,alias("PMPI_Group_difference")));
+int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group * newgroup)
+    __attribute__ ((weak, alias("PMPI_Group_difference")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -30,7 +31,8 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup
 #define FUNCNAME MPIR_Group_difference_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Group_difference_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, MPIR_Group **new_group_ptr)
+int MPIR_Group_difference_impl(MPIR_Group * group_ptr1, MPIR_Group * group_ptr2,
+                               MPIR_Group ** new_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int size1, i, k, g1_idx, g2_idx, l1_pid, l2_pid, nnew;
@@ -38,45 +40,42 @@ int MPIR_Group_difference_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, M
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
     /* Return a group consisting of the members of group1 that are *not*
-       in group2 */
+     * in group2 */
     size1 = group_ptr1->size;
     /* Insure that the lpid lists are setup */
-    MPIR_Group_setup_lpid_pairs( group_ptr1, group_ptr2 );
+    MPIR_Group_setup_lpid_pairs(group_ptr1, group_ptr2);
 
     for (i = 0; i < size1; i++)
         group_ptr1->lrank_to_lpid[i].flag = 0;
-    
+
     g1_idx = group_ptr1->idx_of_first_lpid;
     g2_idx = group_ptr2->idx_of_first_lpid;
-    
+
     nnew = size1;
     while (g1_idx >= 0 && g2_idx >= 0) {
         l1_pid = group_ptr1->lrank_to_lpid[g1_idx].lpid;
         l2_pid = group_ptr2->lrank_to_lpid[g2_idx].lpid;
         if (l1_pid < l2_pid) {
             g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
-        }
-        else if (l1_pid > l2_pid) {
+        } else if (l1_pid > l2_pid) {
             g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
-        }
-        else {
+        } else {
             /* Equal */
             group_ptr1->lrank_to_lpid[g1_idx].flag = 1;
             g1_idx = group_ptr1->lrank_to_lpid[g1_idx].next_lpid;
             g2_idx = group_ptr2->lrank_to_lpid[g2_idx].next_lpid;
-            nnew --;
+            nnew--;
         }
     }
     /* Create the group */
     if (nnew == 0) {
         /* See 5.3.2, Group Constructors.  For many group routines,
-           the standard explicitly says to return MPI_GROUP_EMPTY;
-           for others it is implied */
+         * the standard explicitly says to return MPI_GROUP_EMPTY;
+         * for others it is implied */
         *new_group_ptr = MPIR_Group_empty;
         goto fn_exit;
-    }
-    else {
-        mpi_errno = MPIR_Group_create( nnew, new_group_ptr );
+    } else {
+        mpi_errno = MPIR_Group_create(nnew, new_group_ptr);
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno) {
             goto fn_fail;
@@ -84,7 +83,7 @@ int MPIR_Group_difference_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, M
         /* --END ERROR HANDLING-- */
         (*new_group_ptr)->rank = MPI_UNDEFINED;
         k = 0;
-        for (i=0; i<size1; i++) {
+        for (i = 0; i < size1; i++) {
             if (!group_ptr1->lrank_to_lpid[i].flag) {
                 (*new_group_ptr)->lrank_to_lpid[k].lpid = group_ptr1->lrank_to_lpid[i].lpid;
                 if (i == group_ptr1->rank)
@@ -96,10 +95,10 @@ int MPIR_Group_difference_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, M
     }
 
 
- fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
     return mpi_errno;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -116,11 +115,11 @@ int MPIR_Group_difference_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, M
 MPI_Group_difference - Makes a group from the difference of two groups
 
 Input Parameters:
-+ group1 - first group (handle) 
-- group2 - second group (handle) 
++ group1 - first group (handle)
+- group2 - second group (handle)
 
 Output Parameters:
-. newgroup - difference group (handle) 
+. newgroup - difference group (handle)
 
 Notes:
 The generated group containc the members of 'group1' that are not in 'group2'.
@@ -136,7 +135,7 @@ The generated group containc the members of 'group1' that are not in 'group2'.
 
 .seealso: MPI_Group_free
 @*/
-int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup)
+int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group * newgroup)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr1 = NULL;
@@ -145,46 +144,48 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GROUP_DIFFERENCE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GROUP_DIFFERENCE);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_GROUP(group1, mpi_errno);
-	    MPIR_ERRTEST_GROUP(group2, mpi_errno);
+            MPIR_ERRTEST_GROUP(group1, mpi_errno);
+            MPIR_ERRTEST_GROUP(group2, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
-    
+#endif
+
     /* Convert MPI object handles to object pointers */
-    MPIR_Group_get_ptr( group1, group_ptr1 );
-    MPIR_Group_get_ptr( group2, group_ptr2 );
+    MPIR_Group_get_ptr(group1, group_ptr1);
+    MPIR_Group_get_ptr(group2, group_ptr2);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate group_ptr */
-            MPIR_Group_valid_ptr( group_ptr1, mpi_errno );
-            MPIR_Group_valid_ptr( group_ptr2, mpi_errno );
-	    /* If either group_ptr is not valid, it will be reset to null */
-            if (mpi_errno) goto fn_fail;
+            MPIR_Group_valid_ptr(group_ptr1, mpi_errno);
+            MPIR_Group_valid_ptr(group_ptr2, mpi_errno);
+            /* If either group_ptr is not valid, it will be reset to null */
+            if (mpi_errno)
+                goto fn_fail;
             MPIR_ERRTEST_ARGNULL(newgroup, "newgroup", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
     mpi_errno = MPIR_Group_difference_impl(group_ptr1, group_ptr2, &new_group_ptr);
-    if (mpi_errno) goto fn_fail;
+    if (mpi_errno)
+        goto fn_fail;
 
     MPIR_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
 
@@ -197,14 +198,15 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_group_difference",
-	    "**mpi_group_difference %G %G %p", group1, group2, newgroup);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_group_difference", "**mpi_group_difference %G %G %p",
+                                 group1, group2, newgroup);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

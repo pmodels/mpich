@@ -91,8 +91,7 @@ void pgroup_create(int grp_size, int *pid_list, MPI_Comm * group_out)
             MPI_Intercomm_create(pgroup, 0, MPI_COMM_WORLD, pid_list[(gid + 1) * merge_size],
                                  INTERCOMM_TAG, &inter_pgroup);
             MPI_Intercomm_merge(inter_pgroup, 0 /* LOW */ , &pgroup);
-        }
-        else {
+        } else {
             MPI_Intercomm_create(pgroup, 0, MPI_COMM_WORLD, pid_list[(gid - 1) * merge_size],
                                  INTERCOMM_TAG, &inter_pgroup);
             MPI_Intercomm_merge(inter_pgroup, 1 /* HIGH */ , &pgroup);

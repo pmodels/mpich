@@ -48,8 +48,8 @@ cvars:
 #pragma _CRI duplicate MPI_Iexscan as PMPI_Iexscan
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                MPI_Op op, MPI_Comm comm, MPI_Request *request)
-                __attribute__((weak,alias("PMPI_Iexscan")));
+                MPI_Op op, MPI_Comm comm, MPI_Request * request)
+    __attribute__ ((weak, alias("PMPI_Iexscan")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -63,12 +63,17 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 #define FUNCNAME MPIR_Iexscan_sched_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iexscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iexscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
+                                  MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                                  MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Iexscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    mpi_errno =
+        MPIR_Iexscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr,
+                                                    s);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -81,19 +86,23 @@ int MPIR_Iexscan_sched_intra_auto(const void *sendbuf, void *recvbuf, int count,
 #define FUNCNAME MPIR_Iexscan_sched_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iexscan_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iexscan_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                            MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     /* intracommunicator */
     switch (MPIR_Iexscan_intra_algo_choice) {
         case MPIR_IEXSCAN_INTRA_ALGO_RECURSIVE_DOUBLING:
-            mpi_errno = MPIR_Iexscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+            mpi_errno =
+                MPIR_Iexscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
+                                                            comm_ptr, s);
             break;
         case MPIR_IEXSCAN_INTRA_ALGO_AUTO:
             MPL_FALLTHROUGH;
         default:
-            mpi_errno = MPIR_Iexscan_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+            mpi_errno =
+                MPIR_Iexscan_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
             break;
     }
 
@@ -104,16 +113,15 @@ int MPIR_Iexscan_sched_impl(const void *sendbuf, void *recvbuf, int count, MPI_D
 #define FUNCNAME MPIR_Iexscan_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iexscan_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iexscan_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                       MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (MPIR_CVAR_IEXSCAN_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Iexscan_sched(sendbuf, recvbuf, count, datatype, op,
-                                 comm_ptr, s);
+        mpi_errno = MPID_Iexscan_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     } else {
-        mpi_errno = MPIR_Iexscan_sched_impl(sendbuf, recvbuf, count, datatype, op,
-                                      comm_ptr, s);
+        mpi_errno = MPIR_Iexscan_sched_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     }
 
     return mpi_errno;
@@ -124,8 +132,8 @@ int MPIR_Iexscan_sched(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count,
-                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-                      MPIR_Request **request)
+                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
+                      MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
@@ -134,19 +142,23 @@ int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count,
     *request = NULL;
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Iexscan_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -155,17 +167,14 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iexscan(const void *sendbuf, void *recvbuf, int count,
-                 MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-                 MPIR_Request **request)
+                 MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (MPIR_CVAR_IEXSCAN_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Iexscan(sendbuf, recvbuf, count, datatype, op,
-                                 comm_ptr, request);
+        mpi_errno = MPID_Iexscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
     } else {
-        mpi_errno = MPIR_Iexscan_impl(sendbuf, recvbuf, count, datatype, op,
-                                      comm_ptr, request);
+        mpi_errno = MPIR_Iexscan_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
     }
 
     return mpi_errno;
@@ -200,7 +209,7 @@ Output Parameters:
 .N Errors
 @*/
 int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                MPI_Op op, MPI_Comm comm, MPI_Request *request)
+                MPI_Op op, MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
@@ -211,7 +220,7 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IEXSCAN);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -223,38 +232,40 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, FALSE);
             MPIR_ERRTEST_COMM_INTRA(comm_ptr, mpi_errno);
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
                 MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
                 MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
             }
 
             if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
                 MPIR_Op *op_ptr = NULL;
                 MPIR_Op_get_ptr(op, op_ptr);
                 MPIR_Op_valid_ptr(op_ptr, mpi_errno);
+            } else if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+                mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (datatype);
             }
-            else if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-                mpi_errno = ( * MPIR_OP_HDL_TO_DTYPE_FN(op) )(datatype);
-            }
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
 
-            MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(request, "request", mpi_errno);
 
             if (sendbuf != MPI_IN_PLACE && count != 0)
                 MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);
@@ -262,34 +273,37 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Iexscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, &request_ptr);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* return the handle of the request to the user */
-    if(request_ptr)
+    if (request_ptr)
         *request = request_ptr->handle;
-    else *request = MPI_REQUEST_NULL;
+    else
+        *request = MPI_REQUEST_NULL;
 
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IEXSCAN);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_iexscan", "**mpi_iexscan %p %p %d %D %O %C %p", sendbuf, recvbuf, count, datatype, op, comm, request);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_iexscan", "**mpi_iexscan %p %p %d %D %O %C %p", sendbuf,
+                                 recvbuf, count, datatype, op, comm, request);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

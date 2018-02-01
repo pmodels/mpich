@@ -14,34 +14,34 @@
 
 #define ITER  100
 #define NUM_COUNT 2
-static int test_counts[NUM_COUNT] = {5, 1000};
+static int test_counts[NUM_COUNT] = { 5, 1000 };
 
 #if defined (GACC_TYPE_SHORT)
-#  define TYPE_C   short
-#  define TYPE_MPI_BASE MPI_SHORT
-#  define TYPE_FMT "%d"
+#define TYPE_C   short
+#define TYPE_MPI_BASE MPI_SHORT
+#define TYPE_FMT "%d"
 #elif defined (GACC_TYPE_LONG)
-#  define TYPE_C   long
-#  define TYPE_MPI_BASE MPI_LONG
-#  define TYPE_FMT "%ld"
+#define TYPE_C   long
+#define TYPE_MPI_BASE MPI_LONG
+#define TYPE_FMT "%ld"
 #elif defined (GACC_TYPE_DOUBLE)
-#  define TYPE_C   double
-#  define TYPE_MPI_BASE MPI_DOUBLE
-#  define TYPE_FMT "%f"
+#define TYPE_C   double
+#define TYPE_MPI_BASE MPI_DOUBLE
+#define TYPE_FMT "%f"
 #else
-#  define TYPE_C   int
-#  define TYPE_MPI_BASE MPI_INT
-#  define TYPE_FMT "%d"
+#define TYPE_C   int
+#define TYPE_MPI_BASE MPI_INT
+#define TYPE_FMT "%d"
 #endif
 
 #if defined(GACC_TYPE_DERIVED)
-#  define TYPE_MPI derived_type
+#define TYPE_MPI derived_type
 #else
-#  define TYPE_MPI TYPE_MPI_BASE
+#define TYPE_MPI TYPE_MPI_BASE
 #endif
 
-static void reset_bufs(TYPE_C * win_ptr, TYPE_C * res_ptr, TYPE_C * val_ptr, TYPE_C value, int count,
-                       MPI_Win win)
+static void reset_bufs(TYPE_C * win_ptr, TYPE_C * res_ptr, TYPE_C * val_ptr, TYPE_C value,
+                       int count, MPI_Win win)
 {
     int rank, nproc, i;
 
@@ -108,7 +108,7 @@ int main(int argc, char **argv)
         for (i = 0; i < count; i++) {
             if (win_ptr[i] != ITER) {
                 SQUELCH(printf("%d->%d -- SELF[%d]: expected " TYPE_FMT ", got " TYPE_FMT "\n",
-                            rank, rank, i, (TYPE_C) ITER, win_ptr[i]););
+                               rank, rank, i, (TYPE_C) ITER, win_ptr[i]););
                 errors++;
             }
         }
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
         for (i = 0; i < count; i++) {
             if (win_ptr[i] != ITER) {
                 SQUELCH(printf("%d->%d -- NEIGHBOR[%d]: expected " TYPE_FMT ", got " TYPE_FMT "\n",
-                            (rank + 1) % nproc, rank, i, (TYPE_C) ITER, win_ptr[i]););
+                               (rank + 1) % nproc, rank, i, (TYPE_C) ITER, win_ptr[i]););
                 errors++;
             }
         }
@@ -156,8 +156,9 @@ int main(int argc, char **argv)
         if (rank == 0 && nproc > 1) {
             for (i = 0; i < count; i++) {
                 if (win_ptr[i] != ITER * (nproc - 1)) {
-                    SQUELCH(printf("*->%d - CONTENTION[%d]: expected=" TYPE_FMT " val=" TYPE_FMT "\n",
-                                rank, i, (TYPE_C) ITER * (nproc - 1), win_ptr[i]););
+                    SQUELCH(printf
+                            ("*->%d - CONTENTION[%d]: expected=" TYPE_FMT " val=" TYPE_FMT "\n",
+                             rank, i, (TYPE_C) ITER * (nproc - 1), win_ptr[i]););
                     errors++;
                 }
             }
@@ -184,8 +185,8 @@ int main(int argc, char **argv)
                 for (c = 0; c < count; c++) {
                     if (res_ptr[j * count + c] != i * rank) {
                         SQUELCH(printf
-                                ("%d->%d -- ALL-TO-ALL (FENCE) [%d]: iter %d, expected result " TYPE_FMT
-                                 ", got " TYPE_FMT "\n", rank, j, c, i, (TYPE_C) i * rank,
+                                ("%d->%d -- ALL-TO-ALL (FENCE) [%d]: iter %d, expected result "
+                                 TYPE_FMT ", got " TYPE_FMT "\n", rank, j, c, i, (TYPE_C) i * rank,
                                  res_ptr[j * count + c]););
                         errors++;
                     }
@@ -200,8 +201,8 @@ int main(int argc, char **argv)
             for (c = 0; c < count; c++) {
                 if (win_ptr[i * count + c] != ITER * i) {
                     SQUELCH(printf
-                            ("%d->%d -- ALL-TO-ALL (FENCE): expected " TYPE_FMT ", got " TYPE_FMT "\n",
-                             i, rank, (TYPE_C) ITER * i, win_ptr[i * count + c]););
+                            ("%d->%d -- ALL-TO-ALL (FENCE): expected " TYPE_FMT ", got " TYPE_FMT
+                             "\n", i, rank, (TYPE_C) ITER * i, win_ptr[i * count + c]););
                     errors++;
                 }
             }
@@ -311,7 +312,7 @@ int main(int argc, char **argv)
             int j, target = (rank + 1) % nproc;
 
             /* Test: origin_buf = NULL */
-            memset(res_ptr, -1, sizeof(TYPE_C) * nproc * count); /* reset result buffer. */
+            memset(res_ptr, -1, sizeof(TYPE_C) * nproc * count);        /* reset result buffer. */
 
             MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
             MPI_Get_accumulate(NULL, count, TYPE_MPI, res_ptr, count, TYPE_MPI,
@@ -320,8 +321,9 @@ int main(int argc, char **argv)
 
             for (j = 0; j < count; j++) {
                 if (res_ptr[j] != (TYPE_C) target) {
-                    SQUELCH(printf("%d->%d -- NOP(1)[%d]: expected " TYPE_FMT ", got " TYPE_FMT "\n",
-                                target, rank, i, (TYPE_C) target, res_ptr[i]););
+                    SQUELCH(printf
+                            ("%d->%d -- NOP(1)[%d]: expected " TYPE_FMT ", got " TYPE_FMT "\n",
+                             target, rank, i, (TYPE_C) target, res_ptr[i]););
                     errors++;
                 }
             }
@@ -336,8 +338,9 @@ int main(int argc, char **argv)
 
             for (j = 0; j < count; j++) {
                 if (res_ptr[j] != (TYPE_C) target) {
-                    SQUELCH(printf("%d->%d -- NOP(2)[%d]: expected " TYPE_FMT ", got " TYPE_FMT "\n",
-                                target, rank, i, (TYPE_C) target, res_ptr[i]););
+                    SQUELCH(printf
+                            ("%d->%d -- NOP(2)[%d]: expected " TYPE_FMT ", got " TYPE_FMT "\n",
+                             target, rank, i, (TYPE_C) target, res_ptr[i]););
                     errors++;
                 }
             }
@@ -352,8 +355,9 @@ int main(int argc, char **argv)
 
             for (j = 0; j < count; j++) {
                 if (res_ptr[j] != (TYPE_C) target) {
-                    SQUELCH(printf("%d->%d -- NOP(2)[%d]: expected " TYPE_FMT ", got " TYPE_FMT "\n",
-                                target, rank, i, (TYPE_C) target, res_ptr[i]););
+                    SQUELCH(printf
+                            ("%d->%d -- NOP(2)[%d]: expected " TYPE_FMT ", got " TYPE_FMT "\n",
+                             target, rank, i, (TYPE_C) target, res_ptr[i]););
                     errors++;
                 }
             }
@@ -441,8 +445,7 @@ int main(int argc, char **argv)
     if (rank == 0) {
         if (!toterrs) {
             printf(" No Errors\n");
-        }
-        else {
+        } else {
             printf(" Found %d errors\n", toterrs);
         }
     }

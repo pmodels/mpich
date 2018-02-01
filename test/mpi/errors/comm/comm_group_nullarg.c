@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     int errs = 0, errclass, mpi_errno;
     int rank, size;
@@ -30,4 +30,4 @@ int main(int argc, char* argv[])
     MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
-  }
+}

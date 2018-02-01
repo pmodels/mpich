@@ -16,7 +16,8 @@
 #pragma _CRI duplicate MPI_Type_create_indexed_block as PMPI_Type_create_indexed_block
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_create_indexed_block(int count, int blocklength, const int array_of_displacements[],
-                                  MPI_Datatype oldtype, MPI_Datatype *newtype) __attribute__((weak,alias("PMPI_Type_create_indexed_block")));
+                                  MPI_Datatype oldtype, MPI_Datatype * newtype)
+    __attribute__ ((weak, alias("PMPI_Type_create_indexed_block")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -33,8 +34,7 @@ int MPI_Type_create_indexed_block(int count, int blocklength, const int array_of
 int MPIR_Type_create_indexed_block_impl(int count,
                                         int blocklength,
                                         const int array_of_displacements[],
-                                        MPI_Datatype oldtype,
-                                        MPI_Datatype *newtype)
+                                        MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
@@ -42,39 +42,34 @@ int MPIR_Type_create_indexed_block_impl(int count,
     MPIR_Datatype *new_dtp;
     int i, *ints;
 
-    mpi_errno = MPIR_Type_blockindexed(count,
-				       blocklength,
-				       array_of_displacements,
-				       0, /* dispinbytes */
-				       oldtype,
-				       &new_handle);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Type_blockindexed(count, blocklength, array_of_displacements, 0,   /* dispinbytes */
+                                       oldtype, &new_handle);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
-    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 2) * sizeof(int), mpi_errno, "content description", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 2) * sizeof(int), mpi_errno,
+                               "content description", MPL_MEM_BUFFER);
 
     ints[0] = count;
     ints[1] = blocklength;
 
-    for (i=0; i < count; i++)
-	ints[i+2] = array_of_displacements[i];
+    for (i = 0; i < count; i++)
+        ints[i + 2] = array_of_displacements[i];
 
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp,
-				           MPI_COMBINER_INDEXED_BLOCK,
-				           count + 2, /* ints */
-				           0, /* aints */
-				           1, /* types */
-				           ints,
-				           NULL,
-				           &oldtype);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_INDEXED_BLOCK, count + 2,      /* ints */
+                                           0,   /* aints */
+                                           1,   /* types */
+                                           ints, NULL, &oldtype);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
- fn_exit:
+  fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -90,13 +85,13 @@ int MPIR_Type_create_indexed_block_impl(int count,
      datatype with constant-sized blocks
 
 Input Parameters:
-+ count - length of array of displacements (integer) 
-. blocklength - size of block (integer) 
-. array_of_displacements - array of displacements (array of integer) 
-- oldtype - old datatype (handle) 
++ count - length of array of displacements (integer)
+. blocklength - size of block (integer)
+. array_of_displacements - array of displacements (array of integer)
+- oldtype - old datatype (handle)
 
 Output Parameters:
-. newtype - new datatype (handle) 
+. newtype - new datatype (handle)
 
 Notes:
 The indices are displacements, and are based on a zero origin.  A common error
@@ -130,54 +125,53 @@ consider declaring the Fortran array with a zero origin
 .N MPI_ERR_ARG
 @*/
 int MPI_Type_create_indexed_block(int count,
-				  int blocklength,
-				  const int array_of_displacements[],
-				  MPI_Datatype oldtype,
-				  MPI_Datatype *newtype)
+                                  int blocklength,
+                                  const int array_of_displacements[],
+                                  MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_INDEXED_BLOCK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_CREATE_INDEXED_BLOCK);
-    
+
     /* Validate parameters and objects */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_Datatype *datatype_ptr = NULL;
+            MPIR_Datatype *datatype_ptr = NULL;
 
-	    MPIR_ERRTEST_COUNT(count, mpi_errno);
-	    MPIR_ERRTEST_ARGNEG(blocklength, "blocklen", mpi_errno);
-	    if (count > 0) {
-		MPIR_ERRTEST_ARGNULL(array_of_displacements,
-				     "indices",
-				     mpi_errno);
-	    }
-	    MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
-	    
-	    if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
-		MPIR_Datatype_get_ptr(oldtype, datatype_ptr);
-		MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-	    }
+            MPIR_ERRTEST_COUNT(count, mpi_errno);
+            MPIR_ERRTEST_ARGNEG(blocklength, "blocklen", mpi_errno);
+            if (count > 0) {
+                MPIR_ERRTEST_ARGNULL(array_of_displacements, "indices", mpi_errno);
+            }
+            MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
 
-            if (mpi_errno) goto fn_fail;
+            if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
+                MPIR_Datatype_get_ptr(oldtype, datatype_ptr);
+                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+            }
+
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
 
     mpi_errno = MPIR_Type_create_indexed_block_impl(count, blocklength, array_of_displacements,
                                                     oldtype, newtype);
-    if (mpi_errno) goto fn_fail;
-    
+    if (mpi_errno)
+        goto fn_fail;
+
     /* ... end of body of routine ... */
-    
+
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_CREATE_INDEXED_BLOCK);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -185,14 +179,16 @@ int MPI_Type_create_indexed_block(int count,
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_type_create_indexed_block",
-	    "**mpi_type_create_indexed_block %d %d %p %D %p", count, blocklength, array_of_displacements, oldtype, newtype);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_type_create_indexed_block",
+                                 "**mpi_type_create_indexed_block %d %d %p %D %p", count,
+                                 blocklength, array_of_displacements, oldtype, newtype);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

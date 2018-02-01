@@ -59,16 +59,14 @@ int main(int argc, char *argv[])
                             errs++;
                         }
                     }
-                }
-                else {
+                } else {
                     for (i = 0; i < count; i++) {
                         if (recvbuf[i] != -1) {
                             errs++;
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 /* In the right group */
                 for (i = 0; i < count; i++)
                     sendbuf[i] = i;

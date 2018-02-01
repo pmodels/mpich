@@ -30,8 +30,7 @@ int main(int argc, char **argv)
         MPI_Error_string(rc, errmsg, &errlen);
         printf("MPI_Testall returned failure: %s\n", errmsg);
         errs++;
-    }
-    else if (!flag) {
+    } else if (!flag) {
         printf("MPI_Testall(0, ...) did not return a true flag\n");
         errs++;
     }
@@ -48,8 +47,7 @@ int main(int argc, char **argv)
         MPI_Error_string(rc, errmsg, &errlen);
         printf("MPI_Testany returned failure: %s\n", errmsg);
         errs++;
-    }
-    else if (!flag) {
+    } else if (!flag) {
         printf("MPI_Testany(0, ...) did not return a true flag\n");
         errs++;
     }

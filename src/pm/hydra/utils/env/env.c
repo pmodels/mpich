@@ -196,8 +196,7 @@ HYD_status HYDU_append_env_to_list(const char *env_name, const char *env_value,
     /* Add the structure to the end of the list */
     if (*env_list == NULL) {
         *env_list = tenv;
-    }
-    else {
+    } else {
         run = *env_list;
 
         while (1) {
@@ -206,12 +205,10 @@ HYD_status HYDU_append_env_to_list(const char *env_name, const char *env_value,
                 if (run->env_value != NULL && tenv->env_value != NULL) {
                     MPL_free(run->env_value);
                     run->env_value = MPL_strdup(tenv->env_value);
-                }
-                else if (run->env_value != NULL) {
+                } else if (run->env_value != NULL) {
                     MPL_free(run->env_value);
                     run->env_value = NULL;
-                }
-                else if (env_value != NULL) {
+                } else if (env_value != NULL) {
                     run->env_value = MPL_strdup(tenv->env_value);
                 }
 
@@ -221,8 +218,7 @@ HYD_status HYDU_append_env_to_list(const char *env_name, const char *env_value,
                 MPL_free(tenv);
 
                 break;
-            }
-            else if (run->next == NULL) {
+            } else if (run->next == NULL) {
                 run->next = tenv;
                 break;
             }

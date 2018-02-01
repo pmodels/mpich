@@ -60,7 +60,8 @@ int main(int argc, char *argv[])
     MPI_Win_create(rbuf, sizeof(int) * N_ELMS, sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, win);
     for (i = 0; i < N_BLOCKS; i++)
-        MPI_Rget(lbuf+i*BLOCKSIZE, BLOCKSIZE, MPI_INT, trg, i*BLOCKSIZE, BLOCKSIZE, MPI_INT, win, &reqs[i]);
+        MPI_Rget(lbuf + i * BLOCKSIZE, BLOCKSIZE, MPI_INT, trg, i * BLOCKSIZE, BLOCKSIZE, MPI_INT,
+                 win, &reqs[i]);
     MPI_Win_unlock_all(win);
     for (i = 0; i < N_ELMS; i++)
         lbuf[i] = -2;

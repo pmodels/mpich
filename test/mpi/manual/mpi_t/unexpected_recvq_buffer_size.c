@@ -43,8 +43,7 @@ void reversed_tags_test()
         MPI_Send(send_buf, EAGER_SIZE, MPI_INT, 1, 0xB, MPI_COMM_WORLD);
         MPI_Send(send_buf, EAGER_SIZE, MPI_INT, 1, 0xC, MPI_COMM_WORLD);
         MPI_Send(send_buf, EAGER_SIZE, MPI_INT, 1, 0xD, MPI_COMM_WORLD);
-    }
-    else if (rank == 1) {
+    } else if (rank == 1) {
         int recv_buf[EAGER_SIZE];
         MPI_Status status;
 
@@ -80,8 +79,7 @@ void rndv_test()
 
         MPI_Send(send_buf, RNDV_SIZE, MPI_INT, 1, 0, MPI_COMM_WORLD);
         MPI_Send(send_buf, RNDV_SIZE, MPI_INT, 1, 0, MPI_COMM_WORLD);
-    }
-    else if (rank == 1) {
+    } else if (rank == 1) {
         int recv_buf[RNDV_SIZE];
         MPI_Status status;
 

@@ -30,8 +30,7 @@ int main(int argc, char *argv[])
             errs++;
             printf("rank outside of input communicator not UNDEFINED\n");
         }
-    }
-    else {
+    } else {
         if (rank != newrank) {
             errs++;
             printf("Newrank not defined and should be 0\n");
@@ -47,8 +46,7 @@ int main(int argc, char *argv[])
             errs++;
             printf("rank outside of input communicator not UNDEFINED\n");
         }
-    }
-    else {
+    } else {
         /* rank == 0 */
         if (rank != newrank) {
             errs++;

@@ -10,21 +10,22 @@
 #include "slurm.h"
 
 #if defined(HAVE_SLURM_SLURM_H)
-#include <slurm/slurm.h> /* for slurm_hostlist_create */
+#include <slurm/slurm.h>        /* for slurm_hostlist_create */
 #elif defined(HAVE_POSIX_REGCOMP)
-#include <regex.h> /* for POSIX regular expressions */
+#include <regex.h>      /* for POSIX regular expressions */
 
-#define MAX_GMATCH 5 /* max number of atoms in group matches + 1 */
-#define MAX_RMATCH 5 /* max number of atoms in range matches + 1 */
-#define MAX_EMATCH 2 /* max number of atoms in element matches + 1 */
-#define MAX_NNODES_STRLEN 8 /* max string len for node # incl. '\0' */
+#define MAX_GMATCH 5    /* max number of atoms in group matches + 1 */
+#define MAX_RMATCH 5    /* max number of atoms in range matches + 1 */
+#define MAX_EMATCH 2    /* max number of atoms in element matches + 1 */
+#define MAX_NNODES_STRLEN 8     /* max string len for node # incl. '\0' */
 #endif
 
 static int *tasks_per_node = NULL;
 static struct HYD_node *global_node_list = NULL;
 
 #if defined(HAVE_LIBSLURM)
-static HYD_status list_to_nodes(char *str) {
+static HYD_status list_to_nodes(char *str)
+{
     hostlist_t hostlist;
     char *host;
     int k = 0;
@@ -42,10 +43,10 @@ static HYD_status list_to_nodes(char *str) {
 
     slurm_hostlist_destroy(hostlist);
 
-fn_exit:
+  fn_exit:
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 #elif defined(HAVE_POSIX_REGCOMP)
@@ -83,38 +84,25 @@ static HYD_status list_to_nodes(char *str)
 
     /* compile group-1 regex for old format: "h00-h12 | h14" */
     regcomp(&gmatch_old[1],
-            "([[,]|^)([a-zA-Z]+[0-9]+-[a-zA-Z]+[0-9]+|[a-zA-Z]+[0-9]+)([],]|$)",
-            REG_EXTENDED);
+            "([[,]|^)([a-zA-Z]+[0-9]+-[a-zA-Z]+[0-9]+|[a-zA-Z]+[0-9]+)([],]|$)", REG_EXTENDED);
 
     /* compile range regex for old format: "h00-h12" */
-    regcomp(&rmatch_old,
-            "([a-zA-Z]+)([0-9]+)-([a-zA-Z]+)([0-9]+)",
-            REG_EXTENDED);
+    regcomp(&rmatch_old, "([a-zA-Z]+)([0-9]+)-([a-zA-Z]+)([0-9]+)", REG_EXTENDED);
 
     /* compile element regex for old format: "h14" */
-    regcomp(&ematch_old,
-            "([a-zA-Z]+[0-9]+)",
-            REG_EXTENDED);
+    regcomp(&ematch_old, "([a-zA-Z]+[0-9]+)", REG_EXTENDED);
 
     /* compile group-0 regex for new format: "h-[00-12,14] | h-14" */
-    regcomp(&gmatch_new[0],
-            "(,|^)([a-zA-Z]+[0-9]*-)(\\[[-,0-9]+\\]|[0-9]+)(,|$)",
-            REG_EXTENDED);
+    regcomp(&gmatch_new[0], "(,|^)([a-zA-Z]+[0-9]*-)(\\[[-,0-9]+\\]|[0-9]+)(,|$)", REG_EXTENDED);
 
     /* compile group-1 regex for new format: "00-12 | 14" */
-    regcomp(&gmatch_new[1],
-            "([[,]|^)([0-9]+-[0-9]+|[0-9]+)([],]|$)",
-            REG_EXTENDED);
+    regcomp(&gmatch_new[1], "([[,]|^)([0-9]+-[0-9]+|[0-9]+)([],]|$)", REG_EXTENDED);
 
     /* compile range regex for new format: "00-12" */
-    regcomp(&rmatch_new,
-            "([0-9]+)-([0-9]+)",
-            REG_EXTENDED);
+    regcomp(&rmatch_new, "([0-9]+)-([0-9]+)", REG_EXTENDED);
 
     /* compile element regex for new format: "14" */
-    regcomp(&ematch_new,
-            "([0-9]+)",
-            REG_EXTENDED);
+    regcomp(&ematch_new, "([0-9]+)", REG_EXTENDED);
 
     gpattern[0] = string;
 
@@ -140,13 +128,13 @@ static HYD_status list_to_nodes(char *str)
             if (regexec(&rmatch_old, rpattern, MAX_RMATCH, rmatch, 0) == 0) {
                 /* matched range: (h)(00)-(h)(12) */
                 sprintf(basename, "%.*s%c",
-                        (int)(rmatch[1].rm_eo-rmatch[1].rm_so), rpattern+rmatch[1].rm_so,
+                        (int) (rmatch[1].rm_eo - rmatch[1].rm_so), rpattern + rmatch[1].rm_so,
                         '\0');
                 sprintf(rbegin, "%.*s%c",
-                        (int)(rmatch[2].rm_eo-rmatch[2].rm_so), rpattern+rmatch[2].rm_so,
+                        (int) (rmatch[2].rm_eo - rmatch[2].rm_so), rpattern + rmatch[2].rm_so,
                         '\0');
                 sprintf(rend, "%.*s%c",
-                        (int)(rmatch[4].rm_eo-rmatch[4].rm_so), rpattern+rmatch[4].rm_so,
+                        (int) (rmatch[4].rm_eo - rmatch[4].rm_so), rpattern + rmatch[4].rm_so,
                         '\0');
                 begin = atoi(rbegin);
                 end = atoi(rend);
@@ -154,16 +142,15 @@ static HYD_status list_to_nodes(char *str)
                 /* expand range and add nodes to global node list */
                 for (j = begin; j <= end; j++) {
                     sprintf(hostname, "%s%.*d%c",
-                            basename,
-                            (int)(rmatch[2].rm_eo-rmatch[2].rm_so), j,
-                            '\0');
-                    status = HYDU_add_to_node_list(hostname, tasks_per_node[k++], &global_node_list);
+                            basename, (int) (rmatch[2].rm_eo - rmatch[2].rm_so), j, '\0');
+                    status =
+                        HYDU_add_to_node_list(hostname, tasks_per_node[k++], &global_node_list);
                     HYDU_ERR_POP(status, "unable to add to node list\n");
                 }
             } else if (regexec(&ematch_old, epattern, MAX_EMATCH, ematch, 0) == 0) {
                 /* matched element: (h14) */
                 sprintf(hostname, "%.*s%c",
-                        (int)(ematch[1].rm_eo-ematch[1].rm_so), epattern+ematch[1].rm_so,
+                        (int) (ematch[1].rm_eo - ematch[1].rm_so), epattern + ematch[1].rm_so,
                         '\0');
                 status = HYDU_add_to_node_list(hostname, tasks_per_node[k++], &global_node_list);
                 HYDU_ERR_POP(status, "unable to add to node list\n");
@@ -187,7 +174,7 @@ static HYD_status list_to_nodes(char *str)
 
         /* extranct basename from atom 2 in group-0 */
         sprintf(basename, "%.*s%c",
-                (int)(gmatch[0][2].rm_eo-gmatch[0][2].rm_so), gpattern[0]+gmatch[0][2].rm_so,
+                (int) (gmatch[0][2].rm_eo - gmatch[0][2].rm_so), gpattern[0] + gmatch[0][2].rm_so,
                 '\0');
 
         /* select third atom in group-0 */
@@ -206,10 +193,10 @@ static HYD_status list_to_nodes(char *str)
             if (regexec(&rmatch_new, rpattern, MAX_RMATCH, rmatch, 0) == 0) {
                 /* matched range: (00)-(10) */
                 sprintf(rbegin, "%.*s%c",
-                        (int)(rmatch[1].rm_eo-rmatch[1].rm_so), rpattern+rmatch[1].rm_so,
+                        (int) (rmatch[1].rm_eo - rmatch[1].rm_so), rpattern + rmatch[1].rm_so,
                         '\0');
                 sprintf(rend, "%.*s%c",
-                        (int)(rmatch[2].rm_eo-rmatch[2].rm_so), rpattern+rmatch[2].rm_so,
+                        (int) (rmatch[2].rm_eo - rmatch[2].rm_so), rpattern + rmatch[2].rm_so,
                         '\0');
                 begin = atoi(rbegin);
                 end = atoi(rend);
@@ -217,21 +204,17 @@ static HYD_status list_to_nodes(char *str)
                 /* expand range and add nodes to global node list */
                 for (j = begin; j <= end; j++) {
                     sprintf(hostname, "%s%.*d%c",
-                            basename,
-                            (int)(rmatch[1].rm_eo-rmatch[1].rm_so), j,
-                            '\0');
-                    status = HYDU_add_to_node_list(hostname, tasks_per_node[k++], &global_node_list);
+                            basename, (int) (rmatch[1].rm_eo - rmatch[1].rm_so), j, '\0');
+                    status =
+                        HYDU_add_to_node_list(hostname, tasks_per_node[k++], &global_node_list);
                     HYDU_ERR_POP(status, "unable to add to node list\n");
                 }
             } else if (regexec(&ematch_new, epattern, MAX_EMATCH, ematch, 0) == 0) {
                 /* matched element: (14) */
                 sprintf(rbegin, "%.*s%c",
-                        (int)(ematch[1].rm_eo-ematch[1].rm_so), epattern+ematch[1].rm_so,
+                        (int) (ematch[1].rm_eo - ematch[1].rm_so), epattern + ematch[1].rm_so,
                         '\0');
-                sprintf(hostname, "%s%s%c",
-                        basename,
-                        rbegin,
-                        '\0');
+                sprintf(hostname, "%s%s%c", basename, rbegin, '\0');
                 status = HYDU_add_to_node_list(hostname, tasks_per_node[k++], &global_node_list);
                 HYDU_ERR_POP(status, "unable to add to node list\n");
             }
@@ -259,10 +242,10 @@ static HYD_status list_to_nodes(char *str)
     /* free local nodelist */
     MPL_free(string);
 
-fn_exit:
+  fn_exit:
     return status;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 #else
@@ -409,8 +392,7 @@ static HYD_status extract_tasks_per_node(int nnodes, char *task_list)
             nodes[strlen(nodes) - 1] = 0;
             nodes++;
             j = atoi(nodes);
-        }
-        else
+        } else
             j = 1;
 
         for (k = 0; k < j; k++)

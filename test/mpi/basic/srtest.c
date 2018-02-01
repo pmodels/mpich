@@ -34,8 +34,7 @@ int main(int argc, char *argv[])
         MPI_Recv(buffer, BUFLEN, MPI_CHAR, MPI_ANY_SOURCE, 99, MPI_COMM_WORLD, &status);
         printf("%d received '%s' \n", myid, buffer);
         /* mpdprintf(001,"%d receiving \n",myid); */
-    }
-    else {
+    } else {
         printf("%d receiving  \n", myid);
         MPI_Recv(buffer, BUFLEN, MPI_CHAR, MPI_ANY_SOURCE, 99, MPI_COMM_WORLD, &status);
         printf("%d received '%s' \n", myid, buffer);

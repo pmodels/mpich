@@ -54,8 +54,7 @@ int main(int argc, char *argv[])
         if (!flag || !flagdup) {
             errs++;
             printf("Info get failed for key %s\n", key);
-        }
-        else if (strcmp(value, valdup)) {
+        } else if (strcmp(value, valdup)) {
             errs++;
             printf("Info values for key %s not the same after dup\n", key);
         }

@@ -9,10 +9,8 @@
 
 #include "mpiimpl.h"
 
-int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner, 
-                                    int r, int p, 
-                                    MPI_Datatype *new_ptr );
+int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
+                                   int r, int p, MPI_Datatype * new_ptr);
 
 
 #endif /* CREATE_F90_UTIL_H_INCLUDED */
-

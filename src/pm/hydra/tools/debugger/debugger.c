@@ -70,8 +70,7 @@ HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
                         MPIR_proctable[i].executable_name = MPIR_proctable[i - 1].executable_name;
                     else
                         MPIR_proctable[i].executable_name = MPL_strdup(exec->exec[0]);
-                }
-                else {
+                } else {
                     MPIR_proctable[i].executable_name = NULL;
                 }
                 i++;

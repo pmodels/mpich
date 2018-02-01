@@ -44,8 +44,7 @@ int main(int argc, char *argv[])
             errs++;
             fprintf(stderr, "Error in recvbuf = %d on %d, expected %d\n", recvbuf[0], rank, result);
         }
-    }
-    else if (recvbuf[0] != -2) {
+    } else if (recvbuf[0] != -2) {
         errs++;
         fprintf(stderr, "Error in recvbuf on zero, is %d\n", recvbuf[0]);
     }

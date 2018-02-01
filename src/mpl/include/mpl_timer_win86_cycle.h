@@ -10,14 +10,14 @@
 #include <winsock2.h>
 #include <windows.h>
 
-static inline void MPL_wtime(MPL_time_t *timeval)
+static inline void MPL_wtime(MPL_time_t * timeval)
 {
-    register int *f1 = (int*)var_ptr;
+    register int *f1 = (int *) var_ptr;
     __asm cpuid;
     __asm rdtsc;
     __asm mov ecx, f1;
-    __asm mov [ecx], eax;
-    __asm mov [ecx + TYPE int], edx;
+    __asm mov[ecx], eax;
+    __asm mov[ecx + TYPE int], edx;
 
     return MPL_TIMER_SUCCESS;
 }

@@ -21,12 +21,12 @@
 
 #include "ad_tuning.h"
 
-int     romio_write_aggmethod;
-int     romio_read_aggmethod;
-int     romio_onesided_no_rmw;
-int     romio_onesided_always_rmw;
-int     romio_onesided_inform_rmw;
-int 	romio_tunegather;
+int romio_write_aggmethod;
+int romio_read_aggmethod;
+int romio_onesided_no_rmw;
+int romio_onesided_always_rmw;
+int romio_onesided_inform_rmw;
+int romio_tunegather;
 
 /* set internal variables for tuning environment variables */
 /** \page mpiio_vars MPIIO Configuration
@@ -80,32 +80,39 @@ int 	romio_tunegather;
  *
  */
 
-void ad_get_env_vars() {
+void ad_get_env_vars()
+{
     char *x;
 
     romio_write_aggmethod = 0;
-    x = getenv( "ROMIO_WRITE_AGGMETHOD" );
-    if (x) romio_write_aggmethod = atoi(x);
+    x = getenv("ROMIO_WRITE_AGGMETHOD");
+    if (x)
+        romio_write_aggmethod = atoi(x);
 
     romio_read_aggmethod = 0;
-    x = getenv( "ROMIO_READ_AGGMETHOD" );
-    if (x) romio_read_aggmethod = atoi(x);
+    x = getenv("ROMIO_READ_AGGMETHOD");
+    if (x)
+        romio_read_aggmethod = atoi(x);
 
     romio_onesided_no_rmw = 0;
-    x = getenv( "ROMIO_ONESIDED_NO_RMW" );
-    if (x) romio_onesided_no_rmw = atoi(x);
+    x = getenv("ROMIO_ONESIDED_NO_RMW");
+    if (x)
+        romio_onesided_no_rmw = atoi(x);
 
     romio_onesided_always_rmw = 0;
-    x = getenv( "ROMIO_ONESIDED_ALWAYS_RMW" );
-    if (x) romio_onesided_always_rmw = atoi(x);
+    x = getenv("ROMIO_ONESIDED_ALWAYS_RMW");
+    if (x)
+        romio_onesided_always_rmw = atoi(x);
     if (romio_onesided_always_rmw)
-      romio_onesided_no_rmw = 1;
+        romio_onesided_no_rmw = 1;
 
     romio_onesided_inform_rmw = 0;
-    x = getenv( "ROMIO_ONESIDED_INFORM_RMW" );
-    if (x) romio_onesided_inform_rmw = atoi(x);
+    x = getenv("ROMIO_ONESIDED_INFORM_RMW");
+    if (x)
+        romio_onesided_inform_rmw = atoi(x);
 
     romio_tunegather = 1;
-	x = getenv( "ROMIO_TUNEGATHER"   );
-	if (x) romio_tunegather   = atoi(x);
+    x = getenv("ROMIO_TUNEGATHER");
+    if (x)
+        romio_tunegather = atoi(x);
 }

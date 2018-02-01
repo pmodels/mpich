@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     if (nranks != 3)
         MPI_Abort(MPI_COMM_WORLD, 1);
 
-    MPI_Request reqs[nranks-1];
+    MPI_Request reqs[nranks - 1];
 
     if (rank == 0) {
         MPI_Datatype type;
@@ -27,24 +27,23 @@ int main(int argc, char *argv[])
         MPI_Type_commit(&type);
 
         MPI_Irecv(large_buf, 1, type, r + 1, 111, MPI_COMM_WORLD, &reqs[r]);
-        MPI_Irecv(large_buf1, 1, type, r + 2, 111, MPI_COMM_WORLD, &reqs[r+1]);
+        MPI_Irecv(large_buf1, 1, type, r + 2, 111, MPI_COMM_WORLD, &reqs[r + 1]);
 
         MPI_Type_free(&type);
 
         MPI_Waitall(nranks - 1, reqs, MPI_STATUSES_IGNORE);
 
-        for (i = 0; i < (BLKLEN * NUM_BLKS); i+=1025) {
-             for (j = i; j < i + 1024; j++) {
-                  if (large_buf[j] != rank + 1)
-		      ++errs;
-                  if (large_buf1[j] != rank + 2)
-                      ++errs;
-             }
+        for (i = 0; i < (BLKLEN * NUM_BLKS); i += 1025) {
+            for (j = i; j < i + 1024; j++) {
+                if (large_buf[j] != rank + 1)
+                    ++errs;
+                if (large_buf1[j] != rank + 2)
+                    ++errs;
+            }
         }
-    }
-    else {
-        for (i=0; i < (BLKLEN * NUM_BLKS); i++)
-             large_buf[i] = rank;
+    } else {
+        for (i = 0; i < (BLKLEN * NUM_BLKS); i++)
+            large_buf[i] = rank;
         MPI_Send(large_buf, BLKLEN * NUM_BLKS, MPI_DOUBLE, 0, 111, MPI_COMM_WORLD);
     }
 

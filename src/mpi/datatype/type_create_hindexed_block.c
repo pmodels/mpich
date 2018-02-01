@@ -17,7 +17,8 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_create_hindexed_block(int count, int blocklength,
                                    const MPI_Aint array_of_displacements[],
-                                   MPI_Datatype oldtype, MPI_Datatype *newtype) __attribute__((weak,alias("PMPI_Type_create_hindexed_block")));
+                                   MPI_Datatype oldtype, MPI_Datatype * newtype)
+    __attribute__ ((weak, alias("PMPI_Type_create_hindexed_block")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -49,15 +50,12 @@ int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
     ints[1] = blocklength;
 
     MPIR_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPIR_Datatype_set_contents(new_dtp,
-                                           MPI_COMBINER_HINDEXED_BLOCK,
-                                           2,     /* ints */
-                                           count, /* aints */
-                                           1,     /* types */
-                                           ints,
-                                           array_of_displacements,
-                                           &oldtype);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp, MPI_COMBINER_HINDEXED_BLOCK, 2,     /* ints */
+                                           count,       /* aints */
+                                           1,   /* types */
+                                           ints, array_of_displacements, &oldtype);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
@@ -97,9 +95,9 @@ Output Parameters:
 .N MPI_ERR_ARG
 @*/
 int MPI_Type_create_hindexed_block(int count,
-                                    int blocklength,
-                                    const MPI_Aint array_of_displacements[],
-                                    MPI_Datatype oldtype, MPI_Datatype * newtype)
+                                   int blocklength,
+                                   const MPI_Aint array_of_displacements[],
+                                   MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_HINDEXED_BLOCK);

@@ -49,11 +49,9 @@ int main(int argc, char *argv[])
         if (strcmp(argv[i], "-delaycount") == 0) {
             i++;
             lCount = atoi(argv[i]);
-        }
-        else if (strcmp(argv[i], "-v") == 0) {
+        } else if (strcmp(argv[i], "-v") == 0) {
             verbose = 1;
-        }
-        else {
+        } else {
             fprintf(stderr, "Unrecognized argument %s\n", argv[i]);
             exit(1);
         }
@@ -128,18 +126,15 @@ void SetupDelay(double usec)
             if (direction == 1)
                 break;
             direction = -1;
-        }
-        else if (t < sec / 2) {
+        } else if (t < sec / 2) {
             lCount = lCount * 2;
             if (direction == -1)
                 break;
             direction = 1;
-        }
-        else if (t < sec) {
+        } else if (t < sec) {
             /* sec/2 <= t < sec , so estimate the lCount to hit sec */
             lCount = (sec / t) * lCount;
-        }
-        else
+        } else
             break;
     }
 

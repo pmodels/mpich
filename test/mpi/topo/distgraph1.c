@@ -33,51 +33,51 @@ static void create_graph_layout(int graph_num)
 
     if (rank == 0) {
         switch (graph_num) {
-        case 0:
-            strncpy(graph_layout_name, "deterministic complete graph", MAX_LAYOUT_NAME_LEN);
-            for (i = 0; i < size; i++)
-                for (j = 0; j < size; j++)
-                    layout[i][j] = (i + 2) * (j + 1);
-            break;
-        case 1:
-            strncpy(graph_layout_name, "every other edge deleted", MAX_LAYOUT_NAME_LEN);
-            for (i = 0; i < size; i++)
-                for (j = 0; j < size; j++)
-                    layout[i][j] = (j % 2 ? (i + 2) * (j + 1) : 0);
-            break;
-        case 2:
-            strncpy(graph_layout_name, "only self-edges", MAX_LAYOUT_NAME_LEN);
-            for (i = 0; i < size; i++) {
-                for (j = 0; j < size; j++) {
-                    if (i == rank && j == rank)
-                        layout[i][j] = 10 * (i + 1);
-                    else
-                        layout[i][j] = 0;
+            case 0:
+                strncpy(graph_layout_name, "deterministic complete graph", MAX_LAYOUT_NAME_LEN);
+                for (i = 0; i < size; i++)
+                    for (j = 0; j < size; j++)
+                        layout[i][j] = (i + 2) * (j + 1);
+                break;
+            case 1:
+                strncpy(graph_layout_name, "every other edge deleted", MAX_LAYOUT_NAME_LEN);
+                for (i = 0; i < size; i++)
+                    for (j = 0; j < size; j++)
+                        layout[i][j] = (j % 2 ? (i + 2) * (j + 1) : 0);
+                break;
+            case 2:
+                strncpy(graph_layout_name, "only self-edges", MAX_LAYOUT_NAME_LEN);
+                for (i = 0; i < size; i++) {
+                    for (j = 0; j < size; j++) {
+                        if (i == rank && j == rank)
+                            layout[i][j] = 10 * (i + 1);
+                        else
+                            layout[i][j] = 0;
+                    }
                 }
-            }
-            break;
-        case 3:
-            strncpy(graph_layout_name, "no edges", MAX_LAYOUT_NAME_LEN);
-            for (i = 0; i < size; i++)
-                for (j = 0; j < size; j++)
-                    layout[i][j] = 0;
-            break;
-        default:
-            strncpy(graph_layout_name, "a random incomplete graph", MAX_LAYOUT_NAME_LEN);
-            srand(graph_num);
+                break;
+            case 3:
+                strncpy(graph_layout_name, "no edges", MAX_LAYOUT_NAME_LEN);
+                for (i = 0; i < size; i++)
+                    for (j = 0; j < size; j++)
+                        layout[i][j] = 0;
+                break;
+            default:
+                strncpy(graph_layout_name, "a random incomplete graph", MAX_LAYOUT_NAME_LEN);
+                srand(graph_num);
 
-            /* Create a connectivity graph; layout[i,j]==w represents an outward
-             * connectivity from i to j with weight w, w==0 is no edge. */
-            for (i = 0; i < size; i++) {
-                for (j = 0; j < size; j++) {
-                    /* disable about a third of the edges */
-                    if (((rand() * 1.0) / RAND_MAX) < 0.33)
-                        layout[i][j] = 0;
-                    else
-                        layout[i][j] = rand() % MAX_WEIGHT;
+                /* Create a connectivity graph; layout[i,j]==w represents an outward
+                 * connectivity from i to j with weight w, w==0 is no edge. */
+                for (i = 0; i < size; i++) {
+                    for (j = 0; j < size; j++) {
+                        /* disable about a third of the edges */
+                        if (((rand() * 1.0) / RAND_MAX) < 0.33)
+                            layout[i][j] = 0;
+                        else
+                            layout[i][j] = rand() % MAX_WEIGHT;
+                    }
                 }
-            }
-            break;
+                break;
         }
     }
 
@@ -107,8 +107,7 @@ static int verify_comm(MPI_Comm comm)
     for (use_dup = 0; use_dup <= 1; ++use_dup) {
         if (!use_dup) {
             MPI_Dist_graph_neighbors_count(comm, &indegree, &outdegree, &weighted);
-        }
-        else {
+        } else {
             MPI_Comm_dup(comm, &dupcomm);
             comm = dupcomm;     /* caller retains original comm value */
         }
@@ -161,8 +160,7 @@ static int verify_comm(MPI_Comm comm)
                 if (j == indegree) {
                     fprintf(stderr, "no edge from %d to %d specified\n", i, rank);
                     ++local_errs;
-                }
-                else {
+                } else {
                     if (sweights[j] != layout[i][rank]) {
                         fprintf(stderr, "incorrect weight for edge (%d,%d): %d instead of %d\n",
                                 i, rank, sweights[j], layout[i][rank]);
@@ -180,8 +178,7 @@ static int verify_comm(MPI_Comm comm)
                 if (j == outdegree) {
                     fprintf(stderr, "no edge from %d to %d specified\n", rank, i);
                     ++local_errs;
-                }
-                else {
+                } else {
                     if (dweights[j] != layout[rank][i]) {
                         fprintf(stderr, "incorrect weight for edge (%d,%d): %d instead of %d\n",
                                 rank, i, dweights[j], layout[rank][i]);
@@ -390,8 +387,7 @@ int main(int argc, char *argv[])
             if (rank == 0) {
                 MPI_Dist_graph_create(MPI_COMM_WORLD, p, sources, degrees,
                                       destinations, sweights, MPI_INFO_NULL, reorder, &comm);
-            }
-            else {
+            } else {
                 MPI_Dist_graph_create(MPI_COMM_WORLD, 0, NULL, NULL,
                                       NULL, NULL, MPI_INFO_NULL, reorder, &comm);
             }

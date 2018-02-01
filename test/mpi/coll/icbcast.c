@@ -42,8 +42,7 @@ int main(int argc, char *argv[])
                 if (rank == 0) {
                     for (i = 0; i < count; i++)
                         buf[i] = i;
-                }
-                else {
+                } else {
                     for (i = 0; i < count; i++)
                         buf[i] = -1;
                 }
@@ -62,8 +61,7 @@ int main(int argc, char *argv[])
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 /* In the right group */
                 for (i = 0; i < count; i++)
                     buf[i] = -1;

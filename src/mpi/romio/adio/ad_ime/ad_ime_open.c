@@ -11,8 +11,7 @@
 
 #include <assert.h>
 
-void ADIOI_IME_Open(ADIO_File fd,
-                   int *error_code)
+void ADIOI_IME_Open(ADIO_File fd, int *error_code)
 {
     static char myname[] = "ADIOI_IME_OPEN";
     struct ADIOI_IME_fs_s *ime_fs;
@@ -23,25 +22,21 @@ void ADIOI_IME_Open(ADIO_File fd,
     mode_t old_mask;
 
     /* validate input args */
-    if (!fd)
-    {
+    if (!fd) {
         *error_code = MPI_ERR_FILE;
         return;
     }
-    if (!error_code)
-    {
+    if (!error_code) {
         *error_code = MPI_ERR_FILE;
         return;
     }
 
     /* setup file permissions */
-    if (fd->perm == ADIO_PERM_NULL)
-    {
+    if (fd->perm == ADIO_PERM_NULL) {
         old_mask = umask(022);
         umask(old_mask);
         perm = old_mask ^ 0666;
-    }
-    else
+    } else
         perm = fd->perm;
 
     /* setup the file access mode */
@@ -72,8 +67,7 @@ void ADIOI_IME_Open(ADIO_File fd,
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                            MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__,
-                                           MPI_ERR_UNKNOWN,
-                                           "Error allocating memory", 0);
+                                           MPI_ERR_UNKNOWN, "Error allocating memory", 0);
         return;
     }
 
@@ -81,8 +75,7 @@ void ADIOI_IME_Open(ADIO_File fd,
 
     /* all processes open the file */
     ret = ime_native_open(ime_fs->ime_filename, amode, perm);
-    if (ret < 0)
-    {
+    if (ret < 0) {
         *error_code = MPI_ERR_FILE;
         ADIOI_Free(ime_fs->ime_filename);
         ADIOI_Free(ime_fs);

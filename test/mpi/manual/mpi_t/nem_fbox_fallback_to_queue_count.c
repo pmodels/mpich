@@ -95,8 +95,7 @@ void send_first_test()
          */
         MTestSleep(1);
 
-    }
-    else if (rank == 1) {
+    } else if (rank == 1) {
         char recv_buf[BUF_COUNT];
         MPI_Status status;
 
@@ -150,8 +149,7 @@ void recv_first_test()
         MPI_Send(send_buf, BUF_COUNT, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
         TRY(MPI_T_pvar_read(session, fbox_handle, nem_fbox_fall_back_to_queue_count));
         assert(nem_fbox_fall_back_to_queue_count[1] == 0);
-    }
-    else if (rank == 1) {
+    } else if (rank == 1) {
         char recv_buf[BUF_COUNT];
         MPI_Request reqs[4];
 

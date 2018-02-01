@@ -23,24 +23,20 @@
 #define FUNCNAME MPIR_LAND
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIR_LAND (
-    void *invec,
-    void *inoutvec,
-    int *Len,
-    MPI_Datatype *type )
+void MPIR_LAND(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 {
     int i, len = *Len;
 
     switch (*type) {
 #undef MPIR_OP_TYPE_MACRO
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, MPIR_LLAND)
-        /* no semicolons by necessity */
-        MPIR_OP_TYPE_GROUP(C_INTEGER)
+            /* no semicolons by necessity */
+            MPIR_OP_TYPE_GROUP(C_INTEGER)
 
-        /* MPI_LOGICAL requires special handling (MPIR_{TO,FROM}_FLOG) */
+                /* MPI_LOGICAL requires special handling (MPIR_{TO,FROM}_FLOG) */
 #if defined(HAVE_FORTRAN_BINDING)
-#  undef MPIR_OP_TYPE_MACRO_HAVE_FORTRAN
-#  define MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(mpi_type_, c_type_, type_name_) \
+#undef MPIR_OP_TYPE_MACRO_HAVE_FORTRAN
+#define MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(mpi_type_, c_type_, type_name_) \
     case (mpi_type_): {                                                \
             c_type_ * restrict a = (c_type_ *)inoutvec;                \
             c_type_ * restrict b = (c_type_ *)invec;                   \
@@ -49,42 +45,44 @@ void MPIR_LAND (
                                                MPII_FROM_FLOG(b[i]))); \
             break;                                                     \
     }
-        /* expand logicals (which may include MPI_C_BOOL, a non-Fortran type) */
-        MPIR_OP_TYPE_GROUP(LOGICAL)
-        MPIR_OP_TYPE_GROUP(LOGICAL_EXTRA)
-        /* now revert _HAVE_FORTRAN macro to default */
-#  undef MPIR_OP_TYPE_MACRO_HAVE_FORTRAN
-#  define MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(mpi_type_, c_type_, type_name_) MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_)
+                /* expand logicals (which may include MPI_C_BOOL, a non-Fortran type) */
+                MPIR_OP_TYPE_GROUP(LOGICAL)
+                MPIR_OP_TYPE_GROUP(LOGICAL_EXTRA)
+                /* now revert _HAVE_FORTRAN macro to default */
+#undef MPIR_OP_TYPE_MACRO_HAVE_FORTRAN
+#define MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(mpi_type_, c_type_, type_name_) MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_)
 #else
-        /* if we don't have Fortran support then we don't have to jump through
-           any hoops, simply expand the group */
-        MPIR_OP_TYPE_GROUP(LOGICAL)
-        MPIR_OP_TYPE_GROUP(LOGICAL_EXTRA)
+                /* if we don't have Fortran support then we don't have to jump through
+                 * any hoops, simply expand the group */
+                MPIR_OP_TYPE_GROUP(LOGICAL)
+                MPIR_OP_TYPE_GROUP(LOGICAL_EXTRA)
 #endif
-
-        /* extra types that are not required to be supported by the MPI Standard */
-        MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
-        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
-        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
-        /* We previously supported floating point types, although I question
-           their utility in logical boolean ops [goodell@ 2009-03-16] */
-        MPIR_OP_TYPE_GROUP(FLOATING_POINT)
-        MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA)
+                /* extra types that are not required to be supported by the MPI Standard */
+                MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
+                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
+                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
+                /* We previously supported floating point types, although I question
+                 * their utility in logical boolean ops [goodell@ 2009-03-16] */
+                MPIR_OP_TYPE_GROUP(FLOATING_POINT)
+                MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA)
 #undef MPIR_OP_TYPE_MACRO
-        /* --BEGIN ERROR HANDLING-- */
-        default: {
-            {
-                MPIR_Per_thread_t *per_thread = NULL;
-                int err = 0;
+                /* --BEGIN ERROR HANDLING-- */
+        default:{
+                {
+                    MPIR_Per_thread_t *per_thread = NULL;
+                    int err = 0;
 
-                MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                             MPIR_Per_thread, per_thread, &err);
-                MPIR_Assert(err == 0);
-                per_thread->op_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_LAND" );
+                    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                                 MPIR_Per_thread, per_thread, &err);
+                    MPIR_Assert(err == 0);
+                    per_thread->op_errno =
+                        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                             MPI_ERR_OP, "**opundefined", "**opundefined %s",
+                                             "MPI_LAND");
+                }
+                break;
             }
-            break;
-        }
-        /* --END ERROR HANDLING-- */
+            /* --END ERROR HANDLING-- */
     }
 }
 
@@ -93,29 +91,30 @@ void MPIR_LAND (
 #define FUNCNAME MPIR_LAND
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_LAND_check_dtype ( MPI_Datatype type )
+int MPIR_LAND_check_dtype(MPI_Datatype type)
 {
     switch (type) {
 #undef MPIR_OP_TYPE_MACRO
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) case (mpi_type_):
-        MPIR_OP_TYPE_GROUP(C_INTEGER)
-        MPIR_OP_TYPE_GROUP(LOGICAL) /* no special handling needed in check_dtype code */
-        MPIR_OP_TYPE_GROUP(LOGICAL_EXTRA)
+            MPIR_OP_TYPE_GROUP(C_INTEGER)
+                MPIR_OP_TYPE_GROUP(LOGICAL)     /* no special handling needed in check_dtype code */
+                MPIR_OP_TYPE_GROUP(LOGICAL_EXTRA)
 
-        /* extra types that are not required to be supported by the MPI Standard */
-        MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
-        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
-        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
-        /* We previously supported floating point types, although I question
-           their utility in logical boolean ops [goodell@ 2009-03-16] */
-        MPIR_OP_TYPE_GROUP(FLOATING_POINT)
-        MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA)
+                /* extra types that are not required to be supported by the MPI Standard */
+                MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
+                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
+                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
+                /* We previously supported floating point types, although I question
+                 * their utility in logical boolean ops [goodell@ 2009-03-16] */
+                MPIR_OP_TYPE_GROUP(FLOATING_POINT)
+                MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA)
 #undef MPIR_OP_TYPE_MACRO
-            return MPI_SUCCESS;
-        /* --BEGIN ERROR HANDLING-- */
+                return MPI_SUCCESS;
+            /* --BEGIN ERROR HANDLING-- */
         default:
-            return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_LAND" );
-        /* --END ERROR HANDLING-- */
+            return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                        MPI_ERR_OP, "**opundefined", "**opundefined %s",
+                                        "MPI_LAND");
+            /* --END ERROR HANDLING-- */
     }
 }
-

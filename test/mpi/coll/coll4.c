@@ -28,8 +28,7 @@ int main(int argc, char **argv)
     if (size > MAX_PROCESSES) {
         participants = MAX_PROCESSES;
         MPI_Comm_split(MPI_COMM_WORLD, rank < MAX_PROCESSES, rank, &comm);
-    }
-    else {
+    } else {
         participants = size;
         MPI_Comm_dup(MPI_COMM_WORLD, &comm);
     }

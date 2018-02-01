@@ -18,20 +18,17 @@ void ADIOI_IME_Close(ADIO_File fd, int *error_code)
     int tmp_error_code;
 
     ret = ime_native_close(fd->fd_sys);
-    if (ret != 0)
-    {
+    if (ret != 0) {
         tmp_error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                       MPIR_ERR_RECOVERABLE,
-                                       myname, __LINE__,
-                                       MPI_ERR_UNKNOWN,
-                                       "Error in ime_native_close", 0);
+                                              MPIR_ERR_RECOVERABLE,
+                                              myname, __LINE__,
+                                              MPI_ERR_UNKNOWN, "Error in ime_native_close", 0);
     } else {
         tmp_error_code = MPI_SUCCESS;
     }
 
-    if (error_code)
-    {
-    *   error_code = tmp_error_code;
+    if (error_code) {
+        *error_code = tmp_error_code;
     }
 
     ime_fs = (ADIOI_IME_fs *) fd->fs_ptr;
@@ -44,4 +41,3 @@ void ADIOI_IME_Close(ADIO_File fd, int *error_code)
     fd->fd_direct = -1;
     fd->fd_sys = -1;
 }
-

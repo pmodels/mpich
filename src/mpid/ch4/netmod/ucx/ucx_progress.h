@@ -44,16 +44,14 @@ static inline int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
     if (is_contig) {
         if (in_data_sz > data_sz) {
             rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        }
-        else {
+        } else {
             rreq->status.MPI_ERROR = MPI_SUCCESS;
         }
 
         data_sz = MPL_MIN(data_sz, in_data_sz);
         MPIR_Memcpy(p_data, in_data, data_sz);
         MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-    }
-    else {
+    } else {
         done = 0;
         rem = in_data_sz;
         iov = (struct iovec *) p_data;
@@ -68,8 +66,7 @@ static inline int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
 
         if (rem) {
             rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        }
-        else {
+        } else {
             rreq->status.MPI_ERROR = MPI_SUCCESS;
         }
 
@@ -129,8 +126,7 @@ static inline int MPIDI_NM_progress(int vni, int blocking)
         MPIDI_UCX_am_handler(am_buf, info.length);
         MPL_free(am_buf);
         message_handle =
-            ucp_tag_probe_nb(MPIDI_UCX_global.worker, MPIDI_UCX_AM_TAG,
-                             MPIDI_UCX_AM_TAG, 1, &info);
+            ucp_tag_probe_nb(MPIDI_UCX_global.worker, MPIDI_UCX_AM_TAG, MPIDI_UCX_AM_TAG, 1, &info);
 
     }
 

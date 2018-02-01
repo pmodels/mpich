@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Aint_add as PMPI_Aint_add
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-MPI_Aint MPI_Aint_add(MPI_Aint base, MPI_Aint disp) __attribute__((weak,alias("PMPI_Aint_add")));
+MPI_Aint MPI_Aint_add(MPI_Aint base, MPI_Aint disp) __attribute__ ((weak, alias("PMPI_Aint_add")));
 #endif
 /* -- End Profiling Symbol Block */
 

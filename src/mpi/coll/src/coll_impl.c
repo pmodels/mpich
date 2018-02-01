@@ -32,7 +32,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-int MPIR_Nbc_progress_hook_id=0;
+int MPIR_Nbc_progress_hook_id = 0;
 /*
  * Initializing the below choice variables is not strictly necessary.
  * However, such uninitialized variables are common variables, which
@@ -85,20 +85,34 @@ MPIR_Igather_intra_algo_t MPIR_Igather_intra_algo_choice = MPIR_IGATHER_INTRA_AL
 MPIR_Igather_inter_algo_t MPIR_Igather_inter_algo_choice = MPIR_IGATHER_INTER_ALGO_AUTO;
 MPIR_Igatherv_intra_algo_t MPIR_Igatherv_intra_algo_choice = MPIR_IGATHERV_INTRA_ALGO_AUTO;
 MPIR_Igatherv_inter_algo_t MPIR_Igatherv_inter_algo_choice = MPIR_IGATHERV_INTER_ALGO_AUTO;
-MPIR_Ineighbor_allgather_intra_algo_t MPIR_Ineighbor_allgather_intra_algo_choice = MPIR_INEIGHBOR_ALLGATHER_INTRA_ALGO_AUTO;
-MPIR_Ineighbor_allgather_inter_algo_t MPIR_Ineighbor_allgather_inter_algo_choice = MPIR_INEIGHBOR_ALLGATHER_INTER_ALGO_AUTO;
-MPIR_Ineighbor_allgatherv_intra_algo_t MPIR_Ineighbor_allgatherv_intra_algo_choice = MPIR_INEIGHBOR_ALLGATHERV_INTRA_ALGO_AUTO;
-MPIR_Ineighbor_allgatherv_inter_algo_t MPIR_Ineighbor_allgatherv_inter_algo_choice = MPIR_INEIGHBOR_ALLGATHERV_INTER_ALGO_AUTO;
-MPIR_Ineighbor_alltoall_intra_algo_t MPIR_Ineighbor_alltoall_intra_algo_choice = MPIR_INEIGHBOR_ALLTOALL_INTRA_ALGO_AUTO;
-MPIR_Ineighbor_alltoall_inter_algo_t MPIR_Ineighbor_alltoall_inter_algo_choice = MPIR_INEIGHBOR_ALLTOALL_INTER_ALGO_AUTO;
-MPIR_Ineighbor_alltoallv_intra_algo_t MPIR_Ineighbor_alltoallv_intra_algo_choice = MPIR_INEIGHBOR_ALLTOALLV_INTRA_ALGO_AUTO;
-MPIR_Ineighbor_alltoallv_inter_algo_t MPIR_Ineighbor_alltoallv_inter_algo_choice = MPIR_INEIGHBOR_ALLTOALLV_INTER_ALGO_AUTO;
-MPIR_Ineighbor_alltoallw_intra_algo_t MPIR_Ineighbor_alltoallw_intra_algo_choice = MPIR_INEIGHBOR_ALLTOALLW_INTRA_ALGO_AUTO;
-MPIR_Ineighbor_alltoallw_inter_algo_t MPIR_Ineighbor_alltoallw_inter_algo_choice = MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_AUTO;
-MPIR_Ireduce_scatter_intra_algo_t MPIR_Ireduce_scatter_intra_algo_choice = MPIR_IREDUCE_SCATTER_INTRA_ALGO_AUTO;
-MPIR_Ireduce_scatter_inter_algo_t MPIR_Ireduce_scatter_inter_algo_choice = MPIR_IREDUCE_SCATTER_INTER_ALGO_AUTO;
-MPIR_Ireduce_scatter_block_intra_algo_t MPIR_Ireduce_scatter_block_intra_algo_choice = MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_AUTO;
-MPIR_Ireduce_scatter_block_inter_algo_t MPIR_Ireduce_scatter_block_inter_algo_choice = MPIR_IREDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO;
+MPIR_Ineighbor_allgather_intra_algo_t MPIR_Ineighbor_allgather_intra_algo_choice =
+    MPIR_INEIGHBOR_ALLGATHER_INTRA_ALGO_AUTO;
+MPIR_Ineighbor_allgather_inter_algo_t MPIR_Ineighbor_allgather_inter_algo_choice =
+    MPIR_INEIGHBOR_ALLGATHER_INTER_ALGO_AUTO;
+MPIR_Ineighbor_allgatherv_intra_algo_t MPIR_Ineighbor_allgatherv_intra_algo_choice =
+    MPIR_INEIGHBOR_ALLGATHERV_INTRA_ALGO_AUTO;
+MPIR_Ineighbor_allgatherv_inter_algo_t MPIR_Ineighbor_allgatherv_inter_algo_choice =
+    MPIR_INEIGHBOR_ALLGATHERV_INTER_ALGO_AUTO;
+MPIR_Ineighbor_alltoall_intra_algo_t MPIR_Ineighbor_alltoall_intra_algo_choice =
+    MPIR_INEIGHBOR_ALLTOALL_INTRA_ALGO_AUTO;
+MPIR_Ineighbor_alltoall_inter_algo_t MPIR_Ineighbor_alltoall_inter_algo_choice =
+    MPIR_INEIGHBOR_ALLTOALL_INTER_ALGO_AUTO;
+MPIR_Ineighbor_alltoallv_intra_algo_t MPIR_Ineighbor_alltoallv_intra_algo_choice =
+    MPIR_INEIGHBOR_ALLTOALLV_INTRA_ALGO_AUTO;
+MPIR_Ineighbor_alltoallv_inter_algo_t MPIR_Ineighbor_alltoallv_inter_algo_choice =
+    MPIR_INEIGHBOR_ALLTOALLV_INTER_ALGO_AUTO;
+MPIR_Ineighbor_alltoallw_intra_algo_t MPIR_Ineighbor_alltoallw_intra_algo_choice =
+    MPIR_INEIGHBOR_ALLTOALLW_INTRA_ALGO_AUTO;
+MPIR_Ineighbor_alltoallw_inter_algo_t MPIR_Ineighbor_alltoallw_inter_algo_choice =
+    MPIR_INEIGHBOR_ALLTOALLW_INTER_ALGO_AUTO;
+MPIR_Ireduce_scatter_intra_algo_t MPIR_Ireduce_scatter_intra_algo_choice =
+    MPIR_IREDUCE_SCATTER_INTRA_ALGO_AUTO;
+MPIR_Ireduce_scatter_inter_algo_t MPIR_Ireduce_scatter_inter_algo_choice =
+    MPIR_IREDUCE_SCATTER_INTER_ALGO_AUTO;
+MPIR_Ireduce_scatter_block_intra_algo_t MPIR_Ireduce_scatter_block_intra_algo_choice =
+    MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_AUTO;
+MPIR_Ireduce_scatter_block_inter_algo_t MPIR_Ireduce_scatter_block_inter_algo_choice =
+    MPIR_IREDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO;
 MPIR_Ireduce_intra_algo_t MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_AUTO;
 MPIR_Ireduce_inter_algo_t MPIR_Ireduce_inter_algo_choice = MPIR_IREDUCE_INTER_ALGO_AUTO;
 MPIR_Iscan_intra_algo_t MPIR_Iscan_intra_algo_choice = MPIR_ISCAN_INTRA_ALGO_AUTO;
@@ -106,20 +120,34 @@ MPIR_Iscatter_intra_algo_t MPIR_Iscatter_intra_algo_choice = MPIR_ISCATTER_INTRA
 MPIR_Iscatter_inter_algo_t MPIR_Iscatter_inter_algo_choice = MPIR_ISCATTER_INTER_ALGO_AUTO;
 MPIR_Iscatterv_intra_algo_t MPIR_Iscatterv_intra_algo_choice = MPIR_ISCATTERV_INTRA_ALGO_AUTO;
 MPIR_Iscatterv_inter_algo_t MPIR_Iscatterv_inter_algo_choice = MPIR_ISCATTERV_INTER_ALGO_AUTO;
-MPIR_Neighbor_allgather_intra_algo_t MPIR_Neighbor_allgather_intra_algo_choice = MPIR_NEIGHBOR_ALLGATHER_INTRA_ALGO_AUTO;
-MPIR_Neighbor_allgather_inter_algo_t MPIR_Neighbor_allgather_inter_algo_choice = MPIR_NEIGHBOR_ALLGATHER_INTER_ALGO_AUTO;
-MPIR_Neighbor_allgatherv_intra_algo_t MPIR_Neighbor_allgatherv_intra_algo_choice = MPIR_NEIGHBOR_ALLGATHERV_INTRA_ALGO_AUTO;
-MPIR_Neighbor_allgatherv_inter_algo_t MPIR_Neighbor_allgatherv_inter_algo_choice = MPIR_NEIGHBOR_ALLGATHERV_INTER_ALGO_AUTO;
-MPIR_Neighbor_alltoall_intra_algo_t MPIR_Neighbor_alltoall_intra_algo_choice = MPIR_NEIGHBOR_ALLTOALL_INTRA_ALGO_AUTO;
-MPIR_Neighbor_alltoall_inter_algo_t MPIR_Neighbor_alltoall_inter_algo_choice = MPIR_NEIGHBOR_ALLTOALL_INTER_ALGO_AUTO;
-MPIR_Neighbor_alltoallv_intra_algo_t MPIR_Neighbor_alltoallv_intra_algo_choice = MPIR_NEIGHBOR_ALLTOALLV_INTRA_ALGO_AUTO;
-MPIR_Neighbor_alltoallv_inter_algo_t MPIR_Neighbor_alltoallv_inter_algo_choice = MPIR_NEIGHBOR_ALLTOALLV_INTER_ALGO_AUTO;
-MPIR_Neighbor_alltoallw_intra_algo_t MPIR_Neighbor_alltoallw_intra_algo_choice = MPIR_NEIGHBOR_ALLTOALLW_INTRA_ALGO_AUTO;
-MPIR_Neighbor_alltoallw_inter_algo_t MPIR_Neighbor_alltoallw_inter_algo_choice = MPIR_NEIGHBOR_ALLTOALLW_INTER_ALGO_AUTO;
-MPIR_Reduce_scatter_intra_algo_t MPIR_Reduce_scatter_intra_algo_choice = MPIR_REDUCE_SCATTER_INTRA_ALGO_AUTO;
-MPIR_Reduce_scatter_inter_algo_t MPIR_Reduce_scatter_inter_algo_choice = MPIR_REDUCE_SCATTER_INTER_ALGO_AUTO;
-MPIR_Reduce_scatter_block_intra_algo_t MPIR_Reduce_scatter_block_intra_algo_choice = MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_AUTO;
-MPIR_Reduce_scatter_block_inter_algo_t MPIR_Reduce_scatter_block_inter_algo_choice = MPIR_REDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO;
+MPIR_Neighbor_allgather_intra_algo_t MPIR_Neighbor_allgather_intra_algo_choice =
+    MPIR_NEIGHBOR_ALLGATHER_INTRA_ALGO_AUTO;
+MPIR_Neighbor_allgather_inter_algo_t MPIR_Neighbor_allgather_inter_algo_choice =
+    MPIR_NEIGHBOR_ALLGATHER_INTER_ALGO_AUTO;
+MPIR_Neighbor_allgatherv_intra_algo_t MPIR_Neighbor_allgatherv_intra_algo_choice =
+    MPIR_NEIGHBOR_ALLGATHERV_INTRA_ALGO_AUTO;
+MPIR_Neighbor_allgatherv_inter_algo_t MPIR_Neighbor_allgatherv_inter_algo_choice =
+    MPIR_NEIGHBOR_ALLGATHERV_INTER_ALGO_AUTO;
+MPIR_Neighbor_alltoall_intra_algo_t MPIR_Neighbor_alltoall_intra_algo_choice =
+    MPIR_NEIGHBOR_ALLTOALL_INTRA_ALGO_AUTO;
+MPIR_Neighbor_alltoall_inter_algo_t MPIR_Neighbor_alltoall_inter_algo_choice =
+    MPIR_NEIGHBOR_ALLTOALL_INTER_ALGO_AUTO;
+MPIR_Neighbor_alltoallv_intra_algo_t MPIR_Neighbor_alltoallv_intra_algo_choice =
+    MPIR_NEIGHBOR_ALLTOALLV_INTRA_ALGO_AUTO;
+MPIR_Neighbor_alltoallv_inter_algo_t MPIR_Neighbor_alltoallv_inter_algo_choice =
+    MPIR_NEIGHBOR_ALLTOALLV_INTER_ALGO_AUTO;
+MPIR_Neighbor_alltoallw_intra_algo_t MPIR_Neighbor_alltoallw_intra_algo_choice =
+    MPIR_NEIGHBOR_ALLTOALLW_INTRA_ALGO_AUTO;
+MPIR_Neighbor_alltoallw_inter_algo_t MPIR_Neighbor_alltoallw_inter_algo_choice =
+    MPIR_NEIGHBOR_ALLTOALLW_INTER_ALGO_AUTO;
+MPIR_Reduce_scatter_intra_algo_t MPIR_Reduce_scatter_intra_algo_choice =
+    MPIR_REDUCE_SCATTER_INTRA_ALGO_AUTO;
+MPIR_Reduce_scatter_inter_algo_t MPIR_Reduce_scatter_inter_algo_choice =
+    MPIR_REDUCE_SCATTER_INTER_ALGO_AUTO;
+MPIR_Reduce_scatter_block_intra_algo_t MPIR_Reduce_scatter_block_intra_algo_choice =
+    MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_AUTO;
+MPIR_Reduce_scatter_block_inter_algo_t MPIR_Reduce_scatter_block_inter_algo_choice =
+    MPIR_REDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO;
 MPIR_Reduce_intra_algo_t MPIR_Reduce_intra_algo_choice = MPIR_REDUCE_INTRA_ALGO_AUTO;
 MPIR_Reduce_inter_algo_t MPIR_Reduce_inter_algo_choice = MPIR_REDUCE_INTER_ALGO_AUTO;
 MPIR_Scan_intra_algo_t MPIR_Scan_intra_algo_choice = MPIR_SCAN_INTRA_ALGO_AUTO;
@@ -566,25 +594,32 @@ int MPII_Coll_init(void)
 
     /* Ireduce_scatter Inter */
     if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_INTER_ALGORITHM, "remote_reduce_local_scatterv"))
-        MPIR_Ireduce_scatter_inter_algo_choice = MPIR_IREDUCE_SCATTER_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTERV;
+        MPIR_Ireduce_scatter_inter_algo_choice =
+            MPIR_IREDUCE_SCATTER_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTERV;
     else
         MPIR_Ireduce_scatter_inter_algo_choice = MPIR_IREDUCE_SCATTER_INTER_ALGO_AUTO;
 
     /* Ireduce_scatter_block Intra */
     if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "noncommutative"))
-        MPIR_Ireduce_scatter_block_intra_algo_choice = MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_NONCOMMUTATIVE;
+        MPIR_Ireduce_scatter_block_intra_algo_choice =
+            MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_NONCOMMUTATIVE;
     else if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "pairwise"))
-        MPIR_Ireduce_scatter_block_intra_algo_choice = MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_PAIRWISE;
+        MPIR_Ireduce_scatter_block_intra_algo_choice =
+            MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_PAIRWISE;
     else if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "recursive_doubling"))
-        MPIR_Ireduce_scatter_block_intra_algo_choice = MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_DOUBLING;
+        MPIR_Ireduce_scatter_block_intra_algo_choice =
+            MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_DOUBLING;
     else if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "recursive_halving"))
-        MPIR_Ireduce_scatter_block_intra_algo_choice = MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_HALVING;
+        MPIR_Ireduce_scatter_block_intra_algo_choice =
+            MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_HALVING;
     else
         MPIR_Ireduce_scatter_block_intra_algo_choice = MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_AUTO;
 
     /* Ireduce_scatter_block Inter */
-    if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTER_ALGORITHM, "remote_reduce_local_scatterv"))
-        MPIR_Ireduce_scatter_block_inter_algo_choice = MPIR_IREDUCE_SCATTER_BLOCK_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTERV;
+    if (0 ==
+        strcmp(MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTER_ALGORITHM, "remote_reduce_local_scatterv"))
+        MPIR_Ireduce_scatter_block_inter_algo_choice =
+            MPIR_IREDUCE_SCATTER_BLOCK_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTERV;
     else
         MPIR_Ireduce_scatter_block_inter_algo_choice = MPIR_IREDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO;
 
@@ -712,7 +747,8 @@ int MPII_Coll_init(void)
     if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_INTER_ALGORITHM, "nb"))
         MPIR_Reduce_scatter_inter_algo_choice = MPIR_REDUCE_SCATTER_INTER_ALGO_NB;
     else if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_INTER_ALGORITHM, "remote_reduce_local_scatter"))
-        MPIR_Reduce_scatter_inter_algo_choice = MPIR_REDUCE_SCATTER_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTER;
+        MPIR_Reduce_scatter_inter_algo_choice =
+            MPIR_REDUCE_SCATTER_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTER;
     else
         MPIR_Reduce_scatter_inter_algo_choice = MPIR_REDUCE_SCATTER_INTER_ALGO_AUTO;
 
@@ -720,21 +756,26 @@ int MPII_Coll_init(void)
     if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "nb"))
         MPIR_Reduce_scatter_block_intra_algo_choice = MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_NB;
     else if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "noncommutative"))
-        MPIR_Reduce_scatter_block_intra_algo_choice = MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_NONCOMMUTATIVE;
+        MPIR_Reduce_scatter_block_intra_algo_choice =
+            MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_NONCOMMUTATIVE;
     else if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "pairwise"))
         MPIR_Reduce_scatter_block_intra_algo_choice = MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_PAIRWISE;
     else if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "recursive_doubling"))
-        MPIR_Reduce_scatter_block_intra_algo_choice = MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_DOUBLING;
+        MPIR_Reduce_scatter_block_intra_algo_choice =
+            MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_DOUBLING;
     else if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTRA_ALGORITHM, "recursive_halving"))
-        MPIR_Reduce_scatter_block_intra_algo_choice = MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_HALVING;
+        MPIR_Reduce_scatter_block_intra_algo_choice =
+            MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_HALVING;
     else
         MPIR_Reduce_scatter_block_intra_algo_choice = MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_AUTO;
 
     /* Red_scat_block Inter */
     if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTER_ALGORITHM, "nb"))
         MPIR_Reduce_scatter_block_inter_algo_choice = MPIR_REDUCE_SCATTER_BLOCK_INTER_ALGO_NB;
-    else if (0 == strcmp(MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTER_ALGORITHM, "remote_reduce_local_scatter"))
-        MPIR_Reduce_scatter_block_inter_algo_choice = MPIR_REDUCE_SCATTER_BLOCK_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTER;
+    else if (0 ==
+             strcmp(MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTER_ALGORITHM, "remote_reduce_local_scatter"))
+        MPIR_Reduce_scatter_block_inter_algo_choice =
+            MPIR_REDUCE_SCATTER_BLOCK_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTER;
     else
         MPIR_Reduce_scatter_block_inter_algo_choice = MPIR_REDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO;
 

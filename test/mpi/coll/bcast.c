@@ -63,8 +63,7 @@ int main(int argc, char *argv[])
                             errs++;
                             MTestPrintError(err);
                         }
-                    }
-                    else {
+                    } else {
                         recvtype.InitBuf(&recvtype);
                         err = MPI_Bcast(recvtype.buf, recvtype.count,
                                         recvtype.datatype, root, comm);

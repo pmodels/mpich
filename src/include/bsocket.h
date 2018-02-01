@@ -15,7 +15,7 @@ extern "C" {
 
 /* sockaddr_in (Internet) */
 #ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h> 
+#include <netinet/in.h>
 #endif
 #ifdef HAVE_WINSOCK2_H
 #include <winsock2.h>
@@ -28,7 +28,7 @@ extern "C" {
 #include <sys/select.h>
 #endif
 #ifdef HAVE_NETINET_TCP_H
-#include <netinet/tcp.h> 
+#include <netinet/tcp.h>
 #endif
 
 #ifndef SOCKET_ERROR
@@ -54,7 +54,7 @@ extern "C" {
 
 #ifdef HAVE_WINSOCK2_H
 #ifndef socklen_t
-typedef int socklen_t;
+    typedef int socklen_t;
 #endif
 #else
 #ifndef socklen_t
@@ -91,8 +91,8 @@ typedef int socklen_t;
 
 #define bcopyset(dest, src) *(dest) = *(src)
 #define bget_fd(bfd) bfd
-#define bclr(bfd, s) FD_CLR( (unsigned int)bfd, s )
-#define bset(bfd, s) FD_SET( (unsigned int)bfd, s )
+#define bclr(bfd, s) FD_CLR((unsigned int)bfd, s)
+#define bset(bfd, s) FD_SET((unsigned int)bfd, s)
 #define bsocket(family, type, protocol) socket(family, type, protocol)
 #define bbind(bfd, servaddr, servaddr_len) bind(bfd, servaddr, servaddr_len)
 #define blisten(bfd, backlog) listen(bfd, backlog)
@@ -105,78 +105,77 @@ typedef int socklen_t;
 #define bclose(bfd) bfd_close(bfd)
 #define bgetsockname(bfd, name, namelen) getsockname(bfd, name, namelen)
 
-#else /* #ifndef USE_BSOCKETS */
+#else                           /* #ifndef USE_BSOCKETS */
 
-typedef struct BFD_Buffer_struct BFD_Buffer;
-typedef struct bfd_set
-{
-    fd_set set;
-    int n;
-    BFD_Buffer *p[FD_SETSIZE];
-} bfd_set;
-/*#define BFD_CLR(bfd, s)       FD_CLR( bget_fd(bfd), & (s) -> set )*/
-#define BFD_CLR(bfd, s)       bclr( bfd, s )
+    typedef struct BFD_Buffer_struct BFD_Buffer;
+    typedef struct bfd_set {
+        fd_set set;
+        int n;
+        BFD_Buffer *p[FD_SETSIZE];
+    } bfd_set;
+/*#define BFD_CLR(bfd, s)       FD_CLR(bget_fd(bfd), & (s) -> set)*/
+#define BFD_CLR(bfd, s)       bclr(bfd, s)
 #define BFD_ZERO(s)           { FD_ZERO(& (s) -> set); (s) -> n = 0; }
-#define BFD_SET(bfd, s)       bset( bfd , s )
-#define BFD_ISSET(bfd, s)     FD_ISSET( bget_fd(bfd), & (s) -> set )
+#define BFD_SET(bfd, s)       bset(bfd , s)
+#define BFD_ISSET(bfd, s)     FD_ISSET(bget_fd(bfd), & (s) -> set)
 /*
 #define bfd_set                 fd_set
-#define BFD_CLR(bfd, set)       FD_CLR( bget_fd(bfd), set )
+#define BFD_CLR(bfd, set)       FD_CLR(bget_fd(bfd), set)
 #define BFD_ZERO(set)           FD_ZERO(set)
-#define BFD_SET(bfd, set)       FD_SET( bget_fd(bfd), set )
-#define BFD_ISSET(bfd, set)     FD_ISSET( bget_fd(bfd), set )
+#define BFD_SET(bfd, set)       FD_SET(bget_fd(bfd), set)
+#define BFD_ISSET(bfd, set)     FD_ISSET(bget_fd(bfd), set)
 */
 
 #define BFD_MAX(a,b) (((bget_fd(a)) > (bget_fd(b))) ? (a) : (b))
 
 /* bsockets.c */
-void bcopyset(bfd_set *dest, bfd_set *src);
-unsigned int bget_fd(int bfd);
-void bset(int bfd, bfd_set *s);
-void bclr(int bfd, bfd_set *s);
-int bsocket_init( void );
-int bsocket_finalize( void );
-int bsocket( int, int, int );
-int bbind( int, const struct sockaddr *, socklen_t );
-int blisten( int, int );
-int bsetsockopt( int, int, int, const void *, socklen_t );
-int baccept( int, struct sockaddr *, socklen_t * );
-int bconnect( int, const struct sockaddr *, socklen_t );
-int bread( int, char *, int );
-int breadwrite( int, int, char *, int, int *, int * );
-int breadvwrite( int, int, B_VECTOR *, int, int *, int * );
-int bwrite( int, char *, int );
-int bclose( int );
-int bclose_all( void );
-int bgetsockname(int bfd, struct sockaddr *name, int *namelen );
-int bselect( int maxfds, bfd_set *readbfds, bfd_set *writebfds, bfd_set *execbfds, struct timeval *tv );
+    void bcopyset(bfd_set * dest, bfd_set * src);
+    unsigned int bget_fd(int bfd);
+    void bset(int bfd, bfd_set * s);
+    void bclr(int bfd, bfd_set * s);
+    int bsocket_init(void);
+    int bsocket_finalize(void);
+    int bsocket(int, int, int);
+    int bbind(int, const struct sockaddr *, socklen_t);
+    int blisten(int, int);
+    int bsetsockopt(int, int, int, const void *, socklen_t);
+    int baccept(int, struct sockaddr *, socklen_t *);
+    int bconnect(int, const struct sockaddr *, socklen_t);
+    int bread(int, char *, int);
+    int breadwrite(int, int, char *, int, int *, int *);
+    int breadvwrite(int, int, B_VECTOR *, int, int *, int *);
+    int bwrite(int, char *, int);
+    int bclose(int);
+    int bclose_all(void);
+    int bgetsockname(int bfd, struct sockaddr *name, int *namelen);
+    int bselect(int maxfds, bfd_set * readbfds, bfd_set * writebfds, bfd_set * execbfds,
+                struct timeval *tv);
 
-#endif /* #else #ifndef USE_BSOCKETS */
+#endif                          /* #else #ifndef USE_BSOCKETS */
 
-int bsocket_init( void );
-int bsocket_finalize( void );
-int breadv( int, B_VECTOR *, int );
-int bwritev( int, B_VECTOR *, int );
-int bmake_nonblocking( int );
-int bmake_blocking( int );
+    int bsocket_init(void);
+    int bsocket_finalize(void);
+    int breadv(int, B_VECTOR *, int);
+    int bwritev(int, B_VECTOR *, int);
+    int bmake_nonblocking(int);
+    int bmake_blocking(int);
 
-int beasy_create(int *bfd, int port, unsigned long addr);
-int beasy_connect(int bfd, char *host, int port);
-int beasy_connect_timeout(int bfd, char *host, int port, int seconds);
-int beasy_accept(int bfd);
-int beasy_closesocket(int bfd);
-int beasy_get_sock_info(int bfd, char *name, int *port);
-int beasy_get_ip_string(char *ipstring);
-int beasy_get_ip(unsigned long *ip);
-int beasy_receive(int bfd, char *buffer, int len);
-int beasy_receive_timeout(int bfd, char *buffer, int len, int timeout);
-int beasy_receive_some(int bfd, char *buffer, int len);
-int beasy_send(int bfd, char *buffer, int length);
-int beasy_getlasterror(void);
-int beasy_error_to_string(int error, char *str, int length);
+    int beasy_create(int *bfd, int port, unsigned long addr);
+    int beasy_connect(int bfd, char *host, int port);
+    int beasy_connect_timeout(int bfd, char *host, int port, int seconds);
+    int beasy_accept(int bfd);
+    int beasy_closesocket(int bfd);
+    int beasy_get_sock_info(int bfd, char *name, int *port);
+    int beasy_get_ip_string(char *ipstring);
+    int beasy_get_ip(unsigned long *ip);
+    int beasy_receive(int bfd, char *buffer, int len);
+    int beasy_receive_timeout(int bfd, char *buffer, int len, int timeout);
+    int beasy_receive_some(int bfd, char *buffer, int len);
+    int beasy_send(int bfd, char *buffer, int length);
+    int beasy_getlasterror(void);
+    int beasy_error_to_string(int error, char *str, int length);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* BSOCKET_H_INCLUDED */
+#endif                          /* BSOCKET_H_INCLUDED */

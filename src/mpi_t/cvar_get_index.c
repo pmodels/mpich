@@ -14,7 +14,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_cvar_get_index as PMPI_T_cvar_get_index
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_T_cvar_get_index(const char *name, int *cvar_index) __attribute__((weak,alias("PMPI_T_cvar_get_index")));
+int MPI_T_cvar_get_index(const char *name, int *cvar_index)
+    __attribute__ ((weak, alias("PMPI_T_cvar_get_index")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -55,7 +56,7 @@ int MPI_T_cvar_get_index(const char *name, int *cvar_index)
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_CVAR_GET_INDEX);
 
     /* Validate parameters */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -64,7 +65,7 @@ int MPI_T_cvar_get_index(const char *name, int *cvar_index)
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
@@ -81,11 +82,11 @@ int MPI_T_cvar_get_index(const char *name, int *cvar_index)
 
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_CVAR_GET_INDEX);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

@@ -13,7 +13,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Wtime as PMPI_Wtime
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-double MPI_Wtime(void) __attribute__((weak,alias("PMPI_Wtime")));
+double MPI_Wtime(void) __attribute__ ((weak, alias("PMPI_Wtime")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -37,14 +37,14 @@ double MPI_Wtime(void) __attribute__((weak,alias("PMPI_Wtime")));
   This is intended to be a high-resolution, elapsed (or wall) clock.
   See 'MPI_WTICK' to determine the resolution of 'MPI_WTIME'.
   If the attribute 'MPI_WTIME_IS_GLOBAL' is defined and true, then the
-  value is synchronized across all processes in 'MPI_COMM_WORLD'.  
+  value is synchronized across all processes in 'MPI_COMM_WORLD'.
 
   Notes for Fortran:
   This is a function, declared as 'DOUBLE PRECISION MPI_WTIME()' in Fortran.
 
 .see also: MPI_Wtick, MPI_Comm_get_attr, MPI_Attr_get
 @*/
-double MPI_Wtime( void )
+double MPI_Wtime(void)
 {
     double d;
     MPID_Time_t t;
@@ -53,8 +53,8 @@ double MPI_Wtime( void )
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WTIME);
-    MPID_Wtime( &t );
-    MPID_Wtime_todouble( &t, &d );
+    MPID_Wtime(&t);
+    MPID_Wtime_todouble(&t, &d);
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WTIME);
 
     return d;

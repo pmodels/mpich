@@ -71,8 +71,7 @@ int main(int argc, char **argv)
         installExitHandler(globalFname);
 
         comm = startComm;
-    }
-    else {
+    } else {
         char *readPort;
         readPort = getPortFromFile("%s.%d", fname, expectedRank);
         strncpy(portName, readPort, MPI_MAX_PORT_NAME);

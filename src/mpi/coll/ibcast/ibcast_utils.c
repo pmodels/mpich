@@ -15,14 +15,15 @@ int MPII_Ibcast_sched_test_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     int recv_size;
-    struct  MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state*) state;
+    struct MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state *) state;
 
     MPIR_Get_count_impl(&ibcast_state->status, MPI_BYTE, &recv_size);
-    if(ibcast_state->n_bytes != recv_size || ibcast_state->status.MPI_ERROR != MPI_SUCCESS) {
-        mpi_errno = MPIR_Err_create_code( mpi_errno, MPIR_ERR_RECOVERABLE,
-                FCNAME, __LINE__, MPI_ERR_OTHER,
-                "**collective_size_mismatch",
-                "**collective_size_mismatch %d %d", ibcast_state->n_bytes, recv_size);
+    if (ibcast_state->n_bytes != recv_size || ibcast_state->status.MPI_ERROR != MPI_SUCCESS) {
+        mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
+                                         FCNAME, __LINE__, MPI_ERR_OTHER,
+                                         "**collective_size_mismatch",
+                                         "**collective_size_mismatch %d %d", ibcast_state->n_bytes,
+                                         recv_size);
     }
 
     return mpi_errno;
@@ -36,13 +37,14 @@ int MPII_Ibcast_sched_test_length(MPIR_Comm * comm, int tag, void *state)
 int MPII_Ibcast_sched_test_curr_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct  MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state*) state;
+    struct MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state *) state;
 
-    if(ibcast_state->n_bytes != ibcast_state->curr_bytes) {
-        mpi_errno = MPIR_Err_create_code( mpi_errno, MPIR_ERR_RECOVERABLE,
-                FCNAME, __LINE__, MPI_ERR_OTHER,
-                "**collective_size_mismatch",
-                "**collective_size_mismatch %d %d", ibcast_state->n_bytes, ibcast_state->curr_bytes);
+    if (ibcast_state->n_bytes != ibcast_state->curr_bytes) {
+        mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
+                                         FCNAME, __LINE__, MPI_ERR_OTHER,
+                                         "**collective_size_mismatch",
+                                         "**collective_size_mismatch %d %d", ibcast_state->n_bytes,
+                                         ibcast_state->curr_bytes);
     }
 
     return mpi_errno;
@@ -57,10 +59,10 @@ int MPII_Ibcast_sched_add_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     int recv_size;
-    struct  MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state*) state;
+    struct MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state *) state;
 
     MPIR_Get_count_impl(&ibcast_state->status, MPI_BYTE, &recv_size);
-    ibcast_state->curr_bytes+= recv_size;
+    ibcast_state->curr_bytes += recv_size;
 
     return mpi_errno;
 }
@@ -77,7 +79,8 @@ int MPII_Ibcast_sched_add_length(MPIR_Comm * comm, int tag, void *state)
 #define FUNCNAME MPII_Iscatter_for_bcast_sched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm *comm_ptr, int nbytes, MPIR_Sched_t s)
+int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm * comm_ptr, int nbytes,
+                                  MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, src, dst;
@@ -98,8 +101,8 @@ int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm *comm_ptr, 
      * data is stored at the same offset in the buffer as it is on the
      * root process. */
 
-    scatter_size = (nbytes + comm_size - 1)/comm_size; /* ceiling division */
-    curr_size = (rank == root) ? nbytes : 0; /* root starts with all the data */
+    scatter_size = (nbytes + comm_size - 1) / comm_size;        /* ceiling division */
+    curr_size = (rank == root) ? nbytes : 0;    /* root starts with all the data */
 
     mask = 0x1;
     while (mask < comm_size) {
@@ -117,9 +120,10 @@ int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm *comm_ptr, 
             curr_size = recv_size;
 
             if (recv_size > 0) {
-                mpi_errno = MPIR_Sched_recv(((char *)tmp_buf + relative_rank*scatter_size),
+                mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + relative_rank * scatter_size),
                                             recv_size, MPI_BYTE, src, comm_ptr, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }
             break;
@@ -141,9 +145,11 @@ int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm *comm_ptr, 
                 dst = rank + mask;
                 if (dst >= comm_size)
                     dst -= comm_size;
-                mpi_errno = MPIR_Sched_send(((char *)tmp_buf + scatter_size*(relative_rank+mask)),
-                                            send_size, MPI_BYTE, dst, comm_ptr, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                mpi_errno =
+                    MPIR_Sched_send(((char *) tmp_buf + scatter_size * (relative_rank + mask)),
+                                    send_size, MPI_BYTE, dst, comm_ptr, s);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
 
                 curr_size -= send_size;
             }
@@ -151,8 +157,8 @@ int MPII_Iscatter_for_bcast_sched(void *tmp_buf, int root, MPIR_Comm *comm_ptr, 
         mask >>= 1;
     }
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

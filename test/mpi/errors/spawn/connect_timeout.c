@@ -111,12 +111,10 @@ int test_mismatched_accept(MPI_Comm intra_comm, int gid)
         mpi_errno2 = MPI_Comm_connect(port, MPI_INFO_NULL, 0, intra_comm, &comm);
         if (mpi_errno1 == MPI_SUCCESS) {
             errs += check_errno(mpi_errno2, MPI_ERR_PORT);
-        }
-        else {
+        } else {
             errs += check_errno(mpi_errno2, MPI_SUCCESS);
         }
-    }
-    else if (gid == SERVER_GID) {
+    } else if (gid == SERVER_GID) {
         /* NOTE: if accept hangs, try increase MPIR_CVAR_CH3_COMM_CONN_TIMEOUT. */
         IF_VERBOSE(intra_rank == 0, ("server: accepting connection to <%s>.\n", port));
         MPI_Comm_accept(port, MPI_INFO_NULL, 0, intra_comm, &comm);

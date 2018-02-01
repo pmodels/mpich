@@ -38,11 +38,11 @@
 #define MPIDI_OFI_INTERNAL_HANDLER_CONTROL (MPIDI_AM_HANDLERS_MAX-1)
 #define MPIDI_OFI_INTERNAL_HANDLER_NEXT    (MPIDI_AM_HANDLERS_MAX-2)
 
-#define MPIDI_OFI_PROTOCOL_BITS (2) /* This is set to 2 event though we actually use 3. The ssend
-                                       ack bit needs to live outside the protocol bit space to avoid
-                                       accidentally matching unintended messages. Because of this,
-                                       we shift the PROTOCOL_MASK one extra bit to the left to take
-                                       the place of the empty SSEND_ACK bit. */
+#define MPIDI_OFI_PROTOCOL_BITS (2)     /* This is set to 2 event though we actually use 3. The ssend
+                                         * ack bit needs to live outside the protocol bit space to avoid
+                                         * accidentally matching unintended messages. Because of this,
+                                         * we shift the PROTOCOL_MASK one extra bit to the left to take
+                                         * the place of the empty SSEND_ACK bit. */
 
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS == MPIDI_OFI_ON
 #define MPIDI_OFI_SYNC_SEND_ACK      (1ULL << (MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
@@ -135,7 +135,7 @@
 /* Convert the address vector entry to an endpoint index.
  * This conversion depends on the data structure which could change based on
  * whether we're using scalable endpoints or not. */
-static inline int MPIDI_OFI_av_to_ep(MPIDI_OFI_addr_t *av)
+static inline int MPIDI_OFI_av_to_ep(MPIDI_OFI_addr_t * av)
 {
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
     return (av)->ep_idx;
@@ -152,7 +152,7 @@ static inline int MPIDI_OFI_av_to_ep(MPIDI_OFI_addr_t *av)
 /* Convert a communicator and rank to an endpoint index.
  * This conversion depends on the data structure which could change based on
  * whether we're using scalable endpoints or not. */
-static inline int MPIDI_OFI_comm_to_ep(MPIR_Comm *comm_ptr, int rank)
+static inline int MPIDI_OFI_comm_to_ep(MPIR_Comm * comm_ptr, int rank)
 {
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
     return MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm_ptr, rank)).ep_idx;
@@ -234,21 +234,21 @@ enum {
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
-    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     int index;
 } MPIDI_OFI_am_repost_request_t;
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
-    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     MPIR_Request *signal_req;
 } MPIDI_OFI_ssendack_request_t;
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
-    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     int done;
     uint32_t tag;
@@ -322,14 +322,14 @@ typedef struct {
 } MPIDI_OFI_conn_t;
 
 typedef struct MPIDI_OFI_conn_manager_t {
-    int mmapped_size;            /* Size of the connection list memory which is mmapped */
-    int max_n_conn;              /* Maximum number of connections up to this point */
-    int n_conn;                  /* Current number of open connections */
-    int next_conn_id;            /* The next connection id to be used. */
-    int *free_conn_id;           /* The list of the next connection id to be used so we
-                                    can garbage collect as we go. */
-    MPIDI_OFI_conn_t *conn_list; /* The list of connection structs to track the
-                                    outstanding dynamic process connections. */
+    int mmapped_size;           /* Size of the connection list memory which is mmapped */
+    int max_n_conn;             /* Maximum number of connections up to this point */
+    int n_conn;                 /* Current number of open connections */
+    int next_conn_id;           /* The next connection id to be used. */
+    int *free_conn_id;          /* The list of the next connection id to be used so we
+                                 * can garbage collect as we go. */
+    MPIDI_OFI_conn_t *conn_list;        /* The list of connection structs to track the
+                                         * outstanding dynamic process connections. */
 } MPIDI_OFI_conn_manager_t;
 
 /* Global state data */
@@ -435,30 +435,30 @@ typedef struct {
 } MPIDI_OFI_offset_checker_t;
 
 typedef struct MPIDI_OFI_seg_state {
-    DLOOP_Count   buf_limit;        /* Maximum data size in bytes which a single OFI call can handle.
-                                     * This value remains constant once seg_state is initialized. */
-    DLOOP_Count   buf_limit_left;   /* Buffer length left for a single OFI call */
+    DLOOP_Count buf_limit;      /* Maximum data size in bytes which a single OFI call can handle.
+                                 * This value remains constant once seg_state is initialized. */
+    DLOOP_Count buf_limit_left; /* Buffer length left for a single OFI call */
 
-    MPIR_Segment  origin_seg;       /* Segment structure */
-    size_t        origin_cursor;    /* First byte to pack */
-    size_t        origin_end;       /* Last byte to pack */
-    size_t        origin_iov_len;   /* Length of data actually packed */
-    DLOOP_VECTOR  origin_iov;       /* IOVEC returned after pack */
-    uintptr_t     origin_addr;      /* Address of data actually packed */
+    MPIR_Segment origin_seg;    /* Segment structure */
+    size_t origin_cursor;       /* First byte to pack */
+    size_t origin_end;          /* Last byte to pack */
+    size_t origin_iov_len;      /* Length of data actually packed */
+    DLOOP_VECTOR origin_iov;    /* IOVEC returned after pack */
+    uintptr_t origin_addr;      /* Address of data actually packed */
 
-    MPIR_Segment  target_seg;
-    size_t        target_cursor;
-    size_t        target_end;
-    size_t        target_iov_len;
-    DLOOP_VECTOR  target_iov;
-    uintptr_t     target_addr;
+    MPIR_Segment target_seg;
+    size_t target_cursor;
+    size_t target_end;
+    size_t target_iov_len;
+    DLOOP_VECTOR target_iov;
+    uintptr_t target_addr;
 
-    MPIR_Segment  result_seg;
-    size_t        result_cursor;
-    size_t        result_end;
-    size_t        result_iov_len;
-    DLOOP_VECTOR  result_iov;
-    uintptr_t     result_addr;
+    MPIR_Segment result_seg;
+    size_t result_cursor;
+    size_t result_end;
+    size_t result_iov_len;
+    DLOOP_VECTOR result_iov;
+    uintptr_t result_addr;
 } MPIDI_OFI_seg_state_t;
 
 typedef enum MPIDI_OFI_segment_side {
@@ -469,7 +469,7 @@ typedef enum MPIDI_OFI_segment_side {
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
-    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     struct MPIDI_Iovec_array *next;
     union {
@@ -499,7 +499,7 @@ typedef struct {
 typedef struct MPIDI_OFI_win_request {
     MPIR_OBJECT_HEADER;
     char pad[MPIDI_REQUEST_HDR_SIZE - MPIDI_OFI_OBJECT_HEADER_SIZE];
-    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     struct MPIDI_OFI_win_request *next;
     int target_rank;
@@ -508,14 +508,14 @@ typedef struct MPIDI_OFI_win_request {
 
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
-    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     MPIR_Request *parent;       /* Parent request           */
 } MPIDI_OFI_chunk_request;
 
 typedef struct MPIDI_OFI_huge_recv {
     char pad[MPIDI_REQUEST_HDR_SIZE];
-    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];  /* fixed field, do not move */
+    struct fi_context context[MPIDI_OFI_CONTEXT_STRUCTS];       /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
     int (*done_fn) (struct fi_cq_tagged_entry * wc, MPIR_Request * req, int event_id);
     MPIDI_OFI_send_control_t remote_info;
@@ -523,7 +523,7 @@ typedef struct MPIDI_OFI_huge_recv {
     MPIR_Comm *comm_ptr;
     MPIR_Request *localreq;
     struct fi_cq_tagged_entry wc;
-    struct MPIDI_OFI_huge_recv *next; /* Points to the next entry in the unexpected list
+    struct MPIDI_OFI_huge_recv *next;   /* Points to the next entry in the unexpected list
                                          * (when in the unexpected list) */
 } MPIDI_OFI_huge_recv_t;
 

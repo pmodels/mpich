@@ -32,17 +32,14 @@ extern MPL_dbg_class MPIR_DBG_STRING;
 #define MPL_STR_SEPAR_CHAR     '$'
 #define MPL_STR_SEPAR_STR      "$"
 
-int MPL_str_get_string_arg(const char *str, const char *key, char *val,
-			    int maxlen);
+int MPL_str_get_string_arg(const char *str, const char *key, char *val, int maxlen);
 int MPL_str_get_binary_arg(const char *str, const char *key, char *buffer,
-			    int maxlen, int *out_length);
+                           int maxlen, int *out_length);
 int MPL_str_get_int_arg(const char *str, const char *key, int *val_ptr);
-int MPL_str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *key,
-			    const char *val);
+int MPL_str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *key, const char *val);
 int MPL_str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *key,
-			    const char *buffer, int length);
-int MPL_str_add_int_arg(char **str_ptr, int *maxlen_ptr, const char *key,
-			 int val);
+                           const char *buffer, int length);
+int MPL_str_add_int_arg(char **str_ptr, int *maxlen_ptr, const char *key, int val);
 int MPL_str_add_string(char **str_ptr, int *maxlen_ptr, const char *val);
 int MPL_str_get_string(char **str_ptr, char *val, int maxlen);
 

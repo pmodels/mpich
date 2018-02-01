@@ -72,8 +72,7 @@ int main(int argc, char *argv[])
                     MPI_Win_unlock_all(win);
                     MPI_Barrier(comm);
                     free(resbuf);
-                }
-                else {
+                } else {
                     int err;
                     MPI_Barrier(comm);
                     MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);

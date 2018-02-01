@@ -36,8 +36,7 @@ int main(int argc, char **argv)
         MPI_Irecv(&msg, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &request);
         MPI_Wait(&request, &status);
         assert(msg == 42);
-    }
-    else {
+    } else {
         MPI_Barrier(MPI_COMM_WORLD);
         msg = 42;
         MPI_Send(&msg, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);

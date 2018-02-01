@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_get_group as PMPI_Win_get_group
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Win_get_group(MPI_Win win, MPI_Group *group) __attribute__((weak,alias("PMPI_Win_get_group")));
+int MPI_Win_get_group(MPI_Win win, MPI_Group * group)
+    __attribute__ ((weak, alias("PMPI_Win_get_group")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -34,15 +35,15 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group *group) __attribute__((weak,alias("
    MPI_Win_get_group - Get the MPI Group of the window object
 
 Input Parameters:
-. win - window object (handle) 
+. win - window object (handle)
 
 Output Parameters:
-. group - group of processes which share access to the window (handle) 
+. group - group of processes which share access to the window (handle)
 
    Notes:
-   The group is a duplicate of the group from the communicator used to 
+   The group is a duplicate of the group from the communicator used to
    create the MPI window, and should be freed with 'MPI_Group_free' when
-   it is no longer needed.  This group can be used to form the group of 
+   it is no longer needed.  This group can be used to form the group of
    neighbors for the routines 'MPI_Win_post' and 'MPI_Win_start'.
 
 .N ThreadSafe
@@ -55,7 +56,7 @@ Output Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_OTHER
 @*/
-int MPI_Win_get_group(MPI_Win win, MPI_Group *group)
+int MPI_Win_get_group(MPI_Win win, MPI_Group * group)
 {
     static const char FCNAME[] = "MPI_Win_get_group";
     int mpi_errno = MPI_SUCCESS;
@@ -65,47 +66,49 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group *group)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_GET_GROUP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_WIN_GET_GROUP);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_WIN(win, mpi_errno);
+            MPIR_ERRTEST_WIN(win, mpi_errno);
             MPIR_ERRTEST_ARGNULL(group, "group", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
-    
+#endif
+
     /* Convert MPI object handles to object pointers */
-    MPIR_Win_get_ptr( win, win_ptr );
-    
+    MPIR_Win_get_ptr(win, win_ptr);
+
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate win_ptr */
-            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
-	    /* If win_ptr is not valid, it will be reset to null */
+            MPIR_Win_valid_ptr(win_ptr, mpi_errno);
+            /* If win_ptr is not valid, it will be reset to null */
 
-            if (mpi_errno) goto fn_fail;
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
     win_comm_ptr = win_ptr->comm_ptr;
 
     mpi_errno = MPIR_Comm_group_impl(win_comm_ptr, &group_ptr);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
     *group = group_ptr->handle;
-    
+
     /* ... end of body of routine ... */
 
   fn_exit:
@@ -115,14 +118,14 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group *group)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_win_get_group", 
-	    "**mpi_win_get_group %W %p", win, group);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_win_get_group", "**mpi_win_get_group %W %p", win, group);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

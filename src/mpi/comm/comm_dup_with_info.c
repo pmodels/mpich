@@ -16,7 +16,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_dup_with_info as PMPI_Comm_dup_with_info
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm *newcomm) __attribute__((weak,alias("PMPI_Comm_dup_with_info")));
+int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm)
+    __attribute__ ((weak, alias("PMPI_Comm_dup_with_info")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -118,8 +119,9 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
-            if (mpi_errno) goto fn_fail;
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, FALSE);
+            if (mpi_errno)
+                goto fn_fail;
             /* If comm_ptr is not valid, it will be reset to null */
             MPIR_ERRTEST_ARGNULL(newcomm, "newcomm", mpi_errno);
         }

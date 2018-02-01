@@ -36,7 +36,8 @@ MPIDI_CH4I_API(int, Finalize, void);
 MPIDI_CH4I_API(int, Get_universe_size, int *);
 MPIDI_CH4I_API(int, Get_processor_name, char *, int, int *);
 MPIDI_CH4I_API(int, Iprobe, int, int, MPIR_Comm *, int, int *, MPI_Status *);
-MPIDI_CH4I_API(int, Irecv, void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *, int, MPIR_Request **);
+MPIDI_CH4I_API(int, Irecv, void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *, int,
+               MPIR_Request **);
 MPIDI_CH4I_API(int, Isend, const void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *, int,
                MPIR_Request **);
 MPIDI_CH4I_API(int, Issend, const void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *, int,
@@ -210,7 +211,8 @@ MPIDI_CH4I_API(int, Ialltoall, const void *, int, MPI_Datatype, void *, int, MPI
 MPIDI_CH4I_API(int, Ialltoallv, const void *, const int[], const int[], MPI_Datatype, void *,
                const int[], const int[], MPI_Datatype, MPIR_Comm *, MPIR_Request **);
 MPIDI_CH4I_API(int, Ialltoallw, const void *, const int[], const int[], const MPI_Datatype[],
-               void *, const int[], const int[], const MPI_Datatype[], MPIR_Comm *, MPIR_Request **);
+               void *, const int[], const int[], const MPI_Datatype[], MPIR_Comm *,
+               MPIR_Request **);
 MPIDI_CH4I_API(int, Iexscan, const void *, void *, int, MPI_Datatype, MPI_Op, MPIR_Comm *,
                MPIR_Request **);
 MPIDI_CH4I_API(int, Igather, const void *, int, MPI_Datatype, void *, int, MPI_Datatype, int,
@@ -237,7 +239,7 @@ int MPID_Abort(struct MPIR_Comm *comm, int mpi_errno, int exit_code, const char 
  * function to query locality. This function will determine whether to call the
  * netmod or CH4U locality functions. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm);
-MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t *av);
+MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
 
 /* Include netmod prototypes */
 #include <netmod.h>

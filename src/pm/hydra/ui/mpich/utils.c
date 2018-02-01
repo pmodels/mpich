@@ -203,8 +203,7 @@ static HYD_status genv_fn(char *arg, char ***argv)
         }
         env_value = MPL_strdup(**argv);
         (*argv)++;
-    }
-    else {
+    } else {
         env_value = MPL_strdup(str[1]);
     }
 
@@ -335,8 +334,7 @@ static HYD_status mfile_fn(char *arg, char ***argv)
     if (strcmp(**argv, "HYDRA_USE_LOCALHOST")) {
         status = HYDU_parse_hostfile(**argv, &HYD_server_info.node_list, HYDU_process_mfile_token);
         HYDU_ERR_POP(status, "error parsing hostfile\n");
-    }
-    else {
+    } else {
         if (gethostname(localhost, MAX_HOSTNAME_LEN) < 0)
             HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
 
@@ -439,7 +437,6 @@ static HYD_status profile_fn(char *arg, char ***argv)
         /* global variable already set; ignore */
         goto fn_exit;
     }
-
 #if !defined ENABLE_PROFILING
     HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "profiling support not compiled in\n");
 #endif /* ENABLE_PROFILING */
@@ -647,8 +644,7 @@ static HYD_status env_fn(char *arg, char ***argv)
         }
         env_value = MPL_strdup(**argv);
         (*argv)++;
-    }
-    else {
+    } else {
         env_value = MPL_strdup(str[1]);
     }
 
@@ -1670,8 +1666,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
             ret = open(conf_file, O_RDONLY);
             if (ret < 0) {
                 MPL_free(conf_file);
-            }
-            else {
+            } else {
                 close(ret);
                 config_file = conf_file;
                 goto config_file_check_exit;
@@ -1683,8 +1678,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
         ret = open(conf_file, O_RDONLY);
         if (ret < 0) {
             MPL_free(conf_file);
-        }
-        else {
+        } else {
             close(ret);
             config_file = conf_file;
             goto config_file_check_exit;
@@ -1715,8 +1709,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
         HYD_server_info.base_path = NULL;
         status = HYDU_find_in_path(progname, &HYD_server_info.base_path);
         HYDU_ERR_POP(status, "error while searching for executable in the user path\n");
-    }
-    else {      /* There is a path */
+    } else {    /* There is a path */
         *(++loc) = 0;
 
         /* Check if its absolute or relative */
@@ -1728,8 +1721,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
             status = HYDU_str_alloc_and_join(tmp, &HYD_server_info.base_path);
             HYDU_ERR_POP(status, "unable to join strings\n");
             HYDU_free_strlist(tmp);
-        }
-        else {  /* absolute */
+        } else {        /* absolute */
             HYD_server_info.base_path = MPL_strdup(post);
         }
     }

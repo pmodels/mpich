@@ -13,14 +13,14 @@
 #define FUNCNAME MPIR_process_status
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline void MPIR_Process_status(MPI_Status *status, MPIR_Errflag_t *errflag)
+static inline void MPIR_Process_status(MPI_Status * status, MPIR_Errflag_t * errflag)
 {
     if (MPI_PROC_NULL != status->MPI_SOURCE &&
         (MPIX_ERR_REVOKED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
-        MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
-        MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) && !*errflag) {
+         MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
+         MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) && !*errflag) {
         /* If the receive was completed within the MPID_Recv, handle the
-        * errflag here. */
+         * errflag here. */
         if (MPIR_TAG_CHECK_PROC_FAILURE_BIT(status->MPI_TAG) ||
             MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
             *errflag = MPIR_ERR_PROC_FAILED;

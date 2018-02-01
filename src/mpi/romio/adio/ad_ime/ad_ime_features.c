@@ -10,7 +10,7 @@
 
 int ADIOI_IME_Feature(ADIO_File fd, int flag)
 {
-    switch(flag) {
+    switch (flag) {
         case ADIO_SCALABLE_OPEN:
         case ADIO_SHARED_FP:
         case ADIO_LOCKS:
@@ -20,4 +20,3 @@ int ADIOI_IME_Feature(ADIO_File fd, int flag)
             return 0;
     }
 }
-

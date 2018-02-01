@@ -81,8 +81,7 @@ int main(int argc, char *argv[])
                 errs++;
 
         free(results);
-    }
-    else {
+    } else {
         /* Get the largest power of two smaller than nprocs */
         mask = 1;
         nlevels = 0;
@@ -106,8 +105,7 @@ int main(int argc, char *argv[])
                 acc_idx[level] = idx + 1;
                 get_idx[level] = idx + mask * 2;
                 idx = idx + 1;
-            }
-            else {
+            } else {
                 /* go to right for acc_idx, go to left for
                  * get_idx. set idx=acc_idx for next iteration */
                 acc_idx[level] = idx + mask * 2;

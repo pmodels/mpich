@@ -16,20 +16,20 @@ static int my_callback(void *arg)
     rc = cr_checkpoint(CR_CHECKPOINT_OMIT);
 
     switch (rc) {
-    case -CR_ETEMPFAIL:
-        /* One of the processes indicated that it couldn't take the checkpoint now.  Try again later. */
-        return -1;
-        break;
-    case -CR_EPERMFAIL:
-        /* One of the processes indicated a permanent failure */
-        return -1;
-        break;
-    case -CR_EOMITTED:
-        /* This is the expected return */
-        break;
-    default:
-        /* Something bad happened */
-        return -1;
+        case -CR_ETEMPFAIL:
+            /* One of the processes indicated that it couldn't take the checkpoint now.  Try again later. */
+            return -1;
+            break;
+        case -CR_EPERMFAIL:
+            /* One of the processes indicated a permanent failure */
+            return -1;
+            break;
+        case -CR_EOMITTED:
+            /* This is the expected return */
+            break;
+        default:
+            /* Something bad happened */
+            return -1;
     }
 
 
@@ -174,19 +174,19 @@ static HYD_status wait_for_stdinouterr_sockets(int num_ranks, int *ranks, int *i
 
         /* assign the fd */
         switch (id.socktype) {
-        case IN_SOCK:
-            HYDU_ASSERT(id.rank == 0, status);
-            *in = fd;
-            break;
-        case OUT_SOCK:
-            out[i] = fd;
-            break;
-        case ERR_SOCK:
-            err[i] = fd;
-            break;
-        default:
-            HYDU_ASSERT(0, status);
-            break;
+            case IN_SOCK:
+                HYDU_ASSERT(id.rank == 0, status);
+                *in = fd;
+                break;
+            case OUT_SOCK:
+                out[i] = fd;
+                break;
+            case ERR_SOCK:
+                err[i] = fd;
+                break;
+            default:
+                HYDU_ASSERT(0, status);
+                break;
         }
 
         /* assign the pid */
@@ -249,20 +249,16 @@ HYD_status HYDT_ckpoint_blcr_checkpoint(const char *prefix, int pgid, int id, in
             if ((ret == CR_POLL_CHKPT_ERR_POST) && (errno == CR_ERESTARTED)) {
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                     "trying to restart in a checkpoint\n");
-            }
-            else if (errno == EINTR) {
+            } else if (errno == EINTR) {
                 /* poll was interrupted by a signal -- retry */
-            }
-            else {
+            } else {
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                     "cr_poll_checkpoint failed: %s\n", strerror(errno));
             }
-        }
-        else if (ret == 0) {
+        } else if (ret == 0) {
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                 "cr_poll_checkpoint returned 0 unexpectedly\n");
-        }
-        else {
+        } else {
             break;
         }
     }

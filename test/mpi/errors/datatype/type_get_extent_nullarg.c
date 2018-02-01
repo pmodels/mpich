@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
     int rank, size;
     MPI_Datatype type;
     MPI_Aint lb;
-    int errs =0, errclass, mpi_errno;
+    int errs = 0, errclass, mpi_errno;
 
     MTest_Init(&argc, &argv);
 
@@ -28,4 +28,3 @@ int main(int argc, char *argv[])
     MPI_Finalize();
     return 0;
 }
-

@@ -92,8 +92,7 @@ int main(int argc, char **argv)
     /* print message and exit */
     if (errs) {
         fprintf(stderr, "Found %d errors\n", errs);
-    }
-    else {
+    } else {
         printf(" No Errors\n");
     }
     MPI_Finalize();
@@ -272,27 +271,27 @@ int indexed_contig_test(void)
         int goodval;
 
         switch (i) {
-        case 1:
-            goodval = 1;
-            break;
-        case 2:
-            goodval = 2;
-            break;
-        case 3:
-            goodval = 3;
-            break;
-        case 5:
-            goodval = 4;
-            break;
-        case 6:
-            goodval = 5;
-            break;
-        case 8:
-            goodval = 6;
-            break;
-        default:
-            goodval = 0;        /* pack_and_unpack() zeros before unpack */
-            break;
+            case 1:
+                goodval = 1;
+                break;
+            case 2:
+                goodval = 2;
+                break;
+            case 3:
+                goodval = 3;
+                break;
+            case 5:
+                goodval = 4;
+                break;
+            case 6:
+                goodval = 5;
+                break;
+            case 8:
+                goodval = 6;
+                break;
+            default:
+                goodval = 0;    /* pack_and_unpack() zeros before unpack */
+                break;
         }
         if (buf[i] != goodval) {
             errs++;
@@ -404,8 +403,7 @@ int indexed_contig_leading_zero_test(void)
         adisp[0] = (MPI_Aint) LLONG_MAX;
         adisp[1] = 2 * sizeof(int);
         adisp[2] = (MPI_Aint) LLONG_MAX;
-    }
-    else
+    } else
 #endif
     {
         adisp[0] = (MPI_Aint) INT_MAX;

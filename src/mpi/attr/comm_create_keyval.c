@@ -25,9 +25,10 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_create_keyval as PMPI_Comm_create_keyval
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
-                           MPI_Comm_delete_attr_function *comm_delete_attr_fn, int *comm_keyval,
-                           void *extra_state) __attribute__((weak,alias("PMPI_Comm_create_keyval")));
+int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
+                           MPI_Comm_delete_attr_function * comm_delete_attr_fn, int *comm_keyval,
+                           void *extra_state)
+    __attribute__ ((weak, alias("PMPI_Comm_create_keyval")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -41,30 +42,29 @@ int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
 #define FUNCNAME MPIR_Comm_create_keyval_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
-                                 MPI_Comm_delete_attr_function *comm_delete_attr_fn,
+int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
+                                 MPI_Comm_delete_attr_function * comm_delete_attr_fn,
                                  int *comm_keyval, void *extra_state)
 {
     int mpi_errno = MPI_SUCCESS;
     MPII_Keyval *keyval_ptr;
-        
-    keyval_ptr = (MPII_Keyval *)MPIR_Handle_obj_alloc( &MPII_Keyval_mem );
-    MPIR_ERR_CHKANDJUMP(!keyval_ptr, mpi_errno, MPI_ERR_OTHER,"**nomem");
+
+    keyval_ptr = (MPII_Keyval *) MPIR_Handle_obj_alloc(&MPII_Keyval_mem);
+    MPIR_ERR_CHKANDJUMP(!keyval_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     /* Initialize the attribute dup function */
     if (!MPIR_Process.attr_dup) {
-	MPIR_Process.attr_dup  = MPIR_Attr_dup_list;
-	MPIR_Process.attr_free = MPIR_Attr_delete_list;
+        MPIR_Process.attr_dup = MPIR_Attr_dup_list;
+        MPIR_Process.attr_free = MPIR_Attr_delete_list;
     }
 
     /* The handle encodes the keyval kind.  Modify it to have the correct
-       field */
-    keyval_ptr->handle           = (keyval_ptr->handle & ~(0x03c00000)) |
-	                           (MPIR_COMM << 22);
-    MPIR_Object_set_ref(keyval_ptr,1);
-    keyval_ptr->was_freed        = 0;
-    keyval_ptr->kind	         = MPIR_COMM;
-    keyval_ptr->extra_state      = extra_state;
+     * field */
+    keyval_ptr->handle = (keyval_ptr->handle & ~(0x03c00000)) | (MPIR_COMM << 22);
+    MPIR_Object_set_ref(keyval_ptr, 1);
+    keyval_ptr->was_freed = 0;
+    keyval_ptr->kind = MPIR_COMM;
+    keyval_ptr->extra_state = extra_state;
     keyval_ptr->copyfn.user_function = comm_copy_attr_fn;
     keyval_ptr->copyfn.proxy = MPII_Attr_copy_c_proxy;
     keyval_ptr->delfn.user_function = comm_delete_attr_fn;
@@ -72,9 +72,9 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
 
     MPIR_OBJ_PUBLISH_HANDLE(*comm_keyval, keyval_ptr->handle);
 
- fn_exit:
+  fn_exit:
     return mpi_errno;
- fn_fail:
+  fn_fail:
 
     goto fn_exit;
 }
@@ -86,15 +86,15 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
-   MPI_Comm_create_keyval - Create a new attribute key 
+   MPI_Comm_create_keyval - Create a new attribute key
 
 Input Parameters:
 + comm_copy_attr_fn - Copy callback function for 'keyval'
 . comm_delete_attr_fn - Delete callback function for 'keyval'
-- extra_state - Extra state for callback functions 
+- extra_state - Extra state for callback functions
 
 Output Parameters:
-. comm_keyval - key value for future access (integer) 
+. comm_keyval - key value for future access (integer)
 
 Notes:
 Key values are global (available for any and all communicators).
@@ -121,34 +121,37 @@ Fortran and C in the same program need to be sure that they follow this rule.
 
 .seealso MPI_Comm_free_keyval
 @*/
-int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function *comm_copy_attr_fn, 
-			   MPI_Comm_delete_attr_function *comm_delete_attr_fn, 
-			   int *comm_keyval, void *extra_state)
+int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function * comm_copy_attr_fn,
+                           MPI_Comm_delete_attr_function * comm_delete_attr_fn,
+                           int *comm_keyval, void *extra_state)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_CREATE_KEYVAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_CREATE_KEYVAL);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_ARGNULL(comm_keyval, "comm_keyval", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(comm_keyval, "comm_keyval", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Comm_create_keyval_impl(comm_copy_attr_fn, comm_delete_attr_fn, comm_keyval, extra_state);
-    if (mpi_errno) goto fn_fail;
-    
+    mpi_errno =
+        MPIR_Comm_create_keyval_impl(comm_copy_attr_fn, comm_delete_attr_fn, comm_keyval,
+                                     extra_state);
+    if (mpi_errno)
+        goto fn_fail;
+
     /* ... end of body of routine ... */
 
   fn_exit:
@@ -158,14 +161,15 @@ int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_comm_create_keyval",
-	    "**mpi_comm_create_keyval %p %p %p %p", comm_copy_attr_fn, comm_delete_attr_fn, comm_keyval, extra_state);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_comm_create_keyval", "**mpi_comm_create_keyval %p %p %p %p",
+                                 comm_copy_attr_fn, comm_delete_attr_fn, comm_keyval, extra_state);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

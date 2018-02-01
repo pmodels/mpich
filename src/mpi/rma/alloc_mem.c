@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Alloc_mem as PMPI_Alloc_mem
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr) __attribute__((weak,alias("PMPI_Alloc_mem")));
+int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
+    __attribute__ ((weak, alias("PMPI_Alloc_mem")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -34,21 +35,21 @@ int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr) __attribute__((we
    MPI_Alloc_mem - Allocate memory for message passing and RMA
 
 Input Parameters:
-+ size - size of memory segment in bytes (nonnegative integer) 
-- info - info argument (handle) 
++ size - size of memory segment in bytes (nonnegative integer)
+- info - info argument (handle)
 
 Output Parameters:
-. baseptr - pointer to beginning of memory segment allocated 
+. baseptr - pointer to beginning of memory segment allocated
 
    Notes:
  Using this routine from Fortran requires that the Fortran compiler accept
  a common pointer extension.  See Section 4.11 (Memory Allocation) in the
  MPI-2 standard for more information and examples.
 
-   Also note that while 'baseptr' is a 'void *' type, this is 
-   simply to allow easy use of any pointer object for this parameter.  
-   In fact, this argument is really a 'void **' type, that is, a 
-   pointer to a pointer. 
+   Also note that while 'baseptr' is a 'void *' type, this is
+   simply to allow easy use of any pointer object for this parameter.
+   In fact, this argument is really a 'void **' type, that is, a
+   pointer to a pointer.
 
 .N ThreadSafe
 
@@ -69,23 +70,23 @@ int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ALLOC_MEM);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_ALLOC_MEM);
-    
-#   ifdef HAVE_ERROR_CHECKING
+
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_ARGNEG(size, "size", mpi_errno);
-	    MPIR_ERRTEST_ARGNULL(baseptr, "baseptr", mpi_errno);
+            MPIR_ERRTEST_ARGNEG(size, "size", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(baseptr, "baseptr", mpi_errno);
             MPIR_ERRTEST_INFO_OR_NULL(info, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
-    MPIR_Info_get_ptr( info, info_ptr );
+    MPIR_Info_get_ptr(info, info_ptr);
 
     /* ... body of routine ...  */
 
@@ -93,15 +94,16 @@ int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
     ap = MPID_Alloc_mem(size, info_ptr, MPL_MEM_RMA);
 
     /* --BEGIN ERROR HANDLING-- */
-    if (!ap)
-    {
-        mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_NO_MEM, "**allocmem", 0 );
-	goto fn_fail;
+    if (!ap) {
+        mpi_errno =
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                 MPI_ERR_NO_MEM, "**allocmem", 0);
+        goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
 
     MPL_VG_MEM_INIT(ap, size);
-    *(void **)baseptr = ap;
+    *(void **) baseptr = ap;
 
     /* ... end of body of routine ... */
 
@@ -112,14 +114,15 @@ int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_alloc_mem",
-	    "**mpi_alloc_mem %d %I %p", size, info, baseptr);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_alloc_mem", "**mpi_alloc_mem %d %I %p", size, info,
+                                 baseptr);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

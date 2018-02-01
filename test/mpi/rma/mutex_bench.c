@@ -54,8 +54,7 @@ int main(int argc, char **argv)
             while (!success) {
                 MCS_Mutex_trylock(mcs_mtx, &success);
             }
-        }
-        else {
+        } else {
             MCS_Mutex_lock(mcs_mtx);
         }
         MCS_Mutex_unlock(mcs_mtx);

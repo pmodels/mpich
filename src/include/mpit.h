@@ -33,21 +33,21 @@ extern name2index_hash_t *cvar_hash;
 extern name2index_hash_t *pvar_hashs[MPIR_T_PVAR_CLASS_NUMBER];
 
 /* See description in mpit.c */
-extern void MPIR_T_enum_create(const char *name, MPI_T_enum *handle);
+extern void MPIR_T_enum_create(const char *name, MPI_T_enum * handle);
 extern void MPIR_T_enum_add_item(MPI_T_enum handle, const char *item_name, int item_value);
 extern int MPIR_T_cat_add_pvar(const char *cat_name, int pvar_index);
 extern int MPIR_T_cat_add_cvar(const char *cat_name, int cvar_index);
 extern int MPIR_T_cat_add_subcat(const char *parent_name, const char *child_name);
 extern int MPIR_T_cat_add_desc(const char *cat_name, const char *cat_desc);
 
-static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
+static inline cvar_table_entry_t *LOOKUP_CVAR_BY_NAME(const char *cvar_name)
 {
     unsigned cvar_idx;
     name2index_hash_t *hash_entry;
     HASH_FIND_STR(cvar_hash, cvar_name, hash_entry);
     MPIR_Assert(hash_entry != NULL);
     cvar_idx = hash_entry->idx;
-    return (cvar_table_entry_t *)utarray_eltptr(cvar_table, cvar_idx);
+    return (cvar_table_entry_t *) utarray_eltptr(cvar_table, cvar_idx);
 }
 
 /* Helper macros for getting the default value of a cvar */
@@ -428,13 +428,15 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_LOWWATERMARK_REGISTER_DYNAMIC_impl(dtype_, name_, \
             addr_, count_, verb_, bind_, flags_, get_value_, get_count_, cat_, desc_))
 
-int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_handle *handle, int *count);
+int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_handle * handle,
+                                  int *count);
 int MPIR_T_cvar_read_impl(MPI_T_cvar_handle handle, void *buf);
 int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, const void *buf);
-int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session *session);
-int MPIR_T_pvar_session_free_impl(MPI_T_pvar_session *session);
-int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index, void *obj_handle, MPI_T_pvar_handle *handle, int *count);
-int MPIR_T_pvar_handle_free_impl(MPI_T_pvar_session session, MPI_T_pvar_handle *handle);
+int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session * session);
+int MPIR_T_pvar_session_free_impl(MPI_T_pvar_session * session);
+int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index, void *obj_handle,
+                                  MPI_T_pvar_handle * handle, int *count);
+int MPIR_T_pvar_handle_free_impl(MPI_T_pvar_session session, MPI_T_pvar_handle * handle);
 int MPIR_T_pvar_start_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle);
 int MPIR_T_pvar_stop_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle);
 int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf);
@@ -445,4 +447,4 @@ int MPIR_T_category_get_cvars_impl(int cat_index, int len, int indices[]);
 int MPIR_T_category_get_pvars_impl(int cat_index, int len, int indices[]);
 int MPIR_T_category_get_categories_impl(int cat_index, int len, int indices[]);
 
-#endif  /* MPIT_H_INCLUDED */
+#endif /* MPIT_H_INCLUDED */

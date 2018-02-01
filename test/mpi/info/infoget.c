@@ -28,8 +28,7 @@ int main(int argc, char *argv[])
             errs++;
             printf("returned value is %s, should be %s\n", buff, val);
         }
-    }
-    else {
+    } else {
         errs++;
         printf("key not found\n");
     }

@@ -81,8 +81,7 @@ int main(int argc, char **argv)
         }
 
         fprintf(stdout, " %s\n", buf);
-    }
-    else if (rank == 2) {
+    } else if (rank == 2) {
         char buf[10] = "No errors";
         err = MPI_Recv(NULL, 0, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         if (MPI_SUCCESS != err) {

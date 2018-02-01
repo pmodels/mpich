@@ -30,7 +30,8 @@ int MPIR_Iallreduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int coun
     /* is the op commutative? We do SMP optimizations only if it is. */
     if (!is_commutative) {
         /* use flat fallback */
-        mpi_errno = MPIR_Iallreduce_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+        mpi_errno =
+            MPIR_Iallreduce_sched_intra_auto(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;

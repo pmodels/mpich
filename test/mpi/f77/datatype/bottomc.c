@@ -59,8 +59,7 @@ void c_routine_(MPI_Fint * ftype, int *errs)
          */
         assert(sizeof(MPI_Fint) == sizeof(int));
         MPI_Send(MPI_BOTTOM, 1, newtype, 1, 0, MPI_COMM_WORLD);
-    }
-    else {
+    } else {
         MPI_Recv(buf, 6, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
         if (buf[0] != 5)

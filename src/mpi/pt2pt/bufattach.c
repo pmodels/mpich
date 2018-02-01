@@ -16,7 +16,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Buffer_attach as PMPI_Buffer_attach
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Buffer_attach(void *buffer, int size) __attribute__((weak,alias("PMPI_Buffer_attach")));
+int MPI_Buffer_attach(void *buffer, int size) __attribute__ ((weak, alias("PMPI_Buffer_attach")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -32,38 +32,38 @@ int MPI_Buffer_attach(void *buffer, int size) __attribute__((weak,alias("PMPI_Bu
 #define FUNCNAME MPI_Buffer_attach
 
 /*@
-  MPI_Buffer_attach - Attaches a user-provided buffer for sending 
+  MPI_Buffer_attach - Attaches a user-provided buffer for sending
 
 Input Parameters:
-+ buffer - initial buffer address (choice) 
-- size - buffer size, in bytes (integer) 
++ buffer - initial buffer address (choice)
+- size - buffer size, in bytes (integer)
 
 Notes:
 The size given should be the sum of the sizes of all outstanding Bsends that
 you intend to have, plus 'MPI_BSEND_OVERHEAD' for each Bsend that you do.
-For the purposes of calculating size, you should use 'MPI_Pack_size'. 
+For the purposes of calculating size, you should use 'MPI_Pack_size'.
 In other words, in the code
 .vb
-     MPI_Buffer_attach( buffer, size );
-     MPI_Bsend( ..., count=20, datatype=type1,  ... );
+     MPI_Buffer_attach(buffer, size);
+     MPI_Bsend(..., count=20, datatype=type1,  ...);
      ...
-     MPI_Bsend( ..., count=40, datatype=type2, ... );
+     MPI_Bsend(..., count=40, datatype=type2, ...);
 .ve
 the value of 'size' in the 'MPI_Buffer_attach' call should be greater than
 the value computed by
 .vb
-     MPI_Pack_size( 20, type1, comm, &s1 );
-     MPI_Pack_size( 40, type2, comm, &s2 );
+     MPI_Pack_size(20, type1, comm, &s1);
+     MPI_Pack_size(40, type2, comm, &s2);
      size = s1 + s2 + 2 * MPI_BSEND_OVERHEAD;
-.ve    
-The 'MPI_BSEND_OVERHEAD' gives the maximum amount of space that may be used in 
-the buffer for use by the BSEND routines in using the buffer.  This value 
+.ve
+The 'MPI_BSEND_OVERHEAD' gives the maximum amount of space that may be used in
+the buffer for use by the BSEND routines in using the buffer.  This value
 is in 'mpi.h' (for C) and 'mpif.h' (for Fortran).
 
 .N NotThreadSafe
 Because the buffer for buffered sends (e.g., 'MPI_Bsend') is shared by all
 threads in a process, the user is responsible for ensuring that only
-one thread at a time calls this routine or 'MPI_Buffer_detach'.  
+one thread at a time calls this routine or 'MPI_Buffer_detach'.
 
 .N Fortran
 
@@ -81,27 +81,28 @@ int MPI_Buffer_attach(void *buffer, int size)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_BUFFER_ATTACH);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_BUFFER_ATTACH);
-    
-#   ifdef HAVE_ERROR_CHECKING
+
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_ARGNEG(size,"size",mpi_errno);
+            MPIR_ERRTEST_ARGNEG(size, "size", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    mpi_errno = MPIR_Bsend_attach( buffer, size );
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+
+    mpi_errno = MPIR_Bsend_attach(buffer, size);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     /* ... end of body of routine ... */
-    
+
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_BUFFER_ATTACH);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -109,14 +110,14 @@ int MPI_Buffer_attach(void *buffer, int size)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_buffer_attach",
-	    "**mpi_buffer_attach %p %d", buffer, size);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_buffer_attach", "**mpi_buffer_attach %p %d", buffer, size);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
