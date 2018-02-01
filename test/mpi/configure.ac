@@ -1502,7 +1502,9 @@ if test "$FROM_MPICH" = yes ; then
     F77=$mpibindir/$MPIF77_NAME
     FC=$mpibindir/$MPIFORT_NAME
     CXX=$mpibindir/$MPICXX_NAME
-    MPIEXEC=$mpibindir/$MPIEXEC_NAME
+    if test -z "$MPIEXEC" ; then
+        MPIEXEC=$mpibindir/$MPIEXEC_NAME
+    fi
 
     # Zero out the flags, since they are already contained in the compiler
     # wrapper scripts.  Note that this will kill any flags that have been added
