@@ -82,21 +82,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_composition_beta(MPIR_Comm * comm, MP
     int mpi_errno = MPI_SUCCESS;
     void * barrier_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
-#ifndef MPIDI_BUILD_CH4_SHM
     mpi_errno =
         MPIDI_NM_mpi_barrier(comm, errflag, barrier_container);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-#else
-    if(comm->is_single_node) {
-        mpi_errno =
-            MPIDI_SHM_mpi_barrier(comm, errflag, barrier_container);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    } else{
-        mpi_errno =
-            MPIDI_NM_mpi_barrier(comm, errflag, barrier_container);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-#endif/*MPIDI_BUILD_CH4_SHM*/
 
 fn_exit:
     return mpi_errno;
@@ -234,25 +222,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_composition_gamma(void *buffer, int cou
     int mpi_errno = MPI_SUCCESS;
     void * bcast_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
-#ifndef MPIDI_BUILD_CH4_SHM
     mpi_errno =
         MPIDI_NM_mpi_bcast(buffer, count, datatype, root,
                            comm, errflag, bcast_container);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-#else
-    if(comm->is_single_node){
-      mpi_errno =
-          MPIDI_SHM_mpi_bcast(buffer, count, datatype, root,
-                              comm, errflag, bcast_container);
-      if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else{
-      mpi_errno =
-          MPIDI_NM_mpi_bcast(buffer, count, datatype, root,
-                             comm, errflag, bcast_container);
-      if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-#endif/*MPIDI_BUILD_CH4_SHM*/
 
 fn_exit:
     return mpi_errno;
@@ -358,24 +331,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_composition_beta(const void *sendbu
    int mpi_errno = MPI_SUCCESS;
    void * allred_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
-#ifndef MPIDI_BUILD_CH4_SHM
     mpi_errno =
          MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag,
                                 allred_container);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-#else
-    if(comm->is_single_node) {
-        mpi_errno =
-             MPIDI_SHM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag,
-                                     allred_container);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    } else {
-        mpi_errno =
-             MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag,
-                                    allred_container);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-#endif/*MPIDI_BUILD_CH4_SHM*/
 
 fn_exit:
     return mpi_errno;
@@ -555,24 +514,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_composition_beta(const void *sendbuf, 
     int mpi_errno = MPI_SUCCESS;
     void * reduce_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
-#ifndef MPIDI_BUILD_CH4_SHM
     mpi_errno =
         MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, root,
                             comm, errflag, reduce_container);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-#else
-    if(comm->is_single_node) {
-        mpi_errno =
-            MPIDI_SHM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, root,
-                                 comm, errflag, reduce_container);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    } else {
-        mpi_errno =
-            MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, root,
-                                comm, errflag, reduce_container);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-#endif/*MPIDI_BUILD_CH4_SHM*/
 
 fn_exit:
     return mpi_errno;
