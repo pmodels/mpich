@@ -110,7 +110,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_destroy_comm(MPIR_Comm * comm)
 #define FUNCNAME MPIDI_CH4U_mpi_alloc_mem
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr, MPL_memory_class class)
+MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr,
+                                                        MPL_memory_class class)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_MPI_ALLOC_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_MPI_ALLOC_MEM);

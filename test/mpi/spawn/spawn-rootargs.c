@@ -32,8 +32,7 @@ int main(int argc, char *argv[])
         MPI_Comm_disconnect(&worker);
         if (!rank)
             printf(" No Errors\n");
-    }
-    else {
+    } else {
         MPI_Barrier(master);
         MPI_Comm_disconnect(&master);
     }

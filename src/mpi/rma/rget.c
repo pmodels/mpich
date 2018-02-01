@@ -16,10 +16,9 @@
 #pragma _CRI duplicate MPI_Rget as PMPI_Rget
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Rget(void *origin_addr, int origin_count,
-              MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
-              int target_count, MPI_Datatype target_datatype, MPI_Win win,
-              MPI_Request *request)
-              __attribute__((weak,alias("PMPI_Rget")));
+             MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+             int target_count, MPI_Datatype target_datatype, MPI_Win win, MPI_Request * request)
+    __attribute__ ((weak, alias("PMPI_Rget")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -74,9 +73,8 @@ Output Parameters:
 .seealso: MPI_Get
 @*/
 int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
-            origin_datatype, int target_rank, MPI_Aint target_disp,
-            int target_count, MPI_Datatype target_datatype, MPI_Win
-            win, MPI_Request *request)
+             origin_datatype, int target_rank, MPI_Aint target_disp,
+             int target_count, MPI_Datatype target_datatype, MPI_Win win, MPI_Request * request)
 {
     static const char FCNAME[] = "MPI_Rget";
     int mpi_errno = MPI_SUCCESS;
@@ -85,12 +83,12 @@ int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_RGET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_RGET);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -98,21 +96,22 @@ int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPIR_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr(win, win_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Comm * comm_ptr;
-            
+            MPIR_Comm *comm_ptr;
+
             /* Validate win_ptr */
-            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
-            if (mpi_errno) goto fn_fail;
+            MPIR_Win_valid_ptr(win_ptr, mpi_errno);
+            if (mpi_errno)
+                goto fn_fail;
 
             MPIR_ERRTEST_COUNT(origin_count, mpi_errno);
             MPIR_ERRTEST_DATATYPE(origin_datatype, "origin_datatype", mpi_errno);
@@ -122,42 +121,45 @@ int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
             if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC)
                 MPIR_ERRTEST_DISP(target_disp, mpi_errno);
 
-            if (HANDLE_GET_KIND(origin_datatype) != HANDLE_KIND_BUILTIN)
-            {
+            if (HANDLE_GET_KIND(origin_datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
-                
+
                 MPIR_Datatype_get_ptr(origin_datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
                 MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
             }
 
-            if (HANDLE_GET_KIND(target_datatype) != HANDLE_KIND_BUILTIN)
-            {
+            if (HANDLE_GET_KIND(target_datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
-                
+
                 MPIR_Datatype_get_ptr(target_datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
                 MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
             }
 
             comm_ptr = win_ptr->comm_ptr;
             MPIR_ERRTEST_SEND_RANK(comm_ptr, target_rank, mpi_errno);
-            MPIR_ERRTEST_ARGNULL(request,"request",mpi_errno);
+            MPIR_ERRTEST_ARGNULL(request, "request", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
     mpi_errno = MPID_Rget(origin_addr, origin_count, origin_datatype,
                           target_rank, target_disp, target_count,
                           target_datatype, win_ptr, &request_ptr);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     *request = request_ptr->handle;
 
@@ -170,15 +172,16 @@ int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_rget", "**mpi_rget %p %d %D %d %d %d %D %W %p",
-            origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win, request);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_rget", "**mpi_rget %p %d %D %d %d %d %D %W %p", origin_addr,
+                                 origin_count, origin_datatype, target_rank, target_disp,
+                                 target_count, target_datatype, win, request);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-

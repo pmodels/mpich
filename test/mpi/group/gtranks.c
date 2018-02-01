@@ -52,8 +52,7 @@ int main(int argc, char *argv[])
                 printf("[%d] Rank %d is %d but should be 0\n", rank, i, ranksout[i]);
                 errs++;
             }
-        }
-        else {
+        } else {
             if (ranksout[i] != MPI_UNDEFINED) {
                 printf("[%d] Rank %d is %d but should be undefined\n", rank, i, ranksout[i]);
                 errs++;
@@ -119,8 +118,7 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "Input rank for proc_null but output was %d\n", ranksout[i]);
                 errs++;
             }
-        }
-        else if (ranksout[i] != ranks[ranksin[i]]) {
+        } else if (ranksout[i] != ranks[ranksin[i]]) {
             fprintf(stderr, "Expected ranksout[%d] = %d but found %d\n",
                     i, ranks[ranksin[i]], ranksout[i]);
             errs++;
@@ -140,8 +138,7 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "Input rank for proc_null but output was %d\n", ranksout[i]);
                 errs++;
             }
-        }
-        else if (ranksout[i] != (size - 1) - ranks[ranksin[i]]) {
+        } else if (ranksout[i] != (size - 1) - ranks[ranksin[i]]) {
             fprintf(stderr, "Expected ranksout[%d] = %d but found %d\n",
                     i, (size - 1) - ranks[ranksin[i]], ranksout[i]);
             errs++;

@@ -42,8 +42,7 @@ int main(int argc, char *argv[])
                 errs++;
                 MTestPrintError(err);
             }
-        }
-        else {
+        } else {
             /* In the right group */
             err = MTest_Barrier(comm);
             if (err) {

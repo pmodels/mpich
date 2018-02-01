@@ -45,8 +45,7 @@ int main(int argc, char **argv)
         err += MPI_Wait(&request, MPI_STATUS_IGNORE);
         if (err) {
             fprintf(stderr, "An error occurred during the recv operation\n");
-        }
-        else {
+        } else {
             printf(" %s\n", buf);
             fflush(stdout);
         }

@@ -141,10 +141,10 @@ static inline int MPIDI_POSIX_mpi_win_fence(int assert, MPIR_Win * win)
 }
 
 static inline int MPIDI_POSIX_mpi_win_create(void *base,
-                                           MPI_Aint length,
-                                           int disp_unit,
-                                           MPIR_Info * info, MPIR_Comm * comm_ptr,
-                                           MPIR_Win ** win_ptr)
+                                             MPI_Aint length,
+                                             int disp_unit,
+                                             MPIR_Info * info, MPIR_Comm * comm_ptr,
+                                             MPIR_Win ** win_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_CREATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_CREATE);
@@ -167,10 +167,10 @@ static inline int MPIDI_POSIX_mpi_win_attach(MPIR_Win * win, void *base, MPI_Ain
 }
 
 static inline int MPIDI_POSIX_mpi_win_allocate_shared(MPI_Aint size,
-                                                    int disp_unit,
-                                                    MPIR_Info * info_ptr,
-                                                    MPIR_Comm * comm_ptr,
-                                                    void **base_ptr, MPIR_Win ** win_ptr)
+                                                      int disp_unit,
+                                                      MPIR_Info * info_ptr,
+                                                      MPIR_Comm * comm_ptr,
+                                                      void **base_ptr, MPIR_Win ** win_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE_SHARED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE_SHARED);
@@ -193,8 +193,8 @@ static inline int MPIDI_POSIX_mpi_win_detach(MPIR_Win * win, const void *base)
 }
 
 static inline int MPIDI_POSIX_mpi_win_shared_query(MPIR_Win * win,
-                                                 int rank,
-                                                 MPI_Aint * size, int *disp_unit, void *baseptr)
+                                                   int rank,
+                                                   MPI_Aint * size, int *disp_unit, void *baseptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_SHARED_QUERY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_SHARED_QUERY);
@@ -206,9 +206,9 @@ static inline int MPIDI_POSIX_mpi_win_shared_query(MPIR_Win * win,
 }
 
 static inline int MPIDI_POSIX_mpi_win_allocate(MPI_Aint size,
-                                             int disp_unit,
-                                             MPIR_Info * info,
-                                             MPIR_Comm * comm, void *baseptr, MPIR_Win ** win)
+                                               int disp_unit,
+                                               MPIR_Info * info,
+                                               MPIR_Comm * comm, void *baseptr, MPIR_Win ** win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE);
@@ -253,7 +253,7 @@ static inline int MPIDI_POSIX_mpi_win_unlock_all(MPIR_Win * win)
 }
 
 static inline int MPIDI_POSIX_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm,
-                                                   MPIR_Win ** win)
+                                                     MPIR_Win ** win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_CREATE_DYNAMIC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_CREATE_DYNAMIC);

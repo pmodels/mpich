@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     int minsize = 2, count;
     MPI_Comm comm;
     MPI_Win win;
-    MPI_Aint extent,lb;
+    MPI_Aint extent, lb;
     MTestDatatype sendtype, recvtype;
     int onlyInt = 0;
 

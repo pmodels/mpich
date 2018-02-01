@@ -95,19 +95,19 @@
 /*TOpaqOverview.tex
   MPI Opaque Objects:
 
-  MPI Opaque objects such as 'MPI_Comm' or 'MPI_Datatype' are specified by 
+  MPI Opaque objects such as 'MPI_Comm' or 'MPI_Datatype' are specified by
   integers (in the MPICH implementation); the MPI standard calls these
-  handles.  
+  handles.
   Out of range values are invalid; the value 0 is reserved.
-  For most (with the possible exception of 
+  For most (with the possible exception of
   'MPI_Request' for performance reasons) MPI Opaque objects, the integer
   encodes both the kind of object (allowing runtime tests to detect a datatype
-  passed where a communicator is expected) and important properties of the 
-  object.  Even the 'MPI_xxx_NULL' values should be encoded so that 
+  passed where a communicator is expected) and important properties of the
+  object.  Even the 'MPI_xxx_NULL' values should be encoded so that
   different null handles can be distinguished.  The details of the encoding
   of the handles is covered in more detail in the MPICH Design Document.
   For the most part, the ADI uses pointers to the underlying structures
-  rather than the handles themselves.  However, each structure contains an 
+  rather than the handles themselves.  However, each structure contains an
   'handle' field that is the corresponding integer handle for the MPI object.
 
   MPIR objects are not opaque.
@@ -142,25 +142,25 @@
   Attribute-DS
   E*/
 typedef enum MPII_Object_kind {
-  MPIR_COMM       = 0x1,
-  MPIR_GROUP      = 0x2,
-  MPIR_DATATYPE   = 0x3,
-  MPIR_FILE       = 0x4, /* only used obliquely inside MPIR_Errhandler objs */
-  MPIR_ERRHANDLER = 0x5,
-  MPIR_OP         = 0x6,
-  MPIR_INFO       = 0x7,
-  MPIR_WIN        = 0x8,
-  MPIR_KEYVAL     = 0x9,
-  MPIR_ATTR       = 0xa,
-  MPIR_REQUEST    = 0xb,
-  MPIR_PROCGROUP  = 0xc,               /* These are internal device objects */
-  MPIR_VCONN      = 0xd,
-  MPIR_GREQ_CLASS = 0xf
+    MPIR_COMM = 0x1,
+    MPIR_GROUP = 0x2,
+    MPIR_DATATYPE = 0x3,
+    MPIR_FILE = 0x4,    /* only used obliquely inside MPIR_Errhandler objs */
+    MPIR_ERRHANDLER = 0x5,
+    MPIR_OP = 0x6,
+    MPIR_INFO = 0x7,
+    MPIR_WIN = 0x8,
+    MPIR_KEYVAL = 0x9,
+    MPIR_ATTR = 0xa,
+    MPIR_REQUEST = 0xb,
+    MPIR_PROCGROUP = 0xc,       /* These are internal device objects */
+    MPIR_VCONN = 0xd,
+    MPIR_GREQ_CLASS = 0xf
 } MPII_Object_kind;
 
 
 #define HANDLE_MPI_KIND_SHIFT 26
-#define HANDLE_GET_MPI_KIND(a) ( ((a)&0x3c000000) >> HANDLE_MPI_KIND_SHIFT )
+#define HANDLE_GET_MPI_KIND(a) (((a)&0x3c000000) >> HANDLE_MPI_KIND_SHIFT)
 #define HANDLE_SET_MPI_KIND(a,kind) ((a) | ((kind) << HANDLE_MPI_KIND_SHIFT))
 
 /* returns the name of the handle kind for debugging/logging purposes */
@@ -198,7 +198,7 @@ const char *MPIR_Handle_get_kind_str(int kind);
 #define HANDLE_NUM_INDICES 1024
 #endif /* MPID_HANDLE_NUM_INDICES */
 
-/* For direct, the remainder of the handle is the index into a predefined 
+/* For direct, the remainder of the handle is the index into a predefined
    block */
 #define HANDLE_MASK 0x03FFFFFF
 #define HANDLE_INDEX(a) ((a)& HANDLE_MASK)
@@ -217,28 +217,28 @@ extern MPL_dbg_class MPIR_DBG_HANDLE;
 #ifdef MPICH_DEBUG_HANDLES
 #define MPICH_DEBUG_MAX_REFCOUNT 64
 #define HANDLE_CHECK_REFCOUNT(objptr_,local_ref_count_,op_)             \
-    do {                                                                                            \
-        if (local_ref_count_ > MPICH_DEBUG_MAX_REFCOUNT || local_ref_count_ < 0)                    \
-        {                                                                                           \
-            MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE,TYPICAL,(MPL_DBG_FDEST,                                        \
-                                             "Invalid refcount (%d) in %p (0x%08x) %s",             \
-                                             local_ref_count_, (objptr_), (objptr_)->handle, op_)); \
-        }                                                                                           \
-        MPIR_Assert(local_ref_count_ >= 0);                                                         \
+    do {                                                                \
+        if (local_ref_count_ > MPICH_DEBUG_MAX_REFCOUNT || local_ref_count_ < 0) \
+        {                                                               \
+            MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE,TYPICAL,(MPL_DBG_FDEST,     \
+                                                     "Invalid refcount (%d) in %p (0x%08x) %s", \
+                                                     local_ref_count_, (objptr_), (objptr_)->handle, op_)); \
+        }                                                               \
+        MPIR_Assert(local_ref_count_ >= 0);                             \
     } while (0)
 #else
 #define HANDLE_CHECK_REFCOUNT(objptr_,local_ref_count_,op_)     \
     MPIR_Assert(local_ref_count_ >= 0)
 #endif
 
-#define HANDLE_LOG_REFCOUNT_CHANGE(objptr_, new_refcount_, action_str_)  \
-    MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE,TYPICAL,(MPL_DBG_FDEST,                                                   \
-                                     "%s %p (0x%08x kind=%s) refcount to %d",                          \
-                                     (action_str_),                                                    \
-                                     (objptr_),                                                        \
-                                     (objptr_)->handle,                                                \
-                                     MPIR_Handle_get_kind_str(HANDLE_GET_MPI_KIND((objptr_)->handle)), \
-                                     new_refcount_))
+#define HANDLE_LOG_REFCOUNT_CHANGE(objptr_, new_refcount_, action_str_) \
+    MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE,TYPICAL,(MPL_DBG_FDEST,             \
+                                             "%s %p (0x%08x kind=%s) refcount to %d", \
+                                             (action_str_),             \
+                                             (objptr_),                 \
+                                             (objptr_)->handle,         \
+                                             MPIR_Handle_get_kind_str(HANDLE_GET_MPI_KIND((objptr_)->handle)), \
+                                             new_refcount_))
 
 /* The "_always" versions of these macros unconditionally manipulate the
  * reference count of the given object.  They exist to permit an optimization
@@ -252,25 +252,25 @@ extern MPL_dbg_class MPIR_DBG_HANDLE;
 
 typedef int Handle_ref_count;
 
-#define MPIR_Object_set_ref(objptr_,val)                 \
-    do {                                                 \
-        (objptr_)->ref_count = val;                      \
-        HANDLE_LOG_REFCOUNT_CHANGE(objptr_, val, "set");  \
+#define MPIR_Object_set_ref(objptr_,val)                        \
+    do {                                                        \
+        (objptr_)->ref_count = val;                             \
+        HANDLE_LOG_REFCOUNT_CHANGE(objptr_, val, "set");        \
     } while (0)
 
 /* must be used with care, since there is no synchronization for this read */
-#define MPIR_Object_get_ref(objptr_) \
+#define MPIR_Object_get_ref(objptr_)            \
     ((objptr_)->ref_count)
 
-#define MPIR_Object_add_ref_always(objptr_)               \
-    do {                                                  \
-        (objptr_)->ref_count++;                           \
+#define MPIR_Object_add_ref_always(objptr_)                             \
+    do {                                                                \
+        (objptr_)->ref_count++;                                         \
         HANDLE_LOG_REFCOUNT_CHANGE(objptr_, (objptr_)->ref_count, "incr"); \
         HANDLE_CHECK_REFCOUNT(objptr_,(objptr_)->ref_count,"incr");     \
     } while (0)
-#define MPIR_Object_release_ref_always(objptr_,inuse_ptr) \
-    do {                                                  \
-        *(inuse_ptr) = --((objptr_)->ref_count);          \
+#define MPIR_Object_release_ref_always(objptr_,inuse_ptr)               \
+    do {                                                                \
+        *(inuse_ptr) = --((objptr_)->ref_count);                        \
         HANDLE_LOG_REFCOUNT_CHANGE(objptr_, (objptr_)->ref_count, "decr"); \
         HANDLE_CHECK_REFCOUNT(objptr_,(objptr_)->ref_count,"decr");     \
     } while (0)
@@ -280,10 +280,10 @@ typedef int Handle_ref_count;
 #include "opa_primitives.h"
 typedef OPA_int_t Handle_ref_count;
 
-#define MPIR_Object_set_ref(objptr_,val)                 \
-    do {                                                 \
-        OPA_store_int(&(objptr_)->ref_count, val);       \
-        HANDLE_LOG_REFCOUNT_CHANGE(objptr_, val, "set");                \
+#define MPIR_Object_set_ref(objptr_,val)                        \
+    do {                                                        \
+        OPA_store_int(&(objptr_)->ref_count, val);              \
+        HANDLE_LOG_REFCOUNT_CHANGE(objptr_, val, "set");        \
     } while (0)
 
 /* must be used with care, since there is no synchronization for this read */
@@ -316,9 +316,9 @@ typedef OPA_int_t Handle_ref_count;
     } while (0)
 #else /* MPICH_DEBUG_HANDLES */
 /* MPICH_THREAD_REFCOUNT == MPICH_REFCOUNT__LOCKFREE && !MPICH_DEBUG_HANDLES */
-#define MPIR_Object_add_ref_always(objptr_)                             \
-    do {                                                                \
-        OPA_incr_int(&((objptr_)->ref_count));                          \
+#define MPIR_Object_add_ref_always(objptr_)     \
+    do {                                        \
+        OPA_incr_int(&((objptr_)->ref_count));  \
     } while (0)
 #define MPIR_Object_release_ref_always(objptr_,inuse_ptr)               \
     do {                                                                \
@@ -343,46 +343,46 @@ typedef OPA_int_t Handle_ref_count;
  * It is also assumed that any object being reference counted via these macros
  * will have a valid value in the handle field, even if it is
  * HANDLE_SET_KIND(0, HANDLE_KIND_INVALID) */
-/* TODO profile and examine the assembly that is generated for this if() on Blue
+/* TODO profile and examine the assembly that is generated for this if () on Blue
  * Gene (and elsewhere).  We may need to mark it unlikely(). */
-#define MPIR_Object_add_ref(objptr_)                           \
-    do {                                                       \
-        int handle_kind_ = HANDLE_GET_KIND((objptr_)->handle); \
-        if (unlikely(handle_kind_ != HANDLE_KIND_BUILTIN)) {   \
-            MPIR_Object_add_ref_always((objptr_));             \
-        }                                                      \
-        else {                                                                                                 \
-            MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE,TYPICAL,(MPL_DBG_FDEST,                                                   \
-                                             "skipping add_ref on %p (0x%08x kind=%s) refcount=%d",            \
-                                             (objptr_),                                                        \
-                                             (objptr_)->handle,                                                \
-                                             MPIR_Handle_get_kind_str(HANDLE_GET_MPI_KIND((objptr_)->handle)), \
-                                             MPIR_Object_get_ref(objptr_)))                                    \
-        }                                                                                                      \
+#define MPIR_Object_add_ref(objptr_)                                    \
+    do {                                                                \
+        int handle_kind_ = HANDLE_GET_KIND((objptr_)->handle);          \
+        if (unlikely(handle_kind_ != HANDLE_KIND_BUILTIN)) {            \
+            MPIR_Object_add_ref_always((objptr_));                      \
+        }                                                               \
+        else {                                                          \
+            MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE,TYPICAL,(MPL_DBG_FDEST,     \
+                                                     "skipping add_ref on %p (0x%08x kind=%s) refcount=%d", \
+                                                     (objptr_),         \
+                                                     (objptr_)->handle, \
+                                                     MPIR_Handle_get_kind_str(HANDLE_GET_MPI_KIND((objptr_)->handle)), \
+                                                     MPIR_Object_get_ref(objptr_))) \
+                }                                                       \
     } while (0)
-#define MPIR_Object_release_ref(objptr_,inuse_ptr_)                  \
-    do {                                                             \
-        int handle_kind_ = HANDLE_GET_KIND((objptr_)->handle);       \
-        if (unlikely(handle_kind_ != HANDLE_KIND_BUILTIN)) {         \
-            MPIR_Object_release_ref_always((objptr_), (inuse_ptr_)); \
-        }                                                            \
-        else {                                                       \
-            *(inuse_ptr_) = 1;                                       \
-            MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE,TYPICAL,(MPL_DBG_FDEST,                                                   \
-                                             "skipping release_ref on %p (0x%08x kind=%s) refcount=%d",        \
-                                             (objptr_),                                                        \
-                                             (objptr_)->handle,                                                \
-                                             MPIR_Handle_get_kind_str(HANDLE_GET_MPI_KIND((objptr_)->handle)), \
-                                             MPIR_Object_get_ref(objptr_)))                                    \
-        }                                                            \
+#define MPIR_Object_release_ref(objptr_,inuse_ptr_)                     \
+    do {                                                                \
+        int handle_kind_ = HANDLE_GET_KIND((objptr_)->handle);          \
+        if (unlikely(handle_kind_ != HANDLE_KIND_BUILTIN)) {            \
+            MPIR_Object_release_ref_always((objptr_), (inuse_ptr_));    \
+        }                                                               \
+        else {                                                          \
+            *(inuse_ptr_) = 1;                                          \
+            MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE,TYPICAL,(MPL_DBG_FDEST,     \
+                                                     "skipping release_ref on %p (0x%08x kind=%s) refcount=%d", \
+                                                     (objptr_),         \
+                                                     (objptr_)->handle, \
+                                                     MPIR_Handle_get_kind_str(HANDLE_GET_MPI_KIND((objptr_)->handle)), \
+                                                     MPIR_Object_get_ref(objptr_))) \
+                }                                                       \
     } while (0)
 
 #else /* !defined(MPICH_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS) */
 
 /* the base case, where we just always manipulate the reference counts */
-#define MPIR_Object_add_ref(objptr_) \
+#define MPIR_Object_add_ref(objptr_)            \
     MPIR_Object_add_ref_always((objptr_))
-#define MPIR_Object_release_ref(objptr_,inuse_ptr_) \
+#define MPIR_Object_release_ref(objptr_,inuse_ptr_)             \
     MPIR_Object_release_ref_always((objptr_),(inuse_ptr_))
 
 #endif
@@ -401,36 +401,36 @@ typedef OPA_int_t Handle_ref_count;
  * MPIR_Object_add_ref and MPIR_Object_release_ref.
  *
  * NOTE: This macro *must* be invoked as the very first element of the structure! */
-#define MPIR_OBJECT_HEADER             \
-    int handle;                        \
-    Handle_ref_count ref_count/*semicolon intentionally omitted*/
+#define MPIR_OBJECT_HEADER                                              \
+    int handle;                                                         \
+    Handle_ref_count ref_count  /*semicolon intentionally omitted */
 
 /* ALL objects have the handle as the first value. */
-/* Inactive (unused and stored on the appropriate avail list) objects 
+/* Inactive (unused and stored on the appropriate avail list) objects
    have MPIR_Handle_common as the head */
 typedef struct MPIR_Handle_common {
     MPIR_OBJECT_HEADER;
-    void *next;   /* Free handles use this field to point to the next
-                     free object */
+    void *next;                 /* Free handles use this field to point to the next
+                                 * free object */
 } MPIR_Handle_common;
 
 /* This type contains all of the data, except for the direct array,
    used by the object allocators. */
 typedef struct MPIR_Object_alloc_t {
-    MPIR_Handle_common *avail;          /* Next available object */
-    int                initialized;     /* */
-    void              *(*indirect)[];   /* Pointer to indirect object blocks */
-    int                indirect_size;   /* Number of allocated indirect blocks */
-    MPII_Object_kind   kind;            /* Kind of object this is for */
-    int                size;            /* Size of an individual object */
-    void               *direct;         /* Pointer to direct block, used 
-                                           for allocation */
-    int                direct_size;     /* Size of direct block */
+    MPIR_Handle_common *avail;  /* Next available object */
+    int initialized;            /* */
+    void *(*indirect)[];        /* Pointer to indirect object blocks */
+    int indirect_size;          /* Number of allocated indirect blocks */
+    MPII_Object_kind kind;      /* Kind of object this is for */
+    int size;                   /* Size of an individual object */
+    void *direct;               /* Pointer to direct block, used
+                                 * for allocation */
+    int direct_size;            /* Size of direct block */
 } MPIR_Object_alloc_t;
 static inline void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t *);
 static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t *);
-static inline void  MPIR_Handle_obj_free( MPIR_Object_alloc_t *, void * );
-static inline void *MPIR_Handle_get_ptr_indirect( int, MPIR_Object_alloc_t * );
+static inline void MPIR_Handle_obj_free(MPIR_Object_alloc_t *, void *);
+static inline void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
 
 
 /* Convert Handles to objects for MPI types that have predefined objects */
@@ -438,44 +438,44 @@ static inline void *MPIR_Handle_get_ptr_indirect( int, MPIR_Object_alloc_t * );
  * on Blue Gene.  An if/else if/else might help the compiler out.  It also lets
  * us hint that one case is likely(), usually the BUILTIN case. */
 #define MPIR_Getb_ptr(kind,a,bmsk,ptr)                                  \
-{                                                                       \
-   switch (HANDLE_GET_KIND(a)) {                                        \
-      case HANDLE_KIND_BUILTIN:                                         \
-          ptr=MPIR_##kind##_builtin+((a)&(bmsk));                       \
-          break;                                                        \
-      case HANDLE_KIND_DIRECT:                                          \
-          ptr=MPIR_##kind##_direct+HANDLE_INDEX(a);                     \
-          break;                                                        \
-      case HANDLE_KIND_INDIRECT:                                        \
-          ptr=((MPIR_##kind*)                                           \
-               MPIR_Handle_get_ptr_indirect(a,&MPIR_##kind##_mem));     \
-          break;                                                        \
-      case HANDLE_KIND_INVALID:                                         \
-      default:								\
-          ptr=0;							\
-          break;							\
-    }                                                                   \
-}
+    {                                                                   \
+        switch (HANDLE_GET_KIND(a)) {                                   \
+        case HANDLE_KIND_BUILTIN:                                       \
+            ptr=MPIR_##kind##_builtin+((a)&(bmsk));                     \
+            break;                                                      \
+        case HANDLE_KIND_DIRECT:                                        \
+            ptr=MPIR_##kind##_direct+HANDLE_INDEX(a);                   \
+            break;                                                      \
+        case HANDLE_KIND_INDIRECT:                                      \
+            ptr=((MPIR_##kind*)                                         \
+                 MPIR_Handle_get_ptr_indirect(a,&MPIR_##kind##_mem));   \
+            break;                                                      \
+        case HANDLE_KIND_INVALID:                                       \
+        default:                                                        \
+            ptr=0;                                                      \
+            break;                                                      \
+        }                                                               \
+    }
 
 /* Convert handles to objects for MPI types that do _not_ have any predefined
    objects */
-#define MPIR_Get_ptr(kind,a,ptr)					\
-{									\
-   switch (HANDLE_GET_KIND(a)) {					\
-      case HANDLE_KIND_DIRECT:						\
-          ptr=MPIR_##kind##_direct+HANDLE_INDEX(a);			\
-          break;							\
-      case HANDLE_KIND_INDIRECT:					\
-          ptr=((MPIR_##kind*)						\
-               MPIR_Handle_get_ptr_indirect(a,&MPIR_##kind##_mem));	\
-          break;							\
-      case HANDLE_KIND_INVALID:						\
-      case HANDLE_KIND_BUILTIN:						\
-      default:								\
-          ptr=0;							\
-          break;							\
-     }									\
-}
+#define MPIR_Get_ptr(kind,a,ptr)                                        \
+    {                                                                   \
+        switch (HANDLE_GET_KIND(a)) {                                   \
+        case HANDLE_KIND_DIRECT:                                        \
+            ptr=MPIR_##kind##_direct+HANDLE_INDEX(a);                   \
+            break;                                                      \
+        case HANDLE_KIND_INDIRECT:                                      \
+            ptr=((MPIR_##kind*)                                         \
+                 MPIR_Handle_get_ptr_indirect(a,&MPIR_##kind##_mem));   \
+            break;                                                      \
+        case HANDLE_KIND_INVALID:                                       \
+        case HANDLE_KIND_BUILTIN:                                       \
+        default:                                                        \
+            ptr=0;                                                      \
+            break;                                                      \
+        }                                                               \
+    }
 
 /* FIXME: the masks should be defined with the handle definitions instead
    of inserted here as literals */
@@ -493,24 +493,24 @@ static inline void *MPIR_Handle_get_ptr_indirect( int, MPIR_Object_alloc_t * );
    For the indirect case, we mask off the part of the keyval that is
    in the bits normally used for the indirect block index.
 */
-#define MPII_Keyval_get_ptr(a,ptr)     \
-{                                                                       \
-   switch (HANDLE_GET_KIND(a)) {                                        \
-      case HANDLE_KIND_BUILTIN:                                         \
-          ptr=0;                                                        \
-          break;                                                        \
-      case HANDLE_KIND_DIRECT:                                          \
-          ptr=MPII_Keyval_direct+((a)&0x3fffff);                        \
-          break;                                                        \
-      case HANDLE_KIND_INDIRECT:                                        \
-          ptr=((MPII_Keyval*)                                           \
-             MPIR_Handle_get_ptr_indirect((a)&0xfc3fffff,&MPII_Keyval_mem)); \
-          break;                                                        \
-      case HANDLE_KIND_INVALID:                                         \
-      default:								\
-          ptr=0;							\
-          break;							\
-    }                                                                   \
-}
+#define MPII_Keyval_get_ptr(a,ptr)                                      \
+    {                                                                   \
+        switch (HANDLE_GET_KIND(a)) {                                   \
+        case HANDLE_KIND_BUILTIN:                                       \
+            ptr=0;                                                      \
+            break;                                                      \
+        case HANDLE_KIND_DIRECT:                                        \
+            ptr=MPII_Keyval_direct+((a)&0x3fffff);                      \
+            break;                                                      \
+        case HANDLE_KIND_INDIRECT:                                      \
+            ptr=((MPII_Keyval*)                                         \
+                 MPIR_Handle_get_ptr_indirect((a)&0xfc3fffff,&MPII_Keyval_mem)); \
+            break;                                                      \
+        case HANDLE_KIND_INVALID:                                       \
+        default:                                                        \
+            ptr=0;                                                      \
+            break;                                                      \
+        }                                                               \
+    }
 
-#endif  /* MPIR_OBJECTS_H_INCLUDED */
+#endif /* MPIR_OBJECTS_H_INCLUDED */

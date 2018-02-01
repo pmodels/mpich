@@ -74,8 +74,7 @@ int main(int argc, char **argv)
 
     if (count != 3) {
         printf("unexpected value for count, expected 3, got %d\n", count);
-    }
-    else {
+    } else {
         if (rank == 0) {
             printf(" No Errors\n");
         }

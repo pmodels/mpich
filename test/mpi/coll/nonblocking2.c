@@ -69,8 +69,7 @@ int main(int argc, char **argv)
     for (i = 0; i < COUNT; ++i) {
         if (rank == 0) {
             buf[i] = i;
-        }
-        else {
+        } else {
             buf[i] = 0xdeadbeef;
         }
     }
@@ -193,8 +192,7 @@ int main(int argc, char **argv)
                 my_assert(recvbuf[i * COUNT + j] == i + j);
             }
         }
-    }
-    else {
+    } else {
         for (i = 0; i < size * COUNT; ++i) {
             my_assert(recvbuf[i] == 0xdeadbeef);
         }
@@ -219,8 +217,7 @@ int main(int argc, char **argv)
                     my_assert(recvbuf[i * COUNT + j] == i + j);
                 }
             }
-        }
-        else {
+        } else {
             for (i = 0; i < size * COUNT; ++i) {
                 my_assert(recvbuf[i] == 0xdeadbeef);
             }
@@ -341,8 +338,7 @@ int main(int argc, char **argv)
                 my_assert(recvbuf[i * COUNT + j] == i + j);
             }
         }
-    }
-    else {
+    } else {
         for (i = 0; i < size * COUNT; ++i) {
             my_assert(recvbuf[i] == 0xdeadbeef);
         }

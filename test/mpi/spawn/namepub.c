@@ -51,8 +51,7 @@ int main(int argc, char *argv[])
             printf("Error in Unpublish name: \"%s\"\n", errmsg);
         }
 
-    }
-    else {
+    } else {
         MPI_Barrier(MPI_COMM_WORLD);
 
         merr = MPI_Lookup_name(serv_name, MPI_INFO_NULL, port_name_out);
@@ -60,8 +59,7 @@ int main(int argc, char *argv[])
             errs++;
             MPI_Error_string(merr, errmsg, &msglen);
             printf("Error in Lookup name: \"%s\"\n", errmsg);
-        }
-        else {
+        } else {
             if (strcmp(port_name, port_name_out)) {
                 errs++;
                 printf("Lookup name returned the wrong value (%s)\n", port_name_out);
@@ -78,8 +76,7 @@ int main(int argc, char *argv[])
     if (!merr) {
         errs++;
         printf("Lookup name returned name after it was unpublished\n");
-    }
-    else {
+    } else {
         /* Must be class MPI_ERR_NAME */
         MPI_Error_class(merr, &mclass);
         if (mclass != MPI_ERR_NAME) {

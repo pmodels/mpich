@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include "mpi.h"
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     char str[10];
     MPI_Comm intercomm1, intracomm, intercomm2;
@@ -25,9 +25,9 @@ int main( int argc, char *argv[] )
     MPI_Intercomm_merge(intercomm1, 1, &intracomm);
 
     err = MPI_Comm_spawn("spawn_merge_child2", MPI_ARGV_NULL, 2,
-                         MPI_INFO_NULL, 2, intracomm,
-                         &intercomm2, errcodes);  
-    if (err) printf("Error in MPI_Comm_spawn\n");
+                         MPI_INFO_NULL, 2, intracomm, &intercomm2, errcodes);
+    if (err)
+        printf("Error in MPI_Comm_spawn\n");
 
     MPI_Comm_rank(intercomm2, &rank);
 
@@ -35,8 +35,8 @@ int main( int argc, char *argv[] )
         err = MPI_Recv(str, 3, MPI_CHAR, 1, 0, intercomm2, MPI_STATUS_IGNORE);
         printf("Parent (first child) received from child 2: %s\n", str);
         fflush(stdout);
-        
-        err = MPI_Send("bye", 4, MPI_CHAR, 1, 0, intercomm2); 
+
+        err = MPI_Send("bye", 4, MPI_CHAR, 1, 0, intercomm2);
     }
 
     MPI_Finalize();

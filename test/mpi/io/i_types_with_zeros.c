@@ -80,18 +80,18 @@ static int test_indexed_with_zeros(char *filename, int testcase)
         num++;
     }
     switch (testcase) {
-    case INDEXED:
-        MPI_Type_indexed(num, blocklen, indices, MPI_INT, &filetype);
-        break;
-    case HINDEXED:
-        MPI_Type_hindexed(num, blocklen, addrs, MPI_INT, &filetype);
-        break;
-    case STRUCT:
-        MPI_Type_create_struct(num, blocklen, addrs, types, &filetype);
-        break;
-    default:
-        fprintf(stderr, "unknown testcase!\n");
-        return (-100);
+        case INDEXED:
+            MPI_Type_indexed(num, blocklen, indices, MPI_INT, &filetype);
+            break;
+        case HINDEXED:
+            MPI_Type_hindexed(num, blocklen, addrs, MPI_INT, &filetype);
+            break;
+        case STRUCT:
+            MPI_Type_create_struct(num, blocklen, addrs, types, &filetype);
+            break;
+        default:
+            fprintf(stderr, "unknown testcase!\n");
+            return (-100);
     }
 
     MPI_Type_commit(&filetype);

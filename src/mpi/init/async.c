@@ -24,7 +24,7 @@ static volatile int progress_thread_done = 0;
 #define FUNCNAME progress_fn
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static void progress_fn(void * data)
+static void progress_fn(void *data)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr = NULL;
@@ -89,22 +89,26 @@ int MPIR_Init_async_thread(void)
     /* Dup comm world for the progress thread */
     MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
     mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, &progress_comm_ptr);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     MPID_Thread_cond_create(&progress_cond, &err);
-    MPIR_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**cond_create", "**cond_create %s", strerror(err));
-    
+    MPIR_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**cond_create", "**cond_create %s",
+                         strerror(err));
+
     MPID_Thread_mutex_create(&progress_mutex, &err);
-    MPIR_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**mutex_create", "**mutex_create %s", strerror(err));
-    
+    MPIR_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**mutex_create", "**mutex_create %s",
+                         strerror(err));
+
     MPID_Thread_create((MPID_Thread_func_t) progress_fn, NULL, &progress_thread_id, &err);
-    MPIR_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**mutex_create", "**mutex_create %s", strerror(err));
-    
+    MPIR_ERR_CHKANDJUMP1(err, mpi_errno, MPI_ERR_OTHER, "**mutex_create", "**mutex_create %s",
+                         strerror(err));
+
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
 
- fn_exit:
+  fn_exit:
     return mpi_errno;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 #else
     return MPI_SUCCESS;

@@ -16,8 +16,8 @@
 #pragma _CRI duplicate MPI_Unpack_external as PMPI_Unpack_external
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Unpack_external(const char datarep[], const void *inbuf, MPI_Aint insize,
-                        MPI_Aint *position, void *outbuf, int outcount, MPI_Datatype datatype)
-                        __attribute__((weak,alias("PMPI_Unpack_external")));
+                        MPI_Aint * position, void *outbuf, int outcount, MPI_Datatype datatype)
+    __attribute__ ((weak, alias("PMPI_Unpack_external")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -59,12 +59,9 @@ Output Parameters:
 .N MPI_ERR_ARG
 @*/
 int MPI_Unpack_external(const char datarep[],
-			const void *inbuf,
-			MPI_Aint insize,
-			MPI_Aint *position,
-			void *outbuf,
-			int outcount,
-			MPI_Datatype datatype)
+                        const void *inbuf,
+                        MPI_Aint insize,
+                        MPI_Aint * position, void *outbuf, int outcount, MPI_Datatype datatype)
 {
     static const char FCNAME[] = "MPI_Unpack_external";
     int mpi_errno = MPI_SUCCESS;
@@ -77,62 +74,63 @@ int MPI_Unpack_external(const char datarep[],
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_UNPACK_EXTERNAL);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    if (insize > 0) {
-		MPIR_ERRTEST_ARGNULL(inbuf, "input buffer", mpi_errno);
-	    }
-	    /* NOTE: outbuf could be MPI_BOTTOM; don't test for NULL */
-	    MPIR_ERRTEST_COUNT(insize, mpi_errno);
-	    MPIR_ERRTEST_COUNT(outcount, mpi_errno);
+            if (insize > 0) {
+                MPIR_ERRTEST_ARGNULL(inbuf, "input buffer", mpi_errno);
+            }
+            /* NOTE: outbuf could be MPI_BOTTOM; don't test for NULL */
+            MPIR_ERRTEST_COUNT(insize, mpi_errno);
+            MPIR_ERRTEST_COUNT(outcount, mpi_errno);
 
-	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
+            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
 
-	    if (datatype != MPI_DATATYPE_NULL && HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-		MPIR_Datatype *datatype_ptr = NULL;
+            if (datatype != MPI_DATATYPE_NULL && HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
+                MPIR_Datatype *datatype_ptr = NULL;
 
-		MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-		MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-		MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-	    }
-		
-	    /* If datatye_ptr is not valid, it will be reset to null */
-            if (mpi_errno) goto fn_fail;
+                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
+                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+            }
+
+            /* If datatye_ptr is not valid, it will be reset to null */
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
     if (insize == 0) {
-	goto fn_exit;
+        goto fn_exit;
     }
 
     segp = MPIR_Segment_alloc();
-    MPIR_ERR_CHKANDJUMP1((segp == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
+    MPIR_ERR_CHKANDJUMP1((segp == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
+                         "MPIR_Segment_alloc");
     mpi_errno = MPIR_Segment_init(outbuf, outcount, datatype, segp, 1);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     /* NOTE: buffer values and positions in MPI_Unpack_external are used very
      * differently from use in MPIR_Segment_unpack_external...
      */
     first = 0;
-    last  = SEGMENT_IGNORE_LAST;
+    last = SEGMENT_IGNORE_LAST;
 
     /* Ensure that pointer increment fits in a pointer */
     MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT inbuf) + *position);
 
-    MPIR_Segment_unpack_external32(segp,
-				   first,
-				   &last,
-				   (void *) ((char *) inbuf + *position));
+    MPIR_Segment_unpack_external32(segp, first, &last, (void *) ((char *) inbuf + *position));
 
     *position += last;
 
     MPIR_Segment_free(segp);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     /* ... end of body of routine ... */
 
@@ -142,13 +140,15 @@ int MPI_Unpack_external(const char datarep[],
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_unpack_external",
-	    "**mpi_unpack_external %s %p %d %p %p %d %D", datarep, inbuf, insize, position, outbuf, outcount, datatype);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_unpack_external",
+                                 "**mpi_unpack_external %s %p %d %p %p %d %D", datarep, inbuf,
+                                 insize, position, outbuf, outcount, datatype);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

@@ -24,49 +24,46 @@
 #define FUNCNAME MPIR_Allgatherv_intra_recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allgatherv_intra_recursive_doubling (
-    const void *sendbuf,
-    int sendcount,
-    MPI_Datatype sendtype,
-    void *recvbuf,
-    const int *recvcounts,
-    const int *displs,
-    MPI_Datatype recvtype,
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag )
+int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
+                                             int sendcount,
+                                             MPI_Datatype sendtype,
+                                             void *recvbuf,
+                                             const int *recvcounts,
+                                             const int *displs,
+                                             MPI_Datatype recvtype,
+                                             MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
-    int        comm_size, rank, j, i;
+    int comm_size, rank, j, i;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    MPI_Aint recvtype_extent, recvtype_true_extent, 
-	recvtype_true_lb;
+    MPI_Aint recvtype_extent, recvtype_true_extent, recvtype_true_lb;
     int curr_cnt, dst, total_count;
     void *tmp_buf;
-    int mask, dst_tree_root, my_tree_root, is_homogeneous, position,  
-        send_offset, recv_offset, last_recv_cnt, nprocs_completed, k,
-        offset, tmp_mask, tree_root;
+    int mask, dst_tree_root, my_tree_root, is_homogeneous, position,
+        send_offset, recv_offset, last_recv_cnt, nprocs_completed, k, offset, tmp_mask, tree_root;
 #ifdef MPID_HAS_HETERO
     int tmp_buf_size, nbytes;
 #endif
     MPIR_CHKLMEM_DECL(1);
-    
+
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
 #ifdef HAVE_ERROR_CHECKING
     /* Currently this algorithm can only handle power-of-2 comm_size.
      * Non power-of-2 comm_size is still experimental */
-    MPIR_Assert(!(comm_size & (comm_size-1)));
+    MPIR_Assert(!(comm_size & (comm_size - 1)));
 #endif /* HAVE_ERROR_CHECKING */
 
     total_count = 0;
-    for (i=0; i<comm_size; i++)
+    for (i = 0; i < comm_size; i++)
         total_count += recvcounts[i];
 
-    if (total_count == 0) goto fn_exit;
-    
-    MPIR_Datatype_get_extent_macro( recvtype, recvtype_extent );
+    if (total_count == 0)
+        goto fn_exit;
+
+    MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
 
     is_homogeneous = 1;
@@ -74,77 +71,76 @@ int MPIR_Allgatherv_intra_recursive_doubling (
     if (comm_ptr->is_hetero)
         is_homogeneous = 0;
 #endif
-        
+
     if (is_homogeneous) {
         /* need to receive contiguously into tmp_buf because
-           displs could make the recvbuf noncontiguous */
+         * displs could make the recvbuf noncontiguous */
 
         MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
 
         MPIR_Ensure_Aint_fits_in_pointer(total_count *
-                       (MPL_MAX(recvtype_true_extent, recvtype_extent)));
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, total_count*(MPL_MAX(recvtype_true_extent,recvtype_extent)), mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+                                         (MPL_MAX(recvtype_true_extent, recvtype_extent)));
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *,
+                            total_count * (MPL_MAX(recvtype_true_extent, recvtype_extent)),
+                            mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* adjust for potential negative lower bound in datatype */
-        tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);
+        tmp_buf = (void *) ((char *) tmp_buf - recvtype_true_lb);
 
-        /* copy local data into right location in tmp_buf */ 
+        /* copy local data into right location in tmp_buf */
         position = 0;
-        for (i=0; i<rank; i++) position += recvcounts[i];
-        if (sendbuf != MPI_IN_PLACE)
-	    {
+        for (i = 0; i < rank; i++)
+            position += recvcounts[i];
+        if (sendbuf != MPI_IN_PLACE) {
             mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype,
-                                       ((char *)tmp_buf + position*
-                                        recvtype_extent), 
-                                       recvcounts[rank], recvtype);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	    }
-        else
-	    {
-            /* if in_place specified, local data is found in recvbuf */ 
-            mpi_errno = MPIR_Localcopy(((char *)recvbuf +
-                                        displs[rank]*recvtype_extent), 
+                                       ((char *) tmp_buf + position *
+                                        recvtype_extent), recvcounts[rank], recvtype);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+        } else {
+            /* if in_place specified, local data is found in recvbuf */
+            mpi_errno = MPIR_Localcopy(((char *) recvbuf +
+                                        displs[rank] * recvtype_extent),
                                        recvcounts[rank], recvtype,
-                                       ((char *)tmp_buf + position*
-                                        recvtype_extent), 
-                                       recvcounts[rank], recvtype);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	    }
+                                       ((char *) tmp_buf + position *
+                                        recvtype_extent), recvcounts[rank], recvtype);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+        }
 
         curr_cnt = recvcounts[rank];
-        
+
         mask = 0x1;
         i = 0;
         while (mask < comm_size) {
             dst = rank ^ mask;
-            
-            /* find offset into send and recv buffers. zero out 
-               the least significant "i" bits of rank and dst to 
-               find root of src and dst subtrees. Use ranks of 
-               roots as index to send from and recv into buffer */ 
-            
+
+            /* find offset into send and recv buffers. zero out
+             * the least significant "i" bits of rank and dst to
+             * find root of src and dst subtrees. Use ranks of
+             * roots as index to send from and recv into buffer */
+
             dst_tree_root = dst >> i;
             dst_tree_root <<= i;
-            
+
             my_tree_root = rank >> i;
             my_tree_root <<= i;
-            
+
             if (dst < comm_size) {
                 send_offset = 0;
-                for (j=0; j<my_tree_root; j++)
+                for (j = 0; j < my_tree_root; j++)
                     send_offset += recvcounts[j];
-                
+
                 recv_offset = 0;
-                for (j=0; j<dst_tree_root; j++)
+                for (j = 0; j < dst_tree_root; j++)
                     recv_offset += recvcounts[j];
 
-                mpi_errno = MPIC_Sendrecv(((char *)tmp_buf + send_offset * recvtype_extent),
-                                             curr_cnt, recvtype, dst,
-                                             MPIR_ALLGATHERV_TAG,  
-                                             ((char *)tmp_buf + recv_offset * recvtype_extent),
-                                             total_count - recv_offset, recvtype, dst,
-                                             MPIR_ALLGATHERV_TAG,
-                                             comm_ptr, &status, errflag);
+                mpi_errno = MPIC_Sendrecv(((char *) tmp_buf + send_offset * recvtype_extent),
+                                          curr_cnt, recvtype, dst,
+                                          MPIR_ALLGATHERV_TAG,
+                                          ((char *) tmp_buf + recv_offset * recvtype_extent),
+                                          total_count - recv_offset, recvtype, dst,
+                                          MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -153,34 +149,34 @@ int MPIR_Allgatherv_intra_recursive_doubling (
                     last_recv_cnt = 0;
                 } else
                     /* for convenience, recv is posted for a bigger amount
-                       than will be sent */
+                     * than will be sent */
                     MPIR_Get_count_impl(&status, recvtype, &last_recv_cnt);
                 curr_cnt += last_recv_cnt;
             }
-                
+
             /* if some processes in this process's subtree in this step
-               did not have any destination process to communicate with
-               because of non-power-of-two, we need to send them the
-               data that they would normally have received from those
-               processes. That is, the haves in this subtree must send to
-               the havenots. We use a logarithmic
-               recursive-halfing algorithm for this. */
-            
+             * did not have any destination process to communicate with
+             * because of non-power-of-two, we need to send them the
+             * data that they would normally have received from those
+             * processes. That is, the haves in this subtree must send to
+             * the havenots. We use a logarithmic
+             * recursive-halfing algorithm for this. */
+
             /* This part of the code will not currently be
-             executed because we are not using recursive
-             doubling for non power of two. Mark it as experimental
-             so that it doesn't show up as red in the coverage
-             tests. */  
+             * executed because we are not using recursive
+             * doubling for non power of two. Mark it as experimental
+             * so that it doesn't show up as red in the coverage
+             * tests. */
 
             /* --BEGIN EXPERIMENTAL-- */
             if (dst_tree_root + mask > comm_size) {
                 nprocs_completed = comm_size - my_tree_root - mask;
                 /* nprocs_completed is the number of processes in this
-                   subtree that have all the data. Send data to others
-                   in a tree fashion. First find root of current tree
-                   that is being divided into two. k is the number of
-                   least-significant bits in this process's rank that
-                   must be zeroed out to find the rank of the root */ 
+                 * subtree that have all the data. Send data to others
+                 * in a tree fashion. First find root of current tree
+                 * that is being divided into two. k is the number of
+                 * least-significant bits in this process's rank that
+                 * must be zeroed out to find the rank of the root */
                 j = mask;
                 k = 0;
                 while (j) {
@@ -188,31 +184,30 @@ int MPIR_Allgatherv_intra_recursive_doubling (
                     k++;
                 }
                 k--;
-                
+
                 tmp_mask = mask >> 1;
-                
+
                 while (tmp_mask) {
                     dst = rank ^ tmp_mask;
-                    
+
                     tree_root = rank >> k;
                     tree_root <<= k;
-                    
+
                     /* send only if this proc has data and destination
-                       doesn't have data. at any step, multiple processes
-                       can send if they have the data */
-                    if ((dst > rank) && 
-                        (rank < tree_root + nprocs_completed)
+                     * doesn't have data. at any step, multiple processes
+                     * can send if they have the data */
+                    if ((dst > rank) && (rank < tree_root + nprocs_completed)
                         && (dst >= tree_root + nprocs_completed)) {
 
                         offset = 0;
-                        for (j=0; j<(my_tree_root+mask); j++)
+                        for (j = 0; j < (my_tree_root + mask); j++)
                             offset += recvcounts[j];
                         offset *= recvtype_extent;
 
-                        mpi_errno = MPIC_Send(((char *)tmp_buf + offset),
-                                                 last_recv_cnt,
-                                                 recvtype, dst,
-                                                 MPIR_ALLGATHERV_TAG, comm_ptr, errflag);
+                        mpi_errno = MPIC_Send(((char *) tmp_buf + offset),
+                                              last_recv_cnt,
+                                              recvtype, dst,
+                                              MPIR_ALLGATHERV_TAG, comm_ptr, errflag);
                         if (mpi_errno) {
                             /* for communication errors, just record the error but continue */
                             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -220,23 +215,22 @@ int MPIR_Allgatherv_intra_recursive_doubling (
                             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                         }
                         /* last_recv_cnt was set in the previous
-                           receive. that's the amount of data to be
-                           sent now. */
+                         * receive. that's the amount of data to be
+                         * sent now. */
                     }
                     /* recv only if this proc. doesn't have data and sender
-                       has data */
-                    else if ((dst < rank) && 
-                                 (dst < tree_root + nprocs_completed) &&
-                                 (rank >= tree_root + nprocs_completed)) {
+                     * has data */
+                    else if ((dst < rank) &&
+                             (dst < tree_root + nprocs_completed) &&
+                             (rank >= tree_root + nprocs_completed)) {
 
                         offset = 0;
-                        for (j=0; j<(my_tree_root+mask); j++)
+                        for (j = 0; j < (my_tree_root + mask); j++)
                             offset += recvcounts[j];
 
-                        mpi_errno = MPIC_Recv(((char *)tmp_buf + offset * recvtype_extent),
-                                                 total_count - offset, recvtype,
-                                                 dst, MPIR_ALLGATHERV_TAG,
-                                                 comm_ptr, &status, errflag);
+                        mpi_errno = MPIC_Recv(((char *) tmp_buf + offset * recvtype_extent),
+                                              total_count - offset, recvtype,
+                                              dst, MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
                         if (mpi_errno) {
                             /* for communication errors, just record the error but continue */
                             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -245,7 +239,7 @@ int MPIR_Allgatherv_intra_recursive_doubling (
                             last_recv_cnt = 0;
                         } else
                             /* for convenience, recv is posted for a
-                               bigger amount than will be sent */
+                             * bigger amount than will be sent */
                             MPIR_Get_count_impl(&status, recvtype, &last_recv_cnt);
                         curr_cnt += last_recv_cnt;
                     }
@@ -254,98 +248,100 @@ int MPIR_Allgatherv_intra_recursive_doubling (
                 }
             }
             /* --END EXPERIMENTAL-- */
-                
+
             mask <<= 1;
             i++;
         }
 
         /* copy data from tmp_buf to recvbuf */
         position = 0;
-        for (j=0; j<comm_size; j++) {
+        for (j = 0; j < comm_size; j++) {
             if ((sendbuf != MPI_IN_PLACE) || (j != rank)) {
                 /* not necessary to copy if in_place and
-                   j==rank. otherwise copy. */
-                mpi_errno = MPIR_Localcopy(((char *)tmp_buf + position*recvtype_extent),
+                 * j==rank. otherwise copy. */
+                mpi_errno = MPIR_Localcopy(((char *) tmp_buf + position * recvtype_extent),
                                            recvcounts[j], recvtype,
-                                           ((char *)recvbuf + displs[j]*recvtype_extent),
+                                           ((char *) recvbuf + displs[j] * recvtype_extent),
                                            recvcounts[j], recvtype);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
             }
             position += recvcounts[j];
         }
     }
-        
 #ifdef MPID_HAS_HETERO
     else {
         /* heterogeneous. need to use temp. buffer. */
         MPIR_Pack_size_impl(total_count, recvtype, &tmp_buf_size);
         MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
-        
+
         /* calculate the value of nbytes, the number of bytes in packed
-           representation corresponding to a single recvtype. Since
-           MPI_Pack_size returns only an upper bound on 
-           the size, to get the real size we actually pack some data
-           into tmp_buf and see by how much 'position' is incremented. */
-        
+         * representation corresponding to a single recvtype. Since
+         * MPI_Pack_size returns only an upper bound on
+         * the size, to get the real size we actually pack some data
+         * into tmp_buf and see by how much 'position' is incremented. */
+
         position = 0;
-        mpi_errno = MPIR_Pack_impl(recvbuf, 1, recvtype, tmp_buf, tmp_buf_size,
-                                   &position);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPIR_Pack_impl(recvbuf, 1, recvtype, tmp_buf, tmp_buf_size, &position);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         nbytes = position;
-        
+
         /* pack local data into right location in tmp_buf */
         position = 0;
-        for (i=0; i<rank; i++) position += recvcounts[i];
+        for (i = 0; i < rank; i++)
+            position += recvcounts[i];
         position *= nbytes;
-        
+
         if (sendbuf != MPI_IN_PLACE) {
             mpi_errno = MPIR_Pack_impl(sendbuf, sendcount, sendtype, tmp_buf,
                                        tmp_buf_size, &position);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        }
-        else {
-            /* if in_place specified, local data is found in recvbuf */ 
-            mpi_errno = MPIR_Pack_impl(((char *)recvbuf + displs[rank]*recvtype_extent),
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+        } else {
+            /* if in_place specified, local data is found in recvbuf */
+            mpi_errno = MPIR_Pack_impl(((char *) recvbuf + displs[rank] * recvtype_extent),
                                        recvcounts[rank], recvtype, tmp_buf,
                                        tmp_buf_size, &position);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
         }
-        
-        curr_cnt = recvcounts[rank]*nbytes;
-        
+
+        curr_cnt = recvcounts[rank] * nbytes;
+
         mask = 0x1;
         i = 0;
         while (mask < comm_size) {
             dst = rank ^ mask;
-            
-            /* find offset into send and recv buffers. zero out 
-               the least significant "i" bits of rank and dst to 
-               find root of src and dst subtrees. Use ranks of 
-               roots as index to send from and recv into buffer. */ 
-            
+
+            /* find offset into send and recv buffers. zero out
+             * the least significant "i" bits of rank and dst to
+             * find root of src and dst subtrees. Use ranks of
+             * roots as index to send from and recv into buffer. */
+
             dst_tree_root = dst >> i;
             dst_tree_root <<= i;
-            
+
             my_tree_root = rank >> i;
             my_tree_root <<= i;
-            
+
             send_offset = 0;
-            for (j=0; j<my_tree_root; j++)
+            for (j = 0; j < my_tree_root; j++)
                 send_offset += recvcounts[j];
             send_offset *= nbytes;
-            
+
             recv_offset = 0;
-            for (j=0; j<dst_tree_root; j++)
+            for (j = 0; j < dst_tree_root; j++)
                 recv_offset += recvcounts[j];
             recv_offset *= nbytes;
-            
+
             if (dst < comm_size) {
-                mpi_errno = MPIC_Sendrecv(((char *)tmp_buf + send_offset),
-                                             curr_cnt, MPI_BYTE, dst,
-                                             MPIR_ALLGATHERV_TAG,  
-                                             ((char *)tmp_buf + recv_offset),
-                                             tmp_buf_size-recv_offset, MPI_BYTE, dst,
-                                             MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
+                mpi_errno = MPIC_Sendrecv(((char *) tmp_buf + send_offset),
+                                          curr_cnt, MPI_BYTE, dst,
+                                          MPIR_ALLGATHERV_TAG,
+                                          ((char *) tmp_buf + recv_offset),
+                                          tmp_buf_size - recv_offset, MPI_BYTE, dst,
+                                          MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -354,27 +350,27 @@ int MPIR_Allgatherv_intra_recursive_doubling (
                     last_recv_cnt = 0;
                 } else
                     /* for convenience, recv is posted for a bigger amount
-                       than will be sent */
+                     * than will be sent */
                     MPIR_Get_count_impl(&status, MPI_BYTE, &last_recv_cnt);
                 curr_cnt += last_recv_cnt;
             }
-            
+
             /* if some processes in this process's subtree in this step
-               did not have any destination process to communicate with
-               because of non-power-of-two, we need to send them the
-               data that they would normally have received from those
-               processes. That is, the haves in this subtree must send to
-               the havenots. We use a logarithmic recursive-halfing algorithm
-               for this. */
-            
+             * did not have any destination process to communicate with
+             * because of non-power-of-two, we need to send them the
+             * data that they would normally have received from those
+             * processes. That is, the haves in this subtree must send to
+             * the havenots. We use a logarithmic recursive-halfing algorithm
+             * for this. */
+
             if (dst_tree_root + mask > comm_size) {
                 nprocs_completed = comm_size - my_tree_root - mask;
                 /* nprocs_completed is the number of processes in this
-                   subtree that have all the data. Send data to others
-                   in a tree fashion. First find root of current tree
-                   that is being divided into two. k is the number of
-                   least-significant bits in this process's rank that
-                   must be zeroed out to find the rank of the root */ 
+                 * subtree that have all the data. Send data to others
+                 * in a tree fashion. First find root of current tree
+                 * that is being divided into two. k is the number of
+                 * least-significant bits in this process's rank that
+                 * must be zeroed out to find the rank of the root */
                 j = mask;
                 k = 0;
                 while (j) {
@@ -382,30 +378,28 @@ int MPIR_Allgatherv_intra_recursive_doubling (
                     k++;
                 }
                 k--;
-                
+
                 offset = 0;
-                for (j=0; j<(my_tree_root+mask); j++)
+                for (j = 0; j < (my_tree_root + mask); j++)
                     offset += recvcounts[j];
                 offset *= nbytes;
                 tmp_mask = mask >> 1;
-                
+
                 while (tmp_mask) {
                     dst = rank ^ tmp_mask;
-                    
+
                     tree_root = rank >> k;
                     tree_root <<= k;
-                    
+
                     /* send only if this proc has data and destination
-                       doesn't have data. at any step, multiple processes
-                       can send if they have the data */
-                    if ((dst > rank) && 
-                        (rank < tree_root + nprocs_completed)
+                     * doesn't have data. at any step, multiple processes
+                     * can send if they have the data */
+                    if ((dst > rank) && (rank < tree_root + nprocs_completed)
                         && (dst >= tree_root + nprocs_completed)) {
-                        
-                        mpi_errno = MPIC_Send(((char *)tmp_buf + offset),
-                                                 last_recv_cnt, MPI_BYTE,
-                                                 dst, MPIR_ALLGATHERV_TAG,
-                                                 comm_ptr, errflag);
+
+                        mpi_errno = MPIC_Send(((char *) tmp_buf + offset),
+                                              last_recv_cnt, MPI_BYTE,
+                                              dst, MPIR_ALLGATHERV_TAG, comm_ptr, errflag);
                         if (mpi_errno) {
                             /* for communication errors, just record the error but continue */
                             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -413,19 +407,17 @@ int MPIR_Allgatherv_intra_recursive_doubling (
                             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                         }
                         /* last_recv_cnt was set in the previous
-                           receive. that's the amount of data to be
-                           sent now. */
+                         * receive. that's the amount of data to be
+                         * sent now. */
                     }
                     /* recv only if this proc. doesn't have data and sender
-                       has data */
-                    else if ((dst < rank) && 
+                     * has data */
+                    else if ((dst < rank) &&
                              (dst < tree_root + nprocs_completed) &&
                              (rank >= tree_root + nprocs_completed)) {
-                        mpi_errno = MPIC_Recv(((char *)tmp_buf + offset),
-                                                 tmp_buf_size-offset, MPI_BYTE,
-                                                 dst,
-                                                 MPIR_ALLGATHERV_TAG,
-                                                 comm_ptr, &status, errflag);
+                        mpi_errno = MPIC_Recv(((char *) tmp_buf + offset),
+                                              tmp_buf_size - offset, MPI_BYTE,
+                                              dst, MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
                         if (mpi_errno) {
                             /* for communication errors, just record the error but continue */
                             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -434,7 +426,7 @@ int MPIR_Allgatherv_intra_recursive_doubling (
                             last_recv_cnt = 0;
                         } else
                             /* for convenience, recv is posted for a bigger amount
-                               than will be sent */ 
+                             * than will be sent */
                             MPIR_Get_count_impl(&status, MPI_BYTE, &last_recv_cnt);
                         curr_cnt += last_recv_cnt;
                     }
@@ -445,22 +437,23 @@ int MPIR_Allgatherv_intra_recursive_doubling (
             mask <<= 1;
             i++;
         }
-    
+
         position = 0;
-        for (j=0; j<comm_size; j++) {
+        for (j = 0; j < comm_size; j++) {
             if ((sendbuf != MPI_IN_PLACE) || (j != rank)) {
                 /* not necessary to unpack if in_place and
-                   j==rank. otherwise unpack. */
+                 * j==rank. otherwise unpack. */
                 mpi_errno = MPIR_Unpack_impl(tmp_buf, tmp_buf_size, &position,
-                                             ((char *)recvbuf + displs[j]*recvtype_extent),
+                                             ((char *) recvbuf + displs[j] * recvtype_extent),
                                              recvcounts[j], recvtype);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
             }
         }
     }
 #endif /* MPID_HAS_HETERO */
 
- fn_exit:
+  fn_exit:
     MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
@@ -468,6 +461,6 @@ int MPIR_Allgatherv_intra_recursive_doubling (
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
 
     return mpi_errno;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }

@@ -46,8 +46,7 @@ int main(int argc, char **argv)
     /* print message and exit */
     if (errs) {
         fprintf(stderr, "Found %d errors\n", errs);
-    }
-    else {
+    } else {
         printf(" No Errors\n");
     }
     MPI_Finalize();
@@ -127,12 +126,12 @@ int blockindexed_contig_test(void)
         int goodval;
 
         switch (i) {
-        case 0:
-            goodval = 7;
-            break;
-        default:
-            goodval = 0;        /* pack_and_unpack() zeros before unpack */
-            break;
+            case 0:
+                goodval = 7;
+                break;
+            default:
+                goodval = 0;    /* pack_and_unpack() zeros before unpack */
+                break;
         }
         if (buf[i] != goodval) {
             errs++;

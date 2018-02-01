@@ -57,8 +57,7 @@ MTEST_THREAD_RETURN_TYPE run_test_send(void *arg)
             MPI_Isend(buf, cnt, MPI_INT, thread_num, cnt, MPI_COMM_WORLD, &r[thread_num - 1]);
             if (ownerWaits) {
                 MPI_Wait(&r[thread_num - 1], MPI_STATUS_IGNORE);
-            }
-            else {
+            } else {
                 /* Wait for all threads to start the sends */
                 MTest_thread_barrier(nthreads);
                 if (thread_num == 1) {
@@ -127,8 +126,7 @@ int main(int argc, char **argv)
 
         MTest_Join_threads();
         MTest_thread_barrier_free();
-    }
-    else if (rank < MAX_NTHREAD) {
+    } else if (rank < MAX_NTHREAD) {
         run_test_recv();
     }
 

@@ -8,8 +8,8 @@
 #define MPIPR_H_INCLUDED
 
 /* This file replaces all MPI function names with their PMPI equivalents.
-   PMPI versions are used by default so that the user can profile 
-   application code without interference from MPI functions used by 
+   PMPI versions are used by default so that the user can profile
+   application code without interference from MPI functions used by
    MPI-IO. */
 
 #ifndef USE_MPI_VERSIONS
@@ -299,7 +299,7 @@
 #undef MPI_Wtime
 #define MPI_Wtime PMPI_Wtime
 
-/* commented out because these could be macros themselves, as in MPICH 
+/* commented out because these could be macros themselves, as in MPICH
 #undef MPI_Type_c2f
 #define MPI_Type_c2f PMPI_Type_c2f
 #undef MPI_Type_f2c
@@ -333,7 +333,7 @@
 #undef MPI_Status_set_elements
 #define MPI_Status_set_elements PMPI_Status_set_elements
 
-#ifndef HAVE_MPI_INFO_SRC  /* everywhere except in info source directory */
+#ifndef HAVE_MPI_INFO_SRC       /* everywhere except in info source directory */
 #undef MPI_Info_create
 #define MPI_Info_create PMPI_Info_create
 #undef MPI_Info_set
@@ -370,7 +370,7 @@
 #undef MPIX_Grequest_class_allocate
 #define MPIX_Grequest_class_allocate PMPIX_Grequest_class_allocate
 
-#ifdef MPIO_FORTRAN_SRC   /* only in MPI-IO Fortran source directory */
+#ifdef MPIO_FORTRAN_SRC /* only in MPI-IO Fortran source directory */
 #undef MPI_File_c2f
 #define MPI_File_c2f PMPI_File_c2f
 #undef MPI_File_f2c

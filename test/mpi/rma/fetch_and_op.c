@@ -15,29 +15,29 @@
 #define ITER 100
 
 #if defined (FOP_TYPE_CHAR)
-#  define TYPE_C   char
-#  define TYPE_MPI MPI_CHAR
-#  define TYPE_FMT "%d"
+#define TYPE_C   char
+#define TYPE_MPI MPI_CHAR
+#define TYPE_FMT "%d"
 #elif defined (FOP_TYPE_SHORT)
-#  define TYPE_C   short
-#  define TYPE_MPI MPI_SHORT
-#  define TYPE_FMT "%d"
+#define TYPE_C   short
+#define TYPE_MPI MPI_SHORT
+#define TYPE_FMT "%d"
 #elif defined (FOP_TYPE_LONG)
-#  define TYPE_C   long
-#  define TYPE_MPI MPI_LONG
-#  define TYPE_FMT "%ld"
+#define TYPE_C   long
+#define TYPE_MPI MPI_LONG
+#define TYPE_FMT "%ld"
 #elif defined (FOP_TYPE_DOUBLE)
-#  define TYPE_C   double
-#  define TYPE_MPI MPI_DOUBLE
-#  define TYPE_FMT "%f"
+#define TYPE_C   double
+#define TYPE_MPI MPI_DOUBLE
+#define TYPE_FMT "%f"
 #elif defined (FOP_TYPE_LONG_DOUBLE)
-#  define TYPE_C   long double
-#  define TYPE_MPI MPI_LONG_DOUBLE
-#  define TYPE_FMT "%Lf"
+#define TYPE_C   long double
+#define TYPE_MPI MPI_LONG_DOUBLE
+#define TYPE_FMT "%Lf"
 #else
-#  define TYPE_C   int
-#  define TYPE_MPI MPI_INT
-#  define TYPE_FMT "%d"
+#define TYPE_C   int
+#define TYPE_MPI MPI_INT
+#define TYPE_FMT "%d"
 #endif
 
 #define CMP(x, y) ((x - ((TYPE_C) (y))) > 1.0e-9)

@@ -51,8 +51,7 @@ int main(int argc, char *argv[])
                 buf[3 * i] = i;
             MPI_Send(buf, count, newtype, dest, 0, comm);
             MPI_Send(buf, count, newtype, dest, 1, comm);
-        }
-        else if (rank == dest) {
+        } else if (rank == dest) {
             MPI_Recv(buf, count, MPI_INT, source, 0, comm, &status);
             for (i = 0; i < count; i++) {
                 if (buf[i] != i) {

@@ -68,8 +68,7 @@ int main(int argc, char *argv[])
             MPI_Type_free(&xpose);
 
             MPI_Win_complete(win);
-        }
-        else {  /* rank=1 */
+        } else {        /* rank=1 */
             int *A;
 #ifdef USE_WIN_ALLOCATE
             MPI_Win_allocate(NROWS * NCOLS * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &A,

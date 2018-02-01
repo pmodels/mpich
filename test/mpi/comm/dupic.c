@@ -47,11 +47,9 @@ int main(int argc, char *argv[])
                 errs++;
                 if (count == 1 && indicies[0] != 1) {
                     printf("Error in context values for intercomm\n");
-                }
-                else if (count == 2) {
+                } else if (count == 2) {
                     printf("Error: two messages received!\n");
-                }
-                else {
+                } else {
                     int i;
                     printf("Error: count = %d", count);
                     for (i = 0; i < count; i++) {

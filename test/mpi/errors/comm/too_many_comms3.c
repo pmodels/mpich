@@ -59,8 +59,7 @@ int main(int argc, char **argv)
             if (verbose)
                 printf("%d: Created comm %d\n", rank, i);
             ncomm++;
-        }
-        else {
+        } else {
             if (verbose)
                 printf("%d: Error creating comm %d\n", rank, i);
             MPI_Group_free(&comm_group);

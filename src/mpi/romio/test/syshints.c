@@ -11,34 +11,34 @@
 
 static void handle_error(int errcode, const char *str)
 {
-	char msg[MPI_MAX_ERROR_STRING];
-	int resultlen;
-	MPI_Error_string(errcode, msg, &resultlen);
-	fprintf(stderr, "%s: %s\n", str, msg);
-	MPI_Abort(MPI_COMM_WORLD, 1);
+    char msg[MPI_MAX_ERROR_STRING];
+    int resultlen;
+    MPI_Error_string(errcode, msg, &resultlen);
+    fprintf(stderr, "%s: %s\n", str, msg);
+    MPI_Abort(MPI_COMM_WORLD, 1);
 }
 
 #define CHECK(fn) {int errcode; errcode = (fn); if (errcode != MPI_SUCCESS) handle_error(errcode, #fn); }
 
-static int hint_check(MPI_Info info_used, const char * key, const char *expected) {
-    char value[MPI_MAX_INFO_VAL+1];
+static int hint_check(MPI_Info info_used, const char *key, const char *expected)
+{
+    char value[MPI_MAX_INFO_VAL + 1];
     int flag;
 
     CHECK(MPI_Info_get(info_used, key, MPI_MAX_INFO_VAL, value, &flag));
-    if (strcmp(expected, value) ){
-	    fprintf(stderr, "expected value \"%s\" for key \"%s\" got \"%s\"\n",
-		    expected, key, value);
-	    return 1;
+    if (strcmp(expected, value)) {
+        fprintf(stderr, "expected value \"%s\" for key \"%s\" got \"%s\"\n", expected, key, value);
+        return 1;
     }
     return 0;
 }
 
-int main(int argc, char ** argv)
+int main(int argc, char **argv)
 {
     setenv("ROMIO_HINTS", argv[1], 1);
     MPI_File fh;
     MPI_Info info_used, info_mine;
-    int nr_errors=0;
+    int nr_errors = 0;
 
     MPI_Init(&argc, &argv);
     MPI_Info_create(&info_mine);
@@ -49,7 +49,8 @@ int main(int argc, char ** argv)
     nr_errors += hint_check(info_used, "ind_rd_buffer_size", "49");
     nr_errors += hint_check(info_used, "romio_no_indep_rw", "true");
 
-    if (nr_errors == 0) printf(" No Errors\n");
+    if (nr_errors == 0)
+        printf(" No Errors\n");
 
     CHECK(MPI_Info_free(&info_mine));
     CHECK(MPI_Info_free(&info_used));

@@ -18,14 +18,14 @@
 #define FUNCNAME MPIR_Allreduce_inter_reduce_exchange_bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Allreduce_inter_reduce_exchange_bcast ( const void *sendbuf, void *recvbuf, int
-        count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-        MPIR_Errflag_t *errflag )
+int MPIR_Allreduce_inter_reduce_exchange_bcast(const void *sendbuf, void *recvbuf, int
+                                               count, MPI_Datatype datatype, MPI_Op op,
+                                               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint true_extent, true_lb, extent;
-    void *tmp_buf=NULL;
+    void *tmp_buf = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_CHKLMEM_DECL(1);
 
@@ -36,20 +36,20 @@ int MPIR_Allreduce_inter_reduce_exchange_bcast ( const void *sendbuf, void *recv
          * inside the for loop */
         /* Should MPIR_CHKLMEM_MALLOC do this? */
         MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer", MPL_MEM_BUFFER);
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count * (MPL_MAX(extent, true_extent)), mpi_errno,
+                            "temporary buffer", MPL_MEM_BUFFER);
         /* adjust for potential negative lower bound in datatype */
-        tmp_buf = (void *)((char*)tmp_buf - true_lb);
+        tmp_buf = (void *) ((char *) tmp_buf - true_lb);
     }
 
     /* Get the local intracommunicator */
     if (!comm_ptr->local_comm)
-        MPII_Setup_intercomm_localcomm( comm_ptr );
+        MPII_Setup_intercomm_localcomm(comm_ptr);
 
     newcomm_ptr = comm_ptr->local_comm;
 
     /* Do a local reduce on this intracommunicator */
-    mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype,
-                            op, 0, newcomm_ptr, errflag);
+    mpi_errno = MPIR_Reduce(sendbuf, tmp_buf, count, datatype, op, 0, newcomm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -71,8 +71,7 @@ int MPIR_Allreduce_inter_reduce_exchange_bcast ( const void *sendbuf, void *recv
     }
 
     /* Do a local broadcast on this intracommunicator */
-    mpi_errno = MPIR_Bcast(recvbuf, count, datatype,
-                                0, newcomm_ptr, errflag);
+    mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, newcomm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

@@ -68,8 +68,7 @@ int main(int argc, char *argv[])
                             errs++;
                         }
                     }
-                }
-                else {
+                } else {
                     /* Check for the correct data */
                     for (i = 0; i < count * rsize; i++) {
                         if (buf[i] != i) {
@@ -77,8 +76,7 @@ int main(int argc, char *argv[])
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 /* In the right group */
                 buf = (int *) malloc(count * sizeof(int));
                 for (i = 0; i < count; i++)

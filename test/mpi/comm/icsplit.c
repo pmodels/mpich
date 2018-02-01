@@ -88,8 +88,7 @@ int main(int argc, char *argv[])
             if (commok) {
                 errs += MTestTestComm(newcomm);
             }
-        }
-        else {
+        } else {
             int orig_rsize;
             /* If the newcomm is null, then this means that remote group
              * for this color is of size zero (since all processes in this

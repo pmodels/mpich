@@ -16,7 +16,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_create_group as PMPI_Comm_create_group
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm *newcomm) __attribute__((weak,alias("PMPI_Comm_create_group")));
+int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * newcomm)
+    __attribute__ ((weak, alias("PMPI_Comm_create_group")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -55,64 +56,64 @@ int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag
         MPIR_Comm *mapping_comm = NULL;
 
         /* For this routine, creation of the id is collective over the input
-           *group*, so processes not in the group do not participate. */
+         *group*, so processes not in the group do not participate. */
 
-        mpi_errno = MPIR_Get_contextid_sparse_group( comm_ptr, group_ptr, tag, &new_context_id, 0 );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPIR_Get_contextid_sparse_group(comm_ptr, group_ptr, tag, &new_context_id, 0);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         MPIR_Assert(new_context_id != 0);
 
         mpi_errno = MPII_Comm_create_calculate_mapping(group_ptr, comm_ptr,
                                                        &mapping, &mapping_comm);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
         /* Get the new communicator structure and context id */
 
-        mpi_errno = MPIR_Comm_create( newcomm_ptr );
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPIR_Comm_create(newcomm_ptr);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
         (*newcomm_ptr)->recvcontext_id = new_context_id;
-        (*newcomm_ptr)->rank           = group_ptr->rank;
-        (*newcomm_ptr)->comm_kind      = comm_ptr->comm_kind;
+        (*newcomm_ptr)->rank = group_ptr->rank;
+        (*newcomm_ptr)->comm_kind = comm_ptr->comm_kind;
         /* Since the group has been provided, let the new communicator know
-           about the group */
-        (*newcomm_ptr)->local_comm     = 0;
-        (*newcomm_ptr)->local_group    = group_ptr;
-        MPIR_Group_add_ref( group_ptr );
+         * about the group */
+        (*newcomm_ptr)->local_comm = 0;
+        (*newcomm_ptr)->local_group = group_ptr;
+        MPIR_Group_add_ref(group_ptr);
 
-        (*newcomm_ptr)->remote_group   = group_ptr;
-        MPIR_Group_add_ref( group_ptr );
-        (*newcomm_ptr)->context_id     = (*newcomm_ptr)->recvcontext_id;
-        (*newcomm_ptr)->remote_size    = (*newcomm_ptr)->local_size = n;
-        (*newcomm_ptr)->pof2           = MPL_pof2(n);
+        (*newcomm_ptr)->remote_group = group_ptr;
+        MPIR_Group_add_ref(group_ptr);
+        (*newcomm_ptr)->context_id = (*newcomm_ptr)->recvcontext_id;
+        (*newcomm_ptr)->remote_size = (*newcomm_ptr)->local_size = n;
+        (*newcomm_ptr)->pof2 = MPL_pof2(n);
 
         /* Setup the communicator's vc table.  This is for the remote group,
-           which is the same as the local group for intracommunicators */
-        mpi_errno = MPII_Comm_create_map(n, 0,
-                                         mapping,
-                                         NULL,
-                                         mapping_comm,
-                                         *newcomm_ptr);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+         * which is the same as the local group for intracommunicators */
+        mpi_errno = MPII_Comm_create_map(n, 0, mapping, NULL, mapping_comm, *newcomm_ptr);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
         mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else {
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    } else {
         /* This process is not in the group */
         new_context_id = 0;
     }
 
-fn_exit:
+  fn_exit:
     if (mapping)
         MPL_free(mapping);
 
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_GROUP);
     return mpi_errno;
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     if (*newcomm_ptr != NULL) {
         MPIR_Comm_release(*newcomm_ptr);
-        new_context_id = 0; /* MPIR_Comm_release frees the new ctx id */
+        new_context_id = 0;     /* MPIR_Comm_release frees the new ctx id */
     }
     if (new_context_id != 0)
         MPIR_Free_contextid(new_context_id);
@@ -163,7 +164,7 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_CREATE_GROUP);
 
     /* Validate parameters, and convert MPI object handles to object pointers */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -171,13 +172,14 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
         }
         MPID_END_ERROR_CHECKS;
 
-        MPIR_Comm_get_ptr( comm, comm_ptr );
+        MPIR_Comm_get_ptr(comm, comm_ptr);
 
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
-            if (mpi_errno) goto fn_fail;
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, FALSE);
+            if (mpi_errno)
+                goto fn_fail;
             /* If comm_ptr is not valid, it will be reset to null */
             MPIR_ERRTEST_COMM_INTRA(comm_ptr, mpi_errno);
 
@@ -188,27 +190,29 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
         }
         MPID_END_ERROR_CHECKS;
 
-        MPIR_Group_get_ptr( group, group_ptr );
+        MPIR_Group_get_ptr(group, group_ptr);
 
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Check the group ptr */
-            MPIR_Group_valid_ptr( group_ptr, mpi_errno );
-            if (mpi_errno) goto fn_fail;
+            MPIR_Group_valid_ptr(group_ptr, mpi_errno);
+            if (mpi_errno)
+                goto fn_fail;
             MPIR_ERRTEST_ARGNULL(newcomm, "newcomm", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   else
+#else
     {
-        MPIR_Comm_get_ptr( comm, comm_ptr );
-        MPIR_Group_get_ptr( group, group_ptr );
+        MPIR_Comm_get_ptr(comm, comm_ptr);
+        MPIR_Group_get_ptr(group, group_ptr);
     }
-#   endif
+#endif
 
     /* ... body of routine ...  */
     mpi_errno = MPIR_Comm_create_group(comm_ptr, group_ptr, tag, &newcomm_ptr);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     if (newcomm_ptr)
         MPIR_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
@@ -228,8 +232,7 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
                                  MPI_ERR_OTHER, "**mpi_comm_create_group",
-                                 "**mpi_comm_create_group %C %G %d %p", comm, group, tag,
-                                 newcomm);
+                                 "**mpi_comm_create_group %C %G %d %p", comm, group, tag, newcomm);
     }
 #endif
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);

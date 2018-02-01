@@ -45,8 +45,7 @@ int main(int argc, char *argv[])
         }
         MPI_Barrier(MPI_COMM_WORLD);
         MPI_Wait(&requests[0], MPI_STATUS_IGNORE);
-    }
-    else if (rank == 1) {
+    } else if (rank == 1) {
         MPI_Barrier(MPI_COMM_WORLD);
         MPI_Recv(&a, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         if (a == 20) {

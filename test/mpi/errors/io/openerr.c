@@ -41,8 +41,7 @@ int main(int argc, char *argv[])
         printf("Did not return error when opening a file that does not exist\n");
         MPI_File_close(&fh);
         MPI_File_delete(name, MPI_INFO_NULL);
-    }
-    else {
+    } else {
         MPI_Error_class(err, &ec);
         MPI_Error_string(err, emsg, &emsglen);
         MTestPrintfMsg(2, "Error msg from open: %s\n", emsg);
@@ -63,8 +62,7 @@ int main(int argc, char *argv[])
     if (err) {
         errs++;
         MTestPrintErrorMsg("Unable to open file for writing", err);
-    }
-    else {
+    } else {
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
         memset(outbuf, 'A' + rank, BUFLEN);
 
@@ -83,8 +81,7 @@ int main(int argc, char *argv[])
     if (err) {
         errs++;
         MTestPrintErrorMsg("Unable to reopen file for reading", err);
-    }
-    else {
+    } else {
         /* Try to read it */
 
         /* Clear buffer before reading into it */
@@ -102,8 +99,7 @@ int main(int argc, char *argv[])
         if (err == MPI_SUCCESS) {
             errs++;
             printf("Write operation succeeded to read-only file\n");
-        }
-        else {
+        } else {
             /* Look at error class */
             MPI_Error_class(err, &ec);
             if (ec != MPI_ERR_READ_ONLY && ec != MPI_ERR_ACCESS) {
@@ -131,8 +127,7 @@ int main(int argc, char *argv[])
             errs++;
             printf("File was not deleted!\n");
             MPI_File_close(&fh);
-        }
-        else {
+        } else {
             MPI_Error_class(err, &ec);
             if (ec != MPI_ERR_NO_SUCH_FILE && ec != MPI_ERR_IO) {
                 errs++;

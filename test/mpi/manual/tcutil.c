@@ -108,8 +108,7 @@ char *getPortFromFile(const char *fmt, ...)
             if (retcode != 0) {
                 perror("Calling mkdir");
                 _exit(9);
-            }
-            else {
+            } else {
                 rmdir(dirname);
             }
         }

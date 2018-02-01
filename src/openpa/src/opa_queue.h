@@ -1,5 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-/*  
+/*
  *  (C) 2008 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
@@ -30,7 +30,7 @@ extern char *OPA_Shm_asymm_base_addr;
    assumes that there is only one shared memory segment.  If this turns out to
    not be the case in the future, we should probably add support for multiple
    shm segments.
-   
+
    This function will return an error if it has already been called. */
 int OPA_Shm_asymm_init(char *base);
 
@@ -45,7 +45,7 @@ int OPA_Shm_asymm_init(char *base);
 /* This structure exists such that it is possible to expand the expressiveness
    of a relative address at some point in the future.  It also provides a
    modicum of type safety to help prevent certain flavors of errors.
-   
+
    For example, instead of referencing an offset from a global base address, it
    might make sense for there to be multiple base addresses.  These base
    addresses could correspond to the start of a segment or region of shared
@@ -61,27 +61,26 @@ typedef struct OPA_Shm_rel_addr_t {
 } OPA_Shm_rel_addr_t;
 
 /* converts a relative pointer to an absolute pointer */
-static _opa_inline
-void *OPA_Shm_rel_to_abs(OPA_Shm_rel_addr_t r)
+static _opa_inline void *OPA_Shm_rel_to_abs(OPA_Shm_rel_addr_t r)
 {
     void *offset = OPA_load_ptr(&r.offset);
-    OPA_assert((size_t)OPA_Shm_asymm_base_addr != OPA_SHM_ASYMM_NULL_VAL);
-    return (void*)(OPA_Shm_asymm_base_addr + (size_t)offset);
+    OPA_assert((size_t) OPA_Shm_asymm_base_addr != OPA_SHM_ASYMM_NULL_VAL);
+    return (void *) (OPA_Shm_asymm_base_addr + (size_t) offset);
 }
 
 /* converts an absolute pointer to a relative pointer */
-static _opa_inline
-OPA_Shm_rel_addr_t OPA_Shm_abs_to_rel(void *a)
+static _opa_inline OPA_Shm_rel_addr_t OPA_Shm_abs_to_rel(void *a)
 {
     OPA_Shm_rel_addr_t ret;
 
-    OPA_assert((size_t)OPA_Shm_asymm_base_addr != OPA_SHM_ASYMM_NULL_VAL);
-    OPA_store_ptr(&ret.offset, (void*)((size_t)a - (size_t)OPA_Shm_asymm_base_addr));
+    OPA_assert((size_t) OPA_Shm_asymm_base_addr != OPA_SHM_ASYMM_NULL_VAL);
+    OPA_store_ptr(&ret.offset, (void *) ((size_t) a - (size_t) OPA_Shm_asymm_base_addr));
     return ret;
 }
 
 static _opa_inline
-OPA_Shm_rel_addr_t OPA_Shm_swap_rel(OPA_Shm_rel_addr_t *addr, OPA_Shm_rel_addr_t newv) {
+    OPA_Shm_rel_addr_t OPA_Shm_swap_rel(OPA_Shm_rel_addr_t * addr, OPA_Shm_rel_addr_t newv)
+{
     OPA_Shm_rel_addr_t oldv;
     OPA_store_ptr(&oldv.offset, OPA_swap_ptr(&addr->offset, OPA_load_ptr(&newv.offset)));
     return oldv;
@@ -91,9 +90,12 @@ OPA_Shm_rel_addr_t OPA_Shm_swap_rel(OPA_Shm_rel_addr_t *addr, OPA_Shm_rel_addr_t
    the guts of the _rel_addr_t abstraction from bleeding up into the
    enqueue/dequeue operations. */
 static _opa_inline
-OPA_Shm_rel_addr_t OPA_Shm_cas_rel_null(OPA_Shm_rel_addr_t *addr, OPA_Shm_rel_addr_t oldv) {
+    OPA_Shm_rel_addr_t OPA_Shm_cas_rel_null(OPA_Shm_rel_addr_t * addr, OPA_Shm_rel_addr_t oldv)
+{
     OPA_Shm_rel_addr_t prev;
-    OPA_store_ptr(&prev.offset, OPA_cas_ptr(&(addr->offset), OPA_load_ptr(&oldv.offset), (void*)OPA_SHM_REL_NULL));
+    OPA_store_ptr(&prev.offset,
+                  OPA_cas_ptr(&(addr->offset), OPA_load_ptr(&oldv.offset),
+                              (void *) OPA_SHM_REL_NULL));
     return prev;
 }
 
@@ -128,7 +130,7 @@ OPA_Shm_rel_addr_t OPA_Shm_cas_rel_null(OPA_Shm_rel_addr_t *addr, OPA_Shm_rel_ad
       only one L2 cache miss is encountered when enqueuing onto an empty queue
       or dequeuing from a queue with one element. And because the tail and
       shadow head are in separate cache lines, there are no L2 cache misses from
-      false sharing. 
+      false sharing.
 
       We found that using a shadow head pointer reduced one-way latency by about
       200 ns on a dual 2 GHz Xeon node.
@@ -141,38 +143,36 @@ OPA_Shm_rel_addr_t OPA_Shm_cas_rel_null(OPA_Shm_rel_addr_t *addr, OPA_Shm_rel_ad
 
 /* All absolute and relative pointers point to the start of the enclosing element. */
 typedef struct OPA_Queue_info_t {
-    OPA_Shm_rel_addr_t head; /* holds the offset pointer, not the abs ptr */
-    OPA_Shm_rel_addr_t tail; /* holds the offset pointer, not the abs ptr */
-    char padding1[OPA_QUEUE_CACHELINE_PADDING-2*sizeof(OPA_Shm_rel_addr_t)];
-    OPA_Shm_rel_addr_t  shadow_head; /* holds the offset pointer, not the abs ptr */
-    char padding2[OPA_QUEUE_CACHELINE_PADDING-sizeof(OPA_Shm_rel_addr_t)];
+    OPA_Shm_rel_addr_t head;    /* holds the offset pointer, not the abs ptr */
+    OPA_Shm_rel_addr_t tail;    /* holds the offset pointer, not the abs ptr */
+    char padding1[OPA_QUEUE_CACHELINE_PADDING - 2 * sizeof(OPA_Shm_rel_addr_t)];
+    OPA_Shm_rel_addr_t shadow_head;     /* holds the offset pointer, not the abs ptr */
+    char padding2[OPA_QUEUE_CACHELINE_PADDING - sizeof(OPA_Shm_rel_addr_t)];
 } OPA_Queue_info_t;
 
 /* Using this header struct even though it's just one element gives us the
    opportunity to vary the implementation more easily in the future without
    updating all callers. */
 typedef struct OPA_Queue_element_hdr_t {
-    OPA_Shm_rel_addr_t next; /* holds the offset pointer, not the abs ptr */
+    OPA_Shm_rel_addr_t next;    /* holds the offset pointer, not the abs ptr */
 } OPA_Queue_element_hdr_t;
 
 
 /* Used to initialize a queue structure. */
-void OPA_Queue_init(OPA_Queue_info_t *qhead);
+void OPA_Queue_init(OPA_Queue_info_t * qhead);
 
 /* Used to initialize a queue element header. */
-void OPA_Queue_header_init(OPA_Queue_element_hdr_t *hdr);
+void OPA_Queue_header_init(OPA_Queue_element_hdr_t * hdr);
 
-static _opa_inline
-int OPA_Queue_is_empty(OPA_Queue_info_t *qhead)
+static _opa_inline int OPA_Queue_is_empty(OPA_Queue_info_t * qhead)
 {
     int __ret = 0;
-    if (OPA_SHM_IS_REL_NULL (qhead->shadow_head)) {
+    if (OPA_SHM_IS_REL_NULL(qhead->shadow_head)) {
         if (OPA_SHM_IS_REL_NULL(qhead->head)) {
             __ret = 1;
-        }
-        else {
+        } else {
             qhead->shadow_head = qhead->head;
-            OPA_SHM_SET_REL_NULL(qhead->head); /* reset it for next time */
+            OPA_SHM_SET_REL_NULL(qhead->head);  /* reset it for next time */
         }
     }
     return __ret;
@@ -192,8 +192,7 @@ int OPA_Queue_is_empty(OPA_Queue_info_t *qhead)
    This operation is effectively the same as the dequeue operation (insofar as
    it shares the same calling restrictions) but it does not disturb the actual
    contents of the queue. */
-static _opa_inline
-void *OPA_Queue_peek_head(OPA_Queue_info_t *qhead_ptr)
+static _opa_inline void *OPA_Queue_peek_head(OPA_Queue_info_t * qhead_ptr)
 {
     OPA_assert(qhead_ptr != NULL);
 

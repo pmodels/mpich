@@ -172,8 +172,7 @@ static int run_test()
      *  - Origins: issue RMA on different window and different memory location */
     if (rank == target) {
         win = wins[0];
-    }
-    else {
+    } else {
         win = wins[rank];
         target_disp = rank;
     }

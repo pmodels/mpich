@@ -88,8 +88,7 @@ static void initMat(int rank, int size, int nmat, int mat[])
     if (size == 2) {
         /* rank 0 is A, 1 is B */
         kind = 1 + rank;
-    }
-    else {
+    } else {
         int tmpA, tmpB;
         /* Most ranks are identity matrices */
         kind = 0;
@@ -105,21 +104,21 @@ static void initMat(int rank, int size, int nmat, int mat[])
     }
 
     switch (kind) {
-    case 0:    /* Identity */
-        mat[0] = 1;
-        mat[4] = 1;
-        mat[8] = 1;
-        break;
-    case 1:    /* A */
-        mat[0] = 1;
-        mat[5] = 1;
-        mat[7] = 1;
-        break;
-    case 2:    /* B */
-        mat[1] = 1;
-        mat[3] = 1;
-        mat[8] = 1;
-        break;
+        case 0:        /* Identity */
+            mat[0] = 1;
+            mat[4] = 1;
+            mat[8] = 1;
+            break;
+        case 1:        /* A */
+            mat[0] = 1;
+            mat[5] = 1;
+            mat[7] = 1;
+            break;
+        case 2:        /* B */
+            mat[1] = 1;
+            mat[3] = 1;
+            mat[8] = 1;
+            break;
     }
 }
 

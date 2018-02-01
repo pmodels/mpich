@@ -31,8 +31,7 @@ int main(int argc, char *argv[])
     if (err == MPI_SUCCESS) {
         errs++;
         printf("Cart_create returned success when dims > size\n");
-    }
-    else if (comm != MPI_COMM_NULL) {
+    } else if (comm != MPI_COMM_NULL) {
         errs++;
         printf("Expected a null comm from cart create\n");
     }

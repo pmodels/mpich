@@ -119,8 +119,7 @@ static inline void MPIDI_POSIX_queue_enqueue(MPIDI_POSIX_queue_ptr_t qhead,
          * dependence (if) will enforce ordering between the SWAP and the head
          * assignment */
         qhead->head = r_element;
-    }
-    else {
+    } else {
         /* queue was not empty, swing old tail's next field to point to
          * our element */
         MPIDI_POSIX_Q_assert(MPIDI_POSIX_IS_REL_NULL(MPIDI_POSIX_REL_TO_ABS(r_prev)->next));
@@ -154,8 +153,7 @@ static inline int MPIDI_POSIX_queue_empty(MPIDI_POSIX_queue_ptr_t qhead)
         if (MPIDI_POSIX_IS_REL_NULL(qhead->head)) {
             /* both null, nothing in queue */
             return 1;
-        }
-        else {
+        } else {
             /* shadow head null and head has value, move the value to
              * our private shadow head and zero the real head */
             qhead->my_head = qhead->head;
@@ -190,8 +188,7 @@ static inline void MPIDI_POSIX_queue_dequeue(MPIDI_POSIX_queue_ptr_t qhead,
      * head/my_head and _e->next are ordered by a data dependency */
     if (!MPIDI_POSIX_IS_REL_NULL(_e->next)) {
         qhead->my_head = _e->next;
-    }
-    else {
+    } else {
         /* we've reached the end (tail) of the queue */
         MPIDI_POSIX_cell_rel_ptr_t old_tail;
 
@@ -269,8 +266,7 @@ static inline void MPIDI_POSIX_queue_enqueue(MPIDI_POSIX_queue_ptr_t qhead,
 
     if (MPIDI_POSIX_IS_REL_NULL(r_prev)) {
         qhead->head = r_element;
-    }
-    else {
+    } else {
         MPIDI_POSIX_REL_TO_ABS(r_prev)->next = r_element;
     }
 
@@ -292,8 +288,7 @@ static inline int MPIDI_POSIX_queue_empty(MPIDI_POSIX_queue_ptr_t qhead)
     if (MPIDI_POSIX_IS_REL_NULL(qhead->my_head)) {
         if (MPIDI_POSIX_IS_REL_NULL(qhead->head)) {
             return 1;
-        }
-        else {
+        } else {
             qhead->my_head = qhead->head;
             MPIDI_POSIX_SET_REL_NULL(qhead->head);      /* reset it for next time */
         }
@@ -326,8 +321,7 @@ static inline void MPIDI_POSIX_queue_dequeue(MPIDI_POSIX_queue_ptr_t qhead,
         }
 
         MPIDI_POSIX_queue_mutex_unlock(&qhead->lock, &err);
-    }
-    else {      /* !MPIDI_POSIX_IS_REL_NULL(_e->next) */
+    } else {    /* !MPIDI_POSIX_IS_REL_NULL(_e->next) */
         /* We don't need to lock because a non-null _e->next can't be changed by
          * anyone but us (the dequeuer) and we don't need to modify qhead->tail
          * because we aren't removing the last element from the queue. */

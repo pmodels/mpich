@@ -98,8 +98,7 @@ int main(int argc, char *argv[])
         MPI_Comm_disconnect(&comm1);
         MPI_Comm_disconnect(&comm2);
         MPI_Comm_disconnect(&comm3);
-    }
-    else if (rank == 1) {
+    } else if (rank == 1) {
         IF_VERBOSE(("1: receiving port.\n"));
         MPI_Recv(port1, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
 
@@ -116,8 +115,7 @@ int main(int argc, char *argv[])
 
         IF_VERBOSE(("1: disconnecting.\n"));
         MPI_Comm_disconnect(&comm1);
-    }
-    else if (rank == 2) {
+    } else if (rank == 2) {
         IF_VERBOSE(("2: receiving port.\n"));
         MPI_Recv(port2, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
 
@@ -137,8 +135,7 @@ int main(int argc, char *argv[])
 
         IF_VERBOSE(("2: disconnecting.\n"));
         MPI_Comm_disconnect(&comm2);
-    }
-    else if (rank == 3) {
+    } else if (rank == 3) {
         IF_VERBOSE(("3: receiving port.\n"));
         MPI_Recv(port3, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
 
@@ -166,8 +163,7 @@ int main(int argc, char *argv[])
     if (rank == 0) {
         if (total_num_errors) {
             printf(" Found %d errors\n", total_num_errors);
-        }
-        else {
+        } else {
             printf(" No Errors\n");
         }
         fflush(stdout);

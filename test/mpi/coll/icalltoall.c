@@ -48,8 +48,7 @@ int main(int argc, char *argv[])
                     errs++;
                     MTestPrintError(err);
                 }
-            }
-            else {
+            } else {
                 int rank, size;
 
                 MPI_Comm_rank(comm, &rank);

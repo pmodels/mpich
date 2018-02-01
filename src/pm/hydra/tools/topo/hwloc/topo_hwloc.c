@@ -151,8 +151,7 @@ static int parse_cache_string(const char *str)
         if (*t2 == 'c') {
             *t2 = 0;
             break;
-        }
-        else if (*t2 < '0' || *t2 > '9')
+        } else if (*t2 < '0' || *t2 > '9')
             return 0;
     }
 
@@ -310,8 +309,7 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
         for (i = 1; (i * num_pus_in_map_domain) % num_pus_in_bind_domain; i++);
         HYDT_topo_hwloc_info.num_bitmaps =
             (i * num_pus_in_map_domain * total_map_domains) / num_pus_in_bind_domain;
-    }
-    else {
+    } else {
         HYDT_topo_hwloc_info.num_bitmaps = total_map_domains;
     }
 
@@ -343,8 +341,7 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
                         bind_obj =
                             hwloc_get_next_obj_inside_cpuset_by_depth(topology, map_domains[j],
                                                                       bind_depth, bind_obj);
-                }
-                else {
+                } else {
                     bind_obj = hwloc_get_next_obj_by_depth(topology, bind_depth, bind_obj);
                     if (!bind_obj)
                         bind_obj = hwloc_get_next_obj_by_depth(topology, bind_depth, bind_obj);
@@ -400,8 +397,7 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const 
         status = handle_user_binding(binding + strlen("user:"));
         HYDU_ERR_POP(status, "error binding to %s\n", binding);
         goto fn_exit;
-    }
-    else if (!strcmp(binding, "rr")) {
+    } else if (!strcmp(binding, "rr")) {
         status = handle_rr_binding();
         HYDU_ERR_POP(status, "error binding to %s\n", binding);
         goto fn_exit;
@@ -420,11 +416,9 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const 
         HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_NEXTTOUCH;
     else if (!strncmp(membind, "bind:", strlen("bind:"))) {
         HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_BIND;
-    }
-    else if (!strncmp(membind, "interleave:", strlen("interleave:"))) {
+    } else if (!strncmp(membind, "interleave:", strlen("interleave:"))) {
         HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_INTERLEAVE;
-    }
-    else {
+    } else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "unrecognized membind policy \"%s\"\n", membind);
     }

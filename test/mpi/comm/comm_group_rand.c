@@ -34,8 +34,7 @@ int main(int argc, char **argv)
             if (rand() % 2) {   /* randomly include a rank */
                 included[i] = 1;
                 ranks[count++] = i;
-            }
-            else
+            } else
                 included[i] = 0;
         }
 

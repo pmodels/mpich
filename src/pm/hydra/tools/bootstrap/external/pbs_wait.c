@@ -47,8 +47,7 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
                                     "tm_obit() failed with TM error %d\n", err);
                 spawn_count--;
                 break;
-            }
-            else if (obit_events[idx] == e) {
+            } else if (obit_events[idx] == e) {
                 /* got a task termination event */
                 obit_events[idx] = TM_NULL_EVENT;
             }

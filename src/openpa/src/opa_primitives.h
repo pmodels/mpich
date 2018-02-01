@@ -1,5 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-/*  
+/*
  *  (C) 2008 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
@@ -42,7 +42,7 @@
 
    The same goes for OPA_ptr_t.
 
-   The atomic functions that must be ported for each architecture: 
+   The atomic functions that must be ported for each architecture:
 
    static _opa_inline int   OPA_load_int(_opa_const OPA_int_t *ptr);
    static _opa_inline void  OPA_store_int(OPA_int_t *ptr, int val);
@@ -143,18 +143,18 @@
                  thread/process of the group that calls this function.
 */
 #if defined(OPA_HAVE_PTHREAD_H)
-#  include <pthread.h>
+#include <pthread.h>
 typedef pthread_mutex_t OPA_emulation_ipl_t;
-int OPA_Interprocess_lock_init(OPA_emulation_ipl_t *shm_lock, int isLeader);
+int OPA_Interprocess_lock_init(OPA_emulation_ipl_t * shm_lock, int isLeader);
 #endif
 
 
 /* FIXME This should probably be pushed down into the platform-specific headers. */
 #if defined(OPA_HAVE_SCHED_YIELD)
-#  include <sched.h>
-#  define OPA_busy_wait() sched_yield()
+#include <sched.h>
+#define OPA_busy_wait() sched_yield()
 #else
-#  define OPA_busy_wait() do { } while (0)
+#define OPA_busy_wait() do { } while (0)
 #endif
 
 #endif /* OPA_PRIMITIVES_H_INCLUDED */

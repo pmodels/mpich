@@ -66,8 +66,7 @@ int main(int argc, char **argv)
     if (rank == 0) {
         if (errs) {
             printf("found %d errors\n", errs);
-        }
-        else {
+        } else {
             printf(" No errors\n");
         }
     }

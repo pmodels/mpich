@@ -16,7 +16,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Request_get_status as PMPI_Request_get_status
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status) __attribute__((weak,alias("PMPI_Request_get_status")));
+int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status * status)
+    __attribute__ ((weak, alias("PMPI_Request_get_status")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -43,7 +44,7 @@ Output Parameters:
 
    Notes:
    Unlike 'MPI_Test', 'MPI_Request_get_status' does not deallocate or
-   deactivate the request.  A call to one of the test/wait routines or 
+   deactivate the request.  A call to one of the test/wait routines or
    'MPI_Request_free' should be made to release the request object.
 
 .N ThreadSafe
@@ -53,7 +54,7 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
+int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status * status)
 {
     static const char FCNAME[] = "MPI_Request_get_status";
     int mpi_errno = MPI_SUCCESS;
@@ -66,18 +67,18 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_REQUEST_GET_STATUS);
 
     /* Check the arguments */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_REQUEST_OR_NULL(request, mpi_errno);
-	    MPIR_ERRTEST_ARGNULL(flag, "flag", mpi_errno);
-	    /* NOTE: MPI_STATUS_IGNORE != NULL */
-	    MPIR_ERRTEST_ARGNULL(status, "status", mpi_errno);
-	}
+            MPIR_ERRTEST_REQUEST_OR_NULL(request, mpi_errno);
+            MPIR_ERRTEST_ARGNULL(flag, "flag", mpi_errno);
+            /* NOTE: MPI_STATUS_IGNORE != NULL */
+            MPIR_ERRTEST_ARGNULL(status, "status", mpi_errno);
+        }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* If this is a null request handle, then return an empty status */
     if (request == MPI_REQUEST_NULL) {
@@ -90,160 +91,147 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
     }
 
     /* Convert MPI object handles to object pointers */
-    MPIR_Request_get_ptr( request, request_ptr );
+    MPIR_Request_get_ptr(request, request_ptr);
 
     /* Validate parameters if error checking is enabled */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    /* Validate request_ptr */
-            MPIR_Request_valid_ptr( request_ptr, mpi_errno );
-            if (mpi_errno) goto fn_fail;
+            /* Validate request_ptr */
+            MPIR_Request_valid_ptr(request_ptr, mpi_errno);
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
     if (!MPIR_Request_is_complete(request_ptr)) {
-	/* request not complete. poke the progress engine. Req #3130 */
-	mpi_errno = MPID_Progress_test();
-	if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+        /* request not complete. poke the progress engine. Req #3130 */
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno != MPI_SUCCESS)
+            goto fn_fail;
     }
-    
-    if (MPIR_Request_is_complete(request_ptr))
-    {
-	switch(request_ptr->kind)
-	{
-        case MPIR_REQUEST_KIND__SEND:
-        {
-            if (status != MPI_STATUS_IGNORE)
-            {
-                MPIR_STATUS_SET_CANCEL_BIT(*status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
-            }
-            mpi_errno = request_ptr->status.MPI_ERROR;
-            break;
-        }
-        
-        case MPIR_REQUEST_KIND__RECV:
-        {
-            MPIR_Request_extract_status(request_ptr, status);
-            mpi_errno = request_ptr->status.MPI_ERROR;
-            break;
-        }
-        
-        case MPIR_REQUEST_KIND__PREQUEST_SEND:
-        {
-            MPIR_Request * prequest_ptr = request_ptr->u.persist.real_request;
-            
-            if (prequest_ptr != NULL)
-            {
-		if (prequest_ptr->kind != MPIR_REQUEST_KIND__GREQUEST)
-		{
-		    if (status != MPI_STATUS_IGNORE)
-		    {
-			MPIR_STATUS_SET_CANCEL_BIT(*status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
-		    }
-		    mpi_errno = prequest_ptr->status.MPI_ERROR;
-		}
-		else
-		{
-		    /* This is needed for persistent Bsend requests */
-                    int rc;
-                    
-                    rc = MPIR_Grequest_query(prequest_ptr);
-                    if (mpi_errno == MPI_SUCCESS)
-                    {
-                        mpi_errno = rc;
-                    }
-                    if (status != MPI_STATUS_IGNORE)
-                    {
-                        MPIR_STATUS_SET_CANCEL_BIT(*status, MPIR_STATUS_GET_CANCEL_BIT(prequest_ptr->status));
-                    }
-                    if (mpi_errno == MPI_SUCCESS)
-                    {
-                        mpi_errno = prequest_ptr->status.MPI_ERROR;
-                    }
-		}
-            }
-            else
-            {
-                if (request_ptr->status.MPI_ERROR != MPI_SUCCESS)
+
+    if (MPIR_Request_is_complete(request_ptr)) {
+        switch (request_ptr->kind) {
+            case MPIR_REQUEST_KIND__SEND:
                 {
-                    /* if the persistent request failed to start then 
-                       make the error code available */
-                    if (status != MPI_STATUS_IGNORE)
-                    {
-                        MPIR_STATUS_SET_CANCEL_BIT(*status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
+                    if (status != MPI_STATUS_IGNORE) {
+                        MPIR_STATUS_SET_CANCEL_BIT(*status,
+                                                   MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
                     }
                     mpi_errno = request_ptr->status.MPI_ERROR;
+                    break;
                 }
-                else
+
+            case MPIR_REQUEST_KIND__RECV:
                 {
-                    MPIR_Status_set_empty(status);
+                    MPIR_Request_extract_status(request_ptr, status);
+                    mpi_errno = request_ptr->status.MPI_ERROR;
+                    break;
                 }
-            }
-	    
-            break;
-        }
-        
-        case MPIR_REQUEST_KIND__PREQUEST_RECV:
-        {
-            MPIR_Request * prequest_ptr = request_ptr->u.persist.real_request;
-            
-            if (prequest_ptr != NULL)
-            {
-                MPIR_Request_extract_status(prequest_ptr, status);
-                mpi_errno = prequest_ptr->status.MPI_ERROR;
-            }
-            else
-            {
-                /* if the persistent request failed to start then
-                   make the error code available */
-                mpi_errno = request_ptr->status.MPI_ERROR;
-                MPIR_Status_set_empty(status);
-            }
-	    
-            break;
+
+            case MPIR_REQUEST_KIND__PREQUEST_SEND:
+                {
+                    MPIR_Request *prequest_ptr = request_ptr->u.persist.real_request;
+
+                    if (prequest_ptr != NULL) {
+                        if (prequest_ptr->kind != MPIR_REQUEST_KIND__GREQUEST) {
+                            if (status != MPI_STATUS_IGNORE) {
+                                MPIR_STATUS_SET_CANCEL_BIT(*status,
+                                                           MPIR_STATUS_GET_CANCEL_BIT
+                                                           (request_ptr->status));
+                            }
+                            mpi_errno = prequest_ptr->status.MPI_ERROR;
+                        } else {
+                            /* This is needed for persistent Bsend requests */
+                            int rc;
+
+                            rc = MPIR_Grequest_query(prequest_ptr);
+                            if (mpi_errno == MPI_SUCCESS) {
+                                mpi_errno = rc;
+                            }
+                            if (status != MPI_STATUS_IGNORE) {
+                                MPIR_STATUS_SET_CANCEL_BIT(*status,
+                                                           MPIR_STATUS_GET_CANCEL_BIT
+                                                           (prequest_ptr->status));
+                            }
+                            if (mpi_errno == MPI_SUCCESS) {
+                                mpi_errno = prequest_ptr->status.MPI_ERROR;
+                            }
+                        }
+                    } else {
+                        if (request_ptr->status.MPI_ERROR != MPI_SUCCESS) {
+                            /* if the persistent request failed to start then
+                             * make the error code available */
+                            if (status != MPI_STATUS_IGNORE) {
+                                MPIR_STATUS_SET_CANCEL_BIT(*status,
+                                                           MPIR_STATUS_GET_CANCEL_BIT
+                                                           (request_ptr->status));
+                            }
+                            mpi_errno = request_ptr->status.MPI_ERROR;
+                        } else {
+                            MPIR_Status_set_empty(status);
+                        }
+                    }
+
+                    break;
+                }
+
+            case MPIR_REQUEST_KIND__PREQUEST_RECV:
+                {
+                    MPIR_Request *prequest_ptr = request_ptr->u.persist.real_request;
+
+                    if (prequest_ptr != NULL) {
+                        MPIR_Request_extract_status(prequest_ptr, status);
+                        mpi_errno = prequest_ptr->status.MPI_ERROR;
+                    } else {
+                        /* if the persistent request failed to start then
+                         * make the error code available */
+                        mpi_errno = request_ptr->status.MPI_ERROR;
+                        MPIR_Status_set_empty(status);
+                    }
+
+                    break;
+                }
+
+            case MPIR_REQUEST_KIND__GREQUEST:
+                {
+                    int rc;
+
+                    rc = MPIR_Grequest_query(request_ptr);
+                    if (mpi_errno == MPI_SUCCESS) {
+                        mpi_errno = rc;
+                    }
+                    if (status != MPI_STATUS_IGNORE) {
+                        MPIR_STATUS_SET_CANCEL_BIT(*status,
+                                                   MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
+                    }
+                    MPIR_Request_extract_status(request_ptr, status);
+
+                    break;
+                }
+
+            default:
+                break;
         }
 
-        case MPIR_REQUEST_KIND__GREQUEST:
-        {
-            int rc;
-            
-            rc = MPIR_Grequest_query(request_ptr);
-            if (mpi_errno == MPI_SUCCESS)
-            {
-                mpi_errno = rc;
-            }
-            if (status != MPI_STATUS_IGNORE)
-            {
-                MPIR_STATUS_SET_CANCEL_BIT(*status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
-            }
-            MPIR_Request_extract_status(request_ptr, status);
-	    
-            break;
-        }
-        
-        default:
-            break;
-	}
-
-	*flag = TRUE;
-    }
-    else
-    {
-	*flag = FALSE;
+        *flag = TRUE;
+    } else {
+        *flag = FALSE;
     }
 
     /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
     /* --END ERROR HANDLING-- */
 
     /* ... end of body of routine ... */
-    
+
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_REQUEST_GET_STATUS);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -251,14 +239,16 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-	    FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_request_get_status",
-	    "**mpi_request_get_status %R %p %p", request, flag, status);
+        mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
+                                         FCNAME, __LINE__, MPI_ERR_OTHER,
+                                         "**mpi_request_get_status",
+                                         "**mpi_request_get_status %R %p %p", request, flag,
+                                         status);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

@@ -60,8 +60,7 @@ pthread_mutex_t MPIDI_Mutex_lock[MPIDI_NUM_LOCKS];
 #define FUNCNAME MPID_Abort
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Abort(MPIR_Comm * comm,
-               int mpi_errno, int exit_code, const char *error_msg)
+int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error_msg)
 {
     char sys_str[MPI_MAX_ERROR_STRING + 5] = "";
     char comm_str[MPI_MAX_ERROR_STRING] = "";

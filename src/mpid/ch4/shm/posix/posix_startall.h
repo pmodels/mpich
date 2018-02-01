@@ -39,8 +39,7 @@ static inline int MPIDI_POSIX_mpi_startall(int count, MPIR_Request * requests[])
                                              MPIDI_POSIX_REQUEST(preq)->context_id -
                                              preq->comm->context_id, &preq->u.persist.real_request,
                                              MPIDI_POSIX_REQUEST(preq)->type);
-                }
-                else {
+                } else {
                     MPI_Request sreq_handle;
                     mpi_errno =
                         MPIR_Ibsend_impl(MPIDI_POSIX_REQUEST(preq)->user_buf,
@@ -62,8 +61,8 @@ static inline int MPIDI_POSIX_mpi_startall(int count, MPIR_Request * requests[])
                                          MPIDI_POSIX_REQUEST(preq)->datatype,
                                          MPIDI_POSIX_REQUEST(preq)->rank,
                                          MPIDI_POSIX_REQUEST(preq)->tag, preq->comm,
-                                         MPIDI_POSIX_REQUEST(preq)->context_id - preq->comm->context_id,
-                                         &preq->u.persist.real_request);
+                                         MPIDI_POSIX_REQUEST(preq)->context_id -
+                                         preq->comm->context_id, &preq->u.persist.real_request);
 
                 break;
 
@@ -78,11 +77,9 @@ static inline int MPIDI_POSIX_mpi_startall(int count, MPIR_Request * requests[])
             if (MPIDI_POSIX_REQUEST(preq)->type == MPIDI_POSIX_TYPEBUFFERED) {
                 preq->cc_ptr = &preq->cc;
                 MPIR_cc_set(&preq->cc, 0);
-            }
-            else
+            } else
                 preq->cc_ptr = &preq->u.persist.real_request->cc;
-        }
-        else {
+        } else {
             preq->u.persist.real_request = NULL;
             preq->status.MPI_ERROR = mpi_errno;
             preq->cc_ptr = &preq->cc;

@@ -139,13 +139,11 @@ int main(int argc, char **argv)
                 if (rank == 0) {
                     root = MPI_ROOT;
                     in[i] = 815;
-                }
-                else {
+                } else {
                     root = MPI_PROC_NULL;
                     in[i] = 815;        /* not needed, just to make correctness checking easier */
                 }
-            }
-            else {
+            } else {
                 root = 0;
                 in[i] = 213;    /* garbage value */
             }

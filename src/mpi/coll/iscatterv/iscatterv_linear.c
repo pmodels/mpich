@@ -21,8 +21,9 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iscatterv_sched_linear(const void *sendbuf, const int sendcounts[], const int displs[],
-                         MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                         int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+                                MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                                MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
+                                MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
@@ -33,8 +34,7 @@ int MPIR_Iscatterv_sched_linear(const void *sendbuf, const int sendcounts[], con
 
     /* If I'm the root, then scatter */
     if (((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (root == rank)) ||
-        ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT)))
-    {
+        ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) && (root == MPI_ROOT))) {
         if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
             comm_size = comm_ptr->local_size;
         else
@@ -53,16 +53,17 @@ int MPIR_Iscatterv_sched_linear(const void *sendbuf, const int sendcounts[], con
             if (sendcounts[i]) {
                 if ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (i == rank)) {
                     if (recvbuf != MPI_IN_PLACE) {
-                        mpi_errno = MPIR_Sched_copy(((char *)sendbuf+displs[rank]*extent),
+                        mpi_errno = MPIR_Sched_copy(((char *) sendbuf + displs[rank] * extent),
                                                     sendcounts[rank], sendtype,
                                                     recvbuf, recvcount, recvtype, s);
-                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                        if (mpi_errno)
+                            MPIR_ERR_POP(mpi_errno);
                     }
-                }
-                else {
-                    mpi_errno = MPIR_Sched_send(((char *)sendbuf+displs[i]*extent),
+                } else {
+                    mpi_errno = MPIR_Sched_send(((char *) sendbuf + displs[i] * extent),
                                                 sendcounts[i], sendtype, i, comm_ptr, s);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
                 }
             }
         }
@@ -72,12 +73,13 @@ int MPIR_Iscatterv_sched_linear(const void *sendbuf, const int sendcounts[], con
         /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
         if (recvcount) {
             mpi_errno = MPIR_Sched_recv(recvbuf, recvcount, recvtype, root, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
         }
     }
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

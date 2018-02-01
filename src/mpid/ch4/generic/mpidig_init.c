@@ -228,7 +228,7 @@ int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vnis)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    MPIDI_CH4U_map_create((void**)&(MPIDI_CH4_Global.win_map), MPL_MEM_RMA);
+    MPIDI_CH4U_map_create((void **) &(MPIDI_CH4_Global.win_map), MPL_MEM_RMA);
 
     mpi_errno = MPIDI_CH4R_RMA_Init_sync_pvars();
     if (mpi_errno)

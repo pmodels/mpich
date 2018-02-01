@@ -36,8 +36,7 @@ void PGroup_create(int count, int members[], MPI_Comm * group)
     if (count == 0) {
         *group = MPI_COMM_NULL;
         return;
-    }
-    else if (count == 1 && members[0] == me) {
+    } else if (count == 1 && members[0] == me) {
         *group = MPI_COMM_SELF;
         return;
     }
@@ -94,8 +93,7 @@ void PGroup_create(int count, int members[], MPI_Comm * group)
                 MPI_Intercomm_merge(pgroup_new, 1 /* HIGH */ , &pgroup);
                 MPI_Comm_free(&pgroup_new);
                 merged = 1;
-            }
-            else if (merged) {
+            } else if (merged) {
                 MPI_Comm pgroup_old = pgroup;
 
                 MPI_Comm_connect(port, MPI_INFO_NULL, 0, pgroup, &pgroup_new);

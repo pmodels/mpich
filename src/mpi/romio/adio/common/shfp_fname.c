@@ -1,7 +1,7 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-/* 
+/*
  *
- *   Copyright (C) 1997 University of Chicago. 
+ *   Copyright (C) 1997 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
  */
 
@@ -17,8 +17,8 @@
 #ifdef HAVE_TIME_H
 #include <time.h>
 #endif
-/* The following function selects the name of the file to be used to 
-   store the shared file pointer. The shared-file-pointer file is a 
+/* The following function selects the name of the file to be used to
+   store the shared file pointer. The shared-file-pointer file is a
    hidden file in the same directory as the real file being accessed.
    If the real file is /tmp/thakur/testfile, the shared-file-pointer
    file will be /tmp/thakur/.testfile.shfp.yyy.xxxx, where yyy
@@ -39,66 +39,58 @@ void ADIOI_Shfp_fname(ADIO_File fd, int rank, int *error_code)
     fd->shared_fp_fname = (char *) ADIOI_Malloc(PATH_MAX);
 
     if (!rank) {
-	/* srand takes int but time returns long; keep the lower and most
-	 * significant  32 bits */
-        srand(time(NULL)& 0xffffffff);
+        /* srand takes int but time returns long; keep the lower and most
+         * significant  32 bits */
+        srand(time(NULL) & 0xffffffff);
         i = rand();
-	pid = (int)getpid();
-	
-	if (ADIOI_Strncpy(fd->shared_fp_fname, fd->filename, PATH_MAX)) {
-	    *error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname",
-		    fd->filename, ENAMETOOLONG);
-	    return;
-	}
-	
+        pid = (int) getpid();
+
+        if (ADIOI_Strncpy(fd->shared_fp_fname, fd->filename, PATH_MAX)) {
+            *error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname", fd->filename, ENAMETOOLONG);
+            return;
+        }
 #ifdef ROMIO_NTFS
-	slash = strrchr(fd->filename, '\\');
+        slash = strrchr(fd->filename, '\\');
 #else
-	slash = strrchr(fd->filename, '/');
+        slash = strrchr(fd->filename, '/');
 #endif
-	if (!slash) {
-	    if (ADIOI_Strncpy(fd->shared_fp_fname, ".", 2)) {
-		*error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname",
-			fd->filename, ENAMETOOLONG);
-		return;
-	    }
-	    if (ADIOI_Strncpy(fd->shared_fp_fname + 1, fd->filename, PATH_MAX-1)) {
-		*error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname",
-			fd->filename, ENAMETOOLONG);
-		return;
-	    }
-	}
-	else {
-	    ptr = slash;
+        if (!slash) {
+            if (ADIOI_Strncpy(fd->shared_fp_fname, ".", 2)) {
+                *error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname", fd->filename, ENAMETOOLONG);
+                return;
+            }
+            if (ADIOI_Strncpy(fd->shared_fp_fname + 1, fd->filename, PATH_MAX - 1)) {
+                *error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname", fd->filename, ENAMETOOLONG);
+                return;
+            }
+        } else {
+            ptr = slash;
 #ifdef ROMIO_NTFS
-		slash = strrchr(fd->shared_fp_fname, '\\');
+            slash = strrchr(fd->shared_fp_fname, '\\');
 #else
-	    slash = strrchr(fd->shared_fp_fname, '/');
+            slash = strrchr(fd->shared_fp_fname, '/');
 #endif
-	    if (ADIOI_Strncpy(slash + 1, ".", 2))  {
-		*error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname",
-			fd->filename, ENAMETOOLONG);
-		return;
-	    }
-	    /* ok to cast: file names bounded by PATH_MAX and NAME_MAX */
-	    len = (int) (PATH_MAX - (slash+2 - fd->shared_fp_fname));
-	    if (ADIOI_Strncpy(slash + 2, ptr + 1, len)) {
-		*error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname",
-			ptr + 1, ENAMETOOLONG);
-		return;
-	    }
-	}
-	    
-	MPL_snprintf(tmp, 128, ".shfp.%d.%d", pid, i);
-	/* MPL_strnapp will return non-zero if truncated.  That's ok */
-	MPL_strnapp(fd->shared_fp_fname, tmp, PATH_MAX);
-	
-	len = (int)strlen(fd->shared_fp_fname);
-	MPI_Bcast(&len, 1, MPI_INT, 0, fd->comm);
-	MPI_Bcast(fd->shared_fp_fname, len+1, MPI_CHAR, 0, fd->comm);
-    }
-    else {
-	MPI_Bcast(&len, 1, MPI_INT, 0, fd->comm);
-	MPI_Bcast(fd->shared_fp_fname, len+1, MPI_CHAR, 0, fd->comm);
+            if (ADIOI_Strncpy(slash + 1, ".", 2)) {
+                *error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname", fd->filename, ENAMETOOLONG);
+                return;
+            }
+            /* ok to cast: file names bounded by PATH_MAX and NAME_MAX */
+            len = (int) (PATH_MAX - (slash + 2 - fd->shared_fp_fname));
+            if (ADIOI_Strncpy(slash + 2, ptr + 1, len)) {
+                *error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname", ptr + 1, ENAMETOOLONG);
+                return;
+            }
+        }
+
+        MPL_snprintf(tmp, 128, ".shfp.%d.%d", pid, i);
+        /* MPL_strnapp will return non-zero if truncated.  That's ok */
+        MPL_strnapp(fd->shared_fp_fname, tmp, PATH_MAX);
+
+        len = (int) strlen(fd->shared_fp_fname);
+        MPI_Bcast(&len, 1, MPI_INT, 0, fd->comm);
+        MPI_Bcast(fd->shared_fp_fname, len + 1, MPI_CHAR, 0, fd->comm);
+    } else {
+        MPI_Bcast(&len, 1, MPI_INT, 0, fd->comm);
+        MPI_Bcast(fd->shared_fp_fname, len + 1, MPI_CHAR, 0, fd->comm);
     }
 }

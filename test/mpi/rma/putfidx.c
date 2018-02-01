@@ -85,8 +85,7 @@ int main(int argc, char *argv[])
         errs += CheckMPIErr(err);
         err = MPI_Win_fence(0, win);
         errs += CheckMPIErr(err);
-    }
-    else if (rank == dest) {
+    } else if (rank == dest) {
         MPI_Win_fence(0, win);
         for (i = 0; i < totsize; i++) {
             if (recvBuf[i] != i) {
@@ -96,8 +95,7 @@ int main(int argc, char *argv[])
                 }
             }
         }
-    }
-    else {
+    } else {
         MPI_Win_fence(0, win);
     }
 

@@ -45,19 +45,17 @@ int main(int argc, char **argv)
                     for (i = 0; i < sizes[n]; i++) {
                         buf[i] = 1000000 * (n * NUM_REPS + reps) + i;
                     }
-                }
-                else {
+                } else {
                     for (i = 0; i < sizes[n]; i++) {
                         buf[i] = -1 - (n * NUM_REPS + reps);
                     }
                 }
             }
-
 #	    ifdef DEBUG
             {
                 printf("rank=%d, n=%d, reps=%d\n", rank, n, reps);
             }
-#           endif
+#endif
 
             MPI_Bcast(buf, sizes[n], MPI_INT, ROOT, MPI_COMM_WORLD);
 

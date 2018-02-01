@@ -25,23 +25,22 @@
 #define FUNCNAME MPIR_Alltoall_intra_pairwise_sendrecv_replace
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoall_intra_pairwise_sendrecv_replace(
-    const void *sendbuf,
-    int sendcount, 
-    MPI_Datatype sendtype, 
-    void *recvbuf, 
-    int recvcount, 
-    MPI_Datatype recvtype, 
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag )
+int MPIR_Alltoall_intra_pairwise_sendrecv_replace(const void *sendbuf,
+                                                  int sendcount,
+                                                  MPI_Datatype sendtype,
+                                                  void *recvbuf,
+                                                  int recvcount,
+                                                  MPI_Datatype recvtype,
+                                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
-    int          comm_size, i, j;
-    MPI_Aint     recvtype_extent;
-    int mpi_errno=MPI_SUCCESS, rank;
+    int comm_size, i, j;
+    MPI_Aint recvtype_extent;
+    int mpi_errno = MPI_SUCCESS, rank;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
 
-    if (recvcount == 0) return MPI_SUCCESS;
+    if (recvcount == 0)
+        return MPI_SUCCESS;
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -63,25 +62,22 @@ int MPIR_Alltoall_intra_pairwise_sendrecv_replace(
         for (j = i; j < comm_size; ++j) {
             if (rank == i) {
                 /* also covers the (rank == i && rank == j) case */
-                mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + j*recvcount*recvtype_extent),
-                                                     recvcount, recvtype,
-                                                     j, MPIR_ALLTOALL_TAG,
-                                                     j, MPIR_ALLTOALL_TAG,
-                                                     comm_ptr, &status, errflag);
+                mpi_errno =
+                    MPIC_Sendrecv_replace(((char *) recvbuf + j * recvcount * recvtype_extent),
+                                          recvcount, recvtype, j, MPIR_ALLTOALL_TAG, j,
+                                          MPIR_ALLTOALL_TAG, comm_ptr, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
                     MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
-            }
-            else if (rank == j) {
+            } else if (rank == j) {
                 /* same as above with i/j args reversed */
-                mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + i*recvcount*recvtype_extent),
-                                                     recvcount, recvtype,
-                                                     i, MPIR_ALLTOALL_TAG,
-                                                     i, MPIR_ALLTOALL_TAG,
-                                                     comm_ptr, &status, errflag);
+                mpi_errno =
+                    MPIC_Sendrecv_replace(((char *) recvbuf + i * recvcount * recvtype_extent),
+                                          recvcount, recvtype, i, MPIR_ALLTOALL_TAG, i,
+                                          MPIR_ALLTOALL_TAG, comm_ptr, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

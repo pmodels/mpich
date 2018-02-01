@@ -66,8 +66,7 @@ int main(int argc, char *argv[])
         else
             printf(" No Errors\n");
         fflush(stdout);
-    }
-    else {
+    } else {
         IF_VERBOSE(("size.\n"));
         error = MPI_Comm_size(MPI_COMM_WORLD, &size);
         check_error(error, "MPI_Comm_size");
@@ -126,8 +125,7 @@ int main(int argc, char *argv[])
                 printf(" No Errors\n");
                 fflush(stdout);
             }
-        }
-        else if ((argc == 2) && (strcmp(argv[1], "acceptor") == 0)) {
+        } else if ((argc == 2) && (strcmp(argv[1], "acceptor") == 0)) {
             IF_VERBOSE(("get_parent.\n"));
             error = MPI_Comm_get_parent(&comm_parent);
             check_error(error, "MPI_Comm_get_parent");
@@ -181,8 +179,7 @@ int main(int argc, char *argv[])
             check_error(error, "MPI_Barrier");
 
             MPI_Comm_free(&comm_parent);
-        }
-        else if ((argc == 2) && (strcmp(argv[1], "connector") == 0)) {
+        } else if ((argc == 2) && (strcmp(argv[1], "connector") == 0)) {
             IF_VERBOSE(("get_parent.\n"));
             error = MPI_Comm_get_parent(&comm_parent);
             check_error(error, "MPI_Comm_get_parent");
@@ -227,8 +224,7 @@ int main(int argc, char *argv[])
             check_error(error, "MPI_Barrier");
 
             MPI_Comm_free(&comm_parent);
-        }
-        else {
+        } else {
             printf("invalid command line.\n");
             fflush(stdout);
             {

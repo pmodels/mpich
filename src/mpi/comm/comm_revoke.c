@@ -18,7 +18,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Comm_revoke as PMPIX_Comm_revoke
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPIX_Comm_revoke(MPI_Comm comm) __attribute__((weak,alias("PMPIX_Comm_revoke")));
+int MPIX_Comm_revoke(MPI_Comm comm) __attribute__ ((weak, alias("PMPIX_Comm_revoke")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -62,7 +62,7 @@ int MPIX_Comm_revoke(MPI_Comm comm)
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIX_COMM_REVOKE);
 
     /* Validate parameters, especially handles needing to be converted */
-#    ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -70,28 +70,30 @@ int MPIX_Comm_revoke(MPI_Comm comm)
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
+#endif
 
     /* Convert MPI object handles to object pointers */
-    MPIR_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
-            if (mpi_errno) goto fn_fail;
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, TRUE);
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
+#endif
 
     /* ... body of routine ... */
 
     mpi_errno = MPID_Comm_revoke(comm_ptr, 0);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
@@ -101,14 +103,14 @@ int MPIX_Comm_revoke(MPI_Comm comm)
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpix_comm_revoke",
-            "**mpix_comm_revoke %C", comm);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpix_comm_revoke", "**mpix_comm_revoke %C", comm);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

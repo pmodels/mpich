@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     MPI_Comm comm, newcomm, scomm;
     MPI_Group group;
@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
     color = rank % 2;
     MPI_Comm_split(MPI_COMM_WORLD, color, rank, &scomm);
     /*test inercomm_create for NULL variable */
-    mpi_errno = MPI_Intercomm_create(scomm, 0, MPI_COMM_WORLD, 1-color, 52, NULL);
+    mpi_errno = MPI_Intercomm_create(scomm, 0, MPI_COMM_WORLD, 1 - color, 52, NULL);
     MPI_Error_class(mpi_errno, &errclass);
     if (errclass != MPI_ERR_ARG)
         ++errs;
@@ -35,4 +35,3 @@ int main(int argc, char* argv[])
     MPI_Finalize();
     return 0;
 }
-

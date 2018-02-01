@@ -14,7 +14,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_finalize as PMPI_T_finalize
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_T_finalize(void) __attribute__((weak,alias("PMPI_T_finalize")));
+int MPI_T_finalize(void) __attribute__ ((weak, alias("PMPI_T_finalize")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -35,13 +35,13 @@ static void MPIR_T_enum_env_finalize(void)
     if (enum_table) {
         /* Free all entries */
         for (i = 0; i < utarray_len(enum_table); i++) {
-            e = (MPIR_T_enum_t *)utarray_eltptr(enum_table, i);
-            MPL_free((void *)e->name);
+            e = (MPIR_T_enum_t *) utarray_eltptr(enum_table, i);
+            MPL_free((void *) e->name);
 
             /* Free items in this enum */
             for (j = 0; j < utarray_len(e->items); j++) {
-                item = (enum_item_t *)utarray_eltptr(e->items, j);
-                MPL_free((void *)item->name);
+                item = (enum_item_t *) utarray_eltptr(e->items, j);
+                MPL_free((void *) item->name);
             }
 
             utarray_free(e->items);
@@ -61,9 +61,9 @@ static void MPIR_T_cat_env_finalize(void)
     if (cat_table) {
         /* Free all entries */
         for (i = 0; i < utarray_len(cat_table); i++) {
-            cat = (cat_table_entry_t *)utarray_eltptr(cat_table, i);
-            MPL_free((void *)cat->name);
-            MPL_free((void *)cat->desc);
+            cat = (cat_table_entry_t *) utarray_eltptr(cat_table, i);
+            MPL_free((void *) cat->name);
+            MPL_free((void *) cat->desc);
             utarray_free(cat->cvar_indices);
             utarray_free(cat->pvar_indices);
             utarray_free(cat->subcat_indices);
@@ -99,10 +99,11 @@ static void MPIR_T_cvar_env_finalize(void)
     if (cvar_table) {
         /* Free all entries */
         for (i = 0; i < utarray_len(cvar_table); i++) {
-            cvar = (cvar_table_entry_t *)utarray_eltptr(cvar_table, i);
-            MPL_free((void *)cvar->name);
-            MPL_free((void *)cvar->desc);
-            if (cvar->datatype == MPI_CHAR) MPL_free(cvar->addr);
+            cvar = (cvar_table_entry_t *) utarray_eltptr(cvar_table, i);
+            MPL_free((void *) cvar->name);
+            MPL_free((void *) cvar->desc);
+            if (cvar->datatype == MPI_CHAR)
+                MPL_free(cvar->addr);
         }
 
         /* Free pvar_table itself */
@@ -132,9 +133,9 @@ static void MPIR_T_pvar_env_finalize(void)
     if (pvar_table) {
         /* Free all entries */
         for (i = 0; i < utarray_len(pvar_table); i++) {
-            pvar = (pvar_table_entry_t *)utarray_eltptr(pvar_table, i);
-            MPL_free((void *)pvar->name);
-            MPL_free((void *)pvar->desc);
+            pvar = (pvar_table_entry_t *) utarray_eltptr(pvar_table, i);
+            MPL_free((void *) pvar->name);
+            MPL_free((void *) pvar->desc);
         }
 
         /* Free pvar_table itself */
@@ -220,19 +221,19 @@ int MPI_T_finalize(void)
 
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_FINALIZE);
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_finalize", NULL);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_t_finalize", NULL);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

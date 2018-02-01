@@ -48,14 +48,13 @@ static inline int MPIDI_NM_mpi_win_test(MPIR_Win * win, int *flag)
 }
 
 static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert,
-                                        MPIR_Win * win, MPIDI_av_entry_t *addr)
+                                        MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     return MPIDI_CH4R_mpi_win_lock(lock_type, rank, assert, win);
 }
 
 
-static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win,
-                                          MPIDI_av_entry_t *addr)
+static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     return MPIDI_CH4R_mpi_win_unlock(rank, win);
 }
@@ -120,8 +119,7 @@ static inline int MPIDI_NM_mpi_win_allocate(MPI_Aint size,
     return MPIDI_CH4R_mpi_win_allocate(size, disp_unit, info, comm, baseptr, win);
 }
 
-static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win,
-                                         MPIDI_av_entry_t *addr)
+static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     return MPIDI_CH4R_mpi_win_flush(rank, win);
 }
@@ -142,8 +140,7 @@ static inline int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * 
     return MPIDI_CH4R_mpi_win_create_dynamic(info, comm, win);
 }
 
-static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win,
-                                               MPIDI_av_entry_t *addr)
+static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     return MPIDI_CH4R_mpi_win_flush_local(rank, win);
 }

@@ -34,8 +34,7 @@ int main(int argc, char *argv[])
     if (topo_type != MPI_CART) {
         errs++;
         printf("Topo type of duped cart was not cart\n");
-    }
-    else {
+    } else {
         MPI_Cart_get(comm2, 2, outdims, outperiods, outcoords);
         for (i = 0; i < 2; i++) {
             if (outdims[i] != dims[i]) {
@@ -75,8 +74,7 @@ int main(int argc, char *argv[])
         if (topo_type != MPI_GRAPH) {
             errs++;
             printf("Topo type of duped graph was not graph\n");
-        }
-        else {
+        } else {
             int nnodes, nedges;
             MPI_Graphdims_get(comm2, &nnodes, &nedges);
             if (nnodes != wsize) {

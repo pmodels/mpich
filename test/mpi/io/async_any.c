@@ -50,8 +50,7 @@ int main(int argc, char **argv)
              * fprintf(stderr, "\n*#  Usage: async_any -fname filename\n\n");
              * MPI_Abort(MPI_COMM_WORLD, 1);
              */
-        }
-        else {
+        } else {
             argv++;
             len = (int) strlen(*argv);
             filename = (char *) malloc(len + 10);
@@ -60,8 +59,7 @@ int main(int argc, char **argv)
         }
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(filename, len + 10, MPI_CHAR, 0, MPI_COMM_WORLD);
-    }
-    else {
+    } else {
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
         filename = (char *) malloc(len + 10);
         MTEST_VG_MEM_INIT(filename, (len + 10) * sizeof(char));

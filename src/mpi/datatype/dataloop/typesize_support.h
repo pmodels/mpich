@@ -22,6 +22,6 @@ typedef struct MPIDU_Type_footprint_s {
     int has_sticky_ub;
 } DLOOP_Type_footprint;
 
-void MPIDU_Type_calc_footprint(MPI_Datatype type, DLOOP_Type_footprint *tfp);
+void MPIDU_Type_calc_footprint(MPI_Datatype type, DLOOP_Type_footprint * tfp);
 
 #endif /* TYPESIZE_SUPPORT_H_INCLUDED */

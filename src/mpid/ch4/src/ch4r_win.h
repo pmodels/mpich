@@ -53,30 +53,30 @@ static inline int MPIDI_CH4R_RMA_Init_sync_pvars(void)
     int mpi_errno = MPI_SUCCESS;
     /* rma_winlock_getlocallock */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_winlock_getlocallock,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "WIN_LOCK:Get local lock (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_winlock_getlocallock,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "WIN_LOCK:Get local lock (in seconds)");
 
     /* rma_wincreate_allgather */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_wincreate_allgather,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "WIN_CREATE:Allgather (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_wincreate_allgather,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "WIN_CREATE:Allgather (in seconds)");
 
     /* rma_amhdr_set */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_amhdr_set,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "Set fields in AM Handler (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_amhdr_set,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "Set fields in AM Handler (in seconds)");
 
     return mpi_errno;
 }
@@ -104,8 +104,7 @@ static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
                 MPIDI_CH4U_WIN(win, info_args).no_locks = 1;
             else if (!strcmp(curr_ptr->value, "false"))
                 MPIDI_CH4U_WIN(win, info_args).no_locks = 0;
-        }
-        else if (!strcmp(curr_ptr->key, "accumulate_ordering")) {
+        } else if (!strcmp(curr_ptr->key, "accumulate_ordering")) {
             save_ordering = MPIDI_CH4U_WIN(win, info_args).accumulate_ordering;
             MPIDI_CH4U_WIN(win, info_args).accumulate_ordering = 0;
             if (!strcmp(curr_ptr->value, "none"))
@@ -138,26 +137,22 @@ static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
 
             if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering == 0)
                 MPIDI_CH4U_WIN(win, info_args).accumulate_ordering = save_ordering;
-        }
-        else if (!strcmp(curr_ptr->key, "accumulate_ops")) {
+        } else if (!strcmp(curr_ptr->key, "accumulate_ops")) {
             if (!strcmp(curr_ptr->value, "same_op"))
                 MPIDI_CH4U_WIN(win, info_args).accumulate_ops = MPIDI_CH4I_ACCU_SAME_OP;
             else if (!strcmp(curr_ptr->value, "same_op_no_op"))
                 MPIDI_CH4U_WIN(win, info_args).accumulate_ops = MPIDI_CH4I_ACCU_SAME_OP_NO_OP;
-        }
-        else if (!strcmp(curr_ptr->key, "same_disp_unit")) {
+        } else if (!strcmp(curr_ptr->key, "same_disp_unit")) {
             if (!strcmp(curr_ptr->value, "true"))
                 MPIDI_CH4U_WIN(win, info_args).same_disp_unit = 1;
             else if (!strcmp(curr_ptr->value, "false"))
                 MPIDI_CH4U_WIN(win, info_args).same_disp_unit = 0;
-        }
-        else if (!strcmp(curr_ptr->key, "same_size")) {
+        } else if (!strcmp(curr_ptr->key, "same_size")) {
             if (!strcmp(curr_ptr->value, "true"))
                 MPIDI_CH4U_WIN(win, info_args).same_size = 1;
             else if (!strcmp(curr_ptr->value, "false"))
                 MPIDI_CH4U_WIN(win, info_args).same_size = 0;
-        }
-        else if (!strcmp(curr_ptr->key, "alloc_shared_noncontig")) {
+        } else if (!strcmp(curr_ptr->key, "alloc_shared_noncontig")) {
             if (!strcmp(curr_ptr->value, "true"))
                 MPIDI_CH4U_WIN(win, info_args).alloc_shared_noncontig = 1;
             else if (!strcmp(curr_ptr->value, "false"))
@@ -496,8 +491,7 @@ static inline int MPIDI_CH4R_mpi_win_test(MPIR_Win * win, int *flag)
         *flag = 1;
         MPIR_Group_release(group);
         MPIDI_CH4U_WIN(win, sync).exposure_epoch_type = MPIDI_CH4U_EPOTYPE_NONE;
-    }
-    else {
+    } else {
         MPIDI_CH4R_PROGRESS();
         *flag = 0;
     }
@@ -936,8 +930,7 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
                                0,
                                MPI_DATATYPE_NULL,
                                shared_table,
-                               sizeof(MPIDI_CH4U_win_shared_info_t),
-                               MPI_BYTE, comm_ptr, &errflag);
+                               sizeof(MPIDI_CH4U_win_shared_info_t), MPI_BYTE, comm_ptr, &errflag);
     MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -1140,8 +1133,7 @@ static inline int MPIDI_CH4R_mpi_win_shared_query(MPIR_Win * win,
         for (i = 0; i < offset; i++)
             base += shared_table[i].size;
         *(void **) baseptr = (void *) base;
-    }
-    else
+    } else
         *(void **) baseptr = NULL;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_SHARED_QUERY);

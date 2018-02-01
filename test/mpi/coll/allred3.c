@@ -87,20 +87,17 @@ static void initMat(MPI_Comm comm, int mat[])
                 offset = ((i + 1) % size) + i * size;
                 assert(offset < max_offset);
                 mat[offset] = 1;
-            }
-            else if (i == ((rank + 1) % size)) {
+            } else if (i == ((rank + 1) % size)) {
                 offset = ((i + size - 1) % size) + i * size;
                 assert(offset < max_offset);
                 mat[offset] = 1;
-            }
-            else {
+            } else {
                 offset = i + i * size;
                 assert(offset < max_offset);
                 mat[offset] = 1;
             }
         }
-    }
-    else {
+    } else {
         /* Create the permutation matrix that shifts right by one */
         for (i = 0; i < size; i++) {
             for (j = 0; j < size; j++) {
@@ -135,8 +132,7 @@ static int isIdentity(MPI_Comm comm, int mat[])
                                rank, i, j, mat[offset], MTestGetIntracommName());
                     }
                 }
-            }
-            else {
+            } else {
                 offset = j + i * size;
                 assert(offset < max_offset);
                 if (mat[offset] != 0) {

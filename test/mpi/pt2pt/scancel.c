@@ -55,8 +55,7 @@ int main(int argc, char *argv[])
                 errs++;
                 printf("Failed to cancel an Isend request\n");
                 fflush(stdout);
-            }
-            else {
+            } else {
                 n = 0;
             }
             /* Send the size, zero for successfully cancelled */
@@ -65,8 +64,7 @@ int main(int argc, char *argv[])
             n = cs + n + 1;
             MPI_Send(&n, 1, MPI_INT, dest, 123, comm);
             free(buf);
-        }
-        else if (rank == dest) {
+        } else if (rank == dest) {
             int nn, tag;
             char *btemp;
             MPI_Recv(&nn, 1, MPI_INT, 0, 123, comm, &status);
@@ -110,8 +108,7 @@ int main(int argc, char *argv[])
                 errs++;
                 printf("Failed to cancel an Ibsend request\n");
                 fflush(stdout);
-            }
-            else {
+            } else {
                 n = 0;
             }
             /* Send the size, zero for successfully cancelled */
@@ -122,8 +119,7 @@ int main(int argc, char *argv[])
             free(buf);
             MPI_Buffer_detach(&bf, &bs);
             free(bsendbuf);
-        }
-        else if (rank == dest) {
+        } else if (rank == dest) {
             int nn, tag;
             char *btemp;
             MPI_Recv(&nn, 1, MPI_INT, 0, 123, comm, &status);
@@ -183,8 +179,7 @@ int main(int argc, char *argv[])
             n = cs + n + 3;
             MPI_Send(&n, 1, MPI_INT, dest, 123, comm);
             free(buf);
-        }
-        else if (rank == dest) {
+        } else if (rank == dest) {
             int n, tag;
             char *btemp;
             MPI_Recv(&n, 1, MPI_INT, 0, 123, comm, &status);
@@ -219,8 +214,7 @@ int main(int argc, char *argv[])
                 errs++;
                 printf("Failed to cancel an Issend request\n");
                 fflush(stdout);
-            }
-            else {
+            } else {
                 n = 0;
             }
             /* Send the size, zero for successfully cancelled */
@@ -229,8 +223,7 @@ int main(int argc, char *argv[])
             n = cs + n + 4;
             MPI_Send(&n, 1, MPI_INT, dest, 123, comm);
             free(buf);
-        }
-        else if (rank == dest) {
+        } else if (rank == dest) {
             int nn, tag;
             char *btemp;
             MPI_Recv(&nn, 1, MPI_INT, 0, 123, comm, &status);

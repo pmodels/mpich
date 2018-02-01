@@ -21,7 +21,7 @@ int MPIR_Reduce_nb(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
     mpi_errno = MPIR_Ireduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, &req_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    if(req_ptr)
+    if (req_ptr)
         req = req_ptr->handle;
 
     mpi_errno = MPIR_Wait_impl(&req, MPI_STATUS_IGNORE);

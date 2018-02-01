@@ -41,8 +41,7 @@ int main(int argc, char **argv)
         if (lb != 4 || ub != 5 || extent != 1) {
             printf("lb = %d (should be 4), ub = %d (should be 5) extent = %d should be 1\n",
                    (int) lb, (int) ub, (int) extent);
-        }
-        else {
+        } else {
             printf(" No Errors\n");
         }
 

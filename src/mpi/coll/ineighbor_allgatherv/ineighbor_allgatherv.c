@@ -61,8 +61,8 @@ cvars:
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                              void *recvbuf, const int recvcounts[], const int displs[],
-                             MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request)
-                             __attribute__((weak,alias("PMPI_Ineighbor_allgatherv")));
+                             MPI_Datatype recvtype, MPI_Comm comm, MPI_Request * request)
+    __attribute__ ((weak, alias("PMPI_Ineighbor_allgatherv")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -77,16 +77,18 @@ int MPI_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype se
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_allgatherv_sched_intra_auto(const void *sendbuf, int sendcount,
-                                    MPI_Datatype sendtype, void *recvbuf,
-                                    const int recvcounts[], const int displs[],
-                                    MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+                                               MPI_Datatype sendtype, void *recvbuf,
+                                               const int recvcounts[], const int displs[],
+                                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                               MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Ineighbor_allgatherv_sched_linear(sendbuf, sendcount, sendtype,
                                                        recvbuf, recvcounts, displs, recvtype,
                                                        comm_ptr, s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -100,16 +102,18 @@ int MPIR_Ineighbor_allgatherv_sched_intra_auto(const void *sendbuf, int sendcoun
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_allgatherv_sched_inter_auto(const void *sendbuf, int sendcount,
-                                    MPI_Datatype sendtype, void *recvbuf,
-                                    const int recvcounts[], const int displs[],
-                                    MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+                                               MPI_Datatype sendtype, void *recvbuf,
+                                               const int recvcounts[], const int displs[],
+                                               MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                               MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIR_Ineighbor_allgatherv_sched_linear(sendbuf, sendcount, sendtype,
                                                        recvbuf, recvcounts, displs, recvtype,
                                                        comm_ptr, s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -125,7 +129,8 @@ int MPIR_Ineighbor_allgatherv_sched_inter_auto(const void *sendbuf, int sendcoun
 int MPIR_Ineighbor_allgatherv_sched_impl(const void *sendbuf, int sendcount,
                                          MPI_Datatype sendtype, void *recvbuf,
                                          const int recvcounts[], const int displs[],
-                                         MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+                                         MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                         MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -133,30 +138,30 @@ int MPIR_Ineighbor_allgatherv_sched_impl(const void *sendbuf, int sendcount,
         switch (MPIR_Ineighbor_allgatherv_intra_algo_choice) {
             case MPIR_INEIGHBOR_ALLGATHERV_INTRA_ALGO_LINEAR:
                 mpi_errno = MPIR_Ineighbor_allgatherv_sched_linear(sendbuf, sendcount, sendtype,
-                                                                    recvbuf, recvcounts, displs, recvtype,
-                                                                    comm_ptr, s);
+                                                                   recvbuf, recvcounts, displs,
+                                                                   recvtype, comm_ptr, s);
                 break;
             case MPIR_INEIGHBOR_ALLGATHERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ineighbor_allgatherv_sched_intra_auto(sendbuf, sendcount, sendtype,
-                                                                    recvbuf, recvcounts, displs, recvtype,
-                                                                    comm_ptr, s);
+                                                                       recvbuf, recvcounts, displs,
+                                                                       recvtype, comm_ptr, s);
                 break;
         }
     } else {
         switch (MPIR_Ineighbor_allgatherv_inter_algo_choice) {
             case MPIR_INEIGHBOR_ALLGATHERV_INTER_ALGO_LINEAR:
                 mpi_errno = MPIR_Ineighbor_allgatherv_sched_linear(sendbuf, sendcount, sendtype,
-                                                                    recvbuf, recvcounts, displs, recvtype,
-                                                                    comm_ptr, s);
+                                                                   recvbuf, recvcounts, displs,
+                                                                   recvtype, comm_ptr, s);
                 break;
             case MPIR_INEIGHBOR_ALLGATHERV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ineighbor_allgatherv_sched_inter_auto(sendbuf, sendcount, sendtype,
-                                                                    recvbuf, recvcounts, displs, recvtype,
-                                                                    comm_ptr, s);
+                                                                       recvbuf, recvcounts, displs,
+                                                                       recvtype, comm_ptr, s);
                 break;
         }
     }
@@ -171,7 +176,7 @@ int MPIR_Ineighbor_allgatherv_sched_impl(const void *sendbuf, int sendcount,
 int MPIR_Ineighbor_allgatherv_sched(const void *sendbuf, int sendcount,
                                     MPI_Datatype sendtype, void *recvbuf,
                                     const int recvcounts[], const int displs[],
-                                    MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+                                    MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -193,8 +198,8 @@ int MPIR_Ineighbor_allgatherv_sched(const void *sendbuf, int sendcount,
 int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount,
                                    MPI_Datatype sendtype, void *recvbuf,
                                    const int recvcounts[], const int displs[],
-                                   MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
-                                   MPIR_Request **request)
+                                   MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                   MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
@@ -203,20 +208,23 @@ int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount,
     *request = NULL;
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Ineighbor_allgatherv_sched(sendbuf, sendcount, sendtype,
-                                                recvbuf, recvcounts, displs, recvtype,
-                                                comm_ptr, s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                                                recvbuf, recvcounts, displs, recvtype, comm_ptr, s);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -227,8 +235,7 @@ fn_fail:
 int MPIR_Ineighbor_allgatherv(const void *sendbuf, int sendcount,
                               MPI_Datatype sendtype, void *recvbuf,
                               const int recvcounts[], const int displs[],
-                              MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
-                              MPIR_Request **request)
+                              MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -271,7 +278,9 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request)
+int MPI_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                             void *recvbuf, const int recvcounts[], const int displs[],
+                             MPI_Datatype recvtype, MPI_Comm comm, MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
@@ -282,7 +291,7 @@ int MPI_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype se
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_INEIGHBOR_ALLGATHERV);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -294,13 +303,13 @@ int MPI_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype se
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -308,56 +317,68 @@ int MPI_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype se
                 MPIR_Datatype *sendtype_ptr = NULL;
                 MPIR_Datatype_get_ptr(sendtype, sendtype_ptr);
                 MPIR_Datatype_valid_ptr(sendtype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
                 MPIR_Datatype_committed_ptr(sendtype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
             }
 
             if (HANDLE_GET_KIND(recvtype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *recvtype_ptr = NULL;
                 MPIR_Datatype_get_ptr(recvtype, recvtype_ptr);
                 MPIR_Datatype_valid_ptr(recvtype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
                 MPIR_Datatype_committed_ptr(recvtype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
             }
 
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, FALSE);
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
 
             MPIR_ERRTEST_ARGNULL(request, "request", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Ineighbor_allgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm_ptr, &request_ptr);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    mpi_errno =
+        MPIR_Ineighbor_allgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
+                                  recvtype, comm_ptr, &request_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* return the handle of the request to the user */
-    if(request_ptr)
+    if (request_ptr)
         *request = request_ptr->handle;
-    else *request = MPI_REQUEST_NULL;
+    else
+        *request = MPI_REQUEST_NULL;
 
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_INEIGHBOR_ALLGATHERV);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_ineighbor_allgatherv", "**mpi_ineighbor_allgatherv %p %d %D %p %p %p %D %C %p", sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm, request);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_ineighbor_allgatherv",
+                                 "**mpi_ineighbor_allgatherv %p %d %D %p %p %p %D %C %p", sendbuf,
+                                 sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm,
+                                 request);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

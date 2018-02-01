@@ -6,7 +6,8 @@ extern const MPIDI_POSIX_coll_algo_container_t POSIX_barrier__recursive_doubling
 
 /* Bcast POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_bcast__binomial_cnt;
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_bcast__scatter_recursive_doubling_allgather_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t
+    POSIX_bcast__scatter_recursive_doubling_allgather_cnt;
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_bcast__scatter_ring_allgather_cnt;
 
 /* Reduce POSIX containers declaration */

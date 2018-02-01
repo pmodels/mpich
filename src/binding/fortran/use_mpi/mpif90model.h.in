@@ -13,21 +13,21 @@
  * functions, which are available in C, F90, and C++ (but not in Fortran 77,
  * because these are part of the extended Fortran support).
  *
- * These use the Fortran 90 terms precision and range which have the 
+ * These use the Fortran 90 terms precision and range which have the
  * following meanings:
- * 
+ *
  * precision - number of digits to ??? (FIXME: exact definition)
  * range - number of decimal digits (exponent range for reals)
  */
 
-/* Real and double model: 
+/* Real and double model:
  * precision and range for reals and for doubles
  * The value is two "precision, range", as integers
  */
 #define MPIR_F90_REAL_MODEL          @FC_REAL_MODEL@
 #define MPIR_F90_DOUBLE_MODEL        @FC_DOUBLE_MODEL@
 /* integer model:
- * a single integer, giving the value of the range 
+ * a single integer, giving the value of the range
  */
 #define MPIR_F90_INTEGER_MODEL       @FC_INTEGER_MODEL@
 
@@ -42,7 +42,7 @@
  * where kind ki has range ri and is si bytes long
  *
  * This can be used to find a Fortran 90 integer type with a given range.
- * 
+ *
  */
 #define MPIR_F90_INTEGER_MODEL_MAP   @FC_INTEGER_MODEL_MAP@
 

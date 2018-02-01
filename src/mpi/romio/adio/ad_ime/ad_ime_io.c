@@ -18,14 +18,11 @@
 #define IME_WRITE 1
 
 static void IME_IOContig(ADIO_File fd,
-                        void *buf,
-                        int count,
-                        MPI_Datatype datatype,
-                        int file_ptr_type,
-                        ADIO_Offset offset,
-                        ADIO_Status *status,
-                        int io_flag,
-                        int *error_code)
+                         void *buf,
+                         int count,
+                         MPI_Datatype datatype,
+                         int file_ptr_type,
+                         ADIO_Offset offset, ADIO_Status * status, int io_flag, int *error_code)
 {
     ssize_t ret;
     MPI_Count datatype_size;
@@ -37,38 +34,26 @@ static void IME_IOContig(ADIO_File fd,
     mem_len = datatype_size * count;
 
     if (file_ptr_type == ADIO_INDIVIDUAL)
-            file_offset = fd->fp_ind;
+        file_offset = fd->fp_ind;
 
-    switch(io_flag)
-    {
+    switch (io_flag) {
         case IME_READ:
-            ret = ime_native_pread(fd->fd_sys,
-                           buf,
-                           mem_len,
-                           offset);
+            ret = ime_native_pread(fd->fd_sys, buf, mem_len, offset);
             break;
         case IME_WRITE:
-            ret = ime_native_pwrite(fd->fd_sys,
-                            buf,
-                            mem_len,
-                            offset);
+            ret = ime_native_pwrite(fd->fd_sys, buf, mem_len, offset);
             break;
         default:
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                MPIR_ERR_RECOVERABLE,
-                                               myname,
-                                               __LINE__,
-                                               MPI_ERR_IO,
-                                               "Unknown flag",
-                                               0);
+                                               myname, __LINE__, MPI_ERR_IO, "Unknown flag", 0);
             goto exit;
 
             break;
     };
 
     /* Let the application decide how to fail */
-    if (ret < 0)
-    {
+    if (ret < 0) {
         *error_code = MPI_SUCCESS;
         goto exit;
     }
@@ -83,47 +68,28 @@ static void IME_IOContig(ADIO_File fd,
 
     *error_code = MPI_SUCCESS;
 
-exit:
+  exit:
     return;
 }
 
 void ADIOI_IME_ReadContig(ADIO_File fd,
-                         void *buf,
-                         int count,
-                         MPI_Datatype datatype,
-                         int file_ptr_type,
-                         ADIO_Offset offset,
-                         ADIO_Status *status,
-                         int *error_code)
-{
-    IME_IOContig(fd,
-                buf,
-                count,
-                datatype,
-                file_ptr_type,
-                offset,
-                status,
-                IME_READ,
-                error_code);
-}
-
-void ADIOI_IME_WriteContig(ADIO_File fd,
-                          const void *buf,
+                          void *buf,
                           int count,
                           MPI_Datatype datatype,
                           int file_ptr_type,
-                          ADIO_Offset offset,
-                          ADIO_Status *status,
-                          int *error_code)
+                          ADIO_Offset offset, ADIO_Status * status, int *error_code)
 {
-    IME_IOContig(fd,
-                (void *)buf,
-                count,
-                datatype,
-                file_ptr_type,
-                offset,
-                status,
-                IME_WRITE,
-                error_code);
+    IME_IOContig(fd, buf, count, datatype, file_ptr_type, offset, status, IME_READ, error_code);
 }
 
+void ADIOI_IME_WriteContig(ADIO_File fd,
+                           const void *buf,
+                           int count,
+                           MPI_Datatype datatype,
+                           int file_ptr_type,
+                           ADIO_Offset offset, ADIO_Status * status, int *error_code)
+{
+    IME_IOContig(fd,
+                 (void *) buf,
+                 count, datatype, file_ptr_type, offset, status, IME_WRITE, error_code);
+}

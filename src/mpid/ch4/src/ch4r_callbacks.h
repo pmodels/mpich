@@ -112,8 +112,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
 
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_MATCHED) {
         match_req = (MPIR_Request *) MPIDI_CH4U_REQUEST(rreq, req->rreq.match_req);
-    }
-    else {
+    } else {
         /* MPIDI_CS_ENTER(); */
         if (root_comm)
             match_req =
@@ -145,8 +144,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
     if (MPIDI_CH4U_REQUEST(rreq, count) > dt_sz * MPIDI_CH4U_REQUEST(match_req, count)) {
         rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
         count = MPIDI_CH4U_REQUEST(match_req, count);
-    }
-    else {
+    } else {
         rreq->status.MPI_ERROR = MPI_SUCCESS;
         count = MPIDI_CH4U_REQUEST(rreq, count) / dt_sz;
     }
@@ -159,7 +157,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv MPIR_Segment_alloc");
         MPIR_Segment_init(MPIDI_CH4U_REQUEST(match_req, buffer), count,
-                           MPIDI_CH4U_REQUEST(match_req, datatype), segment_ptr, 0);
+                          MPIDI_CH4U_REQUEST(match_req, datatype), segment_ptr, 0);
 
         last = count * dt_sz;
         MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, buffer));
@@ -170,8 +168,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
                                              MPI_ERR_TYPE, "**dtypemismatch", 0);
             match_req->status.MPI_ERROR = mpi_errno;
         }
-    }
-    else {
+    } else {
         MPIR_Memcpy((char *) MPIDI_CH4U_REQUEST(match_req, buffer) + dt_true_lb,
                     MPIDI_CH4U_REQUEST(rreq, buffer), count * dt_sz);
     }
@@ -229,14 +226,13 @@ static inline int MPIDI_do_send_target(void **data,
     if (dt_contig) {
         *p_data_sz = data_sz;
         *data = (char *) MPIDI_CH4U_REQUEST(rreq, buffer) + dt_true_lb;
-    }
-    else {
+    } else {
         segment_ptr = MPIR_Segment_alloc();
         MPIR_Assert(segment_ptr);
 
         MPIR_Segment_init(MPIDI_CH4U_REQUEST(rreq, buffer),
-                           MPIDI_CH4U_REQUEST(rreq, count),
-                           MPIDI_CH4U_REQUEST(rreq, datatype), segment_ptr, 0);
+                          MPIDI_CH4U_REQUEST(rreq, count),
+                          MPIDI_CH4U_REQUEST(rreq, datatype), segment_ptr, 0);
 
         if (*p_data_sz > data_sz) {
             rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
@@ -251,8 +247,7 @@ static inline int MPIDI_do_send_target(void **data,
         MPIR_Assert(MPIDI_CH4U_REQUEST(rreq, req->iov));
 
         last = *p_data_sz;
-        MPIR_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov),
-                                  &n_iov);
+        MPIR_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov), &n_iov);
         if (last != (MPI_Aint) * p_data_sz) {
             rreq->status.MPI_ERROR = MPI_ERR_TYPE;
         }
@@ -299,7 +294,6 @@ static inline int MPIDI_recv_target_cmpl_cb(MPIR_Request * rreq)
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
-
 #ifdef MPIDI_BUILD_CH4_SHM
     if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) {
         int continue_matching = 1;
@@ -398,8 +392,7 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
         if (p_data_sz) {
             MPIDI_CH4U_REQUEST(rreq, buffer) = (char *) MPL_malloc(*p_data_sz, MPL_MEM_BUFFER);
             MPIDI_CH4U_REQUEST(rreq, count) = *p_data_sz;
-        }
-        else {
+        } else {
             MPIDI_CH4U_REQUEST(rreq, buffer) = NULL;
             MPIDI_CH4U_REQUEST(rreq, count) = 0;
         }
@@ -411,13 +404,11 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
         if (root_comm) {
             MPIR_Comm_add_ref(root_comm);
             MPIDI_CH4U_enqueue_unexp(rreq, &MPIDI_CH4U_COMM(root_comm, unexp_list));
-        }
-        else {
+        } else {
             MPIDI_CH4U_enqueue_unexp(rreq, MPIDI_CH4U_context_id_to_uelist(context_id));
         }
         /* MPIDI_CS_EXIT(); */
-    }
-    else {
+    } else {
         /* rreq != NULL <=> root_comm != NULL */
         MPIR_Assert(root_comm);
         /* Decrement the refcnt when popping a request out from posted_list */
@@ -478,13 +469,11 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
         if (root_comm) {
             MPIR_Comm_add_ref(root_comm);
             MPIDI_CH4U_enqueue_unexp(rreq, &MPIDI_CH4U_COMM(root_comm, unexp_list));
-        }
-        else {
+        } else {
             MPIDI_CH4U_enqueue_unexp(rreq, MPIDI_CH4U_context_id_to_uelist(context_id));
         }
         /* MPIDI_CS_EXIT(); */
-    }
-    else {
+    } else {
         /* Matching receive was posted, tell the netmod */
         MPIR_Comm_release(root_comm);   /* -1 for posted_list */
         MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_LONG_RTS;
@@ -615,12 +604,13 @@ static inline int MPIDI_send_long_ack_target_msg_cb(int handler_id, void *am_hdr
     /* Start the main data transfer */
     send_hdr.rreq_ptr = msg_hdr->rreq_ptr;
     mpi_errno =
-        MPIDI_NM_am_isend_reply(MPIDI_CH4U_get_context(MPIDI_CH4U_REQUEST(sreq, req->lreq).match_bits),
-                                MPIDI_CH4U_REQUEST(sreq, rank), MPIDI_CH4U_SEND_LONG_LMT,
-                                &send_hdr, sizeof(send_hdr),
-                                MPIDI_CH4U_REQUEST(sreq, req->lreq).src_buf,
-                                MPIDI_CH4U_REQUEST(sreq, req->lreq).count,
-                                MPIDI_CH4U_REQUEST(sreq, req->lreq).datatype, sreq);
+        MPIDI_NM_am_isend_reply(MPIDI_CH4U_get_context
+                                (MPIDI_CH4U_REQUEST(sreq, req->lreq).match_bits),
+                                MPIDI_CH4U_REQUEST(sreq, rank), MPIDI_CH4U_SEND_LONG_LMT, &send_hdr,
+                                sizeof(send_hdr), MPIDI_CH4U_REQUEST(sreq, req->lreq).src_buf,
+                                MPIDI_CH4U_REQUEST(sreq, req->lreq).count, MPIDI_CH4U_REQUEST(sreq,
+                                                                                              req->lreq).datatype,
+                                sreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

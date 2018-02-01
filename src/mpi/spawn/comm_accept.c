@@ -16,7 +16,7 @@
 #pragma _CRI duplicate MPI_Comm_accept as PMPI_Comm_accept
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Comm_accept(const char *port_name, MPI_Info info, int root, MPI_Comm comm,
-                    MPI_Comm *newcomm) __attribute__((weak,alias("PMPI_Comm_accept")));
+                    MPI_Comm * newcomm) __attribute__ ((weak, alias("PMPI_Comm_accept")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -30,7 +30,7 @@ int MPI_Comm_accept(const char *port_name, MPI_Info info, int root, MPI_Comm com
 #define FUNCNAME MPIR_Comm_accept_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_accept_impl(const char * port_name, MPIR_Info * info_ptr, int root,
+int MPIR_Comm_accept_impl(const char *port_name, MPIR_Info * info_ptr, int root,
                           MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
 {
     return MPID_Comm_accept(port_name, info_ptr, root, comm_ptr, newcomm_ptr);
@@ -47,13 +47,13 @@ int MPIR_Comm_accept_impl(const char * port_name, MPIR_Info * info_ptr, int root
    MPI_Comm_accept - Accept a request to form a new intercommunicator
 
 Input Parameters:
-+ port_name - port name (string, used only on root) 
-. info - implementation-dependent information (handle, used only on root) 
-. root - rank in comm of root node (integer) 
++ port_name - port name (string, used only on root)
+. info - implementation-dependent information (handle, used only on root)
+. root - rank in comm of root node (integer)
 - comm - intracommunicator over which call is collective (handle)
 
 Output Parameters:
-. newcomm - intercommunicator with client as remote group (handle) 
+. newcomm - intercommunicator with client as remote group (handle)
 
 .N ThreadSafe
 
@@ -65,7 +65,7 @@ Output Parameters:
 .N MPI_ERR_COMM
 @*/
 int MPI_Comm_accept(const char *port_name, MPI_Info info, int root, MPI_Comm comm,
-                    MPI_Comm *newcomm)
+                    MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
@@ -74,43 +74,45 @@ int MPI_Comm_accept(const char *port_name, MPI_Info info, int root, MPI_Comm com
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_ACCEPT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_ACCEPT);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_COMM(comm, mpi_errno);
-	    MPIR_ERRTEST_INFO_OR_NULL(info, mpi_errno);
+            MPIR_ERRTEST_COMM(comm, mpi_errno);
+            MPIR_ERRTEST_INFO_OR_NULL(info, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
-    
+#endif
+
     /* Convert MPI object handles to object pointers */
-    MPIR_Comm_get_ptr( comm, comm_ptr );
-    MPIR_Info_get_ptr( info, info_ptr );
-    
+    MPIR_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Info_get_ptr(info, info_ptr);
+
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
-            if (mpi_errno) goto fn_fail;
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, FALSE);
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
     mpi_errno = MPIR_Comm_accept_impl(port_name, info_ptr, root, comm_ptr, &newcomm_ptr);
-    if (mpi_errno) goto fn_fail;
+    if (mpi_errno)
+        goto fn_fail;
 
     MPIR_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
 
@@ -123,14 +125,15 @@ int MPI_Comm_accept(const char *port_name, MPI_Info info, int root, MPI_Comm com
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_comm_accept",
-	    "**mpi_comm_accept %s %I %d %C %p", port_name, info, root, comm, newcomm);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_comm_accept", "**mpi_comm_accept %s %I %d %C %p", port_name,
+                                 info, root, comm, newcomm);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

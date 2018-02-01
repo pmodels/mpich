@@ -177,8 +177,7 @@ int main(int argc, char **argv)
     }
     if (errs) {
         printf(" Found %d errors\n", errs);
-    }
-    else {
+    } else {
         printf(" No Errors\n");
     }
 

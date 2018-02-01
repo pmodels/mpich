@@ -116,8 +116,7 @@ int main(int argc, char *argv[])
         for (i = 0; i < NTHREADS; i++) {
             MPI_Comm_disconnect(&intercomms[i]);
         }
-    }
-    else {
+    } else {
         int num, threadnum;
 
         /* I'm the created process */

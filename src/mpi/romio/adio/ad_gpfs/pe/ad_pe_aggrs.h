@@ -21,10 +21,10 @@
 #include <sys/stat.h>
 
 #if !defined(GPFS_SUPER_MAGIC)
-  #define GPFS_SUPER_MAGIC (0x47504653)
+#define GPFS_SUPER_MAGIC (0x47504653)
 #endif
 
     /* generate a list of I/O aggregators following a methodology specific for PE */
-    int ADIOI_PE_gen_agg_ranklist(ADIO_File fd);
+int ADIOI_PE_gen_agg_ranklist(ADIO_File fd);
 
 #endif /* AD_PE_AGGRS_H_INCLUDED */

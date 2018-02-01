@@ -37,8 +37,7 @@ static inline int MPIDI_OFI_do_control_send(MPIDI_OFI_send_control_t * control,
 
     mpi_errno = MPIDI_OFI_do_inject(rank, comm_ptr,
                                     MPIDI_OFI_INTERNAL_HANDLER_CONTROL,
-                                    (void *) control,
-                                    sizeof(*control), FALSE, TRUE, need_lock);
+                                    (void *) control, sizeof(*control), FALSE, TRUE, need_lock);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_CONTROL_SEND);
     return mpi_errno;

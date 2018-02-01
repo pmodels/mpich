@@ -80,13 +80,13 @@ typedef uint16_t MPIR_Context_id_t;
 #define MPIR_CONTEXT_PREFIX_WIDTH (MPIR_CONTEXT_ID_BITS - (MPIR_CONTEXT_PREFIX_SHIFT + MPIR_CONTEXT_DYNAMIC_PROC_WIDTH))
 #define MPIR_CONTEXT_PREFIX_MASK (((1 << MPIR_CONTEXT_PREFIX_WIDTH) - 1) << MPIR_CONTEXT_PREFIX_SHIFT)
 
-#define MPIR_CONTEXT_DYNAMIC_PROC_WIDTH (1) /* the upper half is reserved for dynamic procs */
-#define MPIR_CONTEXT_DYNAMIC_PROC_SHIFT (MPIR_CONTEXT_ID_BITS - MPIR_CONTEXT_DYNAMIC_PROC_WIDTH) /* the upper half is reserved for dynamic procs */
+#define MPIR_CONTEXT_DYNAMIC_PROC_WIDTH (1)     /* the upper half is reserved for dynamic procs */
+#define MPIR_CONTEXT_DYNAMIC_PROC_SHIFT (MPIR_CONTEXT_ID_BITS - MPIR_CONTEXT_DYNAMIC_PROC_WIDTH)        /* the upper half is reserved for dynamic procs */
 #define MPIR_CONTEXT_DYNAMIC_PROC_MASK (((1 << MPIR_CONTEXT_DYNAMIC_PROC_WIDTH) - 1) << MPIR_CONTEXT_DYNAMIC_PROC_SHIFT)
 
 /* should probably be (sizeof(int)*CHAR_BITS) once we make the code CHAR_BITS-clean */
 #define MPIR_CONTEXT_INT_BITS (32)
-#define MPIR_CONTEXT_ID_BITS (sizeof(MPIR_Context_id_t)*8) /* 8 --> CHAR_BITS eventually */
+#define MPIR_CONTEXT_ID_BITS (sizeof(MPIR_Context_id_t)*8)      /* 8 --> CHAR_BITS eventually */
 #define MPIR_MAX_CONTEXT_MASK \
     ((1 << (MPIR_CONTEXT_ID_BITS - (MPIR_CONTEXT_PREFIX_SHIFT + MPIR_CONTEXT_DYNAMIC_PROC_WIDTH))) / MPIR_CONTEXT_INT_BITS)
 
@@ -94,12 +94,14 @@ typedef uint16_t MPIR_Context_id_t;
    with the other comm routines (src/mpi/comm, in mpicomm.h).  However,
    to create a new communicator after a spawn or connect-accept operation,
    the device may need to create a new contextid */
-int MPIR_Get_contextid_sparse(MPIR_Comm *comm_ptr, MPIR_Context_id_t *context_id, int ignore_id);
-int MPIR_Get_contextid_sparse_group(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr, int tag, MPIR_Context_id_t *context_id, int ignore_id);
+int MPIR_Get_contextid_sparse(MPIR_Comm * comm_ptr, MPIR_Context_id_t * context_id, int ignore_id);
+int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
+                                    MPIR_Context_id_t * context_id, int ignore_id);
 
-int MPIR_Get_contextid_nonblock(MPIR_Comm *comm_ptr, MPIR_Comm *newcommp, MPIR_Request **req);
-int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm *comm_ptr, MPIR_Comm *newcommp, MPIR_Request **req);
+int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR_Request ** req);
+int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp,
+                                          MPIR_Request ** req);
 
-void MPIR_Free_contextid( MPIR_Context_id_t );
+void MPIR_Free_contextid(MPIR_Context_id_t);
 
 #endif /* MPIR_CONTEXTID_H_INCLUDED */

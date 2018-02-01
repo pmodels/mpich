@@ -131,14 +131,13 @@ int main(int argc, char *argv[])
             fprintf(stderr, "unsigned char PROD(>) test failed\n");
         }
     }
-
 #ifndef USE_STRICT_MPI
     /* For some reason, complex is not allowed for sum and prod */
     if (MPI_DOUBLE_COMPLEX != MPI_DATATYPE_NULL) {
         int dc;
 #ifdef HAVE_LONG_DOUBLE
         ld_complex ldinbuf[3], ldoutbuf[3];
-        MTEST_VG_MEM_INIT(ldinbuf, 3* sizeof(ldinbuf[0]));
+        MTEST_VG_MEM_INIT(ldinbuf, 3 * sizeof(ldinbuf[0]));
 #endif
         /* Must determine which C type matches this Fortran type */
         MPI_Type_size(MPI_DOUBLE_COMPLEX, &dc);
@@ -168,22 +167,22 @@ int main(int argc, char *argv[])
                 imag = 1.0;
                 real = 0.0;     /* Make compiler happy */
                 switch (size % 4) {
-                case 1:
-                    imag = 1.0;
-                    real = 0.0;
-                    break;
-                case 2:
-                    imag = 0.0;
-                    real = -1.0;
-                    break;
-                case 3:
-                    imag = -1.0;
-                    real = 0.0;
-                    break;
-                case 0:
-                    imag = 0.0;
-                    real = 1.0;
-                    break;
+                    case 1:
+                        imag = 1.0;
+                        real = 0.0;
+                        break;
+                    case 2:
+                        imag = 0.0;
+                        real = -1.0;
+                        break;
+                    case 3:
+                        imag = -1.0;
+                        real = 0.0;
+                        break;
+                    case 0:
+                        imag = 0.0;
+                        real = 1.0;
+                        break;
                 }
                 if (doutbuf[1].r != real || doutbuf[1].i != imag) {
                     errs++;
@@ -223,22 +222,22 @@ int main(int argc, char *argv[])
                 imag = 1.0;
                 real = 0.0;     /* Make compiler happy */
                 switch (size % 4) {
-                case 1:
-                    imag = 1.0;
-                    real = 0.0;
-                    break;
-                case 2:
-                    imag = 0.0;
-                    real = -1.0;
-                    break;
-                case 3:
-                    imag = -1.0;
-                    real = 0.0;
-                    break;
-                case 0:
-                    imag = 0.0;
-                    real = 1.0;
-                    break;
+                    case 1:
+                        imag = 1.0;
+                        real = 0.0;
+                        break;
+                    case 2:
+                        imag = 0.0;
+                        real = -1.0;
+                        break;
+                    case 3:
+                        imag = -1.0;
+                        real = 0.0;
+                        break;
+                    case 0:
+                        imag = 0.0;
+                        real = 1.0;
+                        break;
                 }
                 if (ldoutbuf[1].r != real || ldoutbuf[1].i != imag) {
                     errs++;

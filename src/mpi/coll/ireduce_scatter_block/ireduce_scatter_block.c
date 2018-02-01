@@ -64,8 +64,8 @@ cvars:
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
                               MPI_Datatype datatype, MPI_Op op, MPI_Comm comm,
-                              MPI_Request *request)
-                              __attribute__((weak,alias("PMPI_Ireduce_scatter_block")));
+                              MPI_Request * request)
+    __attribute__ ((weak, alias("PMPI_Ireduce_scatter_block")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -79,7 +79,9 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
 #define FUNCNAME MPIR_Ireduce_scatter_block_sched_intra_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_sched_intra_auto(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_sched_intra_auto(const void *sendbuf, void *recvbuf, int recvcount,
+                                                MPI_Datatype datatype, MPI_Op op,
+                                                MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative;
@@ -98,29 +100,40 @@ int MPIR_Ireduce_scatter_block_sched_intra_auto(const void *sendbuf, void *recvb
 
     /* select an appropriate algorithm based on commutivity and message size */
     if (is_commutative && (nbytes < MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
-        mpi_errno = MPIR_Ireduce_scatter_block_sched_intra_recursive_halving(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else if (is_commutative && (nbytes >= MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
-        mpi_errno = MPIR_Ireduce_scatter_block_sched_intra_pairwise(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else /* (!is_commutative) */ {
+        mpi_errno =
+            MPIR_Ireduce_scatter_block_sched_intra_recursive_halving(sendbuf, recvbuf, recvcount,
+                                                                     datatype, op, comm_ptr, s);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    } else if (is_commutative && (nbytes >= MPIR_CVAR_REDUCE_SCATTER_COMMUTATIVE_LONG_MSG_SIZE)) {
+        mpi_errno =
+            MPIR_Ireduce_scatter_block_sched_intra_pairwise(sendbuf, recvbuf, recvcount, datatype,
+                                                            op, comm_ptr, s);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    } else {    /* (!is_commutative) */
+
         if (MPL_is_pof2(comm_size, NULL)) {
             /* noncommutative, pof2 size */
-            mpi_errno = MPIR_Ireduce_scatter_block_sched_intra_noncommutative(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        }
-        else {
+            mpi_errno =
+                MPIR_Ireduce_scatter_block_sched_intra_noncommutative(sendbuf, recvbuf, recvcount,
+                                                                      datatype, op, comm_ptr, s);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+        } else {
             /* noncommutative and non-pof2, use recursive doubling. */
-            mpi_errno = MPIR_Ireduce_scatter_block_sched_intra_recursive_doubling(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            mpi_errno =
+                MPIR_Ireduce_scatter_block_sched_intra_recursive_doubling(sendbuf, recvbuf,
+                                                                          recvcount, datatype, op,
+                                                                          comm_ptr, s);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
         }
     }
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -129,11 +142,16 @@ fn_fail:
 #define FUNCNAME MPIR_Ireduce_scatter_block_sched_inter_auto
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ireduce_scatter_block_sched_inter_auto(const void *sendbuf, void *recvbuf, int recvcount, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ireduce_scatter_block_sched_inter_auto(const void *sendbuf, void *recvbuf, int recvcount,
+                                                MPI_Datatype datatype, MPI_Op op,
+                                                MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ireduce_scatter_block_sched_inter_remote_reduce_local_scatterv(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
+    mpi_errno =
+        MPIR_Ireduce_scatter_block_sched_inter_remote_reduce_local_scatterv(sendbuf, recvbuf,
+                                                                            recvcount, datatype, op,
+                                                                            comm_ptr, s);
 
     return mpi_errno;
 }
@@ -143,7 +161,7 @@ int MPIR_Ireduce_scatter_block_sched_inter_auto(const void *sendbuf, void *recvb
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched_impl(const void *sendbuf, void *recvbuf, int recvcount,
-                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                           MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -153,40 +171,55 @@ int MPIR_Ireduce_scatter_block_sched_impl(const void *sendbuf, void *recvbuf, in
         switch (MPIR_Ireduce_scatter_block_intra_algo_choice) {
             case MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_NONCOMMUTATIVE:
                 mpi_errno = MPIR_Ireduce_scatter_block_sched_intra_noncommutative(sendbuf, recvbuf,
-                            recvcount, datatype, op, comm_ptr, s);
+                                                                                  recvcount,
+                                                                                  datatype, op,
+                                                                                  comm_ptr, s);
                 break;
             case MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_PAIRWISE:
                 mpi_errno = MPIR_Ireduce_scatter_block_sched_intra_pairwise(sendbuf, recvbuf,
-                            recvcount, datatype, op, comm_ptr, s);
+                                                                            recvcount, datatype, op,
+                                                                            comm_ptr, s);
                 break;
             case MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_HALVING:
-                mpi_errno = MPIR_Ireduce_scatter_block_sched_intra_recursive_halving(sendbuf, recvbuf,
-                            recvcount, datatype, op, comm_ptr, s);
+                mpi_errno =
+                    MPIR_Ireduce_scatter_block_sched_intra_recursive_halving(sendbuf, recvbuf,
+                                                                             recvcount, datatype,
+                                                                             op, comm_ptr, s);
                 break;
             case MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_DOUBLING:
-                mpi_errno = MPIR_Ireduce_scatter_block_sched_intra_recursive_doubling(sendbuf, recvbuf,
-                            recvcount, datatype, op, comm_ptr, s);
+                mpi_errno =
+                    MPIR_Ireduce_scatter_block_sched_intra_recursive_doubling(sendbuf, recvbuf,
+                                                                              recvcount, datatype,
+                                                                              op, comm_ptr, s);
                 break;
             case MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ireduce_scatter_block_sched_intra_auto(sendbuf, recvbuf,
-                            recvcount, datatype, op, comm_ptr, s);
+                                                                        recvcount, datatype, op,
+                                                                        comm_ptr, s);
                 break;
-       }
-   } else {
-       /* intercommunicator */
-       switch (MPIR_Ireduce_scatter_block_inter_algo_choice) {
-           case MPIR_IREDUCE_SCATTER_BLOCK_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTERV:
-               mpi_errno = MPIR_Ireduce_scatter_block_sched_inter_remote_reduce_local_scatterv(sendbuf, recvbuf,
-                            recvcount, datatype, op, comm_ptr, s);
-               break;
-           case MPIR_IREDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO:
-               MPL_FALLTHROUGH;
-           default:
-               mpi_errno = MPIR_Ireduce_scatter_block_sched_inter_auto(sendbuf, recvbuf,
-                           recvcount, datatype, op, comm_ptr, s);
-       }
+        }
+    } else {
+        /* intercommunicator */
+        switch (MPIR_Ireduce_scatter_block_inter_algo_choice) {
+            case MPIR_IREDUCE_SCATTER_BLOCK_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTERV:
+                mpi_errno =
+                    MPIR_Ireduce_scatter_block_sched_inter_remote_reduce_local_scatterv(sendbuf,
+                                                                                        recvbuf,
+                                                                                        recvcount,
+                                                                                        datatype,
+                                                                                        op,
+                                                                                        comm_ptr,
+                                                                                        s);
+                break;
+            case MPIR_IREDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO:
+                MPL_FALLTHROUGH;
+            default:
+                mpi_errno = MPIR_Ireduce_scatter_block_sched_inter_auto(sendbuf, recvbuf,
+                                                                        recvcount, datatype, op,
+                                                                        comm_ptr, s);
+        }
     }
 
     return mpi_errno;
@@ -197,7 +230,7 @@ int MPIR_Ireduce_scatter_block_sched_impl(const void *sendbuf, void *recvbuf, in
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int recvcount,
-                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                      MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -219,8 +252,7 @@ int MPIR_Ireduce_scatter_block_sched(const void *sendbuf, void *recvbuf, int rec
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
                                     int recvcount, MPI_Datatype datatype,
-                                    MPI_Op op, MPIR_Comm *comm_ptr,
-                                    MPIR_Request **request)
+                                    MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
@@ -229,19 +261,24 @@ int MPIR_Ireduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
     *request = NULL;
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Ireduce_scatter_block_sched(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    mpi_errno =
+        MPIR_Ireduce_scatter_block_sched(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, request);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -251,8 +288,7 @@ fn_fail:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
                                int recvcount, MPI_Datatype datatype,
-                               MPI_Op op, MPIR_Comm *comm_ptr,
-                               MPIR_Request **request)
+                               MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -297,7 +333,7 @@ Output Parameters:
 int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
                               int recvcount,
                               MPI_Datatype datatype, MPI_Op op, MPI_Comm comm,
-                              MPI_Request *request)
+                              MPI_Request * request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
@@ -308,7 +344,7 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IREDUCE_SCATTER_BLOCK);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -320,74 +356,81 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, FALSE);
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
                 MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
                 MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
             }
 
             if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
                 MPIR_Op *op_ptr = NULL;
                 MPIR_Op_get_ptr(op, op_ptr);
                 MPIR_Op_valid_ptr(op_ptr, mpi_errno);
+            } else if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+                mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (datatype);
             }
-            else if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
-                mpi_errno = ( * MPIR_OP_HDL_TO_DTYPE_FN(op) )(datatype);
-            }
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
 
-            MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(request, "request", mpi_errno);
 
-            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && sendbuf != MPI_IN_PLACE && recvcount != 0) {
+            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && sendbuf != MPI_IN_PLACE &&
+                recvcount != 0) {
                 MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno)
             }
             /* TODO more checks may be appropriate (counts, in_place, etc) */
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr,
                                            &request_ptr);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* return the handle of the request to the user */
-    if(request_ptr)
+    if (request_ptr)
         *request = request_ptr->handle;
-    else *request = MPI_REQUEST_NULL;
+    else
+        *request = MPI_REQUEST_NULL;
 
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IREDUCE_SCATTER_BLOCK);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_ireduce_scatter_block", "**mpi_ireduce_scatter_block %p %p %d %D %O %C %p", sendbuf, recvbuf, recvcount, datatype, op, comm, request);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_ireduce_scatter_block",
+                                 "**mpi_ireduce_scatter_block %p %p %d %D %O %C %p", sendbuf,
+                                 recvbuf, recvcount, datatype, op, comm, request);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

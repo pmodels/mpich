@@ -17,8 +17,7 @@ void ADIOI_IME_Resize(ADIO_File fd, ADIO_Offset size, int *error_code)
 
     if (!error_code)
         return;
-    if (!fd)
-    {
+    if (!fd) {
         *error_code = MPI_ERR_FILE;
         return;
     }
@@ -29,8 +28,7 @@ void ADIOI_IME_Resize(ADIO_File fd, ADIO_Offset size, int *error_code)
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                            MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__,
-                                           MPI_ERR_FILE,
-                                           "Error in ime_native_ftruncate", 0);
+                                           MPI_ERR_FILE, "Error in ime_native_ftruncate", 0);
     else
         *error_code = MPI_SUCCESS;
 }

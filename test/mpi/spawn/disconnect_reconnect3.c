@@ -122,8 +122,7 @@ int main(int argc, char *argv[])
                            /*MPI_ARGV_NULL */ &argv[1], np,
                            MPI_INFO_NULL, 0, MPI_COMM_WORLD, &intercomm, MPI_ERRCODES_IGNORE);
             MPI_Intercomm_merge(intercomm, 0, &intracomm);
-        }
-        else {
+        } else {
             intercomm = parentcomm;
             MPI_Intercomm_merge(intercomm, 1, &intracomm);
         }
@@ -188,8 +187,7 @@ int main(int argc, char *argv[])
              * errs += err;
              * }
              */
-        }
-        else {
+        } else {
             /* The odd group does the connecting */
             for (i = 0; i < num_loops; i++) {
                 IF_VERBOSE(("connecting to port\n"));
@@ -222,8 +220,7 @@ int main(int argc, char *argv[])
         if (parentcomm == MPI_COMM_NULL) {
             MTest_Finalize(errs);
         }
-    }
-    else {
+    } else {
         MTest_Finalize(errs);
     }
 

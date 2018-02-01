@@ -408,8 +408,7 @@ static HYD_status fn_get(int fd, char *args[])
         status = send_cmd_downstream(fd, cmd);
         HYDU_ERR_POP(status, "error sending PMI response\n");
         MPL_free(cmd);
-    }
-    else {
+    } else {
         HASH_FIND_STR(hash_get, key, found);
         if (found) {
             HYD_STRING_STASH_INIT(stash);
@@ -423,8 +422,7 @@ static HYD_status fn_get(int fd, char *args[])
             status = send_cmd_downstream(fd, cmd);
             HYDU_ERR_POP(status, "error sending PMI response\n");
             MPL_free(cmd);
-        }
-        else {
+        } else {
             /* if we can't find the key locally, ask upstream */
             status = send_cmd_upstream("cmd=get ", fd, token_count, args);
             HYDU_ERR_POP(status, "error sending command upstream\n");

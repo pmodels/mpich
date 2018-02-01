@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Wtick as PMPI_Wtick
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-double MPI_Wtick(void) __attribute__((weak,alias("PMPI_Wtick")));
+double MPI_Wtick(void) __attribute__ ((weak, alias("PMPI_Wtick")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -41,13 +41,13 @@ double MPI_Wtick(void) __attribute__((weak,alias("PMPI_Wtick")));
 
 .see also: MPI_Wtime, MPI_Comm_get_attr, MPI_Attr_get
 @*/
-double MPI_Wtick( void )
+double MPI_Wtick(void)
 {
     double tick;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WTICK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WTICK);
     MPID_Wtick(&tick);
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WTICK);

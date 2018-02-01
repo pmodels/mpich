@@ -7,7 +7,7 @@ int main(int argc, char **argv)
     MPI_Group basegroup;
     MPI_Group g1;
     MPI_Comm comm, newcomm;
-    int errs=0, mpi_errno, errclass, rank, size;
+    int errs = 0, mpi_errno, errclass, rank, size;
     int range[1][3];
     int worldrank;
 
@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 
     /* Checking group_range_excl for NULL variable */
     range[0][0] = 1;
-    range[0][1] = size-1;
+    range[0][1] = size - 1;
     range[0][2] = 1;
     mpi_errno = MPI_Group_range_excl(basegroup, 1, range, NULL);
     MPI_Error_class(mpi_errno, &errclass);
@@ -39,4 +39,3 @@ int main(int argc, char **argv)
     MPI_Finalize();
     return 0;
 }
-

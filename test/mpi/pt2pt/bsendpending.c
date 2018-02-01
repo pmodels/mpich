@@ -84,8 +84,7 @@ int main(int argc, char *argv[])
                 errs++;
             }
             free(buf);
-        }
-        else if (rank == dest) {
+        } else if (rank == dest) {
             double tstart;
 
             /* Clear the message buffers */

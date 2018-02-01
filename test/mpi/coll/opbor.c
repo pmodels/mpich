@@ -59,8 +59,7 @@ int main(int argc, char *argv[])
     if (rc) {
         MTestPrintErrorMsg("MPI_BOR and MPI_CHAR", rc);
         errs++;
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (coutbuf[0] != (char) 0xff) {
                 errs++;
@@ -91,8 +90,7 @@ int main(int argc, char *argv[])
     if (rc) {
         MTestPrintErrorMsg("MPI_BOR and MPI_SIGNED_CHAR", rc);
         errs++;
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (scoutbuf[0] != (signed char) 0xff) {
                 errs++;
@@ -122,8 +120,7 @@ int main(int argc, char *argv[])
     if (rc) {
         MTestPrintErrorMsg("MPI_BOR and MPI_UNSIGNED_CHAR", rc);
         errs++;
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (ucoutbuf[0] != 0xff) {
                 errs++;
@@ -153,8 +150,7 @@ int main(int argc, char *argv[])
     if (rc) {
         MTestPrintErrorMsg("MPI_BOR and MPI_BYTE", rc);
         errs++;
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (coutbuf[0] != (char) 0xff) {
                 errs++;
@@ -184,8 +180,7 @@ int main(int argc, char *argv[])
     if (rc) {
         MTestPrintErrorMsg("MPI_BOR and MPI_SHORT", rc);
         errs++;
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (soutbuf[0] != (short) 0xffff) {
                 errs++;
@@ -215,8 +210,7 @@ int main(int argc, char *argv[])
     if (rc) {
         MTestPrintErrorMsg("MPI_BOR and MPI_UNSIGNED_SHORT", rc);
         errs++;
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (usoutbuf[0] != 0xffff) {
                 errs++;
@@ -246,8 +240,7 @@ int main(int argc, char *argv[])
     if (rc) {
         MTestPrintErrorMsg("MPI_BOR and MPI_UNSIGNED", rc);
         errs++;
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (uoutbuf[0] != 0xffffffff) {
                 errs++;
@@ -277,8 +270,7 @@ int main(int argc, char *argv[])
     if (rc) {
         MTestPrintErrorMsg("MPI_BOR and MPI_INT", rc);
         errs++;
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (ioutbuf[0] != 0xffffffff) {
                 errs++;
@@ -308,8 +300,7 @@ int main(int argc, char *argv[])
     if (rc) {
         MTestPrintErrorMsg("MPI_BOR and MPI_LONG", rc);
         errs++;
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (loutbuf[0] != 0xffffffff) {
                 errs++;
@@ -339,8 +330,7 @@ int main(int argc, char *argv[])
     if (rc) {
         MTestPrintErrorMsg("MPI_BOR and MPI_UNSIGNED_LONG", rc);
         errs++;
-    }
-    else {
+    } else {
         if (rank == 0) {
             if (uloutbuf[0] != 0xffffffff) {
                 errs++;
@@ -374,8 +364,7 @@ int main(int argc, char *argv[])
             if (rc) {
                 MTestPrintErrorMsg("MPI_BOR and MPI_LONG_LONG", rc);
                 errs++;
-            }
-            else {
+            } else {
                 if (rank == 0) {
                     if (lloutbuf[0] != 0xffffffff) {
                         errs++;

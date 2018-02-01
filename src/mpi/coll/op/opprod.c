@@ -18,33 +18,29 @@
 #define FUNCNAME MPIR_PROD
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIR_PROD (
-    void *invec,
-    void *inoutvec,
-    int *Len,
-    MPI_Datatype *type )
+void MPIR_PROD(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 {
     int i, len = *Len;
 
     switch (*type) {
 #undef MPIR_OP_TYPE_MACRO
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, MPIR_LPROD)
-        /* no semicolons by necessity */
-        MPIR_OP_TYPE_GROUP(C_INTEGER)
-        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
-        MPIR_OP_TYPE_GROUP(FLOATING_POINT)
-        /* extra types that are not required to be supported by the MPI Standard */
-        MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
-        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
-        MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA)
+            /* no semicolons by necessity */
+            MPIR_OP_TYPE_GROUP(C_INTEGER)
+                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
+                MPIR_OP_TYPE_GROUP(FLOATING_POINT)
+                /* extra types that are not required to be supported by the MPI Standard */
+                MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
+                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
+                MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA)
 
-        /* complex multiplication is slightly different than scalar multiplication */
+                /* complex multiplication is slightly different than scalar multiplication */
 #undef MPIR_OP_TYPE_MACRO
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) \
         case (mpi_type_): {                             \
             c_type_ * restrict a = (c_type_ *)inoutvec; \
             c_type_ * restrict b = (c_type_ *)invec;    \
-            for ( i=0; i<len; i++ ) {                   \
+            for (i=0; i<len; i++) {                   \
                 c_type_ c;                              \
                 c.re = a[i].re; c.im = a[i].im;         \
                 a[i].re = c.re*b[i].re - c.im*b[i].im;  \
@@ -54,26 +50,29 @@ void MPIR_PROD (
         }
 #undef MPIR_OP_C_COMPLEX_TYPE_MACRO
 #define MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_,c_type_,MPIR_LPROD)
-        MPIR_OP_TYPE_GROUP(COMPLEX)
-        MPIR_OP_TYPE_GROUP(COMPLEX_EXTRA)
-        /* put things back where we found them */
+                MPIR_OP_TYPE_GROUP(COMPLEX)
+                MPIR_OP_TYPE_GROUP(COMPLEX_EXTRA)
+                /* put things back where we found them */
 #undef MPIR_OP_TYPE_MACRO
 #undef MPIR_OP_C_COMPLEX_TYPE_MACRO
 #define MPIR_OP_C_COMPLEX_TYPE_MACRO(mpi_type_,c_type_,type_name_) MPIR_OP_TYPE_MACRO(mpi_type_,c_type_,type_name_)
-        /* --BEGIN ERROR HANDLING-- */
-        default: {
-            {
-                MPIR_Per_thread_t *per_thread = NULL;
-                int err = 0;
+                /* --BEGIN ERROR HANDLING-- */
+        default:{
+                {
+                    MPIR_Per_thread_t *per_thread = NULL;
+                    int err = 0;
 
-                MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                             MPIR_Per_thread, per_thread, &err);
-                MPIR_Assert(err == 0);
-                per_thread->op_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_PROD" );
+                    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                                 MPIR_Per_thread, per_thread, &err);
+                    MPIR_Assert(err == 0);
+                    per_thread->op_errno =
+                        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                             MPI_ERR_OP, "**opundefined", "**opundefined %s",
+                                             "MPI_PROD");
+                }
+                break;
             }
-            break;
-        }
-        /* --END ERROR HANDLING-- */
+            /* --END ERROR HANDLING-- */
     }
 
     /* NOTE: the coll/allred test may report uninitialized bytes originating
@@ -87,7 +86,7 @@ void MPIR_PROD (
      * errors from uninitialized input data. [goodell@ 2010-09-30] */
 #if defined(MPICH_DEBUG_MEMINIT) && defined(HAVE_LONG_DOUBLE__COMPLEX)
     if (*type == MPI_C_LONG_DOUBLE_COMPLEX) {
-        MPL_VG_MAKE_MEM_DEFINED(inoutvec, (len*sizeof(long double _Complex)));
+        MPL_VG_MAKE_MEM_DEFINED(inoutvec, (len * sizeof(long double _Complex)));
     }
 #endif
 }
@@ -97,27 +96,28 @@ void MPIR_PROD (
 #define FUNCNAME MPIR_PROD_check_dtype
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_PROD_check_dtype( MPI_Datatype type )
+int MPIR_PROD_check_dtype(MPI_Datatype type)
 {
     switch (type) {
 #undef MPIR_OP_TYPE_MACRO
 #define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) case (mpi_type_):
-        MPIR_OP_TYPE_GROUP(C_INTEGER)
-        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
-        MPIR_OP_TYPE_GROUP(FLOATING_POINT)
-        /* extra types that are not required to be supported by the MPI Standard */
-        MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
-        MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
-        MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA)
+            MPIR_OP_TYPE_GROUP(C_INTEGER)
+                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
+                MPIR_OP_TYPE_GROUP(FLOATING_POINT)
+                /* extra types that are not required to be supported by the MPI Standard */
+                MPIR_OP_TYPE_GROUP(C_INTEGER_EXTRA)
+                MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
+                MPIR_OP_TYPE_GROUP(FLOATING_POINT_EXTRA)
 
-        MPIR_OP_TYPE_GROUP(COMPLEX)
-        MPIR_OP_TYPE_GROUP(COMPLEX_EXTRA)
+                MPIR_OP_TYPE_GROUP(COMPLEX)
+                MPIR_OP_TYPE_GROUP(COMPLEX_EXTRA)
 #undef MPIR_OP_TYPE_MACRO
-            return MPI_SUCCESS;
-        /* --BEGIN ERROR HANDLING-- */
+                return MPI_SUCCESS;
+            /* --BEGIN ERROR HANDLING-- */
         default:
-            return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_PROD" );
-        /* --END ERROR HANDLING-- */
+            return MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                        MPI_ERR_OP, "**opundefined", "**opundefined %s",
+                                        "MPI_PROD");
+            /* --END ERROR HANDLING-- */
     }
 }
-

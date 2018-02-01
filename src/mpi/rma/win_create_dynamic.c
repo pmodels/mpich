@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_create_dynamic as PMPI_Win_create_dynamic
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win) __attribute__((weak,alias("PMPI_Win_create_dynamic")));
+int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win * win)
+    __attribute__ ((weak, alias("PMPI_Win_create_dynamic")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -85,7 +86,7 @@ operation. Only memory that is currently accessible may be attached.
 
 .seealso: MPI_Win_attach MPI_Win_detach MPI_Win_allocate MPI_Win_allocate_shared MPI_Win_create MPI_Win_free
 @*/
-int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
+int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win * win)
 {
     static const char FCNAME[] = "MPI_Win_create_dynamic";
     int mpi_errno = MPI_SUCCESS;
@@ -95,12 +96,12 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_CREATE_DYNAMIC);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_WIN_CREATE_DYNAMIC);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -110,32 +111,34 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPIR_Comm_get_ptr( comm, comm_ptr );
-    MPIR_Info_get_ptr( info, info_ptr );
+    MPIR_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Info_get_ptr(info, info_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate pointers */
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, FALSE);
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
     mpi_errno = MPID_Win_create_dynamic(info_ptr, comm_ptr, &win_ptr);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     /* Initialize a few fields that have specific defaults */
-    win_ptr->name[0]    = 0;
+    win_ptr->name[0] = 0;
     win_ptr->errhandler = 0;
 
     /* return the handle of the window object to the user */
@@ -150,14 +153,15 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_win_create_dynamic",
-            "**mpi_win_create_dynamic %I %C %p", info, comm, win);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_win_create_dynamic", "**mpi_win_create_dynamic %I %C %p",
+                                 info, comm, win);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

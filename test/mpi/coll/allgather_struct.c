@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     MPI_Aint displacements[2];
     MPI_Datatype types[] = { MPI_INT, MPI_LONG };
     int blocklength[2] = { 1, 1 };
-    int_long_t* gathered_objects;
+    int_long_t *gathered_objects;
 
     MTest_Init(&argc, &argv);
 
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
         MPI_Comm_rank(comm, &rank);
         MPI_Comm_size(comm, &size);
 
-        gathered_objects = (int_long_t*) malloc (size*sizeof(int_long_t));
+        gathered_objects = (int_long_t *) malloc(size * sizeof(int_long_t));
 
         /* Local object */
         object.first = rank;

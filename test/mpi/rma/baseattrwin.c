@@ -32,8 +32,7 @@ int main(int argc, char **argv)
     if (!flag) {
         errs++;
         fprintf(stderr, "Could not get WIN_BASE\n");
-    }
-    else {
+    } else {
         /* MPI 2.1, section 11.2.2.  v must be a pointer to the start of the
          * window.  It is not a pointer to a pointer to the start of the window.
          */
@@ -47,8 +46,7 @@ int main(int argc, char **argv)
     if (!flag) {
         errs++;
         fprintf(stderr, "Could not get WIN_SIZE\n");
-    }
-    else {
+    } else {
         MPI_Aint vval = *(MPI_Aint *) v;
         if (vval != n) {
             errs++;
@@ -61,8 +59,7 @@ int main(int argc, char **argv)
     if (!flag) {
         errs++;
         fprintf(stderr, "Could not get WIN_DISP_UNIT\n");
-    }
-    else {
+    } else {
         int vval = *(int *) v;
         if (vval != disp) {
             errs++;

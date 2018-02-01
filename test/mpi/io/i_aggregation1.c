@@ -267,24 +267,23 @@ int main(int argc, char *argv[])
     if (argc > 1) {
         while ((c = getopt(argc, argv, "df:h")) != EOF) {
             switch (c) {
-            case 'd':
-                debug = 1;
-                break;
-            case 'f':
-                target = strdup(optarg);
-                break;
-            case 'h':
-                set_hints(&info);
-                break;
-            default:
-                Usage(__LINE__);
+                case 'd':
+                    debug = 1;
+                    break;
+                case 'f':
+                    target = strdup(optarg);
+                    break;
+                case 'h':
+                    set_hints(&info);
+                    break;
+                default:
+                    Usage(__LINE__);
             }
         }
         if (!target) {
             Usage(__LINE__);
         }
-    }
-    else {
+    } else {
         target = "testfile";
         set_hints(&info);
     }
@@ -296,8 +295,7 @@ int main(int argc, char *argv[])
     if (rank == 0) {
         if (corrupt_blocks == 0) {
             fprintf(stdout, " No Errors\n");
-        }
-        else {
+        } else {
             fprintf(stdout, "%d/%d blocks corrupt\n", corrupt_blocks, nproc * NUM_OBJS);
         }
     }

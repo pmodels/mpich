@@ -90,8 +90,7 @@ int main(int argc, char *argv[])
 
     if (errs) {
         fprintf(stderr, "Found %d errors\n", errs);
-    }
-    else {
+    } else {
         printf(" No Errors\n");
     }
 
@@ -111,9 +110,9 @@ static int parse_args(int argc, char **argv)
 
     while ((ret = getopt(argc, argv, "v")) >= 0) {
         switch (ret) {
-        case 'v':
-            verbose = 1;
-            break;
+            case 'v':
+                verbose = 1;
+                break;
         }
     }
     return 0;

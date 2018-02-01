@@ -44,24 +44,21 @@ int main(int argc, char *argv[])
         if (strcmp(cname, "MPIR_CVAR_GATHER_VSMALL_MSG_SIZE") == 0) {
             gatherCvar = i;
             gatherScope = scope;
-        }
-        else if (strcmp(cname, "MPIR_CVAR_BCAST_SHORT_MSG_SIZE") == 0) {
+        } else if (strcmp(cname, "MPIR_CVAR_BCAST_SHORT_MSG_SIZE") == 0) {
             bcastCvar = i;
             bcastScope = scope;
             if (binding != MPI_T_BIND_NO_OBJECT && binding != MPI_T_BIND_MPI_COMM) {
                 fprintf(stderr, "Unexpected binding for MPIR_CVAR_BCAST_SHORT_MSG\n");
                 errs++;
             }
-        }
-        else if (strcmp(cname, "MPIR_CVAR_BCAST_LONG_MSG_SIZE") == 0) {
+        } else if (strcmp(cname, "MPIR_CVAR_BCAST_LONG_MSG_SIZE") == 0) {
             bcastLongCvar = i;
             bcastLongScope = scope;
             if (binding != MPI_T_BIND_NO_OBJECT && binding != MPI_T_BIND_MPI_COMM) {
                 fprintf(stderr, "Unexpected binding for MPIR_CVAR_BCAST_LONG_MSG\n");
                 errs++;
             }
-        }
-        else if (strcmp(cname, "MPIR_CVAR_BCAST_MIN_PROCS") == 0) {
+        } else if (strcmp(cname, "MPIR_CVAR_BCAST_MIN_PROCS") == 0) {
         }
     }
 
@@ -69,8 +66,7 @@ int main(int argc, char *argv[])
      * change it only on some processes */
     if (bcastCvar < 0 || bcastLongCvar < 0) {
         /* Skip because we did not find a corresponding control variable */
-    }
-    else {
+    } else {
         MPI_T_cvar_handle_alloc(bcastCvar, NULL, &bcastHandle, &bcastCount);
         if (bcastScope == MPI_T_SCOPE_LOCAL) {
             if ((wrank & 0x1)) {
@@ -82,8 +78,7 @@ int main(int argc, char *argv[])
                     fprintf(stderr, "cvar write failed for bcast\n");
                 }
             }
-        }
-        else {
+        } else {
             newval = 100;
             MPI_T_cvar_write(bcastHandle, &newval);
             MPI_T_cvar_read(bcastHandle, &newval);
@@ -104,8 +99,7 @@ int main(int argc, char *argv[])
                     fprintf(stderr, "cvar write failed for bcast long\n");
                 }
             }
-        }
-        else {
+        } else {
             newval = 100;
             MPI_T_cvar_write(bcastLongHandle, &newval);
             MPI_T_cvar_read(bcastLongHandle, &newval);
@@ -143,8 +137,7 @@ int main(int argc, char *argv[])
     if (wrank == 0) {
         if (errs) {
             printf("found %d errors\n", errs);
-        }
-        else {
+        } else {
             printf(" No errors\n");
         }
     }

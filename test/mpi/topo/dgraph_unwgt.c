@@ -27,11 +27,11 @@ static int validate_dgraph(MPI_Comm dgraph_comm)
     comm_topo = MPI_UNDEFINED;
     MPI_Topo_test(dgraph_comm, &comm_topo);
     switch (comm_topo) {
-    case MPI_DIST_GRAPH:
-        break;
-    default:
-        fprintf(stderr, "dgraph_comm is NOT of type MPI_DIST_GRAPH\n");
-        return 0;
+        case MPI_DIST_GRAPH:
+            break;
+        default:
+            fprintf(stderr, "dgraph_comm is NOT of type MPI_DIST_GRAPH\n");
+            return 0;
     }
 
     ierr = MPI_Dist_graph_neighbors_count(dgraph_comm, &src_sz, &dest_sz, &wgt_flag);

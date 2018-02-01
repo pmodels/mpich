@@ -25,10 +25,11 @@
 #define FUNCNAME MPIR_Alltoallw_inter_pairwise_exchange
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoallw_inter_pairwise_exchange(const void *sendbuf, const int sendcounts[], const int sdispls[],
-                                 const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                                 const int rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm *comm_ptr,
-                                 MPIR_Errflag_t *errflag)
+int MPIR_Alltoallw_inter_pairwise_exchange(const void *sendbuf, const int sendcounts[],
+                                           const int sdispls[], const MPI_Datatype sendtypes[],
+                                           void *recvbuf, const int recvcounts[],
+                                           const int rdispls[], const MPI_Datatype recvtypes[],
+                                           MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int local_size, remote_size, max_size, i;
     int mpi_errno = MPI_SUCCESS;
@@ -44,7 +45,7 @@ int MPIR_Alltoallw_inter_pairwise_exchange(const void *sendbuf, const int sendco
 
     /* Use pairwise exchange algorithm. */
     max_size = MPL_MAX(local_size, remote_size);
-    for (i=0; i<max_size; i++) {
+    for (i = 0; i < max_size; i++) {
         src = (rank - i + max_size) % max_size;
         dst = (rank + i) % max_size;
         if (src >= remote_size) {
@@ -52,9 +53,8 @@ int MPIR_Alltoallw_inter_pairwise_exchange(const void *sendbuf, const int sendco
             recvaddr = NULL;
             recvcount = 0;
             recvtype = MPI_DATATYPE_NULL;
-        }
-        else {
-            recvaddr = (char *)recvbuf + rdispls[src];
+        } else {
+            recvaddr = (char *) recvbuf + rdispls[src];
             recvcount = recvcounts[src];
             recvtype = recvtypes[src];
         }
@@ -63,17 +63,16 @@ int MPIR_Alltoallw_inter_pairwise_exchange(const void *sendbuf, const int sendco
             sendaddr = NULL;
             sendcount = 0;
             sendtype = MPI_DATATYPE_NULL;
-        }
-        else {
-            sendaddr = (char *)sendbuf+sdispls[dst];
+        } else {
+            sendaddr = (char *) sendbuf + sdispls[dst];
             sendcount = sendcounts[dst];
             sendtype = sendtypes[dst];
         }
 
         mpi_errno = MPIC_Sendrecv(sendaddr, sendcount, sendtype,
-                                     dst, MPIR_ALLTOALLW_TAG, recvaddr,
-                                     recvcount, recvtype, src,
-                                     MPIR_ALLTOALLW_TAG, comm_ptr, &status, errflag);
+                                  dst, MPIR_ALLTOALLW_TAG, recvaddr,
+                                  recvcount, recvtype, src,
+                                  MPIR_ALLTOALLW_TAG, comm_ptr, &status, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

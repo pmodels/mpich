@@ -20,8 +20,7 @@ int main(int argc, char *argv[])
     if (!err) {
         errs++;
         printf("Did not detect an erroneous rank in MPI_Probe\n");
-    }
-    else {
+    } else {
         /* Check that we can get a message for this error */
         /* (This works if it does not SEGV or hang) */
         MPI_Error_string(err, msg, &len);

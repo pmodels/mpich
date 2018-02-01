@@ -14,7 +14,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_init_thread as PMPI_T_init_thread
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_T_init_thread(int required, int *provided) __attribute__((weak,alias("PMPI_T_init_thread")));
+int MPI_T_init_thread(int required, int *provided)
+    __attribute__ ((weak, alias("PMPI_T_init_thread")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -27,16 +28,14 @@ int MPI_T_init_thread(int required, int *provided) __attribute__((weak,alias("PM
 /* any non-MPI functions go here, especially non-static ones */
 static inline void MPIR_T_enum_env_init(void)
 {
-    static const UT_icd enum_table_entry_icd =
-        {sizeof(MPIR_T_enum_t), NULL, NULL, NULL};
+    static const UT_icd enum_table_entry_icd = { sizeof(MPIR_T_enum_t), NULL, NULL, NULL };
 
     utarray_new(enum_table, &enum_table_entry_icd, MPL_MEM_MPIT);
 }
 
 static inline void MPIR_T_cat_env_init(void)
 {
-    static const UT_icd cat_table_entry_icd =
-                    {sizeof(cat_table_entry_t), NULL, NULL, NULL};
+    static const UT_icd cat_table_entry_icd = { sizeof(cat_table_entry_t), NULL, NULL, NULL };
 
     utarray_new(cat_table, &cat_table_entry_icd, MPL_MEM_MPIT);
     cat_hash = NULL;
@@ -45,8 +44,7 @@ static inline void MPIR_T_cat_env_init(void)
 
 static inline void MPIR_T_cvar_env_init(void)
 {
-    static const UT_icd cvar_table_entry_icd =
-                    {sizeof(cvar_table_entry_t), NULL, NULL, NULL};
+    static const UT_icd cvar_table_entry_icd = { sizeof(cvar_table_entry_t), NULL, NULL, NULL };
 
     utarray_new(cvar_table, &cvar_table_entry_icd, MPL_MEM_MPIT);
     cvar_hash = NULL;
@@ -56,8 +54,7 @@ static inline void MPIR_T_cvar_env_init(void)
 static inline void MPIR_T_pvar_env_init(void)
 {
     int i;
-    static const UT_icd pvar_table_entry_icd =
-                    {sizeof(pvar_table_entry_t), NULL, NULL, NULL};
+    static const UT_icd pvar_table_entry_icd = { sizeof(pvar_table_entry_t), NULL, NULL, NULL };
 
     utarray_new(pvar_table, &pvar_table_entry_icd, MPL_MEM_MPIT);
     for (i = 0; i < MPIR_T_PVAR_CLASS_NUMBER; i++) {
@@ -125,10 +122,9 @@ int MPI_T_init_thread(int required, int *provided)
 #endif /* MPICH_IS_THREADED */
 
     if (provided != NULL) {
-	    /* This must be min(required,MPICH_THREAD_LEVEL) if runtime
-	       control of thread level is available */
-	    *provided = (MPICH_THREAD_LEVEL < required) ?
-	        MPICH_THREAD_LEVEL : required;
+        /* This must be min(required,MPICH_THREAD_LEVEL) if runtime
+         * control of thread level is available */
+        *provided = (MPICH_THREAD_LEVEL < required) ? MPICH_THREAD_LEVEL : required;
     }
 
     ++MPIR_T_init_balance;

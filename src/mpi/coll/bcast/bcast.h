@@ -10,8 +10,8 @@
 
 #include "mpiimpl.h"
 
-int MPII_Scatter_for_bcast( void *buffer, int count, MPI_Datatype datatype,
-        int root, MPIR_Comm *comm_ptr, int nbytes, void *tmp_buf,
-        int is_contig, int is_homogeneous, MPIR_Errflag_t *errflag);
+int MPII_Scatter_for_bcast(void *buffer, int count, MPI_Datatype datatype,
+                           int root, MPIR_Comm * comm_ptr, int nbytes, void *tmp_buf,
+                           int is_contig, int is_homogeneous, MPIR_Errflag_t * errflag);
 
 #endif /* BCAST_H_INCLUDED */

@@ -47,8 +47,7 @@ int MPIR_Iscatter_sched_inter_remote_send_local_scatter(const void *sendbuf, int
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
         goto fn_exit;
-    }
-    else {
+    } else {
         /* remote group. rank 0 receives data from root. need to
          * allocate temporary buffer to store this data. */
         rank = comm_ptr->rank;

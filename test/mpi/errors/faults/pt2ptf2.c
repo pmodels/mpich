@@ -45,8 +45,7 @@ int main(int argc, char *argv[])
     if (color) {
         /* Simulate a fault on some processes */
         exit(1);
-    }
-    else {
+    } else {
         /* To improve the chance that the "faulted" processes will have
          * exited, wait for 1 second */
         MTestSleep(1);
@@ -88,8 +87,7 @@ int main(int argc, char *argv[])
     if (wrank == 0) {
         if (toterrs > 0) {
             printf(" Found %d errors\n", toterrs);
-        }
-        else {
+        } else {
             printf(" No Errors\n");
         }
     }

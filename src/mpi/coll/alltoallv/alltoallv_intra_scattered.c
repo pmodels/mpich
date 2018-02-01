@@ -28,13 +28,13 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const int *sendcounts, const int *sdispls,
-                             MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
-                             const int *rdispls, MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
-                             MPIR_Errflag_t *errflag)
+                                   MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
+                                   const int *rdispls, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                   MPIR_Errflag_t * errflag)
 {
-    int        comm_size, i;
-    MPI_Aint   send_extent, recv_extent;
-    int        mpi_errno = MPI_SUCCESS;
+    int comm_size, i;
+    MPI_Aint send_extent, recv_extent;
+    int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status *starray;
     MPIR_Request **reqarray;
@@ -51,34 +51,36 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const int *sendcounts, c
     MPIR_Datatype_get_extent_macro(recvtype, recv_extent);
 
 #ifdef HAVE_ERROR_CHECKING
-    MPIR_Assert (sendbuf != MPI_IN_PLACE); /* call the pairwise_sendrecv_algo */
+    MPIR_Assert(sendbuf != MPI_IN_PLACE);       /* call the pairwise_sendrecv_algo */
 #endif
 
     bblock = MPIR_CVAR_ALLTOALL_THROTTLE;
-    if (bblock == 0) bblock = comm_size;
+    if (bblock == 0)
+        bblock = comm_size;
 
     MPIR_Datatype_get_extent_macro(sendtype, send_extent);
 
-    MPIR_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*bblock*sizeof(MPI_Status),  mpi_errno, "starray", MPL_MEM_BUFFER);
-    MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request**, 2*bblock*sizeof(MPIR_Request *), mpi_errno, "reqarray", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(starray, MPI_Status *, 2 * bblock * sizeof(MPI_Status), mpi_errno,
+                        "starray", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request **, 2 * bblock * sizeof(MPIR_Request *), mpi_errno,
+                        "reqarray", MPL_MEM_BUFFER);
 
     /* post only bblock isends/irecvs at a time as suggested by Tony Ladd */
-    for (ii=0; ii<comm_size; ii+=bblock) {
+    for (ii = 0; ii < comm_size; ii += bblock) {
         req_cnt = 0;
-        ss = comm_size-ii < bblock ? comm_size-ii : bblock;
+        ss = comm_size - ii < bblock ? comm_size - ii : bblock;
 
         /* do the communication -- post ss sends and receives: */
-        for ( i=0; i<ss; i++ ) { 
-            dst = (rank+i+ii) % comm_size;
+        for (i = 0; i < ss; i++) {
+            dst = (rank + i + ii) % comm_size;
             if (recvcounts[dst]) {
                 MPIR_Datatype_get_size_macro(recvtype, type_size);
                 if (type_size) {
                     MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                                     rdispls[dst]*recv_extent);
-                    mpi_errno = MPIC_Irecv((char *)recvbuf+rdispls[dst]*recv_extent,
-                                              recvcounts[dst], recvtype, dst,
-                                              MPIR_ALLTOALLV_TAG, comm_ptr,
-                                              &reqarray[req_cnt]);
+                                                     rdispls[dst] * recv_extent);
+                    mpi_errno = MPIC_Irecv((char *) recvbuf + rdispls[dst] * recv_extent,
+                                           recvcounts[dst], recvtype, dst,
+                                           MPIR_ALLTOALLV_TAG, comm_ptr, &reqarray[req_cnt]);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
                         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -90,17 +92,17 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const int *sendcounts, c
             }
         }
 
-        for ( i=0; i<ss; i++ ) { 
-            dst = (rank-i-ii+comm_size) % comm_size;
+        for (i = 0; i < ss; i++) {
+            dst = (rank - i - ii + comm_size) % comm_size;
             if (sendcounts[dst]) {
                 MPIR_Datatype_get_size_macro(sendtype, type_size);
                 if (type_size) {
                     MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
-                                                     sdispls[dst]*send_extent);
-                    mpi_errno = MPIC_Isend((char *)sendbuf+sdispls[dst]*send_extent,
-                                              sendcounts[dst], sendtype, dst,
-                                              MPIR_ALLTOALLV_TAG, comm_ptr,
-                                              &reqarray[req_cnt], errflag);
+                                                     sdispls[dst] * send_extent);
+                    mpi_errno = MPIC_Isend((char *) sendbuf + sdispls[dst] * send_extent,
+                                           sendcounts[dst], sendtype, dst,
+                                           MPIR_ALLTOALLV_TAG, comm_ptr,
+                                           &reqarray[req_cnt], errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
                         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -113,11 +115,12 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const int *sendcounts, c
         }
 
         mpi_errno = MPIC_Waitall(req_cnt, reqarray, starray, errflag);
-        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
+            MPIR_ERR_POP(mpi_errno);
 
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno == MPI_ERR_IN_STATUS) {
-            for (i=0; i<req_cnt; i++) {
+            for (i = 0; i < req_cnt; i++) {
                 if (starray[i].MPI_ERROR != MPI_SUCCESS) {
                     mpi_errno = starray[i].MPI_ERROR;
                     if (mpi_errno) {
@@ -132,7 +135,7 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const int *sendcounts, c
         /* --END ERROR HANDLING-- */
     }
 
-fn_exit:
+  fn_exit:
     MPIR_CHKLMEM_FREEALL();
 
     if (mpi_errno_ret)
@@ -142,6 +145,6 @@ fn_exit:
 
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

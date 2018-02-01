@@ -56,8 +56,7 @@ int main(int argc, char *argv[])
     if (rank == 0) {
         if (toterrs) {
             fprintf(stderr, " Found %d errors\n", toterrs);
-        }
-        else {
+        } else {
             printf(" No Errors\n");
         }
     }

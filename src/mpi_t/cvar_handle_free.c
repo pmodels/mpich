@@ -14,7 +14,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_cvar_handle_free as PMPI_T_cvar_handle_free
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_T_cvar_handle_free(MPI_T_cvar_handle *handle) __attribute__((weak,alias("PMPI_T_cvar_handle_free")));
+int MPI_T_cvar_handle_free(MPI_T_cvar_handle * handle)
+    __attribute__ ((weak, alias("PMPI_T_cvar_handle_free")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -42,7 +43,7 @@ Input/Output Parameters:
 .N MPI_T_ERR_NOT_INITIALIZED
 .N MPI_T_ERR_INVALID_HANDLE
 @*/
-int MPI_T_cvar_handle_free(MPI_T_cvar_handle *handle)
+int MPI_T_cvar_handle_free(MPI_T_cvar_handle * handle)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_T_cvar_handle_t *hnd;
@@ -53,7 +54,7 @@ int MPI_T_cvar_handle_free(MPI_T_cvar_handle *handle)
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_CVAR_HANDLE_FREE);
 
     /* Validate parameters */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -61,7 +62,7 @@ int MPI_T_cvar_handle_free(MPI_T_cvar_handle *handle)
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
@@ -71,20 +72,20 @@ int MPI_T_cvar_handle_free(MPI_T_cvar_handle *handle)
 
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_CVAR_HANDLE_FREE);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_cvar_handle_free", "**mpi_t_cvar_handle_free %p", handle);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_t_cvar_handle_free", "**mpi_t_cvar_handle_free %p", handle);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

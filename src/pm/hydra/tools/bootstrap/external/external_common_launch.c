@@ -114,26 +114,20 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
     if (!strcmp(HYDT_bsci_info.launcher, "ssh")) {
         status = ssh_get_path(&path);
         HYDU_ERR_POP(status, "unable to get path to the ssh executable\n");
-    }
-    else if (!strcmp(HYDT_bsci_info.launcher, "rsh")) {
+    } else if (!strcmp(HYDT_bsci_info.launcher, "rsh")) {
         status = rsh_get_path(&path);
         HYDU_ERR_POP(status, "unable to get path to the rsh executable\n");
-    }
-    else if (!strcmp(HYDT_bsci_info.launcher, "fork")) {
+    } else if (!strcmp(HYDT_bsci_info.launcher, "fork")) {
         /* fork has no separate launcher */
-    }
-    else if (!strcmp(HYDT_bsci_info.launcher, "lsf")) {
+    } else if (!strcmp(HYDT_bsci_info.launcher, "lsf")) {
         status = lsf_get_path(&path);
         HYDU_ERR_POP(status, "unable to get path to the blaunch executable\n");
-    }
-    else if (!strcmp(HYDT_bsci_info.launcher, "sge")) {
+    } else if (!strcmp(HYDT_bsci_info.launcher, "sge")) {
         status = sge_get_path(&path);
         HYDU_ERR_POP(status, "unable to get path to the qrsh executable\n");
-    }
-    else if (!strcmp(HYDT_bsci_info.launcher, "manual")) {
+    } else if (!strcmp(HYDT_bsci_info.launcher, "manual")) {
         /* manual has no separate launcher */
-    }
-    else {
+    } else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "bad launcher type %s\n",
                             HYDT_bsci_info.launcher);
     }
@@ -151,11 +145,9 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
             targs[idx++] = MPL_strdup("-x");
         else    /* default mode is disable X */
             targs[idx++] = MPL_strdup("-x");
-    }
-    else if (!strcmp(HYDT_bsci_info.launcher, "lsf")) {
+    } else if (!strcmp(HYDT_bsci_info.launcher, "lsf")) {
         targs[idx++] = MPL_strdup("-n");
-    }
-    else if (!strcmp(HYDT_bsci_info.launcher, "sge")) {
+    } else if (!strcmp(HYDT_bsci_info.launcher, "sge")) {
         targs[idx++] = MPL_strdup("-inherit");
         targs[idx++] = MPL_strdup("-V");
     }
@@ -217,8 +209,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
             MPL_free(targs[host_idx]);
         if (proxy->node->user == NULL) {
             targs[host_idx] = MPL_strdup(proxy->node->hostname);
-        }
-        else {
+        } else {
             len = strlen(proxy->node->user) + strlen("@") + strlen(proxy->node->hostname) + 1;
 
             HYDU_MALLOC_OR_JUMP(targs[host_idx], char *, len, status);
@@ -260,8 +251,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
             }
 
             dummy = NULL;
-        }
-        else {
+        } else {
             offset = 0;
 
             /* We are not launching the executable directly; use the

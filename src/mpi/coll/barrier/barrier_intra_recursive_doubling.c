@@ -22,14 +22,15 @@
 #define FUNCNAME MPIR_Barrier_intra_recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier_intra_recursive_doubling(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Barrier_intra_recursive_doubling(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
-    int size, rank, src, dst, mask, mpi_errno=MPI_SUCCESS;
+    int size, rank, src, dst, mask, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
 
     size = comm_ptr->local_size;
     /* Trivial barriers return immediately */
-    if (size == 1) goto fn_exit;
+    if (size == 1)
+        goto fn_exit;
 
     rank = comm_ptr->rank;
 
@@ -38,9 +39,8 @@ int MPIR_Barrier_intra_recursive_doubling(MPIR_Comm *comm_ptr, MPIR_Errflag_t *e
         dst = (rank + mask) % size;
         src = (rank - mask + size) % size;
         mpi_errno = MPIC_Sendrecv(NULL, 0, MPI_BYTE, dst,
-                                     MPIR_BARRIER_TAG, NULL, 0, MPI_BYTE,
-                                     src, MPIR_BARRIER_TAG, comm_ptr,
-                                     MPI_STATUS_IGNORE, errflag);
+                                  MPIR_BARRIER_TAG, NULL, 0, MPI_BYTE,
+                                  src, MPIR_BARRIER_TAG, comm_ptr, MPI_STATUS_IGNORE, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -50,7 +50,7 @@ int MPIR_Barrier_intra_recursive_doubling(MPIR_Comm *comm_ptr, MPIR_Errflag_t *e
         mask <<= 1;
     }
 
- fn_exit:
+  fn_exit:
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)

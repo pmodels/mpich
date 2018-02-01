@@ -24,14 +24,15 @@
 #define FUNCNAME MPIR_Alltoallv_intra_pairwise_sendrecv_replace
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Alltoallv_intra_pairwise_sendrecv_replace (const void *sendbuf, const int *sendcounts, const int *sdispls,
-                         MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
-                         const int *rdispls, MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
-                         MPIR_Errflag_t *errflag)
+int MPIR_Alltoallv_intra_pairwise_sendrecv_replace(const void *sendbuf, const int *sendcounts,
+                                                   const int *sdispls, MPI_Datatype sendtype,
+                                                   void *recvbuf, const int *recvcounts,
+                                                   const int *rdispls, MPI_Datatype recvtype,
+                                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
-    int        comm_size, i, j;
-    MPI_Aint   recv_extent;
-    int        mpi_errno = MPI_SUCCESS;
+    int comm_size, i, j;
+    MPI_Aint recv_extent;
+    int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     int rank;
@@ -43,7 +44,7 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace (const void *sendbuf, const i
     MPIR_Datatype_get_extent_macro(recvtype, recv_extent);
 
 #ifdef HAVE_ERROR_CHECKING
-    MPIR_Assert (sendbuf == MPI_IN_PLACE);
+    MPIR_Assert(sendbuf == MPI_IN_PLACE);
 #endif
 
     /* We use pair-wise sendrecv_replace in order to conserve memory usage,
@@ -60,11 +61,11 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace (const void *sendbuf, const i
         for (j = i; j < comm_size; ++j) {
             if (rank == i) {
                 /* also covers the (rank == i && rank == j) case */
-                mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[j]*recv_extent),
-                                                     recvcounts[j], recvtype,
-                                                     j, MPIR_ALLTOALLV_TAG,
-                                                     j, MPIR_ALLTOALLV_TAG,
-                                                     comm_ptr, &status, errflag);
+                mpi_errno = MPIC_Sendrecv_replace(((char *) recvbuf + rdispls[j] * recv_extent),
+                                                  recvcounts[j], recvtype,
+                                                  j, MPIR_ALLTOALLV_TAG,
+                                                  j, MPIR_ALLTOALLV_TAG,
+                                                  comm_ptr, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -72,14 +73,13 @@ int MPIR_Alltoallv_intra_pairwise_sendrecv_replace (const void *sendbuf, const i
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
 
-            }
-            else if (rank == j) {
+            } else if (rank == j) {
                 /* same as above with i/j args reversed */
-                mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + rdispls[i]*recv_extent),
-                                                     recvcounts[i], recvtype,
-                                                     i, MPIR_ALLTOALLV_TAG,
-                                                     i, MPIR_ALLTOALLV_TAG,
-                                                     comm_ptr, &status, errflag);
+                mpi_errno = MPIC_Sendrecv_replace(((char *) recvbuf + rdispls[i] * recv_extent),
+                                                  recvcounts[i], recvtype,
+                                                  i, MPIR_ALLTOALLV_TAG,
+                                                  i, MPIR_ALLTOALLV_TAG,
+                                                  comm_ptr, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

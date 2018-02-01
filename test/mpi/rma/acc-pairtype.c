@@ -63,8 +63,7 @@ int main(int argc, char *argv[])
                 if (tar_buf[i].a != 1.0 || tar_buf[i].b != 1) {
                     errors++;
                 }
-            }
-            else {
+            } else {
                 if (tar_buf[i].a != 0.0 || tar_buf[i].b != 0) {
                     errors++;
                 }

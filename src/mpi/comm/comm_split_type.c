@@ -20,7 +20,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_split_type as PMPI_Comm_split_type
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, MPI_Comm *newcomm) __attribute__((weak,alias("PMPI_Comm_split_type")));
+int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, MPI_Comm * newcomm)
+    __attribute__ ((weak, alias("PMPI_Comm_split_type")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -34,7 +35,8 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
 #define FUNCNAME MPIR_Comm_split_type_self
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key, MPIR_Comm ** newcomm_ptr)
+int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key,
+                              MPIR_Comm ** newcomm_ptr)
 {
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Comm *comm_self_ptr;
@@ -70,7 +72,8 @@ int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key
 #define FUNCNAME MPIR_Comm_split_type_node
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_split_type_node(MPIR_Comm * user_comm_ptr, int split_type, int key, MPIR_Comm ** newcomm_ptr)
+int MPIR_Comm_split_type_node(MPIR_Comm * user_comm_ptr, int split_type, int key,
+                              MPIR_Comm ** newcomm_ptr)
 {
     MPIR_Comm *comm_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
@@ -157,8 +160,7 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, hwloc_obj_type_t 
     MPIR_Assert(obj_containing_cpuset != NULL);
     if (obj_containing_cpuset->type == query_obj_type) {
         color = obj_containing_cpuset->logical_index;
-    }
-    else {
+    } else {
         hwloc_obj_t hobj = hwloc_get_ancestor_obj_by_type(MPIR_Process.topology, query_obj_type,
                                                           obj_containing_cpuset);
         if (hobj)
@@ -239,7 +241,7 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
         MPIR_ERR_POP(mpi_errno);
 
     info_args_are_equal = (obj_type == obj_type_global);
-	mpi_errno =
+    mpi_errno =
         MPIR_Allreduce(MPI_IN_PLACE, &info_args_are_equal, 1, MPI_INT, MPI_MIN, comm_ptr, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -301,33 +303,29 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
         mpi_errno = MPIR_Comm_split_type_self(comm_ptr, split_type, key, newcomm_ptr);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-    }
-    else if (split_type == MPIX_COMM_TYPE_NEIGHBORHOOD) {
-	int flag;
-	char hintval[MPI_MAX_INFO_VAL+1];
+    } else if (split_type == MPIX_COMM_TYPE_NEIGHBORHOOD) {
+        int flag;
+        char hintval[MPI_MAX_INFO_VAL + 1];
 
-	/* We plan on dispatching different NEIGHBORHOOD support to
-	 * different parts of MPICH, based on the key provided in the
-	 * info object.  Right now, the one NEIGHBORHOOD we support is
-	 * "nbhd_common_dirname", implementation of which lives in ROMIO */
+        /* We plan on dispatching different NEIGHBORHOOD support to
+         * different parts of MPICH, based on the key provided in the
+         * info object.  Right now, the one NEIGHBORHOOD we support is
+         * "nbhd_common_dirname", implementation of which lives in ROMIO */
 
-	MPIR_Info_get_impl(info_ptr, "nbhd_common_dirname", MPI_MAX_INFO_VAL, hintval,
-                           &flag);
-	if (flag) {
+        MPIR_Info_get_impl(info_ptr, "nbhd_common_dirname", MPI_MAX_INFO_VAL, hintval, &flag);
+        if (flag) {
 #ifdef HAVE_ROMIO
-	    MPI_Comm dummycomm;
-	    MPIR_Comm * dummycomm_ptr;
+            MPI_Comm dummycomm;
+            MPIR_Comm *dummycomm_ptr;
 
-	    mpi_errno = MPIR_Comm_split_filesystem(comm_ptr->handle, key,
-                                                   hintval, &dummycomm);
+            mpi_errno = MPIR_Comm_split_filesystem(comm_ptr->handle, key, hintval, &dummycomm);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
-	    MPIR_Comm_get_ptr(dummycomm, dummycomm_ptr);
-	    *newcomm_ptr = dummycomm_ptr;
+            MPIR_Comm_get_ptr(dummycomm, dummycomm_ptr);
+            *newcomm_ptr = dummycomm_ptr;
 #endif
-	}
-        else {
+        } else {
             /* In the mean time, the user passed in
              * COMM_TYPE_NEIGHBORHOOD but did not give us an info we
              * know how to work with.  Throw up our hands and treat it
@@ -335,8 +333,7 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
              * being returned to the user. */
             *newcomm_ptr = NULL;
         }
-    }
-    else {
+    } else {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_ARG, "**arg");
     }
 
@@ -361,14 +358,11 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
     /* Only MPI_COMM_TYPE_SHARED, MPI_UNDEFINED, and
      * NEIGHBORHOOD are supported */
     MPIR_Assert(split_type == MPI_COMM_TYPE_SHARED ||
-                split_type == MPI_UNDEFINED ||
-                split_type == MPIX_COMM_TYPE_NEIGHBORHOOD);
+                split_type == MPI_UNDEFINED || split_type == MPIX_COMM_TYPE_NEIGHBORHOOD);
 
     if (MPIR_Comm_fns != NULL && MPIR_Comm_fns->split_type != NULL) {
-        mpi_errno =
-            MPIR_Comm_fns->split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
-    }
-    else {
+        mpi_errno = MPIR_Comm_fns->split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
+    } else {
         mpi_errno = MPIR_Comm_split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
     }
     if (mpi_errno)
@@ -413,8 +407,7 @@ Notes:
 
 .seealso: MPI_Comm_free
 @*/
-int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
-                        MPI_Comm * newcomm)
+int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
@@ -448,7 +441,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, FALSE);
             /* If comm_ptr is not valid, it will be reset to null */
             if (mpi_errno)
                 goto fn_fail;
@@ -484,8 +477,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
                                  MPI_ERR_OTHER, "**mpi_comm_split",
-                                 "**mpi_comm_split %C %d %d %p", comm, split_type, key,
-                                 newcomm);
+                                 "**mpi_comm_split %C %d %d %p", comm, split_type, key, newcomm);
     }
 #endif
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);

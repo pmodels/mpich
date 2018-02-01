@@ -42,10 +42,10 @@ typedef enum {
     MPIDI_PTYPE_SSEND
 } MPIDI_ptype;
 
-#define MPIDI_CH4U_REQ_BUSY 		  (0x1)
-#define MPIDI_CH4U_REQ_PEER_SSEND 	  (0x1 << 1)
-#define MPIDI_CH4U_REQ_UNEXPECTED 	  (0x1 << 2)
-#define MPIDI_CH4U_REQ_UNEXP_DQUED 	  (0x1 << 3)
+#define MPIDI_CH4U_REQ_BUSY           (0x1)
+#define MPIDI_CH4U_REQ_PEER_SSEND     (0x1 << 1)
+#define MPIDI_CH4U_REQ_UNEXPECTED     (0x1 << 2)
+#define MPIDI_CH4U_REQ_UNEXP_DQUED    (0x1 << 3)
 #define MPIDI_CH4U_REQ_UNEXP_CLAIMED  (0x1 << 4)
 #define MPIDI_CH4U_REQ_RCV_NON_CONTIG (0x1 << 5)
 #define MPIDI_CH4U_REQ_MATCHED (0x1 << 6)
@@ -152,7 +152,7 @@ typedef struct MPIDI_CH4U_req_t {
     union {
     MPIDI_NM_REQUEST_AM_DECL} netmod_am;
     MPIDI_CH4U_req_ext_t *req;
-    MPIDI_ptype p_type;                 /* persistent request type */
+    MPIDI_ptype p_type;         /* persistent request type */
     void *buffer;
     uint64_t count;
     uint64_t match_bits;

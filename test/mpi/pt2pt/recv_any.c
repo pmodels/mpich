@@ -64,8 +64,7 @@ int main(int argc, char *argv[])
                                     rank, x, i, rbuf[i], i + 1);
                 }
             }
-        }
-        else if (rank == src) {
+        } else if (rank == src) {
             MPI_Send(sbuf, sizeof(int) * BUFSIZE, MPI_CHAR, dst, tag, MPI_COMM_WORLD);
         }
     }

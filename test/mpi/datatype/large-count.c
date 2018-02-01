@@ -238,8 +238,7 @@ int main(int argc, char *argv[])
     if (wrank == 0) {
         if (errs) {
             printf("found %d errors\n", errs);
-        }
-        else {
+        } else {
             printf(" No errors\n");
         }
     }

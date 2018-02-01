@@ -51,7 +51,10 @@
 #define FUNCNAME MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, int count,
+                                                                 MPI_Datatype datatype, int root,
+                                                                 MPIR_Comm * comm_ptr,
+                                                                 MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size, dst;
@@ -81,19 +84,19 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
 
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
         is_contig = 1;
-    }
-    else {
+    } else {
         MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
-    MPIR_SCHED_CHKPMEM_MALLOC(ibcast_state, struct MPII_Ibcast_state*,
-                              sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Status", MPL_MEM_BUFFER);
+    MPIR_SCHED_CHKPMEM_MALLOC(ibcast_state, struct MPII_Ibcast_state *,
+                              sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Status",
+                              MPL_MEM_BUFFER);
     is_homogeneous = 1;
 #ifdef MPID_HAS_HETERO
     if (comm_ptr->is_hetero)
         is_homogeneous = 0;
 #endif
-    MPIR_Assert(is_homogeneous); /* we don't handle the hetero case right now */
+    MPIR_Assert(is_homogeneous);        /* we don't handle the hetero case right now */
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
@@ -104,26 +107,26 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
         /* contiguous and homogeneous. no need to pack. */
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
-        tmp_buf = (char *)buffer + true_lb;
-    }
-    else {
+        tmp_buf = (char *) buffer + true_lb;
+    } else {
         MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* TODO: Pipeline the packing and communication */
         if (rank == root) {
-            mpi_errno = MPIR_Sched_copy(buffer, count, datatype,
-                                        tmp_buf, nbytes, MPI_BYTE, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            mpi_errno = MPIR_Sched_copy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE, s);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
         }
     }
 
 
     mpi_errno = MPII_Iscatter_for_bcast_sched(tmp_buf, root, comm_ptr, nbytes, s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* this is the block size used for the scatter operation */
-    scatter_size = (nbytes + comm_size - 1) / comm_size; /* ceiling division */
+    scatter_size = (nbytes + comm_size - 1) / comm_size;        /* ceiling division */
 
     /* curr_size is the amount of data that this process now has stored in
      * buffer at byte offset (relative_rank*scatter_size) */
@@ -144,10 +147,10 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
         dst = (relative_dst + root) % comm_size;
 
         /* find offset into send and recv buffers.
-           zero out the least significant "i" bits of relative_rank and
-           relative_dst to find root of src and dst
-           subtrees. Use ranks of roots as index to send from
-           and recv into  buffer */
+         * zero out the least significant "i" bits of relative_rank and
+         * relative_dst to find root of src and dst
+         * subtrees. Use ranks of roots as index to send from
+         * and recv into  buffer */
 
         dst_tree_root = relative_dst >> i;
         dst_tree_root <<= i;
@@ -162,48 +165,51 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
             /* calculate the exact amount of data to be received */
             /* alternative */
             if ((nbytes - recv_offset) > 0)
-                incoming_count = MPL_MIN((nbytes-recv_offset), (mask * scatter_size));
+                incoming_count = MPL_MIN((nbytes - recv_offset), (mask * scatter_size));
             else
                 incoming_count = 0;
 
-            mpi_errno = MPIR_Sched_send(((char *)tmp_buf + send_offset),
+            mpi_errno = MPIR_Sched_send(((char *) tmp_buf + send_offset),
                                         curr_size, MPI_BYTE, dst, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
             /* sendrecv, no barrier */
-            mpi_errno = MPIR_Sched_recv_status(((char *)tmp_buf + recv_offset),
-                                        incoming_count,
-                                        MPI_BYTE, dst, comm_ptr,&ibcast_state->status, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            mpi_errno = MPIR_Sched_recv_status(((char *) tmp_buf + recv_offset),
+                                               incoming_count,
+                                               MPI_BYTE, dst, comm_ptr, &ibcast_state->status, s);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
             mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
             curr_size += incoming_count;
         }
 
         /* if some processes in this process's subtree in this step
-           did not have any destination process to communicate with
-           because of non-power-of-two, we need to send them the
-           data that they would normally have received from those
-           processes. That is, the haves in this subtree must send to
-           the havenots. We use a logarithmic recursive-halfing algorithm
-           for this. */
+         * did not have any destination process to communicate with
+         * because of non-power-of-two, we need to send them the
+         * data that they would normally have received from those
+         * processes. That is, the haves in this subtree must send to
+         * the havenots. We use a logarithmic recursive-halfing algorithm
+         * for this. */
 
         /* This part of the code will not currently be
-           executed because we are not using recursive
-           doubling for non power of two. Mark it as experimental
-           so that it doesn't show up as red in the coverage tests. */
+         * executed because we are not using recursive
+         * doubling for non power of two. Mark it as experimental
+         * so that it doesn't show up as red in the coverage tests. */
 
         /* --BEGIN EXPERIMENTAL-- */
         if (dst_tree_root + mask > comm_size) {
             nprocs_completed = comm_size - my_tree_root - mask;
             /* nprocs_completed is the number of processes in this
-               subtree that have all the data. Send data to others
-               in a tree fashion. First find root of current tree
-               that is being divided into two. k is the number of
-               least-significant bits in this process's rank that
-               must be zeroed out to find the rank of the root */
+             * subtree that have all the data. Send data to others
+             * in a tree fashion. First find root of current tree
+             * that is being divided into two. k is the number of
+             * least-significant bits in this process's rank that
+             * must be zeroed out to find the rank of the root */
             j = mask;
             k = 0;
             while (j) {
@@ -223,42 +229,43 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
                 tree_root <<= k;
 
                 /* send only if this proc has data and destination
-                   doesn't have data. */
+                 * doesn't have data. */
 
                 if ((relative_dst > relative_rank) &&
                     (relative_rank < tree_root + nprocs_completed) &&
-                    (relative_dst >= tree_root + nprocs_completed))
-                {
+                    (relative_dst >= tree_root + nprocs_completed)) {
                     /* incoming_count was set in the previous
-                       receive. that's the amount of data to be
-                       sent now. */
-                    mpi_errno = MPIR_Sched_send(((char *)tmp_buf + offset),
+                     * receive. that's the amount of data to be
+                     * sent now. */
+                    mpi_errno = MPIR_Sched_send(((char *) tmp_buf + offset),
                                                 incoming_count, MPI_BYTE, dst, comm_ptr, s);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                 }
                 /* recv only if this proc. doesn't have data and sender
-                   has data */
+                 * has data */
                 else if ((relative_dst < relative_rank) &&
                          (relative_dst < tree_root + nprocs_completed) &&
-                         (relative_rank >= tree_root + nprocs_completed))
-                {
+                         (relative_rank >= tree_root + nprocs_completed)) {
                     /* recalculate incoming_count, since not all processes will have
                      * this value */
                     if ((nbytes - offset) > 0)
-                        incoming_count = MPL_MIN((nbytes-offset), (mask * scatter_size));
+                        incoming_count = MPL_MIN((nbytes - offset), (mask * scatter_size));
                     else
                         incoming_count = 0;
 
                     /* nprocs_completed is also equal to the no. of processes
-                       whose data we don't have */
-                    mpi_errno = MPIR_Sched_recv_status(((char *)tmp_buf + offset),
-                                                incoming_count, MPI_BYTE, dst, comm_ptr,
-                                                &ibcast_state->status, s);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                     * whose data we don't have */
+                    mpi_errno = MPIR_Sched_recv_status(((char *) tmp_buf + offset),
+                                                       incoming_count, MPI_BYTE, dst, comm_ptr,
+                                                       &ibcast_state->status, s);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                     mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
 
                     curr_size += incoming_count;
@@ -272,22 +279,23 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
         mask <<= 1;
         i++;
     }
-    if(is_homogeneous){
+    if (is_homogeneous) {
         mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_curr_length, ibcast_state, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
     }
     if (!is_contig) {
         if (rank != root) {
-            mpi_errno = MPIR_Sched_copy(tmp_buf, nbytes, MPI_BYTE,
-                                        buffer, count, datatype, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            mpi_errno = MPIR_Sched_copy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype, s);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
         }
     }
 
     MPIR_SCHED_CHKPMEM_COMMIT(s);
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
