@@ -30,6 +30,7 @@ static void progress_fn(void * data)
     MPIR_Request *request_ptr = NULL;
     MPI_Request request;
     MPI_Status status;
+    int active_flag;
 
     /* Explicitly add CS_ENTER/EXIT since this thread is created from
      * within an internal function and will call NMPI functions
@@ -49,7 +50,9 @@ static void progress_fn(void * data)
                            MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     MPIR_Assert(!mpi_errno);
     request = request_ptr->handle;
-    mpi_errno = MPIR_Wait_impl(&request, &status);
+    mpi_errno = MPIR_Wait_impl(request_ptr, &status);
+    MPIR_Assert(!mpi_errno);
+    mpi_errno = MPIR_Request_complete(&request, request_ptr, &status, &active_flag);
     MPIR_Assert(!mpi_errno);
 
     /* Send a signal to the main thread saying we are done */
@@ -122,6 +125,7 @@ int MPIR_Finalize_async_thread(void)
     MPIR_Request *request_ptr = NULL;
     MPI_Request request;
     MPI_Status status;
+    int active_flag;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
@@ -130,7 +134,9 @@ int MPIR_Finalize_async_thread(void)
                            MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     MPIR_Assert(!mpi_errno);
     request = request_ptr->handle;
-    mpi_errno = MPIR_Wait_impl(&request, &status);
+    mpi_errno = MPIR_Wait_impl(request_ptr, &status);
+    MPIR_Assert(!mpi_errno);
+    mpi_errno = MPIR_Request_complete(&request, request_ptr, &status, &active_flag);
     MPIR_Assert(!mpi_errno);
 
     /* XXX DJG why is this unlock/lock necessary?  Should we just YIELD here or later?  */
