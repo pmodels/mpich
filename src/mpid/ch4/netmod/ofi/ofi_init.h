@@ -242,17 +242,18 @@ cvars:
         If set to positive, this CVAR specifies the maximum number of CH4 VNIs
         that OFI netmod exposes.
 
-    - name        : MPIR_CVAR_CH4_OFI_ENABLE_PER_WIN_SYNC
+    - name        : MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX
       category    : CH4_OFI
-      type        : boolean
-      default     : true
+      type        : int
+      default     : 0
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        If set to true, enables per-window synchronization in RMA.
-        This value is used when either of scalable endpoints or shared transmit
-        contexts is available. Otherwise this value will be ignored.
+        If set to positive, this CVAR specifies the maximum number of transmit
+        contexts RMA can utilize in a scalable endpoint.
+        This value is effective only when scalable endpoint is available, otherwise
+        it will be ignored.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -1086,6 +1087,13 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         }
     }
 
+    /* Close RMA scalable EP. */
+    if (MPIDI_Global.rma_sep) {
+        /* All transmit contexts on RMA must be closed. */
+        MPIR_Assert(utarray_len(MPIDI_Global.rma_sep_idx_array) == MPIDI_Global.max_rma_sep_tx_cnt);
+        utarray_free(MPIDI_Global.rma_sep_idx_array);
+        MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_sep->fid), epclose);
+    }
     if (MPIDI_OFI_ENABLE_SHARED_CONTEXTS && MPIDI_Global.rma_stx_ctx != NULL)
         MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_stx_ctx->fid), stx_ctx_close);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.ep->fid), epclose);
