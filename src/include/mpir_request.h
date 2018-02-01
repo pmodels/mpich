@@ -132,6 +132,7 @@ struct MPIR_Request {
         } ureq; /* kind : MPIR_REQUEST_KIND__GREQUEST */
         struct {
             MPIR_Errflag_t errflag;
+            MPII_Coll_req_t coll;
         } nbc;  /* kind : MPIR_REQUEST_KIND__COLL */
 #if defined HAVE_DEBUGGER_SUPPORT
         struct {

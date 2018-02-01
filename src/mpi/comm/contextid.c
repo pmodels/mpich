@@ -492,7 +492,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                                              &errflag);
         }
         else {
-            mpi_errno = MPID_Allreduce(MPI_IN_PLACE, st.local_mask, MPIR_MAX_CONTEXT_MASK + 1,
+            mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, st.local_mask, MPIR_MAX_CONTEXT_MASK + 1,
                                             MPI_INT, MPI_BAND, comm_ptr, &errflag);
         }
         if (mpi_errno)
@@ -598,7 +598,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                                                  comm_ptr, group_ptr, coll_tag, &errflag);
             }
             else {
-                mpi_errno = MPID_Allreduce(MPI_IN_PLACE, &minfree, 1, MPI_INT,
+                mpi_errno = MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPI_INT,
                                                 MPI_MIN, comm_ptr, &errflag);
             }
 
@@ -703,7 +703,7 @@ static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
             MPIR_SCHED_BARRIER(st->s);
         }
 
-        mpi_errno = MPID_Ibcast_sched(st->ctx1, 1,
+        mpi_errno = MPIR_Ibcast_sched(st->ctx1, 1,
                                       MPIR_CONTEXT_ID_T_DATATYPE, 0,
                                       st->comm_ptr, st->s);
         if (mpi_errno)
@@ -784,7 +784,7 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
             int minfree;
             context_mask_stats(&nfree, &ntotal);
             minfree = nfree;
-            MPID_Allreduce(MPI_IN_PLACE, &minfree, 1, MPI_INT,
+            MPIR_Allreduce(MPI_IN_PLACE, &minfree, 1, MPI_INT,
                                 MPI_MIN, st->comm_ptr, &errflag);
             if (minfree > 0) {
                 MPIR_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
@@ -897,7 +897,7 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
         }
     }
 
-    mpi_errno = MPID_Iallreduce_sched(MPI_IN_PLACE, st->local_mask,
+    mpi_errno = MPIR_Iallreduce_sched(MPI_IN_PLACE, st->local_mask,
                                       MPIR_MAX_CONTEXT_MASK + 1, MPI_UINT32_T, MPI_BAND,
                                       st->comm_ptr, st->s);
     if (mpi_errno)
@@ -1162,7 +1162,7 @@ int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, MPIR_Context_id_t * conte
 
     /* Make sure that all of the local processes now have this
      * id */
-    mpi_errno = MPID_Bcast(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE,
+    mpi_errno = MPIR_Bcast(&remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE,
                                 0, comm_ptr->local_comm, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

@@ -11,10 +11,20 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
+    - name        : MPIR_CVAR_IBCAST_TREE_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for tree based ibcast (for tree_kary and tree_knomial)
+
     - name        : MPIR_CVAR_IBCAST_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
-      default     : auto
+      default     : tree_kary
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -24,6 +34,8 @@ cvars:
         binomial                             - Force Binomial algorithm
         scatter_recursive_doubling_allgather - Force Scatter Recursive Doubling Allgather algorithm
         scatter_ring_allgather               - Force Scatter Ring Allgather algorithm
+        tree_kary                            - Force Generic Transport Tree Kary
+        tree_knomial                         - Force Generic Transport Tree Knomial
 
     - name        : MPIR_CVAR_IBCAST_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -74,8 +86,9 @@ int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Com
 
 /* any non-MPI functions go here, especially non-static ones */
 
-/* Provides a generic "flat" broadcast that doesn't know anything about hierarchy.  It will choose
- * between several different algorithms based on the given parameters. */
+/* Provides a "flat" broadcast that doesn't know anything about
+ * hierarchy.  It will choose between several different algorithms
+ * based on the given parameters. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ibcast_sched_intra_auto
 #undef FCNAME
@@ -124,9 +137,9 @@ fn_fail:
     goto fn_exit;
 }
 
-/* Provides a generic "flat" broadcast for intercommunicators that doesn't know
- * anything about hierarchy.  It will choose between several different
- * algorithms based on the given parameters. */
+/* Provides a "flat" broadcast for intercommunicators that doesn't
+ * know anything about hierarchy.  It will choose between several
+ * different algorithms based on the given parameters. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ibcast_sched_inter_auto
 #undef FCNAME
@@ -223,7 +236,36 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
+    /* If the user picks one of the transport-enabled algorithms, branch there
+     * before going down to the MPIR_Sched-based algorithms. */
+    /* TODO - Eventually the intention is to replace all of the
+     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * will require sufficient performance testing and replacement algorithms. */
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        /* intracommunicator */
+        switch (MPIR_Ibcast_intra_algo_choice) {
+            case MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KNOMIAL:
+                mpi_errno =
+                    MPIR_Ibcast_intra_tree_knomial(buffer, count, datatype, root, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KARY:
+                mpi_errno =
+                    MPIR_Ibcast_intra_tree_kary(buffer, count, datatype, root, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            default:
+                /* go down to the MPIR_Sched-based algorithms */
+                break;
+        }
+    }
 
+    /* If the user doesn't pick a transport-enabled algorithm, go to the old
+     * sched function. */
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Sched_create(&s);

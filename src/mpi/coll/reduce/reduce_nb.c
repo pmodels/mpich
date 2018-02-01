@@ -18,7 +18,7 @@ int MPIR_Reduce_nb(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
     MPIR_Request *req_ptr = NULL;
 
     /* just call the nonblocking version and wait on it */
-    mpi_errno = MPID_Ireduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, &req_ptr);
+    mpi_errno = MPIR_Ireduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, &req_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     if(req_ptr)

@@ -14,7 +14,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 	       MPIR_Comm * comm, int context_offset,
                MPIR_Request ** request)
 {
-    MPIR_Request * rreq;
+    MPIR_Request * rreq = NULL;
     int found;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IRECV);

@@ -18,7 +18,7 @@ int MPIR_Bcast_nb(void *buffer, int count, MPI_Datatype datatype, int root, MPIR
     MPIR_Request * req_ptr = NULL;
 
     /* just call the nonblocking version and wait on it */
-    mpi_errno = MPID_Ibcast(buffer, count, datatype, root, comm_ptr, &req_ptr);
+    mpi_errno = MPIR_Ibcast(buffer, count, datatype, root, comm_ptr, &req_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     if(req_ptr)
