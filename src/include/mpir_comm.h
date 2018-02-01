@@ -170,7 +170,6 @@ struct MPIR_Comm {
                         intercommunicator collective operations
                         that wish to use half-duplex operations
                         to implement a full-duplex operation */
-    int is_single_node;/* if a communicator is inside a single node */
 
     struct MPIR_Comm     *comm_next;/* Provides a chain through all active
 				       communicators */
