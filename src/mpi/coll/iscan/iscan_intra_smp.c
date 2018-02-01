@@ -1,6 +1,6 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
+ *  (C) 2017 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 
@@ -29,7 +29,8 @@ int MPIR_Iscan_sched_intra_smp(const void *sendbuf, void *recvbuf, int count, MP
        consecutive ranks. */
 
     if (!MPII_Comm_is_node_consecutive(comm_ptr)) {
-        /* We can't use the SMP-aware algorithm, use the generic one */
+        /* We can't use the SMP-aware algorithm, use the non-SMP-aware
+         * one */
         return MPIR_Iscan_sched_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     }
 
