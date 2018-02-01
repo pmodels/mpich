@@ -23,7 +23,7 @@ indent_code()
         --no-comment-delimiters-on-blank-lines \
         --cuddle-else \
         --continuation-indentation4 \
-        --case-indentation0 \
+        `# --case-indentation0` `# Overwritten below` \
         `# --else-endif-column33` `# Overwritten below` \
         --space-after-cast \
         --line-comments-indentation0 \
@@ -57,6 +57,7 @@ indent_code()
         --brace-indent0 \
         --cuddle-do-while \
         --no-space-after-function-call-names \
+        --case-indentation4 \
         ${file}
 
     rm -f ${file}~
