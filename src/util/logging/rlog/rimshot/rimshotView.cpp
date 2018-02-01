@@ -381,6 +381,7 @@ void CRimshotView::OnPrepareDC(CDC* pDC, CPrintInfo* pInfo)
 /////////////////////////////////////////////////////////////////////////////
 // CRimshotView diagnostics
 
+/* *INDENT-OFF* */
 #ifdef _DEBUG
 void CRimshotView::AssertValid() const
 {
@@ -398,6 +399,7 @@ CRimshotDoc* CRimshotView::GetDocument() // non-debug version is inline
 	return (CRimshotDoc*)m_pDocument;
 }
 #endif //_DEBUG
+/* *INDENT-ON* */
 
 /////////////////////////////////////////////////////////////////////////////
 // CRimshotView message handlers

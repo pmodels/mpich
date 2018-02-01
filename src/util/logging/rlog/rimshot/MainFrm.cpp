@@ -86,6 +86,7 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame diagnostics
 
+/* *INDENT-OFF* */
 #ifdef _DEBUG
 void CMainFrame::AssertValid() const
 {
@@ -96,8 +97,8 @@ void CMainFrame::Dump(CDumpContext& dc) const
 {
 	CFrameWnd::Dump(dc);
 }
-
 #endif //_DEBUG
+/* *INDENT-ON* */
 
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame message handlers

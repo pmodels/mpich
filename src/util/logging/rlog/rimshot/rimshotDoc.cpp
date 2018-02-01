@@ -81,6 +81,7 @@ void CRimshotDoc::Serialize(CArchive& ar)
 /////////////////////////////////////////////////////////////////////////////
 // CRimshotDoc diagnostics
 
+/* *INDENT-OFF* */
 #ifdef _DEBUG
 void CRimshotDoc::AssertValid() const
 {
@@ -92,6 +93,7 @@ void CRimshotDoc::Dump(CDumpContext& dc) const
 	CDocument::Dump(dc);
 }
 #endif //_DEBUG
+/* *INDENT-ON* */
 
 /////////////////////////////////////////////////////////////////////////////
 // CRimshotDoc commands

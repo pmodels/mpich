@@ -31,7 +31,7 @@ private:
 public:
     // New and delete
     MPIX_Coverage(void) { head = 0; }
-    //
+
     void Init( void );
     void Add( const char name[], int argcnt, const char file[], int line );
     void AddEnd( const char name[], int argcnt, const char file[], int line );
