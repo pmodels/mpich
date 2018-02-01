@@ -1,6 +1,6 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
+ *  (C) 2017 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 
@@ -62,7 +62,7 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
     int recv_offset, tree_root, nprocs_completed, offset;
     MPI_Aint true_extent, true_lb;
     void *tmp_buf;
-    struct MPII_Ibcast_status *status;
+    struct MPII_Ibcast_state *ibcast_state;
     MPIR_SCHED_CHKPMEM_DECL(2);
 
     comm_size = comm_ptr->local_size;
@@ -86,8 +86,8 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
         MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
-    MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPII_Ibcast_status*,
-                              sizeof(struct MPII_Ibcast_status), mpi_errno, "MPI_Status", MPL_MEM_BUFFER);
+    MPIR_SCHED_CHKPMEM_MALLOC(ibcast_state, struct MPII_Ibcast_state*,
+                              sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Status", MPL_MEM_BUFFER);
     is_homogeneous = 1;
 #ifdef MPID_HAS_HETERO
     if (comm_ptr->is_hetero)
@@ -98,8 +98,8 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     nbytes = type_size * count;
-    status->n_bytes = nbytes;
-    status->curr_bytes = 0;
+    ibcast_state->n_bytes = nbytes;
+    ibcast_state->curr_bytes = 0;
     if (is_contig) {
         /* contiguous and homogeneous. no need to pack. */
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
@@ -131,7 +131,7 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
     if (curr_size < 0)
         curr_size = 0;
     /* curr_size bytes already inplace */
-    status->curr_bytes = curr_size;
+    ibcast_state->curr_bytes = curr_size;
 
     /* initialize because the compiler can't tell that it is always initialized when used */
     incoming_count = -1;
@@ -172,10 +172,10 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
             /* sendrecv, no barrier */
             mpi_errno = MPIR_Sched_recv_status(((char *)tmp_buf + recv_offset),
                                         incoming_count,
-                                        MPI_BYTE, dst, comm_ptr,&status->status, s);
+                                        MPI_BYTE, dst, comm_ptr,&ibcast_state->status, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
-            mpi_errno = MPIR_Sched_cb(&MPII_sched_add_length, status, s);
+            mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
@@ -254,10 +254,10 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
                        whose data we don't have */
                     mpi_errno = MPIR_Sched_recv_status(((char *)tmp_buf + offset),
                                                 incoming_count, MPI_BYTE, dst, comm_ptr,
-                                                &status->status, s);
+                                                &ibcast_state->status, s);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
-                    mpi_errno = MPIR_Sched_cb(&MPII_sched_add_length, status, s);
+                    mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
 
@@ -273,7 +273,7 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
         i++;
     }
     if(is_homogeneous){
-        mpi_errno = MPIR_Sched_cb(&MPII_sched_test_curr_length, status, s);
+        mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_curr_length, ibcast_state, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     if (!is_contig) {

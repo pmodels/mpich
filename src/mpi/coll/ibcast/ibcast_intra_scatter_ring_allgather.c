@@ -1,6 +1,6 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
+ *  (C) 2017 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 
@@ -39,7 +39,7 @@ int MPIR_Ibcast_sched_intra_scatter_ring_allgather(void *buffer, int count, MPI_
     MPI_Aint true_extent, true_lb;
     void *tmp_buf = NULL;
 
-    struct MPII_Ibcast_status *status;
+    struct MPII_Ibcast_state *ibcast_state;
     MPIR_SCHED_CHKPMEM_DECL(4);
 
     comm_size = comm_ptr->local_size;
@@ -61,12 +61,12 @@ int MPIR_Ibcast_sched_intra_scatter_ring_allgather(void *buffer, int count, MPI_
         is_homogeneous = 0;
 #endif
     MPIR_Assert(is_homogeneous); /* we don't handle the hetero case yet */
-    MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPII_Ibcast_status*,
-                              sizeof(struct MPII_Ibcast_status), mpi_errno, "MPI_Status", MPL_MEM_BUFFER);
+    MPIR_SCHED_CHKPMEM_MALLOC(ibcast_state, struct MPII_Ibcast_state*,
+                              sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Status", MPL_MEM_BUFFER);
     MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
-    status->n_bytes = nbytes;
-    status->curr_bytes = 0;
+    ibcast_state->n_bytes = nbytes;
+    ibcast_state->curr_bytes = 0;
     if (is_contig) {
         /* contiguous, no need to pack. */
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
@@ -96,7 +96,7 @@ int MPIR_Ibcast_sched_intra_scatter_ring_allgather(void *buffer, int count, MPI_
     if (curr_size < 0)
         curr_size = 0;
     /* curr_size bytes already inplace */
-    status->curr_bytes = curr_size;
+    ibcast_state->curr_bytes = curr_size;
 
     /* long-message allgather or medium-size but non-power-of-two. use ring algorithm. */
 
@@ -124,17 +124,17 @@ int MPIR_Ibcast_sched_intra_scatter_ring_allgather(void *buffer, int count, MPI_
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         /* sendrecv, no barrier here */
         mpi_errno = MPIR_Sched_recv_status(((char *)tmp_buf + left_disp),
-                                    left_count, MPI_BYTE, left, comm_ptr, &status->status, s);
+                                    left_count, MPI_BYTE, left, comm_ptr, &ibcast_state->status, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
-        mpi_errno = MPIR_Sched_cb(&MPII_sched_add_length, status, s);
+        mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_add_length, ibcast_state, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
 
         j     = jnext;
         jnext = (comm_size + jnext - 1) % comm_size;
     }
-    mpi_errno = MPIR_Sched_cb(&MPII_sched_test_curr_length, status, s);
+    mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_curr_length, ibcast_state, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (!is_contig && rank != root) {

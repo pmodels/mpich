@@ -20,7 +20,7 @@ int MPIR_Allgatherv_nb(const void *sendbuf, int sendcount, MPI_Datatype sendtype
 
     /* just call the nonblocking version and wait on it */
     mpi_errno =
-        MPID_Iallgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
+        MPIR_Iallgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
                          comm_ptr, &req_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
