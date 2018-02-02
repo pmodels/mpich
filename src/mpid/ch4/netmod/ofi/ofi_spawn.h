@@ -762,7 +762,6 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
                                (root, MPIDI_OFI_DYNPROC_SENDER,
                                 port_id, &conn, conname, comm_ptr, &child_root,
                                 &remote_size, &remote_upid_size, &remote_upids, &remote_node_ids));
-        MPIDI_OFI_CALL(fi_av_remove(MPIDI_Global.av, &conn, 1, 0ULL), avmap);
         MPIR_CHKLMEM_MALLOC(remote_lupids, int *, remote_size * sizeof(int),
                             mpi_errno, "remote_lupids", MPL_MEM_ADDRESS);
         MPIDIU_upids_to_lupids(remote_size, remote_upid_size, remote_upids, &remote_lupids,
