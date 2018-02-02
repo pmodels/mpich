@@ -231,6 +231,92 @@ static int node_split_pci_device(MPIR_Comm * comm_ptr, int key,
   fn_fail:
     goto fn_exit;
 }
+
+static int node_split_network_device(MPIR_Comm * comm_ptr, int key,
+                                     const char *hintval, MPIR_Comm ** newcomm_ptr)
+{
+    hwloc_obj_t obj_containing_cpuset, io_device = NULL;
+    int mpi_errno = MPI_SUCCESS;
+    int color;
+
+    /* assign the node id as the color, initially */
+    MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
+
+    obj_containing_cpuset =
+        hwloc_get_obj_covering_cpuset(MPIR_Process.topology, MPIR_Process.bindset);
+    MPIR_Assert(obj_containing_cpuset != NULL);
+
+    color = MPI_UNDEFINED;
+    while ((io_device = hwloc_get_next_osdev(MPIR_Process.topology, io_device))
+           != NULL) {
+        if ((!strncmp(hintval, "hfi", strlen("hfi")) &&
+             io_device->attr->osdev.type == HWLOC_OBJ_OSDEV_OPENFABRICS) ||
+            io_device->attr->osdev.type == HWLOC_OBJ_OSDEV_NETWORK) {
+            if (strcmp(io_device->name, hintval))
+                continue;
+            hwloc_obj_t non_io_ancestor =
+                hwloc_get_non_io_ancestor_obj(MPIR_Process.topology, io_device);
+            MPIR_Assert(non_io_ancestor);
+            if (hwloc_obj_is_in_subtree
+                (MPIR_Process.topology, obj_containing_cpuset, non_io_ancestor)) {
+                color =
+                    (non_io_ancestor->type << (sizeof(int) * 4)) + non_io_ancestor->logical_index;
+                break;
+            }
+        }
+    }
+
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static int node_split_gpu_device(MPIR_Comm * comm_ptr, int key,
+                                 const char *hintval, MPIR_Comm ** newcomm_ptr)
+{
+    hwloc_obj_t obj_containing_cpuset, io_device = NULL;
+    int mpi_errno = MPI_SUCCESS;
+    int color;
+
+    obj_containing_cpuset =
+        hwloc_get_obj_covering_cpuset(MPIR_Process.topology, MPIR_Process.bindset);
+    MPIR_Assert(obj_containing_cpuset != NULL);
+
+    color = MPI_UNDEFINED;
+    while ((io_device = hwloc_get_next_osdev(MPIR_Process.topology, io_device))
+           != NULL) {
+        if (io_device->attr->osdev.type == HWLOC_OBJ_OSDEV_GPU) {
+            if ((*(hintval + strlen("gpu")) != '\0') &&
+                atoi(hintval + strlen("gpu")) != io_device->logical_index)
+                continue;
+            hwloc_obj_t non_io_ancestor =
+                hwloc_get_non_io_ancestor_obj(MPIR_Process.topology, io_device);
+            MPIR_Assert(non_io_ancestor);
+            if (hwloc_obj_is_in_subtree
+                (MPIR_Process.topology, obj_containing_cpuset, non_io_ancestor)) {
+                color =
+                    (non_io_ancestor->type << (sizeof(int) * 4)) + non_io_ancestor->logical_index;
+                break;
+            }
+        }
+    }
+
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
 #endif /* HAVE_HWLOC */
 
 static const char *SHMEM_INFO_KEY = "shmem_topo";
@@ -338,6 +424,11 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
     if (flag) {
         if (!strncmp(hintval, "pci:", strlen("pci:")))
             mpi_errno = node_split_pci_device(comm_ptr, key, hintval, newcomm_ptr);
+        else if (!strncmp(hintval, "ib", strlen("ib")) ||
+                 !strncmp(hintval, "en", strlen("en") || !strncmp(hintval, "hfi", strlen("hfi"))))
+            mpi_errno = node_split_network_device(comm_ptr, key, hintval, newcomm_ptr);
+        else if (!strncmp(hintval, "gpu", strlen("gpu")))
+            mpi_errno = node_split_gpu_device(comm_ptr, key, hintval, newcomm_ptr);
         else
             mpi_errno = node_split_processor(comm_ptr, key, hintval, newcomm_ptr);
 
