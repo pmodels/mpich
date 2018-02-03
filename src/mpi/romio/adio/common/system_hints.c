@@ -98,7 +98,7 @@ static int file_to_info_all(int fd, MPI_Info info, int rank, MPI_Comm comm)
     buffer = (char *) ADIOI_Calloc(HINTFILE_MAX_SIZE, sizeof(char));
 
     if (rank == 0) {
-        ret = read(fd, buffer, HINTFILE_MAX_SIZE);
+        ret = (fd >= 0) ? read(fd, buffer, HINTFILE_MAX_SIZE) : -1;
         /* any error: bad/nonexistent fd, no perms, anything: set up a null
          * buffer and the subsequent string parsing will quit immediately */
         if (ret == -1)
