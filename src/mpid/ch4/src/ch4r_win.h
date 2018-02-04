@@ -1022,7 +1022,9 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
 
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
-        MPIR_ERR_CHKANDSTMT(map_ptr == NULL || map_ptr == MAP_FAILED, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
+        MPIR_ERR_CHKANDSTMT(map_ptr == NULL ||
+                            map_ptr == MAP_FAILED, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail,
+                            "**nomem");
 
         unsigned map_fail = 0;
         if (comm_ptr->rank != 0) {

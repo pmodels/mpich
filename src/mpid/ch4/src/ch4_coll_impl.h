@@ -85,7 +85,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_composition_beta(MPIR_Comm * comm,
     void *barrier_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno = MPIDI_NM_mpi_barrier(comm, errflag, barrier_container);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -245,7 +246,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_composition_gamma(void *buffer, int cou
     void *bcast_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
 
     mpi_errno = MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm, errflag, bcast_container);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     return mpi_errno;
