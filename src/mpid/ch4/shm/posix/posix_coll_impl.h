@@ -17,7 +17,7 @@
 #define FUNCNAME MPIDI_POSIX_Barrier_recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_POSIX_Barrier_recursive_doubling(MPIR_Comm * comm_ptr,
                                                MPIR_Errflag_t * errflag,
                                                MPIDI_POSIX_coll_algo_container_t *
@@ -34,7 +34,7 @@ MPL_STATIC_INLINE_PREFIX
 #define FUNCNAME MPIDI_POSIX_Bcast_binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_POSIX_Bcast_binomial(void *buffer,
                                    int count,
                                    MPI_Datatype datatype,
@@ -55,7 +55,7 @@ MPL_STATIC_INLINE_PREFIX
 #define FUNCNAME MPIDI_POSIX_Bcast_scatter_recursive_doubling_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_POSIX_Bcast_scatter_recursive_doubling_allgather(void *buffer,
                                                                int count,
                                                                MPI_Datatype datatype,
@@ -78,7 +78,7 @@ MPL_STATIC_INLINE_PREFIX
 #define FUNCNAME MPIDI_POSIX_Bcast_scatter_recursive_doubling_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_POSIX_Bcast_scatter_ring_allgather(void *buffer,
                                                  int count,
                                                  MPI_Datatype datatype,
@@ -100,7 +100,7 @@ MPL_STATIC_INLINE_PREFIX
 #define FUNCNAME MPIDI_POSIX_allreduce__recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_POSIX_allreduce__recursive_doubling(const void *sendbuf, void *recvbuf, int count,
                                                   MPI_Datatype datatype, MPI_Op op,
                                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
@@ -120,7 +120,7 @@ MPL_STATIC_INLINE_PREFIX
 #define FUNCNAME MPIDI_POSIX_allreduce__reduce_scatter_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_POSIX_allreduce__reduce_scatter_allgather(const void *sendbuf, void *recvbuf,
                                                         int count, MPI_Datatype datatype, MPI_Op op,
                                                         MPIR_Comm * comm_ptr,
@@ -141,7 +141,7 @@ MPL_STATIC_INLINE_PREFIX
 #define FUNCNAME MPIDI_POSIX_reduce__reduce_scatter_gather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_POSIX_reduce__reduce_scatter_gather(const void *sendbuf, void *recvbuf, int count,
                                                   MPI_Datatype datatype, MPI_Op op, int root,
                                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
@@ -161,7 +161,7 @@ MPL_STATIC_INLINE_PREFIX
 #define FUNCNAME MPIDI_POSIX_reduce__binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_POSIX_reduce__binomial(const void *sendbuf, void *recvbuf, int count,
                                      MPI_Datatype datatype, MPI_Op op, int root,
                                      MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,

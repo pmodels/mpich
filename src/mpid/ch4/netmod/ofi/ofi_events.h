@@ -17,10 +17,9 @@
 #include "ofi_control.h"
 #include "utlist.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc,
-                                                      MPIR_Request * req);
+static inline int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req);
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc)
+static inline int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry *wc)
 {
     if (MPIDI_OFI_ENABLE_DATA)
         return wc->data;
@@ -32,8 +31,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_cqe_get_source(struct fi_cq_tagged_entry 
 #define FUNCNAME MPIDI_OFI_peek_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_peek_event(struct fi_cq_tagged_entry *wc,
-                                                  MPIR_Request * rreq)
+static inline int MPIDI_OFI_peek_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     size_t count;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_NETMOD_PEEK_EVENT);
@@ -52,8 +50,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_peek_event(struct fi_cq_tagged_entry *wc,
 #define FUNCNAME MPIDI_OFI_peek_empty_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_peek_empty_event(struct fi_cq_tagged_entry *wc,
-                                                        MPIR_Request * rreq)
+static inline int MPIDI_OFI_peek_empty_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_NETMOD_PEEK_EMPTY_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_NETMOD_PEEK_EMPTY_EVENT);
@@ -83,8 +80,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_peek_empty_event(struct fi_cq_tagged_entr
 #define FUNCNAME MPIDI_OFI_recv_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
-                                                  MPIR_Request * rreq, int event_id)
+static inline int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
+                                       MPIR_Request * rreq, int event_id)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint last;
@@ -177,8 +174,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
 #define FUNCNAME MPIDI_OFI_recv_huge_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry *wc,
-                                                       MPIR_Request * rreq)
+static inline int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_huge_recv_t *recv = NULL;
@@ -268,8 +264,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry
 #define FUNCNAME MPIDI_OFI_send_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(struct fi_cq_tagged_entry *wc,
-                                                  MPIR_Request * sreq, int event_id)
+static inline int MPIDI_OFI_send_event(struct fi_cq_tagged_entry *wc,
+                                       MPIR_Request * sreq, int event_id)
 {
     int c;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_SEND_EVENT);
@@ -296,8 +292,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(struct fi_cq_tagged_entry *wc,
 #define FUNCNAME MPIDI_OFI_send_huge_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry *wc,
-                                                       MPIR_Request * sreq)
+static inline int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     int c;
@@ -350,8 +345,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
 #define FUNCNAME MPIDI_OFI_ssend_ack_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_ssend_ack_event(struct fi_cq_tagged_entry *wc,
-                                                       MPIR_Request * sreq)
+static inline int MPIDI_OFI_ssend_ack_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 {
     int mpi_errno;
     MPIDI_OFI_ssendack_request_t *req = (MPIDI_OFI_ssendack_request_t *) sreq;
@@ -365,7 +359,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_ssend_ack_event(struct fi_cq_tagged_entry
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_recv_rbase(MPIDI_OFI_huge_recv_t * recv)
+static inline uintptr_t MPIDI_OFI_recv_rbase(MPIDI_OFI_huge_recv_t * recv)
 {
     if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
         return 0;
@@ -378,8 +372,7 @@ MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_recv_rbase(MPIDI_OFI_huge_recv_t * 
 #define FUNCNAME MPIDI_OFI_get_huge_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc,
-                                                      MPIR_Request * req)
+static inline int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_huge_recv_t *recv = (MPIDI_OFI_huge_recv_t *) req;
@@ -441,8 +434,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
 #define FUNCNAME MPIDI_OFI_chunk_done_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_chunk_done_event(struct fi_cq_tagged_entry *wc,
-                                                        MPIR_Request * req)
+static inline int MPIDI_OFI_chunk_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
 {
     int c;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_CHUNK_DONE_EVENT);
@@ -463,8 +455,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_chunk_done_event(struct fi_cq_tagged_entr
 #define FUNCNAME MPIDI_OFI_inject_emu_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_inject_emu_event(struct fi_cq_tagged_entry *wc,
-                                                        MPIR_Request * req)
+static inline int MPIDI_OFI_inject_emu_event(struct fi_cq_tagged_entry *wc, MPIR_Request * req)
 {
     int incomplete;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_INJECT_EMU_EVENT);
@@ -486,8 +477,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_inject_emu_event(struct fi_cq_tagged_entr
 #define FUNCNAME MPIDI_OFI_rma_done_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_rma_done_event(struct fi_cq_tagged_entry *wc,
-                                                      MPIR_Request * in_req)
+static inline int MPIDI_OFI_rma_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * in_req)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_OFI_RMA_DONE_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_OFI_RMA_DONE_EVENT);
@@ -503,8 +493,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_rma_done_event(struct fi_cq_tagged_entry 
 #define FUNCNAME MPIDI_OFI_accept_probe_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_accept_probe_event(struct fi_cq_tagged_entry *wc,
-                                                          MPIR_Request * rreq)
+static inline int MPIDI_OFI_accept_probe_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_OFI_ACCEPT_PROBE_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_OFI_ACCEPT_PROBE_EVENT);
@@ -521,8 +510,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_accept_probe_event(struct fi_cq_tagged_en
 #define FUNCNAME MPIDI_OFI_dynproc_done_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_done_event(struct fi_cq_tagged_entry *wc,
-                                                          MPIR_Request * rreq)
+static inline int MPIDI_OFI_dynproc_done_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_OFI_DYNPROC_DONE_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_OFI_DYNPROC_DONE_EVENT);
@@ -536,8 +524,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_done_event(struct fi_cq_tagged_en
 #define FUNCNAME MPIDI_OFI_am_isend_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_event(struct fi_cq_tagged_entry *wc,
-                                                      MPIR_Request * sreq)
+static inline int MPIDI_OFI_am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t *msg_hdr;
@@ -578,8 +565,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_event(struct fi_cq_tagged_entry 
 #define FUNCNAME MPIDI_OFI_am_recv_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_recv_event(struct fi_cq_tagged_entry *wc,
-                                                     MPIR_Request * rreq)
+static inline int MPIDI_OFI_am_recv_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t *am_hdr;
@@ -636,8 +622,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_recv_event(struct fi_cq_tagged_entry *
 #define FUNCNAME MPIDI_OFI_am_read_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_read_event(struct fi_cq_tagged_entry *wc,
-                                                     MPIR_Request * dont_use_me)
+static inline int MPIDI_OFI_am_read_event(struct fi_cq_tagged_entry *wc, MPIR_Request * dont_use_me)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
@@ -675,8 +660,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_read_event(struct fi_cq_tagged_entry *
 #define FUNCNAME MPIDI_OFI_am_repost_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_repost_event(struct fi_cq_tagged_entry *wc,
-                                                       MPIR_Request * rreq)
+static inline int MPIDI_OFI_am_repost_event(struct fi_cq_tagged_entry *wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_REPOST_BUFFER);
@@ -688,8 +672,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_repost_event(struct fi_cq_tagged_entry
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc,
-                                                         MPIR_Request * req, int buffered)
+static inline int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc,
+                                              MPIR_Request * req, int buffered)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -794,7 +778,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_ent
 #define FUNCNAME MPIDI_OFI_get_buffered
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(struct fi_cq_tagged_entry *wc, ssize_t num)
+static inline int MPIDI_OFI_get_buffered(struct fi_cq_tagged_entry *wc, ssize_t num)
 {
     int rc = 0;
 
@@ -826,8 +810,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(struct fi_cq_tagged_entry *w
 #define FUNCNAME MPIDI_OFI_handle_cq_entries
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_entries(struct fi_cq_tagged_entry *wc,
-                                                         ssize_t num, int buffered)
+static inline int MPIDI_OFI_handle_cq_entries(struct fi_cq_tagged_entry *wc,
+                                              ssize_t num, int buffered)
 {
     int i, mpi_errno = MPI_SUCCESS;
     MPIR_Request *req;
@@ -850,7 +834,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_entries(struct fi_cq_tagged_ent
 #define FUNCNAME MPIDI_OFI_handle_cq_error
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_error(int vni_idx, ssize_t ret)
+static inline int MPIDI_OFI_handle_cq_error(int vni_idx, ssize_t ret)
 {
     int mpi_errno = MPI_SUCCESS;
     struct fi_cq_err_entry e;

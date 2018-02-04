@@ -15,7 +15,7 @@
 #include "ch4r_comm.h"
 #include "ch4i_comm.h"
 
-MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm * comm)
+static inline int MPID_Comm_AS_enabled(MPIR_Comm * comm)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_AS_ENABLED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_AS_ENABLED);
@@ -26,8 +26,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm * comm)
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Comm_reenable_anysource(MPIR_Comm * comm,
-                                                          MPIR_Group ** failed_group_ptr)
+static inline int MPID_Comm_reenable_anysource(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_REENABLE_ANYSOURCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_REENABLE_ANYSOURCE);
@@ -38,8 +37,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_reenable_anysource(MPIR_Comm * comm,
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Comm_remote_group_failed(MPIR_Comm * comm,
-                                                           MPIR_Group ** failed_group_ptr)
+static inline int MPID_Comm_remote_group_failed(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_REMOTE_GROUP_FAILED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_REMOTE_GROUP_FAILED);
@@ -50,8 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_remote_group_failed(MPIR_Comm * comm,
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Comm_group_failed(MPIR_Comm * comm_ptr,
-                                                    MPIR_Group ** failed_group_ptr)
+static inline int MPID_Comm_group_failed(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_GROUP_FAILED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_GROUP_FAILED);
@@ -62,7 +59,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_group_failed(MPIR_Comm * comm_ptr,
     return MPI_SUCCESS;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Comm_failure_ack(MPIR_Comm * comm_ptr)
+static inline int MPID_Comm_failure_ack(MPIR_Comm * comm_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_FAILURE_ACK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_FAILURE_ACK);
@@ -73,8 +70,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_failure_ack(MPIR_Comm * comm_ptr)
     return 0;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Comm_failure_get_acked(MPIR_Comm * comm_ptr,
-                                                         MPIR_Group ** failed_group_ptr)
+static inline int MPID_Comm_failure_get_acked(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_FAILURE_GET_ACKED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_FAILURE_GET_ACKED);
@@ -85,7 +81,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_failure_get_acked(MPIR_Comm * comm_ptr,
     return 0;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Comm_revoke(MPIR_Comm * comm_ptr, int is_remote)
+static inline int MPID_Comm_revoke(MPIR_Comm * comm_ptr, int is_remote)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_REVOKE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_REVOKE);
@@ -96,8 +92,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_revoke(MPIR_Comm * comm_ptr, int is_remot
     return 0;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Comm_get_all_failed_procs(MPIR_Comm * comm_ptr,
-                                                            MPIR_Group ** failed_group, int tag)
+static inline int MPID_Comm_get_all_failed_procs(MPIR_Comm * comm_ptr,
+                                                 MPIR_Group ** failed_group, int tag)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_GET_ALL_FAILED_PROCS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_GET_ALL_FAILED_PROCS);
@@ -112,10 +108,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_get_all_failed_procs(MPIR_Comm * comm_ptr
 #define FUNCNAME MPIDI_Comm_split_type
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr,
-                                                   int split_type,
-                                                   int key, MPIR_Info * info_ptr,
-                                                   MPIR_Comm ** newcomm_ptr)
+static inline int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr,
+                                        int split_type,
+                                        int key, MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
     MPIR_Comm *comm_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
@@ -160,7 +155,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_split_type(MPIR_Comm * user_comm_ptr,
 #define FUNCNAME MPIDI_Comm_create_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
+static inline int MPIDI_Comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
     int i, *uniq_avtids;
@@ -233,7 +228,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
 #define FUNCNAME MPIDI_Comm_free_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
+static inline int MPIDI_Comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
     int i, *uniq_avtids;
@@ -316,12 +311,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
 #define FUNCNAME MPID_Intercomm_exchange_map
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
-                                                         int local_leader,
-                                                         MPIR_Comm * peer_comm,
-                                                         int remote_leader,
-                                                         int *remote_size,
-                                                         int **remote_lupids, int *is_low_group)
+static inline int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
+                                              int local_leader,
+                                              MPIR_Comm * peer_comm,
+                                              int remote_leader,
+                                              int *remote_size,
+                                              int **remote_lupids, int *is_low_group)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;

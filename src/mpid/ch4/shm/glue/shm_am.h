@@ -11,9 +11,8 @@
 #include <shm.h>
 #include "../posix/shm_direct.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm,
-                                                   int handler_id, const void *am_hdr,
-                                                   size_t am_hdr_sz)
+static inline int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm,
+                                        int handler_id, const void *am_hdr, size_t am_hdr_sz)
 {
     int ret;
 
@@ -26,10 +25,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm,
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend(int rank, MPIR_Comm * comm, int handler_id,
-                                                const void *am_hdr, size_t am_hdr_sz,
-                                                const void *data, MPI_Count count,
-                                                MPI_Datatype datatype, MPIR_Request * sreq)
+static inline int MPIDI_SHM_am_isend(int rank, MPIR_Comm * comm, int handler_id,
+                                     const void *am_hdr, size_t am_hdr_sz,
+                                     const void *data, MPI_Count count,
+                                     MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int ret;
 
@@ -43,10 +42,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend(int rank, MPIR_Comm * comm, int 
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isendv(int rank, MPIR_Comm * comm, int handler_id,
-                                                 struct iovec *am_hdrs, size_t iov_len,
-                                                 const void *data, MPI_Count count,
-                                                 MPI_Datatype datatype, MPIR_Request * sreq)
+static inline int MPIDI_SHM_am_isendv(int rank, MPIR_Comm * comm, int handler_id,
+                                      struct iovec *am_hdrs, size_t iov_len,
+                                      const void *data, MPI_Count count,
+                                      MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int ret;
 
@@ -60,9 +59,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isendv(int rank, MPIR_Comm * comm, int
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr_reply(MPIR_Context_id_t context_id,
-                                                         int src_rank, int handler_id,
-                                                         const void *am_hdr, size_t am_hdr_sz)
+static inline int MPIDI_SHM_am_send_hdr_reply(MPIR_Context_id_t context_id,
+                                              int src_rank, int handler_id,
+                                              const void *am_hdr, size_t am_hdr_sz)
 {
     int ret;
 
@@ -75,11 +74,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr_reply(MPIR_Context_id_t conte
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_reply(MPIR_Context_id_t context_id,
-                                                      int src_rank, int handler_id,
-                                                      const void *am_hdr, size_t am_hdr_sz,
-                                                      const void *data, MPI_Count count,
-                                                      MPI_Datatype datatype, MPIR_Request * sreq)
+static inline int MPIDI_SHM_am_isend_reply(MPIR_Context_id_t context_id,
+                                           int src_rank, int handler_id,
+                                           const void *am_hdr, size_t am_hdr_sz,
+                                           const void *data, MPI_Count count,
+                                           MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int ret;
 
@@ -93,7 +92,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_reply(MPIR_Context_id_t context_
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_hdr_max_sz(void)
+static inline size_t MPIDI_SHM_am_hdr_max_sz(void)
 {
     int ret;
 
@@ -106,7 +105,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_hdr_max_sz(void)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_recv(MPIR_Request * req)
+static inline int MPIDI_SHM_am_recv(MPIR_Request * req)
 {
     int ret;
 
@@ -119,7 +118,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_recv(MPIR_Request * req)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_init(MPIR_Request * req)
+static inline void MPIDI_SHM_am_request_init(MPIR_Request * req)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_REQUEST_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_REQUEST_INIT);
@@ -129,7 +128,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_init(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_REQUEST_INIT);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_finalize(MPIR_Request * req)
+static inline void MPIDI_SHM_am_request_finalize(MPIR_Request * req)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_REQUEST_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_REQUEST_FINALIZE);

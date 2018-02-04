@@ -17,7 +17,7 @@
 #define FUNCNAME MPID_Win_set_info
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
+static inline int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_SET_INFO);
@@ -37,7 +37,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_set_info(MPIR_Win * win, MPIR_Info * info)
 #define FUNCNAME MPID_Win_start
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_start(MPIR_Group * group, int assert, MPIR_Win * win)
+static inline int MPID_Win_start(MPIR_Group * group, int assert, MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_START);
@@ -57,7 +57,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_start(MPIR_Group * group, int assert, MPIR
 #define FUNCNAME MPID_Win_complete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_complete(MPIR_Win * win)
+static inline int MPID_Win_complete(MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_COMPLETE);
@@ -77,7 +77,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_complete(MPIR_Win * win)
 #define FUNCNAME MPID_Win_post
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_post(MPIR_Group * group, int assert, MPIR_Win * win)
+static inline int MPID_Win_post(MPIR_Group * group, int assert, MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_POST);
@@ -97,7 +97,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_post(MPIR_Group * group, int assert, MPIR_
 #define FUNCNAME MPID_Win_wait
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_wait(MPIR_Win * win)
+static inline int MPID_Win_wait(MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_WAIT);
@@ -118,7 +118,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_wait(MPIR_Win * win)
 #define FUNCNAME MPID_Win_test
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_test(MPIR_Win * win, int *flag)
+static inline int MPID_Win_test(MPIR_Win * win, int *flag)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_TEST);
@@ -138,7 +138,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_test(MPIR_Win * win, int *flag)
 #define FUNCNAME MPID_Win_lock
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_lock(int lock_type, int rank, int assert, MPIR_Win * win)
+static inline int MPID_Win_lock(int lock_type, int rank, int assert, MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_LOCK);
@@ -158,7 +158,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_lock(int lock_type, int rank, int assert, 
 #define FUNCNAME MPID_Win_unlock
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock(int rank, MPIR_Win * win)
+static inline int MPID_Win_unlock(int rank, MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_UNLOCK);
@@ -178,7 +178,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock(int rank, MPIR_Win * win)
 #define FUNCNAME MPID_Win_get_info
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
+static inline int MPID_Win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_GET_INFO);
@@ -198,7 +198,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_get_info(MPIR_Win * win, MPIR_Info ** info
 #define FUNCNAME MPID_Win_free
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_free(MPIR_Win ** win_ptr)
+static inline int MPID_Win_free(MPIR_Win ** win_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FREE);
@@ -218,7 +218,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_free(MPIR_Win ** win_ptr)
 #define FUNCNAME MPID_Win_fence
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_fence(int assert, MPIR_Win * win)
+static inline int MPID_Win_fence(int assert, MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FENCE);
@@ -238,11 +238,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_fence(int assert, MPIR_Win * win)
 #define FUNCNAME MPID_Win_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_create(void *base,
-                                             MPI_Aint length,
-                                             int disp_unit,
-                                             MPIR_Info * info, MPIR_Comm * comm_ptr,
-                                             MPIR_Win ** win_ptr)
+static inline int MPID_Win_create(void *base,
+                                  MPI_Aint length,
+                                  int disp_unit,
+                                  MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_CREATE);
@@ -262,7 +261,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_create(void *base,
 #define FUNCNAME MPID_Win_attach
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_attach(MPIR_Win * win, void *base, MPI_Aint size)
+static inline int MPID_Win_attach(MPIR_Win * win, void *base, MPI_Aint size)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_ATTACH);
@@ -282,11 +281,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_attach(MPIR_Win * win, void *base, MPI_Ain
 #define FUNCNAME MPID_Win_allocate_shared
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_allocate_shared(MPI_Aint size,
-                                                      int disp_unit,
-                                                      MPIR_Info * info_ptr,
-                                                      MPIR_Comm * comm_ptr,
-                                                      void **base_ptr, MPIR_Win ** win_ptr)
+static inline int MPID_Win_allocate_shared(MPI_Aint size,
+                                           int disp_unit,
+                                           MPIR_Info * info_ptr,
+                                           MPIR_Comm * comm_ptr,
+                                           void **base_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_ALLOCATE_SHARED);
@@ -307,7 +306,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_allocate_shared(MPI_Aint size,
 #define FUNCNAME MPID_Win_flush_local
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local(int rank, MPIR_Win * win)
+static inline int MPID_Win_flush_local(int rank, MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH_LOCAL);
@@ -327,7 +326,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local(int rank, MPIR_Win * win)
 #define FUNCNAME MPID_Win_detach
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_detach(MPIR_Win * win, const void *base)
+static inline int MPID_Win_detach(MPIR_Win * win, const void *base)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_DETACH);
@@ -348,9 +347,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_detach(MPIR_Win * win, const void *base)
 #define FUNCNAME MPID_Win_shared_query
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_shared_query(MPIR_Win * win,
-                                                   int rank, MPI_Aint * size, int *disp_unit,
-                                                   void *baseptr)
+static inline int MPID_Win_shared_query(MPIR_Win * win,
+                                        int rank, MPI_Aint * size, int *disp_unit, void *baseptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_SHARED_QUERY);
@@ -370,10 +368,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_shared_query(MPIR_Win * win,
 #define FUNCNAME MPID_Win_allocate
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_allocate(MPI_Aint size,
-                                               int disp_unit,
-                                               MPIR_Info * info,
-                                               MPIR_Comm * comm, void *baseptr, MPIR_Win ** win)
+static inline int MPID_Win_allocate(MPI_Aint size,
+                                    int disp_unit,
+                                    MPIR_Info * info,
+                                    MPIR_Comm * comm, void *baseptr, MPIR_Win ** win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_ALLOCATE);
@@ -393,7 +391,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_allocate(MPI_Aint size,
 #define FUNCNAME MPID_Win_flush
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_flush(int rank, MPIR_Win * win)
+static inline int MPID_Win_flush(int rank, MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH);
@@ -413,7 +411,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush(int rank, MPIR_Win * win)
 #define FUNCNAME MPID_Win_flush_local_all
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local_all(MPIR_Win * win)
+static inline int MPID_Win_flush_local_all(MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH_LOCAL_ALL);
@@ -433,7 +431,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_local_all(MPIR_Win * win)
 #define FUNCNAME MPID_Win_unlock_all
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock_all(MPIR_Win * win)
+static inline int MPID_Win_unlock_all(MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_UNLOCK_ALL);
@@ -453,8 +451,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock_all(MPIR_Win * win)
 #define FUNCNAME MPID_Win_create_dynamic
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm,
-                                                     MPIR_Win ** win)
+static inline int MPID_Win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win ** win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_CREATE_DYNAMIC);
@@ -474,7 +471,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_create_dynamic(MPIR_Info * info, MPIR_Comm
 #define FUNCNAME MPID_Win_sync
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_sync(MPIR_Win * win)
+static inline int MPID_Win_sync(MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_SYNC);
@@ -494,7 +491,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_sync(MPIR_Win * win)
 #define FUNCNAME MPID_Win_flush_all
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_all(MPIR_Win * win)
+static inline int MPID_Win_flush_all(MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH_ALL);
@@ -514,7 +511,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_flush_all(MPIR_Win * win)
 #define FUNCNAME MPID_Win_lock_all
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Win_lock_all(int assert, MPIR_Win * win)
+static inline int MPID_Win_lock_all(int assert, MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_LOCK_ALL);

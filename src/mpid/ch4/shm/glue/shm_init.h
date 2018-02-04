@@ -11,7 +11,7 @@
 #include <shm.h>
 #include "../posix/shm_direct.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_vnis_provided)
+static inline int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_vnis_provided)
 {
     int ret;
 
@@ -24,7 +24,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_finalize_hook(void)
+static inline int MPIDI_SHM_mpi_finalize_hook(void)
 {
     int ret;
 
@@ -50,7 +50,7 @@ static inline int MPIDI_SHM_get_vni_attr(int vni)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int vni, int blocking)
+static inline int MPIDI_SHM_progress(int vni, int blocking)
 {
     int ret;
 

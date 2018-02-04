@@ -156,10 +156,10 @@ static inline int MPIDI_UCX_recv(void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
-                                                 MPI_Aint count,
-                                                 MPI_Datatype datatype,
-                                                 MPIR_Request * message, MPIR_Request ** rreqp)
+static inline int MPIDI_NM_mpi_imrecv(void *buf,
+                                      MPI_Aint count,
+                                      MPI_Datatype datatype,
+                                      MPIR_Request * message, MPIR_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t data_sz;
@@ -217,39 +217,38 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf,
-                                               MPI_Aint count,
-                                               MPI_Datatype datatype,
-                                               int rank,
-                                               int tag,
-                                               MPIR_Comm * comm,
-                                               int context_offset,
-                                               MPIDI_av_entry_t * addr,
-                                               MPI_Status * status, MPIR_Request ** request)
+static inline int MPIDI_NM_mpi_recv(void *buf,
+                                    MPI_Aint count,
+                                    MPI_Datatype datatype,
+                                    int rank,
+                                    int tag,
+                                    MPIR_Comm * comm,
+                                    int context_offset,
+                                    MPIDI_av_entry_t * addr,
+                                    MPI_Status * status, MPIR_Request ** request)
 {
     return MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf,
-                                                MPI_Aint count,
-                                                MPI_Datatype datatype,
-                                                int rank,
-                                                int tag,
-                                                MPIR_Comm * comm, int context_offset,
-                                                MPIDI_av_entry_t * addr, MPIR_Request ** request)
+static inline int MPIDI_NM_mpi_irecv(void *buf,
+                                     MPI_Aint count,
+                                     MPI_Datatype datatype,
+                                     int rank,
+                                     int tag,
+                                     MPIR_Comm * comm, int context_offset,
+                                     MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     return MPIDI_UCX_recv(buf, count, datatype, rank, tag, comm, context_offset, addr, request);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
-                                                    int count,
-                                                    MPI_Datatype datatype,
-                                                    int rank,
-                                                    int tag,
-                                                    MPIR_Comm * comm,
-                                                    int context_offset,
-                                                    MPIDI_av_entry_t * addr,
-                                                    MPIR_Request ** request)
+static inline int MPIDI_NM_mpi_recv_init(void *buf,
+                                         int count,
+                                         MPI_Datatype datatype,
+                                         int rank,
+                                         int tag,
+                                         MPIR_Comm * comm,
+                                         int context_offset,
+                                         MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     return MPIDIG_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 }

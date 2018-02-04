@@ -20,7 +20,7 @@
 #endif
 
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     MPIDI_coll_algo_container_t * MPIDI_CH4_Barrier_select(MPIR_Comm * comm,
                                                            MPIR_Errflag_t * errflag)
 {
@@ -35,7 +35,7 @@ MPL_STATIC_INLINE_PREFIX
     return (MPIDI_coll_algo_container_t *) & CH4_barrier_composition_beta_cnt;
 }
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_CH4_Barrier_call(MPIR_Comm * comm,
                                MPIR_Errflag_t * errflag,
                                MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
@@ -62,7 +62,7 @@ MPL_STATIC_INLINE_PREFIX
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     MPIDI_coll_algo_container_t * MPIDI_CH4_Bcast_select(void *buffer,
                                                          int count,
                                                          MPI_Datatype datatype,
@@ -92,7 +92,7 @@ MPL_STATIC_INLINE_PREFIX
     return (MPIDI_coll_algo_container_t *) & CH4_bcast_composition_gamma_cnt;
 }
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_CH4_Bcast_call(void *buffer, int count, MPI_Datatype datatype,
                              int root, MPIR_Comm * comm,
                              MPIR_Errflag_t * errflag,
@@ -129,7 +129,7 @@ MPL_STATIC_INLINE_PREFIX
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     MPIDI_coll_algo_container_t * MPIDI_CH4_Allreduce_select(const void *sendbuf,
                                                              void *recvbuf,
                                                              int count,
@@ -160,7 +160,7 @@ MPL_STATIC_INLINE_PREFIX
     return (MPIDI_coll_algo_container_t *) & CH4_allreduce_composition_beta_cnt;
 }
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_CH4_Allreduce_call(const void *sendbuf, void *recvbuf, int count,
                                  MPI_Datatype datatype, MPI_Op op,
                                  MPIR_Comm * comm, MPIR_Errflag_t * errflag,
@@ -191,7 +191,7 @@ MPL_STATIC_INLINE_PREFIX
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     MPIDI_coll_algo_container_t * MPIDI_CH4_Reduce_select(const void *sendbuf,
                                                           void *recvbuf,
                                                           int count,
@@ -221,7 +221,7 @@ MPL_STATIC_INLINE_PREFIX
 }
 
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_CH4_Reduce_call(const void *sendbuf, void *recvbuf, int count,
                               MPI_Datatype datatype, MPI_Op op, int root,
                               MPIR_Comm * comm, MPIR_Errflag_t * errflag,

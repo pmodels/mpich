@@ -11,7 +11,7 @@
 #include <shm.h>
 #include "../posix/shm_direct.h"
 
-MPL_STATIC_INLINE_PREFIX void *MPIDI_SHM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+static inline void *MPIDI_SHM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
     void *ret;
 
@@ -24,7 +24,7 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_SHM_mpi_alloc_mem(size_t size, MPIR_Info * 
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_free_mem(void *ptr)
+static inline int MPIDI_SHM_mpi_free_mem(void *ptr)
 {
     int ret;
 

@@ -17,7 +17,7 @@
 #define FUNCNAME MPIDI_CH4_rank_is_local
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm)
+static inline int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm)
 {
     int ret;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4_RANK_IS_LOCAL);
@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm)
 #define FUNCNAME MPIDI_av_is_local
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av)
+static inline int MPIDI_av_is_local(MPIDI_av_entry_t * av)
 {
     int ret;
 

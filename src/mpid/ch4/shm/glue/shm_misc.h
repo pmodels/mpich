@@ -11,8 +11,8 @@
 #include <shm.h>
 #include "../posix/shm_direct.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
-                                                     int *lpid_ptr, MPL_bool is_remote)
+static inline int MPIDI_SHM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
+                                          int *lpid_ptr, MPL_bool is_remote)
 {
     int ret;
 
@@ -25,7 +25,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_get_lpid(MPIR_Comm * comm_ptr, int i
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
+static inline int MPIDI_SHM_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {
     int ret;
 
@@ -38,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_node_id(MPIR_Comm * comm, int rank, i
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
+static inline int MPIDI_SHM_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
 {
     int ret;
 
@@ -51,8 +51,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_max_node_id(MPIR_Comm * comm, int *ma
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
-                                                       char **local_upids)
+static inline int MPIDI_SHM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
+                                            char **local_upids)
 {
     int ret;
 
@@ -65,8 +65,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_local_upids(MPIR_Comm * comm, size_t 
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_upids_to_lupids(int size, size_t * remote_upid_size,
-                                                       char *remote_upids, int **remote_lupids)
+static inline int MPIDI_SHM_upids_to_lupids(int size, size_t * remote_upid_size,
+                                            char *remote_upids, int **remote_lupids)
 {
     int ret;
 
@@ -79,8 +79,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_upids_to_lupids(int size, size_t * remote
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
-                                                                   int size, const int lpids[])
+static inline int MPIDI_SHM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
+                                                        int size, const int lpids[])
 {
     int ret;
 

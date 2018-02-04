@@ -176,7 +176,7 @@ static inline MPIR_Context_id_t MPIDI_CH4U_win_to_context(const MPIR_Win * win)
 #define FUNCNAME MPIDI_CH4U_request_complete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_complete(MPIR_Request * req)
+static inline void MPIDI_CH4U_request_complete(MPIR_Request * req)
 {
     int incomplete;
 
@@ -194,8 +194,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_complete(MPIR_Request * req)
 #define FUNCNAME MPIDI_CH4U_win_target_add
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_add(MPIR_Win * win,
-                                                                            int rank)
+static inline MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_add(MPIR_Win * win, int rank)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_WIN_TARGET_ADD);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_WIN_TARGET_ADD);
@@ -221,8 +220,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_add(MPIR
 #define FUNCNAME MPIDI_CH4U_win_target_find
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_find(MPIR_Win * win,
-                                                                             int rank)
+static inline MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_find(MPIR_Win * win, int rank)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_WIN_TARGET_FIND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_WIN_TARGET_FIND);
@@ -238,8 +236,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_find(MPI
 #define FUNCNAME MPIDI_CH4U_win_target_get
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_get(MPIR_Win * win,
-                                                                            int rank)
+static inline MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_get(MPIR_Win * win, int rank)
 {
     MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, rank);
     if (!target_ptr)
@@ -251,8 +248,8 @@ MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_get(MPIR
 #define FUNCNAME MPIDI_CH4U_win_target_delete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_target_delete(MPIR_Win * win,
-                                                           MPIDI_CH4U_win_target_t * target_ptr)
+static inline void MPIDI_CH4U_win_target_delete(MPIR_Win * win,
+                                                MPIDI_CH4U_win_target_t * target_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_WIN_TARGET_DELETE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_WIN_TARGET_DELETE);
@@ -267,7 +264,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_target_delete(MPIR_Win * win,
 #define FUNCNAME MPIDI_CH4U_win_target_cleanall
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_target_cleanall(MPIR_Win * win)
+static inline void MPIDI_CH4U_win_target_cleanall(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_WIN_TARGET_CLEANALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_WIN_TARGET_CLEANALL);
@@ -285,7 +282,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_target_cleanall(MPIR_Win * win)
 #define FUNCNAME MPIDI_CH4U_win_hash_clear
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_hash_clear(MPIR_Win * win)
+static inline void MPIDI_CH4U_win_hash_clear(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_WIN_HASH_CLEAR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_WIN_HASH_CLEAR);
@@ -811,7 +808,7 @@ static inline void MPIDI_win_cmpl_cnts_incr(MPIR_Win * win, int target_rank,
 #define FUNCNAME MPIDI_win_remote_acc_cmpl_cnt_incr
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_win_remote_acc_cmpl_cnt_incr(MPIR_Win * win, int target_rank)
+static inline void MPIDI_win_remote_acc_cmpl_cnt_incr(MPIR_Win * win, int target_rank)
 {
     int c = 0;
     switch (MPIDI_CH4U_WIN(win, sync).access_epoch_type) {
@@ -834,7 +831,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_win_remote_acc_cmpl_cnt_incr(MPIR_Win * win,
 #define FUNCNAME MPIDI_win_remote_acc_cmpl_cnt_decr
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_win_remote_acc_cmpl_cnt_decr(MPIR_Win * win, int target_rank)
+static inline void MPIDI_win_remote_acc_cmpl_cnt_decr(MPIR_Win * win, int target_rank)
 {
     int c = 0;
     switch (MPIDI_CH4U_WIN(win, sync).access_epoch_type) {
@@ -951,7 +948,7 @@ static inline void MPIDI_win_check_group_local_completed(MPIR_Win * win,
 #define FUNCNAME MPIDI_CH4U_map_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_create(void **out_map, MPL_memory_class class)
+static inline void MPIDI_CH4U_map_create(void **out_map, MPL_memory_class class)
 {
     MPIDI_CH4U_map_t *map;
     map = MPL_malloc(sizeof(MPIDI_CH4U_map_t), class);
@@ -964,7 +961,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_create(void **out_map, MPL_memory_c
 #define FUNCNAME MPIDI_CH4U_map_destroy
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_destroy(void *in_map)
+static inline void MPIDI_CH4U_map_destroy(void *in_map)
 {
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
     MPIDI_CH4U_map_t *map = in_map;
@@ -977,8 +974,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_destroy(void *in_map)
 #define FUNCNAME MPIDI_CH4U_map_set
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_set(void *in_map, uint64_t id, void *val,
-                                                 MPL_memory_class class)
+static inline void MPIDI_CH4U_map_set(void *in_map, uint64_t id, void *val, MPL_memory_class class)
 {
     MPIDI_CH4U_map_t *map;
     MPIDI_CH4U_map_entry_t *map_entry;
@@ -996,7 +992,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_set(void *in_map, uint64_t id, void
 #define FUNCNAME MPIDI_CH4U_map_erase
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_erase(void *in_map, uint64_t id)
+static inline void MPIDI_CH4U_map_erase(void *in_map, uint64_t id)
 {
     MPIDI_CH4U_map_t *map;
     MPIDI_CH4U_map_entry_t *map_entry;
@@ -1013,7 +1009,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_erase(void *in_map, uint64_t id)
 #define FUNCNAME MPIDI_CH4U_map_lookup
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_map_lookup(void *in_map, uint64_t id)
+static inline void *MPIDI_CH4U_map_lookup(void *in_map, uint64_t id)
 {
     void *rc;
     MPIDI_CH4U_map_t *map;
@@ -1035,7 +1031,7 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_map_lookup(void *in_map, uint64_t id)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* Wait until active message acc ops are done. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_wait_am_acc(MPIR_Win * win, int target_rank, int order_needed)
+static inline int MPIDI_CH4U_wait_am_acc(MPIR_Win * win, int target_rank, int order_needed)
 {
     int mpi_errno = MPI_SUCCESS;
     if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & order_needed) {

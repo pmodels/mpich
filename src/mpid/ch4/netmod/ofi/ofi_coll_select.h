@@ -5,7 +5,7 @@
 #include "coll_algo_params.h"
 #include "ofi_coll_impl.h"
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Barrier_select(MPIR_Comm * comm_ptr,
                                                                MPIR_Errflag_t * errflag,
                                                                MPIDI_OFI_coll_algo_container_t *
@@ -15,7 +15,7 @@ MPL_STATIC_INLINE_PREFIX
     return (MPIDI_OFI_coll_algo_container_t *) & OFI_barrier__recursive_doubling_cnt;
 }
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_OFI_Barrier_call(MPIR_Comm * comm_ptr,
                                MPIR_Errflag_t * errflag,
                                MPIDI_OFI_coll_algo_container_t * ch4_algo_parameters_container)
@@ -36,7 +36,7 @@ MPL_STATIC_INLINE_PREFIX
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Bcast_select(void *buffer, int count,
                                                              MPI_Datatype datatype,
                                                              int root,
@@ -66,7 +66,7 @@ MPL_STATIC_INLINE_PREFIX
     }
 }
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_OFI_Bcast_call(void *buffer, int count, MPI_Datatype datatype,
                              int root, MPIR_Comm * comm_ptr,
                              MPIR_Errflag_t * errflag,
@@ -99,7 +99,7 @@ MPL_STATIC_INLINE_PREFIX
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Allreduce_select(const void *sendbuf,
                                                                  void *recvbuf,
                                                                  int count,
@@ -123,7 +123,7 @@ MPL_STATIC_INLINE_PREFIX
     }
 }
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_OFI_Allreduce_call(const void *sendbuf, void *recvbuf, int count,
                                  MPI_Datatype datatype, MPI_Op op,
                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
@@ -152,7 +152,7 @@ MPL_STATIC_INLINE_PREFIX
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     MPIDI_OFI_coll_algo_container_t * MPIDI_OFI_Reduce_select(const void *sendbuf,
                                                               void *recvbuf,
                                                               int count,
@@ -176,7 +176,7 @@ MPL_STATIC_INLINE_PREFIX
     }
 }
 
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_OFI_Reduce_call(const void *sendbuf, void *recvbuf, int count,
                               MPI_Datatype datatype, MPI_Op op, int root,
                               MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,

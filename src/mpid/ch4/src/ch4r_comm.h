@@ -18,10 +18,10 @@
 #define FUNCNAME MPIDIU_upids_to_lupids
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDIU_upids_to_lupids(int size,
-                                                    size_t * remote_upid_size,
-                                                    char *remote_upids,
-                                                    int **remote_lupids, int *remote_node_ids)
+static inline int MPIDIU_upids_to_lupids(int size,
+                                         size_t * remote_upid_size,
+                                         char *remote_upids,
+                                         int **remote_lupids, int *remote_node_ids)
 {
     int mpi_errno = MPI_SUCCESS, i;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_UPIDS_TO_LUPIDS);
@@ -71,15 +71,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_upids_to_lupids(int size,
 #define FUNCNAME MPIDIU_Intercomm_map_bcast_intra
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm,
-                                                              int local_leader,
-                                                              int *remote_size,
-                                                              int *is_low_group,
-                                                              int pure_intracomm,
-                                                              size_t * remote_upid_size,
-                                                              char *remote_upids,
-                                                              int **remote_lupids,
-                                                              int *remote_node_ids)
+static inline int MPIDIU_Intercomm_map_bcast_intra(MPIR_Comm * local_comm,
+                                                   int local_leader,
+                                                   int *remote_size,
+                                                   int *is_low_group,
+                                                   int pure_intracomm,
+                                                   size_t * remote_upid_size,
+                                                   char *remote_upids,
+                                                   int **remote_lupids, int *remote_node_ids)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;

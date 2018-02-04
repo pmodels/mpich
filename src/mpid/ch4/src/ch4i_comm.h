@@ -872,7 +872,7 @@ static inline int MPIDI_set_map(MPIDI_rank_map_t * src_rmap,
 #define FUNCNAME MPIDI_comm_create_rank_map
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
+static inline int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm_map_t *mapper;
@@ -1067,8 +1067,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
 #define FUNCNAME MPIDI_check_disjoint_lupids
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_check_disjoint_lupids(int lupids1[], int n1,
-                                                         int lupids2[], int n2)
+static inline int MPIDI_check_disjoint_lupids(int lupids1[], int n1, int lupids2[], int n2)
 {
     int i, mask_size, idx, bit, maxlupid = -1;
     int mpi_errno = MPI_SUCCESS;

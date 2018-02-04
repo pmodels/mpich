@@ -11,9 +11,9 @@
 #include <shm.h>
 #include "../posix/shm_direct.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_connect(const char *port_name, MPIR_Info * info,
-                                                        int root, int timeout, MPIR_Comm * comm,
-                                                        MPIR_Comm ** newcomm_ptr)
+static inline int MPIDI_SHM_mpi_comm_connect(const char *port_name, MPIR_Info * info,
+                                             int root, int timeout, MPIR_Comm * comm,
+                                             MPIR_Comm ** newcomm_ptr)
 {
     int ret;
 
@@ -26,7 +26,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_connect(const char *port_name, M
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
+static inline int MPIDI_SHM_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
 {
     int ret;
 
@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
+static inline int MPIDI_SHM_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
 {
     int ret;
 
@@ -52,7 +52,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_open_port(MPIR_Info * info_ptr, char 
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_close_port(const char *port_name)
+static inline int MPIDI_SHM_mpi_close_port(const char *port_name)
 {
     int ret;
 
@@ -65,9 +65,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_close_port(const char *port_name)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_accept(const char *port_name, MPIR_Info * info,
-                                                       int root, MPIR_Comm * comm,
-                                                       MPIR_Comm ** newcomm_ptr)
+static inline int MPIDI_SHM_mpi_comm_accept(const char *port_name, MPIR_Info * info,
+                                            int root, MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     int ret;
 

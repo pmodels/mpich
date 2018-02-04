@@ -30,7 +30,7 @@
 #define FUNCNAME MPIDI_Progress_test
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
+static inline int MPIDI_Progress_test(int flags)
 {
     int mpi_errno, made_progress, i;
 
@@ -79,12 +79,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
 #define FUNCNAME MPID_Progress_test
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Progress_test(void)
+static inline int MPID_Progress_test(void)
 {
     return MPIDI_Progress_test(MPIDI_PROGRESS_ALL);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Progress_poke(void)
+static inline int MPID_Progress_poke(void)
 {
     int ret;
 
@@ -97,7 +97,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_poke(void)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPID_Progress_start(MPID_Progress_state * state)
+static inline void MPID_Progress_start(MPID_Progress_state * state)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_START);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_START);
@@ -106,7 +106,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Progress_start(MPID_Progress_state * state)
     return;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPID_Progress_end(MPID_Progress_state * state)
+static inline void MPID_Progress_end(MPID_Progress_state * state)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_END);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_END);
@@ -115,7 +115,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Progress_end(MPID_Progress_state * state)
     return;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
+static inline int MPID_Progress_wait(MPID_Progress_state * state)
 {
     int ret;
 
@@ -133,7 +133,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
 #define FUNCNAME MPID_Progress_register
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Progress_register(int (*progress_fn) (int *), int *id)
+static inline int MPID_Progress_register(int (*progress_fn) (int *), int *id)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -171,7 +171,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_register(int (*progress_fn) (int *), 
 #define FUNCNAME MPID_Progress_deregister
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Progress_deregister(int id)
+static inline int MPID_Progress_deregister(int id)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_DEREGISTER);
@@ -194,7 +194,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_deregister(int id)
 #define FUNCNAME MPID_Progress_activate
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Progress_activate(int id)
+static inline int MPID_Progress_activate(int id)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_ACTIVATE);
@@ -216,7 +216,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_activate(int id)
 #define FUNCNAME MPID_Progress_deactivate
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Progress_deactivate(int id)
+static inline int MPID_Progress_deactivate(int id)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROGRESS_DEACTIVATE);

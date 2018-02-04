@@ -11,10 +11,9 @@
 #include <shm.h>
 #include "../posix/shm_direct.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_send(const void *buf, MPI_Aint count,
-                                                MPI_Datatype datatype, int rank, int tag,
-                                                MPIR_Comm * comm, int context_offset,
-                                                MPIR_Request ** request)
+static inline int MPIDI_SHM_mpi_send(const void *buf, MPI_Aint count,
+                                     MPI_Datatype datatype, int rank, int tag,
+                                     MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
     int ret;
 
@@ -27,10 +26,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_send(const void *buf, MPI_Aint count,
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ssend(const void *buf, MPI_Aint count,
-                                                 MPI_Datatype datatype, int rank, int tag,
-                                                 MPIR_Comm * comm, int context_offset,
-                                                 MPIR_Request ** request)
+static inline int MPIDI_SHM_mpi_ssend(const void *buf, MPI_Aint count,
+                                      MPI_Datatype datatype, int rank, int tag,
+                                      MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
     int ret;
 
@@ -43,10 +41,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ssend(const void *buf, MPI_Aint count
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_send_init(const void *buf, int count,
-                                                     MPI_Datatype datatype, int rank, int tag,
-                                                     MPIR_Comm * comm, int context_offset,
-                                                     MPIR_Request ** request)
+static inline int MPIDI_SHM_mpi_send_init(const void *buf, int count,
+                                          MPI_Datatype datatype, int rank, int tag,
+                                          MPIR_Comm * comm, int context_offset,
+                                          MPIR_Request ** request)
 {
     int ret;
 
@@ -59,10 +57,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_send_init(const void *buf, int count,
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ssend_init(const void *buf, int count,
-                                                      MPI_Datatype datatype, int rank, int tag,
-                                                      MPIR_Comm * comm, int context_offset,
-                                                      MPIR_Request ** request)
+static inline int MPIDI_SHM_mpi_ssend_init(const void *buf, int count,
+                                           MPI_Datatype datatype, int rank, int tag,
+                                           MPIR_Comm * comm, int context_offset,
+                                           MPIR_Request ** request)
 {
     int ret;
 
@@ -76,10 +74,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ssend_init(const void *buf, int count
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rsend_init(const void *buf, int count,
-                                                      MPI_Datatype datatype, int rank, int tag,
-                                                      MPIR_Comm * comm, int context_offset,
-                                                      MPIR_Request ** request)
+static inline int MPIDI_SHM_mpi_rsend_init(const void *buf, int count,
+                                           MPI_Datatype datatype, int rank, int tag,
+                                           MPIR_Comm * comm, int context_offset,
+                                           MPIR_Request ** request)
 {
     int ret;
 
@@ -93,10 +91,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rsend_init(const void *buf, int count
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_bsend_init(const void *buf, int count,
-                                                      MPI_Datatype datatype, int rank, int tag,
-                                                      MPIR_Comm * comm, int context_offset,
-                                                      MPIR_Request ** request)
+static inline int MPIDI_SHM_mpi_bsend_init(const void *buf, int count,
+                                           MPI_Datatype datatype, int rank, int tag,
+                                           MPIR_Comm * comm, int context_offset,
+                                           MPIR_Request ** request)
 {
     int ret;
 
@@ -110,10 +108,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_bsend_init(const void *buf, int count
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count,
-                                                 MPI_Datatype datatype, int rank, int tag,
-                                                 MPIR_Comm * comm, int context_offset,
-                                                 MPIR_Request ** request)
+static inline int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count,
+                                      MPI_Datatype datatype, int rank, int tag,
+                                      MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
     int ret;
 
@@ -126,10 +123,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_isend(const void *buf, MPI_Aint count
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_issend(const void *buf, MPI_Aint count,
-                                                  MPI_Datatype datatype, int rank, int tag,
-                                                  MPIR_Comm * comm, int context_offset,
-                                                  MPIR_Request ** request)
+static inline int MPIDI_SHM_mpi_issend(const void *buf, MPI_Aint count,
+                                       MPI_Datatype datatype, int rank, int tag,
+                                       MPIR_Comm * comm, int context_offset,
+                                       MPIR_Request ** request)
 {
     int ret;
 
@@ -142,7 +139,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_issend(const void *buf, MPI_Aint coun
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_cancel_send(MPIR_Request * sreq)
+static inline int MPIDI_SHM_mpi_cancel_send(MPIR_Request * sreq)
 {
     int ret;
 
@@ -155,9 +152,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_cancel_send(MPIR_Request * sreq)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_recv_init(void *buf, int count, MPI_Datatype datatype,
-                                                     int rank, int tag, MPIR_Comm * comm,
-                                                     int context_offset, MPIR_Request ** request)
+static inline int MPIDI_SHM_mpi_recv_init(void *buf, int count, MPI_Datatype datatype,
+                                          int rank, int tag, MPIR_Comm * comm,
+                                          int context_offset, MPIR_Request ** request)
 {
     int ret;
 
@@ -170,10 +167,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_recv_init(void *buf, int count, MPI_D
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_recv(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                                int rank, int tag, MPIR_Comm * comm,
-                                                int context_offset, MPI_Status * status,
-                                                MPIR_Request ** request)
+static inline int MPIDI_SHM_mpi_recv(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                     int rank, int tag, MPIR_Comm * comm,
+                                     int context_offset, MPI_Status * status,
+                                     MPIR_Request ** request)
 {
     int ret;
 
@@ -187,9 +184,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_recv(void *buf, MPI_Aint count, MPI_D
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                                 int rank, int tag, MPIR_Comm * comm,
-                                                 int context_offset, MPIR_Request ** request)
+static inline int MPIDI_SHM_mpi_irecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                      int rank, int tag, MPIR_Comm * comm,
+                                      int context_offset, MPIR_Request ** request)
 {
     int ret;
 
@@ -202,8 +199,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_irecv(void *buf, MPI_Aint count, MPI_
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_imrecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                                  MPIR_Request * message, MPIR_Request ** rreqp)
+static inline int MPIDI_SHM_mpi_imrecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
+                                       MPIR_Request * message, MPIR_Request ** rreqp)
 {
     int ret;
 
@@ -216,7 +213,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_imrecv(void *buf, MPI_Aint count, MPI
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_cancel_recv(MPIR_Request * rreq)
+static inline int MPIDI_SHM_mpi_cancel_recv(MPIR_Request * rreq)
 {
     int ret;
 
@@ -229,9 +226,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_cancel_recv(MPIR_Request * rreq)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_improbe(int source, int tag, MPIR_Comm * comm,
-                                                   int context_offset, int *flag,
-                                                   MPIR_Request ** message, MPI_Status * status)
+static inline int MPIDI_SHM_mpi_improbe(int source, int tag, MPIR_Comm * comm,
+                                        int context_offset, int *flag,
+                                        MPIR_Request ** message, MPI_Status * status)
 {
     int ret;
 
@@ -244,9 +241,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_improbe(int source, int tag, MPIR_Com
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_iprobe(int source, int tag, MPIR_Comm * comm,
-                                                  int context_offset, int *flag,
-                                                  MPI_Status * status)
+static inline int MPIDI_SHM_mpi_iprobe(int source, int tag, MPIR_Comm * comm,
+                                       int context_offset, int *flag, MPI_Status * status)
 {
     int ret;
 
