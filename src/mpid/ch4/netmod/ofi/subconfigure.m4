@@ -110,7 +110,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
 
         dnl For these providers, we don't know exactly which capabilities we
         dnl want to select by default so we turn on runtime checks. At some point
-        dnl in the future, we may create a specfici capability set for them.
+        dnl in the future, we may create a specific capability set for them.
         if test "$provider" = "verbs" ; then
             enable_verbs="yes"
             runtime_capabilities="yes"
