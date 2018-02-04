@@ -175,4 +175,26 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
      .tag_bits = MPIDI_OFI_TAG_BITS_VERBS,
      .major_version = MPIDI_OFI_MAJOR_VERSION_MINIMAL,
      .minor_version = MPIDI_OFI_MINOR_VERSION_MINIMAL}
+    ,
+    {   /* RxM */
+     .enable_data = MPIDI_OFI_ENABLE_DATA_RXM,
+     .enable_av_table = MPIDI_OFI_ENABLE_AV_TABLE_RXM,
+     .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_RXM,
+     .enable_stx_rma = MPIDI_OFI_ENABLE_STX_RMA_RXM,
+     .enable_mr_scalable = MPIDI_OFI_ENABLE_MR_SCALABLE_RXM,
+     .enable_tagged = MPIDI_OFI_ENABLE_TAGGED_RXM,
+     .enable_am = MPIDI_OFI_ENABLE_AM_RXM,
+     .enable_rma = MPIDI_OFI_ENABLE_RMA_RXM,
+     .enable_atomics = MPIDI_OFI_ENABLE_ATOMICS_RXM,
+     .enable_data_auto_progress = MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS_RXM,
+     .enable_control_auto_progress = MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_RXM,
+     .enable_pt2pt_nopack = MPIDI_OFI_ENABLE_PT2PT_NOPACK_RXM,
+     .max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_RXM,
+     .max_endpoints_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS_RXM,
+     .fetch_atomic_iovecs = MPIDI_OFI_FETCH_ATOMIC_IOVECS_RXM,
+     .context_bits = MPIDI_OFI_CONTEXT_BITS_RXM,
+     .source_bits = MPIDI_OFI_SOURCE_BITS_RXM,
+     .tag_bits = MPIDI_OFI_TAG_BITS_RXM,
+     .major_version = MPIDI_OFI_MAJOR_VERSION_MINIMAL,
+     .minor_version = MPIDI_OFI_MINOR_VERSION_MINIMAL}
 };
