@@ -17,7 +17,7 @@
  * netmod.
  */
 #define MPIDI_CH4I_API(rc,fcnname,...)            \
-  MPL_STATIC_INLINE_PREFIX rc MPID_##fcnname(__VA_ARGS__) MPL_STATIC_INLINE_SUFFIX
+  MPL_STATIC_INLINE_PREFIX rc MPID_##fcnname(__VA_ARGS__)
 
 MPIDI_CH4I_API(int, Init, int *, char ***, int, int *, int *, int *);
 MPIDI_CH4I_API(int, InitCompleted, void);
