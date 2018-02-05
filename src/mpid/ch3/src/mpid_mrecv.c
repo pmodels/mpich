@@ -14,8 +14,8 @@ int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
                MPIR_Request *message, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Request req_handle; /* dummy for MPIR_Request_complete */
-    int active_flag; /* dummy for MPIR_Request_complete */
+    MPI_Request req_handle;     /* dummy for MPIR_Request_completion_processing */
+    int active_flag;            /* dummy for MPIR_Request_completion_processing */
     MPIR_Request *rreq = NULL;
 
     if (message == NULL) {
@@ -47,7 +47,7 @@ int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
         }
         MPID_Progress_end(&progress_state);
     }
-    mpi_errno = MPIR_Request_complete(&req_handle, rreq, status, &active_flag);
+    mpi_errno = MPIR_Request_completion_processing(&req_handle, rreq, status, &active_flag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
