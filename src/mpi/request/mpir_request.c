@@ -53,7 +53,7 @@ int MPIR_Progress_wait_request(MPIR_Request * req)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Request_complete
+#define FUNCNAME MPIR_Request_completion_processing
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* Complete a request, saving the status data if necessary.
@@ -66,8 +66,8 @@ int MPIR_Progress_wait_request(MPIR_Request * req)
    call the routine MPII_Sendq_forget; otherwise that macro will be a no-op.
    The implementation of the MPIR_Sendq_xxx is in src/mpi/debugger/dbginit.c .
 */
-int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
-                          MPI_Status * status, int *active)
+int MPIR_Request_completion_processing(MPI_Request * request, MPIR_Request * request_ptr,
+                                       MPI_Status * status, int *active)
 {
     int mpi_errno = MPI_SUCCESS;
 

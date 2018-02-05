@@ -32,7 +32,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
 #define MPI_Waitall PMPI_Waitall
 
 
-/* The "fastpath" version of MPIR_Request_complete.  It only handles
+/* The "fastpath" version of MPIR_Request_completion_processing.  It only handles
  * MPIR_REQUEST_KIND__SEND and MPIR_REQUEST_KIND__RECV kinds, and it does not attempt to
  * deal with status structures under the assumption that bleeding fast code will
  * pass either MPI_STATUS_IGNORE or MPI_STATUSES_IGNORE as appropriate.  This
@@ -236,8 +236,8 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[], MPI_Status arr
         if (MPIR_Request_is_complete(request_ptrs[i])) {
             /* complete the request and check the status */
             status_ptr = (ignoring_statuses) ? MPI_STATUS_IGNORE : &array_of_statuses[i];
-            rc = MPIR_Request_complete(&array_of_requests[i], request_ptrs[i], status_ptr,
-                                       &active_flag);
+            rc = MPIR_Request_completion_processing(&array_of_requests[i], request_ptrs[i],
+                                                    status_ptr, &active_flag);
         }
 
         if (rc == MPI_SUCCESS) {
