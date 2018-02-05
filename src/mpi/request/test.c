@@ -64,10 +64,14 @@ int MPIR_Test_impl(MPI_Request * request, int *flag, MPI_Status * status)
     }
 
     if (MPIR_Request_is_complete(request_ptr)) {
-        mpi_errno = MPIR_Request_completion_processing(request, request_ptr, status, &active_flag);
-        *flag = TRUE;
+        mpi_errno = MPIR_Request_completion_processing(request_ptr, status, &active_flag);
+        if (!MPIR_Request_is_persistent(request_ptr)) {
+            MPIR_Request_free(request_ptr);
+            *request = MPI_REQUEST_NULL;
+        }
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
+        *flag = TRUE;
         /* Fall through to the exit */
     } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
                         MPID_Request_is_anysource(request_ptr) &&

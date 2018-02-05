@@ -160,6 +160,12 @@ extern MPIR_Object_alloc_t MPIR_Request_mem;
 /* Preallocated request objects */
 extern MPIR_Request MPIR_Request_direct[];
 
+static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
+{
+    return (req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_SEND ||
+            req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_RECV);
+}
+
 static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 {
     MPIR_Request *req;
@@ -272,7 +278,7 @@ static inline void MPIR_Request_free(MPIR_Request * req)
     }
 }
 
-int MPIR_Request_completion_processing(MPI_Request *, MPIR_Request *, MPI_Status *, int *);
+int MPIR_Request_completion_processing(MPIR_Request *, MPI_Status *, int *);
 int MPIR_Request_get_error(MPIR_Request *);
 int MPIR_Progress_wait_request(MPIR_Request * req);
 
