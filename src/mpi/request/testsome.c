@@ -172,8 +172,8 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
              MPI_STATUSES_IGNORE) ? &array_of_statuses[n_active] : MPI_STATUS_IGNORE;
         if (request_ptrs[i] != NULL) {
             if (MPIR_Request_is_complete(request_ptrs[i])) {
-                rc = MPIR_Request_complete(&array_of_requests[i], request_ptrs[i], status_ptr,
-                                           &active_flag);
+                rc = MPIR_Request_completion_processing(&array_of_requests[i], request_ptrs[i],
+                                                        status_ptr, &active_flag);
                 if (active_flag) {
                     array_of_indices[n_active] = i;
                     n_active += 1;

@@ -348,7 +348,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mrecv(void *buf,
 
     MPIR_Request_extract_status(rreq, status);
 
-    mpi_errno = MPIR_Request_complete(&req_handle, rreq, status, &active_flag);
+    mpi_errno = MPIR_Request_completion_processing(&req_handle, rreq, status, &active_flag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

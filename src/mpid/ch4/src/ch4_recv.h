@@ -214,7 +214,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
 
     /* This should probably be moved to MPICH (above device) level */
     /* Someone neglected to put the blocking at the MPICH level    */
-    mpi_errno = MPIR_Request_complete(&req_handle, rreq, status, &active_flag);
+    mpi_errno = MPIR_Request_completion_processing(&req_handle, rreq, status, &active_flag);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_MRECV);
     return mpi_errno;
