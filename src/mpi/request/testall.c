@@ -127,8 +127,9 @@ int MPIR_Testall_impl(int count, MPI_Request array_of_requests[], int *flag,
                     status_ptr =
                         (array_of_statuses !=
                          MPI_STATUSES_IGNORE) ? &array_of_statuses[i] : MPI_STATUS_IGNORE;
-                    rc = MPIR_Request_completion_processing(&array_of_requests[i], request_ptrs[i],
+                    rc = MPIR_Request_completion_processing(request_ptrs[i],
                                                             status_ptr, &active_flag);
+                    array_of_requests[i] = request_ptrs[i]->handle;
                     if (mpi_errno == MPI_ERR_IN_STATUS && status_ptr != MPI_STATUS_IGNORE) {
                         if (active_flag) {
                             status_ptr->MPI_ERROR = rc;

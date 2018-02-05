@@ -236,8 +236,9 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[], MPI_Status arr
         if (MPIR_Request_is_complete(request_ptrs[i])) {
             /* complete the request and check the status */
             status_ptr = (ignoring_statuses) ? MPI_STATUS_IGNORE : &array_of_statuses[i];
-            rc = MPIR_Request_completion_processing(&array_of_requests[i], request_ptrs[i],
+            rc = MPIR_Request_completion_processing(request_ptrs[i],
                                                     status_ptr, &active_flag);
+            array_of_requests[i] = request_ptrs[i]->handle;
         }
 
         if (rc == MPI_SUCCESS) {

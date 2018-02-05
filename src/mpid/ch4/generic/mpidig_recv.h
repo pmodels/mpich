@@ -332,7 +332,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mrecv(void *buf,
                                           MPIR_Request * message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS, active_flag;
-    MPI_Request req_handle;
     MPIR_Request *rreq = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MRECV);
@@ -348,7 +347,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mrecv(void *buf,
 
     MPIR_Request_extract_status(rreq, status);
 
-    mpi_errno = MPIR_Request_completion_processing(&req_handle, rreq, status, &active_flag);
+    mpi_errno = MPIR_Request_completion_processing(rreq, status, &active_flag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
