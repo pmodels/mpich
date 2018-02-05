@@ -167,9 +167,14 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
         }
         if (request_ptrs[i] != NULL) {
             if (MPIR_Request_is_complete(request_ptrs[i])) {
-                mpi_errno = MPIR_Request_completion_processing(&array_of_requests[i],
-                                                               request_ptrs[i], status,
+                mpi_errno = MPIR_Request_completion_processing(request_ptrs[i], status,
                                                                &active_flag);
+                if (!MPIR_Request_is_persistent(request_ptrs[i])) {
+                    MPIR_Request_free(request_ptrs[i]);
+                    array_of_requests[i] = MPI_REQUEST_NULL;
+                }
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
                 if (active_flag) {
                     *flag = TRUE;
                     *indx = i;
