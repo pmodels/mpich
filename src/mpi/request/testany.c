@@ -167,8 +167,9 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
         }
         if (request_ptrs[i] != NULL) {
             if (MPIR_Request_is_complete(request_ptrs[i])) {
-                mpi_errno = MPIR_Request_complete(&array_of_requests[i],
-                                                  request_ptrs[i], status, &active_flag);
+                mpi_errno = MPIR_Request_completion_processing(&array_of_requests[i],
+                                                               request_ptrs[i], status,
+                                                               &active_flag);
                 if (active_flag) {
                     *flag = TRUE;
                     *indx = i;
@@ -197,7 +198,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     if (n_inactive == count) {
         *flag = TRUE;
         *indx = MPI_UNDEFINED;
-        /* status set to empty by MPIR_Request_complete() */
+        /* status set to empty by MPIR_Request_completion_processing() */
     }
 
     /* ... end of body of routine ... */
