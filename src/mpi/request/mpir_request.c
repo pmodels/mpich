@@ -66,8 +66,7 @@ int MPIR_Progress_wait_request(MPIR_Request * req)
    call the routine MPII_Sendq_forget; otherwise that macro will be a no-op.
    The implementation of the MPIR_Sendq_xxx is in src/mpi/debugger/dbginit.c .
 */
-int MPIR_Request_completion_processing(MPI_Request * request, MPIR_Request * request_ptr,
-                                       MPI_Status * status, int *active)
+int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * status, int *active)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -81,18 +80,12 @@ int MPIR_Request_completion_processing(MPI_Request * request, MPIR_Request * req
                 }
                 mpi_errno = request_ptr->status.MPI_ERROR;
                 MPII_SENDQ_FORGET(request_ptr);
-                MPIR_Request_free(request_ptr);
-                if (NULL != request)
-                    *request = MPI_REQUEST_NULL;
                 break;
             }
         case MPIR_REQUEST_KIND__RECV:
             {
                 MPIR_Request_extract_status(request_ptr, status);
                 mpi_errno = request_ptr->status.MPI_ERROR;
-                MPIR_Request_free(request_ptr);
-                if (NULL != request)
-                    *request = MPI_REQUEST_NULL;
                 break;
             }
 
@@ -197,10 +190,6 @@ int MPIR_Request_completion_processing(MPI_Request * request, MPIR_Request * req
                     mpi_errno = rc;
                 }
 
-                MPIR_Request_free(request_ptr);
-                if (NULL != request)
-                    *request = MPI_REQUEST_NULL;
-
                 break;
             }
 
@@ -209,9 +198,6 @@ int MPIR_Request_completion_processing(MPI_Request * request, MPIR_Request * req
             {
                 mpi_errno = request_ptr->status.MPI_ERROR;
                 MPIR_Request_extract_status(request_ptr, status);
-                MPIR_Request_free(request_ptr);
-                if (NULL != request)
-                    *request = MPI_REQUEST_NULL;
                 break;
             }
 
