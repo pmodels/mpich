@@ -16,7 +16,8 @@
 static const char *split_topo[] = {
     "machine", "socket", "package", "numanode", "core", "hwthread", "pu", "l1cache",
     "l1ucache", "l1dcache", "l1icache", "l2cache", "l2ucache",
-    "l2dcache", "l2icache", "l3cache", "l3ucache", "l3dcache", "l3icache", "pci:x", NULL
+    "l2dcache", "l2icache", "l3cache", "l3ucache", "l3dcache", "l3icache", "pci:x",
+    "ib", "ibx", "gpu", "gpux", "en", "enx", "hfi", "hfix", NULL
 };
 
 int main(int argc, char *argv[])
