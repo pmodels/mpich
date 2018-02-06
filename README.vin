@@ -266,11 +266,8 @@ the application, including the mpiexec command used, and the host
 file. If possible, please try to reproduce the error with a smaller
 application or benchmark and send that along in your bug report.
 
-4. If you have found a bug in MPICH, we request that you report it at
-our bug tracking system:
-(https://trac.mpich.org/projects/mpich/newticket). Even if you believe
-you have found a bug, we recommend you sending an email to
-discuss@mpich.org first.
+4. If you have found a bug in MPICH, you can report it on our Github
+page (https://github.com/pmodels/mpich/issues).
 
 
 -------------------------------------------------------------------------
