@@ -308,6 +308,19 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
                                    curr_len, lmt_msg->context_id, lmt_msg->src_rank, rreq);
             rem -= curr_len;
             done += curr_len;
+
+            /* MPIDI_OFI_BUF_POOL_SIZE serves as an interval after which we call
+             * MPIDI_OFI_PROGRESS. It helps when the network has a very high number of
+             * outstanding RDMA reads. We call progress at MPIDI_OFI_BUF_POOL_SIZE -1 count
+             * to avoid creating a new buffer pool. Check with MPIDI_OFI_BUF_POOL_SIZE - 1
+             * to avoid running progress in the first loop. Make progress to free up memory
+             * due to multiple fi_reads in case of very large number of non contiguous msgs */
+
+            if (i % MPIDI_OFI_BUF_POOL_SIZE == MPIDI_OFI_BUF_POOL_SIZE - 1) {
+                int j;
+                for (j = 0; j < MPIDI_OFI_BUF_POOL_SIZE; j++)
+                    MPIDI_OFI_PROGRESS();
+            }
         }
 
         if (rem) {
