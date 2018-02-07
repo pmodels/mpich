@@ -14,7 +14,7 @@
 #include <shm.h>
 #include "../posix/shm_direct.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_startall(int count, MPIR_Request * requests[])
+static inline int MPIDI_SHM_mpi_startall(int count, MPIR_Request * requests[])
 {
     int ret;
 

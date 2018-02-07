@@ -17,9 +17,8 @@
 #define FUNCNAME MPID_Probe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
-                                        int tag, MPIR_Comm * comm, int context_offset,
-                                        MPI_Status * status)
+static inline int MPID_Probe(int source,
+                             int tag, MPIR_Comm * comm, int context_offset, MPI_Status * status)
 {
     int mpi_errno, flag = 0;
     MPIDI_av_entry_t *av = NULL;
@@ -64,11 +63,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
 #define FUNCNAME MPID_Mprobe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
-                                         int tag,
-                                         MPIR_Comm * comm,
-                                         int context_offset, MPIR_Request ** message,
-                                         MPI_Status * status)
+static inline int MPID_Mprobe(int source,
+                              int tag,
+                              MPIR_Comm * comm,
+                              int context_offset, MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS, flag = 0;
     MPIDI_av_entry_t *av = NULL;
@@ -128,11 +126,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
 #define FUNCNAME MPID_Improbe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
-                                          int tag,
-                                          MPIR_Comm * comm,
-                                          int context_offset,
-                                          int *flag, MPIR_Request ** message, MPI_Status * status)
+static inline int MPID_Improbe(int source,
+                               int tag,
+                               MPIR_Comm * comm,
+                               int context_offset,
+                               int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
@@ -190,10 +188,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
 #define FUNCNAME MPID_Iprobe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
-                                         int tag,
-                                         MPIR_Comm * comm,
-                                         int context_offset, int *flag, MPI_Status * status)
+static inline int MPID_Iprobe(int source,
+                              int tag,
+                              MPIR_Comm * comm, int context_offset, int *flag, MPI_Status * status)
 {
 
     int mpi_errno;

@@ -11,7 +11,7 @@
 #include <shm.h>
 #include "../posix/shm_direct.h"
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_create_hook(MPIR_Comm * comm)
+static inline int MPIDI_SHM_mpi_comm_create_hook(MPIR_Comm * comm)
 {
     int ret;
 
@@ -24,7 +24,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_create_hook(MPIR_Comm * comm)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_free_hook(MPIR_Comm * comm)
+static inline int MPIDI_SHM_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int ret;
 
@@ -37,7 +37,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_free_hook(MPIR_Comm * comm)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_type_commit_hook(MPIR_Datatype * type)
+static inline int MPIDI_SHM_mpi_type_commit_hook(MPIR_Datatype * type)
 {
     int ret;
 
@@ -50,7 +50,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_type_commit_hook(MPIR_Datatype * type
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_type_free_hook(MPIR_Datatype * type)
+static inline int MPIDI_SHM_mpi_type_free_hook(MPIR_Datatype * type)
 {
     int ret;
 
@@ -63,7 +63,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_type_free_hook(MPIR_Datatype * type)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_commit_hook(MPIR_Op * op)
+static inline int MPIDI_SHM_mpi_op_commit_hook(MPIR_Op * op)
 {
     int ret;
 
@@ -76,7 +76,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_commit_hook(MPIR_Op * op)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_free_hook(MPIR_Op * op)
+static inline int MPIDI_SHM_mpi_op_free_hook(MPIR_Op * op)
 {
     int ret;
 

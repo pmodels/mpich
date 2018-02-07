@@ -19,7 +19,7 @@
 #define FUNCNAME MPIDIG_mpi_startall
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * requests[])
+static inline int MPIDIG_mpi_startall(int count, MPIR_Request * requests[])
 {
     int mpi_errno = MPI_SUCCESS, i;
 

@@ -243,7 +243,7 @@ typedef struct {
 #define MPL_munmap(a,b,c)  munmap((void *)(a),(size_t)(b))
 
 #ifdef MPL_DEFINE_ALIGNED_ALLOC
-MPL_STATIC_INLINE_PREFIX void *MPL_aligned_alloc(size_t alignment, size_t size,
+static inline void *MPL_aligned_alloc(size_t alignment, size_t size,
                                                  MPL_memory_class class)
 {
 #if defined (MPL_HAVE_ALIGNED_ALLOC)

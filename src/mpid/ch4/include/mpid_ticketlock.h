@@ -21,7 +21,7 @@ typedef union MPIDI_CH4_Ticket_lock {
     } s;
 } MPIDI_CH4_Ticket_lock MPL_ATTR_ALIGNED(MPIDI_CH4_CACHELINE_SIZE);
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_acquire(MPIDI_CH4_Ticket_lock * m)
+static inline void MPIDI_CH4I_Thread_mutex_acquire(MPIDI_CH4_Ticket_lock * m)
 {
     uint16_t u = __sync_fetch_and_add(&m->s.clients, 1);
 
@@ -34,7 +34,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_acquire(MPIDI_CH4_Ticket_l
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_ACQUIRE);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_release(MPIDI_CH4_Ticket_lock * m)
+static inline void MPIDI_CH4I_Thread_mutex_release(MPIDI_CH4_Ticket_lock * m)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_RELEASE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_RELEASE);
@@ -45,7 +45,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_release(MPIDI_CH4_Ticket_l
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_RELEASE);
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4I_Thread_mutex_try_acquire(MPIDI_CH4_Ticket_lock * m)
+static inline int MPIDI_CH4I_Thread_mutex_try_acquire(MPIDI_CH4_Ticket_lock * m)
 {
     uint16_t u = m->s.clients;
     uint16_t u2 = u + 1;
@@ -63,8 +63,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4I_Thread_mutex_try_acquire(MPIDI_CH4_Ticke
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_lock(MPIDI_CH4_Ticket_lock * m,
-                                                           int *mpi_error)
+static inline void MPIDI_CH4I_Thread_mutex_lock(MPIDI_CH4_Ticket_lock * m, int *mpi_error)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_LOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_LOCK);
@@ -75,8 +74,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_lock(MPIDI_CH4_Ticket_lock
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_LOCK);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_unlock(MPIDI_CH4_Ticket_lock * m,
-                                                             int *mpi_error)
+static inline void MPIDI_CH4I_Thread_mutex_unlock(MPIDI_CH4_Ticket_lock * m, int *mpi_error)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_UNLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_UNLOCK);
@@ -87,8 +85,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_unlock(MPIDI_CH4_Ticket_lo
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_UNLOCK);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_create(MPIDI_CH4_Ticket_lock * m,
-                                                             int *mpi_error)
+static inline void MPIDI_CH4I_Thread_mutex_create(MPIDI_CH4_Ticket_lock * m, int *mpi_error)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_CREATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_CREATE);
@@ -99,8 +96,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_create(MPIDI_CH4_Ticket_lo
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_CREATE);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_destroy(MPIDI_CH4_Ticket_lock * m,
-                                                              int *mpi_error)
+static inline void MPIDI_CH4I_Thread_mutex_destroy(MPIDI_CH4_Ticket_lock * m, int *mpi_error)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_DESTROY);
@@ -116,7 +112,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_destroy(MPIDI_CH4_Ticket_l
 /* 2)  Implement it from scratch                                                      */
 /* Currently only async.c is using condition variables, so we should figure out what  */
 /* we really want from the cv implementations                                         */
-MPL_STATIC_INLINE_PREFIX void
+static inline void
 MPIDI_CH4I_Thread_cond_wait(MPIDU_Thread_cond_t * cond, MPIDI_CH4_Ticket_lock * m, int *mpi_error)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_THREAD_COND_WAIT);

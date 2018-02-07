@@ -236,7 +236,7 @@
 
 #define WINFO(w,rank) MPIDI_CH4U_WINFO(w,rank)
 
-MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
+static inline uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
 {
     if (MPIDI_OFI_ENABLE_MR_SCALABLE)
         return 0;
@@ -244,7 +244,7 @@ MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_winfo_base(MPIR_Win * w, int rank)
         return MPIDI_OFI_WIN(w).winfo[rank].base;
 }
 
-MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_winfo_mr_key(MPIR_Win * w, int rank)
+static inline uint64_t MPIDI_OFI_winfo_mr_key(MPIR_Win * w, int rank)
 {
     if (MPIDI_OFI_ENABLE_MR_SCALABLE)
         return MPIDI_OFI_WIN(w).mr_key;
@@ -252,12 +252,12 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_winfo_mr_key(MPIR_Win * w, int rank)
         return MPIDI_OFI_WIN(w).winfo[rank].mr_key;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_cntr_incr(MPIR_Win * win)
+static inline void MPIDI_OFI_win_cntr_incr(MPIR_Win * win)
 {
     (*MPIDI_OFI_WIN(win).issued_cntr)++;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
+static inline void MPIDI_OFI_cntr_incr()
 {
     MPIDI_Global.rma_issued_cntr++;
 }
@@ -278,30 +278,7 @@ void MPIDI_OFI_index_allocator_destroy(void *_indexmap);
 /* Common Utility functions used by the
  * C and C++ components
  */
-/* Set max size based on OFI acc ordering limit. */
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_check_acc_order_size(MPIR_Win * win, size_t max_size)
-{
-    /* Check ordering limit, a value of -1 guarantees ordering for any data size. */
-    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAR)
-        && MPIDI_Global.max_order_war != -1) {
-        /* An order size value of 0 indicates that ordering is not guaranteed. */
-        MPIR_Assert(MPIDI_Global.max_order_war != 0);
-        max_size = MPL_MIN(max_size, MPIDI_Global.max_order_war);
-    }
-    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAW)
-        && MPIDI_Global.max_order_waw != -1) {
-        MPIR_Assert(MPIDI_Global.max_order_waw != 0);
-        max_size = MPL_MIN(max_size, MPIDI_Global.max_order_waw);
-    }
-    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW)
-        && MPIDI_Global.max_order_raw != -1) {
-        MPIR_Assert(MPIDI_Global.max_order_raw != 0);
-        max_size = MPL_MIN(max_size, MPIDI_Global.max_order_raw);
-    }
-    return max_size;
-}
-
-MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_alloc_and_init(int extra)
+static inline MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_alloc_and_init(int extra)
 {
     MPIDI_OFI_win_request_t *req;
     req = (MPIDI_OFI_win_request_t *) MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
@@ -313,7 +290,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_alloc_an
     return req;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * req)
+static inline void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * req)
 {
     int in_use;
     MPIR_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);
@@ -325,7 +302,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
     }
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank)
+static inline fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank)
 {
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, rank));
@@ -337,7 +314,7 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int 
     }
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av)
+static inline fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av)
 {
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         int ep_num = MPIDI_OFI_av_to_ep(&MPIDI_OFI_AV(av));
@@ -347,7 +324,7 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av)
     }
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_to_phys(int rank)
+static inline fi_addr_t MPIDI_OFI_to_phys(int rank)
 {
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         int ep_num = 0;
@@ -358,13 +335,13 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_to_phys(int rank)
     }
 }
 
-MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
+static inline bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
 {
     return (0 != (MPIDI_OFI_SYNC_SEND & match_bits));
 }
 
-MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t contextid,
-                                                         int source, int tag, uint64_t type)
+static inline uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t contextid,
+                                              int source, int tag, uint64_t type)
 {
     uint64_t match_bits;
     match_bits = contextid;
@@ -380,9 +357,8 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t conte
 }
 
 /* receive posting */
-MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_recvtag(uint64_t * mask_bits,
-                                                         MPIR_Context_id_t contextid,
-                                                         int source, int tag)
+static inline uint64_t MPIDI_OFI_init_recvtag(uint64_t * mask_bits,
+                                              MPIR_Context_id_t contextid, int source, int tag)
 {
     uint64_t match_bits = 0;
     *mask_bits = MPIDI_OFI_PROTOCOL_MASK;
@@ -410,17 +386,17 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_recvtag(uint64_t * mask_bits,
     return match_bits;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_init_get_tag(uint64_t match_bits)
+static inline int MPIDI_OFI_init_get_tag(uint64_t match_bits)
 {
     return ((int) (match_bits & MPIDI_OFI_TAG_MASK));
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_init_get_source(uint64_t match_bits)
+static inline int MPIDI_OFI_init_get_source(uint64_t match_bits)
 {
     return ((int) ((match_bits & MPIDI_OFI_SOURCE_MASK) >> MPIDI_OFI_TAG_BITS));
 }
 
-MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_OFI_context_to_request(void *context)
+static inline MPIR_Request *MPIDI_OFI_context_to_request(void *context)
 {
     char *base = (char *) context;
     return (MPIR_Request *) MPL_container_of(base, MPIR_Request, dev.ch4.netmod);
@@ -430,10 +406,9 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_OFI_context_to_request(void *contex
 #define FUNCNAME MPIDI_OFI_send_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const void *buf, size_t len,
-                                                    void *desc, uint32_t dest, fi_addr_t dest_addr,
-                                                    uint64_t tag, void *context, int is_inject,
-                                                    int do_lock)
+static inline int MPIDI_OFI_send_handler(struct fid_ep *ep, const void *buf, size_t len,
+                                         void *desc, uint32_t dest, fi_addr_t dest_addr,
+                                         uint64_t tag, void *context, int is_inject, int do_lock)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -458,7 +433,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const voi
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn, int rank, int state)
+static inline int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn, int rank, int state)
 {
     int conn_id = -1;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INSERT_CONN);
@@ -499,7 +474,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn, 
     return conn_id;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_remove_conn(int conn_id)
+static inline int MPIDI_OFI_conn_manager_remove_conn(int conn_id)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_REMOVE_CONN);
@@ -516,7 +491,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_remove_conn(int conn_id)
     return mpi_errno;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
+static inline int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -594,7 +569,7 @@ struct MPIDI_OFI_contig_blocks_params {
 #define FUNCNAME MPIDI_OFI_contig_count_block
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
+static inline
     int MPIDI_OFI_contig_count_block(DLOOP_Offset * blocks_p,
                                      DLOOP_Type el_type,
                                      DLOOP_Offset rel_off, DLOOP_Buffer bufp, void *v_paramp)
@@ -643,8 +618,7 @@ MPL_STATIC_INLINE_PREFIX
 #define FUNCNAME MPIDI_OFI_count_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX
-    size_t MPIDI_OFI_count_iov(int dt_count, MPI_Datatype dt_datatype, size_t max_pipe)
+static inline size_t MPIDI_OFI_count_iov(int dt_count, MPI_Datatype dt_datatype, size_t max_pipe)
 {
     struct MPIDI_OFI_contig_blocks_params params;
     MPIR_Segment dt_seg;
@@ -702,7 +676,7 @@ MPL_STATIC_INLINE_PREFIX
 #define FUNCNAME MPIDI_OFI_align_iov_len
 #undef  FCNAME
 #define FCNAME   MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_align_iov_len(size_t len)
+static inline size_t MPIDI_OFI_align_iov_len(size_t len)
 {
     size_t pad = MPIDI_OFI_IOVEC_ALIGN - 1;
     size_t mask = ~pad;
@@ -715,7 +689,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_align_iov_len(size_t len)
 #define FUNCNAME MPIDI_OFI_aligned_next_iov
 #undef  FCNAME
 #define FCNAME   MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void *MPIDI_OFI_aligned_next_iov(void *ptr)
+static inline void *MPIDI_OFI_aligned_next_iov(void *ptr)
 {
     return (void *) (uintptr_t) MPIDI_OFI_align_iov_len((size_t) ptr);
 }
@@ -724,7 +698,7 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_OFI_aligned_next_iov(void *ptr)
 #define FUNCNAME MPIDI_OFI_request_util_iov
 #undef  FCNAME
 #define FCNAME   MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX struct iovec *MPIDI_OFI_request_util_iov(MPIR_Request * req)
+static inline struct iovec *MPIDI_OFI_request_util_iov(MPIR_Request * req)
 {
 #if defined (MPL_HAVE_VAR_ATTRIBUTE_ALIGNED)
     return &MPIDI_OFI_REQUEST(req, util.iov);

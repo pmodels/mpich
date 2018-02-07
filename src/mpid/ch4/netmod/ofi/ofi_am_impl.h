@@ -494,10 +494,9 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
 #define FUNCNAME MPIDI_OFI_do_emulated_inject
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
-                                                          const MPIDI_OFI_am_header_t * msg_hdrp,
-                                                          const void *am_hdr,
-                                                          size_t am_hdr_sz, int need_lock)
+static inline int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
+                                               const MPIDI_OFI_am_header_t * msg_hdrp,
+                                               const void *am_hdr, size_t am_hdr_sz, int need_lock)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;

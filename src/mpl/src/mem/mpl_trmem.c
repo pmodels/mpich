@@ -283,7 +283,7 @@ void MPL_trconfig(int rank, int need_thread_safety)
   Validate given alignment.
   Invoked only when memory tracing is enabled.
  */
-MPL_STATIC_INLINE_PREFIX int is_valid_alignment(size_t a)
+static inline int is_valid_alignment(size_t a)
 {
     /* No alignment constraints - okay */
     if (a == 0)
