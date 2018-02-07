@@ -64,7 +64,8 @@ int MPIR_Test_impl(MPI_Request * request, int *flag, MPI_Status * status)
     }
 
     if (MPIR_Request_is_complete(request_ptr)) {
-        mpi_errno = MPIR_Request_complete(request, request_ptr, status, &active_flag);
+        mpi_errno = MPIR_Request_completion_processing(request_ptr, status, &active_flag);
+        *request = request_ptr->handle;
         *flag = TRUE;
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);

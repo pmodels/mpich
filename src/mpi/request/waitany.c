@@ -163,8 +163,9 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
                     goto fn_progress_end_fail;
             }
             if (MPIR_Request_is_complete(request_ptrs[i])) {
-                mpi_errno = MPIR_Request_complete(&array_of_requests[i],
-                                                  request_ptrs[i], status, &active_flag);
+                mpi_errno = MPIR_Request_completion_processing(request_ptrs[i], status,
+                                                               &active_flag);
+                array_of_requests[i] = request_ptrs[i]->handle;
                 if (active_flag) {
                     *indx = i;
                     goto break_l1;
@@ -174,7 +175,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
 
                     if (n_inactive == count) {
                         *indx = MPI_UNDEFINED;
-                        /* status is set to empty by MPIR_Request_complete */
+                        /* status is set to empty by MPIR_Request_completion_processing */
                         goto break_l1;
                     }
                 }

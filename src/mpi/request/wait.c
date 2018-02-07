@@ -92,9 +92,10 @@ int MPIR_Wait_impl(MPI_Request * request, MPI_Status * status)
         MPID_Progress_end(&progress_state);
     }
 
-    mpi_errno = MPIR_Request_complete(request, request_ptr, status, &active_flag);
+    mpi_errno = MPIR_Request_completion_processing(request_ptr, status, &active_flag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+    *request = request_ptr->handle;
 
   fn_exit:
     return mpi_errno;

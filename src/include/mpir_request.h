@@ -272,7 +272,7 @@ static inline void MPIR_Request_free(MPIR_Request * req)
     }
 }
 
-int MPIR_Request_complete(MPI_Request *, MPIR_Request *, MPI_Status *, int *);
+int MPIR_Request_completion_processing(MPIR_Request *, MPI_Status *, int *);
 int MPIR_Request_get_error(MPIR_Request *);
 int MPIR_Progress_wait_request(MPIR_Request * req);
 
