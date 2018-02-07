@@ -69,6 +69,7 @@ noinst_PROGRAMS =      \
     icreduce           \
     icscatter          \
     icscatterv         \
+    largebuf	       \
     longuser           \
     nonblocking        \
     nonblocking2       \
