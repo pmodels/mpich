@@ -49,6 +49,7 @@ sub ReadInterface {
         if (/^int\s+$routine_prefix($routine_pattern)\s*\((.*)/) {
             $routine_name = $1;
             $args = $2;
+            $experimental = $routine_prefix eq 'MPIX_';
             while (! ($args =~ /;/)) {
                 $args .= <FD>;
             }
@@ -76,7 +77,7 @@ sub ReadInterface {
             # print "replacing args for $routine_name\n" if $gDebug;
             # $args = $$testname;
             # }
-            $$routine_hash{$routine_name} = [$argtypes, $argnames];
+            $$routine_hash{$routine_name} = [$argtypes, $argnames, $experimental];
         }
     }
 }
