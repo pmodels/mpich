@@ -496,10 +496,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
         } else {
             if (local_upid_size[0] == remote_upid_size[0]) {
                 *is_low_group = memcmp(local_upids, remote_upids, local_upid_size[0]);
+                MPIR_Assert(*is_low_group != 0);
+                if (*is_low_group < 0)
+                    *is_low_group = 0;
+                else
+                    *is_low_group = 1;
             } else {
                 *is_low_group = local_upid_size[0] < remote_upid_size[0];
             }
-            (*is_low_group) |= MPIDI_DYNPROC_MASK;
         }
 
         /* At this point, we're done with the local lpids; they'll
