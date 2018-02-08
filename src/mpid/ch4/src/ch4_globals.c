@@ -95,7 +95,7 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ABORT);
     fflush(stderr);
     fflush(stdout);
-    if (MPIR_Comm_size(comm_ptr) == 1)
+    if (MPIR_Comm_size(comm) == 1)
         MPL_exit(exit_code);
     PMI_Abort(exit_code, error_msg);
     return 0;
