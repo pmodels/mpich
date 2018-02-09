@@ -1,4 +1,4 @@
-! This file created from test/mpi/f77/pt2pt//allpair_issendf.f with f77tof90
+! This file created from test/mpi/f77/pt2pt/sendrecvf.f with f77tof90
 ! -*- Mode: Fortran; -*-
 !
 !  (C) 2012 by Argonne National Laboratory.
@@ -8,7 +8,7 @@
 ! (test/pt2pt/allpair.f), which in turn was inspired by a bug report from
 ! fsset@corelli.lerc.nasa.gov (Scott Townsend)
 
-      program allpair_issend
+      program sendrecv
       use mpi
       integer ierr, errs, comm
       logical mtestGetIntraComm
@@ -21,7 +21,7 @@
       call MTest_Init( ierr )
 
       do while ( mtestGetIntraComm( comm, 2, .false. ) )
-         call test_pair_issend( comm, errs )
+         call test_pair_sendrecv( comm, errs )
          call mtestFreeComm( comm )
       enddo
 !
@@ -30,21 +30,19 @@
 !
       end
 !
-      subroutine test_pair_issend( comm, errs )
+      subroutine test_pair_sendrecv( comm, errs )
       use mpi
       integer comm, errs
-      integer rank, size, ierr, next, prev, tag, count, index
+      integer rank, size, ierr, next, prev, tag, count
       integer TEST_SIZE
       parameter (TEST_SIZE=2000)
-      integer status(MPI_STATUS_SIZE), requests(2)
-      integer statuses(MPI_STATUS_SIZE,2)
-      logical flag
+      integer status(MPI_STATUS_SIZE)
       real send_buf(TEST_SIZE), recv_buf(TEST_SIZE)
       logical verbose
       common /flags/ verbose
 !
       if (verbose) then
-         print *, ' issend and irecv (testall)'
+         print *, ' Sendrecv'
       endif
 !
 !
@@ -56,52 +54,33 @@
       prev = rank - 1
       if (prev .lt. 0) prev = size - 1
 !
-      tag = 2789
-      count = TEST_SIZE / 3
-!
+      tag = 4123
+      count = TEST_SIZE / 5
+
       call clear_test_data(recv_buf,TEST_SIZE)
-!
+
       if (rank .eq. 0) then
-!
-         call MPI_Irecv(recv_buf, TEST_SIZE, MPI_REAL, &
-      &                  MPI_ANY_SOURCE, MPI_ANY_TAG, comm, &
-      &                  requests(1), ierr)
-!
+
          call init_test_data(send_buf,TEST_SIZE)
-!
-         call MPI_Issend(send_buf, count, MPI_REAL, next, tag, &
-      &                   comm, requests(2), ierr)
-!
-         flag = .FALSE.
-         do while (.not. flag)
-            call MPI_Testall(2, requests, flag, statuses, ierr)
-         end do
-!
-         call rq_check( requests, 2, 'issend and irecv (testall)' )
-!
-         call msg_check( recv_buf, next, tag, count, statuses(1,1), &
-      &           TEST_SIZE, 'issend and recv (testall)', errs )
-!
+
+         call MPI_Sendrecv(send_buf, count, MPI_REAL, next, tag, &
+      &                     recv_buf, count, MPI_REAL, next, tag, &
+      &                     comm, status, ierr)
+
+         call msg_check( recv_buf, next, tag, count, status, TEST_SIZE, &
+      &                   'sendrecv', errs )
+
       else if (prev .eq. 0) then
-!
+
          call MPI_Recv(recv_buf, TEST_SIZE, MPI_REAL, &
       &                 MPI_ANY_SOURCE, MPI_ANY_TAG, comm, &
       &                 status, ierr)
 
          call msg_check( recv_buf, prev, tag, count, status, TEST_SIZE, &
-      &                   'issend and recv', errs )
+      &                   'recv/send', errs )
 
-         call MPI_Issend(recv_buf, count, MPI_REAL, prev, tag, &
-      &                   comm, requests(1), ierr)
-!
-         flag = .FALSE.
-         do while (.not. flag)
-            call MPI_Testany(1, requests(1), index, flag, &
-      &                       statuses(1,1), ierr)
-         end do
-!
-         call rq_check( requests, 1, 'issend and recv (testany)' )
-!
+         call MPI_Send(recv_buf, count, MPI_REAL, prev, tag, &
+      &                 comm, ierr)
       end if
 !
       end
