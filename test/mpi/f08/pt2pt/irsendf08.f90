@@ -1,4 +1,4 @@
-! This file created from test/mpi/f77/pt2pt//allpair_irsendf.f with f77tof90
+! This file created from test/mpi/f77/pt2pt/irsendf.f with f77tof90
 ! -*- Mode: Fortran; -*-
 !
 !  (C) 2012 by Argonne National Laboratory.
@@ -8,7 +8,7 @@
 ! (test/pt2pt/allpair.f), which in turn was inspired by a bug report from
 ! fsset@corelli.lerc.nasa.gov (Scott Townsend)
 
-      program allpair_isend
+      program isend
       use mpi
       integer ierr, errs, comm
       logical mtestGetIntraComm

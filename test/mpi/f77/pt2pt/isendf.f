@@ -7,7 +7,7 @@ C This program is based on the allpair.f test from the MPICH-1 test
 C (test/pt2pt/allpair.f), which in turn was inspired by a bug report from
 C fsset@corelli.lerc.nasa.gov (Scott Townsend)
 
-      program allpair_isend
+      program isend
       implicit none
       include 'mpif.h'
       integer ierr, errs, comm
