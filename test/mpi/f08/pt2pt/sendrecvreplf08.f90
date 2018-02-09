@@ -1,4 +1,4 @@
-! This file created from test/mpi/f77/pt2pt//allpair_sendf.f with f77tof90
+! This file created from test/mpi/f77/pt2pt/sendrecvreplf.f with f77tof90
 ! -*- Mode: Fortran; -*-
 !
 !  (C) 2012 by Argonne National Laboratory.
@@ -8,7 +8,7 @@
 ! (test/pt2pt/allpair.f), which in turn was inspired by a bug report from
 ! fsset@corelli.lerc.nasa.gov (Scott Townsend)
 
-      program allpair_send
+      program sendrecvrepl
       use mpi
       integer ierr, errs, comm
       logical mtestGetIntraComm
@@ -21,7 +21,7 @@
       call MTest_Init( ierr )
 
       do while ( mtestGetIntraComm( comm, 2, .false. ) )
-         call test_pair_send( comm, errs )
+         call test_pair_sendrecvrepl( comm, errs )
          call mtestFreeComm( comm )
       enddo
 !
@@ -30,10 +30,10 @@
 !
       end
 !
-      subroutine test_pair_send( comm, errs )
+      subroutine test_pair_sendrecvrepl( comm, errs )
       use mpi
       integer comm, errs
-      integer rank, size, ierr, next, prev, tag, count
+      integer rank, size, ierr, next, prev, tag, count, i
       integer TEST_SIZE
       parameter (TEST_SIZE=2000)
       integer status(MPI_STATUS_SIZE)
@@ -42,7 +42,7 @@
       common /flags/ verbose
 !
       if (verbose) then
-         print *, ' Send and recv'
+         print *, ' Sendrecv replace'
       endif
 !
       call mpi_comm_rank( comm, rank, ierr )
@@ -53,31 +53,37 @@
       prev = rank - 1
       if (prev .lt. 0) prev = size - 1
 !
-      tag = 1123
-      count = TEST_SIZE / 5
-!
-      call clear_test_data(recv_buf,TEST_SIZE)
-!
+      tag = 4456
+      count = TEST_SIZE / 3
+
       if (rank .eq. 0) then
 !
-         call init_test_data(send_buf,TEST_SIZE)
+         call init_test_data(recv_buf, TEST_SIZE)
 !
-         call MPI_Send(send_buf, count, MPI_REAL, next, tag, &
-      &        comm, ierr)
+         do 11 i = count+1,TEST_SIZE
+            recv_buf(i) = 0.0
+ 11      continue
 !
-         call MPI_Recv(recv_buf, TEST_SIZE, MPI_REAL, &
-      &                 MPI_ANY_SOURCE, MPI_ANY_TAG, comm, status, ierr)
-!
+         call MPI_Sendrecv_replace(recv_buf, count, MPI_REAL, &
+      &                             next, tag, next, tag, &
+      &                             comm, status, ierr)
+
          call msg_check( recv_buf, next, tag, count, status, TEST_SIZE, &
-      &                   'send and recv', errs )
-      else if (prev .eq. 0)  then
+      &                   'sendrecvreplace', errs )
+
+      else if (prev .eq. 0) then
+
+         call clear_test_data(recv_buf,TEST_SIZE)
+
          call MPI_Recv(recv_buf, TEST_SIZE, MPI_REAL, &
-      &                 MPI_ANY_SOURCE, MPI_ANY_TAG, comm, status, ierr)
+      &                 MPI_ANY_SOURCE, MPI_ANY_TAG, comm, &
+      &                 status, ierr)
 
          call msg_check( recv_buf, prev, tag, count, status, TEST_SIZE, &
-      &                   'send and recv', errs )
-!
-         call MPI_Send(recv_buf, count, MPI_REAL, prev, tag, comm, ierr)
+      &                   'recv/send for replace', errs )
+
+         call MPI_Send(recv_buf, count, MPI_REAL, prev, tag, &
+      &                 comm, ierr)
       end if
 !
       end

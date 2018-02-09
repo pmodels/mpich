@@ -18,27 +18,27 @@ AM_DEFAULT_SOURCE_EXT = .f90
 noinst_PROGRAMS = greqf08 \
                   statusesf08 \
                   mprobef08 \
-                  allpair_sendf08 \
-                  allpair_ssendf08 \
-                  allpair_rsendf08 \
-                  allpair_isendf08 \
-                  allpair_irsendf08 \
-                  allpair_issendf08 \
-                  allpair_psendf08 \
-                  allpair_prsendf08 \
-                  allpair_pssendf08 \
-                  allpair_sendrecvf08 \
-                  allpair_sendrecvreplf08
+                  sendf08 \
+                  ssendf08 \
+                  rsendf08 \
+                  isendf08 \
+                  irsendf08 \
+                  issendf08 \
+                  psendf08 \
+                  prsendf08 \
+                  pssendf08 \
+                  sendrecvf08 \
+                  sendrecvreplf08
 
-allpair_sendf08_SOURCES = allpair_sendf08.f90 allpair_utilsf08.f90
-allpair_ssendf08_SOURCES = allpair_ssendf08.f90 allpair_utilsf08.f90
-allpair_rsendf08_SOURCES = allpair_rsendf08.f90 allpair_utilsf08.f90
-allpair_isendf08_SOURCES = allpair_isendf08.f90 allpair_utilsf08.f90
-allpair_irsendf08_SOURCES = allpair_irsendf08.f90 allpair_utilsf08.f90
-allpair_issendf08_SOURCES = allpair_issendf08.f90 allpair_utilsf08.f90
-allpair_psendf08_SOURCES = allpair_psendf08.f90 allpair_utilsf08.f90
-allpair_prsendf08_SOURCES = allpair_prsendf08.f90 allpair_utilsf08.f90
-allpair_pssendf08_SOURCES = allpair_pssendf08.f90 allpair_utilsf08.f90
-allpair_sendrecvf08_SOURCES = allpair_sendrecvf08.f90 allpair_utilsf08.f90
-allpair_sendrecvreplf08_SOURCES = allpair_sendrecvreplf08.f90 allpair_utilsf08.f90
+sendf08_SOURCES = sendf08.f90 utilsf08.f90
+ssendf08_SOURCES = ssendf08.f90 utilsf08.f90
+rsendf08_SOURCES = rsendf08.f90 utilsf08.f90
+isendf08_SOURCES = isendf08.f90 utilsf08.f90
+irsendf08_SOURCES = irsendf08.f90 utilsf08.f90
+issendf08_SOURCES = issendf08.f90 utilsf08.f90
+psendf08_SOURCES = psendf08.f90 utilsf08.f90
+prsendf08_SOURCES = prsendf08.f90 utilsf08.f90
+pssendf08_SOURCES = pssendf08.f90 utilsf08.f90
+sendrecvf08_SOURCES = sendrecvf08.f90 utilsf08.f90
+sendrecvreplf08_SOURCES = sendrecvreplf08.f90 utilsf08.f90
 greqf08_SOURCES = greqf08.f90 dummyf08.f90

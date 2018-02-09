@@ -12,31 +12,31 @@ EXTRA_DIST = testlist
 # avoid having to write many "foo_SOURCES = foo.f" lines
 AM_DEFAULT_SOURCE_EXT = .f
 
-noinst_PROGRAMS = allpair_sendf \
-                  allpair_ssendf \
-                  allpair_rsendf \
-                  allpair_isendf \
-                  allpair_irsendf \
-                  allpair_issendf \
-                  allpair_psendf \
-                  allpair_prsendf \
-                  allpair_pssendf \
-                  allpair_sendrecvf \
-                  allpair_sendrecvreplf \
+noinst_PROGRAMS = sendf \
+                  ssendf \
+                  rsendf \
+                  isendf \
+                  irsendf \
+                  issendf \
+                  psendf \
+                  prsendf \
+                  pssendf \
+                  sendrecvf \
+                  sendrecvreplf \
                   statusesf greqf \
                   mprobef
 
-allpair_sendf_SOURCES = allpair_sendf.f allpair_utilsf.f
-allpair_ssendf_SOURCES = allpair_ssendf.f allpair_utilsf.f
-allpair_rsendf_SOURCES = allpair_rsendf.f allpair_utilsf.f
-allpair_isendf_SOURCES = allpair_isendf.f allpair_utilsf.f
-allpair_irsendf_SOURCES = allpair_irsendf.f allpair_utilsf.f
-allpair_issendf_SOURCES = allpair_issendf.f allpair_utilsf.f
-allpair_psendf_SOURCES = allpair_psendf.f allpair_utilsf.f
-allpair_prsendf_SOURCES = allpair_prsendf.f allpair_utilsf.f
-allpair_pssendf_SOURCES = allpair_pssendf.f allpair_utilsf.f
-allpair_sendrecvf_SOURCES = allpair_sendrecvf.f allpair_utilsf.f
-allpair_sendrecvreplf_SOURCES = allpair_sendrecvreplf.f allpair_utilsf.f
+sendf_SOURCES = sendf.f utilsf.f
+ssendf_SOURCES = ssendf.f utilsf.f
+rsendf_SOURCES = rsendf.f utilsf.f
+isendf_SOURCES = isendf.f utilsf.f
+irsendf_SOURCES = irsendf.f utilsf.f
+issendf_SOURCES = issendf.f utilsf.f
+psendf_SOURCES = psendf.f utilsf.f
+prsendf_SOURCES = prsendf.f utilsf.f
+pssendf_SOURCES = pssendf.f utilsf.f
+sendrecvf_SOURCES = sendrecvf.f utilsf.f
+sendrecvreplf_SOURCES = sendrecvreplf.f utilsf.f
 greqf_SOURCES = greqf.f dummyf.f
 
 ## attr1aints.h will be distributed because it's listed in AC_CONFIG_FILES/AC_OUTPUT
