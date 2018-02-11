@@ -41,26 +41,26 @@ struct double_test {
     int b;
 };
 
-#define mpi_op2str(op)                   \
-    ((op == MPI_SUM) ? "MPI_SUM" :       \
-     (op == MPI_PROD) ? "MPI_PROD" :     \
-     (op == MPI_MAX) ? "MPI_MAX" :       \
-     (op == MPI_MIN) ? "MPI_MIN" :       \
-     (op == MPI_LOR) ? "MPI_LOR" :       \
-     (op == MPI_LXOR) ? "MPI_LXOR" :     \
-     (op == MPI_LAND) ? "MPI_LAND" :     \
-     (op == MPI_BOR) ? "MPI_BOR" :       \
-     (op == MPI_BAND) ? "MPI_BAND" :     \
-     (op == MPI_BXOR) ? "MPI_BXOR" :     \
-     (op == MPI_MAXLOC) ? "MPI_MAXLOC" : \
-     (op == MPI_MINLOC) ? "MPI_MINLOC" : \
+#define mpi_op2str(op)                          \
+    ((op == MPI_SUM) ? "MPI_SUM" :              \
+     (op == MPI_PROD) ? "MPI_PROD" :            \
+     (op == MPI_MAX) ? "MPI_MAX" :              \
+     (op == MPI_MIN) ? "MPI_MIN" :              \
+     (op == MPI_LOR) ? "MPI_LOR" :              \
+     (op == MPI_LXOR) ? "MPI_LXOR" :            \
+     (op == MPI_LAND) ? "MPI_LAND" :            \
+     (op == MPI_BOR) ? "MPI_BOR" :              \
+     (op == MPI_BAND) ? "MPI_BAND" :            \
+     (op == MPI_BXOR) ? "MPI_BXOR" :            \
+     (op == MPI_MAXLOC) ? "MPI_MAXLOC" :        \
+     (op == MPI_MINLOC) ? "MPI_MINLOC" :        \
      "MPI_NO_OP")
 
 /* calloc to avoid spurious valgrind warnings when "type" has padding bytes */
-#define DECL_MALLOC_IN_OUT_SOL(type)                 \
-    type *in, *out, *sol;                            \
-    in  = (type *) calloc(count, sizeof(type));      \
-    out = (type *) calloc(count, sizeof(type));      \
+#define DECL_MALLOC_IN_OUT_SOL(type)            \
+    type *in, *out, *sol;                       \
+    in  = (type *) calloc(count, sizeof(type)); \
+    out = (type *) calloc(count, sizeof(type)); \
     sol = (type *) calloc(count, sizeof(type));
 
 #define SET_INDEX_CONST(arr, val)               \
@@ -116,14 +116,14 @@ struct double_test {
     {                                                                   \
         int i, rc, lerrcnt = 0;						\
         rc = MPI_Allreduce(in, out, count, mpi_type, mpi_op, MPI_COMM_WORLD); \
-	if (rc) { lerrcnt++; errs++; MTestPrintError(rc); }        \
-	else {                                                          \
-          for (i = 0; i < count; i++) {                                   \
-              if (out[i] != sol[i]) {                                     \
-                  errs++;                                              \
-                  lerrcnt++;                                              \
-              }                                                           \
-	   }                                                              \
+        if (rc) { lerrcnt++; errs++; MTestPrintError(rc); }             \
+        else {                                                          \
+            for (i = 0; i < count; i++) {                               \
+                if (out[i] != sol[i]) {                                 \
+                    errs++;                                             \
+                    lerrcnt++;                                          \
+                }                                                       \
+            }                                                           \
         }                                                               \
         ERROR_CHECK_AND_FREE(lerrcnt, mpi_type, mpi_op);                \
     }
@@ -132,75 +132,75 @@ struct double_test {
     {                                                                   \
         int i, rc, lerrcnt = 0;						\
         rc = MPI_Allreduce(in, out, count, mpi_type, mpi_op, MPI_COMM_WORLD); \
-	if (rc) { lerrcnt++; errs++; MTestPrintError(rc); }        \
-        else {                                                            \
-          for (i = 0; i < count; i++) {                                   \
-              if ((out[i].a != sol[i].a) || (out[i].b != sol[i].b)) {     \
-                  errs++;                                              \
-                  lerrcnt++;                                              \
-              }                                                           \
-            }                                                             \
+        if (rc) { lerrcnt++; errs++; MTestPrintError(rc); }             \
+        else {                                                          \
+            for (i = 0; i < count; i++) {                               \
+                if ((out[i].a != sol[i].a) || (out[i].b != sol[i].b)) { \
+                    errs++;                                             \
+                    lerrcnt++;                                          \
+                }                                                       \
+            }                                                           \
         }                                                               \
         ERROR_CHECK_AND_FREE(lerrcnt, mpi_type, mpi_op);                \
     }
 
-#define SET_INDEX_STRUCT_CONST(arr, val, el)                    \
+#define SET_INDEX_STRUCT_CONST(arr, val, el)    \
+    {                                           \
+        int i;                                  \
+        for (i = 0; i < count; i++)             \
+            arr[i].el = val;                    \
+    }
+
+#define SET_INDEX_STRUCT_SUM(arr, val, el)      \
+    {                                           \
+        int i;                                  \
+        for (i = 0; i < count; i++)             \
+            arr[i].el = i + (val);              \
+    }
+
+#define sum_test1(type, mpi_type)                               \
     {                                                           \
-        int i;                                                  \
-        for (i = 0; i < count; i++)                             \
-            arr[i].el = val;                                    \
+        DECL_MALLOC_IN_OUT_SOL(type);                           \
+        SET_INDEX_SUM(in, 0);                                   \
+        SET_INDEX_FACTOR(sol, size);                            \
+        SET_INDEX_CONST(out, 0);                                \
+        ALLREDUCE_AND_FREE(mpi_type, MPI_SUM, in, out, sol);    \
     }
 
-#define SET_INDEX_STRUCT_SUM(arr, val, el)                      \
+#define prod_test1(type, mpi_type)                              \
     {                                                           \
-        int i;                                                  \
-        for (i = 0; i < count; i++)                             \
-            arr[i].el = i + (val);                              \
+        DECL_MALLOC_IN_OUT_SOL(type);                           \
+        SET_INDEX_SUM(in, 0);                                   \
+        SET_INDEX_POWER(sol, size);                             \
+        SET_INDEX_CONST(out, 0);                                \
+        ALLREDUCE_AND_FREE(mpi_type, MPI_PROD, in, out, sol);   \
     }
 
-#define sum_test1(type, mpi_type)                                       \
-    {                                                                   \
-        DECL_MALLOC_IN_OUT_SOL(type);                                   \
-        SET_INDEX_SUM(in, 0);                                           \
-        SET_INDEX_FACTOR(sol, size);                                    \
-        SET_INDEX_CONST(out, 0);                                        \
-        ALLREDUCE_AND_FREE(mpi_type, MPI_SUM, in, out, sol);            \
+#define max_test1(type, mpi_type)                               \
+    {                                                           \
+        DECL_MALLOC_IN_OUT_SOL(type);                           \
+        SET_INDEX_SUM(in, rank);                                \
+        SET_INDEX_SUM(sol, size - 1);                           \
+        SET_INDEX_CONST(out, 0);                                \
+        ALLREDUCE_AND_FREE(mpi_type, MPI_MAX, in, out, sol);    \
     }
 
-#define prod_test1(type, mpi_type)                                      \
-    {                                                                   \
-        DECL_MALLOC_IN_OUT_SOL(type);                                   \
-        SET_INDEX_SUM(in, 0);                                           \
-        SET_INDEX_POWER(sol, size);                                     \
-        SET_INDEX_CONST(out, 0);                                        \
-        ALLREDUCE_AND_FREE(mpi_type, MPI_PROD, in, out, sol);           \
+#define min_test1(type, mpi_type)                               \
+    {                                                           \
+        DECL_MALLOC_IN_OUT_SOL(type);                           \
+        SET_INDEX_SUM(in, rank);                                \
+        SET_INDEX_SUM(sol, 0);                                  \
+        SET_INDEX_CONST(out, 0);                                \
+        ALLREDUCE_AND_FREE(mpi_type, MPI_MIN, in, out, sol);    \
     }
 
-#define max_test1(type, mpi_type)                                       \
-    {                                                                   \
-        DECL_MALLOC_IN_OUT_SOL(type);                                   \
-        SET_INDEX_SUM(in, rank);                                        \
-        SET_INDEX_SUM(sol, size - 1);                                   \
-        SET_INDEX_CONST(out, 0);                                        \
-        ALLREDUCE_AND_FREE(mpi_type, MPI_MAX, in, out, sol);            \
-    }
-
-#define min_test1(type, mpi_type)                                       \
-    {                                                                   \
-        DECL_MALLOC_IN_OUT_SOL(type);                                   \
-        SET_INDEX_SUM(in, rank);                                        \
-        SET_INDEX_SUM(sol, 0);                                          \
-        SET_INDEX_CONST(out, 0);                                        \
-        ALLREDUCE_AND_FREE(mpi_type, MPI_MIN, in, out, sol);            \
-    }
-
-#define const_test(type, mpi_type, mpi_op, val1, val2, val3)            \
-    {                                                                   \
-        DECL_MALLOC_IN_OUT_SOL(type);                                   \
-        SET_INDEX_CONST(in, (val1));                                    \
-        SET_INDEX_CONST(sol, (val2));                                   \
-        SET_INDEX_CONST(out, (val3));                                   \
-        ALLREDUCE_AND_FREE(mpi_type, mpi_op, in, out, sol);             \
+#define const_test(type, mpi_type, mpi_op, val1, val2, val3)    \
+    {                                                           \
+        DECL_MALLOC_IN_OUT_SOL(type);                           \
+        SET_INDEX_CONST(in, (val1));                            \
+        SET_INDEX_CONST(sol, (val2));                           \
+        SET_INDEX_CONST(out, (val3));                           \
+        ALLREDUCE_AND_FREE(mpi_type, mpi_op, in, out, sol);     \
     }
 
 #define lor_test1(type, mpi_type)                                       \
@@ -211,7 +211,7 @@ struct double_test {
     const_test(type, mpi_type, MPI_LXOR, (rank == 1), (size > 1), 0)
 #define lxor_test2(type, mpi_type)                      \
     const_test(type, mpi_type, MPI_LXOR, 0, 0, 0)
-#define lxor_test3(type, mpi_type)                      \
+#define lxor_test3(type, mpi_type)                              \
     const_test(type, mpi_type, MPI_LXOR, 1, (size & 0x1), 0)
 #define land_test1(type, mpi_type)                              \
     const_test(type, mpi_type, MPI_LAND, (rank & 0x1), 0, 0)
@@ -223,35 +223,35 @@ struct double_test {
     const_test(type, mpi_type, MPI_BXOR, (rank == 1) * 0xf0, (size > 1) * 0xf0, 0)
 #define bxor_test2(type, mpi_type)                      \
     const_test(type, mpi_type, MPI_BXOR, 0, 0, 0)
-#define bxor_test3(type, mpi_type)                      \
+#define bxor_test3(type, mpi_type)                                      \
     const_test(type, mpi_type, MPI_BXOR, ~0, (size &0x1) ? ~0 : 0, 0)
 
-#define band_test1(type, mpi_type)                                      \
-    {                                                                   \
-        DECL_MALLOC_IN_OUT_SOL(type);                                   \
-        if (rank == size-1) {                                           \
-            SET_INDEX_SUM(in, 0);                                       \
-        }                                                               \
-        else {                                                          \
-            SET_INDEX_CONST(in, ~0);                                    \
-        }                                                               \
-        SET_INDEX_SUM(sol, 0);                                          \
-        SET_INDEX_CONST(out, 0);                                        \
-        ALLREDUCE_AND_FREE(mpi_type, MPI_BAND, in, out, sol);           \
+#define band_test1(type, mpi_type)                              \
+    {                                                           \
+        DECL_MALLOC_IN_OUT_SOL(type);                           \
+        if (rank == size-1) {                                   \
+            SET_INDEX_SUM(in, 0);                               \
+        }                                                       \
+        else {                                                  \
+            SET_INDEX_CONST(in, ~0);                            \
+        }                                                       \
+        SET_INDEX_SUM(sol, 0);                                  \
+        SET_INDEX_CONST(out, 0);                                \
+        ALLREDUCE_AND_FREE(mpi_type, MPI_BAND, in, out, sol);   \
     }
 
-#define band_test2(type, mpi_type)                                      \
-    {                                                                   \
-        DECL_MALLOC_IN_OUT_SOL(type);                                   \
-        if (rank == size-1) {                                           \
-            SET_INDEX_SUM(in, 0);                                       \
-        }                                                               \
-        else {                                                          \
-            SET_INDEX_CONST(in, 0);                                     \
-        }                                                               \
-        SET_INDEX_CONST(sol, 0);                                        \
-        SET_INDEX_CONST(out, 0);                                        \
-        ALLREDUCE_AND_FREE(mpi_type, MPI_BAND, in, out, sol);           \
+#define band_test2(type, mpi_type)                              \
+    {                                                           \
+        DECL_MALLOC_IN_OUT_SOL(type);                           \
+        if (rank == size-1) {                                   \
+            SET_INDEX_SUM(in, 0);                               \
+        }                                                       \
+        else {                                                  \
+            SET_INDEX_CONST(in, 0);                             \
+        }                                                       \
+        SET_INDEX_CONST(sol, 0);                                \
+        SET_INDEX_CONST(out, 0);                                \
+        ALLREDUCE_AND_FREE(mpi_type, MPI_BAND, in, out, sol);   \
     }
 
 #define maxloc_test(type, mpi_type)                                     \
@@ -263,7 +263,7 @@ struct double_test {
         SET_INDEX_STRUCT_CONST(sol, size - 1, b);                       \
         SET_INDEX_STRUCT_CONST(out, 0, a);                              \
         SET_INDEX_STRUCT_CONST(out, -1, b);                             \
-        STRUCT_ALLREDUCE_AND_FREE(mpi_type, MPI_MAXLOC, in, out, sol);   \
+        STRUCT_ALLREDUCE_AND_FREE(mpi_type, MPI_MAXLOC, in, out, sol);  \
     }
 
 #define minloc_test(type, mpi_type)                                     \
@@ -279,41 +279,41 @@ struct double_test {
     }
 
 #if MTEST_HAVE_MIN_MPI_VERSION(2,2)
-#define test_types_set_mpi_2_2_integer(op,post) do {                \
-        op##_test##post(int8_t, MPI_INT8_T);                        \
-        op##_test##post(int16_t, MPI_INT16_T);                      \
-        op##_test##post(int32_t, MPI_INT32_T);                      \
-        op##_test##post(int64_t, MPI_INT64_T);                      \
-        op##_test##post(uint8_t, MPI_UINT8_T);                      \
-        op##_test##post(uint16_t, MPI_UINT16_T);                    \
-        op##_test##post(uint32_t, MPI_UINT32_T);                    \
-        op##_test##post(uint64_t, MPI_UINT64_T);                    \
-        op##_test##post(MPI_Aint, MPI_AINT);                        \
-        op##_test##post(MPI_Offset, MPI_OFFSET);                    \
+#define test_types_set_mpi_2_2_integer(op,post) do {    \
+        op##_test##post(int8_t, MPI_INT8_T);            \
+        op##_test##post(int16_t, MPI_INT16_T);          \
+        op##_test##post(int32_t, MPI_INT32_T);          \
+        op##_test##post(int64_t, MPI_INT64_T);          \
+        op##_test##post(uint8_t, MPI_UINT8_T);          \
+        op##_test##post(uint16_t, MPI_UINT16_T);        \
+        op##_test##post(uint32_t, MPI_UINT32_T);        \
+        op##_test##post(uint64_t, MPI_UINT64_T);        \
+        op##_test##post(MPI_Aint, MPI_AINT);            \
+        op##_test##post(MPI_Offset, MPI_OFFSET);        \
     } while (0)
 #else
 #define test_types_set_mpi_2_2_integer(op,post) do { } while (0)
 #endif
 
 #if MTEST_HAVE_MIN_MPI_VERSION(3,0)
-#define test_types_set_mpi_3_0_integer(op,post) do {                \
-        op##_test##post(MPI_Count, MPI_COUNT);                      \
+#define test_types_set_mpi_3_0_integer(op,post) do {    \
+        op##_test##post(MPI_Count, MPI_COUNT);          \
     } while (0)
 #else
 #define test_types_set_mpi_3_0_integer(op,post) do { } while (0)
 #endif
 
-#define test_types_set1(op, post)                                   \
-    {                                                               \
-        op##_test##post(int, MPI_INT);                              \
-        op##_test##post(long, MPI_LONG);                            \
-        op##_test##post(short, MPI_SHORT);                          \
-        op##_test##post(unsigned short, MPI_UNSIGNED_SHORT);        \
-        op##_test##post(unsigned, MPI_UNSIGNED);                    \
-        op##_test##post(unsigned long, MPI_UNSIGNED_LONG);          \
-        op##_test##post(unsigned char, MPI_UNSIGNED_CHAR);          \
-        test_types_set_mpi_2_2_integer(op,post);                    \
-        test_types_set_mpi_3_0_integer(op,post);                    \
+#define test_types_set1(op, post)                               \
+    {                                                           \
+        op##_test##post(int, MPI_INT);                          \
+        op##_test##post(long, MPI_LONG);                        \
+        op##_test##post(short, MPI_SHORT);                      \
+        op##_test##post(unsigned short, MPI_UNSIGNED_SHORT);    \
+        op##_test##post(unsigned, MPI_UNSIGNED);                \
+        op##_test##post(unsigned long, MPI_UNSIGNED_LONG);      \
+        op##_test##post(unsigned char, MPI_UNSIGNED_CHAR);      \
+        test_types_set_mpi_2_2_integer(op,post);                \
+        test_types_set_mpi_3_0_integer(op,post);                \
     }
 
 #define test_types_set2(op, post)               \
@@ -323,25 +323,25 @@ struct double_test {
         op##_test##post(double, MPI_DOUBLE);    \
     }
 
-#define test_types_set3(op, post)                                   \
-    {                                                               \
-        op##_test##post(unsigned char, MPI_BYTE);                   \
+#define test_types_set3(op, post)                       \
+    {                                                   \
+        op##_test##post(unsigned char, MPI_BYTE);       \
     }
 
 /* Make sure that we test complex and double complex, even if long
    double complex is not available */
 #if defined(USE_LONG_DOUBLE_COMPLEX)
 
-#if MTEST_HAVE_MIN_MPI_VERSION(2,2) && defined(HAVE_FLOAT__COMPLEX) \
-    && defined(HAVE_DOUBLE__COMPLEX) \
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2) && defined(HAVE_FLOAT__COMPLEX)     \
+    && defined(HAVE_DOUBLE__COMPLEX)                                    \
     && defined(HAVE_LONG_DOUBLE__COMPLEX)
-#define test_types_set4(op, post)                                             \
-    do {                                                                      \
-        op##_test##post(float _Complex, MPI_C_FLOAT_COMPLEX);                 \
-        op##_test##post(double _Complex, MPI_C_DOUBLE_COMPLEX);               \
-        if (MPI_C_LONG_DOUBLE_COMPLEX != MPI_DATATYPE_NULL) {                 \
+#define test_types_set4(op, post)                                       \
+    do {                                                                \
+        op##_test##post(float _Complex, MPI_C_FLOAT_COMPLEX);           \
+        op##_test##post(double _Complex, MPI_C_DOUBLE_COMPLEX);         \
+        if (MPI_C_LONG_DOUBLE_COMPLEX != MPI_DATATYPE_NULL) {           \
             op##_test##post(long double _Complex, MPI_C_LONG_DOUBLE_COMPLEX); \
-        }                                                                     \
+        }                                                               \
     } while (0)
 
 #else
@@ -349,12 +349,12 @@ struct double_test {
 #endif
 #else
 
-#if MTEST_HAVE_MIN_MPI_VERSION(2,2) && defined(HAVE_FLOAT__COMPLEX) \
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2) && defined(HAVE_FLOAT__COMPLEX)     \
     && defined(HAVE_DOUBLE__COMPLEX)
-#define test_types_set4(op, post)                                         \
-    do {                                                                  \
-        op##_test##post(float _Complex, MPI_C_FLOAT_COMPLEX);             \
-        op##_test##post(double _Complex, MPI_C_DOUBLE_COMPLEX);           \
+#define test_types_set4(op, post)                               \
+    do {                                                        \
+        op##_test##post(float _Complex, MPI_C_FLOAT_COMPLEX);   \
+        op##_test##post(double _Complex, MPI_C_DOUBLE_COMPLEX); \
     } while (0)
 
 #else
@@ -364,9 +364,9 @@ struct double_test {
 #endif /* defined(USE_LONG_DOUBLE_COMPLEX) */
 
 #if MTEST_HAVE_MIN_MPI_VERSION(2,2) && defined(HAVE__BOOL)
-#define test_types_set5(op, post)           \
-    do {                                    \
-        op##_test##post(_Bool, MPI_C_BOOL); \
+#define test_types_set5(op, post)               \
+    do {                                        \
+        op##_test##post(_Bool, MPI_C_BOOL);     \
     } while (0)
 
 #else
