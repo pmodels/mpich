@@ -32,6 +32,48 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Testall_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
+                      MPI_Status array_of_statuses[])
+{
+    int i;
+    int mpi_errno = MPI_SUCCESS;
+    int n_completed = 0;
+
+    mpi_errno = MPID_Progress_test();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    for (i = 0; i < count; i++) {
+        if (request_ptrs[i] != NULL) {
+            if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
+                request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
+                mpi_errno =
+                    (request_ptrs[i]->u.ureq.greq_fns->poll_fn) (request_ptrs[i]->u.ureq.
+                                                                 greq_fns->grequest_extra_state,
+                                                                 &(array_of_statuses[i]));
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+            }
+            if (MPIR_Request_is_complete(request_ptrs[i])) {
+                n_completed++;
+            }
+        } else {
+            n_completed++;
+        }
+    }
+    *flag = (n_completed == count) ? TRUE : FALSE;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Testall
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -76,24 +118,13 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
         }
     }
 
-    mpi_errno = MPID_Progress_test();
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
+    mpi_errno = MPIR_Testall_impl(count, request_ptrs, flag, array_of_statuses);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
-    n_completed = 0;
     for (i = 0; i < count; i++) {
         if (request_ptrs[i] != NULL) {
-            if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
-                request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
-                mpi_errno =
-                    (request_ptrs[i]->u.ureq.greq_fns->poll_fn) (request_ptrs[i]->u.ureq.
-                                                                 greq_fns->grequest_extra_state,
-                                                                 &(array_of_statuses[i]));
-                if (mpi_errno != MPI_SUCCESS)
-                    goto fn_fail;
-            }
             if (MPIR_Request_is_complete(request_ptrs[i])) {
-                n_completed++;
                 rc = MPIR_Request_get_error(request_ptrs[i]);
                 if (rc != MPI_SUCCESS) {
                     if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(rc) ||
@@ -113,13 +144,12 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
                     status_ptr->MPI_ERROR = rc;
                 proc_failure = TRUE;
             }
-        } else {
-            n_completed++;
         }
     }
 
-    if (n_completed == count || mpi_errno == MPI_ERR_IN_STATUS) {
-        n_completed = 0;
+    n_completed = 0;
+
+    if (*flag || mpi_errno == MPI_ERR_IN_STATUS) {
         for (i = 0; i < count; i++) {
             if (request_ptrs[i] != NULL) {
                 if (MPIR_Request_is_complete(request_ptrs[i])) {
