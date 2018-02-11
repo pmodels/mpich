@@ -27,6 +27,39 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
 #define MPI_Test PMPI_Test
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Test_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPID_Progress_test();
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (request_ptr->kind == MPIR_REQUEST_KIND__GREQUEST &&
+        request_ptr->u.ureq.greq_fns != NULL && request_ptr->u.ureq.greq_fns->poll_fn != NULL) {
+        mpi_errno =
+            (request_ptr->u.ureq.greq_fns->poll_fn) (request_ptr->u.ureq.
+                                                     greq_fns->grequest_extra_state, status);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
+
+    if (MPIR_Request_is_complete(request_ptr))
+        *flag = TRUE;
+    else
+        *flag = FALSE;
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Test
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -43,27 +76,13 @@ int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
         goto fn_exit;
     }
 
-    *flag = FALSE;
-
     MPIR_Request_get_ptr(*request, request_ptr);
 
-    /* If the request is already completed AND we want to avoid calling
-     * the progress engine, we could make the call to MPID_Progress_test
-     * conditional on the request not being completed. */
-    mpi_errno = MPID_Progress_test();
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
+    mpi_errno = MPIR_Test_impl(request_ptr, flag, status);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
-    if (request_ptr->kind == MPIR_REQUEST_KIND__GREQUEST &&
-        request_ptr->u.ureq.greq_fns != NULL && request_ptr->u.ureq.greq_fns->poll_fn != NULL) {
-        mpi_errno =
-            (request_ptr->u.ureq.greq_fns->poll_fn) (request_ptr->u.ureq.
-                                                     greq_fns->grequest_extra_state, status);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-    }
-
-    if (MPIR_Request_is_complete(request_ptr)) {
+    if (*flag) {
         mpi_errno = MPIR_Request_completion_processing(request_ptr, status, &active_flag);
         if (!MPIR_Request_is_persistent(request_ptr)) {
             MPIR_Request_free(request_ptr);
@@ -71,7 +90,6 @@ int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
         }
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-        *flag = TRUE;
         /* Fall through to the exit */
     } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
                         MPID_Request_is_anysource(request_ptr) &&
