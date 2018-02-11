@@ -27,7 +27,7 @@ int MPIR_Gather_allcomm_nb(const void *sendbuf, int sendcount, MPI_Datatype send
     if (req_ptr)
         req = req_ptr->handle;
 
-    mpi_errno = MPIR_Wait_impl(&req, MPI_STATUS_IGNORE);
+    mpi_errno = MPIR_Wait(&req, MPI_STATUS_IGNORE);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

@@ -27,10 +27,10 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
 #define MPI_Test PMPI_Test
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Test_impl
+#define FUNCNAME MPIR_Test
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Test_impl(MPI_Request * request, int *flag, MPI_Status * status)
+int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     int active_flag;
@@ -163,7 +163,7 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Test_impl(request, flag, status);
+    mpi_errno = MPIR_Test(request, flag, status);
     if (mpi_errno)
         goto fn_fail;
 
