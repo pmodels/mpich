@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     MPI_Status *statuses;
     MPI_Status status;
     MPI_Offset offset = 0;
-    int nr_errors = 0;
+    int errs = 0;
 #ifdef VERBOSE
     int k;
 #endif
@@ -238,17 +238,17 @@ int main(int argc, char **argv)
                 if (*ptr != compare_buf[i][j]) {
                     fprintf(stderr, "expected %d got %d at [%d][%d]\n",
                             *ptr, compare_buf[i][j], i, j);
-                    nr_errors++;
+                    errs++;
                 }
                 ptr++;
             }
         }
         free(rd_buf);
 
-        if (nr_errors == 0)
+        if (errs == 0)
             fprintf(stdout, " No Errors\n");
         else
-            fprintf(stderr, "Found %d errors\n", nr_errors);
+            fprintf(stderr, "Found %d errors\n", errs);
     }
 
     free(blocklengths);

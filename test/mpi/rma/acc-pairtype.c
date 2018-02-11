@@ -21,7 +21,7 @@ typedef struct long_double_int {
 int main(int argc, char *argv[])
 {
     MPI_Win win;
-    int errors = 0;
+    int errs = 0;
     int rank, nproc, i;
     long_double_int_t *orig_buf;
     long_double_int_t *tar_buf;
@@ -61,11 +61,11 @@ int main(int argc, char *argv[])
         for (i = 0; i < DATA_SIZE; i++) {
             if (i % 5 < 3) {
                 if (tar_buf[i].a != 1.0 || tar_buf[i].b != 1) {
-                    errors++;
+                    errs++;
                 }
             } else {
                 if (tar_buf[i].a != 0.0 || tar_buf[i].b != 0) {
-                    errors++;
+                    errs++;
                 }
             }
         }
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
     MPI_Free_mem(tar_buf);
 
     if (rank == 1) {
-        if (errors == 0)
+        if (errs == 0)
             printf(" No Errors\n");
     }
 

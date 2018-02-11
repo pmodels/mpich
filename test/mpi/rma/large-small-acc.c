@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     MPI_Win win;
     uint64_t buf[DATA_COUNT], orig_buf[DATA_COUNT];
     uint64_t small_orig_buf_1 = 2, small_orig_buf_2[2] = { 3, 3 };
-    int i, j, error = 0;
+    int i, j, errs = 0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 
     for (j = 0; j < LOOP; j++) {
 
-        error = 0;
+        errs = 0;
 
         for (i = 0; i < DATA_COUNT; i++) {
             buf[i] = 0;
@@ -60,15 +60,15 @@ int main(int argc, char *argv[])
             for (i = 0; i < DATA_COUNT; i++) {
                 if (i == 0) {
                     if (buf[i] != 2) {
-                        error++;
+                        errs++;
                     }
                 } else if (i == 1 || i == 2) {
                     if (buf[i] != 3) {
-                        error++;
+                        errs++;
                     }
                 } else {
                     if (buf[i] != 1) {
-                        error++;
+                        errs++;
                     }
                 }
             }
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
         MPI_Win_free(&win);
     }
 
-    if (rank == 1 && error == 0) {
+    if (rank == 1 && errs == 0) {
         printf(" No Errors\n");
     }
 

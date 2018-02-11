@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     int *rbuf, *lbuf;
     int rank, size, trg;
     MPI_Request *reqs;
-    int n_errors = 0;
+    int errs = 0;
 
     MPI_Init(&argc, &argv);
 
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
         int v = lbuf[i];
         if (v != -2) {
             printf("lbuf[%d]=%d, expected -2\n", i, v);
-            n_errors++;
+            errs++;
         }
     }
     MPI_Win_free(&win);
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
     free(lbuf);
     free(rbuf);
 
-    if (rank == 0 && n_errors == 0)
+    if (rank == 0 && errs == 0)
         printf(" No Errors\n");
 
     MPI_Finalize();

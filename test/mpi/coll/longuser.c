@@ -25,7 +25,7 @@ int add(double *invec, double *inoutvec, int *len, MPI_Datatype * dtype)
 int main(int argc, char **argv)
 {
     MPI_Op op;
-    int i, rank, size, bufsize, errcnt = 0, toterr;
+    int i, rank, size, bufsize, errcnt = 0, errs;
     double *inbuf, *outbuf, value;
 
     MPI_Init(&argc, &argv);
@@ -63,13 +63,13 @@ int main(int argc, char **argv)
         bufsize *= 2;
     }
 
-    MPI_Allreduce(&errcnt, &toterr, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&errcnt, &errs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     if (rank == 0) {
-        if (toterr == 0)
+        if (errs == 0)
             printf(" No Errors\n");
         else
-            printf("*! %d errors!\n", toterr);
+            printf("*! %d errors!\n", errs);
     }
 
     MPI_Op_free(&op);

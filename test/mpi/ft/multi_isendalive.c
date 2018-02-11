@@ -15,7 +15,7 @@
  */
 int main(int argc, char **argv)
 {
-    int rank, size, err;
+    int rank, size, errs;
     char buf[10];
     MPI_Request request;
 
@@ -34,17 +34,17 @@ int main(int argc, char **argv)
     }
 
     if (rank == 0) {
-        err = MPI_Issend("No Errors", 10, MPI_CHAR, 3, 0, MPI_COMM_WORLD, &request);
-        err += MPI_Wait(&request, MPI_STATUS_IGNORE);
-        if (err) {
+        errs = MPI_Issend("No Errors", 10, MPI_CHAR, 3, 0, MPI_COMM_WORLD, &request);
+        errs += MPI_Wait(&request, MPI_STATUS_IGNORE);
+        if (errs) {
             fprintf(stderr, "An error occurred during the send operation\n");
         }
     }
 
     if (rank == 3) {
-        err = MPI_Irecv(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &request);
-        err += MPI_Wait(&request, MPI_STATUS_IGNORE);
-        if (err) {
+        errs = MPI_Irecv(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &request);
+        errs += MPI_Wait(&request, MPI_STATUS_IGNORE);
+        if (errs) {
             fprintf(stderr, "An error occurred during the recv operation\n");
         }
     }
@@ -54,17 +54,17 @@ int main(int argc, char **argv)
     }
 
     if (rank == 0) {
-        err = MPI_Issend("No Errors", 10, MPI_CHAR, 2, 0, MPI_COMM_WORLD, &request);
-        err += MPI_Wait(&request, MPI_STATUS_IGNORE);
-        if (err) {
+        errs = MPI_Issend("No Errors", 10, MPI_CHAR, 2, 0, MPI_COMM_WORLD, &request);
+        errs += MPI_Wait(&request, MPI_STATUS_IGNORE);
+        if (errs) {
             fprintf(stderr, "An error occurred during the send operation\n");
         }
     }
 
     if (rank == 2) {
-        err = MPI_Irecv(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &request);
-        err += MPI_Wait(&request, MPI_STATUS_IGNORE);
-        if (err) {
+        errs = MPI_Irecv(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &request);
+        errs += MPI_Wait(&request, MPI_STATUS_IGNORE);
+        if (errs) {
             fprintf(stderr, "An error occurred during the recv operation\n");
         } else {
             printf(" %s\n", buf);

@@ -18,7 +18,7 @@
 #endif
 
 int count, size, rank;
-int cerrcnt;
+int errs;
 
 struct int_test {
     int a;
@@ -116,11 +116,11 @@ struct double_test {
     {                                                                   \
         int i, rc, lerrcnt = 0;						\
         rc = MPI_Allreduce(in, out, count, mpi_type, mpi_op, MPI_COMM_WORLD); \
-	if (rc) { lerrcnt++; cerrcnt++; MTestPrintError(rc); }        \
+	if (rc) { lerrcnt++; errs++; MTestPrintError(rc); }        \
 	else {                                                          \
           for (i = 0; i < count; i++) {                                   \
               if (out[i] != sol[i]) {                                     \
-                  cerrcnt++;                                              \
+                  errs++;                                              \
                   lerrcnt++;                                              \
               }                                                           \
 	   }                                                              \
@@ -132,11 +132,11 @@ struct double_test {
     {                                                                   \
         int i, rc, lerrcnt = 0;						\
         rc = MPI_Allreduce(in, out, count, mpi_type, mpi_op, MPI_COMM_WORLD); \
-	if (rc) { lerrcnt++; cerrcnt++; MTestPrintError(rc); }        \
+	if (rc) { lerrcnt++; errs++; MTestPrintError(rc); }        \
         else {                                                            \
           for (i = 0; i < count; i++) {                                   \
               if ((out[i].a != sol[i].a) || (out[i].b != sol[i].b)) {     \
-                  cerrcnt++;                                              \
+                  errs++;                                              \
                   lerrcnt++;                                              \
               }                                                           \
             }                                                             \
@@ -456,7 +456,7 @@ int main(int argc, char **argv)
     minloc_test(struct double_test, MPI_DOUBLE_INT);
 
     MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
-    MTest_Finalize(cerrcnt);
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

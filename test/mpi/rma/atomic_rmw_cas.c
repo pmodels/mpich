@@ -28,7 +28,7 @@
 int main(int argc, char *argv[])
 {
     int rank, size, k;
-    int errors = 0;
+    int errs = 0;
     int origin_shm, origin_am, dest;
     int *orig_buf = NULL, *result_buf = NULL, *compare_buf = NULL,
         *target_buf = NULL, *check_buf = NULL;
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
                 printf
                     ("Expected results (2): target result = 0, origin_shm result = 0, origin_am result = 1\n");
 
-                errors++;
+                errs++;
             }
 
             MPI_Free_mem(check_buf);
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
     }
 
   exit_test:
-    if (rank == dest && errors == 0)
+    if (rank == dest && errs == 0)
         printf(" No Errors\n");
 
     MPI_Finalize();
