@@ -72,7 +72,7 @@ PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data ATTRIBUTE
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Grequest_start
+#define FUNCNAME MPIR_Grequest_start_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Grequest_start_impl(MPI_Grequest_query_function * query_fn,
