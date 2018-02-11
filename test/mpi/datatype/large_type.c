@@ -89,37 +89,37 @@ static MPI_Datatype make_largexfer_type_hindexed(MPI_Offset nbytes)
 int testtype(MPI_Datatype type, MPI_Offset expected)
 {
     MPI_Count size, lb, extent;
-    int nerrors = 0;
+    int errs = 0;
     MPI_Type_size_x(type, &size);
 
     if (size < 0) {
         printf("ERROR: type size apparently overflowed integer\n");
-        nerrors++;
+        errs++;
     }
 
     if (size != expected) {
         printf("reported type size %lld does not match expected %lld\n", size, expected);
-        nerrors++;
+        errs++;
     }
 
     MPI_Type_get_true_extent_x(type, &lb, &extent);
     if (lb != 0) {
         printf("ERROR: type should have lb of 0, reported %lld\n", lb);
-        nerrors++;
+        errs++;
     }
 
     if (extent != size) {
         printf("ERROR: extent should match size, not %lld\n", extent);
-        nerrors++;
+        errs++;
     }
-    return nerrors;
+    return errs;
 }
 
 
 int main(int argc, char **argv)
 {
 
-    int nerrors = 0, i;
+    int errs = 0, i;
     int rank, size;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -141,15 +141,15 @@ int main(int argc, char **argv)
 
     for (i = 0; i < NR_TYPES; i++) {
         if (types[i] != MPI_DATATYPE_NULL) {
-            nerrors += testtype(types[i], expected_sizes[i]);
+            errs += testtype(types[i], expected_sizes[i]);
             MPI_Type_free(&(types[i]));
         }
     }
 
     MPI_Finalize();
     if (rank == 0) {
-        if (nerrors) {
-            printf("found %d errors\n", nerrors);
+        if (errs) {
+            printf("found %d errors\n", errs);
         } else {
             printf(" No errors\n");
         }

@@ -9,7 +9,7 @@
 
 int main(int argc, char *argv[])
 {
-    int ierr;
+    int errs;
     MPI_File fh;
     MPI_Init(&argc, &argv);
 
@@ -17,9 +17,9 @@ int main(int argc, char *argv[])
                   MPI_MODE_CREATE | MPI_MODE_RDWR | MPI_MODE_DELETE_ON_CLOSE, MPI_INFO_NULL, &fh);
 
     MPI_File_set_errhandler(fh, MPI_ERRORS_RETURN);
-    ierr = MPI_File_call_errhandler(fh, MPI_ERR_FILE);
-    if (ierr != MPI_SUCCESS) {
-        fprintf(stderr, "ierr: %d, expected: %d\n", ierr, (int) MPI_SUCCESS);
+    errs = MPI_File_call_errhandler(fh, MPI_ERR_FILE);
+    if (errs != MPI_SUCCESS) {
+        fprintf(stderr, "errs: %d, expected: %d\n", errs, (int) MPI_SUCCESS);
     } else {
         printf(" No Errors\n");
     }

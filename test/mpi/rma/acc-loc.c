@@ -18,7 +18,7 @@ typedef struct {
     int loc;
 } twoint_t;
 
-static int errors = 0;
+static int errs = 0;
 
 int main(int argc, char **argv)
 {
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     MPI_Win_fence(0, win);
 
     if (me == 0 && (data->loc != 0 || data->val != nproc)) {
-        errors++;
+        errs++;
         printf("Expected: { loc = %d, val = %d }  Actual: { loc = %d, val = %d }\n",
                0, nproc, data->loc, data->val);
     }
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
     MPI_Win_fence(0, win);
 
     if (me == 0 && (data->loc != nproc - 1 || data->val != 1)) {
-        errors++;
+        errs++;
         printf("Expected: { loc = %d, val = %d }  Actual: { loc = %d, val = %d }\n",
                nproc - 1, 1, data->loc, data->val);
     }
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
     MPI_Barrier(MPI_COMM_WORLD);
 
     if (me == 0 && (data->loc != 0 || data->val != 1)) {
-        errors++;
+        errs++;
         printf("Expected: { loc = %d, val = %d }  Actual: { loc = %d, val = %d }\n",
                0, 1, data->loc, data->val);
     }
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
     MPI_Barrier(MPI_COMM_WORLD);
 
     if (me == 0 && (data->loc != 0 || data->val != 1)) {
-        errors++;
+        errs++;
         printf("Expected: { loc = %d, val = %d }  Actual: { loc = %d, val = %d }\n",
                0, 1, data->loc, data->val);
     }
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
         MPI_Free_mem(data);
     }
 
-    MTest_Finalize(errors);
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

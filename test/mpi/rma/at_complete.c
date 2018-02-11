@@ -18,7 +18,7 @@ int main(int argc, char **argv)
     int i, k, rank, nproc;
     int win_buf[WIN_SIZE], orig_get_buf[GET_SIZE], orig_put_buf[PUT_SIZE];
     int orig_rank = 0, dest_rank = 1;
-    int errors = 0;
+    int errs = 0;
     MPI_Group comm_group, orig_group, dest_group;
 
     MPI_Init(&argc, &argv);
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
                 if (orig_get_buf[i] != 1) {
                     printf("LOOP=%d, FENCE, orig_get_buf[%d] = %d, expected 1.\n",
                            k, i, orig_get_buf[i]);
-                    errors++;
+                    errs++;
                 }
             }
         } else if (rank == dest_rank) {
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
                 if (orig_get_buf[i] != 1) {
                     printf("LOOP=%d, PSCW, orig_get_buf[%d] = %d, expected 1.\n",
                            k, i, orig_get_buf[i]);
-                    errors++;
+                    errs++;
                 }
             }
         } else if (rank == dest_rank) {
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
     MPI_Group_free(&dest_group);
     MPI_Group_free(&comm_group);
 
-    if (rank == orig_rank && errors == 0) {
+    if (rank == orig_rank && errs == 0) {
         printf(" No Errors\n");
     }
 

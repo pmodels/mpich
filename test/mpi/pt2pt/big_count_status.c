@@ -36,21 +36,21 @@ int test_count(MPI_Count count)
 
 int main(int argc, char **argv)
 {
-    int nerrors = 0;
+    int errs = 0;
 
     MPI_Init(&argc, &argv);
     /* baseline: this tiny value should pose no problems */
-    nerrors += test_count(60);
+    errs += test_count(60);
     /* one with no next-to-high-bits set */
-    nerrors += test_count(0x3654321f71234567);
+    errs += test_count(0x3654321f71234567);
     /* masking after shift can help the count_high, but count_low is still
      * wrong */
-    nerrors += test_count(0x7654321f71234567);
+    errs += test_count(0x7654321f71234567);
     /* original problematic count reported by Artem Yalozo */
-    nerrors += test_count(0x7654321ff1234567);
+    errs += test_count(0x7654321ff1234567);
 
-    if (nerrors != 0) {
-        fprintf(stderr, "found %d errors\n", nerrors);
+    if (errs != 0) {
+        fprintf(stderr, "found %d errors\n", errs);
     } else {
         printf(" No Errors\n");
     }

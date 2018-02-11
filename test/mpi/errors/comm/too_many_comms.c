@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 {
     int rank, nproc, mpi_errno;
     int i, ncomm;
-    int errors = 1;
+    int errs = 1;
     MPI_Comm *comm_hdls;
 
     MPI_Init(&argc, &argv);
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
         } else {
             if (verbose)
                 printf("%d: Error creating comm %d\n", rank, i);
-            errors = 0;
+            errs = 0;
             break;
         }
     }
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
         MPI_Comm_free(&comm_hdls[i]);
 
     free(comm_hdls);
-    MTest_Finalize(errors);
+    MTest_Finalize(errs);
     MPI_Finalize();
 
     return 0;

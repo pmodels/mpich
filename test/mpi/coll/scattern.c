@@ -13,7 +13,7 @@ int main(int argc, char **argv)
 {
     MPI_Datatype vec;
     double *vecin, *vecout, ivalue;
-    int root, i, n, stride, err = 0;
+    int root, i, n, stride, errs = 0;
     int rank, size;
 
     MPI_Init(&argc, &argv);
@@ -39,16 +39,16 @@ int main(int argc, char **argv)
         for (i = 0; i < n; i++) {
             if (vecout[i] != ivalue) {
                 printf("Expected %f but found %f\n", ivalue, vecout[i]);
-                err++;
+                errs++;
             }
             ivalue += stride;
         }
     }
-    i = err;
-    MPI_Allreduce(&i, &err, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    i = errs;
+    MPI_Allreduce(&i, &errs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (err > 0)
-            printf("Found %d errors!\n", err);
+        if (errs > 0)
+            printf("Found %d errors!\n", errs);
         else
             printf(" No Errors\n");
     }

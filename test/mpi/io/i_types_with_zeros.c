@@ -32,7 +32,7 @@ enum {
 
 static int test_indexed_with_zeros(char *filename, int testcase)
 {
-    int i, rank, np, buflen, num, err, nr_errors = 0;
+    int i, rank, np, buflen, num, err, errs = 0;
     int nelms[MAXLEN], buf[MAXLEN], indices[MAXLEN], blocklen[MAXLEN];
     MPI_File fh;
     MPI_Request request;
@@ -129,18 +129,18 @@ static int test_indexed_with_zeros(char *filename, int testcase)
             handle_error(err, "MPI_File_close");
         for (i = 0; i < MAXLEN; i++) {
             if (buf[i] < 0) {
-                nr_errors++;
+                errs++;
                 printf("Error: unexpected value for case %d at buf[%d] == %d\n",
                        testcase, i, buf[i]);
             }
         }
     }
-    return nr_errors;
+    return errs;
 }
 
 int main(int argc, char **argv)
 {
-    int nr_errors, rank, np;
+    int errs, rank, np;
     char *filename;
 
     filename = (argc > 1) ? argv[1] : "testfile";
@@ -155,11 +155,11 @@ int main(int argc, char **argv)
         MPI_Finalize();
         return 1;
     }
-    nr_errors = test_indexed_with_zeros(filename, INDEXED);
-    nr_errors += test_indexed_with_zeros(filename, HINDEXED);
-    nr_errors += test_indexed_with_zeros(filename, STRUCT);
+    errs = test_indexed_with_zeros(filename, INDEXED);
+    errs += test_indexed_with_zeros(filename, HINDEXED);
+    errs += test_indexed_with_zeros(filename, STRUCT);
 
-    if (rank == 0 && nr_errors == 0)
+    if (rank == 0 && errs == 0)
         printf(" No Errors\n");
 
     MPI_Finalize();

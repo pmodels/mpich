@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 {
     int rank, nproc;
     int i, j, k;
-    int errors = 0, curr_errors = 0;
+    int errs = 0, curr_errors = 0;
     MPI_Win win;
     pair_struct_t *tar_buf = NULL;
     pair_struct_t *orig_buf = NULL;
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
         }
 
         if (j % LOOP == 0) {
-            errors += curr_errors;
+            errs += curr_errors;
             curr_errors = 0;
         }
     }
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
     MPI_Free_mem(result_buf);
 
     if (rank == 1) {
-        if (errors == 0)
+        if (errs == 0)
             printf(" No Errors\n");
     }
 

@@ -78,7 +78,7 @@ MTEST_THREAD_RETURN_TYPE test_comm_create_group(void *arg)
 int main(int argc, char **argv)
 {
     int thread_args[NUM_THREADS];
-    int i, err, provided;
+    int i, errs, provided;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
@@ -94,11 +94,11 @@ int main(int argc, char **argv)
         MTest_Start_thread(test_comm_create_group, (void *) &thread_args[i]);
     }
 
-    err = MTest_Join_threads();
+    errs = MTest_Join_threads();
 
     MPI_Group_free(&global_group);
 
-    MTest_Finalize(err);
+    MTest_Finalize(errs);
 
     MPI_Finalize();
 
