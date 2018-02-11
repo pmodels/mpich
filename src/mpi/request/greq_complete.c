@@ -31,10 +31,10 @@ int MPI_Grequest_complete(MPI_Request request)
    static; this macro expands into "static" if weak symbols are supported and
    into nothing otherwise. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Grequest_complete_impl
+#define FUNCNAME MPIR_Grequest_complete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIR_Grequest_complete_impl(MPIR_Request * request_ptr)
+void MPIR_Grequest_complete(MPIR_Request * request_ptr)
 {
     /* Set the request as completed.  This does not change the
      * reference count on the generalized request */
@@ -110,7 +110,7 @@ int MPI_Grequest_complete(MPI_Request request)
 
     /* ... body of routine ...  */
 
-    MPIR_Grequest_complete_impl(request_ptr);
+    MPIR_Grequest_complete(request_ptr);
 
     /* ... end of body of routine ... */
 

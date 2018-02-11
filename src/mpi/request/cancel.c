@@ -27,10 +27,10 @@ int MPI_Cancel(MPI_Request * request) __attribute__ ((weak, alias("PMPI_Cancel")
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Cancel_impl
+#define FUNCNAME MPIR_Cancel
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Cancel_impl(MPIR_Request * request_ptr)
+int MPIR_Cancel(MPIR_Request * request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -194,7 +194,7 @@ int MPI_Cancel(MPI_Request * request)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Cancel_impl(request_ptr);
+    mpi_errno = MPIR_Cancel(request_ptr);
     if (mpi_errno)
         goto fn_fail;
 

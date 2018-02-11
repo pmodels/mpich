@@ -636,7 +636,7 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status statuses[],
         request_ptrs[i] = requests[i]->handle;
     }
 
-    mpi_errno = MPIR_Waitall_impl(numreq, request_ptrs, status_array);
+    mpi_errno = MPIR_Waitall(numreq, request_ptrs, status_array);
 
     /* The errflag value here is for all requests, not just a single one.  If
      * in the future, this function is used for multiple collectives at a

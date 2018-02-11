@@ -72,13 +72,13 @@ PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data ATTRIBUTE
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Grequest_start_impl
+#define FUNCNAME MPIR_Grequest_start
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Grequest_start_impl(MPI_Grequest_query_function * query_fn,
-                             MPI_Grequest_free_function * free_fn,
-                             MPI_Grequest_cancel_function * cancel_fn,
-                             void *extra_state, MPIR_Request ** request_ptr)
+int MPIR_Grequest_start(MPI_Grequest_query_function * query_fn,
+                        MPI_Grequest_free_function * free_fn,
+                        MPI_Grequest_cancel_function * cancel_fn,
+                        void *extra_state, MPIR_Request ** request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKPMEM_DECL(1);
@@ -201,7 +201,7 @@ int MPI_Grequest_start(MPI_Grequest_query_function * query_fn,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, extra_state, &request_ptr);
+    mpi_errno = MPIR_Grequest_start(query_fn, free_fn, cancel_fn, extra_state, &request_ptr);
     if (mpi_errno)
         goto fn_fail;
 
@@ -357,8 +357,8 @@ int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class,
 
     *request = MPI_REQUEST_NULL;
     MPIR_Grequest_class_get_ptr(greq_class, class_ptr);
-    mpi_errno = MPIR_Grequest_start_impl(class_ptr->query_fn, class_ptr->free_fn,
-                                         class_ptr->cancel_fn, extra_state, &lrequest_ptr);
+    mpi_errno = MPIR_Grequest_start(class_ptr->query_fn, class_ptr->free_fn,
+                                    class_ptr->cancel_fn, extra_state, &lrequest_ptr);
     if (mpi_errno == MPI_SUCCESS) {
         *request = lrequest_ptr->handle;
         lrequest_ptr->u.ureq.greq_fns->poll_fn = class_ptr->poll_fn;
@@ -434,7 +434,7 @@ int MPIX_Grequest_start_impl(MPI_Grequest_query_function * query_fn,
 {
     int mpi_errno;
 
-    mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, extra_state, request);
+    mpi_errno = MPIR_Grequest_start(query_fn, free_fn, cancel_fn, extra_state, request);
 
     if (mpi_errno == MPI_SUCCESS) {
         (*request)->u.ureq.greq_fns->poll_fn = poll_fn;

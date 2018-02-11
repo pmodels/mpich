@@ -25,10 +25,10 @@ int MPI_Wait(MPI_Request * request, MPI_Status * status) __attribute__ ((weak, a
 #undef MPI_Wait
 #define MPI_Wait PMPI_Wait
 #undef FUNCNAME
-#define FUNCNAME MPIR_Wait_impl
+#define FUNCNAME MPIR_Wait
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Wait_impl(MPI_Request * request, MPI_Status * status)
+int MPIR_Wait(MPI_Request * request, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     int active_flag;
@@ -51,7 +51,7 @@ int MPIR_Wait_impl(MPI_Request * request, MPI_Status * status)
         if (unlikely(MPIR_CVAR_ENABLE_FT &&
                      MPID_Request_is_anysource(request_ptr) &&
                      !MPID_Comm_AS_enabled(request_ptr->comm))) {
-            mpi_errno = MPIR_Test_impl(request, &active_flag, status);
+            mpi_errno = MPIR_Test(request, &active_flag, status);
             goto fn_exit;
         }
 
@@ -187,7 +187,7 @@ int MPI_Wait(MPI_Request * request, MPI_Status * status)
     /* save copy of comm because request will be freed */
     if (request_ptr)
         comm_ptr = request_ptr->comm;
-    mpi_errno = MPIR_Wait_impl(request, status);
+    mpi_errno = MPIR_Wait(request, status);
     if (mpi_errno)
         goto fn_fail;
 
