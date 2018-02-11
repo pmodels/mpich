@@ -24,7 +24,7 @@
 
 int main(int argc, char **argv)
 {
-    int err = 0;
+    int errs = 0;
     int *sendbuf, *recvbuf, *recvcounts;
     int size, rank, i, j, idx, mycount, sumval;
     MPI_Comm comm;
@@ -69,8 +69,8 @@ int main(int argc, char **argv)
     /* recvbuf should be size * (rank + i) */
     for (i = 0; i < mycount; i++) {
         if (recvbuf[i] != sumval) {
-            err++;
-            if (err < MAX_ERRORS) {
+            errs++;
+            if (errs < MAX_ERRORS) {
                 fprintf(stdout, "Did not get expected value for reduce scatter\n");
                 fprintf(stdout, "[%d] Got recvbuf[%d] = %d expected %d\n",
                         rank, i, recvbuf[i], sumval);
@@ -85,8 +85,8 @@ int main(int argc, char **argv)
     /* recv'ed values for my process should be size * (rank + i) */
     for (i = 0; i < mycount; i++) {
         if (sendbuf[i] != sumval) {
-            err++;
-            if (err < MAX_ERRORS) {
+            errs++;
+            if (errs < MAX_ERRORS) {
                 fprintf(stdout, "Did not get expected value for reduce scatter (in place)\n");
                 fprintf(stdout, "[%d] Got buf[%d] = %d expected %d\n", rank, i, sendbuf[i], sumval);
             }
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
     free(recvbuf);
     free(recvcounts);
 
-    MTest_Finalize(err);
+    MTest_Finalize(errs);
 
     MPI_Finalize();
 

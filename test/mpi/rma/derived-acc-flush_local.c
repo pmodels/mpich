@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     int *tar_buf = NULL;
     int *orig_buf = NULL;
     MPI_Datatype derived_dtp;
-    int errors = 0;
+    int errs = 0;
 
     MPI_Init(&argc, &argv);
 
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
         for (i = 0; i < DATA_SIZE - COUNT; i++) {
             if (tar_buf[i] != OPS_NUM) {
                 printf("tar_buf[%d] = %d, expected %d\n", i, tar_buf[i], OPS_NUM);
-                errors++;
+                errs++;
             }
         }
     }
@@ -109,11 +109,11 @@ int main(int argc, char *argv[])
         for (i = 0; i < DATA_SIZE - COUNT; i++) {
             if (tar_buf[i] != OPS_NUM) {
                 printf("tar_buf[%d] = %d, expected %d\n", i, tar_buf[i], OPS_NUM);
-                errors++;
+                errs++;
             }
         }
 
-        if (errors == 0)
+        if (errs == 0)
             printf(" No Errors\n");
     }
 

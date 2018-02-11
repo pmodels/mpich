@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 {
     int rank, nproc, mpi_errno;
     int i, ncomm, *ranks;
-    int errors = 1;
+    int errs = 1;
     MPI_Comm *comm_hdls;
     MPI_Group world_group;
 
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
             if (verbose)
                 printf("%d: Error creating comm %d\n", rank, i);
             MPI_Group_free(&comm_group);
-            errors = 0;
+            errs = 0;
             break;
         }
 
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
     free(ranks);
     MPI_Group_free(&world_group);
 
-    MTest_Finalize(errors);
+    MTest_Finalize(errs);
     MPI_Finalize();
 
     return 0;

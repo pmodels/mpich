@@ -117,6 +117,8 @@ int main(int argc, char *argv[])
     char *rbuf = NULL;
     char *sbuf = NULL;
 
+    int errs = 0;
+
     MPI_ASSERT(MPI_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &provided));
 
     MPI_ASSERT(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
@@ -158,15 +160,15 @@ int main(int argc, char *argv[])
 
     /* correctness check */
     if (rank == (size - 1)) {
-        MPI_Count j, errors = 0;
+        MPI_Count j;
         for (j = 0; j < count; j++)
-            errors += (rbuf[j] != 'z');
+            errs += (rbuf[j] != 'z');
         if (count != ocount)
-            ++errors;
-        if (errors == 0) {
+            ++errs;
+        if (errs == 0) {
             printf(" No Errors\n");
         } else {
-            printf("errors = %lld \n", errors);
+            printf("errs = %lld \n", errs);
         }
     }
 

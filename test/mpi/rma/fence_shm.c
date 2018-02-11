@@ -11,7 +11,7 @@
 
 #define ELEM_PER_PROC 1
 
-static int errors = 0;
+static int errs = 0;
 
 int main(int argc, char *argv[])
 {
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
             MPI_Win_fence(0, shm_win);
 
             if (my_base[0] != one) {
-                errors++;
+                errs++;
                 printf("Expected: my_base[0] = %d   Actual: my_base[0] = %d\n", one, my_base[0]);
             }
         }
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
             MPI_Win_fence(0, shm_win);
 
             if (result_data != one) {
-                errors++;
+                errs++;
                 printf("Expected: result_data = %d   Actual: result_data = %d\n", one, result_data);
             }
         }
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 
     MPI_Comm_free(&shm_comm);
 
-    MTest_Finalize(errors);
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }
