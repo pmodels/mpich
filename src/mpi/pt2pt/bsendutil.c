@@ -184,7 +184,7 @@ int MPIR_Bsend_detach(void *bufferp, int *size)
 
         while (p) {
             MPI_Request r = p->request->handle;
-            mpi_errno = MPIR_Wait_impl(&r, MPI_STATUS_IGNORE);
+            mpi_errno = MPIR_Wait(&r, MPI_STATUS_IGNORE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             p = p->next;
@@ -488,7 +488,7 @@ static int MPIR_Bsend_check_active(void)
             flag = 0;
             /* XXX DJG FIXME-MT should we be checking this? */
             if (MPIR_Object_get_ref(active->request) == 1) {
-                mpi_errno = MPIR_Test_impl(&r, &flag, MPI_STATUS_IGNORE);
+                mpi_errno = MPIR_Test(&r, &flag, MPI_STATUS_IGNORE);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
             } else {
@@ -502,7 +502,7 @@ static int MPIR_Bsend_check_active(void)
                     MPIR_ERR_POP(mpi_errno);
             }
         } else {
-            mpi_errno = MPIR_Test_impl(&r, &flag, MPI_STATUS_IGNORE);
+            mpi_errno = MPIR_Test(&r, &flag, MPI_STATUS_IGNORE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }

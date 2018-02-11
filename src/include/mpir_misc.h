@@ -87,7 +87,7 @@ int MPIR_Get_intranode_rank(MPIR_Comm * comm_ptr, int r);
 
 int MPIR_Close_port_impl(const char *port_name);
 int MPIR_Open_port_impl(MPIR_Info * info_ptr, char *port_name);
-int MPIR_Cancel_impl(MPIR_Request * request_ptr);
+int MPIR_Cancel(MPIR_Request * request_ptr);
 
 /* Default routines for asynchronous progress thread */
 int MPIR_Init_async_thread(void);

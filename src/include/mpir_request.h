@@ -296,11 +296,11 @@ int MPIR_Grequest_progress_poke(int count, MPIR_Request ** request_ptrs,
                                 MPI_Status array_of_statuses[]);
 int MPIR_Grequest_waitall(int count, MPIR_Request * const *request_ptrs);
 
-void MPIR_Grequest_complete_impl(MPIR_Request * request_ptr);
-int MPIR_Grequest_start_impl(MPI_Grequest_query_function * query_fn,
-                             MPI_Grequest_free_function * free_fn,
-                             MPI_Grequest_cancel_function * cancel_fn,
-                             void *extra_state, MPIR_Request ** request_ptr);
+void MPIR_Grequest_complete(MPIR_Request * request_ptr);
+int MPIR_Grequest_start(MPI_Grequest_query_function * query_fn,
+                        MPI_Grequest_free_function * free_fn,
+                        MPI_Grequest_cancel_function * cancel_fn,
+                        void *extra_state, MPIR_Request ** request_ptr);
 int MPIX_Grequest_start_impl(MPI_Grequest_query_function *,
                              MPI_Grequest_free_function *,
                              MPI_Grequest_cancel_function *,
