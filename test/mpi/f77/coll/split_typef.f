@@ -10,8 +10,8 @@ C
       integer i, ans, size, rank, color, comm, newcomm
       integer maxSize, displ
       parameter (maxSize=128)
-      integer scounts(maxSize), sdispls(maxSize), stypes(maxSize)
-      integer rcounts(maxSize), rdispls(maxSize), rtypes(maxSize)
+      integer scounts(maxSize), sdispls(maxSize), stype
+      integer rcounts(maxSize), rdispls(maxSize), rtype
       integer sbuf(maxSize), rbuf(maxSize)
 
       errs = 0
@@ -29,15 +29,15 @@ C
       do i=1, size
          scounts(i) = 1
          sdispls(i) = (i-1)
-         stypes(i)  = MPI_INTEGER
          sbuf(i) = rank * size + i
          rcounts(i) = 1
          rdispls(i) = (i-1)
-         rtypes(i)  = MPI_INTEGER
          rbuf(i) = -1
       enddo
-      call mpi_alltoallv( sbuf, scounts, sdispls, stypes,
-     &     rbuf, rcounts, rdispls, rtypes, newcomm, ierr )
+      stype  = MPI_INTEGER
+      rtype  = MPI_INTEGER
+      call mpi_alltoallv( sbuf, scounts, sdispls, stype,
+     &     rbuf, rcounts, rdispls, rtype, newcomm, ierr )
 
       call mpi_comm_free( newcomm, ierr )
       call mpi_comm_free( comm, ierr )
