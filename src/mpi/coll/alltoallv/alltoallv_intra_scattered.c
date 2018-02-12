@@ -83,7 +83,9 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const int *sendcounts, c
                                            MPIR_ALLTOALLV_TAG, comm_ptr, &reqarray[req_cnt]);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
-                        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                        *errflag =
+                            MPIX_ERR_PROC_FAILED ==
+                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                         MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                     }
@@ -105,7 +107,9 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const int *sendcounts, c
                                            &reqarray[req_cnt], errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
-                        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                        *errflag =
+                            MPIX_ERR_PROC_FAILED ==
+                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                         MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                     }
@@ -125,7 +129,9 @@ int MPIR_Alltoallv_intra_scattered(const void *sendbuf, const int *sendcounts, c
                     mpi_errno = starray[i].MPI_ERROR;
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
-                        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                        *errflag =
+                            MPIX_ERR_PROC_FAILED ==
+                            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                         MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                     }
