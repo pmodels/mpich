@@ -11,7 +11,7 @@
 
 #include <mpi.h>
 #include "mpitest.h"
-#include "mcs-mutex.h"
+#include "mcs_mutex.h"
 
 #define NUM_ITER    1000
 #define NUM_MUTEXES 1

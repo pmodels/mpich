@@ -141,13 +141,13 @@ noinst_PROGRAMS =          \
     mutex_bench_shared     \
     mutex_bench_shm        \
     mutex_bench_shm_ordered\
-    rma-contig             \
+    rma_contig             \
     badrma                 \
     nb_test                \
-    acc-loc                \
+    acc_loc                \
     acc_ordering           \
     fence_shm              \
-    get-struct             \
+    get_struct             \
     rput_local_comp        \
     racc_local_comp        \
     at_complete            \
@@ -155,11 +155,11 @@ noinst_PROGRAMS =          \
     atomic_rmw_cas         \
     atomic_rmw_gacc	   \
     atomic_get             \
-    acc-pairtype           \
+    acc_pairtype           \
     manyget                \
-    derived-acc-flush_local\
-    large-acc-flush_local  \
-    large-small-acc        \
+    derived_acc_flush_local\
+    large_acc_flush_local  \
+    large_small_acc        \
     put_flush_get  \
     acc_flush_get  \
     gacc_flush_get \
@@ -175,9 +175,9 @@ noinst_PROGRAMS =          \
     overlap_wins_gacc  \
     overlap_wins_fop  \
     overlap_wins_cas  \
-    rget-unlock  \
+    rget_unlock  \
     lock_nested  \
-    rget-testall
+    rget_testall
 
 if BUILD_MPIX_TESTS
 noinst_PROGRAMS += aint
@@ -247,13 +247,13 @@ test2_am_shm_SOURCES             = test2_am.c
 test3_shm_SOURCES                = test3.c
 test3_am_shm_SOURCES             = test3_am.c
 
-mutex_bench_SOURCES              = mutex_bench.c mcs-mutex.c mcs-mutex.h
+mutex_bench_SOURCES              = mutex_bench.c mcs_mutex.c mcs_mutex.h
 mutex_bench_shared_CPPFLAGS      = -DUSE_WIN_SHARED $(AM_CPPFLAGS)
-mutex_bench_shared_SOURCES       = mutex_bench.c mcs-mutex.c mcs-mutex.h
+mutex_bench_shared_SOURCES       = mutex_bench.c mcs_mutex.c mcs_mutex.h
 mutex_bench_shm_CPPFLAGS         = -DUSE_WIN_ALLOC_SHM $(AM_CPPFLAGS)
-mutex_bench_shm_SOURCES          = mutex_bench.c mcs-mutex.c mcs-mutex.h
+mutex_bench_shm_SOURCES          = mutex_bench.c mcs_mutex.c mcs_mutex.h
 mutex_bench_shm_ordered_CPPFLAGS = -DUSE_WIN_ALLOC_SHM -DUSE_CONTIGUOUS_RANK $(AM_CPPFLAGS)
-mutex_bench_shm_ordered_SOURCES  = mutex_bench.c mcs-mutex.c mcs-mutex.h
+mutex_bench_shm_ordered_SOURCES  = mutex_bench.c mcs_mutex.c mcs_mutex.h
 
 linked_list_bench_lock_shr_nocheck_SOURCES  = linked_list_bench_lock_shr.c
 linked_list_bench_lock_shr_nocheck_CPPFLAGS = -DUSE_MODE_NOCHECK $(AM_CPPFLAGS)

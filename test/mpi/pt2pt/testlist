@@ -23,7 +23,7 @@ icsend 4
 rqstatus 2
 rqfreeb 4
 greq1 1
-probe-unexp 4
+probe_unexp 4
 probenull 1
 # For testing, scancel will run with 1 process as well
 scancel 2 xfail=ticket2266 xfail=ticket2270
@@ -36,7 +36,7 @@ cancelanysrc 2
 isendselfprobe 1
 inactivereq 1
 waittestnull 1
-waitany-null 1
+waitany_null 1
 # this should be run only on machines with large amount of memory (>=8GB)
 # perhaps disable in the release tarball
 large_message 3
