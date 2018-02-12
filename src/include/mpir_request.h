@@ -160,6 +160,20 @@ extern MPIR_Object_alloc_t MPIR_Request_mem;
 /* Preallocated request objects */
 extern MPIR_Request MPIR_Request_direct[];
 
+
+/* Return whether a request is active.
+ * A persistent request and the handle to it are "inactive"
+ * if the request is not associated with any ongoing communication.
+ * A handle is "active" if it is neither null nor "inactive". */
+static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
+{
+    if (req_ptr == NULL)
+        return 0;
+    return (((req_ptr)->kind != MPIR_REQUEST_KIND__PREQUEST_SEND &&
+             (req_ptr)->kind != MPIR_REQUEST_KIND__PREQUEST_RECV) ||
+            (req_ptr)->u.persist.real_request != NULL);
+}
+
 static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
 {
     return (req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_SEND ||
@@ -281,6 +295,21 @@ static inline void MPIR_Request_free(MPIR_Request * req)
 int MPIR_Request_completion_processing(MPIR_Request *, MPI_Status *, int *);
 int MPIR_Request_get_error(MPIR_Request *);
 int MPIR_Progress_wait_request(MPIR_Request * req);
+
+static inline int MPIR_Request_wait_and_complete(MPIR_Request * req_ptr)
+{
+    if (req_ptr == NULL)
+        return MPI_SUCCESS;
+
+    int active_flag;
+    int mpi_errno = MPIR_Wait_impl(req_ptr, MPI_STATUS_IGNORE);
+    if (mpi_errno != MPI_SUCCESS)
+        return mpi_errno;
+    mpi_errno = MPIR_Request_completion_processing(req_ptr, MPI_STATUS_IGNORE,
+                                                   &active_flag);
+    MPIR_Request_free(req_ptr);
+    return mpi_errno;
+}
 
 /* The following routines perform the callouts to the user routines registered
    as part of a generalized request.  They handle any language binding issues

@@ -183,8 +183,7 @@ int MPIR_Bsend_detach(void *bufferp, int *size)
         MPII_Bsend_data_t *p = BsendBuffer.active;
 
         while (p) {
-            MPI_Request r = p->request->handle;
-            mpi_errno = MPIR_Wait_impl(&r, MPI_STATUS_IGNORE);
+            mpi_errno = MPIR_Request_wait_and_complete(p->request);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             p = p->next;
@@ -469,11 +468,11 @@ static void MPIR_Bsend_free_segment(MPII_Bsend_data_t * p)
 static int MPIR_Bsend_check_active(void)
 {
     int mpi_errno = MPI_SUCCESS;
+    int active_flag;
     MPII_Bsend_data_t *active = BsendBuffer.active, *next_active;
 
     MPL_DBG_MSG_P(MPIR_DBG_BSEND, TYPICAL, "Checking active starting at %p", active);
     while (active) {
-        MPI_Request r = active->request->handle;
         int flag;
 
         next_active = active->next;
@@ -488,7 +487,7 @@ static int MPIR_Bsend_check_active(void)
             flag = 0;
             /* XXX DJG FIXME-MT should we be checking this? */
             if (MPIR_Object_get_ref(active->request) == 1) {
-                mpi_errno = MPIR_Test_impl(&r, &flag, MPI_STATUS_IGNORE);
+                mpi_errno = MPID_Test(active->request, &flag, MPI_STATUS_IGNORE);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
             } else {
@@ -502,11 +501,17 @@ static int MPIR_Bsend_check_active(void)
                     MPIR_ERR_POP(mpi_errno);
             }
         } else {
-            mpi_errno = MPIR_Test_impl(&r, &flag, MPI_STATUS_IGNORE);
+            mpi_errno = MPID_Test(active->request, &flag, MPI_STATUS_IGNORE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
         if (flag) {
+            mpi_errno =
+                MPIR_Request_completion_processing(active->request, MPI_STATUS_IGNORE,
+                                                   &active_flag);
+            MPIR_Request_free(active->request);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
             /* We're done.  Remove this segment */
             MPL_DBG_MSG_P(MPIR_DBG_BSEND, TYPICAL, "Removing segment %p", active);
             MPIR_Bsend_free_segment(active);
