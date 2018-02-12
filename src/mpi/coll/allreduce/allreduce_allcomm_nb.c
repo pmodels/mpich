@@ -7,20 +7,18 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Neighbor_alltoall_nb
+#define FUNCNAME MPIR_Allreduce_allcomm_nb
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Neighbor_alltoall_nb(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                              void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                              MPIR_Comm * comm_ptr)
+int MPIR_Allreduce_allcomm_nb(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                              MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Request req = MPI_REQUEST_NULL;
     MPIR_Request *req_ptr = NULL;
 
     /* just call the nonblocking version and wait on it */
-    mpi_errno = MPIR_Ineighbor_alltoall(sendbuf, sendcount, sendtype,
-                                        recvbuf, recvcount, recvtype, comm_ptr, &req_ptr);
+    mpi_errno = MPIR_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, &req_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     if (req_ptr)

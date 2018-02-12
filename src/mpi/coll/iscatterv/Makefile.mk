@@ -16,4 +16,4 @@ mpi_sources +=                                  \
     src/mpi/coll/iscatterv/iscatterv.c
 
 mpi_core_sources +=                             \
-    src/mpi/coll/iscatterv/iscatterv_linear.c
+    src/mpi/coll/iscatterv/iscatterv_allcomm_linear.c

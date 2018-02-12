@@ -87,8 +87,8 @@ int MPIR_Gatherv_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sen
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPIR_Gatherv_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
-                            root, comm_ptr, errflag);
+        MPIR_Gatherv_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
+                                    recvtype, root, comm_ptr, errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -113,8 +113,8 @@ int MPIR_Gatherv_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sen
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPIR_Gatherv_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype,
-                            root, comm_ptr, errflag);
+        MPIR_Gatherv_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
+                                    recvtype, root, comm_ptr, errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -143,13 +143,13 @@ int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
         switch (MPIR_Gatherv_intra_algo_choice) {
             case MPIR_GATHERV_INTRA_ALGO_LINEAR:
                 mpi_errno =
-                    MPIR_Gatherv_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
-                                        recvtype, root, comm_ptr, errflag);
+                    MPIR_Gatherv_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                                displs, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_GATHERV_INTRA_ALGO_NB:
                 mpi_errno =
-                    MPIR_Gatherv_nb(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
-                                    recvtype, root, comm_ptr, errflag);
+                    MPIR_Gatherv_allcomm_nb(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                            displs, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_GATHERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
@@ -163,13 +163,13 @@ int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
         switch (MPIR_Gatherv_inter_algo_choice) {
             case MPIR_GATHERV_INTER_ALGO_LINEAR:
                 mpi_errno =
-                    MPIR_Gatherv_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
-                                        recvtype, root, comm_ptr, errflag);
+                    MPIR_Gatherv_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                                displs, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_GATHERV_INTER_ALGO_NB:
                 mpi_errno =
-                    MPIR_Gatherv_nb(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
-                                    recvtype, root, comm_ptr, errflag);
+                    MPIR_Gatherv_allcomm_nb(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                            displs, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_GATHERV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;

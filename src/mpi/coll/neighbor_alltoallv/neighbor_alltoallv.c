@@ -86,8 +86,8 @@ int MPIR_Neighbor_alltoallv_intra_auto(const void *sendbuf, const int sendcounts
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPIR_Neighbor_alltoallv_nb(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
-                                   rdispls, recvtype, comm_ptr);
+        MPIR_Neighbor_alltoallv_allcomm_nb(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                                           recvcounts, rdispls, recvtype, comm_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -110,8 +110,8 @@ int MPIR_Neighbor_alltoallv_inter_auto(const void *sendbuf, const int sendcounts
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPIR_Neighbor_alltoallv_nb(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts,
-                                   rdispls, recvtype, comm_ptr);
+        MPIR_Neighbor_alltoallv_allcomm_nb(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
+                                           recvcounts, rdispls, recvtype, comm_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -137,8 +137,9 @@ int MPIR_Neighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
         switch (MPIR_Neighbor_alltoallv_intra_algo_choice) {
             case MPIR_NEIGHBOR_ALLTOALLV_INTRA_ALGO_NB:
                 mpi_errno =
-                    MPIR_Neighbor_alltoallv_nb(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
-                                               recvcounts, rdispls, recvtype, comm_ptr);
+                    MPIR_Neighbor_alltoallv_allcomm_nb(sendbuf, sendcounts, sdispls, sendtype,
+                                                       recvbuf, recvcounts, rdispls, recvtype,
+                                                       comm_ptr);
                 break;
             case MPIR_NEIGHBOR_ALLTOALLV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
@@ -153,8 +154,9 @@ int MPIR_Neighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[],
         switch (MPIR_Neighbor_alltoallv_inter_algo_choice) {
             case MPIR_NEIGHBOR_ALLTOALLV_INTER_ALGO_NB:
                 mpi_errno =
-                    MPIR_Neighbor_alltoallv_nb(sendbuf, sendcounts, sdispls, sendtype, recvbuf,
-                                               recvcounts, rdispls, recvtype, comm_ptr);
+                    MPIR_Neighbor_alltoallv_allcomm_nb(sendbuf, sendcounts, sdispls, sendtype,
+                                                       recvbuf, recvcounts, rdispls, recvtype,
+                                                       comm_ptr);
                 break;
             case MPIR_NEIGHBOR_ALLTOALLV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;

@@ -20,12 +20,13 @@
    Cost = (p-1).alpha + n.((p-1)/p).beta
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Scatterv_linear
+#define FUNCNAME MPIR_Scatterv_allcomm_linear
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Scatterv_linear(const void *sendbuf, const int *sendcounts, const int *displs,
-                         MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                         int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+int MPIR_Scatterv_allcomm_linear(const void *sendbuf, const int *sendcounts, const int *displs,
+                                 MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                                 MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
+                                 MPIR_Errflag_t * errflag)
 {
     int rank, comm_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;

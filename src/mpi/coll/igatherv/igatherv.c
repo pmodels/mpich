@@ -84,8 +84,8 @@ int MPIR_Igatherv_sched_intra_auto(const void *sendbuf, int sendcount, MPI_Datat
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPIR_Igatherv_sched_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
-                                   recvtype, root, comm_ptr, s);
+        MPIR_Igatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                           displs, recvtype, root, comm_ptr, s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -108,8 +108,8 @@ int MPIR_Igatherv_sched_inter_auto(const void *sendbuf, int sendcount, MPI_Datat
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPIR_Igatherv_sched_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
-                                   recvtype, root, comm_ptr, s);
+        MPIR_Igatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                           displs, recvtype, root, comm_ptr, s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -134,8 +134,9 @@ int MPIR_Igatherv_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype se
         switch (MPIR_Igatherv_intra_algo_choice) {
             case MPIR_IGATHERV_INTRA_ALGO_LINEAR:
                 mpi_errno =
-                    MPIR_Igatherv_sched_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                               displs, recvtype, root, comm_ptr, s);
+                    MPIR_Igatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf,
+                                                       recvcounts, displs, recvtype, root, comm_ptr,
+                                                       s);
                 break;
             case MPIR_IGATHERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
@@ -149,8 +150,9 @@ int MPIR_Igatherv_sched_impl(const void *sendbuf, int sendcount, MPI_Datatype se
         switch (MPIR_Igatherv_inter_algo_choice) {
             case MPIR_IGATHERV_INTER_ALGO_LINEAR:
                 mpi_errno =
-                    MPIR_Igatherv_sched_linear(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
-                                               displs, recvtype, root, comm_ptr, s);
+                    MPIR_Igatherv_sched_allcomm_linear(sendbuf, sendcount, sendtype, recvbuf,
+                                                       recvcounts, displs, recvtype, root, comm_ptr,
+                                                       s);
                 break;
             case MPIR_IGATHERV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;

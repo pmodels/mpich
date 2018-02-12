@@ -16,4 +16,4 @@ mpi_sources += \
     src/mpi/coll/ineighbor_alltoall/ineighbor_alltoall.c
 
 mpi_core_sources += \
-    src/mpi/coll/ineighbor_alltoall/ineighbor_alltoall_linear.c
+    src/mpi/coll/ineighbor_alltoall/ineighbor_alltoall_allcomm_linear.c

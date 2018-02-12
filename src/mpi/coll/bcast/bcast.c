@@ -295,7 +295,7 @@ int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MP
                                                             errflag);
                 break;
             case MPIR_BCAST_INTRA_ALGO_NB:
-                mpi_errno = MPIR_Bcast_nb(buffer, count, datatype, root, comm_ptr, errflag);
+                mpi_errno = MPIR_Bcast_allcomm_nb(buffer, count, datatype, root, comm_ptr, errflag);
                 break;
             case MPIR_BCAST_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
@@ -312,7 +312,7 @@ int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MP
                                                              comm_ptr, errflag);
                 break;
             case MPIR_BCAST_INTER_ALGO_NB:
-                mpi_errno = MPIR_Bcast_nb(buffer, count, datatype, root, comm_ptr, errflag);
+                mpi_errno = MPIR_Bcast_allcomm_nb(buffer, count, datatype, root, comm_ptr, errflag);
                 break;
             case MPIR_BCAST_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
