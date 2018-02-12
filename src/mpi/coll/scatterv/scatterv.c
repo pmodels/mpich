@@ -87,8 +87,8 @@ int MPIR_Scatterv_intra_auto(const void *sendbuf, const int *sendcounts, const i
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPIR_Scatterv_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype,
-                             root, comm_ptr, errflag);
+        MPIR_Scatterv_allcomm_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
+                                     recvtype, root, comm_ptr, errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -113,8 +113,8 @@ int MPIR_Scatterv_inter_auto(const void *sendbuf, const int *sendcounts, const i
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno =
-        MPIR_Scatterv_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype,
-                             root, comm_ptr, errflag);
+        MPIR_Scatterv_allcomm_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
+                                     recvtype, root, comm_ptr, errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -142,13 +142,13 @@ int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts,
         switch (MPIR_Scatterv_intra_algo_choice) {
             case MPIR_SCATTERV_INTRA_ALGO_LINEAR:
                 mpi_errno =
-                    MPIR_Scatterv_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
-                                         recvtype, root, comm_ptr, errflag);
+                    MPIR_Scatterv_allcomm_linear(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                                                 recvcount, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_SCATTERV_INTRA_ALGO_NB:
                 mpi_errno =
-                    MPIR_Scatterv_nb(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
-                                     recvtype, root, comm_ptr, errflag);
+                    MPIR_Scatterv_allcomm_nb(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                                             recvcount, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_SCATTERV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
@@ -162,13 +162,13 @@ int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts,
         switch (MPIR_Scatterv_inter_algo_choice) {
             case MPIR_SCATTERV_INTER_ALGO_LINEAR:
                 mpi_errno =
-                    MPIR_Scatterv_linear(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
-                                         recvtype, root, comm_ptr, errflag);
+                    MPIR_Scatterv_allcomm_linear(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                                                 recvcount, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_SCATTERV_INTER_ALGO_NB:
                 mpi_errno =
-                    MPIR_Scatterv_nb(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
-                                     recvtype, root, comm_ptr, errflag);
+                    MPIR_Scatterv_allcomm_nb(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                                             recvcount, recvtype, root, comm_ptr, errflag);
                 break;
             case MPIR_SCATTERV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;

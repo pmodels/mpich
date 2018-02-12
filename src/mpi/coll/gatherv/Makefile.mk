@@ -16,5 +16,5 @@ mpi_sources +=                     		\
 	src/mpi/coll/gatherv/gatherv.c
 
 mpi_core_sources +=									\
-	src/mpi/coll/gatherv/gatherv_nb.c \
-	src/mpi/coll/gatherv/gatherv_linear.c
+	src/mpi/coll/gatherv/gatherv_allcomm_nb.c \
+	src/mpi/coll/gatherv/gatherv_allcomm_linear.c

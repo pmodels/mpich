@@ -83,8 +83,9 @@ int MPIR_Ineighbor_alltoall_sched_intra_auto(const void *sendbuf, int sendcount,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ineighbor_alltoall_sched_linear(sendbuf, sendcount, sendtype,
-                                                     recvbuf, recvcount, recvtype, comm_ptr, s);
+    mpi_errno = MPIR_Ineighbor_alltoall_sched_allcomm_linear(sendbuf, sendcount, sendtype,
+                                                             recvbuf, recvcount, recvtype, comm_ptr,
+                                                             s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -106,8 +107,9 @@ int MPIR_Ineighbor_alltoall_sched_inter_auto(const void *sendbuf, int sendcount,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ineighbor_alltoall_sched_linear(sendbuf, sendcount, sendtype,
-                                                     recvbuf, recvcount, recvtype, comm_ptr, s);
+    mpi_errno = MPIR_Ineighbor_alltoall_sched_allcomm_linear(sendbuf, sendcount, sendtype,
+                                                             recvbuf, recvcount, recvtype, comm_ptr,
+                                                             s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -132,7 +134,8 @@ int MPIR_Ineighbor_alltoall_sched_impl(const void *sendbuf, int sendcount,
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_Ineighbor_alltoall_intra_algo_choice) {
             case MPIR_INEIGHBOR_ALLTOALL_INTRA_ALGO_LINEAR:
-                mpi_errno = MPIR_Ineighbor_alltoall_sched_linear(sendbuf, sendcount, sendtype,
+                mpi_errno =
+                    MPIR_Ineighbor_alltoall_sched_allcomm_linear(sendbuf, sendcount, sendtype,
                                                                  recvbuf, recvcount, recvtype,
                                                                  comm_ptr, s);
                 break;
@@ -147,7 +150,8 @@ int MPIR_Ineighbor_alltoall_sched_impl(const void *sendbuf, int sendcount,
     } else {
         switch (MPIR_Ineighbor_alltoall_inter_algo_choice) {
             case MPIR_INEIGHBOR_ALLTOALL_INTER_ALGO_LINEAR:
-                mpi_errno = MPIR_Ineighbor_alltoall_sched_linear(sendbuf, sendcount, sendtype,
+                mpi_errno =
+                    MPIR_Ineighbor_alltoall_sched_allcomm_linear(sendbuf, sendcount, sendtype,
                                                                  recvbuf, recvcount, recvtype,
                                                                  comm_ptr, s);
                 break;

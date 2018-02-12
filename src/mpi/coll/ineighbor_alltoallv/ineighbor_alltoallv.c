@@ -85,7 +85,8 @@ int MPIR_Ineighbor_alltoallv_sched_intra_auto(const void *sendbuf, const int sen
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ineighbor_alltoallv_sched_linear(sendbuf, sendcounts, sdispls, sendtype,
+    mpi_errno =
+        MPIR_Ineighbor_alltoallv_sched_allcomm_linear(sendbuf, sendcounts, sdispls, sendtype,
                                                       recvbuf, recvcounts, rdispls, recvtype,
                                                       comm_ptr, s);
     if (mpi_errno)
@@ -110,7 +111,8 @@ int MPIR_Ineighbor_alltoallv_sched_inter_auto(const void *sendbuf, const int sen
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ineighbor_alltoallv_sched_linear(sendbuf, sendcounts, sdispls, sendtype,
+    mpi_errno =
+        MPIR_Ineighbor_alltoallv_sched_allcomm_linear(sendbuf, sendcounts, sdispls, sendtype,
                                                       recvbuf, recvcounts, rdispls, recvtype,
                                                       comm_ptr, s);
     if (mpi_errno)
@@ -139,9 +141,9 @@ int MPIR_Ineighbor_alltoallv_sched_impl(const void *sendbuf, const int sendcount
         switch (MPIR_Ineighbor_alltoallv_intra_algo_choice) {
             case MPIR_INEIGHBOR_ALLTOALLV_INTRA_ALGO_LINEAR:
                 mpi_errno =
-                    MPIR_Ineighbor_alltoallv_sched_linear(sendbuf, sendcounts, sdispls, sendtype,
-                                                          recvbuf, recvcounts, rdispls, recvtype,
-                                                          comm_ptr, s);
+                    MPIR_Ineighbor_alltoallv_sched_allcomm_linear(sendbuf, sendcounts, sdispls,
+                                                                  sendtype, recvbuf, recvcounts,
+                                                                  rdispls, recvtype, comm_ptr, s);
                 break;
             case MPIR_INEIGHBOR_ALLTOALLV_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
@@ -156,9 +158,9 @@ int MPIR_Ineighbor_alltoallv_sched_impl(const void *sendbuf, const int sendcount
         switch (MPIR_Ineighbor_alltoallv_inter_algo_choice) {
             case MPIR_INEIGHBOR_ALLTOALLV_INTER_ALGO_LINEAR:
                 mpi_errno =
-                    MPIR_Ineighbor_alltoallv_sched_linear(sendbuf, sendcounts, sdispls, sendtype,
-                                                          recvbuf, recvcounts, rdispls, recvtype,
-                                                          comm_ptr, s);
+                    MPIR_Ineighbor_alltoallv_sched_allcomm_linear(sendbuf, sendcounts, sdispls,
+                                                                  sendtype, recvbuf, recvcounts,
+                                                                  rdispls, recvtype, comm_ptr, s);
                 break;
             case MPIR_INEIGHBOR_ALLTOALLV_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;

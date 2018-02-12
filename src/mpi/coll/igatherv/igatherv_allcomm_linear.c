@@ -13,13 +13,13 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Igatherv_sched_linear
+#define FUNCNAME MPIR_Igatherv_sched_allcomm_linear
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Igatherv_sched_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                               void *recvbuf, const int recvcounts[], const int displs[],
-                               MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                               MPIR_Sched_t s)
+int MPIR_Igatherv_sched_allcomm_linear(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                       void *recvbuf, const int recvcounts[], const int displs[],
+                                       MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
+                                       MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;

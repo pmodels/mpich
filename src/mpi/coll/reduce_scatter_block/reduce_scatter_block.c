@@ -242,9 +242,9 @@ int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
                                                                                errflag);
                 break;
             case MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_NB:
-                mpi_errno = MPIR_Reduce_scatter_block_nb(sendbuf, recvbuf,
-                                                         recvcount, datatype, op, comm_ptr,
-                                                         errflag);
+                mpi_errno = MPIR_Reduce_scatter_block_allcomm_nb(sendbuf, recvbuf,
+                                                                 recvcount, datatype, op, comm_ptr,
+                                                                 errflag);
                 break;
             case MPIR_REDUCE_SCATTER_BLOCK_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
@@ -265,9 +265,9 @@ int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
                                                                                 errflag);
                 break;
             case MPIR_REDUCE_SCATTER_BLOCK_INTER_ALGO_NB:
-                mpi_errno = MPIR_Reduce_scatter_block_nb(sendbuf, recvbuf,
-                                                         recvcount, datatype, op, comm_ptr,
-                                                         errflag);
+                mpi_errno = MPIR_Reduce_scatter_block_allcomm_nb(sendbuf, recvbuf,
+                                                                 recvcount, datatype, op, comm_ptr,
+                                                                 errflag);
                 break;
             case MPIR_REDUCE_SCATTER_BLOCK_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;

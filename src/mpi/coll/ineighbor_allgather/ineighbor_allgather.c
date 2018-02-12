@@ -83,8 +83,9 @@ int MPIR_Ineighbor_allgather_sched_intra_auto(const void *sendbuf, int sendcount
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ineighbor_allgather_sched_linear(sendbuf, sendcount, sendtype,
-                                                      recvbuf, recvcount, recvtype, comm_ptr, s);
+    mpi_errno = MPIR_Ineighbor_allgather_sched_allcomm_linear(sendbuf, sendcount, sendtype,
+                                                              recvbuf, recvcount, recvtype,
+                                                              comm_ptr, s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -106,8 +107,9 @@ int MPIR_Ineighbor_allgather_sched_inter_auto(const void *sendbuf, int sendcount
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Ineighbor_allgather_sched_linear(sendbuf, sendcount, sendtype,
-                                                      recvbuf, recvcount, recvtype, comm_ptr, s);
+    mpi_errno = MPIR_Ineighbor_allgather_sched_allcomm_linear(sendbuf, sendcount, sendtype,
+                                                              recvbuf, recvcount, recvtype,
+                                                              comm_ptr, s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -131,7 +133,8 @@ int MPIR_Ineighbor_allgather_sched_impl(const void *sendbuf, int sendcount, MPI_
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         switch (MPIR_Ineighbor_allgather_intra_algo_choice) {
             case MPIR_INEIGHBOR_ALLGATHER_INTRA_ALGO_LINEAR:
-                mpi_errno = MPIR_Ineighbor_allgather_sched_linear(sendbuf, sendcount, sendtype,
+                mpi_errno =
+                    MPIR_Ineighbor_allgather_sched_allcomm_linear(sendbuf, sendcount, sendtype,
                                                                   recvbuf, recvcount, recvtype,
                                                                   comm_ptr, s);
                 break;
@@ -146,7 +149,8 @@ int MPIR_Ineighbor_allgather_sched_impl(const void *sendbuf, int sendcount, MPI_
     } else {
         switch (MPIR_Ineighbor_allgather_inter_algo_choice) {
             case MPIR_INEIGHBOR_ALLGATHER_INTER_ALGO_LINEAR:
-                mpi_errno = MPIR_Ineighbor_allgather_sched_linear(sendbuf, sendcount, sendtype,
+                mpi_errno =
+                    MPIR_Ineighbor_allgather_sched_allcomm_linear(sendbuf, sendcount, sendtype,
                                                                   recvbuf, recvcount, recvtype,
                                                                   comm_ptr, s);
                 break;

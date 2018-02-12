@@ -16,4 +16,4 @@ mpi_sources += \
     src/mpi/coll/neighbor_allgather/neighbor_allgather.c
 
 mpi_core_sources += \
-    src/mpi/coll/neighbor_allgather/neighbor_allgather_nb.c
+    src/mpi/coll/neighbor_allgather/neighbor_allgather_allcomm_nb.c

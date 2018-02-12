@@ -172,8 +172,9 @@ int MPIR_Scatter_impl(const void *sendbuf, int sendcount,
                                                         comm_ptr, errflag);
                 break;
             case MPIR_SCATTER_INTRA_ALGO_NB:
-                mpi_errno = MPIR_Scatter_nb(sendbuf, sendcount, sendtype,
-                                            recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
+                mpi_errno = MPIR_Scatter_allcomm_nb(sendbuf, sendcount, sendtype,
+                                                    recvbuf, recvcount, recvtype, root, comm_ptr,
+                                                    errflag);
                 break;
             case MPIR_SCATTER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
@@ -192,8 +193,9 @@ int MPIR_Scatter_impl(const void *sendbuf, int sendcount,
                                                       comm_ptr, errflag);
                 break;
             case MPIR_SCATTER_INTER_ALGO_NB:
-                mpi_errno = MPIR_Scatter_nb(sendbuf, sendcount, sendtype,
-                                            recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
+                mpi_errno = MPIR_Scatter_allcomm_nb(sendbuf, sendcount, sendtype,
+                                                    recvbuf, recvcount, recvtype, root, comm_ptr,
+                                                    errflag);
                 break;
             case MPIR_SCATTER_INTER_ALGO_REMOTE_SEND_LOCAL_SCATTER:
                 mpi_errno =

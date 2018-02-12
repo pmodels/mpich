@@ -14,14 +14,15 @@
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_alltoallw_sched_linear
+#define FUNCNAME MPIR_Ineighbor_alltoallw_sched_allcomm_linear
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ineighbor_alltoallw_sched_linear(const void *sendbuf, const int sendcounts[],
-                                          const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
-                                          void *recvbuf, const int recvcounts[],
-                                          const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
-                                          MPIR_Comm * comm_ptr, MPIR_Sched_t s)
+int MPIR_Ineighbor_alltoallw_sched_allcomm_linear(const void *sendbuf, const int sendcounts[],
+                                                  const MPI_Aint sdispls[],
+                                                  const MPI_Datatype sendtypes[], void *recvbuf,
+                                                  const int recvcounts[], const MPI_Aint rdispls[],
+                                                  const MPI_Datatype recvtypes[],
+                                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;

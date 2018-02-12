@@ -145,7 +145,7 @@ int MPIR_Barrier_impl(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
                 mpi_errno = MPIR_Barrier_intra_recursive_doubling(comm_ptr, errflag);
                 break;
             case MPIR_BARRIER_INTRA_ALGO_NB:
-                mpi_errno = MPIR_Barrier_nb(comm_ptr, errflag);
+                mpi_errno = MPIR_Barrier_allcomm_nb(comm_ptr, errflag);
                 break;
             case MPIR_BARRIER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
@@ -160,7 +160,7 @@ int MPIR_Barrier_impl(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
                 mpi_errno = MPIR_Barrier_inter_bcast(comm_ptr, errflag);
                 break;
             case MPIR_BARRIER_INTER_ALGO_NB:
-                mpi_errno = MPIR_Barrier_nb(comm_ptr, errflag);
+                mpi_errno = MPIR_Barrier_allcomm_nb(comm_ptr, errflag);
                 break;
             case MPIR_BARRIER_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;

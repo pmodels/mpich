@@ -226,8 +226,9 @@ int MPIR_Alltoall_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype
                                                           comm_ptr, errflag);
                 break;
             case MPIR_ALLTOALL_INTRA_ALGO_NB:
-                mpi_errno = MPIR_Alltoall_nb(sendbuf, sendcount, sendtype,
-                                             recvbuf, recvcount, recvtype, comm_ptr, errflag);
+                mpi_errno = MPIR_Alltoall_allcomm_nb(sendbuf, sendcount, sendtype,
+                                                     recvbuf, recvcount, recvtype, comm_ptr,
+                                                     errflag);
                 break;
             case MPIR_ALLTOALL_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
@@ -246,8 +247,9 @@ int MPIR_Alltoall_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype
                                                                   comm_ptr, errflag);
                 break;
             case MPIR_ALLTOALL_INTER_ALGO_NB:
-                mpi_errno = MPIR_Alltoall_nb(sendbuf, sendcount, sendtype,
-                                             recvbuf, recvcount, recvtype, comm_ptr, errflag);
+                mpi_errno = MPIR_Alltoall_allcomm_nb(sendbuf, sendcount, sendtype,
+                                                     recvbuf, recvcount, recvtype, comm_ptr,
+                                                     errflag);
                 break;
             case MPIR_ALLTOALL_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;
