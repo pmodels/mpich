@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 #define NUM_ITER    10
 
@@ -31,9 +32,7 @@ int main(int argc, char **argv)
     for (i = 0; i < NUM_ITER; i++)
         MPI_Comm_free(&comms[i]);
 
-    if (rank == 0)
-        printf(" No Errors\n");
-
+    MTest_Finalize(0);
     MPI_Finalize();
 
     return 0;

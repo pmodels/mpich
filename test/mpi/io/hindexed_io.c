@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "mpitest.h"
 
 #define DATA_SIZE 324*4
 #define PAD 256
@@ -96,9 +97,7 @@ int main(int argc, char **argv)
     MPI_Type_free(&mem_type);
     MPI_Type_free(&file_type);
 
-    if (errs == 0)
-        printf(" No Errors\n");
-
+    MTest_Finalize(errs);
     MPI_Finalize();
 
     free(data);

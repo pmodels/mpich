@@ -145,9 +145,7 @@ int main(int argc, char *argv[])
     MPI_Type_free(&types[0]);
     MPI_Type_free(&types[1]);
 
-    if (!errs && !rank)
-        printf(" No Errors\n");
-
+    MTest_Finalize(errs);
     MPI_Finalize();
 
     return 0;

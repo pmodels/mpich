@@ -6,6 +6,7 @@
 #include "mpi.h"
 
 #include <stdio.h>
+#include "mpitest.h"
 
 int main(int argc, char *argv[])
 {
@@ -27,10 +28,9 @@ int main(int argc, char *argv[])
 
     MPI_Sendrecv(b, 1, newtype, 0, 0, d, 0, newtype, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-    printf(" No Errors\n");
-
     MPI_Type_free(&newtype);
 
+    MTest_Finalize(0);
     MPI_Finalize();
 
     return 0;

@@ -75,12 +75,10 @@ int main(int argc, char **argv)
 
     if (count != 3) {
         printf("unexpected value for count, expected 3, got %d\n", count);
-    } else {
-        if (rank == 0) {
-            printf(" No Errors\n");
-        }
+        errs++;
     }
 
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

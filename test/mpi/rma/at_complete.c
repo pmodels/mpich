@@ -130,10 +130,7 @@ int main(int argc, char **argv)
     MPI_Group_free(&dest_group);
     MPI_Group_free(&comm_group);
 
-    if (rank == orig_rank && errs == 0) {
-        printf(" No Errors\n");
-    }
-
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

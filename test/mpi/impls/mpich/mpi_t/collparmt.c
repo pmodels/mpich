@@ -135,16 +135,8 @@ int main(int argc, char *argv[])
     /* For full coverage, should address all parameters for collective
      * algorithm selection */
 
-    if (wrank == 0) {
-        if (errs) {
-            printf("found %d errors\n", errs);
-        } else {
-            printf(" No errors\n");
-        }
-    }
-
     MPI_T_finalize();
-    MPI_Finalize();
+    MTest_Finalize(errs);
 
     return 0;
 }

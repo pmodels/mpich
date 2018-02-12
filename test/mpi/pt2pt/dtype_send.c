@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 #define NUM_LOOPS  (128)
 
@@ -90,10 +91,8 @@ int main(int argc, char **argv)
 
     MPI_Barrier(MPI_COMM_WORLD);
 
+    MTest_Finalize(0);
     MPI_Finalize();
-
-    if (rank == 0)
-        printf(" No Errors\n");
 
     return 0;
 }

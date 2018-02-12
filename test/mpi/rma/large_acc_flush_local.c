@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "mpitest.h"
 
 #define MIN_DATA_SIZE (262144)
 #define MAX_DATA_SIZE (8 * 262144)
@@ -62,12 +63,10 @@ int main(int argc, char *argv[])
         MPI_Win_free(&win);
     }
 
-    if (rank == 0)
-        printf(" No Errors\n");
-
     MPI_Free_mem(orig_buf);
     MPI_Free_mem(tar_buf);
 
+    MTest_Finalize(0);
     MPI_Finalize();
 
     return 0;

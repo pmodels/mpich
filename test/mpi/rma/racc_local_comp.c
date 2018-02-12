@@ -122,11 +122,7 @@ int main(int argc, char *argv[])
     if (winbuf)
         MPI_Free_mem(winbuf);
 
-    MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
-    if (rank == 0 && all_errors == 0)
-        printf(" No Errors\n");
-
+    MTest_Finalize(errors);
     MPI_Finalize();
 
     return 0;

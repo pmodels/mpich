@@ -20,7 +20,7 @@ int main(int argc, char **argv)
     int i, j, rank, nproc;
     int shm_rank, shm_nproc;
     MPI_Aint size;
-    int errors = 0, all_errors = 0;
+    int errors = 0;
     int *base, *my_base;
     int disp_unit;
     MPI_Win shm_win;
@@ -84,11 +84,7 @@ int main(int argc, char **argv)
     MPI_Win_free(&shm_win);
     MPI_Comm_free(&shm_comm);
 
-    MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
-    if (rank == 0 && all_errors == 0)
-        printf(" No Errors\n");
-
+    MTest_Finalize(errors);
     MPI_Finalize();
 
     return 0;

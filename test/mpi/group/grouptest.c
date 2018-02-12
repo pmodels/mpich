@@ -166,14 +166,7 @@ int main(int argc, char *argv[])
     MPI_Group_free(&g45);
     MPI_Group_free(&g1);
 
-    if (myrank == 0) {
-        if (errs == 0) {
-            printf(" No Errors\n");
-        } else {
-            printf("Found %d errors\n", errs);
-        }
-    }
-
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

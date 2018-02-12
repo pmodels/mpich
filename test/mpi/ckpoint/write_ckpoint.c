@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include "mpitest.h"
 
 int main(int argc, char *argv[])
 {

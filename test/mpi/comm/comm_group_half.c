@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <mpi.h>
 #include "mpitestconf.h"
+#include "mpitest.h"
 
 int main(int argc, char **argv)
 {
@@ -35,9 +36,7 @@ int main(int argc, char **argv)
     MPI_Group_free(&half_group);
     MPI_Group_free(&full_group);
 
-    if (rank == 0)
-        printf(" No Errors\n");
-
+    MTest_Finalize(0);
     MPI_Finalize();
 
     return 0;

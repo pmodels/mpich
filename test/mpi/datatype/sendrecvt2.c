@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "dtypes.h"
+#include "mpitest.h"
 
 /*
    This program is derived from one in the MPICH-1 test suite.  It

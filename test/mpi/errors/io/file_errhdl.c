@@ -19,13 +19,9 @@ int main(int argc, char *argv[])
 
     MPI_File_set_errhandler(fh, MPI_ERRORS_RETURN);
     errs = MPI_File_call_errhandler(fh, MPI_ERR_FILE);
-    if (errs != MPI_SUCCESS) {
-        fprintf(stderr, "errs: %d, expected: %d\n", errs, (int) MPI_SUCCESS);
-    } else {
-        printf(" No Errors\n");
-    }
     MPI_File_close(&fh);
 
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

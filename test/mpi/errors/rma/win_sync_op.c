@@ -31,10 +31,7 @@ int main(int argc, char *argv[])
 
     MPI_Win_free(&win);
 
-    MPI_Reduce(&errors, &errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
-    if (rank == 0 && errs == 0)
-        printf(" No Errors\n");
+    MTest_Finalize(errors);
     MPI_Finalize();
 
     return 0;

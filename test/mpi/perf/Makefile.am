@@ -23,4 +23,4 @@ nestvec_CFLAGS   = -O
 nestvec2_CFLAGS  = -O
 indexperf_CFLAGS = -O
 
-twovec_LDADD = -lm
+twovec_LDADD = -lm $(top_builddir)/util/mtest.o

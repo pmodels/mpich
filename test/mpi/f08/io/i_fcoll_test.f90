@@ -140,16 +140,7 @@ if (mynod .eq. 0) then
     endif
 endif
 
-call MPI_Allreduce( errs, toterrs, 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr )
-
-if (mynod .eq. 0) then
-  if( toterrs .gt. 0 ) then
-     print *, 'Found ', toterrs, ' errors'
-  else
-     print *, ' No Errors'
-  endif
-endif
-
+call MTEST_FINALIZE(errs)
 call MPI_FINALIZE(ierr)
 
 stop

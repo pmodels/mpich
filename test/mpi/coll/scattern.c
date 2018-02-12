@@ -45,17 +45,10 @@ int main(int argc, char **argv)
             ivalue += stride;
         }
     }
-    i = errs;
-    MPI_Allreduce(&i, &errs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (errs > 0)
-            printf("Found %d errors!\n", errs);
-        else
-            printf(" No Errors\n");
-    }
     free(vecin);
     free(vecout);
     MPI_Type_free(&vec);
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

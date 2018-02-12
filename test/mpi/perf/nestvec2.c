@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "mpitestconf.h"
+#include "mpitest.h"
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
@@ -197,16 +197,11 @@ int main(int argc, char **argv)
         printf("For most informative results, be sure to compile this test with optimization\n");
     }
 
-    if (errs) {
-        printf(" Found %d errors\n", errs);
-    } else {
-        printf(" No Errors\n");
-    }
-
     free(vsource);
     free(outbuf);
     free(outbuf2);
 
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

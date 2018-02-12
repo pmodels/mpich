@@ -106,14 +106,7 @@ int main(int argc, char *argv[])
   fn_exit:
 
     free(buf);
-    /* print message and exit */
-    if (errs) {
-        if (rank == 0)
-            fprintf(stderr, "Found %d errors\n", errs);
-    } else {
-        if (rank == 0)
-            printf(" No Errors\n");
-    }
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include "mpitest.h"
 
 #define TRY(func)                           \
     do {                                    \

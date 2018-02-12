@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 /*
  * Run this test with 8 processes.  This test was submitted by xxx
@@ -139,12 +140,8 @@ int main(int argc, char *argv[])
     if (verbose) {
         fclose(pf);
     }
+    MTest_Finalize(0);
     MPI_Finalize();
-
-    /* This test fails if it hangs */
-    if (rank == 0) {
-        printf(" No Errors\n");
-    }
 
     return 0;
 }

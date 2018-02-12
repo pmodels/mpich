@@ -71,14 +71,14 @@ int main(int argc, char **argv)
             printf("This MPI implementation limits the number of groups that can be created\n\
 This is allowed by the standard and is not a bug, but is a limit on the\n\
 implementation\n");
-        } else {
-            printf(" No Errors\n");
+            errs++;
         }
     }
 
     free(group_array);
     free(ranks);
 
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

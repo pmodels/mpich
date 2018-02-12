@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 int main(int argc, char **argv)
 {
@@ -31,7 +32,8 @@ int main(int argc, char **argv)
     MPI_Cancel(&req);
     MPI_Wait(&req, &status);
 
-    printf(" No Errors\n");
-
+    MTest_Finalize(0);
     MPI_Finalize();
+
+    return 0;
 }

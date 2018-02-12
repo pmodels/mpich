@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include "mpi.h"
 #include <string.h>
+#include "mpitest.h"
 
 #define COUNT		14
 #define SIZE		340
@@ -51,9 +52,8 @@ int main(int argc, char **argv)
 
     MPI_Type_free(&struct_type);
 
+    MTest_Finalize(0);
     MPI_Finalize();
-
-    printf(" No Errors\n");
 
     return 0;
 }

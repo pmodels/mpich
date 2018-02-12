@@ -78,7 +78,7 @@ void checkResults(int loop_k, int *errors)
 int main(int argc, char *argv[])
 {
     int i, k;
-    int errors = 0, all_errors = 0;
+    int errors = 0;
     int my_buf_num;
     MPI_Datatype origin_dtp, target_dtp;
 
@@ -261,11 +261,7 @@ int main(int argc, char *argv[])
     MPI_Type_free(&target_dtp);
 
   exit_test:
-    MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
-    if (rank == 0 && all_errors == 0)
-        printf(" No Errors\n");
-
+    MTest_Finalize(errors);
     MPI_Finalize();
     return 0;
 }

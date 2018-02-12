@@ -116,15 +116,8 @@ program get_elem_d
      endif
   enddo
 
-  if (rank .eq. dest) then
-     if (errs .eq. 0) then
-        write (*,*) " No Errors"
-     else
-        print *, 'errs=',errs
-     endif
-  endif
-
   call MPI_Type_free(newtype, ierror)
+  call MTest_Finalize(errs)
   call MPI_Finalize(ierror)
 
 end program get_elem_d

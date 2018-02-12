@@ -211,14 +211,9 @@ int main(int argc, char *argv[])
     errs = RUN_TEST(intra_comm, rank % 2);
 
     MPI_Comm_free(&intra_comm);
-    MPI_Reduce(&errs, &allerrs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
-    if (rank == 0 && allerrs == 0) {
-        printf(" No Errors\n");
-        fflush(stdout);
-    }
 
   exit:
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

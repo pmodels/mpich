@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 /* tests noncontiguous reads/writes using nonblocking collective I/O */
 
@@ -322,17 +323,10 @@ int main(int argc, char **argv)
     errs += test_file(filename, mynod, nprocs, cb_config_string,
                       "collective w/ hinting: permutation2", verbose);
 
-    MPI_Allreduce(&errs, &sum_errs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
-    if (!mynod) {
-        if (sum_errs)
-            fprintf(stderr, "Found %d error cases\n", sum_errs);
-        else
-            printf(" No Errors\n");
-    }
     if (mynod)
         free(filename);
     free(cb_config_string);
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

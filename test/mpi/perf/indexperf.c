@@ -17,6 +17,7 @@
 #endif
 
 #include "mpi.h"
+#include "mpitest.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -168,11 +169,6 @@ int main(int argc, char **argv)
         printf("MPI_Pack time should be less than 2 times the manual time\n");
         printf("For most informative results, be sure to compile this test with optimization\n");
     }
-    if (errs) {
-        printf(" Found %d errors\n", errs);
-    } else {
-        printf(" No Errors\n");
-    }
 
     MPI_Type_free(&itype1);
     MPI_Type_free(&stype1);
@@ -182,6 +178,7 @@ int main(int argc, char **argv)
     free(outbuf2);
     free(index_displacement);
 
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 #define ITER 5
 #define BUF_COUNT (16*1024)
@@ -48,12 +49,11 @@ int main(int argc, char *argv[])
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    if (rank == 0)
-        printf(" No Errors\n");
 
     free(sendreqs);
     free(sendstats);
 
+    MTest_Finalize(0);
     MPI_Finalize();
 
     return 0;

@@ -27,9 +27,8 @@ int main(int argc, char *argv[])
 
     assert(isum == 2);
     assert(sum == 4);
-    if (rank == 0)
-        printf(" No errors\n");
 
+    MTest_Finalize(0);
     MPI_Finalize();
     return 0;
 }

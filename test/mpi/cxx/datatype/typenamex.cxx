@@ -83,16 +83,10 @@ int main( int argc, char **argv )
 	cout << "Expected int but got :" << name << ":\n";
     }
 
-
-    if (errs) {
-	cout << "Found " << errs << " errors\n";
-    }
-    else {
-	cout << " No Errors\n";
-    }
     delete [] name;
     delete [] mpi_names;
 
+    MTest_Finalize(errs);
     MPI::Finalize();
     return 0;
 }

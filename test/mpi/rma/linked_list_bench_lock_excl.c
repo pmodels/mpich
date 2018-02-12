@@ -248,7 +248,6 @@ int main(int argc, char **argv)
             }
         }
 
-        printf("%s\n", errs == 0 ? " No Errors" : "FAIL");
         free(counts);
     }
 
@@ -269,6 +268,7 @@ int main(int argc, char **argv)
     for (; my_elems_count > 0; my_elems_count--)
         MPI_Free_mem(my_elems[my_elems_count - 1]);
 
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

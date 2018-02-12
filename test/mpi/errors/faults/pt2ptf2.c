@@ -83,15 +83,8 @@ int main(int argc, char *argv[])
         errs += ReportErr(err, "Allreduce");
     MPI_Comm_free(&newcomm);
 
+    MTest_Finalize(toterrs);
     MPI_Finalize();
-
-    if (wrank == 0) {
-        if (toterrs > 0) {
-            printf(" Found %d errors\n", toterrs);
-        } else {
-            printf(" No Errors\n");
-        }
-    }
 
     return 0;
 }

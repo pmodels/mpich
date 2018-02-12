@@ -189,13 +189,7 @@ int main(int argc, char *argv[])
     }
     MPI_Reduce(&errs, &tot_errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
-    /* Use wrank because Comm_split_type may return more than one communicator
-     * across the job, and if so, each will have a rank 0 entry.  Test
-     * output rules are for a single process to write the successful
-     * test (No Errors) output. */
-    if (wrank == 0 && errs == 0)
-        printf(" No errors\n");
-
+    MTest_Finalize(errs);
     MPI_Finalize();
 
     return 0;

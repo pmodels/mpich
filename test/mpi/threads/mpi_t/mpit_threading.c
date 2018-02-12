@@ -90,9 +90,8 @@ int main(int argc, char *argv[])
      * are freed in MPI_T_finalize().
      */
     MPI_T_finalize();
+    MTest_Finalize(0);
     MPI_Finalize();
-
-    fprintf(stdout, " No Errors\n");
 
     return 0;
 }

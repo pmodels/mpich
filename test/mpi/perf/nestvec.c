@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "mpitestconf.h"
+#include "mpitest.h"
 
 #ifdef MPICH
 /* MPICH (as of 6/2012) packs the native bytes */
@@ -176,16 +176,12 @@ int main(int argc, char **argv)
         printf("MPI_Pack time should be less than 4 times the manual time\n");
         printf("For most informative results, be sure to compile this test with optimization\n");
     }
-    if (errs) {
-        printf(" Found %d errors\n", errs);
-    } else {
-        printf(" No Errors\n");
-    }
 
     free(inbuf);
     free(outbuf);
     free(outbuf2);
 
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

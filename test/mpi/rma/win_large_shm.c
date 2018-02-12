@@ -10,6 +10,7 @@
 #include "mpi.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "mpitest.h"
 
 int main(int argc, char **argv)
 {
@@ -89,9 +90,7 @@ int main(int argc, char **argv)
             MPI_Info_free(&win_info);
     }
 
-    if (my_rank == 0)
-        printf(" No Errors\n");
-
+    MTest_Finalize(0);
     MPI_Finalize();
 
     return 0;

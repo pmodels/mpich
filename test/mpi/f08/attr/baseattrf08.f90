@@ -51,13 +51,7 @@
          endif
       endif
 
-      ! Check for errors
-      if (errs .eq. 0) then
-         print *, " No Errors"
-      else
-         print *, " Found ", errs, " errors"
-      endif
-
+      call MTest_Finalize( errs )
       call MPI_Finalize( ierr )
 
       end

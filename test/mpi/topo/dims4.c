@@ -22,9 +22,7 @@ int main(int argc, char **argv)
         if (ret[i] != 1000)
             errs++;
 
-    if (!errs && rank == 0)
-        printf(" No Errors\n");
-
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

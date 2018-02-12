@@ -42,14 +42,14 @@ int main(int argc, char **argv)
         if (lb != 4 || ub != 5 || extent != 1) {
             printf("lb = %d (should be 4), ub = %d (should be 5) extent = %d should be 1\n",
                    (int) lb, (int) ub, (int) extent);
-        } else {
-            printf(" No Errors\n");
+            errs++;
         }
 
         MPI_Type_free(&tmp_type);
         MPI_Type_free(&newtype);
     }
 
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

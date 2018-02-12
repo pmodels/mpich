@@ -48,12 +48,7 @@ int main(int argc, char **argv)
         errs++;
     }
 
-    /* print message and exit */
-    if (errs) {
-        fprintf(stderr, "Found %d errors\n", errs);
-    } else {
-        printf(" No Errors\n");
-    }
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }
