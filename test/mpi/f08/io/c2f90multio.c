@@ -14,6 +14,7 @@
 */
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 int main(int argc, char *argv[])
 {
@@ -44,13 +45,7 @@ int main(int argc, char *argv[])
     }
     MPI_File_close(&cFile);
 
-    if (rank == 0) {
-        if (errs) {
-            fprintf(stderr, "Found %d errors\n", errs);
-        } else {
-            printf(" No Errors\n");
-        }
-    }
+    MTest_Finalize(errs);
 
     MPI_Finalize();
 

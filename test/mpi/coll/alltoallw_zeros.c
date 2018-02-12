@@ -99,8 +99,6 @@ int main(int argc, char *argv[])
 
     MPI_Type_free(&sendtype);
 
-    if (rank == 0)
-        printf(" No Errors\n");
 
   fn_exit:
     if (rdispls)
@@ -116,6 +114,7 @@ int main(int argc, char *argv[])
     if (sendtypes)
         free(sendtypes);
 
+    MTest_Finalize(0);
     MPI_Finalize();
 
     return 0;

@@ -51,15 +51,7 @@ int main(int argc, char *argv[])
     check_type(MPI_CXX_DOUBLE_COMPLEX);
     check_type(MPI_CXX_LONG_DOUBLE_COMPLEX);
 
-    MPI_Reduce((wrank == 0 ? MPI_IN_PLACE : &errs), &errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-    if (wrank == 0) {
-        if (errs) {
-            printf("found %d errors\n", errs);
-        } else {
-            printf(" No errors\n");
-        }
-    }
-
+    MTest_Finalize(errs);
     MPI_Finalize();
 
     return 0;

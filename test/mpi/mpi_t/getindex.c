@@ -8,6 +8,7 @@
  */
 #include <stdio.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 static int verbose = 0;
 
@@ -85,13 +86,10 @@ int main(int argc, char *argv[])
     errno = MPI_T_category_get_index("AN INVALID CATEGORY NAME FOR TEST", &cat_index);
     if (errno != MPI_T_ERR_INVALID_NAME)
         errs++;
-    if (errs)
-        fprintf(stdout, "Errors found in MPI_T_cvar_get_index\n");
 
     MPI_T_finalize();
+    MTest_Finalize(errs);
     MPI_Finalize();
 
-    if (errs == 0)
-        fprintf(stdout, " No Errors\n");
     return 0;
 }

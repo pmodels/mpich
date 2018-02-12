@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 #define BUFSIZE 4
 
@@ -43,11 +44,7 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Win_free(&win);
 
-    if (rank == 0) {
-        fprintf(stdout, " No Errors\n");
-        fflush(stdout);
-    }
-
+    MTest_Finalize(0);
     MPI_Finalize();
     return 0;
 }

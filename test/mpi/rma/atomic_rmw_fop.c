@@ -26,7 +26,7 @@
 int main(int argc, char *argv[])
 {
     int rank, size, i, j, k;
-    int errors = 0, all_errors = 0;
+    int errors = 0;
     int origin_shm, origin_am, dest;
     int my_buf_size;
     int *orig_buf = NULL, *result_buf = NULL, *target_buf = NULL, *check_buf = NULL;
@@ -131,11 +131,8 @@ int main(int argc, char *argv[])
     }
 
   exit_test:
-    MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
-    if (rank == 0 && all_errors == 0)
-        printf(" No Errors\n");
-
+    MTest_Finalize(errors);
     MPI_Finalize();
     return 0;
 }

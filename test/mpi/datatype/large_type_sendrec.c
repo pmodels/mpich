@@ -166,11 +166,6 @@ int main(int argc, char *argv[])
             errs += (rbuf[j] != 'z');
         if (count != ocount)
             ++errs;
-        if (errs == 0) {
-            printf(" No Errors\n");
-        } else {
-            printf("errs = %lld \n", errs);
-        }
     }
 
     if (rbuf)
@@ -180,6 +175,7 @@ int main(int argc, char *argv[])
 
     MPI_ASSERT(MPI_Type_free(&bigtype));
 
+    MTest_Finalize(errs);
     MPI_ASSERT(MPI_Finalize());
 
     return 0;

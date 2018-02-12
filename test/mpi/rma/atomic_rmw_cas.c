@@ -127,9 +127,7 @@ int main(int argc, char *argv[])
     }
 
   exit_test:
-    if (rank == dest && errs == 0)
-        printf(" No Errors\n");
-
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

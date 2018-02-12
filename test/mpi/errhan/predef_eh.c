@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 /* Ensure that setting a user-defined error handler on predefined
  * communicators does not cause a problem at finalize time.  Regression
@@ -30,9 +31,7 @@ int main(int argc, char **argv)
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, errh);
     MPI_Comm_set_errhandler(MPI_COMM_SELF, errh);
     MPI_Errhandler_free(&errh);
+    MTest_Finalize(0);
     MPI_Finalize();
-    /* Test harness requirement is that only one process write No Errors */
-    if (wrank == 0)
-        printf(" No Errors\n");
     return 0;
 }

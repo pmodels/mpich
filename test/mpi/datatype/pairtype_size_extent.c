@@ -132,13 +132,7 @@ int main(int argc, char *argv[])
         MPI_Type_free(&stype);
     }
 
-
-    /* print message and exit */
-    if (errs) {
-        fprintf(stderr, "Found %d errors\n", errs);
-    } else {
-        printf(" No Errors\n");
-    }
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

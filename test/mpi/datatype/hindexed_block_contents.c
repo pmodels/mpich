@@ -64,13 +64,7 @@ int main(int argc, char **argv)
         MPI_Type_free(&t);
     }
 
-    if (rank == 0) {
-        if (errs) {
-            printf("found %d errors\n", errs);
-        } else {
-            printf(" No errors\n");
-        }
-    }
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

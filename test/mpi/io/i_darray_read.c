@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 #define NSIDE 5
 #define NBLOCK 3
@@ -122,13 +123,11 @@ int main(int argc, char *argv[])
             }
         }
     }
-    MPI_Allreduce(&nerrors, &total_errors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0 && total_errors == 0)
-        printf(" No Errors\n");
 
     free(ldata);
     free(pdata);
     MPI_Type_free(&darray);
+    MTest_Finalize(nerrors);
     MPI_Finalize();
 
     exit(total_errors);

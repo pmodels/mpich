@@ -51,10 +51,8 @@ int main(int argc, char *argv[])
     MPI_Win_fence(0, win);
     MPI_Win_free(&win);
 
-    if (rank == 0)
-        printf(" No Errors\n");
-
     free(buf);
+    MTest_Finalize(0);
     MPI_Finalize();
 
     return 0;

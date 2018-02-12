@@ -69,11 +69,7 @@ int main(int argc, char **argv)
     }
     free(recvbuf);
 #endif
-
-    MPI_Allreduce(&err, &toterr, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0 && toterr == 0) {
-        printf(" No Errors\n");
-    }
+    MTest_Finalize(err);
     MPI_Finalize();
 
     return toterr;

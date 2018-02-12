@@ -820,13 +820,7 @@ int main(int argc, char **argv)
         MPI_Comm_free(&comms[i]);
     }
 
-    if (wrank == 0) {
-        if (errs)
-            printf("found %d errors\n", errs);
-        else
-            printf(" No errors\n");
-    }
-
+    MTest_Finalize(errs);
     MPI_Finalize();
 
     return 0;

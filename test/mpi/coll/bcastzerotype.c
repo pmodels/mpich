@@ -52,11 +52,8 @@ int main(int argc, char *argv[])
     free(buf);
 
     MPI_Type_free(&type);
+    MTest_Finalize(0);
     MPI_Finalize();
-
-    if (wrank == 0) {
-        printf(" No errors\n");
-    }
 
     return 0;
 }

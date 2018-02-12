@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 #define HUGE_SIZE (10*1024*1024)
 
@@ -49,9 +50,7 @@ int main(int argc, char *argv[])
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    if (rank == 0)
-        puts(" No Errors");
-
+    MTest_Finalize(0);
     MPI_Finalize();
 
     return 0;

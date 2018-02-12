@@ -14,6 +14,7 @@
 #include "mpi.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "mpitest.h"
 
 #define COUNT (10)
 #define PRIME (17)
@@ -441,10 +442,7 @@ int main(int argc, char **argv)
         }
     }
 
-    if (rank == 0)
-        printf(" No Errors\n");
-
-
+    MTest_Finalize(0);
     MPI_Finalize();
     free(buf);
     free(recvbuf);

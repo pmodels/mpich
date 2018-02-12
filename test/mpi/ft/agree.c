@@ -61,14 +61,8 @@ int main(int argc, char **argv)
         errs++;
     }
 
+    MTest_Finalize(errs);
     MPI_Finalize();
-
-    if (0 == rank) {
-        if (errs == 0)
-            fprintf(stdout, " No Errors\n");
-        else
-            fprintf(stdout, " Found %d errors\n", errs);
-    }
 
     return errs;
 }

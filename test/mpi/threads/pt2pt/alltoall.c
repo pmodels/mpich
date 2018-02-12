@@ -98,12 +98,8 @@ int main(int argc, char *argv[])
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
+    MTest_Finalize(0);
     MPI_Finalize();
-
-    /* This program works if it gets here */
-    if (rank == 0) {
-        printf(" No Errors\n");
-    }
 
     return 0;
 }

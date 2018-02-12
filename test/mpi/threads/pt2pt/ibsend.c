@@ -154,12 +154,12 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
 
     pthread_attr_destroy(&attr);
-    if (!rank)
-        printf(" No Errors\n");
 
     MPI_Comm_free(&communicator);
     MPI_Buffer_detach(&ptr_dt, &bs);
     free(buffer);
+
+    MTest_Finalize(0);
     MPI_Finalize();
     return 0;
 }

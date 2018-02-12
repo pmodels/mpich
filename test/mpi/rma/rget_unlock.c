@@ -81,8 +81,7 @@ int main(int argc, char *argv[])
     free(lbuf);
     free(rbuf);
 
-    if (rank == 0 && errs == 0)
-        printf(" No Errors\n");
+    MTest_Finalize(errs);
 
     MPI_Finalize();
     return 0;

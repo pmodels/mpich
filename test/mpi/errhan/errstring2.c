@@ -19,9 +19,9 @@ int main(int argc, char *argv[])
     MPI_Error_string(errorclass, errorstring, &slen);
     if (strncmp(errorstring, "", 1)) {
         fprintf(stderr, "errorclass:%d errorstring:'%s' len:%d\n", errorclass, errorstring, slen);
-    } else {
-        printf(" No Errors\n");
+        errs++;
     }
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

@@ -5,6 +5,7 @@
  */
 #include <stdio.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 /*
  * This example should be run with 2 processes and tests the ability of the
@@ -25,10 +26,7 @@ int main(int argc, char **argv)
         MPI_Allreduce(&wscale, &scale, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     }
 
-    if (myid == 0) {
-        /* If we get here at all, we're ok */
-        printf(" No Errors\n");
-    }
+    MTest_Finalize(0);
     MPI_Finalize();
 
     return 0;

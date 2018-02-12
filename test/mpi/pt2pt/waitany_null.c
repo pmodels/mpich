@@ -18,7 +18,7 @@ int parse_args(int argc, char **argv);
 
 int main(int argc, char *argv[])
 {
-    int i, err, errs = 0, rank, toterrs;
+    int i, err, errs = 0, rank;
 
     int index;
     MPI_Request requests[10];
@@ -53,14 +53,7 @@ int main(int argc, char *argv[])
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Allreduce(&errs, &toterrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (toterrs) {
-            fprintf(stderr, " Found %d errors\n", toterrs);
-        } else {
-            printf(" No Errors\n");
-        }
-    }
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

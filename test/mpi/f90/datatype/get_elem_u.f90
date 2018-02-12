@@ -66,10 +66,7 @@ PROGRAM get_elem_u
   CALL MPI_Type_free(type1, ierr)
   CALL MPI_Type_free(type2, ierr)
 
+  CALL MTEST_Finalize( errs )
   CALL MPI_Finalize( ierr )
-
-  IF(rank .EQ. 0 .AND. errs .EQ. 0) THEN
-     PRINT *, " No Errors"
-  END IF
 
 END PROGRAM get_elem_u

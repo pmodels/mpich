@@ -89,16 +89,11 @@ int main(int argc, char *argv[])
     /* Release memory. */
     free(buffer);
 
-    if (errs) {
-        fprintf(stderr, "Found %d errors\n", errs);
-    } else {
-        printf(" No Errors\n");
-    }
-
     MPI_Type_free(&oneslice);
     MPI_Type_free(&twoslice);
     MPI_Type_free(&threeslice);
 
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

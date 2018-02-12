@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "mpitest.h"
 
 static int verbose = 0;
 
@@ -71,12 +72,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "%d errors in 4d subarray fortran test 1.\n", err);
     errs += err;
 
-    /* print message and exit */
-    if (errs) {
-        fprintf(stderr, "Found %d errors\n", errs);
-    } else {
-        printf(" No Errors\n");
-    }
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

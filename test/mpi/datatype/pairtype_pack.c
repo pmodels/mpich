@@ -34,12 +34,7 @@ int main(int argc, char *argv[])
     err = short_int_pack_test();
     errs += err;
 
-    /* print message and exit */
-    if (errs) {
-        fprintf(stderr, "Found %d errors\n", errs);
-    } else {
-        printf(" No Errors\n");
-    }
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

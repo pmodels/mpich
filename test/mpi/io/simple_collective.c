@@ -31,6 +31,7 @@
 #include <mpi.h>
 #include <errno.h>
 #include <getopt.h>
+#include "mpitest.h"
 
 static char *opt_file = NULL;
 static int rank = -1;
@@ -112,10 +113,8 @@ int main(int argc, char **argv)
     nr_errors += test_write(file, nprocs, rank, info);
     MPI_Info_free(&info);
 
+    MTest_Finalize(nr_errors);
     MPI_Finalize();
-    if (!rank && nr_errors == 0) {
-        printf(" No Errors\n");
-    }
     return (-nr_errors);
 }
 

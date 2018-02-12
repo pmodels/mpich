@@ -10,6 +10,7 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <unistd.h>
+#include "mpitest.h"
 
 int main(int argc, char *argv[])
 {
@@ -26,9 +27,7 @@ int main(int argc, char *argv[])
         MPI_Test(&barrier, &done, MPI_STATUS_IGNORE);
     }
 
-    if (rank == 0)
-        printf(" No Errors\n");
-
+    MTest_Finalize(0);
     MPI_Finalize();
     return 0;
 }
