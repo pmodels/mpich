@@ -10,6 +10,9 @@
 #define UCX_COLL_H_INCLUDED
 
 #include "ucx_impl.h"
+#ifdef HAVE_LIBHCOLL
+#include "../../../common/hcoll/hcoll.h"
+#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_barrier
@@ -22,8 +25,14 @@ static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * er
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BARRIER);
 
+#ifdef HAVE_LIBHCOLL
+    mpi_errno = hcoll_Barrier(comm_ptr, errflag);
+    if (mpi_errno == MPI_SUCCESS)
+        goto fn_exit;
+#endif
     mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_BARRIER);
     return mpi_errno;
 }
@@ -40,8 +49,14 @@ static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datat
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BCAST);
 
+#ifdef HAVE_LIBHCOLL
+    mpi_errno = hcoll_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
+    if (mpi_errno == MPI_SUCCESS)
+        goto fn_exit;
+#endif
     mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, errflag);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_BCAST);
     return mpi_errno;
 }
@@ -59,8 +74,14 @@ static inline int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
 
+#ifdef HAVE_LIBHCOLL
+    mpi_errno = hcoll_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    if (mpi_errno == MPI_SUCCESS)
+        goto fn_exit;
+#endif
     mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
     return mpi_errno;
 }
@@ -78,9 +99,16 @@ static inline int MPIDI_NM_mpi_allgather(const void *sendbuf, int sendcount, MPI
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLGATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLGATHER);
 
+#ifdef HAVE_LIBHCOLL
+    mpi_errno = hcoll_Allgather(sendbuf, sendcount, sendtype, recvbuf,
+                                recvcount, recvtype, comm_ptr, errflag);
+    if (mpi_errno == MPI_SUCCESS)
+        goto fn_exit;
+#endif
     mpi_errno = MPIR_Allgather_impl(sendbuf, sendcount, sendtype, recvbuf,
                                     recvcount, recvtype, comm_ptr, errflag);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ALLGATHER);
     return mpi_errno;
 }
