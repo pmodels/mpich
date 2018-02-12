@@ -27,7 +27,7 @@ noinst_PROGRAMS = \
     bigtype       \
     hindexed_io   \
     simple_collective \
-    external32-derived-dtype \
+    external32_derived_dtype \
     tst_fileview
 
 

@@ -1,4 +1,4 @@
-transp-datatype 2  xfail=ticket1788
+transp_datatype 2  xfail=ticket1788
 sendrecvl 2
 twovec 1  xfail=ticket1788
 dtpack 1  xfail=ticket1789
