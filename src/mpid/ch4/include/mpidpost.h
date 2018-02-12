@@ -62,4 +62,52 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize_async_thread(void)
     return MPIR_Finalize_async_thread();
 }
 
+MPL_STATIC_INLINE_PREFIX int MPID_Test(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
+{
+    return MPIR_Test_impl(request_ptr, flag, status);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Testall(int count, MPIR_Request * request_ptrs[],
+                                          int *flag, MPI_Status array_of_statuses[])
+{
+    return MPIR_Testall_impl(count, request_ptrs, flag, array_of_statuses);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Testany(int count, MPIR_Request * request_ptrs[],
+                                          int *indx, int *flag, MPI_Status * status)
+{
+    return MPIR_Testany_impl(count, request_ptrs, indx, flag, status);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Testsome(int incount, MPIR_Request * request_ptrs[],
+                                           int *outcount, int array_of_indices[],
+                                           MPI_Status array_of_statuses[])
+{
+    return MPIR_Testsome_impl(incount, request_ptrs, outcount, array_of_indices, array_of_statuses);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Waitall(int count, MPIR_Request * request_ptrs[],
+                                          MPI_Status array_of_statuses[], int request_properties)
+{
+    return MPIR_Waitall_impl(count, request_ptrs, array_of_statuses, request_properties);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * status)
+{
+    return MPIR_Wait_impl(request_ptr, status);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Waitany(int count, MPIR_Request * request_ptrs[],
+                                          int *indx, MPI_Status * status)
+{
+    return MPIR_Waitany_impl(count, request_ptrs, indx, status);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Waitsome(int incount, MPIR_Request * request_ptrs[],
+                                           int *outcount, int array_of_indices[],
+                                           MPI_Status array_of_statuses[])
+{
+    return MPIR_Waitsome_impl(incount, request_ptrs, outcount, array_of_indices, array_of_statuses);
+}
+
 #endif /* MPIDPOST_H_INCLUDED */

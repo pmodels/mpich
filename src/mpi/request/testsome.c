@@ -191,8 +191,7 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
 
     n_active = 0;
 
-    mpi_errno = MPIR_Testsome_impl(incount, request_ptrs, outcount, array_of_indices,
-                                   array_of_statuses);
+    mpi_errno = MPID_Testsome(incount, request_ptrs, outcount, array_of_indices, array_of_statuses);
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;

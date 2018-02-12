@@ -96,7 +96,7 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
             goto fn_exit;
         }
 
-        mpi_errno = MPIR_Wait_impl(request_ptr, status);
+        mpi_errno = MPID_Wait(request_ptr, status);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
