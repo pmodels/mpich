@@ -107,7 +107,9 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
                                        nbytes, tmp_buf, is_contig, is_homogeneous, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
-        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+        *errflag =
+            MPIX_ERR_PROC_FAILED ==
+            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
         MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
@@ -144,7 +146,9 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
                                   MPI_BYTE, left, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+            *errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }

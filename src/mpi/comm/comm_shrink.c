@@ -77,7 +77,9 @@ int MPIR_Comm_shrink(MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
         if (*newcomm_ptr == NULL) {
             errflag = MPIR_ERR_PROC_FAILED;
         } else if (mpi_errno) {
-            errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+            errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
             MPIR_Comm_release(*newcomm_ptr);
         }
 

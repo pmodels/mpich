@@ -116,7 +116,9 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                                           MPIR_ALLGATHER_TAG, comm_ptr, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
-                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                    *errflag =
+                        MPIX_ERR_PROC_FAILED ==
+                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                     MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                     last_recv_cnt = 0;
@@ -180,7 +182,10 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                          * sent now. */
                         if (mpi_errno) {
                             /* for communication errors, just record the error but continue */
-                            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                            *errflag =
+                                MPIX_ERR_PROC_FAILED ==
+                                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED :
+                                MPIR_ERR_OTHER;
                             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                         }
@@ -198,7 +203,10 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                          * no. of processes whose data we don't have */
                         if (mpi_errno) {
                             /* for communication errors, just record the error but continue */
-                            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                            *errflag =
+                                MPIX_ERR_PROC_FAILED ==
+                                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED :
+                                MPIR_ERR_OTHER;
                             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                             last_recv_cnt = 0;
@@ -283,7 +291,9 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                                           MPIR_ALLGATHER_TAG, comm_ptr, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
-                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                    *errflag =
+                        MPIX_ERR_PROC_FAILED ==
+                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                     MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                     last_recv_cnt = 0;
@@ -336,7 +346,10 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                                               dst, MPIR_ALLGATHER_TAG, comm_ptr, errflag);
                         if (mpi_errno) {
                             /* for communication errors, just record the error but continue */
-                            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                            *errflag =
+                                MPIX_ERR_PROC_FAILED ==
+                                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED :
+                                MPIR_ERR_OTHER;
                             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                         }
@@ -357,7 +370,10 @@ int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                          * no. of processes whose data we don't have */
                         if (mpi_errno) {
                             /* for communication errors, just record the error but continue */
-                            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                            *errflag =
+                                MPIX_ERR_PROC_FAILED ==
+                                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED :
+                                MPIR_ERR_OTHER;
                             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                             last_recv_cnt = 0;
