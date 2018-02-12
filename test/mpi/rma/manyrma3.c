@@ -6,6 +6,7 @@
 
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 #define MAX_COUNT 4096
 
@@ -27,9 +28,7 @@ int main(int argc, char *argv[])
 
     MPI_Win_free(&win);
 
-    if (rank == 0)
-        printf(" No Errors\n");
-
+    MTest_Finalize(0);
     MPI_Finalize();
 
     return 0;

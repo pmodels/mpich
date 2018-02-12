@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 #define MAXELEMS      6400
 #define COUNT         1000
@@ -92,15 +93,13 @@ int main(int argc, char *argv[])
 
     MPI_Barrier(MPI_COMM_WORLD);
 
+    MTest_Finalize(0);
     MPI_Finalize();
 
     if (me == 0 && verbose) {
         printf("Test completed.\n");
         fflush(stdout);
     }
-
-    if (me == 0)
-        printf(" No Errors\n");
 
     return 0;
 }

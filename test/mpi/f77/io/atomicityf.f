@@ -182,18 +182,9 @@ C better to use the default values in practice. */
         
       call MPI_Barrier(MPI_COMM_WORLD, ierr )
 
-      call MPI_Allreduce( errs, toterrs, 1, MPI_INTEGER, MPI_SUM,
-     $     MPI_COMM_WORLD, ierr )
-      if (mynod .eq. 0) then
-         if( toterrs .gt. 0) then
-            print *, "Found ", toterrs, " errors"
-         else 
-            print *, " No Errors"
-         endif
-      endif
-
       call MPI_Type_free(newtype, ierr )
       call MPI_Info_free(info, ierr )
       
+      call MTest_Finalize(errs)
       call MPI_Finalize(ierr)
       end

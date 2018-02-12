@@ -6,6 +6,7 @@
 
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 static int verbose = 0;
 
@@ -26,8 +27,7 @@ int main(int argc, char *argv[])
             printf("command: %s\n", value);
     }
 
-    printf(" No Errors\n");
-
+    MTest_Finalize(0);
     MPI_Finalize();
     return 0;
 }

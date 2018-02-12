@@ -45,11 +45,7 @@ int main(int argc, char *argv[])
 
     MPI_Info_free(&i1);
     MPI_Info_free(&i2);
-    if (errs) {
-        printf(" Found %d errors\n", errs);
-    } else {
-        printf(" No Errors\n");
-    }
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

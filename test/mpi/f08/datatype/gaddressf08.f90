@@ -30,11 +30,7 @@
          print *, ' Using get_address, computed a gap of ', gap
          print *, ' Expected a gap of ', 199 * intsize
       endif
-      if (errs .gt. 0) then
-          print *, ' Found ', errs, ' errors'
-      else
-          print *, ' No Errors'
-      endif
 
+      call MTest_Finalize( errs )
       call MPI_Finalize( ierr )
       end

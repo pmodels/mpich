@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <string.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 #define MAX_DATA_SIZE   (1024*128*16)
 #define MAX_NUM_ITERATIONS (8192*4)
@@ -132,10 +133,8 @@ int main(int argc, char **argv)
     run_test(MPI_LOCK_SHARED, 0);
     run_test(MPI_LOCK_SHARED, MPI_MODE_NOCHECK);
 
+    MTest_Finalize(0);
     MPI_Finalize();
-
-    if (rank == 0)
-        printf(" No Errors\n");
 
     return 0;
 }

@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 #define YLEN 5
 #define XLEN 10
@@ -245,11 +246,6 @@ int main(int argc, char **argv)
             }
         }
         free(rd_buf);
-
-        if (errs == 0)
-            fprintf(stdout, " No Errors\n");
-        else
-            fprintf(stderr, "Found %d errors\n", errs);
     }
 
     free(blocklengths);
@@ -258,6 +254,7 @@ int main(int argc, char **argv)
     free(request);
     free(statuses);
     MPI_Type_free(&ftype);
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

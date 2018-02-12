@@ -146,9 +146,7 @@ int main(int argc, char **argv)
 
     free(glist);
 
-    if (me == 0)
-        printf(" No Errors\n");
-
+    MTest_Finalize(0);
     MPI_Finalize();
     return 0;
 }

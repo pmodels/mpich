@@ -11,6 +11,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 MPI_Comm comm_all;
 

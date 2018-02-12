@@ -160,15 +160,7 @@ int main(int argc, char *argv[])
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_Reduce(&num_errors, &total_num_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (total_num_errors) {
-            printf(" Found %d errors\n", total_num_errors);
-        } else {
-            printf(" No Errors\n");
-        }
-        fflush(stdout);
-    }
+    MTest_Finalize(num_errors);
     MPI_Finalize();
     return total_num_errors;
 }

@@ -78,13 +78,8 @@ int main(int argc, char *argv[])
     MPI_Type_free(&xpose);
     MPI_Type_free(&row);
 
-    /* print message and exit */
-    if (errs) {
-        fprintf(stderr, "Found %d errors\n", errs);
-    } else {
-        printf(" No Errors\n");
-    }
     free(buffer);
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

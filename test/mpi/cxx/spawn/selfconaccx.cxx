@@ -56,9 +56,7 @@ int main( int argc, char *argv[] )
 
     MPI::COMM_WORLD.Barrier();
 
-    if (rank == 0) {
-	cout << " No Errors\n";
-    }
+    MTest_Finalize(0);
     MPI::Finalize();
     return 0;
 }

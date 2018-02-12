@@ -102,13 +102,8 @@ int main(int argc, char **argv)
     MPI_Op_free(&op_assoc);
     MPI_Op_free(&op_addem);
 
+    MTest_Finalize(errors);
     MPI_Finalize();
-    if (errors)
-        printf("[%d] done with ERRORS(%d)!\n", rank, errors);
-    else {
-        if (rank == 0)
-            printf(" No Errors\n");
-    }
 
     return errors;
 }

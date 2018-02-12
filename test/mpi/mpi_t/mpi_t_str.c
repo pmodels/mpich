@@ -15,7 +15,7 @@
 #include <assert.h>
 #include <math.h>
 #include <limits.h>
-#include "mpitestconf.h"
+#include "mpitest.h"
 
 /* assert-like macro that bumps the err count and emits a message */
 #define check(x_)                                                                 \
@@ -213,16 +213,8 @@ int main(int argc, char **argv)
         }
     }
 
-    MPI_Allreduce(MPI_IN_PLACE, &errs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (errs) {
-            printf("found %d errors\n", errs);
-        } else {
-            printf(" No errors\n");
-        }
-    }
-
     MPI_T_finalize();
+    MTest_Finalize(errs);
     MPI_Finalize();
 
     return 0;

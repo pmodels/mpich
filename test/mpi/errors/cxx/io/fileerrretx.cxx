@@ -86,16 +86,7 @@ int main( int argc, char *argv[] )
 	cout << "Did not invoke error handler when opening a non-existent file for writing and reading (without MODE_CREATE)" << endl;
     }
 
-    // Find out how many errors we saw
-    MPI::COMM_WORLD.Allreduce( &errs, &toterrs, 1, MPI::INT, MPI::SUM );
-    if (MPI::COMM_WORLD.Get_rank() == 0) {
-	if (toterrs == 0) {
-	    cout << " No Errors" << endl;
-	}
-	else {
-	    cout << " Saw " << toterrs << " errors" << endl;
-	}
-    }
+    MTest_Finalize(errs);
 
     delete[] filename;
     MPI::Finalize();

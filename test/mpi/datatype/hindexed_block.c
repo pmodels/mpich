@@ -52,14 +52,7 @@ int main(int argc, char **argv)
     errs += err;
 #endif /*defined(TEST_HINDEXED_BLOCK) */
 
-    /* print message and exit */
-    if (rank == 0) {
-        if (errs) {
-            fprintf(stderr, "Found %d errors\n", errs);
-        } else {
-            printf(" No Errors\n");
-        }
-    }
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

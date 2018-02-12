@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 /* tests noncontiguous reads/writes using nonblocking collective I/O */
 
@@ -27,7 +28,7 @@
 int main(int argc, char **argv)
 {
     int *buf, i, mynod, nprocs, len, b[3];
-    int errs = 0, toterrs, err;
+    int errs = 0, err = MPI_SUCCESS;
     MPI_Aint d[3];
     MPI_File fh;
     MPI_Request request;
@@ -246,19 +247,11 @@ int main(int argc, char **argv)
     err = MPI_File_close(&fh);
     HANDLE_ERROR(err);
 
-    MPI_Allreduce(&errs, &toterrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (mynod == 0) {
-        if (toterrs > 0) {
-            fprintf(stderr, "Found %d errors\n", toterrs);
-        } else {
-            fprintf(stdout, " No Errors\n");
-        }
-    }
-
     MPI_Type_free(&newtype);
     free(buf);
     if (mynod)
         free(filename);
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

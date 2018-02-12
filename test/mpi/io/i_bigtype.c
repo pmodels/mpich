@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
+#include "mpitest.h"
 
 //#define NUM_X 536870911
 #define NUM_X 536870912
@@ -141,8 +142,8 @@ int main(int argc, char **argv)
     MPI_Type_free(&file_type);
 
   exit:
+    MTest_Finalize(0);
     MPI_Finalize();
-    printf(" No Errors\n");
 
     return 0;
 }

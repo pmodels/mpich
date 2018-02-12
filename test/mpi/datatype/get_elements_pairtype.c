@@ -34,12 +34,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "%d errors in double_int test.\n", err);
     errs += err;
 
-    /* print message and exit */
-    if (errs) {
-        fprintf(stderr, "Found %d errors\n", errs);
-    } else {
-        printf(" No Errors\n");
-    }
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

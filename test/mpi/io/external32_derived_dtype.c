@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 #define HANDLE_ERROR(err) \
     if (err != MPI_SUCCESS) { \
@@ -108,10 +109,7 @@ int main(int argc, char *argv[])
 
     MPI_Type_free(&dt);
 
-    /* if we get this far, then we've passed.  No verification in this test at
-     * this time. */
-    fprintf(stdout, " No Errors\n");
-
+    MTest_Finalize(0);
     MPI_Finalize();
 
     return 0;

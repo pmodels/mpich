@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "mpi.h"
 #include "mpithreadtest.h"
+#include "mpitest.h"
 
 int rank;
 
@@ -57,12 +58,8 @@ int main(int argc, char **argv)
     run_test(&zero);
     MTest_Join_threads();
 
+    MTest_Finalize(0);
     MPI_Finalize();
-
-    /* This program works if it gets here */
-    if (rank == 0) {
-        printf(" No Errors\n");
-    }
 
     return 0;
 }

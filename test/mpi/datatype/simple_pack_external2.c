@@ -1,5 +1,7 @@
 #include <mpi.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include "mpitest.h"
 
 char *datarep = "external32";
 
@@ -33,9 +35,8 @@ int main(void)
     free(dble_data);
     free(uint_data);
 
+    MTest_Finalize(0);
     MPI_Finalize();
-
-    printf(" No Errors\n");
 
     return 0;
 }

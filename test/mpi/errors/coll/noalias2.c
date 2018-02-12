@@ -142,12 +142,7 @@ int main(int argc, char **argv)
     if (types)
         free(types);
 
-    if (rank == 0) {
-        if (errs)
-            fprintf(stderr, "Found %d errors\n", errs);
-        else
-            printf(" No errors\n");
-    }
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

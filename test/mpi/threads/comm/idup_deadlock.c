@@ -81,9 +81,7 @@ int main(int argc, char **argv)
         MPI_Comm_free(&comms[i]);
     }
 
-    if (rank == 0)
-        printf(" No Errors\n");
-
+    MTest_Finalize(0);
     MPI_Finalize();
 
     return 0;

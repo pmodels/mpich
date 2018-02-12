@@ -165,14 +165,7 @@ int main( int argc, char *argv[] )
     }
 #endif
 
-    if (MPI::COMM_WORLD.Get_rank() == 0) {
-	if (errs) {
-	    cout << "Found " << errs << " errors\n";
-	}
-	else {
-	    cout << " No Errors\n";
-	}
-    }
+    MTest_Finalize(errs);
     MPI::Finalize();
 
     return 0;

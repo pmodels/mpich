@@ -23,6 +23,7 @@ MPI_Group_union
 #include <stdio.h>
 /* stdlib.h Needed for malloc declaration */
 #include <stdlib.h>
+#include "mpitest.h"
 
 int main(int argc, char **argv)
 {
@@ -200,16 +201,9 @@ int main(int argc, char **argv)
     MPI_Comm_free(&splitcomm);
     MPI_Comm_free(&newcomm);
 
-    MPI_Allreduce(&errs, &toterr, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (worldrank == 0) {
-        if (toterr == 0)
-            printf(" No Errors\n");
-        else
-            printf("Found %d errors in MPI Group routines\n", toterr);
-    }
-
     free(ranks);
     free(ranks_out);
+    MTest_Finalize(errs);
     MPI_Finalize();
     return toterr;
 }

@@ -12,6 +12,7 @@
 #include <sys/uio.h>
 
 #include <mpi.h>
+#include "mpitest.h"
 
 #define MAXLEN 9
 
@@ -160,9 +161,7 @@ int main(int argc, char **argv)
     errs += test_indexed_with_zeros(filename, HINDEXED);
     errs += test_indexed_with_zeros(filename, STRUCT);
 
-    if (rank == 0 && errs == 0)
-        printf(" No Errors\n");
-
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

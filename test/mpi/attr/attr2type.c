@@ -60,13 +60,10 @@ int main(int argc, char *argv[])
             printf("Delete called %d times; expected twice\n", delete_called);
             errs++;
         }
-        if (errs == 0) {
-            printf(" No Errors\n");
-        } else {
-            printf(" Found %d errors\n", errs);
-        }
         fflush(stdout);
     }
+
+    MTest_Finalize(errs);
 
     MPI_Finalize();
     return 0;

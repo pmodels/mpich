@@ -46,9 +46,8 @@ int main(int argc, char *argv[])
     MPI_Group_free(&world_group);
     MPI_Comm_free(&idup_comm);
     MPI_Comm_free(&group_comm);
-    if (rank == 0)
-        printf(" No errors\n");
 
+    MTest_Finalize(0);
     MPI_Finalize();
     return 0;
 }

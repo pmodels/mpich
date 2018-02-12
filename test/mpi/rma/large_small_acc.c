@@ -78,9 +78,7 @@ int main(int argc, char *argv[])
         MPI_Win_free(&win);
     }
 
-    if (rank == 1 && errs == 0) {
-        printf(" No Errors\n");
-    }
+    MTest_Finalize(errs);
 
     MPI_Finalize();
     return 0;

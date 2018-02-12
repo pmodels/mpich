@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 /* Make sure datatype creation is independent of data size
    Note, however, that there is no guarantee or expectation
@@ -106,9 +107,9 @@ int main(int argc, char *argv[])
         for (i = 0; i < NUM_SIZES; i++)
             fprintf(stderr, "%.3f ", t[i] * 1e6);
         fprintf(stderr, "\n");
-    } else
-        printf(" No Errors\n");
+    }
 
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 /* uncomment to use debugging routine in MPICH
 extern int MPIR_Datatype_debug(MPI_Datatype type, int depth);
@@ -217,9 +218,8 @@ int main(int argc, char **argv)
     /*MPIR_Datatype_debug(hdf5type, 32); */
 
     MPI_Type_free(&hdf5type);
+    MTest_Finalize(0);
     MPI_Finalize();
-
-    printf(" No Errors\n");
 
     return 0;
 }

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 static MPI_Datatype make_largexfer_type_struct(MPI_Offset nbytes)
 {
@@ -147,14 +148,8 @@ int main(int argc, char **argv)
         }
     }
 
+    MTest_Finalize(errs);
     MPI_Finalize();
-    if (rank == 0) {
-        if (errs) {
-            printf("found %d errors\n", errs);
-        } else {
-            printf(" No errors\n");
-        }
-    }
 
     return 0;
 }

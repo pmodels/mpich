@@ -77,11 +77,7 @@ int main(int argc, char *argv[])
     MPI_Free_mem(orig_buf);
     MPI_Free_mem(tar_buf);
 
-    if (rank == 1) {
-        if (errs == 0)
-            printf(" No Errors\n");
-    }
-
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

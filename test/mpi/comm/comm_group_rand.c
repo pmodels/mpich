@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <mpi.h>
 #include "mpitestconf.h"
+#include "mpitest.h"
 
 #define LOOPS 100
 
@@ -52,11 +53,9 @@ int main(int argc, char **argv)
 
     MPI_Group_free(&full_group);
 
-    if (rank == 0)
-        printf(" No Errors\n");
-
     free(ranks);
     free(included);
+    MTest_Finalize(0);
     MPI_Finalize();
 
     return 0;

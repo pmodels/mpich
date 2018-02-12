@@ -50,11 +50,7 @@ int main(int argc, char **argv)
     /* original problematic count reported by Artem Yalozo */
     errs += test_count(0x7654321ff1234567);
 
-    if (errs != 0) {
-        fprintf(stderr, "found %d errors\n", errs);
-    } else {
-        printf(" No Errors\n");
-    }
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

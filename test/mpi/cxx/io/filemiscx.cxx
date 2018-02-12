@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 {
     int buf[1024], amode, mynod, len, i;
     bool flag;
-    int errs = 0, toterrs;
+    int errs = 0;
     MPI::File fh;
     MPI::Status status;
     MPI::Datatype newtype;
@@ -264,17 +264,6 @@ int main(int argc, char **argv)
     MPI::COMM_WORLD.Barrier();
     if (!mynod) MPI::File::Delete(filename, MPI::INFO_NULL);
 
-    MPI::COMM_WORLD.Allreduce( &errs, &toterrs, 1, MPI::INT, MPI::SUM );
-    if (mynod == 0) {
-	if( toterrs > 0) {
-	    cout << "Found " << toterrs << "\n";
-	    cout.flush();
-	}
-	else {
-	    cout << " No Errors\n";
-	    cout.flush();
-	}
-    }
     newtype.Free();
     filetype.Free();
     group.Free();
@@ -291,6 +280,8 @@ int main(int argc, char **argv)
 	cout << "Unhandled exception caught.\n";
 	cout.flush();
     }
+
+    MTest_Finalize(errs);
     MPI::Finalize();
     return 0;
 }
