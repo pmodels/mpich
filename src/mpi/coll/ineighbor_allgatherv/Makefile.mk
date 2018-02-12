@@ -16,4 +16,4 @@ mpi_sources += \
     src/mpi/coll/ineighbor_allgatherv/ineighbor_allgatherv.c
 
 mpi_core_sources += \
-    src/mpi/coll/ineighbor_allgatherv/ineighbor_allgatherv_linear.c
+    src/mpi/coll/ineighbor_allgatherv/ineighbor_allgatherv_allcomm_linear.c

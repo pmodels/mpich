@@ -289,8 +289,8 @@ int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datat
                                                                           errflag);
                 break;
             case MPIR_ALLREDUCE_INTRA_ALGO_NB:
-                mpi_errno = MPIR_Allreduce_nb(sendbuf, recvbuf, count,
-                                              datatype, op, comm_ptr, errflag);
+                mpi_errno = MPIR_Allreduce_allcomm_nb(sendbuf, recvbuf, count,
+                                                      datatype, op, comm_ptr, errflag);
                 break;
             case MPIR_ALLREDUCE_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
@@ -308,8 +308,8 @@ int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datat
                                                                op, comm_ptr, errflag);
                 break;
             case MPIR_ALLREDUCE_INTER_ALGO_NB:
-                mpi_errno = MPIR_Allreduce_nb(sendbuf, recvbuf, count,
-                                              datatype, op, comm_ptr, errflag);
+                mpi_errno = MPIR_Allreduce_allcomm_nb(sendbuf, recvbuf, count,
+                                                      datatype, op, comm_ptr, errflag);
                 break;
             case MPIR_ALLREDUCE_INTER_ALGO_AUTO:
                 MPL_FALLTHROUGH;

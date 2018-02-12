@@ -16,4 +16,4 @@ mpi_sources += \
     src/mpi/coll/neighbor_alltoallv/neighbor_alltoallv.c
 
 mpi_core_sources += \
-    src/mpi/coll/neighbor_alltoallv/neighbor_alltoallv_nb.c
+    src/mpi/coll/neighbor_alltoallv/neighbor_alltoallv_allcomm_nb.c

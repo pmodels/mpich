@@ -16,7 +16,7 @@ mpi_sources +=                     		\
 	src/mpi/coll/reduce_scatter_block/reduce_scatter_block.c
 
 mpi_core_sources +=														\
-	src/mpi/coll/reduce_scatter_block/reduce_scatter_block_nb.c		\
+	src/mpi/coll/reduce_scatter_block/reduce_scatter_block_allcomm_nb.c		\
 	src/mpi/coll/reduce_scatter_block/reduce_scatter_block_intra_recursive_halving.c		\
 	src/mpi/coll/reduce_scatter_block/reduce_scatter_block_intra_pairwise.c				\
 	src/mpi/coll/reduce_scatter_block/reduce_scatter_block_intra_recursive_doubling.c		\

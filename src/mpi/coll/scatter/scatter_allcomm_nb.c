@@ -7,13 +7,12 @@
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Neighbor_alltoallw_nb
+#define FUNCNAME MPIR_Scatter_allcomm_nb
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Neighbor_alltoallw_nb(const void *sendbuf, const int sendcounts[],
-                               const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
-                               void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[],
-                               const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr)
+int MPIR_Scatter_allcomm_nb(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                            void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
+                            MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Request req = MPI_REQUEST_NULL;
@@ -21,8 +20,8 @@ int MPIR_Neighbor_alltoallw_nb(const void *sendbuf, const int sendcounts[],
 
     /* just call the nonblocking version and wait on it */
     mpi_errno =
-        MPIR_Ineighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts,
-                                 rdispls, recvtypes, comm_ptr, &req_ptr);
+        MPIR_Iscatter(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr,
+                      &req_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     if (req_ptr)
