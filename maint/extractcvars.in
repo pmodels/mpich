@@ -210,7 +210,7 @@ foreach my $p (@cvars) {
     }
 
     if ($p->{type} eq 'string') {
-        printf OUTPUT_C "%s ${uc_ns}_%s = (char*)%s;\n", Type2Ctype($p->{type}), $p->{name}, $default;
+        printf OUTPUT_C "%s ${uc_ns}_%s = (%s) %s;\n", Type2Ctype($p->{type}), $p->{name}, Type2Ctype($p->{type}), $default;
     } else {
         printf OUTPUT_C "%s ${uc_ns}_%s = %s;\n", Type2Ctype($p->{type}), $p->{name}, $default;
     }
@@ -263,7 +263,7 @@ foreach my $p (@cvars) {
         $mpi_dtype = "MPI_CHAR";
         $count = "${uc_ns}_MAX_STRLEN";
         $dftval = FmtDefault($p->{name}, $p->{default}, $p->{type});
-        printf OUTPUT_C qq(    defaultval.str = (char *)%s;\n), $dftval;
+        printf OUTPUT_C qq(    defaultval.str = (const char *)%s;\n), $dftval;
     }
     elsif ($p->{type} eq 'int' or $p->{type} eq 'boolean') {
         $mpi_dtype = "MPI_INT";
@@ -461,7 +461,7 @@ sub Type2Ctype {
     my %typemap = (
         'int'     => 'int',
         'double'  => 'double',
-        'string'  => 'char *',
+        'string'  => 'const char *',
         'boolean' => 'int',
         'range'   => "MPIR_T_cvar_range_value_t",
     );
