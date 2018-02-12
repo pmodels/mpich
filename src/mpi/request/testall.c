@@ -118,7 +118,7 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
         }
     }
 
-    mpi_errno = MPIR_Testall_impl(count, request_ptrs, flag, array_of_statuses);
+    mpi_errno = MPID_Testall(count, request_ptrs, flag, array_of_statuses);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
