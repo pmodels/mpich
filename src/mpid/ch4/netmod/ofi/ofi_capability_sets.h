@@ -161,7 +161,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_CONTEXT_STRUCTS           1
 #endif
 
-#define MPIDI_OFI_ENABLE_DATA_PSM2               MPIDI_OFI_OFF
+#define MPIDI_OFI_ENABLE_DATA_PSM2               MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_AV_TABLE_PSM2           MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_PSM2 MPIDI_OFI_ON
 #define MPIDI_OFI_MAX_ENDPOINTS_PSM2             MPIDI_OFI_MAX_ENDPOINTS_SCALABLE
@@ -183,10 +183,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK_PSM2       MPIDI_OFI_ON
 #define MPIDI_OFI_NUM_AM_BUFFERS_PSM2            MPIDI_OFI_MAX_NUM_AM_BUFFERS
 #define MPIDI_OFI_CONTEXT_BITS_PSM2              (16)
-#define MPIDI_OFI_SOURCE_BITS_PSM2               (24)
-#define MPIDI_OFI_TAG_BITS_PSM2                  (20)
+#define MPIDI_OFI_SOURCE_BITS_PSM2               (0)
+#define MPIDI_OFI_TAG_BITS_PSM2                  (31)
 #define MPIDI_OFI_MAJOR_VERSION_PSM2             1
-#define MPIDI_OFI_MINOR_VERSION_PSM2             5
+#define MPIDI_OFI_MINOR_VERSION_PSM2             6
 
 #ifdef MPIDI_CH4_OFI_USE_SET_PSM2
 #define MPIDI_OFI_SET_NUMBER                MPIDI_OFI_SET_NUMBER_PSM2
@@ -208,17 +208,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
 #define MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS  MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS_PSM2
 #define MPIDI_OFI_ENABLE_PT2PT_NOPACK       MPIDI_OFI_ENABLE_PT2PT_NOPACK_PSM2
 #define MPIDI_OFI_NUM_AM_BUFFERS            MPIDI_OFI_NUM_AM_BUFFERS_PSM2
-#define MPIDI_OFI_PROTOCOL_MASK             (0xE000000000000000ULL)
-#define MPIDI_OFI_CONTEXT_MASK              (0x0FFFF00000000000ULL)
-#define MPIDI_OFI_SOURCE_MASK               (0x00000FFFFFF00000ULL)     /* PSM2 does not support immediate data
-                                                                         * so this field needs to be available */
-#define MPIDI_OFI_TAG_MASK                  (0x00000000000FFFFFULL)
+#define MPIDI_OFI_PROTOCOL_MASK             (0x0006000000000000ULL)
+#define MPIDI_OFI_CONTEXT_MASK              (0x0000FFFF00000000ULL)
+#define MPIDI_OFI_SOURCE_MASK               (0x0000000000000000ULL)     /* PSM2 does support immediate data
+                                                                         * so this field is zeroed */
+#define MPIDI_OFI_TAG_MASK                  (0x000000007FFFFFFFULL)
 #define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_PSM2
 #define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_PSM2
 #define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_PSM2
-#define MPIDI_OFI_SYNC_SEND_ACK             (0x1000000000000000ULL)
-#define MPIDI_OFI_SYNC_SEND                 (0x2000000000000000ULL)
-#define MPIDI_OFI_DYNPROC_SEND              (0x4000000000000000ULL)
+#define MPIDI_OFI_SYNC_SEND_ACK             (0x0001000000000000ULL)
+#define MPIDI_OFI_SYNC_SEND                 (0x0002000000000000ULL)
+#define MPIDI_OFI_DYNPROC_SEND              (0x0004000000000000ULL)
 #define MPIDI_OFI_MAJOR_VERSION             MPIDI_OFI_MAJOR_VERSION_PSM2
 #define MPIDI_OFI_MINOR_VERSION             MPIDI_OFI_MINOR_VERSION_PSM2
 #define MPIDI_OFI_CONTEXT_STRUCTS           1
