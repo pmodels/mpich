@@ -129,25 +129,25 @@ mutex_bench 4 mpiversion=3.0
 mutex_bench_shared 4 mpiversion=3.0
 mutex_bench_shm 4 mpiversion=3.0
 mutex_bench_shm_ordered 4 mpiversion=3.0
-rma-contig 2 mpiversion=3.0 timeLimit=720
+rma_contig 2 mpiversion=3.0 timeLimit=720
 badrma 2 mpiversion=3.0
-acc-loc 4
+acc_loc 4
 acc_ordering 2 mpiversion=3.0
 fence_shm 2 mpiversion=3.0
 win_shared_zerobyte 4 mpiversion=3.0
 win_shared_put_flush_get 4 mpiversion=3.0
-get-struct 2
+get_struct 2
 at_complete 2
 atomic_rmw_fop 3
 atomic_rmw_cas 3
 atomic_rmw_gacc 3
 atomic_get 3 mpiversion=3.0 timeLimit=300
 aint 2 mpiversion=3.1
-acc-pairtype 2
+acc_pairtype 2
 manyget 2 timeLimit=300
-derived-acc-flush_local 3 mpiversion=3.0
-large-acc-flush_local 3 mpiversion=3.0
-large-small-acc 2
+derived_acc_flush_local 3 mpiversion=3.0
+large_acc_flush_local 3 mpiversion=3.0
+large_small_acc 2
 win_shared_put_flush_load 3 mpiversion=3.0
 win_shared_acc_flush_load 3 mpiversion=3.0
 win_shared_gacc_flush_load 3 mpiversion=3.0
@@ -158,14 +158,14 @@ acc_flush_get 3 mpiversion=3.0
 gacc_flush_get 3 mpiversion=3.0
 fop_flush_get 3 mpiversion=3.0
 cas_flush_get 3 mpiversion=3.0
-rget-unlock 2 mpiversion=3.0
+rget_unlock 2 mpiversion=3.0
 overlap_wins_put 3
 overlap_wins_acc 3
 overlap_wins_gacc 3
 overlap_wins_fop 3
 overlap_wins_cas 3
 lock_nested 3
-rget-testall 2
+rget_testall 2
 
 ## This test is not strictly correct.  This was meant to test out the
 ## case when MPI_Test is not nonblocking.  However, we ended up

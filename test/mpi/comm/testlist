@@ -14,7 +14,7 @@ ctxsplit 4 timeLimit=300
 cmfree 4
 cmsplit 4
 cmsplit2 12
-probe-intercomm 2
+probe_intercomm 2
 # one way to split a communicator, if implementation supports it, is by access
 # to a common file system. argument is a directory whose presence or
 # non-presence will determine the communicator split.   the other split_type

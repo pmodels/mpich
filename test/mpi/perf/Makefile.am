@@ -9,7 +9,7 @@ include $(top_srcdir)/Makefile.mtest
 
 EXTRA_DIST = testlist
 
-noinst_PROGRAMS = transp-datatype non_zero_root sendrecvl twovec dtpack \
+noinst_PROGRAMS = transp_datatype non_zero_root sendrecvl twovec dtpack \
                   allredtrace commcreatep allredtrace commcreatep timer \
                   manyrma nestvec nestvec2 indexperf
 

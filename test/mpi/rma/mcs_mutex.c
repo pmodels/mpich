@@ -10,7 +10,7 @@
 #include <strings.h>
 
 #include <mpi.h>
-#include "mcs-mutex.h"
+#include "mcs_mutex.h"
 
 /* TODO: Make these mutex operations no-ops for sequential runs */
 

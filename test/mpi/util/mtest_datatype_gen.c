@@ -248,7 +248,7 @@ static inline int MTestDdtStructDefine(int ddt_index, MPI_Aint tot_count, MPI_Ai
 
     /* Get short value according to user specified tot_count.
      * It is used as count for large-block-length structure, or block length
-     * for large-count structure. */
+     * for large_count structure. */
     if (tot_count < 2) {
         _short = 1;
     } else if (tot_count < 64) {

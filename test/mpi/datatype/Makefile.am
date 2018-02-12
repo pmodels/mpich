@@ -12,74 +12,74 @@ EXTRA_DIST = testlist.in
 ## For some reason, these tests were missing from both the simplemakefile and
 ## the testlist.  Leaving them disabled for now.
 ##segtest
-##zero-blklen-vector
+##zero_blklen_vector
 
 ## for all programs that are just built from the single corresponding source
 ## file, we don't need per-target _SOURCES rules, automake will infer them
 ## correctly
 noinst_PROGRAMS =           \
-    blockindexed-misc       \
-    blockindexed-zero-count \
+    blockindexed_misc       \
+    blockindexed_zero_count \
     concurrent_irecv        \
     contents                \
-    contig-zero-count       \
+    contig_zero_count       \
     contigstruct            \
-    cxx-types               \
+    cxx_types               \
     dataalign               \
-    darray-pack             \
-    darray-cyclic           \
+    darray_pack             \
+    darray_cyclic           \
     gaddress                \
-    get-elements            \
-    get-elements-pairtype   \
+    get_elements            \
+    get_elements_pairtype   \
     getpartelm              \
-    hindexed-zeros          \
+    hindexed_zeros          \
     hindexed_block          \
     hindexed_block_contents \
     hvecblklen              \
-    indexed-misc            \
-    large-count             \
+    indexed_misc            \
+    large_count             \
     large_type              \
     large_type_sendrec      \
     large_vec	            \
     lbub                    \
     localpack               \
     longdouble              \
-    lots-of-types           \
-    pairtype-pack           \
-    pairtype-size-extent    \
+    lots_of_types           \
+    pairtype_pack           \
+    pairtype_size_extent    \
     sendrecvt2              \
     sendrecvt4              \
-    simple-commit           \
-    simple-pack             \
-    simple-pack-external    \
-    simple-pack-external2   \
-    simple-resized          \
-    simple-size-extent      \
+    simple_commit           \
+    simple_pack             \
+    simple_pack_external    \
+    simple_pack_external2   \
+    simple_resized          \
+    simple_size_extent      \
     sizedtypes              \
-    slice-pack              \
-    slice-pack-external     \
-    struct-derived-zeros    \
-    struct-empty-el         \
-    struct-ezhov            \
-    struct-no-real-types    \
-    struct-pack             \
+    slice_pack              \
+    slice_pack_external     \
+    struct_derived_zeros    \
+    struct_empty_el         \
+    struct_ezhov            \
+    struct_no_real_types    \
+    struct_pack             \
     structpack2             \
-    struct-verydeep         \
-    struct-zero-count       \
+    struct_verydeep         \
+    struct_zero_count       \
     subarray                \
-    subarray-pack           \
+    subarray_pack           \
     tfree                   \
     tmatchsize              \
-    transpose-pack          \
+    transpose_pack          \
     tresized                \
     tresized2               \
-    triangular-pack         \
+    triangular_pack         \
     typecommit              \
     typefree                \
     typelb                  \
     typename                \
     unpack                  \
-    unusual-noncontigs      \
+    unusual_noncontigs      \
     vecblklen               \
     zeroblks                \
     zeroparms

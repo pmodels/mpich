@@ -44,9 +44,9 @@ noinst_PROGRAMS =  \
     sendrecv1      \
     sendrecv2      \
     sendrecv3      \
-    waitany-null   \
+    waitany_null   \
     pingping       \
-    probe-unexp    \
+    probe_unexp    \
     probenull      \
     inactivereq    \
     waittestnull   \
