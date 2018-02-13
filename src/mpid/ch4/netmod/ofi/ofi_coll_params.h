@@ -2,7 +2,7 @@
 #define OFI_COLL_PARAMS_H_INCLUDED
 
 typedef enum {
-    MPIDI_OFI_barrier__recursive_doubling_id,
+    MPIDI_OFI_barrier_intra_recursive_doubling_id,
 } MPIDI_OFI_barrier_id_t;
 
 typedef union {
@@ -13,9 +13,9 @@ typedef union {
 } MPIDI_OFI_barrier_params_t;
 
 typedef enum {
-    MPIDI_OFI_bcast__binomial_id,
-    MPIDI_OFI_bcast__scatter_recursive_doubling_allgather_id,
-    MPIDI_OFI_bcast__scatter_ring_allgather_id,
+    MPIDI_OFI_bcast_intra_binomial_id,
+    MPIDI_OFI_bcast_intra_scatter_recursive_doubling_allgather_id,
+    MPIDI_OFI_bcast_intra_scatter_ring_allgather_id,
 } MPIDI_OFI_bcast_id_t;
 
 typedef union {
@@ -30,8 +30,8 @@ typedef union {
 } MPIDI_OFI_bcast_params_t;
 
 typedef enum {
-    MPIDI_OFI_allreduce__recursive_doubling_id,
-    MPIDI_OFI_allreduce__reduce_scatter_allgather_id
+    MPIDI_OFI_allreduce_intra_recursive_doubling_id,
+    MPIDI_OFI_allreduce_intra_reduce_scatter_allgather_id
 } MPIDI_OFI_allreduce_id_t;
 
 typedef union {
@@ -42,8 +42,8 @@ typedef union {
 } MPIDI_OFI_allreduce_params_t;
 
 typedef enum {
-    MPIDI_OFI_reduce__reduce_scatter_gather_id,
-    MPIDI_OFI_reduce__binomial_id
+    MPIDI_OFI_reduce_intra_reduce_scatter_gather_id,
+    MPIDI_OFI_reduce_intra_binomial_id
 } MPIDI_OFI_reduce_id_t;
 
 typedef union {

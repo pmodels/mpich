@@ -2,7 +2,7 @@
 #define STUBSHM_COLL_PARAMS_H_INCLUDED
 
 typedef enum {
-    MPIDI_STUBSHM_barrier__recursive_doubling_id,
+    MPIDI_STUBSHM_barrier_intra_recursive_doubling_id,
 } MPIDI_STUBSHM_barrier_id_t;
 
 typedef union {
@@ -13,9 +13,9 @@ typedef union {
 } MPIDI_STUBSHM_barrier_params_t;
 
 typedef enum {
-    MPIDI_STUBSHM_bcast__binomial_id,
-    MPIDI_STUBSHM_bcast__scatter_recursive_doubling_allgather_id,
-    MPIDI_STUBSHM_bcast__scatter_ring_allgather_id
+    MPIDI_STUBSHM_bcast_intra_binomial_id,
+    MPIDI_STUBSHM_bcast_intra_scatter_recursive_doubling_allgather_id,
+    MPIDI_STUBSHM_bcast_intra_scatter_ring_allgather_id
 } MPIDI_STUBSHM_bcast_id_t;
 
 typedef union {
@@ -30,8 +30,8 @@ typedef union {
 } MPIDI_STUBSHM_bcast_params_t;
 
 typedef enum {
-    MPIDI_STUBSHM_reduce__reduce_scatter_gather_id,
-    MPIDI_STUBSHM_reduce__binomial_id
+    MPIDI_STUBSHM_reduce_intra_reduce_scatter_gather_id,
+    MPIDI_STUBSHM_reduce_intra_binomial_id
 } MPIDI_STUBSHM_reduce_id_t;
 
 typedef union {
@@ -42,8 +42,8 @@ typedef union {
 } MPIDI_STUBSHM_reduce_params_t;
 
 typedef enum {
-    MPIDI_STUBSHM_allreduce__recursive_doubling_id,
-    MPIDI_STUBSHM_allreduce__reduce_scatter_allgather_id
+    MPIDI_STUBSHM_allreduce_intra_recursive_doubling_id,
+    MPIDI_STUBSHM_allreduce_intra_reduce_scatter_allgather_id
 } MPIDI_STUBSHM_allreduce_id_t;
 
 typedef union {
