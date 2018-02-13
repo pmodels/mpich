@@ -170,8 +170,9 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
     if (comm_ptr->next_sched_tag == tag_ub) {
         comm_ptr->next_sched_tag = MPIR_FIRST_NBC_TAG;
     }
-
+#if defined(HAVE_ERROR_CHECKING)
   fn_fail:
+#endif
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SCHED_NEXT_TAG);
     return mpi_errno;
 }
