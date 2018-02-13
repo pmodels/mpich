@@ -24,7 +24,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
                                 ADIO_Offset
                                 min_st_offset, ADIO_Offset fd_size,
                                 ADIO_Offset * fd_start, ADIO_Offset * fd_end,
-                                int *buf_idx, int *error_code);
+                                MPI_Aint * buf_idx, int *error_code);
 static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                                   * flat_buf, ADIO_Offset * offset_list, ADIO_Offset
                                   * len_list, int *send_size, int *recv_size,
@@ -37,7 +37,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                                   ADIO_Offset fd_size,
                                   ADIO_Offset * fd_start, ADIO_Offset * fd_end,
                                   ADIOI_Access * others_req,
-                                  int iter, MPI_Aint buftype_extent, int *buf_idx);
+                                  int iter, MPI_Aint buftype_extent, MPI_Aint * buf_idx);
 void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             * flat_buf, char **recv_buf, ADIO_Offset
                             * offset_list, ADIO_Offset * len_list,
@@ -76,7 +76,7 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
     ADIO_Offset *offset_list = NULL, *st_offsets = NULL, *fd_start = NULL,
         *fd_end = NULL, *end_offsets = NULL;
     ADIO_Offset *len_list = NULL;
-    int *buf_idx = NULL;
+    MPI_Aint *buf_idx = NULL;
 
 #ifdef HAVE_STATUS_SET_BYTES
     MPI_Count bufsize, size;
@@ -487,7 +487,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
                                 ADIO_Offset * len_list, int contig_access_count, ADIO_Offset
                                 min_st_offset, ADIO_Offset fd_size,
                                 ADIO_Offset * fd_start, ADIO_Offset * fd_end,
-                                int *buf_idx, int *error_code)
+                                MPI_Aint * buf_idx, int *error_code)
 {
 /* Read in sizes of no more than coll_bufsize, an info parameter.
    Send data to appropriate processes.
@@ -766,7 +766,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                                   ADIO_Offset min_st_offset, ADIO_Offset fd_size,
                                   ADIO_Offset * fd_start, ADIO_Offset * fd_end,
                                   ADIOI_Access * others_req,
-                                  int iter, MPI_Aint buftype_extent, int *buf_idx)
+                                  int iter, MPI_Aint buftype_extent, MPI_Aint * buf_idx)
 {
     int i, j, k = 0, tmp = 0, nprocs_recv, nprocs_send;
     char **recv_buf = NULL;
