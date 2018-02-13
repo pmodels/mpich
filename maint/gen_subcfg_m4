@@ -281,7 +281,7 @@ sub dfs_visit {
     foreach my $v (keys %{$dag_ref->{$u}}) {
         # detect cycles in the graph at this point, see ("Classification of edges"
         # in CLR)
-        if ($colors_ref->{$v} == $GRAY) {
+        if ((exists $colors_ref->{$v}) && $colors_ref->{$v} == $GRAY) {
             # We are already exploring the tree from $v, so this is a "back edge",
             # indicating a cycle is present in the digraph.  This is erroneous in
             # our usage, since we cannot topologically sort a cyclic graph.
@@ -292,7 +292,7 @@ sub dfs_visit {
                 "  $v\n".
                 "Stopped";
         }
-        elsif ($colors_ref->{$v} == $WHITE) {
+        elsif ((exists $colors_ref->{$v}) && $colors_ref->{$v} == $WHITE) {
             dfs_visit($dag_ref, $colors_ref, $v, $out_arr_ref);
         }
     }
