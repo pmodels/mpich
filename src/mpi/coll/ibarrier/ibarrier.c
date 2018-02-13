@@ -114,7 +114,7 @@ int MPIR_Ibarrier_sched_impl(MPIR_Comm * comm_ptr, MPIR_Sched_t s)
             case MPIR_IBARRIER_INTRA_ALGO_RECURSIVE_DOUBLING:
                 mpi_errno = MPIR_Ibarrier_sched_intra_recursive_doubling(comm_ptr, s);
                 break;
-            case MPIR_BARRIER_INTRA_ALGO_AUTO:
+            case MPIR_IBARRIER_INTRA_ALGO_AUTO:
                 MPL_FALLTHROUGH;
             default:
                 mpi_errno = MPIR_Ibarrier_sched_intra_auto(comm_ptr, s);

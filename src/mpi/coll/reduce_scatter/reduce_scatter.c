@@ -293,7 +293,7 @@ int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf,
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Reduce_scatter_intra_algo_choice) {
+        switch (MPIR_Reduce_scatter_inter_algo_choice) {
             case MPIR_REDUCE_SCATTER_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTER:
                 mpi_errno =
                     MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(sendbuf, recvbuf,
