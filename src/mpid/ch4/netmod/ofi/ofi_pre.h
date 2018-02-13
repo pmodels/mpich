@@ -46,6 +46,7 @@ typedef struct {
     void *rma_id_allocator;
     /* support for connection */
     int conn_id;
+    int eagain;
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_SHORT_HDR = 0,

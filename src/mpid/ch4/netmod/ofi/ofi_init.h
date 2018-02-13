@@ -277,6 +277,16 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints);
         MPIDI_OFI_choose_provider(prov,prov_use);                           \
     } while (0);
 
+static inline int MPIDI_OFI_set_eagain(MPIR_Comm * comm_ptr, MPIR_Info * info, void *state)
+{
+    if (!strncmp(info->value, "true", strlen("true")))
+        MPIDI_OFI_COMM(comm_ptr).eagain = TRUE;
+    if (!strncmp(info->value, "false", strlen("false")))
+        MPIDI_OFI_COMM(comm_ptr).eagain = FALSE;
+
+    return MPI_SUCCESS;
+}
+
 static inline int MPIDI_OFI_conn_manager_init()
 {
     int mpi_errno = MPI_SUCCESS, i;
@@ -1028,6 +1038,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIR_Assert(MPIR_Process.comm_parent != NULL);
         MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
     }
+
+    mpi_errno = MPIR_Comm_register_hint("eagain", MPIDI_OFI_set_eagain, NULL);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
 
