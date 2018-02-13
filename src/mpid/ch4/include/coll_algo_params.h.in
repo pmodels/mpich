@@ -10,7 +10,7 @@
 
 #define MPIDI_CH4_COLL_AUTO_SELECT (-1)
 
-typedef union MPIDI_barrier_algo_params {
+typedef union MPIDI_Barrier_algo_params {
     /* *INDENT-OFF* */
     MPIDI_CH4_BARRIER_PARAMS_DECL;
     @ch4_netmod_barrier_params_decl@
@@ -18,7 +18,7 @@ typedef union MPIDI_barrier_algo_params {
     /* *INDENT-ON* */
 } MPIDI_BARRIER_ALGO_params_t;
 
-typedef union MPIDI_bcast_algo_params {
+typedef union MPIDI_Bcast_algo_params {
     /* *INDENT-OFF* */
     MPIDI_CH4_BCAST_PARAMS_DECL;
     @ch4_netmod_bcast_params_decl@
@@ -26,7 +26,7 @@ typedef union MPIDI_bcast_algo_params {
     /* *INDENT-ON* */
 } MPIDI_BCAST_ALGO_params_t;
 
-typedef union MPIDI_reduce_algo_params {
+typedef union MPIDI_Reduce_algo_params {
     /* *INDENT-OFF* */
     MPIDI_CH4_REDUCE_PARAMS_DECL;
     @ch4_netmod_reduce_params_decl@
@@ -34,7 +34,7 @@ typedef union MPIDI_reduce_algo_params {
     /* *INDENT-ON* */
 } MPIDI_REDUCE_ALGO_params_t;
 
-typedef union MPIDI_allreduce_algo_params {
+typedef union MPIDI_Allreduce_algo_params {
     /* *INDENT-OFF* */
     MPIDI_CH4_ALLREDUCE_PARAMS_DECL;
     @ch4_netmod_allreduce_params_decl@
