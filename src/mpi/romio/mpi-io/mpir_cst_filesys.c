@@ -255,12 +255,6 @@ static int comm_split_filesystem_heuristic(MPI_Comm comm, int key,
     MPL_free(all_ids);
     MPL_free(filename);
     return mpi_errno;
-
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
-
 }
 
 /* not to be called directly (note the MPIR_ prefix), but instead from
