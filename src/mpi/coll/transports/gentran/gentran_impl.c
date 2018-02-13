@@ -65,11 +65,7 @@ int MPII_Gentran_comm_init(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-  fn_exit:
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -81,11 +77,7 @@ int MPII_Gentran_comm_cleanup(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
-  fn_exit:
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
@@ -99,11 +91,7 @@ int MPII_Gentran_finalize()
 
     MPID_Progress_deregister_hook(MPII_Genutil_progress_hook_id);
 
-  fn_exit:
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
