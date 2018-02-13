@@ -97,11 +97,11 @@ MPL_STATIC_INLINE_PREFIX
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_allreduce_intra_recursive_doubling
+#define FUNCNAME MPIDI_POSIX_Allreduce_intra_recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-    int MPIDI_POSIX_allreduce_intra_recursive_doubling(const void *sendbuf, void *recvbuf,
+    int MPIDI_POSIX_Allreduce_intra_recursive_doubling(const void *sendbuf, void *recvbuf,
                                                        int count, MPI_Datatype datatype, MPI_Op op,
                                                        MPIR_Comm * comm_ptr,
                                                        MPIR_Errflag_t * errflag,
@@ -118,11 +118,11 @@ MPL_STATIC_INLINE_PREFIX
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_allreduce_intra_reduce_scatter_allgather
+#define FUNCNAME MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-    int MPIDI_POSIX_allreduce_intra_reduce_scatter_allgather(const void *sendbuf, void *recvbuf,
+    int MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf, void *recvbuf,
                                                              int count, MPI_Datatype datatype,
                                                              MPI_Op op, MPIR_Comm * comm_ptr,
                                                              MPIR_Errflag_t * errflag,
@@ -139,11 +139,11 @@ MPL_STATIC_INLINE_PREFIX
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_reduce_intra_reduce_scatter_gather
+#define FUNCNAME MPIDI_POSIX_Reduce_intra_reduce_scatter_gather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-    int MPIDI_POSIX_reduce_intra_reduce_scatter_gather(const void *sendbuf, void *recvbuf,
+    int MPIDI_POSIX_Reduce_intra_reduce_scatter_gather(const void *sendbuf, void *recvbuf,
                                                        int count, MPI_Datatype datatype, MPI_Op op,
                                                        int root, MPIR_Comm * comm_ptr,
                                                        MPIR_Errflag_t * errflag,
@@ -160,11 +160,11 @@ MPL_STATIC_INLINE_PREFIX
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_reduce_intra_binomial
+#define FUNCNAME MPIDI_POSIX_Reduce_intra_binomial
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-    int MPIDI_POSIX_reduce_intra_binomial(const void *sendbuf, void *recvbuf, int count,
+    int MPIDI_POSIX_Reduce_intra_binomial(const void *sendbuf, void *recvbuf, int count,
                                           MPI_Datatype datatype, MPI_Op op, int root,
                                           MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
                                           MPIDI_POSIX_coll_algo_container_t *
