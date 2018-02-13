@@ -98,10 +98,13 @@ int MPI_Group_rank(MPI_Group group, int *rank)
 
     /* ... end of body of routine ... */
 
+#ifdef HAVE_ERROR_CHECKING
   fn_exit:
+#endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GROUP_RANK);
     return mpi_errno;
 
+#ifdef HAVE_ERROR_CHECKING
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     {
@@ -112,4 +115,5 @@ int MPI_Group_rank(MPI_Group group, int *rank)
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
+#endif
 }
