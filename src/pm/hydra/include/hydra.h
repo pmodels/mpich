@@ -413,7 +413,7 @@ struct HYD_user_global {
 
 #define HYDU_dump_prefix(fp)                    \
     {                                           \
-        fprintf(fp, "[%s] ", HYD_dbg_prefix);   \
+        fprintf(fp, "[%s] ", HYD_dbg_prefix ? HYD_dbg_prefix : "unknown");   \
         fflush(fp);                             \
     }
 
