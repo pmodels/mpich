@@ -2,7 +2,7 @@
 #define OFI_COLL_PARAMS_H_INCLUDED
 
 typedef enum {
-    MPIDI_OFI_Barrier_intra_recursive_doubling_id,
+    MPIDI_OFI_Barrier_intra_dissemination_id,
 } MPIDI_OFI_Barrier_id_t;
 
 typedef union {

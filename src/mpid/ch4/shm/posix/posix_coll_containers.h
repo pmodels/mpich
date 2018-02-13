@@ -2,7 +2,7 @@
 #define POSIX_COLL_CONTAINERS_H_INCLUDED
 
 /* Barrier POSIX containers declaration */
-extern const MPIDI_POSIX_coll_algo_container_t POSIX_Barrier_intra_recursive_doubling_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t POSIX_Barrier_intra_dissemination_cnt;
 
 /* Bcast POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t POSIX_Bcast_intra_binomial_cnt;

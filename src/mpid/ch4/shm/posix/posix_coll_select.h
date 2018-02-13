@@ -14,7 +14,7 @@ MPL_STATIC_INLINE_PREFIX
                                                                    ch4_algo_parameters_container_in
                                                                    ATTRIBUTE((unused)))
 {
-    return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_Barrier_intra_recursive_doubling_cnt;
+    return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_Barrier_intra_dissemination_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -25,10 +25,10 @@ MPL_STATIC_INLINE_PREFIX
     int mpi_errno = MPI_SUCCESS;
 
     switch (ch4_algo_parameters_container->id) {
-        case MPIDI_POSIX_Barrier_intra_recursive_doubling_id:
+        case MPIDI_POSIX_Barrier_intra_dissemination_id:
             mpi_errno =
-                MPIDI_POSIX_Barrier_intra_recursive_doubling(comm_ptr, errflag,
-                                                             ch4_algo_parameters_container);
+                MPIDI_POSIX_Barrier_intra_dissemination(comm_ptr, errflag,
+                                                        ch4_algo_parameters_container);
             break;
         default:
             mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);

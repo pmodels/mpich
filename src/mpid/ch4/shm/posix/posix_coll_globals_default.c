@@ -1,6 +1,6 @@
 /* Barrier default POSIX containers initialization*/
-const MPIDI_POSIX_coll_algo_container_t POSIX_Barrier_intra_recursive_doubling_cnt = {
-    .id = MPIDI_POSIX_Barrier_intra_recursive_doubling_id
+const MPIDI_POSIX_coll_algo_container_t POSIX_Barrier_intra_dissemination_cnt = {
+    .id = MPIDI_POSIX_Barrier_intra_dissemination_id
 };
 
 /* Bcast default POSIX containers initialization*/

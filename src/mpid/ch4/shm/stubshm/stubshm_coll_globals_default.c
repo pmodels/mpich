@@ -1,6 +1,6 @@
 /* Barrier default STUBSHM containers initialization*/
-const MPIDI_STUBSHM_coll_algo_container_t STUBSHM_Barrier_intra_recursive_doubling_cnt = {
-    .id = MPIDI_STUBSHM_Barrier_intra_recursive_doubling_id
+const MPIDI_STUBSHM_coll_algo_container_t STUBSHM_Barrier_intra_dissemination_cnt = {
+    .id = MPIDI_STUBSHM_Barrier_intra_dissemination_id
 };
 
 /* Bcast default STUBSHM containers initialization*/

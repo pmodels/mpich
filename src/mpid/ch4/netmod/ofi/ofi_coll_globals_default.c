@@ -1,6 +1,6 @@
 /* Barrier default OFI containers initialization*/
-const MPIDI_OFI_coll_algo_container_t OFI_Barrier_intra_recursive_doubling_cnt = {
-    .id = MPIDI_OFI_Barrier_intra_recursive_doubling_id
+const MPIDI_OFI_coll_algo_container_t OFI_Barrier_intra_dissemination_cnt = {
+    .id = MPIDI_OFI_Barrier_intra_dissemination_id
 };
 
 /* Bcast default OFI containers initialization*/

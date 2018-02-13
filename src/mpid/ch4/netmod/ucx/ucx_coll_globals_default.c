@@ -1,6 +1,6 @@
 /* Barrier default UCX containers initialization*/
-const MPIDI_UCX_coll_algo_container_t UCX_Barrier_intra_recursive_doubling_cnt = {
-    .id = MPIDI_UCX_Barrier_intra_recursive_doubling_id
+const MPIDI_UCX_coll_algo_container_t UCX_Barrier_intra_dissemination_cnt = {
+    .id = MPIDI_UCX_Barrier_intra_dissemination_id
 };
 
 /* Bcast default UCX containers initialization*/

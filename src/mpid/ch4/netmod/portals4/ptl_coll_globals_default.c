@@ -1,6 +1,6 @@
 /* Barrier default PTL containers initialization*/
-const MPIDI_PTL_coll_algo_container_t PTL_Barrier_intra_recursive_doubling_cnt = {
-    .id = MPIDI_PTL_Barrier_intra_recursive_doubling_id
+const MPIDI_PTL_coll_algo_container_t PTL_Barrier_intra_dissemination_cnt = {
+    .id = MPIDI_PTL_Barrier_intra_dissemination_id
 };
 
 /* Bcast default PTL containers initialization*/

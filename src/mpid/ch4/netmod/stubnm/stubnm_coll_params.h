@@ -2,7 +2,7 @@
 #define STUBNM_COLL_PARAMS_H_INCLUDED
 
 typedef enum {
-    MPIDI_STUBNM_Barrier_intra_recursive_doubling_id,
+    MPIDI_STUBNM_Barrier_intra_dissemination_id,
 } MPIDI_STUBNM_Barrier_id_t;
 
 typedef union {

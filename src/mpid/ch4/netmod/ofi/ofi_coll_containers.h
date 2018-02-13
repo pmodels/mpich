@@ -2,7 +2,7 @@
 #define OFI_COLL_CONTAINERS_H_INCLUDED
 
 /* Barrier OFI containers declaration */
-extern const MPIDI_OFI_coll_algo_container_t OFI_Barrier_intra_recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t OFI_Barrier_intra_dissemination_cnt;
 
 /* Bcast OFI containers declaration */
 extern const MPIDI_OFI_coll_algo_container_t OFI_Bcast_intra_binomial_cnt;
