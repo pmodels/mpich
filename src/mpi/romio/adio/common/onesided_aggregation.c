@@ -273,6 +273,8 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     printf("ADIOI_OneSidedWriteAggregation started on rank %d\n", myrank);
 #endif
 
+    /* Initialize to self here to avoid uninitialized warnings. */
+    io_thread = pthread_self();
 
     if (fd->io_buf_window == MPI_WIN_NULL || fd->io_buf_put_amounts_window == MPI_WIN_NULL) {
         ADIOI_OneSidedSetup(fd, nprocs);
@@ -886,7 +888,6 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 #ifdef ROMIO_GPFS
     if (gpfsmpio_pthreadio && (numberOfRounds > 1)) {
         useIOBuffer = 1;
-        io_thread = pthread_self();
     }
 #endif
 
@@ -1620,6 +1621,9 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     MPI_Comm_size(fd->comm, &nprocs);
     MPI_Comm_rank(fd->comm, &myrank);
 
+    /* Initialize to self here to avoid uninitialized warnings. */
+    io_thread = pthread_self();
+
 #ifdef onesidedtrace
     printf("ADIOI_OneSidedReadAggregation started on rank %d\n", myrank);
 #endif
@@ -2235,7 +2239,6 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 #ifdef ROMIO_GPFS
     if (gpfsmpio_pthreadio && (numberOfRounds > 1)) {
         useIOBuffer = 1;
-        io_thread = pthread_self();
     }
 #endif
 
