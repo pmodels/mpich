@@ -14,18 +14,18 @@
 #include "posix_coll_params.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_Barrier_intra_recursive_doubling
+#define FUNCNAME MPIDI_POSIX_Barrier_intra_dissemination
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX
-    int MPIDI_POSIX_Barrier_intra_recursive_doubling(MPIR_Comm * comm_ptr,
-                                                     MPIR_Errflag_t * errflag,
-                                                     MPIDI_POSIX_coll_algo_container_t *
-                                                     params_container ATTRIBUTE((unused)))
+    int MPIDI_POSIX_Barrier_intra_dissemination(MPIR_Comm * comm_ptr,
+                                                MPIR_Errflag_t * errflag,
+                                                MPIDI_POSIX_coll_algo_container_t *
+                                                params_container ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Barrier_intra_recursive_doubling(comm_ptr, errflag);
+    mpi_errno = MPIR_Barrier_intra_dissemination(comm_ptr, errflag);
 
     return mpi_errno;
 }

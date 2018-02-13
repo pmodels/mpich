@@ -19,10 +19,10 @@
  * (i - 2^k + p) % p.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Barrier_intra_recursive_doubling
+#define FUNCNAME MPIR_Barrier_intra_dissemination
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier_intra_recursive_doubling(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+int MPIR_Barrier_intra_dissemination(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int size, rank, src, dst, mask, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
