@@ -35,7 +35,6 @@ typedef struct MPIR_Process_t {
                                          * that is separate from user's
                                          * versions */
     PreDefined_attrs attrs;     /* Predefined attribute values */
-    int tagged_coll_mask;       /* Tag space mask for tagged collectives */
 
 #ifdef HAVE_HWLOC
     hwloc_topology_t topology;  /* HWLOC topology */
