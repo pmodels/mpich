@@ -23,11 +23,11 @@
 static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag,
                                        void *ch4_algo_parameters_container_in)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BARRIER);
-
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     nm_algo_parameters_container_out =
         MPIDI_OFI_Barrier_select(comm, errflag, (MPIDI_OFI_coll_algo_container_t *)
@@ -64,10 +64,10 @@ static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datat
                                      void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BCAST);
-
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     nm_algo_parameters_container_out =
         MPIDI_OFI_Bcast_select(buffer, count, datatype, root, comm, errflag,
@@ -117,11 +117,11 @@ static inline int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int
                                          MPIR_Errflag_t * errflag,
                                          void *ch4_algo_parameters_container_in)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
-
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     nm_algo_parameters_container_out =
         MPIDI_OFI_Allreduce_select(sendbuf, recvbuf, count, datatype, op, comm, errflag,
@@ -344,11 +344,11 @@ static inline int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int co
                                       MPIR_Comm * comm, MPIR_Errflag_t * errflag,
                                       void *ch4_algo_parameters_container_in)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_REDUCE);
-
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     nm_algo_parameters_container_out =
         MPIDI_OFI_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, comm, errflag,
