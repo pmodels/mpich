@@ -192,13 +192,13 @@ typedef int (*MPIDI_NM_mpi_win_lock_all_t) (int assert, MPIR_Win * win);
 typedef int (*MPIDI_NM_rank_is_local_t) (int target, MPIR_Comm * comm);
 typedef int (*MPIDI_NM_av_is_local_t) (MPIDI_av_entry_t * av);
 typedef int (*MPIDI_NM_mpi_barrier_t) (MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                       void *algo_parameters_ptr);
+                                       void *algo_parameters_container);
 typedef int (*MPIDI_NM_mpi_bcast_t) (void *buffer, int count, MPI_Datatype datatype, int root,
                                      MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                     void *algo_parameters_ptr);
+                                     void *algo_parameters_container);
 typedef int (*MPIDI_NM_mpi_allreduce_t) (const void *sendbuf, void *recvbuf, int count,
                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                         MPIR_Errflag_t * errflag, void *algo_parameters_ptr);
+                                         MPIR_Errflag_t * errflag, void *algo_parameters_container);
 typedef int (*MPIDI_NM_mpi_allgather_t) (const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                          MPIR_Comm * comm, MPIR_Errflag_t * errflag);
@@ -236,7 +236,7 @@ typedef int (*MPIDI_NM_mpi_alltoallw_t) (const void *sendbuf, const int *sendcou
 typedef int (*MPIDI_NM_mpi_reduce_t) (const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
                                       MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                      void *algo_parameters_ptr);
+                                      void *algo_parameters_container);
 typedef int (*MPIDI_NM_mpi_reduce_scatter_t) (const void *sendbuf, void *recvbuf,
                                               const int *recvcounts, MPI_Datatype datatype,
                                               MPI_Op op, MPIR_Comm * comm_ptr,
@@ -888,16 +888,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rank_is_local(int target,
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_av_is_local(MPIDI_av_entry_t * av) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm,
                                                   MPIR_Errflag_t * errflag,
-                                                  void *algo_parameters_ptr)
+                                                  void *algo_parameters_container)
     MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
                                                 int root, MPIR_Comm * comm,
                                                 MPIR_Errflag_t * errflag,
-                                                void *algo_parameters_ptr) MPL_STATIC_INLINE_SUFFIX;
+                                                void *algo_parameters_container)
+    MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int count,
                                                     MPI_Datatype datatype, MPI_Op op,
                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                    void *algo_parameters_ptr)
+                                                    void *algo_parameters_container)
     MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allgather(const void *sendbuf, int sendcount,
                                                     MPI_Datatype sendtype, void *recvbuf,
@@ -959,7 +960,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_alltoallw(const void *sendbuf, const i
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int count,
                                                  MPI_Datatype datatype, MPI_Op op, int root,
                                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                                 void *algo_parameters_ptr)
+                                                 void *algo_parameters_container)
     MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_reduce_scatter(const void *sendbuf, void *recvbuf,
                                                          const int *recvcounts,
