@@ -16,6 +16,7 @@
 #include "ch4i_comm.h"
 #include "strings.h"
 #include "datatype.h"
+#include "ch4r_recvq.h"
 
 #ifdef USE_PMI2_API
 /* PMI does not specify a max size for jobid_size in PMI2_Job_GetId.
