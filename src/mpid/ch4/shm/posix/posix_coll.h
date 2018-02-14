@@ -37,8 +37,7 @@ static inline int MPIDI_POSIX_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
     switch (shm_algo_parameters_container_out->id) {
         case MPIDI_POSIX_Barrier_intra_dissemination_id:
             mpi_errno =
-                MPIDI_POSIX_Barrier_intra_dissemination(comm, errflag,
-                                                        shm_algo_parameters_container_out);
+                MPIR_Barrier_intra_dissemination(comm, errflag);
             break;
         default:
             mpi_errno = MPIR_Barrier_impl(comm, errflag);
@@ -78,19 +77,17 @@ static inline int MPIDI_POSIX_mpi_bcast(void *buffer, int count, MPI_Datatype da
     switch (shm_algo_parameters_container_out->id) {
         case MPIDI_POSIX_Bcast_intra_binomial_id:
             mpi_errno =
-                MPIDI_POSIX_Bcast_intra_binomial(buffer, count, datatype, root, comm, errflag,
-                                                 shm_algo_parameters_container_out);
+                MPIR_Bcast_intra_binomial(buffer, count, datatype, root, comm, errflag);
             break;
         case MPIDI_POSIX_Bcast_intra_scatter_recursive_doubling_allgather_id:
             mpi_errno =
-                MPIDI_POSIX_Bcast_intra_scatter_recursive_doubling_allgather(buffer, count, datatype,
-                                                                             root, comm, errflag,
-                                                                             shm_algo_parameters_container_out);
+                MPIR_Bcast_intra_scatter_recursive_doubling_allgather(buffer, count, datatype,
+                                                                      root, comm, errflag);
             break;
         case MPIDI_POSIX_Bcast_intra_scatter_ring_allgather_id:
             mpi_errno =
-                MPIDI_POSIX_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root, comm,
-                                                               errflag, shm_algo_parameters_container_out);
+                MPIR_Bcast_intra_scatter_ring_allgather(buffer, count, datatype,
+                                                        root, comm, errflag);
             break;
         default:
             mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);
@@ -131,16 +128,13 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
     switch (shm_algo_parameters_container_out->id) {
         case MPIDI_POSIX_Allreduce_intra_recursive_doubling_id:
             mpi_errno =
-                MPIDI_POSIX_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count, datatype,
-                                                               op, comm, errflag,
-                                                               shm_algo_parameters_container_out);
+                MPIR_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count, datatype,
+                                                        op, comm, errflag);
             break;
         case MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather_id:
             mpi_errno =
-                MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather(sendbuf, recvbuf, count,
-                                                                     datatype, op, comm,
-                                                                     errflag,
-                                                                     shm_algo_parameters_container_out);
+                MPIR_Allreduce_intra_reduce_scatter_allgather(sendbuf, recvbuf, count,
+                                                              datatype, op, comm, errflag);
             break;
         default:
             mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op,
@@ -362,14 +356,13 @@ static inline int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *recvbuf, int
     switch (shm_algo_parameters_container_out->id) {
         case MPIDI_POSIX_Reduce_intra_reduce_scatter_gather_id:
             mpi_errno =
-                MPIDI_POSIX_Reduce_intra_reduce_scatter_gather(sendbuf, recvbuf, count, datatype,
-                                                               op, root, comm, errflag,
-                                                               shm_algo_parameters_container_out);
+                MPIR_Reduce_intra_reduce_scatter_gather(sendbuf, recvbuf, count, datatype,
+                                                        op, root, comm, errflag);
             break;
         case MPIDI_POSIX_Reduce_intra_binomial_id:
             mpi_errno =
-                MPIDI_POSIX_Reduce_intra_binomial(sendbuf, recvbuf, count, datatype, op, root,
-                                                  comm, errflag, shm_algo_parameters_container_out);
+                MPIR_Reduce_intra_binomial(sendbuf, recvbuf, count, datatype,
+                                           op, root, comm, errflag);
             break;
         default:
             mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op,
