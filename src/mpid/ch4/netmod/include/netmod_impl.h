@@ -1223,14 +1223,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_av_is_local(MPIDI_av_entry_t * av)
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                  void *algo_parameters_ptr)
+                                                  void *algo_parameters_container)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BARRIER);
 
-    ret = MPIDI_NM_native_func->mpi_barrier(comm, errflag, algo_parameters_ptr);
+    ret = MPIDI_NM_native_func->mpi_barrier(comm, errflag, algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_BARRIER);
     return ret;
@@ -1238,7 +1238,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
                                                 int root, MPIR_Comm * comm,
-                                                MPIR_Errflag_t * errflag, void *algo_parameters_ptr)
+                                                MPIR_Errflag_t * errflag,
+                                                void *algo_parameters_container)
 {
     int ret;
 
@@ -1247,7 +1248,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Dat
 
     ret =
         MPIDI_NM_native_func->mpi_bcast(buffer, count, datatype, root, comm, errflag,
-                                        algo_parameters_ptr);
+                                        algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_BCAST);
     return ret;
@@ -1256,7 +1257,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Dat
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int count,
                                                     MPI_Datatype datatype, MPI_Op op,
                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                    void *algo_parameters_ptr)
+                                                    void *algo_parameters_container)
 {
     int ret;
 
@@ -1265,7 +1266,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *r
 
     ret =
         MPIDI_NM_native_func->mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag,
-                                            algo_parameters_ptr);
+                                            algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
     return ret;
@@ -1433,7 +1434,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_alltoallw(const void *sendbuf, const i
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int count,
                                                  MPI_Datatype datatype, MPI_Op op, int root,
                                                  MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                                 void *algo_parameters_ptr)
+                                                 void *algo_parameters_container)
 {
     int ret;
 
@@ -1441,7 +1442,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recv
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_REDUCE);
 
     ret = MPIDI_NM_native_func->mpi_reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
-                                           errflag, algo_parameters_ptr);
+                                           errflag, algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_REDUCE);
     return ret;

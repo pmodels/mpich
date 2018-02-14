@@ -16,7 +16,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                       void *algo_parameters_ptr)
+                                       void *algo_parameters_container ATTRIBUTE((unused)))
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BARRIER);
@@ -34,7 +34,7 @@ static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * er
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
                                      int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                     void *algo_parameters_ptr)
+                                     void *algo_parameters_container ATTRIBUTE((unused)))
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BCAST);
@@ -52,7 +52,8 @@ static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datat
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int count,
                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                         MPIR_Errflag_t * errflag, void *algo_parameters_ptr)
+                                         MPIR_Errflag_t * errflag,
+                                         void *algo_parameters_container ATTRIBUTE((unused)))
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
@@ -249,7 +250,7 @@ static inline int MPIDI_NM_mpi_alltoallw(const void *sendbuf, const int sendcoun
 static inline int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
                                       MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                      void *algo_parameters_ptr)
+                                      void *algo_parameters_container ATTRIBUTE((unused)))
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_REDUCE);
