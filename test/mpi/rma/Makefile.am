@@ -25,15 +25,6 @@ noinst_PROGRAMS =          \
     lockcontention2        \
     lockcontention3        \
     lockopts               \
-    lock_dt                \
-    lock_dt_flush          \
-    lock_dt_flushlocal     \
-    lockall_dt             \
-    lockall_dt_flush       \
-    lockall_dt_flushall    \
-    lockall_dt_flushlocal  \
-    lockall_dt_flushlocalall\
-    lock_contention_dt     \
     contention_put         \
     contention_putget      \
     put_base               \
@@ -52,15 +43,9 @@ noinst_PROGRAMS =          \
     fetchandadd            \
     fetchandadd_tree       \
     winname                \
-    putfence1              \
     putfidx                \
-    epochtest              \
-    getfence1              \
-    accfence1              \
     accfence2              \
     adlb_mimic1            \
-    putpscw1               \
-    accpscw1               \
     getgroup               \
     contig_displ           \
     test1_am               \
@@ -297,3 +282,5 @@ overlap_wins_acc_CPPFLAGS  = -DTEST_ACC $(AM_CPPFLAGS)
 overlap_wins_gacc_CPPFLAGS = -DTEST_GACC $(AM_CPPFLAGS)
 overlap_wins_fop_CPPFLAGS  = -DTEST_FOP $(AM_CPPFLAGS)
 overlap_wins_cas_CPPFLAGS  = -DTEST_CAS $(AM_CPPFLAGS)
+
+include Makefile.dtp
