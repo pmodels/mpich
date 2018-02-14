@@ -25,11 +25,11 @@ static inline int MPIDI_POSIX_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t *
                                           MPIDI_POSIX_coll_algo_container_t *
                                           ch4_algo_parameters_container_in)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_POSIX_coll_algo_container_t *shm_algo_parameters_container_out = NULL;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_BARRIER);
-
-    MPIDI_POSIX_coll_algo_container_t *shm_algo_parameters_container_out = NULL;
 
     shm_algo_parameters_container_out =
         MPIDI_POSIX_Barrier_select(comm_ptr, errflag, ch4_algo_parameters_container_in);
@@ -66,10 +66,10 @@ static inline int MPIDI_POSIX_mpi_bcast(void *buffer, int count, MPI_Datatype da
                                         ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_POSIX_coll_algo_container_t *shm_algo_parameters_container_out = NULL;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_BCAST);
-
-    MPIDI_POSIX_coll_algo_container_t *shm_algo_parameters_container_out = NULL;
 
     shm_algo_parameters_container_out =
         MPIDI_POSIX_Bcast_select(buffer, count, datatype, root, comm_ptr, errflag,
@@ -118,11 +118,11 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
                                             MPIDI_POSIX_coll_algo_container_t *
                                             ch4_algo_parameters_ptr_in)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_POSIX_coll_algo_container_t *shm_algo_parameters_container_out = NULL;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_ALLREDUCE);
-
-    MPIDI_POSIX_coll_algo_container_t *shm_algo_parameters_container_out = NULL;
 
     shm_algo_parameters_container_out =
         MPIDI_POSIX_Allreduce_select(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag,
@@ -349,11 +349,11 @@ static inline int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *recvbuf, int
                                          MPIDI_POSIX_coll_algo_container_t *
                                          ch4_algo_parameters_container_in)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_POSIX_coll_algo_container_t *shm_algo_parameters_container_out = NULL;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_REDUCE);
-
-    MPIDI_POSIX_coll_algo_container_t *shm_algo_parameters_container_out = NULL;
 
     shm_algo_parameters_container_out =
         MPIDI_POSIX_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag,

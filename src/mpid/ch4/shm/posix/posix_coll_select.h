@@ -28,7 +28,7 @@ MPL_STATIC_INLINE_PREFIX
                                                                  ATTRIBUTE((unused)))
 {
     int nbytes = 0;
-    MPI_Aint type_size;
+    MPI_Aint type_size = 0;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
@@ -61,8 +61,8 @@ MPL_STATIC_INLINE_PREFIX
                                                                      ch4_algo_parameters_container_in
                                                                      ATTRIBUTE((unused)))
 {
-    MPI_Aint type_size;
-    int pof2;
+    MPI_Aint type_size = 0;
+    int pof2 = 0;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
     pof2 = comm_ptr->pof2;
@@ -87,7 +87,8 @@ MPL_STATIC_INLINE_PREFIX
                                                                   ch4_algo_parameters_container_in
                                                                   ATTRIBUTE((unused)))
 {
-    int type_size, pof2;
+    MPI_Aint type_size = 0;
+    int pof2 = 0;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
     pof2 = comm_ptr->pof2;

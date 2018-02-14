@@ -17,8 +17,8 @@
 
 MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BARRIER);
@@ -50,8 +50,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
 MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype datatype,
                                         int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BCAST);
