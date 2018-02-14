@@ -4,7 +4,6 @@
 #include "posix_impl.h"
 #include "ch4_impl.h"
 #include "coll_algo_params.h"
-#include "posix_coll_impl.h"
 
 MPL_STATIC_INLINE_PREFIX
     MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Barrier_select(MPIR_Comm * comm,
