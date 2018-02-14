@@ -113,7 +113,7 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
                                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                             MPIR_Errflag_t * errflag,
                                             MPIDI_POSIX_coll_algo_container_t *
-                                            ch4_algo_parameters_ptr_in)
+                                            ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_coll_algo_container_t *shm_algo_parameters_container_out = NULL;
@@ -123,7 +123,7 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
 
     shm_algo_parameters_container_out =
         MPIDI_POSIX_Allreduce_select(sendbuf, recvbuf, count, datatype, op, comm, errflag,
-                                     ch4_algo_parameters_ptr_in);
+                                     ch4_algo_parameters_container_in);
 
     switch (shm_algo_parameters_container_out->id) {
         case MPIDI_POSIX_Allreduce_intra_recursive_doubling_id:
