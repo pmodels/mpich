@@ -87,7 +87,7 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
                                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                             MPIR_Errflag_t * errflag,
                                             MPIDI_POSIX_coll_algo_container_t *
-                                            ch4_algo_parameters_ptr_in)
+                                            ch4_algo_parameters_container_in)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_ALLREDUCE);
@@ -97,7 +97,7 @@ static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, 
 
     shm_algo_parameters_container_out =
         MPIDI_POSIX_Allreduce_select(sendbuf, recvbuf, count, datatype, op, comm, errflag,
-                                     ch4_algo_parameters_ptr_in);
+                                     ch4_algo_parameters_container_in);
 
     mpi_errno =
         MPIDI_POSIX_Allreduce_call(sendbuf, recvbuf, count, datatype, op, comm, errflag,
