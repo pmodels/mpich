@@ -32,7 +32,18 @@ static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * er
     nm_algo_parameters_container_out =
         MPIDI_OFI_Barrier_select(comm_ptr, errflag, (MPIDI_OFI_coll_algo_container_t *)
                                  ch4_algo_parameters_container_in);
-    mpi_errno = MPIDI_OFI_Barrier_call(comm_ptr, errflag, nm_algo_parameters_container_out);
+
+    switch (nm_algo_parameters_container_out->id) {
+        case MPIDI_OFI_Barrier_intra_dissemination_id:
+            mpi_errno =
+                MPIDI_OFI_Barrier_intra_dissemination(comm_ptr, errflag,
+                                                      nm_algo_parameters_container_out);
+            break;
+        default:
+            mpi_errno = MPIR_Barrier_impl(comm_ptr, errflag);
+            break;
+    }
+
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -63,9 +74,29 @@ static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datat
                                (MPIDI_OFI_coll_algo_container_t *)
                                ch4_algo_parameters_container_in);
 
-    mpi_errno =
-        MPIDI_OFI_Bcast_call(buffer, count, datatype, root, comm_ptr, errflag,
-                             nm_algo_parameters_container_out);
+    switch (nm_algo_parameters_container_out->id) {
+        case MPIDI_OFI_Bcast_intra_binomial_id:
+            mpi_errno =
+                MPIDI_OFI_Bcast_intra_binomial(buffer, count, datatype, root, comm_ptr, errflag,
+                                               nm_algo_parameters_container_out);
+            break;
+        case MPIDI_OFI_Bcast_intra_scatter_recursive_doubling_allgather_id:
+            mpi_errno =
+                MPIDI_OFI_Bcast_intra_scatter_recursive_doubling_allgather(buffer, count, datatype,
+                                                                           root, comm_ptr, errflag,
+                                                                           nm_algo_parameters_container_out);
+            break;
+        case MPIDI_OFI_Bcast_intra_scatter_ring_allgather_id:
+            mpi_errno =
+                MPIDI_OFI_Bcast_intra_scatter_ring_allgather(buffer, count, datatype, root,
+                                                             comm_ptr, errflag,
+                                                             nm_algo_parameters_container_out);
+            break;
+        default:
+            mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm_ptr, errflag);
+            break;
+    }
+
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -89,13 +120,30 @@ static inline int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
 
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_ptr_out = NULL;
-    nm_algo_parameters_ptr_out =
+    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    nm_algo_parameters_container_out =
         MPIDI_OFI_Allreduce_select(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag,
                                    (MPIDI_OFI_coll_algo_container_t *) ch4_algo_parameters_ptr_in);
-    mpi_errno =
-        MPIDI_OFI_Allreduce_call(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag,
-                                 nm_algo_parameters_ptr_out);
+
+    switch (nm_algo_parameters_container_out->id) {
+        case MPIDI_OFI_Allreduce_intra_recursive_doubling_id:
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_recursive_doubling(sendbuf, recvbuf, count, datatype, op,
+                                                             comm_ptr, errflag,
+                                                             nm_algo_parameters_container_out);
+            break;
+        case MPIDI_OFI_Allreduce_intra_reduce_scatter_allgather_id:
+            mpi_errno =
+                MPIDI_OFI_Allreduce_intra_reduce_scatter_allgather(sendbuf, recvbuf, count,
+                                                                   datatype, op, comm_ptr, errflag,
+                                                                   nm_algo_parameters_container_out);
+            break;
+        default:
+            mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op,
+                                            comm_ptr, errflag);
+            break;
+    }
+
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -305,9 +353,24 @@ static inline int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int co
                                 (MPIDI_OFI_coll_algo_container_t *)
                                 ch4_algo_parameters_container_in);
 
-    mpi_errno =
-        MPIDI_OFI_Reduce_call(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag,
-                              nm_algo_parameters_container_out);
+    switch (nm_algo_parameters_container_out->id) {
+        case MPIDI_OFI_Reduce_intra_reduce_scatter_gather_id:
+            mpi_errno =
+                MPIDI_OFI_Reduce_intra_reduce_scatter_gather(sendbuf, recvbuf, count, datatype, op,
+                                                             root, comm_ptr, errflag,
+                                                             nm_algo_parameters_container_out);
+            break;
+        case MPIDI_OFI_Reduce_intra_binomial_id:
+            mpi_errno =
+                MPIDI_OFI_Reduce_intra_binomial(sendbuf, recvbuf, count, datatype, op, root,
+                                                comm_ptr, errflag, nm_algo_parameters_container_out);
+            break;
+        default:
+            mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op,
+                                         root, comm_ptr, errflag);
+            break;
+    }
+
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
