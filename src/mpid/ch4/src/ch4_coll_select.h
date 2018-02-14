@@ -43,7 +43,7 @@ MPL_STATIC_INLINE_PREFIX
                                                          MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int nbytes = 0;
-    MPI_Aint type_size;
+    MPI_Aint type_size = 0;
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
@@ -75,9 +75,9 @@ MPL_STATIC_INLINE_PREFIX
                                                              MPIR_Comm * comm,
                                                              MPIR_Errflag_t * errflag)
 {
-    MPI_Aint type_size;
+    MPI_Aint type_size = 0;
     int nbytes = 0;
-    int is_commutative;
+    int is_commutative = -1;
 
     is_commutative = MPIR_Op_is_commutative(op);
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
@@ -105,7 +105,8 @@ MPL_STATIC_INLINE_PREFIX
                                                           MPIR_Comm * comm,
                                                           MPIR_Errflag_t * errflag)
 {
-    int is_commutative, type_size;
+    int is_commutative = -1;
+    MPI_Aint type_size = 0;
     int nbytes = 0;
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
