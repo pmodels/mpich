@@ -191,6 +191,27 @@ static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win)
     finfo = fi_dupinfo(MPIDI_Global.prov_use);
     MPIR_Assert(finfo);
 
+    /* Create shared context only in first call. */
+    if (MPIDI_Global.rma_stx_ctx == NULL) {
+        memset(finfo->tx_attr, 0, sizeof(struct fi_tx_attr));
+        /* A shared transmit context’s attributes must be a union of all associated
+         * endpoints' transmit capabilities. */
+        finfo->tx_attr->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
+        finfo->tx_attr->msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
+        finfo->tx_attr->op_flags = FI_DELIVERY_COMPLETE | FI_COMPLETION;
+        MPIDI_OFI_CALL_RETURN(fi_stx_context(MPIDI_Global.domain,
+                                             finfo->tx_attr,
+                                             &MPIDI_Global.rma_stx_ctx, NULL /* context */), ret);
+        if (ret < 0) {
+            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        "Failed to create shared TX context for RMA, "
+                        "falling back to global EP/counter scheme");
+            MPIDI_Global.rma_stx_ctx = NULL;
+            mpi_errno = MPIDI_OFI_ENAVAIL;
+            goto fn_fail;
+        }
+    }
+
     /* Set per window transmit attributes. */
     MPIDI_OFI_set_rma_fi_info(win, finfo);
     /* Still need to take out rx capabilities for shared context. */
@@ -314,7 +335,7 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
     MPIDI_OFI_WIN(win).win_id = ((uint64_t) comm_ptr->context_id) | (window_instance << 32);
     MPIDI_CH4U_map_set(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id, win, MPL_MEM_RMA);
 
-    if (MPIR_CVAR_CH4_OFI_ENABLE_PER_WIN_SYNC && MPIDI_Global.rma_stx_ctx != NULL) {
+    if (MPIR_CVAR_CH4_OFI_ENABLE_PER_WIN_SYNC) {
         /* Create tx using shared transmit context. */
         if (MPIDI_OFI_win_init_stx(win) == MPI_SUCCESS) {
             goto fn_exit;
