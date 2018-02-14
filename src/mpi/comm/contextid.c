@@ -483,7 +483,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
          * other processes to enter the global or brief global critical section.
          */
         if (group_ptr != NULL) {
-            int coll_tag = tag | MPIR_Process.tagged_coll_mask; /* Shift tag into the tagged coll space */
+            int coll_tag = tag | MPIR_TAG_COLL_BIT;     /* Shift tag into the tagged coll space */
             mpi_errno = MPII_Allreduce_group(MPI_IN_PLACE, st.local_mask, MPIR_MAX_CONTEXT_MASK + 1,
                                              MPI_INT, MPI_BAND, comm_ptr, group_ptr, coll_tag,
                                              &errflag);
@@ -584,7 +584,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
                 minfree = nfree;
 
             if (group_ptr != NULL) {
-                int coll_tag = tag | MPIR_Process.tagged_coll_mask;     /* Shift tag into the tagged coll space */
+                int coll_tag = tag | MPIR_TAG_COLL_BIT; /* Shift tag into the tagged coll space */
                 mpi_errno = MPII_Allreduce_group(MPI_IN_PLACE, &minfree, 1, MPI_INT, MPI_MIN,
                                                  comm_ptr, group_ptr, coll_tag, &errflag);
             } else {
