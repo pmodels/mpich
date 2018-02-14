@@ -278,7 +278,7 @@ done
 ########################################################################
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/mpi/romio src/openpa src/hwloc"
+externals="src/pm/hydra src/mpi/romio src/openpa src/hwloc test/mpi"
 
 if [ "yes" = "$do_izem" ] ; then
     externals="${externals} src/izem"
@@ -601,7 +601,7 @@ echo
 check_submodule_presence src/hwloc
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/mpi/romio src/openpa src/hwloc"
+externals="src/pm/hydra src/mpi/romio src/openpa src/hwloc test/mpi"
 
 if [ "yes" = "$do_izem" ] ; then
     check_submodule_presence src/izem

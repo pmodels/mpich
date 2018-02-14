@@ -1540,6 +1540,7 @@ AC_OUTPUT(maint/testmerge \
           Makefile \
           basic/Makefile \
           attr/Makefile \
+          attr/testlist \
           util/Makefile \
           coll/Makefile \
 	  coll/testlist \
@@ -1551,6 +1552,7 @@ AC_OUTPUT(maint/testmerge \
           info/Makefile \
           init/Makefile \
           pt2pt/Makefile \
+          pt2pt/testlist \
           mpi_t/Makefile \
           rma/Makefile \
           rma/testlist \
@@ -1630,12 +1632,14 @@ AC_OUTPUT(maint/testmerge \
      cxx/Makefile \
           cxx/util/Makefile \
           cxx/attr/Makefile \
+          cxx/attr/testlist \
           cxx/pt2pt/Makefile \
           cxx/comm/Makefile \
           cxx/coll/Makefile \
 	  cxx/errhan/Makefile \
           cxx/info/Makefile \
           cxx/datatype/Makefile \
+          cxx/datatype/testlist \
           cxx/io/Makefile \
           cxx/init/Makefile \
           cxx/rma/Makefile \
