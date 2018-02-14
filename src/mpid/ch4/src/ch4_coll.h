@@ -182,7 +182,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, int sendcount,
 MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const int *sendcounts,
                                            const int *displs, MPI_Datatype sendtype,
                                            void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                           int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                           int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -190,7 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const int *sendc
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SCATTERV);
 
     ret = MPIDI_NM_mpi_scatterv(sendbuf, sendcounts, displs, sendtype,
-                                recvbuf, recvcount, recvtype, root, comm_ptr, errflag);
+                                recvbuf, recvcount, recvtype, root, comm, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SCATTERV);
     return ret;
@@ -269,7 +269,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const int sendc
                                             const int sdispls[], const MPI_Datatype sendtypes[],
                                             void *recvbuf, const int recvcounts[],
                                             const int rdispls[], const MPI_Datatype recvtypes[],
-                                            MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                            MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int ret;
 
@@ -277,7 +277,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const int sendc
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALLW);
 
     ret = MPIDI_NM_mpi_alltoallw(sendbuf, sendcounts, sdispls, sendtypes,
-                                 recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, errflag);
+                                 recvbuf, recvcounts, rdispls, recvtypes, comm, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLTOALLW);
     return ret;
@@ -285,7 +285,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const int sendc
 
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
                                          int count, MPI_Datatype datatype, MPI_Op op,
-                                         int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                         int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
@@ -294,27 +294,27 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE);
 
     ch4_algo_parameters_container =
-        MPIDI_CH4_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+        MPIDI_CH4_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, comm, errflag);
 
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_CH4_Reduce_intra_composition_alpha_id:
             mpi_errno =
                 MPIDI_Reduce_intra_composition_alpha(sendbuf, recvbuf, count, datatype, op, root,
-                                                     comm_ptr, errflag, ch4_algo_parameters_container);
+                                                     comm, errflag, ch4_algo_parameters_container);
             break;
         case MPIDI_CH4_Reduce_intra_composition_beta_id:
             mpi_errno =
                 MPIDI_Reduce_intra_composition_beta(sendbuf, recvbuf, count, datatype, op, root,
-                                                    comm_ptr, errflag, ch4_algo_parameters_container);
+                                                    comm, errflag, ch4_algo_parameters_container);
             break;
         case MPIDI_CH4_Reduce_inter_composition_alpha_id:
             mpi_errno =
                 MPIDI_Reduce_inter_composition_alpha(sendbuf, recvbuf, count, datatype, op, root,
-                                                     comm_ptr, errflag, ch4_algo_parameters_container);
+                                                     comm, errflag, ch4_algo_parameters_container);
             break;
         default:
             mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op,
-                                         root, comm_ptr, errflag);
+                                         root, comm, errflag);
             break;
     }
 
@@ -324,7 +324,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
 
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recvbuf,
                                                  const int recvcounts[], MPI_Datatype datatype,
-                                                 MPI_Op op, MPIR_Comm * comm_ptr,
+                                                 MPI_Op op, MPIR_Comm * comm,
                                                  MPIR_Errflag_t * errflag)
 {
     int ret;
@@ -332,7 +332,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REDUCE_SCATTER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE_SCATTER);
 
-    ret = MPIDI_NM_mpi_reduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr,
+    ret = MPIDI_NM_mpi_reduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm,
                                       errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REDUCE_SCATTER);
@@ -341,7 +341,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
 
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
                                                        int recvcount, MPI_Datatype datatype,
-                                                       MPI_Op op, MPIR_Comm * comm_ptr,
+                                                       MPI_Op op, MPIR_Comm * comm,
                                                        MPIR_Errflag_t * errflag)
 {
     int ret;
@@ -350,7 +350,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE_SCATTER_BLOCK);
 
     ret = MPIDI_NM_mpi_reduce_scatter_block(sendbuf, recvbuf, recvcount,
-                                            datatype, op, comm_ptr, errflag);
+                                            datatype, op, comm, errflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REDUCE_SCATTER_BLOCK);
     return ret;
