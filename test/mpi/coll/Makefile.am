@@ -32,9 +32,6 @@ noinst_PROGRAMS =      \
     alltoallw1         \
     alltoallw2         \
     alltoallw_zeros    \
-    bcast_full         \
-    bcast_min_datatypes \
-    bcast_comm_world   \
     bcasttest          \
     bcastzerotype      \
     coll2              \
@@ -125,14 +122,6 @@ noinst_PROGRAMS =      \
     neighb_coll
 allgatherv4_LDADD = $(LDADD) -lm
 
-bcast_full_SOURCES = bcast.c
-
-bcast_min_datatypes_CPPFLAGS = -DBCAST_MIN_DATATYPES_ONLY $(AM_CPPFLAGS)
-bcast_min_datatypes_SOURCES = bcast.c
-
-bcast_comm_world_CPPFLAGS = -DBCAST_COMM_WORLD_ONLY $(AM_CPPFLAGS)
-bcast_comm_world_SOURCES = bcast.c
-
 # Generate tests of the nonblocking collectives by reusing the blocking tests.
 nballtoall1_SOURCES = alltoall1.c
 nballtoall1_CPPFLAGS  = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
@@ -178,3 +167,5 @@ nbicscatter_SOURCES = icscatter.c
 nbicscatter_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
 nbicscatterv_SOURCES = icscatterv.c
 nbicscatterv_CPPFLAGS = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
+
+include Makefile.dtp

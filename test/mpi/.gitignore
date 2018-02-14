@@ -1385,3 +1385,16 @@
 /topo/graphmap1
 /topo/topodup
 /topo/topotest
+/attr/Makefile.dtp
+/attr/testlist.in
+/coll/Makefile.dtp
+/coll/testlist.in
+/rma/Makefile.dtp
+/rma/testlist.in
+/pt2pt/Makefile.dtp
+/pt2pt/testlist.in
+/cxx/attr/Makefile.dtp
+/cxx/attr/testlist.in
+/cxx/datatype/Makefile.dtp
+/cxx/datatype/testlist.in
+/dtpools/basictypelist.txt

@@ -1,13 +1,8 @@
 winname 2
 allocmem 2
-putfence1 2
 putfidx 4
-getfence1 2
-accfence1 4
 adlb_mimic1 3
 accfence2 4
-putpscw1 4
-accpscw1 4
 getgroup 4
 transpose1 2
 transpose2 2
@@ -28,15 +23,6 @@ lockcontention2 4
 lockcontention2 8
 lockcontention3 8
 lockopts 2
-lock_dt 2
-lock_dt_flush 2
-lock_dt_flushlocal 2
-lockall_dt 4 timeLimit=240
-lockall_dt_flush 4 timeLimit=240
-lockall_dt_flushall 4 timeLimit=240
-lockall_dt_flushlocal 4 timeLimit=240
-lockall_dt_flushlocalall 4 timeLimit=240
-lock_contention_dt 4 timeLimit=240
 transpose4 2
 fetchandadd 7
 fetchandadd_tree 7
@@ -62,7 +48,6 @@ baseattrwin 1
 fkeyvalwin 1
 selfrma 1
 mixedsync 4
-epochtest 4 timeLimit=300
 locknull 2
 rmanull 2
 rmazero 2
