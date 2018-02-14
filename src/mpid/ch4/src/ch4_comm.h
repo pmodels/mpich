@@ -348,7 +348,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(5);
 
-    cts_tag = 0 | MPIR_Process.tagged_coll_mask;
+    cts_tag = 0 | MPIR_TAG_COLL_BIT;
     local_size = local_comm->local_size;
 
     /*
