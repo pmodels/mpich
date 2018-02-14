@@ -94,6 +94,30 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_beta(MPIR_Comm * co
     goto fn_exit;
 }
 
+#ifdef MPIDI_BUILD_CH4_SHM
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Barrier_intra_composition_gamma
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_gamma(MPIR_Comm * comm,
+                                                                   MPIR_Errflag_t * errflag,
+                                                                   MPIDI_coll_algo_container_t *
+                                                                   ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void *barrier_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno = MPIDI_SHM_mpi_barrier(comm, errflag, barrier_container);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+#endif /* MPIDI_BUILD_CH4_SHM */
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Barrier_inter_composition_alpha
 #undef FCNAME
@@ -256,6 +280,32 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, i
     goto fn_exit;
 }
 
+#ifdef MPIDI_BUILD_CH4_SHM
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Bcast_intra_composition_delta
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_delta(void *buffer, int count,
+                                                                 MPI_Datatype datatype, int root,
+                                                                 MPIR_Comm * comm,
+                                                                 MPIR_Errflag_t * errflag,
+                                                                 MPIDI_coll_algo_container_t *
+                                                                 ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void *bcast_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno = MPIDI_SHM_mpi_bcast(buffer, count, datatype, root, comm, errflag, bcast_container);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+#endif /* MPIDI_BUILD_CH4_SHM */
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Bcast_inter_composition_alpha
 #undef FCNAME
@@ -364,7 +414,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Allreduce_intra_composition_gamma
+#define FUNCNAME MPIDI_Allreduce_intra_composition_beta
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *sendbuf,
@@ -389,6 +439,35 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_beta(const void *
   fn_fail:
     goto fn_exit;
 }
+
+#ifdef MPIDI_BUILD_CH4_SHM
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Allreduce_intra_composition_gamma
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_gamma(const void *sendbuf,
+                                                                     void *recvbuf, int count,
+                                                                     MPI_Datatype datatype,
+                                                                     MPI_Op op, MPIR_Comm * comm,
+                                                                     MPIR_Errflag_t * errflag,
+                                                                     MPIDI_coll_algo_container_t *
+                                                                     ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void *allred_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno =
+        MPIDI_SHM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag,
+                                allred_container);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+#endif /* MPIDI_BUILD_CH4_SHM */
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Allreduce_inter_composition_alpha
@@ -580,6 +659,35 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_beta(const void *sen
   fn_fail:
     goto fn_exit;
 }
+
+#ifdef MPIDI_BUILD_CH4_SHM
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Reduce_intra_composition_gamma
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_gamma(const void *sendbuf, void *recvbuf,
+                                                                  int count, MPI_Datatype datatype,
+                                                                  MPI_Op op, int root,
+                                                                  MPIR_Comm * comm,
+                                                                  MPIR_Errflag_t * errflag,
+                                                                  MPIDI_coll_algo_container_t *
+                                                                  ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void *reduce_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+
+    mpi_errno =
+        MPIDI_SHM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, root,
+                             comm, errflag, reduce_container);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+#endif /* MPIDI_BUILD_CH4_SHM */
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Reduce_inter_composition_alpha
