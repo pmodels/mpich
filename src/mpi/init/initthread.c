@@ -537,9 +537,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 #else
     MPIR_Process.attrs.tag_ub >>= 1;
 #endif
-    /* The bit for error checking is set in a macro in mpiimpl.h for
-     * performance reasons. */
-    MPIR_Process.tagged_coll_mask = MPIR_Process.attrs.tag_ub + 1;
 
     /* Assert: tag_ub is at least the minimum asked for in the MPI spec */
     MPIR_Assert(MPIR_Process.attrs.tag_ub >= 32767);
