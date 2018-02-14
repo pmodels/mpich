@@ -8,8 +8,6 @@
 #include "mpiimpl.h"
 #include "mpicomm.h"
 
-#define MPIR_COMM_KIND__INTERCOMM_CREATE_TAG 0
-
 /* -- Begin Profiling Symbol Block for routine MPI_Intercomm_create */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Intercomm_create = PMPI_Intercomm_create
@@ -43,15 +41,13 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
     int remote_size = 0, *remote_lpids = NULL;
     int comm_info[3];
     int is_low_group = 0;
-    int cts_tag;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
 
-    /* Shift tag into the tagged coll space (tag provided by the user
-     * is ignored as of MPI 3.0) */
-    cts_tag = MPIR_COMM_KIND__INTERCOMM_CREATE_TAG | MPIR_TAG_COLL_BIT;
+    /* Shift tag into the tagged coll space */
+    tag |= MPIR_TAG_COLL_BIT;
 
     mpi_errno = MPID_Intercomm_exchange_map(local_comm_ptr, local_leader,
                                             peer_comm_ptr, remote_leader,
@@ -83,8 +79,8 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
         MPIR_Context_id_t remote_context_id;
 
         mpi_errno =
-            MPIC_Sendrecv(&recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, cts_tag,
-                          &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, cts_tag,
+            MPIC_Sendrecv(&recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, tag,
+                          &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, tag,
                           peer_comm_ptr, MPI_STATUS_IGNORE, &errflag);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
