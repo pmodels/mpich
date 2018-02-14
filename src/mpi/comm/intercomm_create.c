@@ -51,7 +51,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
 
     /* Shift tag into the tagged coll space (tag provided by the user
      * is ignored as of MPI 3.0) */
-    cts_tag = MPIR_COMM_KIND__INTERCOMM_CREATE_TAG | MPIR_Process.tagged_coll_mask;
+    cts_tag = MPIR_COMM_KIND__INTERCOMM_CREATE_TAG | MPIR_TAG_COLL_BIT;
 
     mpi_errno = MPID_Intercomm_exchange_map(local_comm_ptr, local_leader,
                                             peer_comm_ptr, remote_leader,
