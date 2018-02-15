@@ -75,7 +75,6 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
     int i;
     int n_inactive;
     int active_flag;
-    int init_req_array;
     int found_nonnull_req;
     int last_disabled_anysource = -1;
     int mpi_errno = MPI_SUCCESS;
@@ -113,40 +112,47 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
                                    mpi_errno, "request pointers", MPL_MEM_OBJECT);
     }
 
-    n_inactive = 0;
-    init_req_array = TRUE;
-    found_nonnull_req = FALSE;
+    for (i = 0; i < count; i++) {
+#ifdef HAVE_ERROR_CHECKING
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+            MPIR_ERRTEST_ARRAYREQUEST_OR_NULL(array_of_requests[i], i, mpi_errno);
+        }
+        MPID_END_ERROR_CHECKS;
+#endif /* HAVE_ERROR_CHECKING */
+        if (array_of_requests[i] != MPI_REQUEST_NULL) {
+            MPIR_Request_get_ptr(array_of_requests[i], request_ptrs[i]);
+            /* Validate object pointers if error checking is enabled */
+#ifdef HAVE_ERROR_CHECKING
+            {
+                MPID_BEGIN_ERROR_CHECKS;
+                {
+                    MPIR_Request_valid_ptr(request_ptrs[i], mpi_errno);
+                    if (mpi_errno != MPI_SUCCESS)
+                        goto fn_progress_end_fail;
+                }
+                MPID_END_ERROR_CHECKS;
+            }
+#endif
+
+            if (unlikely(MPIR_CVAR_ENABLE_FT &&
+                         MPID_Request_is_anysource(request_ptrs[i]) &&
+                         !MPID_Comm_AS_enabled(request_ptrs[i]->comm) &&
+                         !MPIR_Request_is_complete(request_ptrs[i]))) {
+                last_disabled_anysource = i;
+            }
+
+        } else {
+            request_ptrs[i] = NULL;
+        }
+    }
 
     MPID_Progress_start(&progress_state);
     for (;;) {
+        n_inactive = 0;
+        found_nonnull_req = FALSE;
+
         for (i = 0; i < count; i++) {
-            if (init_req_array) {
-#ifdef HAVE_ERROR_CHECKING
-                MPID_BEGIN_ERROR_CHECKS;
-                {
-                    MPIR_ERRTEST_ARRAYREQUEST_OR_NULL(array_of_requests[i], i, mpi_errno);
-                }
-                MPID_END_ERROR_CHECKS;
-#endif /* HAVE_ERROR_CHECKING */
-                if (array_of_requests[i] != MPI_REQUEST_NULL) {
-                    MPIR_Request_get_ptr(array_of_requests[i], request_ptrs[i]);
-                    /* Validate object pointers if error checking is enabled */
-#ifdef HAVE_ERROR_CHECKING
-                    {
-                        MPID_BEGIN_ERROR_CHECKS;
-                        {
-                            MPIR_Request_valid_ptr(request_ptrs[i], mpi_errno);
-                            if (mpi_errno != MPI_SUCCESS)
-                                goto fn_progress_end_fail;
-                        }
-                        MPID_END_ERROR_CHECKS;
-                    }
-#endif
-                } else {
-                    request_ptrs[i] = NULL;
-                    ++n_inactive;
-                }
-            }
             if (request_ptrs[i] == NULL)
                 continue;
             /* we found at least one non-null request */
@@ -184,13 +190,8 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
                         goto break_l1;
                     }
                 }
-            } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                                MPID_Request_is_anysource(request_ptrs[i]) &&
-                                !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
-                last_disabled_anysource = i;
             }
         }
-        init_req_array = FALSE;
 
         if (!found_nonnull_req) {
             /* all requests were NULL */
