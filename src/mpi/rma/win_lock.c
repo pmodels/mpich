@@ -30,7 +30,8 @@ int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_lock
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_lock - Begin an RMA access epoch at the target process.
 
@@ -76,7 +77,6 @@ Input Parameters:
 @*/
 int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
 {
-    static const char FCNAME[] = "MPI_Win_lock";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_LOCK);

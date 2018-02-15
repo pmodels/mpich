@@ -30,7 +30,8 @@ int MPI_Get_version(int *version, int *subversion)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Get_version
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Get_version - Return the version number of MPI
 
@@ -47,9 +48,6 @@ Output Parameters:
 @*/
 int MPI_Get_version(int *version, int *subversion)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Get_version";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_VERSION);
 

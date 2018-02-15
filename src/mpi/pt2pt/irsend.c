@@ -30,7 +30,8 @@ int MPI_Irsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Irsend
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Irsend - Starts a nonblocking ready send
 
@@ -62,7 +63,6 @@ Output Parameters:
 int MPI_Irsend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                MPI_Comm comm, MPI_Request * request)
 {
-    static const char FCNAME[] = "MPI_Irsend";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;

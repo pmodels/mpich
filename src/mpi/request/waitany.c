@@ -34,7 +34,8 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Waitany
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Waitany - Waits for any specified MPI Request to complete
 
@@ -68,7 +69,6 @@ program to unexecpectedly terminate or produce incorrect results.
 @*/
 int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Status * status)
 {
-    static const char FCNAME[] = "MPI_Waitany";
     MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPIR_Request **request_ptrs = request_ptr_array;
     MPID_Progress_state progress_state;

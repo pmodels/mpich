@@ -29,9 +29,6 @@ int MPI_Type_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_resized
-
 /* --BEGIN ERROR HANDLING-- */
 static int MPII_Type_create_resized_memory_error(void)
 {
@@ -126,6 +123,10 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
     return MPI_SUCCESS;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPI_Type_create_resized
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_resized - Create a datatype with a new lower bound and
      extent from an existing datatype
@@ -149,7 +150,6 @@ Output Parameters:
 int MPI_Type_create_resized(MPI_Datatype oldtype,
                             MPI_Aint lb, MPI_Aint extent, MPI_Datatype * newtype)
 {
-    static const char FCNAME[] = "MPI_Type_create_resized";
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
     MPIR_Datatype *new_dtp;

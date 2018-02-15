@@ -29,10 +29,11 @@ int MPI_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_va
 
 #undef FUNCNAME
 #define FUNCNAME MPII_Type_set_attr
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_val,
                        MPIR_Attr_type attrType)
 {
-    static const char FCNAME[] = "MPII_Type_set_attr";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *type_ptr = NULL;
     MPII_Keyval *keyval_ptr = NULL;
@@ -163,7 +164,8 @@ int MPII_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_set_attr
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_set_attr - Stores attribute value associated with a key
 
@@ -189,7 +191,6 @@ corresponding keyval was created) will be called.
 @*/
 int MPI_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_val)
 {
-    static const char FCNAME[] = "MPI_Type_set_attr";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_SET_ATTR);
 

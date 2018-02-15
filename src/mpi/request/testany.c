@@ -34,7 +34,8 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx, int *flag
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Testany
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Testany - Tests for completion of any previdously initiated
                   requests
@@ -67,7 +68,6 @@ program to unexecpectedly terminate or produce incorrect results.
 int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
                 int *flag, MPI_Status * status)
 {
-    static const char FCNAME[] = "MPI_Testany";
     MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPIR_Request **request_ptrs = request_ptr_array;
     int i;

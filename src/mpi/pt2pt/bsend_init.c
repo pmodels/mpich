@@ -31,7 +31,8 @@ int MPI_Bsend_init(const void *buf, int count, MPI_Datatype datatype, int dest, 
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Bsend_init
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Bsend_init - Builds a handle for a buffered send
 
@@ -63,7 +64,6 @@ Output Parameters:
 int MPI_Bsend_init(const void *buf, int count, MPI_Datatype datatype,
                    int dest, int tag, MPI_Comm comm, MPI_Request * request)
 {
-    static const char FCNAME[] = "MPI_Bsend_init";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr = NULL;
     MPIR_Comm *comm_ptr = NULL;

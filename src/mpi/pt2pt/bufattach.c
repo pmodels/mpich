@@ -30,7 +30,8 @@ int MPI_Buffer_attach(void *buffer, int size) __attribute__ ((weak, alias("PMPI_
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Buffer_attach
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Buffer_attach - Attaches a user-provided buffer for sending
 
@@ -76,7 +77,6 @@ one thread at a time calls this routine or 'MPI_Buffer_detach'.
 @*/
 int MPI_Buffer_attach(void *buffer, int size)
 {
-    static const char FCNAME[] = "MPI_Buffer_attach";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_BUFFER_ATTACH);
 

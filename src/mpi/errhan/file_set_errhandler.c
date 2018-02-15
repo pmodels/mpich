@@ -31,7 +31,8 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_File_set_errhandler
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_File_set_errhandler - Set the error handler for an MPI file
 
@@ -48,9 +49,6 @@ Input Parameters:
 @*/
 int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_File_set_errhandler";
-#endif
     int mpi_errno = MPI_SUCCESS;
 #ifdef MPI_MODE_RDONLY
     int in_use;

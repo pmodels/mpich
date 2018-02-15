@@ -28,7 +28,8 @@ int MPI_Info_free(MPI_Info * info) __attribute__ ((weak, alias("PMPI_Info_free")
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Info_free
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Info_free - Frees an info object
 
@@ -46,9 +47,6 @@ Input Parameters:
 @*/
 int MPI_Info_free(MPI_Info * info)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Info_free";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = 0;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INFO_FREE);

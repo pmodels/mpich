@@ -42,7 +42,8 @@ int MPI_Type_create_keyval(MPI_Type_copy_attr_function * type_copy_attr_fn,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_create_keyval
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_keyval - Create an attribute keyval for MPI datatypes
 
@@ -75,7 +76,6 @@ int MPI_Type_create_keyval(MPI_Type_copy_attr_function * type_copy_attr_fn,
                            MPI_Type_delete_attr_function * type_delete_attr_fn,
                            int *type_keyval, void *extra_state)
 {
-    static const char FCNAME[] = "MPI_Type_create_keyval";
     int mpi_errno = MPI_SUCCESS;
     MPII_Keyval *keyval_ptr;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_KEYVAL);

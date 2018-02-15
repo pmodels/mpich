@@ -141,11 +141,12 @@ static mpi_names_t mpi_maxloc_names[] = {
 #undef type_name_entry
 /* This routine is also needed by type_set_name */
 
+#undef  FUNCNAME
+#define FUNCNAME MPIR_Datatype_init_names
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Datatype_init_names(void)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPIR_Datatype_init_names";
-#endif
     int mpi_errno = MPI_SUCCESS;
     int i;
     MPIR_Datatype *datatype_ptr = NULL;
@@ -215,7 +216,8 @@ int MPIR_Datatype_init_names(void)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_get_name
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_get_name - Get the print name for a datatype
 
@@ -240,7 +242,6 @@ Output Parameters:
 @*/
 int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
 {
-    static const char FCNAME[] = "MPI_Type_get_name";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *datatype_ptr = NULL;
     static int setup = 0;

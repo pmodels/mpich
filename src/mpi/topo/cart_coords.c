@@ -30,7 +30,8 @@ int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int coords[])
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Cart_coords
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Cart_coords - Determines process coords in cartesian topology given
                   rank in group
@@ -57,7 +58,6 @@ Output Parameters:
 @*/
 int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int coords[])
 {
-    static const char FCNAME[] = "MPI_Cart_coords";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Topology *cart_ptr;

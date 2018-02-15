@@ -29,7 +29,8 @@ int MPI_Op_free(MPI_Op * op) __attribute__ ((weak, alias("PMPI_Op_free")));
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Op_free
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Op_free - Frees a user-defined combination function handle
 
@@ -54,9 +55,6 @@ Input Parameters:
 @*/
 int MPI_Op_free(MPI_Op * op)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Op_free";
-#endif
     MPIR_Op *op_ptr = NULL;
     int in_use;
     int mpi_errno = MPI_SUCCESS;

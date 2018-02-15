@@ -30,7 +30,8 @@ int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges, int indx[], int edg
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Graph_get
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Graph_get - Retrieves graph topology information associated with a
@@ -57,7 +58,6 @@ Output Parameters:
 @*/
 int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges, int indx[], int edges[])
 {
-    static const char FCNAME[] = "MPI_Graph_get";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Topology *topo_ptr;

@@ -31,7 +31,8 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_delete_attr
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_delete_attr - Deletes an attribute value associated with a key on
    a datatype
@@ -52,7 +53,6 @@ Input Parameters:
 @*/
 int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
 {
-    static const char FCNAME[] = "MPI_Win_delete_attr";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_Attribute *p, **old_p;

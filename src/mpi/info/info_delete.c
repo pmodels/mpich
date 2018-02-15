@@ -29,7 +29,8 @@ int MPI_Info_delete(MPI_Info info, const char *key)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Info_delete
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Info_delete - Deletes a (key,value) pair from info
 
@@ -46,7 +47,6 @@ Input Parameters:
 @*/
 int MPI_Info_delete(MPI_Info info, const char *key)
 {
-    static const char FCNAME[] = "MPI_Info_delete";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = 0, *prev_ptr, *curr_ptr;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INFO_DELETE);

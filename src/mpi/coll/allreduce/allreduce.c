@@ -362,7 +362,7 @@ int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 #undef FUNCNAME
 #define FUNCNAME MPI_Allreduce
 #undef FCNAME
-
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Allreduce - Combines values from all processes and distributes the result
                 back to all processes
@@ -393,7 +393,6 @@ Output Parameters:
 int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
                   MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
-    static const char FCNAME[] = "MPI_Allreduce";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;

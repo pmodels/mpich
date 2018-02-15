@@ -31,7 +31,8 @@ int MPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int t
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Recv_init
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Recv_init - Create a persistent request for a receive
 
@@ -64,7 +65,6 @@ Output Parameters:
 int MPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source,
                   int tag, MPI_Comm comm, MPI_Request * request)
 {
-    static const char FCNAME[] = "MPI_Recv_init";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;

@@ -30,7 +30,8 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_set_errhandler
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_set_errhandler - Set window error handler
 
@@ -48,9 +49,6 @@ Input Parameters:
 @*/
 int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Win_set_errhandler";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     int in_use;

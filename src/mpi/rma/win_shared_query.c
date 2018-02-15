@@ -30,7 +30,8 @@ int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint * size, int *disp_unit,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_shared_query
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_shared_query - Query the size and base pointer for a patch of a shared
 memory window.
@@ -74,7 +75,6 @@ Output Parameters:
 @*/
 int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint * size, int *disp_unit, void *baseptr)
 {
-    static const char FCNAME[] = "MPI_Win_shared_query";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_SHARED_QUERY);

@@ -29,7 +29,8 @@ int MPI_Win_lock_all(int assert, MPI_Win win) __attribute__ ((weak, alias("PMPI_
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_lock_all
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_lock_all - Begin an RMA access epoch at all processes on the given window.
 
@@ -79,7 +80,6 @@ avoided by specifying the assertion 'MPI_MODE_NOCHECK' when possible
 @*/
 int MPI_Win_lock_all(int assert, MPI_Win win)
 {
-    static const char FCNAME[] = "MPI_Win_lock_all";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_LOCK_ALL);

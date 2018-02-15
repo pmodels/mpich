@@ -34,7 +34,8 @@ int MPI_Get_processor_name(char *name, int *resultlen)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Get_processor_name
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Get_processor_name - Gets the name of the processor
 
@@ -71,7 +72,6 @@ Output Parameters:
 @*/
 int MPI_Get_processor_name(char *name, int *resultlen)
 {
-    static const char FCNAME[] = "MPI_Get_processor_name";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_PROCESSOR_NAME);
 

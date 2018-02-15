@@ -32,7 +32,8 @@ int MPI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype origi
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Accumulate
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Accumulate - Accumulate data into the target process using remote
    memory access
@@ -70,7 +71,6 @@ int MPI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
                    target_disp, int target_count, MPI_Datatype
                    target_datatype, MPI_Op op, MPI_Win win)
 {
-    static const char FCNAME[] = "MPI_Accumulate";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ACCUMULATE);

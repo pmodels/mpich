@@ -27,7 +27,8 @@ int MPI_Finalized(int *flag) __attribute__ ((weak, alias("PMPI_Finalized")));
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Finalized
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Finalized - Indicates whether 'MPI_Finalize' has been called.
 
@@ -44,9 +45,6 @@ Output Parameters:
 @*/
 int MPI_Finalized(int *flag)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Finalized";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FINALIZED);
 

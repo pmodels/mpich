@@ -29,7 +29,8 @@ int MPI_Start(MPI_Request * request) __attribute__ ((weak, alias("PMPI_Start")))
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Start
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Start - Initiates a communication with a persistent request handle
 
@@ -47,7 +48,6 @@ Input Parameters:
 @*/
 int MPI_Start(MPI_Request * request)
 {
-    static const char FCNAME[] = "MPI_Start";
     MPIR_Request *request_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_START);

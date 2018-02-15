@@ -31,7 +31,8 @@ int MPI_Bsend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Bsend
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Bsend - Basic send with user-provided buffering
 
@@ -88,7 +89,6 @@ delivered.)
 @*/
 int MPI_Bsend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
 {
-    static const char FCNAME[] = "MPI_Bsend";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;

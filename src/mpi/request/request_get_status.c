@@ -31,7 +31,8 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status * status)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Request_get_status
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Request_get_status - Nondestructive test for the completion of a Request
 
@@ -56,7 +57,6 @@ Output Parameters:
 @*/
 int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status * status)
 {
-    static const char FCNAME[] = "MPI_Request_get_status";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_REQUEST_GET_STATUS);

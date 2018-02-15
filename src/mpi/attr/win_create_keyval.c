@@ -42,7 +42,8 @@ int MPI_Win_create_keyval(MPI_Win_copy_attr_function * win_copy_attr_fn,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_create_keyval
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_create_keyval - Create an attribute keyval for MPI window objects
 
@@ -75,7 +76,6 @@ int MPI_Win_create_keyval(MPI_Win_copy_attr_function * win_copy_attr_fn,
                           MPI_Win_delete_attr_function * win_delete_attr_fn,
                           int *win_keyval, void *extra_state)
 {
-    static const char FCNAME[] = "MPI_Win_create_keyval";
     int mpi_errno = MPI_SUCCESS;
     MPII_Keyval *keyval_ptr;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_CREATE_KEYVAL);

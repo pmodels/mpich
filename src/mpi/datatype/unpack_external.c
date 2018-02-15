@@ -31,7 +31,8 @@ int MPI_Unpack_external(const char datarep[], const void *inbuf, MPI_Aint insize
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Unpack_external
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Unpack_external - Unpack a buffer (packed with MPI_Pack_external)
    according to a datatype into contiguous memory
@@ -63,7 +64,6 @@ int MPI_Unpack_external(const char datarep[],
                         MPI_Aint insize,
                         MPI_Aint * position, void *outbuf, int outcount, MPI_Datatype datatype)
 {
-    static const char FCNAME[] = "MPI_Unpack_external";
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint first, last;
     MPIR_Segment *segp;

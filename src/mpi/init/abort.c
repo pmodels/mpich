@@ -48,7 +48,8 @@ int MPI_Abort(MPI_Comm comm, int errorcode) __attribute__ ((weak, alias("PMPI_Ab
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Abort
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Abort - Terminates MPI execution environment
 
@@ -72,7 +73,6 @@ release a lock or other mechanism for atomic access.
 @*/
 int MPI_Abort(MPI_Comm comm, int errorcode)
 {
-    static const char FCNAME[] = "MPI_Abort";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     /* FIXME: 100 is arbitrary and may not be long enough */

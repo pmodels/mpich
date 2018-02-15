@@ -30,7 +30,8 @@ int MPI_Errhandler_create(MPI_Handler_function * function, MPI_Errhandler * errh
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Errhandler_create
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Errhandler_create - Creates an MPI-style errorhandler
 
@@ -63,7 +64,6 @@ The replacement routine for this function is 'MPI_Comm_create_errhandler'.
 @*/
 int MPI_Errhandler_create(MPI_Handler_function * function, MPI_Errhandler * errhandler)
 {
-    static const char FCNAME[] = "MPI_Errhandler_create";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ERRHANDLER_CREATE);
 
