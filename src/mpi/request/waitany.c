@@ -147,6 +147,12 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
         }
     }
 
+    if (unlikely(last_disabled_anysource != -1)) {
+        int flag;
+        mpi_errno = MPI_Testany(count, array_of_requests, indx, &flag, status);
+        goto fn_exit;
+    }
+
     MPID_Progress_start(&progress_state);
     for (;;) {
         n_inactive = 0;
@@ -191,15 +197,6 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
             if (status != NULL) /* could be null if count=0 */
                 MPIR_Status_set_empty(status);
             goto break_l1;
-        }
-
-        /* If none of the requests completed, mark the last anysource request
-         * as pending failure and break out. */
-        if (unlikely(last_disabled_anysource != -1)) {
-            MPIR_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
-            if (status != MPI_STATUS_IGNORE)
-                status->MPI_ERROR = mpi_errno;
-            goto fn_progress_end_fail;
         }
 
         mpi_errno = MPID_Progress_test();
