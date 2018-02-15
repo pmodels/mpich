@@ -51,37 +51,22 @@ include $(top_srcdir)/src/mpi/coll/ineighbor_alltoall/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/ineighbor_alltoallv/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/ineighbor_alltoallw/Makefile.mk
 
+include $(top_srcdir)/src/mpi/coll/op/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/reduce_local/Makefile.mk
+include $(top_srcdir)/src/mpi/coll/allreduce_group/Makefile.mk
 include $(top_srcdir)/src/mpi/coll/src/Makefile.mk
 
+# build collectives transport
+include $(top_srcdir)/src/mpi/coll/transports/Makefile.mk
+
+# build collectives algorithms
+include $(top_srcdir)/src/mpi/coll/algorithms/Makefile.mk
+
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/coll/include/
-# mpi_sources includes only the routines that are MPI function entry points
-# The code for the MPI operations (e.g., MPI_SUM) is not included in 
-# mpi_sources
-mpi_sources +=                     \
-    src/mpi/coll/op/op_create.c       \
-    src/mpi/coll/op/op_free.c         \
-    src/mpi/coll/reduce_local/reduce_local.c    \
-    src/mpi/coll/op/op_commutative.c
 
 mpi_core_sources += \
-    src/mpi/coll/allreduce_group/allreduce_group.c   \
     src/mpi/coll/helper_fns.c     \
-    src/mpi/coll/op/opsum.c          \
-    src/mpi/coll/op/opmax.c          \
-    src/mpi/coll/op/opmin.c          \
-    src/mpi/coll/op/opband.c         \
-    src/mpi/coll/op/opbor.c          \
-    src/mpi/coll/op/opbxor.c         \
-    src/mpi/coll/op/opland.c         \
-    src/mpi/coll/op/oplor.c          \
-    src/mpi/coll/op/oplxor.c         \
-    src/mpi/coll/op/opprod.c         \
-    src/mpi/coll/op/opminloc.c       \
-    src/mpi/coll/op/opmaxloc.c       \
-    src/mpi/coll/op/opno_op.c        \
-    src/mpi/coll/op/opreplace.c      \
     src/mpi/coll/nbcutil.c
 
 noinst_HEADERS +=                    \
-    src/mpi/coll/include/coll_util.h \
     src/mpi/coll/include/coll_impl.h

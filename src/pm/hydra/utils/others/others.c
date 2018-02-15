@@ -32,8 +32,7 @@ HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs, struct HYD
         (*node_list)->hostname = MPL_strdup(hostname);
         (*node_list)->core_count = num_procs;
         (*node_list)->node_id = 0;
-    }
-    else {
+    } else {
         for (node = *node_list; node->next; node = node->next);
 
         if (strcmp(node->hostname, hostname)) {

@@ -14,7 +14,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_pvar_read as PMPI_T_pvar_read
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_T_pvar_read(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf) __attribute__((weak,alias("PMPI_T_pvar_read")));
+int MPI_T_pvar_read(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf)
+    __attribute__ ((weak, alias("PMPI_T_pvar_read")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -49,94 +50,85 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
         if (handle->get_value == NULL) {
             /* A running SUM without callback. Read its current value directly */
             switch (handle->datatype) {
-            case MPI_UNSIGNED_LONG_LONG:
-                /* Put long long and double at front, since they are common */
-                for (i = 0; i < handle->count; i++) {
-                    ((unsigned long long *)buf)[i] =
-                        ((unsigned long long *)handle->accum)[i]
-                        + ((unsigned long long *)handle->addr)[i]
-                        - ((unsigned long long *)handle->offset)[i];
-                }
-                break;
-            case MPI_DOUBLE:
-                for (i = 0; i < handle->count; i++) {
-                    ((double *)buf)[i] =
-                        ((double *)handle->accum)[i]
-                        + ((double *)handle->addr)[i]
-                        - ((double *)handle->offset)[i];
-                }
-                break;
-            case MPI_UNSIGNED:
-                for (i = 0; i < handle->count; i++) {
-                    ((unsigned *)buf)[i] =
-                        ((unsigned *)handle->accum)[i]
-                        + ((unsigned *)handle->addr)[i]
-                        - ((unsigned *)handle->offset)[i];
-                }
-                break;
-            case MPI_UNSIGNED_LONG:
-                for (i = 0; i < handle->count; i++) {
-                   ((unsigned long *)buf)[i] =
-                        ((unsigned long *)handle->accum)[i]
-                        + ((unsigned long *)handle->addr)[i]
-                        - ((unsigned long *)handle->offset)[i];
-                }
-                break;
-            default:
-                /* Code should never come here */
-                mpi_errno = MPI_ERR_INTERN; goto fn_fail;
-                break;
+                case MPI_UNSIGNED_LONG_LONG:
+                    /* Put long long and double at front, since they are common */
+                    for (i = 0; i < handle->count; i++) {
+                        ((unsigned long long *) buf)[i] = ((unsigned long long *) handle->accum)[i]
+                            + ((unsigned long long *) handle->addr)[i]
+                            - ((unsigned long long *) handle->offset)[i];
+                    }
+                    break;
+                case MPI_DOUBLE:
+                    for (i = 0; i < handle->count; i++) {
+                        ((double *) buf)[i] = ((double *) handle->accum)[i]
+                            + ((double *) handle->addr)[i]
+                            - ((double *) handle->offset)[i];
+                    }
+                    break;
+                case MPI_UNSIGNED:
+                    for (i = 0; i < handle->count; i++) {
+                        ((unsigned *) buf)[i] = ((unsigned *) handle->accum)[i]
+                            + ((unsigned *) handle->addr)[i]
+                            - ((unsigned *) handle->offset)[i];
+                    }
+                    break;
+                case MPI_UNSIGNED_LONG:
+                    for (i = 0; i < handle->count; i++) {
+                        ((unsigned long *) buf)[i] = ((unsigned long *) handle->accum)[i]
+                            + ((unsigned long *) handle->addr)[i]
+                            - ((unsigned long *) handle->offset)[i];
+                    }
+                    break;
+                default:
+                    /* Code should never come here */
+                    mpi_errno = MPI_ERR_INTERN;
+                    goto fn_fail;
+                    break;
             }
         } else {
             /* A running SUM with callback. Read its current value into handle */
-            handle->get_value(handle->addr, handle->obj_handle,
-                              handle->count, handle->current);
+            handle->get_value(handle->addr, handle->obj_handle, handle->count, handle->current);
 
             switch (handle->datatype) {
-            case MPI_UNSIGNED_LONG_LONG:
-                for (i = 0; i < handle->count; i++) {
-                    ((unsigned long long *)buf)[i] =
-                        ((unsigned long long *)handle->accum)[i]
-                        + ((unsigned long *)handle->current)[i]
-                        - ((unsigned long long *)handle->offset)[i];
-                }
-                break;
-            case MPI_DOUBLE:
-                for (i = 0; i < handle->count; i++) {
-                    ((double *)buf)[i] =
-                        ((double *)handle->accum)[i]
-                        + ((double *)handle->current)[i]
-                        - ((double *)handle->offset)[i];
-                }
-                break;
-            case MPI_UNSIGNED:
-                for (i = 0; i < handle->count; i++) {
-                    ((unsigned *)buf)[i] =
-                        ((unsigned *)handle->accum)[i]
-                        + ((unsigned *)handle->current)[i]
-                        - ((unsigned *)handle->offset)[i];
-                }
-                break;
-            case MPI_UNSIGNED_LONG:
-                for (i = 0; i < handle->count; i++) {
-                    ((unsigned long *)buf)[i] =
-                        ((unsigned long *)handle->accum)[i]
-                        + ((unsigned long *)handle->current)[i]
-                        - ((unsigned long *)handle->offset)[i];
-                }
-                break;
-            default:
-                /* Code should never come here */
-                mpi_errno = MPI_ERR_INTERN; goto fn_fail;
-                break;
+                case MPI_UNSIGNED_LONG_LONG:
+                    for (i = 0; i < handle->count; i++) {
+                        ((unsigned long long *) buf)[i] = ((unsigned long long *) handle->accum)[i]
+                            + ((unsigned long *) handle->current)[i]
+                            - ((unsigned long long *) handle->offset)[i];
+                    }
+                    break;
+                case MPI_DOUBLE:
+                    for (i = 0; i < handle->count; i++) {
+                        ((double *) buf)[i] = ((double *) handle->accum)[i]
+                            + ((double *) handle->current)[i]
+                            - ((double *) handle->offset)[i];
+                    }
+                    break;
+                case MPI_UNSIGNED:
+                    for (i = 0; i < handle->count; i++) {
+                        ((unsigned *) buf)[i] = ((unsigned *) handle->accum)[i]
+                            + ((unsigned *) handle->current)[i]
+                            - ((unsigned *) handle->offset)[i];
+                    }
+                    break;
+                case MPI_UNSIGNED_LONG:
+                    for (i = 0; i < handle->count; i++) {
+                        ((unsigned long *) buf)[i] = ((unsigned long *) handle->accum)[i]
+                            + ((unsigned long *) handle->current)[i]
+                            - ((unsigned long *) handle->offset)[i];
+                    }
+                    break;
+                default:
+                    /* Code should never come here */
+                    mpi_errno = MPI_ERR_INTERN;
+                    goto fn_fail;
+                    break;
             }
         }
-    }
-    else if (MPIR_T_pvar_is_sum(handle) && !MPIR_T_pvar_is_started(handle)) {
+    } else if (MPIR_T_pvar_is_sum(handle) && !MPIR_T_pvar_is_started(handle)) {
         /* A SUM is stopped. Return accum directly */
         MPIR_Memcpy(buf, handle->accum, handle->bytes * handle->count);
-    }
-    else if (MPIR_T_pvar_is_watermark(handle)) {
+    } else if (MPIR_T_pvar_is_watermark(handle)) {
         /* Callback and array are not allowed for watermarks, since they
          * can not gurantee correct semantics of watermarks.
          */
@@ -147,46 +139,46 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
              * a special location nearby the watermark itself.
              */
             switch (handle->datatype) {
-            case MPI_UNSIGNED_LONG_LONG:
-                 *(unsigned long long *)buf =
-                    ((MPIR_T_pvar_watermark_t *)handle->addr)->watermark.ull;
-                 break;
-            case MPI_DOUBLE:
-                 *(double *)buf =
-                    ((MPIR_T_pvar_watermark_t *)handle->addr)->watermark.f;
-                 break;
-            case MPI_UNSIGNED:
-                 *(unsigned *)buf =
-                    ((MPIR_T_pvar_watermark_t *)handle->addr)->watermark.u;
-                 break;
-            case MPI_UNSIGNED_LONG:
-                 *(unsigned long *)buf =
-                    ((MPIR_T_pvar_watermark_t *)handle->addr)->watermark.ul;
-                 break;
-            default:
-                /* Code should never come here */
-                 mpi_errno = MPI_ERR_INTERN; goto fn_fail;
-                 break;
+                case MPI_UNSIGNED_LONG_LONG:
+                    *(unsigned long long *) buf =
+                        ((MPIR_T_pvar_watermark_t *) handle->addr)->watermark.ull;
+                    break;
+                case MPI_DOUBLE:
+                    *(double *) buf = ((MPIR_T_pvar_watermark_t *) handle->addr)->watermark.f;
+                    break;
+                case MPI_UNSIGNED:
+                    *(unsigned *) buf = ((MPIR_T_pvar_watermark_t *) handle->addr)->watermark.u;
+                    break;
+                case MPI_UNSIGNED_LONG:
+                    *(unsigned long *) buf =
+                        ((MPIR_T_pvar_watermark_t *) handle->addr)->watermark.ul;
+                    break;
+                default:
+                    /* Code should never come here */
+                    mpi_errno = MPI_ERR_INTERN;
+                    goto fn_fail;
+                    break;
             }
         } else {
             /* For remaining handles, their current value are in the handle */
             switch (handle->datatype) {
-            case MPI_UNSIGNED_LONG_LONG:
-                 *(unsigned long long *)buf = handle->watermark.ull;
-                 break;
-            case MPI_DOUBLE:
-                 *(double *)buf = handle->watermark.f;
-                 break;
-            case MPI_UNSIGNED:
-                 *(unsigned *)buf = handle->watermark.u;
-                 break;
-            case MPI_UNSIGNED_LONG:
-                 *(unsigned long *)buf = handle->watermark.ul;
-                 break;
-            default:
-                /* Code should never come here */
-                 mpi_errno = MPI_ERR_INTERN; goto fn_fail;
-                 break;
+                case MPI_UNSIGNED_LONG_LONG:
+                    *(unsigned long long *) buf = handle->watermark.ull;
+                    break;
+                case MPI_DOUBLE:
+                    *(double *) buf = handle->watermark.f;
+                    break;
+                case MPI_UNSIGNED:
+                    *(unsigned *) buf = handle->watermark.u;
+                    break;
+                case MPI_UNSIGNED_LONG:
+                    *(unsigned long *) buf = handle->watermark.ul;
+                    break;
+                default:
+                    /* Code should never come here */
+                    mpi_errno = MPI_ERR_INTERN;
+                    goto fn_fail;
+                    break;
             }
         }
     } else {
@@ -194,13 +186,12 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
         if (handle->get_value == NULL)
             MPIR_Memcpy(buf, handle->addr, handle->bytes * handle->count);
         else
-            handle->get_value(handle->addr, handle->obj_handle,
-                              handle->count, buf);
+            handle->get_value(handle->addr, handle->obj_handle, handle->count, buf);
     }
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -249,45 +240,46 @@ int MPI_T_pvar_read(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_READ);
 
     /* Validate parameters */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_PVAR_SESSION(session, mpi_errno);
             MPIR_ERRTEST_PVAR_HANDLE(handle, mpi_errno);
             MPIR_ERRTEST_ARGNULL(buf, "buf", mpi_errno);
-            if (handle == MPI_T_PVAR_ALL_HANDLES  || session != handle->session
-                || !MPIR_T_pvar_is_oncestarted(handle))
-            {
+            if (handle == MPI_T_PVAR_ALL_HANDLES || session != handle->session
+                || !MPIR_T_pvar_is_oncestarted(handle)) {
                 mpi_errno = MPI_T_ERR_INVALID_HANDLE;
                 goto fn_fail;
             }
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_T_pvar_read_impl(session, handle, buf);
-    if (mpi_errno) goto fn_fail;
+    if (mpi_errno)
+        goto fn_fail;
 
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_PVAR_READ);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_pvar_read", "**mpi_t_pvar_read %p %p %p", session, handle, buf);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_t_pvar_read", "**mpi_t_pvar_read %p %p %p", session, handle,
+                                 buf);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

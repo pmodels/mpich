@@ -33,8 +33,7 @@ int main(int argc, char *argv[])
     if (rc) {
         errs++;
         printf("Unable to open file \"temp\"\n");
-    }
-    else {
+    } else {
         handleA = MPI_File_c2f(cFile);
         handleB = MPI_File_c2f(cFile);
         if (handleA != handleB) {
@@ -47,8 +46,7 @@ int main(int argc, char *argv[])
     if (rank == 0) {
         if (errs) {
             fprintf(stderr, "Found %d errors\n", errs);
-        }
-        else {
+        } else {
             printf(" No Errors\n");
         }
     }

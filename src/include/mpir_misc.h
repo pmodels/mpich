@@ -40,11 +40,10 @@ typedef enum {
 typedef enum MPIR_Lang_t {
     MPIR_LANG__C
 #ifdef HAVE_FORTRAN_BINDING
-    , MPIR_LANG__FORTRAN
-    , MPIR_LANG__FORTRAN90
+        , MPIR_LANG__FORTRAN, MPIR_LANG__FORTRAN90
 #endif
 #ifdef HAVE_CXX_BINDING
-    , MPIR_LANG__CXX
+        , MPIR_LANG__CXX
 #endif
 } MPIR_Lang_t;
 
@@ -76,17 +75,18 @@ Notes:
   a higher priority execute before 'MPID_Finalize' is called; those with
   a lower priority after 'MPID_Finalize' is called.
 @*/
-void MPIR_Add_finalize( int (*routine)( void * ), void *extra, int priority );
+void MPIR_Add_finalize(int (*routine) (void *), void *extra, int priority);
 
 /* Routines for determining local and remote processes */
-int MPIR_Find_local_and_external(struct MPIR_Comm *comm, int *local_size_p, int *local_rank_p, int **local_ranks_p,
-                                 int *external_size_p, int *external_rank_p, int **external_ranks_p,
-                                 int **intranode_table, int **internode_table_p);
-int MPIR_Get_internode_rank(MPIR_Comm *comm_ptr, int r);
-int MPIR_Get_intranode_rank(MPIR_Comm *comm_ptr, int r);
+int MPIR_Find_local_and_external(struct MPIR_Comm *comm, int *local_size_p, int *local_rank_p,
+                                 int **local_ranks_p, int *external_size_p, int *external_rank_p,
+                                 int **external_ranks_p, int **intranode_table,
+                                 int **internode_table_p);
+int MPIR_Get_internode_rank(MPIR_Comm * comm_ptr, int r);
+int MPIR_Get_intranode_rank(MPIR_Comm * comm_ptr, int r);
 
 int MPIR_Close_port_impl(const char *port_name);
-int MPIR_Open_port_impl(MPIR_Info *info_ptr, char *port_name);
-int MPIR_Cancel_impl(MPIR_Request *request_ptr);
+int MPIR_Open_port_impl(MPIR_Info * info_ptr, char *port_name);
+int MPIR_Cancel_impl(MPIR_Request * request_ptr);
 
 #endif /* MPIR_MISC_H_INCLUDED */

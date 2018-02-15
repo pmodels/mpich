@@ -1,6 +1,6 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
+ *  (C) 2017 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 
@@ -19,13 +19,14 @@
  * best solution for the MPI_IN_PLACE scenario.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_intra_inplace_sched
+#define FUNCNAME MPIR_Ialltoallw_sched_intra_inplace
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoallw_intra_inplace_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
-                          const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                          const int rdispls[], const MPI_Datatype recvtypes[],
-                          MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ialltoallw_sched_intra_inplace(const void *sendbuf, const int sendcounts[],
+                                        const int sdispls[], const MPI_Datatype sendtypes[],
+                                        void *recvbuf, const int recvcounts[], const int rdispls[],
+                                        const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
+                                        MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, i, j;
@@ -59,43 +60,47 @@ int MPIR_Ialltoallw_intra_inplace_sched(const void *sendbuf, const int sendcount
         MPIR_Datatype_get_extent_macro(recvtypes[i], recv_extent);
         max_size = MPL_MAX(max_size, recvcounts[i] * MPL_MAX(recv_extent, true_extent));
     }
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, max_size, mpi_errno, "Ialltoallw tmp_buf", MPL_MEM_BUFFER);
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, max_size, mpi_errno, "Ialltoallw tmp_buf",
+                              MPL_MEM_BUFFER);
 
     for (i = 0; i < comm_size; ++i) {
         /* start inner loop at i to avoid re-exchanging data */
         for (j = i; j < comm_size; ++j) {
             if (rank == i && rank == j) {
                 /* no need to "sendrecv_replace" for ourselves */
-            }
-            else if (rank == i || rank == j) {
+            } else if (rank == i || rank == j) {
                 if (rank == i)
                     dst = j;
                 else
                     dst = i;
 
                 MPIR_Type_get_true_extent_impl(recvtypes[i], &true_lb, &true_extent);
-                adj_tmp_buf = (void *)((char*)tmp_buf - true_lb);
+                adj_tmp_buf = (void *) ((char *) tmp_buf - true_lb);
 
-                mpi_errno = MPIR_Sched_send(((char *)recvbuf + rdispls[dst]),
-                        recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                mpi_errno = MPIR_Sched_recv(adj_tmp_buf, recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                mpi_errno = MPIR_Sched_send(((char *) recvbuf + rdispls[dst]),
+                                            recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                mpi_errno =
+                    MPIR_Sched_recv(adj_tmp_buf, recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
                 mpi_errno = MPIR_Sched_copy(adj_tmp_buf, recvcounts[dst], recvtypes[dst],
-                        ((char *)recvbuf + rdispls[dst]),
-                        recvcounts[dst], recvtypes[dst], s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                                            ((char *) recvbuf + rdispls[dst]),
+                                            recvcounts[dst], recvtypes[dst], s);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
             }
         }
     }
 
     MPIR_SCHED_CHKPMEM_COMMIT(s);
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }

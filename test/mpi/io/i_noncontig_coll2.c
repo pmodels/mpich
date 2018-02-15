@@ -105,8 +105,7 @@ int cb_gather_name_array(MPI_Comm comm, ADIO_cb_name_array * arrayp)
         if (procname_len == NULL) {
             return -1;
         }
-    }
-    else {
+    } else {
         /* everyone else just keeps an empty list as a placeholder */
         array->namect = 0;
         array->names = NULL;
@@ -153,8 +152,7 @@ int cb_gather_name_array(MPI_Comm comm, ADIO_cb_name_array * arrayp)
     if (commrank == 0) {
         MPI_Gatherv(my_procname, my_procname_len + 1, MPI_CHAR,
                     procname[0], procname_len, disp, MPI_CHAR, 0, comm);
-    }
-    else {
+    } else {
         /* if we didn't do this, we would need to allocate procname[]
          * on all processes...which seems a little silly.
          */
@@ -270,8 +268,7 @@ int main(int argc, char **argv)
         len = strlen(filename);
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
-    }
-    else {
+    } else {
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
         filename = (char *) malloc(len + 1);
         MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
@@ -366,8 +363,7 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
     if (cb_hosts != NULL) {
         MPI_Info_create(&info);
         MPI_Info_set(info, "cb_config_list", cb_hosts);
-    }
-    else {
+    } else {
         info = MPI_INFO_NULL;
     }
 

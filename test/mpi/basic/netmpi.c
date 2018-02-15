@@ -163,8 +163,7 @@ int main(int argc, char *argv[])
     if (one_buffer) {
         if (onebuffersize < 1) {
             one_buffer = 0;
-        }
-        else {
+        } else {
             onebuffersize += bufalign;
         }
     }
@@ -204,8 +203,7 @@ int main(int argc, char *argv[])
 
     if (args.tr) {
         SendTime(&args, &latency, &nzero);
-    }
-    else {
+    } else {
         RecvTime(&args, &latency, &nzero);
     }
     if (args.tr && printopt) {
@@ -244,8 +242,7 @@ int main(int argc, char *argv[])
                     nrepeat = (int) (MAX((RUNTM / ((double) args.bufflen /
                                                    (args.bufflen - inc + 1.0) * tlast)), TRIALS));
                 SendTime(&args, &tzero, &nrepeat);
-            }
-            else {
+            } else {
                 nrepeat = 1;    /* Just needs to be greater than zero */
                 RecvTime(&args, &tzero, &nrepeat);
             }
@@ -260,8 +257,7 @@ int main(int argc, char *argv[])
                         quit = 1;
                         break;
                     }
-                }
-                else {
+                } else {
                     if (args.bufflen + bufalign > onebuffersize) {
                         fprintf(stdout, "Exceeded user specified buffer size\n");
                         fflush(stdout);
@@ -269,8 +265,7 @@ int main(int argc, char *argv[])
                         break;
                     }
                 }
-            }
-            else {
+            } else {
                 /* printf("allocating %d bytes\n",
                  * args.bufflen * nrepeat + bufalign); */
                 if (bNoCache) {
@@ -280,8 +275,7 @@ int main(int argc, char *argv[])
                         fflush(stdout);
                         break;
                     }
-                }
-                else {
+                } else {
                     if ((args.buff = (char *) malloc(args.bufflen + bufalign)) == (char *) NULL) {
                         fprintf(stdout, "Couldn't allocate memory\n");
                         fflush(stdout);
@@ -325,8 +319,7 @@ int main(int argc, char *argv[])
                                 ((bufalign - ((MPI_Aint) args.buff % bufalign) +
                                   bufoffset) % bufalign);
                             /* args.buff1 = memtmp1 + ((bufalign - ((MPI_Aint)args.buff1 % bufalign) + bufoffset) % bufalign); */
-                        }
-                        else {
+                        } else {
                             args.buff = memtmp;
                             /* args.buff1 = memtmp1; */
                         }
@@ -364,8 +357,7 @@ int main(int argc, char *argv[])
                 if (!streamopt)
                     bwdata[n].variance = t2 / TRIALS - t1 / TRIALS * t1 / TRIALS;
 
-            }
-            else {
+            } else {
                 bwdata[n].t = LONGTIME;
                 t2 = t1 = 0;
                 for (i = 0; i < TRIALS; i++) {
@@ -376,8 +368,7 @@ int main(int argc, char *argv[])
                                 ((bufalign - ((MPI_Aint) args.buff % bufalign) +
                                   bufoffset) % bufalign);
                             /* args.buff1 = memtmp1 + ((bufalign - ((MPI_Aint)args.buff1 % bufalign) + bufoffset) % bufalign); */
-                        }
-                        else {
+                        } else {
                             args.buff = memtmp;
                             /* args.buff1 = memtmp1; */
                         }
@@ -520,8 +511,7 @@ void Sync(ArgStruct * p)
         MPI_Send(&ch, 0, MPI_BYTE, p->prot.nbor, 1, MPI_COMM_WORLD);
         MPI_Recv(&ch, 0, MPI_BYTE, p->prot.nbor, 1, MPI_COMM_WORLD, &status);
         MPI_Send(&ch, 0, MPI_BYTE, p->prot.nbor, 1, MPI_COMM_WORLD);
-    }
-    else {
+    } else {
         MPI_Recv(&ch, 0, MPI_BYTE, p->prot.nbor, 1, MPI_COMM_WORLD, &status);
         MPI_Send(&ch, 0, MPI_BYTE, p->prot.nbor, 1, MPI_COMM_WORLD);
         MPI_Recv(&ch, 0, MPI_BYTE, p->prot.nbor, 1, MPI_COMM_WORLD, &status);
@@ -588,8 +578,7 @@ double TestLatency(ArgStruct * p)
         if (p->tr) {
             SendData(p);
             RecvData(p);
-        }
-        else {
+        } else {
             RecvData(p);
             SendData(p);
         }

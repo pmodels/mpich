@@ -86,8 +86,7 @@ int main(int argc, char *argv[])
                 errs++;
                 printf("Attribute not decremented when comm %s freed\n", MTestGetIntracommName());
             }
-        }
-        else {
+        } else {
             /* Explicitly delete the attributes from world and self */
             MPI_Attr_delete(comm, saveKeyval);
         }

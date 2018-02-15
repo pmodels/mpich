@@ -16,7 +16,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_get_name as PMPI_Type_get_name
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen) __attribute__((weak,alias("PMPI_Type_get_name")));
+int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
+    __attribute__ ((weak, alias("PMPI_Type_get_name")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -32,7 +33,10 @@ int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen) __
    datatypes */
 #ifndef MPICH_MPI_FROM_PMPI
 /* Include these definitions only with the PMPI version */
-typedef struct mpi_names_t { MPI_Datatype dtype; const char *name; } mpi_names_t;
+typedef struct mpi_names_t {
+    MPI_Datatype dtype;
+    const char *name;
+} mpi_names_t;
 /* The MPI standard specifies that the names must be the MPI names,
    not the related language names (e.g., MPI_CHAR, not char) */
 #define type_name_entry(x_) { x_, #x_ }
@@ -52,7 +56,7 @@ static mpi_names_t mpi_names[] = {
     type_name_entry(MPI_DOUBLE),
     type_name_entry(MPI_LONG_DOUBLE),
     /* LONG_LONG_INT is allowed as an alias; we don't make it a separate
-       type */
+     * type */
 /*    type_name_entry(MPI_LONG_LONG_INT), */
     type_name_entry(MPI_LONG_LONG),
     type_name_entry(MPI_UNSIGNED_LONG_LONG),
@@ -121,7 +125,7 @@ static mpi_names_t mpi_names[] = {
     type_name_entry(MPI_OFFSET),
     type_name_entry(MPI_COUNT),
 
-    { 0, (char *) 0 },  /* Sentinel used to indicate the last element */
+    {0, (char *) 0},    /* Sentinel used to indicate the last element */
 };
 
 static mpi_names_t mpi_maxloc_names[] = {
@@ -131,8 +135,9 @@ static mpi_names_t mpi_maxloc_names[] = {
     type_name_entry(MPI_SHORT_INT),
     type_name_entry(MPI_2INT),
     type_name_entry(MPI_LONG_DOUBLE_INT),
-    { 0, (char *) 0 },  /* Sentinel used to indicate the last element */
+    {0, (char *) 0},    /* Sentinel used to indicate the last element */
 };
+
 #undef type_name_entry
 /* This routine is also needed by type_set_name */
 
@@ -148,61 +153,60 @@ int MPIR_Datatype_init_names(void)
 
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     if (needsInit) {
-	/* Make sure that the basics have datatype structures allocated
-	 * and filled in for them.  They are just integers prior to this
-	 * call.
-	 */
-	mpi_errno = MPIR_Datatype_builtin_fillin();
-	if (mpi_errno != MPI_SUCCESS) {
-	    MPIR_ERR_POPFATAL(mpi_errno);
-	}
-	
-	/* For each predefined type, ensure that there is a corresponding
-	   object and that the object's name is set */
-	for (i=0; mpi_names[i].name != 0; i++) {
-	    /* The size-specific types may be DATATYPE_NULL, as might be those
-	       based on 'long long' and 'long double' if those types were
-	       disabled at configure time. */
-	    if (mpi_names[i].dtype == MPI_DATATYPE_NULL) continue;
+        /* Make sure that the basics have datatype structures allocated
+         * and filled in for them.  They are just integers prior to this
+         * call.
+         */
+        mpi_errno = MPIR_Datatype_builtin_fillin();
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
 
-	    MPIR_Datatype_get_ptr(mpi_names[i].dtype, datatype_ptr);
+        /* For each predefined type, ensure that there is a corresponding
+         * object and that the object's name is set */
+        for (i = 0; mpi_names[i].name != 0; i++) {
+            /* The size-specific types may be DATATYPE_NULL, as might be those
+             * based on 'long long' and 'long double' if those types were
+             * disabled at configure time. */
+            if (mpi_names[i].dtype == MPI_DATATYPE_NULL)
+                continue;
 
-	    if (datatype_ptr < MPIR_Datatype_builtin ||
-		datatype_ptr > MPIR_Datatype_builtin + MPIR_DATATYPE_N_BUILTIN)
-		{
-		    MPIR_ERR_SETFATALANDJUMP1(mpi_errno,MPI_ERR_INTERN,
-			      "**typeinitbadmem","**typeinitbadmem %d", i);
-		}
-	    if (!datatype_ptr) {
-		MPIR_ERR_SETFATALANDJUMP1(mpi_errno,MPI_ERR_INTERN,
-			      "**typeinitfail", "**typeinitfail %d", i - 1);
-	    }
+            MPIR_Datatype_get_ptr(mpi_names[i].dtype, datatype_ptr);
 
-	    MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPL_DBG_FDEST,
-		   "mpi_names[%d].name = %p", i, mpi_names[i].name));
+            if (datatype_ptr < MPIR_Datatype_builtin ||
+                datatype_ptr > MPIR_Datatype_builtin + MPIR_DATATYPE_N_BUILTIN) {
+                MPIR_ERR_SETFATALANDJUMP1(mpi_errno, MPI_ERR_INTERN,
+                                          "**typeinitbadmem", "**typeinitbadmem %d", i);
+            }
+            if (!datatype_ptr) {
+                MPIR_ERR_SETFATALANDJUMP1(mpi_errno, MPI_ERR_INTERN,
+                                          "**typeinitfail", "**typeinitfail %d", i - 1);
+            }
 
-	    MPL_strncpy(datatype_ptr->name, mpi_names[i].name,
-			 MPI_MAX_OBJECT_NAME);
-	}
-	/* Handle the minloc/maxloc types */
-	for (i=0; mpi_maxloc_names[i].name != 0; i++) {
-	    /* types based on 'long long' and 'long double' may be disabled at
-	       configure time, and their values set to MPI_DATATYPE_NULL.  skip
-	       those types. */
-	    if (mpi_maxloc_names[i].dtype == MPI_DATATYPE_NULL) continue;
+            MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE, (MPL_DBG_FDEST,
+                                                         "mpi_names[%d].name = %p", i,
+                                                         mpi_names[i].name));
 
-	    MPIR_Datatype_get_ptr(mpi_maxloc_names[i].dtype,
-				  datatype_ptr);
-	    if (!datatype_ptr) {
-		MPIR_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_INTERN, "**typeinitminmaxloc");
-	    }
-	    MPL_strncpy(datatype_ptr->name, mpi_maxloc_names[i].name,
-			 MPI_MAX_OBJECT_NAME);
-	}
+            MPL_strncpy(datatype_ptr->name, mpi_names[i].name, MPI_MAX_OBJECT_NAME);
+        }
+        /* Handle the minloc/maxloc types */
+        for (i = 0; mpi_maxloc_names[i].name != 0; i++) {
+            /* types based on 'long long' and 'long double' may be disabled at
+             * configure time, and their values set to MPI_DATATYPE_NULL.  skip
+             * those types. */
+            if (mpi_maxloc_names[i].dtype == MPI_DATATYPE_NULL)
+                continue;
+
+            MPIR_Datatype_get_ptr(mpi_maxloc_names[i].dtype, datatype_ptr);
+            if (!datatype_ptr) {
+                MPIR_ERR_SETFATALANDJUMP(mpi_errno, MPI_ERR_INTERN, "**typeinitminmaxloc");
+            }
+            MPL_strncpy(datatype_ptr->name, mpi_maxloc_names[i].name, MPI_MAX_OBJECT_NAME);
+        }
         needsInit = 0;
     }
 
-fn_fail:
+  fn_fail:
     /* empty statement */ ;
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
@@ -247,46 +251,48 @@ int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_GET_NAME);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
+            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
+#endif
 
     /* Note that MPI_DATATYPE_NULL is invalid input to this routine;
-       it must not return a string for MPI_DATATYPE_NULL.  Instead,
-       it must return an error indicating an invalid datatype argument */
+     * it must not return a string for MPI_DATATYPE_NULL.  Instead,
+     * it must return an error indicating an invalid datatype argument */
 
     /* Convert MPI object handles to object pointers */
     MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate datatype_ptr */
             MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-            if (mpi_errno) goto fn_fail;
-	    /* If datatype_ptr is not valid, it will be reset to null */
-	    MPIR_ERRTEST_ARGNULL(type_name,"type_name", mpi_errno);
-	    MPIR_ERRTEST_ARGNULL(resultlen,"resultlen", mpi_errno);
+            if (mpi_errno)
+                goto fn_fail;
+            /* If datatype_ptr is not valid, it will be reset to null */
+            MPIR_ERRTEST_ARGNULL(type_name, "type_name", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(resultlen, "resultlen", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
     /* If this is the first call, initialize all of the predefined names */
     if (!setup) {
-	mpi_errno = MPIR_Datatype_init_names();
-	if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-	setup = 1;
+        mpi_errno = MPIR_Datatype_init_names();
+        if (mpi_errno != MPI_SUCCESS)
+            goto fn_fail;
+        setup = 1;
     }
 
     /* Include the null in MPI_MAX_OBJECT_NAME */
@@ -301,14 +307,14 @@ int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-	    "**mpi_type_get_name",
-	    "**mpi_type_get_name %D %p %p", datatype, type_name, resultlen);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_type_get_name", "**mpi_type_get_name %D %p %p", datatype,
+                                 type_name, resultlen);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

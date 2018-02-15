@@ -72,8 +72,7 @@ int main(int argc, char **argv)
                            base[j], i, j, j);
                 }
             }
-        }
-        else {
+        } else {
             assert(size == 0);
             assert(base == NULL);
         }

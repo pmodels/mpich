@@ -310,10 +310,9 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, voi
     MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "enqueuing");
 
     /* create a request */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
     MPIR_Assert (sreq != NULL);
     MPIR_Object_set_ref (sreq, 2);
-    sreq->kind = MPIR_REQUEST_KIND__SEND;
 
     sreq->dev.OnDataAvail = 0;
     sreq->ch.vc = vc;
@@ -449,10 +448,9 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_
     MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "enqueuing");
 
     /* create a request */
-    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
     MPIR_Assert (sreq != NULL);
     MPIR_Object_set_ref (sreq, 2);
-    sreq->kind = MPIR_REQUEST_KIND__SEND;
 
     sreq->dev.OnDataAvail = 0;
     sreq->ch.vc = vc;

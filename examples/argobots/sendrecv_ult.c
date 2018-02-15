@@ -45,8 +45,7 @@ void thread_send_func(void *arg)
             int dest = (rank + j) % size;
             send_buf[0] = rank;
             if (verbose)
-                printf("[rank %d, TH%lu]: MPI_Send to %d\n", rank, my_id,
-                       dest);
+                printf("[rank %d, TH%lu]: MPI_Send to %d\n", rank, my_id, dest);
             MPI_Send(send_buf, buf_size, MPI_INT, dest, 0, MPI_COMM_WORLD);
         }
     }
@@ -66,10 +65,8 @@ void thread_recv_func(void *arg)
         for (j = 1; j < size; j++) {
             int source = (rank + size - j) % size;
             if (verbose)
-                printf("[rank %d, TH%lu]: MPI_Recv from %d\n", rank, my_id,
-                       source);
-            MPI_Recv(recv_buf, buf_size, MPI_INT, source, 0,
-                     MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                printf("[rank %d, TH%lu]: MPI_Recv from %d\n", rank, my_id, source);
+            MPI_Recv(recv_buf, buf_size, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             sum += recv_buf[0];
         }
     }
@@ -120,7 +117,7 @@ int main(int argc, char *argv[])
         t1 = MPI_Wtime();
     ABT_xstream xstream;
     ABT_pool pools;
-    ABT_thread* threads = (ABT_thread*) malloc(num_threads * sizeof(ABT_thread));
+    ABT_thread *threads = (ABT_thread *) malloc(num_threads * sizeof(ABT_thread));
 
     ABT_xstream_self(&xstream);
     ABT_xstream_get_main_pools(xstream, 1, &pools);
@@ -139,14 +136,13 @@ int main(int argc, char *argv[])
     }
 
     /* Join and free the ULT children */
-    for(i = 0; i < num_threads; i++)
+    for (i = 0; i < num_threads; i++)
         ABT_thread_free(&threads[i]);
 
     if (profiling) {
         t2 = MPI_Wtime();
         if (rank == 0) {
-            fprintf(stdout, "%*s%*f\n", FIELD_WIDTH, "Time",
-                    FIELD_WIDTH, t2 - t1);
+            fprintf(stdout, "%*s%*f\n", FIELD_WIDTH, "Time", FIELD_WIDTH, t2 - t1);
         }
     }
 

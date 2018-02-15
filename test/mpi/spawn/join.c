@@ -97,8 +97,7 @@ int main(int argc, char *argv[])
             printf("accept failed\n");
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
-    }
-    else {
+    } else {
         /* client */
 
         MPI_Recv(hostname, MPI_MAX_PROCESSOR_NAME, MPI_CHAR, 1, 0,

@@ -187,13 +187,11 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
         if (success) {
             status = cmd_response(fd, "SUCCESS");
             HYDU_ERR_POP(status, "error responding to REMOVE request\n");
-        }
-        else {
+        } else {
             status = cmd_response(fd, "FAILURE");
             HYDU_ERR_POP(status, "error responding to REMOVE request\n");
         }
-    }
-    else if (!strcmp(cmd, "UNPUBLISH")) {
+    } else if (!strcmp(cmd, "UNPUBLISH")) {
         status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
         HYDU_ASSERT(!closed, status);
@@ -209,8 +207,7 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
                 publish_list = publish_list->next;
                 free_publish_element(tmp);
                 success = 1;
-            }
-            else {
+            } else {
                 for (tmp = publish_list; tmp->next && strcmp(tmp->next->name, name);
                      tmp = tmp->next);
                 if (tmp->next) {
@@ -224,13 +221,11 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
         if (success) {
             status = cmd_response(fd, "SUCCESS");
             HYDU_ERR_POP(status, "error responding to REMOVE request\n");
-        }
-        else {
+        } else {
             status = cmd_response(fd, "FAILURE");
             HYDU_ERR_POP(status, "error responding to REMOVE request\n");
         }
-    }
-    else if (!strcmp(cmd, "LOOKUP")) {
+    } else if (!strcmp(cmd, "LOOKUP")) {
         status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
         HYDU_ASSERT(!closed, status);
@@ -245,13 +240,11 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
             status = cmd_response(fd, tmp->info);
             HYDU_ERR_POP(status, "error sending command response\n");
             success = 1;
-        }
-        else {
+        } else {
             status = cmd_response(fd, "");
             HYDU_ERR_POP(status, "error sending command response\n");
         }
-    }
-    else {
+    } else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized command: %s\n", cmd);
     }
 

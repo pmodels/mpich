@@ -178,8 +178,7 @@ int main(int argc, char *argv[])
             MPI_Put(&localbuf2[i], NBLOCK, MPI_INT, trank,
                     NELM * wsize + NBLOCK * (rank + i * wsize), NBLOCK, MPI_INT, win);
             MPI_Put(&localbuf[i], 1, MPI_INT, trank, rank + i * wsize, 1, MPI_INT, win);
-        }
-        else {
+        } else {
             MPI_Get(&vals[i], 1, MPI_INT, trank, i, 1, MPI_INT, win);
         }
         MPI_Win_unlock(trank, win);
@@ -195,8 +194,7 @@ int main(int argc, char *argv[])
                         printf("put/get: vals[%d] = %d, expected -1\n", i, vals[i]);
                     }
                 }
-            }
-            else if (vals[i] != i && vals[i] != -1) {
+            } else if (vals[i] != i && vals[i] != -1) {
                 toterrs++;
                 if (toterrs < MAX_ERRS_REPORT) {
                     printf("put/get: vals[%d] = %d, expected -1 or %d\n", i, vals[i], i);

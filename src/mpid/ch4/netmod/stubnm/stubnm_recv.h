@@ -14,15 +14,14 @@
 #include "stubnm_impl.h"
 
 static inline int MPIDI_NM_mpi_recv(void *buf,
-                                    int count,
+                                    MPI_Aint count,
                                     MPI_Datatype datatype,
                                     int rank,
                                     int tag,
                                     MPIR_Comm * comm,
                                     int context_offset,
-                                    MPIDI_av_entry_t *addr,
-                                    MPI_Status * status,
-                                    MPIR_Request ** request)
+                                    MPIDI_av_entry_t * addr,
+                                    MPI_Status * status, MPIR_Request ** request)
 {
     int err = MPI_SUCCESS;
     MPIR_Assert(0);
@@ -35,15 +34,14 @@ static inline int MPIDI_NM_mpi_recv_init(void *buf,
                                          int rank,
                                          int tag,
                                          MPIR_Comm * comm, int context_offset,
-                                         MPIDI_av_entry_t *addr,
-                                         MPIR_Request ** request)
+                                         MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
 static inline int MPIDI_NM_mpi_imrecv(void *buf,
-                                      int count,
+                                      MPI_Aint count,
                                       MPI_Datatype datatype,
                                       MPIR_Request * message, MPIR_Request ** rreqp)
 {
@@ -52,13 +50,12 @@ static inline int MPIDI_NM_mpi_imrecv(void *buf,
 }
 
 static inline int MPIDI_NM_mpi_irecv(void *buf,
-                                     int count,
+                                     MPI_Aint count,
                                      MPI_Datatype datatype,
                                      int rank,
                                      int tag,
                                      MPIR_Comm * comm, int context_offset,
-                                     MPIDI_av_entry_t *addr,
-                                     MPIR_Request ** request)
+                                     MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     int err = MPI_SUCCESS;
     MPIR_Assert(0);

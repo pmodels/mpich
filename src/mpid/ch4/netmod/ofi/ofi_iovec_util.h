@@ -127,24 +127,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_segment_next(MPIDI_OFI_seg_state_t * stat
     int num_contig = 1;
 
     switch (side) {
-    case MPIDI_OFI_SEGMENT_ORIGIN:
-        last = state->origin_end;
-        seg = &state->origin_seg;
-        cursor = &state->origin_cursor;
-        break;
-    case MPIDI_OFI_SEGMENT_TARGET:
-        last = state->target_end;
-        seg = &state->target_seg;
-        cursor = &state->target_cursor;
-        break;
-    case MPIDI_OFI_SEGMENT_RESULT:
-        last = state->result_end;
-        seg = &state->result_seg;
-        cursor = &state->result_cursor;
-        break;
-    default:
-        MPIR_Assert(0);
-        break;
+        case MPIDI_OFI_SEGMENT_ORIGIN:
+            last = state->origin_end;
+            seg = &state->origin_seg;
+            cursor = &state->origin_cursor;
+            break;
+        case MPIDI_OFI_SEGMENT_TARGET:
+            last = state->target_end;
+            seg = &state->target_seg;
+            cursor = &state->target_cursor;
+            break;
+        case MPIDI_OFI_SEGMENT_RESULT:
+            last = state->result_end;
+            seg = &state->result_seg;
+            cursor = &state->result_cursor;
+            break;
+        default:
+            MPIR_Assert(0);
+            break;
     }
     if (*cursor >= last)
         return 1;
@@ -226,8 +226,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_next_seg_state(MPIDI_OFI_seg_state_t * se
         MPIDI_OFI_NEXT_SEG_STATE(target, TARGET);
         MPIDI_OFI_NEXT_SEG_STATE(origin, ORIGIN);
         return MPIDI_OFI_SEG_EAGAIN;
-    }
-    else {
+    } else {
         if (((seg_state->origin_iov_len != 0) || (seg_state->target_iov_len != 0)))
             return MPIDI_OFI_SEG_ERROR;
         return MPIDI_OFI_SEG_DONE;
@@ -250,8 +249,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_next_seg_state2(MPIDI_OFI_seg_state_t * s
         MPIDI_OFI_NEXT_SEG_STATE(origin, ORIGIN);
         MPIDI_OFI_NEXT_SEG_STATE(result, RESULT);
         return MPIDI_OFI_SEG_EAGAIN;
-    }
-    else {
+    } else {
         if (((seg_state->origin_iov_len != 0) ||
              (seg_state->target_iov_len != 0) || (seg_state->result_iov_len != 0)))
             return MPIDI_OFI_SEG_ERROR;
@@ -276,8 +274,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_peek_seg_state(MPIDI_OFI_seg_state_t * se
             MPL_MIN(MPL_MIN(seg_state->target_iov_len,
                             seg_state->origin_iov_len), seg_state->buf_limit_left);
         return MPIDI_OFI_SEG_EAGAIN;
-    }
-    else {
+    } else {
         if (((seg_state->origin_iov_len != 0) || (seg_state->target_iov_len != 0)))
             return MPIDI_OFI_SEG_ERROR;
 
@@ -303,8 +300,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_peek_seg_state2(MPIDI_OFI_seg_state_t * s
         *buf_len = MPL_MIN(MPL_MIN(MPL_MIN(seg_state->target_iov_len, seg_state->origin_iov_len),
                                    seg_state->result_iov_len), seg_state->buf_limit_left);
         return MPIDI_OFI_SEG_EAGAIN;
-    }
-    else {
+    } else {
         if (((seg_state->origin_iov_len != 0) ||
              (seg_state->target_iov_len != 0) || (seg_state->result_iov_len != 0)))
             return MPIDI_OFI_SEG_ERROR;
@@ -358,12 +354,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_merge_segment(MPIDI_OFI_seg_state_t * seg
         if (target_last_addr + last_len == target_addr) {
             /* target address is contiguous, update a new iovec for origin only. */
             MPIDI_OFI_UPDATE_SEG_STATE1(target, origin);
-        }
-        else if (origin_last_addr + last_len == origin_addr) {
+        } else if (origin_last_addr + last_len == origin_addr) {
             /* origin address is contiguous, update a new iovec for target only. */
             MPIDI_OFI_UPDATE_SEG_STATE1(origin, target);
-        }
-        else {
+        } else {
             MPIDI_OFI_UPDATE_SEG(target, TARGET);
             MPIDI_OFI_UPDATE_SEG(origin, ORIGIN);
             MPIDI_OFI_next_seg_state(seg_state, &origin_addr, &target_addr, &len);
@@ -429,21 +423,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_merge_segment2(MPIDI_OFI_seg_state_t * se
         /* IOV count is initialized as 1. Limit check should be done before update.
          * Otherwise check doesn't work correctly for max_iovs = 1. */
         if ((*origin_iovs_nout >= origin_max_iovs) ||
-                (*target_iovs_nout >= target_max_iovs) || (*result_iovs_nout >= result_max_iovs)) {
+            (*target_iovs_nout >= target_max_iovs) || (*result_iovs_nout >= result_max_iovs)) {
             seg_state->buf_limit_left = seg_state->buf_limit;
             return MPIDI_OFI_SEG_EAGAIN;
         }
 
         if (target_last_addr + last_len == target_addr) {
             MPIDI_OFI_UPDATE_SEG_STATE2(target, origin, result);
-        }
-        else if (origin_last_addr + last_len == origin_addr) {
+        } else if (origin_last_addr + last_len == origin_addr) {
             MPIDI_OFI_UPDATE_SEG_STATE2(origin, target, result);
-        }
-        else if (result_last_addr + last_len == result_addr) {
+        } else if (result_last_addr + last_len == result_addr) {
             MPIDI_OFI_UPDATE_SEG_STATE2(result, target, origin);
-        }
-        else {
+        } else {
             MPIDI_OFI_UPDATE_SEG(target, TARGET);
             MPIDI_OFI_UPDATE_SEG(origin, ORIGIN);
             MPIDI_OFI_UPDATE_SEG(result, RESULT);
@@ -466,8 +457,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_merge_segment2(MPIDI_OFI_seg_state_t * se
 
     if (rc == MPIDI_OFI_SEG_DONE) {
         return MPIDI_OFI_SEG_DONE;
-    }
-    else {
+    } else {
         seg_state->buf_limit_left = seg_state->buf_limit;
         return MPIDI_OFI_SEG_EAGAIN;
     }

@@ -172,13 +172,11 @@ MTEST_THREAD_RETURN_TYPE test_intercomm(void *arg)
             if (rank == 0) {
                 root = MPI_ROOT;
                 ans[2] = 199;
-            }
-            else {
+            } else {
                 root = MPI_PROC_NULL;
                 ans[2] = 199;   /* not needed, just to make correctness checking easier */
             }
-        }
-        else {
+        } else {
             root = 0;
             ans[2] = 111;       /* garbage value */
         }

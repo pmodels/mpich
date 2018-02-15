@@ -10,7 +10,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #if MPL_TIMER_KIND == MPL_TIMER_KIND__QUERYPERFORMANCECOUNTER
 
-static double seconds_per_tick = 0.0;     /* High performance counter frequency */
+static double seconds_per_tick = 0.0;   /* High performance counter frequency */
 
 int MPL_wtime_init(void)
 {

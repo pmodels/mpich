@@ -133,8 +133,7 @@ static void signal_cb(int sig)
     if (sig == SIGPIPE) {
         /* Upstream socket closed; kill all processes */
         HYD_pmcd_pmip_send_signal(SIGKILL);
-    }
-    else if (sig == SIGTSTP) {
+    } else if (sig == SIGTSTP) {
         HYD_pmcd_pmip_send_signal(sig);
     }
     /* Ignore other signals for now */
@@ -174,8 +173,7 @@ int main(int argc, char **argv)
     ret = MPL_env2int("HYDI_CONTROL_FD", &HYD_pmcd_pmip.upstream.control);
     if (ret < 0) {
         HYDU_ERR_POP(status, "error reading HYDI_CONTROL_FD environment\n");
-    }
-    else if (ret == 0) {
+    } else if (ret == 0) {
         status = HYDU_sock_connect(HYD_pmcd_pmip.upstream.server_name,
                                    HYD_pmcd_pmip.upstream.server_port,
                                    &HYD_pmcd_pmip.upstream.control,
@@ -234,8 +232,7 @@ int main(int argc, char **argv)
                             HYD_pmcd_pmip.downstream.exit_status[i] = 0;
                         else
                             HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
-                    }
-                    else {
+                    } else {
                         HYD_pmcd_pmip.downstream.exit_status[i] = ret_status;
                     }
 

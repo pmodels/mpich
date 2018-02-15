@@ -109,8 +109,7 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
     if (myrank == 1) {
         MPI_Send(src, 1, small_non_contig_struct_type, 0, 0xabc, MPI_COMM_WORLD);
-    }
-    else {
+    } else {
         MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
         ret = MPI_Recv(sendrec, 1, contig_indexed_type, 1, 0xabc, MPI_COMM_WORLD, &status);
         if (ret == MPI_SUCCESS) {

@@ -61,8 +61,7 @@ int main(int argc, char *argv[])
                             ("Get Error: B[i] is %d, should be %d\n", B[i], (-4) * (i + SIZE1)););
                     errs++;
                 }
-        }
-        else if (rank == 1) {
+        } else if (rank == 1) {
 #ifdef USE_WIN_ALLOCATE
             int *B;
             MPI_Win_allocate(SIZE2 * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &B, &win);

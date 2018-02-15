@@ -74,8 +74,7 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
             HYDU_error_printf("execvp error on file %s (%s)\n", client_arg[0], MPL_strerror(errno));
             exit(-1);
         }
-    }
-    else {      /* Parent process */
+    } else {    /* Parent process */
         if (out)
             close(outpipe[1]);
         if (err)

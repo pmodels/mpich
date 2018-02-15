@@ -80,7 +80,7 @@ int Type_contiguous_x(MPI_Count count, MPI_Datatype oldtype, MPI_Datatype * newt
     MPI_ASSERT(MPI_Type_size(oldtype, &typesize));
 
     {
-        MPI_Aint remdisp = (MPI_Aint) c * BIGMPI_MAX * typesize;    /* must explicit-cast to avoid overflow */
+        MPI_Aint remdisp = (MPI_Aint) c * BIGMPI_MAX * typesize;        /* must explicit-cast to avoid overflow */
         int array_of_blocklengths[2] = { 1, 1 };
         MPI_Aint array_of_displacements[2] = { 0, remdisp };
         MPI_Datatype array_of_types[2] = { chunks, remainder };
@@ -145,13 +145,11 @@ int main(int argc, char *argv[])
     if (size == 1) {
         MPI_ASSERT(MPI_Waitall(2, requests, statuses));
         MPI_ASSERT(MPI_Get_elements_x(&(statuses[1]), MPI_CHAR, &ocount));
-    }
-    else {
+    } else {
         if (rank == (size - 1)) {
             MPI_ASSERT(MPI_Wait(&(requests[1]), &(statuses[1])));
             MPI_ASSERT(MPI_Get_elements_x(&(statuses[1]), MPI_CHAR, &ocount));
-        }
-        else if (rank == 0) {
+        } else if (rank == 0) {
             MPI_ASSERT(MPI_Wait(&(requests[0]), &(statuses[0])));
             /* No valid fields in status from a send request (MPI-3 p53,
              * line 1-5) */
@@ -163,11 +161,11 @@ int main(int argc, char *argv[])
         MPI_Count j, errors = 0;
         for (j = 0; j < count; j++)
             errors += (rbuf[j] != 'z');
-        if (count != ocount) ++errors;
+        if (count != ocount)
+            ++errors;
         if (errors == 0) {
             printf(" No Errors\n");
-        }
-        else {
+        } else {
             printf("errors = %lld \n", errors);
         }
     }

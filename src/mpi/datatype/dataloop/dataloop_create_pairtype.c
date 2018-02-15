@@ -7,13 +7,13 @@
 
 #include "mpiimpl.h"
 
-#define PAIRTYPE_CONTENTS(mt1_,ut1_,mt2_,ut2_)				\
-    {									\
-	struct { ut1_ a; ut2_ b; } foo;					\
-	disps[0] = 0;							\
-	disps[1] = DLOOP_VOID_PTR_CAST_TO_OFFSET ((char *) &foo.b - (char *) &foo.a);	\
-	types[0] = mt1_;						\
-	types[1] = mt2_;						\
+#define PAIRTYPE_CONTENTS(mt1_,ut1_,mt2_,ut2_)                          \
+    {                                                                   \
+        struct { ut1_ a; ut2_ b; } foo;                                 \
+        disps[0] = 0;                                                   \
+        disps[1] = DLOOP_VOID_PTR_CAST_TO_OFFSET ((char *) &foo.b - (char *) &foo.a); \
+        types[0] = mt1_;                                                \
+        types[1] = mt2_;                                                \
     }
 
 /*@
@@ -37,38 +37,29 @@
    that actually consists of two distinct elements.
 @*/
 int MPIR_Dataloop_create_pairtype(MPI_Datatype type,
-					     DLOOP_Dataloop **dlp_p,
-					     MPI_Aint *dlsz_p,
-					     int *dldepth_p,
-					     int flag)
+                                  DLOOP_Dataloop ** dlp_p,
+                                  MPI_Aint * dlsz_p, int *dldepth_p, int flag)
 {
     int blocks[2] = { 1, 1 };
     MPI_Aint disps[2];
     MPI_Datatype types[2];
 
     DLOOP_Assert(type == MPI_FLOAT_INT || type == MPI_DOUBLE_INT ||
-		 type == MPI_LONG_INT || type == MPI_SHORT_INT ||
-		 type == MPI_LONG_DOUBLE_INT || type == MPI_2INT);
+                 type == MPI_LONG_INT || type == MPI_SHORT_INT ||
+                 type == MPI_LONG_DOUBLE_INT || type == MPI_2INT);
 
-    if (type ==  MPI_FLOAT_INT)
-	PAIRTYPE_CONTENTS(MPI_FLOAT, float, MPI_INT, int);
+    if (type == MPI_FLOAT_INT)
+        PAIRTYPE_CONTENTS(MPI_FLOAT, float, MPI_INT, int);
     if (type == MPI_DOUBLE_INT)
-	PAIRTYPE_CONTENTS(MPI_DOUBLE, double, MPI_INT, int);
+        PAIRTYPE_CONTENTS(MPI_DOUBLE, double, MPI_INT, int);
     if (type == MPI_LONG_INT)
-	PAIRTYPE_CONTENTS(MPI_LONG, long, MPI_INT, int);
+        PAIRTYPE_CONTENTS(MPI_LONG, long, MPI_INT, int);
     if (type == MPI_SHORT_INT)
-	PAIRTYPE_CONTENTS(MPI_SHORT, short, MPI_INT, int);
+        PAIRTYPE_CONTENTS(MPI_SHORT, short, MPI_INT, int);
     if (type == MPI_LONG_DOUBLE_INT)
-	PAIRTYPE_CONTENTS(MPI_LONG_DOUBLE, long double, MPI_INT, int);
+        PAIRTYPE_CONTENTS(MPI_LONG_DOUBLE, long double, MPI_INT, int);
     if (type == MPI_2INT)
-	PAIRTYPE_CONTENTS(MPI_INT, int, MPI_INT, int);
+        PAIRTYPE_CONTENTS(MPI_INT, int, MPI_INT, int);
 
-    return MPIR_Dataloop_create_struct(2,
-						  blocks,
-						  disps,
-						  types,
-						  dlp_p,
-						  dlsz_p,
-						  dldepth_p,
-						  flag);
+    return MPIR_Dataloop_create_struct(2, blocks, disps, types, dlp_p, dlsz_p, dldepth_p, flag);
 }

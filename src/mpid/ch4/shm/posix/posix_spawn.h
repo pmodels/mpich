@@ -14,9 +14,9 @@
 #include "posix_impl.h"
 
 static inline int MPIDI_POSIX_mpi_comm_connect(const char *port_name,
-                                             MPIR_Info * info,
-                                             int root, int timeout,
-                                             MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
+                                               MPIR_Info * info,
+                                               int root, int timeout,
+                                               MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_COMM_CONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_COMM_CONNECT);
@@ -61,8 +61,8 @@ static inline int MPIDI_POSIX_mpi_close_port(const char *port_name)
 }
 
 static inline int MPIDI_POSIX_mpi_comm_accept(const char *port_name,
-                                            MPIR_Info * info,
-                                            int root, MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
+                                              MPIR_Info * info,
+                                              int root, MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_COMM_ACCEPT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_COMM_ACCEPT);

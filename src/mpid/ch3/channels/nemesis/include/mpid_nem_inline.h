@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef _MPID_NEM_INLINE_H
-#define _MPID_NEM_INLINE_H
+#ifndef MPID_NEM_INLINE_H_INCLUDED
+#define MPID_NEM_INLINE_H_INCLUDED
 
 #include "my_papi_defs.h"
 #include "mpl.h"
@@ -90,6 +90,7 @@ cvars:
      !MPIDI_CH3I_shm_active_send &&             \
      !MPIDI_CH3I_Sendq_head(MPIDI_CH3I_shm_sendq) &&       \
      !MPIDU_Sched_are_pending() &&              \
+     MPIR_Coll_safe_to_block() &&  \
      !MPIDI_RMA_Win_active_list_head)
 
 #undef FUNCNAME
@@ -1085,5 +1086,5 @@ MPID_nem_mpich_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc)
     return mpi_errno;
 }
 
-#endif /*_MPID_NEM_INLINE_H*/
+#endif /* MPID_NEM_INLINE_H_INCLUDED */
 

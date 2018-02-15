@@ -16,7 +16,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_size as PMPI_Type_size
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Type_size(MPI_Datatype datatype, int *size) __attribute__((weak,alias("PMPI_Type_size")));
+int MPI_Type_size(MPI_Datatype datatype, int *size) __attribute__ ((weak, alias("PMPI_Type_size")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -37,10 +37,10 @@ int MPI_Type_size(MPI_Datatype datatype, int *size) __attribute__((weak,alias("P
                     in the datatype
 
 Input Parameters:
-. datatype - datatype (handle) 
+. datatype - datatype (handle)
 
 Output Parameters:
-. size - datatype size (integer) 
+. size - datatype size (integer)
 
 .N SignalSafe
 
@@ -58,53 +58,54 @@ int MPI_Type_size(MPI_Datatype datatype, int *size)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_SIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_SIZE);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
-	}
+            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
+        }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
-	    
+#endif /* HAVE_ERROR_CHECKING */
+
     /* If this is a built-in datatype, then get the size out of the handle */
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
-    {
-	MPIR_Datatype_get_size_macro(datatype, *size);
-	goto fn_exit;
+    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
+        MPIR_Datatype_get_size_macro(datatype, *size);
+        goto fn_exit;
     }
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_Datatype *datatype_ptr = NULL;
 
             /* Convert MPI object handles to object pointers */
-            MPIR_Datatype_get_ptr( datatype, datatype_ptr );
+            MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
             /* Validate datatype_ptr */
-            MPIR_Datatype_valid_ptr( datatype_ptr, mpi_errno );
-            if (mpi_errno) goto fn_fail;
+            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Type_size_x_impl(datatype, &size_x);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     MPIR_Assert(size_x >= 0);
     /* handle overflow: see MPI-3 p.104 */
-    *size = (size_x > INT_MAX) ? MPI_UNDEFINED : (int)size_x;
+    *size = (size_x > INT_MAX) ? MPI_UNDEFINED : (int) size_x;
 
     /* ... end of body of routine ... */
 
@@ -115,12 +116,11 @@ int MPI_Type_size(MPI_Datatype datatype, int *size)
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
-	    "**mpi_type_size", 
-	    "**mpi_type_size %D %p", datatype, size);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_type_size", "**mpi_type_size %D %p", datatype, size);
     }
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

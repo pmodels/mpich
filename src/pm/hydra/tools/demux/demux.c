@@ -44,14 +44,12 @@ HYD_status HYDT_dmx_init(char **demux)
         HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_select_stdin_valid;
         *demux = MPL_strdup("select");
 #endif /* HAVE_SELECT */
-    }
-    else if (!strcmp(*demux, "poll")) { /* user wants to use poll */
+    } else if (!strcmp(*demux, "poll")) {       /* user wants to use poll */
 #if defined HAVE_POLL
         HYDT_dmxu_fns.wait_for_event = HYDT_dmxu_poll_wait_for_event;
         HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_poll_stdin_valid;
 #endif /* HAVE_POLL */
-    }
-    else if (!strcmp(*demux, "select")) {       /* user wants to use select */
+    } else if (!strcmp(*demux, "select")) {     /* user wants to use select */
 #if defined HAVE_SELECT
         HYDT_dmxu_fns.wait_for_event = HYDT_dmxu_select_wait_for_event;
         HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_select_stdin_valid;
@@ -118,8 +116,7 @@ HYD_status HYDT_dmx_register_fd(int num_fds, int *fd, HYD_event_t events, void *
 
     if (HYDT_dmxu_cb_list == NULL) {
         HYDT_dmxu_cb_list = cb_element;
-    }
-    else {
+    } else {
         run = HYDT_dmxu_cb_list;
         while (run->next)
             run = run->next;

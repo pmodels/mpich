@@ -1,6 +1,6 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-/* 
- *   Copyright (C) 1997 University of Chicago. 
+/*
+ *   Copyright (C) 1997 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
  */
 
@@ -69,30 +69,30 @@ void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
     MPI_Type_get_envelope(datatype, &nints, &nadds, &ntypes, &combiner);
 
     switch (combiner) {
-    case MPI_COMBINER_NAMED:
-	*flag = 1;
-	break;
-    case MPI_COMBINER_CONTIGUOUS:
-	ints = (int *) ADIOI_Malloc((nints+1)*sizeof(int));
-	adds = (MPI_Aint *) ADIOI_Malloc((nadds+1)*sizeof(MPI_Aint));
-	types = (MPI_Datatype *) ADIOI_Malloc((ntypes+1)*sizeof(MPI_Datatype));
-	MPI_Type_get_contents(datatype, nints, nadds, ntypes, ints,
-			      adds, types); 
-	ADIOI_Datatype_iscontig(types[0], flag);
+        case MPI_COMBINER_NAMED:
+            *flag = 1;
+            break;
+        case MPI_COMBINER_CONTIGUOUS:
+            ints = (int *) ADIOI_Malloc((nints + 1) * sizeof(int));
+            adds = (MPI_Aint *) ADIOI_Malloc((nadds + 1) * sizeof(MPI_Aint));
+            types = (MPI_Datatype *) ADIOI_Malloc((ntypes + 1) * sizeof(MPI_Datatype));
+            MPI_Type_get_contents(datatype, nints, nadds, ntypes, ints, adds, types);
+            ADIOI_Datatype_iscontig(types[0], flag);
 
-	MPI_Type_get_envelope(types[0], &ni, &na, &nt, &cb);
-	if (cb != MPI_COMBINER_NAMED) MPI_Type_free(types);
+            MPI_Type_get_envelope(types[0], &ni, &na, &nt, &cb);
+            if (cb != MPI_COMBINER_NAMED)
+                MPI_Type_free(types);
 
-	ADIOI_Free(ints);
-	ADIOI_Free(adds);
-	ADIOI_Free(types);
-	break;
-    default:
-	*flag = 0;
-	break;
+            ADIOI_Free(ints);
+            ADIOI_Free(adds);
+            ADIOI_Free(types);
+            break;
+        default:
+            *flag = 0;
+            break;
     }
 
-    /* This function needs more work. It should check for contiguity 
-       in other cases as well.*/
+    /* This function needs more work. It should check for contiguity
+     * in other cases as well. */
 }
 #endif

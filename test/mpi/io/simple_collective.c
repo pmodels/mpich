@@ -124,16 +124,16 @@ static int parse_args(int argc, char **argv)
 
     while ((c = getopt(argc, argv, "e")) != EOF) {
         switch (c) {
-        case 'h':
-            if (rank == 0)
-                usage(argv[0]);
-            exit(0);
-        case '?':      /* unknown */
-            if (rank == 0)
-                usage(argv[0]);
-            exit(1);
-        default:
-            break;
+            case 'h':
+                if (rank == 0)
+                    usage(argv[0]);
+                exit(0);
+            case '?':  /* unknown */
+                if (rank == 0)
+                    usage(argv[0]);
+                exit(1);
+            default:
+                break;
         }
     }
 

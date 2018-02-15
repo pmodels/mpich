@@ -23,25 +23,25 @@
 #include "mpi.h"
 
 #if !defined(PVFS2_SUPER_MAGIC)
-  #define PVFS2_SUPER_MAGIC (0x20030528)
+#define PVFS2_SUPER_MAGIC (0x20030528)
 #endif
 
 
-int 	gpfsmpio_timing;
-int 	gpfsmpio_timing2;
-int     gpfsmpio_timing_cw_level;
-int 	gpfsmpio_comm;
-int 	gpfsmpio_tuneblocking;
-long    bglocklessmpio_f_type;
-int     gpfsmpio_bg_nagg_pset;
-int     gpfsmpio_pthreadio;
-int     gpfsmpio_p2pcontig;
-int	gpfsmpio_balancecontig;
-int     gpfsmpio_devnullio;
-int     gpfsmpio_bridgeringagg;
+int gpfsmpio_timing;
+int gpfsmpio_timing2;
+int gpfsmpio_timing_cw_level;
+int gpfsmpio_comm;
+int gpfsmpio_tuneblocking;
+long bglocklessmpio_f_type;
+int gpfsmpio_bg_nagg_pset;
+int gpfsmpio_pthreadio;
+int gpfsmpio_p2pcontig;
+int gpfsmpio_balancecontig;
+int gpfsmpio_devnullio;
+int gpfsmpio_bridgeringagg;
 
-double	gpfsmpio_prof_cw    [GPFSMPIO_CIO_LAST+1];
-double	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST+1];
+double gpfsmpio_prof_cw[GPFSMPIO_CIO_LAST + 1];
+double gpfsmpio_prof_cr[GPFSMPIO_CIO_LAST + 1];
 
 /* set internal variables for tuning environment variables */
 /** \page mpiio_vars MPIIO Configuration
@@ -123,142 +123,145 @@ double	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST+1];
  *
  */
 
-void ad_gpfs_get_env_vars() {
+void ad_gpfs_get_env_vars()
+{
     char *x, *dummy;
 
-    gpfsmpio_comm   = 0;
-	x = getenv( "GPFSMPIO_COMM"         );
-	if (x) gpfsmpio_comm         = atoi(x);
+    gpfsmpio_comm = 0;
+    x = getenv("GPFSMPIO_COMM");
+    if (x)
+        gpfsmpio_comm = atoi(x);
     gpfsmpio_timing = 0;
-	x = getenv( "GPFSMPIO_TIMING"       );
-	if (x) gpfsmpio_timing       = atoi(x);
+    x = getenv("GPFSMPIO_TIMING");
+    if (x)
+        gpfsmpio_timing = atoi(x);
     gpfsmpio_tuneblocking = 1;
-    x = getenv( "GPFSMPIO_TUNEBLOCKING" );
-    if (x) gpfsmpio_tuneblocking = atoi(x);
+    x = getenv("GPFSMPIO_TUNEBLOCKING");
+    if (x)
+        gpfsmpio_tuneblocking = atoi(x);
     bglocklessmpio_f_type = PVFS2_SUPER_MAGIC;
-    x = getenv( "BGLOCKLESSMPIO_F_TYPE" );
-    if (x) bglocklessmpio_f_type = strtol(x,&dummy,0);
-    DBG_FPRINTF(stderr,"BGLOCKLESSMPIO_F_TYPE=%ld/%#lX\n",
-            bglocklessmpio_f_type,bglocklessmpio_f_type);
+    x = getenv("BGLOCKLESSMPIO_F_TYPE");
+    if (x)
+        bglocklessmpio_f_type = strtol(x, &dummy, 0);
+    DBG_FPRINTF(stderr, "BGLOCKLESSMPIO_F_TYPE=%ld/%#lX\n",
+                bglocklessmpio_f_type, bglocklessmpio_f_type);
     /* note: this value will be 'sanity checked' in ADIOI_BG_persInfo_init(),
      * when we know a bit more about what "largest possible value" and
      * "smallest possible value" should be */
     gpfsmpio_bg_nagg_pset = ADIOI_BG_NAGG_PSET_DFLT;
     x = getenv("GPFSMPIO_NAGG_PSET");
-    if (x) gpfsmpio_bg_nagg_pset = atoi(x);
+    if (x)
+        gpfsmpio_bg_nagg_pset = atoi(x);
 
     gpfsmpio_p2pcontig = 0;
-    x = getenv( "GPFSMPIO_P2PCONTIG" );
-    if (x) gpfsmpio_p2pcontig = atoi(x);
+    x = getenv("GPFSMPIO_P2PCONTIG");
+    if (x)
+        gpfsmpio_p2pcontig = atoi(x);
 
     gpfsmpio_balancecontig = 0;
-    x = getenv( "GPFSMPIO_BALANCECONTIG" );
-    if (x) gpfsmpio_balancecontig = atoi(x);
+    x = getenv("GPFSMPIO_BALANCECONTIG");
+    if (x)
+        gpfsmpio_balancecontig = atoi(x);
 
     gpfsmpio_devnullio = 0;
-    x = getenv( "GPFSMPIO_DEVNULLIO" );
-    if (x) gpfsmpio_devnullio = atoi(x);
+    x = getenv("GPFSMPIO_DEVNULLIO");
+    if (x)
+        gpfsmpio_devnullio = atoi(x);
 
     gpfsmpio_bridgeringagg = 0;
-    x = getenv( "GPFSMPIO_BRIDGERINGAGG" );
-    if (x) gpfsmpio_bridgeringagg = atoi(x);
+    x = getenv("GPFSMPIO_BRIDGERINGAGG");
+    if (x)
+        gpfsmpio_bridgeringagg = atoi(x);
 
 }
 
 /* report timing breakdown for MPI I/O collective call */
-void ad_gpfs_timing_crw_report( int rw, ADIO_File fd, int myrank, int nprocs )
+void ad_gpfs_timing_crw_report(int rw, ADIO_File fd, int myrank, int nprocs)
 {
     int i;
 
     if (gpfsmpio_timing) {
-	/* Timing across the whole communicator is a little bit interesting,
-	 * but what is *more* interesting is if we single out the aggregators
-	 * themselves.  non-aggregators spend a lot of time in "exchange" not
-	 * exchanging data, but blocked because they are waiting for
-	 * aggregators to finish writing.  If we focus on just the aggregator
-	 * processes we will get a more clear picture about the data exchange
-	 * vs. i/o time breakdown */
+        /* Timing across the whole communicator is a little bit interesting,
+         * but what is *more* interesting is if we single out the aggregators
+         * themselves.  non-aggregators spend a lot of time in "exchange" not
+         * exchanging data, but blocked because they are waiting for
+         * aggregators to finish writing.  If we focus on just the aggregator
+         * processes we will get a more clear picture about the data exchange
+         * vs. i/o time breakdown */
 
-	/* if deferred open enabled, we could use the aggregator communicator */
-	MPI_Comm agg_comm;
-	int nr_aggs, agg_rank;
-	MPI_Comm_split(fd->comm, (fd->is_agg ? 1 : MPI_UNDEFINED), 0, &agg_comm);
-	if(agg_comm != MPI_COMM_NULL) {
-	    MPI_Comm_size(agg_comm, &nr_aggs);
-	    MPI_Comm_rank(agg_comm, &agg_rank);
-	}
+        /* if deferred open enabled, we could use the aggregator communicator */
+        MPI_Comm agg_comm;
+        int nr_aggs, agg_rank;
+        MPI_Comm_split(fd->comm, (fd->is_agg ? 1 : MPI_UNDEFINED), 0, &agg_comm);
+        if (agg_comm != MPI_COMM_NULL) {
+            MPI_Comm_size(agg_comm, &nr_aggs);
+            MPI_Comm_rank(agg_comm, &agg_rank);
+        }
 
-	double *gpfsmpio_prof_org = gpfsmpio_prof_cr;
-	if (rw) gpfsmpio_prof_org = gpfsmpio_prof_cw;
+        double *gpfsmpio_prof_org = gpfsmpio_prof_cr;
+        if (rw)
+            gpfsmpio_prof_org = gpfsmpio_prof_cw;
 
-	double gpfsmpio_prof_avg[ GPFSMPIO_CIO_LAST ];
-	double gpfsmpio_prof_max[ GPFSMPIO_CIO_LAST ];
+        double gpfsmpio_prof_avg[GPFSMPIO_CIO_LAST];
+        double gpfsmpio_prof_max[GPFSMPIO_CIO_LAST];
 
-	if( agg_comm != MPI_COMM_NULL) {
-	    MPI_Reduce( gpfsmpio_prof_org, gpfsmpio_prof_avg, GPFSMPIO_CIO_LAST, MPI_DOUBLE, MPI_SUM, 0, agg_comm);
-	    MPI_Reduce( gpfsmpio_prof_org, gpfsmpio_prof_max, GPFSMPIO_CIO_LAST, MPI_DOUBLE, MPI_MAX, 0, agg_comm);
-	}
-	if (agg_comm != MPI_COMM_NULL && agg_rank == 0) {
+        if (agg_comm != MPI_COMM_NULL) {
+            MPI_Reduce(gpfsmpio_prof_org, gpfsmpio_prof_avg, GPFSMPIO_CIO_LAST, MPI_DOUBLE, MPI_SUM,
+                       0, agg_comm);
+            MPI_Reduce(gpfsmpio_prof_org, gpfsmpio_prof_max, GPFSMPIO_CIO_LAST, MPI_DOUBLE, MPI_MAX,
+                       0, agg_comm);
+        }
+        if (agg_comm != MPI_COMM_NULL && agg_rank == 0) {
 
-	    for (i=0; i<GPFSMPIO_CIO_LAST; i++) gpfsmpio_prof_avg[i] /= nr_aggs;
+            for (i = 0; i < GPFSMPIO_CIO_LAST; i++)
+                gpfsmpio_prof_avg[i] /= nr_aggs;
 
-	    gpfsmpio_prof_avg[ GPFSMPIO_CIO_B_POSI_RW  ] =
-		gpfsmpio_prof_avg[ GPFSMPIO_CIO_DATA_SIZE ] * nr_aggs /
-		gpfsmpio_prof_max[ GPFSMPIO_CIO_T_POSI_RW  ];
-	    gpfsmpio_prof_avg[ GPFSMPIO_CIO_B_MPIO_RW  ] =
-		gpfsmpio_prof_avg[ GPFSMPIO_CIO_DATA_SIZE ] * nr_aggs /
-		gpfsmpio_prof_max[ GPFSMPIO_CIO_T_MPIO_RW  ];
+            gpfsmpio_prof_avg[GPFSMPIO_CIO_B_POSI_RW] =
+                gpfsmpio_prof_avg[GPFSMPIO_CIO_DATA_SIZE] * nr_aggs /
+                gpfsmpio_prof_max[GPFSMPIO_CIO_T_POSI_RW];
+            gpfsmpio_prof_avg[GPFSMPIO_CIO_B_MPIO_RW] =
+                gpfsmpio_prof_avg[GPFSMPIO_CIO_DATA_SIZE] * nr_aggs /
+                gpfsmpio_prof_max[GPFSMPIO_CIO_T_MPIO_RW];
 
-	    gpfsmpio_prof_avg[ GPFSMPIO_CIO_B_MPIO_CRW ] =
-		gpfsmpio_prof_avg[ GPFSMPIO_CIO_DATA_SIZE ] * nr_aggs /
-		gpfsmpio_prof_max[ GPFSMPIO_CIO_T_MPIO_CRW ];
+            gpfsmpio_prof_avg[GPFSMPIO_CIO_B_MPIO_CRW] =
+                gpfsmpio_prof_avg[GPFSMPIO_CIO_DATA_SIZE] * nr_aggs /
+                gpfsmpio_prof_max[GPFSMPIO_CIO_T_MPIO_CRW];
 
-	    fprintf(stderr,"TIMING-%1s,", (rw ? "W" : "R") );
-	    fprintf(stderr,"SIZE: %12.4lld , ", (long long int)(gpfsmpio_prof_avg[ GPFSMPIO_CIO_DATA_SIZE ] * nr_aggs));
-	    fprintf(stderr,"SEEK-avg: %10.3f , ",
-		    gpfsmpio_prof_avg[ GPFSMPIO_CIO_T_SEEK ]     );
-	    fprintf(stderr,"SEEK-max: %10.3f , ",
-		    gpfsmpio_prof_max[ GPFSMPIO_CIO_T_SEEK ]     );
-	    fprintf(stderr,"LOCAL-avg: %10.3f , ",
-		    gpfsmpio_prof_avg[ GPFSMPIO_CIO_T_LCOMP ]    );
-	    fprintf(stderr,"GATHER-max: %10.3f , ",
-		    gpfsmpio_prof_max[ GPFSMPIO_CIO_T_GATHER ]   );
-	    fprintf(stderr,"PATTERN-avg: %10.3f , ",
-		    gpfsmpio_prof_avg[ GPFSMPIO_CIO_T_PATANA ]   );
-	    fprintf(stderr,"FILEDOMAIN-avg: %10.3f , ",
-		    gpfsmpio_prof_avg[ GPFSMPIO_CIO_T_FD_PART ]  );
-	    fprintf(stderr,"MYREQ-avg: %10.3f , ",
-		    gpfsmpio_prof_avg[ GPFSMPIO_CIO_T_MYREQ ]    );
-	    fprintf(stderr,"OTHERREQ-max: %10.3f , ",
-		    gpfsmpio_prof_max[ GPFSMPIO_CIO_T_OTHREQ ]   );
-	    fprintf(stderr,"EXCHANGE-max: %10.3f , ",
-		    gpfsmpio_prof_max[ GPFSMPIO_CIO_T_DEXCH ]    );
-	    fprintf(stderr, "EXCHANGE-RECV_EXCH-max: %10.3f , ",
-		    gpfsmpio_prof_max[ GPFSMPIO_CIO_T_DEXCH_RECV_EXCH]  );
-	    fprintf(stderr, "EXCHANGE-SETUP-max: %10.3f , ",
-		    gpfsmpio_prof_max[ GPFSMPIO_CIO_T_DEXCH_SETUP]  );
-	    fprintf(stderr, "EXCHANGE-NET-max: %10.3f , ",
-		    gpfsmpio_prof_max[ GPFSMPIO_CIO_T_DEXCH_NET]  );
-	    fprintf(stderr, "EXCHANGE-SORT-max: %10.3f , ",
-		    gpfsmpio_prof_max[ GPFSMPIO_CIO_T_DEXCH_SORT]  );
-	    fprintf(stderr, "EXCHANGE-SIEVE-max: %10.3f , ",
-		    gpfsmpio_prof_max[ GPFSMPIO_CIO_T_DEXCH_SIEVE]  );
-	    fprintf(stderr,"POSIX-TIME-avg: %10.3f , ",
-		    gpfsmpio_prof_avg[ GPFSMPIO_CIO_T_POSI_RW ]  );
-	    fprintf(stderr,"POSIX-TIME-max: %10.3f , ",
-		    gpfsmpio_prof_max[ GPFSMPIO_CIO_T_POSI_RW ]  );
-	    fprintf(stderr,"MPIIO-CONTIG-TIME-avg: %10.3f , ",
-		    gpfsmpio_prof_avg[ GPFSMPIO_CIO_T_MPIO_RW ]  );
-	    fprintf(stderr,"MPIIO-STRIDED-TIME-avg: %10.3f , ",
-		    gpfsmpio_prof_avg[ GPFSMPIO_CIO_T_MPIO_CRW ] );
-	    fprintf(stderr,"POSIX-BW-avg: %10.3f , ",
-		    gpfsmpio_prof_avg[ GPFSMPIO_CIO_B_POSI_RW ]  );
-	    fprintf(stderr,"MPI-BW-avg: %10.3f , ",
-		    gpfsmpio_prof_avg[ GPFSMPIO_CIO_B_MPIO_RW ]  );
-	    fprintf(stderr,"MPI-BW-collective-avg: %10.3f\n ",
-		    gpfsmpio_prof_avg[ GPFSMPIO_CIO_B_MPIO_CRW ] );
-	}
-	if (agg_comm != MPI_COMM_NULL) MPI_Comm_free(&agg_comm);
+            fprintf(stderr, "TIMING-%1s,", (rw ? "W" : "R"));
+            fprintf(stderr, "SIZE: %12.4lld , ",
+                    (long long int) (gpfsmpio_prof_avg[GPFSMPIO_CIO_DATA_SIZE] * nr_aggs));
+            fprintf(stderr, "SEEK-avg: %10.3f , ", gpfsmpio_prof_avg[GPFSMPIO_CIO_T_SEEK]);
+            fprintf(stderr, "SEEK-max: %10.3f , ", gpfsmpio_prof_max[GPFSMPIO_CIO_T_SEEK]);
+            fprintf(stderr, "LOCAL-avg: %10.3f , ", gpfsmpio_prof_avg[GPFSMPIO_CIO_T_LCOMP]);
+            fprintf(stderr, "GATHER-max: %10.3f , ", gpfsmpio_prof_max[GPFSMPIO_CIO_T_GATHER]);
+            fprintf(stderr, "PATTERN-avg: %10.3f , ", gpfsmpio_prof_avg[GPFSMPIO_CIO_T_PATANA]);
+            fprintf(stderr, "FILEDOMAIN-avg: %10.3f , ", gpfsmpio_prof_avg[GPFSMPIO_CIO_T_FD_PART]);
+            fprintf(stderr, "MYREQ-avg: %10.3f , ", gpfsmpio_prof_avg[GPFSMPIO_CIO_T_MYREQ]);
+            fprintf(stderr, "OTHERREQ-max: %10.3f , ", gpfsmpio_prof_max[GPFSMPIO_CIO_T_OTHREQ]);
+            fprintf(stderr, "EXCHANGE-max: %10.3f , ", gpfsmpio_prof_max[GPFSMPIO_CIO_T_DEXCH]);
+            fprintf(stderr, "EXCHANGE-RECV_EXCH-max: %10.3f , ",
+                    gpfsmpio_prof_max[GPFSMPIO_CIO_T_DEXCH_RECV_EXCH]);
+            fprintf(stderr, "EXCHANGE-SETUP-max: %10.3f , ",
+                    gpfsmpio_prof_max[GPFSMPIO_CIO_T_DEXCH_SETUP]);
+            fprintf(stderr, "EXCHANGE-NET-max: %10.3f , ",
+                    gpfsmpio_prof_max[GPFSMPIO_CIO_T_DEXCH_NET]);
+            fprintf(stderr, "EXCHANGE-SORT-max: %10.3f , ",
+                    gpfsmpio_prof_max[GPFSMPIO_CIO_T_DEXCH_SORT]);
+            fprintf(stderr, "EXCHANGE-SIEVE-max: %10.3f , ",
+                    gpfsmpio_prof_max[GPFSMPIO_CIO_T_DEXCH_SIEVE]);
+            fprintf(stderr, "POSIX-TIME-avg: %10.3f , ", gpfsmpio_prof_avg[GPFSMPIO_CIO_T_POSI_RW]);
+            fprintf(stderr, "POSIX-TIME-max: %10.3f , ", gpfsmpio_prof_max[GPFSMPIO_CIO_T_POSI_RW]);
+            fprintf(stderr, "MPIIO-CONTIG-TIME-avg: %10.3f , ",
+                    gpfsmpio_prof_avg[GPFSMPIO_CIO_T_MPIO_RW]);
+            fprintf(stderr, "MPIIO-STRIDED-TIME-avg: %10.3f , ",
+                    gpfsmpio_prof_avg[GPFSMPIO_CIO_T_MPIO_CRW]);
+            fprintf(stderr, "POSIX-BW-avg: %10.3f , ", gpfsmpio_prof_avg[GPFSMPIO_CIO_B_POSI_RW]);
+            fprintf(stderr, "MPI-BW-avg: %10.3f , ", gpfsmpio_prof_avg[GPFSMPIO_CIO_B_MPIO_RW]);
+            fprintf(stderr, "MPI-BW-collective-avg: %10.3f\n ",
+                    gpfsmpio_prof_avg[GPFSMPIO_CIO_B_MPIO_CRW]);
+        }
+        if (agg_comm != MPI_COMM_NULL)
+            MPI_Comm_free(&agg_comm);
     }
 
 }

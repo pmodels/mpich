@@ -62,8 +62,7 @@ int main(int argc, char *argv[])
             MPI_Send(big_buffer, RNDV_SIZE, MPI_BYTE, 1, tag, MPI_COMM_WORLD);
             MPI_Recv(big_buffer, RNDV_SIZE, MPI_BYTE, 1, tag, MPI_COMM_WORLD, &status);
         }
-    }
-    else if (rank == 1) {
+    } else if (rank == 1) {
         printf("Rank 1: receiving messages from process 0.\n");
         fflush(stdout);
         for (i = 0; i < reps; i++) {
@@ -84,8 +83,7 @@ int main(int argc, char *argv[])
         }
         printf("Rank 1: received message '%s'\n", big_buffer);
         fflush(stdout);
-    }
-    else {
+    } else {
         printf("Rank %d, I am not participating.\n", rank);
         fflush(stdout);
     }

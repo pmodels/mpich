@@ -23,8 +23,7 @@ int main(int argc, char *argv[])
         errs++;
         printf("Comm_connect returned success with bogus port\n");
         MPI_Comm_free(&newcomm);
-    }
-    else {
+    } else {
         if (verbose) {
             char str[MPI_MAX_ERROR_STRING];
             int slen;

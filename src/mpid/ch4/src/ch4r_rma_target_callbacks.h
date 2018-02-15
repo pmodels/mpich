@@ -50,183 +50,183 @@ static inline int MPIDI_CH4R_RMA_Init_targetcb_pvars(void)
     int mpi_errno = MPI_SUCCESS;
     /* rma_targetcb_put */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_put,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for Put (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_put,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for Put (in seconds)");
 
     /* rma_targetcb_put_ack */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_put_ack,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for Put ACK (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_put_ack,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for Put ACK (in seconds)");
 
     /* rma_targetcb_get */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_get,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for Get (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_get,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for Get (in seconds)");
 
     /* rma_targetcb_get_ack */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_get_ack,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for Get ACK (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_get_ack,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for Get ACK (in seconds)");
 
     /* rma_targetcb_cas */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_cas,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for Compare-and-swap (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_cas,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for Compare-and-swap (in seconds)");
 
     /* rma_targetcb_cas_ack */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_cas_ack,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for Compare-and-swap ACK (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_cas_ack,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for Compare-and-swap ACK (in seconds)");
 
     /* rma_targetcb_acc */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_acc,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for Accumulate (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_acc,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for Accumulate (in seconds)");
 
     /* rma_targetcb_get_acc */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_get_acc,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for Get-Accumulate (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_get_acc,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for Get-Accumulate (in seconds)");
 
     /* rma_targetcb_acc_ack */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_acc_ack,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for Accumulate ACK (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_acc_ack,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for Accumulate ACK (in seconds)");
 
     /* rma_targetcb_get_acc_ack */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_get_acc_ack,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for Get-Accumulate ACK (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_get_acc_ack,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for Get-Accumulate ACK (in seconds)");
 
     /* rma_targetcb_win_ctrl */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_win_ctrl,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for WIN CTRL (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_win_ctrl,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for WIN CTRL (in seconds)");
 
     /* rma_targetcb_put_iov */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_put_iov,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for PUT IOV (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_put_iov,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for PUT IOV (in seconds)");
 
     /* rma_targetcb_put_iov_ack */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_put_iov_ack,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for PUT IOV ACK (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_put_iov_ack,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for PUT IOV ACK (in seconds)");
 
     /* rma_targetcb_put_data */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_put_data,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for PUT DATA (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_put_data,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for PUT DATA (in seconds)");
 
     /* rma_targetcb_acc_iov */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_acc_iov,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for ACC IOV (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_acc_iov,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for ACC IOV (in seconds)");
 
     /* rma_targetcb_get_acc_iov */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_get_acc_iov,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for GET ACC IOV (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_get_acc_iov,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for GET ACC IOV (in seconds)");
 
     /* rma_targetcb_acc_iov_ack */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_acc_iov_ack,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for ACC IOV ACK (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_acc_iov_ack,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for ACC IOV ACK (in seconds)");
 
     /* rma_targetcb_get_acc_iov_ack */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_get_acc_iov_ack,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for GET ACC IOV ACK (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_get_acc_iov_ack,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for GET ACC IOV ACK (in seconds)");
 
     /* rma_targetcb_acc_data */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_acc_data,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for ACC DATA (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_acc_data,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for ACC DATA (in seconds)");
 
     /* rma_targetcb_get_acc_data */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-            MPI_DOUBLE,
-            rma_targetcb_get_acc_data,
-            MPI_T_VERBOSITY_MPIDEV_DETAIL,
-            MPI_T_BIND_NO_OBJECT,
-            MPIR_T_PVAR_FLAG_READONLY,
-            "RMA", "RMA:TARGETCB for GET ACC DATA (in seconds)");
+                                      MPI_DOUBLE,
+                                      rma_targetcb_get_acc_data,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:TARGETCB for GET ACC DATA (in seconds)");
 
     return mpi_errno;
 }
@@ -454,11 +454,9 @@ static inline void MPIDI_win_lock_ack_proc(int handler_id,
 
         MPIR_Assert((int) target_ptr->sync.lock.locked == 0);
         target_ptr->sync.lock.locked = 1;
-    }
-    else if (handler_id == MPIDI_CH4U_WIN_LOCKALL_ACK) {
+    } else if (handler_id == MPIDI_CH4U_WIN_LOCKALL_ACK) {
         MPIDI_CH4U_WIN(win, sync).lockall.allLocked += 1;
-    }
-    else {
+    } else {
         MPIR_Assert(0);
     }
 
@@ -541,12 +539,10 @@ static inline void MPIDI_win_unlock_done(const MPIDI_CH4U_win_cntrl_msg_t * info
 
         MPIR_Assert((int) target_ptr->sync.lock.locked == 1);
         target_ptr->sync.lock.locked = 0;
-    }
-    else if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK_ALL) {
+    } else if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK_ALL) {
         MPIR_Assert((int) MPIDI_CH4U_WIN(win, sync).lockall.allLocked > 0);
         MPIDI_CH4U_WIN(win, sync).lockall.allLocked -= 1;
-    }
-    else {
+    } else {
         MPIR_Assert(0);
     }
 
@@ -584,8 +580,7 @@ static inline int MPIDI_do_accumulate_op(void *source_buf, int source_count,
     if (HANDLE_GET_KIND(acc_op) == HANDLE_KIND_BUILTIN) {
         /* get the function by indexing into the op table */
         uop = MPIR_OP_HDL_TO_FN(acc_op);
-    }
-    else {
+    } else {
         /* --BEGIN ERROR HANDLING-- */
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                          FCNAME, __LINE__, MPI_ERR_OP,
@@ -604,14 +599,12 @@ static inline int MPIDI_do_accumulate_op(void *source_buf, int source_count,
             MPIR_Assert(source_dtp == target_dtp);
             real_stream_offset = (stream_offset / source_dtp_size) * source_dtp_extent;
             curr_target_buf = (void *) ((char *) target_buf + real_stream_offset);
-        }
-        else {
+        } else {
             curr_target_buf = target_buf;
         }
 
         (*uop) (source_buf, curr_target_buf, &source_count, &source_dtp);
-    }
-    else {
+    } else {
         /* derived datatype */
         MPIR_Segment *segp;
         DLOOP_VECTOR *dloop_vec;
@@ -683,8 +676,7 @@ static inline int MPIDI_do_accumulate_op(void *source_buf, int source_count,
                     curr_loc = dloop_vec[i].DLOOP_VECTOR_BUF;
                     curr_len = dloop_vec[i].DLOOP_VECTOR_LEN;
                 }
-            }
-            else {
+            } else {
                 curr_loc = (void *) ((char *) curr_loc + type_extent * count);
                 curr_len -= type_size * count;
             }
@@ -738,8 +730,7 @@ static inline int MPIDI_handle_acc_cmpl(MPIR_Request * rreq)
                                            0, MPIDI_CH4U_REQUEST(rreq, req->areq.op));
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-    }
-    else {
+    } else {
         iov = (struct iovec *) MPIDI_CH4U_REQUEST(rreq, req->areq.dt_iov);
         src_ptr = (char *) MPIDI_CH4U_REQUEST(rreq, req->areq.data);
         for (i = 0; i < MPIDI_CH4U_REQUEST(rreq, req->areq.n_iov); i++) {
@@ -819,8 +810,7 @@ static inline int MPIDI_handle_get_acc_cmpl(MPIR_Request * rreq)
                                            0, MPIDI_CH4U_REQUEST(rreq, req->areq.op));
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-    }
-    else {
+    } else {
         iov = (struct iovec *) MPIDI_CH4U_REQUEST(rreq, req->areq.dt_iov);
         src_ptr = (char *) MPIDI_CH4U_REQUEST(rreq, req->areq.data);
         for (i = 0; i < MPIDI_CH4U_REQUEST(rreq, req->areq.n_iov); i++) {
@@ -1128,8 +1118,7 @@ static inline int MPIDI_cswap_target_cmpl_cb(MPIR_Request * rreq)
                            MPIDI_CH4U_REQUEST(rreq, req->creq.datatype))) {
         MPIR_Memcpy(compare_addr, (void *) MPIDI_CH4U_REQUEST(rreq, req->creq.addr), data_sz);
         MPIR_Memcpy((void *) MPIDI_CH4U_REQUEST(rreq, req->creq.addr), origin_addr, data_sz);
-    }
-    else {
+    } else {
         MPIR_Memcpy(compare_addr, (void *) MPIDI_CH4U_REQUEST(rreq, req->creq.addr), data_sz);
     }
 
@@ -1252,6 +1241,7 @@ static inline int MPIDI_get_acc_ack_target_cmpl_cb(MPIR_Request * areq)
 
     win = MPIDI_CH4U_REQUEST(areq, req->areq.win_ptr);
     MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
+    MPIDI_win_remote_acc_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
 
     dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype));
     MPID_Request_complete(areq);
@@ -1278,6 +1268,7 @@ static inline int MPIDI_cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
 
     win = MPIDI_CH4U_REQUEST(rreq, req->creq.win_ptr);
     MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(rreq, rank));
+    MPIDI_win_remote_acc_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(rreq, rank));
 
     MPL_free(MPIDI_CH4U_REQUEST(rreq, req->creq.data));
     MPID_Request_complete(rreq);
@@ -1354,6 +1345,7 @@ static inline int MPIDI_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
     }
 
     MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
+    MPIDI_win_remote_acc_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
 
     MPID_Request_complete(areq);
 
@@ -1405,14 +1397,13 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
     if (dt_contig) {
         *p_data_sz = data_sz;
         *data = (char *) MPIDI_CH4U_REQUEST(areq, req->areq.result_addr) + dt_true_lb;
-    }
-    else {
+    } else {
         segment_ptr = MPIR_Segment_alloc();
         MPIR_Assert(segment_ptr);
 
         MPIR_Segment_init(MPIDI_CH4U_REQUEST(areq, req->areq.result_addr),
-                           MPIDI_CH4U_REQUEST(areq, req->areq.result_count),
-                           MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype), segment_ptr, 0);
+                          MPIDI_CH4U_REQUEST(areq, req->areq.result_count),
+                          MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype), segment_ptr, 0);
 
         last = data_sz;
         MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
@@ -1423,8 +1414,7 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
         MPIR_Assert(MPIDI_CH4U_REQUEST(areq, req->iov));
 
         last = data_sz;
-        MPIR_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(areq, req->iov),
-                                  &n_iov);
+        MPIR_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(areq, req->iov), &n_iov);
         MPIR_Assert(last == (MPI_Aint) data_sz);
         *data = MPIDI_CH4U_REQUEST(areq, req->iov);
         *p_data_sz = n_iov;
@@ -1498,39 +1488,39 @@ static inline int MPIDI_win_ctrl_target_msg_cb(int handler_id, void *am_hdr,
     /* TODO: check output win ptr */
 
     switch (handler_id) {
-        char buff[32];
+            char buff[32];
 
-    case MPIDI_CH4U_WIN_LOCK:
-    case MPIDI_CH4U_WIN_LOCKALL:
-        MPIDI_win_lock_req_proc(handler_id, msg_hdr, win);
-        break;
+        case MPIDI_CH4U_WIN_LOCK:
+        case MPIDI_CH4U_WIN_LOCKALL:
+            MPIDI_win_lock_req_proc(handler_id, msg_hdr, win);
+            break;
 
-    case MPIDI_CH4U_WIN_LOCK_ACK:
-    case MPIDI_CH4U_WIN_LOCKALL_ACK:
-        MPIDI_win_lock_ack_proc(handler_id, msg_hdr, win);
-        break;
+        case MPIDI_CH4U_WIN_LOCK_ACK:
+        case MPIDI_CH4U_WIN_LOCKALL_ACK:
+            MPIDI_win_lock_ack_proc(handler_id, msg_hdr, win);
+            break;
 
-    case MPIDI_CH4U_WIN_UNLOCK:
-    case MPIDI_CH4U_WIN_UNLOCKALL:
-        MPIDI_win_unlock_proc(msg_hdr, win);
-        break;
+        case MPIDI_CH4U_WIN_UNLOCK:
+        case MPIDI_CH4U_WIN_UNLOCKALL:
+            MPIDI_win_unlock_proc(msg_hdr, win);
+            break;
 
-    case MPIDI_CH4U_WIN_UNLOCK_ACK:
-    case MPIDI_CH4U_WIN_UNLOCKALL_ACK:
-        MPIDI_win_unlock_done(msg_hdr, win);
-        break;
+        case MPIDI_CH4U_WIN_UNLOCK_ACK:
+        case MPIDI_CH4U_WIN_UNLOCKALL_ACK:
+            MPIDI_win_unlock_done(msg_hdr, win);
+            break;
 
-    case MPIDI_CH4U_WIN_COMPLETE:
-        MPIDI_win_complete_proc(msg_hdr, win);
-        break;
+        case MPIDI_CH4U_WIN_COMPLETE:
+            MPIDI_win_complete_proc(msg_hdr, win);
+            break;
 
-    case MPIDI_CH4U_WIN_POST:
-        MPIDI_win_post_proc(msg_hdr, win);
-        break;
+        case MPIDI_CH4U_WIN_POST:
+            MPIDI_win_post_proc(msg_hdr, win);
+            break;
 
-    default:
-        MPL_snprintf(buff, sizeof(buff), "Invalid message type: %d\n", handler_id);
-        MPID_Abort(NULL, MPI_ERR_INTERN, 1, buff);
+        default:
+            MPL_snprintf(buff, sizeof(buff), "Invalid message type: %d\n", handler_id);
+            MPID_Abort(NULL, MPI_ERR_INTERN, 1, buff);
     }
 
     if (req)
@@ -1614,13 +1604,12 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
     if (dt_contig) {
         *p_data_sz = data_sz;
         *data = (char *) (offset + base + dt_true_lb);
-    }
-    else {
+    } else {
         segment_ptr = MPIR_Segment_alloc();
         MPIR_Assert(segment_ptr);
 
         MPIR_Segment_init((void *) (offset + base), msg_hdr->count, msg_hdr->datatype,
-                           segment_ptr, 0);
+                          segment_ptr, 0);
         last = data_sz;
         MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
         n_iov = (int) num_iov;
@@ -1630,8 +1619,7 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
         MPIR_Assert(MPIDI_CH4U_REQUEST(rreq, req->iov));
 
         last = data_sz;
-        MPIR_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov),
-                                  &n_iov);
+        MPIR_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov), &n_iov);
         MPIR_Assert(last == (MPI_Aint) data_sz);
         *data = MPIDI_CH4U_REQUEST(rreq, req->iov);
         *p_data_sz = n_iov;
@@ -2327,14 +2315,13 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
     if (dt_contig) {
         *p_data_sz = data_sz;
         *data = (char *) (MPIDI_CH4U_REQUEST(rreq, req->greq.addr) + dt_true_lb);
-    }
-    else {
+    } else {
         segment_ptr = MPIR_Segment_alloc();
         MPIR_Assert(segment_ptr);
 
         MPIR_Segment_init((void *) MPIDI_CH4U_REQUEST(rreq, req->greq.addr),
-                           MPIDI_CH4U_REQUEST(rreq, req->greq.count),
-                           MPIDI_CH4U_REQUEST(rreq, req->greq.datatype), segment_ptr, 0);
+                          MPIDI_CH4U_REQUEST(rreq, req->greq.count),
+                          MPIDI_CH4U_REQUEST(rreq, req->greq.datatype), segment_ptr, 0);
         last = data_sz;
         MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
         n_iov = (int) num_iov;
@@ -2344,8 +2331,7 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
         MPIR_Assert(MPIDI_CH4U_REQUEST(rreq, req->iov));
 
         last = data_sz;
-        MPIR_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov),
-                                  &n_iov);
+        MPIR_Segment_pack_vector(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, req->iov), &n_iov);
         MPIR_Assert(last == (MPI_Aint) data_sz);
         *data = MPIDI_CH4U_REQUEST(rreq, req->iov);
         *p_data_sz = n_iov;

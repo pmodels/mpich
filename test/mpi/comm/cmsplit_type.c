@@ -14,9 +14,9 @@
 
 
 static const char *split_topo[] = {
-    "machine", "socket", "package", "numanode", "core", "hwthread", "pu", "cache:l1",
-    "cache:l1u", "cache:l1d", "cache:l1i", "cache:l2", "cache:l2u",
-    "cache:l2d", "cache:l2i", "cache:l3", "cache:l3u", "cache:l3d", "cache:l3i", NULL
+    "machine", "socket", "package", "numanode", "core", "hwthread", "pu", "l1cache",
+    "l1ucache", "l1dcache", "l1icache", "l2cache", "l2ucache",
+    "l2dcache", "l2icache", "l3cache", "l3ucache", "l3dcache", "l3icache", NULL
 };
 
 int main(int argc, char *argv[])
@@ -38,8 +38,7 @@ int main(int argc, char *argv[])
     if (comm == MPI_COMM_NULL) {
         printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
         errs++;
-    }
-    else {
+    } else {
         MPI_Comm_rank(comm, &rank);
         MPI_Comm_size(comm, &size);
         if (rank == 0 && verbose)
@@ -57,8 +56,7 @@ int main(int argc, char *argv[])
         if (comm == MPI_COMM_NULL) {
             printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
             errs++;
-        }
-        else {
+        } else {
             int newsize;
             MPI_Comm_size(comm, &newsize);
             if (newsize > size) {
@@ -75,16 +73,14 @@ int main(int argc, char *argv[])
     MPI_Info_create(&info);
     if (rank % 2 == 0) {
         MPI_Info_set(info, "shmem_topo", split_topo[0]);
-    }
-    else {
+    } else {
         MPI_Info_set(info, "shmem_topo", split_topo[1]);
     }
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
     if (comm == MPI_COMM_NULL) {
         printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
         errs++;
-    }
-    else {
+    } else {
         int newsize;
         MPI_Comm_size(comm, &newsize);
         if (newsize > size) {
@@ -101,15 +97,13 @@ int main(int argc, char *argv[])
     if (rank % 2 == 0) {
         MPI_Info_create(&info);
         MPI_Info_set(info, "shmem_topo", split_topo[0]);
-    }
-    else
+    } else
         info = MPI_INFO_NULL;
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
     if (comm == MPI_COMM_NULL) {
         printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
         errs++;
-    }
-    else {
+    } else {
         int newsize;
         MPI_Comm_size(comm, &newsize);
         if (newsize > size) {
@@ -130,8 +124,7 @@ int main(int argc, char *argv[])
     if (comm == MPI_COMM_NULL) {
         printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
         errs++;
-    }
-    else {
+    } else {
         int newsize;
 
         MPI_Comm_size(comm, &newsize);
@@ -157,8 +150,7 @@ int main(int argc, char *argv[])
     if (comm == MPI_COMM_NULL) {
         printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
         errs++;
-    }
-    else {
+    } else {
         MPI_Comm_rank(comm, &rank);
         MPI_Comm_size(comm, &size);
         if (rank == 0 && verbose)
@@ -174,8 +166,7 @@ int main(int argc, char *argv[])
         printf("Expected a NULL communicator, but got something else\n");
         errs++;
         MPI_Comm_free(&comm);
-    }
-    else {
+    } else {
         if (rank == 0 && verbose)
             printf("Unknown hint correctly resulted in NULL communicator\n");
     }
@@ -195,8 +186,7 @@ int main(int argc, char *argv[])
         if (comm == MPI_COMM_NULL) {
             printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
             errs++;
-        }
-        else {
+        } else {
             MPI_Comm_rank(comm, &rank);
             MPI_Comm_size(comm, &size);
             if (rank == 0 && verbose)

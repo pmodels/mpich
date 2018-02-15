@@ -9,7 +9,7 @@
 
 typedef intptr_t MPLI_shm_lhnd_t;
 
-typedef char * MPLI_shm_ghnd_t;
+typedef char *MPLI_shm_ghnd_t;
 /* The local handle, lhnd, is valid only for the current process,
  * The global handle, ghnd, is valid across multiple processes
  * The handle flag, flag, is used to set various attributes of the
@@ -33,4 +33,4 @@ typedef MPLI_shm_lghnd_t *MPL_shm_hnd_t;
 /* Returns 0 on success, -1 on error */
 int MPLI_shm_lhnd_close(MPL_shm_hnd_t hnd);
 
-#endif /* ifndef MPL_SHM_MMAP_H_INCLUDED */
+#endif /* MPL_SHM_MMAP_H_INCLUDED */

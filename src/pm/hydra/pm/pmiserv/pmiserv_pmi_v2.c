@@ -80,14 +80,12 @@ static HYD_status poke_progress(char *key)
             if (list_head == NULL) {
                 list_head = req;
                 list_tail = req;
-            }
-            else {
+            } else {
                 list_tail->next = req;
                 req->prev = list_tail;
                 list_tail = req;
             }
-        }
-        else {
+        } else {
             status = fn_kvs_get(req->fd, req->pid, req->pgid, req->args);
             HYDU_ERR_POP(status, "kvs_get returned error\n");
 
@@ -160,8 +158,7 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
         HYD_STRING_STASH(stash, MPL_strdup("TRUE;value="), status);
         HYD_STRING_STASH(stash, MPL_strdup(val), status);
         HYD_STRING_STASH(stash, MPL_strdup(";rc=0;"), status);
-    }
-    else {
+    } else {
         HYD_STRING_STASH(stash, MPL_strdup("FALSE;rc=0;"), status);
     }
 
@@ -324,8 +321,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
         HYD_STRING_STASH(stash, MPL_strdup("found=TRUE;value="), status);
         HYD_STRING_STASH(stash, MPL_strdup(run->val), status);
         HYD_STRING_STASH(stash, MPL_strdup(";"), status);
-    }
-    else {
+    } else {
         HYD_STRING_STASH(stash, MPL_strdup("found=FALSE;"), status);
     }
     HYD_STRING_STASH(stash, MPL_strdup("rc=0;"), status);
@@ -429,8 +425,7 @@ static void segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
             j++;
             segment_list[j].start_idx = i;
             segment_list[j].token_count = 1;
-        }
-        else {
+        } else {
             segment_list[j].token_count++;
         }
     }
@@ -538,8 +533,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
             HYDU_ERR_POP(status, "unable to allocate exec\n");
             exec_list->appnum = 0;
             exec = exec_list;
-        }
-        else {
+        } else {
             for (exec = exec_list; exec->next; exec = exec->next);
             status = HYDU_alloc_exec(&exec->next);
             HYDU_ERR_POP(status, "unable to allocate exec\n");
@@ -567,11 +561,9 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
             if (!strcmp(info_key, "path")) {
                 path = MPL_strdup(info_val);
-            }
-            else if (!strcmp(info_key, "wdir")) {
+            } else if (!strcmp(info_key, "wdir")) {
                 exec->wdir = MPL_strdup(info_val);
-            }
-            else if (!strcmp(info_key, "host") || !strcmp(info_key, "hosts")) {
+            } else if (!strcmp(info_key, "host") || !strcmp(info_key, "hosts")) {
                 char *saveptr;
                 char *host = strtok_r(info_val, ",", &saveptr);
                 while (host) {
@@ -579,13 +571,11 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
                     HYDU_ERR_POP(status, "error creating node list\n");
                     host = strtok_r(NULL, ",", &saveptr);
                 }
-            }
-            else if (!strcmp(info_key, "hostfile")) {
+            } else if (!strcmp(info_key, "hostfile")) {
                 status = HYDU_parse_hostfile(info_val, &pg->user_node_list,
                                              HYDU_process_mfile_token);
                 HYDU_ERR_POP(status, "error parsing hostfile\n");
-            }
-            else {
+            } else {
                 /* Unrecognized info key; ignore */
             }
         }
@@ -670,8 +660,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     if (pg->user_node_list) {
         status = HYDU_create_proxy_list(exec_list, pg->user_node_list, pg);
         HYDU_ERR_POP(status, "error creating proxy list\n");
-    }
-    else {
+    } else {
         status = HYDU_create_proxy_list(exec_list, HYD_server_info.node_list, pg);
         HYDU_ERR_POP(status, "error creating proxy list\n");
     }
@@ -681,8 +670,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         pg->pg_core_count = 0;
         for (i = 0, node = pg->user_node_list; node; node = node->next, i++)
             pg->pg_core_count += node->core_count;
-    }
-    else {
+    } else {
         pg->pg_core_count = 0;
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
             pg->pg_core_count += proxy->node->core_count;
@@ -782,8 +770,7 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
         HYD_STRING_STASH(stash, MPL_strdup("rc=1;errmsg=duplicate_service_"), status);
         HYD_STRING_STASH(stash, MPL_strdup(name), status);
         HYD_STRING_STASH(stash, MPL_strdup(";"), status);
-    }
-    else
+    } else
         HYD_STRING_STASH(stash, MPL_strdup("rc=0;"), status);
 
     HYD_STRING_SPIT(stash, cmd, status);
@@ -890,8 +877,7 @@ static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
         HYD_STRING_STASH(stash, MPL_strdup("port="), status);
         HYD_STRING_STASH(stash, MPL_strdup(value), status);
         HYD_STRING_STASH(stash, MPL_strdup(";found=TRUE;rc=0;"), status);
-    }
-    else {
+    } else {
         HYD_STRING_STASH(stash, MPL_strdup("found=FALSE;rc=1;"), status);
     }
 

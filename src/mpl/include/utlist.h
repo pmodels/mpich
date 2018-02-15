@@ -51,7 +51,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#if !defined(UTLIST_H_INCLUDED)
+#ifndef UTLIST_H_INCLUDED
 #define UTLIST_H_INCLUDED
 
 #define UTLIST_VERSION 1.9.5
@@ -89,19 +89,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * The sort macro is O(n log(n)) for all types of single/double/circular lists.
  */
 
-#ifdef MPL_HAVE___TYPEOF /* MPICH modification */
+#ifdef MPL_HAVE___TYPEOF        /* MPICH modification */
 /* These macros use decltype or the earlier __typeof GNU extension.
    As decltype is only available in newer compilers (VS2010 or gcc 4.3+
    when compiling c++ code), this code uses whatever method is needed
    or, for VS2008 where neither is available, uses casting workarounds. */
-#ifdef _MSC_VER            /* MS compiler */
-#if _MSC_VER >= 1600 && defined(__cplusplus)  /* VS2010 or newer in C++ mode */
+#ifdef _MSC_VER /* MS compiler */
+#if _MSC_VER >= 1600 && defined(__cplusplus)    /* VS2010 or newer in C++ mode */
 #define LDECLTYPE(x) decltype(x)
-#else                     /* VS2008 or older (or VS2010 in C mode) */
+#else /* VS2008 or older (or VS2010 in C mode) */
 #define NO_DECLTYPE
 #define LDECLTYPE(x) char*
 #endif
-#else                      /* GNU, Sun and other compilers */
+#else /* GNU, Sun and other compilers */
 #define LDECLTYPE(x) __typeof(x)
 #endif
 #else /* !MPL_HAVE___TYPEOF */
@@ -406,7 +406,7 @@ do {                                                                            
 #ifdef NO_DECLTYPE
 #undef LL_DELETE
 #define LL_DELETE LL_DELETE_VS2008
-#undef DL_CONCAT /* no DL_CONCAT_VS2008 */
+#undef DL_CONCAT        /* no DL_CONCAT_VS2008 */
 #endif
 /* end VS2008 replacements */
 
@@ -424,7 +424,7 @@ do {                                                                            
     LL_FOREACH_N(head,out,_next) {                                                         \
       if ((out)->field == (val)) break;                                                        \
     }                                                                                          \
-} while(0)
+} while (0)
 
 #define LL_SEARCH(head,out,elt,cmp) LL_SEARCH_N(head,out,elt,cmp,next)
 #define LL_SEARCH_N(head,out,elt,cmp,_next)                                                \
@@ -432,7 +432,7 @@ do {                                                                            
     LL_FOREACH_N(head,out,_next) {                                                         \
       if ((cmp(out,elt))==0) break;                                                            \
     }                                                                                          \
-} while(0)
+} while (0)
 
 /******************************************************************************
  * doubly linked list macros (non-circular)                                   *
@@ -536,7 +536,7 @@ do {                                                                            
 #define CDL_DELETE(head,del) CDL_DELETE_NP(head,del,next,prev)
 #define CDL_DELETE_NP(head,del,_next,_prev)                                                \
 do {                                                                                           \
-  if ( ((head)==(del)) && ((head)->_next == (head))) {                                         \
+  if (((head)==(del)) && ((head)->_next == (head))) {                                         \
       (head) = 0L;                                                                             \
   } else {                                                                                     \
      (del)->_next->_prev = (del)->_prev;                                                       \
@@ -561,7 +561,7 @@ do {                                                                            
     CDL_FOREACH_NP(head,out,_next,_prev) {                                                 \
       if ((out)->field == (val)) break;                                                        \
     }                                                                                          \
-} while(0)
+} while (0)
 
 #define CDL_SEARCH(head,out,elt,cmp) CDL_SEARCH_NP(head,out,elt,cmp,next,prev)
 #define CDL_SEARCH_NP(head,out,elt,cmp,_next,_prev)                                        \
@@ -569,6 +569,6 @@ do {                                                                            
     CDL_FOREACH_NP(head,out,_next,_prev) {                                                 \
       if ((cmp(out,elt))==0) break;                                                            \
     }                                                                                          \
-} while(0)
+} while (0)
 
-#endif /* !defined(UTLIST_H_INCLUDED) */
+#endif /* UTLIST_H_INCLUDED */

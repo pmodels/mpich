@@ -85,8 +85,7 @@ int main(int argc, char **argv)
             fflush(stdout);
         }
         comm = MPI_COMM_WORLD;
-    }
-    else {
+    } else {
         char *cerr;
         cerr = fgets(port, MPI_MAX_PORT_NAME, fh);
         fclose(fh);

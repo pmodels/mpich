@@ -35,8 +35,8 @@ int main(int argc, char **argv)
     MPI_Comm_set_attr(duped, keyval, NULL);
 
     MPI_Comm_free(&duped);      /* first MPI_Comm_free_keyval */
-    MPI_Comm_free_keyval(&keyval);   /* second MPI_Comm_free_keyval */
-    MPI_Comm_free_keyval(&keyval_copy);      /* third MPI_Comm_free_keyval */
+    MPI_Comm_free_keyval(&keyval);      /* second MPI_Comm_free_keyval */
+    MPI_Comm_free_keyval(&keyval_copy); /* third MPI_Comm_free_keyval */
     MTest_Finalize(errs);
     MPI_Finalize();     /* fourth MPI_Comm_free_keyval */
     return 0;

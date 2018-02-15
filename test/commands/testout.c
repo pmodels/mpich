@@ -9,12 +9,12 @@
 
 int main()
 {
-    setvbuf(stdout,NULL,_IOLBF,0);  
-    printf( "first line\n" );
+    setvbuf(stdout, NULL, _IOLBF, 0);
+    printf("first line\n");
     sleep(1);
-    printf( "second line\n" );
-    sleep(1); 
-    printf( "last line\n" ); 
+    printf("second line\n");
+    sleep(1);
+    printf("last line\n");
     fflush(stdout);
     return 0;
 }

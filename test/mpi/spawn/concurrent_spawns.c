@@ -85,8 +85,7 @@ int main(int argc, char *argv[])
         for (i = 0; i < num_spawns; i++) {
             if (argc > 2) {
                 sprintf(description, "%s:%d", argv[2], i);
-            }
-            else {
+            } else {
                 sprintf(description, "%d", i);
             }
             IF_VERBOSE(("spawning %s\n", description));
@@ -114,15 +113,13 @@ int main(int argc, char *argv[])
         if (parentcomm != MPI_COMM_NULL) {
             MPI_Send(&errs, 1, MPI_INT, 0, 0, parentcomm);
             MPI_Comm_disconnect(&parentcomm);
-        }
-        else {
+        } else {
             /* Note that the MTest_Finalize get errs only over COMM_WORLD */
             /* Note also that both the parent and child will generate "No Errors"
              * if both call MTest_Finalize */
             MTest_Finalize(errs);
         }
-    }
-    else {
+    } else {
         MTest_Finalize(errs);
     }
 

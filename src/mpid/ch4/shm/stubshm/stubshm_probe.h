@@ -15,10 +15,10 @@
 
 
 static inline int MPIDI_STUBSHM_mpi_improbe(int source,
-                                        int tag,
-                                        MPIR_Comm * comm,
-                                        int context_offset,
-                                        int *flag, MPIR_Request ** message, MPI_Status * status)
+                                            int tag,
+                                            MPIR_Comm * comm,
+                                            int context_offset,
+                                            int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_IMPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_IMPROBE);
@@ -30,9 +30,9 @@ static inline int MPIDI_STUBSHM_mpi_improbe(int source,
 }
 
 static inline int MPIDI_STUBSHM_mpi_iprobe(int source,
-                                       int tag,
-                                       MPIR_Comm * comm,
-                                       int context_offset, int *flag, MPI_Status * status)
+                                           int tag,
+                                           MPIR_Comm * comm,
+                                           int context_offset, int *flag, MPI_Status * status)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_IPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_IPROBE);

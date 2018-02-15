@@ -52,15 +52,15 @@ int main(int argc, char *argv[])
         /* printf("[%d] sending...\n",rank); */
         ierr = MPI_Send(cols, cnt, MPI_LONG_LONG_INT, 1, 0, MPI_COMM_WORLD);
         ierr = MPI_Send(cols, cnt, MPI_LONG_LONG_INT, 2, 0, MPI_COMM_WORLD);
-    }
-    else {
+    } else {
         /* printf("[%d] receiving...\n",rank); */
         for (i = 0; i < cnt; i++)
             cols[i] = -1;
         ierr = MPI_Recv(cols, cnt, MPI_LONG_LONG_INT, 0, 0, MPI_COMM_WORLD, &status);
-        ierr = MPI_Get_count(&status,MPI_LONG_LONG_INT,&stat_cnt);
+        ierr = MPI_Get_count(&status, MPI_LONG_LONG_INT, &stat_cnt);
         if (cnt != stat_cnt) {
-            fprintf(stderr, "Output of MPI_Get_count (%d) does not match expected count (%d).\n", stat_cnt, cnt);
+            fprintf(stderr, "Output of MPI_Get_count (%d) does not match expected count (%d).\n",
+                    stat_cnt, cnt);
             errs++;
         }
         for (i = 0; i < cnt; i++) {

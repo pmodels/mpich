@@ -26,8 +26,8 @@ int main(int argc, char **argv)
         if (!strcmp(argv[0], "--num-cpus")) {
             num_cpus = atoi(argv[1]);
             argv += 2;
-        }
-        else if (!strcmp(argv[0], "--help") || !strcmp(argv[0], "-help") || !strcmp(argv[0], "-h")) {
+        } else if (!strcmp(argv[0], "--help") || !strcmp(argv[0], "-help") ||
+                   !strcmp(argv[0], "-h")) {
             fprintf(stderr, "Usage: ./binding {--num-cpus [CPUs]}\n");
             MPI_Abort(MPI_COMM_WORLD, -1);
         }

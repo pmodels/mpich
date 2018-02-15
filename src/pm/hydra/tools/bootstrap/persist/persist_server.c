@@ -96,14 +96,12 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
                                      HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "error sending stdout to client\n");
             HYDU_ASSERT(!closed, status);
-        }
-        else {
+        } else {
             status = HYDT_dmx_deregister_fd(private.stdout_fd);
             HYDU_ERR_SETANDJUMP(status, status, "error deregistering fd %d\n", private.stdout_fd);
             close(private.stdout_fd);
         }
-    }
-    else if (fd == private.stderr_fd) {
+    } else if (fd == private.stderr_fd) {
         /* stderr event */
         hdr.io_type = HYDT_PERSIST_STDERR;
         hdr.buflen = 0;
@@ -126,8 +124,7 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
                                      HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "error sending stdout to client\n");
             HYDU_ASSERT(!closed, status);
-        }
-        else {
+        } else {
             status = HYDT_dmx_deregister_fd(private.stderr_fd);
             HYDU_ERR_SETANDJUMP(status, status, "error deregistering fd %d\n", private.stderr_fd);
             close(private.stderr_fd);

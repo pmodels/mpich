@@ -110,8 +110,8 @@ static inline int MPIDI_choose_netmod(void)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
-                                        char ***argv,
-                                        int requested, int *provided, int *has_args, int *has_env)
+                                       char ***argv,
+                                       int requested, int *provided, int *has_args, int *has_env)
 {
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
     int avtid;
@@ -198,6 +198,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIR_Process.comm_self->rank = 0;
     MPIR_Process.comm_self->remote_size = 1;
     MPIR_Process.comm_self->local_size = 1;
+    MPIR_Process.comm_self->pof2 = 0;
 
     /* ---------------------------------- */
     /* Initialize MPI_COMM_WORLD          */
@@ -205,6 +206,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIR_Process.comm_world->rank = rank;
     MPIR_Process.comm_world->remote_size = size;
     MPIR_Process.comm_world->local_size = size;
+    MPIR_Process.comm_world->pof2 = MPL_pof2(size);
 
     MPIDIU_avt_init();
     MPIDIU_get_next_avtid(&avtid);
@@ -266,7 +268,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     mpi_errno = MPIDI_CH4U_build_nodemap(MPIR_Process.comm_world->rank,
                                          MPIR_Process.comm_world,
                                          MPIR_Process.comm_world->local_size,
-                                         MPIDI_CH4_Global.node_map[0], &MPIDI_CH4_Global.max_node_id);
+                                         MPIDI_CH4_Global.node_map[0],
+                                         &MPIDI_CH4_Global.max_node_id);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -297,8 +300,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
     mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &MPIR_Process.attrs.tag_ub,
                                        MPIR_Process.comm_world,
-                                       MPIR_Process.comm_self, has_parent,
-                                       &n_nm_vnis_provided);
+                                       MPIR_Process.comm_self, has_parent, &n_nm_vnis_provided);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POPFATAL(mpi_errno);
     }
@@ -308,23 +310,25 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIR_Process.attrs.io = MPI_ANY_SOURCE;
 
     mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_self);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Comm_commit(MPIR_Process.comm_world);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* -------------------------------- */
     /* Return MPICH Parameters          */
     /* -------------------------------- */
     switch (requested) {
-    case MPI_THREAD_SINGLE:
-    case MPI_THREAD_SERIALIZED:
-    case MPI_THREAD_FUNNELED:
-        *provided = requested;
-        break;
+        case MPI_THREAD_SINGLE:
+        case MPI_THREAD_SERIALIZED:
+        case MPI_THREAD_FUNNELED:
+            *provided = requested;
+            break;
 
-    case MPI_THREAD_MULTIPLE:
-        *provided = MAX_THREAD_MODE;
-        break;
+        case MPI_THREAD_MULTIPLE:
+            *provided = MAX_THREAD_MODE;
+            break;
     }
 
     *has_args = TRUE;
@@ -467,7 +471,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_processor_name(char *name, int namelen, in
 #define FUNCNAME MPID_Alloc_mem
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr, MPL_memory_class class)
+MPL_STATIC_INLINE_PREFIX void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr,
+                                              MPL_memory_class class)
 {
     void *p;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLOC_MEM);
@@ -506,7 +511,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Free_mem(void *ptr)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_get_lpid(MPIR_Comm * comm_ptr,
-                                                 int idx, int *lpid_ptr, MPL_bool is_remote)
+                                                int idx, int *lpid_ptr, MPL_bool is_remote)
 {
     int mpi_errno = MPI_SUCCESS;
     int avtid = 0, lpid = 0;
@@ -531,7 +536,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_get_lpid(MPIR_Comm * comm_ptr,
 #define FUNCNAME MPID_Get_node_id
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Get_node_id(MPIR_Comm * comm, int rank, int * id_p)
+MPL_STATIC_INLINE_PREFIX int MPID_Get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET_NODE_ID);
@@ -547,7 +552,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_node_id(MPIR_Comm * comm, int rank, int * 
 #define FUNCNAME MPID_Get_max_node_id
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPID_Get_max_node_id(MPIR_Comm * comm, int * max_id_p)
+MPL_STATIC_INLINE_PREFIX int MPID_Get_max_node_id(MPIR_Comm * comm, int *max_id_p)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET_MAX_NODE_ID);
@@ -564,7 +569,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_max_node_id(MPIR_Comm * comm, int * max_id
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
-                                                               int size, const int lpids[])
+                                                              int size, const int lpids[])
 {
     int mpi_errno = MPI_SUCCESS, i;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CREATE_INTERCOMM_FROM_LPIDS);
@@ -643,7 +648,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Type_commit_hook(MPIR_Datatype * type)
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-
 #ifdef MPIDI_BUILD_CH4_SHM
     mpi_errno = MPIDI_SHM_mpi_type_commit_hook(type);
     if (mpi_errno != MPI_SUCCESS) {
@@ -673,7 +677,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Type_free_hook(MPIR_Datatype * type)
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-
 #ifdef MPIDI_BUILD_CH4_SHM
     mpi_errno = MPIDI_SHM_mpi_type_free_hook(type);
     if (mpi_errno != MPI_SUCCESS) {
@@ -703,7 +706,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Op_commit_hook(MPIR_Op * op)
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-
 #ifdef MPIDI_BUILD_CH4_SHM
     mpi_errno = MPIDI_SHM_mpi_op_commit_hook(op);
     if (mpi_errno != MPI_SUCCESS) {
@@ -733,7 +735,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Op_free_hook(MPIR_Op * op)
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-
 #ifdef MPIDI_BUILD_CH4_SHM
     mpi_errno = MPIDI_SHM_mpi_op_free_hook(op);
     if (mpi_errno != MPI_SUCCESS) {

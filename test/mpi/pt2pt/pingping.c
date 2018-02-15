@@ -78,8 +78,7 @@ int main(int argc, char *argv[])
                             }
                         }
                     }
-                }
-                else if (rank == dest) {
+                } else if (rank == dest) {
                     for (nmsg = 1; nmsg < maxmsg; nmsg++) {
                         err = MPI_Recv(recvtype.buf, recvtype.count,
                                        recvtype.datatype, source, 0, comm, MPI_STATUS_IGNORE);

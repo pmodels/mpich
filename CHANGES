@@ -16,13 +16,23 @@
    scheme, which de-couples implementation from selection logic,
    enables easier integration of additional algorithms.
 
+ # TSP collectives framework: A C++-template style framework for
+   collective algorithms is added to allow single collective
+   implementation to move data over generic or device-specific
+   transport functions.
+
+ # Cleanup of whitespace (ch3 excluded) using the
+   maint/code-cleanup.sh script. For instructions on how to update
+   PRs/branches based on MPICH before the cleanup, see
+   https://github.com/pmodels/mpich/wiki/Code-Cleanup-Procedure.
+
  # Removed the PAMI device and poe PMI client.
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
 
    A full list of changes is available at the following link:
 
-     http://git.mpich.org/mpich.git/shortlog/v3.2..v3.3a3
+     http://git.mpich.org/mpich.git/shortlog/v3.2..v3.3b1
 
    A list of bugs that have been fixed is available at the following
    link:

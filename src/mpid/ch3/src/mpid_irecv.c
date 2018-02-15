@@ -14,7 +14,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 	       MPIR_Comm * comm, int context_offset,
                MPIR_Request ** request)
 {
-    MPIR_Request * rreq;
+    MPIR_Request * rreq = NULL;
     int found;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IRECV);
@@ -167,10 +167,11 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
     *request = rreq;
     MPL_DBG_MSG_P(MPIDI_CH3_DBG_OTHER,VERBOSE,"request allocated, handle=0x%08x",
 		   rreq->handle);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IRECV);
+    return mpi_errno;
 
  fn_fail:
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"IRECV errno: 0x%08x", mpi_errno);
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"(class: %d)", MPIR_ERR_GET_CLASS(mpi_errno));
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IRECV);
-    return mpi_errno;
+    goto fn_exit;
 }

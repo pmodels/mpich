@@ -16,7 +16,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_get_info as PMPI_Comm_get_info
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Comm_get_info(MPI_Comm comm, MPI_Info *info) __attribute__((weak,alias("PMPI_Comm_get_info")));
+int MPI_Comm_get_info(MPI_Comm comm, MPI_Info * info)
+    __attribute__ ((weak, alias("PMPI_Comm_get_info")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -107,8 +108,9 @@ int MPI_Comm_get_info(MPI_Comm comm, MPI_Info * info_used)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate pointers */
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
-            if (mpi_errno) goto fn_fail;
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, TRUE);
+            if (mpi_errno)
+                goto fn_fail;
             MPIR_ERRTEST_ARGNULL(info_used, "info_used", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;

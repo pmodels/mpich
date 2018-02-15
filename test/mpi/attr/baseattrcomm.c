@@ -24,8 +24,7 @@ int main(int argc, char **argv)
     if (!flag) {
         errs++;
         fprintf(stderr, "Could not get TAG_UB\n");
-    }
-    else {
+    } else {
         vval = *(int *) v;
         if (vval < 32767) {
             errs++;
@@ -37,8 +36,7 @@ int main(int argc, char **argv)
     if (!flag) {
         errs++;
         fprintf(stderr, "Could not get HOST\n");
-    }
-    else {
+    } else {
         vval = *(int *) v;
         if ((vval < 0 || vval >= size) && vval != MPI_PROC_NULL) {
             errs++;
@@ -49,8 +47,7 @@ int main(int argc, char **argv)
     if (!flag) {
         errs++;
         fprintf(stderr, "Could not get IO\n");
-    }
-    else {
+    } else {
         vval = *(int *) v;
         if ((vval < 0 || vval >= size) && vval != MPI_ANY_SOURCE && vval != MPI_PROC_NULL) {
             errs++;
@@ -105,8 +102,7 @@ int main(int argc, char **argv)
                     "MPI_LASTUSEDCODE points to an integer (%d) smaller than MPI_ERR_LASTCODE (%d)\n",
                     vval, MPI_ERR_LASTCODE);
         }
-    }
-    else {
+    } else {
         errs++;
         fprintf(stderr, "MPI_LASTUSECODE is not defined\n");
     }

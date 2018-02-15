@@ -81,8 +81,7 @@ int main(int argc, char **argv)
         /* Write to my slot at each target */
         for (i = 0; i < odd_nproc; i++)
             MPI_Put(&rank, 1, MPI_INT, odd_ranks[i], rank, 1, MPI_INT, win);
-    }
-    else {
+    } else {
         MPI_Win_post(even_group, 0, win);       /* Odd procs are targeted by even procs */
         MPI_Win_start(even_group, 0, win);      /* Odd-numbered procs target even procs */
 
@@ -104,8 +103,7 @@ int main(int argc, char **argv)
         /* Write to my slot at each target */
         for (i = 0; i < even_nproc; i++)
             MPI_Put(&rank, 1, MPI_INT, even_ranks[i], rank, 1, MPI_INT, win);
-    }
-    else {
+    } else {
         MPI_Win_post(odd_group, 0, win);        /* Odd procs are targeted by odd procs */
         MPI_Win_start(odd_group, 0, win);       /* Odd-numbered procs target odd procs */
 

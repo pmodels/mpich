@@ -60,7 +60,6 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-
 #if MTEST_HAVE_MIN_MPI_VERSION(2,2)
             /* now try the MPI_IN_PLACE flavor */
             for (i = 0; i < count; i++) {

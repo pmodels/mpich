@@ -72,8 +72,7 @@ int main(int argc, char *argv[])
                 errs++;
                 if (verbose)
                     fprintf(stderr, "b[%d][%d] = %d; should be %d\n", i, j, b[i][j], 0);
-            }
-            else if (j <= i && b[i][j] != 1000 * i + j) {
+            } else if (j <= i && b[i][j] != 1000 * i + j) {
                 errs++;
                 if (verbose)
                     fprintf(stderr, "b[%d][%d] = %d; should be %d\n", i, j, b[i][j], 1000 * i + j);
@@ -92,9 +91,9 @@ int parse_args(int argc, char **argv)
 
     while ((ret = getopt(argc, argv, "v")) >= 0) {
         switch (ret) {
-        case 'v':
-            verbose = 1;
-            break;
+            case 'v':
+                verbose = 1;
+                break;
         }
     }
     return 0;

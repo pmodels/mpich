@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_pvar_reset as PMPI_T_pvar_reset
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle) __attribute__((weak,alias("PMPI_T_pvar_reset")));
+int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
+    __attribute__ ((weak, alias("PMPI_T_pvar_reset")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -45,14 +46,13 @@ int MPIR_T_pvar_reset_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
             if (handle->get_value == NULL) {
                 MPIR_Memcpy(handle->offset, handle->addr, handle->bytes * handle->count);
             } else {
-                handle->get_value(handle->addr, handle->obj_handle,
-                                  handle->count, handle->offset);
+                handle->get_value(handle->addr, handle->obj_handle, handle->count, handle->offset);
             }
         }
     } else if (MPIR_T_pvar_is_watermark(handle)) {
         if (MPIR_T_pvar_is_started(handle)) {
             /* Use the current value as starting value when pvar is running */
-            mark = (MPIR_T_pvar_watermark_t *)handle->addr;
+            mark = (MPIR_T_pvar_watermark_t *) handle->addr;
             if (MPIR_T_pvar_is_first(handle)) {
                 MPIR_Assert(mark->first_used);
                 mark->watermark = mark->current;
@@ -112,17 +112,17 @@ int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_RESET);
 
-     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+    /* Validate parameters, especially handles needing to be converted */
+#ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_PVAR_SESSION(session, mpi_errno);
             MPIR_ERRTEST_PVAR_HANDLE(handle, mpi_errno);
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
@@ -133,7 +133,8 @@ int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
         DL_FOREACH(session->hlist, hnd) {
             if (!MPIR_T_pvar_is_readonly(hnd)) {
                 mpi_errno = MPIR_T_pvar_reset_impl(session, hnd);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
             }
         }
     } else {
@@ -148,25 +149,26 @@ int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
         }
 
         mpi_errno = MPIR_T_pvar_reset_impl(session, handle);
-        if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+        if (mpi_errno != MPI_SUCCESS)
+            goto fn_fail;
     }
 
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_PVAR_RESET);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_pvar_reset", "**mpi_t_pvar_reset %p %p", session, handle);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_t_pvar_reset", "**mpi_t_pvar_reset %p %p", session, handle);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

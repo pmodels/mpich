@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPIR_REFCOUNT_H_INCLUDED)
+#ifndef MPIR_REFCOUNT_H_INCLUDED
 #define MPIR_REFCOUNT_H_INCLUDED
 
 #include "mpi.h"
@@ -23,4 +23,4 @@
 
 #endif
 
-#endif /* !defined(MPIR_REFCOUNT_H_INCLUDED) */
+#endif /* MPIR_REFCOUNT_H_INCLUDED */

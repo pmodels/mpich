@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Info_get_nthkey as PMPI_Info_get_nthkey
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Info_get_nthkey(MPI_Info info, int n, char *key) __attribute__((weak,alias("PMPI_Info_get_nthkey")));
+int MPI_Info_get_nthkey(MPI_Info info, int n, char *key)
+    __attribute__ ((weak, alias("PMPI_Info_get_nthkey")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -29,7 +30,7 @@ int MPI_Info_get_nthkey(MPI_Info info, int n, char *key) __attribute__((weak,ali
 #define FUNCNAME MPIR_Info_get_nthkey_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Info_get_nthkey_impl(MPIR_Info *info_ptr, int n, char *key)
+int MPIR_Info_get_nthkey_impl(MPIR_Info * info_ptr, int n, char *key)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *curr_ptr;
@@ -43,17 +44,18 @@ int MPIR_Info_get_nthkey_impl(MPIR_Info *info_ptr, int n, char *key)
     }
 
     /* verify that n is valid */
-    MPIR_ERR_CHKANDJUMP2((!curr_ptr), mpi_errno, MPI_ERR_ARG, "**infonkey", "**infonkey %d %d", n, nkeys);
+    MPIR_ERR_CHKANDJUMP2((!curr_ptr), mpi_errno, MPI_ERR_ARG, "**infonkey", "**infonkey %d %d", n,
+                         nkeys);
 
     /* if key is MPI_MAX_INFO_KEY long, MPL_strncpy will null-terminate it for
      * us */
-    MPL_strncpy( key, curr_ptr->key, MPI_MAX_INFO_KEY);
+    MPL_strncpy(key, curr_ptr->key, MPI_MAX_INFO_KEY);
     /* Eventually, we could remember the location of this key in
-       the head using the key/value locations (and a union datatype?) */
- 
- fn_exit:
+     * the head using the key/value locations (and a union datatype?) */
+
+  fn_exit:
     return mpi_errno;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -82,66 +84,69 @@ Output Parameters:
 #define FUNCNAME MPI_Info_get_nthkey
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPI_Info_get_nthkey( MPI_Info info, int n, char *key )
+int MPI_Info_get_nthkey(MPI_Info info, int n, char *key)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Info *info_ptr=0;
+    MPIR_Info *info_ptr = 0;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INFO_GET_NTHKEY);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_INFO_GET_NTHKEY);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_INFO(info, mpi_errno);
+            MPIR_ERRTEST_INFO(info, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
-    
+#endif /* HAVE_ERROR_CHECKING */
+
     /* Convert MPI object handles to object pointers */
-    MPIR_Info_get_ptr( info, info_ptr );
-    
+    MPIR_Info_get_ptr(info, info_ptr);
+
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate info_ptr */
-            MPIR_Info_valid_ptr( info_ptr, mpi_errno );
-            if (mpi_errno) goto fn_fail;
+            MPIR_Info_valid_ptr(info_ptr, mpi_errno);
+            if (mpi_errno)
+                goto fn_fail;
 
-	    MPIR_ERR_CHKANDJUMP((!key), mpi_errno, MPI_ERR_INFO_KEY, "**infokeynull");
+            MPIR_ERR_CHKANDJUMP((!key), mpi_errno, MPI_ERR_INFO_KEY, "**infokeynull");
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
     mpi_errno = MPIR_Info_get_nthkey_impl(info_ptr, n, key);
-    if (mpi_errno) goto fn_fail;
+    if (mpi_errno)
+        goto fn_fail;
     /* ... end of body of routine ... */
 
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_INFO_GET_NTHKEY);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-    
+
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_info_get_nthkey",
-	    "**mpi_info_get_nthkey %I %d %p", info, n, key);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_info_get_nthkey", "**mpi_info_get_nthkey %I %d %p", info, n,
+                                 key);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

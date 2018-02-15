@@ -7,7 +7,6 @@
 
 #include "mpiimpl.h"
 #include "bcast.h"
-#include "coll_util.h"
 
 /* Algorithm: Broadcast based on a scatter followed by an allgather.
  *
@@ -28,13 +27,11 @@
 #define FUNCNAME MPIR_Bcast_intra_scatter_ring_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Bcast_intra_scatter_ring_allgather(
-    void *buffer, 
-    int count, 
-    MPI_Datatype datatype, 
-    int root, 
-    MPIR_Comm *comm_ptr,
-    MPIR_Errflag_t *errflag)
+int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
+                                            int count,
+                                            MPI_Datatype datatype,
+                                            int root,
+                                            MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int rank, comm_size;
     int mpi_errno = MPI_SUCCESS;
@@ -54,7 +51,8 @@ int MPIR_Bcast_intra_scatter_ring_allgather(
     rank = comm_ptr->rank;
 
     /* If there is only one process, return */
-    if (comm_size == 1) goto fn_exit;
+    if (comm_size == 1)
+        goto fn_exit;
 
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
         is_contig = 1;
@@ -78,38 +76,35 @@ int MPIR_Bcast_intra_scatter_ring_allgather(
     if (is_homogeneous)
         MPIR_Datatype_get_size_macro(datatype, type_size);
     else
-	/* --BEGIN HETEROGENEOUS-- */
+        /* --BEGIN HETEROGENEOUS-- */
         MPIR_Pack_size_impl(1, datatype, &type_size);
-        /* --END HETEROGENEOUS-- */
+    /* --END HETEROGENEOUS-- */
 
     nbytes = type_size * count;
     if (nbytes == 0)
-        goto fn_exit; /* nothing to do */
+        goto fn_exit;   /* nothing to do */
 
-    if (is_contig && is_homogeneous)
-    {
+    if (is_contig && is_homogeneous) {
         /* contiguous and homogeneous. no need to pack. */
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
         tmp_buf = (char *) buffer + true_lb;
-    }
-    else
-    {
+    } else {
         MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* TODO: Pipeline the packing and communication */
         position = 0;
         if (rank == root) {
-            mpi_errno = MPIR_Pack_impl(buffer, count, datatype, tmp_buf, nbytes,
-                                       &position);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            mpi_errno = MPIR_Pack_impl(buffer, count, datatype, tmp_buf, nbytes, &position);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
         }
     }
 
-    scatter_size = (nbytes + comm_size - 1)/comm_size; /* ceiling division */
+    scatter_size = (nbytes + comm_size - 1) / comm_size;        /* ceiling division */
 
     mpi_errno = MPII_Scatter_for_bcast(buffer, count, datatype, root, comm_ptr,
-                                  nbytes, tmp_buf, is_contig, is_homogeneous, errflag);
+                                       nbytes, tmp_buf, is_contig, is_homogeneous, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -117,23 +112,22 @@ int MPIR_Bcast_intra_scatter_ring_allgather(
         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
 
-    /* long-message allgather or medium-size but non-power-of-two. use ring algorithm. */ 
+    /* long-message allgather or medium-size but non-power-of-two. use ring algorithm. */
 
     /* Calculate how much data we already have */
     curr_size = MPL_MIN(scatter_size,
-                         nbytes - ((rank - root + comm_size) % comm_size) * scatter_size);
+                        nbytes - ((rank - root + comm_size) % comm_size) * scatter_size);
     if (curr_size < 0)
         curr_size = 0;
 
-    left  = (comm_size + rank - 1) % comm_size;
+    left = (comm_size + rank - 1) % comm_size;
     right = (rank + 1) % comm_size;
-    j     = rank;
+    j = rank;
     jnext = left;
-    for (i=1; i<comm_size; i++)
-    {
+    for (i = 1; i < comm_size; i++) {
         int left_count, right_count, left_disp, right_disp, rel_j, rel_jnext;
 
-        rel_j     = (j     - root + comm_size) % comm_size;
+        rel_j = (j - root + comm_size) % comm_size;
         rel_jnext = (jnext - root + comm_size) % comm_size;
         left_count = MPL_MIN(scatter_size, (nbytes - rel_jnext * scatter_size));
         if (left_count < 0)
@@ -144,11 +138,10 @@ int MPIR_Bcast_intra_scatter_ring_allgather(
             right_count = 0;
         right_disp = rel_j * scatter_size;
 
-        mpi_errno = MPIC_Sendrecv((char *)tmp_buf + right_disp, right_count,
-                                     MPI_BYTE, right, MPIR_BCAST_TAG,
-                                     (char *)tmp_buf + left_disp, left_count,
-                                     MPI_BYTE, left, MPIR_BCAST_TAG,
-                                     comm_ptr, &status, errflag);
+        mpi_errno = MPIC_Sendrecv((char *) tmp_buf + right_disp, right_count,
+                                  MPI_BYTE, right, MPIR_BCAST_TAG,
+                                  (char *) tmp_buf + left_disp, left_count,
+                                  MPI_BYTE, left, MPIR_BCAST_TAG, comm_ptr, &status, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -157,32 +150,31 @@ int MPIR_Bcast_intra_scatter_ring_allgather(
         }
         MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
         curr_size += recvd_size;
-        j     = jnext;
+        j = jnext;
         jnext = (comm_size + jnext - 1) % comm_size;
     }
 
     /* check that we received as much as we expected */
     /* recvd_size may not be accurate for packed heterogeneous data */
     if (is_homogeneous && curr_size != nbytes) {
-        if (*errflag == MPIR_ERR_NONE) *errflag = MPIR_ERR_OTHER;
+        if (*errflag == MPIR_ERR_NONE)
+            *errflag = MPIR_ERR_OTHER;
         MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
-		      "**collective_size_mismatch",
-		      "**collective_size_mismatch %d %d", curr_size, nbytes );
+                      "**collective_size_mismatch",
+                      "**collective_size_mismatch %d %d", curr_size, nbytes);
         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
 
-    if (!is_contig || !is_homogeneous)
-    {
-        if (rank != root)
-        {
+    if (!is_contig || !is_homogeneous) {
+        if (rank != root) {
             position = 0;
-            mpi_errno = MPIR_Unpack_impl(tmp_buf, nbytes, &position, buffer,
-                                         count, datatype);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            mpi_errno = MPIR_Unpack_impl(tmp_buf, nbytes, &position, buffer, count, datatype);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
         }
     }
 
-fn_exit:
+  fn_exit:
     MPIR_CHKLMEM_FREEALL();
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno_ret)
@@ -191,6 +183,6 @@ fn_exit:
         MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     /* --END ERROR HANDLING-- */
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }

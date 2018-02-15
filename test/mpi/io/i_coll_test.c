@@ -54,8 +54,7 @@ int main(int argc, char **argv)
         len = strlen(filename);
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
-    }
-    else {
+    } else {
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
         filename = (char *) malloc(len + 1);
         MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
@@ -190,8 +189,7 @@ int main(int argc, char **argv)
     if (mynod == 0) {
         if (toterrs > 0) {
             fprintf(stderr, "Found %d errors\n", toterrs);
-        }
-        else {
+        } else {
             fprintf(stdout, " No Errors\n");
         }
     }

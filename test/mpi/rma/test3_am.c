@@ -73,8 +73,7 @@ int main(int argc, char *argv[])
             MPI_Send(B, SIZE, MPI_INT, 1, 100, MPI_COMM_WORLD);
 
             MPI_Free_mem(B);
-        }
-        else {  /* rank=1 */
+        } else {        /* rank=1 */
 #ifdef USE_WIN_ALLOCATE
             MPI_Win_allocate(SIZE * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &B, &win);
 #else

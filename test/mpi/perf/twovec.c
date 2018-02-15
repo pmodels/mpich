@@ -105,8 +105,7 @@ int main(int argc, char *argv[])
         for (i = 0; i < NUM_SIZES; i++)
             fprintf(stderr, "%.3f ", t[i] * 1e6);
         fprintf(stderr, "\n");
-    }
-    else
+    } else
         printf(" No Errors\n");
 
     MPI_Finalize();

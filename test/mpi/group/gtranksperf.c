@@ -89,8 +89,7 @@ int main(int argc, char *argv[])
 
     if (rank != 0) {
         MTestSleep(10);
-    }
-    else {      /* rank==0 */
+    } else {    /* rank==0 */
 
         MTestSleep(1);  /* try to avoid timing while everyone else is making syscalls */
 

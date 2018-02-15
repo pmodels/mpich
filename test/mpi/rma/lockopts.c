@@ -69,14 +69,12 @@ int main(int argc, char *argv[])
             }
         }
         MPI_Win_unlock(0, win);
-    }
-    else if (wrank == 1) {
+    } else if (wrank == 1) {
         MPI_Win_lock(MPI_LOCK_SHARED, 0, 0, win);
         MPI_Accumulate(srcbuf, 1, vectype, 0, 0, 10, MPI_INT, MPI_SUM, win);
         MPI_Win_unlock(0, win);
         MPI_Barrier(MPI_COMM_WORLD);
-    }
-    else {
+    } else {
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
@@ -101,14 +99,12 @@ int main(int argc, char *argv[])
             }
         }
         MPI_Win_unlock(0, win);
-    }
-    else if (wrank == 1) {
+    } else if (wrank == 1) {
         MPI_Win_lock(MPI_LOCK_SHARED, 0, 0, win);
         MPI_Put(srcbuf, 1, vectype, 0, 0, 10, MPI_INT, win);
         MPI_Win_unlock(0, win);
         MPI_Barrier(MPI_COMM_WORLD);
-    }
-    else {
+    } else {
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
@@ -134,8 +130,7 @@ int main(int argc, char *argv[])
             }
         }
         MPI_Win_unlock(0, win);
-    }
-    else if (wrank == 1) {
+    } else if (wrank == 1) {
         int val;
         MPI_Win_lock(MPI_LOCK_SHARED, 0, 0, win);
         MPI_Get(&val, 1, MPI_INT, 0, 10, 1, MPI_INT, win);
@@ -146,8 +141,7 @@ int main(int argc, char *argv[])
             errs++;
             printf("Get: Expected -10, got %d\n", val);
         }
-    }
-    else {
+    } else {
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
@@ -173,8 +167,7 @@ int main(int argc, char *argv[])
             }
         }
         MPI_Win_unlock(0, win);
-    }
-    else if (wrank == 1) {
+    } else if (wrank == 1) {
         int val;
         MPI_Win_lock(MPI_LOCK_SHARED, 0, 0, win);
         MPI_Put(srcbuf, 1, vectype, 0, 0, 10, MPI_INT, win);
@@ -185,8 +178,7 @@ int main(int argc, char *argv[])
             errs++;
             printf("Get: Expected -10, got %d\n", val);
         }
-    }
-    else {
+    } else {
         MPI_Barrier(MPI_COMM_WORLD);
     }
 

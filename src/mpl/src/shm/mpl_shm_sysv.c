@@ -22,35 +22,33 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #define FUNCNAME MPL_shm_seg_create_attach_templ
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPL_shm_seg_create_attach_templ(
-    MPL_shm_hnd_t hnd, intptr_t seg_sz, char **shm_addr_ptr,
-    int offset, int flag)
+static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t seg_sz,
+                                                  char **shm_addr_ptr, int offset, int flag)
 {
     int rc = -1;
     int lhnd = -1;
 
-    if(flag & MPLI_SHM_FLAG_SHM_CREATE){
+    if (flag & MPLI_SHM_FLAG_SHM_CREATE) {
         lhnd = shmget(IPC_PRIVATE, seg_sz, IPC_CREAT | S_IRWXU);
-        MPL_shm_lhnd_set(hnd, lhnd);
-        rc = MPLI_shm_ghnd_alloc(hnd);
+        MPLI_shm_lhnd_set(hnd, lhnd);
+        rc = MPLI_shm_ghnd_alloc(hnd, MPL_MEM_SHM);
         rc = MPLI_shm_ghnd_set_by_val(hnd, "%d", lhnd);
-    }
-    else{
+    } else {
         /* Open an existing shared memory seg */
-        if(!MPLI_shm_lhnd_is_valid(hnd)){
+        if (!MPLI_shm_lhnd_is_valid(hnd)) {
             lhnd = atoi(MPLI_shm_ghnd_get_by_ref(hnd));
             MPLI_shm_lhnd_set(hnd, lhnd);
         }
     }
 
-    if(flag & MPLI_SHM_FLAG_SHM_ATTACH){
+    if (flag & MPLI_SHM_FLAG_SHM_ATTACH) {
         /* Attach to shared mem seg */
         *shm_addr_ptr = shmat(MPLI_shm_lhnd_get(hnd), NULL, 0x0);
     }
 
-fn_exit:
+  fn_exit:
     return rc;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -61,8 +59,7 @@ fn_fail:
 int MPL_shm_seg_create(MPL_shm_hnd_t hnd, intptr_t seg_sz)
 {
     int rc = -1;
-    rc = MPL_shm_seg_create_attach_templ(hnd, seg_sz, NULL, 0,
-                                         MPLI_SHM_FLAG_SHM_CREATE);
+    rc = MPL_shm_seg_create_attach_templ(hnd, seg_sz, NULL, 0, MPLI_SHM_FLAG_SHM_CREATE);
     return rc;
 }
 
@@ -90,7 +87,7 @@ int MPL_shm_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
 {
     int rc = 0;
     rc = MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
-                            MPLI_SHM_FLAG_SHM_CREATE | MPLI_SHM_FLAG_SHM_ATTACH);
+                                         MPLI_SHM_FLAG_SHM_CREATE | MPLI_SHM_FLAG_SHM_ATTACH);
     return rc;
 }
 
@@ -101,14 +98,14 @@ int MPL_shm_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
  *                  the shared mem segment
  * offset : Offset to attach the shared memory address to
  */
-int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, char **shm_addr_ptr,
-                       int offset)
+int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, char **shm_addr_ptr, int offset)
 {
     int rc = 0;
     rc = MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
                                          MPLI_SHM_FLAG_SHM_ATTACH);
     return rc;
 }
+
 /* Detach from an attached SHM segment
  * hnd : Handle to the shm segment
  * shm_addr_ptr : Pointer to the shm address to detach
@@ -125,9 +122,9 @@ int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, char **shm_addr_ptr, intptr_t seg_sz)
     rc = shmdt(*shm_addr_ptr);
     *shm_addr_ptr = NULL;
 
-fn_exit:
+  fn_exit:
     return rc;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -138,16 +135,16 @@ fn_fail:
 #define FUNCNAME MPL_shm_seg_remove
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int  MPL_shm_seg_remove(MPL_shm_hnd_t hnd)
+int MPL_shm_seg_remove(MPL_shm_hnd_t hnd)
 {
     struct shmid_ds ds;
     int rc = -1;
 
-    rc = shmctl(MPL_shm_lhnd_get(hnd), IPC_RMID, &ds);
+    rc = shmctl(MPLI_shm_lhnd_get(hnd), IPC_RMID, &ds);
 
-fn_exit:
+  fn_exit:
     return rc;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 

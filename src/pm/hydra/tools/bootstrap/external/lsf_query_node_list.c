@@ -23,8 +23,7 @@ HYD_status HYDT_bscd_lsf_query_node_list(struct HYD_node **node_list)
     if (hosts == NULL) {
         *node_list = NULL;
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "No LSF node list found\n");
-    }
-    else {
+    } else {
         hosts = MPL_strdup(hosts);
         thosts = hosts;
 

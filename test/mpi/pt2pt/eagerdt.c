@@ -61,8 +61,7 @@ int main(int argc, char *argv[])
         for (i = 0; i < MAX_MSGS; i++) {
             MPI_Recv(buf, 10 * 30, MPI_INT, source, i, comm, MPI_STATUS_IGNORE);
         }
-    }
-    else if (rank == source) {
+    } else if (rank == source) {
         for (i = 0; i < MAX_MSGS; i++) {
             MPI_Isend(bufs[i], 1, dtype, dest, i, comm, &req[i]);
         }

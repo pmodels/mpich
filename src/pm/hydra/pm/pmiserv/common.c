@@ -39,8 +39,7 @@ HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cm
             delim = " ";
         else
             delim = "\n";
-    }
-    else {      /* PMI-v2 */
+    } else {    /* PMI-v2 */
         delim = ";";
     }
 
@@ -84,8 +83,7 @@ HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tok
         for (j = 0; arg[j] && arg[j] != '='; j++);
         if (!arg[j]) {
             (*tokens)[i].val = NULL;
-        }
-        else {
+        } else {
             arg[j] = 0;
             (*tokens)[i].val = &arg[++j];
         }
@@ -134,12 +132,13 @@ HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs ** kvs, int pgid)
 
     MPL_wtime(&tv);
     MPL_wtime_todouble(&tv, &secs);
-    seed = (unsigned int)(secs*1e6);
+    seed = (unsigned int) (secs * 1e6);
     srand(seed);
     rnd = rand();
 
     HYDU_MALLOC_OR_JUMP(*kvs, struct HYD_pmcd_pmi_kvs *, sizeof(struct HYD_pmcd_pmi_kvs), status);
-    MPL_snprintf((*kvs)->kvsname, PMI_MAXKVSLEN, "kvs_%d_%d_%d_%s", (int) getpid(), pgid, rnd, hostname);
+    MPL_snprintf((*kvs)->kvsname, PMI_MAXKVSLEN, "kvs_%d_%d_%d_%s", (int) getpid(), pgid, rnd,
+                 hostname);
     (*kvs)->key_pair = NULL;
     (*kvs)->tail = NULL;
 
@@ -186,8 +185,7 @@ HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_
     if (kvs->key_pair == NULL) {
         kvs->key_pair = key_pair;
         kvs->tail = key_pair;
-    }
-    else {
+    } else {
 #ifdef PMI_KEY_CHECK
         struct HYD_pmcd_pmi_kvs_pair *run, *last;
 

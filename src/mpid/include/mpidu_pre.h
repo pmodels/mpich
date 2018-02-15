@@ -22,4 +22,4 @@ typedef struct MPIDU_Sched *MPIR_Sched_t;
 typedef int (MPIR_Sched_cb_t) (struct MPIR_Comm * comm, int tag, void *state);
 typedef int (MPIR_Sched_cb2_t) (struct MPIR_Comm * comm, int tag, void *state, void *state2);
 
-#endif
+#endif /* MPIDU_PRE_H_INCLUDED */

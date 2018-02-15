@@ -32,15 +32,15 @@ void run_test(int lock_mode, int lock_assert)
         printf("Synchronization mode: ");
 
         switch (lock_mode) {
-        case MPI_LOCK_EXCLUSIVE:
-            printf("Exclusive lock");
-            break;
-        case MPI_LOCK_SHARED:
-            printf("Shared lock");
-            break;
-        default:
-            printf("Unknown lock");
-            break;
+            case MPI_LOCK_EXCLUSIVE:
+                printf("Exclusive lock");
+                break;
+            case MPI_LOCK_SHARED:
+                printf("Shared lock");
+                break;
+            default:
+                printf("Unknown lock");
+                break;
         }
 
         if (lock_assert & MPI_MODE_NOCHECK)

@@ -31,13 +31,11 @@ int main(int argc, char **argv)
     if (rc) {
         MissingKeyval(rc, "MPI_TAG_UB");
         errs++;
-    }
-    else {
+    } else {
         if (!flag) {
             errs++;
             fprintf(stderr, "Could not get TAG_UB\n");
-        }
-        else {
+        } else {
             vval = *(int *) v;
             if (vval < 32767) {
                 errs++;
@@ -50,13 +48,11 @@ int main(int argc, char **argv)
     if (rc) {
         MissingKeyval(rc, "MPI_HOST");
         errs++;
-    }
-    else {
+    } else {
         if (!flag) {
             errs++;
             fprintf(stderr, "Could not get HOST\n");
-        }
-        else {
+        } else {
             vval = *(int *) v;
             if ((vval < 0 || vval >= size) && vval != MPI_PROC_NULL) {
                 errs++;
@@ -69,13 +65,11 @@ int main(int argc, char **argv)
     if (rc) {
         MissingKeyval(rc, "MPI_IO");
         errs++;
-    }
-    else {
+    } else {
         if (!flag) {
             errs++;
             fprintf(stderr, "Could not get IO\n");
-        }
-        else {
+        } else {
             vval = *(int *) v;
             if ((vval < 0 || vval >= size) && vval != MPI_ANY_SOURCE && vval != MPI_PROC_NULL) {
                 errs++;
@@ -88,8 +82,7 @@ int main(int argc, char **argv)
     if (rc) {
         MissingKeyval(rc, "MPI_WTIME_IS_GLOBAL");
         errs++;
-    }
-    else {
+    } else {
         if (flag) {
             /* Wtime need not be set */
             vval = *(int *) v;
@@ -104,8 +97,7 @@ int main(int argc, char **argv)
     if (rc) {
         MissingKeyval(rc, "MPI_APPNUM");
         errs++;
-    }
-    else {
+    } else {
         /* appnum need not be set */
         if (flag) {
             vval = *(int *) v;
@@ -120,8 +112,7 @@ int main(int argc, char **argv)
     if (rc) {
         MissingKeyval(rc, "MPI_UNIVERSE_SIZE");
         errs++;
-    }
-    else {
+    } else {
         /* MPI_UNIVERSE_SIZE need not be set */
         if (flag) {
             vval = *(int *) v;
@@ -136,8 +127,7 @@ int main(int argc, char **argv)
     if (rc) {
         MissingKeyval(rc, "MPI_LASTUSEDCODE");
         errs++;
-    }
-    else {
+    } else {
         /* Last used code must be defined and >= MPI_ERR_LASTCODE */
         if (flag) {
             vval = *(int *) v;
@@ -147,8 +137,7 @@ int main(int argc, char **argv)
                         "MPI_LASTUSEDCODE points to an integer (%d) smaller than MPI_ERR_LASTCODE (%d)\n",
                         vval, MPI_ERR_LASTCODE);
             }
-        }
-        else {
+        } else {
             errs++;
             fprintf(stderr, "MPI_LASTUSECODE is not defined\n");
         }

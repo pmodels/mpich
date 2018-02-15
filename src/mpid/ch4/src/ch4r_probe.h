@@ -48,14 +48,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_iprobe(int source,
         *flag = 1;
         unexp_req->status.MPI_ERROR = MPI_SUCCESS;
         unexp_req->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(unexp_req, rank);
-        unexp_req->status.MPI_TAG = MPIDI_CH4U_get_tag(MPIDI_CH4U_REQUEST(unexp_req, tag));
+        unexp_req->status.MPI_TAG = MPIDI_CH4U_request_get_tag(unexp_req);
         MPIR_STATUS_SET_COUNT(unexp_req->status, MPIDI_CH4U_REQUEST(unexp_req, count));
 
         status->MPI_TAG = unexp_req->status.MPI_TAG;
         status->MPI_SOURCE = unexp_req->status.MPI_SOURCE;
         MPIR_STATUS_SET_COUNT(*status, MPIDI_CH4U_REQUEST(unexp_req, count));
-    }
-    else {
+    } else {
         *flag = 0;
         MPIDI_CH4R_PROGRESS();
     }
@@ -114,15 +113,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_improbe(int source,
 
         unexp_req->status.MPI_ERROR = MPI_SUCCESS;
         unexp_req->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(unexp_req, rank);
-        unexp_req->status.MPI_TAG = MPIDI_CH4U_get_tag(MPIDI_CH4U_REQUEST(unexp_req, tag));
+        unexp_req->status.MPI_TAG = MPIDI_CH4U_request_get_tag(unexp_req);
         MPIR_STATUS_SET_COUNT(unexp_req->status, MPIDI_CH4U_REQUEST(unexp_req, count));
         MPIDI_CH4U_REQUEST(unexp_req, req->status) |= MPIDI_CH4U_REQ_UNEXP_DQUED;
 
         status->MPI_TAG = unexp_req->status.MPI_TAG;
         status->MPI_SOURCE = unexp_req->status.MPI_SOURCE;
         MPIR_STATUS_SET_COUNT(*status, MPIDI_CH4U_REQUEST(unexp_req, count));
-    }
-    else {
+    } else {
         *flag = 0;
         MPIDI_CH4R_PROGRESS();
     }

@@ -65,8 +65,7 @@ int main(int argc, char **argv)
             if (rank == 0) {
                 partner = np - 1;
                 MPI_Send(inbufs[j], counts[j], types[j], partner, tag, comm);
-            }
-            else if (rank == np - 1) {
+            } else if (rank == np - 1) {
                 partner = 0;
                 obuf = outbufs[j];
                 for (k = 0; k < bytesize[j]; k++)

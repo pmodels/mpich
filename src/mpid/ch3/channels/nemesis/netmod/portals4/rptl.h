@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined RPTL_H_INCLUDED
+#ifndef RPTL_H_INCLUDED
 #define RPTL_H_INCLUDED
 
 #if !defined HAVE_MACRO_VA_ARGS

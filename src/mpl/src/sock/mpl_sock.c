@@ -45,8 +45,7 @@ ssize_t MPL_large_writev(int fd, const struct iovec *iov, int iovcnt)
             do {
                 tmp = writev(fd, &iov[i], 1);
             } while (tmp == -1 && errno == EINTR);
-        }
-        else {
+        } else {
             dummy.iov_base = iov[i].iov_base;
             dummy.iov_len = INT_MAX;
             do {
@@ -59,8 +58,7 @@ ssize_t MPL_large_writev(int fd, const struct iovec *iov, int iovcnt)
         else if (tmp < iov[i].iov_len) {
             total_size += tmp;
             return total_size;
-        }
-        else
+        } else
             total_size += tmp;
     }
 
@@ -68,7 +66,7 @@ ssize_t MPL_large_writev(int fd, const struct iovec *iov, int iovcnt)
 }
 
 
-ssize_t MPL_large_readv(int fd, const struct iovec *iov, int iovcnt)
+ssize_t MPL_large_readv(int fd, const struct iovec * iov, int iovcnt)
 {
     ssize_t total_size, tmp;
     struct iovec dummy;
@@ -97,8 +95,7 @@ ssize_t MPL_large_readv(int fd, const struct iovec *iov, int iovcnt)
             do {
                 tmp = readv(fd, &iov[i], 1);
             } while (tmp == -1 && errno == EINTR);
-        }
-        else {
+        } else {
             dummy.iov_base = iov[i].iov_base;
             dummy.iov_len = INT_MAX;
             do {
@@ -111,8 +108,7 @@ ssize_t MPL_large_readv(int fd, const struct iovec *iov, int iovcnt)
         else if (tmp < iov[i].iov_len) {
             total_size += tmp;
             return total_size;
-        }
-        else
+        } else
             total_size += tmp;
     }
 

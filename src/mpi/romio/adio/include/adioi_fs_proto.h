@@ -1,13 +1,13 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-/* 
+/*
  *
- *   Copyright (C) 1997 University of Chicago. 
+ *   Copyright (C) 1997 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
  */
 
 
-#ifndef ADIO_PROTO
-#define ADIO_PROTO
+#ifndef ADIOI_FS_PROTO_H_INCLUDED
+#define ADIOI_FS_PROTO_H_INCLUDED
 
 #ifdef ROMIO_NFS
 extern struct ADIOI_Fns_struct ADIO_NFS_operations;
@@ -54,4 +54,4 @@ extern struct ADIOI_Fns_struct ADIO_GPFS_operations;
 extern struct ADIOI_Fns_struct ADIO_IME_operations;
 #endif
 
-#endif
+#endif /* ADIOI_FS_PROTO_H_INCLUDED */

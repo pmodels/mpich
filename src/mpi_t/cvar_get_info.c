@@ -15,8 +15,9 @@
 #pragma _CRI duplicate MPI_T_cvar_get_info as PMPI_T_cvar_get_info
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosity,
-                        MPI_Datatype *datatype, MPI_T_enum *enumtype, char *desc, int *desc_len,
-                        int *binding, int *scope) __attribute__((weak,alias("PMPI_T_cvar_get_info")));
+                        MPI_Datatype * datatype, MPI_T_enum * enumtype, char *desc, int *desc_len,
+                        int *binding, int *scope)
+    __attribute__ ((weak, alias("PMPI_T_cvar_get_info")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -58,8 +59,8 @@ Output Parameters:
 .N MPI_T_ERR_INVALID_INDEX
 @*/
 int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len,
-    int *verbosity, MPI_Datatype *datatype, MPI_T_enum *enumtype,
-    char *desc, int *desc_len, int *binding, int *scope)
+                        int *verbosity, MPI_Datatype * datatype, MPI_T_enum * enumtype,
+                        char *desc, int *desc_len, int *binding, int *scope)
 {
     int mpi_errno = MPI_SUCCESS;
     const cvar_table_entry_t *cvar;
@@ -70,25 +71,25 @@ int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len,
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_CVAR_GET_INFO);
 
     /* Validate parameters */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_CVAR_INDEX(cvar_index, mpi_errno);
             /* Do not do *_TEST_ARGNULL for pointer arguments, since this is
              * allowed or will be allowed by MPI_T standard.
              */
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
-    cvar = (cvar_table_entry_t *)utarray_eltptr(cvar_table, cvar_index);
+    cvar = (cvar_table_entry_t *) utarray_eltptr(cvar_table, cvar_index);
 
-    MPIR_T_strncpy(name, cvar->name,  name_len);
-    MPIR_T_strncpy(desc, cvar->desc,  desc_len);
+    MPIR_T_strncpy(name, cvar->name, name_len);
+    MPIR_T_strncpy(desc, cvar->desc, desc_len);
 
     if (verbosity != NULL)
         *verbosity = cvar->verbosity;
@@ -106,19 +107,21 @@ int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len,
         *scope = cvar->scope;
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_CVAR_GET_INFO);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_cvar_get_info", "**mpi_t_cvar_get_info %d %p %p %p %p %p %p %p %p %p",
-            cvar_index, name, name_len, verbosity, datatype, enumtype, desc, desc_len, binding, scope);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_t_cvar_get_info",
+                                 "**mpi_t_cvar_get_info %d %p %p %p %p %p %p %p %p %p", cvar_index,
+                                 name, name_len, verbosity, datatype, enumtype, desc, desc_len,
+                                 binding, scope);
     }
 #endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

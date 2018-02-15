@@ -170,20 +170,20 @@ int parse_args(int argc, char **argv)
     extern char *optarg;
     while ((c = getopt(argc, argv, "csp:")) != -1) {
         switch (c) {
-        case 's':
-            is_server = 1;
-            break;
-        case 'c':
-            is_client = 1;
-            break;
-        case 'p':
-            opt_port = atoi(optarg);
-            break;
-        case '?':
-        case ':':
-        default:
-            usage(argv[0]);
-            return -1;
+            case 's':
+                is_server = 1;
+                break;
+            case 'c':
+                is_client = 1;
+                break;
+            case 'p':
+                opt_port = atoi(optarg);
+                break;
+            case '?':
+            case ':':
+            default:
+                usage(argv[0]);
+                return -1;
         }
     }
     if ((is_client == 0) && (is_server == 0)) {
@@ -200,18 +200,18 @@ int parse_args(int argc, char **argv)
     int c;
     while ((c = get_option(argc, argv, arg_cnt++)) > 0) {
         switch (c) {
-        case 's':
-            is_server = 1;
-            break;
-        case 'c':
-            is_client = 1;
-            break;
-        case 'p':
-            opt_port = atoi(argv[arg_cnt++]);
-            break;
-        default:
-            usage(argv[0]);
-            return -1;
+            case 's':
+                is_server = 1;
+                break;
+            case 'c':
+                is_client = 1;
+                break;
+            case 'p':
+                opt_port = atoi(argv[arg_cnt++]);
+                break;
+            default:
+                usage(argv[0]);
+                return -1;
         }
     }
     if ((is_client == 0) && (is_server == 0)) {
@@ -247,15 +247,13 @@ int main(int argc, char **argv)
     if (is_server) {
         fd = server_routine(opt_port);
 
-    }
-    else if (is_client) {
+    } else if (is_client) {
         fd = client_routine(opt_port);
     }
 
     if (fd == INVALID_SOCKET_FD) {
         return -1;
     }
-
 #ifdef SINGLETON_KICK
 /* #warning isn't standard C, so we comment out this directive */
 /* #warning  using singleton workaround */
@@ -269,8 +267,7 @@ int main(int argc, char **argv)
 
     if (is_server) {
         MPI_Send(MPI_BOTTOM, 0, MPI_INT, 0, 0, intercomm);
-    }
-    else {
+    } else {
         MPI_Recv(MPI_BOTTOM, 0, MPI_INT, 0, 0, intercomm, MPI_STATUS_IGNORE);
         printf("Completed receive on intercomm\n");
         fflush(stdout);

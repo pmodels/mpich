@@ -3,8 +3,8 @@
  * (C) 2016 by Argonne National Laboratory.
  *     See COPYRIGHT in top-level directory.
  */
-#ifndef MPID_PORT_H_
-#define MPID_PORT_H_
+#ifndef MPID_PORT_H_INCLUDED
+#define MPID_PORT_H_INCLUDED
 
 #include "utlist.h"
 
@@ -197,4 +197,4 @@ static inline int MPIDI_CH3I_Port_issue_conn_ack(MPIDI_VC_t * vc, int ack)
 
 #endif /* MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS */
 
-#endif /* MPID_PORT_H_ */
+#endif /* MPID_PORT_H_INCLUDED */

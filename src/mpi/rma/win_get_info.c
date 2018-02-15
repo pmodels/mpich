@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_get_info as PMPI_Win_get_info
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Win_get_info(MPI_Win win, MPI_Info *info_used) __attribute__((weak,alias("PMPI_Win_get_info")));
+int MPI_Win_get_info(MPI_Win win, MPI_Info * info_used)
+    __attribute__ ((weak, alias("PMPI_Win_get_info")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -66,7 +67,7 @@ set.
 
 .seealso: MPI_Win_set_info
 @*/
-int MPI_Win_get_info(MPI_Win win, MPI_Info *info_used)
+int MPI_Win_get_info(MPI_Win win, MPI_Info * info_used)
 {
     static const char FCNAME[] = "MPI_Win_get_info";
     int mpi_errno = MPI_SUCCESS;
@@ -80,7 +81,7 @@ int MPI_Win_get_info(MPI_Win win, MPI_Info *info_used)
     MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_WIN_GET_INFO);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -88,29 +89,31 @@ int MPI_Win_get_info(MPI_Win win, MPI_Info *info_used)
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPIR_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr(win, win_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate pointers */
-            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
-            if (mpi_errno) goto fn_fail;
+            MPIR_Win_valid_ptr(win_ptr, mpi_errno);
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Win_get_info(win_ptr, &info_ptr);
 
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     *info_used = info_ptr->handle;
 
@@ -123,14 +126,14 @@ int MPI_Win_get_info(MPI_Win win, MPI_Info *info_used)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_win_get_info", "**mpi_win_get_info %W %p", win, info_used);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_win_get_info", "**mpi_win_get_info %W %p", win, info_used);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

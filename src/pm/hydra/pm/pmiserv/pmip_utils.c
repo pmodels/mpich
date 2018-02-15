@@ -497,8 +497,7 @@ static HYD_status exec_fn(char *arg, char ***argv)
     if (HYD_pmcd_pmip.exec_list == NULL) {
         status = HYDU_alloc_exec(&HYD_pmcd_pmip.exec_list);
         HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
-    }
-    else {
+    } else {
         for (exec = HYD_pmcd_pmip.exec_list; exec->next; exec = exec->next);
         status = HYDU_alloc_exec(&exec->next);
         HYDU_ERR_POP(status, "unable to allocate proxy exec\n");

@@ -43,8 +43,7 @@ int main(int argc, char *argv[])
             errs++;
         }
         MPI_Comm_free(&scomm);
-    }
-    else {
+    } else {
         if (scomm != MPI_COMM_NULL) {
             errs++;
         }

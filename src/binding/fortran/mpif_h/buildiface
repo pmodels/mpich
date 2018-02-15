@@ -3307,7 +3307,7 @@ sub chararray_ftoc {
     # null at the end
     print $OUTFD "\
     { int i;
-      char *ptmp;\n";
+      char *ptmp = NULL;\n";
     if ($Array_size) {
 	print $OUTFD "\
       asize$count = (int)$Array_size + 1;\n";

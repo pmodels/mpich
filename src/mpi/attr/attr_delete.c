@@ -16,7 +16,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Attr_delete as PMPI_Attr_delete
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Attr_delete(MPI_Comm comm, int keyval) __attribute__((weak,alias("PMPI_Attr_delete")));
+int MPI_Attr_delete(MPI_Comm comm, int keyval) __attribute__ ((weak, alias("PMPI_Attr_delete")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -33,12 +33,12 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval) __attribute__((weak,alias("PMPI_A
 
 /*@
 
-MPI_Attr_delete - Deletes an attribute value associated with a key on a 
+MPI_Attr_delete - Deletes an attribute value associated with a key on a
     communicator
 
 Input Parameters:
-+ comm - communicator to which attribute is attached (handle) 
-- keyval - The key value of the deleted attribute (integer) 
++ comm - communicator to which attribute is attached (handle)
+- keyval - The key value of the deleted attribute (integer)
 
 .N ThreadSafe
 
@@ -61,45 +61,47 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ATTR_DELETE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_ATTR_DELETE);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_COMM(comm, mpi_errno);
+            MPIR_ERRTEST_COMM(comm, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
-    
+#endif
+
     /* Convert MPI object handles to object pointers */
-    MPIR_Comm_get_ptr( comm, comm_ptr );
-    MPII_Keyval_get_ptr( keyval, keyval_ptr );
+    MPIR_Comm_get_ptr(comm, comm_ptr);
+    MPII_Keyval_get_ptr(keyval, keyval_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
-	    /* If comm_ptr is not valid, it will be reset to null */
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, TRUE);
+            /* If comm_ptr is not valid, it will be reset to null */
             /* Validate keyval_ptr */
-	    MPII_Keyval_valid_ptr( keyval_ptr, mpi_errno );
-            if (mpi_errno) goto fn_fail;
+            MPII_Keyval_valid_ptr(keyval_ptr, mpi_errno);
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Comm_delete_attr_impl( comm_ptr, keyval_ptr );
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    mpi_errno = MPIR_Comm_delete_attr_impl(comm_ptr, keyval_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     /* ... end of body of routine ... */
 
@@ -110,14 +112,14 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_attr_delete",
-	    "**mpi_attr_delete %C %d", comm, keyval);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_attr_delete", "**mpi_attr_delete %C %d", comm, keyval);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

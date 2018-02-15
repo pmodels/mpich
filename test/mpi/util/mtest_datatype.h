@@ -5,8 +5,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MTEST_DATATYPE_H_
-#define MTEST_DATATYPE_H_
+#ifndef MTEST_DATATYPE_H_INCLUDED
+#define MTEST_DATATYPE_H_INCLUDED
 
 #include "mpi.h"
 #include "mpitestconf.h"
@@ -50,7 +50,8 @@ enum MTEST_MIN_DERIVED_DT {
     MTEST_MIN_DDT_MAX
 };
 
-typedef int (*MTestDdtCreator) (MPI_Aint, MPI_Aint, MPI_Aint, MPI_Aint, MPI_Datatype, const char *, MTestDatatype *);
+typedef int (*MTestDdtCreator) (MPI_Aint, MPI_Aint, MPI_Aint, MPI_Aint, MPI_Datatype, const char *,
+                                MTestDatatype *);
 
 extern void MTestTypeCreatorInit(MTestDdtCreator * creators);
 extern void MTestTypeMinCreatorInit(MTestDdtCreator * creators);
@@ -59,4 +60,4 @@ extern void *MTestTypeInitRecv(MTestDatatype * mtype);
 extern int MTestTypeBasicCreate(MPI_Datatype oldtype, MTestDatatype * mtype);
 extern int MTestTypeDupCreate(MPI_Datatype oldtype, MTestDatatype * mtype);
 
-#endif /* MTEST_DATATYPE_H_ */
+#endif /* MTEST_DATATYPE_H_INCLUDED */

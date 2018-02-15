@@ -93,14 +93,16 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
 
     /* Request free q region */
     mpi_errno =
-        MPIDU_shm_seg_alloc(num_local * sizeof(MPIDI_POSIX_queue_t), (void **) &free_queues_p, MPL_MEM_SHM);
+        MPIDU_shm_seg_alloc(num_local * sizeof(MPIDI_POSIX_queue_t), (void **) &free_queues_p,
+                            MPL_MEM_SHM);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     /* Request recv q region */
     mpi_errno =
-        MPIDU_shm_seg_alloc(num_local * sizeof(MPIDI_POSIX_queue_t), (void **) &recv_queues_p, MPL_MEM_SHM);
+        MPIDU_shm_seg_alloc(num_local * sizeof(MPIDI_POSIX_queue_t), (void **) &recv_queues_p,
+                            MPL_MEM_SHM);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -125,8 +127,7 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
     /* post check_alloc steps */
     if (MPIDI_POSIX_mem_region.memory.symmetrical == 1) {
         MPIDI_POSIX_asym_base_addr = NULL;
-    }
-    else {
+    } else {
         MPIDI_POSIX_asym_base_addr = MPIDI_POSIX_mem_region.memory.base_addr;
 #ifdef MPIDI_POSIX_SYMMETRIC_QUEUES
         MPIR_ERR_INTERNALANDJUMP(mpi_errno, "queues are not symmetrically allocated as expected");
@@ -193,13 +194,15 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
 
     /* Allocate table of pointers to fastboxes */
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_mem_region.mailboxes.in, MPIDI_POSIX_fastbox_t **,
-                        num_local * sizeof(MPIDI_POSIX_fastbox_t *), mpi_errno, "fastboxes", MPL_MEM_SHM);
+                        num_local * sizeof(MPIDI_POSIX_fastbox_t *), mpi_errno, "fastboxes",
+                        MPL_MEM_SHM);
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_mem_region.mailboxes.out, MPIDI_POSIX_fastbox_t **,
-                        num_local * sizeof(MPIDI_POSIX_fastbox_t *), mpi_errno, "fastboxes", MPL_MEM_SHM);
+                        num_local * sizeof(MPIDI_POSIX_fastbox_t *), mpi_errno, "fastboxes",
+                        MPL_MEM_SHM);
 
     MPIR_Assert(num_local > 0);
 
-#define MPIDI_POSIX_MAILBOX_INDEX(sender, receiver) (((sender) > (receiver)) ? ((num_local-1) * (sender) + (receiver)) :		\
+#define MPIDI_POSIX_MAILBOX_INDEX(sender, receiver) (((sender) > (receiver)) ? ((num_local-1) * (sender) + (receiver)) :        \
                                           (((sender) < (receiver)) ? ((num_local-1) * (sender) + ((receiver)-1)) : 0))
 
     /* fill in tables */
@@ -208,8 +211,7 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
             /* No fastboxs to myself */
             MPIDI_POSIX_mem_region.mailboxes.in[i] = NULL;
             MPIDI_POSIX_mem_region.mailboxes.out[i] = NULL;
-        }
-        else {
+        } else {
             MPIDI_POSIX_mem_region.mailboxes.in[i] =
                 &fastboxes_p[MPIDI_POSIX_MAILBOX_INDEX(i, local_rank)];
             MPIDI_POSIX_mem_region.mailboxes.out[i] =
@@ -287,41 +289,41 @@ static inline int MPIDI_POSIX_mpi_free_mem(void *ptr)
 }
 
 static inline int MPIDI_POSIX_comm_get_lpid(MPIR_Comm * comm_ptr,
-                                          int idx, int *lpid_ptr, MPL_bool is_remote)
+                                            int idx, int *lpid_ptr, MPL_bool is_remote)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_POSIX_get_node_id(MPIR_Comm * comm, int rank, int * id_p)
+static inline int MPIDI_POSIX_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {
     *id_p = (int) 0;
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_POSIX_get_max_node_id(MPIR_Comm * comm, int * max_id_p)
+static inline int MPIDI_POSIX_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
 {
     *max_id_p = (int) 0;
     return MPI_SUCCESS;
 }
 
 static inline int MPIDI_POSIX_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
-                                            char **local_upids)
+                                              char **local_upids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
 static inline int MPIDI_POSIX_upids_to_lupids(int size,
-                                            size_t * remote_upid_size,
-                                            char *remote_upids, int **remote_lupids)
+                                              size_t * remote_upid_size,
+                                              char *remote_upids, int **remote_lupids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
 static inline int MPIDI_POSIX_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
-                                                        int size, const int lpids[])
+                                                          int size, const int lpids[])
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

@@ -12,17 +12,6 @@
 #include "pmi.h"
 #endif
 
-/* FIXME: We should move this into a header file so that we don't
-   need the ifdef.  Also, don't use exit (add to coding check) since
-   not safe in windows.  To avoid confusion, define a RobustExit? or
-   MPL_exit? */
-#ifdef HAVE_WINDOWS_H
-/* exit can hang if libc fflushes output while in/out/err buffers are locked
-   (this must be a bug in exit?).  ExitProcess does not hang (what does this
-   mean about the state of the locked buffers?). */
-#define exit(_e) ExitProcess(_e)
-#endif
-
 /* FIXME: This routine *or* MPI_Abort should provide abort callbacks,
    similar to the support in MPI_Finalize */
 

@@ -52,8 +52,8 @@ cvars:
       "direct" - this is a block of preallocated space
       "indirect" - this is a block of blocks that are allocated as necessary.
                    E.g., objmem_ptr->indirect[0..objmem_ptr->indirect_size-1]
-		   are pointers (or null) to a block of memory.  This block is
-		   then divided into objects that are added to the avail list.
+                   are pointers (or null) to a block of memory.  This block is
+                   then divided into objects that are added to the avail list.
 
    To provide information on the handles that are still in use, we must
    "repatriate" all of the free objects, at least virtually.  To give
@@ -88,8 +88,7 @@ int MPIR_check_handles_on_finalize(void *objmem_ptr)
         /* Find where this object belongs */
         if ((char *) ptr >= direct && (char *) ptr < directEnd) {
             nDirect++;
-        }
-        else {
+        } else {
             void **indirect = (void **) objmem->indirect;
             for (i = 0; i < objmem->indirect_size; i++) {
                 char *start = indirect[i];
@@ -153,20 +152,20 @@ const char *MPIR_Handle_get_kind_str(int kind)
 {
 #define mpiu_name_case_(name_) case MPIR_##name_: return (#name_)
     switch (kind) {
-        mpiu_name_case_(COMM);
-        mpiu_name_case_(GROUP);
-        mpiu_name_case_(DATATYPE);
-        mpiu_name_case_(FILE);
-        mpiu_name_case_(ERRHANDLER);
-        mpiu_name_case_(OP);
-        mpiu_name_case_(INFO);
-        mpiu_name_case_(WIN);
-        mpiu_name_case_(KEYVAL);
-        mpiu_name_case_(ATTR);
-        mpiu_name_case_(REQUEST);
-        mpiu_name_case_(PROCGROUP);
-        mpiu_name_case_(VCONN);
-        mpiu_name_case_(GREQ_CLASS);
+            mpiu_name_case_(COMM);
+            mpiu_name_case_(GROUP);
+            mpiu_name_case_(DATATYPE);
+            mpiu_name_case_(FILE);
+            mpiu_name_case_(ERRHANDLER);
+            mpiu_name_case_(OP);
+            mpiu_name_case_(INFO);
+            mpiu_name_case_(WIN);
+            mpiu_name_case_(KEYVAL);
+            mpiu_name_case_(ATTR);
+            mpiu_name_case_(REQUEST);
+            mpiu_name_case_(PROCGROUP);
+            mpiu_name_case_(VCONN);
+            mpiu_name_case_(GREQ_CLASS);
         default:
             return "unknown";
     }

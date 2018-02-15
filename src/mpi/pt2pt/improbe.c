@@ -14,8 +14,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Improbe as PMPI_Improbe
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPI_Message *message,
-                MPI_Status *status) __attribute__((weak,alias("PMPI_Improbe")));
+int MPI_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPI_Message * message,
+                MPI_Status * status) __attribute__ ((weak, alias("PMPI_Improbe")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -52,7 +52,8 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPI_Message *message, MPI_Status *status)
+int MPI_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPI_Message * message,
+                MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *msgp = NULL;
@@ -63,68 +64,70 @@ int MPI_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPI_Message *mess
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IMPROBE);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_COMM(comm, mpi_errno);
 
             /* TODO more checks may be appropriate */
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, FALSE);
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
 
             MPIR_ERRTEST_ARGNULL(flag, "flag", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
     *message = MPI_MESSAGE_NULL;
     mpi_errno = MPID_Improbe(source, tag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, flag, &msgp, status);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     if (*flag) {
-	if (msgp == NULL) {
-	    MPIR_Assert(source == MPI_PROC_NULL);
-	    *message = MPI_MESSAGE_NO_PROC;
-	}
-	else {
-	    *message = msgp->handle;
-	}
+        if (msgp == NULL) {
+            MPIR_Assert(source == MPI_PROC_NULL);
+            *message = MPI_MESSAGE_NO_PROC;
+        } else {
+            *message = msgp->handle;
+        }
     }
 
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IMPROBE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_improbe", "**mpi_improbe %d %d %C %p %p %p", source, tag, comm, flag, message, status);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_improbe", "**mpi_improbe %d %d %C %p %p %p", source, tag,
+                                 comm, flag, message, status);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

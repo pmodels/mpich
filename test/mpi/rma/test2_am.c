@@ -77,8 +77,7 @@ int main(int argc, char *argv[])
                 }
 
             MPI_Free_mem(B);
-        }
-        else if (rank == 1) {
+        } else if (rank == 1) {
 #ifdef USE_WIN_ALLOCATE
             MPI_Win_allocate(SIZE2 * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &B, &win);
 #else

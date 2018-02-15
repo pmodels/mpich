@@ -55,8 +55,7 @@ int main(int argc, char *argv[])
         /* printf("[%d] sending...\n",rank); */
         ierr = MPI_Send(cols, 1, dtype, 1, 0, MPI_COMM_WORLD);
         ierr = MPI_Send(cols, 1, dtype, 2, 0, MPI_COMM_WORLD);
-    }
-    else {
+    } else {
         /* printf("[%d] receiving...\n",rank); */
         for (i = 0; i < elems; i++)
             cols[i] = -1;

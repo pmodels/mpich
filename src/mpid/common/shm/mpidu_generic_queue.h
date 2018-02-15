@@ -4,16 +4,16 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPIDU_SHM_GENERIC_QUEUE_H
-#define MPIDU_SHM_GENERIC_QUEUE_H
+#ifndef MPIDU_GENERIC_QUEUE_H_INCLUDED
+#define MPIDU_GENERIC_QUEUE_H_INCLUDED
 
 /* Generic queue macros -- "next_field" should be set to the name of
    the next pointer field in the element (e.g., "ch.tcp_sendq_next") */
 
 #define PRINT_QUEUE(qp, next_field) do {        \
-    } while(0)
+    } while (0)
 #define PRINTM_QUEUE(qp, next_field_macro, next_field) do {     \
-    } while(0)
+    } while (0)
 
 #define GENERIC_Q_DECL(type) struct { type *head, *tail; }
 
@@ -336,4 +336,4 @@
         *(epp) = (sp)->top;                      \
         (sp)->top = (*(epp))->next_field;        \
     } while (0)
-#endif /* MPIDU_SHM_GENERIC_QUEUE_H */
+#endif /* MPIDU_GENERIC_QUEUE_H_INCLUDED */

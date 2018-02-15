@@ -19,8 +19,7 @@ static inline int MPIDI_NM_am_isend(int rank,
                                     const void *am_hdr,
                                     size_t am_hdr_sz,
                                     const void *data,
-                                    MPI_Count count,
-                                    MPI_Datatype datatype, MPIR_Request * sreq)
+                                    MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS, ret, c;
     size_t data_sz;
@@ -80,8 +79,7 @@ static inline int MPIDI_NM_am_isend(int rank,
         ret = PtlPut(sreq->dev.ch4.am.netmod_am.portals4.md, 0, am_hdr_sz + data_sz,
                      PTL_ACK_REQ, MPIDI_PTL_global.addr_table[rank].process,
                      MPIDI_PTL_global.addr_table[rank].pt, match_bits, 0, sreq, ptl_hdr);
-    }
-    else {
+    } else {
         /* copy everything into pack_buffer */
         MPIR_Segment *segment;
         MPI_Aint last;
@@ -114,9 +112,7 @@ static inline int MPIDI_NM_am_isendv(int rank,
                                      struct iovec *am_hdr,
                                      size_t iov_len,
                                      const void *data,
-                                     MPI_Count count,
-                                     MPI_Datatype datatype,
-                                     MPIR_Request * sreq)
+                                     MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
@@ -176,8 +172,7 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
         ret = PtlPut(sreq->dev.ch4.am.netmod_am.portals4.md, 0, am_hdr_sz + data_sz,
                      PTL_ACK_REQ, MPIDI_PTL_global.addr_table[src_rank].process,
                      MPIDI_PTL_global.addr_table[src_rank].pt, match_bits, 0, sreq, ptl_hdr);
-    }
-    else {
+    } else {
         /* copy everything into pack_buffer */
         MPIR_Segment *segment;
         MPI_Aint last;
@@ -212,8 +207,7 @@ static inline size_t MPIDI_NM_am_hdr_max_sz(void)
 
 static inline int MPIDI_NM_am_send_hdr(int rank,
                                        MPIR_Comm * comm,
-                                       int handler_id,
-                                       const void *am_hdr, size_t am_hdr_sz)
+                                       int handler_id, const void *am_hdr, size_t am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS, ret, c;
     ptl_hdr_data_t ptl_hdr;

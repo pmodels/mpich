@@ -20,8 +20,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(comm, &iam);
     if (np < 2) {
         printf("Should be at least 2 processes for the test\n");
-    }
-    else {
+    } else {
         MPI_Type_vector(n, m, lda, type, &vtype);
         MPI_Type_commit(&vtype);
         A[0] = -1.0 - 0.1 * iam;

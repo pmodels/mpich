@@ -3,8 +3,8 @@
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#ifndef SIMPLE_PMI_UTIL_H_INCLUDED
-#define SIMPLE_PMI_UTIL_H_INCLUDED
+#ifndef SIMPLE_PMIUTIL_H_INCLUDED
+#define SIMPLE_PMIUTIL_H_INCLUDED
 
 #include "mpichconf.h"
 
@@ -13,15 +13,15 @@
 #define PMI2U_IDSIZE    32
 
 /* prototypes for PMIU routines */
-void PMI2U_Set_rank( int PMI_rank );
-void PMI2U_SetServer( void );
-void PMI2U_printf( int print_flag, const char *fmt, ... );
-int  PMI2U_readline( int fd, char *buf, int max );
-int  PMI2U_writeline( int fd, char *buf );
-int  PMI2U_parse_keyvals( char *st );
-void PMI2U_dump_keyvals( void );
-char *PMI2U_getval( const char *keystr, char *valstr, int vallen );
-void PMI2U_chgval( const char *keystr, char *valstr );
+void PMI2U_Set_rank(int PMI_rank);
+void PMI2U_SetServer(void);
+void PMI2U_printf(int print_flag, const char *fmt, ...);
+int PMI2U_readline(int fd, char *buf, int max);
+int PMI2U_writeline(int fd, char *buf);
+int PMI2U_parse_keyvals(char *st);
+void PMI2U_dump_keyvals(void);
+char *PMI2U_getval(const char *keystr, char *valstr, int vallen);
+void PMI2U_chgval(const char *keystr, char *valstr);
 
 #ifdef HAVE__FUNCTION__
 #define PMI2U_FUNC __FUNCTION__
@@ -33,7 +33,7 @@ void PMI2U_chgval( const char *keystr, char *valstr );
 #define PMI2U_FUNC __FILE__
 #endif
 
-extern int PMI2_pmiverbose; /* Set this to true to print PMI debugging info */
+extern int PMI2_pmiverbose;     /* Set this to true to print PMI debugging info */
 #define printf_d(x...)  do { if (PMI2_pmiverbose) printf(x); } while (0)
 
 /* error reporting macros */
@@ -119,7 +119,7 @@ extern int PMI2_pmiverbose; /* Set this to true to print PMI debugging info */
         rc_ = PMI2_ERR_NOMEM;                                                                   \
         printf_d("ERROR: memory allocation of %lu bytes failed for %s in %s (%d)\n",     \
                 (size_t)nbytes_, name_, PMI2U_FUNC, __LINE__);                                  \
-    } while(0)
+    } while (0)
 #else
 #define PMI2U_CHKMEM_SETERR(rc_, nbytes_, name_) rc_ = PMI2_ERR_NOMEM
 #endif
@@ -140,7 +140,7 @@ extern int PMI2_pmiverbose; /* Set this to true to print PMI debugging info */
             PMI2U_CHKMEM_SETERR(rc_,nbytes_,name_);                                     \
             stmt_;                                                                      \
         }                                                                               \
-    } while(0)
+    } while (0)
 #else
 #define PMI2U_CHKLMEM_DECL(n_)                                  \
     void *(pmi2u_chklmem_stk_[n_]) = {0};                       \
@@ -156,10 +156,10 @@ extern int PMI2_pmiverbose; /* Set this to true to print PMI debugging info */
             PMI2U_CHKMEM_SETERR(rc_,nbytes_,name_);                                     \
             stmt_;                                                                      \
         }                                                                               \
-    } while(0)
+    } while (0)
 #define PMI2U_CHKLMEM_FREEALL()                                         \
     while (pmi2u_chklmem_stk_sp_ > 0) {                                 \
-        PMI2U_Free( pmi2u_chklmem_stk_[--pmi2u_chklmem_stk_sp_] ); }
+        PMI2U_Free(pmi2u_chklmem_stk_[--pmi2u_chklmem_stk_sp_]); }
 #endif /* HAVE_ALLOCA */
 #define PMI2U_CHKLMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_) \
     PMI2U_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)
@@ -184,10 +184,10 @@ extern int PMI2_pmiverbose; /* Set this to true to print PMI debugging info */
             PMI2U_CHKMEM_SETERR(rc_,nbytes_,name_);                                     \
             stmt_;                                                                      \
         }                                                                               \
-    } while(0)
+    } while (0)
 #define PMI2U_CHKLBIGMEM_FREEALL()                                              \
     while (pmi2u_chklbigmem_stk_sp_ > 0) {                                      \
-        PMI2U_Free( pmi2u_chklbigmem_stk_[--pmi2u_chklbigmem_stk_sp_] ); }
+        PMI2U_Free(pmi2u_chklbigmem_stk_[--pmi2u_chklbigmem_stk_sp_]); }
 
 #define PMI2U_CHKLBIGMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_)       \
     PMI2U_CHKLBIGMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)
@@ -208,14 +208,14 @@ extern int PMI2_pmiverbose; /* Set this to true to print PMI debugging info */
             PMI2U_CHKMEM_SETERR(rc_,nbytes_,name_);                                     \
             stmt_;                                                                      \
         }                                                                               \
-    } while(0)
+    } while (0)
 #define PMI2U_CHKPMEM_REGISTER(pointer_) do {                           \
         PMI2U_Assert(pmi2u_chkpmem_stk_sp_<pmi2u_chkpmem_stk_sz_);      \
         pmi2u_chkpmem_stk_[pmi2u_chkpmem_stk_sp_++] = pointer_;         \
-    } while(0)
+    } while (0)
 #define PMI2U_CHKPMEM_REAP()                                            \
     while (pmi2u_chkpmem_stk_sp_ > 0) {                                 \
-        PMI2U_Free( pmi2u_chkpmem_stk_[--pmi2u_chkpmem_stk_sp_] ); }
+        PMI2U_Free(pmi2u_chkpmem_stk_[--pmi2u_chkpmem_stk_sp_]); }
 #define PMI2U_CHKPMEM_COMMIT() pmi2u_chkpmem_stk_sp_ = 0
 #define PMI2U_CHKPMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_)          \
     PMI2U_CHKPMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)
@@ -229,7 +229,7 @@ extern int PMI2_pmiverbose; /* Set this to true to print PMI debugging info */
             PMI2U_CHKMEM_SETERR(rc_,nbytes_,name_);                             \
             stmt_;                                                              \
         }                                                                       \
-    } while(0)
+    } while (0)
 
 /* Provides a easy way to use realloc safely and avoid the temptation to use
  * realloc unsafely (direct ptr assignment).  Zero-size reallocs returning NULL
@@ -252,4 +252,4 @@ extern int PMI2_pmiverbose; /* Set this to true to print PMI debugging info */
         (ptr_) = realloc_tmp_;                                                                  \
     } while (0)
 
-#endif /*SIMPLE_PMI_UTIL_H_INCLUDED*/
+#endif /* SIMPLE_PMIUTIL_H_INCLUDED */

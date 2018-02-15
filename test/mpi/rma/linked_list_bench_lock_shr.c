@@ -171,8 +171,7 @@ int main(int argc, char **argv)
                                (void *) next_tail_ptr.disp);
                     tail_ptr = next_tail_ptr;
                     pollint = MAX(MIN_NPROBE, pollint / 2);
-                }
-                else {
+                } else {
                     for (j = 0; j < pollint; j++)
                         MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag,
                                    MPI_STATUS_IGNORE);

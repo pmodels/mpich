@@ -53,8 +53,7 @@ int main(int argc, char **argv)
         }
         MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &rreq);
         MPI_Wait(&rreq, MPI_STATUS_IGNORE);
-    }
-    else {
+    } else {
         MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &rreq);
         buf[0] = rank;
         buf[1] = size + rank;
@@ -96,8 +95,7 @@ int main(int argc, char **argv)
         }
         MPI_Comm_idup(ic, &newcomm, &rreq);
         MPI_Wait(&rreq, MPI_STATUS_IGNORE);
-    }
-    else {
+    } else {
         MPI_Comm_idup(ic, &newcomm, &rreq);
         buf[0] = lrank;
         buf[1] = lsize + lrank;
@@ -125,8 +123,7 @@ int main(int argc, char **argv)
     if (rank == 0) {
         if (errs) {
             printf("found %d errors\n", errs);
-        }
-        else {
+        } else {
             printf(" No errors\n");
         }
     }

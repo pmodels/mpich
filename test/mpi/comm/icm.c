@@ -50,8 +50,7 @@ int main(int argc, char *argv[])
                     errs++;
                     printf("(1) rank for high process is %d should be %d\n", nrank, rsize + rank);
                 }
-            }
-            else {
+            } else {
                 /* The right processes should be low */
                 if (nrank != rank) {
                     errs++;
@@ -73,8 +72,7 @@ int main(int argc, char *argv[])
                     errs++;
                     printf("(2) rank for high process is %d should be %d\n", nrank, rsize + rank);
                 }
-            }
-            else {
+            } else {
                 /* The left processes should be low */
                 if (nrank != rank) {
                     errs++;

@@ -1,14 +1,24 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-/* 
+/*
  *
- *   Copyright (C) 1997 University of Chicago. 
+ *   Copyright (C) 1997 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
  */
 
-/* 
-   This header file converts all MPI_ names into PMPI_ names, for 
+/*
+   This header file converts all MPI_ names into PMPI_ names, for
    building the profiling interface
  */
+
+/* This file is a no-op without MPIO_BUILD_PROFILING defined.
+ * Do not allow erroneous inclusion as that will falsely define
+ * MPIO_PROF_H_INCLUDED */
+#ifndef MPIO_BUILD_PROFILING
+#error "The file must be included only when MPIO_BUILD_PROFILING is defined"
+#endif
+
+#ifndef MPIO_PROF_H_INCLUDED
+#define MPIO_PROF_H_INCLUDED
 
 #ifdef MPIO_BUILD_PROFILING
 
@@ -54,7 +64,7 @@
 #undef MPI_File_read
 #define MPI_File_read PMPI_File_read
 #undef MPI_File_read_all
-#define MPI_File_read_all  PMPI_File_read_all 
+#define MPI_File_read_all  PMPI_File_read_all
 #undef MPI_File_write
 #define MPI_File_write PMPI_File_write
 #undef MPI_File_write_all
@@ -212,3 +222,5 @@
 #define MPIX_Grequest_class_create PMPIX_Grequest_class_create
 
 #endif
+
+#endif /* MPIO_PROF_H_INCLUDED */

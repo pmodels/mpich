@@ -14,8 +14,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_cvar_handle_alloc as PMPI_T_cvar_handle_alloc
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle *handle,
-                            int *count) __attribute__((weak,alias("PMPI_T_cvar_handle_alloc")));
+int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle * handle,
+                            int *count) __attribute__ ((weak, alias("PMPI_T_cvar_handle_alloc")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -31,7 +31,8 @@ int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle 
 #define FUNCNAME MPIR_T_cvar_handle_alloc_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_handle *handle, int *count)
+int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_handle * handle,
+                                  int *count)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_T_cvar_handle_t *hnd;
@@ -41,7 +42,8 @@ int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_h
     cvar_table_entry_t *cvar = (cvar_table_entry_t *) utarray_eltptr(cvar_table, cvar_index);
 
     /* Allocate handle memory */
-    MPIR_CHKPMEM_MALLOC(hnd, MPIR_T_cvar_handle_t*, sizeof(*hnd), mpi_errno, "control variable handle", MPL_MEM_MPIT);
+    MPIR_CHKPMEM_MALLOC(hnd, MPIR_T_cvar_handle_t *, sizeof(*hnd), mpi_errno,
+                        "control variable handle", MPL_MEM_MPIT);
 #ifdef HAVE_ERROR_CHECKING
     hnd->kind = MPIR_T_CVAR_HANDLE;
 #endif
@@ -66,9 +68,9 @@ int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_h
     *handle = hnd;
 
     MPIR_CHKPMEM_COMMIT();
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
@@ -99,7 +101,8 @@ Output Parameters:
 .N MPI_T_ERR_INVALID_HANDLE
 .N MPI_T_ERR_OUT_OF_HANDLES
 @*/
-int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle *handle, int *count)
+int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle * handle,
+                            int *count)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -109,41 +112,44 @@ int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_CVAR_HANDLE_ALLOC);
 
     /* Validate parameters */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_CVAR_INDEX(cvar_index, mpi_errno);
             /* obj_handle is ignored if cvar has no binding, so no
-               TEST_ARGNULL for it */
+             * TEST_ARGNULL for it */
             MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
             MPIR_ERRTEST_ARGNULL(count, "count", mpi_errno);
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_T_cvar_handle_alloc_impl(cvar_index, obj_handle, handle, count);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_CVAR_HANDLE_ALLOC);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_cvar_handle_alloc", "**mpi_t_cvar_handle_alloc %d %p %p %p", cvar_index, obj_handle, handle, count);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_t_cvar_handle_alloc",
+                                 "**mpi_t_cvar_handle_alloc %d %p %p %p", cvar_index, obj_handle,
+                                 handle, count);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

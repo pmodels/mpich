@@ -1,18 +1,18 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
+ *  (C) 2017 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv_intra_brucks_sched
+#define FUNCNAME MPIR_Iallgatherv_sched_intra_brucks
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgatherv_intra_brucks_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                           void *recvbuf, const int recvcounts[], const int displs[],
-                           MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iallgatherv_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                        void *recvbuf, const int recvcounts[], const int displs[],
+                                        MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, j, i;
@@ -28,7 +28,7 @@ int MPIR_Iallgatherv_intra_brucks_sched(const void *sendbuf, int sendcount, MPI_
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     total_count = 0;
-    for (i=0; i<comm_size; i++)
+    for (i = 0; i < comm_size; i++)
         total_count += recvcounts[i];
 
     if (total_count == 0)
@@ -42,23 +42,25 @@ int MPIR_Iallgatherv_intra_brucks_sched(const void *sendbuf, int sendcount, MPI_
     MPIR_Ensure_Aint_fits_in_pointer(total_count * MPL_MAX(recvtype_true_extent, recvtype_extent));
     recvbuf_extent = total_count * (MPL_MAX(recvtype_true_extent, recvtype_extent));
 
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf",
+                              MPL_MEM_BUFFER);
 
     /* adjust for potential negative lower bound in datatype */
-    tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);
+    tmp_buf = (void *) ((char *) tmp_buf - recvtype_true_lb);
 
     /* copy local data to the top of tmp_buf */
     if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Sched_copy(sendbuf, sendcount, sendtype,
                                     tmp_buf, recvcounts[rank], recvtype, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
-    }
-    else {
-        mpi_errno = MPIR_Sched_copy(((char *)recvbuf + displs[rank]*recvtype_extent),
+    } else {
+        mpi_errno = MPIR_Sched_copy(((char *) recvbuf + displs[rank] * recvtype_extent),
                                     recvcounts[rank], recvtype,
                                     tmp_buf, recvcounts[rank], recvtype, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 
@@ -73,7 +75,7 @@ int MPIR_Iallgatherv_intra_brucks_sched(const void *sendbuf, int sendcount, MPI_
      * right now, starting with the block we copied in the previous step */
     curr_count = recvcounts[rank];
     pof2 = 1;
-    while (pof2 <= comm_size/2) {
+    while (pof2 <= comm_size / 2) {
         src = (rank + pof2) % comm_size;
         dst = (rank - pof2 + comm_size) % comm_size;
 
@@ -83,11 +85,13 @@ int MPIR_Iallgatherv_intra_brucks_sched(const void *sendbuf, int sendcount, MPI_
         }
 
         mpi_errno = MPIR_Sched_send(tmp_buf, curr_count, recvtype, dst, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         /* sendrecv, no barrier */
-        mpi_errno = MPIR_Sched_recv(((char *)tmp_buf + curr_count*recvtype_extent),
+        mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + curr_count * recvtype_extent),
                                     incoming_count, recvtype, src, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
 
         /* we will send everything we had plus what we just got to next round's dst */
@@ -102,15 +106,17 @@ int MPIR_Iallgatherv_intra_brucks_sched(const void *sendbuf, int sendcount, MPI_
         dst = (rank - pof2 + comm_size) % comm_size;
 
         send_cnt = 0;
-        for (i=0; i<rem; i++)
-            send_cnt += recvcounts[(rank+i)%comm_size];
+        for (i = 0; i < rem; i++)
+            send_cnt += recvcounts[(rank + i) % comm_size];
 
         mpi_errno = MPIR_Sched_send(tmp_buf, send_cnt, recvtype, dst, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         /* sendrecv, no barrier */
-        mpi_errno = MPIR_Sched_recv(((char *)tmp_buf + curr_count*recvtype_extent),
-                                     (total_count - curr_count), recvtype, src, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPIR_Sched_recv(((char *) tmp_buf + curr_count * recvtype_extent),
+                                    (total_count - curr_count), recvtype, src, comm_ptr, s);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 
@@ -118,30 +124,31 @@ int MPIR_Iallgatherv_intra_brucks_sched(const void *sendbuf, int sendcount, MPI_
      * result in recvbuf. */
 
     send_cnt = 0;
-    for (i=0; i < (comm_size-rank); i++) {
-        j = (rank+i)%comm_size;
-        mpi_errno = MPIR_Sched_copy(((char *)tmp_buf + send_cnt*recvtype_extent),
+    for (i = 0; i < (comm_size - rank); i++) {
+        j = (rank + i) % comm_size;
+        mpi_errno = MPIR_Sched_copy(((char *) tmp_buf + send_cnt * recvtype_extent),
                                     recvcounts[j], recvtype,
-                                    ((char *)recvbuf + displs[j]*recvtype_extent),
+                                    ((char *) recvbuf + displs[j] * recvtype_extent),
                                     recvcounts[j], recvtype, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         send_cnt += recvcounts[j];
     }
 
-    for (i=0; i<rank; i++) {
-        mpi_errno = MPIR_Sched_copy(((char *)tmp_buf + send_cnt*recvtype_extent),
+    for (i = 0; i < rank; i++) {
+        mpi_errno = MPIR_Sched_copy(((char *) tmp_buf + send_cnt * recvtype_extent),
                                     recvcounts[i], recvtype,
-                                    ((char *)recvbuf + displs[i]*recvtype_extent),
+                                    ((char *) recvbuf + displs[i] * recvtype_extent),
                                     recvcounts[i], recvtype, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         send_cnt += recvcounts[i];
     }
 
     MPIR_SCHED_CHKPMEM_COMMIT(s);
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
-

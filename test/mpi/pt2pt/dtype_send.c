@@ -42,8 +42,7 @@ int main(int argc, char **argv)
         req = (MPI_Request *) malloc(NUM_LOOPS * sizeof(MPI_Request));
         for (i = 0; i < NUM_LOOPS; i++)
             MPI_Isend(snd_buf, 1, newtype, !rank, 0, MPI_COMM_WORLD, &req[i]);
-    }
-    else {
+    } else {
         for (i = 0; i < NUM_LOOPS; i++)
             MPI_Recv(rcv_buf, 1, newtype, !rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
@@ -61,8 +60,7 @@ int main(int argc, char **argv)
         req = (MPI_Request *) malloc(NUM_LOOPS * sizeof(MPI_Request));
         for (i = 0; i < NUM_LOOPS; i++)
             MPI_Issend(snd_buf, 1, newtype, !rank, 0, MPI_COMM_WORLD, &req[i]);
-    }
-    else {
+    } else {
         for (i = 0; i < NUM_LOOPS; i++)
             MPI_Recv(rcv_buf, 1, newtype, !rank, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
@@ -81,8 +79,7 @@ int main(int argc, char **argv)
         MPI_Barrier(MPI_COMM_WORLD);
         for (i = 0; i < NUM_LOOPS; i++)
             MPI_Irsend(snd_buf, 1, newtype, !rank, 0, MPI_COMM_WORLD, &req[i]);
-    }
-    else {
+    } else {
         for (i = 0; i < NUM_LOOPS; i++)
             MPI_Irecv(rcv_buf, 1, newtype, !rank, 0, MPI_COMM_WORLD, &req[i]);
         MPI_Barrier(MPI_COMM_WORLD);

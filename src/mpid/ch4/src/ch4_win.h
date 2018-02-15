@@ -239,10 +239,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_fence(int assert, MPIR_Win * win)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Win_create(void *base,
-                                              MPI_Aint length,
-                                              int disp_unit,
-                                              MPIR_Info * info, MPIR_Comm * comm_ptr,
-                                              MPIR_Win ** win_ptr)
+                                             MPI_Aint length,
+                                             int disp_unit,
+                                             MPIR_Info * info, MPIR_Comm * comm_ptr,
+                                             MPIR_Win ** win_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_CREATE);
@@ -283,10 +283,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_attach(MPIR_Win * win, void *base, MPI_Ain
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Win_allocate_shared(MPI_Aint size,
-                                                       int disp_unit,
-                                                       MPIR_Info * info_ptr,
-                                                       MPIR_Comm * comm_ptr,
-                                                       void **base_ptr, MPIR_Win ** win_ptr)
+                                                      int disp_unit,
+                                                      MPIR_Info * info_ptr,
+                                                      MPIR_Comm * comm_ptr,
+                                                      void **base_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_ALLOCATE_SHARED);
@@ -349,8 +349,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_detach(MPIR_Win * win, const void *base)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Win_shared_query(MPIR_Win * win,
-                                                    int rank, MPI_Aint * size, int *disp_unit,
-                                                    void *baseptr)
+                                                   int rank, MPI_Aint * size, int *disp_unit,
+                                                   void *baseptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_SHARED_QUERY);
@@ -371,9 +371,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_shared_query(MPIR_Win * win,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Win_allocate(MPI_Aint size,
-                                                int disp_unit,
-                                                MPIR_Info * info,
-                                                MPIR_Comm * comm, void *baseptr, MPIR_Win ** win)
+                                               int disp_unit,
+                                               MPIR_Info * info,
+                                               MPIR_Comm * comm, void *baseptr, MPIR_Win ** win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_ALLOCATE);
@@ -454,7 +454,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Win_unlock_all(MPIR_Win * win)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm,
-                                                      MPIR_Win ** win)
+                                                     MPIR_Win ** win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_CREATE_DYNAMIC);

@@ -101,8 +101,7 @@ int main(int argc, char *argv[])
                 /* Free the intercomm before the next round of spawns */
                 MPI_Comm_free(&intercomm);
             }
-        }
-        else {
+        } else {
             /* Note that worker also send errs to the parent */
             errs += worker(argc, argv, parentcomm, outargv, np);
             MPI_Comm_free(&parentcomm);
@@ -120,8 +119,7 @@ int main(int argc, char *argv[])
             free(outargv[i]);
         }
 
-    }
-    else {
+    } else {
         MTest_Finalize(errs);
     }
 

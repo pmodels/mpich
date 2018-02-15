@@ -119,8 +119,7 @@ static inline int MPIDI_CH4R_check_maprange_ok(void *start, size_t size)
             if (errno != ENOMEM)
                 goto fn_fail;
             ptr += page_sz;
-        }
-        else
+        } else
             goto fn_exit;
     }
 
@@ -227,7 +226,7 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
 
     maxloc.sz = size;
     maxloc.loc = comm->rank;
-    mpi_errno = MPID_Allreduce(&maxloc,
+    mpi_errno = MPIR_Allreduce(&maxloc,
                                &maxloc_result, 1, MPI_LONG_INT, MPI_MAXLOC, comm, &errflag);
 
     if (mpi_errno != MPI_SUCCESS)
@@ -245,10 +244,11 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
                 void *p = MPIDI_CH4R_generate_random_addr(mapsize);
                 map_pointer = (uintptr_t) p;
                 baseP = MPL_mmap((void *) map_pointer, mapsize,
-                                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0, MPL_MEM_RMA);
+                                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0,
+                                 MPL_MEM_RMA);
             }
 
-            mpi_errno = MPID_Bcast(&map_pointer,
+            mpi_errno = MPIR_Bcast(&map_pointer,
                                    1, MPI_UNSIGNED_LONG, maxloc_result.loc, comm, &errflag);
 
             if (mpi_errno != MPI_SUCCESS)
@@ -259,9 +259,9 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
 
                 if (rc) {
                     baseP = MPL_mmap((void *) map_pointer, mapsize,
-                                     PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0, MPL_MEM_RMA);
-                }
-                else
+                                     PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1,
+                                     0, MPL_MEM_RMA);
+                } else
                     baseP = (void *) -1ULL;
             }
 
@@ -269,8 +269,7 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
                 baseP = (void *) map_pointer;
 
             test = ((uintptr_t) baseP != -1ULL) ? 1 : 0;
-            mpi_errno = MPID_Allreduce(&test,
-                                       &result, 1, MPI_UNSIGNED, MPI_BAND, comm, &errflag);
+            mpi_errno = MPIR_Allreduce(&test, &result, 1, MPI_UNSIGNED, MPI_BAND, comm, &errflag);
 
             if (mpi_errno != MPI_SUCCESS)
                 goto fn_fail;
@@ -278,8 +277,7 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
             if (result == 0 && baseP != (void *) -1ULL)
                 MPL_munmap(baseP, mapsize, MPL_MEM_RMA);
         }
-    }
-    else
+    } else
         baseP = NULL;
 #endif
 
@@ -290,8 +288,7 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
         MPIR_ERR_CHKANDJUMP((baseP == NULL), mpi_errno, MPI_ERR_BUFFER, "**bufnull");
         MPIDI_CH4U_WIN(win, mmap_sz) = -1ULL;
         MPIDI_CH4U_WIN(win, mmap_addr) = NULL;
-    }
-    else {
+    } else {
         MPIDI_CH4U_WIN(win, mmap_sz) = mapsize;
         MPIDI_CH4U_WIN(win, mmap_addr) = baseP;
     }

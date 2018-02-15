@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPIR_REFCOUNT_SINGLE_H_INCLUDED)
+#ifndef MPIR_REFCOUNT_SINGLE_H_INCLUDED
 #define MPIR_REFCOUNT_SINGLE_H_INCLUDED
 
 /* define a type for the completion counter */
@@ -45,4 +45,4 @@ typedef int MPIR_cc_t;
         (hnd_lval_) = (handle_);                        \
     } while (0)
 
-#endif /* !defined(MPIR_REFCOUNT_SINGLE_H_INCLUDED) */
+#endif /* MPIR_REFCOUNT_SINGLE_H_INCLUDED */

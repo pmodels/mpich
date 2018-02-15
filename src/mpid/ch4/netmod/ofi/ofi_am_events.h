@@ -54,16 +54,14 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     if (is_contig) {
         if (in_data_sz > data_sz) {
             rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        }
-        else {
+        } else {
             rreq->status.MPI_ERROR = MPI_SUCCESS;
         }
 
         data_sz = MPL_MIN(data_sz, in_data_sz);
         MPIR_Memcpy(p_data, in_data, data_sz);
         MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-    }
-    else {
+    } else {
         done = 0;
         rem = in_data_sz;
         iov = (struct iovec *) p_data;
@@ -78,8 +76,7 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
 
         if (rem) {
             rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        }
-        else {
+        } else {
             rreq->status.MPI_ERROR = MPI_SUCCESS;
         }
 
@@ -156,7 +153,7 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
         MPIDI_OFI_cntr_incr();
 
         struct iovec iov = {
-            .iov_base = (char *)dst + done,
+            .iov_base = (char *) dst + done,
             .iov_len = curr_len
         };
         struct fi_rma_iov rma_iov = {
@@ -176,8 +173,7 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
         };
 
         MPIDI_OFI_CALL_RETRY_AM(fi_readmsg(MPIDI_Global.ctx[0].tx,
-                                           &msg,
-                                           FI_COMPLETION), FALSE /* no lock */ , read);
+                                           &msg, FI_COMPLETION), FALSE /* no lock */ , read);
 
         done += curr_len;
         rem -= curr_len;
@@ -264,7 +260,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
 
     if ((!p_data || !data_sz) && target_cmpl_cb) {
         target_cmpl_cb(rreq);
-        MPID_Request_complete(rreq);   /* FIXME: Should not call MPIDI in NM ? */
+        MPID_Request_complete(rreq);    /* FIXME: Should not call MPIDI in NM ? */
         goto fn_exit;
     }
 
@@ -275,8 +271,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     if (is_contig) {
         if (in_data_sz > data_sz) {
             rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        }
-        else {
+        } else {
             rreq->status.MPI_ERROR = MPI_SUCCESS;
         }
 
@@ -286,8 +281,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
                                lmt_msg->src_offset,
                                data_sz, lmt_msg->context_id, lmt_msg->src_rank, rreq);
         MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-    }
-    else {
+    } else {
         done = 0;
         rem = in_data_sz;
         iov = (struct iovec *) p_data;
@@ -318,8 +312,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
 
         if (rem) {
             rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-        }
-        else {
+        } else {
             rreq->status.MPI_ERROR = MPI_SUCCESS;
         }
 
@@ -386,7 +379,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
     }
 
     handler_id = MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr).handler_id;
-    MPID_Request_complete(sreq);       /* FIXME: Should not call MPIDI in NM ? */
+    MPID_Request_complete(sreq);        /* FIXME: Should not call MPIDI in NM ? */
     mpi_errno = MPIDIG_global.origin_cbs[handler_id] (sreq);
 
     if (mpi_errno)
@@ -403,9 +396,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
 #define FUNCNAME MPIDI_OFI_dispatch_ack
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_dispatch_ack(int rank,
-                                         int context_id,
-                                         uint64_t sreq_ptr, int am_type)
+static inline int MPIDI_OFI_dispatch_ack(int rank, int context_id, uint64_t sreq_ptr, int am_type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_ack_msg_t msg;

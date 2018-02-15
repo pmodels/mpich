@@ -78,8 +78,7 @@ int main(int argc, char *argv[])
                             MTestPrintError(err);
                         }
                     }
-                }
-                else if (rank == dest) {
+                } else if (rank == dest) {
                     MPI_Group_incl(wingroup, 1, &source, &neighbors);
                     MPI_Win_post(neighbors, 0, win);
                     MPI_Group_free(&neighbors);
@@ -90,8 +89,7 @@ int main(int argc, char *argv[])
                     if (err) {
                         errs += errs;
                     }
-                }
-                else {
+                } else {
                     /* Nothing; the other processes need not call any
                      * MPI routines */
                     ;

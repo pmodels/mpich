@@ -29,8 +29,7 @@ int main(int argc, char **argv)
         if (i == 0) {
             MPI_Info_create(&win_info);
             MPI_Info_set(win_info, (char *) "alloc_shm", (char *) "true");
-        }
-        else {
+        } else {
             win_info = MPI_INFO_NULL;
         }
 

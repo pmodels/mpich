@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     MPI_Comm comm, newcomm, scomm;
     MPI_Group group;
@@ -36,4 +36,3 @@ int main(int argc, char* argv[])
     MPI_Finalize();
     return 0;
 }
-

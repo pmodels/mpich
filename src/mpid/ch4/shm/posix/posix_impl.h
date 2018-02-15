@@ -59,84 +59,84 @@ typedef struct {
     MPIR_Request *tail;
 } MPIDI_POSIX_request_queue_t;
 
-#define MPIDI_POSIX_REQUEST_COMPLETE(req_)    \
-{ \
-    int incomplete__; \
-    MPIR_cc_decr((req_)->cc_ptr, &incomplete__); \
-    dtype_release_if_not_builtin(MPIDI_POSIX_REQUEST(req_)->datatype); \
-    if (!incomplete__) \
-        MPIR_Request_free(req_);    \
-}
+#define MPIDI_POSIX_REQUEST_COMPLETE(req_)                              \
+    {                                                                   \
+        int incomplete__;                                               \
+        MPIR_cc_decr((req_)->cc_ptr, &incomplete__);                    \
+        dtype_release_if_not_builtin(MPIDI_POSIX_REQUEST(req_)->datatype); \
+        if (!incomplete__)                                              \
+            MPIR_Request_free(req_);                                    \
+    }
 
-#define MPIDI_POSIX_REQUEST_ENQUEUE(req,queue) \
-{ \
-    if ((queue).tail != NULL) \
-        MPIDI_POSIX_REQUEST((queue).tail)->next = req; \
-    else \
-        (queue).head = req; \
-    (queue).tail = req; \
-}
+#define MPIDI_POSIX_REQUEST_ENQUEUE(req,queue)                  \
+    {                                                           \
+        if ((queue).tail != NULL)                               \
+            MPIDI_POSIX_REQUEST((queue).tail)->next = req;      \
+        else                                                    \
+            (queue).head = req;                                 \
+        (queue).tail = req;                                     \
+    }
 
-#define MPIDI_POSIX_REQUEST_DEQUEUE(req_p,prev_req,queue) \
-{ \
-    MPIR_Request *next = MPIDI_POSIX_REQUEST(*(req_p))->next; \
-    if ((queue).head == *(req_p)) \
-        (queue).head = next; \
-    else \
-        MPIDI_POSIX_REQUEST(prev_req)->next = next; \
-    if ((queue).tail == *(req_p)) \
-        (queue).tail = prev_req; \
-    MPIDI_POSIX_REQUEST(*(req_p))->next = NULL; \
-}
+#define MPIDI_POSIX_REQUEST_DEQUEUE(req_p,prev_req,queue)               \
+    {                                                                   \
+        MPIR_Request *next = MPIDI_POSIX_REQUEST(*(req_p))->next;       \
+        if ((queue).head == *(req_p))                                   \
+            (queue).head = next;                                        \
+        else                                                            \
+            MPIDI_POSIX_REQUEST(prev_req)->next = next;                 \
+        if ((queue).tail == *(req_p))                                   \
+            (queue).tail = prev_req;                                    \
+        MPIDI_POSIX_REQUEST(*(req_p))->next = NULL;                     \
+    }
 
 #define MPIDI_POSIX_REQUEST_DEQUEUE_AND_SET_ERROR(req_p,prev_req,queue,err) \
-{ \
-    MPIR_Request *next = MPIDI_POSIX_REQUEST(*(req_p))->next; \
-    if ((queue).head == *(req_p)) \
-        (queue).head = next; \
-    else \
-        MPIDI_POSIX_REQUEST(prev_req)->next = next; \
-    if ((queue).tail == *(req_p)) \
-        (queue).tail = prev_req; \
-    (*(req_p))->status.MPI_ERROR = err; \
-    MPIDI_POSIX_REQUEST_COMPLETE(*(req_p)); \
-    *(req_p) = next; \
-}
+    {                                                                   \
+        MPIR_Request *next = MPIDI_POSIX_REQUEST(*(req_p))->next;       \
+        if ((queue).head == *(req_p))                                   \
+            (queue).head = next;                                        \
+        else                                                            \
+            MPIDI_POSIX_REQUEST(prev_req)->next = next;                 \
+        if ((queue).tail == *(req_p))                                   \
+            (queue).tail = prev_req;                                    \
+        (*(req_p))->status.MPI_ERROR = err;                             \
+        MPIDI_POSIX_REQUEST_COMPLETE(*(req_p));                         \
+        *(req_p) = next;                                                \
+    }
 
-#define MPIDI_POSIX_REQUEST_CREATE_SREQ(sreq_)	\
-{								\
-    (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);             \
-    MPIR_Request_add_ref((sreq_));                                      \
-    (sreq_)->u.persist.real_request   = NULL;                          \
-}
+#define MPIDI_POSIX_REQUEST_CREATE_SREQ(sreq_)                  \
+    {                                                           \
+        (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND); \
+        MPIR_Request_add_ref((sreq_));                          \
+        (sreq_)->u.persist.real_request   = NULL;               \
+    }
 
-#define MPIDI_POSIX_REQUEST_CREATE_RREQ(rreq_)	\
-{								\
-    (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);             \
-    MPIR_Request_add_ref((rreq_));                                      \
-    (rreq_)->u.persist.real_request   = NULL;                          \
-}
+#define MPIDI_POSIX_REQUEST_CREATE_RREQ(rreq_)                  \
+    {                                                           \
+        (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV); \
+        MPIR_Request_add_ref((rreq_));                          \
+        (rreq_)->u.persist.real_request   = NULL;               \
+    }
 
 /* ---------------------------------------------------- */
 /* matching macros                                      */
 /* ---------------------------------------------------- */
-#define MPIDI_POSIX_ENVELOPE_SET(ptr_,rank_,tag_,context_id_) \
-{ \
-    (ptr_)->rank = rank_; \
-    (ptr_)->tag = tag_; \
-    (ptr_)->context_id = context_id_; \
-}
+#define MPIDI_POSIX_ENVELOPE_SET(ptr_,rank_,tag_,context_id_)   \
+    {                                                           \
+        (ptr_)->rank = rank_;                                   \
+        (ptr_)->tag = tag_;                                     \
+        (ptr_)->context_id = context_id_;                       \
+    }
 
-#define MPIDI_POSIX_ENVELOPE_GET(ptr_,rank_,tag_,context_id_) \
-{ \
-    rank_ = (ptr_)->rank; \
-    tag_ = (ptr_)->tag; \
-    context_id_ = (ptr_)->context_id; \
-}
+#define MPIDI_POSIX_ENVELOPE_GET(ptr_,rank_,tag_,context_id_)   \
+    {                                                           \
+        rank_ = (ptr_)->rank;                                   \
+        tag_ = (ptr_)->tag;                                     \
+        context_id_ = (ptr_)->context_id;                       \
+    }
 
 #define MPIDI_POSIX_ENVELOPE_MATCH(ptr_,rank_,tag_,context_id_) \
-    (((ptr_)->rank == (rank_) || (rank_) == MPI_ANY_SOURCE) && \
-     ((ptr_)->tag == (tag_) || (tag_) == MPI_ANY_TAG) && \
+    (((ptr_)->rank == (rank_) || (rank_) == MPI_ANY_SOURCE) &&  \
+     ((ptr_)->tag == (tag_) || (tag_) == MPI_ANY_TAG) &&        \
      (ptr_)->context_id == (context_id_))
 
 /*
@@ -147,28 +147,26 @@ typedef struct {
 #undef FUNCNAME
 #define FUNCNAME nothing
 #define BEGIN_FUNC(FUNCNAME)                    \
-  MPIR_FUNC_VERBOSE_STATE_DECL(FUNCNAME);                   \
-  MPIR_FUNC_VERBOSE_ENTER(FUNCNAME);
+    MPIR_FUNC_VERBOSE_STATE_DECL(FUNCNAME);     \
+    MPIR_FUNC_VERBOSE_ENTER(FUNCNAME);
 #define END_FUNC(FUNCNAME)                      \
-  MPIR_FUNC_VERBOSE_EXIT(FUNCNAME);
-#define END_FUNC_RC(FUNCNAME) \
-  fn_exit:                    \
-  MPIR_FUNC_VERBOSE_EXIT(FUNCNAME);  \
-  return mpi_errno;           \
-fn_fail:                      \
-  goto fn_exit;
+    MPIR_FUNC_VERBOSE_EXIT(FUNCNAME);
+#define END_FUNC_RC(FUNCNAME)                   \
+  fn_exit:                                      \
+    MPIR_FUNC_VERBOSE_EXIT(FUNCNAME);           \
+    return mpi_errno;                           \
+  fn_fail:                                      \
+    goto fn_exit;
 
 #define __SHORT_FILE__                          \
-  (strrchr(__FILE__,'/')                        \
-   ? strrchr(__FILE__,'/')+1                    \
-   : __FILE__                                   \
+    (strrchr(__FILE__,'/')                      \
+     ? strrchr(__FILE__,'/')+1                  \
+     : __FILE__                                 \
 )
 
 int MPIDI_POSIX_barrier_vars_init(MPIDI_POSIX_barrier_vars_t * barrier_region);
 extern MPIDI_POSIX_request_queue_t MPIDI_POSIX_sendq;
 extern MPIDI_POSIX_request_queue_t MPIDI_POSIX_recvq_unexpected;
 extern MPIDI_POSIX_request_queue_t MPIDI_POSIX_recvq_posted;
-
-
 
 #endif /* POSIX_IMPL_H_INCLUDED */

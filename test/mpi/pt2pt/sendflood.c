@@ -52,8 +52,7 @@ int main(int argc, char *argv[])
         char buf[128];
         sprintf(buf, "fast_mpi_%d.dmp", rank);
         pf = fopen(buf, "w");
-    }
-    else if (loopProgress) {
+    } else if (loopProgress) {
         pf = stdout;
     }
 
@@ -70,8 +69,7 @@ int main(int argc, char *argv[])
             if (verbose) {
                 fprintf(pf, "Master : loop %d\n", i);
                 fflush(pf);
-            }
-            else if (loopProgress && (i & PROGRESS_COUNT) == 0) {
+            } else if (loopProgress && (i & PROGRESS_COUNT) == 0) {
                 fprintf(pf, "Master: loop %d\n", i);
                 fflush(pf);
             }
@@ -105,8 +103,7 @@ int main(int argc, char *argv[])
         }
         free(psend);
         free(precv);
-    }
-    else {
+    } else {
         int *psend;
         int *precv;
         psend = (int *) calloc(DATA_SIZE, sizeof(int));

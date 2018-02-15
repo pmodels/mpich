@@ -11,8 +11,12 @@
  * better performance.  If a good use case for having unsafe operations with
  * volatile types comes up, we can make two definitions that are conditional on
  * something sort of like NDEBUG. [goodell@ 2009-08-18] */
-typedef struct { int v;  } OPA_int_t;
-typedef struct { int *v; } OPA_ptr_t;
+typedef struct {
+    int v;
+} OPA_int_t;
+typedef struct {
+    int *v;
+} OPA_ptr_t;
 
 #define OPA_INT_T_INITIALIZER(val_) { (val_) }
 #define OPA_PTR_T_INITIALIZER(val_) { (val_) }
@@ -31,26 +35,26 @@ typedef struct { int *v; } OPA_ptr_t;
     Thanks to Josh Haberman for inspiring this primitives implementation.
 */
 
-static _opa_inline int OPA_load_int(const OPA_int_t *ptr)
+static _opa_inline int OPA_load_int(const OPA_int_t * ptr)
 {
     int retval;
     retval = ptr->v;
     return retval;
 }
 
-static _opa_inline void OPA_store_int(OPA_int_t *ptr, int val)
+static _opa_inline void OPA_store_int(OPA_int_t * ptr, int val)
 {
     ptr->v = val;
 }
 
-static _opa_inline void *OPA_load_ptr(const OPA_ptr_t *ptr)
+static _opa_inline void *OPA_load_ptr(const OPA_ptr_t * ptr)
 {
     int *retval;
     retval = ptr->v;
     return retval;
 }
 
-static _opa_inline void OPA_store_ptr(OPA_ptr_t *ptr, void *val)
+static _opa_inline void OPA_store_ptr(OPA_ptr_t * ptr, void *val)
 {
     ptr->v = val;
 }
@@ -61,12 +65,12 @@ static _opa_inline void OPA_store_ptr(OPA_ptr_t *ptr, void *val)
 #define OPA_load_acquire_ptr(ptr_)       OPA_load_ptr((ptr_))
 #define OPA_store_release_ptr(ptr_,val_) OPA_store_ptr((ptr_),(val_))
 
-static _opa_inline void OPA_add_int(OPA_int_t *ptr, int val)
+static _opa_inline void OPA_add_int(OPA_int_t * ptr, int val)
 {
     ptr->v += val;
 }
 
-static _opa_inline void *OPA_cas_ptr(OPA_ptr_t *ptr, int *oldv, int *newv)
+static _opa_inline void *OPA_cas_ptr(OPA_ptr_t * ptr, int *oldv, int *newv)
 {
     int *prev;
     prev = ptr->v;
@@ -76,7 +80,7 @@ static _opa_inline void *OPA_cas_ptr(OPA_ptr_t *ptr, int *oldv, int *newv)
     return prev;
 }
 
-static _opa_inline int OPA_cas_int(OPA_int_t *ptr, int oldv, int newv)
+static _opa_inline int OPA_cas_int(OPA_int_t * ptr, int oldv, int newv)
 {
     int prev;
     prev = ptr->v;
@@ -86,19 +90,19 @@ static _opa_inline int OPA_cas_int(OPA_int_t *ptr, int oldv, int newv)
     return prev;
 }
 
-static _opa_inline int OPA_decr_and_test_int(OPA_int_t *ptr)
+static _opa_inline int OPA_decr_and_test_int(OPA_int_t * ptr)
 {
     int new_val;
     new_val = --(ptr->v);
     return (0 == new_val);
 }
 
-static _opa_inline void OPA_decr_int(OPA_int_t *ptr)
+static _opa_inline void OPA_decr_int(OPA_int_t * ptr)
 {
     --(ptr->v);
 }
 
-static _opa_inline int OPA_fetch_and_add_int(OPA_int_t *ptr, int val)
+static _opa_inline int OPA_fetch_and_add_int(OPA_int_t * ptr, int val)
 {
     int prev;
     prev = ptr->v;
@@ -106,7 +110,7 @@ static _opa_inline int OPA_fetch_and_add_int(OPA_int_t *ptr, int val)
     return prev;
 }
 
-static _opa_inline int OPA_fetch_and_decr_int(OPA_int_t *ptr)
+static _opa_inline int OPA_fetch_and_decr_int(OPA_int_t * ptr)
 {
     int prev;
     prev = ptr->v;
@@ -114,7 +118,7 @@ static _opa_inline int OPA_fetch_and_decr_int(OPA_int_t *ptr)
     return prev;
 }
 
-static _opa_inline int OPA_fetch_and_incr_int(OPA_int_t *ptr)
+static _opa_inline int OPA_fetch_and_incr_int(OPA_int_t * ptr)
 {
     int prev;
     prev = ptr->v;
@@ -122,12 +126,12 @@ static _opa_inline int OPA_fetch_and_incr_int(OPA_int_t *ptr)
     return prev;
 }
 
-static _opa_inline void OPA_incr_int(OPA_int_t *ptr)
+static _opa_inline void OPA_incr_int(OPA_int_t * ptr)
 {
     ++(ptr->v);
 }
 
-static _opa_inline void *OPA_swap_ptr(OPA_ptr_t *ptr, void *val)
+static _opa_inline void *OPA_swap_ptr(OPA_ptr_t * ptr, void *val)
 {
     int *prev;
     prev = ptr->v;
@@ -135,12 +139,12 @@ static _opa_inline void *OPA_swap_ptr(OPA_ptr_t *ptr, void *val)
     return prev;
 }
 
-static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
+static _opa_inline int OPA_swap_int(OPA_int_t * ptr, int val)
 {
     int prev;
     prev = ptr->v;
     ptr->v = val;
-    return (int)prev;
+    return (int) prev;
 }
 
 /* null barriers */
@@ -149,4 +153,4 @@ static _opa_inline int OPA_swap_int(OPA_int_t *ptr, int val)
 #define OPA_read_write_barrier() do {} while (0)
 #define OPA_compiler_barrier()   do {} while (0)
 
-#endif /* !defined(OPA_UNSAFE_H_INCLUDED) */
+#endif /* OPA_UNSAFE_H_INCLUDED */

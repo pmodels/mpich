@@ -80,8 +80,7 @@ int main(int argc, char **argv)
         MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
         MPI_Comm_idup(dup_comm, &newcomm, &sreq[1]);
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
-    }
-    else {
+    } else {
         MPI_Comm_idup(dup_comm, &newcomm, &sreq[1]);
         MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
@@ -105,8 +104,7 @@ int main(int argc, char **argv)
         MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, split, &sreq[0]);
         MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &sreq[1]);
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
-    }
-    else {
+    } else {
         MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &sreq[1]);
         MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, split, &sreq[0]);
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
@@ -124,8 +122,7 @@ int main(int argc, char **argv)
         MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
         MPI_Comm_idup(split, &newcomm, &sreq[1]);
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
-    }
-    else {
+    } else {
         MPI_Comm_idup(split, &newcomm, &sreq[1]);
         MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
@@ -159,8 +156,7 @@ int main(int argc, char **argv)
         MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, split, &sreq[0]);
         MPI_Comm_idup(ic, &newcomm, &sreq[1]);
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
-    }
-    else {
+    } else {
         MPI_Comm_idup(ic, &newcomm, &sreq[1]);
         MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, split, &sreq[0]);
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
@@ -181,8 +177,7 @@ int main(int argc, char **argv)
         MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
         MPI_Comm_idup(merge, &newcomm, &sreq[1]);
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
-    }
-    else {
+    } else {
         MPI_Comm_idup(merge, &newcomm, &sreq[1]);
         MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
@@ -200,8 +195,7 @@ int main(int argc, char **argv)
         MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, merge, &sreq[0]);
         MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &sreq[1]);
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
-    }
-    else {
+    } else {
         MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &sreq[1]);
         MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, merge, &sreq[0]);
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);

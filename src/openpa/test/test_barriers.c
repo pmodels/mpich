@@ -38,7 +38,7 @@
 #define LINEAR_ARRAY_LEN 100
 typedef struct {
     OPA_int_t *shared_array;
-    int       master_thread;  /* Whether this is the master thread */
+    int master_thread;          /* Whether this is the master thread */
 } linear_array_t;
 
 /* Definitions for test_barriers_variables */
@@ -55,7 +55,7 @@ typedef struct {
     OPA_int_t *v_7;
     OPA_int_t *v_8;
     OPA_int_t *v_9;
-    int       master_thread;  /* Whether this is the master thread */
+    int master_thread;          /* Whether this is the master thread */
 } variables_t;
 
 /* Definitions for test_barriers_scattered_array */
@@ -83,11 +83,14 @@ typedef struct {
  */
 static int test_barriers_sanity(void)
 {
-    OPA_int_t   a;
-    int         b;
-    OPA_ptr_t   op;
-    void       *p;
-    struct {int i;} obj = {0xabcdef};
+    OPA_int_t a;
+    int b;
+    OPA_ptr_t op;
+    void *p;
+    struct {
+        int i;
+    } obj = {
+    0xabcdef};
 
     TESTING("memory barrier sanity", 0);
 
@@ -127,9 +130,11 @@ static int test_barriers_sanity(void)
     OPA_read_write_barrier();
 
     /* Load the result, verify it is correct */
-    if(OPA_load_int(&a) != INT_MIN + 1 + INT_MAX - 1) TEST_ERROR;
+    if (OPA_load_int(&a) != INT_MIN + 1 + INT_MAX - 1)
+        TEST_ERROR;
     OPA_read_barrier();
-    if(b != OPA_load_int(&a)) TEST_ERROR;
+    if (b != OPA_load_int(&a))
+        TEST_ERROR;
 
     OPA_read_write_barrier();
 
@@ -157,9 +162,11 @@ static int test_barriers_sanity(void)
     b++;
 
     /* Load the result, verify it is correct */
-    if(OPA_load_int(&a) != INT_MAX - 1 + INT_MIN + 1) TEST_ERROR;
+    if (OPA_load_int(&a) != INT_MAX - 1 + INT_MIN + 1)
+        TEST_ERROR;
     OPA_write_barrier();
-    if(b != OPA_load_int(&a)) TEST_ERROR;
+    if (b != OPA_load_int(&a))
+        TEST_ERROR;
 
     /* now provide a quick sanity check that the load-acquire/store-release code
      * works (as in, successfully compiles and runs single-threaded, no
@@ -167,24 +174,28 @@ static int test_barriers_sanity(void)
 
     OPA_store_int(&a, 5);
     b = OPA_load_acquire_int(&a);
-    if (b != 5) TEST_ERROR;
+    if (b != 5)
+        TEST_ERROR;
     OPA_store_release_int(&a, 0);
     b = OPA_load_acquire_int(&a);
-    if (b != 0) TEST_ERROR;
+    if (b != 0)
+        TEST_ERROR;
 
     OPA_store_ptr(&op, &obj);
     p = OPA_load_acquire_ptr(&op);
-    if (p != &obj) TEST_ERROR;
+    if (p != &obj)
+        TEST_ERROR;
     OPA_store_release_ptr(&op, NULL);
     p = OPA_load_acquire_ptr(&op);
-    if (p != NULL) TEST_ERROR;
+    if (p != NULL)
+        TEST_ERROR;
 
     PASSED();
     return 0;
 
-error:
+  error:
     return 1;
-} /* end test_barriers_sanity() */
+}       /* end test_barriers_sanity() */
 
 
 #if defined(OPA_HAVE_PTHREAD_H)
@@ -206,28 +217,27 @@ error:
  */
 static void *test_barriers_linear_array_write(void *_udata)
 {
-    linear_array_t      *udata = (linear_array_t *)_udata;
-    OPA_int_t           *shared_array = udata->shared_array;
-    int                 niter = LINEAR_ARRAY_NITER / LINEAR_ARRAY_LEN
-                                / iter_reduction[curr_test];
-    int                 i, j;
+    linear_array_t *udata = (linear_array_t *) _udata;
+    OPA_int_t *shared_array = udata->shared_array;
+    int niter = LINEAR_ARRAY_NITER / LINEAR_ARRAY_LEN / iter_reduction[curr_test];
+    int i, j;
 
     /* Main loop */
-    for(i=0; i<niter; i++)
-        for(j=0; j<LINEAR_ARRAY_LEN; j++) {
+    for (i = 0; i < niter; i++)
+        for (j = 0; j < LINEAR_ARRAY_LEN; j++) {
             /* Increment the value in the array */
             OPA_incr_int(&shared_array[j]);
 
             /* Write barrier */
             OPA_write_barrier();
-        } /* end for */
+        }       /* end for */
 
     /* Exit */
-    if(udata->master_thread)
-        return(NULL);
+    if (udata->master_thread)
+        return (NULL);
     else
         pthread_exit(NULL);
-} /* end test_barriers_linear_array_write() */
+}       /* end test_barriers_linear_array_write() */
 
 
 /*-------------------------------------------------------------------------
@@ -249,41 +259,40 @@ static void *test_barriers_linear_array_write(void *_udata)
  */
 static void *test_barriers_linear_array_read(void *_udata)
 {
-    linear_array_t      *udata = (linear_array_t *)_udata;
-    OPA_int_t           *shared_array = udata->shared_array;
-    int                 read_buffer[LINEAR_ARRAY_LEN];
-    int                 niter = LINEAR_ARRAY_NITER / LINEAR_ARRAY_LEN
-                                / iter_reduction[curr_test];
-    int                 nerrors = 0;    /* Number of errors */
-    int                 i, j;
+    linear_array_t *udata = (linear_array_t *) _udata;
+    OPA_int_t *shared_array = udata->shared_array;
+    int read_buffer[LINEAR_ARRAY_LEN];
+    int niter = LINEAR_ARRAY_NITER / LINEAR_ARRAY_LEN / iter_reduction[curr_test];
+    int nerrors = 0;            /* Number of errors */
+    int i, j;
 
     /* Main loop */
-    for(i=0; i<niter; i++) {
+    for (i = 0; i < niter; i++) {
         /* Load the values from the array into the read buffer in reverse
          * order */
-        for(j = LINEAR_ARRAY_LEN - 1; j >= 0; j--) {
+        for (j = LINEAR_ARRAY_LEN - 1; j >= 0; j--) {
             read_buffer[j] = OPA_load_int(&shared_array[j]);
 
             /* Read barrier */
             OPA_read_barrier();
-        } /* end for */
+        }       /* end for */
 
         /* Verify that the values never increase when read back in forward
-        * order */
-         for(j=1; j<LINEAR_ARRAY_LEN; j++)
-            if(read_buffer[j-1] < read_buffer[j]) {
+         * order */
+        for (j = 1; j < LINEAR_ARRAY_LEN; j++)
+            if (read_buffer[j - 1] < read_buffer[j]) {
                 printf("    Unexpected load: %d is less than %d\n",
-                        read_buffer[j-1], read_buffer[j]);
+                       read_buffer[j - 1], read_buffer[j]);
                 nerrors++;
-            } /* end if */
-    } /* end for */
+            }   /* end if */
+    }   /* end for */
 
     /* Any non-NULL exit value indicates an error, we use (void *) 1 here */
-    if(udata->master_thread)
-        return(nerrors ? (void *) 1 : NULL);
+    if (udata->master_thread)
+        return (nerrors ? (void *) 1 : NULL);
     else
         pthread_exit(nerrors ? (void *) 1 : NULL);
-} /* end test_barriers_linear_array_read() */
+}       /* end test_barriers_linear_array_read() */
 #endif /* OPA_HAVE_PTHREAD_H */
 
 
@@ -307,67 +316,69 @@ static void *test_barriers_linear_array_read(void *_udata)
 static int test_barriers_linear_array(void)
 {
 #if defined(OPA_HAVE_PTHREAD_H)
-    pthread_t           *threads = NULL; /* Threads */
-    pthread_attr_t      ptattr;         /* Thread attributes */
-    linear_array_t      *thread_data = NULL; /* User data structs for each thread */
-    static OPA_int_t    shared_array[LINEAR_ARRAY_LEN]; /* Array to operate on */
-    void                *ret;           /* Thread return value */
-    unsigned            nthreads = num_threads[curr_test];
-    int                 nerrors = 0;    /* number of errors */
-    int                 i;
+    pthread_t *threads = NULL;  /* Threads */
+    pthread_attr_t ptattr;      /* Thread attributes */
+    linear_array_t *thread_data = NULL; /* User data structs for each thread */
+    static OPA_int_t shared_array[LINEAR_ARRAY_LEN];    /* Array to operate on */
+    void *ret;                  /* Thread return value */
+    unsigned nthreads = num_threads[curr_test];
+    int nerrors = 0;            /* number of errors */
+    int i;
 
     TESTING("memory barriers with linear array", nthreads);
 
     /* Allocate array of threads */
-    if(NULL == (threads = (pthread_t *) malloc(nthreads * sizeof(pthread_t))))
+    if (NULL == (threads = (pthread_t *) malloc(nthreads * sizeof(pthread_t))))
         TEST_ERROR;
 
     /* Allocate array of thread data */
-    if(NULL == (thread_data = (linear_array_t *) calloc(nthreads,
-            sizeof(linear_array_t)))) TEST_ERROR;
+    if (NULL == (thread_data = (linear_array_t *) calloc(nthreads, sizeof(linear_array_t))))
+        TEST_ERROR;
 
     /* Set threads to be joinable */
     pthread_attr_init(&ptattr);
     pthread_attr_setdetachstate(&ptattr, PTHREAD_CREATE_JOINABLE);
 
     /* Initialize shared array */
-    for(i=0; i<LINEAR_ARRAY_LEN; i++)
+    for (i = 0; i < LINEAR_ARRAY_LEN; i++)
         OPA_store_int(&shared_array[i], 0);
 
     /* Initialize thread data structs */
-    for(i=0; i<nthreads; i++)
+    for (i = 0; i < nthreads; i++)
         thread_data[i].shared_array = shared_array;
-    thread_data[nthreads-1].master_thread = 1;
+    thread_data[nthreads - 1].master_thread = 1;
 
     /* Create the threads. */
-    for(i=0; i<(nthreads - 1); i++) {
-        if(pthread_create(&threads[i], &ptattr, test_barriers_linear_array_write,
-                &thread_data[i])) TEST_ERROR;
-        if(++i < (nthreads - 1))
-            if(pthread_create(&threads[i], &ptattr, test_barriers_linear_array_read,
-                    &thread_data[i])) TEST_ERROR;
-    } /* end for */
-    if(nthreads % 2) {
-        if(test_barriers_linear_array_write(&thread_data[(nthreads - 1)]))
+    for (i = 0; i < (nthreads - 1); i++) {
+        if (pthread_create(&threads[i], &ptattr, test_barriers_linear_array_write, &thread_data[i]))
+            TEST_ERROR;
+        if (++i < (nthreads - 1))
+            if (pthread_create(&threads[i], &ptattr, test_barriers_linear_array_read,
+                               &thread_data[i]))
+                TEST_ERROR;
+    }   /* end for */
+    if (nthreads % 2) {
+        if (test_barriers_linear_array_write(&thread_data[(nthreads - 1)]))
             nerrors++;
-    } else
-        if(test_barriers_linear_array_read(&thread_data[(nthreads - 1)]))
-            nerrors++;
+    } else if (test_barriers_linear_array_read(&thread_data[(nthreads - 1)]))
+        nerrors++;
 
     /* Free the attribute */
-    if(pthread_attr_destroy(&ptattr)) TEST_ERROR;
+    if (pthread_attr_destroy(&ptattr))
+        TEST_ERROR;
 
     /* Join the threads */
-    for (i=0; i<(nthreads - 1); i++) {
-        if(pthread_join(threads[i], &ret)) TEST_ERROR;
-        if(ret)
+    for (i = 0; i < (nthreads - 1); i++) {
+        if (pthread_join(threads[i], &ret))
+            TEST_ERROR;
+        if (ret)
             nerrors++;
-    } /* end for */
+    }   /* end for */
 
     /* Check for errors */
-    if(nerrors)
+    if (nerrors)
         FAIL_OP_ERROR(printf("    Unexpected return from %d thread%s\n", nerrors,
-                nerrors == 1 ? "" : "s"));
+                             nerrors == 1 ? "" : "s"));
 
     /* Free memory */
     free(threads);
@@ -383,11 +394,12 @@ static int test_barriers_linear_array(void)
     return 0;
 
 #if defined(OPA_HAVE_PTHREAD_H)
-error:
-    if(threads) free(threads);
+  error:
+    if (threads)
+        free(threads);
     return 1;
 #endif /* OPA_HAVE_PTHREAD_H */
-} /* end test_barriers_linear_array() */
+}       /* end test_barriers_linear_array() */
 
 
 #if defined(OPA_HAVE_PTHREAD_H)
@@ -409,11 +421,10 @@ error:
  */
 static void *test_barriers_variables_write(void *_udata)
 {
-    variables_t         *udata = (variables_t *)_udata;
-    OPA_int_t           *v_0, *v_1, *v_2, *v_3, *v_4, *v_5, *v_6, *v_7, *v_8, *v_9;
-    int                 niter = VARIABLES_NITER / VARIABLES_NVAR
-                                / iter_reduction[curr_test];
-    int                 i;
+    variables_t *udata = (variables_t *) _udata;
+    OPA_int_t *v_0, *v_1, *v_2, *v_3, *v_4, *v_5, *v_6, *v_7, *v_8, *v_9;
+    int niter = VARIABLES_NITER / VARIABLES_NVAR / iter_reduction[curr_test];
+    int i;
 
     /* Make local copies of the pointers in udata, to maximize the chance of the
      * compiler reordering instructions (if the barriers don't work) */
@@ -429,7 +440,7 @@ static void *test_barriers_variables_write(void *_udata)
     v_9 = udata->v_9;
 
     /* Main loop */
-    for(i=0; i<niter; i++) {
+    for (i = 0; i < niter; i++) {
         /* Incrememnt the variables in forward order */
         OPA_incr_int(v_0);
         OPA_write_barrier();
@@ -451,14 +462,14 @@ static void *test_barriers_variables_write(void *_udata)
         OPA_write_barrier();
         OPA_incr_int(v_9);
         OPA_write_barrier();
-    } /* end for */
+    }   /* end for */
 
     /* Exit */
-    if(udata->master_thread)
-        return(NULL);
+    if (udata->master_thread)
+        return (NULL);
     else
         pthread_exit(NULL);
-} /* end test_barriers_variables_write() */
+}       /* end test_barriers_variables_write() */
 
 
 /*-------------------------------------------------------------------------
@@ -480,13 +491,12 @@ static void *test_barriers_variables_write(void *_udata)
  */
 static void *test_barriers_variables_read(void *_udata)
 {
-    variables_t         *udata = (variables_t *)_udata;
-    OPA_int_t           *v_0, *v_1, *v_2, *v_3, *v_4, *v_5, *v_6, *v_7, *v_8, *v_9;
-    int                 read_buffer[VARIABLES_NVAR];
-    int                 niter = VARIABLES_NITER / VARIABLES_NVAR
-                                / iter_reduction[curr_test];
-    int                 nerrors = 0;    /* Number of errors */
-    int                 i, j;
+    variables_t *udata = (variables_t *) _udata;
+    OPA_int_t *v_0, *v_1, *v_2, *v_3, *v_4, *v_5, *v_6, *v_7, *v_8, *v_9;
+    int read_buffer[VARIABLES_NVAR];
+    int niter = VARIABLES_NITER / VARIABLES_NVAR / iter_reduction[curr_test];
+    int nerrors = 0;            /* Number of errors */
+    int i, j;
 
     /* Make local copies of the pointers in udata, to maximize the chance of the
      * compiler reordering instructions (if the barriers don't work) */
@@ -502,7 +512,7 @@ static void *test_barriers_variables_read(void *_udata)
     v_9 = udata->v_9;
 
     /* Main loop */
-    for(i=0; i<niter; i++) {
+    for (i = 0; i < niter; i++) {
         /* Load the values from the array into the read buffer in reverse
          * order*/
         read_buffer[9] = OPA_load_int(v_9);
@@ -527,21 +537,21 @@ static void *test_barriers_variables_read(void *_udata)
         OPA_read_barrier();
 
         /* Verify that the values never increase when read back in forward
-        * order */
-         for(j=1; j<VARIABLES_NVAR; j++)
-            if(read_buffer[j-1] < read_buffer[j]) {
+         * order */
+        for (j = 1; j < VARIABLES_NVAR; j++)
+            if (read_buffer[j - 1] < read_buffer[j]) {
                 printf("    Unexpected load: %d is less than %d\n",
-                        read_buffer[j-1], read_buffer[j]);
+                       read_buffer[j - 1], read_buffer[j]);
                 nerrors++;
-            } /* end if */
-    } /* end for */
+            }   /* end if */
+    }   /* end for */
 
     /* Any non-NULL exit value indicates an error, we use (void *) 1 here */
-    if(udata->master_thread)
-        return(nerrors ? (void *) 1 : NULL);
+    if (udata->master_thread)
+        return (nerrors ? (void *) 1 : NULL);
     else
         pthread_exit(nerrors ? (void *) 1 : NULL);
-} /* end test_barriers_variables_read() */
+}       /* end test_barriers_variables_read() */
 #endif /* OPA_HAVE_PTHREAD_H */
 
 
@@ -565,24 +575,24 @@ static void *test_barriers_variables_read(void *_udata)
 static int test_barriers_variables(void)
 {
 #if defined(OPA_HAVE_PTHREAD_H)
-    pthread_t           *threads = NULL; /* Threads */
-    pthread_attr_t      ptattr;         /* Thread attributes */
-    variables_t         *thread_data = NULL; /* User data structs for each thread */
-    OPA_int_t           v_0, v_1, v_2, v_3, v_4, v_5, v_6, v_7, v_8, v_9;
-    void                *ret;           /* Thread return value */
-    unsigned            nthreads = num_threads[curr_test];
-    int                 nerrors = 0;    /* number of errors */
-    int                 i;
+    pthread_t *threads = NULL;  /* Threads */
+    pthread_attr_t ptattr;      /* Thread attributes */
+    variables_t *thread_data = NULL;    /* User data structs for each thread */
+    OPA_int_t v_0, v_1, v_2, v_3, v_4, v_5, v_6, v_7, v_8, v_9;
+    void *ret;                  /* Thread return value */
+    unsigned nthreads = num_threads[curr_test];
+    int nerrors = 0;            /* number of errors */
+    int i;
 
     TESTING("memory barriers with local variables", nthreads);
 
     /* Allocate array of threads */
-    if(NULL == (threads = (pthread_t *) malloc(nthreads * sizeof(pthread_t))))
+    if (NULL == (threads = (pthread_t *) malloc(nthreads * sizeof(pthread_t))))
         TEST_ERROR;
 
     /* Allocate array of thread data */
-    if(NULL == (thread_data = (variables_t *) calloc(nthreads,
-            sizeof(variables_t)))) TEST_ERROR;
+    if (NULL == (thread_data = (variables_t *) calloc(nthreads, sizeof(variables_t))))
+        TEST_ERROR;
 
     /* Set threads to be joinable */
     pthread_attr_init(&ptattr);
@@ -601,7 +611,7 @@ static int test_barriers_variables(void)
     OPA_store_int(&v_9, 0);
 
     /* Initialize thread data structs */
-    for(i=0; i<nthreads; i++) {
+    for (i = 0; i < nthreads; i++) {
         thread_data[i].v_0 = &v_0;
         thread_data[i].v_1 = &v_1;
         thread_data[i].v_2 = &v_2;
@@ -612,38 +622,39 @@ static int test_barriers_variables(void)
         thread_data[i].v_7 = &v_7;
         thread_data[i].v_8 = &v_8;
         thread_data[i].v_9 = &v_9;
-    } /* end for */
-    thread_data[nthreads-1].master_thread = 1;
+    }   /* end for */
+    thread_data[nthreads - 1].master_thread = 1;
 
     /* Create the threads. */
-    for(i=0; i<(nthreads - 1); i++) {
-        if(pthread_create(&threads[i], &ptattr, test_barriers_variables_write,
-                &thread_data[i])) TEST_ERROR;
-        if(++i < (nthreads - 1))
-            if(pthread_create(&threads[i], &ptattr, test_barriers_variables_read,
-                    &thread_data[i])) TEST_ERROR;
-    } /* end for */
-    if(nthreads % 2) {
-        if(test_barriers_variables_write(&thread_data[(nthreads - 1)]))
+    for (i = 0; i < (nthreads - 1); i++) {
+        if (pthread_create(&threads[i], &ptattr, test_barriers_variables_write, &thread_data[i]))
+            TEST_ERROR;
+        if (++i < (nthreads - 1))
+            if (pthread_create(&threads[i], &ptattr, test_barriers_variables_read, &thread_data[i]))
+                TEST_ERROR;
+    }   /* end for */
+    if (nthreads % 2) {
+        if (test_barriers_variables_write(&thread_data[(nthreads - 1)]))
             nerrors++;
-    } else
-        if(test_barriers_variables_read(&thread_data[(nthreads - 1)]))
-            nerrors++;
+    } else if (test_barriers_variables_read(&thread_data[(nthreads - 1)]))
+        nerrors++;
 
     /* Free the attribute */
-    if(pthread_attr_destroy(&ptattr)) TEST_ERROR;
+    if (pthread_attr_destroy(&ptattr))
+        TEST_ERROR;
 
     /* Join the threads */
-    for (i=0; i<(nthreads - 1); i++) {
-        if(pthread_join(threads[i], &ret)) TEST_ERROR;
-        if(ret)
+    for (i = 0; i < (nthreads - 1); i++) {
+        if (pthread_join(threads[i], &ret))
+            TEST_ERROR;
+        if (ret)
             nerrors++;
-    } /* end for */
+    }   /* end for */
 
     /* Check for errors */
-    if(nerrors)
+    if (nerrors)
         FAIL_OP_ERROR(printf("    Unexpected return from %d thread%s\n", nerrors,
-                nerrors == 1 ? "" : "s"));
+                             nerrors == 1 ? "" : "s"));
 
     /* Free memory */
     free(threads);
@@ -659,11 +670,12 @@ static int test_barriers_variables(void)
     return 0;
 
 #if defined(OPA_HAVE_PTHREAD_H)
-error:
-    if(threads) free(threads);
+  error:
+    if (threads)
+        free(threads);
     return 1;
 #endif /* OPA_HAVE_PTHREAD_H */
-} /* end test_barriers_variables() */
+}       /* end test_barriers_variables() */
 
 
 /*-------------------------------------------------------------------------
@@ -686,36 +698,36 @@ error:
 static int test_barriers_scattered_array(void)
 {
 #if defined(OPA_HAVE_PTHREAD_H)
-    pthread_t           *threads = NULL; /* Threads */
-    pthread_attr_t      ptattr;         /* Thread attributes */
-    variables_t         *thread_data = NULL; /* User data structs for each thread */
-    static OPA_int_t    shared_array[SCATTERED_ARRAY_SIZE];
-    int                 shared_locs[VARIABLES_NVAR] = SCATTERED_ARRAY_LOCS;
-    void                *ret;           /* Thread return value */
-    unsigned            nthreads = num_threads[curr_test];
-    int                 nerrors = 0;    /* number of errors */
-    int                 i;
+    pthread_t *threads = NULL;  /* Threads */
+    pthread_attr_t ptattr;      /* Thread attributes */
+    variables_t *thread_data = NULL;    /* User data structs for each thread */
+    static OPA_int_t shared_array[SCATTERED_ARRAY_SIZE];
+    int shared_locs[VARIABLES_NVAR] = SCATTERED_ARRAY_LOCS;
+    void *ret;                  /* Thread return value */
+    unsigned nthreads = num_threads[curr_test];
+    int nerrors = 0;            /* number of errors */
+    int i;
 
     TESTING("memory barriers with scattered array", nthreads);
 
     /* Allocate array of threads */
-    if(NULL == (threads = (pthread_t *) malloc(nthreads * sizeof(pthread_t))))
+    if (NULL == (threads = (pthread_t *) malloc(nthreads * sizeof(pthread_t))))
         TEST_ERROR;
 
     /* Allocate array of thread data */
-    if(NULL == (thread_data = (variables_t *) calloc(nthreads,
-            sizeof(variables_t)))) TEST_ERROR;
+    if (NULL == (thread_data = (variables_t *) calloc(nthreads, sizeof(variables_t))))
+        TEST_ERROR;
 
     /* Set threads to be joinable */
     pthread_attr_init(&ptattr);
     pthread_attr_setdetachstate(&ptattr, PTHREAD_CREATE_JOINABLE);
 
     /* Initialize shared variables */
-    for(i=0; i<VARIABLES_NVAR; i++)
+    for (i = 0; i < VARIABLES_NVAR; i++)
         OPA_store_int(&shared_array[shared_locs[i]], 0);
 
     /* Initialize thread data structs */
-    for(i=0; i<nthreads; i++) {
+    for (i = 0; i < nthreads; i++) {
         thread_data[i].v_0 = &shared_array[shared_locs[0]];
         thread_data[i].v_1 = &shared_array[shared_locs[1]];
         thread_data[i].v_2 = &shared_array[shared_locs[2]];
@@ -726,39 +738,40 @@ static int test_barriers_scattered_array(void)
         thread_data[i].v_7 = &shared_array[shared_locs[7]];
         thread_data[i].v_8 = &shared_array[shared_locs[8]];
         thread_data[i].v_9 = &shared_array[shared_locs[9]];
-    } /* end for */
-    thread_data[nthreads-1].master_thread = 1;
+    }   /* end for */
+    thread_data[nthreads - 1].master_thread = 1;
 
     /* Create the threads.  We will use the helper routines for
      * test_barriers_variables. */
-    for(i=0; i<(nthreads - 1); i++) {
-        if(pthread_create(&threads[i], &ptattr, test_barriers_variables_write,
-                &thread_data[i])) TEST_ERROR;
-        if(++i < (nthreads - 1))
-            if(pthread_create(&threads[i], &ptattr, test_barriers_variables_read,
-                    &thread_data[i])) TEST_ERROR;
-    } /* end for */
-    if(nthreads % 2) {
-        if(test_barriers_variables_write(&thread_data[(nthreads - 1)]))
+    for (i = 0; i < (nthreads - 1); i++) {
+        if (pthread_create(&threads[i], &ptattr, test_barriers_variables_write, &thread_data[i]))
+            TEST_ERROR;
+        if (++i < (nthreads - 1))
+            if (pthread_create(&threads[i], &ptattr, test_barriers_variables_read, &thread_data[i]))
+                TEST_ERROR;
+    }   /* end for */
+    if (nthreads % 2) {
+        if (test_barriers_variables_write(&thread_data[(nthreads - 1)]))
             nerrors++;
-    } else
-        if(test_barriers_variables_read(&thread_data[(nthreads - 1)]))
-            nerrors++;
+    } else if (test_barriers_variables_read(&thread_data[(nthreads - 1)]))
+        nerrors++;
 
     /* Free the attribute */
-    if(pthread_attr_destroy(&ptattr)) TEST_ERROR;
+    if (pthread_attr_destroy(&ptattr))
+        TEST_ERROR;
 
     /* Join the threads */
-    for (i=0; i<(nthreads - 1); i++) {
-        if(pthread_join(threads[i], &ret)) TEST_ERROR;
-        if(ret)
+    for (i = 0; i < (nthreads - 1); i++) {
+        if (pthread_join(threads[i], &ret))
+            TEST_ERROR;
+        if (ret)
             nerrors++;
-    } /* end for */
+    }   /* end for */
 
     /* Check for errors */
-    if(nerrors)
+    if (nerrors)
         FAIL_OP_ERROR(printf("    Unexpected return from %d thread%s\n", nerrors,
-                nerrors == 1 ? "" : "s"));
+                             nerrors == 1 ? "" : "s"));
 
     /* Free memory */
     free(threads);
@@ -774,11 +787,12 @@ static int test_barriers_scattered_array(void)
     return 0;
 
 #if defined(OPA_HAVE_PTHREAD_H)
-error:
-    if(threads) free(threads);
+  error:
+    if (threads)
+        free(threads);
     return 1;
 #endif /* OPA_HAVE_PTHREAD_H */
-} /* end test_barriers_scattered_array() */
+}       /* end test_barriers_scattered_array() */
 
 
 /*-------------------------------------------------------------------------
@@ -802,35 +816,33 @@ int main(int argc, char **argv)
     unsigned nerrors = 0;
 #if defined(OPA_USE_LOCK_BASED_PRIMITIVES)
     OPA_emulation_ipl_t shm_lock;
-    OPA_Interprocess_lock_init(&shm_lock, 1/*isLeader*/);
+    OPA_Interprocess_lock_init(&shm_lock, 1 /*isLeader */);
 #endif
 
     /* Simple tests */
     nerrors += test_barriers_sanity();
 
     /* Loop over test configurations */
-    for(curr_test=0; curr_test<num_thread_tests; curr_test++) {
+    for (curr_test = 0; curr_test < num_thread_tests; curr_test++) {
         /* Don't test with only 1 thread */
-        if(num_threads[curr_test] == 1)
+        if (num_threads[curr_test] == 1)
             continue;
 
         /* Threaded tests */
         nerrors += test_barriers_linear_array();
         nerrors += test_barriers_variables();
         nerrors += test_barriers_scattered_array();
-    } /* end for */
+    }   /* end for */
 
-    if(nerrors)
+    if (nerrors)
         goto error;
     printf("All barriers tests passed.\n");
 
     return 0;
 
-error:
-    if(!nerrors)
+  error:
+    if (!nerrors)
         nerrors = 1;
-    printf("***** %d BARRIERS TEST%s FAILED! *****\n",
-            nerrors, 1 == nerrors ? "" : "S");
+    printf("***** %d BARRIERS TEST%s FAILED! *****\n", nerrors, 1 == nerrors ? "" : "S");
     return 1;
-} /* end main() */
-
+}       /* end main() */

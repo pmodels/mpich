@@ -61,8 +61,7 @@ int main(int argc, char *argv[])
         }
         if (errs == 0) {
             printf(" No Errors\n");
-        }
-        else {
+        } else {
             printf(" Found %d errors\n", errs);
         }
         fflush(stdout);

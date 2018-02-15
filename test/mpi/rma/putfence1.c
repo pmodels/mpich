@@ -57,8 +57,7 @@ static inline int test(MPI_Comm comm, int rank, int source, int dest,
                 MTestPrintError(err);
             }
         }
-    }
-    else if (rank == dest) {
+    } else if (rank == dest) {
         MPI_Win_fence(0, win);
         /* This should have the same effect, in terms of
          * transfering data, as a send/recv pair */
@@ -74,8 +73,7 @@ static inline int test(MPI_Comm comm, int rank, int source, int dest,
             }
             errs += err;
         }
-    }
-    else {
+    } else {
         MPI_Win_fence(0, win);
     }
     MPI_Win_free(&win);
