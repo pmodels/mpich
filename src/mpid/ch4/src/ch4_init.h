@@ -248,9 +248,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     }
 #endif
 
-    MPIR_Process.attrs.tag_ub = (1ULL << MPIDI_CH4U_TAG_SHIFT) - 1;
-    /* discuss */
-
     /* Call any and all MPID_Init type functions */
     MPIR_Err_init();
     MPIR_Datatype_init();
