@@ -122,30 +122,38 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    for (i = 0; i < count; i++) {
-        if (request_ptrs[i] != NULL) {
-            if (MPIR_Request_is_complete(request_ptrs[i])) {
-                rc = MPIR_Request_get_error(request_ptrs[i]);
-                if (rc != MPI_SUCCESS) {
-                    if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(rc) ||
-                        MPIX_ERR_PROC_FAILED_PENDING == MPIR_ERR_GET_CLASS(rc))
-                        proc_failure = TRUE;
+#ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS;
+        {
+            for (i = 0; i < count; i++) {
+                if (request_ptrs[i] == NULL)
+                    continue;
+                if (MPIR_Request_is_complete(request_ptrs[i])) {
+                    rc = MPIR_Request_get_error(request_ptrs[i]);
+                    if (rc != MPI_SUCCESS) {
+                        if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(rc) ||
+                            MPIX_ERR_PROC_FAILED_PENDING == MPIR_ERR_GET_CLASS(rc))
+                            proc_failure = TRUE;
+                        mpi_errno = MPI_ERR_IN_STATUS;
+                    }
+                } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
+                                    MPID_Request_is_anysource(request_ptrs[i]) &&
+                                    !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
                     mpi_errno = MPI_ERR_IN_STATUS;
+                    MPIR_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+                    status_ptr =
+                        (array_of_statuses !=
+                         MPI_STATUSES_IGNORE) ? &array_of_statuses[i] : MPI_STATUS_IGNORE;
+                    if (status_ptr != MPI_STATUS_IGNORE)
+                        status_ptr->MPI_ERROR = rc;
+                    proc_failure = TRUE;
                 }
-            } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                                MPID_Request_is_anysource(request_ptrs[i]) &&
-                                !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
-                mpi_errno = MPI_ERR_IN_STATUS;
-                MPIR_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
-                status_ptr =
-                    (array_of_statuses !=
-                     MPI_STATUSES_IGNORE) ? &array_of_statuses[i] : MPI_STATUS_IGNORE;
-                if (status_ptr != MPI_STATUS_IGNORE)
-                    status_ptr->MPI_ERROR = rc;
-                proc_failure = TRUE;
             }
         }
+        MPID_END_ERROR_CHECKS;
     }
+#endif
 
     n_completed = 0;
 
