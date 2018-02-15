@@ -31,6 +31,47 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
 #undef MPI_Testsome
 #define MPI_Testsome PMPI_Testsome
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Testsome_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
+                       int *outcount, int array_of_indices[], MPI_Status array_of_statuses[])
+{
+    int i;
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPID_Progress_test();
+    /* --BEGIN ERROR HANDLING-- */
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+    /* --END ERROR HANDLING-- */
+
+    *outcount = 0;
+
+    for (i = 0; i < incount; i++) {
+        if (request_ptrs[i] != NULL &&
+            request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
+            request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
+            mpi_errno =
+                (request_ptrs[i]->u.ureq.greq_fns->poll_fn) (request_ptrs[i]->u.ureq.
+                                                             greq_fns->grequest_extra_state,
+                                                             array_of_statuses);
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
+        }
+        if (MPIR_Request_is_active(request_ptrs[i]) && MPIR_Request_is_complete(request_ptrs[i])) {
+            array_of_indices[*outcount] = i;
+            *outcount += 1;
+        }
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
@@ -150,23 +191,14 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
 
     n_active = 0;
 
-    mpi_errno = MPID_Progress_test();
+    mpi_errno = MPIR_Testsome_impl(incount, request_ptrs, outcount, array_of_indices,
+                                   array_of_statuses);
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
     /* --END ERROR HANDLING-- */
 
     for (i = 0; i < incount; i++) {
-        if (request_ptrs[i] != NULL &&
-            request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
-            request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
-            mpi_errno =
-                (request_ptrs[i]->u.ureq.greq_fns->poll_fn) (request_ptrs[i]->u.ureq.
-                                                             greq_fns->grequest_extra_state,
-                                                             array_of_statuses);
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
-        }
         status_ptr =
             (array_of_statuses !=
              MPI_STATUSES_IGNORE) ? &array_of_statuses[n_active] : MPI_STATUS_IGNORE;
