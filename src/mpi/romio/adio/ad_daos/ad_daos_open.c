@@ -2,6 +2,10 @@
 
 #include <libgen.h>
 #include "ad_daos.h"
+#include "daos/common.h"
+#include <uuid/uuid.h>
+
+#define OID_SEED 5731
 
 extern daos_handle_t daos_pool_oh;
 
@@ -358,12 +362,12 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
     parse_filename(fd->filename, &cont->obj_name, &cont->cont_name);
 
     /* Hash container name to create uuid */
-    duuid_hash128(cont->cont_name, &cont->uuid, &cont->oid.mid, &cont->oid.lo);
+    duuid_hash128(cont->cont_name, &cont->uuid, NULL, NULL);
 
     /* Hash object name to create obj id */
-    uuid_t tmp_uuid;
     cont->oid.hi = 0;
-    duuid_hash128(cont->obj_name, &tmp_uuid, &cont->oid.mid, &cont->oid.lo);
+    cont->oid.lo = daos_hash_murmur64(cont->obj_name, strlen(cont->obj_name),
+                                      OID_SEED);
 
     /* MSC - add hint for object class */
     daos_obj_id_generate(&cont->oid, DAOS_OC_REPL_MAX_RW);
@@ -374,8 +378,8 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
         uuid_unparse(cont->uuid, uuid_str);
 
         fprintf(stderr, "Container Open %s %s\n", cont->cont_name, uuid_str);
-        fprintf(stderr, "File %s OID %" PRIx64".%" PRIx64".%" PRIx64"\n",
-                cont->obj_name, cont->oid.hi , cont->oid.mid, cont->oid.lo);
+        fprintf(stderr, "File %s OID %" PRIx64".%" PRIx64"\n",
+                cont->obj_name, cont->oid.hi, cont->oid.lo);
     }
     fprintf(stderr, "block_size  = %d\n", fd->hints->fs_hints.daos.block_size);
 #endif

@@ -5,7 +5,9 @@
 #include <assert.h>
 
 #include "../../mpi-io/mpioimpl.h"
+#ifdef MPIO_BUILD_PROFILING
 #include "../../mpi-io/mpioprof.h"
+#endif
 #include "mpiu_greq.h"
 
 enum {
