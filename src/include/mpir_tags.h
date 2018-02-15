@@ -118,4 +118,11 @@
 #define MPIR_TAG_MASK_ERROR_BITS(tag) (tag)
 #endif
 
+/* This macro defines tags bits which are reserved by the MPI layer */
+#ifdef HAVE_TAG_ERROR_BITS
+#define MPIR_TAG_USABLE_BITS (INT_MAX & ~(MPIR_TAG_ERROR_BIT | MPIR_TAG_PROC_FAILURE_BIT | MPIR_TAG_COLL_BIT))
+#else
+#define MPIR_TAG_USABLE_BITS (INT_MAX & ~MPI_TAG_COLL_BIT)
+#endif
+
 #endif /* MPIR_TAGS_H_INCLUDED */
