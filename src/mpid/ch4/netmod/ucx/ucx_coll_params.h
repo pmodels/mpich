@@ -9,7 +9,7 @@ typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_UCX_Barrier_empty_parameters {
         int empty;
-    } UCX_Barrier_empty_parameters;
+    } ucx_barrier_empty_parameters;
 } MPIDI_UCX_Barrier_params_t;
 
 typedef enum {
@@ -23,10 +23,10 @@ typedef union {
     struct MPIDI_UCX_Bcast_knomial_parameters {
         int radix;
         int block_size;
-    } UCX_Bcast_knomial_parameters;
+    } ucx_bcast_knomial_parameters;
     struct MPIDI_UCX_Bcast_empty_parameters {
         int empty;
-    } UCX_Bcast_empty_parameters;
+    } ucx_bcast_empty_parameters;
 } MPIDI_UCX_Bcast_params_t;
 
 typedef enum {
@@ -38,7 +38,7 @@ typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_UCX_Allreduce_empty_parameters {
         int empty;
-    } UCX_Allreduce_empty_parameters;
+    } ucx_allreduce_empty_parameters;
 } MPIDI_UCX_Allreduce_params_t;
 
 typedef enum {
@@ -50,7 +50,7 @@ typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_UCX_Reduce_empty_parameters {
         int empty;
-    } UCX_Reduce_empty_parameters;
+    } ucx_reduce_empty_parameters;
 } MPIDI_UCX_Reduce_params_t;
 
 #define MPIDI_UCX_BARRIER_PARAMS_DECL MPIDI_UCX_Barrier_params_t ucx_barrier_params

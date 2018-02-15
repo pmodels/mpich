@@ -9,7 +9,7 @@ typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_STUBNM_Barrier_empty_parameters {
         int empty;
-    } STUBNM_Barrier_empty_parameters;
+    } stubnm_barrier_empty_parameters;
 } MPIDI_STUBNM_Barrier_params_t;
 
 typedef enum {
@@ -23,10 +23,10 @@ typedef union {
     struct MPIDI_STUBNM_Bcast_knomial_parameters {
         int radix;
         int block_size;
-    } STUBNM_Bcast_knomial_parameters;
+    } stubnm_bcast_knomial_parameters;
     struct MPIDI_STUBNM_Bcast_empty_parameters {
         int empty;
-    } STUBNM_Bcast_empty_parameters;
+    } stubnm_bcast_empty_parameters;
 } MPIDI_STUBNM_Bcast_params_t;
 
 typedef enum {
@@ -38,7 +38,7 @@ typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_STUBNM_Allreduce_empty_parameters {
         int empty;
-    } STUBNM_Allreduce_empty_parameters;
+    } stubnm_allreduce_empty_parameters;
 } MPIDI_STUBNM_Allreduce_params_t;
 
 typedef enum {
@@ -50,7 +50,7 @@ typedef union {
     /* reserved for parameters related to NETMOD specific collectives */
     struct MPIDI_STUBNM_Reduce_empty_parameters {
         int empty;
-    } STUBNM_Reduce_empty_parameters;
+    } stubnm_reduce_empty_parameters;
 } MPIDI_STUBNM_Reduce_params_t;
 
 #define MPIDI_STUBNM_BARRIER_PARAMS_DECL MPIDI_STUBNM_Barrier_params_t stubnm_barrier_params

@@ -9,7 +9,7 @@ typedef union {
     /* reserved for parameters related to SHM specific collectives */
     struct MPIDI_STUBSHM_Barrier_empty_parameters {
         int empty;
-    } STUBSHM_Barrier_empty_parameters;
+    } stubshm_barrier_empty_parameters;
 } MPIDI_STUBSHM_Barrier_params_t;
 
 typedef enum {
@@ -23,10 +23,10 @@ typedef union {
     struct MPIDI_STUBSHM_Bcast_knomial_parameters {
         int radix;
         int block_size;
-    } STUBSHM_Bcast_knomial_parameters;
+    } stubshm_bcast_knomial_parameters;
     struct MPIDI_STUBSHM_Bcast_empty_parameters {
         int empty;
-    } STUBSHM_Bcast_empty_parameters;
+    } stubshm_bcast_empty_parameters;
 } MPIDI_STUBSHM_Bcast_params_t;
 
 typedef enum {
@@ -38,7 +38,7 @@ typedef union {
     /* reserved for parameters related to SHM specific collectives */
     struct MPIDI_STUBSHM_Reduce_empty_parameters {
         int empty;
-    } STUBSHM_Reduce_empty_parameters;
+    } stubshm_reduce_empty_parameters;
 } MPIDI_STUBSHM_Reduce_params_t;
 
 typedef enum {
@@ -50,7 +50,7 @@ typedef union {
     /* reserved for parameters related to SHM specific collectives */
     struct MPIDI_STUBSHM_Allreduce_empty_parameters {
         int empty;
-    } STUBSHM_Allreduce_empty_parameters;
+    } stubshm_allreduce_empty_parameters;
 } MPIDI_STUBSHM_Allreduce_params_t;
 
 #define MPIDI_STUBSHM_BARRIER_PARAMS_DECL MPIDI_STUBSHM_Barrier_params_t stubshm_barrier_params
