@@ -24,6 +24,49 @@ int MPI_Wait(MPI_Request * request, MPI_Status * status) __attribute__ ((weak, a
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Wait
 #define MPI_Wait PMPI_Wait
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Wait_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Progress_state progress_state;
+    if (request_ptr == NULL)
+        goto fn_exit;
+
+    MPID_Progress_start(&progress_state);
+    while (!MPIR_Request_is_complete(request_ptr)) {
+        mpi_errno = MPIR_Grequest_progress_poke(1, &request_ptr, status);
+        if (request_ptr->kind == MPIR_REQUEST_KIND__GREQUEST &&
+            request_ptr->u.ureq.greq_fns->wait_fn != NULL) {
+            if (mpi_errno) {
+                /* --BEGIN ERROR HANDLING-- */
+                MPID_Progress_end(&progress_state);
+                MPIR_ERR_POP(mpi_errno);
+                /* --END ERROR HANDLING-- */
+            }
+            continue;   /* treating UREQUEST like normal request means we'll
+                         * poll indefinitely. skip over progress_wait */
+        }
+
+        mpi_errno = MPID_Progress_wait(&progress_state);
+        if (mpi_errno) {
+            /* --BEGIN ERROR HANDLING-- */
+            MPID_Progress_end(&progress_state);
+            MPIR_ERR_POP(mpi_errno);
+            /* --END ERROR HANDLING-- */
+        }
+    }
+    MPID_Progress_end(&progress_state);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Wait
 #undef FCNAME
@@ -43,8 +86,6 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
     MPIR_Request_get_ptr(*request, request_ptr);
 
     if (!MPIR_Request_is_complete(request_ptr)) {
-        MPID_Progress_state progress_state;
-
         /* If this is an anysource request including a communicator with
          * anysource disabled, convert the call to an MPI_Test instead so we
          * don't get stuck in the progress engine. */
@@ -55,30 +96,9 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
             goto fn_exit;
         }
 
-        MPID_Progress_start(&progress_state);
-        while (!MPIR_Request_is_complete(request_ptr)) {
-            mpi_errno = MPIR_Grequest_progress_poke(1, &request_ptr, status);
-            if (request_ptr->kind == MPIR_REQUEST_KIND__GREQUEST &&
-                request_ptr->u.ureq.greq_fns->wait_fn != NULL) {
-                if (mpi_errno) {
-                    /* --BEGIN ERROR HANDLING-- */
-                    MPID_Progress_end(&progress_state);
-                    MPIR_ERR_POP(mpi_errno);
-                    /* --END ERROR HANDLING-- */
-                }
-                continue;       /* treating UREQUEST like normal request means we'll
-                                 * poll indefinitely. skip over progress_wait */
-            }
-
-            mpi_errno = MPID_Progress_wait(&progress_state);
-            if (mpi_errno) {
-                /* --BEGIN ERROR HANDLING-- */
-                MPID_Progress_end(&progress_state);
-                MPIR_ERR_POP(mpi_errno);
-                /* --END ERROR HANDLING-- */
-            }
-        }
-        MPID_Progress_end(&progress_state);
+        mpi_errno = MPIR_Wait_impl(request_ptr, status);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
     }
 
     mpi_errno = MPIR_Request_completion_processing(request_ptr, status, &active_flag);
