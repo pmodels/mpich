@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef _HCOLLPRE_H_
-#define _HCOLLPRE_H_
+#ifndef HCOLLPRE_H_INCLUDED
+#define HCOLLPRE_H_INCLUDED
 
 typedef struct {
     int is_hcoll_init;
@@ -13,4 +13,4 @@ typedef struct {
     void *hcoll_context;
 } hcoll_comm_priv_t;
 
-#endif
+#endif /* HCOLLPRE_H_INCLUDED */

@@ -48,8 +48,7 @@ int chkcomm2inc_(int *keyval, const int *expected, int *ierr)
     MPI_Comm_get_attr(MPI_COMM_WORLD, *keyval, &val, &flag);
     if (!flag) {
         *ierr = 1;
-    }
-    else {
+    } else {
         if (*val != *expected) {
             /* In some cases, using printf from a c routine linked
              * with a Fortran routine can cause linking difficulties.

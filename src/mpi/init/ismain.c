@@ -14,7 +14,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Is_thread_main as PMPI_Is_thread_main
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Is_thread_main(int *flag) __attribute__((weak,alias("PMPI_Is_thread_main")));
+int MPI_Is_thread_main(int *flag) __attribute__ ((weak, alias("PMPI_Is_thread_main")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -29,11 +29,11 @@ int MPI_Is_thread_main(int *flag) __attribute__((weak,alias("PMPI_Is_thread_main
 #define FUNCNAME MPI_Is_thread_main
 
 /*@
-   MPI_Is_thread_main - Returns a flag indicating whether this thread called 
+   MPI_Is_thread_main - Returns a flag indicating whether this thread called
                         'MPI_Init' or 'MPI_Init_thread'
 
 Output Parameters:
-. flag - Flag is true if 'MPI_Init' or 'MPI_Init_thread' has been called by 
+. flag - Flag is true if 'MPI_Init' or 'MPI_Init_thread' has been called by
          this thread and false otherwise.  (logical)
 
 .N SignalSafe
@@ -43,7 +43,7 @@ Output Parameters:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Is_thread_main( int *flag )
+int MPI_Is_thread_main(int *flag)
 {
 #ifdef HAVE_ERROR_CHECKING
     static const char FCNAME[] = "MPI_Is_thread_main";
@@ -52,31 +52,31 @@ int MPI_Is_thread_main( int *flag )
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IS_THREAD_MAIN);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_ARGNULL(flag,"flag",mpi_errno);
+            MPIR_ERRTEST_ARGNULL(flag, "flag", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
-    
-    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IS_THREAD_MAIN);
-    
-    /* ... body of routine ...  */
-#   if MPICH_THREAD_LEVEL <= MPI_THREAD_FUNNELED || ! defined(MPICH_IS_THREADED)
-    {
-	*flag = TRUE;
-    }
-#   else
-    {
-	MPID_Thread_id_t my_thread_id;
+#endif /* HAVE_ERROR_CHECKING */
 
-	MPID_Thread_self(&my_thread_id);
-	MPID_Thread_same(&MPIR_ThreadInfo.master_thread, &my_thread_id, flag);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IS_THREAD_MAIN);
+
+    /* ... body of routine ...  */
+#if MPICH_THREAD_LEVEL <= MPI_THREAD_FUNNELED || ! defined(MPICH_IS_THREADED)
+    {
+        *flag = TRUE;
     }
-#   endif
+#else
+    {
+        MPID_Thread_id_t my_thread_id;
+
+        MPID_Thread_self(&my_thread_id);
+        MPID_Thread_same(&MPIR_ThreadInfo.master_thread, &my_thread_id, flag);
+    }
+#endif
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING
@@ -84,18 +84,17 @@ int MPI_Is_thread_main( int *flag )
 #endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IS_THREAD_MAIN);
     return mpi_errno;
-    
+
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
   fn_fail:
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 
-	    MPI_ERR_OTHER, "**mpi_is_thread_main",
-	    "**mpi_is_thread_main %p", flag);
+        mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                         MPI_ERR_OTHER, "**mpi_is_thread_main",
+                                         "**mpi_is_thread_main %p", flag);
     }
-    mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
+    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
     goto fn_exit;
-#   endif
+#endif
     /* --END ERROR HANDLING-- */
 }

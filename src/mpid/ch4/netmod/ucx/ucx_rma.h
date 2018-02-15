@@ -15,7 +15,7 @@ static inline int MPIDI_UCX_contig_put(const void *origin_addr,
                                        size_t size,
                                        int target_rank,
                                        MPI_Aint target_disp, MPI_Aint true_lb,
-                                       MPIR_Win * win, MPIDI_av_entry_t *addr)
+                                       MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
 
     MPIDI_UCX_win_info_t *win_info = &(MPIDI_UCX_WIN_INFO(win, target_rank));
@@ -45,7 +45,7 @@ static inline int MPIDI_UCX_noncontig_put(const void *origin_addr,
                                           int origin_count, MPI_Datatype origin_datatype,
                                           int target_rank, size_t size,
                                           MPI_Aint target_disp, MPI_Aint true_lb,
-                                          MPIR_Win * win, MPIDI_av_entry_t *addr)
+                                          MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     MPIDI_UCX_win_info_t *win_info = &(MPIDI_UCX_WIN_INFO(win, target_rank));
     size_t offset, last;
@@ -77,10 +77,10 @@ static inline int MPIDI_UCX_noncontig_put(const void *origin_addr,
     status = ucp_put(ep, buffer, size, base + offset, win_info->rkey);
     MPIDI_UCX_CHK_STATUS(status);
 
-fn_exit:
+  fn_exit:
     MPL_free(buffer);
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -88,7 +88,7 @@ static inline int MPIDI_UCX_contig_get(void *origin_addr,
                                        size_t size,
                                        int target_rank,
                                        MPI_Aint target_disp, MPI_Aint true_lb,
-                                       MPIR_Win * win, MPIDI_av_entry_t *addr)
+                                       MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
 
     MPIDI_UCX_win_info_t *win_info = &(MPIDI_UCX_WIN_INFO(win, target_rank));
@@ -123,7 +123,7 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
                                    int target_rank,
                                    MPI_Aint target_disp,
                                    int target_count, MPI_Datatype target_datatype,
-                                   MPIR_Win * win, MPIDI_av_entry_t *addr)
+                                   MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_PUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_PUT);
@@ -157,9 +157,9 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
         return MPIDI_CH4U_mpi_put(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count, target_datatype, win);
 
-    if(!origin_contig)
-        return  MPIDI_UCX_noncontig_put(origin_addr, origin_count,  origin_datatype, target_rank,
-                                         target_bytes, target_disp, target_true_lb,  win, addr);
+    if (!origin_contig)
+        return MPIDI_UCX_noncontig_put(origin_addr, origin_count, origin_datatype, target_rank,
+                                       target_bytes, target_disp, target_true_lb, win, addr);
 
     if (target_rank == win->comm_ptr->rank) {
         offset = win->disp_unit * target_disp;
@@ -185,7 +185,7 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
                                    int target_rank,
                                    MPI_Aint target_disp,
                                    int target_count, MPI_Datatype target_datatype,
-                                   MPIR_Win * win, MPIDI_av_entry_t *addr)
+                                   MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
 
 
@@ -247,8 +247,7 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
                                     int target_count,
                                     MPI_Datatype target_datatype,
                                     MPIR_Win * win,
-                                    MPIDI_av_entry_t *addr,
-                                    MPIR_Request ** request)
+                                    MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     return MPIDI_CH4U_mpi_rput(origin_addr, origin_count, origin_datatype,
                                target_rank, target_disp, target_count, target_datatype, win,
@@ -261,7 +260,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
                                                 void *result_addr,
                                                 MPI_Datatype datatype,
                                                 int target_rank, MPI_Aint target_disp,
-                                                MPIR_Win * win, MPIDI_av_entry_t *addr)
+                                                MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     return MPIDI_CH4U_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
                                            datatype, target_rank, target_disp, win);
@@ -275,8 +274,7 @@ static inline int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
                                            int target_count,
                                            MPI_Datatype target_datatype,
                                            MPI_Op op, MPIR_Win * win,
-                                           MPIDI_av_entry_t *addr,
-                                           MPIR_Request ** request)
+                                           MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     return MPIDI_CH4U_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count,
@@ -294,8 +292,7 @@ static inline int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
                                                int target_count,
                                                MPI_Datatype target_datatype,
                                                MPI_Op op, MPIR_Win * win,
-                                               MPIDI_av_entry_t *addr,
-                                               MPIR_Request ** request)
+                                               MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     return MPIDI_CH4U_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                           result_addr, result_count, result_datatype,
@@ -308,7 +305,7 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
                                             MPI_Datatype datatype,
                                             int target_rank,
                                             MPI_Aint target_disp, MPI_Op op,
-                                            MPIR_Win * win, MPIDI_av_entry_t *addr)
+                                            MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     return MPIDI_CH4U_mpi_fetch_and_op(origin_addr, result_addr, datatype,
                                        target_rank, target_disp, op, win);
@@ -323,8 +320,7 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
                                     int target_count,
                                     MPI_Datatype target_datatype,
                                     MPIR_Win * win,
-                                    MPIDI_av_entry_t *addr,
-                                    MPIR_Request ** request)
+                                    MPIDI_av_entry_t * addr, MPIR_Request ** request)
 {
     return MPIDI_CH4U_mpi_rget(origin_addr, origin_count, origin_datatype,
                                target_rank, target_disp, target_count, target_datatype, win,
@@ -342,7 +338,7 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
                                               MPI_Aint target_disp,
                                               int target_count,
                                               MPI_Datatype target_datatype, MPI_Op op,
-                                              MPIR_Win * win, MPIDI_av_entry_t *addr)
+                                              MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     return MPIDI_CH4U_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                          result_addr, result_count, result_datatype,
@@ -357,7 +353,7 @@ static inline int MPIDI_NM_mpi_accumulate(const void *origin_addr,
                                           MPI_Aint target_disp,
                                           int target_count,
                                           MPI_Datatype target_datatype, MPI_Op op,
-                                          MPIR_Win * win, MPIDI_av_entry_t *addr)
+                                          MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     return MPIDI_CH4U_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count, target_datatype, op,

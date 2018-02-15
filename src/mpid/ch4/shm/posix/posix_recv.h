@@ -26,7 +26,7 @@ extern MPIDI_POSIX_request_queue_t MPIDI_POSIX_recvq_unexpected;
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_POSIX_do_irecv)
 static inline int MPIDI_POSIX_do_irecv(void *buf,
-                                       int count,
+                                       MPI_Aint count,
                                        MPI_Datatype datatype,
                                        int rank,
                                        int tag,
@@ -95,13 +95,13 @@ static inline int MPIDI_POSIX_do_irecv(void *buf,
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_POSIX_mpi_recv)
 static inline int MPIDI_POSIX_mpi_recv(void *buf,
-                                     int count,
-                                     MPI_Datatype datatype,
-                                     int rank,
-                                     int tag,
-                                     MPIR_Comm * comm,
-                                     int context_offset, MPI_Status * status,
-                                     MPIR_Request ** request)
+                                       MPI_Aint count,
+                                       MPI_Datatype datatype,
+                                       int rank,
+                                       int tag,
+                                       MPIR_Comm * comm,
+                                       int context_offset, MPI_Status * status,
+                                       MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS, dt_contig __attribute__ ((__unused__));
     size_t data_sz __attribute__ ((__unused__));
@@ -121,12 +121,12 @@ static inline int MPIDI_POSIX_mpi_recv(void *buf,
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_POSIX_mpi_recv)
 static inline int MPIDI_POSIX_mpi_recv_init(void *buf,
-                                          int count,
-                                          MPI_Datatype datatype,
-                                          int rank,
-                                          int tag,
-                                          MPIR_Comm * comm, int context_offset,
-                                          MPIR_Request ** request)
+                                            int count,
+                                            MPI_Datatype datatype,
+                                            int rank,
+                                            int tag,
+                                            MPIR_Comm * comm, int context_offset,
+                                            MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
@@ -153,9 +153,9 @@ static inline int MPIDI_POSIX_mpi_recv_init(void *buf,
 
 
 static inline int MPIDI_POSIX_mpi_imrecv(void *buf,
-                                       int count,
-                                       MPI_Datatype datatype,
-                                       MPIR_Request * message, MPIR_Request ** rreqp)
+                                         MPI_Aint count,
+                                         MPI_Datatype datatype,
+                                         MPIR_Request * message, MPIR_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
@@ -242,8 +242,7 @@ static inline int MPIDI_POSIX_mpi_imrecv(void *buf,
                                     MPIDI_POSIX_REQUEST(rreq)->segment_first, (MPI_Aint *) & last,
                                     send_buffer);
                 MPIR_Segment_free(MPIDI_POSIX_REQUEST(rreq)->segment_ptr);
-            }
-            else
+            } else
                 /* contig */
             if (send_buffer)
                 MPIR_Memcpy(recv_buffer, (void *) send_buffer, data_sz);
@@ -253,8 +252,7 @@ static inline int MPIDI_POSIX_mpi_imrecv(void *buf,
             rreq->status.MPI_TAG = sreq->status.MPI_TAG;
             count = MPIR_STATUS_GET_COUNT(rreq->status) + (MPI_Count) data_sz;
             MPIR_STATUS_SET_COUNT(rreq->status, count);
-        }
-        else if (MPIDI_POSIX_REQUEST(sreq)->type == MPIDI_POSIX_TYPELMT) {
+        } else if (MPIDI_POSIX_REQUEST(sreq)->type == MPIDI_POSIX_TYPELMT) {
             /* long message */
             if (MPIDI_POSIX_REQUEST(rreq)->segment_ptr) {
                 /* non-contig */
@@ -264,8 +262,7 @@ static inline int MPIDI_POSIX_mpi_imrecv(void *buf,
                                     MPIDI_POSIX_REQUEST(rreq)->segment_first, (MPI_Aint *) & last,
                                     send_buffer);
                 MPIDI_POSIX_REQUEST(rreq)->segment_first = last;
-            }
-            else
+            } else
                 /* contig */
             if (send_buffer)
                 MPIR_Memcpy(recv_buffer, (void *) send_buffer, MPIDI_POSIX_EAGER_THRESHOLD);
@@ -297,11 +294,12 @@ static inline int MPIDI_POSIX_mpi_imrecv(void *buf,
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_POSIX_mpi_irecv)
 static inline int MPIDI_POSIX_mpi_irecv(void *buf,
-                                      int count,
-                                      MPI_Datatype datatype,
-                                      int rank,
-                                      int tag,
-                                      MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
+                                        MPI_Aint count,
+                                        MPI_Datatype datatype,
+                                        int rank,
+                                        int tag,
+                                        MPIR_Comm * comm, int context_offset,
+                                        MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -335,8 +333,7 @@ static inline int MPIDI_POSIX_mpi_cancel_recv(MPIR_Request * rreq)
 
             if (prev_req) {
                 MPIDI_POSIX_REQUEST(prev_req)->next = MPIDI_POSIX_REQUEST(req)->next;
-            }
-            else {
+            } else {
                 MPIDI_POSIX_recvq_posted.head = MPIDI_POSIX_REQUEST(req)->next;
             }
 

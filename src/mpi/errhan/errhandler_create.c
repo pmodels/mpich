@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Errhandler_create as PMPI_Errhandler_create
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Errhandler_create(MPI_Handler_function *function, MPI_Errhandler *errhandler) __attribute__((weak,alias("PMPI_Errhandler_create")));
+int MPI_Errhandler_create(MPI_Handler_function * function, MPI_Errhandler * errhandler)
+    __attribute__ ((weak, alias("PMPI_Errhandler_create")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -34,17 +35,17 @@ int MPI_Errhandler_create(MPI_Handler_function *function, MPI_Errhandler *errhan
   MPI_Errhandler_create - Creates an MPI-style errorhandler
 
 Input Parameters:
-. function - user defined error handling procedure 
+. function - user defined error handling procedure
 
 Output Parameters:
-. errhandler - MPI error handler (handle) 
+. errhandler - MPI error handler (handle)
 
 Notes:
-The MPI Standard states that an implementation may make the output value 
-(errhandler) simply the address of the function.  However, the action of 
+The MPI Standard states that an implementation may make the output value
+(errhandler) simply the address of the function.  However, the action of
 'MPI_Errhandler_free' makes this impossible, since it is required to set the
 value of the argument to 'MPI_ERRHANDLER_NULL'.  In addition, the actual
-error handler must remain until all communicators that use it are 
+error handler must remain until all communicators that use it are
 freed.
 
 .N ThreadSafe
@@ -60,34 +61,34 @@ The replacement routine for this function is 'MPI_Comm_create_errhandler'.
 
 .seealso: MPI_Comm_create_errhandler, MPI_Errhandler_free
 @*/
-int MPI_Errhandler_create(MPI_Handler_function *function, 
-                          MPI_Errhandler *errhandler)
+int MPI_Errhandler_create(MPI_Handler_function * function, MPI_Errhandler * errhandler)
 {
     static const char FCNAME[] = "MPI_Errhandler_create";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ERRHANDLER_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_ERRHANDLER_CREATE);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_ARGNULL(function, "function", mpi_errno);
-	    MPIR_ERRTEST_ARGNULL(errhandler, "errhandler", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(function, "function", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(errhandler, "errhandler", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    mpi_errno = MPIR_Comm_create_errhandler_impl( function, errhandler );
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-    
+    mpi_errno = MPIR_Comm_create_errhandler_impl(function, errhandler);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
     /* ... end of body of routine ... */
 
   fn_exit:
@@ -97,15 +98,15 @@ int MPI_Errhandler_create(MPI_Handler_function *function,
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_errhandler_create",
-	    "**mpi_errhandler_create %p %p", function, errhandler);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_errhandler_create", "**mpi_errhandler_create %p %p",
+                                 function, errhandler);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-

@@ -278,6 +278,29 @@ void MPIDI_OFI_index_allocator_destroy(void *_indexmap);
 /* Common Utility functions used by the
  * C and C++ components
  */
+/* Set max size based on OFI acc ordering limit. */
+MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_check_acc_order_size(MPIR_Win * win, size_t max_size)
+{
+    /* Check ordering limit, a value of -1 guarantees ordering for any data size. */
+    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAR)
+        && MPIDI_Global.max_order_war != -1) {
+        /* An order size value of 0 indicates that ordering is not guaranteed. */
+        MPIR_Assert(MPIDI_Global.max_order_war != 0);
+        max_size = MPL_MIN(max_size, MPIDI_Global.max_order_war);
+    }
+    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAW)
+        && MPIDI_Global.max_order_waw != -1) {
+        MPIR_Assert(MPIDI_Global.max_order_waw != 0);
+        max_size = MPL_MIN(max_size, MPIDI_Global.max_order_waw);
+    }
+    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW)
+        && MPIDI_Global.max_order_raw != -1) {
+        MPIR_Assert(MPIDI_Global.max_order_raw != 0);
+        max_size = MPL_MIN(max_size, MPIDI_Global.max_order_raw);
+    }
+    return max_size;
+}
+
 MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_alloc_and_init(int extra)
 {
     MPIDI_OFI_win_request_t *req;
@@ -285,7 +308,8 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_alloc_an
     memset((char *) req + MPIDI_REQUEST_HDR_SIZE, 0,
            sizeof(MPIDI_OFI_win_request_t) - MPIDI_REQUEST_HDR_SIZE);
     req->noncontig =
-        (MPIDI_OFI_win_noncontig_t *) MPL_calloc(1, (extra) + sizeof(*(req->noncontig)), MPL_MEM_BUFFER);
+        (MPIDI_OFI_win_noncontig_t *) MPL_calloc(1, (extra) + sizeof(*(req->noncontig)),
+                                                 MPL_MEM_BUFFER);
     return req;
 }
 
@@ -313,13 +337,12 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int 
     }
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t *av)
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_av_to_phys(MPIDI_av_entry_t * av)
 {
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         int ep_num = MPIDI_OFI_av_to_ep(&MPIDI_OFI_AV(av));
         return fi_rx_addr(MPIDI_OFI_AV_TO_PHYS(av), ep_num, MPIDI_OFI_MAX_ENDPOINTS_BITS);
-    }
-    else {
+    } else {
         return MPIDI_OFI_AV_TO_PHYS(av);
     }
 }
@@ -341,7 +364,7 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
 }
 
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t contextid,
-                                                  int source, int tag, uint64_t type)
+                                                         int source, int tag, uint64_t type)
 {
     uint64_t match_bits;
     match_bits = contextid;
@@ -358,8 +381,8 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t conte
 
 /* receive posting */
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_recvtag(uint64_t * mask_bits,
-                                                  MPIR_Context_id_t contextid,
-                                                  int source, int tag)
+                                                         MPIR_Context_id_t contextid,
+                                                         int source, int tag)
 {
     uint64_t match_bits = 0;
     *mask_bits = MPIDI_OFI_PROTOCOL_MASK;
@@ -371,13 +394,11 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_recvtag(uint64_t * mask_bits,
         if (MPI_ANY_SOURCE == source) {
             match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
             *mask_bits |= MPIDI_OFI_SOURCE_MASK;
-        }
-        else {
+        } else {
             match_bits |= source;
             match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
         }
-    }
-    else {
+    } else {
         match_bits = (match_bits << MPIDI_OFI_TAG_BITS);
     }
 
@@ -410,9 +431,9 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_OFI_context_to_request(void *contex
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const void *buf, size_t len,
-                                             void *desc, uint32_t dest, fi_addr_t dest_addr,
-                                             uint64_t tag, void *context, int is_inject,
-                                             int do_lock)
+                                                    void *desc, uint32_t dest, fi_addr_t dest_addr,
+                                                    uint64_t tag, void *context, int is_inject,
+                                                    int do_lock)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -422,8 +443,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const voi
                                  do_lock);
         else
             MPIDI_OFI_CALL_RETRY(fi_tinject(ep, buf, len, dest_addr, tag), tinject, do_lock);
-    }
-    else {
+    } else {
         if (MPIDI_OFI_ENABLE_DATA)
             MPIDI_OFI_CALL_RETRY(fi_tsenddata(ep, buf, len, desc, dest, dest_addr, tag, context),
                                  tsenddata, do_lock);
@@ -438,9 +458,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const voi
     goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn,
-                                                                int rank,
-                                                                int state)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn, int rank, int state)
 {
     int conn_id = -1;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INSERT_CONN);
@@ -452,7 +470,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn,
         old_max = MPIDI_Global.conn_mgr.max_n_conn;
         new_max = old_max + 1;
         MPIDI_Global.conn_mgr.free_conn_id =
-            (int *) MPL_realloc(MPIDI_Global.conn_mgr.free_conn_id, new_max * sizeof(int), MPL_MEM_ADDRESS);
+            (int *) MPL_realloc(MPIDI_Global.conn_mgr.free_conn_id, new_max * sizeof(int),
+                                MPL_MEM_ADDRESS);
         for (i = old_max; i < new_max - 1; ++i) {
             MPIDI_Global.conn_mgr.free_conn_id[i] = i + 1;
         }
@@ -474,8 +493,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn,
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, " new_conn_id=%d for conn=%" PRIu64 " rank=%d state=%d",
-                     conn_id, conn, rank,
-                     MPIDI_Global.conn_mgr.conn_list[conn_id].state));
+                     conn_id, conn, rank, MPIDI_Global.conn_mgr.conn_list[conn_id].state));
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INSERT_CONN);
     return conn_id;
@@ -492,8 +510,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_remove_conn(int conn_id)
     MPIDI_Global.conn_mgr.next_conn_id = conn_id;
     MPIDI_Global.conn_mgr.n_conn--;
 
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                    (MPL_DBG_FDEST, " free_conn_id=%d", conn_id));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE, (MPL_DBG_FDEST, " free_conn_id=%d", conn_id));
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONN_MANAGER_REMOVE_CONN);
     return mpi_errno;
@@ -518,9 +535,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, " send disconnect msg conn_id=%d from child side",
                          conn_id));
-        match_bits = MPIDI_OFI_init_sendtag(context_id,
-                                            rank,
-                                            1, MPIDI_OFI_DYNPROC_SEND);
+        match_bits = MPIDI_OFI_init_sendtag(context_id, rank, 1, MPIDI_OFI_DYNPROC_SEND);
 
         /* fi_av_map here is not quite right for some providers */
         /* we need to get this connection from the sockname     */
@@ -537,20 +552,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
         msg.context = (void *) &req.context;
         msg.data = 0;
         MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_Global.ctx[0].tx, &msg,
-                                         FI_COMPLETION | FI_TRANSMIT_COMPLETE | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0)),
-                             tsendmsg, MPIDI_OFI_CALL_LOCK);
+                                         FI_COMPLETION | FI_TRANSMIT_COMPLETE |
+                                         (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0)), tsendmsg,
+                             MPIDI_OFI_CALL_LOCK);
         MPIDI_OFI_PROGRESS_WHILE(!req.done);
     }
 
     switch (MPIDI_Global.conn_mgr.conn_list[conn_id].state) {
-    case MPIDI_OFI_DYNPROC_CONNECTED_CHILD:
-        MPIDI_Global.conn_mgr.conn_list[conn_id].state = MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_CHILD;
-        break;
-    case MPIDI_OFI_DYNPROC_CONNECTED_PARENT:
-        MPIDI_Global.conn_mgr.conn_list[conn_id].state = MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_PARENT;
-        break;
-    default:
-        break;
+        case MPIDI_OFI_DYNPROC_CONNECTED_CHILD:
+            MPIDI_Global.conn_mgr.conn_list[conn_id].state =
+                MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_CHILD;
+            break;
+        case MPIDI_OFI_DYNPROC_CONNECTED_PARENT:
+            MPIDI_Global.conn_mgr.conn_list[conn_id].state =
+                MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_PARENT;
+            break;
+        default:
+            break;
     }
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -569,7 +587,7 @@ struct MPIDI_OFI_contig_blocks_params {
     DLOOP_Count count;
     DLOOP_Offset last_loc;
     DLOOP_Offset start_loc;
-    size_t       last_chunk;
+    size_t last_chunk;
 };
 
 #undef FUNCNAME
@@ -596,25 +614,26 @@ MPL_STATIC_INLINE_PREFIX
         /* this region is adjacent to the last */
         paramp->last_loc += size;
         /* If necessary, recalculate the number of chunks in this block */
-        if(paramp->last_loc - paramp->start_loc > paramp->max_pipe) {
+        if (paramp->last_loc - paramp->start_loc > paramp->max_pipe) {
             paramp->count -= paramp->last_chunk;
             num = (paramp->last_loc - paramp->start_loc) / paramp->max_pipe;
             rem = (paramp->last_loc - paramp->start_loc) % paramp->max_pipe;
-            if(rem) num++;
+            if (rem)
+                num++;
             paramp->last_chunk = num;
             paramp->count += num;
         }
-    }
-    else {
-         /* new region */
-        num  = size / paramp->max_pipe;
-        rem  = size % paramp->max_pipe;
-        if(rem) num++;
+    } else {
+        /* new region */
+        num = size / paramp->max_pipe;
+        rem = size % paramp->max_pipe;
+        if (rem)
+            num++;
 
         paramp->last_chunk = num;
-        paramp->last_loc   = rel_off + size;
-        paramp->start_loc  = rel_off;
-        paramp->count     += num;
+        paramp->last_loc = rel_off + size;
+        paramp->start_loc = rel_off;
+        paramp->count += num;
     }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONTIG_COUNT_BLOCK);
     return 0;
@@ -646,8 +665,8 @@ MPL_STATIC_INLINE_PREFIX
         params.last_chunk = 0;
         MPIR_Segment_init(NULL, 1, dt_datatype, &dt_seg, 0);
         MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
-                                 MPIDI_OFI_contig_count_block,
-                                 NULL, NULL, NULL, NULL, (void *) &params);
+                                MPIDI_OFI_contig_count_block,
+                                NULL, NULL, NULL, NULL, (void *) &params);
         count1 = params.count;
         params.count = 0;
         params.last_loc = 0;
@@ -655,8 +674,8 @@ MPL_STATIC_INLINE_PREFIX
         params.last_chunk = 0;
         MPIR_Segment_init(NULL, dtc, dt_datatype, &dt_seg, 0);
         MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
-                                 MPIDI_OFI_contig_count_block,
-                                 NULL, NULL, NULL, NULL, (void *) &params);
+                                MPIDI_OFI_contig_count_block,
+                                NULL, NULL, NULL, NULL, (void *) &params);
         count2 = params.count;
         if (count2 == 1) {      /* Contiguous */
             num = (dt_size * dt_count) / max_pipe;
@@ -664,14 +683,13 @@ MPL_STATIC_INLINE_PREFIX
             if (rem)
                 num++;
             count += num;
-        }
-        else if (count2 < count1 * 2)
+        } else if (count2 < count1 * 2)
             /* The commented calculation assumes merged blocks  */
             /* The iov processor will not merge adjacent blocks */
             /* When the iov state machine adds this capability  */
             /* we should switch to use the optimized calcultion */
             /* count += (count1*dt_count) - (dt_count-1);       */
-             count += count1 * dt_count;
+            count += count1 * dt_count;
         else
             count += count1 * dt_count;
     }
@@ -686,7 +704,7 @@ MPL_STATIC_INLINE_PREFIX
 #define FCNAME   MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_align_iov_len(size_t len)
 {
-    size_t pad  = MPIDI_OFI_IOVEC_ALIGN - 1;
+    size_t pad = MPIDI_OFI_IOVEC_ALIGN - 1;
     size_t mask = ~pad;
 
     return (len + pad) & mask;
@@ -697,7 +715,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_align_iov_len(size_t len)
 #define FUNCNAME MPIDI_OFI_aligned_next_iov
 #undef  FCNAME
 #define FCNAME   MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void* MPIDI_OFI_aligned_next_iov(void *ptr)
+MPL_STATIC_INLINE_PREFIX void *MPIDI_OFI_aligned_next_iov(void *ptr)
 {
     return (void *) (uintptr_t) MPIDI_OFI_align_iov_len((size_t) ptr);
 }
@@ -706,7 +724,7 @@ MPL_STATIC_INLINE_PREFIX void* MPIDI_OFI_aligned_next_iov(void *ptr)
 #define FUNCNAME MPIDI_OFI_request_util_iov
 #undef  FCNAME
 #define FCNAME   MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX struct iovec *MPIDI_OFI_request_util_iov(MPIR_Request *req)
+MPL_STATIC_INLINE_PREFIX struct iovec *MPIDI_OFI_request_util_iov(MPIR_Request * req)
 {
 #if defined (MPL_HAVE_VAR_ATTRIBUTE_ALIGNED)
     return &MPIDI_OFI_REQUEST(req, util.iov);

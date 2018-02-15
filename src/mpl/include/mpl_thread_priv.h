@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPL_THREAD_PRIV_H_INCLUDED)
+#ifndef MPL_THREAD_PRIV_H_INCLUDED
 #define MPL_THREAD_PRIV_H_INCLUDED
 
 #if MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE && !defined(MPL_TLS_SPECIFIER)
@@ -95,4 +95,4 @@ void MPLI_cleanup_tls(void *a);
 
 #endif
 
-#endif /* !defined(MPL_THREAD_PRIV_H_INCLUDED) */
+#endif /* MPL_THREAD_PRIV_H_INCLUDED */

@@ -31,7 +31,10 @@ int MPIDI_OFI_handle_cq_error_util(int vni_idx, ssize_t ret)
 
 int MPIDI_OFI_progress_test_no_inline()
 {
-    return MPID_Progress_test();
+    /* We do not call progress on hooks form netmod level
+     * because it is not reentrant safe.
+     */
+    return MPIDI_Progress_test(MPIDI_PROGRESS_NM | MPIDI_PROGRESS_SHM);
 }
 
 typedef struct MPIDI_OFI_index_allocator_t {
@@ -138,18 +141,23 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     {
         MPIDI_OFI_huge_recv_list_t *list_ptr;
 
-        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "SEARCHING POSTED LIST: (%d, %d, %d)", info->comm_id, info->origin_rank, info->tag));
+        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
+                        (MPL_DBG_FDEST, "SEARCHING POSTED LIST: (%d, %d, %d)", info->comm_id,
+                         info->origin_rank, info->tag));
 
         LL_FOREACH(MPIDI_posted_huge_recv_head, list_ptr) {
             if (list_ptr->comm_id == info->comm_id &&
-                    list_ptr->rank == info->origin_rank &&
-                    list_ptr->tag == info->tag) {
-                MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "MATCHED POSTED LIST: (%d, %d, %d, %d)", info->comm_id, info->origin_rank, info->tag, list_ptr->rreq->handle));
+                list_ptr->rank == info->origin_rank && list_ptr->tag == info->tag) {
+                MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
+                                (MPL_DBG_FDEST, "MATCHED POSTED LIST: (%d, %d, %d, %d)",
+                                 info->comm_id, info->origin_rank, info->tag,
+                                 list_ptr->rreq->handle));
 
                 LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
 
-                recv = (MPIDI_OFI_huge_recv_t *) MPIDI_CH4U_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
-                            list_ptr->rreq->handle);
+                recv = (MPIDI_OFI_huge_recv_t *)
+                    MPIDI_CH4U_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
+                                          list_ptr->rreq->handle);
 
                 MPL_free(list_ptr);
                 break;
@@ -158,12 +166,15 @@ static inline int MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     }
 
     if (recv == NULL) { /* Put the struct describing the transfer on an
-                           unexpected list to be retrieved later */
-        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "CREATING UNEXPECTED HUGE RECV: (%d, %d, %d)", info->comm_id, info->origin_rank, info->tag));
+                         * unexpected list to be retrieved later */
+        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE,
+                        (MPL_DBG_FDEST, "CREATING UNEXPECTED HUGE RECV: (%d, %d, %d)",
+                         info->comm_id, info->origin_rank, info->tag));
 
         /* If this is unexpected, create a new tracker and put it in the unexpected list. */
         recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1, MPL_MEM_COMM);
-        if (!recv) MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
+        if (!recv)
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         LL_APPEND(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, recv);
     }
@@ -195,21 +206,21 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
     *target_cmpl_cb = NULL;
 
     switch (ctrlsend->type) {
-    case MPIDI_OFI_CTRL_HUGEACK:{
-            mpi_errno = MPIDI_OFI_dispatch_function(NULL, ctrlsend->ackreq, 0);
-            goto fn_exit;
-        }
-        break;
+        case MPIDI_OFI_CTRL_HUGEACK:{
+                mpi_errno = MPIDI_OFI_dispatch_function(NULL, ctrlsend->ackreq, 0);
+                goto fn_exit;
+            }
+            break;
 
-    case MPIDI_OFI_CTRL_HUGE:{
-            mpi_errno = MPIDI_OFI_get_huge(ctrlsend);
-            goto fn_exit;
-        }
-        break;
+        case MPIDI_OFI_CTRL_HUGE:{
+                mpi_errno = MPIDI_OFI_get_huge(ctrlsend);
+                goto fn_exit;
+            }
+            break;
 
-     default:
-        fprintf(stderr, "Bad control type: 0x%08x  %d\n", ctrlsend->type, ctrlsend->type);
-        MPIR_Assert(0);
+        default:
+            fprintf(stderr, "Bad control type: 0x%08x  %d\n", ctrlsend->type, ctrlsend->type);
+            MPIR_Assert(0);
     }
 
   fn_exit:
@@ -302,73 +313,73 @@ static inline int mpi_to_ofi(MPI_Datatype dt, enum fi_datatype *fi_dt, MPI_Op op
     *fi_op = FI_ATOMIC_OP_LAST;
 
     switch (op) {
-    case MPI_SUM:
-        *fi_op = FI_SUM;
-        goto fn_exit;
-
-    case MPI_PROD:
-        *fi_op = FI_PROD;
-        goto fn_exit;
-
-    case MPI_MAX:
-        *fi_op = FI_MAX;
-        goto fn_exit;
-
-    case MPI_MIN:
-        *fi_op = FI_MIN;
-        goto fn_exit;
-
-    case MPI_BAND:
-        *fi_op = FI_BAND;
-        goto fn_exit;
-
-    case MPI_BOR:
-        *fi_op = FI_BOR;
-        goto fn_exit;
-
-    case MPI_BXOR:
-        *fi_op = FI_BXOR;
-        goto fn_exit;
-        break;
-
-    case MPI_LAND:
-        if (isLONG_DOUBLE(dt))
-            goto fn_fail;
-
-        *fi_op = FI_LAND;
-        goto fn_exit;
-
-    case MPI_LOR:
-        if (isLONG_DOUBLE(dt))
-            goto fn_fail;
-
-        *fi_op = FI_LOR;
-        goto fn_exit;
-
-    case MPI_LXOR:
-        if (isLONG_DOUBLE(dt))
-            goto fn_fail;
-
-        *fi_op = FI_LXOR;
-        goto fn_exit;
-
-    case MPI_REPLACE:{
-            *fi_op = FI_ATOMIC_WRITE;
+        case MPI_SUM:
+            *fi_op = FI_SUM;
             goto fn_exit;
-        }
 
-    case MPI_NO_OP:{
-            *fi_op = FI_ATOMIC_READ;
+        case MPI_PROD:
+            *fi_op = FI_PROD;
             goto fn_exit;
-        }
 
-    case MPI_OP_NULL:{
-            *fi_op = FI_CSWAP;
+        case MPI_MAX:
+            *fi_op = FI_MAX;
             goto fn_exit;
-        }
 
-    default:
-        goto fn_fail;
+        case MPI_MIN:
+            *fi_op = FI_MIN;
+            goto fn_exit;
+
+        case MPI_BAND:
+            *fi_op = FI_BAND;
+            goto fn_exit;
+
+        case MPI_BOR:
+            *fi_op = FI_BOR;
+            goto fn_exit;
+
+        case MPI_BXOR:
+            *fi_op = FI_BXOR;
+            goto fn_exit;
+            break;
+
+        case MPI_LAND:
+            if (isLONG_DOUBLE(dt))
+                goto fn_fail;
+
+            *fi_op = FI_LAND;
+            goto fn_exit;
+
+        case MPI_LOR:
+            if (isLONG_DOUBLE(dt))
+                goto fn_fail;
+
+            *fi_op = FI_LOR;
+            goto fn_exit;
+
+        case MPI_LXOR:
+            if (isLONG_DOUBLE(dt))
+                goto fn_fail;
+
+            *fi_op = FI_LXOR;
+            goto fn_exit;
+
+        case MPI_REPLACE:{
+                *fi_op = FI_ATOMIC_WRITE;
+                goto fn_exit;
+            }
+
+        case MPI_NO_OP:{
+                *fi_op = FI_ATOMIC_READ;
+                goto fn_exit;
+            }
+
+        case MPI_OP_NULL:{
+                *fi_op = FI_CSWAP;
+                goto fn_exit;
+            }
+
+        default:
+            goto fn_fail;
     }
 
   fn_exit:
@@ -571,6 +582,6 @@ void MPIDI_OFI_index_datatypes()
     add_index(MPI_LONG_DOUBLE_INT, &index);
 
     /* do not generate map when atomics are not enabled */
-    if(MPIDI_OFI_ENABLE_ATOMICS)
+    if (MPIDI_OFI_ENABLE_ATOMICS)
         create_dt_map();
 }

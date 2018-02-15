@@ -75,8 +75,8 @@ main() {
 }
 ****************************************************************************/
 
-#ifndef __RDTSC_H
-#define __RDTSC_H
+#ifndef RDTSC_H_INCLUDED
+#define RDTSC_H_INCLUDED
 #include <stdlib.h>
 #include <stdio.h>
 /*#include "asm/msr.h" */
@@ -154,7 +154,7 @@ USECS_DELAY(double usecs)
 }
     
 
-#endif /* __RDTSC_H */
+#endif /* RDTSC_H_INCLUDED */
 
 
 

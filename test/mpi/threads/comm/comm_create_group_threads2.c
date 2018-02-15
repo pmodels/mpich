@@ -48,7 +48,7 @@ MTEST_THREAD_RETURN_TYPE test_comm_create_group(void *arg)
          */
         if (verbose)
             printf("%d: Thread %d - Comm_create_group %d start\n", rank, *(int *) arg, i);
-        if(rank <= size / 2){
+        if (rank <= size / 2) {
             MPI_Comm_create_group(MPI_COMM_WORLD, half_group, *(int *) arg /* tag */ , &comm);
             MPI_Barrier(comm);
             MPI_Comm_free(&comm);

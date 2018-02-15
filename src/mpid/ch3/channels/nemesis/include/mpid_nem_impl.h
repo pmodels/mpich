@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPID_NEM_IMPL_H
-#define MPID_NEM_IMPL_H
+#ifndef MPID_NEM_IMPL_H_INCLUDED
+#define MPID_NEM_IMPL_H_INCLUDED
 
 #include "my_papi_defs.h"
 #include "mpidi_ch3_impl.h"
@@ -274,4 +274,4 @@ fn_fail:
     } while (0)   
 
 
-#endif /* MPID_NEM_IMPL_H */
+#endif /* MPID_NEM_IMPL_H_INCLUDED */

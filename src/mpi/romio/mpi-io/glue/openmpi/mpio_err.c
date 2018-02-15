@@ -29,8 +29,7 @@ int MPIO_Err_create_code(int lastcode, int fatal, const char fcname[],
         idx += MPL_snprintf(buf, 1023, "%s (line %d): ", fcname, line);
         if (specific_msg == NULL) {
             MPL_snprintf(&buf[idx], 1023 - idx, "%s\n", generic_msg);
-        }
-        else {
+        } else {
             va_start(Argp, specific_msg);
             vsnprintf(&buf[idx], 1023 - idx, specific_msg, Argp);
             va_end(Argp);

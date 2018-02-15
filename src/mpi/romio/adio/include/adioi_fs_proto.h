@@ -1,13 +1,13 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-/* 
+/*
  *
- *   Copyright (C) 1997 University of Chicago. 
+ *   Copyright (C) 1997 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
  */
 
 
-#ifndef ADIO_PROTO
-#define ADIO_PROTO
+#ifndef ADIOI_FS_PROTO_H_INCLUDED
+#define ADIOI_FS_PROTO_H_INCLUDED
 
 #include <assert.h>
 #ifdef ROMIO_NFS
@@ -116,4 +116,4 @@ handle_share(daos_handle_t *hdl, int type, int rank, daos_handle_t poh,
 	MPI_Barrier(comm);
 }
 #endif
-#endif
+#endif /* ADIOI_FS_PROTO_H_INCLUDED */

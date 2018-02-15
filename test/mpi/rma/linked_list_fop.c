@@ -149,8 +149,7 @@ int main(int argc, char **argv)
                     MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag,
                                MPI_STATUS_IGNORE);
 
-            }
-            else {
+            } else {
                 /* Tail pointer is stale, fetch the displacement.  May take multiple tries
                  * if it is being updated. */
                 do {

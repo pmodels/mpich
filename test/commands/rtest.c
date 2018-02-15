@@ -1,11 +1,11 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
-/*  
+/*
  *  (C) 2006 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 #include <stdio.h>
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
-    printf( testname );
+    printf(testname);
     return 0;
 }

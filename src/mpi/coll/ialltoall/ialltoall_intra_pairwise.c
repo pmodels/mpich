@@ -1,11 +1,10 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
+ *  (C) 2017 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* Algorithm: Pairwise Exchange
  *
@@ -25,10 +24,12 @@
  * other processes.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoall_intra_pairwise_sched
+#define FUNCNAME MPIR_Ialltoall_sched_intra_pairwise
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ialltoall_intra_pairwise_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Ialltoall_sched_intra_pairwise(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                                        MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -36,7 +37,9 @@ int MPIR_Ialltoall_intra_pairwise_sched(const void *sendbuf, int sendcount, MPI_
     int rank, comm_size;
     MPI_Aint sendtype_extent, recvtype_extent;
 
-    MPIR_Assert(sendbuf != MPI_IN_PLACE); /* we do not handle in-place */
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_Assert(sendbuf != MPI_IN_PLACE);       /* we do not handle in-place */
+#endif
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -45,37 +48,38 @@ int MPIR_Ialltoall_intra_pairwise_sched(const void *sendbuf, int sendcount, MPI_
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     /* Make local copy first */
-    mpi_errno = MPIR_Sched_copy(((char *)sendbuf + rank*sendcount*sendtype_extent),
+    mpi_errno = MPIR_Sched_copy(((char *) sendbuf + rank * sendcount * sendtype_extent),
                                 sendcount, sendtype,
-                                ((char *)recvbuf + rank*recvcount*recvtype_extent),
+                                ((char *) recvbuf + rank * recvcount * recvtype_extent),
                                 recvcount, recvtype, s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
-    is_pof2 = MPIU_is_pof2(comm_size, NULL);
+    is_pof2 = MPL_is_pof2(comm_size, NULL);
 
     /* Do the pairwise exchanges */
     for (i = 1; i < comm_size; i++) {
         if (is_pof2 == 1) {
             /* use exclusive-or algorithm */
             src = dst = rank ^ i;
-        }
-        else {
+        } else {
             src = (rank - i + comm_size) % comm_size;
             dst = (rank + i) % comm_size;
         }
 
-        mpi_errno = MPIR_Sched_send(((char *)sendbuf + dst*sendcount*sendtype_extent),
+        mpi_errno = MPIR_Sched_send(((char *) sendbuf + dst * sendcount * sendtype_extent),
                                     sendcount, sendtype, dst, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        mpi_errno = MPIR_Sched_recv(((char *)recvbuf + src*recvcount*recvtype_extent),
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPIR_Sched_recv(((char *) recvbuf + src * recvcount * recvtype_extent),
                                     recvcount, recvtype, src, comm_ptr, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
-

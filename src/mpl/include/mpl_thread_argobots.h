@@ -15,10 +15,10 @@
 
 #include <errno.h>
 
-typedef ABT_mutex       MPL_thread_mutex_t;
-typedef ABT_cond        MPL_thread_cond_t;
-typedef ABT_thread_id   MPL_thread_id_t;
-typedef ABT_key         MPL_thread_tls_t;
+typedef ABT_mutex MPL_thread_mutex_t;
+typedef ABT_cond MPL_thread_cond_t;
+typedef ABT_thread_id MPL_thread_id_t;
+typedef ABT_key MPL_thread_tls_t;
 
 /* ======================================================================
  *    Creation and misc

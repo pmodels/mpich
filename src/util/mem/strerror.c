@@ -26,15 +26,15 @@ const char *MPIR_Strerror(int errnum)
                                  MPIR_Per_thread, per_thread, &err);
     MPIR_Assert(err == 0);
     buf = per_thread->strerrbuf;
-#  if defined(STRERROR_R_CHAR_P)
+#if defined(STRERROR_R_CHAR_P)
     /* strerror_r returns char ptr (old GNU-flavor).  Static strings for known
      * errnums are in returned buf, unknown errnums put a message in buf and
      * return buf */
     buf = strerror_r(errnum, buf, MPIR_STRERROR_BUF_SIZE);
-#  else
+#else
     /* strerror_r returns an int */
     strerror_r(errnum, buf, MPIR_STRERROR_BUF_SIZE);
-#  endif
+#endif
     return buf;
 
 #elif defined(HAVE_STRERROR)
@@ -52,7 +52,5 @@ const char *MPIR_Strerror(int errnum)
      * internal header file inclusion bug rather than an actually missing
      * strerror routine */
     return "(strerror() unavailable on this platform)"
-
 #endif
 }
-

@@ -42,12 +42,10 @@ int main(int argc, char *argv[])
             if (wrank == 0) {
                 MPI_Comm_spawn((char *) "./spaiccreate", MPI_ARGV_NULL, np,
                                MPI_INFO_NULL, 0, MPI_COMM_SELF, &intercomm, errcodes);
-            }
-            else {
+            } else {
                 intercomm = MPI_COMM_NULL;
             }
-        }
-        else
+        } else
             intercomm = parentcomm;
 
         /* We now have a valid intercomm.  Use it to create a NEW intercomm
@@ -58,8 +56,7 @@ int main(int argc, char *argv[])
          * parent */
         if (parentcomm == MPI_COMM_NULL) {
             MPI_Send(&wrank, 1, MPI_INT, 1, wrank, intercomm2);
-        }
-        else {
+        } else {
             if (wrank == 1) {
                 int i, rsize, rrank;
                 MPI_Status status;
@@ -91,8 +88,7 @@ int main(int argc, char *argv[])
         if (parentcomm == MPI_COMM_NULL) {
             MTest_Finalize(errs);
         }
-    }
-    else {
+    } else {
         MTest_Finalize(errs);
     }
 

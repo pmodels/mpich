@@ -49,50 +49,49 @@ inline int MPLI_shm_lhnd_close(MPL_shm_hnd_t hnd)
 #define FUNCNAME MPL_shm_seg_create_attach_templ
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPL_shm_seg_create_attach_templ(
-    MPL_shm_hnd_t hnd, intptr_t seg_sz, char **shm_addr_ptr,
-    int offset, int flag, MPL_memory_class class)
+static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t seg_sz,
+                                                  char **shm_addr_ptr, int offset, int flag,
+                                                  MPL_memory_class class)
 {
     MPLI_shm_lhnd_t lhnd = -1, rc = -1;
 
-    if(flag & MPLI_SHM_FLAG_SHM_CREATE){
+    if (flag & MPLI_SHM_FLAG_SHM_CREATE) {
         char dev_shm_fname[] = "/dev/shm/mpich_shar_tmpXXXXXX";
         char tmp_fname[] = "/tmp/mpich_shar_tmpXXXXXX";
         char *chosen_fname = NULL;
 
         chosen_fname = dev_shm_fname;
         lhnd = mkstemp(chosen_fname);
-        if(lhnd == -1){
+        if (lhnd == -1) {
             chosen_fname = tmp_fname;
             lhnd = mkstemp(chosen_fname);
         }
 
         MPLI_shm_lhnd_set(hnd, lhnd);
-        rc = (MPLI_shm_lhnd_t)lseek(lhnd, seg_sz - 1, SEEK_SET);
-        do{
+        rc = (MPLI_shm_lhnd_t) lseek(lhnd, seg_sz - 1, SEEK_SET);
+        do {
             rc = (int) write(lhnd, "", 1);
-        }while((rc == -1) && (errno == EINTR));
+        } while ((rc == -1) && (errno == EINTR));
 
         rc = MPLI_shm_ghnd_alloc(hnd, MPL_MEM_SHM);
         rc = MPLI_shm_ghnd_set_by_val(hnd, "%s", chosen_fname);
-    }
-    else{
+    } else {
         /* Open an existing shared memory seg */
-        if(!MPLI_shm_lhnd_is_valid(hnd)){
+        if (!MPLI_shm_lhnd_is_valid(hnd)) {
             lhnd = open(MPLI_shm_ghnd_get_by_ref(hnd), O_RDWR);
             MPLI_shm_lhnd_set(hnd, lhnd);
         }
     }
 
-    if(flag & MPLI_SHM_FLAG_SHM_ATTACH){
+    if (flag & MPLI_SHM_FLAG_SHM_ATTACH) {
         void *buf_ptr = NULL;
         buf_ptr = MPL_mmap(NULL, seg_sz, PROT_READ | PROT_WRITE,
                            MAP_SHARED, MPLI_shm_lhnd_get(hnd), 0, MPL_MEM_SHM);
-        *shm_addr_ptr = (char*)buf_ptr;
+        *shm_addr_ptr = (char *) buf_ptr;
     }
 
     /* FIXME: Close local handle only when closing the shm handle */
-    if(MPLI_shm_lhnd_is_valid(hnd)){
+    if (MPLI_shm_lhnd_is_valid(hnd)) {
         rc = MPLI_shm_lhnd_close(hnd);
     }
     return rc;
@@ -134,7 +133,8 @@ int MPL_shm_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
 {
     int rc = 0;
     rc = MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
-                            MPLI_SHM_FLAG_SHM_CREATE | MPLI_SHM_FLAG_SHM_ATTACH, MPL_MEM_SHM);
+                                         MPLI_SHM_FLAG_SHM_CREATE | MPLI_SHM_FLAG_SHM_ATTACH,
+                                         MPL_MEM_SHM);
     return rc;
 }
 
@@ -145,14 +145,14 @@ int MPL_shm_seg_create_and_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz,
  *                  the shared mem segment
  * offset : Offset to attach the shared memory address to
  */
-int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, char **shm_addr_ptr,
-                       int offset)
+int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, char **shm_addr_ptr, int offset)
 {
     int rc = 0;
     rc = MPL_shm_seg_create_attach_templ(hnd, seg_sz, shm_addr_ptr, offset,
                                          MPLI_SHM_FLAG_SHM_ATTACH, MPL_MEM_SHM);
     return rc;
 }
+
 /* Detach from an attached SHM segment */
 #undef FUNCNAME
 #define FUNCNAME MPL_shm_seg_detach
@@ -173,7 +173,7 @@ int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, char **shm_addr_ptr, intptr_t seg_sz)
 #define FUNCNAME MPL_shm_seg_remove
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int  MPL_shm_seg_remove(MPL_shm_hnd_t hnd)
+int MPL_shm_seg_remove(MPL_shm_hnd_t hnd)
 {
     int rc = -1;
 

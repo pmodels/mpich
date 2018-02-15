@@ -42,10 +42,10 @@ typedef enum {
     MPIDI_PTYPE_SSEND
 } MPIDI_ptype;
 
-#define MPIDI_CH4U_REQ_BUSY 		  (0x1)
-#define MPIDI_CH4U_REQ_PEER_SSEND 	  (0x1 << 1)
-#define MPIDI_CH4U_REQ_UNEXPECTED 	  (0x1 << 2)
-#define MPIDI_CH4U_REQ_UNEXP_DQUED 	  (0x1 << 3)
+#define MPIDI_CH4U_REQ_BUSY           (0x1)
+#define MPIDI_CH4U_REQ_PEER_SSEND     (0x1 << 1)
+#define MPIDI_CH4U_REQ_UNEXPECTED     (0x1 << 2)
+#define MPIDI_CH4U_REQ_UNEXP_DQUED    (0x1 << 3)
 #define MPIDI_CH4U_REQ_UNEXP_CLAIMED  (0x1 << 4)
 #define MPIDI_CH4U_REQ_RCV_NON_CONTIG (0x1 << 5)
 #define MPIDI_CH4U_REQ_MATCHED (0x1 << 6)
@@ -63,7 +63,7 @@ typedef struct MPIDI_CH4U_lreq_t {
     const void *src_buf;
     MPI_Count count;
     MPI_Datatype datatype;
-    uint64_t msg_tag;
+    uint64_t match_bits;
 } MPIDI_CH4U_lreq_t;
 
 typedef struct MPIDI_CH4U_rreq_t {
@@ -152,10 +152,10 @@ typedef struct MPIDI_CH4U_req_t {
     union {
     MPIDI_NM_REQUEST_AM_DECL} netmod_am;
     MPIDI_CH4U_req_ext_t *req;
-    MPIDI_ptype p_type;
+    MPIDI_ptype p_type;         /* persistent request type */
     void *buffer;
     uint64_t count;
-    uint64_t tag;
+    uint64_t match_bits;
     int rank;
     MPI_Datatype datatype;
 } MPIDI_CH4U_req_t;
@@ -290,6 +290,7 @@ typedef struct MPIDI_CH4U_win_sync {
 typedef struct MPIDI_CH4U_win_target {
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
+    MPIR_cc_t remote_acc_cmpl_cnts; /* for acc only, increase at OP issuing, decrease at remote completion */
     MPIDI_CH4U_win_target_sync_t sync;
     int rank;
     UT_hash_handle hash_handle;
@@ -303,6 +304,7 @@ typedef struct MPIDI_CH4U_win_t {
     /* per-window OP completion for fence */
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
+    MPIR_cc_t remote_acc_cmpl_cnts; /* for acc only, increase at OP issuing, decrease at remote completion */
 
     MPI_Aint *sizes;
     MPIDI_CH4U_win_sync_t sync;

@@ -9,16 +9,16 @@
 #define ERRCODES_H_INCLUDED
 
 /* Prototypes for internal routines for the errhandling module */
-int MPIR_Err_set_msg( int, const char * );
-int MPIR_Err_add_class( void );
-int MPIR_Err_add_code( int );
+int MPIR_Err_set_msg(int, const char *);
+int MPIR_Err_add_class(void);
+int MPIR_Err_add_code(int);
 
-/* 
+/*
    This file contains the definitions of the error code fields
-   
+
    An error code is organized as
 
-   is-dynamic? specific-msg-sequence# specific-msg-index 
+   is-dynamic? specific-msg-sequence# specific-msg-index
                                              generic-code is-fatal? class
 
    where
@@ -26,25 +26,25 @@ int MPIR_Err_add_code( int );
    is-dynamic?: Set if this is a dynamically created error code (using
       the routines to add error classes and codes at runtime).  This *must*
       be the top bit so that MPI_ERR_LASTCODE and MPI_LASTUSEDCODE can
-      be set properly.  (MPI_ERR_LASTCODE must be the largest valid 
+      be set properly.  (MPI_ERR_LASTCODE must be the largest valid
       error *code* from the predefined codes.  The standard text is poorly
-      worded here, but users and the rationale will expect to be able to 
+      worded here, but users and the rationale will expect to be able to
       perform (errcode <= MPI_ERR_LASTCODE).  See Section 8.5 in the MPI-2
       standard for MPI_LASTUSEDCODE.
    generic-code: Index into the array of generic messages
-   specific-msg-index: index to the *buffer* containing recent 
+   specific-msg-index: index to the *buffer* containing recent
    instance-specific error messages.
    specific-msg-sequence#: A sequence number used to check that the specific
    message text is still valid.
    is-fatal?: the error is fatal and should not be returned to the user
 
-   Note that error codes must also be positive integers, so we lose one 
-   bit (if they aren't positive, the comparisons agains MPI_ERR_LASTCODE 
+   Note that error codes must also be positive integers, so we lose one
+   bit (if they aren't positive, the comparisons agains MPI_ERR_LASTCODE
    and the value of the attribute MPI_LASTUSEDCODE will fail).
  */
 
 /* the error class bits are defined in mpir_err.h, are 0x0000007f */
-#define ERROR_CLASS_MASK          MPIR_ERR_CLASS_MASK  
+#define ERROR_CLASS_MASK          MPIR_ERR_CLASS_MASK
 #define ERROR_CLASS_SIZE          MPIR_ERR_CLASS_SIZE
 #define ERROR_DYN_MASK            0x40000000
 #define ERROR_DYN_SHIFT           30
@@ -64,4 +64,4 @@ int MPIR_Err_add_code( int );
 /* These must correspond to the masks defined above */
 #define ERROR_MAX_NCLASS ERROR_CLASS_SIZE
 #define ERROR_MAX_NCODE  8192
-#endif
+#endif /* ERRCODES_H_INCLUDED */

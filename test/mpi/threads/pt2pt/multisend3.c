@@ -30,7 +30,7 @@ static int nthreads = -1;
 MTEST_THREAD_RETURN_TYPE run_test_send(void *arg);
 MTEST_THREAD_RETURN_TYPE run_test_send(void *arg)
 {
-    int cnt, j, *buf, wsize;
+    int cnt, j, *buf, wsize, tag;
     int thread_num = (int) (long) arg;
     double t;
     static MPI_Request r[MAX_NTHREAD];
@@ -47,18 +47,17 @@ MTEST_THREAD_RETURN_TYPE run_test_send(void *arg)
     if (nthreads != wsize - 1)
         fprintf(stderr, "Panic wsize = %d nthreads = %d\n", wsize, nthreads);
 
-    for (cnt = 1; cnt < MAX_CNT; cnt = 2 * cnt) {
+    for (cnt = 1, tag = 1; cnt < MAX_CNT; cnt = 2 * cnt, tag++) {
         /* Wait for all senders to be ready */
         MTest_thread_barrier(nthreads);
 
         t = MPI_Wtime();
         for (j = 0; j < MAX_LOOP; j++) {
             MTest_thread_barrier(nthreads);
-            MPI_Isend(buf, cnt, MPI_INT, thread_num, cnt, MPI_COMM_WORLD, &r[thread_num - 1]);
+            MPI_Isend(buf, cnt, MPI_INT, thread_num, tag, MPI_COMM_WORLD, &r[thread_num - 1]);
             if (ownerWaits) {
                 MPI_Wait(&r[thread_num - 1], MPI_STATUS_IGNORE);
-            }
-            else {
+            } else {
                 /* Wait for all threads to start the sends */
                 MTest_thread_barrier(nthreads);
                 if (thread_num == 1) {
@@ -78,16 +77,16 @@ MTEST_THREAD_RETURN_TYPE run_test_send(void *arg)
 void run_test_recv(void);
 void run_test_recv(void)
 {
-    int cnt, j, *buf;
+    int cnt, j, *buf, tag;
     MPI_Status status;
     double t;
 
-    for (cnt = 1; cnt < MAX_CNT; cnt = 2 * cnt) {
+    for (cnt = 1, tag = 1; cnt < MAX_CNT; cnt = 2 * cnt, tag++) {
         buf = (int *) malloc(cnt * sizeof(int));
         MTEST_VG_MEM_INIT(buf, cnt * sizeof(int));
         t = MPI_Wtime();
         for (j = 0; j < MAX_LOOP; j++)
-            MPI_Recv(buf, cnt, MPI_INT, 0, cnt, MPI_COMM_WORLD, &status);
+            MPI_Recv(buf, cnt, MPI_INT, 0, tag, MPI_COMM_WORLD, &status);
         t = MPI_Wtime() - t;
         free(buf);
     }
@@ -127,8 +126,7 @@ int main(int argc, char **argv)
 
         MTest_Join_threads();
         MTest_thread_barrier_free();
-    }
-    else if (rank < MAX_NTHREAD) {
+    } else if (rank < MAX_NTHREAD) {
         run_test_recv();
     }
 

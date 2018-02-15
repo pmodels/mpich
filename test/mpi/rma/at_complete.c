@@ -60,8 +60,7 @@ int main(int argc, char **argv)
                     errors++;
                 }
             }
-        }
-        else if (rank == dest_rank) {
+        } else if (rank == dest_rank) {
             MPI_Win_fence(MPI_MODE_NOPRECEDE, win);
             MPI_Win_fence(MPI_MODE_NOSUCCEED, win);
 
@@ -101,8 +100,7 @@ int main(int argc, char **argv)
                     errors++;
                 }
             }
-        }
-        else if (rank == dest_rank) {
+        } else if (rank == dest_rank) {
             MPI_Win_post(orig_group, 0, win);
             MPI_Win_wait(win);
 

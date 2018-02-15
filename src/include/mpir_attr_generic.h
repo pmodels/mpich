@@ -112,21 +112,21 @@
 
 /* bit 0 distinguishes between pointers (0) and integers (1) */
 typedef enum {
-    MPIR_ATTR_PTR=0,
-    MPIR_ATTR_AINT=1,
-    MPIR_ATTR_INT=3
+    MPIR_ATTR_PTR = 0,
+    MPIR_ATTR_AINT = 1,
+    MPIR_ATTR_INT = 3
 } MPIR_Attr_type;
 
 #define MPII_ATTR_KIND(_a) (_a & 0x1)
 
-MPICH_API_PUBLIC int MPII_Comm_set_attr( MPI_Comm, int, void *, MPIR_Attr_type );
-MPICH_API_PUBLIC int MPII_Type_set_attr( MPI_Datatype, int, void *, MPIR_Attr_type );
-MPICH_API_PUBLIC int MPII_Win_set_attr( MPI_Win, int, void *, MPIR_Attr_type );
-MPICH_API_PUBLIC int MPII_Comm_get_attr( MPI_Comm, int, void *, int *, MPIR_Attr_type );
-MPICH_API_PUBLIC int MPII_Type_get_attr( MPI_Datatype, int, void *, int *, MPIR_Attr_type );
-MPICH_API_PUBLIC int MPII_Win_get_attr( MPI_Win, int, void *, int *, MPIR_Attr_type );
+MPICH_API_PUBLIC int MPII_Comm_set_attr(MPI_Comm, int, void *, MPIR_Attr_type);
+MPICH_API_PUBLIC int MPII_Type_set_attr(MPI_Datatype, int, void *, MPIR_Attr_type);
+MPICH_API_PUBLIC int MPII_Win_set_attr(MPI_Win, int, void *, MPIR_Attr_type);
+MPICH_API_PUBLIC int MPII_Comm_get_attr(MPI_Comm, int, void *, int *, MPIR_Attr_type);
+MPICH_API_PUBLIC int MPII_Type_get_attr(MPI_Datatype, int, void *, int *, MPIR_Attr_type);
+MPICH_API_PUBLIC int MPII_Win_get_attr(MPI_Win, int, void *, int *, MPIR_Attr_type);
 
-MPICH_API_PUBLIC int MPII_Comm_get_attr_fort( MPI_Comm, int, void *, int *, MPIR_Attr_type );
+MPICH_API_PUBLIC int MPII_Comm_get_attr_fort(MPI_Comm, int, void *, int *, MPIR_Attr_type);
 
 
 #if defined(__cplusplus)
@@ -150,39 +150,27 @@ extern "C" {
  * Consolidate Comm/Type/Win attribute functions together as the handle type is the same
  * use MPI_Comm for the prototypes
  */
-typedef
-int
-(MPII_Attr_copy_proxy)(
-    MPI_Comm_copy_attr_function* user_function,
-    int handle,
-    int keyval,
-    void* extra_state,
-    MPIR_Attr_type attrib_type,
-    void* attrib,
-    void** attrib_copy,
-    int* flag
-    );
+    typedef
+        int
+     (MPII_Attr_copy_proxy) (MPI_Comm_copy_attr_function * user_function,
+                             int handle,
+                             int keyval,
+                             void *extra_state,
+                             MPIR_Attr_type attrib_type,
+                             void *attrib, void **attrib_copy, int *flag);
 
-typedef
-int
-(MPII_Attr_delete_proxy)(
-    MPI_Comm_delete_attr_function* user_function,
-    int handle,
-    int keyval,
-    MPIR_Attr_type attrib_type,
-    void* attrib,
-    void* extra_state
-    );
+    typedef
+        int
+     (MPII_Attr_delete_proxy) (MPI_Comm_delete_attr_function * user_function,
+                               int handle,
+                               int keyval,
+                               MPIR_Attr_type attrib_type, void *attrib, void *extra_state);
 
-MPICH_API_PUBLIC void
-MPII_Keyval_set_proxy(
-    int keyval,
-    MPII_Attr_copy_proxy copy_proxy,
-    MPII_Attr_delete_proxy delete_proxy
-    );
+    MPICH_API_PUBLIC void
+        MPII_Keyval_set_proxy(int keyval,
+                              MPII_Attr_copy_proxy copy_proxy, MPII_Attr_delete_proxy delete_proxy);
 
 #if defined(__cplusplus)
 }
 #endif
-
-#endif /* MPIR_ATTR_GENERIC_H_INCLUDED */
+#endif                          /* MPIR_ATTR_GENERIC_H_INCLUDED */

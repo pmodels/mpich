@@ -53,8 +53,7 @@ int main(int argc, char *argv[])
             if (leftGroup) {
                 for (i = 0; i < count; i++)
                     sbuf[i] = i + rank * count;
-            }
-            else {
+            } else {
                 for (i = 0; i < count; i++)
                     sbuf[i] = -(i + rank * count);
             }
@@ -70,8 +69,7 @@ int main(int argc, char *argv[])
                         errs++;
                     }
                 }
-            }
-            else {
+            } else {
                 for (i = 0; i < count * rsize; i++) {
                     if (rbuf[i] != i) {
                         errs++;
@@ -94,8 +92,7 @@ int main(int argc, char *argv[])
                         errs++;
                     }
                 }
-            }
-            else {
+            } else {
                 for (i = 0; i < rsize; i++) {
                     recvcounts[i] = 0;
                     recvdispls[i] = 0;

@@ -57,8 +57,7 @@ static inline int MPIDI_OFI_win_allgather(MPIR_Win * win, void *base, int disp_u
     if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
         /* Context id in lower bits, instance in upper bits */
         MPIDI_OFI_WIN(win).mr_key = (gen_id << MPIDI_Global.context_shift) | window_instance;
-    }
-    else {
+    } else {
         MPIDI_OFI_WIN(win).mr_key = 0;
     }
 
@@ -84,7 +83,7 @@ static inline int MPIDI_OFI_win_allgather(MPIR_Win * win, void *base, int disp_u
         winfo[comm_ptr->rank].base = (uintptr_t) base;
     }
 
-    mpi_errno = MPID_Allgather(MPI_IN_PLACE, 0,
+    mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0,
                                MPI_DATATYPE_NULL,
                                winfo, sizeof(*winfo), MPI_BYTE, comm_ptr, &errflag);
     if (mpi_errno)
@@ -120,13 +119,11 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
                                      int disp_unit,
                                      MPIR_Win ** win_ptr,
                                      MPIR_Info * info,
-                                     MPIR_Comm * comm_ptr,
-                                     int create_flavor,
-                                     int model)
+                                     MPIR_Comm * comm_ptr, int create_flavor, int model)
 {
     int mpi_errno = MPI_SUCCESS;
     uint64_t window_instance;
-    MPIR_Win *win;
+    MPIR_Win *win = NULL;
     struct fi_info *finfo;
     struct fi_cntr_attr cntr_attr;
 
@@ -146,11 +143,12 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
 
     /* context id lower bits, window instance upper bits */
     window_instance =
-        MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator, MPL_MEM_RMA);
+        MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator,
+                                        MPL_MEM_RMA);
     MPIDI_OFI_WIN(win).win_id = ((uint64_t) comm_ptr->context_id) | (window_instance << 32);
     MPIDI_CH4U_map_set(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id, win, MPL_MEM_RMA);
 
-    if (MPIDI_OFI_ENABLE_STX_RMA && MPIDI_Global.stx_ctx != NULL) {
+    if (MPIR_CVAR_CH4_OFI_ENABLE_PER_WIN_SYNC && MPIDI_Global.stx_ctx != NULL) {
         /* Activate per-window EP/counter */
         int ret;
 
@@ -158,9 +156,28 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
         MPIR_Assert(finfo);
         finfo->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
         finfo->tx_attr->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
+        /* Update msg_order by accumulate ordering in window info.
+         * Accumulate ordering cannot easily be changed once the window has been created.
+         * OFI implementation ignores acc ordering hints issued in MPI_WIN_SET_INFO()
+         * after window is created. */
+        finfo->tx_attr->msg_order = FI_ORDER_NONE;  /* FI_ORDER_NONE is an alias for the value 0 */
+        if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAR) ==
+                MPIDI_CH4I_ACCU_ORDER_RAR )
+            finfo->tx_attr->msg_order |= FI_ORDER_RAR;
+        if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW) ==
+                MPIDI_CH4I_ACCU_ORDER_RAW )
+            finfo->tx_attr->msg_order |= FI_ORDER_RAW;
+        if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAR) ==
+                MPIDI_CH4I_ACCU_ORDER_WAR )
+            finfo->tx_attr->msg_order |= FI_ORDER_WAR;
+        if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAW) ==
+                MPIDI_CH4I_ACCU_ORDER_WAW )
+            finfo->tx_attr->msg_order |= FI_ORDER_WAW;
+
         finfo->rx_attr->caps = 0ULL; /* RX capabilities not needed */
 
         finfo->ep_attr->tx_ctx_cnt = FI_SHARED_CONTEXT; /* Request a shared context */
+        finfo->ep_attr->rx_ctx_cnt = 0; /* We don't need RX contexts */
         MPIDI_OFI_CALL_RETURN(fi_endpoint(MPIDI_Global.domain,
                                           finfo, &MPIDI_OFI_WIN(win).ep, NULL), ret);
         if (ret < 0) {
@@ -181,8 +198,8 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
 
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.stx_ctx->fid, 0), bind);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep,
-                                  &MPIDI_Global.ctx[0].cq->fid, FI_TRANSMIT | FI_SELECTIVE_COMPLETION),
-                       bind);
+                                  &MPIDI_Global.ctx[0].cq->fid,
+                                  FI_TRANSMIT | FI_SELECTIVE_COMPLETION), bind);
         MPIDI_OFI_CALL(fi_ep_bind
                        (MPIDI_OFI_WIN(win).ep, &MPIDI_OFI_WIN(win).cmpl_cntr->fid,
                         FI_READ | FI_WRITE), bind);
@@ -191,8 +208,7 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
         fi_freeinfo(finfo);
 
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_WIN(win).ep), ep_enable);
-    }
-    else {
+    } else {
       fallback_global:
 
         /* Fallback for the traditional global EP/counter model */
@@ -456,7 +472,7 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
     MPIDI_CH4U_ACCESS_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
     MPIDI_CH4U_EXPOSURE_EPOCH_CHECK_NONE(win, mpi_errno, return mpi_errno);
 
-    mpi_errno = MPID_Barrier(win->comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -468,7 +484,7 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
     if (MPIDI_OFI_WIN(win).ep != MPIDI_Global.ctx[0].tx)
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
     if (MPIDI_OFI_WIN(win).cmpl_cntr != MPIDI_Global.rma_cmpl_cntr)
-        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntr->fid), cqclose);
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntr->fid), cntrclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).mr->fid), mr_unreg);
     if (MPIDI_OFI_WIN(win).winfo) {
         MPL_free(MPIDI_OFI_WIN(win).winfo);
@@ -545,7 +561,7 @@ static inline int MPIDI_NM_mpi_win_create(void *base,
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    mpi_errno = MPID_Barrier(win->comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -615,12 +631,11 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
     shared_table[comm_ptr->rank].size = size;
     shared_table[comm_ptr->rank].disp_unit = disp_unit;
 
-    mpi_errno = MPID_Allgather(MPI_IN_PLACE,
+    mpi_errno = MPIR_Allgather(MPI_IN_PLACE,
                                0,
                                MPI_DATATYPE_NULL,
                                shared_table,
-                               sizeof(MPIDI_CH4U_win_shared_info_t),
-                               MPI_BYTE, comm_ptr, &errflag);
+                               sizeof(MPIDI_CH4U_win_shared_info_t), MPI_BYTE, comm_ptr, &errflag);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -644,14 +659,13 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
 
     if (comm_ptr->rank == 0)
         root_rank = MPIR_Process.comm_world->rank;
-    mpi_errno = MPID_Bcast(&root_rank, 1, MPI_INT, 0, comm_ptr, &errflag);
+    mpi_errno = MPIR_Bcast(&root_rank, 1, MPI_INT, 0, comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    shm_key = (char *) MPL_malloc(sizeof(char), MPL_MEM_SHM);
-    shm_key_size = snprintf(shm_key, 1, "/mpi-%s-%X-%" PRIx64,
+    shm_key_size = snprintf(NULL, 0, "/mpi-%s-%X-%" PRIx64,
                             MPIDI_CH4_Global.jobid, root_rank, MPIDI_OFI_WIN(win).win_id);
-    shm_key = (char *) MPL_realloc(shm_key, shm_key_size, MPL_MEM_SHM);
+    shm_key = (char *) MPL_malloc(shm_key_size, MPL_MEM_SHM);
     MPIR_Assert(shm_key);
     snprintf(shm_key, shm_key_size, "/mpi-%s-%X-%" PRIx64,
              MPIDI_CH4_Global.jobid, root_rank, MPIDI_OFI_WIN(win).win_id);
@@ -705,14 +719,18 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
                 if (first)
                     shm_unlink(shm_key);
 
+                mpi_errno = MPIR_Bcast_impl(&map_ptr, 1, MPI_UNSIGNED_LONG, 0, comm_ptr, &errflag);
                 MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
             }
         }
 
-        mpi_errno = MPID_Bcast(&map_ptr, 1, MPI_UNSIGNED_LONG, 0, comm_ptr, &errflag);
+        mpi_errno = MPIR_Bcast(&map_ptr, 1, MPI_UNSIGNED_LONG, 0, comm_ptr, &errflag);
 
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
+        MPIR_ERR_CHKANDSTMT(map_ptr == NULL ||
+                            map_ptr == MAP_FAILED, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail,
+                            "**nomem");
 
         unsigned map_fail = 0;
         if (comm_ptr->rank != 0) {
@@ -733,7 +751,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
 
         /* If any local process fails to sync range or mmap, then try more
          * addresses on rank 0. */
-        mpi_errno = MPID_Allreduce(&map_fail,
+        mpi_errno = MPIR_Allreduce(&map_fail,
                                    &anyfail, 1, MPI_UNSIGNED, MPI_BOR, comm_ptr, &errflag);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
@@ -770,7 +788,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
         MPIR_ERR_POP(mpi_errno);
 
     *(void **) base_ptr = (void *) win->base;
-    mpi_errno = MPID_Barrier(comm_ptr, &errflag);
+    mpi_errno = MPIR_Barrier(comm_ptr, &errflag);
 
     if (fd >= 0)
         close(fd);
@@ -784,6 +802,8 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_ALLOCATE_SHARED);
     return mpi_errno;
   fn_fail:
+    if (win_ptr)
+        MPIDI_CH4R_win_finalize(win_ptr);
     goto fn_exit;
 }
 
@@ -864,7 +884,7 @@ static inline int MPIDI_NM_mpi_win_allocate(MPI_Aint size,
         goto fn_fail;
 
     *(void **) baseptr = (void *) win->base;
-    mpi_errno = MPID_Barrier(comm, &errflag);
+    mpi_errno = MPIR_Barrier(comm, &errflag);
 
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
@@ -979,7 +999,7 @@ static inline int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info,
     if (rc != MPI_SUCCESS)
         goto fn_fail;
 
-    mpi_errno = MPID_Barrier(comm, &errflag);
+    mpi_errno = MPIR_Barrier(comm, &errflag);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_CREATE_DYNAMIC);

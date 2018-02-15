@@ -21,7 +21,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
                                       int tag,
                                       MPIR_Comm * comm,
                                       int context_offset,
-                                      MPIDI_av_entry_t *addr,
+                                      MPIDI_av_entry_t * addr,
                                       int *flag,
                                       MPI_Status * status,
                                       MPIR_Request ** message, uint64_t peek_flags)
@@ -46,8 +46,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     else
         rreq = &r;
 
-    match_bits =
-        MPIDI_OFI_init_recvtag(&mask_bits, comm->context_id + context_offset, source, tag);
+    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, comm->context_id + context_offset, source, tag);
 
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_PEEK;
     MPIDI_OFI_REQUEST(rreq, util_id) = MPIDI_OFI_PEEK_START;
@@ -62,7 +61,9 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     msg.data = 0;
 
     MPIDI_OFI_CALL_RETURN(fi_trecvmsg(MPIDI_Global.ctx[0].rx, &msg,
-                   peek_flags | FI_PEEK | FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0)), ofi_err);
+                                      peek_flags | FI_PEEK | FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA
+                                                                              ? FI_REMOTE_CQ_DATA :
+                                                                              0)), ofi_err);
     if (ofi_err == -FI_ENOMSG) {
         *flag = 0;
         if (message)
@@ -74,28 +75,28 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     MPIDI_OFI_PROGRESS_WHILE(MPIDI_OFI_REQUEST(rreq, util_id) == MPIDI_OFI_PEEK_START);
 
     switch (MPIDI_OFI_REQUEST(rreq, util_id)) {
-    case MPIDI_OFI_PEEK_NOT_FOUND:
-        *flag = 0;
+        case MPIDI_OFI_PEEK_NOT_FOUND:
+            *flag = 0;
 
-        if (message)
-            MPIR_Request_free(rreq);
+            if (message)
+                MPIR_Request_free(rreq);
 
-        goto fn_exit;
-        break;
+            goto fn_exit;
+            break;
 
-    case MPIDI_OFI_PEEK_FOUND:
-        MPIR_Request_extract_status(rreq, status);
-        *flag = 1;
+        case MPIDI_OFI_PEEK_FOUND:
+            MPIR_Request_extract_status(rreq, status);
+            *flag = 1;
 
-        if (message) {
-            MPIR_Request_add_ref(rreq);
-            *message = rreq;
-        }
+            if (message) {
+                MPIR_Request_add_ref(rreq);
+                *message = rreq;
+            }
 
-        break;
+            break;
 
-    default:
-        MPIR_Assert(0);
+        default:
+            MPIR_Assert(0);
     }
 
   fn_exit:
@@ -112,7 +113,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
 static inline int MPIDI_NM_mpi_improbe(int source,
                                        int tag,
                                        MPIR_Comm * comm,
-                                       int context_offset, MPIDI_av_entry_t *addr,
+                                       int context_offset, MPIDI_av_entry_t * addr,
                                        int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -121,7 +122,8 @@ static inline int MPIDI_NM_mpi_improbe(int source,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IMPROBE);
 
     if (!MPIDI_OFI_ENABLE_TAGGED) {
-        mpi_errno = MPIDI_CH4U_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
+        mpi_errno =
+            MPIDI_CH4U_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
         goto fn_exit;
     }
 
@@ -134,7 +136,7 @@ static inline int MPIDI_NM_mpi_improbe(int source,
         MPIR_Object_add_ref(comm);
     }
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IMPROBE);
     return mpi_errno;
 }
@@ -146,7 +148,8 @@ fn_exit:
 static inline int MPIDI_NM_mpi_iprobe(int source,
                                       int tag,
                                       MPIR_Comm * comm,
-                                      int context_offset, MPIDI_av_entry_t *addr, int *flag, MPI_Status * status)
+                                      int context_offset, MPIDI_av_entry_t * addr, int *flag,
+                                      MPI_Status * status)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IPROBE);
@@ -157,9 +160,10 @@ static inline int MPIDI_NM_mpi_iprobe(int source,
         goto fn_exit;
     }
 
-    mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr, flag, status, NULL, 0ULL);
+    mpi_errno =
+        MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr, flag, status, NULL, 0ULL);
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IPROBE);
     return mpi_errno;
 }

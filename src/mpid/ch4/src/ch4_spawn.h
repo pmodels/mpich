@@ -101,13 +101,13 @@ static inline void MPIDI_free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *cou
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_spawn_multiple(int count,
-                                                       char *commands[],
-                                                       char **argvs[],
-                                                       const int maxprocs[],
-                                                       MPIR_Info * info_ptrs[],
-                                                       int root,
-                                                       MPIR_Comm * comm_ptr,
-                                                       MPIR_Comm ** intercomm, int errcodes[])
+                                                      char *commands[],
+                                                      char **argvs[],
+                                                      const int maxprocs[],
+                                                      MPIR_Info * info_ptrs[],
+                                                      int root,
+                                                      MPIR_Comm * comm_ptr,
+                                                      MPIR_Comm ** intercomm, int errcodes[])
 {
     char port_name[MPI_MAX_PORT_NAME];
     int *info_keyval_sizes = 0, i, mpi_errno = MPI_SUCCESS;
@@ -138,15 +138,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_spawn_multiple(int count,
 
         info_keyval_sizes = (int *) MPL_malloc(count * sizeof(int), MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP(!info_keyval_sizes, mpi_errno, MPI_ERR_OTHER, "**nomem");
-        info_keyval_vectors = (PMI_keyval_t **) MPL_malloc(count * sizeof(PMI_keyval_t *), MPL_MEM_BUFFER);
+        info_keyval_vectors =
+            (PMI_keyval_t **) MPL_malloc(count * sizeof(PMI_keyval_t *), MPL_MEM_BUFFER);
         MPIR_ERR_CHKANDJUMP(!info_keyval_vectors, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         if (!info_ptrs)
             for (i = 0; i < count; i++) {
                 info_keyval_vectors[i] = 0;
                 info_keyval_sizes[i] = 0;
-            }
-        else
+        } else
             for (i = 0; i < count; i++) {
                 mpi_errno = MPIDI_mpi_to_pmi_keyvals(info_ptrs[i],
                                                      &info_keyval_vectors[i],
@@ -179,20 +179,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_spawn_multiple(int count,
 
     if (errcodes != MPI_ERRCODES_IGNORE) {
         MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-        mpi_errno = MPID_Bcast(&should_accept, 1, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPIR_Bcast(&should_accept, 1, MPI_INT, root, comm_ptr, &errflag);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPID_Bcast(&pmi_errno, 1, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPIR_Bcast(&pmi_errno, 1, MPI_INT, root, comm_ptr, &errflag);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPID_Bcast(&total_num_processes, 1, MPI_INT, root, comm_ptr, &errflag);
+        mpi_errno = MPIR_Bcast(&total_num_processes, 1, MPI_INT, root, comm_ptr, &errflag);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPID_Bcast(errcodes, total_num_processes, MPI_INT,
-                                    root, comm_ptr, &errflag);
+        mpi_errno = MPIR_Bcast(errcodes, total_num_processes, MPI_INT, root, comm_ptr, &errflag);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -201,8 +200,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_spawn_multiple(int count,
         mpi_errno = MPID_Comm_accept(port_name, NULL, root, comm_ptr, intercomm);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-    }
-    else {
+    } else {
         if ((pmi_errno == PMI_SUCCESS) && (errcodes[0] != 0)) {
             mpi_errno = MPIR_Comm_create(intercomm);
             if (mpi_errno)
@@ -240,9 +238,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_spawn_multiple(int count,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_connect(const char *port_name,
-                                                MPIR_Info * info,
-                                                int root, MPIR_Comm * comm,
-                                                MPIR_Comm ** newcomm_ptr)
+                                               MPIR_Info * info,
+                                               int root, MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int timeout = MPIR_CVAR_CH4_COMM_CONNECT_TIMEOUT;
@@ -257,8 +254,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_connect(const char *port_name,
             timeout = atoi(info_value);
         }
     }
-    mpi_errno = MPIDI_NM_mpi_comm_connect(port_name, info, root, timeout,
-                                          comm, newcomm_ptr);
+    mpi_errno = MPIDI_NM_mpi_comm_connect(port_name, info, root, timeout, comm, newcomm_ptr);
 
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -342,8 +338,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Close_port(const char *port_name)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_accept(const char *port_name,
-                                               MPIR_Info * info,
-                                               int root, MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
+                                              MPIR_Info * info,
+                                              int root, MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_ACCEPT);

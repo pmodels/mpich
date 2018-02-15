@@ -37,8 +37,7 @@ int main(int argc, char **argv)
                 errclass);
         MPI_Abort(MPI_COMM_WORLD, 1);
         errs++;
-    }
-    else if (0 != flag) {
+    } else if (0 != flag) {
         fprintf(stderr, "[%d] Expected flag to be 0. Received: %d\n", rank, flag);
         errs++;
     }
@@ -55,8 +54,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "[%d] Expected MPI_SUCCESS after agree. Received: %d\n", rank, errclass);
         MPI_Abort(MPI_COMM_WORLD, 1);
         errs++;
-    }
-    else if (0 != flag) {
+    } else if (0 != flag) {
         fprintf(stderr, "[%d] Expected flag to be 0. Received: %d\n", rank, flag);
         MPI_Abort(MPI_COMM_WORLD, 1);
         errs++;

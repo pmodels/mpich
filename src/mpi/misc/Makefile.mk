@@ -11,4 +11,5 @@ mpi_sources +=              \
     src/mpi/misc/version.c  \
     src/mpi/misc/library_version.c \
     src/mpi/misc/aint_add.c \
-    src/mpi/misc/aint_diff.c
+    src/mpi/misc/aint_diff.c \
+    src/mpi/misc/utils.c

@@ -91,11 +91,11 @@ int hcoll_initialize(void)
     hcoll_init_opts_t *init_opts;
     mpi_errno = MPI_SUCCESS;
 
-    hcoll_enable = (MPIR_CVAR_ENABLE_HCOLL | MPIR_CVAR_CH3_ENABLE_HCOLL) && !MPIR_ThreadInfo.isThreaded;
+    hcoll_enable = (MPIR_CVAR_ENABLE_HCOLL | MPIR_CVAR_CH3_ENABLE_HCOLL) &&
+        !MPIR_ThreadInfo.isThreaded;
     if (0 >= hcoll_enable) {
         goto fn_exit;
     }
-
 #if defined(MPL_USE_DBG_LOGGING)
     MPIR_DBG_HCOLL = MPL_dbg_class_alloc("HCOLL", "hcoll");
 #endif /* MPL_USE_DBG_LOGGING */
@@ -104,7 +104,7 @@ int hcoll_initialize(void)
 
     hcoll_read_init_opts(&init_opts);
     init_opts->base_tag = MPIR_FIRST_HCOLL_TAG;
-    init_opts->max_tag  = MPIR_LAST_HCOLL_TAG;
+    init_opts->max_tag = MPIR_LAST_HCOLL_TAG;
 
 #if defined MPICH_IS_THREADED
     init_opts->enable_thread_support = MPIR_ThreadInfo.isThreaded;
@@ -118,9 +118,9 @@ int hcoll_initialize(void)
 
     if (!hcoll_initialized) {
         hcoll_initialized = 1;
-        mpi_errno = MPID_Progress_register_hook(hcoll_do_progress,
-                                                &hcoll_progress_hook_id);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPID_Progress_register_hook(hcoll_do_progress, &hcoll_progress_hook_id);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
         MPID_Progress_activate_hook(hcoll_progress_hook_id);
     }

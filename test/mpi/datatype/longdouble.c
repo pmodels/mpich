@@ -53,8 +53,7 @@ int main(int argc, char *argv[])
 #endif
         if (errs) {
             printf("found %d errors\n", errs);
-        }
-        else {
+        } else {
             printf(" No errors\n");
         }
     }

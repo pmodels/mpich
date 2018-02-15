@@ -179,12 +179,12 @@ int main(int argc, char *argv[])
                    MPI_Accumulate(rmabuf, count, MPI_INT, TARGET, 0, count, MPI_INT, MPI_SUM, win);
 );
         TEST_PT_OP("Accumulate_derived",
-                   MPI_Accumulate(rmabuf, count, derived_dtp, TARGET, 0,
-                                  count, derived_dtp, MPI_SUM, win);
+                   MPI_Accumulate(rmabuf, count, derived_dtp, TARGET, 0, count, derived_dtp,
+                                  MPI_SUM, win);
 );
         TEST_PT_OP("Get accumulate",
-                   MPI_Get_accumulate(rmabuf, count, MPI_INT, result, count,
-                                      MPI_INT, TARGET, 0, count, MPI_INT, MPI_SUM, win);
+                   MPI_Get_accumulate(rmabuf, count, MPI_INT, result, count, MPI_INT, TARGET, 0,
+                                      count, MPI_INT, MPI_SUM, win);
 );
 
         /* Note: It's not possible to generate a zero-byte FOP or CAS */

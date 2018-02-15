@@ -43,8 +43,7 @@ int main(int argc, char *argv[])
             if (leftGroup) {
                 for (i = 0; i < count; i++)
                     sendbuf[i] = i;
-            }
-            else {
+            } else {
                 for (i = 0; i < count; i++)
                     sendbuf[i] = -i;
             }
@@ -66,8 +65,7 @@ int main(int argc, char *argv[])
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 for (i = 0; i < count; i++) {
                     if (recvbuf[i] != i * rsize) {
                         errs++;

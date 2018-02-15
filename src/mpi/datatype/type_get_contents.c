@@ -20,7 +20,8 @@
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Type_get_contents(MPI_Datatype datatype, int max_integers, int max_addresses,
                           int max_datatypes, int array_of_integers[],
-                          MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[]) __attribute__((weak,alias("PMPI_Type_get_contents")));
+                          MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[])
+    __attribute__ ((weak, alias("PMPI_Type_get_contents")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -29,8 +30,6 @@ int MPI_Type_get_contents(MPI_Datatype datatype, int max_integers, int max_addre
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Type_get_contents
 #define MPI_Type_get_contents PMPI_Type_get_contents
-
-#endif
 
 /*@
   MPIR_Type_get_contents - get content information from datatype
@@ -52,8 +51,7 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
                            int max_addresses,
                            int max_datatypes,
                            int array_of_integers[],
-                           MPI_Aint array_of_addresses[],
-                           MPI_Datatype array_of_datatypes[])
+                           MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[])
 {
     int i, mpi_errno;
     MPIR_Datatype *dtp;
@@ -67,8 +65,7 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
     MPIR_Assert(datatype != MPI_FLOAT_INT &&
                 datatype != MPI_DOUBLE_INT &&
                 datatype != MPI_LONG_INT &&
-                datatype != MPI_SHORT_INT &&
-                datatype != MPI_LONG_DOUBLE_INT);
+                datatype != MPI_SHORT_INT && datatype != MPI_LONG_DOUBLE_INT);
     /* --END ERROR HANDLING-- */
 
     MPIR_Datatype_get_ptr(datatype, dtp);
@@ -76,10 +73,7 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
     MPIR_Assert(cp != NULL);
 
     /* --BEGIN ERROR HANDLING-- */
-    if (max_integers < cp->nr_ints ||
-        max_addresses < cp->nr_aints ||
-        max_datatypes < cp->nr_types)
-    {
+    if (max_integers < cp->nr_ints || max_addresses < cp->nr_aints || max_datatypes < cp->nr_types) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                          "MPIR_Type_get_contents", __LINE__,
                                          MPI_ERR_OTHER, "**dtype", 0);
@@ -87,8 +81,7 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
     }
     /* --END ERROR HANDLING-- */
 
-    if (cp->nr_ints > 0)
-    {
+    if (cp->nr_ints > 0) {
         MPII_Datatype_get_contents_ints(cp, array_of_integers);
     }
 
@@ -100,10 +93,8 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
         MPII_Datatype_get_contents_types(cp, array_of_datatypes);
     }
 
-    for (i=0; i < cp->nr_types; i++)
-    {
-        if (HANDLE_GET_KIND(array_of_datatypes[i]) != HANDLE_KIND_BUILTIN)
-        {
+    for (i = 0; i < cp->nr_types; i++) {
+        if (HANDLE_GET_KIND(array_of_datatypes[i]) != HANDLE_KIND_BUILTIN) {
             MPIR_Datatype_get_ptr(array_of_datatypes[i], dtp);
             MPIR_Datatype_add_ref(dtp);
         }
@@ -111,6 +102,8 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
 
     return MPI_SUCCESS;
 }
+
+#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_get_contents
@@ -137,89 +130,84 @@ Output Parameters:
 .N MPI_SUCCESS
 @*/
 int MPI_Type_get_contents(MPI_Datatype datatype,
-			  int max_integers,
-			  int max_addresses,
-			  int max_datatypes,
-			  int array_of_integers[],
-			  MPI_Aint array_of_addresses[],
-			  MPI_Datatype array_of_datatypes[])
+                          int max_integers,
+                          int max_addresses,
+                          int max_datatypes,
+                          int array_of_integers[],
+                          MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[])
 {
     static const char FCNAME[] = "MPI_Type_get_contents";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_GET_CONTENTS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_GET_CONTENTS);
-    
+
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
+            MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
-    
+#endif
+
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_Datatype *datatype_ptr = NULL;
 
-	    /* Check for built-in type */
-	    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
-		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-						 MPIR_ERR_RECOVERABLE,
-						 FCNAME, __LINE__,
-						 MPI_ERR_TYPE,
-						 "**contentspredef", 0);
-		goto fn_fail;
-	    }
+            /* Check for built-in type */
+            if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
+                mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
+                                                 MPIR_ERR_RECOVERABLE,
+                                                 FCNAME, __LINE__,
+                                                 MPI_ERR_TYPE, "**contentspredef", 0);
+                goto fn_fail;
+            }
 
-	    /* all but MPI_2INT of the pair types are not stored as builtins
-	     * but should be treated similarly.
-	     */
-	    if (datatype == MPI_FLOAT_INT ||
-		datatype == MPI_DOUBLE_INT ||
-		datatype == MPI_LONG_INT ||
-		datatype == MPI_SHORT_INT ||
-		datatype == MPI_LONG_DOUBLE_INT)
-	    {
-		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-						 MPIR_ERR_RECOVERABLE,
-						 FCNAME, __LINE__,
-						 MPI_ERR_TYPE,
-						 "**contentspredef", 0);
-		goto fn_fail;
-	    }
+            /* all but MPI_2INT of the pair types are not stored as builtins
+             * but should be treated similarly.
+             */
+            if (datatype == MPI_FLOAT_INT ||
+                datatype == MPI_DOUBLE_INT ||
+                datatype == MPI_LONG_INT ||
+                datatype == MPI_SHORT_INT || datatype == MPI_LONG_DOUBLE_INT) {
+                mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
+                                                 MPIR_ERR_RECOVERABLE,
+                                                 FCNAME, __LINE__,
+                                                 MPI_ERR_TYPE, "**contentspredef", 0);
+                goto fn_fail;
+            }
 
             /* Convert MPI object handles to object pointers */
             MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
             /* Validate datatype_ptr */
             MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-	    /* If comm_ptr is not value, it will be reset to null */
-            if (mpi_errno) goto fn_fail;
+            /* If comm_ptr is not value, it will be reset to null */
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
     mpi_errno = MPIR_Type_get_contents(datatype,
-				       max_integers,
-				       max_addresses,
-				       max_datatypes,
-				       array_of_integers,
-				       array_of_addresses,
-				       array_of_datatypes);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                                       max_integers,
+                                       max_addresses,
+                                       max_datatypes,
+                                       array_of_integers, array_of_addresses, array_of_datatypes);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     /* ... end of body of routine ... */
 
@@ -230,18 +218,17 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_type_get_contents",
-	    "**mpi_type_get_contents %D %d %d %d %p %p %p", datatype, max_integers, max_addresses, max_datatypes,
-	    array_of_integers, array_of_addresses, array_of_datatypes);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_type_get_contents",
+                                 "**mpi_type_get_contents %D %d %d %d %p %p %p", datatype,
+                                 max_integers, max_addresses, max_datatypes, array_of_integers,
+                                 array_of_addresses, array_of_datatypes);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
-
-

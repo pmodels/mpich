@@ -49,14 +49,11 @@ int main(int argc, char **argv)
     for (i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-byteonly") == 0) {
             testCases = BYTE_ONLY;
-        }
-        else if (strcmp(argv[i], "-twostruct") == 0) {
+        } else if (strcmp(argv[i], "-twostruct") == 0) {
             testCases = TWO_STRUCT;
-        }
-        else if (strcmp(argv[i], "-onelevel") == 0) {
+        } else if (strcmp(argv[i], "-onelevel") == 0) {
             isOneLevel = 1;
-        }
-        else {
+        } else {
             printf("Unrecognized argument %s\n", argv[i]);
         }
     }
@@ -82,8 +79,7 @@ int main(int argc, char **argv)
         if (isOneLevel) {
             blens[0] = sizeof(nullDptr);
             dtypes[0] = MPI_BYTE;
-        }
-        else {
+        } else {
             blens[0] = 1;
             dtypes[0] = dptrType;
         }

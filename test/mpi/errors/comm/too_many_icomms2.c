@@ -46,24 +46,21 @@ int main(int argc, char **argv)
     for (i = 0; i < MAX_NCOMM; i++) {
         /* Note: the comms we create are all dups of MPI_COMM_WORLD */
         MPI_Comm_idup(MPI_COMM_WORLD, &comm_hdls[i], &req[block++]);
-        if(block == WAIT_COMM ){
+        if (block == WAIT_COMM) {
             mpi_errno = MPI_Waitall(block, req, error_status);
             if (mpi_errno == MPI_SUCCESS) {
-                ncomm+=block;
-            }
-            else {
+                ncomm += block;
+            } else {
                 if (verbose)
                     printf("%d: Error creating comm %d\n", rank, i);
-                for(j = 0; j <  block; j++) {
-                    if(error_status[j].MPI_ERROR == MPI_SUCCESS){
-                        ncomm+=1;
-                    }
-                    else if(error_status[j].MPI_ERROR == MPI_ERR_PENDING) {
+                for (j = 0; j < block; j++) {
+                    if (error_status[j].MPI_ERROR == MPI_SUCCESS) {
+                        ncomm += 1;
+                    } else if (error_status[j].MPI_ERROR == MPI_ERR_PENDING) {
                         mpi_errno = MPI_Wait(&req[j], MPI_STATUSES_IGNORE);
-                        if(mpi_errno == MPI_SUCCESS) {
-                            ncomm+=1;
-                        }
-                        else {
+                        if (mpi_errno == MPI_SUCCESS) {
+                            ncomm += 1;
+                        } else {
                             if (verbose)
                                 printf("%d: Error creating comm %d\n", rank, i);
                         }
@@ -76,13 +73,12 @@ int main(int argc, char **argv)
             block = 0;
         }
     }
-    if(block != 0) {
+    if (block != 0) {
         mpi_errno = MPI_Waitall(block, req, MPI_STATUSES_IGNORE);
         if (mpi_errno == MPI_SUCCESS) {
-            ncomm+=block;
-        }
-        else {
-           if (verbose)
+            ncomm += block;
+        } else {
+            if (verbose)
                 printf("%d: Error creating comm %d\n", rank, i);
             errors = 0;
         }

@@ -34,7 +34,6 @@ static void signal_cb(int signum)
             HYDU_dump(stderr, "No checkpoint prefix provided\n");
             return;
         }
-
 #if HAVE_ALARM
         if (HYD_ui_mpich_info.ckpoint_int != -1)
             alarm(HYD_ui_mpich_info.ckpoint_int);
@@ -174,8 +173,7 @@ int main(int argc, char **argv)
         /* If we already have a host list at this point, it must have
          * come from the user */
         user_provided_host_list = 1;
-    }
-    else {
+    } else {
         /* Node list is not created yet. The user might not have
          * provided the host file. Query the RMK. */
         status = HYDT_bsci_query_node_list(&HYD_server_info.node_list);
@@ -399,14 +397,11 @@ int main(int argc, char **argv)
         printf("This typically refers to a problem with your application.\n");
         printf("Please see the FAQ page for debugging suggestions\n");
         return exit_status;
-    }
-    else if (WIFEXITED(exit_status)) {
+    } else if (WIFEXITED(exit_status)) {
         return WEXITSTATUS(exit_status);
-    }
-    else if (WIFSTOPPED(exit_status)) {
+    } else if (WIFSTOPPED(exit_status)) {
         return WSTOPSIG(exit_status);
-    }
-    else {
+    } else {
         return exit_status;
     }
 

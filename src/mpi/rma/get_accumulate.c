@@ -16,10 +16,10 @@
 #pragma _CRI duplicate MPI_Get_accumulate as PMPI_Get_accumulate
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Get_accumulate(const void *origin_addr, int origin_count,
-                        MPI_Datatype origin_datatype, void *result_addr, int result_count,
-                        MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-                        int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win)
-                        __attribute__((weak,alias("PMPI_Get_accumulate")));
+                       MPI_Datatype origin_datatype, void *result_addr, int result_count,
+                       MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                       int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win)
+    __attribute__ ((weak, alias("PMPI_Get_accumulate")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -97,9 +97,9 @@ the target buffer. 'MPI_NO_OP' can be used only in 'MPI_Get_accumulate',
 .seealso: MPI_Rget_accumulate MPI_Fetch_and_op
 @*/
 int MPI_Get_accumulate(const void *origin_addr, int origin_count,
-        MPI_Datatype origin_datatype, void *result_addr, int result_count,
-        MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-        int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win)
+                       MPI_Datatype origin_datatype, void *result_addr, int result_count,
+                       MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                       int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win)
 {
     static const char FCNAME[] = "MPI_Get_accumulate";
     int mpi_errno = MPI_SUCCESS;
@@ -107,12 +107,12 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_ACCUMULATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_GET_ACCUMULATE);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -120,21 +120,22 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
-    
+#endif /* HAVE_ERROR_CHECKING */
+
     /* Convert MPI object handles to object pointers */
-    MPIR_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr(win, win_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Comm * comm_ptr;
-            
+            MPIR_Comm *comm_ptr;
+
             /* Validate win_ptr */
-            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
-            if (mpi_errno) goto fn_fail;
+            MPIR_Win_valid_ptr(win_ptr, mpi_errno);
+            if (mpi_errno)
+                goto fn_fail;
 
             if (op != MPI_NO_OP) {
                 /* NOTE: when op is MPI_NO_OP, origin_addr is allowed to be NULL,
@@ -153,38 +154,40 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
             if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC)
                 MPIR_ERRTEST_DISP(target_disp, mpi_errno);
 
-            if (op != MPI_NO_OP &&
-                HANDLE_GET_KIND(origin_datatype) != HANDLE_KIND_BUILTIN)
-            {
+            if (op != MPI_NO_OP && HANDLE_GET_KIND(origin_datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
-                
+
                 MPIR_Datatype_get_ptr(origin_datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
                 MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
             }
 
-            if (HANDLE_GET_KIND(result_datatype) != HANDLE_KIND_BUILTIN)
-            {
+            if (HANDLE_GET_KIND(result_datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
-                
+
                 MPIR_Datatype_get_ptr(result_datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
                 MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
             }
 
-            if (HANDLE_GET_KIND(target_datatype) != HANDLE_KIND_BUILTIN)
-            {
+            if (HANDLE_GET_KIND(target_datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
-                
+
                 MPIR_Datatype_get_ptr(target_datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
                 MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
             }
 
             comm_ptr = win_ptr->comm_ptr;
@@ -193,17 +196,18 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
+
     mpi_errno = MPID_Get_accumulate(origin_addr, origin_count,
                                     origin_datatype,
                                     result_addr, result_count,
                                     result_datatype,
                                     target_rank, target_disp, target_count,
                                     target_datatype, op, win_ptr);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     /* ... end of body of routine ... */
 
@@ -214,17 +218,18 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_get_accumulate",
-            "**mpi_get_accumulate %p %d %D %p %d %D %d %d %d %D %O %W", origin_addr, origin_count, origin_datatype,
-            result_addr, result_count, result_datatype,
-            target_rank, target_disp, target_count, target_datatype, op, win);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_get_accumulate",
+                                 "**mpi_get_accumulate %p %d %D %p %d %D %d %d %d %D %O %W",
+                                 origin_addr, origin_count, origin_datatype, result_addr,
+                                 result_count, result_datatype, target_rank, target_disp,
+                                 target_count, target_datatype, op, win);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-

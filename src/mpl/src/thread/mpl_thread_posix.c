@@ -47,7 +47,8 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
     int err = MPL_THREAD_SUCCESS;
 
     /* FIXME: faster allocation, or avoid it all together? */
-    thread_info = (struct MPLI_thread_info *) MPL_malloc(sizeof(struct MPLI_thread_info), MPL_MEM_THREAD);
+    thread_info =
+        (struct MPLI_thread_info *) MPL_malloc(sizeof(struct MPLI_thread_info), MPL_MEM_THREAD);
     if (thread_info != NULL) {
         pthread_attr_t attr;
 
@@ -95,8 +96,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
         /* FIXME: convert error to an MPL_THREAD_ERR value */
 #endif
         pthread_attr_destroy(&attr);
-    }
-    else {
+    } else {
         err = 1000000000;
     }
 

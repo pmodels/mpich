@@ -65,7 +65,7 @@ int usleep(useconds_t usec);
  * - sub 1, giving all 1s starting at third-to-msb digit  (0011...1111)
  * - shift left 1                                         (0111...1110)
  * - add 1, yielding all 1s in positive space             (0111...1111) */
-#define LLONG_MAX (((((long long) 1 << (sizeof(long long) * CHAR_BIT - 2)) - 1 ) << 1) + 1)
+#define LLONG_MAX (((((long long) 1 << (sizeof(long long) * CHAR_BIT - 2)) - 1) << 1) + 1)
 #endif
 #endif /* defined(HAVE_LONG_LONG_INT) */
 
@@ -95,7 +95,7 @@ int usleep(useconds_t usec);
 
 #if defined(HAVE_VSNPRINTF) && defined(NEEDS_VSNPRINTF_DECL) && !defined(vsnprintf)
 int vsnprintf(char *str, size_t size, const char *format, va_list ap);
-# endif
+#endif
 
 
 /*****************************************************************************
@@ -197,6 +197,8 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpii_f77interface.h"
 #endif
 
+#include "coll_types.h"
+#include "coll_impl.h"
 
 /*****************************************************************************/
 /********************** PART 4: DEVICE PRE DECLARATION ***********************/
@@ -237,4 +239,4 @@ typedef struct MPIR_Topology MPIR_Topology;
 #undef FUNCNAME
 #undef FCNAME
 
-#endif /* MPIIMPL_INCLUDED */
+#endif /* MPIIMPL_H_INCLUDED */

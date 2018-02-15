@@ -20,10 +20,11 @@ int main(int argc, char **argv)
     MPI_Comm_size(comm, &size);
     MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
-    MPI_Comm_split( comm, 0, size - rank, &newcomm );
-    MPI_Comm_group( newcomm, &g1);
-    ranks = (int *)malloc( size * sizeof(int) );
-    for (i=0; i<size; i++) ranks[i] = i;
+    MPI_Comm_split(comm, 0, size - rank, &newcomm);
+    MPI_Comm_group(newcomm, &g1);
+    ranks = (int *) malloc(size * sizeof(int));
+    for (i = 0; i < size; i++)
+        ranks[i] = i;
     nranks = size;
 
     /*Checking group_ranslate_ranks for NULL variable */
@@ -40,4 +41,3 @@ int main(int argc, char **argv)
     MPI_Finalize();
     return 0;
 }
-

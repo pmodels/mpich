@@ -30,7 +30,7 @@ static int nthreads = -1;
 MTEST_THREAD_RETURN_TYPE run_test_sendrecv(void *arg);
 MTEST_THREAD_RETURN_TYPE run_test_sendrecv(void *arg)
 {
-    int cnt, j, *buf, wsize;
+    int cnt, j, *buf, wsize, tag;
     int thread_num = (int) (long) arg;
     double t;
     int myrloc = 2 * thread_num;
@@ -44,7 +44,7 @@ MTEST_THREAD_RETURN_TYPE run_test_sendrecv(void *arg)
     if (nthreads != wsize)
         fprintf(stderr, "Panic wsize = %d nthreads = %d\n", wsize, nthreads);
 
-    for (cnt = 1; cnt < MAX_CNT; cnt = 2 * cnt) {
+    for (cnt = 1, tag = 1; cnt < MAX_CNT; cnt = 2 * cnt, tag++) {
         buf = (int *) malloc(2 * cnt * sizeof(int));
         MTEST_VG_MEM_INIT(buf, 2 * cnt * sizeof(int));
 
@@ -54,13 +54,12 @@ MTEST_THREAD_RETURN_TYPE run_test_sendrecv(void *arg)
         t = MPI_Wtime();
         for (j = 0; j < MAX_LOOP; j++) {
             MTest_thread_barrier(nthreads);
-            MPI_Isend(buf, cnt, MPI_INT, thread_num, cnt, MPI_COMM_WORLD, &r[myrloc]);
-            MPI_Irecv(buf + cnt, cnt, MPI_INT, thread_num, cnt, MPI_COMM_WORLD, &r[myrloc + 1]);
+            MPI_Isend(buf, cnt, MPI_INT, thread_num, tag, MPI_COMM_WORLD, &r[myrloc]);
+            MPI_Irecv(buf + cnt, cnt, MPI_INT, thread_num, tag, MPI_COMM_WORLD, &r[myrloc + 1]);
             /* Wait for all threads to start the sends */
             if (ownerWaits) {
                 MPI_Waitall(2, &r[myrloc], MPI_STATUSES_IGNORE);
-            }
-            else {
+            } else {
                 /* Wait for all threads to create their requests */
                 MTest_thread_barrier(nthreads);
                 if (thread_num == 1)

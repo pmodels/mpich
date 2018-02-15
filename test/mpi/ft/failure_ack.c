@@ -104,8 +104,7 @@ int main(int argc, char **argv)
         }
 
         fprintf(stdout, " No errors\n");
-    }
-    else if (rank == 2) {
+    } else if (rank == 2) {
         MPI_Ssend(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
 
         exit(EXIT_FAILURE);

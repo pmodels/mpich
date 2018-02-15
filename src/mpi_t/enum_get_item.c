@@ -14,7 +14,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_enum_get_item as PMPI_T_enum_get_item
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, int *name_len) __attribute__((weak,alias("PMPI_T_enum_get_item")));
+int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, int *name_len)
+    __attribute__ ((weak, alias("PMPI_T_enum_get_item")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -62,9 +63,9 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int index, int *value, char *name, 
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_ENUM_GET_ITEM);
 
     /* Validate parameters */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_ENUM_HANDLE(enumtype, mpi_errno);
             MPIR_ERRTEST_ENUM_ITEM(enumtype, index, mpi_errno);
@@ -73,33 +74,33 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int index, int *value, char *name, 
              * permitted per MPI_T standard.
              */
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
-    item = (enum_item_t *)utarray_eltptr(enumtype->items, index);
+    item = (enum_item_t *) utarray_eltptr(enumtype->items, index);
     *value = item->value;
     MPIR_T_strncpy(name, item->name, name_len);
 
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_ENUM_GET_ITEM);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_enum_get_item", "**mpi_t_enum_get_item %p %d %p %p %p",
-            enumtype, index, value, name, name_len);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_t_enum_get_item", "**mpi_t_enum_get_item %p %d %p %p %p",
+                                 enumtype, index, value, name, name_len);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

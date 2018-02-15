@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPL_SOCK_H_INCLUDED)
+#ifndef MPL_SOCK_H_INCLUDED
 #define MPL_SOCK_H_INCLUDED
 
 #include "mplconfig.h"
@@ -18,7 +18,7 @@
 #include <limits.h>
 
 #ifdef MPL_HAVE_SYS_TYPES_H
-#include <sys/types.h> /* macs need sys/types.h before uio.h can be included */
+#include <sys/types.h>  /* macs need sys/types.h before uio.h can be included */
 #endif
 #ifdef MPL_HAVE_SYS_UIO_H
 #include <sys/uio.h>
@@ -43,4 +43,4 @@ ssize_t MPL_large_readv(int fd, const struct iovec *iov, int iovcnt);
 #endif
 /* *INDENT-OFF* */
 
-#endif /* !defined(MPL_SOCK_H_INCLUDED) */
+#endif /* MPL_SOCK_H_INCLUDED */

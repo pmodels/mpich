@@ -135,14 +135,12 @@ int test_communicators(void)
             printf("incorrect lo group rank: %d\n", rank);
             fflush(stdout);
             MPI_Abort(MPI_COMM_WORLD, 3002);
-        }
-        else {
+        } else {
             /* printf("lo in\n");FFLUSH; */
             MPI_Barrier(lo_comm);
             /* printf("lo out\n");FFLUSH; */
         }
-    }
-    else {
+    } else {
         if (lo_comm != MPI_COMM_NULL) {
             errs++;
             printf("incorrect lo comm:\n");

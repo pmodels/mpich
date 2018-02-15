@@ -203,8 +203,7 @@ static HYD_status genv_fn(char *arg, char ***argv)
         }
         env_value = MPL_strdup(**argv);
         (*argv)++;
-    }
-    else {
+    } else {
         env_value = MPL_strdup(str[1]);
     }
 
@@ -335,8 +334,7 @@ static HYD_status mfile_fn(char *arg, char ***argv)
     if (strcmp(**argv, "HYDRA_USE_LOCALHOST")) {
         status = HYDU_parse_hostfile(**argv, &HYD_server_info.node_list, HYDU_process_mfile_token);
         HYDU_ERR_POP(status, "error parsing hostfile\n");
-    }
-    else {
+    } else {
         if (gethostname(localhost, MAX_HOSTNAME_LEN) < 0)
             HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
 
@@ -439,7 +437,6 @@ static HYD_status profile_fn(char *arg, char ***argv)
         /* global variable already set; ignore */
         goto fn_exit;
     }
-
 #if !defined ENABLE_PROFILING
     HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "profiling support not compiled in\n");
 #endif /* ENABLE_PROFILING */
@@ -647,8 +644,7 @@ static HYD_status env_fn(char *arg, char ***argv)
         }
         env_value = MPL_strdup(**argv);
         (*argv)++;
-    }
-    else {
+    } else {
         env_value = MPL_strdup(str[1]);
     }
 
@@ -903,14 +899,30 @@ static void bind_to_help_fn(void)
     printf("            user:0+2,1+4,3,2 -- user specified binding\n");
     printf("\n");
     printf("        Architecture aware options (part within the {} braces are optional):\n");
-    printf("            board{:<n>}      -- bind to 'n' motherboards\n");
+    printf("            machine          -- bind to machine\n");
     printf("            numa{:<n>}       -- bind to 'n' numa domains\n");
     printf("            socket{:<n>}     -- bind to 'n' sockets\n");
     printf("            core{:<n>}       -- bind to 'n' cores\n");
     printf("            hwthread{:<n>}   -- bind to 'n' hardware threads\n");
     printf("            l1cache{:<n>}    -- bind to processes on 'n' L1 cache domains\n");
+    printf("            l1dcache{:<n>}   -- bind to processes on 'n' L1 data cache domain\n");
+    printf("            l1icache{:<n>}   -- bind to processes on 'n' L1 instruction cache domain\n");
+    printf("            l1ucache{:<n>}   -- bind to processes on 'n' L1 unified cache domain\n");
     printf("            l2cache{:<n>}    -- bind to processes on 'n' L2 cache domains\n");
-    printf("            l3cache{:<n>}    -- bind to processes on 'n' L3 cache domains\n");
+    printf("            l2dcache{:<n>}   -- bind to processes on 'n' L2 data cache domain\n");
+    printf("            l2icache{:<n>}   -- bind to processes on 'n' L2 instruction cache domain\n");
+    printf("            l2ucache{:<n>}   -- bind to processes on 'n' L2 unified cache domain\n");
+    printf("            l3cache{:<n>}    -- bind to processes on 'n' L3 cache domain\n");
+    printf("            l3dcache{:<n>}   -- bind to processes on 'n' L3 data cache domain\n");
+    printf("            l3icache{:<n>}   -- bind to processes on 'n' L3 instruction cache domain\n");
+    printf("            l3ucache{:<n>}   -- bind to processes on 'n' L3 unified cache domain\n");
+    printf("            l4cache{:<n>}    -- bind to processes on 'n' L4 cache domain\n");
+    printf("            l4dcache{:<n>}   -- bind to processes on 'n' L4 data cache domain\n");
+    printf("            l4ucache{:<n>}   -- bind to processes on 'n' L4 unified cache domain\n");
+    printf("            l5cache{:<n>}    -- bind to processes on 'n' L5 cache domain\n");
+    printf("            l5dcache{:<n>}   -- bind to processes on 'n' L5 data cache domain\n");
+    printf("            l5ucache{:<n>}   -- bind to processes on 'n' L5 unified cache domain\n");
+
 
     printf("\n\n");
 
@@ -919,14 +931,24 @@ static void bind_to_help_fn(void)
     printf("        Default: <same option as binding>\n");
     printf("\n");
     printf("        Architecture aware options:\n");
-    printf("            board            -- map to motherboard\n");
+    printf("            machine          -- map to machine\n");
     printf("            numa             -- map to numa domain\n");
     printf("            socket           -- map to socket\n");
     printf("            core             -- map to core\n");
     printf("            hwthread         -- map to hardware thread\n");
     printf("            l1cache          -- map to L1 cache domain\n");
+    printf("            l1dcache         -- map to L1 data cache domain\n");
+    printf("            l1icache         -- map to L1 instruction cache domain\n");
+    printf("            l1ucache         -- map to L1 unified cache domain\n");
     printf("            l2cache          -- map to L2 cache domain\n");
+    printf("            l2dcache         -- map to L2 data cache domain\n");
+    printf("            l2icache         -- map to L2 instruction cache domain\n");
+    printf("            l2ucache         -- map to L2 unified cache domain\n");
     printf("            l3cache          -- map to L3 cache domain\n");
+    printf("            l3dcache         -- map to L3 data cache domain\n");
+    printf("            l3icache         -- map to L3 instruction cache domain\n");
+    printf("            l3ucache         -- map to L3 unified cache domain\n");
+
 
     printf("\n\n");
 
@@ -940,7 +962,6 @@ static void bind_to_help_fn(void)
     printf("            nexttouch         -- closest to process that next touches memory\n");
     printf("            bind:<list>       -- bind to memory node list\n");
     printf("            interleave:<list> -- interleave among memory node list\n");
-    printf("            replicate:<list>  -- replicate among memory node list\n");
 }
 
 static HYD_status bind_to_fn(char *arg, char ***argv)
@@ -1671,8 +1692,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
             ret = open(conf_file, O_RDONLY);
             if (ret < 0) {
                 MPL_free(conf_file);
-            }
-            else {
+            } else {
                 close(ret);
                 config_file = conf_file;
                 goto config_file_check_exit;
@@ -1684,8 +1704,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
         ret = open(conf_file, O_RDONLY);
         if (ret < 0) {
             MPL_free(conf_file);
-        }
-        else {
+        } else {
             close(ret);
             config_file = conf_file;
             goto config_file_check_exit;
@@ -1716,8 +1735,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
         HYD_server_info.base_path = NULL;
         status = HYDU_find_in_path(progname, &HYD_server_info.base_path);
         HYDU_ERR_POP(status, "error while searching for executable in the user path\n");
-    }
-    else {      /* There is a path */
+    } else {    /* There is a path */
         *(++loc) = 0;
 
         /* Check if its absolute or relative */
@@ -1729,8 +1747,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
             status = HYDU_str_alloc_and_join(tmp, &HYD_server_info.base_path);
             HYDU_ERR_POP(status, "unable to join strings\n");
             HYDU_free_strlist(tmp);
-        }
-        else {  /* absolute */
+        } else {        /* absolute */
             HYD_server_info.base_path = MPL_strdup(post);
         }
     }

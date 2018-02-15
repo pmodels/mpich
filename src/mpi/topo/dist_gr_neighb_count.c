@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Dist_graph_neighbors_count as PMPI_Dist_graph_neighbors_count
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree, int *weighted) __attribute__((weak,alias("PMPI_Dist_graph_neighbors_count")));
+int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree, int *weighted)
+    __attribute__ ((weak, alias("PMPI_Dist_graph_neighbors_count")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -31,20 +32,23 @@ int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree,
 #define FUNCNAME MPIR_Dist_graph_neighbors_count_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Dist_graph_neighbors_count_impl(MPIR_Comm *comm_ptr, int *indegree, int *outdegree, int *weighted)
+int MPIR_Dist_graph_neighbors_count_impl(MPIR_Comm * comm_ptr, int *indegree, int *outdegree,
+                                         int *weighted)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Topology *topo_ptr = NULL;
 
     topo_ptr = MPIR_Topology_get(comm_ptr);
-    MPIR_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPI_ERR_TOPOLOGY, "**notdistgraphtopo");
+    MPIR_ERR_CHKANDJUMP(!topo_ptr ||
+                        topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPI_ERR_TOPOLOGY,
+                        "**notdistgraphtopo");
     *indegree = topo_ptr->topo.dist_graph.indegree;
     *outdegree = topo_ptr->topo.dist_graph.outdegree;
     *weighted = topo_ptr->topo.dist_graph.is_weighted;
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -85,7 +89,7 @@ int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree,
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS_COUNT);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -93,18 +97,19 @@ int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree,
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif
+#endif
 
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, TRUE);
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
 
             MPIR_ERRTEST_ARGNULL(indegree, "indegree", mpi_errno);
             MPIR_ERRTEST_ARGNULL(outdegree, "outdegree", mpi_errno);
@@ -112,12 +117,13 @@ int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree,
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Dist_graph_neighbors_count_impl(comm_ptr, indegree, outdegree, weighted);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
@@ -128,16 +134,16 @@ int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree,
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_dist_graph_neighbors_count", "**mpi_dist_graph_neighbors_count %C %p %p %p",
-            comm, indegree, outdegree, weighted);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_dist_graph_neighbors_count",
+                                 "**mpi_dist_graph_neighbors_count %C %p %p %p", comm, indegree,
+                                 outdegree, weighted);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-

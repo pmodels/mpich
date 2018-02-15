@@ -44,8 +44,7 @@ int run_tests(MPI_Comm comm)
             fprintf(stderr, "Source not set correctly in status on %d\n", rank);
             fflush(stderr);
         }
-    }
-    else if (rank == size - 1) {
+    } else if (rank == size - 1) {
         dest = 0;
         a = rank;
         b = -1;

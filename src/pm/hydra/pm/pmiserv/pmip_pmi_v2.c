@@ -119,14 +119,12 @@ static HYD_status poke_progress(char *key)
             if (list_head == NULL) {
                 list_head = req;
                 list_tail = req;
-            }
-            else {
+            } else {
                 list_tail->next = req;
                 req->prev = list_tail;
                 list_tail = req;
             }
-        }
-        else {
+        } else {
             status = fn_info_getnodeattr(req->fd, req->args);
             HYDU_ERR_POP(status, "getnodeattr returned error\n");
 
@@ -194,8 +192,7 @@ static HYD_status fn_fullinit(int fd, char *args[])
     }
     if (HYD_pmcd_pmip.user_global.debug) {
         HYD_STRING_STASH(stash, MPL_strdup(";debugged=TRUE;pmiverbose=TRUE"), status);
-    }
-    else {
+    } else {
         HYD_STRING_STASH(stash, MPL_strdup(";debugged=FALSE;pmiverbose=FALSE"), status);
     }
     HYD_STRING_STASH(stash, MPL_strdup(";rc=0;"), status);
@@ -364,15 +361,13 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
 
         send_cmd_downstream(fd, cmd);
         MPL_free(cmd);
-    }
-    else if (waitval && !strcmp(waitval, "TRUE")) {
+    } else if (waitval && !strcmp(waitval, "TRUE")) {
         /* The client wants to wait for a response; queue up the request */
         status = HYD_pmcd_pmi_v2_queue_req(fd, -1, -1, args, key, &pending_reqs);
         HYDU_ERR_POP(status, "unable to queue request\n");
 
         goto fn_exit;
-    }
-    else {
+    } else {
         /* Tell the client that we can't find the attribute */
         HYD_STRING_STASH_INIT(stash);
         HYD_STRING_STASH(stash, MPL_strdup("cmd=info-getnodeattr-response;"), status);
@@ -434,8 +429,7 @@ static HYD_status fn_info_getjobattr(int fd, char *args[])
 
         send_cmd_downstream(fd, cmd);
         MPL_free(cmd);
-    }
-    else {
+    } else {
         status = send_cmd_upstream("cmd=info-getjobattr;", fd, args);
         HYDU_ERR_POP(status, "error sending command upstream\n");
     }

@@ -26,11 +26,12 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const int sendcounts[], const int sdispls[],
-                             const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
-                             const int rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm *comm_ptr,
-                             MPIR_Errflag_t *errflag)
+                                   const MPI_Datatype sendtypes[], void *recvbuf,
+                                   const int recvcounts[], const int rdispls[],
+                                   const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
+                                   MPIR_Errflag_t * errflag)
 {
-    int        comm_size, i;
+    int comm_size, i;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status *starray;
@@ -44,51 +45,60 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const int sendcounts[], 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
+#ifdef HAVE_ERROR_CHECKING
     /* When MPI_IN_PLACE, we use pair-wise sendrecv_replace in order to conserve memory usage,
      * which is keeping with the spirit of the MPI-2.2 Standard.  But
      * because of this approach all processes must agree on the global
      * schedule of sendrecv_replace operations to avoid deadlock.
      */
-    MPIR_Assert (sendbuf != MPI_IN_PLACE);
+    MPIR_Assert(sendbuf != MPI_IN_PLACE);
+#endif
 
     bblock = MPIR_CVAR_ALLTOALL_THROTTLE;
-    if (bblock == 0) bblock = comm_size;
+    if (bblock == 0)
+        bblock = comm_size;
 
-    MPIR_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*bblock*sizeof(MPI_Status),  mpi_errno, "starray", MPL_MEM_BUFFER);
-    MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request**, 2*bblock*sizeof(MPIR_Request *), mpi_errno, "reqarray", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(starray, MPI_Status *, 2 * bblock * sizeof(MPI_Status), mpi_errno,
+                        "starray", MPL_MEM_BUFFER);
+    MPIR_CHKLMEM_MALLOC(reqarray, MPIR_Request **, 2 * bblock * sizeof(MPIR_Request *), mpi_errno,
+                        "reqarray", MPL_MEM_BUFFER);
 
     /* post only bblock isends/irecvs at a time as suggested by Tony Ladd */
-    for (ii=0; ii<comm_size; ii+=bblock) {
+    for (ii = 0; ii < comm_size; ii += bblock) {
         outstanding_requests = 0;
-        ss = comm_size-ii < bblock ? comm_size-ii : bblock;
+        ss = comm_size - ii < bblock ? comm_size - ii : bblock;
 
         /* do the communication -- post ss sends and receives: */
-        for ( i=0; i<ss; i++ ) { 
-            dst = (rank+i+ii) % comm_size;
+        for (i = 0; i < ss; i++) {
+            dst = (rank + i + ii) % comm_size;
             if (recvcounts[dst]) {
                 MPIR_Datatype_get_size_macro(recvtypes[dst], type_size);
                 if (type_size) {
-                    mpi_errno = MPIC_Irecv((char *)recvbuf+rdispls[dst],
-                                              recvcounts[dst], recvtypes[dst], dst,
-                                              MPIR_ALLTOALLW_TAG, comm_ptr,
-                                              &reqarray[outstanding_requests]);
-                    if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
+                    mpi_errno = MPIC_Irecv((char *) recvbuf + rdispls[dst],
+                                           recvcounts[dst], recvtypes[dst], dst,
+                                           MPIR_ALLTOALLW_TAG, comm_ptr,
+                                           &reqarray[outstanding_requests]);
+                    if (mpi_errno) {
+                        MPIR_ERR_POP(mpi_errno);
+                    }
 
                     outstanding_requests++;
                 }
             }
         }
 
-        for ( i=0; i<ss; i++ ) { 
-            dst = (rank-i-ii+comm_size) % comm_size;
+        for (i = 0; i < ss; i++) {
+            dst = (rank - i - ii + comm_size) % comm_size;
             if (sendcounts[dst]) {
                 MPIR_Datatype_get_size_macro(sendtypes[dst], type_size);
                 if (type_size) {
-                    mpi_errno = MPIC_Isend((char *)sendbuf+sdispls[dst],
-                                              sendcounts[dst], sendtypes[dst], dst,
-                                              MPIR_ALLTOALLW_TAG, comm_ptr,
-                                              &reqarray[outstanding_requests], errflag);
-                    if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
+                    mpi_errno = MPIC_Isend((char *) sendbuf + sdispls[dst],
+                                           sendcounts[dst], sendtypes[dst], dst,
+                                           MPIR_ALLTOALLW_TAG, comm_ptr,
+                                           &reqarray[outstanding_requests], errflag);
+                    if (mpi_errno) {
+                        MPIR_ERR_POP(mpi_errno);
+                    }
 
                     outstanding_requests++;
                 }
@@ -96,11 +106,12 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const int sendcounts[], 
         }
 
         mpi_errno = MPIC_Waitall(outstanding_requests, reqarray, starray, errflag);
-        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) MPIR_ERR_POP(mpi_errno);
-        
+        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
+            MPIR_ERR_POP(mpi_errno);
+
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno == MPI_ERR_IN_STATUS) {
-            for (i=0; i<outstanding_requests; i++) {
+            for (i = 0; i < outstanding_requests; i++) {
                 if (starray[i].MPI_ERROR != MPI_SUCCESS) {
                     mpi_errno = starray[i].MPI_ERROR;
                     if (mpi_errno) {
@@ -112,7 +123,7 @@ int MPIR_Alltoallw_intra_scattered(const void *sendbuf, const int sendcounts[], 
                 }
             }
         }
-        /* --END ERROR HANDLING-- */   
+        /* --END ERROR HANDLING-- */
     }
 
   fn_exit:

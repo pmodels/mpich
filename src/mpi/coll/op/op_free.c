@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Op_free as PMPI_Op_free
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Op_free(MPI_Op *op) __attribute__((weak,alias("PMPI_Op_free")));
+int MPI_Op_free(MPI_Op * op) __attribute__ ((weak, alias("PMPI_Op_free")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -32,9 +32,9 @@ int MPI_Op_free(MPI_Op *op) __attribute__((weak,alias("PMPI_Op_free")));
 
 /*@
   MPI_Op_free - Frees a user-defined combination function handle
- 
+
 Input Parameters:
-. op - operation (handle) 
+. op - operation (handle)
 
   Notes:
   'op' is set to 'MPI_OP_NULL' on exit.
@@ -52,71 +52,71 @@ Input Parameters:
 
 .seealso: MPI_Op_create
 @*/
-int MPI_Op_free(MPI_Op *op)
+int MPI_Op_free(MPI_Op * op)
 {
 #ifdef HAVE_ERROR_CHECKING
     static const char FCNAME[] = "MPI_Op_free";
 #endif
     MPIR_Op *op_ptr = NULL;
-    int     in_use;
-    int     mpi_errno = MPI_SUCCESS;
+    int in_use;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_FREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_OP_FREE);
-    
-    MPIR_Op_get_ptr( *op, op_ptr );
-#   ifdef HAVE_ERROR_CHECKING
+
+    MPIR_Op_get_ptr(*op, op_ptr);
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_Op_valid_ptr( op_ptr, mpi_errno );
-	    if (!mpi_errno) {
-		if (op_ptr->kind < MPIR_OP_KIND__USER_NONCOMMUTE) {
-		    mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
-                         MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP,
-						      "**permop", 0 );
-		}
-	    }
-            if (mpi_errno) goto fn_fail;
+            MPIR_Op_valid_ptr(op_ptr, mpi_errno);
+            if (!mpi_errno) {
+                if (op_ptr->kind < MPIR_OP_KIND__USER_NONCOMMUTE) {
+                    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
+                                                     MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                                     MPI_ERR_OP, "**permop", 0);
+                }
+            }
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
-    
+#endif /* HAVE_ERROR_CHECKING */
+
     /* ... body of routine ...  */
-    
-    MPIR_Op_release_ref( op_ptr, &in_use);
+
+    MPIR_Op_release_ref(op_ptr, &in_use);
     if (!in_use) {
-	MPIR_Handle_obj_free( &MPIR_Op_mem, op_ptr );
+        MPIR_Handle_obj_free(&MPIR_Op_mem, op_ptr);
 #ifdef MPID_Op_free_hook
         MPID_Op_free_hook(op_ptr);
 #endif
     }
     *op = MPI_OP_NULL;
-    
+
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_OP_FREE);
-        MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-	return mpi_errno;
-	
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    return mpi_errno;
+
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
   fn_fail:
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
-	    "**mpi_op_free", "**mpi_op_free %p", op);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_op_free", "**mpi_op_free %p", op);
     }
-    mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
+    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
     goto fn_exit;
-#   endif
+#endif
     /* --END ERROR HANDLING-- */
 }
-

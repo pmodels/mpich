@@ -48,9 +48,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int appnum,
                                          int *tag_ub,
                                          MPIR_Comm * comm_world,
-                                         MPIR_Comm * comm_self,
-                                         int spawned,
-                                         int *n_vnis_provided)
+                                         MPIR_Comm * comm_self, int spawned, int *n_vnis_provided)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
@@ -144,7 +142,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPL_str_add_binary_arg(&buscard, &val_sz_left, "PTI", (char *) &MPIDI_PTL_global.pt,
                                sizeof(MPIDI_PTL_global.pt));
 
-    MPL_snprintf(keyS, key_max_sz*sizeof(char), "PTL-%d", rank);
+    MPL_snprintf(keyS, key_max_sz * sizeof(char), "PTL-%d", rank);
     buscard = valS;
     ret = PMI_KVS_Put(MPIDI_PTL_global.kvsname, keyS, buscard);
     ret = PMI_KVS_Commit(MPIDI_PTL_global.kvsname);
@@ -153,7 +151,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* get and store business cards in address table */
     MPIDI_PTL_global.addr_table = MPL_malloc(size * sizeof(MPIDI_PTL_addr_t), MPL_MEM_ADDRESS);
     for (i = 0; i < size; i++) {
-        MPL_snprintf(keyS, key_max_sz*sizeof(char), "PTL-%d", i);
+        MPL_snprintf(keyS, key_max_sz * sizeof(char), "PTL-%d", i);
         ret = PMI_KVS_Get(MPIDI_PTL_global.kvsname, keyS, valS, val_max_sz);
         MPL_str_get_binary_arg(valS, "NID",
                                (char *) &MPIDI_PTL_global.addr_table[i].process.phys.nid,
@@ -168,11 +166,13 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* Setup CH4R Active Messages */
     MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
     for (i = 0; i < MPIDI_PTL_NUM_OVERFLOW_BUFFERS; i++) {
-        MPIDI_PTL_global.overflow_bufs[i] = MPL_malloc(MPIDI_PTL_OVERFLOW_BUFFER_SZ, MPL_MEM_BUFFER);
+        MPIDI_PTL_global.overflow_bufs[i] =
+            MPL_malloc(MPIDI_PTL_OVERFLOW_BUFFER_SZ, MPL_MEM_BUFFER);
         MPIDI_PTL_append_overflow(i);
     }
 
-    MPIDI_PTL_global.node_map = MPL_malloc(size * sizeof(*MPIDI_PTL_global.node_map), MPL_MEM_ADDRESS);
+    MPIDI_PTL_global.node_map =
+        MPL_malloc(size * sizeof(*MPIDI_PTL_global.node_map), MPL_MEM_ADDRESS);
     mpi_errno =
         MPIDI_CH4U_build_nodemap(rank, comm_world, size, MPIDI_PTL_global.node_map,
                                  &MPIDI_PTL_global.max_node_id);
@@ -254,7 +254,8 @@ static inline int MPIDI_NM_mpi_free_mem(void *ptr)
     return MPIDI_CH4U_mpi_free_mem(ptr);
 }
 
-static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr, MPL_memory_class class)
+static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr,
+                                           MPL_memory_class class)
 {
     return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr, class);
 }

@@ -73,8 +73,7 @@ int main(int argc, char **argv)
     /* print message and exit */
     if (errs) {
         fprintf(stderr, "Found %d errors\n", errs);
-    }
-    else {
+    } else {
         printf(" No Errors\n");
     }
     MPI_Finalize();
@@ -123,18 +122,18 @@ int subarray_1d_c_test1(void)
     for (i = 0; i < 9; i++) {
         int goodval;
         switch (i) {
-        case 1:
-            goodval = 1;
-            break;
-        case 2:
-            goodval = 2;
-            break;
-        case 3:
-            goodval = 3;
-            break;
-        default:
-            goodval = 0;        /* pack_and_unpack() zeros before unpacking */
-            break;
+            case 1:
+                goodval = 1;
+                break;
+            case 2:
+                goodval = 2;
+                break;
+            case 3:
+                goodval = 3;
+                break;
+            default:
+                goodval = 0;    /* pack_and_unpack() zeros before unpacking */
+                break;
         }
         if (array[i] != goodval) {
             errs++;
@@ -190,18 +189,18 @@ int subarray_1d_fortran_test1(void)
     for (i = 0; i < 9; i++) {
         int goodval;
         switch (i) {
-        case 1:
-            goodval = 1;
-            break;
-        case 2:
-            goodval = 2;
-            break;
-        case 3:
-            goodval = 3;
-            break;
-        default:
-            goodval = 0;        /* pack_and_unpack() zeros before unpacking */
-            break;
+            case 1:
+                goodval = 1;
+                break;
+            case 2:
+                goodval = 2;
+                break;
+            case 3:
+                goodval = 3;
+                break;
+            default:
+                goodval = 0;    /* pack_and_unpack() zeros before unpacking */
+                break;
         }
         if (array[i] != goodval) {
             errs++;
@@ -260,21 +259,21 @@ int subarray_2d_c_test1(void)
     for (i = 0; i < 9; i++) {
         int goodval;
         switch (i) {
-        case 4:
-            goodval = 1;
-            break;
-        case 5:
-            goodval = 2;
-            break;
-        case 7:
-            goodval = 3;
-            break;
-        case 8:
-            goodval = 4;
-            break;
-        default:
-            goodval = 0;
-            break;
+            case 4:
+                goodval = 1;
+                break;
+            case 5:
+                goodval = 2;
+                break;
+            case 7:
+                goodval = 3;
+                break;
+            case 8:
+                goodval = 4;
+                break;
+            default:
+                goodval = 0;
+                break;
         }
         if (array[i] != goodval) {
             errs++;
@@ -331,15 +330,15 @@ int subarray_2d_c_test2(void)
     for (i = 0; i < 12; i++) {
         int goodval;
         switch (i) {
-        case 4:
-            goodval = 1;
-            break;
-        case 5:
-            goodval = 2;
-            break;
-        default:
-            goodval = 0;
-            break;
+            case 4:
+                goodval = 1;
+                break;
+            case 5:
+                goodval = 2;
+                break;
+            default:
+                goodval = 0;
+                break;
         }
         if (array[i] != goodval) {
             errs++;
@@ -408,27 +407,27 @@ int subarray_4d_c_test1(void)
     for (i = 0; i < 72; i++) {
         int goodval;
         switch (i) {
-        case 40:
-            goodval = 1;
-            break;
-        case 46:
-            goodval = 2;
-            break;
-        case 52:
-            goodval = 3;
-            break;
-        case 58:
-            goodval = 4;
-            break;
-        case 64:
-            goodval = 5;
-            break;
-        case 70:
-            goodval = 6;
-            break;
-        default:
-            goodval = 0;
-            break;
+            case 40:
+                goodval = 1;
+                break;
+            case 46:
+                goodval = 2;
+                break;
+            case 52:
+                goodval = 3;
+                break;
+            case 58:
+                goodval = 4;
+                break;
+            case 64:
+                goodval = 5;
+                break;
+            case 70:
+                goodval = 6;
+                break;
+            default:
+                goodval = 0;
+                break;
         }
         if (array[i] != goodval) {
             errs++;
@@ -498,27 +497,27 @@ int subarray_4d_fortran_test1(void)
     for (i = 0; i < 72; i++) {
         int goodval;
         switch (i) {
-        case 40:
-            goodval = 1;
-            break;
-        case 46:
-            goodval = 2;
-            break;
-        case 52:
-            goodval = 3;
-            break;
-        case 58:
-            goodval = 4;
-            break;
-        case 64:
-            goodval = 5;
-            break;
-        case 70:
-            goodval = 6;
-            break;
-        default:
-            goodval = 0;
-            break;
+            case 40:
+                goodval = 1;
+                break;
+            case 46:
+                goodval = 2;
+                break;
+            case 52:
+                goodval = 3;
+                break;
+            case 58:
+                goodval = 4;
+                break;
+            case 64:
+                goodval = 5;
+                break;
+            case 70:
+                goodval = 6;
+                break;
+            default:
+                goodval = 0;
+                break;
         }
         if (array[i] != goodval) {
             errs++;
@@ -577,15 +576,15 @@ int subarray_2d_fortran_test1(void)
     for (i = 0; i < 12; i++) {
         int goodval;
         switch (i) {
-        case 4:
-            goodval = 1;
-            break;
-        case 5:
-            goodval = 2;
-            break;
-        default:
-            goodval = 0;
-            break;
+            case 4:
+                goodval = 1;
+                break;
+            case 5:
+                goodval = 2;
+                break;
+            default:
+                goodval = 0;
+                break;
         }
         if (array[i] != goodval) {
             errs++;

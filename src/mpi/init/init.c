@@ -60,7 +60,7 @@ cvars:
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Init as PMPI_Init
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Init(int *argc, char ***argv) __attribute__((weak,alias("PMPI_Init")));
+int MPI_Init(int *argc, char ***argv) __attribute__ ((weak, alias("PMPI_Init")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -86,7 +86,7 @@ int MPIR_async_thread_initialized = 0;
    MPI_Init - Initialize the MPI execution environment
 
 Input Parameters:
-+  argc - Pointer to the number of arguments 
++  argc - Pointer to the number of arguments
 -  argv - Pointer to the argument vector
 
 Thread and Signal Safety:
@@ -107,7 +107,7 @@ Notes for C:
 Notes for Fortran:
 The Fortran binding for 'MPI_Init' has only the error return
 .vb
-    subroutine MPI_INIT( ierr )
+    subroutine MPI_INIT(ierr)
     integer ierr
 .ve
 
@@ -117,7 +117,7 @@ The Fortran binding for 'MPI_Init' has only the error return
 
 .seealso: MPI_Init_thread, MPI_Finalize
 @*/
-int MPI_Init( int *argc, char ***argv )
+int MPI_Init(int *argc, char ***argv)
 {
     static const char FCNAME[] = "MPI_Init";
     int mpi_errno = MPI_SUCCESS;
@@ -127,23 +127,25 @@ int MPI_Init( int *argc, char ***argv )
 
     rc = MPID_Wtime_init();
 #ifdef MPL_USE_DBG_LOGGING
-    MPL_dbg_pre_init( argc, argv, rc );
+    MPL_dbg_pre_init(argc, argv, rc);
 #endif
 
     MPIR_FUNC_TERSE_INIT_ENTER(MPID_STATE_MPI_INIT);
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             if (OPA_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT) {
-                mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-						  "**inittwice", NULL );
-	    }
-            if (mpi_errno) goto fn_fail;
+                mpi_errno =
+                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                         MPI_ERR_OTHER, "**inittwice", NULL);
+            }
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
 
@@ -175,8 +177,9 @@ int MPI_Init( int *argc, char ***argv )
     if (MPIR_CVAR_ASYNC_PROGRESS)
         threadLevel = MPI_THREAD_MULTIPLE;
 
-    mpi_errno = MPIR_Init_thread( argc, argv, threadLevel, &provided );
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    mpi_errno = MPIR_Init_thread(argc, argv, threadLevel, &provided);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     if (MPIR_CVAR_ASYNC_PROGRESS) {
 #if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_ARGOBOTS
@@ -185,11 +188,11 @@ int MPI_Init( int *argc, char ***argv )
 #else
         if (provided == MPI_THREAD_MULTIPLE) {
             mpi_errno = MPIR_Init_async_thread();
-            if (mpi_errno) goto fn_fail;
+            if (mpi_errno)
+                goto fn_fail;
 
             MPIR_async_thread_initialized = 1;
-        }
-        else {
+        } else {
             printf("WARNING: No MPI_THREAD_MULTIPLE support (needed for async progress)\n");
         }
 #endif
@@ -204,14 +207,14 @@ int MPI_Init( int *argc, char ***argv )
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_REPORTING
+#ifdef HAVE_ERROR_REPORTING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
-	    "**mpi_init", "**mpi_init %p %p", argc, argv);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_init", "**mpi_init %p %p", argc, argv);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
     return mpi_errno;
     /* --END ERROR HANDLING-- */
 }

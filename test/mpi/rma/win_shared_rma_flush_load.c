@@ -72,7 +72,7 @@ static inline void issue_rma_op(int i)
 #elif defined(TEST_CAS)
 static inline void issue_rma_op(int i)
 {
-    compare_buf[i] = i;        /* always equal to window value, thus swap happens */
+    compare_buf[i] = i; /* always equal to window value, thus swap happens */
     MPI_Compare_and_swap(&local_buf[i], &compare_buf[i], &result_addr[i], MPI_INT, target, i, win);
 }
 #endif
@@ -182,7 +182,6 @@ int main(int argc, char *argv[])
         MPI_Barrier(MPI_COMM_WORLD);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
-
 #if !defined(TEST_PUT) && !defined(TEST_ACC) && !defined(TEST_GACC) && !defined(TEST_FOP) && !defined(TEST_CAS)
     if (rank == 0)
         printf("Error: must specify operation type at compile time\n");
@@ -228,16 +227,13 @@ int main(int argc, char *argv[])
         if (shm_root_ranks[i] == target_shm_root) {
             if (shm_ranks[i] == 0) {
                 target = i;
-            }
-            else if (shm_ranks[i] == 1) {
+            } else if (shm_ranks[i] == 1) {
                 checker = i;
-            }
-            else {
+            } else {
                 /* all three processes are in shared memory, origin is the third one. */
                 origin = i;
             }
-        }
-        else {
+        } else {
             /* origin is in separate memory. */
             origin = i;
         }

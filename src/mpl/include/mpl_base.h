@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPL_BASE_H_INCLUDED)
+#ifndef MPL_BASE_H_INCLUDED
 #define MPL_BASE_H_INCLUDED
 
 /* this file splits off the base functionality in MPL, which does not
@@ -45,11 +45,11 @@
 #endif /* MPL_HAVE_INTTYPES_H */
 
 #if !defined ATTRIBUTE
-#  if defined MPL_HAVE_GCC_ATTRIBUTE
-#    define ATTRIBUTE(a_) __attribute__(a_)
-#  else /* MPL_HAVE_GCC_ATTRIBUTE */
-#    define ATTRIBUTE(a_)
-#  endif /* MPL_HAVE_GCC_ATTRIBUTE */
+#if defined MPL_HAVE_GCC_ATTRIBUTE
+#define ATTRIBUTE(a_) __attribute__(a_)
+#else /* MPL_HAVE_GCC_ATTRIBUTE */
+#define ATTRIBUTE(a_)
+#endif /* MPL_HAVE_GCC_ATTRIBUTE */
 #endif /* ATTRIBUTE */
 
 #define MPL_UNUSED ATTRIBUTE((unused))
@@ -83,11 +83,11 @@
  * These macros are not namespaced because the namespacing is cumbersome.
  */
 #ifdef MPL_HAVE_BUILTIN_EXPECT
-#  define unlikely(x_) __builtin_expect(!!(x_),0)
-#  define likely(x_)   __builtin_expect(!!(x_),1)
+#define unlikely(x_) __builtin_expect(!!(x_),0)
+#define likely(x_)   __builtin_expect(!!(x_),1)
 #else
-#  define unlikely(x_) (x_)
-#  define likely(x_)   (x_)
+#define unlikely(x_) (x_)
+#define likely(x_)   (x_)
 #endif
 
 #define MPL_QUOTE(A) MPL_QUOTE2(A)
@@ -129,4 +129,4 @@
 
 typedef int MPL_bool;
 
-#endif /* !defined(MPL_BASE_H_INCLUDED) */
+#endif /* MPL_BASE_H_INCLUDED */

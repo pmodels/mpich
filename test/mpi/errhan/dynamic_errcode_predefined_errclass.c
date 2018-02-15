@@ -22,8 +22,7 @@ int main(int argc, char **argv)
 
     if (errclass != MPI_ERR_ARG) {
         printf("ERROR: Got 0x%x, expected 0x%x\n", errclass, MPI_ERR_ARG);
-    }
-    else {
+    } else {
         printf(" No Errors\n");
     }
 

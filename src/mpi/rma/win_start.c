@@ -15,7 +15,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_start as PMPI_Win_start
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Win_start(MPI_Group group, int assert, MPI_Win win) __attribute__((weak,alias("PMPI_Win_start")));
+int MPI_Win_start(MPI_Group group, int assert, MPI_Win win)
+    __attribute__ ((weak, alias("PMPI_Win_start")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -34,24 +35,24 @@ int MPI_Win_start(MPI_Group group, int assert, MPI_Win win) __attribute__((weak,
    MPI_Win_start - Start an RMA access epoch for MPI
 
 Input Parameters:
-+ group - group of target processes (handle) 
++ group - group of target processes (handle)
 . assert - Used to optimize this call; zero may be used as a default.
-  See notes. (integer) 
-- win - window object (handle) 
+  See notes. (integer)
+- win - window object (handle)
 
    Notes:
    The 'assert' argument is used to indicate special conditions for the
-   fence that an implementation may use to optimize the 'MPI_Win_start' 
+   fence that an implementation may use to optimize the 'MPI_Win_start'
    operation.  The value zero is always correct.  Other assertion values
    may be or''ed together.  Assertions tha are valid for 'MPI_Win_start' are\:
 
-. MPI_MODE_NOCHECK - the matching calls to 'MPI_WIN_POST' have already 
-  completed on all target processes when the call to 'MPI_WIN_START' is made. 
-  The nocheck option can be specified in a start call if and only if it is 
-  specified in each matching post call. This is similar to the optimization 
-  of ready-send that may save a handshake when the handshake is implicit in 
-  the code. (However, ready-send is matched by a regular receive, whereas 
-  both start and post must specify the nocheck option.) 
+. MPI_MODE_NOCHECK - the matching calls to 'MPI_WIN_POST' have already
+  completed on all target processes when the call to 'MPI_WIN_START' is made.
+  The nocheck option can be specified in a start call if and only if it is
+  specified in each matching post call. This is similar to the optimization
+  of ready-send that may save a handshake when the handshake is implicit in
+  the code. (However, ready-send is matched by a regular receive, whereas
+  both start and post must specify the nocheck option.)
 
 .N ThreadSafe
 
@@ -71,49 +72,52 @@ int MPI_Win_start(MPI_Group group, int assert, MPI_Win win)
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_START);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_WIN_START);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_WIN(win, mpi_errno);
-	    MPIR_ERRTEST_GROUP(group, mpi_errno);
+            MPIR_ERRTEST_WIN(win, mpi_errno);
+            MPIR_ERRTEST_GROUP(group, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
-    
+#endif /* HAVE_ERROR_CHECKING */
+
     /* Get handles to MPI objects. */
-    MPIR_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr(win, win_ptr);
     MPIR_Group_get_ptr(group, group_ptr);
 
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate win_ptr */
-            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
-            if (mpi_errno) goto fn_fail;
+            MPIR_Win_valid_ptr(win_ptr, mpi_errno);
+            if (mpi_errno)
+                goto fn_fail;
 
             MPIR_Group_valid_ptr(group_ptr, mpi_errno);
 
             /* TODO: Validate assert argument */
             /* TODO: Validate window state */
 
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Win_start(group_ptr, assert, win_ptr);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
     /* ... end of body of routine ... */
 
@@ -124,15 +128,14 @@ int MPI_Win_start(MPI_Group group, int assert, MPI_Win win)
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_win_start", 
-	    "**mpi_win_start %G %A %W", group, assert, win);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_win_start", "**mpi_win_start %G %A %W", group, assert, win);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-

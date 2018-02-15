@@ -77,8 +77,7 @@ int main(int argc, char *argv[])
                             MTestPrintError(err);
                         }
                     }
-                }
-                else if (rank == dest) {
+                } else if (rank == dest) {
                     MPI_Win_fence(0, win);
                     /* This should have the same effect, in terms of
                      * transfering data, as a send/recv pair */
@@ -86,8 +85,7 @@ int main(int argc, char *argv[])
                     if (err) {
                         errs += err;
                     }
-                }
-                else {
+                } else {
                     MPI_Win_fence(0, win);
                 }
                 MPI_Win_free(&win);

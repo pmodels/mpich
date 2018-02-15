@@ -139,29 +139,44 @@ static HYD_status split_count_field(const char *str, char **split_str, int *coun
     return status;
 }
 
-static int parse_cache_string(const char *str)
-{
-    char *t1, *t2;
 
-    if (str[0] != 'l')
-        return 0;
+struct hwloc_obj_info_table {
+    const char *val;
+    hwloc_obj_type_t obj_type;
+};
 
-    t1 = MPL_strdup(str + 1);
-    for (t2 = t1;; t2++) {
-        if (*t2 == 'c') {
-            *t2 = 0;
-            break;
-        }
-        else if (*t2 < '0' || *t2 > '9')
-            return 0;
-    }
-
-    return atoi(t1);
-}
+static struct hwloc_obj_info_table hwloc_obj_info[] = {
+    {"machine", HWLOC_OBJ_MACHINE},
+    {"socket", HWLOC_OBJ_PACKAGE},
+    {"numa", HWLOC_OBJ_NUMANODE},
+    {"core", HWLOC_OBJ_CORE},
+    {"hwthread", HWLOC_OBJ_PU},
+    {"l1dcache", HWLOC_OBJ_L1CACHE},
+    {"l1ucache", HWLOC_OBJ_L1CACHE},
+    {"l1icache", HWLOC_OBJ_L1ICACHE},
+    {"l1cache", HWLOC_OBJ_L1CACHE},
+    {"l2dcache", HWLOC_OBJ_L2CACHE},
+    {"l2ucache", HWLOC_OBJ_L2CACHE},
+    {"l2icache", HWLOC_OBJ_L2ICACHE},
+    {"l2cache", HWLOC_OBJ_L2CACHE},
+    {"l3dcache", HWLOC_OBJ_L3CACHE},
+    {"l3ucache", HWLOC_OBJ_L3CACHE},
+    {"l3icache", HWLOC_OBJ_L3ICACHE},
+    {"l3cache", HWLOC_OBJ_L3CACHE},
+    {"l4dcache", HWLOC_OBJ_L4CACHE},
+    {"l4ucache", HWLOC_OBJ_L4CACHE},
+    {"l4cache", HWLOC_OBJ_L4CACHE},
+    {"l5dcache", HWLOC_OBJ_L5CACHE},
+    {"l5ucache", HWLOC_OBJ_L5CACHE},
+    {"l5cache", HWLOC_OBJ_L5CACHE},
+    {NULL, HWLOC_OBJ_TYPE_MAX}
+};
 
 static HYD_status handle_bitmap_binding(const char *binding, const char *mapping)
 {
-    int i, j, k, bind_count, map_count, cache_depth = 0, bind_depth = 0, map_depth = 0;
+    int i, j, k, bind_count, map_count, bind_depth = 0, map_depth = 0;
+    int valid_binding = 0;
+    int valid_mapping = 0;
     int total_map_objs, total_bind_objs, num_pus_in_map_domain, num_pus_in_bind_domain,
         total_map_domains;
     hwloc_obj_t map_obj, bind_obj, *start_pu;
@@ -178,46 +193,32 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
     status = split_count_field(mapping, &map_str, &map_count);
     HYDU_ERR_POP(status, "error splitting count field\n");
 
-
     /* get the binding object */
-    if (!strcmp(bind_str, "board"))
-        bind_depth = hwloc_get_type_or_above_depth(topology, HWLOC_OBJ_MACHINE);
-    else if (!strcmp(bind_str, "numa"))
-        bind_depth = hwloc_get_type_or_above_depth(topology, HWLOC_OBJ_NODE);
-    else if (!strcmp(bind_str, "socket"))
-        bind_depth = hwloc_get_type_or_above_depth(topology, HWLOC_OBJ_SOCKET);
-    else if (!strcmp(bind_str, "core"))
-        bind_depth = hwloc_get_type_or_above_depth(topology, HWLOC_OBJ_CORE);
-    else if (!strcmp(bind_str, "hwthread"))
-        bind_depth = hwloc_get_type_or_above_depth(topology, HWLOC_OBJ_PU);
-    else {
-        /* check if it's in the l*cache format */
-        cache_depth = parse_cache_string(bind_str);
-        if (!cache_depth) {
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "unrecognized binding string \"%s\"\n", binding);
+    for (i = 0; hwloc_obj_info[i].val; i++) {
+        if (!strcmp(hwloc_obj_info[i].val, bind_str)) {
+            bind_depth = hwloc_get_type_or_above_depth(topology, hwloc_obj_info[i].obj_type);
+            valid_binding = 1;
+            break;
         }
-        bind_depth = hwloc_get_cache_type_depth(topology, cache_depth, -1);
+    }
+
+    if (!valid_binding) {
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "unrecognized binding string \"%s\"\n", mapping);
     }
 
     /* get the mapping */
-    if (!strcmp(map_str, "board"))
-        map_depth = hwloc_get_type_or_above_depth(topology, HWLOC_OBJ_MACHINE);
-    else if (!strcmp(map_str, "numa"))
-        map_depth = hwloc_get_type_or_above_depth(topology, HWLOC_OBJ_NODE);
-    else if (!strcmp(map_str, "socket"))
-        map_depth = hwloc_get_type_or_above_depth(topology, HWLOC_OBJ_SOCKET);
-    else if (!strcmp(map_str, "core"))
-        map_depth = hwloc_get_type_or_above_depth(topology, HWLOC_OBJ_CORE);
-    else if (!strcmp(map_str, "hwthread"))
-        map_depth = hwloc_get_type_or_above_depth(topology, HWLOC_OBJ_PU);
-    else {
-        cache_depth = parse_cache_string(map_str);
-        if (!cache_depth) {
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "unrecognized mapping string \"%s\"\n", mapping);
+    for (i = 0; hwloc_obj_info[i].val; i++) {
+        if (!strcmp(hwloc_obj_info[i].val, map_str)) {
+            map_depth = hwloc_get_type_or_above_depth(topology, hwloc_obj_info[i].obj_type);
+            valid_mapping = 1;
+            break;
         }
-        map_depth = hwloc_get_cache_type_depth(topology, cache_depth, -1);
+    }
+
+    if (!valid_mapping) {
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "unrecognized mapping string \"%s\"\n", mapping);
     }
 
     /*
@@ -310,8 +311,7 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
         for (i = 1; (i * num_pus_in_map_domain) % num_pus_in_bind_domain; i++);
         HYDT_topo_hwloc_info.num_bitmaps =
             (i * num_pus_in_map_domain * total_map_domains) / num_pus_in_bind_domain;
-    }
-    else {
+    } else {
         HYDT_topo_hwloc_info.num_bitmaps = total_map_domains;
     }
 
@@ -343,8 +343,7 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
                         bind_obj =
                             hwloc_get_next_obj_inside_cpuset_by_depth(topology, map_domains[j],
                                                                       bind_depth, bind_obj);
-                }
-                else {
+                } else {
                     bind_obj = hwloc_get_next_obj_by_depth(topology, bind_depth, bind_obj);
                     if (!bind_obj)
                         bind_obj = hwloc_get_next_obj_by_depth(topology, bind_depth, bind_obj);
@@ -400,8 +399,7 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const 
         status = handle_user_binding(binding + strlen("user:"));
         HYDU_ERR_POP(status, "error binding to %s\n", binding);
         goto fn_exit;
-    }
-    else if (!strcmp(binding, "rr")) {
+    } else if (!strcmp(binding, "rr")) {
         status = handle_rr_binding();
         HYDU_ERR_POP(status, "error binding to %s\n", binding);
         goto fn_exit;
@@ -420,14 +418,9 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const 
         HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_NEXTTOUCH;
     else if (!strncmp(membind, "bind:", strlen("bind:"))) {
         HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_BIND;
-    }
-    else if (!strncmp(membind, "interleave:", strlen("interleave:"))) {
+    } else if (!strncmp(membind, "interleave:", strlen("interleave:"))) {
         HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_INTERLEAVE;
-    }
-    else if (!strncmp(membind, "replicate:", strlen("replicate:"))) {
-        HYDT_topo_hwloc_info.membind = HWLOC_MEMBIND_REPLICATE;
-    }
-    else {
+    } else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "unrecognized membind policy \"%s\"\n", membind);
     }

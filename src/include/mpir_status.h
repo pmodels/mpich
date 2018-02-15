@@ -30,13 +30,13 @@
 #define MPIR_STATUS_GET_COUNT(status_)                                  \
     ((MPI_Count) ((((MPIR_Ucount) (((unsigned int) (status_).count_hi_and_cancelled) >> 1)) << (8 * SIZEOF_INT)) + (unsigned int) (status_).count_lo))
 
-#define MPIR_STATUS_SET_CANCEL_BIT(status_, cancelled_)	\
+#define MPIR_STATUS_SET_CANCEL_BIT(status_, cancelled_) \
     {                                                   \
         (status_).count_hi_and_cancelled &= ~1;         \
         (status_).count_hi_and_cancelled |= cancelled_; \
     }
 
-#define MPIR_STATUS_GET_CANCEL_BIT(status_)	((status_).count_hi_and_cancelled & 1)
+#define MPIR_STATUS_GET_CANCEL_BIT(status_) ((status_).count_hi_and_cancelled & 1)
 
 /* Do not set MPI_ERROR (only set if ERR_IN_STATUS is returned */
 #define MPIR_Status_set_empty(status_)                          \

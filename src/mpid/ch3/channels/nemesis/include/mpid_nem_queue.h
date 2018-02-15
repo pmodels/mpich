@@ -7,8 +7,8 @@
 /* TODO figure out how to rewrite some/all of this queue code to use
  * explicit OPA_load_ptr/OPA_store_ptr operations */
 
-#ifndef MPID_NEM_QUEUE_H
-#define MPID_NEM_QUEUE_H
+#ifndef MPID_NEM_QUEUE_H_INCLUDED
+#define MPID_NEM_QUEUE_H_INCLUDED
 #include "mpid_nem_datatypes.h"
 #include "mpid_nem_defs.h"
 #include "mpid_nem_atomics.h"
@@ -342,4 +342,4 @@ MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
 
 #endif /* !defined(MPID_NEM_USE_LOCK_FREE_QUEUES) */
 
-#endif /* MPID_NEM_QUEUE_H */
+#endif /* MPID_NEM_QUEUE_H_INCLUDED */

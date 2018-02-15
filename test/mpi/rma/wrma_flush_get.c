@@ -73,7 +73,7 @@ static inline void issue_rma_op(int i)
 #elif defined(TEST_CAS)
 static inline void issue_rma_op(int i)
 {
-    compare_buf[i] = i;        /* always equal to window value, thus swap happens */
+    compare_buf[i] = i; /* always equal to window value, thus swap happens */
     MPI_Compare_and_swap(&local_buf[i], &compare_buf[i], &result_addr[i], MPI_INT, target, i, win);
 }
 #endif
@@ -180,7 +180,6 @@ int main(int argc, char *argv[])
         MPI_Barrier(MPI_COMM_WORLD);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
-
 #if !defined(TEST_PUT) && !defined(TEST_ACC) && !defined(TEST_GACC) && !defined(TEST_FOP) && !defined(TEST_CAS)
     if (rank == 0)
         printf("Error: must specify operation type at compile time\n");

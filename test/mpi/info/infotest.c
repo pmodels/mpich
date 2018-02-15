@@ -37,8 +37,7 @@ int main(int argc, char *argv[])
     if (!flag) {
         errs++;
         printf("Did not find key1 in info1\n");
-    }
-    else if (strcmp(value, "value1")) {
+    } else if (strcmp(value, "value1")) {
         errs++;
         printf("Found wrong value (%s), expected value1\n", value);
     }
@@ -47,8 +46,7 @@ int main(int argc, char *argv[])
     MPI_Info_free(&i2);
     if (errs) {
         printf(" Found %d errors\n", errs);
-    }
-    else {
+    } else {
         printf(" No Errors\n");
     }
     MPI_Finalize();

@@ -1,11 +1,10 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
+ *  (C) 2017 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 
 #include "mpiimpl.h"
-#include "coll_util.h"
 
 /* This is the machine-independent implementation of exscan. The algorithm is:
 
@@ -51,10 +50,12 @@
    End Algorithm: MPI_Exscan
 */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iexscan_intra_recursive_doubling_sched
+#define FUNCNAME MPIR_Iexscan_sched_intra_recursive_doubling
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iexscan_intra_recursive_doubling_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iexscan_sched_intra_recursive_doubling(const void *sendbuf, void *recvbuf, int count,
+                                                MPI_Datatype datatype, MPI_Op op,
+                                                MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
@@ -71,22 +72,26 @@ int MPIR_Iexscan_intra_recursive_doubling_sched(const void *sendbuf, void *recvb
 
     is_commutative = MPIR_Op_is_commutative(op);
 
-    /* need to allocate temporary buffer to store partial scan*/
+    /* need to allocate temporary buffer to store partial scan */
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPIR_Datatype_get_extent_macro(datatype, extent);
 
-    MPIR_SCHED_CHKPMEM_MALLOC(partial_scan, void *, (count*(MPL_MAX(true_extent,extent))), mpi_errno, "partial_scan", MPL_MEM_BUFFER);
+    MPIR_SCHED_CHKPMEM_MALLOC(partial_scan, void *, (count * (MPL_MAX(true_extent, extent))),
+                              mpi_errno, "partial_scan", MPL_MEM_BUFFER);
     /* adjust for potential negative lower bound in datatype */
-    partial_scan = (void *)((char*)partial_scan - true_lb);
+    partial_scan = (void *) ((char *) partial_scan - true_lb);
 
-    /* need to allocate temporary buffer to store incoming data*/
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, (count*(MPL_MAX(true_extent,extent))), mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
+    /* need to allocate temporary buffer to store incoming data */
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, (count * (MPL_MAX(true_extent, extent))), mpi_errno,
+                              "tmp_buf", MPL_MEM_BUFFER);
     /* adjust for potential negative lower bound in datatype */
-    tmp_buf = (void *)((char*)tmp_buf - true_lb);
+    tmp_buf = (void *) ((char *) tmp_buf - true_lb);
 
-    mpi_errno = MPIR_Sched_copy((sendbuf == MPI_IN_PLACE ? (const void *)recvbuf : sendbuf), count, datatype,
-                               partial_scan, count, datatype, s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    mpi_errno =
+        MPIR_Sched_copy((sendbuf == MPI_IN_PLACE ? (const void *) recvbuf : sendbuf), count,
+                        datatype, partial_scan, count, datatype, s);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     flag = 0;
     mask = 0x1;
@@ -95,54 +100,59 @@ int MPIR_Iexscan_intra_recursive_doubling_sched(const void *sendbuf, void *recvb
         if (dst < comm_size) {
             /* Send partial_scan to dst. Recv into tmp_buf */
             mpi_errno = MPIR_Sched_send(partial_scan, count, datatype, dst, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
             /* sendrecv, no barrier here */
             mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, dst, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
             MPIR_SCHED_BARRIER(s);
 
             if (rank > dst) {
                 mpi_errno = MPIR_Sched_reduce(tmp_buf, partial_scan, count, datatype, op, s);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
                 MPIR_SCHED_BARRIER(s);
 
                 /* On rank 0, recvbuf is not defined.  For sendbuf==MPI_IN_PLACE
-                   recvbuf must not change (per MPI-2.2).
-                   On rank 1, recvbuf is to be set equal to the value
-                   in sendbuf on rank 0.
-                   On others, recvbuf is the scan of values in the
-                   sendbufs on lower ranks. */
+                 * recvbuf must not change (per MPI-2.2).
+                 * On rank 1, recvbuf is to be set equal to the value
+                 * in sendbuf on rank 0.
+                 * On others, recvbuf is the scan of values in the
+                 * sendbufs on lower ranks. */
                 if (rank != 0) {
                     if (flag == 0) {
                         /* simply copy data recd from rank 0 into recvbuf */
                         mpi_errno = MPIR_Sched_copy(tmp_buf, count, datatype,
                                                     recvbuf, count, datatype, s);
-                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                        if (mpi_errno)
+                            MPIR_ERR_POP(mpi_errno);
                         MPIR_SCHED_BARRIER(s);
 
                         flag = 1;
-                    }
-                    else {
+                    } else {
                         mpi_errno = MPIR_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
-                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                        if (mpi_errno)
+                            MPIR_ERR_POP(mpi_errno);
                         MPIR_SCHED_BARRIER(s);
                     }
                 }
-            }
-            else {
+            } else {
                 if (is_commutative) {
                     mpi_errno = MPIR_Sched_reduce(tmp_buf, partial_scan, count, datatype, op, s);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
-                }
-                else {
+                } else {
                     mpi_errno = MPIR_Sched_reduce(partial_scan, tmp_buf, count, datatype, op, s);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
 
                     mpi_errno = MPIR_Sched_copy(tmp_buf, count, datatype,
                                                 partial_scan, count, datatype, s);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
                     MPIR_SCHED_BARRIER(s);
                 }
             }
@@ -151,10 +161,9 @@ int MPIR_Iexscan_intra_recursive_doubling_sched(const void *sendbuf, void *recvb
     }
 
     MPIR_SCHED_CHKPMEM_COMMIT(s);
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     MPIR_SCHED_CHKPMEM_REAP(s);
     goto fn_exit;
 }
-

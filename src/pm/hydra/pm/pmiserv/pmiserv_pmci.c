@@ -60,8 +60,7 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
         hdr.cmd = CKPOINT;
         status = send_cmd_to_proxies(hdr);
         HYDU_ERR_POP(status, "error checkpointing processes\n");
-    }
-    else if (cmd.type == HYD_CLEANUP) {
+    } else if (cmd.type == HYD_CLEANUP) {
         HYDU_dump_noprefix(stdout, "Ctrl-C caught... cleaning up processes\n");
         status = HYD_pmcd_pmiserv_cleanup_all_pgs();
         HYDU_ERR_POP(status, "cleanup of processes failed\n");
@@ -71,16 +70,14 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "launcher returned error waiting for completion\n");
 
         exit(1);
-    }
-    else if (cmd.type == HYD_SIGNAL) {
+    } else if (cmd.type == HYD_SIGNAL) {
         for (pg = &HYD_server_info.pg_list; pg; pg = pg->next) {
             for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
                 status = HYD_pmcd_pmiserv_send_signal(proxy, cmd.signum);
                 HYDU_ERR_POP(status, "unable to send signal downstream\n");
             }
         }
-    }
-    else {
+    } else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized command\n");
     }
 
@@ -187,8 +184,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
                     /* Force kill all bootstrap processes that we launched */
                     status = HYDT_bsci_wait_for_completion(0);
                     HYDU_ERR_POP(status, "launcher returned error waiting for completion\n");
-                }
-                else
+                } else
                     time_left = timeout - time_elapsed;
             }
 
@@ -210,8 +206,7 @@ HYD_status HYD_pmci_wait_for_completion(int timeout)
         time_left = timeout - time_elapsed;
         if (time_left < 0)
             time_left = 0;
-    }
-    else
+    } else
         time_left = timeout;
 
     status = HYDT_bsci_wait_for_completion(time_left);

@@ -60,8 +60,7 @@ pthread_mutex_t MPIDI_Mutex_lock[MPIDI_NUM_LOCKS];
 #define FUNCNAME MPID_Abort
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Abort(MPIR_Comm * comm,
-               int mpi_errno, int exit_code, const char *error_msg)
+int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error_msg)
 {
     char sys_str[MPI_MAX_ERROR_STRING + 5] = "";
     char comm_str[MPI_MAX_ERROR_STRING] = "";
@@ -96,16 +95,10 @@ int MPID_Abort(MPIR_Comm * comm,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ABORT);
     fflush(stderr);
     fflush(stdout);
+    if (MPIR_Comm_size(comm) == 1)
+        MPL_exit(exit_code);
     PMI_Abort(exit_code, error_msg);
     return 0;
-}
-
-/* Another weird ADI that doesn't follow convention */
-static void init_comm() __attribute__ ((constructor));
-static void init_comm()
-{
-    MPIR_Comm_fns = &MPIDI_CH4_Global.MPIR_Comm_fns_store;
-    MPIR_Comm_fns->split_type = MPIDI_Comm_split_type;
 }
 
 MPL_dbg_class MPIDI_CH4_DBG_GENERAL;

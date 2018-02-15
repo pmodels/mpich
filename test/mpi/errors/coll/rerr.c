@@ -26,8 +26,7 @@ int main(int argc, char *argv[])
     if (ierr == MPI_SUCCESS) {
         errs++;
         printf("Did not detect invalid type/op pair (byte,max) in Allreduce\n");
-    }
-    else {
+    } else {
         if (verbose) {
             MPI_Error_string(ierr, str, &slen);
             printf("Found expected error; message is: %s\n", str);

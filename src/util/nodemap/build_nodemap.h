@@ -79,8 +79,9 @@ static inline int MPIR_NODEMAP_publish_node_id(int sz, int myrank)
     /* set hostname */
 
     ret = gethostname(hostname, MAX_HOSTNAME_LEN);
-    MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock_gethost", "**sock_gethost %s %d", MPIR_Strerror(errno), errno);
-    hostname[MAX_HOSTNAME_LEN-1] = '\0';
+    MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock_gethost",
+                         "**sock_gethost %s %d", MPIR_Strerror(errno), errno);
+    hostname[MAX_HOSTNAME_LEN - 1] = '\0';
 
     /* Allocate space for pmi key */
     pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
@@ -92,25 +93,27 @@ static inline int MPIR_NODEMAP_publish_node_id(int sz, int myrank)
     pmi_errno = PMI_KVS_Get_my_name(kvs_name, 256);
     MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
     /* Put my hostname id */
-    if (sz > 1)
-    {
+    if (sz > 1) {
         memset(key, 0, key_max_sz);
         MPL_snprintf(key, key_max_sz, "hostname[%d]", myrank);
 
         pmi_errno = PMI_KVS_Put(kvs_name, key, hostname);
-        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put", "**pmi_kvs_put %d", pmi_errno);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put",
+                             "**pmi_kvs_put %d", pmi_errno);
 
         pmi_errno = PMI_KVS_Commit(kvs_name);
-        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit", "**pmi_kvs_commit %d", pmi_errno);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit",
+                             "**pmi_kvs_commit %d", pmi_errno);
 
         pmi_errno = PMI_Barrier();
-        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier",
+                             "**pmi_barrier %d", pmi_errno);
     }
 
-fn_exit:
+  fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 #endif
@@ -136,8 +139,7 @@ typedef enum {
 
 #define MPIR_NODEMAP_VECTOR "vector"
 
-typedef struct map_block
-{
+typedef struct map_block {
     int start_id;
     int count;
     int size;
@@ -148,9 +150,8 @@ typedef struct map_block
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIR_NODEMAP_parse_mapping(char *map_str,
-                                             MPIR_NODEMAP_mapping_type_t *type,
-                                             MPIR_NODEMAP_map_block_t **map,
-                                             int *nblocks)
+                                             MPIR_NODEMAP_mapping_type_t * type,
+                                             MPIR_NODEMAP_map_block_t ** map, int *nblocks)
 {
     int mpi_errno = MPI_SUCCESS;
     char *c = map_str, *d;
@@ -159,12 +160,12 @@ static inline int MPIR_NODEMAP_parse_mapping(char *map_str,
     MPIR_CHKPMEM_DECL(1);
 
     /* parse string of the form:
-       '(' <format> ',' '(' <num> ',' <num> ',' <num> ')' {',' '(' <num> ',' <num> ',' <num> ')'} ')'
-
-       the values of each 3-tuple have the following meaning (X,Y,Z):
-         X - node id start value
-         Y - number of nodes with size Z
-         Z - number of processes assigned to each node
+     * '(' <format> ',' '(' <num> ',' <num> ',' <num> ')' {',' '(' <num> ',' <num> ',' <num> ')'} ')'
+     *
+     * the values of each 3-tuple have the following meaning (X,Y,Z):
+     * X - node id start value
+     * Y - number of nodes with size Z
+     * Z - number of processes assigned to each node
      */
 
     if (!strlen(map_str)) {
@@ -197,7 +198,9 @@ static inline int MPIR_NODEMAP_parse_mapping(char *map_str,
         ++d;
     }
 
-    MPIR_CHKPMEM_MALLOC(*map, MPIR_NODEMAP_map_block_t *, sizeof(MPIR_NODEMAP_map_block_t) * num_blocks, mpi_errno, "map", MPL_MEM_ADDRESS);
+    MPIR_CHKPMEM_MALLOC(*map, MPIR_NODEMAP_map_block_t *,
+                        sizeof(MPIR_NODEMAP_map_block_t) * num_blocks, mpi_errno, "map",
+                        MPL_MEM_ADDRESS);
 
     /* parse block descriptors */
     for (i = 0; i < num_blocks; ++i) {
@@ -209,7 +212,7 @@ static inline int MPIR_NODEMAP_parse_mapping(char *map_str,
 
         if (!isdigit(*c))
             MPIR_NODEMAP_PARSE_ERROR();
-        (*map)[i].start_id = (int)strtol(c, &c, 0);
+        (*map)[i].start_id = (int) strtol(c, &c, 0);
         MPIR_NODEMAP_SKIP_SPACE(c);
 
         MPIR_NODEMAP_EXPECT_AND_SKIP_C(c, ',');
@@ -217,7 +220,7 @@ static inline int MPIR_NODEMAP_parse_mapping(char *map_str,
 
         if (!isdigit(*c))
             MPIR_NODEMAP_PARSE_ERROR();
-        (*map)[i].count = (int)strtol(c, &c, 0);
+        (*map)[i].count = (int) strtol(c, &c, 0);
         MPIR_NODEMAP_SKIP_SPACE(c);
 
         MPIR_NODEMAP_EXPECT_AND_SKIP_C(c, ',');
@@ -225,7 +228,7 @@ static inline int MPIR_NODEMAP_parse_mapping(char *map_str,
 
         if (!isdigit(*c))
             MPIR_NODEMAP_PARSE_ERROR();
-        (*map)[i].size = (int)strtol(c, &c, 0);
+        (*map)[i].size = (int) strtol(c, &c, 0);
 
         MPIR_NODEMAP_EXPECT_AND_SKIP_C(c, ')');
         MPIR_NODEMAP_SKIP_SPACE(c);
@@ -235,9 +238,9 @@ static inline int MPIR_NODEMAP_parse_mapping(char *map_str,
 
     *nblocks = num_blocks;
     MPIR_CHKPMEM_COMMIT();
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
@@ -251,8 +254,7 @@ fn_fail:
 static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
                                                          int sz,
                                                          int *out_nodemap,
-                                                         int *out_max_node_id,
-                                                         int *did_map)
+                                                         int *out_max_node_id, int *did_map)
 {
     int mpi_errno = MPI_SUCCESS;
     /* PMI_process_mapping is available */
@@ -265,12 +267,14 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
     int found_wrap;
     int local_max_node_id = -1;
 
-    *did_map = 1; /* reset upon failure */
+    *did_map = 1;       /* reset upon failure */
 
     mpi_errno = MPIR_NODEMAP_parse_mapping(mapping, &mt, &mb, &nblocks);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
-    if (MPIR_NODEMAP_NULL_MAPPING == mt) goto fn_fail;
+    if (MPIR_NODEMAP_NULL_MAPPING == mt)
+        goto fn_fail;
     MPIR_ERR_CHKINTERNAL(mt != MPIR_NODEMAP_VECTOR_MAPPING, mpi_errno, "unsupported mapping type");
 
     /* allocate nodes to ranks */
@@ -295,7 +299,7 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
                 found_wrap = 1;
             for (block_node = 0; block_node < mb[block].count; block_node++) {
                 for (node_proc = 0; node_proc < mb[block].size; node_proc++) {
-                    out_nodemap[rank]= mb[block].start_id + block_node;
+                    out_nodemap[rank] = mb[block].start_id + block_node;
                     if (++rank == sz)
                         goto break_out;
                 }
@@ -303,7 +307,7 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
         }
     }
 
- break_out:
+  break_out:
     /* identify maximum node id */
     for (i = 0; i < sz; i++)
         if (out_nodemap[i] + 1 > local_max_node_id)
@@ -311,10 +315,10 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
 
     *out_max_node_id = local_max_node_id;
 
-fn_exit:
+  fn_exit:
     MPL_free(mb);
     return mpi_errno;
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     *did_map = 0;
     goto fn_exit;
@@ -343,9 +347,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIR_NODEMAP_build_nodemap(int sz,
-                                             int myrank,
-                                             int *out_nodemap,
-                                             int *out_max_node_id)
+                                             int myrank, int *out_nodemap, int *out_max_node_id)
 {
     static int g_max_node_id = -1;
     int mpi_errno = MPI_SUCCESS;
@@ -382,8 +384,8 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
 #endif
 
     /* Used for debugging on a single machine: Odd procs on a node are
-       seen as local to each other, and even procs on a node are seen
-       as local to each other. */
+     * seen as local to each other, and even procs on a node are seen
+     * as local to each other. */
 #ifdef ENABLED_ODD_EVEN_CLIQUES
     odd_even_cliques = 1;
 #else
@@ -398,7 +400,6 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
         *out_max_node_id = g_max_node_id;
         goto fn_exit;
     }
-
 #ifdef USE_PMI2_API
     {
         char process_mapping[PMI2_MAX_VALLEN];
@@ -411,18 +412,25 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
         int block, block_node, node_proc;
         int did_map = 0;
 
-        mpi_errno = PMI2_Info_GetJobAttr("PMI_process_mapping", process_mapping, sizeof(process_mapping), &found);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        mpi_errno =
+            PMI2_Info_GetJobAttr("PMI_process_mapping", process_mapping, sizeof(process_mapping),
+                                 &found);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "PMI_process_mapping attribute not found");
         /* this code currently assumes pg is comm_world */
-        mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(process_mapping, sz, out_nodemap, out_max_node_id, &did_map);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPIR_ERR_CHKINTERNAL(!did_map, mpi_errno, "unable to populate node ids from PMI_process_mapping");
+        mpi_errno =
+            MPIR_NODEMAP_populate_ids_from_mapping(process_mapping, sz, out_nodemap,
+                                                   out_max_node_id, &did_map);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHKINTERNAL(!did_map, mpi_errno,
+                             "unable to populate node ids from PMI_process_mapping");
     }
 #else /* USE_PMI2_API */
     if (myrank == -1) {
         /* fixme this routine can't handle the dynamic process case at this
-           time.  this will require more support from the process manager. */
+         * time.  this will require more support from the process manager. */
         MPIR_Assert(0);
     }
 
@@ -445,9 +453,12 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
         if (pmi_errno == 0) {
             int did_map = 0;
             /* this code currently assumes pg is comm_world */
-            mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(value, sz, out_nodemap, out_max_node_id, &did_map);
+            mpi_errno =
+                MPIR_NODEMAP_populate_ids_from_mapping(value, sz, out_nodemap, out_max_node_id,
+                                                       &did_map);
             g_max_node_id = *out_max_node_id;
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
             if (did_map) {
                 goto cliques;
             }
@@ -457,60 +468,60 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
 
     /* fallback algorithm */
     mpi_errno = MPIR_NODEMAP_publish_node_id(sz, myrank);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* Allocate temporary structures.  These would need to be persistent if
-       we somehow were able to support dynamic processes via this method. */
-    MPIR_CHKLMEM_MALLOC(node_names, char **, sz * sizeof(char*), mpi_errno, "node_names", MPL_MEM_ADDRESS);
-    MPIR_CHKLMEM_MALLOC(node_name_buf, char *, sz * key_max_sz * sizeof(char), mpi_errno, "node_name_buf", MPL_MEM_ADDRESS);
+     * we somehow were able to support dynamic processes via this method. */
+    MPIR_CHKLMEM_MALLOC(node_names, char **, sz * sizeof(char *), mpi_errno, "node_names",
+                        MPL_MEM_ADDRESS);
+    MPIR_CHKLMEM_MALLOC(node_name_buf, char *, sz * key_max_sz * sizeof(char), mpi_errno,
+                        "node_name_buf", MPL_MEM_ADDRESS);
 
     /* Gather hostnames */
-    for (i = 0; i < sz; ++i)
-    {
+    for (i = 0; i < sz; ++i) {
         node_names[i] = &node_name_buf[i * key_max_sz];
         node_names[i][0] = '\0';
     }
 
     g_max_node_id = -1; /* defensive */
 
-    for (i = 0; i < sz; ++i)
-    {
+    for (i = 0; i < sz; ++i) {
         MPIR_Assert(g_max_node_id < sz);
-        if (i == myrank)
-        {
+        if (i == myrank) {
             /* This is us, no need to perform a get */
             int ret;
-            char *hostname = (char*) MPL_malloc(sizeof(char) * MAX_HOSTNAME_LEN, MPL_MEM_ADDRESS);
+            char *hostname = (char *) MPL_malloc(sizeof(char) * MAX_HOSTNAME_LEN, MPL_MEM_ADDRESS);
             ret = gethostname(hostname, MAX_HOSTNAME_LEN);
-            MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock_gethost", "**sock_gethost %s %d", MPIR_Strerror(errno), errno);
-            hostname[MAX_HOSTNAME_LEN-1] = '\0';
-            MPL_snprintf(node_names[g_max_node_id+1], key_max_sz, "%s", hostname);
+            MPIR_ERR_CHKANDJUMP2(ret == -1, mpi_errno, MPI_ERR_OTHER, "**sock_gethost",
+                                 "**sock_gethost %s %d", MPIR_Strerror(errno), errno);
+            hostname[MAX_HOSTNAME_LEN - 1] = '\0';
+            MPL_snprintf(node_names[g_max_node_id + 1], key_max_sz, "%s", hostname);
             MPL_free(hostname);
-        }
-        else
-        {
+        } else {
             memset(key, 0, key_max_sz);
             MPL_snprintf(key, key_max_sz, "hostname[%d]", i);
 
-            pmi_errno = PMI_KVS_Get(kvs_name, key, node_names[g_max_node_id+1], key_max_sz);
-            MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
+            pmi_errno = PMI_KVS_Get(kvs_name, key, node_names[g_max_node_id + 1], key_max_sz);
+            MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                 "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
         }
 
         /* Find the node_id for this process, or create a new one */
         /* FIXME:need a better algorithm -- this one does O(N^2) strncmp()s! */
         /* The right fix is to get all this information from the process
-           manager, rather than bother with this hostname hack at all. */
+         * manager, rather than bother with this hostname hack at all. */
         for (j = 0; j < g_max_node_id + 1; ++j)
-            if (!MPL_strncmp(node_names[j], node_names[g_max_node_id+1], key_max_sz))
+            if (!MPL_strncmp(node_names[j], node_names[g_max_node_id + 1], key_max_sz))
                 break;
         if (j == g_max_node_id + 1)
             ++g_max_node_id;
         else
-            node_names[g_max_node_id+1][0] = '\0';
+            node_names[g_max_node_id + 1][0] = '\0';
         out_nodemap[i] = j;
     }
 
-cliques:
+  cliques:
     if (MPIR_CVAR_NUM_CLIQUES > 1) {
         for (i = 0; i < sz; ++i) {
             if (i % MPIR_CVAR_NUM_CLIQUES) {
@@ -520,8 +531,8 @@ cliques:
         g_max_node_id = (g_max_node_id + 1) * MPIR_CVAR_NUM_CLIQUES - 1;
     } else if (odd_even_cliques) {
         /* Create new processes for all odd numbered processes. This
-           may leave nodes ids with no processes assigned to them, but
-           I think this is OK */
+         * may leave nodes ids with no processes assigned to them, but
+         * I think this is OK */
         for (i = 0; i < sz; ++i)
             if (i & 0x1)
                 out_nodemap[i] += g_max_node_id + 1;
@@ -530,11 +541,11 @@ cliques:
     *out_max_node_id = g_max_node_id;
 #endif
 
-fn_exit:
+  fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
-#endif /* ifndef BUILD_NODEMAP_H_INCLUDED */
+#endif /* BUILD_NODEMAP_H_INCLUDED */

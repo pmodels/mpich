@@ -16,7 +16,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Comm_failure_get_acked as PMPIX_Comm_failure_get_acked
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPIX_Comm_failure_get_acked( MPI_Comm comm, MPI_Group *failedgrp ) __attribute__((weak,alias("PMPIX_Comm_failure_get_acked")));
+int MPIX_Comm_failure_get_acked(MPI_Comm comm, MPI_Group * failedgrp)
+    __attribute__ ((weak, alias("PMPIX_Comm_failure_get_acked")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -53,11 +54,11 @@ Notes:
 .N MPI_SUCCESS
 .N MPI_ERR_COMM
 @*/
-int MPIX_Comm_failure_get_acked( MPI_Comm comm, MPI_Group *failedgrp )
+int MPIX_Comm_failure_get_acked(MPI_Comm comm, MPI_Group * failedgrp)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_Group *group_ptr;
+    MPIR_Group *group_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIX_COMM_FAILURE_GET_ACKED);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -66,7 +67,7 @@ int MPIX_Comm_failure_get_acked( MPI_Comm comm, MPI_Group *failedgrp )
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIX_COMM_FAILURE_GET_ACKED);
 
     /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -74,47 +75,50 @@ int MPIX_Comm_failure_get_acked( MPI_Comm comm, MPI_Group *failedgrp )
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects(post conversion */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, TRUE);
             /* If comm_ptr is not valid, it will be reset to null */
-            if (mpi_errno) goto fn_fail;
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
 
     mpi_errno = MPID_Comm_failure_get_acked(comm_ptr, &group_ptr);
-    if (mpi_errno) goto fn_fail;
+    if (mpi_errno)
+        goto fn_fail;
     *failedgrp = group_ptr->handle;
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIX_COMM_FAILURE_GET_ACKED);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-                mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpix_comm_failure_get_acked",
-                "**mpix_comm_failure_get_acked %C %p", comm, failedgrp);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpix_comm_failure_get_acked",
+                                 "**mpix_comm_failure_get_acked %C %p", comm, failedgrp);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

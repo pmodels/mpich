@@ -54,7 +54,7 @@ int MPL_shm_hnd_deserialize(MPL_shm_hnd_t hnd, const char *str_hnd, size_t str_h
 int MPL_shm_hnd_get_serialized_by_ref(MPL_shm_hnd_t hnd, char **str_ptr)
 {
     int mpi_errno = 0;
-    *str_ptr = (char *)MPLI_shm_ghnd_get_by_ref(hnd);
+    *str_ptr = (char *) MPLI_shm_ghnd_get_by_ref(hnd);
     return mpi_errno;
 }
 
@@ -83,7 +83,7 @@ int MPL_shm_hnd_deserialize_by_ref(MPL_shm_hnd_t hnd, char **ser_hnd_ptr)
  * hnd_ptr : A pointer to the shared memory handle
  */
 
-int MPL_shm_hnd_init(MPL_shm_hnd_t *hnd_ptr)
+int MPL_shm_hnd_init(MPL_shm_hnd_t * hnd_ptr)
 {
     int rc = -1;
     rc = MPLI_shm_hnd_alloc(hnd_ptr, MPL_MEM_SHM);
@@ -95,7 +95,7 @@ int MPL_shm_hnd_init(MPL_shm_hnd_t *hnd_ptr)
  * hnd_ptr : A pointer to the shm handle to be finalized.
  *           Any handle that is init has to be finalized.
  */
-int MPL_shm_hnd_finalize(MPL_shm_hnd_t *hnd_ptr)
+int MPL_shm_hnd_finalize(MPL_shm_hnd_t * hnd_ptr)
 {
     int mpi_errno = 0;
 
@@ -109,4 +109,3 @@ int MPL_shm_hnd_finalize(MPL_shm_hnd_t *hnd_ptr)
 
     return mpi_errno;
 }
-

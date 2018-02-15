@@ -95,8 +95,7 @@ int main(int argc, char *argv[])
                 errs++;
                 printf("Attribute not decremented when type %s freed\n", typename);
             }
-        }
-        else {
+        } else {
             /* Explicitly delete the attributes from world and self */
             MPI_Type_delete_attr(type, saveKeyval);
             if (mstype.buf) {

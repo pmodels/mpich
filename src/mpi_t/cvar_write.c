@@ -14,7 +14,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_cvar_write as PMPI_T_cvar_write
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf) __attribute__((weak,alias("PMPI_T_cvar_write")));
+int MPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf)
+    __attribute__ ((weak, alias("PMPI_T_cvar_write")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -50,39 +51,40 @@ int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, const void *buf)
     MPIR_Assert(addr != NULL);
 
     switch (hnd->datatype) {
-    case MPI_INT:
-        for (i = 0; i < count; i++)
-            ((int *)addr)[i] = ((int *)buf)[i];
-        break;
-    case MPI_UNSIGNED:
-        for (i = 0; i < count; i++)
-            ((unsigned *)addr)[i] = ((unsigned *)buf)[i];
-        break;
-    case MPI_UNSIGNED_LONG:
-        for (i = 0; i < count; i++)
-            ((unsigned long *)addr)[i] = ((unsigned long *)buf)[i];
-        break;
-    case MPI_UNSIGNED_LONG_LONG:
-        for (i = 0; i < count; i++)
-            ((unsigned long long *)addr)[i] = ((unsigned long long *)buf)[i];
-        break;
-    case MPI_DOUBLE:
-        for (i = 0; i < count; i++)
-            ((double *)addr)[i] = ((double *)buf)[i];
-        break;
-    case MPI_CHAR:
-        MPIR_Assert(count > strlen(buf)); /* Make sure buf will not overflow this cvar */
-        MPL_strncpy(addr, buf, count);
-        break;
-    default:
-         /* FIXME the error handling code may not have been setup yet */
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_INTERN, "**intern", "**intern %s", "unexpected parameter type");
-        break;
+        case MPI_INT:
+            for (i = 0; i < count; i++)
+                ((int *) addr)[i] = ((int *) buf)[i];
+            break;
+        case MPI_UNSIGNED:
+            for (i = 0; i < count; i++)
+                ((unsigned *) addr)[i] = ((unsigned *) buf)[i];
+            break;
+        case MPI_UNSIGNED_LONG:
+            for (i = 0; i < count; i++)
+                ((unsigned long *) addr)[i] = ((unsigned long *) buf)[i];
+            break;
+        case MPI_UNSIGNED_LONG_LONG:
+            for (i = 0; i < count; i++)
+                ((unsigned long long *) addr)[i] = ((unsigned long long *) buf)[i];
+            break;
+        case MPI_DOUBLE:
+            for (i = 0; i < count; i++)
+                ((double *) addr)[i] = ((double *) buf)[i];
+            break;
+        case MPI_CHAR:
+            MPIR_Assert(count > strlen(buf));   /* Make sure buf will not overflow this cvar */
+            MPL_strncpy(addr, buf, count);
+            break;
+        default:
+            /* FIXME the error handling code may not have been setup yet */
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_INTERN, "**intern", "**intern %s",
+                                 "unexpected parameter type");
+            break;
     }
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -117,39 +119,40 @@ int MPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf)
     MPIR_T_THREAD_CS_ENTER();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_CVAR_WRITE);
 
-   /* Validate parameters */
-#   ifdef HAVE_ERROR_CHECKING
+    /* Validate parameters */
+#ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_CVAR_HANDLE(handle, mpi_errno);
             MPIR_ERRTEST_ARGNULL(buf, "buf", mpi_errno);
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_T_cvar_write_impl(handle, buf);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_CVAR_WRITE);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_cvar_write", "**mpi_t_cvar_write %p %p", handle, buf);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_t_cvar_write", "**mpi_t_cvar_write %p %p", handle, buf);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

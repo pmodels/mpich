@@ -66,39 +66,31 @@ int main(int argc, char *argv[])
             if (rmaChoice == RMA_ALL)
                 rmaChoice = RMA_NONE;
             rmaChoice |= RMA_PUT;
-        }
-        else if (strcmp(argv[i], "-acc") == 0) {
+        } else if (strcmp(argv[i], "-acc") == 0) {
             if (rmaChoice == RMA_ALL)
                 rmaChoice = RMA_NONE;
             rmaChoice |= RMA_ACC;
-        }
-        else if (strcmp(argv[i], "-fence") == 0) {
+        } else if (strcmp(argv[i], "-fence") == 0) {
             if (syncChoice == SYNC_ALL)
                 syncChoice = SYNC_NONE;
             syncChoice |= SYNC_FENCE;
-        }
-        else if (strcmp(argv[i], "-lock") == 0) {
+        } else if (strcmp(argv[i], "-lock") == 0) {
             if (syncChoice == SYNC_ALL)
                 syncChoice = SYNC_NONE;
             syncChoice |= SYNC_LOCK;
-        }
-        else if (strcmp(argv[i], "-pscw") == 0) {
+        } else if (strcmp(argv[i], "-pscw") == 0) {
             if (syncChoice == SYNC_ALL)
                 syncChoice = SYNC_NONE;
             syncChoice |= SYNC_PSCW;
-        }
-        else if (strcmp(argv[i], "-maxsz") == 0) {
+        } else if (strcmp(argv[i], "-maxsz") == 0) {
             i++;
             maxSz = atoi(argv[i]);
-        }
-        else if (strcmp(argv[i], "-maxcount") == 0) {
+        } else if (strcmp(argv[i], "-maxcount") == 0) {
             i++;
             maxCount = atoi(argv[i]);
-        }
-        else if (strcmp(argv[i], "-barrier") == 0) {
+        } else if (strcmp(argv[i], "-barrier") == 0) {
             barrierSync = 1;
-        }
-        else {
+        } else {
             fprintf(stderr, "Unrecognized argument %s\n", argv[i]);
             fprintf(stderr,
                     "%s [ -put ] [ -acc ] [ -lock ] [ -fence ] [ -pscw ] [ -barrier ]  [ -maxsz msgsize ]\n",

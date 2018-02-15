@@ -1,5 +1,5 @@
-#ifndef OFI_TAG_LAYOUT_H
-#define OFI_TAG_LAYOUT_H
+#ifndef OFI_TAG_LAYOUT_H_INCLUDED
+#define OFI_TAG_LAYOUT_H_INCLUDED
 
 
 
@@ -141,4 +141,4 @@ static inline uint64_t init_recvtag_2(uint64_t * mask_bits,
 #define API_SET_1 1
 #define API_SET_2 2
 
-#endif /*OFI_TAG_LAYOUT_H*/
+#endif /* OFI_TAG_LAYOUT_H_INCLUDED */

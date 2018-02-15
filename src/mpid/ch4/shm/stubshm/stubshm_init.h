@@ -71,7 +71,7 @@ static inline int MPIDI_STUBSHM_mpi_free_mem(void *ptr)
 }
 
 static inline int MPIDI_STUBSHM_comm_get_lpid(MPIR_Comm * comm_ptr,
-                                          int idx, int *lpid_ptr, MPL_bool is_remote)
+                                              int idx, int *lpid_ptr, MPL_bool is_remote)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_COMM_GET_LPID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_COMM_GET_LPID);
@@ -82,7 +82,7 @@ static inline int MPIDI_STUBSHM_comm_get_lpid(MPIR_Comm * comm_ptr,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_get_node_id(MPIR_Comm * comm, int rank, int * id_p)
+static inline int MPIDI_STUBSHM_get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_GET_NODE_ID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_GET_NODE_ID);
@@ -93,7 +93,7 @@ static inline int MPIDI_STUBSHM_get_node_id(MPIR_Comm * comm, int rank, int * id
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_STUBSHM_get_max_node_id(MPIR_Comm * comm, int * max_id_p)
+static inline int MPIDI_STUBSHM_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_GET_MAX_NODE_ID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_GET_MAX_NODE_ID);
@@ -105,7 +105,7 @@ static inline int MPIDI_STUBSHM_get_max_node_id(MPIR_Comm * comm, int * max_id_p
 }
 
 static inline int MPIDI_STUBSHM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
-                                            char **local_upids)
+                                                char **local_upids)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_GET_LOCAL_UPIDS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_GET_LOCAL_UPIDS);
@@ -117,8 +117,8 @@ static inline int MPIDI_STUBSHM_get_local_upids(MPIR_Comm * comm, size_t ** loca
 }
 
 static inline int MPIDI_STUBSHM_upids_to_lupids(int size,
-                                            size_t * remote_upid_size,
-                                            char *remote_upids, int **remote_lupids)
+                                                size_t * remote_upid_size,
+                                                char *remote_upids, int **remote_lupids)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_UPIDS_TO_LUPIDS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_UPIDS_TO_LUPIDS);
@@ -130,7 +130,7 @@ static inline int MPIDI_STUBSHM_upids_to_lupids(int size,
 }
 
 static inline int MPIDI_STUBSHM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
-                                                        int size, const int lpids[])
+                                                            int size, const int lpids[])
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_CREATE_INTERCOMM_FROM_LPIDS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_CREATE_INTERCOMM_FROM_LPIDS);

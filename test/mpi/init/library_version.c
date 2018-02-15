@@ -21,8 +21,7 @@ int main(int argc, char *argv[])
     if (resultlen < 0) {
         errs++;
         printf("Resultlen is %d\n", resultlen);
-    }
-    else {
+    } else {
         if (verbose)
             printf("%s\n", version);
     }

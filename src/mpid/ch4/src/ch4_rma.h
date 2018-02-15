@@ -18,18 +18,19 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Put(const void *origin_addr,
-                                       int origin_count,
-                                       MPI_Datatype origin_datatype,
-                                       int target_rank,
-                                       MPI_Aint target_disp,
-                                       int target_count, MPI_Datatype target_datatype,
-                                       MPIR_Win * win)
+                                      int origin_count,
+                                      MPI_Datatype origin_datatype,
+                                      int target_rank,
+                                      MPI_Aint target_disp,
+                                      int target_count, MPI_Datatype target_datatype,
+                                      MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PUT);
     mpi_errno = MPIDI_NM_mpi_put(origin_addr, origin_count, origin_datatype,
-                                 target_rank, target_disp, target_count, target_datatype, win, NULL);
+                                 target_rank, target_disp, target_count, target_datatype, win,
+                                 NULL);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -45,18 +46,19 @@ MPL_STATIC_INLINE_PREFIX int MPID_Put(const void *origin_addr,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Get(void *origin_addr,
-                                       int origin_count,
-                                       MPI_Datatype origin_datatype,
-                                       int target_rank,
-                                       MPI_Aint target_disp,
-                                       int target_count, MPI_Datatype target_datatype,
-                                       MPIR_Win * win)
+                                      int origin_count,
+                                      MPI_Datatype origin_datatype,
+                                      int target_rank,
+                                      MPI_Aint target_disp,
+                                      int target_count, MPI_Datatype target_datatype,
+                                      MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GET);
     mpi_errno = MPIDI_NM_mpi_get(origin_addr, origin_count, origin_datatype,
-                                 target_rank, target_disp, target_count, target_datatype, win, NULL);
+                                 target_rank, target_disp, target_count, target_datatype, win,
+                                 NULL);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -72,13 +74,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get(void *origin_addr,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Accumulate(const void *origin_addr,
-                                              int origin_count,
-                                              MPI_Datatype origin_datatype,
-                                              int target_rank,
-                                              MPI_Aint target_disp,
-                                              int target_count,
-                                              MPI_Datatype target_datatype, MPI_Op op,
-                                              MPIR_Win * win)
+                                             int origin_count,
+                                             MPI_Datatype origin_datatype,
+                                             int target_rank,
+                                             MPI_Aint target_disp,
+                                             int target_count,
+                                             MPI_Datatype target_datatype, MPI_Op op,
+                                             MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ACCUMULATE);
@@ -101,11 +103,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Accumulate(const void *origin_addr,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Compare_and_swap(const void *origin_addr,
-                                                    const void *compare_addr,
-                                                    void *result_addr,
-                                                    MPI_Datatype datatype,
-                                                    int target_rank, MPI_Aint target_disp,
-                                                    MPIR_Win * win)
+                                                   const void *compare_addr,
+                                                   void *result_addr,
+                                                   MPI_Datatype datatype,
+                                                   int target_rank, MPI_Aint target_disp,
+                                                   MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMPARE_AND_SWAP);
@@ -127,13 +129,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Compare_and_swap(const void *origin_addr,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Raccumulate(const void *origin_addr,
-                                               int origin_count,
-                                               MPI_Datatype origin_datatype,
-                                               int target_rank,
-                                               MPI_Aint target_disp,
-                                               int target_count,
-                                               MPI_Datatype target_datatype,
-                                               MPI_Op op, MPIR_Win * win, MPIR_Request ** request)
+                                              int origin_count,
+                                              MPI_Datatype origin_datatype,
+                                              int target_rank,
+                                              MPI_Aint target_disp,
+                                              int target_count,
+                                              MPI_Datatype target_datatype,
+                                              MPI_Op op, MPIR_Win * win, MPIR_Request ** request)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RACCUMULATE);
@@ -156,17 +158,17 @@ MPL_STATIC_INLINE_PREFIX int MPID_Raccumulate(const void *origin_addr,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Rget_accumulate(const void *origin_addr,
-                                                   int origin_count,
-                                                   MPI_Datatype origin_datatype,
-                                                   void *result_addr,
-                                                   int result_count,
-                                                   MPI_Datatype result_datatype,
-                                                   int target_rank,
-                                                   MPI_Aint target_disp,
-                                                   int target_count,
-                                                   MPI_Datatype target_datatype,
-                                                   MPI_Op op, MPIR_Win * win,
-                                                   MPIR_Request ** request)
+                                                  int origin_count,
+                                                  MPI_Datatype origin_datatype,
+                                                  void *result_addr,
+                                                  int result_count,
+                                                  MPI_Datatype result_datatype,
+                                                  int target_rank,
+                                                  MPI_Aint target_disp,
+                                                  int target_count,
+                                                  MPI_Datatype target_datatype,
+                                                  MPI_Op op, MPIR_Win * win,
+                                                  MPIR_Request ** request)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RGET_ACCUMULATE);
@@ -190,10 +192,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rget_accumulate(const void *origin_addr,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Fetch_and_op(const void *origin_addr,
-                                                void *result_addr,
-                                                MPI_Datatype datatype,
-                                                int target_rank,
-                                                MPI_Aint target_disp, MPI_Op op, MPIR_Win * win)
+                                               void *result_addr,
+                                               MPI_Datatype datatype,
+                                               int target_rank,
+                                               MPI_Aint target_disp, MPI_Op op, MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_FETCH_AND_OP);
@@ -216,13 +218,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Fetch_and_op(const void *origin_addr,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Rget(void *origin_addr,
-                                        int origin_count,
-                                        MPI_Datatype origin_datatype,
-                                        int target_rank,
-                                        MPI_Aint target_disp,
-                                        int target_count,
-                                        MPI_Datatype target_datatype, MPIR_Win * win,
-                                        MPIR_Request ** request)
+                                       int origin_count,
+                                       MPI_Datatype origin_datatype,
+                                       int target_rank,
+                                       MPI_Aint target_disp,
+                                       int target_count,
+                                       MPI_Datatype target_datatype, MPIR_Win * win,
+                                       MPIR_Request ** request)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RGET);
@@ -245,13 +247,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rget(void *origin_addr,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Rput(const void *origin_addr,
-                                        int origin_count,
-                                        MPI_Datatype origin_datatype,
-                                        int target_rank,
-                                        MPI_Aint target_disp,
-                                        int target_count,
-                                        MPI_Datatype target_datatype, MPIR_Win * win,
-                                        MPIR_Request ** request)
+                                       int origin_count,
+                                       MPI_Datatype origin_datatype,
+                                       int target_rank,
+                                       MPI_Aint target_disp,
+                                       int target_count,
+                                       MPI_Datatype target_datatype, MPIR_Win * win,
+                                       MPIR_Request ** request)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RPUT);
@@ -274,16 +276,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rput(const void *origin_addr,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Get_accumulate(const void *origin_addr,
-                                                  int origin_count,
-                                                  MPI_Datatype origin_datatype,
-                                                  void *result_addr,
-                                                  int result_count,
-                                                  MPI_Datatype result_datatype,
-                                                  int target_rank,
-                                                  MPI_Aint target_disp,
-                                                  int target_count,
-                                                  MPI_Datatype target_datatype, MPI_Op op,
-                                                  MPIR_Win * win)
+                                                 int origin_count,
+                                                 MPI_Datatype origin_datatype,
+                                                 void *result_addr,
+                                                 int result_count,
+                                                 MPI_Datatype result_datatype,
+                                                 int target_rank,
+                                                 MPI_Aint target_disp,
+                                                 int target_count,
+                                                 MPI_Datatype target_datatype, MPI_Op op,
+                                                 MPIR_Win * win)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET_ACCUMULATE);

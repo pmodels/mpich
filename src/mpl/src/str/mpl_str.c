@@ -26,8 +26,7 @@ int MPL_snprintf(char *str, size_t size, mpl_const char *format, ...)
             while (size-- > 0 && *p) {
                 *out_str++ = *p++;
             }
-        }
-        else {
+        } else {
             int nc;
             int width = -1;
 
@@ -49,96 +48,95 @@ int MPL_snprintf(char *str, size_t size, mpl_const char *format, ...)
                 /* When there is no longer a digit, get the format
                  * character */
                 nc = *p++;
-            }
-            else {
+            } else {
                 /* Skip over the format string */
                 p += 2;
             }
 
             switch (nc) {
-            case '%':
-                *out_str++ = '%';
-                size--;
-                break;
+                case '%':
+                    *out_str++ = '%';
+                    size--;
+                    break;
 
-            case 'd':
-                {
-                    int val;
-                    char tmp[20];
-                    char *t = tmp;
-                    /* Get the argument, of integer type */
-                    val = va_arg(list, int);
-                    sprintf(tmp, "%d", val);
-                    if (width > 0) {
-                        size_t tmplen = strlen(tmp);
-                        /* If a width was specified, pad with spaces on the
-                         * left (on the right if %-3d given; not implemented yet */
-                        while (size-- > 0 && width-- > tmplen)
-                            *out_str++ = ' ';
+                case 'd':
+                    {
+                        int val;
+                        char tmp[20];
+                        char *t = tmp;
+                        /* Get the argument, of integer type */
+                        val = va_arg(list, int);
+                        sprintf(tmp, "%d", val);
+                        if (width > 0) {
+                            size_t tmplen = strlen(tmp);
+                            /* If a width was specified, pad with spaces on the
+                             * left (on the right if %-3d given; not implemented yet */
+                            while (size-- > 0 && width-- > tmplen)
+                                *out_str++ = ' ';
+                        }
+                        while (size-- > 0 && *t) {
+                            *out_str++ = *t++;
+                        }
                     }
-                    while (size-- > 0 && *t) {
-                        *out_str++ = *t++;
-                    }
-                }
-                break;
+                    break;
 
-            case 'x':
-                {
-                    int val;
-                    char tmp[20];
-                    char *t = tmp;
-                    /* Get the argument, of integer type */
-                    val = va_arg(list, int);
-                    sprintf(tmp, "%x", val);
-                    if (width > 0) {
-                        size_t tmplen = strlen(tmp);
-                        /* If a width was specified, pad with spaces on the
-                         * left (on the right if %-3d given; not implemented yet */
-                        while (size-- > 0 && width-- > tmplen)
-                            *out_str++ = ' ';
+                case 'x':
+                    {
+                        int val;
+                        char tmp[20];
+                        char *t = tmp;
+                        /* Get the argument, of integer type */
+                        val = va_arg(list, int);
+                        sprintf(tmp, "%x", val);
+                        if (width > 0) {
+                            size_t tmplen = strlen(tmp);
+                            /* If a width was specified, pad with spaces on the
+                             * left (on the right if %-3d given; not implemented yet */
+                            while (size-- > 0 && width-- > tmplen)
+                                *out_str++ = ' ';
+                        }
+                        while (size-- > 0 && *t) {
+                            *out_str++ = *t++;
+                        }
                     }
-                    while (size-- > 0 && *t) {
-                        *out_str++ = *t++;
-                    }
-                }
-                break;
+                    break;
 
-            case 'p':
-                {
-                    void *val;
-                    char tmp[20];
-                    char *t = tmp;
-                    /* Get the argument, of pointer type */
-                    val = va_arg(list, void *);
-                    sprintf(tmp, "%p", val);
-                    if (width > 0) {
-                        size_t tmplen = strlen(tmp);
-                        /* If a width was specified, pad with spaces on the
-                         * left (on the right if %-3d given; not implemented yet */
-                        while (size-- > 0 && width-- > tmplen)
-                            *out_str++ = ' ';
+                case 'p':
+                    {
+                        void *val;
+                        char tmp[20];
+                        char *t = tmp;
+                        /* Get the argument, of pointer type */
+                        val = va_arg(list, void *);
+                        sprintf(tmp, "%p", val);
+                        if (width > 0) {
+                            size_t tmplen = strlen(tmp);
+                            /* If a width was specified, pad with spaces on the
+                             * left (on the right if %-3d given; not implemented yet */
+                            while (size-- > 0 && width-- > tmplen)
+                                *out_str++ = ' ';
+                        }
+                        while (size-- > 0 && *t) {
+                            *out_str++ = *t++;
+                        }
                     }
-                    while (size-- > 0 && *t) {
-                        *out_str++ = *t++;
-                    }
-                }
-                break;
+                    break;
 
-            case 's':
-                {
-                    char *s_arg;
-                    /* Get the argument, of pointer to char type */
-                    s_arg = va_arg(list, char *);
-                    while (size-- > 0 && s_arg && *s_arg) {
-                        *out_str++ = *s_arg++;
+                case 's':
+                    {
+                        char *s_arg;
+                        /* Get the argument, of pointer to char type */
+                        s_arg = va_arg(list, char *);
+                        while (size-- > 0 && s_arg && *s_arg) {
+                            *out_str++ = *s_arg++;
+                        }
                     }
-                }
-                break;
+                    break;
 
-            default:
-                /* Error, unknown case */
-                return -1;
-                break;
+                default:
+                    /* Error, unknown case */
+                    return -1;
+                    break;
             }
         }
     }
@@ -245,8 +243,7 @@ int MPL_strncpy(char *dest, const char *src, size_t n)
     if (i > 0) {
         *d_ptr = 0;
         return 0;
-    }
-    else {
+    } else {
         /* Force a null at the end of the string (gives better safety
          * in case the user fails to check the error code) */
         dest[n - 1] = 0;
@@ -290,7 +287,7 @@ char *MPL_strsep(char **stringp, const char *delim)
         for (j = 0; delim[j] != '\0'; ++j) {
             if (ret[i] == delim[j]) {
                 ret[i] = '\0';
-                *stringp = &ret[i+1];
+                *stringp = &ret[i + 1];
                 return ret;
             }
         }
@@ -354,8 +351,7 @@ int MPL_strnapp(char *dest, const char *src, size_t n)
     if (i >= 0) {
         *d_ptr = 0;
         return 0;
-    }
-    else {
+    } else {
         /* Force the null at the end */
         *--d_ptr = 0;
 

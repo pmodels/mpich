@@ -60,7 +60,6 @@ int main(int argc, char **argv)
                             ("ERROR: unexpected message tag from MPI_Recv(): lp=0, rp=%d, expected=%d, actual=%d, count=%d\n",
                              status.MPI_SOURCE, status.MPI_TAG, tag, msg_cnt);
                     }
-
 #		    if defined(VERBOSE)
                     {
                         printf("sending message: p=%d s=%d c=%d\n",
@@ -76,8 +75,7 @@ int main(int argc, char **argv)
                         MTestPrintError(mpi_errno);
                     }
                 }
-            }
-            else {
+            } else {
                 int incoming_msg_size;
 
                 /* Send synchronization message */

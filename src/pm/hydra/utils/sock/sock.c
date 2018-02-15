@@ -47,15 +47,14 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
 
         if (high_port < low_port)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "high port < low port\n");
-    }
-    else {
+    } else {
         /* If port range is NULL, if a port is already provided, we
          * pick that. Otherwise, we search for an available port. */
         low_port = *port;
         high_port = *port;
     }
 
- setup_socket:
+  setup_socket:
     *listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (*listen_fd < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "cannot open socket (%s)\n",
@@ -84,8 +83,7 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
             if (errno != EADDRINUSE)
                 HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "bind error (%s)\n",
                                     MPL_strerror(errno));
-        }
-        else    /* We got a port */
+        } else  /* We got a port */
             break;
     }
 
@@ -164,8 +162,7 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd, int retri
             if (retry_count > retries)
                 break;
             HYDU_delay(delay);
-        }
-        else
+        } else
             break;
     } while (1);
 
@@ -245,12 +242,10 @@ HYD_status HYDU_sock_read(int fd, void *buf, int maxlen, int *recvd, int *closed
 
         if (tmp < 0) {
             HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "read error (%s)\n", MPL_strerror(errno));
-        }
-        else if (tmp == 0) {
+        } else if (tmp == 0) {
             *closed = 1;
             goto fn_exit;
-        }
-        else {
+        } else {
             *recvd += tmp;
         }
 
@@ -286,14 +281,12 @@ HYD_status HYDU_sock_write(int fd, const void *buf, int maxlen, int *sent, int *
                     goto fn_exit;
                 else
                     continue;
-            }
-            else if (errno == ECONNRESET) {
+            } else if (errno == ECONNRESET) {
                 *closed = 1;
                 goto fn_exit;
             }
             HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "write error (%s)\n", MPL_strerror(errno));
-        }
-        else {
+        } else {
             *sent += tmp;
         }
 
@@ -412,8 +405,7 @@ HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed)
             for (tmp = fwd_hash_list; tmp->next; tmp = tmp->next);
             tmp->next = fwd_hash;
         }
-    }
-    else {
+    } else {
         fwd_hash = tmp;
     }
 
@@ -564,12 +556,10 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
          * cannot try steps 2 and 3 either, since we don't have our
          * local hostname. */
         goto fn_exit;
-    }
-    else if (!strcmp(lhost, host)) {
+    } else if (!strcmp(lhost, host)) {
         *is_local = 1;
         goto fn_exit;
-    }
-    else {
+    } else {
         /* we have our local hostname, but that does not match the
          * provided hostname.  Let's try to get our remote IP address
          * first.  If we can't get that, we can give up. */
@@ -664,8 +654,7 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
 
     if (gethostname(lhost, MAX_HOSTNAME_LEN) < 0) {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "gethostname returned an error\n");
-    }
-    else if (!strcmp(lhost, host)) {
+    } else if (!strcmp(lhost, host)) {
         *is_local = 1;
     }
 
@@ -702,11 +691,9 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
     if (iface) {
         status = HYDU_sock_get_iface_ip(iface, &ip);
         HYDU_ERR_POP(status, "unable to get network interface IP\n");
-    }
-    else if (hostname) {
+    } else if (hostname) {
         ip = MPL_strdup(hostname);
-    }
-    else {
+    } else {
         char localhost[MAX_HOSTNAME_LEN] = { 0 };
 
         if (gethostname(localhost, MAX_HOSTNAME_LEN) < 0)

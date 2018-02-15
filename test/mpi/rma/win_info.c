@@ -28,8 +28,7 @@ static int check_win_info_get(MPI_Win win, const char *key, const char *exp_val)
         else
             printf("%d: %s not defined\n", rank, key);
         errors++;
-    }
-    else if (flag && VERBOSE)
+    } else if (flag && VERBOSE)
         printf("%d: %s = %s\n", rank, key, buf);
 
     MPI_Info_free(&info_out);

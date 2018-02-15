@@ -45,8 +45,7 @@ int main(int argc, char **argv)
 
         if (mpi_errno == MPI_SUCCESS) {
             ncomm++;
-        }
-        else {
+        } else {
             if (verbose)
                 printf("%d: Error creating comm %d\n", rank, i);
             errors = 0;

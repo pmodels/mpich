@@ -248,8 +248,7 @@ static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
     if (val) {
         tmp[i++] = MPL_strdup("0 msg=success value=");
         tmp[i++] = MPL_strdup(val);
-    }
-    else {
+    } else {
         tmp[i++] = MPL_strdup("-1 msg=key_");
         tmp[i++] = MPL_strdup(key);
         tmp[i++] = MPL_strdup("_not_found value=unknown");
@@ -291,8 +290,7 @@ static void segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
             j++;
             segment_list[j].start_idx = i + 1;
             segment_list[j].token_count = 0;
-        }
-        else {
+        } else {
             segment_list[j].token_count++;
         }
     }
@@ -369,8 +367,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         /* We didn't read the entire PMI string; wait for the rest to
          * arrive */
         goto fn_exit;
-    }
-    else {
+    } else {
         /* Got the entire PMI string; free the arguments and reset */
         HYDU_free_strlist(mcmd_args);
         mcmd_num_args = 0;
@@ -417,8 +414,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
             HYDU_ERR_POP(status, "unable to allocate exec\n");
             exec_list->appnum = 0;
             exec = exec_list;
-        }
-        else {
+        } else {
             for (exec = exec_list; exec->next; exec = exec->next);
             status = HYDU_alloc_exec(&exec->next);
             HYDU_ERR_POP(status, "unable to allocate exec\n");
@@ -446,11 +442,9 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
             if (!strcmp(info_key, "path")) {
                 path = MPL_strdup(info_val);
-            }
-            else if (!strcmp(info_key, "wdir")) {
+            } else if (!strcmp(info_key, "wdir")) {
                 exec->wdir = MPL_strdup(info_val);
-            }
-            else if (!strcmp(info_key, "host") || !strcmp(info_key, "hosts")) {
+            } else if (!strcmp(info_key, "host") || !strcmp(info_key, "hosts")) {
                 char *saveptr;
                 char *host = strtok_r(info_val, ",", &saveptr);
                 while (host) {
@@ -458,13 +452,11 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
                     HYDU_ERR_POP(status, "error creating node list\n");
                     host = strtok_r(NULL, ",", &saveptr);
                 }
-            }
-            else if (!strcmp(info_key, "hostfile")) {
+            } else if (!strcmp(info_key, "hostfile")) {
                 status = HYDU_parse_hostfile(info_val, &pg->user_node_list,
                                              HYDU_process_mfile_token);
                 HYDU_ERR_POP(status, "error parsing hostfile\n");
-            }
-            else {
+            } else {
                 /* Unrecognized info key; ignore */
             }
         }
@@ -550,8 +542,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     if (pg->user_node_list) {
         status = HYDU_create_proxy_list(exec_list, pg->user_node_list, pg);
         HYDU_ERR_POP(status, "error creating proxy list\n");
-    }
-    else {
+    } else {
         status = HYDU_create_proxy_list(exec_list, HYD_server_info.node_list, pg);
         HYDU_ERR_POP(status, "error creating proxy list\n");
     }
@@ -561,8 +552,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         pg->pg_core_count = 0;
         for (i = 0, node = pg->user_node_list; node; node = node->next, i++)
             pg->pg_core_count += node->core_count;
-    }
-    else {
+    } else {
         pg->pg_core_count = 0;
         for (proxy = pg->proxy_list; proxy; proxy = proxy->next)
             pg->pg_core_count += proxy->node->core_count;
@@ -746,8 +736,7 @@ static HYD_status fn_lookup_name(int fd, int pid, int pgid, char *args[])
         HYD_STRING_STASH(stash, MPL_strdup(" port="), status);
         HYD_STRING_STASH(stash, MPL_strdup(value), status);
         HYD_STRING_STASH(stash, MPL_strdup(" info=ok rc=0 msg=success\n"), status);
-    }
-    else {
+    } else {
         HYD_STRING_STASH(stash, MPL_strdup(" rc=1 msg=service_not_found\n"), status);
     }
 

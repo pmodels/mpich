@@ -1,4 +1,14 @@
 statusesf 1
 greqf 1
-allpairf 2
+sendf 2
+rsendf 2
+ssendf 2
+isendf 2
+irsendf 2
+issendf 2
+psendf 2
+prsendf 2
+pssendf 2
+sendrecvf 2
+sendrecvreplf 2
 mprobef 2 mpiversion=3.0

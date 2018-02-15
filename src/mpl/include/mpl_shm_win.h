@@ -4,12 +4,12 @@
  *  (C) 2016 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#ifndef MPL_SHM_WIN_INCLUDED
-#define MPL_SHM_WIN_INCLUDED
+#ifndef MPL_SHM_WIN_H_INCLUDED
+#define MPL_SHM_WIN_H_INCLUDED
 
 typedef HANDLE MPL_shm_lhnd_t;
 
-typedef char * MPLI_shm_ghnd_t;
+typedef char *MPLI_shm_ghnd_t;
 /* The local handle, lhnd, is valid only for the current process,
  * The global handle, ghnd, is valid across multiple processes
  * The handle flag, flag, is used to set various attributes of the
@@ -31,7 +31,7 @@ typedef MPLI_shm_lghnd_t *MPL_shm_hnd_t;
 #define MPL_shm_SEG_ALREADY_EXISTS ERROR_ALREADY_EXISTS
 
 /* Returns 0 on success, -1 on error */
-#define MPLI_shm_lhnd_close(hnd)(                                  \
+#define MPLI_shm_lhnd_close(hnd)(\
     (CloseHandle(MPLI_shm_lhnd_get(hnd)) != 0) ? 0 : -1            \
 )
 
@@ -43,8 +43,8 @@ static inline int MPL_shm_get_uniq_str(char *str, int strlen)
 {
     LARGE_INTEGER perfCnt;
     QueryPerformanceCounter(&perfCnt);
-    return(MPL_snprintf(str, strlen, "MPICH_NEM_%d_%I64d", 
-            GetCurrentThreadId(), (perfCnt.QuadPart)));
+    return (MPL_snprintf(str, strlen, "MPICH_NEM_%d_%I64d",
+                         GetCurrentThreadId(), (perfCnt.QuadPart)));
 }
 #endif
 
@@ -67,4 +67,4 @@ static inline int MPL_shm_seg_remove(MPL_shm_hnd_t hnd)
     return MPI_SUCCESS;
 }
 
-#endif /* ifndef MPL_SHM_WIN_INCLUDED */
+#endif /* MPL_SHM_WIN_H_INCLUDED */

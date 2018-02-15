@@ -57,8 +57,7 @@ int main(int argc, char *argv[])
                     printf(" Error: strcmp(test_str,buf)!=0\n");
                     ++errs;
                 }
-            }
-            else {
+            } else {
                 strncpy(buf, test_str, 5);
                 MPI_Send(buf, strlen(buf) + 1, MPI_CHAR, 0, 0, intercomm);
             }

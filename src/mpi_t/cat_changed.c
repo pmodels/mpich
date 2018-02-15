@@ -14,7 +14,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_category_changed as PMPI_T_category_changed
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_T_category_changed(int *stamp) __attribute__((weak,alias("PMPI_T_category_changed")));
+int MPI_T_category_changed(int *stamp) __attribute__ ((weak, alias("PMPI_T_category_changed")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -56,15 +56,15 @@ int MPI_T_category_changed(int *stamp)
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_CATEGORY_CHANGED);
 
     /* Validate parameters */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        MPID_BEGIN_ERROR_CHECKS
+        MPID_BEGIN_ERROR_CHECKS;
         {
             MPIR_ERRTEST_ARGNULL(stamp, "stamp", mpi_errno);
         }
-        MPID_END_ERROR_CHECKS
+        MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
@@ -72,20 +72,20 @@ int MPI_T_category_changed(int *stamp)
 
     /* ... end of body of routine ... */
 
-fn_exit:
+  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_CATEGORY_CHANGED);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
-fn_fail:
+  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_category_changed", "**mpi_t_category_changed %p", stamp);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_t_category_changed", "**mpi_t_category_changed %p", stamp);
     }
-#   endif
+#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

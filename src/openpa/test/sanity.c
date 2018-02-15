@@ -15,7 +15,7 @@ int main(int argc, char **argv)
     int c;
 #if defined(OPA_USE_LOCK_BASED_PRIMITIVES)
     OPA_emulation_ipl_t shm_lock;
-    OPA_Interprocess_lock_init(&shm_lock, 1/*isLeader*/);
+    OPA_Interprocess_lock_init(&shm_lock, 1 /*isLeader */);
 #endif
 
     OPA_store_int(&a, 0);
@@ -32,4 +32,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-

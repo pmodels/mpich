@@ -43,8 +43,7 @@ int main(int argc, char **argv)
         if ((err) && (errclass != MPIX_ERR_PROC_FAILED)) {
             fprintf(stderr, "Wrong error code (%d) returned. Expected MPIX_ERR_PROC_FAILED\n",
                     errclass);
-        }
-        else {
+        } else {
             printf(" No Errors\n");
             fflush(stdout);
         }

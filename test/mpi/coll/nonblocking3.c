@@ -160,251 +160,250 @@ static void start_random_nonblocking(MPI_Comm comm, unsigned int rndnum, MPI_Req
 #define NUM_CASES (21)
     l->case_num = rand_range(rndnum, 0, NUM_CASES);
     switch (l->case_num) {
-    case 0:    /* MPI_Ibcast */
-        for (i = 0; i < COUNT; ++i) {
-            if (rank == 0) {
-                buf[i] = i;
+        case 0:        /* MPI_Ibcast */
+            for (i = 0; i < COUNT; ++i) {
+                if (rank == 0) {
+                    buf[i] = i;
+                } else {
+                    buf[i] = 0xdeadbeef;
+                }
             }
-            else {
-                buf[i] = 0xdeadbeef;
+            MPI_Ibcast(buf, COUNT, MPI_INT, 0, comm, req);
+            break;
+
+        case 1:        /* MPI_Ibcast (again, but designed to stress scatter/allgather impls) */
+            /* FIXME fiddle with PRIME and buffer allocation s.t. PRIME is much larger (1021?) */
+            buf_alias = (signed char *) buf;
+            my_assert(COUNT * size * sizeof(int) > PRIME);      /* sanity */
+            for (i = 0; i < PRIME; ++i) {
+                if (rank == 0)
+                    buf_alias[i] = i;
+                else
+                    buf_alias[i] = 0xdb;
             }
-        }
-        MPI_Ibcast(buf, COUNT, MPI_INT, 0, comm, req);
-        break;
+            for (i = PRIME; i < COUNT * size * sizeof(int); ++i) {
+                buf_alias[i] = 0xbf;
+            }
+            MPI_Ibcast(buf_alias, PRIME, MPI_SIGNED_CHAR, 0, comm, req);
+            break;
 
-    case 1:    /* MPI_Ibcast (again, but designed to stress scatter/allgather impls) */
-        /* FIXME fiddle with PRIME and buffer allocation s.t. PRIME is much larger (1021?) */
-        buf_alias = (signed char *) buf;
-        my_assert(COUNT * size * sizeof(int) > PRIME);  /* sanity */
-        for (i = 0; i < PRIME; ++i) {
-            if (rank == 0)
-                buf_alias[i] = i;
-            else
-                buf_alias[i] = 0xdb;
-        }
-        for (i = PRIME; i < COUNT * size * sizeof(int); ++i) {
-            buf_alias[i] = 0xbf;
-        }
-        MPI_Ibcast(buf_alias, PRIME, MPI_SIGNED_CHAR, 0, comm, req);
-        break;
+        case 2:        /* MPI_Ibarrier */
+            MPI_Ibarrier(comm, req);
+            break;
 
-    case 2:    /* MPI_Ibarrier */
-        MPI_Ibarrier(comm, req);
-        break;
-
-    case 3:    /* MPI_Ireduce */
-        for (i = 0; i < COUNT; ++i) {
-            buf[i] = rank + i;
-            recvbuf[i] = 0xdeadbeef;
-        }
-        MPI_Ireduce(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, 0, comm, req);
-        break;
-
-    case 4:    /* same again, use a user op and free it before the wait */
-        {
-            MPI_Op op = MPI_OP_NULL;
-            MPI_Op_create(sum_fn, /*commute= */ 1, &op);
+        case 3:        /* MPI_Ireduce */
             for (i = 0; i < COUNT; ++i) {
                 buf[i] = rank + i;
                 recvbuf[i] = 0xdeadbeef;
             }
-            MPI_Ireduce(buf, recvbuf, COUNT, MPI_INT, op, 0, comm, req);
-            MPI_Op_free(&op);
-        }
-        break;
+            MPI_Ireduce(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, 0, comm, req);
+            break;
 
-    case 5:    /* MPI_Iallreduce */
-        for (i = 0; i < COUNT; ++i) {
-            buf[i] = rank + i;
-            recvbuf[i] = 0xdeadbeef;
-        }
-        MPI_Iallreduce(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, comm, req);
-        break;
-
-    case 6:    /* MPI_Ialltoallv (a weak test, neither irregular nor sparse) */
-        for (i = 0; i < size; ++i) {
-            sendcounts[i] = COUNT;
-            recvcounts[i] = COUNT;
-            sdispls[i] = COUNT * i;
-            rdispls[i] = COUNT * i;
-            for (j = 0; j < COUNT; ++j) {
-                buf[i * COUNT + j] = rank + (i * j);
-                recvbuf[i * COUNT + j] = 0xdeadbeef;
+        case 4:        /* same again, use a user op and free it before the wait */
+            {
+                MPI_Op op = MPI_OP_NULL;
+                MPI_Op_create(sum_fn, /*commute= */ 1, &op);
+                for (i = 0; i < COUNT; ++i) {
+                    buf[i] = rank + i;
+                    recvbuf[i] = 0xdeadbeef;
+                }
+                MPI_Ireduce(buf, recvbuf, COUNT, MPI_INT, op, 0, comm, req);
+                MPI_Op_free(&op);
             }
-        }
-        MPI_Ialltoallv(buf, sendcounts, sdispls, MPI_INT, recvbuf, recvcounts, rdispls, MPI_INT,
-                       comm, req);
-        break;
+            break;
 
-    case 7:    /* MPI_Igather */
-        for (i = 0; i < size * COUNT; ++i) {
-            buf[i] = rank + i;
-            recvbuf[i] = 0xdeadbeef;
-        }
-        MPI_Igather(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, 0, comm, req);
-        break;
+        case 5:        /* MPI_Iallreduce */
+            for (i = 0; i < COUNT; ++i) {
+                buf[i] = rank + i;
+                recvbuf[i] = 0xdeadbeef;
+            }
+            MPI_Iallreduce(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, comm, req);
+            break;
 
-    case 8:    /* same test again, just use a dup'ed datatype and free it before the wait */
-        {
-            MPI_Datatype type = MPI_DATATYPE_NULL;
-            MPI_Type_dup(MPI_INT, &type);
+        case 6:        /* MPI_Ialltoallv (a weak test, neither irregular nor sparse) */
+            for (i = 0; i < size; ++i) {
+                sendcounts[i] = COUNT;
+                recvcounts[i] = COUNT;
+                sdispls[i] = COUNT * i;
+                rdispls[i] = COUNT * i;
+                for (j = 0; j < COUNT; ++j) {
+                    buf[i * COUNT + j] = rank + (i * j);
+                    recvbuf[i * COUNT + j] = 0xdeadbeef;
+                }
+            }
+            MPI_Ialltoallv(buf, sendcounts, sdispls, MPI_INT, recvbuf, recvcounts, rdispls, MPI_INT,
+                           comm, req);
+            break;
+
+        case 7:        /* MPI_Igather */
             for (i = 0; i < size * COUNT; ++i) {
                 buf[i] = rank + i;
                 recvbuf[i] = 0xdeadbeef;
             }
-            MPI_Igather(buf, COUNT, MPI_INT, recvbuf, COUNT, type, 0, comm, req);
-            MPI_Type_free(&type);       /* should cause implementations that don't refcount
+            MPI_Igather(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, 0, comm, req);
+            break;
+
+        case 8:        /* same test again, just use a dup'ed datatype and free it before the wait */
+            {
+                MPI_Datatype type = MPI_DATATYPE_NULL;
+                MPI_Type_dup(MPI_INT, &type);
+                for (i = 0; i < size * COUNT; ++i) {
+                    buf[i] = rank + i;
+                    recvbuf[i] = 0xdeadbeef;
+                }
+                MPI_Igather(buf, COUNT, MPI_INT, recvbuf, COUNT, type, 0, comm, req);
+                MPI_Type_free(&type);   /* should cause implementations that don't refcount
                                          * correctly to blow up or hang in the wait */
-        }
-        break;
+            }
+            break;
 
-    case 9:    /* MPI_Iscatter */
-        for (i = 0; i < size; ++i) {
-            for (j = 0; j < COUNT; ++j) {
-                if (rank == 0)
-                    buf[i * COUNT + j] = i + j;
+        case 9:        /* MPI_Iscatter */
+            for (i = 0; i < size; ++i) {
+                for (j = 0; j < COUNT; ++j) {
+                    if (rank == 0)
+                        buf[i * COUNT + j] = i + j;
+                    else
+                        buf[i * COUNT + j] = 0xdeadbeef;
+                    recvbuf[i * COUNT + j] = 0xdeadbeef;
+                }
+            }
+            MPI_Iscatter(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, 0, comm, req);
+            break;
+
+        case 10:       /* MPI_Iscatterv */
+            for (i = 0; i < size; ++i) {
+                /* weak test, just test the regular case where all counts are equal */
+                sendcounts[i] = COUNT;
+                sdispls[i] = i * COUNT;
+                for (j = 0; j < COUNT; ++j) {
+                    if (rank == 0)
+                        buf[i * COUNT + j] = i + j;
+                    else
+                        buf[i * COUNT + j] = 0xdeadbeef;
+                    recvbuf[i * COUNT + j] = 0xdeadbeef;
+                }
+            }
+            MPI_Iscatterv(buf, sendcounts, sdispls, MPI_INT, recvbuf, COUNT, MPI_INT, 0, comm, req);
+            break;
+
+        case 11:       /* MPI_Ireduce_scatter */
+            for (i = 0; i < size; ++i) {
+                recvcounts[i] = COUNT;
+                for (j = 0; j < COUNT; ++j) {
+                    buf[i * COUNT + j] = rank + i;
+                    recvbuf[i * COUNT + j] = 0xdeadbeef;
+                }
+            }
+            MPI_Ireduce_scatter(buf, recvbuf, recvcounts, MPI_INT, MPI_SUM, comm, req);
+            break;
+
+        case 12:       /* MPI_Ireduce_scatter_block */
+            for (i = 0; i < size; ++i) {
+                for (j = 0; j < COUNT; ++j) {
+                    buf[i * COUNT + j] = rank + i;
+                    recvbuf[i * COUNT + j] = 0xdeadbeef;
+                }
+            }
+            MPI_Ireduce_scatter_block(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, comm, req);
+            break;
+
+        case 13:       /* MPI_Igatherv */
+            for (i = 0; i < size * COUNT; ++i) {
+                buf[i] = 0xdeadbeef;
+                recvbuf[i] = 0xdeadbeef;
+            }
+            for (i = 0; i < COUNT; ++i) {
+                buf[i] = rank + i;
+            }
+            for (i = 0; i < size; ++i) {
+                recvcounts[i] = COUNT;
+                rdispls[i] = i * COUNT;
+            }
+            MPI_Igatherv(buf, COUNT, MPI_INT, recvbuf, recvcounts, rdispls, MPI_INT, 0, comm, req);
+            break;
+
+        case 14:       /* MPI_Ialltoall */
+            for (i = 0; i < size; ++i) {
+                for (j = 0; j < COUNT; ++j) {
+                    buf[i * COUNT + j] = rank + (i * j);
+                    recvbuf[i * COUNT + j] = 0xdeadbeef;
+                }
+            }
+            MPI_Ialltoall(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, comm, req);
+            break;
+
+        case 15:       /* MPI_Iallgather */
+            for (i = 0; i < size * COUNT; ++i) {
+                buf[i] = rank + i;
+                recvbuf[i] = 0xdeadbeef;
+            }
+            MPI_Iallgather(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, comm, req);
+            break;
+
+        case 16:       /* MPI_Iallgatherv */
+            for (i = 0; i < size; ++i) {
+                for (j = 0; j < COUNT; ++j) {
+                    recvbuf[i * COUNT + j] = 0xdeadbeef;
+                }
+                recvcounts[i] = COUNT;
+                rdispls[i] = i * COUNT;
+            }
+            for (i = 0; i < COUNT; ++i)
+                buf[i] = rank + i;
+            MPI_Iallgatherv(buf, COUNT, MPI_INT, recvbuf, recvcounts, rdispls, MPI_INT, comm, req);
+            break;
+
+        case 17:       /* MPI_Iscan */
+            for (i = 0; i < COUNT; ++i) {
+                buf[i] = rank + i;
+                recvbuf[i] = 0xdeadbeef;
+            }
+            MPI_Iscan(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, comm, req);
+            break;
+
+        case 18:       /* MPI_Iexscan */
+            for (i = 0; i < COUNT; ++i) {
+                buf[i] = rank + i;
+                recvbuf[i] = 0xdeadbeef;
+            }
+            MPI_Iexscan(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, comm, req);
+            break;
+
+        case 19:       /* MPI_Ialltoallw (a weak test, neither irregular nor sparse) */
+            for (i = 0; i < size; ++i) {
+                sendcounts[i] = COUNT;
+                recvcounts[i] = COUNT;
+                sdispls[i] = COUNT * i * sizeof(int);
+                rdispls[i] = COUNT * i * sizeof(int);
+                sendtypes[i] = MPI_INT;
+                recvtypes[i] = MPI_INT;
+                for (j = 0; j < COUNT; ++j) {
+                    buf[i * COUNT + j] = rank + (i * j);
+                    recvbuf[i * COUNT + j] = 0xdeadbeef;
+                }
+            }
+            MPI_Ialltoallw(buf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
+                           recvtypes, comm, req);
+            break;
+
+        case 20:       /* basic pt2pt MPI_Isend/MPI_Irecv pairing */
+            /* even ranks send to odd ranks, but only if we have a full pair */
+            if ((rank % 2 != 0) || (rank != size - 1)) {
+                for (j = 0; j < COUNT; ++j) {
+                    buf[j] = j;
+                    recvbuf[j] = 0xdeadbeef;
+                }
+                if (rank % 2 == 0)
+                    MPI_Isend(buf, COUNT, MPI_INT, rank + 1, 5, comm, req);
                 else
-                    buf[i * COUNT + j] = 0xdeadbeef;
-                recvbuf[i * COUNT + j] = 0xdeadbeef;
+                    MPI_Irecv(recvbuf, COUNT, MPI_INT, rank - 1, 5, comm, req);
             }
-        }
-        MPI_Iscatter(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, 0, comm, req);
-        break;
+            break;
 
-    case 10:   /* MPI_Iscatterv */
-        for (i = 0; i < size; ++i) {
-            /* weak test, just test the regular case where all counts are equal */
-            sendcounts[i] = COUNT;
-            sdispls[i] = i * COUNT;
-            for (j = 0; j < COUNT; ++j) {
-                if (rank == 0)
-                    buf[i * COUNT + j] = i + j;
-                else
-                    buf[i * COUNT + j] = 0xdeadbeef;
-                recvbuf[i * COUNT + j] = 0xdeadbeef;
-            }
-        }
-        MPI_Iscatterv(buf, sendcounts, sdispls, MPI_INT, recvbuf, COUNT, MPI_INT, 0, comm, req);
-        break;
-
-    case 11:   /* MPI_Ireduce_scatter */
-        for (i = 0; i < size; ++i) {
-            recvcounts[i] = COUNT;
-            for (j = 0; j < COUNT; ++j) {
-                buf[i * COUNT + j] = rank + i;
-                recvbuf[i * COUNT + j] = 0xdeadbeef;
-            }
-        }
-        MPI_Ireduce_scatter(buf, recvbuf, recvcounts, MPI_INT, MPI_SUM, comm, req);
-        break;
-
-    case 12:   /* MPI_Ireduce_scatter_block */
-        for (i = 0; i < size; ++i) {
-            for (j = 0; j < COUNT; ++j) {
-                buf[i * COUNT + j] = rank + i;
-                recvbuf[i * COUNT + j] = 0xdeadbeef;
-            }
-        }
-        MPI_Ireduce_scatter_block(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, comm, req);
-        break;
-
-    case 13:   /* MPI_Igatherv */
-        for (i = 0; i < size * COUNT; ++i) {
-            buf[i] = 0xdeadbeef;
-            recvbuf[i] = 0xdeadbeef;
-        }
-        for (i = 0; i < COUNT; ++i) {
-            buf[i] = rank + i;
-        }
-        for (i = 0; i < size; ++i) {
-            recvcounts[i] = COUNT;
-            rdispls[i] = i * COUNT;
-        }
-        MPI_Igatherv(buf, COUNT, MPI_INT, recvbuf, recvcounts, rdispls, MPI_INT, 0, comm, req);
-        break;
-
-    case 14:   /* MPI_Ialltoall */
-        for (i = 0; i < size; ++i) {
-            for (j = 0; j < COUNT; ++j) {
-                buf[i * COUNT + j] = rank + (i * j);
-                recvbuf[i * COUNT + j] = 0xdeadbeef;
-            }
-        }
-        MPI_Ialltoall(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, comm, req);
-        break;
-
-    case 15:   /* MPI_Iallgather */
-        for (i = 0; i < size * COUNT; ++i) {
-            buf[i] = rank + i;
-            recvbuf[i] = 0xdeadbeef;
-        }
-        MPI_Iallgather(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, comm, req);
-        break;
-
-    case 16:   /* MPI_Iallgatherv */
-        for (i = 0; i < size; ++i) {
-            for (j = 0; j < COUNT; ++j) {
-                recvbuf[i * COUNT + j] = 0xdeadbeef;
-            }
-            recvcounts[i] = COUNT;
-            rdispls[i] = i * COUNT;
-        }
-        for (i = 0; i < COUNT; ++i)
-            buf[i] = rank + i;
-        MPI_Iallgatherv(buf, COUNT, MPI_INT, recvbuf, recvcounts, rdispls, MPI_INT, comm, req);
-        break;
-
-    case 17:   /* MPI_Iscan */
-        for (i = 0; i < COUNT; ++i) {
-            buf[i] = rank + i;
-            recvbuf[i] = 0xdeadbeef;
-        }
-        MPI_Iscan(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, comm, req);
-        break;
-
-    case 18:   /* MPI_Iexscan */
-        for (i = 0; i < COUNT; ++i) {
-            buf[i] = rank + i;
-            recvbuf[i] = 0xdeadbeef;
-        }
-        MPI_Iexscan(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, comm, req);
-        break;
-
-    case 19:   /* MPI_Ialltoallw (a weak test, neither irregular nor sparse) */
-        for (i = 0; i < size; ++i) {
-            sendcounts[i] = COUNT;
-            recvcounts[i] = COUNT;
-            sdispls[i] = COUNT * i * sizeof(int);
-            rdispls[i] = COUNT * i * sizeof(int);
-            sendtypes[i] = MPI_INT;
-            recvtypes[i] = MPI_INT;
-            for (j = 0; j < COUNT; ++j) {
-                buf[i * COUNT + j] = rank + (i * j);
-                recvbuf[i * COUNT + j] = 0xdeadbeef;
-            }
-        }
-        MPI_Ialltoallw(buf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes,
-                       comm, req);
-        break;
-
-    case 20:   /* basic pt2pt MPI_Isend/MPI_Irecv pairing */
-        /* even ranks send to odd ranks, but only if we have a full pair */
-        if ((rank % 2 != 0) || (rank != size - 1)) {
-            for (j = 0; j < COUNT; ++j) {
-                buf[j] = j;
-                recvbuf[j] = 0xdeadbeef;
-            }
-            if (rank % 2 == 0)
-                MPI_Isend(buf, COUNT, MPI_INT, rank + 1, 5, comm, req);
-            else
-                MPI_Irecv(recvbuf, COUNT, MPI_INT, rank - 1, 5, comm, req);
-        }
-        break;
-
-    default:
-        fprintf(stderr, "unexpected value for l->case_num=%d)\n", (l->case_num));
-        MPI_Abort(comm, 1);
-        break;
+        default:
+            fprintf(stderr, "unexpected value for l->case_num=%d)\n", (l->case_num));
+            MPI_Abort(comm, 1);
+            break;
     }
 }
 
@@ -428,235 +427,232 @@ static void check_after_completion(struct laundry *l)
 
     /* these cases all correspond to cases in start_random_nonblocking */
     switch (l->case_num) {
-    case 0:    /* MPI_Ibcast */
-        for (i = 0; i < COUNT; ++i) {
-            if (buf[i] != i)
-                printf("buf[%d]=%d i=%d\n", i, buf[i], i);
-            my_assert(buf[i] == i);
-        }
-        break;
+        case 0:        /* MPI_Ibcast */
+            for (i = 0; i < COUNT; ++i) {
+                if (buf[i] != i)
+                    printf("buf[%d]=%d i=%d\n", i, buf[i], i);
+                my_assert(buf[i] == i);
+            }
+            break;
 
-    case 1:    /* MPI_Ibcast (again, but designed to stress scatter/allgather impls) */
-        for (i = 0; i < PRIME; ++i) {
-            if (buf_alias[i] != i)
-                printf("buf_alias[%d]=%d i=%d\n", i, buf_alias[i], i);
-            my_assert(buf_alias[i] == i);
-        }
-        break;
+        case 1:        /* MPI_Ibcast (again, but designed to stress scatter/allgather impls) */
+            for (i = 0; i < PRIME; ++i) {
+                if (buf_alias[i] != i)
+                    printf("buf_alias[%d]=%d i=%d\n", i, buf_alias[i], i);
+                my_assert(buf_alias[i] == i);
+            }
+            break;
 
-    case 2:    /* MPI_Ibarrier */
-        /* nothing to check */
-        break;
+        case 2:        /* MPI_Ibarrier */
+            /* nothing to check */
+            break;
 
-    case 3:    /* MPI_Ireduce */
-        if (rank == 0) {
+        case 3:        /* MPI_Ireduce */
+            if (rank == 0) {
+                for (i = 0; i < COUNT; ++i) {
+                    if (recvbuf[i] != ((size * (size - 1) / 2) + (i * size)))
+                        printf("got recvbuf[%d]=%d, expected %d\n", i, recvbuf[i],
+                               ((size * (size - 1) / 2) + (i * size)));
+                    my_assert(recvbuf[i] == ((size * (size - 1) / 2) + (i * size)));
+                }
+            }
+            break;
+
+        case 4:        /* same again, use a user op and free it before the wait */
+            if (rank == 0) {
+                for (i = 0; i < COUNT; ++i) {
+                    if (recvbuf[i] != ((size * (size - 1) / 2) + (i * size)))
+                        printf("got recvbuf[%d]=%d, expected %d\n", i, recvbuf[i],
+                               ((size * (size - 1) / 2) + (i * size)));
+                    my_assert(recvbuf[i] == ((size * (size - 1) / 2) + (i * size)));
+                }
+            }
+            break;
+
+        case 5:        /* MPI_Iallreduce */
             for (i = 0; i < COUNT; ++i) {
                 if (recvbuf[i] != ((size * (size - 1) / 2) + (i * size)))
                     printf("got recvbuf[%d]=%d, expected %d\n", i, recvbuf[i],
                            ((size * (size - 1) / 2) + (i * size)));
                 my_assert(recvbuf[i] == ((size * (size - 1) / 2) + (i * size)));
             }
-        }
-        break;
+            break;
 
-    case 4:    /* same again, use a user op and free it before the wait */
-        if (rank == 0) {
+        case 6:        /* MPI_Ialltoallv (a weak test, neither irregular nor sparse) */
+            for (i = 0; i < size; ++i) {
+                for (j = 0; j < COUNT; ++j) {
+                    /*printf("recvbuf[%d*COUNT+%d]=%d, expecting %d\n", i, j, recvbuf[i*COUNT+j], (i + (rank * j))); */
+                    my_assert(recvbuf[i * COUNT + j] == (i + (rank * j)));
+                }
+            }
+            break;
+
+        case 7:        /* MPI_Igather */
+            if (rank == 0) {
+                for (i = 0; i < size; ++i) {
+                    for (j = 0; j < COUNT; ++j) {
+                        my_assert(recvbuf[i * COUNT + j] == i + j);
+                    }
+                }
+            } else {
+                for (i = 0; i < size * COUNT; ++i) {
+                    my_assert(recvbuf[i] == 0xdeadbeef);
+                }
+            }
+            break;
+
+        case 8:        /* same test again, just use a dup'ed datatype and free it before the wait */
+            if (rank == 0) {
+                for (i = 0; i < size; ++i) {
+                    for (j = 0; j < COUNT; ++j) {
+                        my_assert(recvbuf[i * COUNT + j] == i + j);
+                    }
+                }
+            } else {
+                for (i = 0; i < size * COUNT; ++i) {
+                    my_assert(recvbuf[i] == 0xdeadbeef);
+                }
+            }
+            break;
+
+        case 9:        /* MPI_Iscatter */
+            for (j = 0; j < COUNT; ++j) {
+                my_assert(recvbuf[j] == rank + j);
+            }
+            if (rank != 0) {
+                for (i = 0; i < size * COUNT; ++i) {
+                    /* check we didn't corrupt the sendbuf somehow */
+                    my_assert(buf[i] == 0xdeadbeef);
+                }
+            }
+            break;
+
+        case 10:       /* MPI_Iscatterv */
+            for (j = 0; j < COUNT; ++j) {
+                my_assert(recvbuf[j] == rank + j);
+            }
+            if (rank != 0) {
+                for (i = 0; i < size * COUNT; ++i) {
+                    /* check we didn't corrupt the sendbuf somehow */
+                    my_assert(buf[i] == 0xdeadbeef);
+                }
+            }
+            for (i = 1; i < size; ++i) {
+                for (j = 0; j < COUNT; ++j) {
+                    /* check we didn't corrupt the rest of the recvbuf */
+                    my_assert(recvbuf[i * COUNT + j] == 0xdeadbeef);
+                }
+            }
+            break;
+
+        case 11:       /* MPI_Ireduce_scatter */
+            for (j = 0; j < COUNT; ++j) {
+                my_assert(recvbuf[j] == (size * rank + ((size - 1) * size) / 2));
+            }
+            for (i = 1; i < size; ++i) {
+                for (j = 0; j < COUNT; ++j) {
+                    /* check we didn't corrupt the rest of the recvbuf */
+                    my_assert(recvbuf[i * COUNT + j] == 0xdeadbeef);
+                }
+            }
+            break;
+
+        case 12:       /* MPI_Ireduce_scatter_block */
+            for (j = 0; j < COUNT; ++j) {
+                my_assert(recvbuf[j] == (size * rank + ((size - 1) * size) / 2));
+            }
+            for (i = 1; i < size; ++i) {
+                for (j = 0; j < COUNT; ++j) {
+                    /* check we didn't corrupt the rest of the recvbuf */
+                    my_assert(recvbuf[i * COUNT + j] == 0xdeadbeef);
+                }
+            }
+            break;
+
+        case 13:       /* MPI_Igatherv */
+            if (rank == 0) {
+                for (i = 0; i < size; ++i) {
+                    for (j = 0; j < COUNT; ++j) {
+                        my_assert(recvbuf[i * COUNT + j] == i + j);
+                    }
+                }
+            } else {
+                for (i = 0; i < size * COUNT; ++i) {
+                    my_assert(recvbuf[i] == 0xdeadbeef);
+                }
+            }
+            break;
+
+        case 14:       /* MPI_Ialltoall */
+            for (i = 0; i < size; ++i) {
+                for (j = 0; j < COUNT; ++j) {
+                    /*printf("recvbuf[%d*COUNT+%d]=%d, expecting %d\n", i, j, recvbuf[i*COUNT+j], (i + (i * j))); */
+                    my_assert(recvbuf[i * COUNT + j] == (i + (rank * j)));
+                }
+            }
+            break;
+
+        case 15:       /* MPI_Iallgather */
+            for (i = 0; i < size; ++i) {
+                for (j = 0; j < COUNT; ++j) {
+                    my_assert(recvbuf[i * COUNT + j] == i + j);
+                }
+            }
+            break;
+
+        case 16:       /* MPI_Iallgatherv */
+            for (i = 0; i < size; ++i) {
+                for (j = 0; j < COUNT; ++j) {
+                    my_assert(recvbuf[i * COUNT + j] == i + j);
+                }
+            }
+            break;
+
+        case 17:       /* MPI_Iscan */
             for (i = 0; i < COUNT; ++i) {
-                if (recvbuf[i] != ((size * (size - 1) / 2) + (i * size)))
-                    printf("got recvbuf[%d]=%d, expected %d\n", i, recvbuf[i],
-                           ((size * (size - 1) / 2) + (i * size)));
-                my_assert(recvbuf[i] == ((size * (size - 1) / 2) + (i * size)));
+                my_assert(recvbuf[i] == ((rank * (rank + 1) / 2) + (i * (rank + 1))));
             }
-        }
-        break;
+            break;
 
-    case 5:    /* MPI_Iallreduce */
-        for (i = 0; i < COUNT; ++i) {
-            if (recvbuf[i] != ((size * (size - 1) / 2) + (i * size)))
-                printf("got recvbuf[%d]=%d, expected %d\n", i, recvbuf[i],
-                       ((size * (size - 1) / 2) + (i * size)));
-            my_assert(recvbuf[i] == ((size * (size - 1) / 2) + (i * size)));
-        }
-        break;
-
-    case 6:    /* MPI_Ialltoallv (a weak test, neither irregular nor sparse) */
-        for (i = 0; i < size; ++i) {
-            for (j = 0; j < COUNT; ++j) {
-                /*printf("recvbuf[%d*COUNT+%d]=%d, expecting %d\n", i, j, recvbuf[i*COUNT+j], (i + (rank * j))); */
-                my_assert(recvbuf[i * COUNT + j] == (i + (rank * j)));
+        case 18:       /* MPI_Iexscan */
+            for (i = 0; i < COUNT; ++i) {
+                if (rank == 0)
+                    my_assert(recvbuf[i] == 0xdeadbeef);
+                else
+                    my_assert(recvbuf[i] ==
+                              ((rank * (rank + 1) / 2) + (i * (rank + 1)) - (rank + i)));
             }
-        }
-        break;
+            break;
 
-    case 7:    /* MPI_Igather */
-        if (rank == 0) {
+        case 19:       /* MPI_Ialltoallw (a weak test, neither irregular nor sparse) */
             for (i = 0; i < size; ++i) {
                 for (j = 0; j < COUNT; ++j) {
-                    my_assert(recvbuf[i * COUNT + j] == i + j);
+                    /*printf("recvbuf[%d*COUNT+%d]=%d, expecting %d\n", i, j, recvbuf[i*COUNT+j], (i + (rank * j))); */
+                    my_assert(recvbuf[i * COUNT + j] == (i + (rank * j)));
                 }
             }
-        }
-        else {
-            for (i = 0; i < size * COUNT; ++i) {
-                my_assert(recvbuf[i] == 0xdeadbeef);
-            }
-        }
-        break;
+            break;
 
-    case 8:    /* same test again, just use a dup'ed datatype and free it before the wait */
-        if (rank == 0) {
-            for (i = 0; i < size; ++i) {
+        case 20:       /* basic pt2pt MPI_Isend/MPI_Irecv pairing */
+            /* even ranks send to odd ranks, but only if we have a full pair */
+            if ((rank % 2 != 0) || (rank != size - 1)) {
                 for (j = 0; j < COUNT; ++j) {
-                    my_assert(recvbuf[i * COUNT + j] == i + j);
+                    /* only odd procs did a recv */
+                    if (rank % 2 == 0) {
+                        my_assert(recvbuf[j] == 0xdeadbeef);
+                    } else {
+                        if (recvbuf[j] != j)
+                            printf("recvbuf[%d]=%d j=%d\n", j, recvbuf[j], j);
+                        my_assert(recvbuf[j] == j);
+                    }
                 }
             }
-        }
-        else {
-            for (i = 0; i < size * COUNT; ++i) {
-                my_assert(recvbuf[i] == 0xdeadbeef);
-            }
-        }
-        break;
+            break;
 
-    case 9:    /* MPI_Iscatter */
-        for (j = 0; j < COUNT; ++j) {
-            my_assert(recvbuf[j] == rank + j);
-        }
-        if (rank != 0) {
-            for (i = 0; i < size * COUNT; ++i) {
-                /* check we didn't corrupt the sendbuf somehow */
-                my_assert(buf[i] == 0xdeadbeef);
-            }
-        }
-        break;
-
-    case 10:   /* MPI_Iscatterv */
-        for (j = 0; j < COUNT; ++j) {
-            my_assert(recvbuf[j] == rank + j);
-        }
-        if (rank != 0) {
-            for (i = 0; i < size * COUNT; ++i) {
-                /* check we didn't corrupt the sendbuf somehow */
-                my_assert(buf[i] == 0xdeadbeef);
-            }
-        }
-        for (i = 1; i < size; ++i) {
-            for (j = 0; j < COUNT; ++j) {
-                /* check we didn't corrupt the rest of the recvbuf */
-                my_assert(recvbuf[i * COUNT + j] == 0xdeadbeef);
-            }
-        }
-        break;
-
-    case 11:   /* MPI_Ireduce_scatter */
-        for (j = 0; j < COUNT; ++j) {
-            my_assert(recvbuf[j] == (size * rank + ((size - 1) * size) / 2));
-        }
-        for (i = 1; i < size; ++i) {
-            for (j = 0; j < COUNT; ++j) {
-                /* check we didn't corrupt the rest of the recvbuf */
-                my_assert(recvbuf[i * COUNT + j] == 0xdeadbeef);
-            }
-        }
-        break;
-
-    case 12:   /* MPI_Ireduce_scatter_block */
-        for (j = 0; j < COUNT; ++j) {
-            my_assert(recvbuf[j] == (size * rank + ((size - 1) * size) / 2));
-        }
-        for (i = 1; i < size; ++i) {
-            for (j = 0; j < COUNT; ++j) {
-                /* check we didn't corrupt the rest of the recvbuf */
-                my_assert(recvbuf[i * COUNT + j] == 0xdeadbeef);
-            }
-        }
-        break;
-
-    case 13:   /* MPI_Igatherv */
-        if (rank == 0) {
-            for (i = 0; i < size; ++i) {
-                for (j = 0; j < COUNT; ++j) {
-                    my_assert(recvbuf[i * COUNT + j] == i + j);
-                }
-            }
-        }
-        else {
-            for (i = 0; i < size * COUNT; ++i) {
-                my_assert(recvbuf[i] == 0xdeadbeef);
-            }
-        }
-        break;
-
-    case 14:   /* MPI_Ialltoall */
-        for (i = 0; i < size; ++i) {
-            for (j = 0; j < COUNT; ++j) {
-                /*printf("recvbuf[%d*COUNT+%d]=%d, expecting %d\n", i, j, recvbuf[i*COUNT+j], (i + (i * j))); */
-                my_assert(recvbuf[i * COUNT + j] == (i + (rank * j)));
-            }
-        }
-        break;
-
-    case 15:   /* MPI_Iallgather */
-        for (i = 0; i < size; ++i) {
-            for (j = 0; j < COUNT; ++j) {
-                my_assert(recvbuf[i * COUNT + j] == i + j);
-            }
-        }
-        break;
-
-    case 16:   /* MPI_Iallgatherv */
-        for (i = 0; i < size; ++i) {
-            for (j = 0; j < COUNT; ++j) {
-                my_assert(recvbuf[i * COUNT + j] == i + j);
-            }
-        }
-        break;
-
-    case 17:   /* MPI_Iscan */
-        for (i = 0; i < COUNT; ++i) {
-            my_assert(recvbuf[i] == ((rank * (rank + 1) / 2) + (i * (rank + 1))));
-        }
-        break;
-
-    case 18:   /* MPI_Iexscan */
-        for (i = 0; i < COUNT; ++i) {
-            if (rank == 0)
-                my_assert(recvbuf[i] == 0xdeadbeef);
-            else
-                my_assert(recvbuf[i] == ((rank * (rank + 1) / 2) + (i * (rank + 1)) - (rank + i)));
-        }
-        break;
-
-    case 19:   /* MPI_Ialltoallw (a weak test, neither irregular nor sparse) */
-        for (i = 0; i < size; ++i) {
-            for (j = 0; j < COUNT; ++j) {
-                /*printf("recvbuf[%d*COUNT+%d]=%d, expecting %d\n", i, j, recvbuf[i*COUNT+j], (i + (rank * j))); */
-                my_assert(recvbuf[i * COUNT + j] == (i + (rank * j)));
-            }
-        }
-        break;
-
-    case 20:   /* basic pt2pt MPI_Isend/MPI_Irecv pairing */
-        /* even ranks send to odd ranks, but only if we have a full pair */
-        if ((rank % 2 != 0) || (rank != size - 1)) {
-            for (j = 0; j < COUNT; ++j) {
-                /* only odd procs did a recv */
-                if (rank % 2 == 0) {
-                    my_assert(recvbuf[j] == 0xdeadbeef);
-                }
-                else {
-                    if (recvbuf[j] != j)
-                        printf("recvbuf[%d]=%d j=%d\n", j, recvbuf[j], j);
-                    my_assert(recvbuf[j] == j);
-                }
-            }
-        }
-        break;
-
-    default:
-        printf("invalid case_num (%d) detected\n", l->case_num);
-        assert(0);
-        break;
+        default:
+            printf("invalid case_num (%d) detected\n", l->case_num);
+            assert(0);
+            break;
     }
 }
 
@@ -669,84 +665,81 @@ static void complete_something_somehow(unsigned int rndnum, int numreqs, MPI_Req
 
 #define COMPLETION_CASES (8)
     switch (rand_range(rndnum, 0, COMPLETION_CASES)) {
-    case 0:
-        MPI_Waitall(numreqs, reqs, MPI_STATUSES_IGNORE);
-        *outcount = numreqs;
-        for (i = 0; i < numreqs; ++i) {
-            indices[i] = i;
-        }
-        break;
-
-    case 1:
-        MPI_Testsome(numreqs, reqs, outcount, indices, MPI_STATUS_IGNORE);
-        if (*outcount == MPI_UNDEFINED) {
-            *outcount = 0;
-        }
-        break;
-
-    case 2:
-        MPI_Waitsome(numreqs, reqs, outcount, indices, MPI_STATUS_IGNORE);
-        if (*outcount == MPI_UNDEFINED) {
-            *outcount = 0;
-        }
-        break;
-
-    case 3:
-        MPI_Waitany(numreqs, reqs, &idx, MPI_STATUS_IGNORE);
-        if (idx == MPI_UNDEFINED) {
-            *outcount = 0;
-        }
-        else {
-            *outcount = 1;
-            indices[0] = idx;
-        }
-        break;
-
-    case 4:
-        MPI_Testany(numreqs, reqs, &idx, &flag, MPI_STATUS_IGNORE);
-        if (idx == MPI_UNDEFINED) {
-            *outcount = 0;
-        }
-        else {
-            *outcount = 1;
-            indices[0] = idx;
-        }
-        break;
-
-    case 5:
-        MPI_Testall(numreqs, reqs, &flag, MPI_STATUSES_IGNORE);
-        if (flag) {
+        case 0:
+            MPI_Waitall(numreqs, reqs, MPI_STATUSES_IGNORE);
             *outcount = numreqs;
             for (i = 0; i < numreqs; ++i) {
                 indices[i] = i;
             }
-        }
-        else {
-            *outcount = 0;
-        }
-        break;
+            break;
 
-    case 6:
-        /* select a new random index and wait on it */
-        rndnum = gen_prn(rndnum);
-        idx = rand_range(rndnum, 0, numreqs);
-        MPI_Wait(&reqs[idx], MPI_STATUS_IGNORE);
-        *outcount = 1;
-        indices[0] = idx;
-        break;
+        case 1:
+            MPI_Testsome(numreqs, reqs, outcount, indices, MPI_STATUS_IGNORE);
+            if (*outcount == MPI_UNDEFINED) {
+                *outcount = 0;
+            }
+            break;
 
-    case 7:
-        /* select a new random index and wait on it */
-        rndnum = gen_prn(rndnum);
-        idx = rand_range(rndnum, 0, numreqs);
-        MPI_Test(&reqs[idx], &flag, MPI_STATUS_IGNORE);
-        *outcount = (flag ? 1 : 0);
-        indices[0] = idx;
-        break;
+        case 2:
+            MPI_Waitsome(numreqs, reqs, outcount, indices, MPI_STATUS_IGNORE);
+            if (*outcount == MPI_UNDEFINED) {
+                *outcount = 0;
+            }
+            break;
 
-    default:
-        assert(0);
-        break;
+        case 3:
+            MPI_Waitany(numreqs, reqs, &idx, MPI_STATUS_IGNORE);
+            if (idx == MPI_UNDEFINED) {
+                *outcount = 0;
+            } else {
+                *outcount = 1;
+                indices[0] = idx;
+            }
+            break;
+
+        case 4:
+            MPI_Testany(numreqs, reqs, &idx, &flag, MPI_STATUS_IGNORE);
+            if (idx == MPI_UNDEFINED) {
+                *outcount = 0;
+            } else {
+                *outcount = 1;
+                indices[0] = idx;
+            }
+            break;
+
+        case 5:
+            MPI_Testall(numreqs, reqs, &flag, MPI_STATUSES_IGNORE);
+            if (flag) {
+                *outcount = numreqs;
+                for (i = 0; i < numreqs; ++i) {
+                    indices[i] = i;
+                }
+            } else {
+                *outcount = 0;
+            }
+            break;
+
+        case 6:
+            /* select a new random index and wait on it */
+            rndnum = gen_prn(rndnum);
+            idx = rand_range(rndnum, 0, numreqs);
+            MPI_Wait(&reqs[idx], MPI_STATUS_IGNORE);
+            *outcount = 1;
+            indices[0] = idx;
+            break;
+
+        case 7:
+            /* select a new random index and wait on it */
+            rndnum = gen_prn(rndnum);
+            idx = rand_range(rndnum, 0, numreqs);
+            MPI_Test(&reqs[idx], &flag, MPI_STATUS_IGNORE);
+            *outcount = (flag ? 1 : 0);
+            indices[0] = idx;
+            break;
+
+        default:
+            assert(0);
+            break;
     }
 #undef COMPLETION_CASES
 }

@@ -129,8 +129,7 @@ static inline int MPIDI_do_put(const void *origin_addr,
         mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDI_CH4U_PUT_REQ,
                                        &am_iov[0], 2, origin_addr, origin_count, origin_datatype,
                                        sreq);
-    }
-    else {
+    } else {
         MPIDI_CH4U_REQUEST(sreq, req->preq.origin_addr) = (void *) origin_addr;
         MPIDI_CH4U_REQUEST(sreq, req->preq.origin_count) = origin_count;
         MPIDI_CH4U_REQUEST(sreq, req->preq.origin_datatype) = origin_datatype;
@@ -330,8 +329,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
 
     if (HANDLE_GET_KIND(origin_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.origin_datatype = origin_datatype;
-    }
-    else {
+    } else {
         am_hdr.origin_datatype = (dt_ptr) ? dt_ptr->basic_type : MPI_DATATYPE_NULL;
         MPIR_Datatype_get_size_macro(am_hdr.origin_datatype, basic_type_size);
         am_hdr.origin_count = (basic_type_size > 0) ? data_sz / basic_type_size : 0;
@@ -347,6 +345,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     /* Increase local and remote completion counters and set the local completion
      * counter in request, thus it can be decreased at request completion. */
     MPIDI_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
+    /* Increase remote completion counter for acc. */
+    MPIDI_win_remote_acc_cmpl_cnt_incr(win, target_rank);
 
     MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
     MPIDI_CH4U_REQUEST(sreq, req->areq.data_sz) = data_sz;
@@ -358,8 +358,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
         /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_REQ,
                                       &am_hdr, sizeof(am_hdr), origin_addr,
-                                      (op == MPI_NO_OP) ? 0 : origin_count,
-                                      origin_datatype, sreq);
+                                      (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype, sreq);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
@@ -399,10 +398,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
         /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_REQ,
                                        &am_iov[0], 2, origin_addr,
-                                       (op == MPI_NO_OP) ? 0 : origin_count,
-                                       origin_datatype, sreq);
-    }
-    else {
+                                       (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype, sreq);
+    } else {
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_addr) = (void *) origin_addr;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_count) = origin_count;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_datatype) = origin_datatype;
@@ -491,8 +488,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
 
     if (HANDLE_GET_KIND(origin_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.origin_datatype = origin_datatype;
-    }
-    else {
+    } else {
         am_hdr.origin_datatype = (dt_ptr) ? dt_ptr->basic_type : MPI_DATATYPE_NULL;
         MPIR_Datatype_get_size_macro(am_hdr.origin_datatype, basic_type_size);
         am_hdr.origin_count = (basic_type_size > 0) ? data_sz / basic_type_size : 0;
@@ -510,6 +506,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     /* Increase local and remote completion counters and set the local completion
      * counter in request, thus it can be decreased at request completion. */
     MPIDI_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
+    /* Increase remote completion counter for acc. */
+    MPIDI_win_remote_acc_cmpl_cnt_incr(win, target_rank);
 
     MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
     MPIDI_CH4U_REQUEST(sreq, req->areq.data_sz) = data_sz;
@@ -521,8 +519,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
         /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_GET_ACC_REQ,
                                       &am_hdr, sizeof(am_hdr), origin_addr,
-                                      (op == MPI_NO_OP) ? 0 : origin_count,
-                                      origin_datatype, sreq);
+                                      (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype, sreq);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
@@ -562,10 +559,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
         /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDI_CH4U_GET_ACC_REQ,
                                        &am_iov[0], 2, origin_addr,
-                                       (op == MPI_NO_OP) ? 0 : origin_count,
-                                       origin_datatype, sreq);
-    }
-    else {
+                                       (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype, sreq);
+    } else {
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_addr) = (void *) origin_addr;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_count) = origin_count;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_datatype) = origin_datatype;
@@ -956,6 +951,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
     MPIR_T_PVAR_TIMER_END(RMA, rma_amhdr_set);
 
     MPIDI_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
+    /* Increase remote completion counter for acc. */
+    MPIDI_win_remote_acc_cmpl_cnt_incr(win, target_rank);
 
     /* FIXIME: we need to choose between NM and SHM */
     mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_CSWAP_REQ,

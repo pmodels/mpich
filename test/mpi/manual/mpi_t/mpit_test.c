@@ -74,8 +74,7 @@ int main(int argc, char **argv)
             val = 0xdeadbeef;
             MPI_T_cvar_read(handle, &val);
             printf("--> incremented val=%d\n", val);
-        }
-        else if (dtype == MPI_DOUBLE) {
+        } else if (dtype == MPI_DOUBLE) {
             double val = NAN;
             MPI_T_cvar_read(handle, &val);
             printf("--> val=%f\n", val);
@@ -84,8 +83,7 @@ int main(int argc, char **argv)
             val = NAN;
             MPI_T_cvar_read(handle, &val);
             printf("--> doubled val=%f\n", val);
-        }
-        else if (dtype == MPI_CHAR) {
+        } else if (dtype == MPI_CHAR) {
             char *str = malloc(count + 1);
             MPI_T_cvar_read(handle, str);
             printf("--> str='%s'\n", str);

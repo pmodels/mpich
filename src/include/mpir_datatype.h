@@ -46,11 +46,11 @@ typedef struct MPIR_Datatype_contents {
   Notes:
   The 'ref_count' is needed for nonblocking operations such as
 .vb
-   MPI_Type_struct( ... , &newtype );
-   MPI_Irecv( buf, 1000, newtype, ..., &request );
-   MPI_Type_free( &newtype );
+   MPI_Type_struct(... , &newtype);
+   MPI_Irecv(buf, 1000, newtype, ..., &request);
+   MPI_Type_free(&newtype);
    ...
-   MPI_Wait( &request, &status );
+   MPI_Wait(&request, &status);
 .ve
 
   Module:
@@ -89,16 +89,16 @@ typedef struct MPIR_Datatype_contents {
   S*/
 struct MPIR_Datatype {
     /* handle and ref_count are filled in by MPIR_Handle_obj_alloc() */
-    MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
+    MPIR_OBJECT_HEADER;         /* adds handle and ref_count fields */
 
     /* basic parameters for datatype, accessible via MPI calls */
-    MPI_Aint size;   /* MPI_Count could be 128 bits, so use MPI_Aint */
+    MPI_Aint size;              /* MPI_Count could be 128 bits, so use MPI_Aint */
     MPI_Aint extent, ub, lb, true_ub, true_lb;
 
     /* chars affecting subsequent datatype processing and creation */
     MPI_Aint alignsize;
     int has_sticky_ub, has_sticky_lb;
-    int is_permanent; /* non-zero if datatype is a predefined type */
+    int is_permanent;           /* non-zero if datatype is a predefined type */
     int is_committed;
 
     /* element information; used for accumulate and get elements
@@ -111,7 +111,7 @@ struct MPIR_Datatype {
      *                       it is set to size of that type, otherwise it
      *                       is set to -1.
      */
-    int      basic_type;
+    int basic_type;
     MPI_Aint n_builtin_elements;
     MPI_Aint builtin_element_size;
 
@@ -133,17 +133,17 @@ struct MPIR_Datatype {
     /* dataloop members, including a pointer to the loop, the size in bytes,
      * and a depth used to verify that we can process it (limited stack depth
      */
-    struct MPIR_Dataloop *dataloop; /* might be optimized for homogenous */
-    MPI_Aint              dataloop_size;
-    int                   dataloop_depth;
+    struct MPIR_Dataloop *dataloop;     /* might be optimized for homogenous */
+    MPI_Aint dataloop_size;
+    int dataloop_depth;
 #if defined(MPID_HAS_HETERO) || 1
     struct MPIR_Dataloop *hetero_dloop; /* heterogeneous dataloop */
-    MPI_Aint              hetero_dloop_size;
-    int                   hetero_dloop_depth;
-#endif /* MPID_HAS_HETERO */
+    MPI_Aint hetero_dloop_size;
+    int hetero_dloop_depth;
+#endif                          /* MPID_HAS_HETERO */
     /* MPI-2 attributes and name */
     struct MPIR_Attribute *attributes;
-    char                  name[MPI_MAX_OBJECT_NAME];
+    char name[MPI_MAX_OBJECT_NAME];
 
     /* not yet used; will be used to track what processes have cached
      * copies of this type.
@@ -151,11 +151,11 @@ struct MPIR_Datatype {
     int32_t cache_id;
     /* MPID_Lpidmask mask; */
 
-    /* int (*free_fn)( struct MPIR_Datatype * ); */ /* Function to free this datatype */
+    /* int (*free_fn)(struct MPIR_Datatype *); *//* Function to free this datatype */
 
     /* Other, device-specific information */
 #ifdef MPID_DEV_DATATYPE_DECL
-    MPID_DEV_DATATYPE_DECL
+     MPID_DEV_DATATYPE_DECL
 #endif
 };
 
@@ -163,7 +163,7 @@ extern MPIR_Datatype MPIR_Datatype_builtin[MPIR_DATATYPE_N_BUILTIN + 1];
 extern MPIR_Datatype MPIR_Datatype_direct[];
 extern MPIR_Object_alloc_t MPIR_Datatype_mem;
 
-static inline void MPIR_Datatype_free(MPIR_Datatype *ptr);
+static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
 
 #define MPIR_Datatype_add_ref(datatype_ptr) MPIR_Object_add_ref((datatype_ptr))
 
@@ -180,7 +180,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype *ptr);
                                    MPI_ERR_TYPE,                \
                                    "**dtypecommit",             \
                                    0);                          \
-} while(0)
+} while (0)
 
 #define MPIR_Datatype_get_basic_size(a) (((a)&0x0000ff00)>>8)
 
@@ -211,7 +211,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype *ptr);
      */                                                             \
     if (HANDLE_GET_KIND(basic_type_) != HANDLE_KIND_BUILTIN)        \
         basic_type_ = MPI_DATATYPE_NULL;                            \
- } while(0)
+ } while (0)
 
 #define MPIR_Datatype_get_ptr(a,ptr)   MPIR_Getb_ptr(Datatype,a,0x000000ff,ptr)
 
@@ -238,7 +238,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype *ptr);
          break;                                                         \
                                                                         \
     }                                                                   \
-} while(0)
+} while (0)
 
 #define MPIR_Datatype_get_extent_macro(a,extent_) do {                  \
     void *ptr;                                                          \
@@ -258,7 +258,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype *ptr);
             extent_ = MPIR_Datatype_get_basic_size(a);  /* same as size */  \
             break;                                                      \
     }                                                                   \
-} while(0)
+} while (0)
 
 /* helper macro: takes an MPI_Datatype handle value and returns TRUE in
  * (*is_config_) if the type is contiguous */
@@ -285,22 +285,22 @@ static inline void MPIR_Datatype_free(MPIR_Datatype *ptr);
     if (!inuse_) {                                                          \
         int lmpi_errno = MPI_SUCCESS;                                       \
      if (MPIR_Process.attr_free && datatype_ptr->attributes) {              \
-         lmpi_errno = MPIR_Process.attr_free( datatype_ptr->handle,         \
-                               &datatype_ptr->attributes );                 \
+         lmpi_errno = MPIR_Process.attr_free(datatype_ptr->handle,         \
+                               &datatype_ptr->attributes);                 \
      }                                                                      \
      /* LEAVE THIS COMMENTED OUT UNTIL WE HAVE SOME USE FOR THE FREE_FN     \
      if (datatype_ptr->free_fn) {                                           \
-         mpi_errno = (datatype_ptr->free_fn)( datatype_ptr );               \
+         mpi_errno = (datatype_ptr->free_fn)(datatype_ptr);               \
           if (mpi_errno) {                                                  \
            MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_FREE);                  \
-           return MPIR_Err_return_comm( 0, FCNAME, mpi_errno );             \
+           return MPIR_Err_return_comm(0, FCNAME, mpi_errno);             \
           }                                                                 \
      } */                                                                   \
         if (lmpi_errno == MPI_SUCCESS) {                                    \
          MPIR_Datatype_free(datatype_ptr);                                 \
         }                                                                   \
     }                                                                       \
-} while(0)
+} while (0)
 
 /* helper macro: takes an MPI_Datatype handle value and returns true_lb in
  * (*true_lb_) */
@@ -336,7 +336,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype *ptr);
             depth_ = 0;                                             \
             break;                                                  \
     }                                                               \
-} while(0)
+} while (0)
 
 
 #define MPIR_Datatype_get_loopptr_macro(a,lptr_,hetero_) do {         \
@@ -357,7 +357,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype *ptr);
             lptr_ = 0;                                 \
             break;                                \
     }                                             \
-} while(0)
+} while (0)
 
 #define MPIR_Datatype_get_loopsize_macro(a,depth_,hetero_) do {     \
     void *ptr;                                                      \
@@ -377,7 +377,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype *ptr);
             depth_ = 0;                                             \
             break;                                                  \
     }                                                               \
-} while(0)
+} while (0)
 
 #define MPIR_Datatype_set_loopdepth_macro(a,depth_,hetero_) do {    \
     void *ptr;                                                      \
@@ -397,7 +397,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype *ptr);
             depth_ = 0;                                             \
             break;                                                  \
     }                                                               \
-} while(0)
+} while (0)
 
 #define MPIR_Datatype_set_loopptr_macro(a,lptr_,hetero_) do {       \
     void *ptr;                                                      \
@@ -417,7 +417,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype *ptr);
             lptr_ = 0;                                              \
             break;                                                  \
     }                                                               \
-} while(0)
+} while (0)
 
 #define MPIR_Datatype_set_loopsize_macro(a,depth_,hetero_) do {     \
     void *ptr;                                                      \
@@ -437,9 +437,9 @@ static inline void MPIR_Datatype_free(MPIR_Datatype *ptr);
             depth_ = 0;                                             \
             break;                                                  \
     }                                                               \
-} while(0)
+} while (0)
 
-static inline void MPIR_Datatype_free_contents(MPIR_Datatype *dtp)
+static inline void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
 {
     int i, struct_sz = sizeof(MPIR_Datatype_contents);
     int align_sz = 8, epsilon;
@@ -451,9 +451,9 @@ static inline void MPIR_Datatype_free_contents(MPIR_Datatype *dtp)
     }
 
     /* note: relies on types being first after structure */
-    array_of_types = (MPI_Datatype *) ((char *)dtp->contents + struct_sz);
+    array_of_types = (MPI_Datatype *) ((char *) dtp->contents + struct_sz);
 
-    for (i=0; i < dtp->contents->nr_types; i++) {
+    for (i = 0; i < dtp->contents->nr_types; i++) {
         if (HANDLE_GET_KIND(array_of_types[i]) != HANDLE_KIND_BUILTIN) {
             MPIR_Datatype_get_ptr(array_of_types[i], old_dtp);
             MPIR_Datatype_release(old_dtp);
@@ -485,17 +485,17 @@ Output Parameters:
   types that are no longer referenced as well.
 
   @*/
-static inline void MPIR_Datatype_free(MPIR_Datatype *ptr)
+static inline void MPIR_Datatype_free(MPIR_Datatype * ptr)
 {
-    MPL_DBG_MSG_P(MPIR_DBG_DATATYPE,VERBOSE,"type %x freed.", ptr->handle);
+    MPL_DBG_MSG_P(MPIR_DBG_DATATYPE, VERBOSE, "type %x freed.", ptr->handle);
 
 #ifdef MPID_Type_free_hook
     MPID_Type_free_hook(ptr);
 #endif /* MPID_Type_free_hook */
 
     /* before freeing the contents, check whether the pointer is not
-       null because it is null in the case of a datatype shipped to the target
-       for RMA ops */
+     * null because it is null in the case of a datatype shipped to the target
+     * for RMA ops */
     if (ptr->contents) {
         MPIR_Datatype_free_contents(ptr);
     }
@@ -516,7 +516,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype *ptr)
 
   Returns MPI_SUCCESS on success, MPI error code on error.
   @*/
-static inline int MPIR_Datatype_set_contents(MPIR_Datatype *new_dtp,
+static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
                                              int combiner,
                                              int nr_ints,
                                              int nr_aints,
@@ -525,22 +525,22 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype *new_dtp,
                                              const MPI_Aint array_of_aints[],
                                              const MPI_Datatype array_of_types[])
 {
-    int i, contents_size, align_sz = 8, epsilon, mpi_errno;
+    int i, contents_size, align_sz, epsilon, mpi_errno;
     int struct_sz, ints_sz, aints_sz, types_sz;
     MPIR_Datatype_contents *cp;
     MPIR_Datatype *old_dtp;
     char *ptr;
 
 #ifdef HAVE_MAX_STRUCT_ALIGNMENT
-    if (align_sz > HAVE_MAX_STRUCT_ALIGNMENT) {
-        align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
-    }
+    align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
+#else
+    align_sz = 8;
 #endif
 
     struct_sz = sizeof(MPIR_Datatype_contents);
-    types_sz  = nr_types * sizeof(MPI_Datatype);
-    ints_sz   = nr_ints * sizeof(int);
-    aints_sz  = nr_aints * sizeof(MPI_Aint);
+    types_sz = nr_types * sizeof(MPI_Datatype);
+    ints_sz = nr_ints * sizeof(int);
+    aints_sz = nr_aints * sizeof(MPI_Aint);
 
     /* pad the struct, types, and ints before we allocate.
      *
@@ -565,16 +565,13 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype *new_dtp,
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                          MPIR_ERR_RECOVERABLE,
                                          "MPIR_Datatype_set_contents",
-                                         __LINE__,
-                                         MPI_ERR_OTHER,
-                                         "**nomem",
-                                         0);
+                                         __LINE__, MPI_ERR_OTHER, "**nomem", 0);
         return mpi_errno;
     }
     /* --END ERROR HANDLING-- */
 
     cp->combiner = combiner;
-    cp->nr_ints  = nr_ints;
+    cp->nr_ints = nr_ints;
     cp->nr_aints = nr_aints;
     cp->nr_types = nr_types;
 
@@ -599,7 +596,7 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype *new_dtp,
     new_dtp->contents = cp;
 
     /* increment reference counts on all the derived types used here */
-    for (i=0; i < nr_types; i++) {
+    for (i = 0; i < nr_types; i++) {
         if (HANDLE_GET_KIND(array_of_types[i]) != HANDLE_KIND_BUILTIN) {
             MPIR_Datatype_get_ptr(array_of_types[i], old_dtp);
             MPIR_Datatype_add_ref(old_dtp);
@@ -610,13 +607,15 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype *new_dtp,
 }
 
 /* contents accessor functions */
-void MPIR_Type_access_contents(MPI_Datatype type, int **ints_p, MPI_Aint **aints_p, MPI_Datatype **types_p);
-void MPIR_Type_release_contents(MPI_Datatype type, int **ints_p, MPI_Aint **aints_p, MPI_Datatype **types_p);
+void MPIR_Type_access_contents(MPI_Datatype type, int **ints_p, MPI_Aint ** aints_p,
+                               MPI_Datatype ** types_p);
+void MPIR_Type_release_contents(MPI_Datatype type, int **ints_p, MPI_Aint ** aints_p,
+                                MPI_Datatype ** types_p);
 
 /* This routine is used to install an attribute free routine for datatypes
    at finalize-time */
-void MPII_Datatype_attr_finalize( void );
-int MPII_Type_zerolen(MPI_Datatype *newtype);
+void MPII_Datatype_attr_finalize(void);
+int MPII_Type_zerolen(MPI_Datatype * newtype);
 
 #define MPIR_DATATYPE_IS_PREDEFINED(type) \
     ((HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) || \
@@ -624,60 +623,67 @@ int MPII_Type_zerolen(MPI_Datatype *newtype);
      (type == MPI_LONG_INT) || (type == MPI_SHORT_INT) || \
      (type == MPI_LONG_DOUBLE_INT))
 
-int MPIR_Get_elements_x_impl(MPI_Count *bytes, MPI_Datatype datatype, MPI_Count *elements);
-int MPIR_Status_set_elements_x_impl(MPI_Status *status, MPI_Datatype datatype, MPI_Count count);
-void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count *lb, MPI_Count *extent);
-void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count *true_lb, MPI_Count *true_extent);
-int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count *size);
+int MPIR_Get_elements_x_impl(MPI_Count * bytes, MPI_Datatype datatype, MPI_Count * elements);
+int MPIR_Status_set_elements_x_impl(MPI_Status * status, MPI_Datatype datatype, MPI_Count count);
+void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * extent);
+void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count * true_lb,
+                                      MPI_Count * true_extent);
+int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count * size);
 
-void MPIR_Get_count_impl(const MPI_Status *status, MPI_Datatype datatype, int *count);
-int MPIR_Type_commit_impl(MPI_Datatype *datatype);
+void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, int *count);
+int MPIR_Type_commit_impl(MPI_Datatype * datatype);
 int MPIR_Type_create_struct_impl(int count,
                                  const int array_of_blocklengths[],
                                  const MPI_Aint array_of_displacements[],
-                                 const MPI_Datatype array_of_types[],
-                                 MPI_Datatype *newtype);
+                                 const MPI_Datatype array_of_types[], MPI_Datatype * newtype);
 int MPIR_Type_create_indexed_block_impl(int count,
                                         int blocklength,
                                         const int array_of_displacements[],
-                                        MPI_Datatype oldtype,
-                                        MPI_Datatype *newtype);
+                                        MPI_Datatype oldtype, MPI_Datatype * newtype);
 int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
                                          const MPI_Aint array_of_displacements[],
-                                         MPI_Datatype oldtype, MPI_Datatype *newtype);
-int MPIR_Type_contiguous_impl(int count,
-                              MPI_Datatype old_type,
-                              MPI_Datatype *new_type_p);
-int MPIR_Type_contiguous_x_impl(MPI_Count count,
-                              MPI_Datatype old_type,
-                              MPI_Datatype *new_type_p);
-void MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint *lb, MPI_Aint *extent);
-void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint *true_lb, MPI_Aint *true_extent);
+                                         MPI_Datatype oldtype, MPI_Datatype * newtype);
+int MPIR_Type_contiguous_impl(int count, MPI_Datatype old_type, MPI_Datatype * new_type_p);
+int MPIR_Type_contiguous_x_impl(MPI_Count count, MPI_Datatype old_type, MPI_Datatype * new_type_p);
+void MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint * lb, MPI_Aint * extent);
+void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint * true_lb,
+                                    MPI_Aint * true_extent);
 void MPIR_Type_get_envelope(MPI_Datatype datatype, int *num_integers, int *num_addresses,
-                                 int *num_datatypes, int *combiner);
-int MPIR_Type_hvector_impl(int count, int blocklen, MPI_Aint stride, MPI_Datatype old_type, MPI_Datatype *newtype_p);
+                            int *num_datatypes, int *combiner);
+int MPIR_Type_hvector_impl(int count, int blocklen, MPI_Aint stride, MPI_Datatype old_type,
+                           MPI_Datatype * newtype_p);
 int MPIR_Type_indexed_impl(int count, const int blocklens[], const int indices[],
-                           MPI_Datatype old_type, MPI_Datatype *newtype);
-void MPIR_Type_free_impl(MPI_Datatype *datatype);
-int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype old_type, MPI_Datatype *newtype_p);
-int MPIR_Type_struct_impl(int count, const int blocklens[], const MPI_Aint indices[], const MPI_Datatype old_types[], MPI_Datatype *newtype);
-int MPIR_Pack_impl(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype, void *outbuf, MPI_Aint outcount, MPI_Aint *position);
-void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint *size);
-int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint *position,
+                           MPI_Datatype old_type, MPI_Datatype * newtype);
+void MPIR_Type_free_impl(MPI_Datatype * datatype);
+int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype old_type,
+                          MPI_Datatype * newtype_p);
+int MPIR_Type_struct_impl(int count, const int blocklens[], const MPI_Aint indices[],
+                          const MPI_Datatype old_types[], MPI_Datatype * newtype);
+int MPIR_Pack_impl(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype, void *outbuf,
+                   MPI_Aint outcount, MPI_Aint * position);
+void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint * size);
+int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
                      void *outbuf, int outcount, MPI_Datatype datatype);
-void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint *displacement);
+void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint * displacement);
 
 /* Datatype functions */
-int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype *newtype);
-int MPIR_Type_struct(int count, const int *blocklength_array, const MPI_Aint *displacement_array, const MPI_Datatype *oldtype_array, MPI_Datatype *newtype);
-int MPIR_Type_indexed(int count, const int *blocklength_array, const void *displacement_array, int dispinbytes, MPI_Datatype oldtype, MPI_Datatype *newtype);
-int MPIR_Type_vector(int count, int blocklength, MPI_Aint stride, int strideinbytes, MPI_Datatype oldtype, MPI_Datatype *newtype);
-int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype *newtype);
-int MPII_Type_zerolen(MPI_Datatype *newtype);
-int MPIR_Type_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent, MPI_Datatype *newtype);
-int MPIR_Type_get_contents(MPI_Datatype datatype, int max_integers, int max_addresses, int max_datatypes, int array_of_integers[], MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[]);
-int MPIR_Type_create_pairtype(MPI_Datatype datatype, MPIR_Datatype *new_dtp);
-int MPIR_Type_flatten(MPI_Datatype type, MPI_Aint *off_array, DLOOP_Size *size_array, MPI_Aint *array_len_p);
+int MPIR_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype);
+int MPIR_Type_struct(int count, const int *blocklength_array, const MPI_Aint * displacement_array,
+                     const MPI_Datatype * oldtype_array, MPI_Datatype * newtype);
+int MPIR_Type_indexed(int count, const int *blocklength_array, const void *displacement_array,
+                      int dispinbytes, MPI_Datatype oldtype, MPI_Datatype * newtype);
+int MPIR_Type_vector(int count, int blocklength, MPI_Aint stride, int strideinbytes,
+                     MPI_Datatype oldtype, MPI_Datatype * newtype);
+int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype);
+int MPII_Type_zerolen(MPI_Datatype * newtype);
+int MPIR_Type_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
+                             MPI_Datatype * newtype);
+int MPIR_Type_get_contents(MPI_Datatype datatype, int max_integers, int max_addresses,
+                           int max_datatypes, int array_of_integers[],
+                           MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[]);
+int MPIR_Type_create_pairtype(MPI_Datatype datatype, MPIR_Datatype * new_dtp);
+int MPIR_Type_flatten(MPI_Datatype type, MPI_Aint * off_array, DLOOP_Size * size_array,
+                      MPI_Aint * array_len_p);
 
 /* debugging helper functions */
 char *MPIR_Datatype_builtin_to_string(MPI_Datatype type);
@@ -690,14 +696,12 @@ static inline MPI_Aint MPIR_Datatype_size_external32(MPI_Datatype type)
 {
     if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
         return MPII_Datatype_get_basic_size_external32(type);
-    }
-    else {
+    } else {
         MPIR_Dataloop *dlp = NULL;
 
         MPIR_Datatype_get_loopptr_macro(type, dlp, MPIR_DATALOOP_HETEROGENEOUS);
 
-        return MPIR_Dataloop_stream_size(dlp,
-                MPII_Datatype_get_basic_size_external32);
+        return MPIR_Dataloop_stream_size(dlp, MPII_Datatype_get_basic_size_external32);
     }
 }
 

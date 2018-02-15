@@ -1,18 +1,18 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2010 by Argonne National Laboratory.
+ *  (C) 2017 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 
 #include "mpiimpl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Iallgatherv_intra_ring_sched
+#define FUNCNAME MPIR_Iallgatherv_sched_intra_ring
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallgatherv_intra_ring_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                          void *recvbuf, const int recvcounts[], const int displs[],
-                          MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
+int MPIR_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                      void *recvbuf, const int recvcounts[], const int displs[],
+                                      MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, total_count;
@@ -31,7 +31,7 @@ int MPIR_Iallgatherv_intra_ring_sched(const void *sendbuf, int sendcount, MPI_Da
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     total_count = 0;
-    for (i=0; i<comm_size; i++)
+    for (i = 0; i < comm_size; i++)
         total_count += recvcounts[i];
 
     if (total_count == 0)
@@ -40,13 +40,14 @@ int MPIR_Iallgatherv_intra_ring_sched(const void *sendbuf, int sendcount, MPI_Da
     if (sendbuf != MPI_IN_PLACE) {
         /* First, load the "local" version in the recvbuf. */
         mpi_errno = MPIR_Sched_copy(sendbuf, sendcount, sendtype,
-                                    ((char *)recvbuf + displs[rank]*recvtype_extent),
+                                    ((char *) recvbuf + displs[rank] * recvtype_extent),
                                     recvcounts[rank], recvtype, s);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
     }
 
-    left  = (comm_size + rank - 1) % comm_size;
+    left = (comm_size + rank - 1) % comm_size;
     right = (rank + 1) % comm_size;
 
     torecv = total_count - recvcounts[rank];
@@ -67,11 +68,11 @@ int MPIR_Iallgatherv_intra_ring_sched(const void *sendbuf, int sendcount, MPI_Da
     ridx = left;
     soffset = 0;
     roffset = 0;
-    while (tosend || torecv) { /* While we have data to send or receive */
+    while (tosend || torecv) {  /* While we have data to send or receive */
         sendnow = ((recvcounts[sidx] - soffset) > min) ? min : (recvcounts[sidx] - soffset);
         recvnow = ((recvcounts[ridx] - roffset) > min) ? min : (recvcounts[ridx] - roffset);
-        sbuf = (char *)recvbuf + ((displs[sidx] + soffset) * recvtype_extent);
-        rbuf = (char *)recvbuf + ((displs[ridx] + roffset) * recvtype_extent);
+        sbuf = (char *) recvbuf + ((displs[sidx] + soffset) * recvtype_extent);
+        rbuf = (char *) recvbuf + ((displs[ridx] + roffset) * recvtype_extent);
 
         /* Protect against wrap-around of indices */
         if (!tosend)
@@ -80,14 +81,16 @@ int MPIR_Iallgatherv_intra_ring_sched(const void *sendbuf, int sendcount, MPI_Da
             recvnow = 0;
 
         /* Communicate */
-        if (recvnow) { /* If there's no data to send, just do a recv call */
+        if (recvnow) {  /* If there's no data to send, just do a recv call */
             mpi_errno = MPIR_Sched_recv(rbuf, recvnow, recvtype, left, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
             torecv -= recvnow;
         }
-        if (sendnow) { /* If there's no data to receive, just do a send call */
+        if (sendnow) {  /* If there's no data to receive, just do a send call */
             mpi_errno = MPIR_Sched_send(sbuf, sendnow, recvtype, right, comm_ptr, s);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
             tosend -= sendnow;
         }
         MPIR_SCHED_BARRIER(s);
@@ -104,9 +107,8 @@ int MPIR_Iallgatherv_intra_ring_sched(const void *sendbuf, int sendcount, MPI_Da
         }
     }
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
-

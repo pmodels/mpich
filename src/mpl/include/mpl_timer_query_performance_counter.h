@@ -10,11 +10,11 @@
 #include <winsock2.h>
 #include <windows.h>
 
-static inline void MPL_wtime(MPL_time_t *timeval)
+static inline void MPL_wtime(MPL_time_t * timeval)
 {
     QueryPerformanceCounter(timeval);
 
     return MPL_TIMER_SUCCESS;
 }
 
-#endif
+#endif /* MPL_TIMER_QUERY_PERFORMANCE_COUNTER_H_INCLUDED */

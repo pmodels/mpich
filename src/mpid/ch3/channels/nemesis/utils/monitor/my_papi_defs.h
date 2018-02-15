@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef _MY_PAPI_DEFS_H
-#define _MY_PAPI_DEFS_H
+#ifndef MY_PAPI_DEFS_H_INCLUDED
+#define MY_PAPI_DEFS_H_INCLUDED
 
 #ifdef PAPI_MONITOR
 #undef ENABLE_PAPI_TIMING 
@@ -77,4 +77,4 @@ int PAPI_accum_min (int EventSet, long_long *values);
 int PAPI_accum_var (int EventSet, long_long values[2][NEVENTS]);
 
 #endif  /*PAPI_MONITOR */
-#endif /*_MY_PAPI_DEFS_H */
+#endif /* MY_PAPI_DEFS_H_INCLUDED */

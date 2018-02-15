@@ -64,8 +64,7 @@ int main(int argc, char **argv)
                            rank, ivalue, vecout[i * stride], i * stride);
                 }
             }
-        }
-        else {
+        } else {
             /* Receive into contiguous data */
             MPI_Scatter(NULL, -1, MPI_DATATYPE_NULL, vecout, n, MPI_DOUBLE, root, MPI_COMM_WORLD);
             for (i = 0; i < n; i++) {

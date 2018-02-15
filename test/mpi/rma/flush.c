@@ -32,8 +32,7 @@ int main(int argc, char *argv[])
     if (rank == 0) {
         MPI_Alloc_mem(sizeof(int), MPI_INFO_NULL, &buf);
         *buf = nproc - 1;
-    }
-    else
+    } else
         buf = NULL;
 
     MPI_Win_create(buf, sizeof(int) * (rank == 0), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &window);

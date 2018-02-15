@@ -68,8 +68,7 @@ int CheckData(double *recvbuf, int nx, int ny, int myrow, int mycol, int nrow, i
                 if (errs < 10) {
                     printf("Error in (%d,%d) [%d,%d] location, got %f expected %f\n",
                            m, k, myrow, mycol, p[k], val);
-                }
-                else if (errs == 10) {
+                } else if (errs == 10) {
                     printf("Too many errors; suppressing printing\n");
                 }
             }

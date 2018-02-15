@@ -62,13 +62,11 @@ int main(int argc, char *argv[])
                     if (buf[i] != 2) {
                         error++;
                     }
-                }
-                else if (i == 1 || i == 2) {
+                } else if (i == 1 || i == 2) {
                     if (buf[i] != 3) {
                         error++;
                     }
-                }
-                else {
+                } else {
                     if (buf[i] != 1) {
                         error++;
                     }

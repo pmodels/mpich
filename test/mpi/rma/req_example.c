@@ -71,8 +71,7 @@ int main(int argc, char *argv[])
         /* Find a free put request */
         if (i < M) {
             j = i;
-        }
-        else {
+        } else {
             MPI_Waitany(M, put_req, &j, MPI_STATUS_IGNORE);
         }
 

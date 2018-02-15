@@ -22,7 +22,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Mutex_create as PMPIX_Mutex_create
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPIX_Mutex_create(int my_count, MPI_Comm comm, MPIX_Mutex * hdl_out) __attribute__((weak,alias("PMPIX_Mutex_create")));
+int MPIX_Mutex_create(int my_count, MPI_Comm comm, MPIX_Mutex * hdl_out)
+    __attribute__ ((weak, alias("PMPIX_Mutex_create")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -71,8 +72,7 @@ int MPIX_Mutex_create(int my_count, MPI_Comm comm, MPIX_Mutex * hdl_out)
     if (my_count > 0) {
         hdl->bases = malloc(sizeof(uint8_t *) * my_count);
         assert(hdl->bases != NULL);
-    }
-    else {
+    } else {
         hdl->bases = NULL;
     }
 
@@ -91,8 +91,7 @@ int MPIX_Mutex_create(int my_count, MPI_Comm comm, MPIX_Mutex * hdl_out)
             size = nproc;
         }
 
-        MPI_Win_create(base, size, sizeof(uint8_t), MPI_INFO_NULL, hdl->comm,
-                       &hdl->windows[i]);
+        MPI_Win_create(base, size, sizeof(uint8_t), MPI_INFO_NULL, hdl->comm, &hdl->windows[i]);
     }
 
     *hdl_out = hdl;

@@ -120,8 +120,7 @@ PMPI_LOCAL int MPIR_Dims_create_init(void)
                                       dims_basefact,
                                       MPI_T_VERBOSITY_MPIDEV_DETAIL,
                                       MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "DIMS", "Time to ? (seconds)");
+                                      MPIR_T_PVAR_FLAG_READONLY, "DIMS", "Time to ? (seconds)");
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(DIMS,
                                       MPI_DOUBLE,
                                       dims_div,
@@ -137,33 +136,12 @@ PMPI_LOCAL int MPIR_Dims_create_init(void)
                                       MPIR_T_PVAR_FLAG_READONLY,
                                       "DIMS", "Time finding balanced decomposition (seconds)");
 
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(
-        DIMS,
-        MPI_UNSIGNED_LONG_LONG,
-        dims_npruned,
-        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-        MPI_T_BIND_NO_OBJECT,
-        (MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS),
-        "DIMS", /* category name */
-        "Number of divisors pruned from the search for a balanced decomposition");
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(
-        DIMS,
-        MPI_UNSIGNED_LONG_LONG,
-        dims_ndivmade,
-        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-        MPI_T_BIND_NO_OBJECT,
-        (MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS),
-        "DIMS", /* category name */
-        "Number of integer divisions performed");
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(
-        DIMS,
-        MPI_UNSIGNED_LONG_LONG,
-        dims_optbalcalls,
-        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-        MPI_T_BIND_NO_OBJECT,
-        (MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS),
-        "DIMS", /* category name */
-        "Number of call to optbalance");
+    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(DIMS, MPI_UNSIGNED_LONG_LONG, dims_npruned, MPI_T_VERBOSITY_MPIDEV_DETAIL, MPI_T_BIND_NO_OBJECT, (MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS), "DIMS",     /* category name */
+                                        "Number of divisors pruned from the search for a balanced decomposition");
+    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(DIMS, MPI_UNSIGNED_LONG_LONG, dims_ndivmade, MPI_T_VERBOSITY_MPIDEV_DETAIL, MPI_T_BIND_NO_OBJECT, (MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS), "DIMS",    /* category name */
+                                        "Number of integer divisions performed");
+    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(DIMS, MPI_UNSIGNED_LONG_LONG, dims_optbalcalls, MPI_T_VERBOSITY_MPIDEV_DETAIL, MPI_T_BIND_NO_OBJECT, (MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS), "DIMS", /* category name */
+                                        "Number of call to optbalance");
 
     return 0;
 }
@@ -179,14 +157,12 @@ PMPI_LOCAL int MPIR_Dims_create_init(void)
 #include "primes.h"
 
 /* Local only routines.  These should *not* have standard prefix */
-static int factor_num(int, Factors [], int *);
-static int ndivisors_from_factor(int nf, const Factors *factors);
-static int factor_to_divisors(int nf, Factors *factors, int ndivs,
-                             int divs[]);
+static int factor_num(int, Factors[], int *);
+static int ndivisors_from_factor(int nf, const Factors * factors);
+static int factor_to_divisors(int nf, Factors * factors, int ndivs, int divs[]);
 static void factor_to_dims_by_rr(int nf, Factors f[], int nd, int dims[]);
 static int optbalance(int n, int idx, int nd, int ndivs,
-                      const int divs[], int trydims[], int *curbal_p,
-                      int optdims[]);
+                      const int divs[], int trydims[], int *curbal_p, int optdims[]);
 
 /*
  * Factor "n", returning the prime factors and their counts in factors, in
@@ -196,8 +172,8 @@ static int optbalance(int n, int idx, int nd, int ndivs,
  */
 static int factor_num(int nn, Factors factors[], int *nprimes)
 {
-    int n=nn, val;
-    int i, nfactors=0, nall=0;
+    int n = nn, val;
+    int i, nfactors = 0, nall = 0;
     int cnt;
 
     /* Find the prime number that less than that value and try dividing
@@ -214,7 +190,7 @@ static int factor_num(int nn, Factors factors[], int *nprimes)
         factors[0].cnt = cnt;
         factors[0].val = 2;
         nfactors = 1;
-        nall     = cnt;
+        nall = cnt;
     }
 
     /* An earlier version computed an approximation to the sqrt(n) to serve
@@ -229,7 +205,8 @@ static int factor_num(int nn, Factors factors[], int *nprimes)
         /* Note that we keep removing factors from n, so this test becomes
          * easier and easier to satisfy as we remove factors from n
          */
-        if (val * val > n) break;
+        if (val * val > n)
+            break;
         n2 = n / val;
         if (n2 * val == n) {
             cnt = 1;
@@ -250,17 +227,18 @@ static int factor_num(int nn, Factors factors[], int *nprimes)
                 return nfactors;
             }
             /* --END ERROR HANDLING-- */
-            factors[nfactors].val   = val;
+            factors[nfactors].val = val;
             factors[nfactors++].cnt = cnt;
             nall += cnt;
-            if (n == 1) break;
+            if (n == 1)
+                break;
         }
         i++;
     } while (1);
     if (n != 1) {
         /* There was one factor > sqrt(n).  This factor must be prime.
          * Note if nfactors was 0, n was prime */
-        factors[nfactors].val   = n;
+        factors[nfactors].val = n;
         factors[nfactors++].cnt = 1;
         nall++;
     }
@@ -268,11 +246,11 @@ static int factor_num(int nn, Factors factors[], int *nprimes)
     return nfactors;
 }
 
-static int ndivisors_from_factor(int nf, const Factors *factors)
+static int ndivisors_from_factor(int nf, const Factors * factors)
 {
     int i, ndiv;
     ndiv = 1;
-    for (i=0; i<nf; i++) {
+    for (i = 0; i < nf; i++) {
         ndiv *= (factors[i].cnt + 1);
     }
     ndiv -= 2;
@@ -282,25 +260,24 @@ static int ndivisors_from_factor(int nf, const Factors *factors)
 
 #undef FCNAME
 #define FCNAME "factor_to_divisors"
-static int factor_to_divisors(int nf, Factors *factors, int ndiv, int divs[])
+static int factor_to_divisors(int nf, Factors * factors, int ndiv, int divs[])
 {
     int i, powers[MAX_FACTORS], curbase[MAX_FACTORS], nd, idx, val, mpi_errno;
 
     MPIR_T_PVAR_TIMER_START(DIMS, dims_getdivs);
-    for (i=0; i<nf; i++) {
-        powers[i]  = 0;
+    for (i = 0; i < nf; i++) {
+        powers[i] = 0;
         curbase[i] = 1;
     }
 
     for (nd = 0; nd < ndiv; nd++) {
         /* Get the next power */
-        for (idx=0; idx<nf; idx++) {
+        for (idx = 0; idx < nf; idx++) {
             powers[idx]++;
             if (powers[idx] > factors[idx].cnt) {
-                powers[idx]  = 0;
+                powers[idx] = 0;
                 curbase[idx] = 1;
-            }
-            else {
+            } else {
                 curbase[idx] *= factors[idx].val;
                 break;
             }
@@ -308,7 +285,8 @@ static int factor_to_divisors(int nf, Factors *factors, int ndiv, int divs[])
         /* Compute the divisor.  Note that we could keep the scan of values
          * from k to nf-1, then curscan[0] would always be the next value */
         val = 1;
-        for (idx=0; idx<nf; idx++) val *= curbase[idx];
+        for (idx = 0; idx < nf; idx++)
+            val *= curbase[idx];
         divs[nd] = val;
     }
     MPIR_T_PVAR_TIMER_END(DIMS, dims_getdivs);
@@ -319,61 +297,71 @@ static int factor_to_divisors(int nf, Factors *factors, int ndiv, int divs[])
      * the qsort routine.  In tests of several million dims_create
      * calls, this code took 1.02 seconds (with -O3) and 1.79 seconds
      * (without optimization) while qsort took 2.5 seconds.
-    */
+     */
     if (nf > 1) {
         int gap, j, j1, j2, k, j1max, j2max;
         MPIR_CHKLMEM_DECL(1);
         int *divs2;
         int *restrict d1, *restrict d2;
 
-        MPIR_CHKLMEM_MALLOC(divs2, int *, nd*sizeof(int), mpi_errno, "divs2", MPL_MEM_COMM);
+        MPIR_CHKLMEM_MALLOC(divs2, int *, nd * sizeof(int), mpi_errno, "divs2", MPL_MEM_COMM);
 
         MPIR_T_PVAR_TIMER_START(DIMS, dims_sort);
         /* handling the first set of pairs separately saved about 20%;
          * done inplace */
-        for (j=0; j<nd-1; j+=2) {
-            if (divs[j] > divs[j+1]) {
-                int tmp = divs[j]; divs[j] = divs[j+1]; divs[j+1]=tmp;
+        for (j = 0; j < nd - 1; j += 2) {
+            if (divs[j] > divs[j + 1]) {
+                int tmp = divs[j];
+                divs[j] = divs[j + 1];
+                divs[j + 1] = tmp;
             }
         }
         /* Using pointers d1 and d2 about 2x copying divs2 back into divs
          * at the end of each phase */
         d1 = divs;
         d2 = divs2;
-        for (gap=2; gap < nd; gap *= 2) {
+        for (gap = 2; gap < nd; gap *= 2) {
             k = 0;
-            for (j=0; j+gap<nd; j+= gap*2) {
+            for (j = 0; j + gap < nd; j += gap * 2) {
                 j1 = j;
                 j2 = j + gap;
                 j1max = j2;
                 j2max = j2 + gap;
-                if (j2max > nd) j2max = nd;
+                if (j2max > nd)
+                    j2max = nd;
                 while (j1 < j1max && j2 < j2max) {
                     if (d1[j1] < d1[j2]) {
                         d2[k++] = d1[j1++];
-                    }
-                    else {
+                    } else {
                         d2[k++] = d1[j2++];
                     }
                 }
                 /* Copy remainder */
-                while (j1 < j1max) d2[k++] = d1[j1++];
-                while (j2 < j2max) d2[k++] = d1[j2++];
+                while (j1 < j1max)
+                    d2[k++] = d1[j1++];
+                while (j2 < j2max)
+                    d2[k++] = d1[j2++];
             }
             /* May be some left over */
-            while (j < nd) d2[k++] = d1[j++];
+            while (j < nd)
+                d2[k++] = d1[j++];
             /* swap pointers and start again */
-            { int *dt = d1; d1 = d2; d2 = dt; }
+            {
+                int *dt = d1;
+                d1 = d2;
+                d2 = dt;
+            }
         }
         MPIR_T_PVAR_TIMER_END(DIMS, dims_sort);
         /* Result must end up in divs */
         if (d1 != divs) {
-            for (j1=0; j1<nd; j1++) divs[j1] = d1[j1];
+            for (j1 = 0; j1 < nd; j1++)
+                divs[j1] = d1[j1];
         }
         MPIR_CHKLMEM_FREEALL();
     }
     return nd;
-fn_fail:
+  fn_fail:
     return mpi_errno;
 }
 
@@ -396,23 +384,24 @@ static void factor_to_dims_by_rr(int nf, Factors f[], int nd, int dims[])
     int i, j, k, cnt, val;
 
     /* Initialize dims */
-    for (i=0; i<nd; i++) dims[i] = 1;
+    for (i = 0; i < nd; i++)
+        dims[i] = 1;
 
     k = 0;
     /* Start with the largest factors, move back to the smallest factor */
-    for (i=nf-1; i>=0; i--) {
+    for (i = nf - 1; i >= 0; i--) {
         val = f[i].val;
         cnt = f[i].cnt;
-        for (j=0; j<cnt; j++) {
+        for (j = 0; j < cnt; j++) {
             if (k < nd) {
                 dims[k++] = val;
-            }
-            else {
+            } else {
                 int kk;
                 /* find first location where apply val is valid.
                  * Can always apply at dims[0] */
-                for (kk=nd-1; kk>0; kk--) {
-                    if (dims[kk]*val <= dims[kk-1]) break;
+                for (kk = nd - 1; kk > 0; kk--) {
+                    if (dims[kk] * val <= dims[kk - 1])
+                        break;
                 }
                 dims[kk] *= val;
             }
@@ -429,45 +418,45 @@ static void factor_to_dims_by_rr(int nf, Factors f[], int nd, int dims[])
 #define FC_NAME "optbalance"
 
 static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
-                           int trydims[], int *curbal_p, int optdims[])
+                      int trydims[], int *curbal_p, int optdims[])
 {
-    int min = trydims[nd-1], curbal = *curbal_p, testbal;
-    int k, f, q, ff, i, ii, kk, nndivs, sf, mpi_errno=MPI_SUCCESS;
+    int min = trydims[nd - 1], curbal = *curbal_p, testbal;
+    int k, f, q, ff, i, ii, kk, nndivs, sf, mpi_errno = MPI_SUCCESS;
 
     MPIR_T_PVAR_COUNTER_INC(DIMS, dims_optbalcalls, 1);
-    if (MPIR_CVAR_DIMS_VERBOSE){
-        MPL_msg_printf("Noptb: idx=%d, nd=%d, ndivs=%d, balance=%d\n",
-                       idx, nd, ndivs, curbal);
+    if (MPIR_CVAR_DIMS_VERBOSE) {
+        MPL_msg_printf("Noptb: idx=%d, nd=%d, ndivs=%d, balance=%d\n", idx, nd, ndivs, curbal);
         MPL_msg_printf("Noptb:optdims: ");
-        for (i=0; i<nd; i++)
-            MPL_msg_printf("%d%c", optdims[i], (i+1<nd) ? 'x' : '\n');
+        for (i = 0; i < nd; i++)
+            MPL_msg_printf("%d%c", optdims[i], (i + 1 < nd) ? 'x' : '\n');
         MPL_msg_printf("Noptb:trydims: ");
-        for (i=idx+1; i<nd; i++)
-            MPL_msg_printf("%d%c", trydims[i], (i+1<nd) ? 'x' : '\n');
+        for (i = idx + 1; i < nd; i++)
+            MPL_msg_printf("%d%c", trydims[i], (i + 1 < nd) ? 'x' : '\n');
     }
     if (idx > 1) {
         MPIR_CHKLMEM_DECL(1);
         int *newdivs;
-        MPIR_CHKLMEM_MALLOC(newdivs,int*,ndivs*sizeof(int),mpi_errno,"divs", MPL_MEM_COMM);
-        if (mpi_errno) return mpi_errno;
+        MPIR_CHKLMEM_MALLOC(newdivs, int *, ndivs * sizeof(int), mpi_errno, "divs", MPL_MEM_COMM);
+        if (mpi_errno)
+            return mpi_errno;
 
         /* At least 3 divisors to set (0...idx).  We try all choices
          * recursively, but stop looking when we can easily tell that
          * no additional cases can improve the current solution. */
-        for (k=0; k<ndivs; k++) {
+        for (k = 0; k < ndivs; k++) {
             f = divs[k];
             if (MPIR_CVAR_DIMS_VERBOSE) {
                 MPL_msg_printf("Noptb: try f=%d at dims[%d]\n", f, idx);
             }
-            if (idx < nd-1 && f-min > curbal) {
-                if (MPIR_CVAR_DIMS_VERBOSE){
-                  MPL_msg_printf("f-min = %d, curbal = %d, skipping other divisors\n",
+            if (idx < nd - 1 && f - min > curbal) {
+                if (MPIR_CVAR_DIMS_VERBOSE) {
+                    MPL_msg_printf("f-min = %d, curbal = %d, skipping other divisors\n",
                                    f - min, curbal);
                 }
                 MPIR_T_PVAR_COUNTER_INC(DIMS, dims_npruned, 1);
-                break; /* best case is all divisors at least
-                        * f, so the best balance is at least
-                        * f - min */
+                break;  /* best case is all divisors at least
+                         * f, so the best balance is at least
+                         * f - min */
             }
             q = n / f;
             /* check whether f is a divisor of what's left.  If so,
@@ -477,28 +466,27 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
             nndivs = 0;
             if (q % f == 0) {
                 newdivs[nndivs++] = f;
-                sf                = f;
-            }
-            else {
+                sf = f;
+            } else {
                 sf = divs[k + 1];
             }
-            if (idx < nd-1 && sf - min > curbal) {
+            if (idx < nd - 1 && sf - min > curbal) {
                 MPIR_T_PVAR_COUNTER_INC(DIMS, dims_npruned, 1);
                 break;
             }
             if (MPIR_CVAR_DIMS_VERBOSE) {
                 MPL_msg_printf("Noptb: sf = %d\n", sf);
             }
-            ff = sf*sf;                /* At least 2 more divisors */
-            for (ii=idx-1; ii>0 && ff <= q; ii--) ff *= sf;
+            ff = sf * sf;       /* At least 2 more divisors */
+            for (ii = idx - 1; ii > 0 && ff <= q; ii--)
+                ff *= sf;
             if (ii > 0) {
                 if (MPIR_CVAR_DIMS_VERBOSE) {
-                    MPL_msg_printf("break for ii = %d, ff = %d and q = %d\n",
-                                   ii, ff, q);
+                    MPL_msg_printf("break for ii = %d, ff = %d and q = %d\n", ii, ff, q);
                 }
                 MPIR_T_PVAR_COUNTER_INC(DIMS, dims_npruned, 1);
-                break;        /* remaining divisors >= sf, and
-                               * product must be <= q */
+                break;  /* remaining divisors >= sf, and
+                         * product must be <= q */
             }
 
             /* Try f as the divisor at the idx location */
@@ -506,9 +494,9 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
             MPIR_T_PVAR_TIMER_START(DIMS, dims_div);
             /* find the subset of divisors of n that are divisors of q
              * and larger than f but such that f*f <= q */
-            for (kk=k+1; kk<ndivs; kk++) {
+            for (kk = k + 1; kk < ndivs; kk++) {
                 f = divs[kk];
-                ff = f*f;
+                ff = f * f;
                 if (ff > q) {
                     MPIR_T_PVAR_COUNTER_INC(DIMS, dims_npruned, 1);
                     break;
@@ -522,26 +510,27 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
             MPIR_T_PVAR_TIMER_END(DIMS, dims_div);
             /* recursively try to find the best subset */
             if (nndivs > 0)
-                optbalance(q, idx - 1, nd, nndivs, newdivs, trydims,
-                           curbal_p, optdims);
+                optbalance(q, idx - 1, nd, nndivs, newdivs, trydims, curbal_p, optdims);
         }
         MPIR_CHKLMEM_FREEALL();
-    }
-    else if (idx == 1) {
+    } else if (idx == 1) {
         /* Only two.  Find the pair such that q,f has min value for q-min, i.e.,
          * the smallest q such that q > f.  Note that f*f < n if q > f and
          * q*f = n */
         /* Valid choices for f, q >= divs[0] */
         int qprev = -1;
-        for (k=1; k<ndivs; k++) {
+        for (k = 1; k < ndivs; k++) {
             f = divs[k];
             q = n / f;
-            if (q < f) break;
+            if (q < f)
+                break;
             qprev = q;
         }
-        f = divs[k-1];
-        if (qprev > 0) q = qprev;
-        else           q = n / f;
+        f = divs[k - 1];
+        if (qprev > 0)
+            q = qprev;
+        else
+            q = n / f;
 
         if (q < f) {
             if (MPIR_CVAR_DIMS_VERBOSE) {
@@ -552,37 +541,39 @@ static int optbalance(int n, int idx, int nd, int ndivs, const int divs[],
             return 0;
         }
         if (MPIR_CVAR_DIMS_VERBOSE) {
-            MPL_msg_printf("Found best factors %d,%d, from divs[%d]\n",
-                           q, f, k-1);
+            MPL_msg_printf("Found best factors %d,%d, from divs[%d]\n", q, f, k - 1);
         }
         /* If nd is 2 (and not greater), we will be replacing all values
          * in dims.  In that case, testbal is q-f;
          */
-        if (nd == 2) testbal = q - f;
-        else  testbal = q - min;
+        if (nd == 2)
+            testbal = q - f;
+        else
+            testbal = q - min;
 
         /* Take the new value if it is at least as good as the
          * current choice.  This is what Jesper Traeff's version does
          * (see the code he provided for his EuroMPI'15 paper) */
         if (testbal <= curbal) {
-            for (i=2; i<nd; i++) optdims[i] = trydims[i];
+            for (i = 2; i < nd; i++)
+                optdims[i] = trydims[i];
             optdims[0] = q;
             optdims[1] = f;
             /* Use the balance for the range of dims, not the total
              * balance */
             *curbal_p = q - min;
         }
-    }
-    else {
+    } else {
         /* idx == 0.  Only one choice for divisor */
-        if (n-min <= curbal) {
-            for (i=1; i<nd; i++) optdims[i] = trydims[i];
+        if (n - min <= curbal) {
+            for (i = 1; i < nd; i++)
+                optdims[i] = trydims[i];
             optdims[0] = n;
             *curbal_p = n - min;
         }
     }
     return 0;
-fn_fail:
+  fn_fail:
     return mpi_errno;
 }
 
@@ -596,38 +587,39 @@ fn_fail:
 PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
 {
     Factors f[MAX_FACTORS];
-    int     nf, nprimes, i, j, k, val, nextidx;
-    int     ndivs, curbal;
-    int     trydims[MAX_DIMS];
-    int     dims_needed, dims_product, mpi_errno;
-    int     chosen[MAX_DIMS], foundDecomp;
-    int     *divs;
+    int nf, nprimes = 0, i, j, k, val, nextidx;
+    int ndivs, curbal;
+    int trydims[MAX_DIMS];
+    int dims_needed, dims_product, mpi_errno;
+    int chosen[MAX_DIMS], foundDecomp;
+    int *divs;
     MPIR_CHKLMEM_DECL(1);
 
     /* Find the number of unspecified dimensions in dims and the product
      * of the positive values in dims */
-    dims_needed  = 0;
+    dims_needed = 0;
     dims_product = 1;
-    for (i=0; i<ndims; i++) {
+    for (i = 0; i < ndims; i++) {
         if (dims[i] < 0) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                              MPIR_ERR_RECOVERABLE,
-                                              "MPIR_Dims_create", __LINE__,
-                                              MPI_ERR_DIMS,
-                                              "**argarrayneg",
-                                              "**argarrayneg %s %d %d",
-                                              "dims", i, dims[i]);
+                                             MPIR_ERR_RECOVERABLE,
+                                             "MPIR_Dims_create", __LINE__,
+                                             MPI_ERR_DIMS,
+                                             "**argarrayneg",
+                                             "**argarrayneg %s %d %d", "dims", i, dims[i]);
             return mpi_errno;
         }
-        if (dims[i] == 0) dims_needed ++;
-        else dims_product *= dims[i];
+        if (dims[i] == 0)
+            dims_needed++;
+        else
+            dims_product *= dims[i];
     }
 
     /* Can we factor nnodes by dims_product? */
     if ((nnodes / dims_product) * dims_product != nnodes) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                          "MPIR_Dims_create", __LINE__,
-                                          MPI_ERR_DIMS, "**dimspartition", 0);
+                                         "MPIR_Dims_create", __LINE__,
+                                         MPI_ERR_DIMS, "**dimspartition", 0);
         return mpi_errno;
     }
 
@@ -639,10 +631,9 @@ PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
     if (dims_needed > MAX_DIMS) {
 /* --BEGIN ERROR HANDLING-- */
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                 MPIR_ERR_RECOVERABLE,
-                                 "MPIR_Dims_create", __LINE__,  MPI_ERR_DIMS,
-                                 "**dimsmany", "**dimsmany %d %d",
-                                 dims_needed, MAX_DIMS);
+                                         MPIR_ERR_RECOVERABLE,
+                                         "MPIR_Dims_create", __LINE__, MPI_ERR_DIMS,
+                                         "**dimsmany", "**dimsmany %d %d", dims_needed, MAX_DIMS);
         return mpi_errno;
 /* --END ERROR HANDLING-- */
     }
@@ -665,7 +656,7 @@ PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
 
     if (dims_needed == 1) {
         /* Simply put the correct value in place */
-        for (j=0; j<ndims; j++) {
+        for (j = 0; j < ndims; j++) {
             if (dims[j] == 0) {
                 dims[j] = nnodes;
                 break;
@@ -679,13 +670,15 @@ PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
     nf = factor_num(nnodes, f, &nprimes);
     MPIR_T_PVAR_TIMER_END(DIMS, dims_fact);
 
-    if (MPIR_CVAR_DIMS_VERBOSE) { MPL_msg_printf("found %d factors\n", nf); }
+    if (MPIR_CVAR_DIMS_VERBOSE) {
+        MPL_msg_printf("found %d factors\n", nf);
+    }
 
     /* Remove primes > sqrt(n) */
     nextidx = 0;
-    for (j=nf-1; j>0 && nextidx < dims_needed - 1; j--) {
+    for (j = nf - 1; j > 0 && nextidx < dims_needed - 1; j--) {
         val = f[j].val;
-        if (f[j].cnt == 1 && val*val > nnodes) {
+        if (f[j].cnt == 1 && val * val > nnodes) {
             if (MPIR_CVAR_DIMS_VERBOSE) {
                 MPL_msg_printf("prime %d required in idx %d\n", val, nextidx);
             }
@@ -693,8 +686,8 @@ PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
             nf--;
             nnodes /= val;
             nprimes--;
-        }
-        else break;
+        } else
+            break;
     }
 
     /* Now, handle some special cases.  If we find *any* of these,
@@ -704,24 +697,23 @@ PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
         /* Fill with the primes */
         int m, cnt;
         if (MPIR_CVAR_DIMS_VERBOSE) {
-            MPL_msg_printf("Nprimes = %d, number dims left = %d\n", nprimes,
-                           dims_needed - nextidx);
+            MPL_msg_printf("Nprimes = %d, number dims left = %d\n", nprimes, dims_needed - nextidx);
         }
         i = nextidx + nprimes;
-        for (k=0; k<nf; k++) {
+        for (k = 0; k < nf; k++) {
             cnt = f[k].cnt;
             val = f[k].val;
-            for (m=0; m<cnt; m++) chosen[--i] = val;
+            for (m = 0; m < cnt; m++)
+                chosen[--i] = val;
         }
         i = nextidx + nprimes;
-        while (i<ndims) chosen[i++] = 1;
+        while (i < ndims)
+            chosen[i++] = 1;
         foundDecomp = 1;
-    }
-    else if (dims_needed - nextidx == 1) {
+    } else if (dims_needed - nextidx == 1) {
         chosen[nextidx] = nnodes;
         foundDecomp = 1;
-    }
-    else if (nf == 1) {
+    } else if (nf == 1) {
         /* What's left is a product of a single prime, so there is only one
          * possible factorization */
         int cnt = f[0].cnt;
@@ -729,10 +721,12 @@ PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
         if (MPIR_CVAR_DIMS_VERBOSE) {
             MPL_msg_printf("only 1 prime = %d left\n", val);
         }
-        for (k=nextidx; k<dims_needed; k++) chosen[k] = 1;
+        for (k = nextidx; k < dims_needed; k++)
+            chosen[k] = 1;
         k = nextidx;
         while (cnt-- > 0) {
-            if (k >= dims_needed) k = nextidx;
+            if (k >= dims_needed)
+                k = nextidx;
             chosen[k++] *= val;
         }
         foundDecomp = 1;
@@ -744,16 +738,20 @@ PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
      */
     if (!foundDecomp) {
         int ndleft = dims_needed - nextidx;
-        for (j=0; j<nf; j++) if (f[j].cnt % ndleft != 0) break;
+        for (j = 0; j < nf; j++)
+            if (f[j].cnt % ndleft != 0)
+                break;
         if (j == nf) {
             int fval;
             val = 1;
-            for (j=0; j<nf; j++) {
+            for (j = 0; j < nf; j++) {
                 int pow = f[j].cnt / ndleft;
                 fval = f[j].val;
-                while (pow--) val *= fval;
+                while (pow--)
+                    val *= fval;
             }
-            for (j=nextidx; j<dims_needed; j++) chosen[j] = val;
+            for (j = nextidx; j < dims_needed; j++)
+                chosen[j] = val;
             if (MPIR_CVAR_DIMS_VERBOSE) {
                 MPL_msg_printf("Used power of factors for dims\n");
             }
@@ -763,7 +761,7 @@ PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
 
     if (foundDecomp) {
         j = 0;
-        for (i=0; i<ndims; i++) {
+        for (i = 0; i < ndims; i++) {
             if (dims[i] == 0) {
                 dims[i] = chosen[j++];
             }
@@ -776,11 +774,11 @@ PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
     /* No trivial solution.  Balance the remaining values (note that we may
      * have already trimmed off some large factors */
     /* First, find all of the divisors given by the remaining factors */
-    ndivs = ndivisors_from_factor(nf, (const Factors *)f);
-    MPIR_CHKLMEM_MALLOC(divs, int*, (ndivs)*sizeof(int), mpi_errno, "divs", MPL_MEM_COMM);
+    ndivs = ndivisors_from_factor(nf, (const Factors *) f);
+    MPIR_CHKLMEM_MALLOC(divs, int *, ((unsigned int) ndivs) * sizeof(int), mpi_errno, "divs", MPL_MEM_COMM);
     ndivs = factor_to_divisors(nf, f, ndivs, divs);
     if (MPIR_CVAR_DIMS_VERBOSE) {
-        for (i=0; i<ndivs; i++) {
+        for (i = 0; i < ndivs; i++) {
             if (divs[i] <= 0) {
                 MPL_msg_printf("divs[%d]=%d!\n", i, divs[i]);
             }
@@ -801,30 +799,30 @@ PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
     trydims[dims_needed - nextidx - 1] = divs[0];
     if (MPIR_CVAR_DIMS_VERBOSE) {
         MPL_msg_printf("N: initial decomp is: ");
-        for (i=0; i<dims_needed; i++)
-            MPL_msg_printf("%d%c", chosen[i], (i+1 < dims_needed) ? 'x' : '\n');
+        for (i = 0; i < dims_needed; i++)
+            MPL_msg_printf("%d%c", chosen[i], (i + 1 < dims_needed) ? 'x' : '\n');
     }
     MPIR_T_PVAR_TIMER_START(DIMS, dims_bal);
     optbalance(nnodes, dims_needed - nextidx - 1, dims_needed - nextidx,
-               ndivs, divs, trydims, &curbal, chosen+nextidx);
+               ndivs, divs, trydims, &curbal, chosen + nextidx);
     MPIR_T_PVAR_TIMER_END(DIMS, dims_bal);
     MPIR_CHKLMEM_FREEALL();
 
     if (MPIR_CVAR_DIMS_VERBOSE) {
         MPL_msg_printf("N: final decomp is: ");
-        for (i=0; i<dims_needed; i++)
-            MPL_msg_printf("%d%c", chosen[i], (i+1 < dims_needed) ? 'x' : '\n');
+        for (i = 0; i < dims_needed; i++)
+            MPL_msg_printf("%d%c", chosen[i], (i + 1 < dims_needed) ? 'x' : '\n');
     }
 
     j = 0;
-    for (i=0; i<ndims; i++) {
+    for (i = 0; i < ndims; i++) {
         if (dims[i] == 0) {
             dims[i] = chosen[j++];
         }
     }
 
     return MPI_SUCCESS;
-fn_fail:
+  fn_fail:
     return mpi_errno;
 }
 
@@ -867,7 +865,8 @@ int MPI_Dims_create(int nnodes, int ndims, int dims[])
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_DIMS_CREATE);
 
-    if (ndims == 0) goto fn_exit;
+    if (ndims == 0)
+        goto fn_exit;
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -891,11 +890,11 @@ int MPI_Dims_create(int nnodes, int ndims, int dims[])
     /* ... body of routine ...  */
     if (MPIR_Process.dimsCreate != NULL) {
         mpi_errno = MPIR_Process.dimsCreate(nnodes, ndims, dims);
-    }
-    else {
+    } else {
         mpi_errno = MPIR_Dims_create_impl(nnodes, ndims, dims);
     }
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
     /* ... end of body of routine ... */
 
   fn_exit:
@@ -906,10 +905,10 @@ int MPI_Dims_create(int nnodes, int ndims, int dims[])
   fn_fail:
 #ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_dims_create",
-            "**mpi_dims_create %d %d %p", nnodes, ndims, dims);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_dims_create", "**mpi_dims_create %d %d %p", nnodes, ndims,
+                                 dims);
     }
 #endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

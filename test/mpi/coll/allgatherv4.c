@@ -214,8 +214,7 @@ double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double *max
             /* If the maximum message size is too large, don't run */
             if (tmp > MAX_BUF)
                 return 0;
-        }
-        else if (test_type == BELL_CURVE) {
+        } else if (test_type == BELL_CURVE) {
             for (j = 0; j < i; j++) {
                 if (i - 1 + j >= comm_size)
                     continue;

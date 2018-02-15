@@ -14,7 +14,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Get_processor_name as PMPI_Get_processor_name
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Get_processor_name(char *name, int *resultlen) __attribute__((weak,alias("PMPI_Get_processor_name")));
+int MPI_Get_processor_name(char *name, int *resultlen)
+    __attribute__ ((weak, alias("PMPI_Get_processor_name")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -26,7 +27,7 @@ int MPI_Get_processor_name(char *name, int *resultlen) __attribute__((weak,alias
 #define MPI_Get_processor_name PMPI_Get_processor_name
 
 /* Any internal routines can go here.  Make them static if possible.  If they
-   are used by both the MPI and PMPI versions, use PMPI_LOCAL instead of 
+   are used by both the MPI and PMPI versions, use PMPI_LOCAL instead of
    static; this macro expands into "static" if weak symbols are supported and
    into nothing otherwise. */
 #endif
@@ -40,10 +41,10 @@ int MPI_Get_processor_name(char *name, int *resultlen) __attribute__((weak,alias
 Output Parameters:
 + name - A unique specifier for the actual (as opposed to virtual) node. This
   must be an array of size at least 'MPI_MAX_PROCESSOR_NAME'.
-- resultlen - Length (in characters) of the name 
+- resultlen - Length (in characters) of the name
 
   Notes:
-  The name returned should identify a particular piece of hardware; 
+  The name returned should identify a particular piece of hardware;
   the exact format is implementation defined.  This name may or may not
   be the same as might be returned by 'gethostname', 'uname', or 'sysinfo'.
 
@@ -52,8 +53,8 @@ Output Parameters:
 .N Fortran
 
  In Fortran, the character argument should be declared as a character string
- of 'MPI_MAX_PROCESSOR_NAME' rather than an array of dimension 
- 'MPI_MAX_PROCESSOR_NAME'.  That is, 
+ of 'MPI_MAX_PROCESSOR_NAME' rather than an array of dimension
+ 'MPI_MAX_PROCESSOR_NAME'.  That is,
 .vb
    character*(MPI_MAX_PROCESSOR_NAME) name
 .ve
@@ -61,43 +62,43 @@ Output Parameters:
 .vb
    character name(MPI_MAX_PROCESSOR_NAME)
 .ve
- The two 
+ The two
 
 .N FortranString
 
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Get_processor_name( char *name, int *resultlen )
+int MPI_Get_processor_name(char *name, int *resultlen)
 {
     static const char FCNAME[] = "MPI_Get_processor_name";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_PROCESSOR_NAME);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GET_PROCESSOR_NAME);
 
     /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_ARGNULL(name,"name",mpi_errno);
-	    MPIR_ERRTEST_ARGNULL(resultlen,"resultlen",mpi_errno);
+            MPIR_ERRTEST_ARGNULL(name, "name", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(resultlen, "resultlen", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
-#   endif /* HAVE_ERROR_CHECKING */
+#endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    mpi_errno = MPID_Get_processor_name( name, MPI_MAX_PROCESSOR_NAME, 
-					 resultlen );
-    
+
+    mpi_errno = MPID_Get_processor_name(name, MPI_MAX_PROCESSOR_NAME, resultlen);
+
     /* ... end of body of routine ... */
 
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
 
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GET_PROCESSOR_NAME);
@@ -105,14 +106,15 @@ int MPI_Get_processor_name( char *name, int *resultlen )
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
+#ifdef HAVE_ERROR_CHECKING
     {
-	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_get_processor_name",
-	    "**mpi_get_processor_name %p %p", name, resultlen);
+        mpi_errno =
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+                                 "**mpi_get_processor_name", "**mpi_get_processor_name %p %p", name,
+                                 resultlen);
     }
-#   endif
-    mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
+#endif
+    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

@@ -17,7 +17,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_set_info as PMPI_Comm_set_info
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info) __attribute__((weak,alias("PMPI_Comm_set_info")));
+int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
+    __attribute__ ((weak, alias("PMPI_Comm_set_info")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -55,10 +56,12 @@ int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
      * in info_ptr and "n" is the number of keys in comm_ptr->info. */
     LL_FOREACH(info_ptr, curr_info) {
         /* Have we hit the default, empty info hint? */
-        if (curr_info->key == NULL) continue;
+        if (curr_info->key == NULL)
+            continue;
 
         mpi_errno = MPIR_Info_set_impl(comm_ptr->info, curr_info->key, curr_info->value);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
     }
 
   fn_exit:
@@ -128,8 +131,9 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate pointers */
-            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
-            if (mpi_errno) goto fn_fail;
+            MPIR_Comm_valid_ptr(comm_ptr, mpi_errno, TRUE);
+            if (mpi_errno)
+                goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

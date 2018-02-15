@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef PTL_IMPL_H
-#define PTL_IMPL_H
+#ifndef PTL_IMPL_H_INCLUDED
+#define PTL_IMPL_H_INCLUDED
 
 #include <mpid_nem_impl.h>
 #include <portals4.h>
@@ -68,9 +68,8 @@ static inline MPID_nem_ptl_req_area * REQ_PTL(MPIR_Request *req) {
     } while (0)
 
 #define MPID_nem_ptl_request_create_sreq(sreq_, errno_, comm_) do {                                             \
-        (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);               \
+        (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);               \
         MPIR_Object_set_ref((sreq_), 2);                                                                        \
-        (sreq_)->kind               = MPIR_REQUEST_KIND__SEND;                                                        \
         MPIR_Comm_add_ref(comm_);                                                                               \
         (sreq_)->comm               = comm_;                                                                    \
         (sreq_)->status.MPI_ERROR   = MPI_SUCCESS;                                                              \
@@ -256,4 +255,4 @@ const char *MPID_nem_ptl_strlist(ptl_list_t list);
     
 
 
-#endif /* PTL_IMPL_H */
+#endif /* PTL_IMPL_H_INCLUDED */

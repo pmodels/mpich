@@ -19,7 +19,7 @@ int MPII_Timer_finalize(void);
 int MPII_Describe_timer_states(void);
 
 /* structures, global variables */
-/* FIXME: All global names should follow the prefix rules to ensure that 
+/* FIXME: All global names should follow the prefix rules to ensure that
    there are no collisions with user-defined global names.  g_pRLOG should be
    RLOGI_something */
 extern RLOGI_Struct *g_pRLOG;
@@ -30,44 +30,44 @@ extern RLOGI_Struct *g_pRLOG;
 #define RLOG_FINALIZE_STATE_DECL(a)
 
 /* function enter and exit macros */
-#define RLOG_FUNC_ENTER(a) \
-if (g_pRLOG) \
-{ \
-    g_pRLOG->nRecursion++; \
-    MPID_Wtime( &time_stamp_in##a ); \
-}
+#define RLOG_FUNC_ENTER(a)                      \
+    if (g_pRLOG)                                \
+    {                                           \
+        g_pRLOG->nRecursion++;                  \
+        MPID_Wtime(&time_stamp_in##a);          \
+    }
 
 #define RLOGI_MACRO_HEADER_CAST() ((RLOGI_HEADER*)g_pRLOG->pOutput->pCurHeader)
 #define RLOGI_MACRO_EVENT_CAST()  ((RLOGI_EVENT*)((char*)g_pRLOG->pOutput->pCurHeader + sizeof(RLOGI_HEADER)))
 
-#define RLOG_FUNC_EXIT(a) \
-if (g_pRLOG) \
-{ \
-    if (g_pRLOG->bLogging) \
-    { \
-	double d1, d2; \
-	MPID_Wtime( &time_stamp_out##a ); \
-	MPIDM_Wtime_todouble( ( &time_stamp_in##a ), &d1); \
-	MPIDM_Wtime_todouble( ( &time_stamp_out##a ), &d2); \
-	g_pRLOG->nRecursion--; \
-	if (g_pRLOG->pOutput->pCurHeader + sizeof(RLOGI_HEADER) + sizeof(RLOGI_EVENT) > g_pRLOG->pOutput->pEnd) \
-	{ \
-	    WriteCurrentDataAndLogEvent(g_pRLOG, a , d1, d2, g_pRLOG->nRecursion); \
-	} \
-	else \
-	{ \
-	    RLOGI_MACRO_HEADER_CAST()->type = RLOGI_EVENT_TYPE; \
-	    RLOGI_MACRO_HEADER_CAST()->length = sizeof(RLOGI_HEADER) + sizeof(RLOGI_EVENT); \
-	    RLOGI_MACRO_EVENT_CAST()->rank = g_pRLOG->nRank; \
-	    RLOGI_MACRO_EVENT_CAST()->end_time = d2 - g_pRLOG->dFirstTimestamp; \
-	    RLOGI_MACRO_EVENT_CAST()->start_time = d1 - g_pRLOG->dFirstTimestamp; \
-	    RLOGI_MACRO_EVENT_CAST()->event = a ; \
-	    RLOGI_MACRO_EVENT_CAST()->recursion = g_pRLOG->nRecursion; \
-	    /* advance the current position pointer */ \
-	    g_pRLOG->pOutput->pCurHeader += sizeof(RLOGI_HEADER) + sizeof(RLOGI_EVENT); \
-	} \
-    } \
-}
+#define RLOG_FUNC_EXIT(a)                                               \
+    if (g_pRLOG)                                                        \
+    {                                                                   \
+        if (g_pRLOG->bLogging)                                          \
+        {                                                               \
+            double d1, d2;                                              \
+            MPID_Wtime(&time_stamp_out##a);                             \
+            MPIDM_Wtime_todouble((&time_stamp_in##a), &d1);             \
+            MPIDM_Wtime_todouble((&time_stamp_out##a), &d2);            \
+            g_pRLOG->nRecursion--;                                      \
+            if (g_pRLOG->pOutput->pCurHeader + sizeof(RLOGI_HEADER) + sizeof(RLOGI_EVENT) > g_pRLOG->pOutput->pEnd) \
+            {                                                           \
+                WriteCurrentDataAndLogEvent(g_pRLOG, a , d1, d2, g_pRLOG->nRecursion); \
+            }                                                           \
+            else                                                        \
+            {                                                           \
+                RLOGI_MACRO_HEADER_CAST()->type = RLOGI_EVENT_TYPE;     \
+                RLOGI_MACRO_HEADER_CAST()->length = sizeof(RLOGI_HEADER) + sizeof(RLOGI_EVENT); \
+                RLOGI_MACRO_EVENT_CAST()->rank = g_pRLOG->nRank;        \
+                RLOGI_MACRO_EVENT_CAST()->end_time = d2 - g_pRLOG->dFirstTimestamp; \
+                RLOGI_MACRO_EVENT_CAST()->start_time = d1 - g_pRLOG->dFirstTimestamp; \
+                RLOGI_MACRO_EVENT_CAST()->event = a ;                   \
+                RLOGI_MACRO_EVENT_CAST()->recursion = g_pRLOG->nRecursion; \
+                /* advance the current position pointer */              \
+                g_pRLOG->pOutput->pCurHeader += sizeof(RLOGI_HEADER) + sizeof(RLOGI_EVENT); \
+            }                                                           \
+        }                                                               \
+    }
 
 #define RLOG_PT2PT_FUNC_ENTER(a)     RLOG_FUNC_ENTER(a)
 #define RLOG_PT2PT_FUNC_EXIT(a)      RLOG_FUNC_EXIT(a)
@@ -81,43 +81,43 @@ if (g_pRLOG) \
 #define RLOG_FINALIZE_FUNC_EXIT(a)
 
 /* arrow generating enter and exit macros */
-#define RLOG_PT2PT_FUNC_ENTER_FRONT(a) \
-if (g_pRLOG) \
-{ \
-    g_pRLOG->nRecursion++; \
-    MPID_Wtime( &time_stamp_in##a ); \
-    RLOGI_LogSend( g_pRLOG, dest, tag, count ); \
-}
+#define RLOG_PT2PT_FUNC_ENTER_FRONT(a)                  \
+    if (g_pRLOG)                                        \
+    {                                                   \
+        g_pRLOG->nRecursion++;                          \
+        MPID_Wtime(&time_stamp_in##a);                  \
+        RLOGI_LogSend(g_pRLOG, dest, tag, count);       \
+    }
 
-#define RLOG_PT2PT_FUNC_ENTER_BACK(a) \
-if (g_pRLOG) \
-{ \
-    g_pRLOG->nRecursion++; \
-    MPID_Wtime( &time_stamp_in##a ); \
-    RLOGI_LogRecv( g_pRLOG, source, tag, count ); \
-}
+#define RLOG_PT2PT_FUNC_ENTER_BACK(a)                   \
+    if (g_pRLOG)                                        \
+    {                                                   \
+        g_pRLOG->nRecursion++;                          \
+        MPID_Wtime(&time_stamp_in##a);                  \
+        RLOGI_LogRecv(g_pRLOG, source, tag, count);     \
+    }
 
-#define RLOG_PT2PT_FUNC_ENTER_BOTH(a) \
-if (g_pRLOG) \
-{ \
-    g_pRLOG->nRecursion++; \
-    MPID_Wtime( &time_stamp_in##a ); \
-    RLOGI_LogSend( g_pRLOG, dest, sendtag, sendcount ); \
-}
+#define RLOG_PT2PT_FUNC_ENTER_BOTH(a)                           \
+    if (g_pRLOG)                                                \
+    {                                                           \
+        g_pRLOG->nRecursion++;                                  \
+        MPID_Wtime(&time_stamp_in##a);                          \
+        RLOGI_LogSend(g_pRLOG, dest, sendtag, sendcount);       \
+    }
 
-#define RLOG_PT2PT_FUNC_EXIT_BACK(a) \
-if (g_pRLOG) \
-{ \
-    RLOGI_LogRecv( g_pRLOG, source, tag, count ); \
-    RLOG_PT2PT_FUNC_EXIT(a) \
-}
+#define RLOG_PT2PT_FUNC_EXIT_BACK(a)                    \
+    if (g_pRLOG)                                        \
+    {                                                   \
+        RLOGI_LogRecv(g_pRLOG, source, tag, count);     \
+        RLOG_PT2PT_FUNC_EXIT(a);                        \
+    }
 
-#define RLOG_PT2PT_FUNC_EXIT_BOTH(a) \
-if (g_pRLOG) \
-{ \
-    RLOGI_LogRecv( g_pRLOG, source, recvtag, recvcount ); \
-    RLOG_PT2PT_FUNC_EXIT(a) \
-}
+#define RLOG_PT2PT_FUNC_EXIT_BOTH(a)                            \
+    if (g_pRLOG)                                                \
+    {                                                           \
+        RLOGI_LogRecv(g_pRLOG, source, recvtag, recvcount);     \
+        RLOG_PT2PT_FUNC_EXIT(a);                                \
+    }
 
 
 /* MPI layer definitions */
@@ -148,7 +148,7 @@ if (g_pRLOG) \
 #if defined(HAVE_TIMING) && (HAVE_TIMING == MPICH_TIMING_KIND__LOG_DETAILED || HAVE_TIMING == MPICH_TIMING_KIND__ALL)
 
 /* device layer definitions */
-#define MPIR_FUNC_VERBOSE_STATE_DECL(a)                RLOG_STATE_DECL(a)
+#define MPIR_FUNC_VERBOSE_STATE_DECL(a)           RLOG_STATE_DECL(a)
 #define MPIR_FUNC_VERBOSE_ENTER(a)                RLOG_FUNC_ENTER(a)
 #define MPIR_FUNC_VERBOSE_EXIT(a)                 RLOG_FUNC_EXIT(a)
 #define MPIR_FUNC_VERBOSE_PT2PT_ENTER(a)          RLOG_PT2PT_FUNC_ENTER(a)
@@ -168,4 +168,4 @@ if (g_pRLOG) \
 
 #endif /* (HAVE_TIMING == MPICH_TIMING_KIND__LOG_DETAILED || HAVE_TIMING == MPICH_TIMING_KIND__ALL) */
 
-#endif
+#endif /* RLOG_MACROS_H_INCLUDED */

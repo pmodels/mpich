@@ -56,8 +56,7 @@ int main(int argc, char *argv[])
     if (rank == 0) {
         errs += MPI_Win_allocate(COUNT * sizeof(double), sizeof(double),
                                  MPI_INFO_NULL, MPI_COMM_WORLD, &win_mem, &win);
-    }
-    else {
+    } else {
         errs += MPI_Win_allocate(0, sizeof(double), MPI_INFO_NULL, MPI_COMM_WORLD, &win_mem, &win);
     }
 

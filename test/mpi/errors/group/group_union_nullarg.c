@@ -10,21 +10,21 @@ int main(int argc, char **argv)
     int errs = 0, mpi_errno, rank, size;
     int errclass, worldrank;
 
-    MTest_Init( &argc, &argv );
-    MPI_Comm_rank( MPI_COMM_WORLD, &worldrank );
+    MTest_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &worldrank);
     comm = MPI_COMM_WORLD;
-    MPI_Comm_group( comm, &basegroup );
-    MPI_Comm_rank( comm, &rank );
-    MPI_Comm_size( comm, &size );
+    MPI_Comm_group(comm, &basegroup);
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &size);
     MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
-    MPI_Comm_split( comm, 0, size - rank, &newcomm );
-    MPI_Comm_group( newcomm, &g1);
-    MPI_Comm_dup( comm, &dupcomm );
-    MPI_Comm_group( dupcomm, &g2 );
+    MPI_Comm_split(comm, 0, size - rank, &newcomm);
+    MPI_Comm_group(newcomm, &g1);
+    MPI_Comm_dup(comm, &dupcomm);
+    MPI_Comm_group(dupcomm, &g2);
 
     /* checking group_union for NULL variable */
-    mpi_errno = MPI_Group_union( g1, g2, NULL );
+    mpi_errno = MPI_Group_union(g1, g2, NULL);
     MPI_Error_class(mpi_errno, &errclass);
     if (errclass != MPI_ERR_ARG)
         ++errs;
@@ -39,4 +39,3 @@ int main(int argc, char **argv)
     MPI_Finalize();
     return 0;
 }
-
