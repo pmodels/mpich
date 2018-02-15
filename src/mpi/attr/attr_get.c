@@ -30,7 +30,8 @@ int MPI_Attr_get(MPI_Comm comm, int keyval, void *attribute_val, int *flag)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Attr_get
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Attr_get - Retrieves attribute value by key
@@ -74,7 +75,6 @@ Notes for C:
 @*/
 int MPI_Attr_get(MPI_Comm comm, int keyval, void *attribute_val, int *flag)
 {
-    static const char FCNAME[] = "MPI_Attr_get";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ATTR_GET);

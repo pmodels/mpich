@@ -29,7 +29,8 @@ int MPI_Comm_disconnect(MPI_Comm * comm) __attribute__ ((weak, alias("PMPI_Comm_
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_disconnect
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_disconnect - Disconnect from a communicator
 
@@ -52,7 +53,6 @@ with 'MPI_COMM_WORLD' or 'MPI_COMM_SELF'.
 @*/
 int MPI_Comm_disconnect(MPI_Comm * comm)
 {
-    static const char FCNAME[] = "MPI_Comm_disconnect";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_DISCONNECT);

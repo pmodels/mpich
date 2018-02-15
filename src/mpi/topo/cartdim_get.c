@@ -29,7 +29,8 @@ int MPI_Cartdim_get(MPI_Comm comm, int *ndims) __attribute__ ((weak, alias("PMPI
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Cartdim_get
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Cartdim_get - Retrieves Cartesian topology information associated with a
@@ -52,7 +53,6 @@ Output Parameters:
 @*/
 int MPI_Cartdim_get(MPI_Comm comm, int *ndims)
 {
-    static const char FCNAME[] = "MPI_Cartdim_get";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Topology *cart_ptr;

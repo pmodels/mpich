@@ -29,7 +29,8 @@ int MPI_Win_test(MPI_Win win, int *flag) __attribute__ ((weak, alias("PMPI_Win_t
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_test
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_test - Test whether an RMA exposure epoch has completed
 
@@ -56,7 +57,6 @@ Output Parameters:
 @*/
 int MPI_Win_test(MPI_Win win, int *flag)
 {
-    static const char FCNAME[] = "MPI_Win_test";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_TEST);

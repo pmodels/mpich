@@ -29,13 +29,11 @@ int MPI_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_va
 
 #undef FUNCNAME
 #define FUNCNAME MPII_Type_get_attr
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_val,
                        int *flag, MPIR_Attr_type outAttrType)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Type_get_attr";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *type_ptr = NULL;
     MPIR_Attribute *p;

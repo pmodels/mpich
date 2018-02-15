@@ -31,7 +31,8 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function * file_errhandler_fn
 
 #undef FUNCNAME
 #define FUNCNAME MPI_File_create_errhandler
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_File_create_errhandler - Create a file error handler
 
@@ -51,7 +52,6 @@ Output Parameters:
 int MPI_File_create_errhandler(MPI_File_errhandler_function * file_errhandler_fn,
                                MPI_Errhandler * errhandler)
 {
-    static const char FCNAME[] = "MPI_File_create_errhandler";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errhandler *errhan_ptr;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FILE_CREATE_ERRHANDLER);

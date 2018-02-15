@@ -27,7 +27,8 @@
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Register_datarep
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Register_datarep - Register a set of user-provided data conversion
    functions
@@ -52,7 +53,6 @@ int MPI_Register_datarep(char *datarep,
                          MPI_Datarep_conversion_function * write_conversion_fn,
                          MPI_Datarep_extent_function * dtype_file_extent_fn, void *extra_state)
 {
-    static const char FCNAME[] = "MPI_Register_datarep";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_REGISTER_DATAREP);
 

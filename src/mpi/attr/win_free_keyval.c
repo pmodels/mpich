@@ -30,7 +30,8 @@ int MPI_Win_free_keyval(int *win_keyval) __attribute__ ((weak, alias("PMPI_Win_f
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_free_keyval
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_free_keyval - Frees an attribute key for MPI RMA windows
 
@@ -49,9 +50,6 @@ Input Parameters:
 @*/
 int MPI_Win_free_keyval(int *win_keyval)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Win_free_keyval";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPII_Keyval *keyval_ptr = NULL;
     int in_use;

@@ -29,7 +29,8 @@ int MPI_Win_detach(MPI_Win win, const void *base) __attribute__ ((weak, alias("P
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_detach
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_detach - Detach memory from a dynamic window
 
@@ -61,7 +62,6 @@ Memory also becomes detached when the associated dynamic memory window is freed.
 @*/
 int MPI_Win_detach(MPI_Win win, const void *base)
 {
-    static const char FCNAME[] = "MPI_Win_detach";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_DETACH);

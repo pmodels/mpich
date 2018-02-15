@@ -31,7 +31,8 @@ int MPI_Send_init(const void *buf, int count, MPI_Datatype datatype, int dest, i
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Send_init
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Send_init - Create a persistent request for a standard send
 
@@ -64,7 +65,6 @@ Output Parameters:
 int MPI_Send_init(const void *buf, int count, MPI_Datatype datatype, int dest,
                   int tag, MPI_Comm comm, MPI_Request * request)
 {
-    static const char FCNAME[] = "MPI_Send_init";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;

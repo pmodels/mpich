@@ -31,7 +31,8 @@ int MPI_Unpublish_name(const char *service_name, MPI_Info info, const char *port
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Unpublish_name
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Unpublish_name - Unpublish a service name published with
    MPI_Publish_name
@@ -53,7 +54,6 @@ Input Parameters:
 @*/
 int MPI_Unpublish_name(const char *service_name, MPI_Info info, const char *port_name)
 {
-    static const char FCNAME[] = "MPI_Unpublish_name";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_UNPUBLISH_NAME);

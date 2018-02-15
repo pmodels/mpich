@@ -27,7 +27,8 @@ int MPI_Query_thread(int *provided) __attribute__ ((weak, alias("PMPI_Query_thre
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Query_thread
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Query_thread - Return the level of thread support provided by the MPI
     library
@@ -62,9 +63,6 @@ Output Parameters:
 @*/
 int MPI_Query_thread(int *provided)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Query_thread";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_QUERY_THREAD);
 

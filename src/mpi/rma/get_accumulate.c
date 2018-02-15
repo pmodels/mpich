@@ -33,7 +33,8 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Get_accumulate
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Get_accumulate - Perform an atomic, one-sided read-and-accumulate operation.
 
@@ -101,7 +102,6 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
                        MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                        int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win)
 {
-    static const char FCNAME[] = "MPI_Get_accumulate";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_ACCUMULATE);

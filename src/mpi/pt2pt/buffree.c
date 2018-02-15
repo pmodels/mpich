@@ -31,7 +31,8 @@ int MPI_Buffer_detach(void *buffer_addr, int *size)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Buffer_detach
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Buffer_detach - Removes an existing buffer (for use in MPI_Bsend etc)
 
@@ -94,7 +95,6 @@ Notes for C:
 @*/
 int MPI_Buffer_detach(void *buffer_addr, int *size)
 {
-    static const char FCNAME[] = "MPI_Buffer_detach";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_BUFFER_DETACH);
 

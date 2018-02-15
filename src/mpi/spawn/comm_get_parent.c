@@ -29,7 +29,8 @@ int MPI_Comm_get_parent(MPI_Comm * parent) __attribute__ ((weak, alias("PMPI_Com
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_get_parent
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_get_parent - Return the parent communicator for this process
 
@@ -60,9 +61,6 @@ Output Parameters:
 @*/
 int MPI_Comm_get_parent(MPI_Comm * parent)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Comm_get_parent";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_GET_PARENT);
 

@@ -31,7 +31,8 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Sendrecv_replace
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Sendrecv_replace - Sends and receives using a single buffer
 
@@ -69,7 +70,6 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
                          int dest, int sendtag, int source, int recvtag,
                          MPI_Comm comm, MPI_Status * status)
 {
-    static const char FCNAME[] = "MPI_Sendrecv_replace";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_CHKLMEM_DECL(1);

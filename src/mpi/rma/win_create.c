@@ -30,7 +30,8 @@ int MPI_Win_create(void *base, MPI_Aint size, int disp_unit, MPI_Info info, MPI_
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_create
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_create - Create an MPI Window object for one-sided communication
 
@@ -99,7 +100,6 @@ usage pattern of the window. The following info keys are predefined.
 int MPI_Win_create(void *base, MPI_Aint size, int disp_unit, MPI_Info info,
                    MPI_Comm comm, MPI_Win * win)
 {
-    static const char FCNAME[] = "MPI_Win_create";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_Comm *comm_ptr = NULL;

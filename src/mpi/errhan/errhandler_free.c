@@ -30,7 +30,8 @@ int MPI_Errhandler_free(MPI_Errhandler * errhandler)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Errhandler_free
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Errhandler_free - Frees an MPI-style errorhandler
 
@@ -48,9 +49,6 @@ exit.
 @*/
 int MPI_Errhandler_free(MPI_Errhandler * errhandler)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Errhandler_free";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errhandler *errhan_ptr = NULL;
     int in_use;

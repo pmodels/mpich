@@ -31,7 +31,8 @@ int MPI_Type_create_hvector(int count, int blocklength, MPI_Aint stride, MPI_Dat
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_create_hvector
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_hvector - Create a datatype with a constant stride given
      in bytes
@@ -58,7 +59,6 @@ int MPI_Type_create_hvector(int count,
                             int blocklength,
                             MPI_Aint stride, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
-    static const char FCNAME[] = "MPI_Type_create_hvector";
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
     MPIR_Datatype *new_dtp;

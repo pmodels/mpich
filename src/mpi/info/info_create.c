@@ -28,7 +28,8 @@ int MPI_Info_create(MPI_Info * info) __attribute__ ((weak, alias("PMPI_Info_crea
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Info_create
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Info_create - Creates a new info object
 
@@ -46,7 +47,6 @@ Output Parameters:
 int MPI_Info_create(MPI_Info * info)
 {
     MPIR_Info *info_ptr;
-    static const char FCNAME[] = "MPI_Info_create";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INFO_CREATE);
 

@@ -35,7 +35,8 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Testsome
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Testsome - Tests for some given requests to complete
 
@@ -70,7 +71,6 @@ program to unexecpectedly terminate or produce incorrect results.
 int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
                  int array_of_indices[], MPI_Status array_of_statuses[])
 {
-    static const char FCNAME[] = "MPI_Testsome";
     MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPIR_Request **request_ptrs = request_ptr_array;
     MPI_Status *status_ptr;

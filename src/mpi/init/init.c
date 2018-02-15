@@ -81,7 +81,8 @@ int MPIR_async_thread_initialized = 0;
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Init
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Init - Initialize the MPI execution environment
 
@@ -119,7 +120,6 @@ The Fortran binding for 'MPI_Init' has only the error return
 @*/
 int MPI_Init(int *argc, char ***argv)
 {
-    static const char FCNAME[] = "MPI_Init";
     int mpi_errno = MPI_SUCCESS;
     int rc ATTRIBUTE((unused));
     int threadLevel, provided;

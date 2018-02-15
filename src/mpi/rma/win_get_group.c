@@ -30,7 +30,8 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group * group)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_get_group
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_get_group - Get the MPI Group of the window object
 
@@ -58,7 +59,6 @@ Output Parameters:
 @*/
 int MPI_Win_get_group(MPI_Win win, MPI_Group * group)
 {
-    static const char FCNAME[] = "MPI_Win_get_group";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_Comm *win_comm_ptr;
