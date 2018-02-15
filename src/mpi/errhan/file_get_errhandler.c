@@ -31,7 +31,8 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler * errhandler)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_File_get_errhandler
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_File_get_errhandler - Get the error handler attached to a file
 
@@ -50,9 +51,6 @@ Output Parameters:
 @*/
 int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler * errhandler)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_File_get_errhandler";
-#endif
     int mpi_errno = MPI_SUCCESS;
 #ifdef MPI_MODE_RDONLY
     MPI_Errhandler eh;

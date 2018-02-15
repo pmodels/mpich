@@ -129,7 +129,8 @@ PMPI_LOCAL void MPIR_Call_finalize_callbacks(int, int);
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Finalize
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Finalize - Terminates MPI execution environment
 
@@ -150,7 +151,6 @@ thread that initialized MPI with either 'MPI_Init' or 'MPI_Init_thread'.
 @*/
 int MPI_Finalize(void)
 {
-    static const char FCNAME[] = "MPI_Finalize";
     int mpi_errno = MPI_SUCCESS;
 
 #ifdef HAVE_HWLOC

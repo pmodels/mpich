@@ -41,7 +41,8 @@ typedef struct intModel {
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_create_f90_integer
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_f90_integer - Return a predefined type that matches
    the specified range
@@ -65,7 +66,6 @@ returns an error of class 'MPI_ERR_ARG'.
 @*/
 int MPI_Type_create_f90_integer(int range, MPI_Datatype * newtype)
 {
-    static const char FCNAME[] = "MPI_Type_create_f90_integer";
     int i, bytes;
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype basetype = MPI_DATATYPE_NULL;

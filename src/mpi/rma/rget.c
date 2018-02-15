@@ -32,7 +32,8 @@ int MPI_Rget(void *origin_addr, int origin_count,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Rget
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Rget - Get data from a memory window on a remote process
 
@@ -76,7 +77,6 @@ int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
              origin_datatype, int target_rank, MPI_Aint target_disp,
              int target_count, MPI_Datatype target_datatype, MPI_Win win, MPI_Request * request)
 {
-    static const char FCNAME[] = "MPI_Rget";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_Request *request_ptr = NULL;

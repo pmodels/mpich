@@ -32,7 +32,8 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Fetch_and_op
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Fetch_and_op - Perform one-sided read-modify-write.
 
@@ -81,7 +82,6 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
                      MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
                      MPI_Op op, MPI_Win win)
 {
-    static const char FCNAME[] = "MPI_Fetch_and_op";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FETCH_AND_OP);

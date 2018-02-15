@@ -32,7 +32,8 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, int 
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Sendrecv
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Sendrecv - Sends and receives a message
 
@@ -72,7 +73,6 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
                  int source, int recvtag, MPI_Comm comm, MPI_Status * status)
 {
-    static const char FCNAME[] = "MPI_Sendrecv";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *sreq = NULL;

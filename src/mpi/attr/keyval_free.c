@@ -30,7 +30,8 @@ int MPI_Keyval_free(int *keyval) __attribute__ ((weak, alias("PMPI_Keyval_free")
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Keyval_free
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Keyval_free - Frees an attribute key for communicators
@@ -57,7 +58,6 @@ The replacement for this routine is 'MPI_Comm_free_keyval'.
 @*/
 int MPI_Keyval_free(int *keyval)
 {
-    static const char FCNAME[] = "MPI_Keyval_free";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_KEYVAL_FREE);
 

@@ -30,7 +30,8 @@ int MPI_Attr_put(MPI_Comm comm, int keyval, void *attribute_val)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Attr_put
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Attr_put - Stores attribute value associated with a key
@@ -73,7 +74,6 @@ corresponding keyval was created) will be called.
 @*/
 int MPI_Attr_put(MPI_Comm comm, int keyval, void *attribute_val)
 {
-    static const char FCNAME[] = "MPI_Attr_put";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ATTR_PUT);

@@ -27,7 +27,8 @@ int MPI_Is_thread_main(int *flag) __attribute__ ((weak, alias("PMPI_Is_thread_ma
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Is_thread_main
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Is_thread_main - Returns a flag indicating whether this thread called
                         'MPI_Init' or 'MPI_Init_thread'
@@ -45,9 +46,6 @@ Output Parameters:
 @*/
 int MPI_Is_thread_main(int *flag)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Is_thread_main";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IS_THREAD_MAIN);
 

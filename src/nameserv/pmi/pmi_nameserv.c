@@ -121,6 +121,8 @@ int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const c
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Free
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Free(MPID_NS_Handle * handle_ptr)
 {
     /* MPID_NS_Handle is Null */
@@ -152,9 +154,10 @@ struct MPID_NS_Handle {
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Create
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
 {
-    static const char FCNAME[] = "MPID_NS_Create";
     int err;
     int length;
     char *pmi_namepub_kvs;
@@ -208,10 +211,11 @@ int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Publish
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                     const char service_name[], const char port[])
 {
-    static const char FCNAME[] = "MPID_NS_Publish";
     int err;
 
     /*printf("publish kvs: <%s>\n", handle->kvsname);fflush(stdout); */
@@ -239,10 +243,11 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Lookup
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                    const char service_name[], char port[])
 {
-    static const char FCNAME[] = "MPID_NS_Lookup";
     int err;
 
     /*printf("lookup kvs: <%s>\n", handle->kvsname);fflush(stdout); */
@@ -264,9 +269,10 @@ int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Unpublish
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const char service_name[])
 {
-    static const char FCNAME[] = "MPID_NS_Unpublish";
     int err;
 
     /*printf("unpublish kvs: <%s>\n", handle->kvsname);fflush(stdout); */
@@ -295,9 +301,10 @@ int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const c
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Free
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Free(MPID_NS_Handle * handle_ptr)
 {
-    static const char FCNAME[] = "MPID_NS_Free";
     int err;
 
     MPL_free((*handle_ptr)->kvsname);

@@ -31,7 +31,8 @@ int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info inf
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_spawn
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_spawn - Spawn up to maxprocs instances of a single MPI application
 
@@ -64,7 +65,6 @@ Output Parameters:
 int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info info,
                    int root, MPI_Comm comm, MPI_Comm * intercomm, int array_of_errcodes[])
 {
-    static const char FCNAME[] = "MPI_Comm_spawn";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *intercomm_ptr;
     MPIR_Info *info_ptr = NULL;

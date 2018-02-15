@@ -50,8 +50,10 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
 #undef MPI_Type_create_darray
 #define MPI_Type_create_darray PMPI_Type_create_darray
 
-
-
+#undef FUNCNAME
+#define FUNCNAME MPIR_Type_block
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
                                int dim,
                                int ndims,
@@ -64,7 +66,6 @@ PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
 {
 /* nprocs = no. of processes in dimension dim of grid
    rank = coordinate of this process in dimension dim */
-    static const char FCNAME[] = "MPIR_Type_block";
     int mpi_errno, blksize, global_size, mysize, i, j;
     MPI_Aint stride;
 
@@ -164,7 +165,10 @@ PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
     return MPI_SUCCESS;
 }
 
-
+#undef FUNCNAME
+#define FUNCNAME MPIR_Type_cyclic
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
                                 int dim,
                                 int ndims,
@@ -178,7 +182,6 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
 {
 /* nprocs = no. of processes in dimension dim of grid
    rank = coordinate of this process in dimension dim */
-    static const char FCNAME[] = "MPIR_Type_cyclic";
     int mpi_errno, blksize, i, blklens[3], st_index, end_index, local_size, rem, count;
     MPI_Aint stride, disps[3];
     MPI_Datatype type_tmp, type_indexed, types[3];
@@ -315,8 +318,8 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_create_darray
-
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_darray - Create a datatype representing a distributed array
 
@@ -352,7 +355,6 @@ int MPI_Type_create_darray(int size,
                            const int array_of_psizes[],
                            int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
-    static const char FCNAME[] = "MPI_Type_create_darray";
     int mpi_errno = MPI_SUCCESS, i;
     MPI_Datatype new_handle;
 

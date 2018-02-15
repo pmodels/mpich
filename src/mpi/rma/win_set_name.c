@@ -30,7 +30,8 @@ int MPI_Win_set_name(MPI_Win win, const char *win_name)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_set_name
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_set_name - Set the print name for an MPI RMA window
 
@@ -50,7 +51,6 @@ Input Parameters:
 @*/
 int MPI_Win_set_name(MPI_Win win, const char *win_name)
 {
-    static const char FCNAME[] = "MPI_Win_set_name";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_SET_NAME);

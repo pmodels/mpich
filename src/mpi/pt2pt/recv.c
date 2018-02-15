@@ -30,7 +30,8 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Recv
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Recv - Blocking receive for a message
 
@@ -67,7 +68,6 @@ length of the message can be determined with 'MPI_Get_count'.
 int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
              MPI_Comm comm, MPI_Status * status)
 {
-    static const char FCNAME[] = "MPI_Recv";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;

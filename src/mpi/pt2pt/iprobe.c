@@ -30,7 +30,8 @@ int MPI_Iprobe(int source, int tag, MPI_Comm comm, int *flag, MPI_Status * statu
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Iprobe
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Iprobe - Nonblocking test for a message
 
@@ -57,7 +58,6 @@ Output Parameters:
 @*/
 int MPI_Iprobe(int source, int tag, MPI_Comm comm, int *flag, MPI_Status * status)
 {
-    static const char FCNAME[] = "MPI_Iprobe";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IPROBE);

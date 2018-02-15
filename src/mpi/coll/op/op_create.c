@@ -69,7 +69,8 @@ void MPII_Op_set_fc(MPI_Op op)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Op_create
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Op_create - Creates a user-defined combination function handle
 
@@ -104,7 +105,6 @@ Output Parameters:
 @*/
 int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
 {
-    static const char FCNAME[] = "MPI_Op_create";
     MPIR_Op *op_ptr;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_CREATE);

@@ -30,7 +30,8 @@ int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int ta
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Send
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Send - Performs a blocking send
 
@@ -62,7 +63,6 @@ process.
 @*/
 int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
 {
-    static const char FCNAME[] = "MPI_Send";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;

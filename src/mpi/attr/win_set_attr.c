@@ -29,9 +29,10 @@ int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
 
 #undef FUNCNAME
 #define FUNCNAME MPII_Win_set_attr
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val, MPIR_Attr_type attrType)
 {
-    static const char FCNAME[] = "MPI_Win_set_attr";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPII_Keyval *keyval_ptr = NULL;

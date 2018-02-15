@@ -30,7 +30,8 @@ int MPI_Win_get_errhandler(MPI_Win win, MPI_Errhandler * errhandler)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_get_errhandler
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_get_errhandler - Get the error handler for the MPI RMA window
 
@@ -51,9 +52,6 @@ Output Parameters:
 @*/
 int MPI_Win_get_errhandler(MPI_Win win, MPI_Errhandler * errhandler)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Win_get_errhandler";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_GET_ERRHANDLER);

@@ -30,7 +30,8 @@ int MPI_Issend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Issend
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Issend - Starts a nonblocking synchronous send
 
@@ -61,7 +62,6 @@ Output Parameters:
 int MPI_Issend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                MPI_Comm comm, MPI_Request * request)
 {
-    static const char FCNAME[] = "MPI_Issend";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;

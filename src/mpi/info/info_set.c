@@ -31,7 +31,8 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Info_set
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Info_set - Adds a (key,value) pair to info
 
@@ -52,7 +53,6 @@ Input Parameters:
 @*/
 int MPI_Info_set(MPI_Info info, const char *key, const char *value)
 {
-    static const char FCNAME[] = "MPI_Info_set";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INFO_SET);

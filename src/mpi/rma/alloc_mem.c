@@ -30,7 +30,8 @@ int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Alloc_mem
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Alloc_mem - Allocate memory for message passing and RMA
 
@@ -63,7 +64,6 @@ Output Parameters:
 @*/
 int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
 {
-    static const char FCNAME[] = "MPI_Alloc_mem";
     int mpi_errno = MPI_SUCCESS;
     void *ap;
     MPIR_Info *info_ptr = NULL;

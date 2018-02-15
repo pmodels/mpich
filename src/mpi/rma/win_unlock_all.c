@@ -29,7 +29,8 @@ int MPI_Win_unlock_all(MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_unlock
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_unlock_all
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_unlock_all - Completes an RMA access epoch at all processes on the given window.
 
@@ -58,7 +59,6 @@ This call is not collective.
 @*/
 int MPI_Win_unlock_all(MPI_Win win)
 {
-    static const char FCNAME[] = "MPI_Win_unlock_all";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_UNLOCK_ALL);

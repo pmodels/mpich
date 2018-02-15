@@ -29,7 +29,8 @@ int MPI_Win_set_info(MPI_Win win, MPI_Info info) __attribute__ ((weak, alias("PM
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_set_info
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_set_info - Set new values for the hints of the window associated with
 win.
@@ -65,7 +66,6 @@ call.
 @*/
 int MPI_Win_set_info(MPI_Win win, MPI_Info info)
 {
-    static const char FCNAME[] = "MPI_Win_set_info";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_Info *info_ptr = NULL;

@@ -34,7 +34,8 @@ int MPI_Startall(int count, MPI_Request array_of_requests[])
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Startall
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Startall - Starts a collection of persistent requests
 
@@ -61,7 +62,6 @@ Input Parameters:
 @*/
 int MPI_Startall(int count, MPI_Request array_of_requests[])
 {
-    static const char FCNAME[] = "MPI_Startall";
     MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPIR_Request **request_ptrs = request_ptr_array;
     int i;

@@ -35,7 +35,8 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[], int *outcount,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Waitsome
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Waitsome - Waits for some given MPI Requests to complete
 
@@ -86,7 +87,6 @@ completion of the message.
 int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
                  int *outcount, int array_of_indices[], MPI_Status array_of_statuses[])
 {
-    static const char FCNAME[] = "MPI_Waitsome";
     MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPIR_Request **request_ptrs = request_ptr_array;
     MPI_Status *status_ptr;

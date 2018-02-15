@@ -31,7 +31,8 @@ int MPI_Publish_name(const char *service_name, MPI_Info info, const char *port_n
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Publish_name
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Publish_name - Publish a service name for use with MPI_Comm_connect
 
@@ -56,7 +57,6 @@ The maximum size string that may be supplied for 'port_name' is
 @*/
 int MPI_Publish_name(const char *service_name, MPI_Info info, const char *port_name)
 {
-    static const char FCNAME[] = "MPI_Publish_name";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PUBLISH_NAME);

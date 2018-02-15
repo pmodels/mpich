@@ -30,7 +30,8 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win * win)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_create_dynamic
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_create_dynamic - Create an MPI Window object for one-sided
 communication.  This window allows memory to be dynamically exposed and
@@ -88,7 +89,6 @@ operation. Only memory that is currently accessible may be attached.
 @*/
 int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win * win)
 {
-    static const char FCNAME[] = "MPI_Win_create_dynamic";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_Comm *comm_ptr = NULL;

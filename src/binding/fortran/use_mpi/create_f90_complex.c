@@ -43,7 +43,8 @@ typedef struct realModel {
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_create_f90_complex
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_f90_complex - Return a predefined type that matches
    the specified range
@@ -68,7 +69,6 @@ returns an error of class 'MPI_ERR_ARG'.
 @*/
 int MPI_Type_create_f90_complex(int precision, int range, MPI_Datatype * newtype)
 {
-    static const char FCNAME[] = "MPI_Type_create_f90_complex";
     int i;
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype basetype;
