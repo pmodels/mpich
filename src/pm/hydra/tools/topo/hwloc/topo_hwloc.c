@@ -172,6 +172,26 @@ static struct hwloc_obj_info_table hwloc_obj_info[] = {
     {NULL, HWLOC_OBJ_TYPE_MAX}
 };
 
+static int io_device_found(const char *resource, const char *devname, hwloc_obj_t io_device,
+                           hwloc_obj_osdev_type_t obj_type)
+{
+    if (!strncmp(resource, devname, strlen(devname))) {
+        /* device type does not match */
+        if (io_device->attr->osdev.type != obj_type)
+            return 0;
+
+        /* device prefix does not match */
+        if (strncmp(io_device->name, devname, strlen(devname)))
+            return 0;
+
+        /* specific device is supplied, but does not match */
+        if (strlen(resource) != strlen(devname) && strcmp(io_device->name, resource))
+            return 0;
+    }
+
+    return 1;
+}
+
 static HYD_status get_hw_obj_list(const char *resource, hwloc_obj_t ** resource_list,
                                   int *resource_list_length, int *resource_count, char **prefix,
                                   hwloc_obj_type_t * type)
@@ -189,22 +209,84 @@ static HYD_status get_hw_obj_list(const char *resource, hwloc_obj_t ** resource_
     status = split_count_field(resource, &resource_str, resource_count);
     HYDU_ERR_POP(status, "error splitting count field\n");
 
-    for (i = 0; hwloc_obj_info[i].val; i++) {
-        if (!strcmp(hwloc_obj_info[i].val, resource_str)) {
-            obj_type = hwloc_obj_info[i].obj_type;
-            obj_type_prefix = MPL_strdup(hwloc_obj_info[i].val);
-            break;
-        }
-    }
+    if (!strncmp(resource, "pci:", strlen("pci:"))) {
+        hwloc_obj_t pci_obj = hwloc_get_pcidev_by_busidstring(topology,
+                                                              resource + strlen("pci:"));
 
-    if (obj_type != HWLOC_OBJ_TYPE_MAX) {
-        hwloc_obj_t obj = NULL;
-        while ((obj = hwloc_get_next_obj_by_type(topology, obj_type, obj))) {
-            HYDU_REALLOC_OR_JUMP(resource_obj, hwloc_obj_t *, (count + 1) * sizeof(hwloc_obj_t),
-                                 status);
-            resource_obj[count++] = obj;
+        if (pci_obj == NULL)
+            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                                "unrecognized pci device id string \"%s\"\n", resource);
+        HYDU_MALLOC_OR_JUMP(resource_obj, hwloc_obj_t *, sizeof(hwloc_obj_t), status);
+        resource_obj[0] = hwloc_get_non_io_ancestor_obj(topology, pci_obj);
+        *resource_count = 1;
+        *resource_list_length = 1;
+        obj_type_prefix = MPL_strdup(resource);
+        obj_type = HWLOC_OBJ_OS_DEVICE;
+    } else if (!strncmp(resource, "gpu", strlen("gpu"))) {
+        hwloc_obj_t io_device = NULL;
+
+        obj_type_prefix = MPL_strdup("gpu");
+        obj_type = HWLOC_OBJ_OS_DEVICE;
+
+        while ((io_device = hwloc_get_next_osdev(topology, io_device))) {
+            int gpuid = atoi(resource + strlen("gpu"));
+
+            if (io_device->attr->osdev.type != HWLOC_OBJ_OSDEV_GPU)
+                continue;
+
+            if (*(resource + strlen("gpu")) == '\0' ||
+                *(resource + strlen("gpu")) == ':' || gpuid == io_device->logical_index) {
+                HYDU_REALLOC_OR_JUMP(resource_obj, hwloc_obj_t *,
+                                     (count + 1) * sizeof(hwloc_obj_t), status);
+                resource_obj[count++] = hwloc_get_non_io_ancestor_obj(topology, io_device);
+            }
         }
         *resource_list_length = count;
+    } else if (!strncmp(resource, "ib", strlen("ib"))
+               || !strncmp(resource, "hfi", strlen("hfi"))
+               || !strncmp(resource, "eth", strlen("eth"))
+               || !strncmp(resource, "en", strlen("en"))) {
+        hwloc_obj_t io_device = NULL;
+        obj_type = HWLOC_OBJ_OS_DEVICE;
+
+        if (!strncmp(resource, "ib", strlen("ib")))
+            obj_type_prefix = MPL_strdup("ib");
+        else if (!strncmp(resource, "hfi", strlen("hfi")))
+            obj_type_prefix = MPL_strdup("hfi");
+        else if (!strncmp(resource, "eth", strlen("eth")) || !strncmp(resource, "en", strlen("en")))
+            obj_type_prefix = MPL_strdup("en");
+
+        while ((io_device = hwloc_get_next_osdev(topology, io_device))) {
+            if (!io_device_found(resource_str, "hfi", io_device, HWLOC_OBJ_OSDEV_OPENFABRICS))
+                continue;
+            if (!io_device_found(resource_str, "ib", io_device, HWLOC_OBJ_OSDEV_NETWORK))
+                continue;
+            if (!io_device_found(resource_str, "eth", io_device, HWLOC_OBJ_OSDEV_NETWORK) &&
+                !io_device_found(resource_str, "en", io_device, HWLOC_OBJ_OSDEV_NETWORK))
+                continue;
+            HYDU_REALLOC_OR_JUMP(resource_obj, hwloc_obj_t *, (count + 1) * sizeof(hwloc_obj_t),
+                                 status);
+            resource_obj[count++] = hwloc_get_non_io_ancestor_obj(topology, io_device);
+        }
+        *resource_list_length = count;
+    } else {
+        for (i = 0; hwloc_obj_info[i].val; i++) {
+            if (!strcmp(hwloc_obj_info[i].val, resource_str)) {
+                obj_type = hwloc_obj_info[i].obj_type;
+                obj_type_prefix = MPL_strdup(hwloc_obj_info[i].val);
+                break;
+            }
+        }
+
+        if (obj_type != HWLOC_OBJ_TYPE_MAX) {
+            hwloc_obj_t obj = NULL;
+            while ((obj = hwloc_get_next_obj_by_type(topology, obj_type, obj))) {
+                HYDU_REALLOC_OR_JUMP(resource_obj, hwloc_obj_t *, (count + 1) * sizeof(hwloc_obj_t),
+                                     status);
+                resource_obj[count++] = obj;
+            }
+            *resource_list_length = count;
+        }
     }
 
     if (obj_type == HWLOC_OBJ_TYPE_MAX)
@@ -250,6 +332,12 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
         get_hw_obj_list(mapping, &map_list, &total_map_objs, &map_count, &map_obj_prefix,
                         &map_type);
     HYDU_ERR_POP(status, "error finding map objects\n");
+
+    if ((bind_type != HWLOC_OBJ_OS_DEVICE && map_type == HWLOC_OBJ_OS_DEVICE) ||
+        (bind_type == HWLOC_OBJ_OS_DEVICE && strcmp(bind_obj_prefix, map_obj_prefix)))
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "IO device binding policy \"%s\" does not support IO device mapping policy \"%s\"\n",
+                            binding, mapping);
 
     /*
      * Process Affinity Algorithm:
@@ -425,6 +513,7 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const 
     HYDU_ASSERT(binding, status);
 
     hwloc_topology_init(&topology);
+    hwloc_topology_set_io_types_filter(topology, HWLOC_TYPE_FILTER_KEEP_ALL);
     hwloc_topology_load(topology);
 
     HYDT_topo_hwloc_info.total_num_pus = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PU);
