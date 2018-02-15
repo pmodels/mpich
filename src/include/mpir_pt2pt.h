@@ -13,6 +13,8 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
 int MPIR_Test_impl(MPIR_Request * request, int *flag, MPI_Status * status);
 int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
                       MPI_Status array_of_statuses[]);
+int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
+                      int *indx, int *flag, MPI_Status * status);
 
 int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status);
 int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
