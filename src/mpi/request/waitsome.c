@@ -229,16 +229,6 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
                         request_ptrs[i] = NULL;
                         n_inactive += 1;
                     }
-                } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                                    MPID_Request_is_anysource(request_ptrs[i]) &&
-                                    !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
-                    mpi_errno = MPI_ERR_IN_STATUS;
-                    MPIR_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
-                    status_ptr =
-                        (array_of_statuses !=
-                         MPI_STATUSES_IGNORE) ? &array_of_statuses[n_active] : MPI_STATUS_IGNORE;
-                    if (status_ptr != MPI_STATUS_IGNORE)
-                        status_ptr->MPI_ERROR = rc;
                 }
             }
         }

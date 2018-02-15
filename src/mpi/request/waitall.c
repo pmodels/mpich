@@ -165,12 +165,6 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
                  * OK for the error case to be slower */
                 if (unlikely(mpi_errno)) {
                     /* --BEGIN ERROR HANDLING-- */
-                    if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                                 MPID_Request_is_anysource(request_ptrs[i]) &&
-                                 !MPIR_Request_is_complete(request_ptrs[i]) &&
-                                 !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
-                        MPIR_ERR_SET(mpi_errno, MPI_ERR_IN_STATUS, "**instatus");
-                    }
                     MPID_Progress_end(&progress_state);
                     MPIR_ERR_POP(mpi_errno);
                     /* --END ERROR HANDLING-- */
@@ -217,18 +211,6 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
                 MPID_Progress_end(&progress_state);
                 MPIR_ERR_POP(mpi_errno);
                 /* --END ERROR HANDLING-- */
-            } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                                MPID_Request_is_anysource(request_ptrs[i]) &&
-                                !MPIR_Request_is_complete(request_ptrs[i]) &&
-                                !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
-                /* Check for pending failures */
-                MPID_Progress_end(&progress_state);
-                MPIR_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
-                status_ptr = (ignoring_statuses) ? MPI_STATUS_IGNORE : &array_of_statuses[i];
-                if (status_ptr != MPI_STATUS_IGNORE)
-                    status_ptr->MPI_ERROR = mpi_errno;
-                proc_failure = TRUE;
-                break;
             }
         }
 
