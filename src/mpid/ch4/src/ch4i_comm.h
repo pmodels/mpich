@@ -666,7 +666,7 @@ static inline int MPIDI_check_convert_mlut_to_lut(MPIDI_rank_map_t * src)
     int mpi_errno = MPI_SUCCESS, i;
     int flag = 1;
     int avtid;
-    MPIDI_rank_map_mlut_t *mlut = NULL;
+    MPIDI_rank_map_lut_t *lut = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHECK_CONVERT_MLUT_TO_LUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHECK_CONVERT_MLUT_TO_LUT);
@@ -693,15 +693,15 @@ static inline int MPIDI_check_convert_mlut_to_lut(MPIDI_rank_map_t * src)
     } else {
         src->mode = MPIDI_RANK_MAP_LUT;
     }
-    mlut = src->irreg.mlut.t;
-    mpi_errno = MPIDIU_alloc_lut(&src->irreg.lut.t, src->size);
+    mpi_errno = MPIDIU_alloc_lut(&lut, src->size);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    src->irreg.lut.lpid = src->irreg.lut.t->lpid;
     for (i = 0; i < src->size; i++) {
-        src->irreg.lut.lpid[i] = mlut->gpid[i].lpid;
+        lut->lpid[i] = src->irreg.mlut.gpid[i].lpid;
     }
-    MPIDIU_release_mlut(mlut);
+    MPIDIU_release_mlut(src->irreg.mlut.t);
+    src->irreg.lut.t = lut;
+    src->irreg.lut.lpid = src->irreg.lut.t->lpid;
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE, (MPL_DBG_FDEST, " avtid %d", src->avtid));
 
   fn_exit:
