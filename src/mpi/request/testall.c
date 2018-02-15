@@ -56,7 +56,6 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
                                    MPL_MEM_OBJECT);
     }
 
-    n_completed = 0;
     for (i = 0; i < count; i++) {
         if (array_of_requests[i] != MPI_REQUEST_NULL) {
             MPIR_Request_get_ptr(array_of_requests[i], request_ptrs[i]);
@@ -74,7 +73,6 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
 #endif
         } else {
             request_ptrs[i] = NULL;
-            n_completed += 1;
         }
     }
 
@@ -82,18 +80,18 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
+    n_completed = 0;
     for (i = 0; i < count; i++) {
-        if (request_ptrs[i] != NULL &&
-            request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
-            request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
-            mpi_errno =
-                (request_ptrs[i]->u.ureq.greq_fns->poll_fn) (request_ptrs[i]->u.ureq.
-                                                             greq_fns->grequest_extra_state,
-                                                             &(array_of_statuses[i]));
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
-        }
         if (request_ptrs[i] != NULL) {
+            if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
+                request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
+                mpi_errno =
+                    (request_ptrs[i]->u.ureq.greq_fns->poll_fn) (request_ptrs[i]->u.ureq.
+                                                                 greq_fns->grequest_extra_state,
+                                                                 &(array_of_statuses[i]));
+                if (mpi_errno != MPI_SUCCESS)
+                    goto fn_fail;
+            }
             if (MPIR_Request_is_complete(request_ptrs[i])) {
                 n_completed++;
                 rc = MPIR_Request_get_error(request_ptrs[i]);
@@ -115,6 +113,8 @@ int MPIR_Testall(int count, MPI_Request array_of_requests[], int *flag,
                     status_ptr->MPI_ERROR = rc;
                 proc_failure = TRUE;
             }
+        } else {
+            n_completed++;
         }
     }
 
