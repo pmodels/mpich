@@ -11,6 +11,81 @@
 #define MPIR_REQUEST_PTR_ARRAY_SIZE 16
 #endif
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Waitany
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_Status * status)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Progress_state progress_state;
+    int i;
+    int found_nonnull_req;
+    int n_inactive;
+
+    MPID_Progress_start(&progress_state);
+    for (;;) {
+        n_inactive = 0;
+        found_nonnull_req = FALSE;
+
+        for (i = 0; i < count; i++) {
+            if (request_ptrs[i] == NULL) {
+                ++n_inactive;
+                continue;
+            }
+            /* we found at least one non-null request */
+            found_nonnull_req = TRUE;
+
+            if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
+                request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
+                /* this is a generalized request; make progress on it */
+                mpi_errno =
+                    (request_ptrs[i]->u.ureq.greq_fns->poll_fn) (request_ptrs[i]->u.ureq.
+                                                                 greq_fns->grequest_extra_state,
+                                                                 status);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+            }
+            if (MPIR_Request_is_complete(request_ptrs[i])) {
+                if (MPIR_Request_is_active(request_ptrs[i])) {
+                    *indx = i;
+                    goto fn_exit;
+                } else {
+                    ++n_inactive;
+                    request_ptrs[i] = NULL;
+
+                    if (n_inactive == count) {
+                        *indx = MPI_UNDEFINED;
+                        /* status is set to empty by MPIR_Request_completion_processing */
+                        goto fn_exit;
+                    }
+                }
+            }
+        }
+
+        if (!found_nonnull_req) {
+            /* all requests were NULL */
+            *indx = MPI_UNDEFINED;
+            if (status != NULL) /* could be null if count=0 */
+                MPIR_Status_set_empty(status);
+            goto fn_exit;
+        }
+
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        /* Avoid blocking other threads since I am inside an infinite loop */
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    }
+
+  fn_exit:
+    MPID_Progress_end(&progress_state);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 /* -- Begin Profiling Symbol Block for routine MPI_Waitany */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Waitany = PMPI_Waitany
@@ -71,11 +146,8 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
 {
     MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPIR_Request **request_ptrs = request_ptr_array;
-    MPID_Progress_state progress_state;
     int i;
-    int n_inactive;
     int active_flag;
-    int found_nonnull_req;
     int last_disabled_anysource = -1;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
@@ -129,7 +201,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
                 {
                     MPIR_Request_valid_ptr(request_ptrs[i], mpi_errno);
                     if (mpi_errno != MPI_SUCCESS)
-                        goto fn_progress_end_fail;
+                        goto fn_fail;
                 }
                 MPID_END_ERROR_CHECKS;
             }
@@ -153,59 +225,10 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
         goto fn_exit;
     }
 
-    MPID_Progress_start(&progress_state);
-    for (;;) {
-        n_inactive = 0;
-        found_nonnull_req = FALSE;
+    mpi_errno = MPIR_Waitany_impl(count, request_ptrs, indx, status);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
-        for (i = 0; i < count; i++) {
-            if (request_ptrs[i] == NULL)
-                continue;
-            /* we found at least one non-null request */
-            found_nonnull_req = TRUE;
-
-            if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
-                request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
-                /* this is a generalized request; make progress on it */
-                mpi_errno =
-                    (request_ptrs[i]->u.ureq.greq_fns->poll_fn) (request_ptrs[i]->u.ureq.
-                                                                 greq_fns->grequest_extra_state,
-                                                                 status);
-                if (mpi_errno != MPI_SUCCESS)
-                    goto fn_progress_end_fail;
-            }
-            if (MPIR_Request_is_complete(request_ptrs[i])) {
-                if (MPIR_Request_is_active(request_ptrs[i])) {
-                    *indx = i;
-                    goto break_l1;
-                } else {
-                    ++n_inactive;
-                    request_ptrs[i] = NULL;
-
-                    if (n_inactive == count) {
-                        *indx = MPI_UNDEFINED;
-                        /* status is set to empty by MPIR_Request_completion_processing */
-                        goto break_l1;
-                    }
-                }
-            }
-        }
-
-        if (!found_nonnull_req) {
-            /* all requests were NULL */
-            *indx = MPI_UNDEFINED;
-            if (status != NULL) /* could be null if count=0 */
-                MPIR_Status_set_empty(status);
-            goto break_l1;
-        }
-
-        mpi_errno = MPID_Progress_test();
-        if (mpi_errno != MPI_SUCCESS)
-            goto fn_progress_end_fail;
-        /* Avoid blocking other threads since I am inside an infinite loop */
-        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    }
-  break_l1:
     if (*indx != MPI_UNDEFINED) {
         mpi_errno = MPIR_Request_completion_processing(request_ptrs[*indx], status, &active_flag);
         if (!MPIR_Request_is_persistent(request_ptrs[*indx])) {
@@ -215,7 +238,6 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
-    MPID_Progress_end(&progress_state);
 
     /* ... end of body of routine ... */
 
@@ -227,9 +249,6 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
     MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_WAITANY);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
-
-  fn_progress_end_fail:
-    MPID_Progress_end(&progress_state);
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
