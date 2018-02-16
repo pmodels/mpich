@@ -36,7 +36,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
                                        MPIDI_CH4U_REQUEST(preq, count),
                                        MPIDI_CH4U_REQUEST(preq, datatype),
                                        MPIDI_CH4U_REQUEST(preq, rank),
-                                       MPIDI_CH4U_request_get_tag(preq),
+                                       MPIDI_CH4U_REQUEST(preq, tag),
                                        preq->comm,
                                        MPIDI_CH4U_request_get_context_offset(preq),
                                        &preq->u.persist.real_request);
@@ -47,7 +47,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
                                        MPIDI_CH4U_REQUEST(preq, count),
                                        MPIDI_CH4U_REQUEST(preq, datatype),
                                        MPIDI_CH4U_REQUEST(preq, rank),
-                                       MPIDI_CH4U_request_get_tag(preq),
+                                       MPIDI_CH4U_REQUEST(preq, tag),
                                        preq->comm,
                                        MPIDI_CH4U_request_get_context_offset(preq),
                                        &preq->u.persist.real_request);
@@ -58,7 +58,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
                                         MPIDI_CH4U_REQUEST(preq, count),
                                         MPIDI_CH4U_REQUEST(preq, datatype),
                                         MPIDI_CH4U_REQUEST(preq, rank),
-                                        MPIDI_CH4U_request_get_tag(preq),
+                                        MPIDI_CH4U_REQUEST(preq, tag),
                                         preq->comm,
                                         MPIDI_CH4U_request_get_context_offset(preq),
                                         &preq->u.persist.real_request);
@@ -70,7 +70,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
                                                  MPIDI_CH4U_REQUEST(preq, count),
                                                  MPIDI_CH4U_REQUEST(preq, datatype),
                                                  MPIDI_CH4U_REQUEST(preq, rank),
-                                                 MPIDI_CH4U_request_get_tag(preq),
+                                                 MPIDI_CH4U_REQUEST(preq, tag),
                                                  preq->comm, &sreq_handle);
                     if (mpi_errno == MPI_SUCCESS)
                         MPIR_Request_get_ptr(sreq_handle, preq->u.persist.real_request);

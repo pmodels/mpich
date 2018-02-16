@@ -25,7 +25,6 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIR_Request *sreq = NULL;
-    uint64_t match_bits;
     MPIDI_CH4U_hdr_t am_hdr;
     MPIDI_CH4U_ssend_req_msg_t ssend_req;
 
@@ -46,10 +45,11 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
     MPIR_Assert(sreq);
 
     *request = sreq;
-    match_bits = MPIDI_CH4U_init_send_tag(comm->context_id + context_offset, comm->rank, tag);
 
-    am_hdr.msg_tag = match_bits;
     am_hdr.src_rank = comm->rank;
+    am_hdr.protocol = 0;
+    am_hdr.tag = tag;
+    am_hdr.context_id = comm->context_id + context_offset;
     if (type == MPIDI_CH4U_SSEND_REQ) {
         ssend_req.hdr = am_hdr;
         ssend_req.sreq_ptr = (uint64_t) sreq;
@@ -86,7 +86,6 @@ static inline int MPIDI_psend_init(const void *buf,
                                    MPIR_Request ** request)
 {
     MPIR_Request *sreq;
-    uint64_t match_bits;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PSEND_INIT);
@@ -96,13 +95,14 @@ static inline int MPIDI_psend_init(const void *buf,
 
     MPIR_Comm_add_ref(comm);
     sreq->comm = comm;
-    match_bits = MPIDI_CH4U_init_send_tag(comm->context_id + context_offset, rank, tag);
 
     MPIDI_CH4U_REQUEST(sreq, buffer) = (void *) buf;
     MPIDI_CH4U_REQUEST(sreq, count) = count;
     MPIDI_CH4U_REQUEST(sreq, datatype) = datatype;
-    MPIDI_CH4U_REQUEST(sreq, match_bits) = match_bits;
     MPIDI_CH4U_REQUEST(sreq, rank) = rank;
+    MPIDI_CH4U_REQUEST(sreq, protocol) = 0;
+    MPIDI_CH4U_REQUEST(sreq, tag) = tag;
+    MPIDI_CH4U_REQUEST(sreq, context_id) = comm->context_id + context_offset;
 
     sreq->u.persist.real_request = NULL;
     MPID_Request_complete(sreq);
