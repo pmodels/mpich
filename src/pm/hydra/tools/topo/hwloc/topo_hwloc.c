@@ -204,7 +204,7 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
 
     if (!valid_binding) {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "unrecognized binding string \"%s\"\n", mapping);
+                            "unrecognized binding string \"%s\"\n", binding);
     }
 
     /* get the mapping */
