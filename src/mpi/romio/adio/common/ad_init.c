@@ -60,12 +60,11 @@ static void my_consensus(void *invec, void *inoutvec, int *len, MPI_Datatype * d
 static d_rank_list_t *
 daos_rank_list_parse(const char *str, const char *sep)
 {
-    d_rank_t	       *buf;
-    int			cap = 8;
-    d_rank_list_t   *ranks = NULL;
-    char	       *s;
-    char	       *p;
-    int			n = 0;
+    d_rank_t *buf;
+    int cap = 8;
+    d_rank_list_t *ranks = NULL;
+    char *s, *p;
+    int n = 0;
 
     buf = ADIOI_Malloc(sizeof(d_rank_t) * cap);
     if (buf == NULL)
