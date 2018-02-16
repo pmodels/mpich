@@ -230,7 +230,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
                                            MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__,
                                            ADIOI_DAOS_error_convert(rc),
-                                           "Container Create Failed", 0);
+                                           "Container Create/Open Failed", 0);
         goto out;
     }
 
@@ -271,6 +271,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
         rc = daos_array_open(cont->coh, cont->oid, cont->epoch, DAOS_OO_RW,
                              &elem_size, &block_size, &cont->oh, NULL);
         if (rc == 0) {
+            rc = -DER_EXIST;
             PRINT_MSG(stderr, "Array exists (EXCL mode) (%d)\n", rc);
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                MPIR_ERR_RECOVERABLE,
@@ -387,12 +388,24 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
     cont->block_size = fd->hints->fs_hints.daos.block_size;
 
     fd->fs_ptr = cont;
-    if (rank == 0)
+
+    if (rank == 0) {
         (*(fd->fns->ADIOI_xxx_Open))(fd, error_code);
+        MPI_Error_class(*error_code, &rc);
+    }
+    if (mpi_size > 1) {
+        MPI_Bcast(&rc, 1, MPI_INT, 0, comm);
 
-    if (mpi_size > 1)
-        MPI_Bcast(error_code, 1, MPI_INT, 0, comm);
-
+        if (rank != 0) {
+            if (rc)
+                *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                                   MPIR_ERR_RECOVERABLE,
+                                                   myname, __LINE__, rc,
+                                                   "File Open Failed", 0);
+            else
+                *error_code = MPI_SUCCESS;
+        }
+    }
     if (*error_code != MPI_SUCCESS)
         goto err_free;
 
