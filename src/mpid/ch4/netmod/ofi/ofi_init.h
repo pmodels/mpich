@@ -370,6 +370,7 @@ static inline int MPIDI_OFI_conn_manager_destroy()
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                             (MPL_DBG_FDEST, "conn_id=%d closed", i));
         }
+        MPIDI_OFI_CALL(fi_av_remove(MPIDI_Global.av, conn, j, 0ULL), avmap);
 
         MPL_free(req);
         MPL_free(conn);
