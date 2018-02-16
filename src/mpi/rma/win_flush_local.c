@@ -66,7 +66,7 @@ int MPI_Win_flush_local(int rank, MPI_Win win)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WIN_FLUSH_LOCAL);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -115,7 +115,7 @@ int MPI_Win_flush_local(int rank, MPI_Win win)
 
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WIN_FLUSH_LOCAL);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:
