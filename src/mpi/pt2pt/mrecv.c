@@ -60,7 +60,7 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * message
     MPIR_Request *msgp = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_MRECV);
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_MRECV);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -122,7 +122,7 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * message
 
   fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_MRECV);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

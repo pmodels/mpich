@@ -34,7 +34,7 @@ static void progress_fn(void *data)
     /* Explicitly add CS_ENTER/EXIT since this thread is created from
      * within an internal function and will call NMPI functions
      * directly. */
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_ENTER(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     /* FIXME: We assume that waiting on some request forces progress
      * on all requests. With fine-grained threads, will this still
@@ -64,7 +64,7 @@ static void progress_fn(void *data)
     MPID_Thread_cond_signal(&progress_cond, &mpi_errno);
     MPIR_Assert(!mpi_errno);
 
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_EXIT(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return;
 }
