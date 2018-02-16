@@ -99,7 +99,7 @@ int MPIR_Barrier_intra_auto(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
         MPIR_CVAR_ENABLE_SMP_BARRIER && MPIR_Comm_is_node_aware(comm_ptr)) {
         mpi_errno = MPIR_Barrier_intra_smp(comm_ptr, errflag);
     } else {
-        mpi_errno = MPIR_Barrier_intra_recursive_doubling(comm_ptr, errflag);
+        mpi_errno = MPIR_Barrier_intra_dissemination(comm_ptr, errflag);
     }
 
     if (mpi_errno) {
@@ -142,7 +142,7 @@ int MPIR_Barrier_impl(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
         /* intracommunicator */
         switch (MPIR_Barrier_intra_algo_choice) {
             case MPIR_BARRIER_INTRA_ALGO_RECURSIVE_DOUBLING:
-                mpi_errno = MPIR_Barrier_intra_recursive_doubling(comm_ptr, errflag);
+                mpi_errno = MPIR_Barrier_intra_dissemination(comm_ptr, errflag);
                 break;
             case MPIR_BARRIER_INTRA_ALGO_NB:
                 mpi_errno = MPIR_Barrier_allcomm_nb(comm_ptr, errflag);
