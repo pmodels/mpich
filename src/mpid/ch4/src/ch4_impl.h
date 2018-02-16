@@ -80,13 +80,11 @@ static inline int MPIDI_CH4U_request_get_tag(MPIR_Request * req)
 static inline int MPIDI_CH4U_request_get_context_offset(MPIR_Request * req)
 {
     int context_offset;
-    uint64_t match_bits;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_REQUEST_GET_CONTEXT_OFFSET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_REQUEST_GET_CONTEXT_OFFSET);
 
-    match_bits = MPIDI_CH4U_REQUEST(req, match_bits);
-    context_offset = MPIDI_CH4U_get_context(match_bits) - req->comm->context_id;
+    context_offset = MPIDI_CH4U_REQUEST(req, context_id) - req->comm->context_id;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_REQUEST_GET_CONTEXT_OFFSET);
 
