@@ -609,9 +609,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
      * providers support bigger tag than the maximum supported
      * tag value in AM */
     if (MPIDI_OFI_ENABLE_TAGGED)
-       *tag_ub = (1ULL << MPIDI_OFI_TAG_BITS) - 1;
+        *tag_ub = (1ULL << MPIDI_OFI_TAG_BITS) - 1;
     else
-       *tag_ub = (1ULL << MPIDI_CH4U_TAG_SHIFT) - 1;
+        *tag_ub = (1ULL << MPIDI_CH4U_TAG_SHIFT) - 1;
 
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
         /* ------------------------------------------------------------------------ */
