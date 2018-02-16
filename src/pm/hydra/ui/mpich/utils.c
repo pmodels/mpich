@@ -948,6 +948,12 @@ static void bind_to_help_fn(void)
     printf("            l3dcache         -- map to L3 data cache domain\n");
     printf("            l3icache         -- map to L3 instruction cache domain\n");
     printf("            l3ucache         -- map to L3 unified cache domain\n");
+    printf("            l4cache          -- map to L4 cache domain\n");
+    printf("            l4dcache         -- map to L4 data cache domain\n");
+    printf("            l4ucache         -- map to L4 unified cache domain\n");
+    printf("            l5cache          -- map to L5 cache domain\n");
+    printf("            l5dcache         -- map to L5 data cache domain\n");
+    printf("            l5ucache         -- map to L5 unified cache domain\n");
 
 
     printf("\n\n");
