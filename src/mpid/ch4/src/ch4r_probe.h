@@ -26,7 +26,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_iprobe(int source,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *root_comm;
     MPIR_Request *unexp_req;
-    uint64_t match_bits, mask_bits;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_MPI_IPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_MPI_IPROBE);
 
@@ -37,18 +36,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_iprobe(int source,
     }
 
     root_comm = MPIDI_CH4U_context_id_to_comm(comm->context_id);
-    match_bits = MPIDI_CH4U_init_recvtag(&mask_bits, root_comm->recvcontext_id +
-                                         context_offset, source, tag);
 
     /* MPIDI_CS_ENTER(); */
-    unexp_req = MPIDI_CH4U_find_unexp(match_bits, mask_bits,
+    unexp_req = MPIDI_CH4U_find_unexp(source, 0, tag, root_comm->recvcontext_id + context_offset,
                                       &MPIDI_CH4U_COMM(root_comm, unexp_list));
 
     if (unexp_req) {
         *flag = 1;
         unexp_req->status.MPI_ERROR = MPI_SUCCESS;
         unexp_req->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(unexp_req, rank);
-        unexp_req->status.MPI_TAG = MPIDI_CH4U_request_get_tag(unexp_req);
+        unexp_req->status.MPI_TAG = MPIDI_CH4U_REQUEST(unexp_req, tag);
         MPIR_STATUS_SET_COUNT(unexp_req->status, MPIDI_CH4U_REQUEST(unexp_req, count));
 
         status->MPI_TAG = unexp_req->status.MPI_TAG;
@@ -82,7 +79,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_improbe(int source,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *root_comm;
     MPIR_Request *unexp_req;
-    uint64_t match_bits, mask_bits;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_MPI_IMPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_MPI_IMPROBE);
@@ -94,11 +90,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_improbe(int source,
     }
 
     root_comm = MPIDI_CH4U_context_id_to_comm(comm->context_id);
-    match_bits = MPIDI_CH4U_init_recvtag(&mask_bits, root_comm->recvcontext_id +
-                                         context_offset, source, tag);
 
     /* MPIDI_CS_ENTER(); */
-    unexp_req = MPIDI_CH4U_dequeue_unexp(match_bits, mask_bits,
+    unexp_req = MPIDI_CH4U_dequeue_unexp(source, 0, tag, root_comm->recvcontext_id + context_offset,
                                          &MPIDI_CH4U_COMM(root_comm, unexp_list));
 
     if (unexp_req) {
@@ -113,7 +107,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_improbe(int source,
 
         unexp_req->status.MPI_ERROR = MPI_SUCCESS;
         unexp_req->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(unexp_req, rank);
-        unexp_req->status.MPI_TAG = MPIDI_CH4U_request_get_tag(unexp_req);
+        unexp_req->status.MPI_TAG = MPIDI_CH4U_REQUEST(unexp_req, tag);
         MPIR_STATUS_SET_COUNT(unexp_req->status, MPIDI_CH4U_REQUEST(unexp_req, count));
         MPIDI_CH4U_REQUEST(unexp_req, req->status) |= MPIDI_CH4U_REQ_UNEXP_DQUED;
 
