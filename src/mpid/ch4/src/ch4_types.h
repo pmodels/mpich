@@ -17,24 +17,6 @@
 #include "pmi.h"
 
 /* Macros and inlines */
-/* match/ignore bit manipulation
- *
- * 0123 4567 01234567 0123 4567 01234567 0123 4567 01234567 01234567 01234567
- *     |                  |                  |
- * ^   |    context id    |       source     |       message tag
- * |   |                  |                  |
- * +---- protocol
- */
-#define MPIDI_CH4U_PROTOCOL_MASK (0x9000000000000000ULL)
-#define MPIDI_CH4U_CONTEXT_MASK  (0x0FFFF00000000000ULL)
-#define MPIDI_CH4U_SOURCE_MASK   (0x00000FFFF0000000ULL)
-#define MPIDI_CH4U_TAG_MASK      (0x000000000FFFFFFFULL)
-#define MPIDI_CH4U_DYNPROC_SEND  (0x4000000000000000ULL)
-#define MPIDI_CH4U_TAG_SHIFT     (28)
-#define MPIDI_CH4U_SOURCE_SHIFT  (16)
-#define MPIDI_CH4U_SOURCE_SHIFT_UNPACK (sizeof(int)*8 - MPIDI_CH4U_SOURCE_SHIFT)
-#define MPIDI_CH4U_TAG_SHIFT_UNPACK (sizeof(int)*8 - MPIDI_CH4U_TAG_SHIFT)
-
 #define MPIDI_CH4U_MAP_NOT_FOUND      ((void*)(-1UL))
 
 #define MAX_PROGRESS_HOOKS 4
@@ -118,8 +100,10 @@ enum {
 };
 
 typedef struct MPIDI_CH4U_hdr_t {
-    uint64_t msg_tag;
     int src_rank;
+    short protocol;
+    int tag;
+    MPIR_Context_id_t context_id;
 } MPIDI_CH4U_hdr_t;
 
 typedef struct MPIDI_CH4U_send_long_req_msg_t {
