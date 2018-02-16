@@ -16,7 +16,7 @@ mpi_sources +=                                  \
     src/mpi/coll/ireduce/ireduce.c
 
 mpi_core_sources +=                             \
-    src/mpi/coll/ireduce/ireduce_intra_binomial.c		\
+    src/mpi/coll/ireduce/ireduce_intra_binomial.c        \
     src/mpi/coll/ireduce/ireduce_intra_reduce_scatter_gather.c \
     src/mpi/coll/ireduce/ireduce_intra_smp.c            \
     src/mpi/coll/ireduce/ireduce_inter_local_reduce_remote_send.c
