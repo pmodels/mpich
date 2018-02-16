@@ -10,5 +10,5 @@ include $(top_srcdir)/mpi-io/glue/mpich/Makefile.mk
 
 if !BUILD_ROMIO_EMBEDDED
 romio_other_sources += \
-	mpi-io/glue/large_count.c
+    mpi-io/glue/large_count.c
 endif

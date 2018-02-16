@@ -10,7 +10,7 @@ bin_SCRIPTS +=           \
     src/env/parkill
 
 bin_PROGRAMS += src/env/mpichversion \
-	src/env/mpivars
+    src/env/mpivars
 
 src_env_mpichversion_SOURCES = src/env/mpichversion.c
 src_env_mpichversion_LDADD = lib/lib@MPILIBNAME@.la
