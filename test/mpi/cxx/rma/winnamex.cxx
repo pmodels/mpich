@@ -61,6 +61,5 @@ int main( int argc, char *argv[] )
     delete [] nameout;
 
     MTest_Finalize( errs );
-    MPI::Finalize();
     return 0;
 }

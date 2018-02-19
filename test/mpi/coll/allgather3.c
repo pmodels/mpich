@@ -57,6 +57,5 @@ int main(int argc, char **argv)
     MPI_Allgather(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, NULL, 0, MPI_BYTE, MPI_COMM_WORLD);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

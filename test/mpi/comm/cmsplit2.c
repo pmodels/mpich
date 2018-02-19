@@ -39,7 +39,6 @@ int main(int argc, char **argv)
     MPI_Comm comm, splitcomm;
     MPI_Group wgroup, newgroup;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     if (getenv("MPITEST_VERBOSE"))
@@ -127,6 +126,5 @@ int main(int argc, char **argv)
         free(identity);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

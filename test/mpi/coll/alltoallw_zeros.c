@@ -35,7 +35,6 @@ int main(int argc, char *argv[])
     int i;
 
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -115,7 +114,6 @@ int main(int argc, char *argv[])
         free(sendtypes);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

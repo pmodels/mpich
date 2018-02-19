@@ -22,7 +22,6 @@ int main(int argc, char **argv)
     char buf[MPI_MAX_INFO_VAL];
     int flag;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -53,7 +52,6 @@ int main(int argc, char **argv)
     MPI_Reduce(&errors, &errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

@@ -82,13 +82,11 @@ int main( int argc, char *argv[] )
     errs += testCommCall( MPI::COMM_SELF );
     errs += testCommCall( cart );
     //errs += testCommCall( graph );
-    
-    MTest_Finalize( errs );
 
     cart.Free();
     // graph.Free();
 
-    MPI::Finalize();
+    MTest_Finalize( errs );
 
     return 0;
 }

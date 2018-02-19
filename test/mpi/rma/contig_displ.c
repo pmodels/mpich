@@ -91,7 +91,6 @@ int main(int argc, char **argv)
     }
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 
   err_return:
@@ -99,6 +98,5 @@ int main(int argc, char **argv)
     MTestPrintError(mpi_err);
     errs++;
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 1;
 }

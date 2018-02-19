@@ -55,6 +55,5 @@ int main(int argc, char *argv[])
     MPI_Buffer_detach(&bptr, &bl);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

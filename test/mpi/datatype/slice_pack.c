@@ -43,7 +43,6 @@ int main(int argc, char *argv[])
     }
 
     /* Initialize MPI */
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Type_extent(MPI_INT, &sizeofint);
 
@@ -95,7 +94,6 @@ int main(int argc, char *argv[])
     MPI_Type_free(&threeslice);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }
 

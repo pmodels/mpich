@@ -105,13 +105,14 @@ int main(int argc, char *argv[])
             /* Note that worker also send errs to the parent */
             errs += worker(argc, argv, parentcomm, outargv, np);
             MPI_Comm_free(&parentcomm);
-            MPI_Finalize();
             return 0;
         }
 
         /* Note that the MTest_Finalize get errs only over COMM_WORLD */
         if (parentcomm == MPI_COMM_NULL) {
             MTest_Finalize(errs);
+        } else {
+            MPI_Finalize();
         }
         /* free the argument vectors */
         for (i = 0; i < MAX_ARGV; i++) {
@@ -123,7 +124,6 @@ int main(int argc, char *argv[])
         MTest_Finalize(errs);
     }
 
-    MPI_Finalize();
     return 0;
 }
 

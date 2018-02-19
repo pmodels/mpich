@@ -146,7 +146,6 @@ int main(int argc, char **argv)
 
     filename = (argc > 1) ? argv[1] : "testfile";
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
@@ -154,7 +153,6 @@ int main(int argc, char **argv)
     if (np != 2) {
         if (rank == 0)
             fprintf(stderr, "Must run on 2 MPI processes\n");
-        MPI_Finalize();
         return 1;
     }
     errs = test_indexed_with_zeros(filename, INDEXED);
@@ -162,6 +160,5 @@ int main(int argc, char **argv)
     errs += test_indexed_with_zeros(filename, STRUCT);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

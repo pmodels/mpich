@@ -84,9 +84,8 @@ int main(int argc, char **argv)
         }
     }
 
-    MTest_Finalize(errors);
-
     MPI_Comm_free(&test_comm);
-    MPI_Finalize();
+
+    MTest_Finalize(errors);
     return MTestReturnValue(errors);
 }

@@ -80,6 +80,5 @@ C recvbuf should be size * (rank + i)
       call mpi_op_free( sumop, ierr )
 
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
 
       end

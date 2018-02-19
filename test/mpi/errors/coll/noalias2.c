@@ -33,10 +33,7 @@ int main(int argc, char **argv)
     MPI_Datatype *types = NULL;
     MPI_Comm comm;
 
-    /* intentionally not using MTest_Init/MTest_Finalize in order to make it
-     * easy to take this test and use it as an NBC sanity test outside of the
-     * MPICH test suite */
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
 
@@ -143,6 +140,5 @@ int main(int argc, char **argv)
         free(types);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

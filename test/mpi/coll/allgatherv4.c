@@ -124,7 +124,6 @@ int main(int argc, char **argv)
 
   fn_exit:
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

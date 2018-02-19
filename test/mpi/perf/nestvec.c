@@ -42,7 +42,6 @@ int main(int argc, char **argv)
     double tpack, tmanual, tpackopt;
     int ntry;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Type_contiguous(6, MPI_FLOAT, &ft1type);
@@ -182,6 +181,5 @@ int main(int argc, char **argv)
     free(outbuf2);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

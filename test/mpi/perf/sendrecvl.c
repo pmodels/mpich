@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
     char *rbuf, *sbuf;
     double times[3][MAXTESTS];
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;
@@ -249,7 +248,6 @@ int main(int argc, char *argv[])
     free(rbuf);
 
     MTest_Finalize(nPerfErrors);
-    MPI_Finalize();
 
     return 0;
 }

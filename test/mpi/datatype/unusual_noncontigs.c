@@ -34,7 +34,6 @@ int main(int argc, char *argv[])
     int err, errs = 0;
 
     /* Initialize MPI */
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     parse_args(argc, argv);
 
@@ -68,7 +67,6 @@ int main(int argc, char *argv[])
     errs += err;
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }
 

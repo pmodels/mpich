@@ -194,5 +194,4 @@
       call MPI_Comm_free(dgraph_comm, ierr)
 
       call MTEST_Finalize(errs)
-      call MPI_Finalize(ierr)
       end

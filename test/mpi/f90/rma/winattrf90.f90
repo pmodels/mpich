@@ -140,7 +140,6 @@
 !
       call mpi_comm_free( comm, ierr )
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
       end
 !
 ! Note that the copyfn is unused for MPI windows, since there is

@@ -100,6 +100,5 @@ int main(int argc, char *argv[])
         MTestFreeComm(&comm);
     }
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

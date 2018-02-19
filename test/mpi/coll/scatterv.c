@@ -92,7 +92,6 @@ int main(int argc, char **argv)
     int *sendcounts;
 
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -181,6 +180,5 @@ int main(int argc, char **argv)
     MPI_Type_free(&block);
     MPI_Comm_free(&comm2d);
     MTest_Finalize(errs);
-    MPI_Finalize();
     return errs;
 }

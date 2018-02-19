@@ -74,6 +74,5 @@ int main(int argc, char *argv[])
     MPI_Info_free(&infodup);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

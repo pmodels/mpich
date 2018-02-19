@@ -37,7 +37,6 @@ int main(int argc, char *argv[])
     int size;
     int i, j, errs = 0, nrows, ncols;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     tmean = 0;
@@ -110,6 +109,5 @@ int main(int argc, char *argv[])
     }
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

@@ -98,7 +98,6 @@ int main(int argc, char *argv[])
     int blocks[2] = { 1, 1 };
     int disps[2] = { 0, 1 };
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Type_indexed(2, blocks, disps, MPI_CHAR, &dt);
     MPI_Type_commit(&dt);
@@ -110,7 +109,6 @@ int main(int argc, char *argv[])
     MPI_Type_free(&dt);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

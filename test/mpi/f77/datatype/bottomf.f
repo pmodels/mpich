@@ -31,5 +31,4 @@ C  See discussion on p.652 of MPI-3.0
 
       call MPI_Type_free(type, ierr);
       call mtest_finalize(errs)
-      call MPI_Finalize(ierr)
       end

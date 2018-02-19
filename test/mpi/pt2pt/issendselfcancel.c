@@ -14,7 +14,6 @@ int main(int argc, char **argv)
     MPI_Request req;
     MPI_Status status;
 
-    MPI_Init(NULL, NULL);
     MTest_Init(&argc, &argv);
 
     MPI_Issend(NULL, 0, MPI_BYTE, 0, 123, MPI_COMM_SELF, &req);
@@ -33,7 +32,6 @@ int main(int argc, char **argv)
     MPI_Wait(&req, &status);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

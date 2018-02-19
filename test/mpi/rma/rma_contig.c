@@ -125,7 +125,6 @@ void run_test(int lock_mode, int lock_assert)
 
 int main(int argc, char **argv)
 {
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     run_test(MPI_LOCK_EXCLUSIVE, 0);
@@ -134,7 +133,6 @@ int main(int argc, char **argv)
     run_test(MPI_LOCK_SHARED, MPI_MODE_NOCHECK);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

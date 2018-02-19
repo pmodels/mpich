@@ -125,6 +125,5 @@ int main( int argc, char *argv[] )
     delete [] port_name_out;
 
     MTest_Finalize( errs );
-    MPI::Finalize();
     return 0;
 }

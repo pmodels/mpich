@@ -23,7 +23,6 @@
 
       errs = 0
 
-      call MPI_Init(ierr)
       call MTest_Init(ierr)
       call MPI_Comm_rank(MPI_COMM_WORLD, mynod, ierr )
       call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr )
@@ -189,5 +188,4 @@
       call MPI_Info_free(info, ierr )
 
       call MTEST_Finalize(errs)
-      call MPI_Finalize(ierr)
       end

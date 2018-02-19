@@ -21,7 +21,6 @@ int main(int argc, char *argv[])
     MPI_Status *sendstats = NULL;
     MPI_Request *sendreqs = NULL;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -54,7 +53,6 @@ int main(int argc, char *argv[])
     free(sendstats);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

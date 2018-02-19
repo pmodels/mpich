@@ -36,7 +36,6 @@ int main(int argc, char **argv)
     double tpack, tspack, tmanual;
     int ntry;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     icount = 2014;
@@ -179,6 +178,5 @@ int main(int argc, char **argv)
     free(index_displacement);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

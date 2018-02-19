@@ -36,7 +36,6 @@ int main(int argc, char *argv[])
     int shm_root_rank_in_world;
     int origin = -1, put_target, get_target;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -190,7 +189,6 @@ int main(int argc, char *argv[])
         MPI_Group_free(&world_group);
 
     MTest_Finalize(errors);
-    MPI_Finalize();
 
     return 0;
 }

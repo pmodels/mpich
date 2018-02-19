@@ -25,7 +25,6 @@ int main(int argc, char **argv)
     MPI_Aint disp1[COUNT] = { 0, 0, 332, 340 };
     int block1[COUNT] = { 1, 56, 2, 1 };
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -53,7 +52,6 @@ int main(int argc, char **argv)
     MPI_Type_free(&struct_type);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

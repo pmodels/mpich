@@ -30,7 +30,6 @@ int main(int argc, char *argv[])
     int *orig_buf = NULL;
     int data_size;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -67,7 +66,6 @@ int main(int argc, char *argv[])
     MPI_Free_mem(tar_buf);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

@@ -31,6 +31,5 @@
 
         call mpi_free_mem( a, ierr )
         call mtest_finalize(errs)
-        call mpi_finalize(ierr)
 
         end

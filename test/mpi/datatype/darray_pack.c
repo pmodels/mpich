@@ -53,7 +53,6 @@ int main(int argc, char **argv)
      * Type_create_darray is no larger than MPI_COMM_WORLD */
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }
 

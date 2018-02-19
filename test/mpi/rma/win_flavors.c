@@ -18,7 +18,6 @@ int main(int argc, char *argv[])
     void *buf;
     MPI_Win window;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -113,7 +112,6 @@ int main(int argc, char *argv[])
     MPI_Win_free(&window);
 
     MTest_Finalize(errors);
-    MPI_Finalize();
 
     return 0;
 }

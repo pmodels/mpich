@@ -262,7 +262,6 @@ int main(int argc, char *argv[])
     free(vals);
 
     MTest_Finalize(toterrs);
-    MPI_Finalize();
     return 0;
 }
 

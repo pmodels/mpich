@@ -13,7 +13,6 @@ int main(int argc, char **argv)
     MPI_Aint offsets[2], lb, ub, extent;
     MPI_Datatype tmp_type, newtype;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     /* Set some values in locations that should not be accessed */
@@ -50,6 +49,5 @@ int main(int argc, char **argv)
     }
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

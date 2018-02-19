@@ -66,8 +66,7 @@ int main(int argc, char **argv)
 
     free(vecin);
     free(vecout);
-    MTest_Finalize(errs);
     MPI_Type_free(&vec);
-    MPI_Finalize();
+    MTest_Finalize(errs);
     return 0;
 }

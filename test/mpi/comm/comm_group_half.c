@@ -16,7 +16,6 @@ int main(int argc, char **argv)
     int range[1][3];
     MPI_Comm comm;
 
-    MPI_Init(NULL, NULL);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -37,7 +36,6 @@ int main(int argc, char **argv)
     MPI_Group_free(&full_group);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

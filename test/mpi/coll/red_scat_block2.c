@@ -123,7 +123,6 @@ int main(int argc, char **argv)
 #endif
 
     MTest_Finalize(err);
-    MPI_Finalize();
 
     return err;
 }

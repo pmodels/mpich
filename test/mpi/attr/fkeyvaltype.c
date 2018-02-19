@@ -110,7 +110,6 @@ int main(int argc, char *argv[])
         MTestFreeDatatype(&mrtype);
     }
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

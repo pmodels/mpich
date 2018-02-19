@@ -206,5 +206,4 @@ C Make sure we use the expected position in the next step.
       call mpi_type_free( newtype, ierr )
 
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
       end

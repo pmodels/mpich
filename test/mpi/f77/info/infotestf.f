@@ -53,5 +53,4 @@ C     check for trailing blanks
        call mpi_info_free( i2, ierr )
 
        call MTest_Finalize( errs )
-       call MPI_Finalize( ierr )
        end

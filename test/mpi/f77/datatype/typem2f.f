@@ -172,6 +172,5 @@ C
       call mpi_type_free( type5, ierr )
 
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
 
       end

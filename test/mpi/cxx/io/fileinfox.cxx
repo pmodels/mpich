@@ -73,6 +73,5 @@ int main( int argc, char **argv )
     delete [] myvalue;
 
     MTest_Finalize( errs );
-    MPI::Finalize();
     return 0;
 }

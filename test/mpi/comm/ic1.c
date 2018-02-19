@@ -53,7 +53,6 @@ int main(int argc, char *argv[])
      * sizes FIXME */
 
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

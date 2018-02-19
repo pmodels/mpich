@@ -97,7 +97,6 @@ int main(int argc, char **argv)
     int nr_errors = 0;
 
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -114,7 +113,6 @@ int main(int argc, char **argv)
     MPI_Info_free(&info);
 
     MTest_Finalize(nr_errors);
-    MPI_Finalize();
     return (-nr_errors);
 }
 

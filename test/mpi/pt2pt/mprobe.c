@@ -36,7 +36,6 @@ int main(int argc, char **argv)
     MPI_Status s1, s2;
     MPI_Datatype vectype;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -587,7 +586,6 @@ int main(int argc, char **argv)
 
   epilogue:
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

@@ -21,7 +21,6 @@ int main(int argc, char *argv[])
     MPI_Request requests[2];
     MPI_Status statuses[2];
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     int rank, size;
@@ -56,6 +55,5 @@ int main(int argc, char *argv[])
     }
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

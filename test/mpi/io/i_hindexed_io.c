@@ -40,7 +40,6 @@ int main(int argc, char **argv)
     MPI_Status status;
     MPI_Request request;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     disp[0] = (MPI_Aint) (PAD);
     disp[1] = (MPI_Aint) (data_size * 1 + PAD);
@@ -107,7 +106,6 @@ int main(int argc, char **argv)
     MPI_Type_free(&file_type);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     free(data);
     free(verify);

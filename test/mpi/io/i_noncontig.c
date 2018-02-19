@@ -271,6 +271,5 @@ int main(int argc, char **argv)
     free(buf);
     free(filename);
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

@@ -78,6 +78,5 @@ int main( int argc, char **argv )
     
     sumop.Free();
     MTest_Finalize( errs + uopErrs );
-    MPI::Finalize();
     return 0;
 }

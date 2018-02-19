@@ -36,8 +36,7 @@ int main(int argc, char *argv[])
     required = MPI_THREAD_SINGLE;
 
     MPI_T_init_thread(required, &provided);
-    MPI_Init_thread(&argc, &argv, required, &provided);
-    MTest_Init(&argc, &argv);
+    MTest_Init_thread(&argc, &argv, required, &provided);
 
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;
@@ -58,7 +57,6 @@ int main(int argc, char *argv[])
      */
     MPI_T_finalize();
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

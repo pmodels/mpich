@@ -757,7 +757,6 @@ int main(int argc, char **argv)
     MPI_Comm comms[NUM_COMMS];
     MPI_Comm comm;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
@@ -821,7 +820,6 @@ int main(int argc, char **argv)
     }
 
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

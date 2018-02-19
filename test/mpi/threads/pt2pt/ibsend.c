@@ -100,8 +100,7 @@ int main(int argc, char *argv[])
     MPI_Comm communicator;
     int bs;
 
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-    MTest_Init(&argc, &argv);
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
     if (provided != MPI_THREAD_MULTIPLE) {
         printf("Error\n");
@@ -160,6 +159,5 @@ int main(int argc, char *argv[])
     free(buffer);
 
     MTest_Finalize(0);
-    MPI_Finalize();
     return 0;
 }

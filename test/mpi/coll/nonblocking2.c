@@ -53,7 +53,6 @@ int main(int argc, char **argv)
     signed char *buf_alias = NULL;
     MPI_Request req;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -443,7 +442,6 @@ int main(int argc, char **argv)
     }
 
     MTest_Finalize(0);
-    MPI_Finalize();
     free(buf);
     free(recvbuf);
     free(sendcounts);

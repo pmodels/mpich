@@ -76,7 +76,6 @@ int main(int argc, char *argv[])
     free(sb);
     free(rb);
 
-    MPI_Finalize();
 
     return MTestReturnValue(status);
 }

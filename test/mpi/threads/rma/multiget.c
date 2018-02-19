@@ -71,7 +71,6 @@ int main(int argc, char *argv[])
     errs += MPI_Win_free(&win);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }
