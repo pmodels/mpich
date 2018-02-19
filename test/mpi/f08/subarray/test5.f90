@@ -85,5 +85,4 @@ program main
     endif
 
     call MTest_Finalize(errs)
-    call MPI_Finalize(ierr)
 end program

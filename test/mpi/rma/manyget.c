@@ -22,7 +22,6 @@ int main(int argc, char *argv[])
     int *buf;
     MPI_Win win;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     buf = malloc(BUFSIZE);
@@ -53,7 +52,6 @@ int main(int argc, char *argv[])
 
     free(buf);
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

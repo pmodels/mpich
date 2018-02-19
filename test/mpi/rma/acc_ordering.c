@@ -267,7 +267,6 @@ int main(int argc, char **argv)
         free(expected);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     free(data);
 
     return errs != 0;

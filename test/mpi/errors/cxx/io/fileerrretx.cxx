@@ -89,7 +89,6 @@ int main( int argc, char *argv[] )
     MTest_Finalize(errs);
 
     delete[] filename;
-    MPI::Finalize();
 
     return 0;
 }

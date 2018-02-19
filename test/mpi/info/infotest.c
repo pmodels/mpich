@@ -20,7 +20,6 @@ int main(int argc, char *argv[])
     char value[64];
     int flag;
 
-    MPI_Init(0, 0);
     MTest_Init(&argc, &argv);
 
     MPI_Info_create(&i1);
@@ -46,6 +45,5 @@ int main(int argc, char *argv[])
     MPI_Info_free(&i1);
     MPI_Info_free(&i2);
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

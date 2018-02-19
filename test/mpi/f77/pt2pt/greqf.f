@@ -106,6 +106,5 @@ C      just remembering that extrastate was set in grequest_start
        endif
 C
        call MTest_Finalize( errs )
-       call mpi_finalize( ierr )
        end
 C

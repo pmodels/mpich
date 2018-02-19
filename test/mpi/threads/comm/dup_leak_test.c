@@ -45,8 +45,7 @@ int main(int argc, char **argv)
     MPI_Comm comms[NTHREADS];
     int num_threads_obtained = 1;
 
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &threaded);
-    MTest_Init(&argc, &argv);
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &threaded);
     if (threaded != MPI_THREAD_MULTIPLE) {
         printf("unable to initialize with MPI_THREAD_MULTIPLE\n");
         goto fn_fail;
@@ -85,7 +84,6 @@ int main(int argc, char **argv)
 
   fn_exit:
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
   fn_fail:
     errs = 1;

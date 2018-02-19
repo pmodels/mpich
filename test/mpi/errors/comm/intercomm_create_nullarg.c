@@ -32,6 +32,5 @@ int main(int argc, char *argv[])
     MPI_Comm_free(&newcomm);
     MPI_Group_free(&group);
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

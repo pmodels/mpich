@@ -69,7 +69,6 @@ int main(int argc, char **argv)
     delete [] recvbuf;
 
     MTest_Finalize(err);
-    MPI_Finalize();
 
     return 0;
 }

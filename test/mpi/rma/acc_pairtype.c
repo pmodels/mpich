@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
     long_double_int_t *tar_buf;
     MPI_Datatype vector_dtp;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -78,6 +77,5 @@ int main(int argc, char *argv[])
     MPI_Free_mem(tar_buf);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

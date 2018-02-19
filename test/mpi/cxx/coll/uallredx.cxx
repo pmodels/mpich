@@ -212,6 +212,5 @@ int main( int argc, char *argv[] )
     op.Free();
 
     MTest_Finalize( errs );
-    MPI::Finalize();
     return 0;
 }

@@ -54,6 +54,5 @@ int main(int argc, char **argv)
     MPI_Comm_free(&comm);
 
     MTest_Finalize(errors);
-    MPI_Finalize();
     return MTestReturnValue(errors);
 }

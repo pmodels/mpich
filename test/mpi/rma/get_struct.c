@@ -164,6 +164,5 @@ int main(int argc, char **argv)
     MPI_Type_free(&listelmType);
 
     MTest_Finalize(errors);
-    MPI_Finalize();
     return MTestReturnValue(errors);
 }

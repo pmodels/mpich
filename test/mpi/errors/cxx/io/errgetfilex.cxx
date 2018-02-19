@@ -77,11 +77,9 @@ int main( int argc, char *argv[] )
         errs += testRetrieveErrhandler(file);
     }
 
-    MTest_Finalize( errs );
-
     file.Close();
 
-    MPI::Finalize();
+    MTest_Finalize( errs );
 
     return 0;
 }

@@ -42,8 +42,7 @@ int main(int argc, char **argv)
     MPI_Keyval_free(&exit_key);
 
     /* Now, exit MPI */
-    /* MTest_Finalize(errs); */
-    MPI_Finalize();
+    MTest_Finalize(errs);
 
     /* Check that the exit handler was called, and without error */
     if (wrank == 0) {

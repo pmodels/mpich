@@ -197,5 +197,4 @@ C     the nearest neighbors that within a ring.
       call MPI_Comm_free(dgraph_comm, ierr)
 
       call MTEST_Finalize(errs)
-      call MPI_Finalize(ierr)
       end

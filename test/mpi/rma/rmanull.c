@@ -213,6 +213,5 @@ int main(int argc, char *argv[])
     free(buf);
     free(rmabuf);
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

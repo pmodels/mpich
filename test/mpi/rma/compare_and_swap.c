@@ -21,7 +21,6 @@ int main(int argc, char **argv)
     int *val_ptr;
     MPI_Win win;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -100,7 +99,6 @@ int main(int argc, char **argv)
 
     free(val_ptr);
     MTest_Finalize(errors);
-    MPI_Finalize();
 
     return 0;
 }

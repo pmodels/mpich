@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
     long *sendbuf = NULL;
     long *recvbuf = NULL;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -73,14 +72,12 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        MTest_Finalize(errs);
         free(recvbuf);
-    } else {
-        MTest_Finalize(errs);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    MPI_Finalize();
+
+    MTest_Finalize(errs);
 
     free(sendbuf);
     return 0;

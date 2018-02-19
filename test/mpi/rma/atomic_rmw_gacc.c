@@ -82,7 +82,6 @@ int main(int argc, char *argv[])
     int my_buf_num;
     MPI_Datatype origin_dtp, target_dtp;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -262,6 +261,5 @@ int main(int argc, char *argv[])
 
   exit_test:
     MTest_Finalize(errors);
-    MPI_Finalize();
     return 0;
 }

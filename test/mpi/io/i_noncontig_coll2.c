@@ -256,7 +256,6 @@ int main(int argc, char **argv)
     ADIO_cb_name_array array;
 
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
@@ -327,7 +326,6 @@ int main(int argc, char **argv)
         free(filename);
     free(cb_config_string);
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }
 

@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
     MTEST_VG_MEM_INIT(buf2, 400 * sizeof(char));
     MTEST_VG_MEM_INIT(buf3, 400 * sizeof(char));
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);
 

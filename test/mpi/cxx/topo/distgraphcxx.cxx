@@ -94,7 +94,6 @@ int main( int argc, char *argv[] )
     // Note that there is no dist_graph_map function in MPI (!)
   
     MTest_Finalize( errs );
-    MPI::Finalize();
 
     return 0;
 }

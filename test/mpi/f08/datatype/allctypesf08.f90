@@ -87,7 +87,6 @@
        endif
 !
        call mtest_finalize( ierr )
-       call MPI_Finalize( ierr )
        end
 !
 ! Check name of datatype

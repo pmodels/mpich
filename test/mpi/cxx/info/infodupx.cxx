@@ -97,7 +97,6 @@ int main( int argc, char *argv[] )
     delete [] value;
     delete [] valdup;
 
-    MPI::Finalize();
 
     return 0;  
 }

@@ -92,5 +92,4 @@ C       Must be class MPI_ERR_NAME
       endif
       
       call MTest_Finalize( errs )
-      call MPI_Finalize( ierr )
       end

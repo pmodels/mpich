@@ -112,7 +112,6 @@ int main(int argc, char **argv)
     int gsize, *glist;
     MPI_Comm group;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &me);
@@ -147,6 +146,5 @@ int main(int argc, char **argv)
     free(glist);
 
     MTest_Finalize(0);
-    MPI_Finalize();
     return 0;
 }

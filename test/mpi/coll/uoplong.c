@@ -104,6 +104,5 @@ int main(int argc, char *argv[])
     MPI_Op_free(&op);
     MPI_Type_free(&tripleType);
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

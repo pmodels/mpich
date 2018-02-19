@@ -16,7 +16,6 @@ int main(int argc, char *argv[])
     MPI_Group world_group, even_group;
     MPI_Comm even_comm;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -51,6 +50,5 @@ int main(int argc, char *argv[])
 
     free(excl);
     MTest_Finalize(0);
-    MPI_Finalize();
     return 0;
 }

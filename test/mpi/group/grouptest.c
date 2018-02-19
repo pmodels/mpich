@@ -15,7 +15,6 @@ int main(int argc, char *argv[])
     int errs = 0;
     int i, rin[16], rout[16], result;
 
-    MPI_Init(0, 0);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_group(MPI_COMM_WORLD, &g1);
@@ -167,6 +166,5 @@ int main(int argc, char *argv[])
     MPI_Group_free(&g1);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

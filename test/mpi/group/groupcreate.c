@@ -15,7 +15,6 @@ int main(int argc, char **argv)
     MPI_Group *group_array, world_group;
     char msg[MPI_MAX_ERROR_STRING];
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -79,6 +78,5 @@ implementation\n");
     free(ranks);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

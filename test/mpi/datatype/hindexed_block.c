@@ -30,7 +30,6 @@ int main(int argc, char **argv)
     int err, errs = 0;
     int rank;
 
-    MPI_Init(&argc, &argv);     /* MPI-1.2 doesn't allow for MPI_Init(0,0) */
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #if defined(TEST_HINDEXED_BLOCK)
@@ -53,7 +52,6 @@ int main(int argc, char **argv)
 #endif /*defined(TEST_HINDEXED_BLOCK) */
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }
 

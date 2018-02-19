@@ -36,7 +36,6 @@ int main(int argc, char **argv)
     char *filename;
     MPI_Datatype typevec, newtype, t[3];
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
@@ -252,6 +251,5 @@ int main(int argc, char **argv)
     if (mynod)
         free(filename);
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

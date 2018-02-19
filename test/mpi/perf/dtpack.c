@@ -437,7 +437,6 @@ int main(int argc, char *argv[])
     void *dest, *src;
     double avgTimeUser, avgTimeMPI;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;
@@ -474,7 +473,6 @@ int main(int argc, char *argv[])
 
     fflush(stdout);
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

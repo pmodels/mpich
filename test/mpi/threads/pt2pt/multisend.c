@@ -39,8 +39,7 @@ int main(int argc, char **argv)
 {
     int zero = 0, pmode, nprocs;
 
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &pmode);
-    MTest_Init(&argc, &argv);
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &pmode);
     if (pmode != MPI_THREAD_MULTIPLE) {
         fprintf(stderr, "Thread Multiple not supported by the MPI implementation\n");
         MPI_Abort(MPI_COMM_WORLD, -1);
@@ -59,7 +58,6 @@ int main(int argc, char **argv)
     MTest_Join_threads();
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

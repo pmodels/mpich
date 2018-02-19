@@ -72,8 +72,7 @@ int main( int argc, char *argv[] )
             errs++;
             break;
     }
-    
+
     MTest_Finalize( errs );
-    MPI::Finalize( );
     return 0;
 }

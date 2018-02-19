@@ -26,7 +26,6 @@ int main(int argc, char **argv)
     MPI_Comm mtx_comm;
     MCS_Mutex mcs_mtx;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -76,7 +75,6 @@ int main(int argc, char **argv)
         MPI_Comm_free(&mtx_comm);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

@@ -24,7 +24,6 @@ int main(int argc, char *argv[])
 
     required = MPI_THREAD_SINGLE;
     MPI_T_init_thread(required, &provided);
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     /* Test MPI_T_cvar_get_index with both valid and bogus names */
@@ -89,7 +88,6 @@ int main(int argc, char *argv[])
 
     MPI_T_finalize();
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

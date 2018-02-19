@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
     /* print message and exit */
     MTest_Finalize(errs);
 
-    MPI_Finalize();
     return 0;
 }
 

@@ -136,6 +136,5 @@ C     Free info
       call mpi_info_free( i2, ierr )
 
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
 
       end

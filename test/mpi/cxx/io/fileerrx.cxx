@@ -134,7 +134,6 @@ int main( int argc, char **argv )
     delete [] errstring;
 
     MTest_Finalize( errs );
-    MPI::Finalize();
     return 0;
 }
 

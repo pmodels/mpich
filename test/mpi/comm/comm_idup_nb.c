@@ -177,6 +177,5 @@ int main(int argc, char **argv)
         MTestFreeComm(&test_comm);
     }
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

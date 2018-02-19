@@ -77,7 +77,6 @@ int main(int argc, char **argv)
     int k;
 #endif
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
@@ -85,7 +84,6 @@ int main(int argc, char **argv)
     if (np != 4) {
         if (!rank)
             printf("Please run with 4 processes. Exiting ...\n\n");
-        MPI_Finalize();
         return 1;
     }
 
@@ -255,7 +253,6 @@ int main(int argc, char **argv)
     free(statuses);
     MPI_Type_free(&ftype);
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }
 

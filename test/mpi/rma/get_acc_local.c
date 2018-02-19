@@ -20,7 +20,6 @@ int main(int argc, char **argv)
     int out_val, i, counter = 0;
     MPI_Win win;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -44,7 +43,6 @@ int main(int argc, char **argv)
     MPI_Win_free(&win);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

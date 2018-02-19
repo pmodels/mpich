@@ -79,8 +79,7 @@ int main(int argc, char **argv)
     int thread_args[NUM_THREADS];
     int i, errs, provided;
 
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-    MTest_Init(&argc, &argv);
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
     check(provided == MPI_THREAD_MULTIPLE);
 
@@ -100,7 +99,6 @@ int main(int argc, char **argv)
 
     MTest_Finalize(errs);
 
-    MPI_Finalize();
 
     return 0;
 }

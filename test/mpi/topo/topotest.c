@@ -39,6 +39,5 @@ int main(int argc, char *argv[])
     /* FIXME: still need graph example */
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

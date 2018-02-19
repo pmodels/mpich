@@ -37,5 +37,4 @@ C See the C version (typename.c) for the relevant MPI sections
       endif
 
       call mtest_finalize( errs )
-      call MPI_Finalize( ierr )
       end

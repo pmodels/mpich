@@ -18,7 +18,6 @@ int main(int argc, char *argv[])
     };
     int flag, i;
 
-    MPI_Init(NULL, NULL);
     MTest_Init(&argc, &argv);
 
     for (i = 0; keys[i]; i++) {
@@ -28,6 +27,5 @@ int main(int argc, char *argv[])
     }
 
     MTest_Finalize(0);
-    MPI_Finalize();
     return 0;
 }

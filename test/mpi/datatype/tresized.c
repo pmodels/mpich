@@ -75,6 +75,5 @@ int main(int argc, char *argv[])
     MPI_Type_free(&newtype);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

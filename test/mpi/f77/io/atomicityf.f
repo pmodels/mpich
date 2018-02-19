@@ -20,7 +20,6 @@ C This is a version of the test in romio/test/atomicity.c .
 
       errs = 0
 
-      call MPI_Init(ierr)
       call MTest_Init(ierr)
       call MPI_Comm_rank(MPI_COMM_WORLD, mynod, ierr )
       call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr )
@@ -186,5 +185,4 @@ C better to use the default values in practice. */
       call MPI_Info_free(info, ierr )
       
       call MTest_Finalize(errs)
-      call MPI_Finalize(ierr)
       end

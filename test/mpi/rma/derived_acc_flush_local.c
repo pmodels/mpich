@@ -32,7 +32,6 @@ int main(int argc, char *argv[])
     MPI_Datatype derived_dtp;
     int errs = 0;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -123,7 +122,6 @@ int main(int argc, char *argv[])
     MPI_Free_mem(tar_buf);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

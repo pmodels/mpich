@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
     char *buff;
     MPI_Request reqs[N_TRY];
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     buff = malloc(N_TRY * BLKSIZE);
@@ -54,7 +53,6 @@ int main(int argc, char *argv[])
     free(buff);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

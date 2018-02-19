@@ -32,7 +32,6 @@ int main(int argc, char *argv[])
     int i, j, status;
     FILE *pf = 0;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nProc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -141,7 +140,6 @@ int main(int argc, char *argv[])
         fclose(pf);
     }
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

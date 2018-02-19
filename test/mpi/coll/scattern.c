@@ -16,7 +16,6 @@ int main(int argc, char **argv)
     int root, i, n, stride, errs = 0;
     int rank, size;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -49,6 +48,5 @@ int main(int argc, char **argv)
     free(vecout);
     MPI_Type_free(&vec);
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
     int dest;
     char *buff;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     buff = malloc(HUGE_SIZE);
@@ -51,7 +50,6 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

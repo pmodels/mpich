@@ -21,7 +21,6 @@ int main(int argc, char *argv[])
     char *buf = NULL;
     int wrank, wsize;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
@@ -53,7 +52,6 @@ int main(int argc, char *argv[])
 
     MPI_Type_free(&type);
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

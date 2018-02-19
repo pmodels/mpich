@@ -86,7 +86,6 @@ int main(int argc, char **argv)
     llist_ptr_t head_ptr, tail_ptr;
     int errs = 0;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &procid);
@@ -266,6 +265,5 @@ int main(int argc, char **argv)
         MPI_Free_mem(my_elems[my_elems_count - 1]);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

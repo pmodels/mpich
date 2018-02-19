@@ -24,7 +24,6 @@ int main(int argc, char *argv[])
     MPI_Request requests[10];
     MPI_Status statuses[10];
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     parse_args(argc, argv);
 
@@ -54,7 +53,6 @@ int main(int argc, char *argv[])
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }
 

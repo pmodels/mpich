@@ -62,8 +62,7 @@ int main(int argc, char *argv[])
     int err;
     MPI_Comm parentcomm;
 
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-    MTest_Init(&argc, &argv);
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -74,7 +73,6 @@ int main(int argc, char *argv[])
                 ("MPI_Init_thread must return MPI_THREAD_MULTIPLE in order for this test to run.\n");
             fflush(stdout);
         }
-        MPI_Finalize();
         return -1;
     }
 
@@ -86,7 +84,6 @@ int main(int argc, char *argv[])
         if (err) {
             printf("barrier_init failed\n");
             fflush(stdout);
-            MPI_Finalize();
             return 1;
         }
 
@@ -104,7 +101,6 @@ int main(int argc, char *argv[])
         if (err) {
             printf("barrier_free failed\n");
             fflush(stdout);
-            MPI_Finalize();
             return 1;
         }
 
@@ -138,7 +134,8 @@ int main(int argc, char *argv[])
 
     if (wasParent)
         MTest_Finalize(0);
+    else
+        MPI_Finalize();
 
-    MPI_Finalize();
     return 0;
 }

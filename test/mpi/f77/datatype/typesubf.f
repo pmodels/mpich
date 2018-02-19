@@ -68,6 +68,5 @@ C Check the data
       call mpi_type_free( newtype, ierr )
 
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
 
       end

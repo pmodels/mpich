@@ -30,7 +30,6 @@ int main(int argc, char **argv)
     int dst_shm_rank, dst_world_rank;
     MPI_Info create_info = MPI_INFO_NULL;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -129,7 +128,6 @@ int main(int argc, char **argv)
         MPI_Group_free(&world_group);
 
     MTest_Finalize(errors);
-    MPI_Finalize();
 
     if (bases)
         free(bases);
