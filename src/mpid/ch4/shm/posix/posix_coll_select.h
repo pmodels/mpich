@@ -14,7 +14,7 @@ MPL_STATIC_INLINE_PREFIX
                                                                    ch4_algo_parameters_container_in
                                                                    ATTRIBUTE((unused)))
 {
-    return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_Barrier_intra_recursive_doubling_cnt;
+    return (MPIDI_POSIX_coll_algo_container_t *) & MPIDI_POSIX_Barrier_intra_recursive_doubling_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -57,14 +57,14 @@ MPL_STATIC_INLINE_PREFIX
 
     if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
         (comm->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
-        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_Bcast_intra_binomial_cnt;
+        return (MPIDI_POSIX_coll_algo_container_t *) & MPIDI_POSIX_Bcast_intra_binomial_cnt;
     } else {
         if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm->local_size, NULL)) {
             return (MPIDI_POSIX_coll_algo_container_t *) &
-                POSIX_Bcast_intra_scatter_recursive_doubling_allgather_cnt;
+                MPIDI_POSIX_Bcast_intra_scatter_recursive_doubling_allgather_cnt;
         } else {
             return (MPIDI_POSIX_coll_algo_container_t *) &
-                POSIX_Bcast_intra_scatter_ring_allgather_cnt;
+                MPIDI_POSIX_Bcast_intra_scatter_ring_allgather_cnt;
         }
     }
 }
@@ -122,10 +122,10 @@ MPL_STATIC_INLINE_PREFIX
     pof2 = comm->pof2;
     if ((count * type_size <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
         (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) || (count < pof2)) {
-        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_Allreduce_intra_recursive_doubling_cnt;
+        return (MPIDI_POSIX_coll_algo_container_t *) & MPIDI_POSIX_Allreduce_intra_recursive_doubling_cnt;
     } else {
         return (MPIDI_POSIX_coll_algo_container_t *) &
-            POSIX_Allreduce_intra_reduce_scatter_allgather_cnt;
+            MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather_cnt;
     }
 }
 
@@ -182,9 +182,9 @@ MPL_STATIC_INLINE_PREFIX
     pof2 = comm->pof2;
     if ((count * type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
         (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) && (count >= pof2)) {
-        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_Reduce_intra_reduce_scatter_gather_cnt;
+        return (MPIDI_POSIX_coll_algo_container_t *) & MPIDI_POSIX_Reduce_intra_reduce_scatter_gather_cnt;
     } else {
-        return (MPIDI_POSIX_coll_algo_container_t *) & POSIX_Reduce_intra_binomial_cnt;
+        return (MPIDI_POSIX_coll_algo_container_t *) & MPIDI_POSIX_Reduce_intra_binomial_cnt;
     }
 }
 
