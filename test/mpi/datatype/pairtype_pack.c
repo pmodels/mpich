@@ -23,7 +23,6 @@ int main(int argc, char *argv[])
 {
     int err, errs = 0;
 
-    MPI_Init(&argc, &argv);     /* MPI-1.2 doesn't allow for MPI_Init(0,0) */
     MTest_Init(&argc, &argv);
     parse_args(argc, argv);
 
@@ -35,7 +34,6 @@ int main(int argc, char *argv[])
     errs += err;
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }
 

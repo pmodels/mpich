@@ -44,6 +44,5 @@ int main(int argc, char *argv[])
     free(in_buf);
     free(out_buf);
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

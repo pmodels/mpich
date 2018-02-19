@@ -113,7 +113,6 @@ C Test the attr delete function
       endif
 
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
       end
 C
       subroutine mycopyfn( oldtype, keyval, extrastate, valin, valout,

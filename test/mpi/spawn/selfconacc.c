@@ -41,8 +41,6 @@ int main(int argc, char *argv[])
         printf("init.\n");
         fflush(stdout);
     }
-    error = MPI_Init(&argc, &argv);
-    check_error(error, "MPI_Init");
     MTest_Init(&argc, &argv);
 
     /* To improve reporting of problems about operations, we
@@ -142,6 +140,5 @@ int main(int argc, char *argv[])
     check_error(error, "MPI_Barrier");
 
     MTest_Finalize(0);
-    MPI_Finalize();
     return 0;
 }

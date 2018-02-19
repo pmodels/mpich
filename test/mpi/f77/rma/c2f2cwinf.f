@@ -48,6 +48,5 @@ C
          endif
       endif
 
-      call mpi_finalize( ierr )
       end
       

@@ -60,7 +60,6 @@
           endif
        endif
 !
-       call mpi_finalize( ierr )
        end
 !
        subroutine mpi_send_f08ts( smsg, count, dtype, dest, tag, comm, ierr )

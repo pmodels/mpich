@@ -13,7 +13,8 @@ int main(int argc, char *argv[])
     int errorclass;
     char errorstring[MPI_MAX_ERROR_STRING] = { 64, 0 };
     int slen;
-    MPI_Init(&argc, &argv);
+    int errs = 0;
+
     MTest_Init(&argc, &argv);
     MPI_Add_error_class(&errorclass);
     MPI_Error_string(errorclass, errorstring, &slen);
@@ -22,6 +23,5 @@ int main(int argc, char *argv[])
         errs++;
     }
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

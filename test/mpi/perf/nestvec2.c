@@ -46,7 +46,6 @@ int main(int argc, char **argv)
     MPI_Aint displacements[2];
     MPI_Datatype typesArray[2];
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     /* Create a struct consisting of a two 32-bit ints, followed by a
@@ -202,6 +201,5 @@ int main(int argc, char **argv)
     free(outbuf2);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

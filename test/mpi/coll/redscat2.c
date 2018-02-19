@@ -123,7 +123,6 @@ int main(int argc, char **argv)
     MPI_Op_free(&nc_sum_op);
 
     MTest_Finalize(err);
-    MPI_Finalize();
 
     return err;
 }

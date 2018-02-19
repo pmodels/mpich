@@ -49,7 +49,6 @@ int main( int argc, char **argv )
     errs = test_communicators();
 
     MTest_Finalize( errs );
-    MPI::Finalize();
     return 0;
 }
 

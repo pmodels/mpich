@@ -29,7 +29,6 @@
 
 !
        call mtest_finalize( errs )
-       call mpi_finalize( ierr )
        end
 !
        subroutine explore( dtype, mycomb, errs )

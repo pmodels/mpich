@@ -20,7 +20,6 @@ int main(int argc, char **argv)
     int count = 2;
     int *displs;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -92,7 +91,6 @@ int main(int argc, char **argv)
     MPI_Barrier(MPI_COMM_WORLD);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

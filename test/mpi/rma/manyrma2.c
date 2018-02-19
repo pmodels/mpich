@@ -52,7 +52,6 @@ int main(int argc, char *argv[])
     int maxSz = MAX_RMA_SIZE;
     double start, end;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     for (i = 1; i < argc; i++) {
@@ -224,7 +223,6 @@ int main(int argc, char *argv[])
     MPI_Group_free(&exposureGroup);
 
     MTest_Finalize(0);
-    MPI_Finalize();
     return 0;
 }
 

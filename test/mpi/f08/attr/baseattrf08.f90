@@ -11,7 +11,6 @@
       integer ierr, errs
 
       errs = 0
-      call mpi_init( ierr )
       call mtest_init( ierr )
 
       call mpi_comm_size( MPI_COMM_WORLD, commsize, ierr )
@@ -52,7 +51,6 @@
       endif
 
       call MTest_Finalize( errs )
-      call MPI_Finalize( ierr )
 
       end
 

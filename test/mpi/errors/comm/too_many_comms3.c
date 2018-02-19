@@ -34,7 +34,6 @@ int main(int argc, char **argv)
     MPI_Comm *comm_hdls;
     MPI_Group world_group;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -79,7 +78,6 @@ int main(int argc, char **argv)
     MPI_Group_free(&world_group);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

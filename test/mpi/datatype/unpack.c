@@ -102,7 +102,6 @@ int main(int argc, char **argv)
     free(mem_buf);
     free(unpack_buf);
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

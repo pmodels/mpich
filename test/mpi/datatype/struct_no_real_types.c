@@ -44,7 +44,6 @@ int main(int argc, char **argv)
     errs += err;
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }
 

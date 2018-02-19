@@ -73,6 +73,5 @@ int main( int argc, char *argv[] )
     win.Free();
 
     MTest_Finalize( errs );
-    MPI::Finalize();
     return 0;
 }

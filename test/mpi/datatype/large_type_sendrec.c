@@ -119,8 +119,7 @@ int main(int argc, char *argv[])
 
     int errs = 0;
 
-    MPI_ASSERT(MPI_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &provided));
-    MTest_Init(&argc, &argv);
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &provided);
 
     MPI_ASSERT(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
     MPI_ASSERT(MPI_Comm_size(MPI_COMM_WORLD, &size));
@@ -176,7 +175,6 @@ int main(int argc, char *argv[])
     MPI_ASSERT(MPI_Type_free(&bigtype));
 
     MTest_Finalize(errs);
-    MPI_ASSERT(MPI_Finalize());
 
     return 0;
 }

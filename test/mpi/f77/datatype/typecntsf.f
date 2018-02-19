@@ -29,7 +29,6 @@ C
        
 C
        call mtest_finalize( errs )
-       call mpi_finalize( ierr )
        end
 C
        subroutine explore( dtype, mycomb, errs )

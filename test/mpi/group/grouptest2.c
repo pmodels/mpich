@@ -37,7 +37,6 @@ int main(int argc, char **argv)
     int range[1][3];
     int worldrank;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &worldrank);
 
@@ -204,6 +203,5 @@ int main(int argc, char **argv)
     free(ranks);
     free(ranks_out);
     MTest_Finalize(errs);
-    MPI_Finalize();
     return toterr;
 }

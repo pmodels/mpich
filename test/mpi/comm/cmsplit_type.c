@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Info info;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     if (getenv("MPITEST_VERBOSE"))
@@ -190,7 +189,6 @@ int main(int argc, char *argv[])
     MPI_Reduce(&errs, &tot_errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

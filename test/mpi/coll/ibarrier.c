@@ -17,7 +17,6 @@ int main(int argc, char *argv[])
     MPI_Request barrier;
     int rank, i, done;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Ibarrier(MPI_COMM_WORLD, &barrier);
@@ -28,6 +27,5 @@ int main(int argc, char *argv[])
     }
 
     MTest_Finalize(0);
-    MPI_Finalize();
     return 0;
 }

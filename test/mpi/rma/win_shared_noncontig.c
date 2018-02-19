@@ -26,7 +26,6 @@ int main(int argc, char **argv)
     MPI_Win shm_win;
     MPI_Comm shm_comm;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -79,7 +78,6 @@ int main(int argc, char **argv)
     MPI_Info_free(&alloc_shared_info);
 
     MTest_Finalize(errors);
-    MPI_Finalize();
 
     return 0;
 }

@@ -26,7 +26,6 @@ int main(int argc, char **argv)
     MPI_Comm_free(&scomm);
     MPI_Comm_free_keyval(&key);
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }
 

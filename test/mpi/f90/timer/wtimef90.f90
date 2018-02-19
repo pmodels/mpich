@@ -28,5 +28,4 @@
                 print *, ' No Errors'
           endif
           
-          call mpi_finalize(err)
         end

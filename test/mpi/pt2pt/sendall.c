@@ -75,6 +75,5 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(0);
 
-    MPI_Finalize();
     return 0;
 }

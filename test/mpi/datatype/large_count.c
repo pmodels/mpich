@@ -38,7 +38,6 @@ int main(int argc, char *argv[])
     MPI_Datatype imx4i_rsz = MPI_DATATYPE_NULL;
     MPI_Status status;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
@@ -236,7 +235,6 @@ int main(int argc, char *argv[])
         MPI_Type_free(&imx4i_rsz);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

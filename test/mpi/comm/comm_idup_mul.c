@@ -20,7 +20,6 @@ int main(int argc, char **argv)
     MPI_Comm comms[NUM_ITER];
     MPI_Request req[NUM_ITER];
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -33,7 +32,6 @@ int main(int argc, char **argv)
         MPI_Comm_free(&comms[i]);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

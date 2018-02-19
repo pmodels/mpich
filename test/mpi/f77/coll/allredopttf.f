@@ -42,5 +42,4 @@ C A simple test of allreduce for the optional integer*8 type
      & outbuf, " but should have ", wsize
       endif
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
       end

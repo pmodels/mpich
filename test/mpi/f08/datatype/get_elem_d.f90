@@ -28,7 +28,6 @@ program get_elem_d
   integer :: ibuff(imax)
   character :: cbuff(cmax)='X'
 
-  call MPI_Init(ierror)
   call MTest_Init(ierror)
   comm=MPI_COMM_WORLD
   types(1) = MPI_DOUBLE_PRECISION
@@ -118,6 +117,5 @@ program get_elem_d
 
   call MPI_Type_free(newtype, ierror)
   call MTest_Finalize(errs)
-  call MPI_Finalize(ierror)
 
 end program get_elem_d

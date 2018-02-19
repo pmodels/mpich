@@ -75,11 +75,9 @@ int main( int argc, char *argv[] )
         errs += testRetrieveErrhandler(win);
     }
 
-    MTest_Finalize( errs );
-
     win.Free();
 
-    MPI::Finalize();
+    MTest_Finalize( errs );
 
     return 0;
 }

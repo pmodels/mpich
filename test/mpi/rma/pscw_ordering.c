@@ -138,6 +138,5 @@ int main(int argc, char **argv)
     free(even_ranks);
 
     MTest_Finalize(errors);
-    MPI_Finalize();
     return MTestReturnValue(errors);
 }

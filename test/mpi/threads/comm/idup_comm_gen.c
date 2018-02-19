@@ -123,8 +123,7 @@ int main(int argc, char **argv)
     int toterrs = 0;
     int size;
 
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-    MTest_Init(&argc, &argv);
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     if (provided < MPI_THREAD_MULTIPLE) {
@@ -150,6 +149,5 @@ int main(int argc, char **argv)
         toterrs += errs[i];
     }
     MTest_Finalize(toterrs);
-    MPI_Finalize();
     return 0;
 }

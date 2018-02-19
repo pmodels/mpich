@@ -17,7 +17,6 @@ int main(void)
     void *pack_buffer;
     MPI_Aint position = 0;
 
-    MPI_Init(NULL, NULL);
     MTest_Init(NULL, NULL);
 
     MPI_Pack_external_size(datarep, UINT_COUNT, MPI_UNSIGNED, &uint_pack_size);
@@ -36,7 +35,6 @@ int main(void)
     free(uint_data);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

@@ -87,7 +87,6 @@ int main( int argc, char **argv )
     delete [] mpi_names;
 
     MTest_Finalize(errs);
-    MPI::Finalize();
     return 0;
 }
 

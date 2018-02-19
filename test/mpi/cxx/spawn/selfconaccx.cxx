@@ -36,7 +36,6 @@ int main( int argc, char *argv[] )
     if (size < 2)
     {
 	cout << "Two processes needed.\n"; 
-	MPI::Finalize();
 	return 0;
     }
 
@@ -57,6 +56,5 @@ int main( int argc, char *argv[] )
     MPI::COMM_WORLD.Barrier();
 
     MTest_Finalize(0);
-    MPI::Finalize();
     return 0;
 }

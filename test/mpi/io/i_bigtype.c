@@ -37,7 +37,6 @@ int main(int argc, char **argv)
     MPI_Status status;
     MPI_Request request;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     if (sizeof(MPI_Aint) <= sizeof(int)) {
@@ -143,7 +142,6 @@ int main(int argc, char **argv)
 
   exit:
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

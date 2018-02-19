@@ -172,7 +172,6 @@ int main(int argc, char *argv[])
     int win_unit = sizeof(int);
     int shm_root_rank = -1, shm_target = -1, target_shm_root = -1;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -286,7 +285,6 @@ int main(int argc, char *argv[])
         MPI_Comm_free(&shm_comm);
 
     MTest_Finalize(errors);
-    MPI_Finalize();
 
     return 0;
 }

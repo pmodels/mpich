@@ -103,6 +103,5 @@ int main(int argc, char **argv)
 
     MTestDatatype2Free(types, inbufs, outbufs, counts, bytesize, ntype);
     MTest_Finalize(err);
-    MPI_Finalize();
     return MTestReturnValue(err);
 }

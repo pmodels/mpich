@@ -11,7 +11,6 @@ int main(int argc, char *argv[])
 {
     int errs;
     MPI_File fh;
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_File_open(MPI_COMM_WORLD, "/tmp/datafile",
@@ -22,6 +21,5 @@ int main(int argc, char *argv[])
     MPI_File_close(&fh);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

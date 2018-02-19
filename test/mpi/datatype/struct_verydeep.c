@@ -211,7 +211,6 @@ int main(int argc, char **argv)
 {
     MPI_Datatype hdf5type;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     makeHDF5type(&hdf5type);
 
@@ -219,7 +218,6 @@ int main(int argc, char **argv)
 
     MPI_Type_free(&hdf5type);
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

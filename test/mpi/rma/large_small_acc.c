@@ -24,7 +24,6 @@ int main(int argc, char *argv[])
     uint64_t small_orig_buf_1 = 2, small_orig_buf_2[2] = { 3, 3 };
     int i, j, errs = 0;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -80,6 +79,5 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(errs);
 
-    MPI_Finalize();
     return 0;
 }

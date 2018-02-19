@@ -81,5 +81,4 @@
       call MPI_Win_free(win, ierr)
 
       call MTest_Finalize(errs)
-      call MPI_Finalize(ierr);
       end

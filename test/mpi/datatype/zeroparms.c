@@ -13,7 +13,6 @@ int main(int argc, char *argv[])
     MPI_Datatype newtype;
     int b[1], d[1];
 
-    MPI_Init(0, 0);
     MTest_Init(&argc, &argv);
 
     /* create a legitimate type to see that we don't
@@ -31,7 +30,6 @@ int main(int argc, char *argv[])
     MPI_Type_free(&newtype);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

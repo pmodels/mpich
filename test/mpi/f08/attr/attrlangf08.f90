@@ -148,7 +148,6 @@
       integer(MPI_ADDRESS_KIND) tmp
 
       errs = 0
-      call MPI_INIT( ierr )
       call MTEST_INIT( ierr )
       call MPI_COMM_RANK( MPI_COMM_WORLD, rank, ierr )
 !
@@ -248,7 +247,6 @@
            & MPI_COMM_WORLD, ierr )
 
       call MTEST_FINALIZE( errs )
-      call MPI_FINALIZE( ierr )
 
       end
 !

@@ -108,6 +108,5 @@ int main(int argc, char *argv[])
     MPI_Type_free(&str);
     MPI_Type_free(&con);
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

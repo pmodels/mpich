@@ -18,5 +18,4 @@
       &                   MPI_COMM_WORLD, ierr)
 
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
       end

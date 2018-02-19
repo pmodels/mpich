@@ -21,7 +21,6 @@ int main(int argc, char **argv)
     int errs = 0;
     MPI_Group comm_group, orig_group, dest_group;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -131,6 +130,5 @@ int main(int argc, char **argv)
     MPI_Group_free(&comm_group);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 0;
 }

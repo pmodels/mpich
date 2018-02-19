@@ -18,7 +18,6 @@ int main(int argc, char **argv)
     int world_rank, shm_rank;
     MPI_Comm shm_comm;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
@@ -61,7 +60,6 @@ int main(int argc, char **argv)
     MPI_Comm_free(&shm_comm);
 
     MTest_Finalize(0);
-    MPI_Finalize();
 
     return 0;
 }

@@ -144,7 +144,6 @@ int main(int argc, char **argv)
     MPI_Free_mem(dst_buf);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

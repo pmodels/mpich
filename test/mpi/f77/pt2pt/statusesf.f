@@ -52,5 +52,4 @@ C     Test support for MPI_STATUS_IGNORE and MPI_STATUSES_IGNORE
       endif
 
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
       end

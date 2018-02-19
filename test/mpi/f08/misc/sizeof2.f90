@@ -57,6 +57,5 @@
           else
              print *, ' No Errors'
           endif
-          call mpi_finalize(ierr)
 
         end program main

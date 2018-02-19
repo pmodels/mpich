@@ -26,7 +26,6 @@ int main(int argc, char **argv)
     c0 = c1 = ic = MPI_COMM_NULL;
     g0 = g1 = gworld = MPI_GROUP_NULL;
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -79,7 +78,6 @@ int main(int argc, char **argv)
         MPI_Comm_free(&ic);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

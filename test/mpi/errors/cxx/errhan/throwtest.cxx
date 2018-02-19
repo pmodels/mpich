@@ -134,11 +134,9 @@ int main( int argc, char *argv[] )
         }
     }
 
-    MTest_Finalize( errs );
-
     win.Free();
 
-    MPI::Finalize();
+    MTest_Finalize( errs );
 
     return 0;
 }

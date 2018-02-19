@@ -31,7 +31,6 @@ int main(int argc, char **argv)
     MPI_Comm *comm_hdls;
     MPI_Request req[WAIT_COMM];
 
-    MPI_Init(&argc, &argv);
     MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -89,7 +88,6 @@ int main(int argc, char **argv)
 
     free(comm_hdls);
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     return 0;
 }

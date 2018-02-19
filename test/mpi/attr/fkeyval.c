@@ -96,7 +96,6 @@ int main(int argc, char *argv[])
         }
     }
     MTest_Finalize(errs);
-    MPI_Finalize();
 
     /* The attributes on comm self and world were deleted by finalize
      * (see separate test) */

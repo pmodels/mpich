@@ -60,5 +60,4 @@
 !
       call mpi_keyval_free( mykey, ierr )
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
       end

@@ -94,5 +94,4 @@ C
       call MPI_Wait(req, MPI_STATUS_IGNORE, ierr)
 
       call mtest_finalize( errs )
-      call MPI_Finalize( ierr )
       end
