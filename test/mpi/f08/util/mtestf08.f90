@@ -38,6 +38,8 @@
                 print *, " No Errors"
            endif
         endif
+
+        call MPI_Finalize( ierr )
         end
 !
 ! A simple get intracomm for now
