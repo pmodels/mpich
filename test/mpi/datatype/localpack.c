@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 
     /* Initialize MPI */
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     parse_args(argc, argv);
 
     pos = 0;

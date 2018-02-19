@@ -170,6 +170,7 @@ int main(int argc, char **argv)
     int pmode, i, j;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &pmode);
+    MTest_Init(&argc, &argv);
     if (pmode != MPI_THREAD_MULTIPLE) {
         fprintf(stderr, "Thread Multiple not supported by the MPI implementation\n");
         MPI_Abort(MPI_COMM_WORLD, -1);

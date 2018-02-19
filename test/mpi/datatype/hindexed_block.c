@@ -31,6 +31,7 @@ int main(int argc, char **argv)
     int rank;
 
     MPI_Init(&argc, &argv);     /* MPI-1.2 doesn't allow for MPI_Init(0,0) */
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #if defined(TEST_HINDEXED_BLOCK)
     parse_args(argc, argv);

@@ -36,6 +36,7 @@ int main(int argc, char *argv[])
 
     MPI_T_init_thread(required, &provided);
     MPI_Init_thread(&argc, &argv, required, &provided);
+    MTest_Init(&argc, &argv);
 
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;

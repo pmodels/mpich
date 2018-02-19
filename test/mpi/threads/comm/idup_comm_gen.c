@@ -124,6 +124,7 @@ int main(int argc, char **argv)
     int size;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     if (provided < MPI_THREAD_MULTIPLE) {

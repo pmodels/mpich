@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
     int errs;
     MPI_File fh;
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_File_open(MPI_COMM_WORLD, "/tmp/datafile",
                   MPI_MODE_CREATE | MPI_MODE_RDWR | MPI_MODE_DELETE_ON_CLOSE, MPI_INFO_NULL, &fh);

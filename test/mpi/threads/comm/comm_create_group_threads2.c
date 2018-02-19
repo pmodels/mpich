@@ -80,6 +80,7 @@ int main(int argc, char **argv)
     int i, errs, provided;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+    MTest_Init(&argc, &argv);
 
     check(provided == MPI_THREAD_MULTIPLE);
 

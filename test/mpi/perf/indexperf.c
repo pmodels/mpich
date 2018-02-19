@@ -36,6 +36,7 @@ int main(int argc, char **argv)
     int ntry;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     icount = 2014;
 

@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
     double times[3][MAXTESTS];
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;
 

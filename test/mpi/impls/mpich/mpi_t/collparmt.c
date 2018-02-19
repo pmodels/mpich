@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
     MTEST_VG_MEM_INIT(buf3, 400 * sizeof(char));
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);

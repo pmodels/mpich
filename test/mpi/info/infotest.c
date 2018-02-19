@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
     int flag;
 
     MPI_Init(0, 0);
+    MTest_Init(&argc, &argv);
 
     MPI_Info_create(&i1);
     MPI_Info_create(&i2);

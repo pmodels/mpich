@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
     int b[1], d[1];
 
     MPI_Init(0, 0);
+    MTest_Init(&argc, &argv);
 
     /* create a legitimate type to see that we don't
      * emit spurious errors.

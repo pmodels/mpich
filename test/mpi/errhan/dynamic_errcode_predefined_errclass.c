@@ -16,6 +16,7 @@ int main(int argc, char **argv)
     int errcode, errclass;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Add_error_code(MPI_ERR_ARG, &errcode);
     MPI_Error_class(errcode, &errclass);

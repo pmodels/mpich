@@ -14,6 +14,7 @@ int main(int argc, char **argv)
     MPI_Datatype tmp_type, newtype;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     /* Set some values in locations that should not be accessed */
     blockcnt[1] = -1;

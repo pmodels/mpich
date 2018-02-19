@@ -87,6 +87,7 @@ int main(int argc, char *argv[])
     MPI_Datatype stype;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     parse_args(argc, argv);
 
     for (i = 0; pairtypes[i].atype != (MPI_Datatype) - 1; i++) {

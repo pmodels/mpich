@@ -4,11 +4,11 @@
  *      See COPYRIGHT in top-level directory.
  */
 #include "mpi.h"
-#include "mpitestconf.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include "mpitest.h"
 
 int main(int argc, char *argv[])
 {
@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
     MPI_Comm even_comm;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);

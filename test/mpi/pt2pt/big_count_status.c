@@ -39,6 +39,7 @@ int main(int argc, char **argv)
     int errs = 0;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     /* baseline: this tiny value should pose no problems */
     errs += test_count(60);
     /* one with no next-to-high-bits set */

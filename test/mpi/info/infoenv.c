@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
     int flag, i;
 
     MPI_Init(NULL, NULL);
+    MTest_Init(&argc, &argv);
 
     for (i = 0; keys[i]; i++) {
         MPI_Info_get(MPI_INFO_ENV, keys[i], MPI_MAX_INFO_VAL, value, &flag);

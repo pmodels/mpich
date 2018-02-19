@@ -211,6 +211,7 @@ int main(int argc, char **argv)
     MPI_Datatype hdf5type;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     makeHDF5type(&hdf5type);
 
     /*MPIR_Datatype_debug(hdf5type, 32); */

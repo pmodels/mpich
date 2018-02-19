@@ -98,6 +98,7 @@ int main(int argc, char *argv[])
     int disps[2] = { 0, 1 };
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Type_indexed(2, blocks, disps, MPI_CHAR, &dt);
     MPI_Type_commit(&dt);
 

@@ -27,6 +27,7 @@ program get_elem_d
   character :: cbuff(cmax)='X'
 
   call MPI_Init(ierror)
+  call MTEST_Init(ierror)
   comm=MPI_COMM_WORLD
   types(1) = MPI_DOUBLE_PRECISION
   types(2) = MPI_INTEGER

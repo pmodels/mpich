@@ -34,6 +34,7 @@ int main(int argc, char **argv)
     MPI_Aint displacements[] = { 0, 8, 16, 24 };
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (!rank) {
