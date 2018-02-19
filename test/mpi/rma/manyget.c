@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
     MPI_Win win;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     buf = malloc(BUFSIZE);
     MTEST_VG_MEM_INIT(buf, BUFSIZE);

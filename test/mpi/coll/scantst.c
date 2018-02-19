@@ -51,6 +51,7 @@ int main(int argc, char **argv)
     MPI_Comm comm = MPI_COMM_WORLD;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Op_create((MPI_User_function *) assoc, 0, &op_assoc);
     MPI_Op_create((MPI_User_function *) addem, 1, &op_addem);
 

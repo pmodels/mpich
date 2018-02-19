@@ -26,6 +26,7 @@ int main(int argc, char **argv)
 
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     comm = MPI_COMM_WORLD;
 
     MPI_Comm_size(comm, &size);

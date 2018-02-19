@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
     }
     error = MPI_Init(&argc, &argv);
     check_error(error, "MPI_Init");
+    MTest_Init(&argc, &argv);
 
     /* To improve reporting of problems about operations, we
      * change the error handler to errors return */

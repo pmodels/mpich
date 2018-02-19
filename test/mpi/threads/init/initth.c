@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
     int provided, rank;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 

@@ -42,6 +42,7 @@ errs = 0
 str = "iotest.txt"
 
 call MPI_INIT(ierr)
+call MTEST_INIT(ierr)
 call MPI_COMM_SIZE(MPI_COMM_WORLD, nprocs, ierr)
 call MPI_COMM_RANK(MPI_COMM_WORLD, mynod, ierr)
 

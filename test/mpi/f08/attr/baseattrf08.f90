@@ -12,6 +12,7 @@
 
       errs = 0
       call mpi_init( ierr )
+      call mtest_init( ierr )
 
       call mpi_comm_size( MPI_COMM_WORLD, commsize, ierr )
       call mpi_attr_get( MPI_COMM_WORLD, MPI_UNIVERSE_SIZE, value, flag &

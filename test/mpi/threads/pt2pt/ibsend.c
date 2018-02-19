@@ -101,6 +101,7 @@ int main(int argc, char *argv[])
     int bs;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+    MTest_Init(&argc, &argv);
 
     if (provided != MPI_THREAD_MULTIPLE) {
         printf("Error\n");

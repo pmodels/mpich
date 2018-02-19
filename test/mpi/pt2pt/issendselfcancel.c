@@ -14,6 +14,7 @@ int main(int argc, char **argv)
     MPI_Status status;
 
     MPI_Init(NULL, NULL);
+    MTest_Init(&argc, &argv);
 
     MPI_Issend(NULL, 0, MPI_BYTE, 0, 123, MPI_COMM_SELF, &req);
 

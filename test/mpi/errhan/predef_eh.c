@@ -24,6 +24,7 @@ int main(int argc, char **argv)
     MPI_Errhandler errh;
     int wrank;
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
     MPI_Comm_create_errhandler((MPI_Comm_errhandler_function *) errf, &errh);
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, errh);

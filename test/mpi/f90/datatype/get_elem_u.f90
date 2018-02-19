@@ -26,6 +26,7 @@ PROGRAM get_elem_u
 
   errs = 0 
   CALL MPI_Init( ierr ) 
+  CALL MTEST_Init( ierr )
   COMM = MPI_COMM_WORLD 
   types(1) = MPI_DOUBLE_PRECISION
   types(2) = MPI_CHAR

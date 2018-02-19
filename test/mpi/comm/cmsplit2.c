@@ -40,6 +40,7 @@ int main(int argc, char **argv)
     MPI_Group wgroup, newgroup;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;

@@ -47,6 +47,7 @@ int main(int argc, char **argv)
     MPI_Datatype typesArray[2];
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     /* Create a struct consisting of a two 32-bit ints, followed by a
      * vector of stride 3 but count 128k (less than a few MB of data area) */

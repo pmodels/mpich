@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
     int rank, i, done;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Ibarrier(MPI_COMM_WORLD, &barrier);
     for (i = 0, done = 0; !done; i++) {

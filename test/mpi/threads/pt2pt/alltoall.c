@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
     long int i, j;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+    MTest_Init(&argc, &argv);
 
     if (provided != MPI_THREAD_MULTIPLE) {
         printf("This test requires MPI_THREAD_MULTIPLE\n");
