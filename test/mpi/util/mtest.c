@@ -184,7 +184,6 @@ void MTest_Init(int *argc, char ***argv)
   Finalize MTest.  errs is the number of errors on the calling process;
   this routine will write the total number of errors over all of MPI_COMM_WORLD
   to the process with rank zero, or " No Errors".
-  It does *not* finalize MPI.
  */
 void MTest_Finalize(int errs)
 {
@@ -212,6 +211,8 @@ void MTest_Finalize(int errs)
 
     /* Clean up any persistent objects that we allocated */
     MTestRMACleanup();
+
+    MPI_Finalize();
 }
 
 /* ------------------------------------------------------------------------ */
