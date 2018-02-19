@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
     char *buf = NULL;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     parse_args(argc, argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);

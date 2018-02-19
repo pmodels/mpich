@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
     MPI_Datatype my_int;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* C Integer */

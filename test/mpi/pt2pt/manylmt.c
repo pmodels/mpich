@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
     MPI_Request reqs[N_TRY];
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     buff = malloc(N_TRY * BLKSIZE);
     memset(buff, -1, N_TRY * BLKSIZE);

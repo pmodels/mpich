@@ -69,6 +69,7 @@ int main(int argc, char *argv[])
     }
 
     MPI_Init_thread(&argc, &argv, required, &provided);
+    MTest_Init(&argc, &argv);
     if (provided != MPI_THREAD_MULTIPLE) {
         fprintf(stderr, "MPI_THREAD_MULTIPLE not supported by the MPI implementation\n");
         MPI_Abort(MPI_COMM_WORLD, -1);

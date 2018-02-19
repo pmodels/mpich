@@ -46,6 +46,7 @@ int main(int argc, char **argv)
     int num_threads_obtained = 1;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &threaded);
+    MTest_Init(&argc, &argv);
     if (threaded != MPI_THREAD_MULTIPLE) {
         printf("unable to initialize with MPI_THREAD_MULTIPLE\n");
         goto fn_fail;

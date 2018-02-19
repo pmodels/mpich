@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
     MPI_Win window;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /** Create using MPI_Win_create() **/

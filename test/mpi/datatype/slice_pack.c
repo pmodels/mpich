@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
 
     /* Initialize MPI */
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Type_extent(MPI_INT, &sizeofint);
 
     parse_args(argc, argv);

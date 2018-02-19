@@ -146,6 +146,7 @@
 
       errs = 0
       call MPI_INIT( ierr )
+      call MTEST_INIT( ierr )
       call MPI_COMM_RANK( MPI_COMM_WORLD, rank, ierr )
 !
 !     Let the C routines know about debugging

@@ -43,6 +43,7 @@ int main(int argc, char **argv)
     int ntry;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Type_contiguous(6, MPI_FLOAT, &ft1type);
     MPI_Type_size(ft1type, &typesize);

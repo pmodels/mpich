@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 #define BUFSIZE 4
 #define ITER 10
@@ -31,6 +32,7 @@ int main(int argc, char *argv[])
     int sbuf[BUFSIZE], rbuf[BUFSIZE];
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 

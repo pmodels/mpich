@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
     MPI_Status statuses[10];
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     parse_args(argc, argv);
 
     for (i = 0; i < 10; i++) {

@@ -222,6 +222,7 @@ int main(int argc, char **argv)
     int toterrs = 0;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+    MTest_Init(&argc, &argv);
 
     check(provided == MPI_THREAD_MULTIPLE);
     check(NUM_IDUPS1 >= 1 && NUM_IDUPS2 >= 1);

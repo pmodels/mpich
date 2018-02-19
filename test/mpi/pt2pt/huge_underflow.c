@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
     char *buff;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     buff = malloc(HUGE_SIZE);
     buff[0] = 0;

@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
     double start, end;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     for (i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-put") == 0) {

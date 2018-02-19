@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
     int origin = -1, put_target, get_target;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_group(MPI_COMM_WORLD, &world_group);

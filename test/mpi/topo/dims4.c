@@ -13,6 +13,7 @@ int main(int argc, char **argv)
     int errs = 0, i, rank;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     MPI_Dims_create(nproc, 3, ret);

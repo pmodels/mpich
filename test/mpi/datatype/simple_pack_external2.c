@@ -16,6 +16,7 @@ int main(void)
     MPI_Aint position = 0;
 
     MPI_Init(NULL, NULL);
+    MTest_Init(NULL, NULL);
 
     MPI_Pack_external_size(datarep, UINT_COUNT, MPI_UNSIGNED, &uint_pack_size);
     MPI_Pack_external_size(datarep, DBLE_COUNT, MPI_DOUBLE, &dble_pack_size);

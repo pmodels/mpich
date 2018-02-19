@@ -37,6 +37,7 @@ int main(int argc, char **argv)
     int worldrank;
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &worldrank);
 
     comm = MPI_COMM_WORLD;

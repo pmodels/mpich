@@ -33,6 +33,7 @@ int main(int argc, char **argv)
     MPI_Datatype type[2];
 
     MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     if (sizeof(MPI_Aint) <= sizeof(int)) {
         /* can't test on this platform... */

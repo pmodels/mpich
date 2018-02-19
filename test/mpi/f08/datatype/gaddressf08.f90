@@ -17,6 +17,7 @@
       errs = 0
 
       call MPI_Init(ierr)
+      call MTest_Init(ierr)
 
       call MPI_Get_address( iarray(1), aintv(1), ierr )
       call MPI_Get_address( iarray(200), aintv(2), ierr )
