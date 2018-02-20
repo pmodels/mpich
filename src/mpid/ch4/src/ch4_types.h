@@ -263,6 +263,9 @@ typedef struct MPIDI_CH4U_map_t {
     MPIDI_CH4U_map_entry_t *head;
 } MPIDI_CH4U_map_t;
 
+typedef struct {
+} MPIDI_CH4_configurations_t;
+
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;
     MPIR_Comm *comm_test;
