@@ -178,6 +178,13 @@ static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
         return (!MPIR_Request_is_persistent(req_ptr) || (req_ptr)->u.persist.real_request != NULL);
 }
 
+#define MPIR_REQUESTS_PROPERTY__NO_NULL        (1 << 1)
+#define MPIR_REQUESTS_PROPERTY__NO_GREQUESTS   (1 << 2)
+#define MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY (1 << 3)
+#define MPIR_REQUESTS_PROPERTY__OPT_ALL (MPIR_REQUESTS_PROPERTY__NO_NULL          \
+                                         | MPIR_REQUESTS_PROPERTY__NO_GREQUESTS   \
+                                         | MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY)
+
 static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 {
     MPIR_Request *req;
