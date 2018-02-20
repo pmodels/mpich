@@ -80,11 +80,10 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
     int n_completed;
     int active_flag;
     int rc = MPI_SUCCESS;
-    int n_greqs;
     int proc_failure = FALSE;
     int disabled_anysource = FALSE;
     const int ignoring_statuses = (array_of_statuses == MPI_STATUSES_IGNORE);
-    int optimize = ignoring_statuses;   /* see NOTE-O1 */
+    int requests_property = MPIR_REQUESTS_PROPERTY__OPT_ALL;
     MPIR_CHKLMEM_DECL(1);
 
     /* Convert MPI request handles to a request object pointers */
@@ -93,7 +92,6 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
                             mpi_errno, "request pointers", MPL_MEM_OBJECT);
     }
 
-    n_greqs = 0;
     n_completed = 0;
     for (i = 0; i < count; i++) {
         if (array_of_requests[i] != MPI_REQUEST_NULL) {
@@ -113,14 +111,6 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
                 MPID_END_ERROR_CHECKS;
             }
 #endif
-            if (request_ptrs[i]->kind != MPIR_REQUEST_KIND__RECV &&
-                request_ptrs[i]->kind != MPIR_REQUEST_KIND__SEND) {
-                optimize = FALSE;
-            }
-
-            if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST)
-                ++n_greqs;
-
             /* If one of the requests is an anysource on a communicator that's
              * disabled such communication, convert this operation to a testall
              * instead to prevent getting stuck in the progress engine. */
@@ -130,6 +120,14 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
                          !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
                 disabled_anysource = TRUE;
             }
+
+            if (request_ptrs[i]->kind != MPIR_REQUEST_KIND__RECV &&
+                request_ptrs[i]->kind != MPIR_REQUEST_KIND__SEND) {
+                requests_property &= ~MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY;
+                if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST) {
+                    requests_property &= ~MPIR_REQUESTS_PROPERTY__NO_GREQUESTS;
+                }
+            }
         } else {
             status_ptr =
                 (array_of_statuses !=
@@ -137,7 +135,7 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
             MPIR_Status_set_empty(status_ptr);
             request_ptrs[i] = NULL;
             n_completed += 1;
-            optimize = FALSE;
+            requests_property &= ~MPIR_REQUESTS_PROPERTY__NO_NULL;
         }
     }
 
@@ -156,7 +154,7 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
      *
      * Possible variation: permit request_ptrs[i]==NULL at the cost of an
      * additional branch inside the for-loop below. */
-    if (optimize) {
+    if (requests_property == MPIR_REQUESTS_PROPERTY__OPT_ALL && ignoring_statuses) {
         MPID_Progress_start(&progress_state);
         for (i = 0; i < count; ++i) {
             while (!MPIR_Request_is_complete(request_ptrs[i])) {
@@ -185,7 +183,7 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
     /* Grequest_waitall may run the progress engine - thus, we don't
      * invoke progress_start until after running Grequest_waitall */
     /* first, complete any generalized requests */
-    if (n_greqs) {
+    if (!(requests_property & MPIR_REQUESTS_PROPERTY__NO_GREQUESTS)) {
         mpi_errno = MPIR_Grequest_waitall(count, request_ptrs);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
