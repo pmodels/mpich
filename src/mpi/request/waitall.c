@@ -148,12 +148,6 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
         goto fn_exit;
     }
 
-    /* NOTE-O1: high-message-rate optimization.  For simple send and recv
-     * operations and MPI_STATUSES_IGNORE we use a fastpath approach that strips
-     * out as many unnecessary jumps and error handling as possible.
-     *
-     * Possible variation: permit request_ptrs[i]==NULL at the cost of an
-     * additional branch inside the for-loop below. */
     if (requests_property == MPIR_REQUESTS_PROPERTY__OPT_ALL && ignoring_statuses) {
         MPID_Progress_start(&progress_state);
         for (i = 0; i < count; ++i) {
@@ -168,48 +162,59 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
                     /* --END ERROR HANDLING-- */
                 }
             }
+        }
+        MPID_Progress_end(&progress_state);
+    } else {
+        /* Grequest_waitall may run the progress engine - thus, we don't
+         * invoke progress_start until after running Grequest_waitall */
+        /* first, complete any generalized requests */
+        mpi_errno = MPIR_Grequest_waitall(count, request_ptrs);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        MPID_Progress_start(&progress_state);
+        for (i = 0; i < count; i++) {
+            if (request_ptrs[i] == NULL) {
+                continue;
+            }
+            /* wait for ith request to complete */
+            while (!MPIR_Request_is_complete(request_ptrs[i])) {
+                /* generalized requests should already be finished */
+                MPIR_Assert(request_ptrs[i]->kind != MPIR_REQUEST_KIND__GREQUEST);
+
+                mpi_errno = MPID_Progress_wait(&progress_state);
+                if (mpi_errno != MPI_SUCCESS) {
+                    /* --BEGIN ERROR HANDLING-- */
+                    MPID_Progress_end(&progress_state);
+                    MPIR_ERR_POP(mpi_errno);
+                    /* --END ERROR HANDLING-- */
+                }
+            }
+        }
+        MPID_Progress_end(&progress_state);
+    }
+
+    /* NOTE-O1: high-message-rate optimization.  For simple send and recv
+     * operations and MPI_STATUSES_IGNORE we use a fastpath approach that strips
+     * out as many unnecessary jumps and error handling as possible.
+     *
+     * Possible variation: permit request_ptrs[i]==NULL at the cost of an
+     * additional branch inside the for-loop below. */
+    if (requests_property == MPIR_REQUESTS_PROPERTY__OPT_ALL && ignoring_statuses) {
+        for (i = 0; i < count; ++i) {
             mpi_errno = request_complete_fastpath(&array_of_requests[i], request_ptrs[i]);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
-
-        MPID_Progress_end(&progress_state);
-
         goto fn_exit;
     }
 
     /* ------ "slow" code path below ------ */
-
-    /* Grequest_waitall may run the progress engine - thus, we don't
-     * invoke progress_start until after running Grequest_waitall */
-    /* first, complete any generalized requests */
-    if (!(requests_property & MPIR_REQUESTS_PROPERTY__NO_GREQUESTS)) {
-        mpi_errno = MPIR_Grequest_waitall(count, request_ptrs);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-    }
-
-    MPID_Progress_start(&progress_state);
 
     for (i = 0; i < count; i++) {
         if (request_ptrs[i] == NULL) {
             if (!ignoring_statuses)
                 array_of_statuses[i].MPI_ERROR = MPI_SUCCESS;
             continue;
-        }
-
-        /* wait for ith request to complete */
-        while (!MPIR_Request_is_complete(request_ptrs[i])) {
-            /* generalized requests should already be finished */
-            MPIR_Assert(request_ptrs[i]->kind != MPIR_REQUEST_KIND__GREQUEST);
-
-            mpi_errno = MPID_Progress_wait(&progress_state);
-            if (mpi_errno != MPI_SUCCESS) {
-                /* --BEGIN ERROR HANDLING-- */
-                MPID_Progress_end(&progress_state);
-                MPIR_ERR_POP(mpi_errno);
-                /* --END ERROR HANDLING-- */
-            }
         }
 
         if (MPIR_Request_is_complete(request_ptrs[i])) {
@@ -257,7 +262,6 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
             break;
         }
     }
-    MPID_Progress_end(&progress_state);
 
   fn_exit:
     if (count > MPIR_REQUEST_PTR_ARRAY_SIZE) {
