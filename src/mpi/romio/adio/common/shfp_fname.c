@@ -7,16 +7,6 @@
 
 #include "adio.h"
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-
-#ifdef HAVE_TIME_H
-#include <time.h>
-#endif
 /* The following function selects the name of the file to be used to
    store the shared file pointer. The shared-file-pointer file is a
    hidden file in the same directory as the real file being accessed.
@@ -33,17 +23,13 @@ void ADIOI_Shfp_fname(ADIO_File fd, int rank, int *error_code)
 {
     int i;
     int len;
-    char *slash, *ptr, tmp[128];
+    char *slash, *ptr, tmp[PATH_MAX];
     int pid = 0;
 
     fd->shared_fp_fname = (char *) ADIOI_Malloc(PATH_MAX);
 
     if (!rank) {
-        /* srand takes int but time returns long; keep the lower and most
-         * significant  32 bits */
-        srand(time(NULL) & 0xffffffff);
-        i = rand();
-        pid = (int) getpid();
+        MPL_create_pathname(tmp, NULL, ".shfp", 0);
 
         if (ADIOI_Strncpy(fd->shared_fp_fname, fd->filename, PATH_MAX)) {
             *error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname", fd->filename, ENAMETOOLONG);
@@ -82,7 +68,6 @@ void ADIOI_Shfp_fname(ADIO_File fd, int rank, int *error_code)
             }
         }
 
-        MPL_snprintf(tmp, 128, ".shfp.%d.%d", pid, i);
         /* MPL_strnapp will return non-zero if truncated.  That's ok */
         MPL_strnapp(fd->shared_fp_fname, tmp, PATH_MAX);
 

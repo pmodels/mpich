@@ -6,16 +6,10 @@
 
 #include "mpioimpl.h"
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
 #ifdef HAVE_DIRENT_H
 #include <dirent.h>
 #endif
@@ -51,14 +45,9 @@ static int comm_split_filesystem_exhaustive(MPI_Comm comm, int key,
     filename = MPL_malloc(PATH_MAX, MPL_MEM_IO);
     ranks = MPL_malloc(nprocs * sizeof(int), MPL_MEM_IO);
 
-    if (rank == 0) {
-        /* same algorithim as shared file pointer name */
-        srand(time(NULL) & 0xffffffff);
-        pid = (int) getpid();
+    if (rank == 0)
+        MPL_create_pathname(testdirname, dirname, ".commonfstest.0", 1);
 
-        MPL_snprintf(testdirname, PATH_MAX, "%s/.commonfstest.%d.%d.%d/",
-                     dirname == NULL ? "." : dirname, rank, rand(), pid);
-    }
     MPI_Bcast(testdirname, PATH_MAX, MPI_BYTE, 0, comm);
     /* ignore EEXIST: quite likely another process will have made this
      * directory, but since the whole point is to figure out who we share this
@@ -184,17 +173,8 @@ static int comm_split_filesystem_heuristic(MPI_Comm comm, int key,
 
     filename = MPL_calloc(PATH_MAX, sizeof(char), MPL_MEM_IO);
 
-    if (rank == 0) {
-        int r, pid;
-
-        /* same algorithim as shared file pointer name */
-        srand(time(NULL) & 0xffffffff);
-        r = rand();
-        pid = (int) getpid();
-
-        MPL_snprintf(filename, PATH_MAX, "%s/.commonfstest.%d.%d.%d",
-                     dirname == NULL ? "." : dirname, rank, r, pid);
-    }
+    if (rank == 0)
+        MPL_create_pathname(filename, dirname, ".commonfstest.0", 0);
 
     MPI_Bcast(filename, PATH_MAX, MPI_BYTE, 0, comm);
 

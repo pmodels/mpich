@@ -5,6 +5,19 @@
  */
 
 #include "mpl.h"
+#include <assert.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
 
 #if !defined MPL_HAVE_SNPRINTF
 int MPL_snprintf(char *str, size_t size, mpl_const char *format, ...)
@@ -358,5 +371,50 @@ int MPL_strnapp(char *dest, const char *src, size_t n)
         /* We may want to force an error message here, at least in the
          * debugging version */
         return 1;
+    }
+}
+
+static unsigned int xorshift_rand(void)
+{
+    /* time returns long; keep the lower and most significant 32 bits */
+    unsigned int val = time(NULL) & 0xffffffff;
+
+    /* Marsaglia's xorshift random number generator */
+    val ^= val << 13;
+    val ^= val >> 17;
+    val ^= val << 5;
+
+    return val;
+}
+
+/*@ MPL_create_pathname - Generate a random pathname
+
+Input Parameters:
++   dirname - String containing the path of the parent dir (current dir if NULL)
++   prefix - String containing the prefix of the generated name
+-   is_dir - Boolean to tell if the path should be treated as a directory
+
+Output Parameters:
+.   dest_filename - String to copy the generated path name
+
+    Notes:
+    dest_filename should point to a preallocated buffer of PATH_MAX size.
+
+  Module:
+  Utility
+  @*/
+void MPL_create_pathname(char *dest_filename, const char *dirname,
+                         const char *prefix, const int is_dir)
+{
+    /* Generate a random number which doesn't interfere with user application */
+    const unsigned int random = xorshift_rand();
+    const unsigned int pid = (unsigned int) getpid();
+
+    if (dirname) {
+        MPL_snprintf(dest_filename, PATH_MAX, "%s/%s.%u.%u%c", dirname, prefix,
+                     random, pid, is_dir ? '/' : '\0');
+    } else {
+        MPL_snprintf(dest_filename, PATH_MAX, "%s.%u.%u%c", prefix,
+                     random, pid, is_dir ? '/' : '\0');
     }
 }
