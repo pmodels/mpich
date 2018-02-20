@@ -68,6 +68,16 @@ cvars:
       description : >-
         Enables an optimized business card exchange over PMI for node root processes only.
 
+    - name        : MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG
+      category    : CH4
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If enabled, CH4-level runtime configurations are printed out
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -123,6 +133,20 @@ static inline int MPIDI_choose_netmod(void)
 #error "Thread Granularity:  Invalid"
 #endif
 
+MPL_STATIC_INLINE_PREFIX void MPIDI_print_runtime_configurations(void)
+{
+    printf("==== CH4 runtime configurations ====\n");
+    printf("================================\n");
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_set_runtime_configurations(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+  fn_fail:
+    return mpi_errno;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPID_Init
 #undef FCNAME
@@ -143,6 +167,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
+
+    mpi_errno = MPIDI_set_runtime_configurations();
+    if (mpi_errno != MPI_SUCCESS)
+        return mpi_errno;
 
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_CH4_DBG_GENERAL = MPL_dbg_class_alloc("CH4", "ch4");
@@ -248,6 +276,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
+
+    if (MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG && rank == 0)
+        MPIDI_print_runtime_configurations();
 
     /* ---------------------------------- */
     /* Initialize MPI_COMM_SELF           */
