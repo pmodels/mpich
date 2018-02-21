@@ -23,7 +23,8 @@
 /* Active Message Stuff */
 #define MPIDI_UCX_NUM_AM_BUFFERS       (64)
 #define MPIDI_UCX_MAX_AM_EAGER_SZ      (16*1024)
-#define MPIDI_UCX_AM_TAG               (1 << 28)
+#define MPIDI_UCX_TAG_USABLE_BITS      (MPIR_TAG_USABLE_BITS >> 1)
+#define MPIDI_UCX_AM_TAG               (MPIDI_UCX_TAG_USABLE_BITS + 1)
 
 typedef struct {
     int avtid;

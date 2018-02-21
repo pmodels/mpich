@@ -50,6 +50,9 @@ int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag
     n = group_ptr->size;
     *newcomm_ptr = NULL;
 
+    /* Shift tag into the tagged coll space */
+    tag |= MPIR_TAG_COLL_BIT;
+
     /* Create a new communicator from the specified group members */
 
     if (group_ptr->rank != MPI_UNDEFINED) {
