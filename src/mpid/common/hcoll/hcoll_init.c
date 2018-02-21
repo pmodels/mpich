@@ -166,6 +166,7 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
     mpi_errno = MPI_SUCCESS;
 
     if (0 == hcoll_enable) {
+        comm_ptr->hcoll_priv.is_hcoll_init = 0;
         goto fn_exit;
     }
 
