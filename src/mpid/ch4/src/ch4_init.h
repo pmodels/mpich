@@ -289,19 +289,25 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     }
 #endif
 
+    {
+        int shm_tag_ub = MPIR_Process.attrs.tag_ub, nm_tag_ub = MPIR_Process.attrs.tag_ub;
 #ifdef MPIDI_BUILD_CH4_SHM
-    mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vnis_provided);
+        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vnis_provided, &shm_tag_ub);
 
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POPFATAL(mpi_errno);
-    }
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
 #endif
 
-    mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &MPIR_Process.attrs.tag_ub,
-                                       MPIR_Process.comm_world,
-                                       MPIR_Process.comm_self, has_parent, &n_nm_vnis_provided);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POPFATAL(mpi_errno);
+        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_ub,
+                                           MPIR_Process.comm_world,
+                                           MPIR_Process.comm_self, has_parent, &n_nm_vnis_provided);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
+
+        /* Use the minimum tag_ub from the netmod and shmod */
+        MPIR_Process.attrs.tag_ub = MPL_MIN(shm_tag_ub, nm_tag_ub);
     }
 
     /* Override split_type */
