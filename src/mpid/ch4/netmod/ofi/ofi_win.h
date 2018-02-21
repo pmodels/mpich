@@ -190,6 +190,7 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
 
         memset(&cntr_attr, 0, sizeof(cntr_attr));
         cntr_attr.events = FI_CNTR_EVENTS_COMP;
+        cntr_attr.wait_obj = FI_WAIT_UNSPEC;
         MPIDI_OFI_CALL(fi_cntr_open(MPIDI_Global.domain,        /* In:  Domain Object        */
                                     &cntr_attr, /* In:  Configuration object */
                                     &MPIDI_OFI_WIN(win).cmpl_cntr,      /* Out: Counter Object       */
