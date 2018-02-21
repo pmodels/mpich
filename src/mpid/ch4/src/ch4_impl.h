@@ -16,35 +16,6 @@
 #include "mpidig.h"
 
 /* Static inlines */
-static inline int MPIDI_CH4U_get_tag(uint64_t match_bits)
-{
-    int tag = (match_bits & MPIDI_CH4U_TAG_MASK);
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_GET_TAG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_GET_TAG);
-
-    /* Left shift and right shift by MPIDI_CH4U_TAG_SHIFT_UNPACK is to make sure the sign of tag is retained */
-    ret = ((tag << MPIDI_CH4U_TAG_SHIFT_UNPACK) >> MPIDI_CH4U_TAG_SHIFT_UNPACK);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_GET_TAG);
-    return ret;
-}
-
-static inline int MPIDI_CH4U_get_context(uint64_t match_bits)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_GET_CONTEXT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_GET_CONTEXT);
-
-    ret = ((int) ((match_bits & MPIDI_CH4U_CONTEXT_MASK) >>
-                  (MPIDI_CH4U_TAG_SHIFT + MPIDI_CH4U_SOURCE_SHIFT)));
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_GET_CONTEXT);
-    return ret;
-}
-
 static inline int MPIDI_CH4U_get_context_index(uint64_t context_id)
 {
     int raw_prefix, idx, bitpos, gen_id;
@@ -59,22 +30,6 @@ static inline int MPIDI_CH4U_get_context_index(uint64_t context_id)
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_GET_CONTEXT_INDEX);
     return gen_id;
-}
-
-static inline int MPIDI_CH4U_request_get_tag(MPIR_Request * req)
-{
-    int tag;
-    uint64_t match_bits;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_REQUEST_GET_TAG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_REQUEST_GET_TAG);
-
-    match_bits = MPIDI_CH4U_REQUEST(req, match_bits);
-    tag = MPIDI_CH4U_get_tag(match_bits);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_REQUEST_GET_TAG);
-
-    return tag;
 }
 
 static inline int MPIDI_CH4U_request_get_context_offset(MPIR_Request * req)
@@ -487,52 +442,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_hash_clear(MPIR_Win * win)
 
 #define IS_BUILTIN(_datatype)                           \
     (HANDLE_GET_KIND(_datatype) == HANDLE_KIND_BUILTIN)
-
-static inline uint64_t MPIDI_CH4U_init_send_tag(MPIR_Context_id_t contextid, int source, int tag)
-{
-    uint64_t match_bits;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_INIT_SEND_TAG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_INIT_SEND_TAG);
-
-    match_bits = contextid;
-    match_bits = (match_bits << MPIDI_CH4U_SOURCE_SHIFT);
-    match_bits |= (source & (MPIDI_CH4U_SOURCE_MASK >> MPIDI_CH4U_TAG_SHIFT));
-    match_bits = (match_bits << MPIDI_CH4U_TAG_SHIFT);
-    match_bits |= (MPIDI_CH4U_TAG_MASK & tag);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_INIT_SEND_TAG);
-    return match_bits;
-}
-
-static inline uint64_t MPIDI_CH4U_init_recvtag(uint64_t * mask_bits,
-                                               MPIR_Context_id_t contextid, int source, int tag)
-{
-    uint64_t match_bits = 0;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_INIT_RECVTAG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_INIT_RECVTAG);
-
-    *mask_bits = MPIDI_CH4U_PROTOCOL_MASK;
-    match_bits = contextid;
-    match_bits = (match_bits << MPIDI_CH4U_SOURCE_SHIFT);
-
-    if (MPI_ANY_SOURCE == source) {
-        match_bits = (match_bits << MPIDI_CH4U_TAG_SHIFT);
-        *mask_bits |= MPIDI_CH4U_SOURCE_MASK;
-    } else {
-        match_bits |= source;
-        match_bits = (match_bits << MPIDI_CH4U_TAG_SHIFT);
-    }
-
-    if (MPI_ANY_TAG == tag)
-        *mask_bits |= MPIDI_CH4U_TAG_MASK;
-    else
-        match_bits |= (MPIDI_CH4U_TAG_MASK & tag);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_INIT_RECVTAG);
-    return match_bits;
-}
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH4I_valid_group_rank
