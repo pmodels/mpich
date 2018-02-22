@@ -728,7 +728,6 @@ echo "done"
 ## Building non-C interfaces
 ########################################################################
 
-export PERL5LIB=.
 # Create the bindings if necessary 
 if [ $do_bindings = "yes" ] ; then
     build_f77=no
