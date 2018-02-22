@@ -54,8 +54,8 @@ struct argstruct {
     char *host;                 /* Name of receiving host                       */
     char *buff;                 /* Transmitted buffer                           */
     char *buff1;                /* Transmitted buffer                           */
-    int bufflen,                /* Length of transmitted buffer                 */
-     tr,                        /* Transmit flag                                */
+    size_t bufflen;             /* Length of transmitted buffer                 */
+    int tr,                     /* Transmit flag                                */
      nbuff;                     /* Number of buffers to transmit                */
 
     /* Now we work with a union of information for protocol dependent stuff */
@@ -116,8 +116,7 @@ int main(int argc, char *argv[])
      bufoffset = 0,             /* Align buffer to this                 */
         bufalign = 16 * 1024,   /* Boundary to align buffer to          */
         nrepeat,        /* Number of time to do the transmission */
-        nzero = 0, len, /* Number of bytes to be transmitted    */
-        inc = 1,        /* Increment value                      */
+        nzero = 0, inc = 1,     /* Increment value                      */
         detailflag = 0, /* Set to examine the signature curve detail */
         pert,   /* Perturbation value                   */
         ipert,  /* index of the perturbation loop       */
@@ -128,6 +127,7 @@ int main(int argc, char *argv[])
     int one_buffer = 0;
     int onebuffersize = 100 * 1024 * 1024;
     int quit = 0;
+    size_t len;                 /* Number of bytes to be transmitted    */
 
     ArgStruct args;             /* Argumentsfor all the calls           */
 
@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
             args.buff1 += (bufalign - ((MPI_Aint) args.buff1 % bufalign) + bufoffset) % bufalign;
 
             if (args.tr && printopt) {
-                fprintf(stdout, "%3d: %9d bytes %4d times --> ", n, args.bufflen, nrepeat);
+                fprintf(stdout, "%3d: %9zu bytes %4d times --> ", n, args.bufflen, nrepeat);
                 fflush(stdout);
             }
 
