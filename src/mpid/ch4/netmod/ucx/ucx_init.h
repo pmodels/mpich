@@ -219,6 +219,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_cc_set(&MPIDI_UCX_global.lw_send_req->cc, 0);
 #endif
 
+    *tag_ub = MPIDI_UCX_AM_TAG - 1;
+
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_EXIT);
