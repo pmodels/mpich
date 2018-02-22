@@ -148,7 +148,8 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
         goto fn_exit;
     }
 
-    if (requests_property == MPIR_REQUESTS_PROPERTY__OPT_ALL && ignoring_statuses) {
+    if ((requests_property & MPIR_REQUESTS_PROPERTY__NO_GREQUESTS) &&
+        (requests_property & MPIR_REQUESTS_PROPERTY__NO_NULL)) {
         MPID_Progress_start(&progress_state);
         for (i = 0; i < count; ++i) {
             while (!MPIR_Request_is_complete(request_ptrs[i])) {
