@@ -1744,6 +1744,7 @@ static inline int MPIDI_OFI_init_global_settings(const char *prov_name)
 
 static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
 {
+    int fi_version = FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION);
     MPIR_Assert(hints != NULL);
 
     /* ------------------------------------------------------------------------ */
@@ -1772,7 +1773,11 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
     /*           endpoint, so the netmod requires dynamic memory regions        */
     /* ------------------------------------------------------------------------ */
     hints->mode = FI_CONTEXT | FI_ASYNC_IOV | FI_RX_CQ_DATA;    /* We can handle contexts  */
-    if (FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION) >= FI_VERSION(1, 5)) {
+
+    if (MPIDI_OFI_MAJOR_VERSION != -1 && MPIDI_OFI_MINOR_VERSION != -1)
+        fi_version = FI_VERSION(MPIDI_OFI_MAJOR_VERSION, MPIDI_OFI_MINOR_VERSION);
+
+    if (fi_version >= FI_VERSION(1, 5)) {
 #ifdef FI_CONTEXT2
         hints->mode |= FI_CONTEXT2;
 #endif
