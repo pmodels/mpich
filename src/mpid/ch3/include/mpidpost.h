@@ -227,9 +227,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Test(MPIR_Request * request_ptr, int *flag, MP
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Testall(int count, MPIR_Request * request_ptrs[],
-                                          int *flag, MPI_Status array_of_statuses[])
+                                          int *flag, MPI_Status array_of_statuses[],
+                                          int requests_property)
 {
-    return MPIR_Testall_impl(count, request_ptrs, flag, array_of_statuses);
+    return MPIR_Testall_impl(count, request_ptrs, flag, array_of_statuses, requests_property);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Testany(int count, MPIR_Request * request_ptrs[],
