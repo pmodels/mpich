@@ -8,9 +8,18 @@
 #include <stdio.h>
 #include "mpi.h"
 
+#define HANDLE_ERROR(err) \
+    if (err != MPI_SUCCESS) { \
+        char msg[MPI_MAX_ERROR_STRING]; \
+        int resultlen; \
+        MPI_Error_string(err, msg, &resultlen); \
+        fprintf(stderr, "%s line %d: %s\n", __FILE__, __LINE__, msg); \
+        MPI_Abort(MPI_COMM_WORLD, 1); \
+    }
+
 static void read_file(const char *name, void *buf, MPI_Datatype dt)
 {
-    int rank, rc;
+    int rank, err;
     MPI_File fh;
     char datarep[] = "external32";
     int amode = MPI_MODE_RDONLY;
@@ -21,32 +30,30 @@ static void read_file(const char *name, void *buf, MPI_Datatype dt)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* open file */
-    rc = MPI_File_open(MPI_COMM_WORLD, (char *) name, amode, MPI_INFO_NULL, &fh);
-    if (rc != MPI_SUCCESS) {
-        printf("Rank %d: Failed to open file %s\n", rank, name);
-        fflush(stdout);
-        MPI_Abort(MPI_COMM_WORLD, 1);
-        return;
-    }
+    err = MPI_File_open(MPI_COMM_WORLD, (char *) name, amode, MPI_INFO_NULL, &fh);
+    HANDLE_ERROR(err);
 
     /* set file view to be sequence of datatypes past header */
-    MPI_File_set_view(fh, 0, dt, dt, datarep, MPI_INFO_NULL);
+    err = MPI_File_set_view(fh, 0, dt, dt, datarep, MPI_INFO_NULL);
+    HANDLE_ERROR(err);
 
     /* issue a collective read: In 3.2 and older the external32 code
      * path had a bug that would cause an overlapping memcopy and crash
      */
     offset = rank;
-    MPI_File_read_at_all(fh, offset, buf, 1, dt, &status);
+    err = MPI_File_read_at_all(fh, offset, buf, 1, dt, &status);
+    HANDLE_ERROR(err);
 
     /* close file */
-    MPI_File_close(&fh);
+    err = MPI_File_close(&fh);
+    HANDLE_ERROR(err);
 
     return;
 }
 
 static void write_file(const char *name, void *buf, MPI_Datatype dt)
 {
-    int rank, amode;
+    int rank, amode, err;
     char datarep[] = "external32";
     MPI_Status status;
     MPI_File fh;
@@ -57,20 +64,25 @@ static void write_file(const char *name, void *buf, MPI_Datatype dt)
 
     /* open file */
     amode = MPI_MODE_WRONLY | MPI_MODE_CREATE;
-    MPI_File_open(MPI_COMM_WORLD, (char *) name, amode, MPI_INFO_NULL, &fh);
+    err = MPI_File_open(MPI_COMM_WORLD, (char *) name, amode, MPI_INFO_NULL, &fh);
+    HANDLE_ERROR(err);
 
     /* truncate file to 0 bytes */
-    MPI_File_set_size(fh, 0);
+    err = MPI_File_set_size(fh, 0);
+    HANDLE_ERROR(err);
 
     /* set file view to be sequence of datatypes past header */
-    MPI_File_set_view(fh, 0, dt, dt, datarep, MPI_INFO_NULL);
+    err = MPI_File_set_view(fh, 0, dt, dt, datarep, MPI_INFO_NULL);
+    HANDLE_ERROR(err);
 
     /* collective write of file info */
     offset = rank;
-    MPI_File_write_at_all(fh, offset, buf, 1, dt, &status);
+    err = MPI_File_write_at_all(fh, offset, buf, 1, dt, &status);
+    HANDLE_ERROR(err);
 
     /* close file */
-    MPI_File_close(&fh);
+    err = MPI_File_close(&fh);
+    HANDLE_ERROR(err);
 
     return;
 }
