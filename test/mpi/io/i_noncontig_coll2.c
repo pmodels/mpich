@@ -394,7 +394,10 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
         handle_error(errcode, "MPI_File_open");
     }
 
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
+    errcode = MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
+    if (errcode != MPI_SUCCESS) {
+        handle_error(errcode, "MPI_File_set_view");
+    }
 
     for (i = 0; i < SIZE; i++)
         buf[i] = SEEDER(mynod, i, SIZE);
@@ -515,7 +518,10 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
 
     MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
 
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
+    errcode = MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
+    if (errcode != MPI_SUCCESS) {
+        handle_error(errcode, "MPI_File_set_view");
+    }
 
     for (i = 0; i < SIZE; i++)
         buf[i] = SEEDER(mynod, i, SIZE);
