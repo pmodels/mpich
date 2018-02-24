@@ -18,6 +18,15 @@
         MPI_Abort(MPI_COMM_WORLD, 1); \
     }
 
+#define HANDLE_ERROR(err) \
+    if (err != MPI_SUCCESS) { \
+        char msg[MPI_MAX_ERROR_STRING]; \
+        int resultlen; \
+        MPI_Error_string(err, msg, &resultlen); \
+        fprintf(stderr, "%s line %d: %s\n", __FILE__, __LINE__, msg); \
+        MPI_Abort(MPI_COMM_WORLD, 1); \
+    }
+
 static void read_file(const char *name, void *buf, MPI_Datatype dt)
 {
     int rank, err;
