@@ -297,6 +297,39 @@ static inline void MPIR_Request_free(MPIR_Request * req)
     }
 }
 
+/* The "fastpath" version of MPIR_Request_completion_processing.  It only handles
+ * MPIR_REQUEST_KIND__SEND and MPIR_REQUEST_KIND__RECV kinds, and it does not attempt to
+ * deal with status structures under the assumption that bleeding fast code will
+ * pass either MPI_STATUS_IGNORE or MPI_STATUSES_IGNORE as appropriate.  This
+ * routine (or some a variation of it) is an unfortunately necessary stunt to
+ * get high message rates on key benchmarks for high-end systems.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Request_completion_processing_fastpath
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIR_Request_completion_processing_fastpath(MPI_Request * request,
+                                                                         MPIR_Request * request_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(request_ptr->kind == MPIR_REQUEST_KIND__SEND ||
+                request_ptr->kind == MPIR_REQUEST_KIND__RECV);
+
+    if (request_ptr->kind == MPIR_REQUEST_KIND__SEND) {
+        /* FIXME: are Ibsend requests added to the send queue? */
+        MPII_SENDQ_FORGET(request_ptr);
+    }
+
+    /* the completion path for SEND and RECV is the same at this time, modulo
+     * the SENDQ hook above */
+    mpi_errno = request_ptr->status.MPI_ERROR;
+    MPIR_Request_free(request_ptr);
+    *request = MPI_REQUEST_NULL;
+
+    return mpi_errno;
+}
+
 int MPIR_Request_completion_processing(MPIR_Request *, MPI_Status *, int *);
 int MPIR_Request_get_error(MPIR_Request *);
 int MPIR_Progress_wait_request(MPIR_Request * req);
