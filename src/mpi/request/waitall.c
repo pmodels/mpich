@@ -116,39 +116,6 @@ int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array
     goto fn_exit;
 }
 
-/* The "fastpath" version of MPIR_Request_completion_processing.  It only handles
- * MPIR_REQUEST_KIND__SEND and MPIR_REQUEST_KIND__RECV kinds, and it does not attempt to
- * deal with status structures under the assumption that bleeding fast code will
- * pass either MPI_STATUS_IGNORE or MPI_STATUSES_IGNORE as appropriate.  This
- * routine (or some a variation of it) is an unfortunately necessary stunt to
- * get high message rates on key benchmarks for high-end systems.
- */
-#undef FUNCNAME
-#define FUNCNAME request_complete_fastpath
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int request_complete_fastpath(MPI_Request * request, MPIR_Request * request_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_Assert(request_ptr->kind == MPIR_REQUEST_KIND__SEND ||
-                request_ptr->kind == MPIR_REQUEST_KIND__RECV);
-
-    if (request_ptr->kind == MPIR_REQUEST_KIND__SEND) {
-        /* FIXME: are Ibsend requests added to the send queue? */
-        MPII_SENDQ_FORGET(request_ptr);
-    }
-
-    /* the completion path for SEND and RECV is the same at this time, modulo
-     * the SENDQ hook above */
-    mpi_errno = request_ptr->status.MPI_ERROR;
-    MPIR_Request_free(request_ptr);
-    *request = MPI_REQUEST_NULL;
-
-    /* avoid normal fn_exit/fn_fail jump pattern to reduce jumps and compiler confusion */
-    return mpi_errno;
-}
-
 #undef FUNCNAME
 #define FUNCNAME MPIR_Waitall
 #undef FCNAME
@@ -243,7 +210,8 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
      * additional branch inside the for-loop below. */
     if (requests_property == MPIR_REQUESTS_PROPERTY__OPT_ALL && ignoring_statuses) {
         for (i = 0; i < count; ++i) {
-            mpi_errno = request_complete_fastpath(&array_of_requests[i], request_ptrs[i]);
+            mpi_errno = MPIR_Request_completion_processing_fastpath(&array_of_requests[i],
+                                                                    request_ptrs[i]);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
