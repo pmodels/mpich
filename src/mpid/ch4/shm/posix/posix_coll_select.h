@@ -8,9 +8,7 @@
 MPL_STATIC_INLINE_PREFIX
     MPIDI_POSIX_coll_algo_container_t * MPIDI_POSIX_Barrier_select(MPIR_Comm * comm,
                                                                    MPIR_Errflag_t * errflag,
-                                                                   MPIDI_POSIX_coll_algo_container_t
-                                                                   *
-                                                                   ch4_algo_parameters_container_in
+                                                                   void * ch4_algo_parameters_container_in
                                                                    ATTRIBUTE((unused)))
 {
     return (MPIDI_POSIX_coll_algo_container_t *) & MPIDI_POSIX_Barrier_intra_dissemination_cnt;
@@ -22,8 +20,7 @@ MPL_STATIC_INLINE_PREFIX
                                                                  datatype, int root,
                                                                  MPIR_Comm * comm,
                                                                  MPIR_Errflag_t * errflag,
-                                                                 MPIDI_POSIX_coll_algo_container_t *
-                                                                 ch4_algo_parameters_container_in
+                                                                 void * ch4_algo_parameters_container_in
                                                                  ATTRIBUTE((unused)))
 {
     int nbytes = 0;
@@ -55,9 +52,7 @@ MPL_STATIC_INLINE_PREFIX
                                                                      MPI_Op op,
                                                                      MPIR_Comm * comm,
                                                                      MPIR_Errflag_t * errflag,
-                                                                     MPIDI_POSIX_coll_algo_container_t
-                                                                     *
-                                                                     ch4_algo_parameters_container_in
+                                                                     void * ch4_algo_parameters_container_in
                                                                      ATTRIBUTE((unused)))
 {
     MPI_Aint type_size = 0;
@@ -81,9 +76,7 @@ MPL_STATIC_INLINE_PREFIX
                                                                   MPI_Op op, int root,
                                                                   MPIR_Comm * comm,
                                                                   MPIR_Errflag_t * errflag,
-                                                                  MPIDI_POSIX_coll_algo_container_t
-                                                                  *
-                                                                  ch4_algo_parameters_container_in
+                                                                  void * ch4_algo_parameters_container_in
                                                                   ATTRIBUTE((unused)))
 {
     MPI_Aint type_size = 0;
