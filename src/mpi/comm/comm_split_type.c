@@ -144,16 +144,28 @@ static struct shmem_processor_info_table shmem_processor_info[] = {
     {NULL, HWLOC_OBJ_TYPE_MAX}
 };
 
-static int node_split_processor(MPIR_Comm * comm_ptr, int key, hwloc_obj_type_t obj_type,
+static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintval,
                                 MPIR_Comm ** newcomm_ptr)
 {
     int color;
     hwloc_obj_t obj_containing_cpuset;
-    hwloc_obj_type_t query_obj_type = obj_type;
-    int mpi_errno = MPI_SUCCESS;
+    hwloc_obj_type_t query_obj_type = HWLOC_OBJ_TYPE_MAX;
+    int i, mpi_errno = MPI_SUCCESS;
 
     /* assign the node id as the color, initially */
     MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
+
+    /* try to find the info value in the processor object
+     * table */
+    for (i = 0; shmem_processor_info[i].val; i++) {
+        if (!strcmp(shmem_processor_info[i].val, hintval)) {
+            query_obj_type = shmem_processor_info[i].obj_type;
+            break;
+        }
+    }
+
+    if (query_obj_type == HWLOC_OBJ_TYPE_MAX)
+        goto split_id;
 
     obj_containing_cpuset =
         hwloc_get_obj_covering_cpuset(MPIR_Process.topology, MPIR_Process.bindset);
@@ -167,6 +179,7 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, hwloc_obj_type_t 
             color = hobj->logical_index;
     }
 
+  split_id:
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -181,6 +194,33 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, hwloc_obj_type_t 
 
 static const char *SHMEM_INFO_KEY = "shmem_topo";
 
+static int compare_info_args(const void *sendbuf, void *recvbuf, int count, MPIR_Comm * comm_ptr,
+                             int *info_args_global)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    int info_args_are_equal = 0;
+
+    mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, MPI_BYTE, MPI_BAND, comm_ptr, &errflag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (!memcmp(sendbuf, recvbuf, count))
+        info_args_are_equal = 1;
+
+    mpi_errno =
+        MPIR_Allreduce(&info_args_are_equal, info_args_global, 1, MPI_INT, MPI_MIN, comm_ptr,
+                       &errflag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_split_type_node_topo
 #undef FCNAME
@@ -190,14 +230,12 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
 {
     MPIR_Comm *comm_ptr;
     int mpi_errno = MPI_SUCCESS;
-
-#ifdef HAVE_HWLOC
+    int hintval_size, hintval_size_global;
+    char *hintval_global = NULL;
+    int flag = 0;
     char hintval[MPI_MAX_INFO_VAL + 1];
-    int i, flag = 0;
-    hwloc_obj_type_t obj_type, obj_type_global;
     int info_args_are_equal;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-#endif
+    *newcomm_ptr = NULL;
 
     mpi_errno = MPIR_Comm_split_type_node(user_comm_ptr, split_type, key, &comm_ptr);
     if (mpi_errno)
@@ -209,44 +247,40 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
         goto fn_exit;
     }
 
-    /* check if the info arguments match across processes */
-#ifdef HAVE_HWLOC
-    /* if our bindset is not valid, skip topology-aware comm split */
-    if (!MPIR_Process.bindset_is_valid)
-        goto use_node_comm;
-
-    /* initially point to HWLOC_OBJ_TYPE_MAX and then see if there is
-     * an info argument pointing to a different object */
-    obj_type = HWLOC_OBJ_TYPE_MAX;
     if (info_ptr) {
         MPIR_Info_get_impl(info_ptr, SHMEM_INFO_KEY, MPI_MAX_INFO_VAL, hintval, &flag);
-        if (flag) {
-            /* try to find the info value in the processor object
-             * table */
-            for (i = 0; shmem_processor_info[i].val; i++) {
-                if (!strcmp(shmem_processor_info[i].val, hintval)) {
-                    obj_type = shmem_processor_info[i].obj_type;
-                    break;
-                }
-            }
-        }
     }
 
-    /* even if we did not give an info key, do an allreduce since
-     * other processes might have given an info key */
+    if (!flag) {
+        hintval[0] = '\0';
+    }
+
+    /* Compare hintval string length */
+    hintval_size = strlen(hintval);
     mpi_errno =
-        MPIR_Allreduce(&obj_type, &obj_type_global, sizeof(obj_type), MPI_BYTE, MPI_BAND, comm_ptr,
-                       &errflag);
+        compare_info_args(&hintval_size, &hintval_size_global, sizeof(int) / sizeof(char), comm_ptr,
+                          &info_args_are_equal);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    info_args_are_equal = (obj_type == obj_type_global);
+    /* if all processes do not give the same length of hintval, skip
+     * topology-aware comm split */
+    if (!info_args_are_equal)
+        goto use_node_comm;
+
+    hintval_global = MPL_malloc(sizeof(hintval), MPL_MEM_OTHER);
+    /* Compare the hintval strings */
     mpi_errno =
-        MPIR_Allreduce(MPI_IN_PLACE, &info_args_are_equal, 1, MPI_INT, MPI_MIN, comm_ptr, &errflag);
+        compare_info_args(hintval, hintval_global, (strlen(hintval) + 1) * sizeof(char), comm_ptr,
+                          &info_args_are_equal);
+
+    if (hintval_global != NULL)
+        MPL_free(hintval_global);
+
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    /* if all processes did not give the same info key, skip
+    /* if all processes do not have the same hintval, skip
      * topology-aware comm split */
     if (!info_args_are_equal)
         goto use_node_comm;
@@ -255,17 +289,21 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
     if (!info_ptr)
         goto use_node_comm;
 
-    /* if the info key is not something we recognize, skip
-     * topology-aware comm split */
-    if (obj_type == HWLOC_OBJ_TYPE_MAX)
+#ifdef HAVE_HWLOC
+    /* if our bindset is not valid, skip topology-aware comm split */
+    if (!MPIR_Process.bindset_is_valid)
         goto use_node_comm;
 
-    mpi_errno = node_split_processor(comm_ptr, key, obj_type, newcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    if (flag) {
+        mpi_errno = node_split_processor(comm_ptr, key, hintval, newcomm_ptr);
 
-    MPIR_Comm_free_impl(comm_ptr);
-    goto fn_exit;
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        MPIR_Comm_free_impl(comm_ptr);
+
+        goto fn_exit;
+    }
 #endif /* HAVE_HWLOC */
 
   use_node_comm:
