@@ -340,6 +340,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     MPIR_Process.bindset = hwloc_bitmap_alloc();
     hwloc_topology_init(&MPIR_Process.topology);
     MPIR_Process.bindset_is_valid = 0;
+    hwloc_topology_set_io_types_filter(MPIR_Process.topology, HWLOC_TYPE_FILTER_KEEP_ALL);
     if (!hwloc_topology_load(MPIR_Process.topology)) {
         MPIR_Process.bindset_is_valid =
             !hwloc_get_proc_cpubind(MPIR_Process.topology, getpid(), MPIR_Process.bindset,
