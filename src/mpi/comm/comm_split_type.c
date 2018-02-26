@@ -177,6 +177,8 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintv
                                                           obj_containing_cpuset);
         if (hobj)
             color = hobj->logical_index;
+        else
+            color = MPI_UNDEFINED;
     }
 
   split_id:
