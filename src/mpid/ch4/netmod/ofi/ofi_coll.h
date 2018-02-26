@@ -30,8 +30,7 @@ static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errfla
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BARRIER);
 
     nm_algo_parameters_container_out =
-        MPIDI_OFI_Barrier_select(comm, errflag, (MPIDI_OFI_coll_algo_container_t *)
-                                 ch4_algo_parameters_container_in);
+        MPIDI_OFI_Barrier_select(comm, errflag, ch4_algo_parameters_container_in);
 
     switch (nm_algo_parameters_container_out->id) {
         case MPIDI_OFI_Barrier_intra_dissemination_id:
@@ -69,7 +68,6 @@ static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datat
 
     nm_algo_parameters_container_out =
         MPIDI_OFI_Bcast_select(buffer, count, datatype, root, comm, errflag,
-                               (MPIDI_OFI_coll_algo_container_t *)
                                ch4_algo_parameters_container_in);
 
     switch (nm_algo_parameters_container_out->id) {
@@ -119,7 +117,6 @@ static inline int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int
 
     nm_algo_parameters_container_out =
         MPIDI_OFI_Allreduce_select(sendbuf, recvbuf, count, datatype, op, comm, errflag,
-                                   (MPIDI_OFI_coll_algo_container_t *)
                                    ch4_algo_parameters_container_in);
 
     switch (nm_algo_parameters_container_out->id) {
@@ -156,7 +153,7 @@ static inline int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int
 static inline int MPIDI_NM_mpi_allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                          MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                         void * ch4_algo_parameters_container_in)
+                                         void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
@@ -211,7 +208,7 @@ static inline int MPIDI_NM_mpi_allgatherv(const void *sendbuf, int sendcount, MP
                                           void *recvbuf, const int *recvcounts, const int *displs,
                                           MPI_Datatype recvtype, MPIR_Comm * comm,
                                           MPIR_Errflag_t * errflag,
-                                          void * ch4_algo_parameters_container_in)
+                                          void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
@@ -265,7 +262,7 @@ static inline int MPIDI_NM_mpi_allgatherv(const void *sendbuf, int sendcount, MP
 static inline int MPIDI_NM_mpi_gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                       int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                      void * ch4_algo_parameters_container_in)
+                                      void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
@@ -275,8 +272,7 @@ static inline int MPIDI_NM_mpi_gather(const void *sendbuf, int sendcount, MPI_Da
 
     nm_algo_parameters_container_out =
         MPIDI_OFI_Gather_select(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                recvtype, root, comm, errflag,
-                                ch4_algo_parameters_container_in);
+                                recvtype, root, comm, errflag, ch4_algo_parameters_container_in);
 
     switch (nm_algo_parameters_container_out->id) {
         case MPIDI_OFI_Gather_intra_binomial_id:
@@ -309,7 +305,7 @@ static inline int MPIDI_NM_mpi_gatherv(const void *sendbuf, int sendcount, MPI_D
                                        void *recvbuf, const int *recvcounts, const int *displs,
                                        MPI_Datatype recvtype, int root, MPIR_Comm * comm,
                                        MPIR_Errflag_t * errflag,
-                                       void * ch4_algo_parameters_container_in)
+                                       void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
@@ -353,7 +349,7 @@ static inline int MPIDI_NM_mpi_gatherv(const void *sendbuf, int sendcount, MPI_D
 static inline int MPIDI_NM_mpi_scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                        int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                       void * ch4_algo_parameters_container_in)
+                                       void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
@@ -363,8 +359,7 @@ static inline int MPIDI_NM_mpi_scatter(const void *sendbuf, int sendcount, MPI_D
 
     nm_algo_parameters_container_out =
         MPIDI_OFI_Scatter_select(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                                 recvtype, root, comm, errflag,
-                                 ch4_algo_parameters_container_in);
+                                 recvtype, root, comm, errflag, ch4_algo_parameters_container_in);
 
     switch (nm_algo_parameters_container_out->id) {
         case MPIDI_OFI_Scatter_intra_binomial_id:
@@ -397,7 +392,7 @@ static inline int MPIDI_NM_mpi_scatterv(const void *sendbuf, const int *sendcoun
                                         const int *displs, MPI_Datatype sendtype,
                                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                         int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                        void * ch4_algo_parameters_container_in)
+                                        void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
@@ -440,7 +435,7 @@ static inline int MPIDI_NM_mpi_scatterv(const void *sendbuf, const int *sendcoun
 static inline int MPIDI_NM_mpi_alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                         MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                        void * ch4_algo_parameters_container_in)
+                                        void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
@@ -501,7 +496,7 @@ static inline int MPIDI_NM_mpi_alltoallv(const void *sendbuf, const int *sendcou
                                          void *recvbuf, const int *recvcounts,
                                          const int *rdispls, MPI_Datatype recvtype,
                                          MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                         void * ch4_algo_parameters_container_in)
+                                         void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
@@ -555,7 +550,7 @@ static inline int MPIDI_NM_mpi_alltoallw(const void *sendbuf, const int sendcoun
                                          void *recvbuf, const int recvcounts[],
                                          const int rdispls[], const MPI_Datatype recvtypes[],
                                          MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                         void * ch4_algo_parameters_container_in)
+                                         void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
@@ -617,7 +612,6 @@ static inline int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int co
 
     nm_algo_parameters_container_out =
         MPIDI_OFI_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, comm, errflag,
-                                (MPIDI_OFI_coll_algo_container_t *)
                                 ch4_algo_parameters_container_in);
 
     switch (nm_algo_parameters_container_out->id) {
@@ -656,7 +650,7 @@ static inline int MPIDI_NM_mpi_reduce_scatter(const void *sendbuf, void *recvbuf
                                               const int recvcounts[], MPI_Datatype datatype,
                                               MPI_Op op, MPIR_Comm * comm,
                                               MPIR_Errflag_t * errflag,
-                                              void * ch4_algo_parameters_container_in)
+                                              void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
@@ -714,7 +708,7 @@ static inline int MPIDI_NM_mpi_reduce_scatter_block(const void *sendbuf, void *r
                                                     int recvcount, MPI_Datatype datatype,
                                                     MPI_Op op, MPIR_Comm * comm,
                                                     MPIR_Errflag_t * errflag,
-                                                    void * ch4_algo_parameters_container_in)
+                                                    void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
@@ -772,7 +766,7 @@ static inline int MPIDI_NM_mpi_reduce_scatter_block(const void *sendbuf, void *r
 static inline int MPIDI_NM_mpi_scan(const void *sendbuf, void *recvbuf, int count,
                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                     MPIR_Errflag_t * errflag,
-                                    void * ch4_algo_parameters_container_in)
+                                    void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
@@ -813,7 +807,7 @@ static inline int MPIDI_NM_mpi_scan(const void *sendbuf, void *recvbuf, int coun
 static inline int MPIDI_NM_mpi_exscan(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                       MPIR_Errflag_t * errflag,
-                                      void * ch4_algo_parameters_container_in)
+                                      void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
