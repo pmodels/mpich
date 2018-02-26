@@ -22,8 +22,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_POSIX_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                          MPIDI_POSIX_coll_algo_container_t *
-                                          ch4_algo_parameters_container_in)
+                                          void * ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_coll_algo_container_t *shm_algo_parameters_container_out = NULL;
@@ -61,8 +60,7 @@ static inline int MPIDI_POSIX_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_POSIX_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
                                         int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                        MPIDI_POSIX_coll_algo_container_t *
-                                        ch4_algo_parameters_container_in)
+                                        void * ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_coll_algo_container_t *shm_algo_parameters_container_out = NULL;
@@ -112,8 +110,7 @@ static inline int MPIDI_POSIX_mpi_bcast(void *buffer, int count, MPI_Datatype da
 static inline int MPIDI_POSIX_mpi_allreduce(const void *sendbuf, void *recvbuf, int count,
                                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                             MPIR_Errflag_t * errflag,
-                                            MPIDI_POSIX_coll_algo_container_t *
-                                            ch4_algo_parameters_container_in)
+                                            void * ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_coll_algo_container_t *shm_algo_parameters_container_out = NULL;
@@ -612,8 +609,7 @@ static inline int MPIDI_POSIX_mpi_alltoallw(const void *sendbuf, const int sendc
 static inline int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *recvbuf, int count,
                                          MPI_Datatype datatype, MPI_Op op, int root,
                                          MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                         MPIDI_POSIX_coll_algo_container_t *
-                                         ch4_algo_parameters_container_in)
+                                         void * ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_POSIX_coll_algo_container_t *shm_algo_parameters_container_out = NULL;

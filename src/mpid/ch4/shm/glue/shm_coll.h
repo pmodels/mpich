@@ -20,7 +20,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_barrier(MPIR_Comm * comm, MPIR_Errfla
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_BARRIER);
 
     ret = MPIDI_POSIX_mpi_barrier(comm, errflag,
-                                  (MPIDI_POSIX_coll_algo_container_t *) algo_parameters_container);
+                                  algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_BARRIER);
     return ret;
@@ -38,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_bcast(void *buffer, int count, MPI_Da
 
     ret =
         MPIDI_POSIX_mpi_bcast(buffer, count, datatype, root, comm, errflag,
-                              (MPIDI_POSIX_coll_algo_container_t *) algo_parameters_container);
+                              algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_BCAST);
     return ret;
@@ -56,7 +56,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allreduce(const void *sendbuf, void *
 
     ret =
         MPIDI_POSIX_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag,
-                                  (MPIDI_POSIX_coll_algo_container_t *) algo_parameters_container);
+                                  algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_ALLREDUCE);
     return ret;
@@ -251,7 +251,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce(const void *sendbuf, void *rec
 
     ret =
         MPIDI_POSIX_mpi_reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag,
-                               (MPIDI_POSIX_coll_algo_container_t *) algo_parameters_container);
+                               algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_REDUCE);
     return ret;
