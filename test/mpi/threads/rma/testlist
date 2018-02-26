@@ -1,3 +1,14 @@
 multirma 2 mpiversion=3.0
 multiget 2 mpiversion=3.0
 multifence 3
+mt_put_huge 2 mpiversion=3.0
+mt_get_huge 2 mpiversion=3.0
+mt_put_normal 2 mpiversion=3.0
+mt_get_normal 2 mpiversion=3.0
+mt_accfence_normal 2 mpiversion=3.0
+mt_accfence_huge 2 mpiversion=3.0
+mt_getaccfence_normal 2 mpiversion=3.0
+mt_getaccfence_huge 2 mpiversion=3.0
+mt_compareandswap 4 mpiversion=3.0
+mt_fetchandop 4 mpiversion=3.0
+mt_reqops 4 mpiversion=3.0
