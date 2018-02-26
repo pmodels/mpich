@@ -192,6 +192,45 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintv
   fn_fail:
     goto fn_exit;
 }
+
+static int node_split_pci_device(MPIR_Comm * comm_ptr, int key,
+                                 const char *hintval, MPIR_Comm ** newcomm_ptr)
+{
+    hwloc_obj_t obj_containing_cpuset, io_device = NULL;
+    int mpi_errno = MPI_SUCCESS;
+    int color;
+
+    obj_containing_cpuset =
+        hwloc_get_obj_covering_cpuset(MPIR_Process.topology, MPIR_Process.bindset);
+    MPIR_Assert(obj_containing_cpuset != NULL);
+
+    io_device = hwloc_get_pcidev_by_busidstring(MPIR_Process.topology, hintval + strlen("pci:"));
+
+    if (io_device != NULL) {
+        hwloc_obj_t non_io_ancestor =
+            hwloc_get_non_io_ancestor_obj(MPIR_Process.topology, io_device);
+
+        /* An io object will never be the root of the topology and is
+         * hence guaranteed to have a non io ancestor */
+        MPIR_Assert(non_io_ancestor);
+
+        if (hwloc_obj_is_in_subtree(MPIR_Process.topology, obj_containing_cpuset, non_io_ancestor)) {
+            color = non_io_ancestor->logical_index;
+        } else
+            color = MPI_UNDEFINED;
+    } else
+        color = MPI_UNDEFINED;
+
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
 #endif /* HAVE_HWLOC */
 
 static const char *SHMEM_INFO_KEY = "shmem_topo";
@@ -297,7 +336,10 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
         goto use_node_comm;
 
     if (flag) {
-        mpi_errno = node_split_processor(comm_ptr, key, hintval, newcomm_ptr);
+        if (!strncmp(hintval, "pci:", strlen("pci:")))
+            mpi_errno = node_split_pci_device(comm_ptr, key, hintval, newcomm_ptr);
+        else
+            mpi_errno = node_split_processor(comm_ptr, key, hintval, newcomm_ptr);
 
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
