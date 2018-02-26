@@ -53,14 +53,11 @@ int main(int argc, char *argv[])
         MPI_Info_create(&info);
         MPI_Info_set(info, "shmem_topo", split_topo[i]);
         MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
-        if (comm == MPI_COMM_NULL) {
-            printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
-            errs++;
-        } else {
+        if (comm != MPI_COMM_NULL) {
             int newsize;
             MPI_Comm_size(comm, &newsize);
             if (newsize > size) {
-                printf("Expected comm size to be smaller than node size\n");
+                printf("Expected comm size to be at most the node size\n");
                 errs++;
             }
             MPI_Comm_free(&comm);
@@ -77,14 +74,11 @@ int main(int argc, char *argv[])
         MPI_Info_set(info, "shmem_topo", split_topo[1]);
     }
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
-    if (comm == MPI_COMM_NULL) {
-        printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
-        errs++;
-    } else {
+    if (comm != MPI_COMM_NULL) {
         int newsize;
         MPI_Comm_size(comm, &newsize);
         if (newsize > size) {
-            printf("Expected comm size to be smaller than node size\n");
+            printf("Expected comm size to be at most the node size\n");
             errs++;
         }
         MPI_Comm_free(&comm);
@@ -100,14 +94,11 @@ int main(int argc, char *argv[])
     } else
         info = MPI_INFO_NULL;
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
-    if (comm == MPI_COMM_NULL) {
-        printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
-        errs++;
-    } else {
+    if (comm != MPI_COMM_NULL) {
         int newsize;
         MPI_Comm_size(comm, &newsize);
         if (newsize > size) {
-            printf("Expected comm size to be smaller than node size\n");
+            printf("Expected comm size to be at most the node size\n");
             errs++;
         }
         MPI_Comm_free(&comm);
