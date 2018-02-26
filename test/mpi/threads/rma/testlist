@@ -1,3 +1,7 @@
 multirma 2 mpiversion=3.0
 multiget 2 mpiversion=3.0
 multifence 3
+mt_put_huge 2 mpiversion=3.0
+mt_get_huge 2 mpiversion=3.0
+mt_put_normal 2 mpiversion=3.0
+mt_get_normal 2 mpiversion=3.0
