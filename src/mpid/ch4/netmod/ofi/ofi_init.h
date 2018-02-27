@@ -255,6 +255,19 @@ cvars:
         This value is effective only when scalable endpoint is available, otherwise
         it will be ignored.
 
+    - name        : MPIR_CVAR_CH4_OFI_MAX_EAGAIN_RETRY
+      category    : CH4_OFI
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If set to positive, this CVAR specifies the maximum number of retries
+        of an ofi operations before returning MPIX_ERR_EAGAIN. This value is
+        effective only when the communicator has the MPI_OFI_set_eagain info
+        hint set to true.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -367,7 +380,7 @@ static inline int MPIDI_OFI_conn_manager_destroy()
                                                   conn[j],
                                                   match_bits,
                                                   mask_bits, &req[j].context),
-                                         trecv, MPIDI_OFI_CALL_LOCK);
+                                         trecv, MPIDI_OFI_CALL_LOCK, FALSE);
                     j++;
                     break;
                 default:
@@ -1005,7 +1018,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             MPIDI_OFI_CALL_RETRY(fi_recvmsg(MPIDI_Global.ctx[0].rx,
                                             &MPIDI_Global.am_msg[i],
                                             FI_MULTI_RECV | FI_COMPLETION), prepost,
-                                 MPIDI_OFI_CALL_LOCK);
+                                 MPIDI_OFI_CALL_LOCK, FALSE);
         }
 
         /* Grow the header handlers down */

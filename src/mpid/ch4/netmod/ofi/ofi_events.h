@@ -155,7 +155,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
                                            MPIDI_OFI_REQUEST(rreq, util_comm->rank),
                                            MPIDI_OFI_comm_to_phys(c, r),
                                            ss_bits, NULL, MPIDI_OFI_DO_INJECT,
-                                           MPIDI_OFI_CALL_NO_LOCK);
+                                           MPIDI_OFI_CALL_NO_LOCK, FALSE);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -426,7 +426,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
                                      MPIDI_OFI_recv_rbase(recv) + recv->cur_offset,     /* remote maddr */
                                      remote_key,        /* Key          */
                                      (void *) &recv->context), rdma_readfrom,   /* Context */
-                             MPIDI_OFI_CALL_NO_LOCK);
+                             MPIDI_OFI_CALL_NO_LOCK, FALSE);
         recv->cur_offset += bytesToGet;
     }
 
