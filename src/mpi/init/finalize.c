@@ -175,7 +175,7 @@ int MPI_Finalize(void)
     /* If the user requested for asynchronous progress, we need to
      * shutdown the progress thread */
     if (MPIR_async_thread_initialized) {
-        mpi_errno = MPIR_Finalize_async_thread();
+        mpi_errno = MPID_Finalize_async_thread();
         if (mpi_errno)
             goto fn_fail;
     }

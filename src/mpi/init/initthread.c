@@ -738,7 +738,7 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
         goto fn_fail;
 #else
         if (*provided == MPI_THREAD_MULTIPLE) {
-            mpi_errno = MPIR_Init_async_thread();
+            mpi_errno = MPID_Init_async_thread();
             if (mpi_errno)
                 goto fn_fail;
 
