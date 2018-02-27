@@ -248,17 +248,17 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
         switch (MPIR_Ibcast_intra_algo_choice) {
-            case MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KNOMIAL:
+            case MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KARY:
                 mpi_errno =
-                    MPIR_Ibcast_intra_tree_knomial(buffer, count, datatype, root, comm_ptr,
-                                                   request);
+                    MPIR_Ibcast_intra_tree_kary(buffer, count, datatype, root, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
                 break;
-            case MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KARY:
+            case MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KNOMIAL:
                 mpi_errno =
-                    MPIR_Ibcast_intra_tree_kary(buffer, count, datatype, root, comm_ptr, request);
+                    MPIR_Ibcast_intra_tree_knomial(buffer, count, datatype, root, comm_ptr,
+                                                   request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
