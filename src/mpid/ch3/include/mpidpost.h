@@ -208,4 +208,17 @@ int MPIDI_CH3I_Progress_deactivate_hook(int id);
 #define MPID_Progress_activate_hook(id_) MPIDI_CH3I_Progress_activate_hook(id_)
 #define MPID_Progress_deactivate_hook(id_) MPIDI_CH3I_Progress_deactivate_hook(id_)
 
+/*
+  Device override hooks for asynchronous progress threads
+*/
+MPL_STATIC_INLINE_PREFIX int MPID_Init_async_thread(void)
+{
+    return MPIR_Init_async_thread();
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Finalize_async_thread(void)
+{
+    return MPIR_Finalize_async_thread();
+}
+
 #endif /* MPIDPOST_H_INCLUDED */
