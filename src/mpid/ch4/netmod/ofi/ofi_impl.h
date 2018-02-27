@@ -118,9 +118,10 @@
 
 #define MPIDI_OFI_CALL_LOCK 1
 #define MPIDI_OFI_CALL_NO_LOCK 0
-#define MPIDI_OFI_CALL_RETRY(FUNC,STR,LOCK)                               \
+#define MPIDI_OFI_CALL_RETRY(FUNC,STR,LOCK,EAGAIN)          \
     do {                                                    \
     ssize_t _ret;                                           \
+    int _retry = MPIR_CVAR_CH4_OFI_MAX_EAGAIN_RETRY;        \
     do {                                                    \
         if (LOCK == MPIDI_OFI_CALL_LOCK)                    \
             MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);   \
@@ -137,11 +138,16 @@
                               __LINE__,                     \
                               FCNAME,                       \
                               fi_strerror(-_ret));          \
+        MPIR_ERR_CHKANDJUMP(_retry == 0 && EAGAIN,          \
+                            mpi_errno,                      \
+                            MPIX_ERR_EAGAIN,                \
+                            "**eagain");                    \
         if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
             MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);     \
         MPIDI_OFI_PROGRESS_NONINLINE();                              \
         if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
             MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);    \
+        _retry--;                                           \
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
 
@@ -461,23 +467,24 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_OFI_context_to_request(void *contex
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const void *buf, size_t len,
                                                     void *desc, uint32_t src, fi_addr_t dest_addr,
                                                     uint64_t tag, void *context, int is_inject,
-                                                    int do_lock)
+                                                    int do_lock, int do_eagain)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (is_inject) {
         if (MPIDI_OFI_ENABLE_DATA)
             MPIDI_OFI_CALL_RETRY(fi_tinjectdata(ep, buf, len, src, dest_addr, tag), tinjectdata,
-                                 do_lock);
+                                 do_lock, do_eagain);
         else
-            MPIDI_OFI_CALL_RETRY(fi_tinject(ep, buf, len, dest_addr, tag), tinject, do_lock);
+            MPIDI_OFI_CALL_RETRY(fi_tinject(ep, buf, len, dest_addr, tag), tinject, do_lock,
+                                 do_eagain);
     } else {
         if (MPIDI_OFI_ENABLE_DATA)
             MPIDI_OFI_CALL_RETRY(fi_tsenddata(ep, buf, len, desc, src, dest_addr, tag, context),
-                                 tsenddata, do_lock);
+                                 tsenddata, do_lock, do_eagain);
         else
             MPIDI_OFI_CALL_RETRY(fi_tsend(ep, buf, len, desc, dest_addr, tag, context), tsend,
-                                 do_lock);
+                                 do_lock, do_eagain);
     }
 
   fn_exit:
@@ -582,7 +589,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
         MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_Global.ctx[0].tx, &msg,
                                          FI_COMPLETION | FI_TRANSMIT_COMPLETE |
                                          (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0)), tsendmsg,
-                             MPIDI_OFI_CALL_LOCK);
+                             MPIDI_OFI_CALL_LOCK, FALSE);
         MPIDI_OFI_PROGRESS_WHILE(!req.done);
     }
 

@@ -280,7 +280,7 @@ static inline int MPIDI_OFI_dynproc_handshake(int root,
                                       NULL,
                                       *conn,
                                       match_bits,
-                                      mask_bits, &req.context), trecv, MPIDI_OFI_CALL_LOCK);
+                                      mask_bits, &req.context), trecv, MPIDI_OFI_CALL_LOCK, FALSE);
         time_gap = 0.0;
         MPID_Wtime(&time_sta);
         do {
@@ -318,7 +318,7 @@ static inline int MPIDI_OFI_dynproc_handshake(int root,
                                            *conn,
                                            match_bits,
                                            (void *) &req.context,
-                                           MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK);
+                                           MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK, FALSE);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -407,7 +407,8 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
                                       NULL,
                                       FI_ADDR_UNSPEC,
                                       match_bits,
-                                      mask_bits, &req[0].context), trecv, MPIDI_OFI_CALL_LOCK);
+                                      mask_bits, &req[0].context), trecv, MPIDI_OFI_CALL_LOCK,
+                             FALSE);
         MPIDI_OFI_PROGRESS_WHILE(!req[0].done);
 
         for (i = 0; i < (*remote_size); i++)
@@ -421,7 +422,8 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
                                       NULL,
                                       FI_ADDR_UNSPEC,
                                       match_bits,
-                                      mask_bits, &req[1].context), trecv, MPIDI_OFI_CALL_LOCK);
+                                      mask_bits, &req[1].context), trecv, MPIDI_OFI_CALL_LOCK,
+                             FALSE);
 
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_Global.ctx[0].rx,
                                       *remote_node_ids,
@@ -429,7 +431,8 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
                                       NULL,
                                       FI_ADDR_UNSPEC,
                                       match_bits,
-                                      mask_bits, &req[2].context), trecv, MPIDI_OFI_CALL_LOCK);
+                                      mask_bits, &req[2].context), trecv, MPIDI_OFI_CALL_LOCK,
+                             FALSE);
 
         MPIDI_OFI_PROGRESS_WHILE(!req[1].done || !req[2].done);
         size_t disp = 0;
@@ -476,7 +479,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
                                            *conn,
                                            match_bits,
                                            (void *) &req[0].context,
-                                           MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK);
+                                           MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK, FALSE);
         if (mpi_errno) {
             MPL_free(local_upid_size);
             MPL_free(local_upids);
@@ -491,15 +494,11 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
                                comm_ptr->rank,
                                *conn,
                                match_bits,
-                               (void *) &req[1].context, MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK);
-        MPIDI_OFI_send_handler(MPIDI_Global.ctx[0].tx,
-                               local_node_ids,
-                               local_size * sizeof(int),
-                               NULL,
-                               comm_ptr->rank,
-                               *conn,
-                               match_bits,
-                               (void *) &req[2].context, MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK);
+                               (void *) &req[1].context, MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK,
+                               FALSE);
+        MPIDI_OFI_send_handler(MPIDI_Global.ctx[0].tx, local_node_ids, local_size * sizeof(int),
+                               NULL, comm_ptr->rank, *conn, match_bits, (void *) &req[2].context,
+                               MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK, FALSE);
 
         MPIDI_OFI_PROGRESS_WHILE(!req[0].done || !req[1].done || !req[2].done);
 
