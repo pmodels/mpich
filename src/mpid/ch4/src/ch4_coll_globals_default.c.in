@@ -4,7 +4,7 @@
 
 /* container traverse function to be implemented  */
 /* e.g. return ((void *) ((char *)container) + sizeof(MPIDI_coll_algo_generic_container_t)); */
-void *MPIDI_coll_get_next_container(void *container)
+const void *MPIDI_coll_get_next_container(const void *container)
 {
     return NULL;
 }
