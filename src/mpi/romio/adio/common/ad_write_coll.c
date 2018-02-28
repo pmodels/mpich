@@ -186,7 +186,6 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     for (i = 0; i < nprocs; i++) {
         if (my_req[i].count) {
             ADIOI_Free(my_req[i].offsets);
-            ADIOI_Free(my_req[i].lens);
         }
     }
     ADIOI_Free(my_req);
@@ -240,7 +239,6 @@ void ADIOI_GEN_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     for (i = 0; i < nprocs; i++) {
         if (others_req[i].count) {
             ADIOI_Free(others_req[i].offsets);
-            ADIOI_Free(others_req[i].lens);
             ADIOI_Free(others_req[i].mem_ptrs);
         }
     }
