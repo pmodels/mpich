@@ -27,12 +27,12 @@ int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched, int tag);
 int MPII_Stubutil_sched_isend(const void *buf, int count, MPI_Datatype dt, int dest, int tag,
                               MPIR_Comm * comm_ptr, MPII_Stubutil_sched_t * sched,
                               int n_invtcs, int *invtcs);
-int MPII_Stubutil_sched_imcast(const void *buf, int count, MPI_Datatype dt, UT_array * destinations,
-                               int num_destinations, int tag, MPIR_Comm * comm_ptr,
-                               MPII_Stubutil_sched_t * sched, int n_invtcs, int *invtcs);
 int MPII_Stubutil_sched_irecv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
                               MPIR_Comm * comm_ptr, MPII_Stubutil_sched_t * sched,
                               int n_invtcs, int *invtcs);
+int MPII_Stubutil_sched_imcast(const void *buf, int count, MPI_Datatype dt, UT_array * destinations,
+                               int num_destinations, int tag, MPIR_Comm * comm_ptr,
+                               MPII_Stubutil_sched_t * sched, int n_invtcs, int *invtcs);
 int MPII_Stubutil_sched_start(MPII_Stubutil_sched_t * sched, MPIR_Comm * comm,
                               MPII_Coll_req_t ** request);
 
