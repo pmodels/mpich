@@ -460,7 +460,6 @@ static void ADIOI_GEN_IwriteStridedColl_exch(ADIOI_NBC_Request * nbc_req, int *e
     for (i = 0; i < nprocs; i++) {
         if (my_req[i].count) {
             ADIOI_Free(my_req[i].offsets);
-            ADIOI_Free(my_req[i].lens);
         }
     }
     ADIOI_Free(my_req);
@@ -550,7 +549,6 @@ static void ADIOI_GEN_IwriteStridedColl_free(ADIOI_NBC_Request * nbc_req, int *e
     for (i = 0; i < nprocs; i++) {
         if (others_req[i].count) {
             ADIOI_Free(others_req[i].offsets);
-            ADIOI_Free(others_req[i].lens);
             ADIOI_Free(others_req[i].mem_ptrs);
         }
     }
