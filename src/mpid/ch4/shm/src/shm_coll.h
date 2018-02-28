@@ -12,7 +12,7 @@
 #include "../posix/shm_inline.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                   void *algo_parameters_container)
+                                                   const void *algo_parameters_container)
 {
     int ret;
 
@@ -28,7 +28,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_barrier(MPIR_Comm * comm, MPIR_Errfla
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
                                                  int root, MPIR_Comm * comm,
                                                  MPIR_Errflag_t * errflag,
-                                                 void *algo_parameters_container)
+                                                 const void *algo_parameters_container)
 {
     int ret;
 
@@ -46,7 +46,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_bcast(void *buffer, int count, MPI_Da
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allreduce(const void *sendbuf, void *recvbuf,
                                                      int count, MPI_Datatype datatype, MPI_Op op,
                                                      MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                     void *algo_parameters_container)
+                                                     const void *algo_parameters_container)
 {
     int ret;
 
@@ -65,7 +65,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allgather(const void *sendbuf, int se
                                                      MPI_Datatype sendtype, void *recvbuf,
                                                      int recvcount, MPI_Datatype recvtype,
                                                      MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                     void *algo_parameters_container)
+                                                     const void *algo_parameters_container)
 {
     int ret;
 
@@ -84,7 +84,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allgatherv(const void *sendbuf, int s
                                                       const int *recvcounts, const int *displs,
                                                       MPI_Datatype recvtype, MPIR_Comm * comm,
                                                       MPIR_Errflag_t * errflag,
-                                                      void *algo_parameters_container)
+                                                      const void *algo_parameters_container)
 {
     int ret;
 
@@ -102,7 +102,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_scatter(const void *sendbuf, int send
                                                    MPI_Datatype sendtype, void *recvbuf,
                                                    int recvcount, MPI_Datatype recvtype, int root,
                                                    MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                   void *algo_parameters_container)
+                                                   const void *algo_parameters_container)
 {
     int ret;
 
@@ -121,7 +121,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_scatterv(const void *sendbuf, const i
                                                     void *recvbuf, int recvcount,
                                                     MPI_Datatype recvtype, int root,
                                                     MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                                    void *algo_parameters_container)
+                                                    const void *algo_parameters_container)
 {
     int ret;
 
@@ -140,7 +140,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_gather(const void *sendbuf, int sendc
                                                   MPI_Datatype sendtype, void *recvbuf,
                                                   int recvcount, MPI_Datatype recvtype, int root,
                                                   MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                  void *algo_parameters_container)
+                                                  const void *algo_parameters_container)
 {
     int ret;
 
@@ -159,7 +159,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_gatherv(const void *sendbuf, int send
                                                    const int *recvcounts, const int *displs,
                                                    MPI_Datatype recvtype, int root,
                                                    MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                   void *algo_parameters_container)
+                                                   const void *algo_parameters_container)
 {
     int ret;
 
@@ -177,7 +177,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_alltoall(const void *sendbuf, int sen
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     int recvcount, MPI_Datatype recvtype,
                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                    void *algo_parameters_container)
+                                                    const void *algo_parameters_container)
 {
     int ret;
 
@@ -196,7 +196,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_alltoallv(const void *sendbuf, const 
                                                      void *recvbuf, const int *recvcounts,
                                                      const int *rdispls, MPI_Datatype recvtype,
                                                      MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                     void *algo_parameters_container)
+                                                     const void *algo_parameters_container)
 {
     int ret;
 
@@ -218,7 +218,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_alltoallw(const void *sendbuf, const 
                                                      const int *rdispls,
                                                      const MPI_Datatype recvtypes[],
                                                      MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                     void *algo_parameters_container)
+                                                     const void *algo_parameters_container)
 {
     int ret;
 
@@ -236,7 +236,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_alltoallw(const void *sendbuf, const 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce(const void *sendbuf, void *recvbuf, int count,
                                                   MPI_Datatype datatype, MPI_Op op, int root,
                                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
-                                                  void *algo_parameters_container)
+                                                  const void *algo_parameters_container)
 {
     int ret;
 
@@ -256,7 +256,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce_scatter(const void *sendbuf, v
                                                           MPI_Datatype datatype, MPI_Op op,
                                                           MPIR_Comm * comm_ptr,
                                                           MPIR_Errflag_t * errflag,
-                                                          void *algo_parameters_container)
+                                                          const void *algo_parameters_container)
 {
     int ret;
 
@@ -274,8 +274,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce_scatter_block(const void *send
                                                                 void *recvbuf, int recvcount,
                                                                 MPI_Datatype datatype, MPI_Op op,
                                                                 MPIR_Comm * comm_ptr,
-                                                                MPIR_Errflag_t * errflag,
-                                                                void *algo_parameters_container)
+                                                                MPIR_Errflag_t * errflag, const void
+                                                                *algo_parameters_container)
 {
     int ret;
 
@@ -292,7 +292,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce_scatter_block(const void *send
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_scan(const void *sendbuf, void *recvbuf,
                                                 int count, MPI_Datatype datatype, MPI_Op op,
                                                 MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                void *algo_parameters_container)
+                                                const void *algo_parameters_container)
 {
     int ret;
 
@@ -309,7 +309,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_scan(const void *sendbuf, void *recvb
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_exscan(const void *sendbuf, void *recvbuf, int count,
                                                   MPI_Datatype datatype, MPI_Op op,
                                                   MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                                  void *algo_parameters_container)
+                                                  const void *algo_parameters_container)
 {
     int ret;
 

@@ -21,10 +21,10 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                       void *ch4_algo_parameters_container_in)
+                                       const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BARRIER);
@@ -58,10 +58,10 @@ static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errfla
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
                                      int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                     void *ch4_algo_parameters_container_in)
+                                     const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BCAST);
@@ -107,10 +107,10 @@ static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datat
 static inline int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int count,
                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                          MPIR_Errflag_t * errflag,
-                                         void *ch4_algo_parameters_container_in)
+                                         const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
@@ -153,10 +153,10 @@ static inline int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int
 static inline int MPIDI_NM_mpi_allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                          MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                         void *ch4_algo_parameters_container_in)
+                                         const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLGATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLGATHER);
@@ -208,10 +208,10 @@ static inline int MPIDI_NM_mpi_allgatherv(const void *sendbuf, int sendcount, MP
                                           void *recvbuf, const int *recvcounts, const int *displs,
                                           MPI_Datatype recvtype, MPIR_Comm * comm,
                                           MPIR_Errflag_t * errflag,
-                                          void *ch4_algo_parameters_container_in)
+                                          const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLGATHERV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLGATHERV);
@@ -262,10 +262,10 @@ static inline int MPIDI_NM_mpi_allgatherv(const void *sendbuf, int sendcount, MP
 static inline int MPIDI_NM_mpi_gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                       int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                      void *ch4_algo_parameters_container_in)
+                                      const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_GATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_GATHER);
@@ -305,10 +305,10 @@ static inline int MPIDI_NM_mpi_gatherv(const void *sendbuf, int sendcount, MPI_D
                                        void *recvbuf, const int *recvcounts, const int *displs,
                                        MPI_Datatype recvtype, int root, MPIR_Comm * comm,
                                        MPIR_Errflag_t * errflag,
-                                       void *ch4_algo_parameters_container_in)
+                                       const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_GATHERV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_GATHERV);
@@ -349,10 +349,10 @@ static inline int MPIDI_NM_mpi_gatherv(const void *sendbuf, int sendcount, MPI_D
 static inline int MPIDI_NM_mpi_scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                        int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                       void *ch4_algo_parameters_container_in)
+                                       const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SCATTER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SCATTER);
@@ -392,10 +392,10 @@ static inline int MPIDI_NM_mpi_scatterv(const void *sendbuf, const int *sendcoun
                                         const int *displs, MPI_Datatype sendtype,
                                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                         int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                        void *ch4_algo_parameters_container_in)
+                                        const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SCATTERV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SCATTERV);
@@ -435,10 +435,10 @@ static inline int MPIDI_NM_mpi_scatterv(const void *sendbuf, const int *sendcoun
 static inline int MPIDI_NM_mpi_alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                         MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                        void *ch4_algo_parameters_container_in)
+                                        const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLTOALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLTOALL);
@@ -496,10 +496,10 @@ static inline int MPIDI_NM_mpi_alltoallv(const void *sendbuf, const int *sendcou
                                          void *recvbuf, const int *recvcounts,
                                          const int *rdispls, MPI_Datatype recvtype,
                                          MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                         void *ch4_algo_parameters_container_in)
+                                         const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLTOALLV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLTOALLV);
@@ -550,10 +550,10 @@ static inline int MPIDI_NM_mpi_alltoallw(const void *sendbuf, const int sendcoun
                                          void *recvbuf, const int recvcounts[],
                                          const int rdispls[], const MPI_Datatype recvtypes[],
                                          MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                         void *ch4_algo_parameters_container_in)
+                                         const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLTOALLW);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLTOALLW);
@@ -602,10 +602,10 @@ static inline int MPIDI_NM_mpi_alltoallw(const void *sendbuf, const int sendcoun
 static inline int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
                                       MPIR_Comm * comm, MPIR_Errflag_t * errflag,
-                                      void *ch4_algo_parameters_container_in)
+                                      const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_REDUCE);
@@ -650,10 +650,10 @@ static inline int MPIDI_NM_mpi_reduce_scatter(const void *sendbuf, void *recvbuf
                                               const int recvcounts[], MPI_Datatype datatype,
                                               MPI_Op op, MPIR_Comm * comm,
                                               MPIR_Errflag_t * errflag,
-                                              void *ch4_algo_parameters_container_in)
+                                              const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_REDUCE_SCATTER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_REDUCE_SCATTER);
@@ -708,10 +708,10 @@ static inline int MPIDI_NM_mpi_reduce_scatter_block(const void *sendbuf, void *r
                                                     int recvcount, MPI_Datatype datatype,
                                                     MPI_Op op, MPIR_Comm * comm,
                                                     MPIR_Errflag_t * errflag,
-                                                    void *ch4_algo_parameters_container_in)
+                                                    const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_REDUCE_SCATTER_BLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_REDUCE_SCATTER_BLOCK);
@@ -766,10 +766,10 @@ static inline int MPIDI_NM_mpi_reduce_scatter_block(const void *sendbuf, void *r
 static inline int MPIDI_NM_mpi_scan(const void *sendbuf, void *recvbuf, int count,
                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                     MPIR_Errflag_t * errflag,
-                                    void *ch4_algo_parameters_container_in)
+                                    const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SCAN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SCAN);
@@ -807,10 +807,10 @@ static inline int MPIDI_NM_mpi_scan(const void *sendbuf, void *recvbuf, int coun
 static inline int MPIDI_NM_mpi_exscan(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                       MPIR_Errflag_t * errflag,
-                                      void *ch4_algo_parameters_container_in)
+                                      const void *ch4_algo_parameters_container_in)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+    const MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_EXSCAN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_EXSCAN);

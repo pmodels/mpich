@@ -189,6 +189,6 @@ typedef struct MPIDI_coll_algo_generic_container {
     MPIDI_coll_algo_generic_params_t params;
 } MPIDI_coll_algo_generic_container_t;
 
-void *MPIDI_coll_get_next_container(void *container);
+const void *MPIDI_coll_get_next_container(const void *container);
 
 #endif /* COLL_ALGO_PARAMS_H_INCLUDED */
