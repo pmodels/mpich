@@ -566,6 +566,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
              * hints included this time. */
             hints->caps = prov_use->caps;
             if (!MPIR_CVAR_OFI_USE_PROVIDER) {
+                /* as soon as we updates globals for the provider, let's update
+                 * hints that corresponds to the current globals */
+                MPIDI_OFI_init_hints(hints);
                 /* set provider name to hints to make more accurate selection */
                 provname = MPL_strdup(prov_use->fabric_attr->prov_name);
                 hints->fabric_attr->prov_name = provname;
