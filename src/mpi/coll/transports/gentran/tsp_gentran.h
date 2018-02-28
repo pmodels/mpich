@@ -41,6 +41,15 @@ int MPII_Genutil_sched_isend(const void *buf,
                              MPIR_Comm * comm_ptr,
                              MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
 
+/* Transport function to schedule a irecv vertex */
+int MPII_Genutil_sched_irecv(void *buf,
+                             int count,
+                             MPI_Datatype dt,
+                             int source,
+                             int tag,
+                             MPIR_Comm * comm_ptr,
+                             MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
+
 /* Transport function to schedule a imcast vertex */
 int MPII_Genutil_sched_imcast(const void *buf,
                               int count,
@@ -51,14 +60,6 @@ int MPII_Genutil_sched_imcast(const void *buf,
                               MPIR_Comm * comm_ptr,
                               MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
 
-/* Transport function to schedule a irecv vertex */
-int MPII_Genutil_sched_irecv(void *buf,
-                             int count,
-                             MPI_Datatype dt,
-                             int source,
-                             int tag,
-                             MPIR_Comm * comm_ptr,
-                             MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
 
 /* Transport function to enqueue and kick start a non-blocking
  * collective */
