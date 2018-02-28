@@ -78,6 +78,42 @@ int MPII_Genutil_sched_isend(const void *buf,
 
 
 #undef FUNCNAME
+#define FUNCNAME MPII_Genutil_sched_irecv
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPII_Genutil_sched_irecv(void *buf,
+                             int count,
+                             MPI_Datatype dt,
+                             int source,
+                             int tag,
+                             MPIR_Comm * comm_ptr,
+                             MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs)
+{
+    vtx_t *vtxp;
+    int vtx_id;
+
+    /* assign a new vertex */
+    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+
+    sched->tag = tag;
+    vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__IRECV;
+    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
+
+    /* record the arguments */
+    vtxp->u.irecv.buf = buf;
+    vtxp->u.irecv.count = count;
+    vtxp->u.irecv.dt = dt;
+    vtxp->u.irecv.src = source;
+    vtxp->u.irecv.comm = comm_ptr;
+
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] irecv\n", vtx_id));
+
+    return vtx_id;
+}
+
+
+#undef FUNCNAME
 #define FUNCNAME MPII_Genutil_sched_imcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -115,42 +151,6 @@ int MPII_Genutil_sched_imcast(const void *buf,
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST, "Gentran: schedule [%d] imcast\n", vtx_id));
-    return vtx_id;
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_irecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_Genutil_sched_irecv(void *buf,
-                             int count,
-                             MPI_Datatype dt,
-                             int source,
-                             int tag,
-                             MPIR_Comm * comm_ptr,
-                             MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs)
-{
-    vtx_t *vtxp;
-    int vtx_id;
-
-    /* assign a new vertex */
-    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
-
-    sched->tag = tag;
-    vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__IRECV;
-    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
-
-    /* record the arguments */
-    vtxp->u.irecv.buf = buf;
-    vtxp->u.irecv.count = count;
-    vtxp->u.irecv.dt = dt;
-    vtxp->u.irecv.src = source;
-    vtxp->u.irecv.comm = comm_ptr;
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] irecv\n", vtx_id));
-
     return vtx_id;
 }
 
