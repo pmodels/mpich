@@ -453,7 +453,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Aint true_lb, true_extent, extent;
+    MPI_Aint true_lb = 0;
+    MPI_Aint true_extent = 0;
+    MPI_Aint extent = 0;
     const void *reduce_roots_container =
         MPIDI_coll_get_next_container(ch4_algo_parameters_container);
     const void *reduce_node_container = MPIDI_coll_get_next_container(reduce_roots_container);
