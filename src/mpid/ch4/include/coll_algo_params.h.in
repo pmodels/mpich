@@ -8,186 +8,186 @@
 #include "../shm/src/shm_coll_params.h"
 /* *INDENT-ON* */
 
-#define MPIDI_CH4_COLL_AUTO_SELECT (-1)
+#define MPIDI_COLL_AUTO_SELECT (-1)
 
-typedef union MPIDI_Barrier_algo_params {
+typedef union MPIDIG_Barrier_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_BARRIER_PARAMS_DECL;
+    MPIDI_BARRIER_PARAMS_DECL;
     @ch4_netmod_barrier_params_decl@
     MPIDI_SHM_BARRIER_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_BARRIER_ALGO_params_t;
+} MPIDIG_BARRIER_ALGO_params_t;
 
-typedef union MPIDI_Bcast_algo_params {
+typedef union MPIDIG_Bcast_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_BCAST_PARAMS_DECL;
+    MPIDI_BCAST_PARAMS_DECL;
     @ch4_netmod_bcast_params_decl@
     MPIDI_SHM_BCAST_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_BCAST_ALGO_params_t;
+} MPIDIG_BCAST_ALGO_params_t;
 
-typedef union MPIDI_Reduce_algo_params {
+typedef union MPIDIG_Reduce_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_REDUCE_PARAMS_DECL;
+    MPIDI_REDUCE_PARAMS_DECL;
     @ch4_netmod_reduce_params_decl@
     MPIDI_SHM_REDUCE_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_REDUCE_ALGO_params_t;
+} MPIDIG_REDUCE_ALGO_params_t;
 
-typedef union MPIDI_Allreduce_algo_params {
+typedef union MPIDIG_Allreduce_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_ALLREDUCE_PARAMS_DECL;
+    MPIDI_ALLREDUCE_PARAMS_DECL;
     @ch4_netmod_allreduce_params_decl@
     MPIDI_SHM_ALLREDUCE_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_ALLREDUCE_ALGO_params_t;
+} MPIDIG_ALLREDUCE_ALGO_params_t;
 
-typedef union MPIDI_Alltoall_algo_params {
+typedef union MPIDIG_Alltoall_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_ALLTOALL_PARAMS_DECL;
+    MPIDI_ALLTOALL_PARAMS_DECL;
     @ch4_netmod_alltoall_params_decl@
     MPIDI_SHM_ALLTOALL_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_ALLTOALL_ALGO_params_t;
+} MPIDIG_ALLTOALL_ALGO_params_t;
 
-typedef union MPIDI_Alltoallv_algo_params {
+typedef union MPIDIG_Alltoallv_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_ALLTOALLV_PARAMS_DECL;
+    MPIDI_ALLTOALLV_PARAMS_DECL;
     @ch4_netmod_alltoallv_params_decl@
     MPIDI_SHM_ALLTOALLV_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_ALLTOALLV_ALGO_params_t;
+} MPIDIG_ALLTOALLV_ALGO_params_t;
 
-typedef union MPIDI_Alltoallw_algo_params {
+typedef union MPIDIG_Alltoallw_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_ALLTOALLW_PARAMS_DECL;
+    MPIDI_ALLTOALLW_PARAMS_DECL;
     @ch4_netmod_alltoallw_params_decl@
     MPIDI_SHM_ALLTOALLW_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_ALLTOALLW_ALGO_params_t;
+} MPIDIG_ALLTOALLW_ALGO_params_t;
 
-typedef union MPIDI_Allgather_algo_params {
+typedef union MPIDIG_Allgather_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_ALLGATHER_PARAMS_DECL;
+    MPIDI_ALLGATHER_PARAMS_DECL;
     @ch4_netmod_allgather_params_decl@
     MPIDI_SHM_ALLGATHER_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_ALLGATHER_ALGO_params_t;
+} MPIDIG_ALLGATHER_ALGO_params_t;
 
-typedef union MPIDI_Allgatherv_algo_params {
+typedef union MPIDIG_Allgatherv_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_ALLGATHERV_PARAMS_DECL;
+    MPIDI_ALLGATHERV_PARAMS_DECL;
     @ch4_netmod_allgatherv_params_decl@
     MPIDI_SHM_ALLGATHERV_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_ALLGATHERV_ALGO_params_t;
+} MPIDIG_ALLGATHERV_ALGO_params_t;
 
-typedef union MPIDI_Gather_algo_params {
+typedef union MPIDIG_Gather_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_GATHER_PARAMS_DECL;
+    MPIDI_GATHER_PARAMS_DECL;
     @ch4_netmod_gather_params_decl@
     MPIDI_SHM_GATHER_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_GATHER_ALGO_params_t;
+} MPIDIG_GATHER_ALGO_params_t;
 
-typedef union MPIDI_Gatherv_algo_params {
+typedef union MPIDIG_Gatherv_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_GATHERV_PARAMS_DECL;
+    MPIDI_GATHERV_PARAMS_DECL;
     @ch4_netmod_gatherv_params_decl@
     MPIDI_SHM_GATHERV_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_GATHERV_ALGO_params_t;
+} MPIDIG_GATHERV_ALGO_params_t;
 
-typedef union MPIDI_Scatter_algo_params {
+typedef union MPIDIG_Scatter_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_SCATTER_PARAMS_DECL;
+    MPIDI_SCATTER_PARAMS_DECL;
     @ch4_netmod_scatter_params_decl@
     MPIDI_SHM_SCATTER_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_SCATTER_ALGO_params_t;
+} MPIDIG_SCATTER_ALGO_params_t;
 
-typedef union MPIDI_Scatterv_algo_params {
+typedef union MPIDIG_Scatterv_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_SCATTERV_PARAMS_DECL;
+    MPIDI_SCATTERV_PARAMS_DECL;
     @ch4_netmod_scatterv_params_decl@
     MPIDI_SHM_SCATTERV_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_SCATTERV_ALGO_params_t;
+} MPIDIG_SCATTERV_ALGO_params_t;
 
-typedef union MPIDI_Reduce_scatter_algo_params {
+typedef union MPIDIG_Reduce_scatter_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_REDUCE_SCATTER_PARAMS_DECL;
+    MPIDI_REDUCE_SCATTER_PARAMS_DECL;
     @ch4_netmod_reduce_scatter_params_decl@
     MPIDI_SHM_REDUCE_SCATTER_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_REDUCE_SCATTER_ALGO_params_t;
+} MPIDIG_REDUCE_SCATTER_ALGO_params_t;
 
-typedef union MPIDI_Reduce_scatter_block_algo_params {
+typedef union MPIDIG_Reduce_scatter_block_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
+    MPIDI_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
     @ch4_netmod_reduce_scatter_block_params_decl@
     MPIDI_SHM_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_REDUCE_SCATTER_BLOCK_ALGO_params_t;
+} MPIDIG_REDUCE_SCATTER_BLOCK_ALGO_params_t;
 
-typedef union MPIDI_Scan_algo_params {
+typedef union MPIDIG_Scan_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_SCAN_PARAMS_DECL;
+    MPIDI_SCAN_PARAMS_DECL;
     @ch4_netmod_scan_params_decl@
     MPIDI_SHM_SCAN_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_SCAN_ALGO_params_t;
+} MPIDIG_SCAN_ALGO_params_t;
 
-typedef union MPIDI_Exscan_algo_params {
+typedef union MPIDIG_Exscan_algo_params {
     /* *INDENT-OFF* */
-    MPIDI_CH4_EXSCAN_PARAMS_DECL;
+    MPIDI_EXSCAN_PARAMS_DECL;
     @ch4_netmod_exscan_params_decl@
     MPIDI_SHM_EXSCAN_PARAMS_DECL;
     /* *INDENT-ON* */
-} MPIDI_EXSCAN_ALGO_params_t;
+} MPIDIG_EXSCAN_ALGO_params_t;
 
-#define MPIDI_BARRIER_PARAMS_DECL MPIDI_BARRIER_ALGO_params_t barrier_params;
-#define MPIDI_BCAST_PARAMS_DECL MPIDI_BCAST_ALGO_params_t bcast_params;
-#define MPIDI_REDUCE_PARAMS_DECL MPIDI_REDUCE_ALGO_params_t reduce_params;
-#define MPIDI_ALLREDUCE_PARAMS_DECL MPIDI_ALLREDUCE_ALGO_params_t allreduce_params;
-#define MPIDI_ALLTOALL_PARAMS_DECL MPIDI_ALLTOALL_ALGO_params_t alltoall_params;
-#define MPIDI_ALLTOALLV_PARAMS_DECL MPIDI_ALLTOALLV_ALGO_params_t alltoallv_params;
-#define MPIDI_ALLTOALLW_PARAMS_DECL MPIDI_ALLTOALLW_ALGO_params_t alltoallw_params;
-#define MPIDI_ALLGATHER_PARAMS_DECL MPIDI_ALLGATHER_ALGO_params_t allgather_params;
-#define MPIDI_ALLGATHERV_PARAMS_DECL MPIDI_ALLGATHERV_ALGO_params_t allgatherv_params;
-#define MPIDI_GATHER_PARAMS_DECL MPIDI_GATHER_ALGO_params_t gather_params;
-#define MPIDI_GATHERV_PARAMS_DECL MPIDI_GATHERV_ALGO_params_t gatherv_params;
-#define MPIDI_SCATTER_PARAMS_DECL MPIDI_SCATTER_ALGO_params_t scatter_params;
-#define MPIDI_SCATTERV_PARAMS_DECL MPIDI_SCATTERV_ALGO_params_t scatterv_params;
-#define MPIDI_REDUCE_SCATTER_PARAMS_DECL MPIDI_REDUCE_SCATTER_ALGO_params_t reduce_scatter_params;
-#define MPIDI_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDI_REDUCE_SCATTER_BLOCK_ALGO_params_t reduce_scatter_block_params;
-#define MPIDI_SCAN_PARAMS_DECL MPIDI_SCAN_ALGO_params_t scan_params;
-#define MPIDI_EXSCAN_PARAMS_DECL MPIDI_EXSCAN_ALGO_params_t exscan_params;
+#define MPIDIG_BARRIER_PARAMS_DECL MPIDIG_BARRIER_ALGO_params_t barrier_params;
+#define MPIDIG_BCAST_PARAMS_DECL MPIDIG_BCAST_ALGO_params_t bcast_params;
+#define MPIDIG_REDUCE_PARAMS_DECL MPIDIG_REDUCE_ALGO_params_t reduce_params;
+#define MPIDIG_ALLREDUCE_PARAMS_DECL MPIDIG_ALLREDUCE_ALGO_params_t allreduce_params;
+#define MPIDIG_ALLTOALL_PARAMS_DECL MPIDIG_ALLTOALL_ALGO_params_t alltoall_params;
+#define MPIDIG_ALLTOALLV_PARAMS_DECL MPIDIG_ALLTOALLV_ALGO_params_t alltoallv_params;
+#define MPIDIG_ALLTOALLW_PARAMS_DECL MPIDIG_ALLTOALLW_ALGO_params_t alltoallw_params;
+#define MPIDIG_ALLGATHER_PARAMS_DECL MPIDIG_ALLGATHER_ALGO_params_t allgather_params;
+#define MPIDIG_ALLGATHERV_PARAMS_DECL MPIDIG_ALLGATHERV_ALGO_params_t allgatherv_params;
+#define MPIDIG_GATHER_PARAMS_DECL MPIDIG_GATHER_ALGO_params_t gather_params;
+#define MPIDIG_GATHERV_PARAMS_DECL MPIDIG_GATHERV_ALGO_params_t gatherv_params;
+#define MPIDIG_SCATTER_PARAMS_DECL MPIDIG_SCATTER_ALGO_params_t scatter_params;
+#define MPIDIG_SCATTERV_PARAMS_DECL MPIDIG_SCATTERV_ALGO_params_t scatterv_params;
+#define MPIDIG_REDUCE_SCATTER_PARAMS_DECL MPIDIG_REDUCE_SCATTER_ALGO_params_t reduce_scatter_params;
+#define MPIDIG_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDIG_REDUCE_SCATTER_BLOCK_ALGO_params_t reduce_scatter_block_params;
+#define MPIDIG_SCAN_PARAMS_DECL MPIDIG_SCAN_ALGO_params_t scan_params;
+#define MPIDIG_EXSCAN_PARAMS_DECL MPIDIG_EXSCAN_ALGO_params_t exscan_params;
 
-typedef union MPIDI_coll_algo_generic_params {
-    MPIDI_BARRIER_PARAMS_DECL;
-    MPIDI_BCAST_PARAMS_DECL;
-    MPIDI_REDUCE_PARAMS_DECL;
-    MPIDI_ALLREDUCE_PARAMS_DECL;
-    MPIDI_ALLTOALL_PARAMS_DECL;
-    MPIDI_ALLTOALLV_PARAMS_DECL;
-    MPIDI_ALLTOALLW_PARAMS_DECL;
-    MPIDI_ALLGATHER_PARAMS_DECL;
-    MPIDI_ALLGATHERV_PARAMS_DECL;
-    MPIDI_GATHER_PARAMS_DECL;
-    MPIDI_GATHERV_PARAMS_DECL;
-    MPIDI_SCATTER_PARAMS_DECL;
-    MPIDI_SCATTERV_PARAMS_DECL;
-    MPIDI_REDUCE_SCATTER_PARAMS_DECL;
-    MPIDI_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
-    MPIDI_SCAN_PARAMS_DECL;
-    MPIDI_EXSCAN_PARAMS_DECL;
-} MPIDI_coll_algo_generic_params_t;
+typedef union MPIDIG_coll_algo_generic_params {
+    MPIDIG_BARRIER_PARAMS_DECL;
+    MPIDIG_BCAST_PARAMS_DECL;
+    MPIDIG_REDUCE_PARAMS_DECL;
+    MPIDIG_ALLREDUCE_PARAMS_DECL;
+    MPIDIG_ALLTOALL_PARAMS_DECL;
+    MPIDIG_ALLTOALLV_PARAMS_DECL;
+    MPIDIG_ALLTOALLW_PARAMS_DECL;
+    MPIDIG_ALLGATHER_PARAMS_DECL;
+    MPIDIG_ALLGATHERV_PARAMS_DECL;
+    MPIDIG_GATHER_PARAMS_DECL;
+    MPIDIG_GATHERV_PARAMS_DECL;
+    MPIDIG_SCATTER_PARAMS_DECL;
+    MPIDIG_SCATTERV_PARAMS_DECL;
+    MPIDIG_REDUCE_SCATTER_PARAMS_DECL;
+    MPIDIG_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
+    MPIDIG_SCAN_PARAMS_DECL;
+    MPIDIG_EXSCAN_PARAMS_DECL;
+} MPIDIG_coll_algo_generic_params_t;
 
-typedef struct MPIDI_coll_algo_generic_container {
+typedef struct MPIDIG_coll_algo_generic_container {
     int id;
-    MPIDI_coll_algo_generic_params_t params;
-} MPIDI_coll_algo_generic_container_t;
+    MPIDIG_coll_algo_generic_params_t params;
+} MPIDIG_coll_algo_generic_container_t;
 
 const void *MPIDI_coll_get_next_container(const void *container);
 
