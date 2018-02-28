@@ -27,6 +27,18 @@ cvars:
         How frequent to poll during completion calls (wait/test) in terms
         of number of processed requests before polling.
 
+    - name        : MPIR_CVAR_REQUEST_BATCH_SIZE
+      category    : REQUEST
+      type        : int
+      default     : 64
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        The number of requests to make completion as a batch
+        in MPI_Waitall and MPI_Testall implementation. A large number
+        is likely to cause more cache misses.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
