@@ -1749,13 +1749,15 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
 #endif
     }
     hints->tx_attr->op_flags = FI_COMPLETION;
+    hints->tx_attr->msg_order = FI_ORDER_SAS;
     /* direct RMA operations supported only with delivery complete mode,
      * else (AM mode) delivery complete is not required */
-    if (MPIDI_OFI_ENABLE_RMA)
+    if (MPIDI_OFI_ENABLE_RMA) {
         hints->tx_attr->op_flags |= FI_DELIVERY_COMPLETE;
-    /* Apply most restricted msg order in hints for RMA. */
-    hints->tx_attr->msg_order =
-        FI_ORDER_SAS | FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
+        /* Apply most restricted msg order in hints for RMA ATOMICS. */
+        if (MPIDI_OFI_ENABLE_ATOMICS)
+            hints->tx_attr->msg_order |= FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
+    }
     hints->tx_attr->comp_order = FI_ORDER_NONE;
     hints->rx_attr->op_flags = FI_COMPLETION;
     hints->rx_attr->total_buffered_recv = 0;    /* FI_RM_ENABLED ensures buffering of unexpected messages */
