@@ -52,15 +52,8 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_destroy_hook(MPIR_Request * req)
 /*
   Device override hooks for asynchronous progress threads
 */
-MPL_STATIC_INLINE_PREFIX int MPID_Init_async_thread(void)
-{
-    return MPIR_Init_async_thread();
-}
-
-MPL_STATIC_INLINE_PREFIX int MPID_Finalize_async_thread(void)
-{
-    return MPIR_Finalize_async_thread();
-}
+MPL_STATIC_INLINE_PREFIX int MPID_Init_async_thread(void);
+MPL_STATIC_INLINE_PREFIX int MPID_Finalize_async_thread(void);
 
 MPL_STATIC_INLINE_PREFIX int MPID_Test(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 {
