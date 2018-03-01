@@ -636,4 +636,3 @@ include $(top_srcdir)/doc/Makefile.mk
 # use the _TARGETS var as a workaround for being unable to define multiple
 # -local targets
 install-data-local: $(INSTALL_DATA_LOCAL_TARGETS)
-

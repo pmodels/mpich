@@ -7,4 +7,3 @@
 
 mpi_core_sources +=   \
     src/util/procmap/local_proc.c
-

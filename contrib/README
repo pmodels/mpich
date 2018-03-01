@@ -2,4 +2,3 @@ This directory contains non-essential code that complements MPICH but
 is not part of MPICH itself.  Code in this directory may have a
 different license and copyright than MPICH and should be explained in
 each subdirectory.
-

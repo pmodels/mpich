@@ -19,4 +19,3 @@ noinst_HEADERS +=                          \
 
 
 endif BUILD_MPID_COMMON_SCHED
-

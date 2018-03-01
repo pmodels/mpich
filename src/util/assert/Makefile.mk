@@ -6,4 +6,3 @@
 ##
 
 mpi_core_sources += src/util/assert/assert.c
-

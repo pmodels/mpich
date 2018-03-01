@@ -57,4 +57,3 @@ winscale2f.$(OBJEXT): addsize.h
 ## not sure how accurate it is.
 # bindir may be used in MPIEXEC, so make sure it is defined
 BINDIR=${bindir}
-

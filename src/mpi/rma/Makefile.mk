@@ -50,4 +50,3 @@ mpi_sources +=                          \
 mpi_core_sources += \
     src/mpi/rma/winutil.c         \
     src/mpi/rma/rmatypeutil.c
-

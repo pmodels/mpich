@@ -29,4 +29,3 @@ mpi_core_sources +=				\
     src/mpid/ch3/channels/nemesis/src/mpid_nem_net_array.c	\
     src/mpid/ch3/channels/nemesis/src/mpid_nem_lmt_dma.c	\
     src/mpid/ch3/channels/nemesis/src/mpid_nem_lmt_vmsplice.c
-

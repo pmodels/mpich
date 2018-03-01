@@ -18,4 +18,3 @@ noinst_PROGRAMS = profile1f
 
 # ensure that dependent tests will be rebuilt when typeaints.h is updated
 greqf.$(OBJEXT): attr1aints.h
-

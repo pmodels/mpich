@@ -13,4 +13,3 @@ EXTRA_DIST += testlist.ap
 
 noinst_PROGRAMS = sizeof2
 sizeof2_SOURCES = sizeof2.f90
-

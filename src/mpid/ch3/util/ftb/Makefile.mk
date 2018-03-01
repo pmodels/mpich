@@ -13,4 +13,3 @@ mpi_core_sources +=    \
     src/mpid/ch3/util/ftb/ftb.c
 
 endif BUILD_CH3_UTIL_FTB
-

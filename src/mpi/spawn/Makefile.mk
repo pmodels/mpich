@@ -22,4 +22,3 @@ noinst_HEADERS += src/mpi/spawn/namepub.h
 
 # for namepub.h, which is included by some other dirs
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/spawn
-

@@ -10,4 +10,3 @@ include $(top_srcdir)/threads/Makefile_threads.mtest
 EXTRA_DIST = testlist
 
 noinst_PROGRAMS = multispawn th_taskmaster
-

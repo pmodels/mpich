@@ -60,4 +60,3 @@ C
       call MPI_Finalize( ierr )
 
       end
-

@@ -6,4 +6,3 @@
 ##
 
 nodist_pkgconfig_DATA += src/packaging/pkgconfig/mpich.pc
-

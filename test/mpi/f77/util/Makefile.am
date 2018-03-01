@@ -11,4 +11,3 @@ EXTRA_LIBRARIES = libmtest_dummy.a
 libmtest_dummy_a_SOURCES = mtestf.f
 
 all-local: mtestf.$(OBJEXT)
-

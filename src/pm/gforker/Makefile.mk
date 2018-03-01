@@ -39,4 +39,3 @@ endif BUILD_PM_GFORKER
 ##doc_HTML_SOURCES  = ${doc_sources}
 ##doc_MAN_SOURCES   = ${doc_sources}
 ##doc_LATEX_SOURCES = ${doc_sources}
-

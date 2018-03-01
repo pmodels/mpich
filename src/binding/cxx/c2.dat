@@ -413,4 +413,3 @@ void Status::Set_error(int error)
 
 # B.11 MPI-1.2
 void Get_version(int& version, int& subversion)
-

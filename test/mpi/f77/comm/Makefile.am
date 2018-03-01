@@ -13,4 +13,3 @@ EXTRA_DIST = testlist
 AM_DEFAULT_SOURCE_EXT = .f
 
 noinst_PROGRAMS = commnamef commerrf
-

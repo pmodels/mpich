@@ -30,4 +30,3 @@ include $(top_srcdir)/src/mpid/ch3/util/Makefile.mk
 include $(top_srcdir)/src/mpid/ch3/channels/Makefile.mk
 
 endif BUILD_CH3
-

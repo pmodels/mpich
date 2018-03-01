@@ -30,4 +30,3 @@ noinst_PROGRAMS = \
     graphcr2      \
     distgraph1    \
     dgraph_unwgt
-

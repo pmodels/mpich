@@ -174,4 +174,3 @@ MPID_Win_get_hdlr(header)
     {
     }
 }
-
