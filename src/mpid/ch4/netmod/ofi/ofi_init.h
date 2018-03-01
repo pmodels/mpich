@@ -823,12 +823,12 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         tx_attr.op_flags = FI_DELIVERY_COMPLETE | FI_COMPLETION;
         MPIDI_OFI_CALL_RETURN(fi_stx_context(MPIDI_Global.domain,
                                              &tx_attr,
-                                             &MPIDI_Global.stx_ctx, NULL /* context */), ret);
+                                             &MPIDI_Global.rma_stx_ctx, NULL /* context */), ret);
         if (ret < 0) {
             MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         "Failed to create shared TX context for RMA, "
                         "falling back to global EP/counter scheme");
-            MPIDI_Global.stx_ctx = NULL;
+            MPIDI_Global.rma_stx_ctx = NULL;
         }
     }
 
@@ -1109,8 +1109,8 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         }
     }
 
-    if (MPIDI_OFI_ENABLE_SHARED_CONTEXTS && MPIDI_Global.stx_ctx != NULL)
-        MPIDI_OFI_CALL(fi_close(&MPIDI_Global.stx_ctx->fid), stx_ctx_close);
+    if (MPIDI_OFI_ENABLE_SHARED_CONTEXTS && MPIDI_Global.rma_stx_ctx != NULL)
+        MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_stx_ctx->fid), stx_ctx_close);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.ep->fid), epclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.av->fid), avclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.p2p_cq->fid), cqclose);
