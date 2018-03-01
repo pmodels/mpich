@@ -13,4 +13,3 @@ EXTRA_DIST = testlist
 AM_DEFAULT_SOURCE_EXT = .f
 
 noinst_PROGRAMS = cartcrf dgraph_wgtf dgraph_unwgtf
-

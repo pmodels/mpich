@@ -22,4 +22,3 @@ noinst_HEADERS +=                                                \
     src/mpid/ch3/channels/nemesis/netmod/tcp/tcp_queue.h
 
 endif BUILD_NEMESIS_NETMOD_TCP
-

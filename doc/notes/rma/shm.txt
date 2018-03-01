@@ -154,4 +154,3 @@ MPID_shm_Accumulate
  * Unlock target local window
 
 ------------------------------------------------------------------------
-

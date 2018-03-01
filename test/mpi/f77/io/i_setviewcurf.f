@@ -117,4 +117,3 @@ C   All processes must provide the same file view for MODE_SEQUENTIAL
 
       call MTest_Finalize( errs )
       end
-

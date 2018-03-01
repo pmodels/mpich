@@ -543,5 +543,3 @@ Error codes for MPI_T:
  values(s)
 
 D*/
-
-

@@ -106,4 +106,3 @@ endif BUILD_MPIO_REQUEST
 if BUILD_MPIO_ERRHAN
 romio_other_sources += $(mpio_request_sources)
 endif BUILD_MPIO_ERRHAN
-

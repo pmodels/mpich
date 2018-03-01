@@ -27,4 +27,3 @@ install-devdocs:
 	        export DEV_INSTALL_PREFIX ; \
 	        ( cd $$dir && $(MAKE) install-devdocs ) ; \
 	done
-

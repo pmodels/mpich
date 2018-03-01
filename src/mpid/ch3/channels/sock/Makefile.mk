@@ -19,4 +19,3 @@ noinst_HEADERS +=                                       \
     src/mpid/ch3/channels/sock/include/mpidi_ch3_post.h
 
 endif BUILD_CH3_SOCK
-

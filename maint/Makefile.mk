@@ -53,4 +53,3 @@ dist_noinst_DATA +=                        \
 ### TODO FIXME what do we do about these?
 ##makedefs
 ##sampleconf.in
-

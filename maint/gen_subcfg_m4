@@ -372,4 +372,3 @@ sub cmp_arrays {
         }
     }
 }
-

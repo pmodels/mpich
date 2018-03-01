@@ -20,4 +20,3 @@ mpi_core_sources +=                                         \
     src/mpi/coll/iallgather/iallgather_intra_brucks.c             \
     src/mpi/coll/iallgather/iallgather_intra_ring.c               \
     src/mpi/coll/iallgather/iallgather_inter_local_gather_remote_bcast.c
-

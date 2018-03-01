@@ -16,7 +16,3 @@ MPID_Win_fence(assert,win)
 * Atomically move the remote handler call counters to a buffer and
   zero the counters.  This ensures that the 
 ------------------------------------------------------------------------
-
-
-
-

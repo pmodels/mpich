@@ -315,4 +315,3 @@ if [ -n "$rmfiles" ] ; then
     rm -f $rmfiles
 fi
 exit $rc
-

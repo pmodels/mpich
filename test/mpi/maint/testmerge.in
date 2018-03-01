@@ -313,4 +313,3 @@ if ($defnFile eq "" || $tmplFile eq "") {
 }
 
 &ReadAndMerge( $defnFile, $tmplFile );
-
