@@ -22,6 +22,7 @@
 #define MPIR_TSP_sched_irecv                MPII_Stubutil_sched_irecv
 #define MPIR_TSP_sched_imcast               MPII_Stubutil_sched_imcast
 #define MPIR_TSP_sched_reduce_local         MPII_Stubutil_sched_reduce_local
+#define MPIR_TSP_sched_localcopy            MPII_Stubutil_sched_localcopy
 #define MPIR_TSP_sched_start                MPII_Stubutil_sched_start
 
 int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched, int tag);

@@ -183,6 +183,39 @@ int MPII_Genutil_sched_reduce_local(const void *inbuf, void *inoutbuf, int count
     return vtx_id;
 }
 
+
+#undef FUNCNAME
+#define FUNCNAME MPII_Genutil_sched_localcopy
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPII_Genutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                 void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                                 MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs)
+{
+    vtx_t *vtxp;
+    int vtx_id;
+
+    /* assign a new vertex */
+    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+
+    vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__LOCALCOPY;
+    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
+
+    /* record the arguments */
+    vtxp->u.localcopy.sendbuf = sendbuf;
+    vtxp->u.localcopy.sendcount = sendcount;
+    vtxp->u.localcopy.sendtype = sendtype;
+    vtxp->u.localcopy.recvbuf = recvbuf;
+    vtxp->u.localcopy.recvcount = recvcount;
+    vtxp->u.localcopy.recvtype = recvtype;
+
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] localcopy\n", vtx_id));
+
+    return vtx_id;
+}
+
+
 #undef FUNCNAME
 #define FUNCNAME MPII_Genutil_sched_start
 #undef FCNAME

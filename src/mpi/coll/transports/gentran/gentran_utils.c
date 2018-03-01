@@ -117,6 +117,20 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                     vtx_record_completion(vtxp, sched);
                 }
                 break;
+
+            case MPII_GENUTIL_VTX_KIND__LOCALCOPY:{
+                    MPIR_Localcopy(vtxp->u.localcopy.sendbuf,
+                                   vtxp->u.localcopy.sendcount,
+                                   vtxp->u.localcopy.sendtype,
+                                   vtxp->u.localcopy.recvbuf,
+                                   vtxp->u.localcopy.recvcount, vtxp->u.localcopy.recvtype);
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST,
+                                     "  --> GENTRAN transport (localcopy) performed\n"));
+
+                    vtx_record_completion(vtxp, sched);
+                }
+                break;
         }
 
 #ifdef MPL_USE_DBG_LOGGING

@@ -45,6 +45,13 @@ int MPII_Stubutil_sched_reduce_local(const void *inbuf, void *inoutbuf, int coun
     return MPI_SUCCESS;
 }
 
+int MPII_Stubutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                                  void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
+                                  MPII_Stubutil_sched_t * sched, int n_in_vtcs, int *in_vtcs)
+{
+    return MPI_SUCCESS;
+}
+
 int MPII_Stubutil_sched_start(MPII_Stubutil_sched_t * sched, MPIR_Comm * comm,
                               MPII_Coll_req_t ** request)
 {
