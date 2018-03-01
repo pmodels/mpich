@@ -28,6 +28,15 @@ static void vtx_extend_utarray(UT_array * dst_array, int n_elems, int *elems)
     }
 }
 
+#undef FUNCNAME
+#define FUNCNAME vtx_record_issue
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static void vtx_record_issue(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t * vtxp)
+{
+    vtxp->vtx_state = MPII_GENUTIL_VTX_STATE__ISSUED;
+    LL_APPEND(sched->issued_head, sched->issued_tail, vtxp);
+}
 
 #undef FUNCNAME
 #define FUNCNAME vtx_issue
@@ -93,8 +102,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                 break;
         }
 
-        vtxp->vtx_state = MPII_GENUTIL_VTX_STATE__ISSUED;
-        LL_APPEND(sched->issued_head, sched->issued_tail, vtxp);
+        vtx_record_issue(sched, vtxp);
 
 #ifdef MPL_USE_DBG_LOGGING
         /* print issued vertex list */
