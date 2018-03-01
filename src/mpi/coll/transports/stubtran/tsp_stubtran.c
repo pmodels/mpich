@@ -38,6 +38,13 @@ int MPII_Stubutil_sched_imcast(const void *buf, int count, MPI_Datatype dt, UT_a
     return MPI_SUCCESS;
 }
 
+int MPII_Stubutil_sched_reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype dt,
+                                     MPI_Op op, MPII_Stubutil_sched_t * sched, int n_invtcs,
+                                     int *invtcs)
+{
+    return MPI_SUCCESS;
+}
+
 int MPII_Stubutil_sched_start(MPII_Stubutil_sched_t * sched, MPIR_Comm * comm,
                               MPII_Coll_req_t ** request)
 {
