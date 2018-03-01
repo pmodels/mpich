@@ -18,6 +18,9 @@
 #include "ch4_impl.h"
 #include "ofi_iovec_util.h"
 
+#define MPIDI_OFI_ENAVAIL   -1  /* OFI resource not available */
+#define MPIDI_OFI_EPERROR   -2  /* OFI endpoint error */
+
 #define MPIDI_OFI_DT(dt)         ((dt)->dev.netmod.ofi)
 #define MPIDI_OFI_OP(op)         ((op)->dev.netmod.ofi)
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
@@ -299,6 +302,31 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_check_acc_order_size(MPIR_Win * win, s
         max_size = MPL_MIN(max_size, MPIDI_Global.max_order_raw);
     }
     return max_size;
+}
+
+/* Set OFI attributes and capabilities for RMA. */
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_set_rma_fi_info(MPIR_Win * win, struct fi_info *finfo)
+{
+    finfo->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
+    finfo->tx_attr->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
+
+    /* Update msg_order by accumulate ordering in window info.
+     * Accumulate ordering cannot easily be changed once the window has been created.
+     * OFI implementation ignores acc ordering hints issued in MPI_WIN_SET_INFO()
+     * after window is created. */
+    finfo->tx_attr->msg_order = FI_ORDER_NONE;  /* FI_ORDER_NONE is an alias for the value 0 */
+    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAR) ==
+        MPIDI_CH4I_ACCU_ORDER_RAR)
+        finfo->tx_attr->msg_order |= FI_ORDER_RAR;
+    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW) ==
+        MPIDI_CH4I_ACCU_ORDER_RAW)
+        finfo->tx_attr->msg_order |= FI_ORDER_RAW;
+    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAR) ==
+        MPIDI_CH4I_ACCU_ORDER_WAR)
+        finfo->tx_attr->msg_order |= FI_ORDER_WAR;
+    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAW) ==
+        MPIDI_CH4I_ACCU_ORDER_WAW)
+        finfo->tx_attr->msg_order |= FI_ORDER_WAW;
 }
 
 MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_alloc_and_init(int extra)
