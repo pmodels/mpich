@@ -17,7 +17,8 @@ typedef enum {
     MPII_GENUTIL_VTX_KIND__ISEND,
     MPII_GENUTIL_VTX_KIND__IRECV,
     MPII_GENUTIL_VTX_KIND__IMCAST,
-    MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL
+    MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL,
+    MPII_GENUTIL_VTX_KIND__LOCALCOPY
 } MPII_Genutil_vtx_kind_e;
 
 typedef enum {
@@ -70,6 +71,14 @@ typedef struct MPII_Genutil_vtx_t {
             MPI_Datatype datatype;
             MPI_Op op;
         } reduce_local;
+        struct {
+            const void *sendbuf;
+            MPI_Aint sendcount;
+            MPI_Datatype sendtype;
+            void *recvbuf;
+            MPI_Aint recvcount;
+            MPI_Datatype recvtype;
+        } localcopy;
     } u;
 
     struct MPII_Genutil_vtx_t *next;
