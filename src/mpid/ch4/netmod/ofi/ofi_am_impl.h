@@ -267,7 +267,6 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     MPIDI_OFI_am_header_t *msg_hdr;
     MPIDI_OFI_lmt_msg_payload_t *lmt_info;
     struct iovec *iov;
-    uint64_t index;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
@@ -288,13 +287,18 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     lmt_info->src_rank = comm->rank;
     lmt_info->src_offset = MPIDI_OFI_ENABLE_MR_SCALABLE ? (uint64_t) 0 /* MR_SCALABLE */ : (uint64_t) data;     /* MR_BASIC */
     lmt_info->sreq_ptr = (uint64_t) sreq;
-    /* Always allocates RMA ID from COMM_WORLD as the actual associated communicator
-     * is not available here */
-    index =
-        MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(MPIR_Process.comm_world).rma_id_allocator,
-                                        MPL_MEM_RMA);
-    MPIR_Assert(index < MPIDI_Global.max_huge_rmas);
-    lmt_info->rma_key = MPIDI_OFI_ENABLE_MR_SCALABLE ? index << MPIDI_Global.huge_rma_shift : 0;
+    if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+        /* Always allocates RMA ID from COMM_WORLD as the actual associated communicator
+         * is not available here */
+        uint64_t index =
+            MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM
+                                            (MPIR_Process.comm_world).rma_id_allocator,
+                                            MPL_MEM_RMA);
+        MPIR_Assert(index < MPIDI_Global.max_huge_rmas);
+        lmt_info->rma_key = index << MPIDI_Global.huge_rma_shift;
+    } else {
+        lmt_info->rma_key = 0;
+    }
 
     MPIR_cc_incr(sreq->cc_ptr, &c);     /* send completion */
     MPIR_cc_incr(sreq->cc_ptr, &c);     /* lmt ack handler */

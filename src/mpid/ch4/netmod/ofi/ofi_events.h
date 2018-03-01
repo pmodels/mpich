@@ -310,8 +310,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
         MPIR_Comm *comm;
         void *ptr;
         struct fid_mr *huge_send_mr;
-        uint64_t key;
-        int key_back;
 
         comm = MPIDI_OFI_REQUEST(sreq, util_comm);
 
@@ -327,9 +325,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
         MPIDI_CH4U_map_erase(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
 
         /* Clean up the memory region */
-        key = fi_mr_key(huge_send_mr);
-        key_back = (key >> MPIDI_Global.huge_rma_shift);
-        MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(comm).rma_id_allocator, key_back);
+        if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+            uint64_t key = fi_mr_key(huge_send_mr);
+            int key_back = (key >> MPIDI_Global.huge_rma_shift);
+            MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(comm).rma_id_allocator, key_back);
+        }
         MPIDI_OFI_CALL_NOLOCK(fi_close(&huge_send_mr->fid), mr_unreg);
 
         if (MPIDI_OFI_REQUEST(sreq, noncontig.pack))
