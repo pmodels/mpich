@@ -13,4 +13,3 @@ EXTRA_DIST = testlist
 
 noinst_PROGRAMS = createf90types
 createf90types_SOURCES = createf90types.c
-

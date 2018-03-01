@@ -11,4 +11,3 @@ mpi_core_sources +=   \
     src/nameserv/pmi/pmi_nameserv.c
 
 endif BUILD_NAMEPUB_PMI
-

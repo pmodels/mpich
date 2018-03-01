@@ -30,4 +30,3 @@ allocmemf.$(OBJEXT): add1size.h
 # we don't get this from Makefile_f77.mtest and we don't include Makefile.mtest
 $(top_builddir)/util/mtest.o:
 	(cd $(top_builddir)/util && $(MAKE) mtest.o)
-

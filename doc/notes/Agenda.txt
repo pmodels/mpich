@@ -16,4 +16,3 @@ the next thing to do:
 - work through a scenario using this whole layered design
 
 - rinse and repeat for a collective scenario
-

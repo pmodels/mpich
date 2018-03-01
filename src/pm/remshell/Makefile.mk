@@ -31,4 +31,3 @@ EXTRA_src_pm_remshell_mpiexec_remshell_DEPENDENCIES = $(mpllib)
 src_pm_remshell_mpiexec_remshell_CPPFLAGS = $(common_pm_includes) $(AM_CPPFLAGS)
 endif !PRIMARY_PM_REMSHELL
 endif BUILD_PM_REMSHELL
-

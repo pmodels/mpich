@@ -28,4 +28,3 @@ commattr3f.$(OBJEXT): attraints.h
 typeattrf.$(OBJEXT): attraints.h
 typeattr2f.$(OBJEXT): attraints.h
 typeattr3f.$(OBJEXT): attraints.h
-

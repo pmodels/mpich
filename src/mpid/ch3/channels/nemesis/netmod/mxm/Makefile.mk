@@ -19,4 +19,3 @@ noinst_HEADERS +=                                           \
     src/mpid/ch3/channels/nemesis/netmod/mxm/mxm_impl.h
 
 endif BUILD_NEMESIS_NETMOD_MXM
-

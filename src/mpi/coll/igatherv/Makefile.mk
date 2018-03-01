@@ -17,4 +17,3 @@ mpi_sources +=                                  \
 
 mpi_core_sources +=                          \
     src/mpi/coll/igatherv/igatherv_allcomm_linear.c
-

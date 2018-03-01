@@ -20,4 +20,3 @@ mpi_core_sources += \
     src/mpi/init/async.c
 
 noinst_HEADERS += src/mpi/init/mpi_init.h
-

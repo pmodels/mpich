@@ -87,4 +87,3 @@ if test "$enable_coverage" = "yes" ; then
 fi
 AM_CONDITIONAL([BUILD_COVERAGE],[test "X$pac_cv_use_coverage" = "Xyes"])
 ])
-

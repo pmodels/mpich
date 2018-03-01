@@ -81,4 +81,3 @@
 Optimizations
 
 * merge synchronization with RMA ops when sending messages
-

@@ -32,4 +32,3 @@ romio_other_sources +=                          \
     adio/ad_pvfs2/ad_pvfs2_features.c
 
 endif BUILD_AD_PVFS2
-

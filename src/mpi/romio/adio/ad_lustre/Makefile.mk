@@ -19,4 +19,3 @@ romio_other_sources +=                   \
     adio/ad_lustre/ad_lustre_aggregate.c
 
 endif BUILD_AD_LUSTRE
-

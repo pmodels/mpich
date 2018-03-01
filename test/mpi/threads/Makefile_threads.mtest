@@ -17,4 +17,3 @@ LDADD += $(top_builddir)/threads/util/mtestthread.$(OBJEXT) @threadlib@
 
 $(top_builddir)/threads/util/mtestthread.$(OBJEXT): $(top_srcdir)/threads/util/mtestthread.c
 	(cd $(top_builddir)/threads/util && $(MAKE) mtestthread.$(OBJEXT))
-

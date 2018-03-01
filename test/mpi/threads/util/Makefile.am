@@ -12,4 +12,3 @@ AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
 EXTRA_LIBRARIES = libmtestthread_dummy.a
 libmtestthread_dummy_a_SOURCES = mtestthread.c
 all-local: mtestthread.$(OBJEXT)
-

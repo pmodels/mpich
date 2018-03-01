@@ -266,4 +266,3 @@ recv_mop can be used for accumulate
 
 send_mop could cause remote operations to occur.  We will not use send_mop 
 currently.
-

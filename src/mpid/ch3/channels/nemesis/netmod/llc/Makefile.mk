@@ -24,4 +24,3 @@ noinst_HEADERS +=							\
 	$(EOA)
 
 endif BUILD_NEMESIS_NETMOD_LLC
-

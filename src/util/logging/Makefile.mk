@@ -13,4 +13,3 @@ include $(top_srcdir)/src/util/logging/rlog/Makefile.mk
 # "slog_api" conditionally existed in Makefile.sm, but doesn't seem to be
 # present in the current source tree, so this is commented out for now
 #include $(top_srcdir)/src/util/logging/slog_api/Makefile.mk
-

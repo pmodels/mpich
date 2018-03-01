@@ -22,4 +22,3 @@ spawnmult2f.$(OBJEXT): type1aint.h
 # add "-lU77" (or equivalent) to the link line for these tests that use getarg
 spawnargvf_LDADD = $(LDADD) $(F77_GETARG_LIBS)
 spawnmultf_LDADD = $(LDADD) $(F77_GETARG_LIBS)
-

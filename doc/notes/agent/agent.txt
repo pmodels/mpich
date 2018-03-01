@@ -1299,5 +1299,3 @@ Open Issues:
   avoid buffer copies?
 
 - Need to define the communication agent
-
-
