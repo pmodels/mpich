@@ -26,6 +26,7 @@
 #define MPIR_TSP_sched_imcast              MPII_Genutil_sched_imcast
 #define MPIR_TSP_sched_reduce_local        MPII_Genutil_sched_reduce_local
 #define MPIR_TSP_sched_localcopy           MPII_Genutil_sched_localcopy
+#define MPIR_TSP_sched_malloc              MPII_Genutil_sched_malloc
 #define MPIR_TSP_sched_start               MPII_Genutil_sched_start
 
 extern MPII_Coll_queue_t coll_queue;
@@ -72,6 +73,9 @@ int MPII_Genutil_sched_reduce_local(const void *inbuf, void *inoutbuf, int count
 int MPII_Genutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                  void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                  MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
+
+/* Transport function to allocata memory required for schedule execution */
+void *MPII_Genutil_sched_malloc(size_t size, MPII_Genutil_sched_t * sched);
 
 /* Transport function to enqueue and kick start a non-blocking
  * collective */

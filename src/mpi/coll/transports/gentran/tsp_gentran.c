@@ -35,6 +35,8 @@ int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched, int tag)
     /* initialize array for storing vertices */
     utarray_new(sched->vtcs, &vtx_t_icd, MPL_MEM_COLL);
 
+    utarray_new(sched->buffers, &ut_ptr_icd, MPL_MEM_COLL);
+
     sched->issued_head = NULL;
     sched->issued_tail = NULL;
 
@@ -215,6 +217,17 @@ int MPII_Genutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Da
     return vtx_id;
 }
 
+
+#undef FUNCNAME
+#define FUNCNAME MPII_Genutil_sched_malloc
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+void *MPII_Genutil_sched_malloc(size_t size, MPII_Genutil_sched_t * sched)
+{
+    void *addr = MPL_malloc(size, MPL_MEM_COLL);
+    utarray_push_back(sched->buffers, &addr, MPL_MEM_COLL);
+    return addr;
+}
 
 #undef FUNCNAME
 #define FUNCNAME MPII_Genutil_sched_start
