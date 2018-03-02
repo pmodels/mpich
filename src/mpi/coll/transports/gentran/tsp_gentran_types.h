@@ -92,6 +92,9 @@ typedef struct {
     int total_vtcs;
     int completed_vtcs;
 
+    /* array of buffers allocated for schedule execution */
+    UT_array *buffers;
+
     /* issued vertices linked list */
     struct MPII_Genutil_vtx_t *issued_head;
     struct MPII_Genutil_vtx_t *issued_tail;
