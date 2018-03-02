@@ -52,6 +52,11 @@ int MPII_Stubutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_D
     return MPI_SUCCESS;
 }
 
+void *MPII_Stubutil_sched_malloc(size_t size, MPII_Stubutil_sched_t * sched)
+{
+    return MPI_SUCCESS;
+}
+
 int MPII_Stubutil_sched_start(MPII_Stubutil_sched_t * sched, MPIR_Comm * comm,
                               MPII_Coll_req_t ** request)
 {
