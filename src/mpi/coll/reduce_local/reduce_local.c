@@ -195,17 +195,16 @@ int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype 
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Reduce_local(inbuf, inoutbuf, count, datatype, op);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_REDUCE_LOCAL);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
-#ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     {
@@ -217,5 +216,4 @@ int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype 
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
-#endif
 }
