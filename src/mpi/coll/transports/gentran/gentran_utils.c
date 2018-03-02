@@ -14,6 +14,7 @@
 #include "gentran_utils.h"
 #include "utlist.h"
 
+static void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched);
 
 #undef FUNCNAME
 #define FUNCNAME vtx_extend_utarray
