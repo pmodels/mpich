@@ -1081,6 +1081,12 @@ int MPIR_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dat
                  int root, MPIR_Comm * comm_ptr, MPIR_Request ** request);
 int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                       MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Ireduce_intra_tree_kary(const void *sendbuf, void *recvbuf, int count,
+                                 MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
+                                 MPIR_Request ** request);
+int MPIR_Ireduce_intra_tree_knomial(const void *sendbuf, void *recvbuf, int count,
+                                    MPI_Datatype datatype, MPI_Op op, int root,
+                                    MPIR_Comm * comm_ptr, MPIR_Request ** request);
 
 /* sched-based functions */
 int MPIR_Ireduce_sched(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
