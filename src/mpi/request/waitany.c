@@ -149,6 +149,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
     int i;
     int active_flag;
     int last_disabled_anysource = -1;
+    int first_nonnull = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WAITANY);
@@ -184,6 +185,8 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
                                    mpi_errno, "request pointers", MPL_MEM_OBJECT);
     }
 
+    *indx = MPI_UNDEFINED;
+
     for (i = 0; i < count; i++) {
 #ifdef HAVE_ERROR_CHECKING
         MPID_BEGIN_ERROR_CHECKS;
@@ -214,30 +217,52 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Statu
                 last_disabled_anysource = i;
             }
 
+            /* Since waitany is likely to return as soon as a
+             * completed request is found, the first loop here is
+             * taking the longest. We can check for any completed
+             * request here, and we can poll from the first entry
+             * which is not null. */
+            if (MPIR_Request_is_complete(request_ptrs[i])) {
+                if (MPIR_Request_is_active(request_ptrs[i])) {
+                    *indx = i;
+                    break;
+                } else {
+                    request_ptrs[i] = NULL;
+                }
+            } else {
+                if (!first_nonnull)
+                    first_nonnull = i;
+            }
         } else {
             request_ptrs[i] = NULL;
         }
     }
 
-    if (unlikely(last_disabled_anysource != -1)) {
-        int flag;
-        mpi_errno = MPI_Testany(count, array_of_requests, indx, &flag, status);
-        goto fn_exit;
-    }
-
-    mpi_errno = MPID_Waitany(count, request_ptrs, indx, status);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-    if (*indx != MPI_UNDEFINED) {
-        mpi_errno = MPIR_Request_completion_processing(request_ptrs[*indx], status, &active_flag);
-        if (!MPIR_Request_is_persistent(request_ptrs[*indx])) {
-            MPIR_Request_free(request_ptrs[*indx]);
-            array_of_requests[*indx] = MPI_REQUEST_NULL;
+    if (*indx == MPI_UNDEFINED) {
+        if (unlikely(last_disabled_anysource != -1)) {
+            int flag;
+            mpi_errno = MPI_Testany(count, array_of_requests, indx, &flag, status);
+            goto fn_exit;
         }
+
+        mpi_errno = MPID_Waitany(count - first_nonnull, &request_ptrs[first_nonnull], indx, status);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
+
+        if (*indx != MPI_UNDEFINED) {
+            *indx += first_nonnull;
+        } else {
+            goto fn_exit;
+        }
     }
+
+    mpi_errno = MPIR_Request_completion_processing(request_ptrs[*indx], status, &active_flag);
+    if (!MPIR_Request_is_persistent(request_ptrs[*indx])) {
+        MPIR_Request_free(request_ptrs[*indx]);
+        array_of_requests[*indx] = MPI_REQUEST_NULL;
+    }
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
