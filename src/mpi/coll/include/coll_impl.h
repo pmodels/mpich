@@ -422,6 +422,8 @@ typedef enum MPIR_Ireduce_intra_algo_t {
     MPIR_IREDUCE_INTRA_ALGO_AUTO,
     MPIR_IREDUCE_INTRA_ALGO_BINOMIAL,
     MPIR_IREDUCE_INTRA_ALGO_REDUCE_SCATTER_GATHER,
+    MPIR_IREDUCE_INTRA_ALGO_GENTRAN_TREE_KARY,
+    MPIR_IREDUCE_INTRA_ALGO_GENTRAN_TREE_KNOMIAL,
 } MPIR_Ireduce_intra_algo_t;
 extern MPIR_Ireduce_intra_algo_t MPIR_Ireduce_intra_algo_choice;
 
