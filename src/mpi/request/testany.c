@@ -122,6 +122,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     int n_inactive;
     int active_flag;
     int last_disabled_anysource = -1;
+    int first_nonnull = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TESTANY);
@@ -163,6 +164,9 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     }
 
     n_inactive = 0;
+    *flag = FALSE;
+    *indx = MPI_UNDEFINED;
+
     for (i = 0; i < count; i++) {
         if (array_of_requests[i] != MPI_REQUEST_NULL) {
             MPIR_Request_get_ptr(array_of_requests[i], request_ptrs[i]);
@@ -184,6 +188,19 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
                          !MPIR_Request_is_complete(request_ptrs[i]))) {
                 last_disabled_anysource = i;
             }
+
+            if (MPIR_Request_is_complete(request_ptrs[i])) {
+                if (MPIR_Request_is_active(request_ptrs[i])) {
+                    *indx = i;
+                    *flag = TRUE;
+                    break;
+                } else {
+                    request_ptrs[i] = NULL;
+                }
+            } else {
+                if (!first_nonnull)
+                    first_nonnull = i;
+            }
         } else {
             request_ptrs[i] = NULL;
             n_inactive += 1;
@@ -198,15 +215,19 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
         goto fn_exit;
     }
 
-    *flag = FALSE;
-    *indx = MPI_UNDEFINED;
+    if (*indx == MPI_UNDEFINED) {
+        mpi_errno =
+            MPID_Testany(count - first_nonnull, &request_ptrs[first_nonnull], indx, flag, status);
+        /* --BEGIN ERROR HANDLING-- */
+        if (mpi_errno != MPI_SUCCESS) {
+            goto fn_fail;
+        }
+        /* --END ERROR HANDLING-- */
 
-    mpi_errno = MPID_Testany(count, request_ptrs, indx, flag, status);
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno != MPI_SUCCESS) {
-        goto fn_fail;
+        if (*indx != MPI_UNDEFINED) {
+            *indx += first_nonnull;
+        }
     }
-    /* --END ERROR HANDLING-- */
 
     if (*indx != MPI_UNDEFINED) {
         mpi_errno = MPIR_Request_completion_processing(request_ptrs[*indx], status, &active_flag);
