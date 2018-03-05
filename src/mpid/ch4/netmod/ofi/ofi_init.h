@@ -272,6 +272,16 @@ cvars:
         effective only when the communicator has the MPI_OFI_set_eagain info
         hint set to true.
 
+    - name        : MPIR_CVAR_CH4_OFI_NUM_AM_BUFFERS
+      category    : CH4_OFI
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the number of buffers for receiving active messages.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -1573,6 +1583,8 @@ static inline int MPIDI_OFI_application_hints(int rank)
                     (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_PT2PT_NOPACK: %d",
                      MPIDI_OFI_ENABLE_PT2PT_NOPACK));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, "MPIDI_OFI_NUM_AM_BUFFERS: %d", MPIDI_OFI_NUM_AM_BUFFERS));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "MPIDI_OFI_CONTEXT_BITS: %d", MPIDI_OFI_CONTEXT_BITS));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "MPIDI_OFI_SOURCE_BITS: %d", MPIDI_OFI_SOURCE_BITS));
@@ -1598,6 +1610,7 @@ static inline int MPIDI_OFI_application_hints(int rank)
         fprintf(stdout, "MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS: %d\n",
                 MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS);
         fprintf(stdout, "MPIDI_OFI_ENABLE_PT2PT_NOPACK: %d\n", MPIDI_OFI_ENABLE_PT2PT_NOPACK);
+        fprintf(stdout, "MPIDI_OFI_NUM_AM_BUFFERS: %d\n", MPIDI_OFI_NUM_AM_BUFFERS);
         fprintf(stdout, "MPIDI_OFI_CONTEXT_BITS: %d\n", MPIDI_OFI_CONTEXT_BITS);
         fprintf(stdout, "MPIDI_OFI_SOURCE_BITS: %d\n", MPIDI_OFI_SOURCE_BITS);
         fprintf(stdout, "MPIDI_OFI_TAG_BITS: %d\n", MPIDI_OFI_TAG_BITS);
@@ -1719,6 +1732,17 @@ static inline int MPIDI_OFI_init_global_settings(const char *prov_name)
         -1 ? MPIR_CVAR_CH4_OFI_MINOR_VERSION : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].minor_version :
         MPIR_CVAR_CH4_OFI_MINOR_VERSION;
+    MPIDI_Global.settings.num_am_buffers =
+        MPIR_CVAR_CH4_OFI_NUM_AM_BUFFERS !=
+        -1 ? MPIR_CVAR_CH4_OFI_NUM_AM_BUFFERS : prov_name ?
+        MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].num_am_buffers :
+        MPIDI_OFI_NUM_AM_BUFFERS_MINIMAL;
+    if (MPIDI_Global.settings.num_am_buffers < 0) {
+        MPIDI_Global.settings.num_am_buffers = 0;
+    }
+    if (MPIDI_Global.settings.num_am_buffers > MPIDI_OFI_MAX_NUM_AM_BUFFERS) {
+        MPIDI_Global.settings.num_am_buffers = MPIDI_OFI_MAX_NUM_AM_BUFFERS;
+    }
     return MPI_SUCCESS;
 }
 

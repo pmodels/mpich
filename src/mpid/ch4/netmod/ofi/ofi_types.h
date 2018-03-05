@@ -28,7 +28,7 @@
 )
 #define MPIDI_OFI_MAP_NOT_FOUND            ((void*)(-1UL))
 #define MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE  (16 * 1024)
-#define MPIDI_OFI_NUM_AM_BUFFERS           (8)
+#define MPIDI_OFI_MAX_NUM_AM_BUFFERS       (8)
 #define MPIDI_OFI_AM_BUFF_SZ               (1 * 1024 * 1024)
 #define MPIDI_OFI_CACHELINE_SIZE           (64)
 #define MPIDI_OFI_IOV_MAX                  (32)
@@ -313,6 +313,7 @@ typedef struct {
     int tag_bits;
     int major_version;
     int minor_version;
+    int num_am_buffers;
 } MPIDI_OFI_capabilities_t;
 
 typedef struct {
@@ -383,10 +384,10 @@ typedef struct {
     UT_array *rma_sep_idx_array;        /* Array of available indexes of transmit contexts on sep */
 
     /* Active Message Globals */
-    struct iovec am_iov[MPIDI_OFI_NUM_AM_BUFFERS] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
-    struct fi_msg am_msg[MPIDI_OFI_NUM_AM_BUFFERS];
-    void *am_bufs[MPIDI_OFI_NUM_AM_BUFFERS];
-    MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_NUM_AM_BUFFERS];
+    struct iovec am_iov[MPIDI_OFI_MAX_NUM_AM_BUFFERS] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
+    struct fi_msg am_msg[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+    void *am_bufs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
+    MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_MAX_NUM_AM_BUFFERS];
     MPIU_buf_pool_t *am_buf_pool;
     OPA_int_t am_inflight_inject_emus;
     OPA_int_t am_inflight_rma_send_mrs;
