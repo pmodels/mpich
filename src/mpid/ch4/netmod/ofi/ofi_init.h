@@ -102,7 +102,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_AM
       category    : CH4_OFI
       type        : int
-      default     : 1
+      default     : -1
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
@@ -112,7 +112,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_RMA
       category    : CH4_OFI
       type        : int
-      default     : 1
+      default     : -1
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
@@ -122,7 +122,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS
       category    : CH4_OFI
       type        : int
-      default     : 1
+      default     : -1
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
@@ -174,7 +174,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS
       category    : CH4_OFI
       type        : int
-      default     : 16
+      default     : -1
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
@@ -186,7 +186,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_RANK_BITS
       category    : CH4_OFI
       type        : int
-      default     : 24
+      default     : -1
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
@@ -198,7 +198,7 @@ cvars:
     - name        : MPIR_CVAR_CH4_OFI_TAG_BITS
       category    : CH4_OFI
       type        : int
-      default     : 20
+      default     : -1
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
@@ -1560,18 +1560,18 @@ static inline int MPIDI_OFI_init_global_settings(const char *prov_name)
         MPIR_CVAR_CH4_OFI_ENABLE_TAGGED;
     MPIDI_Global.settings.enable_am =
         MPIR_CVAR_CH4_OFI_ENABLE_AM !=
-        1 ? MPIR_CVAR_CH4_OFI_ENABLE_AM : prov_name ?
+        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_AM : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_am :
         MPIR_CVAR_CH4_OFI_ENABLE_AM;
     MPIDI_Global.settings.enable_rma =
         MPIR_CVAR_CH4_OFI_ENABLE_RMA !=
-        1 ? MPIR_CVAR_CH4_OFI_ENABLE_RMA : prov_name ?
+        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_RMA : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_rma :
         MPIR_CVAR_CH4_OFI_ENABLE_RMA;
     /* try to enable atomics only when RMA is enabled */
     MPIDI_Global.settings.enable_atomics =
         MPIDI_OFI_ENABLE_RMA ? (MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS !=
-                                1 ? MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS : prov_name ?
+                                -1 ? MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS : prov_name ?
                                 MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number
                                                     (prov_name)].enable_atomics :
                                 MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS) : 0;
@@ -1592,33 +1592,32 @@ static inline int MPIDI_OFI_init_global_settings(const char *prov_name)
         MPIR_CVAR_CH4_OFI_ENABLE_CONTROL_AUTO_PROGRESS;
     MPIDI_Global.settings.enable_pt2pt_nopack =
         MPIR_CVAR_CH4_OFI_ENABLE_PT2PT_NOPACK !=
-        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_PT2PT_NOPACK : MPIR_CVAR_OFI_USE_PROVIDER ?
-        MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number
-                            (MPIR_CVAR_OFI_USE_PROVIDER)].enable_pt2pt_nopack :
+        -1 ? MPIR_CVAR_CH4_OFI_ENABLE_PT2PT_NOPACK : prov_name ?
+        MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].enable_pt2pt_nopack :
         MPIR_CVAR_CH4_OFI_ENABLE_PT2PT_NOPACK;
     MPIDI_Global.settings.context_bits =
         MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS !=
-        16 ? MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS : prov_name ?
+        -1 ? MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].context_bits :
         MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS;
     MPIDI_Global.settings.source_bits =
         MPIR_CVAR_CH4_OFI_RANK_BITS !=
-        24 ? MPIR_CVAR_CH4_OFI_RANK_BITS : prov_name ?
+        -1 ? MPIR_CVAR_CH4_OFI_RANK_BITS : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].source_bits :
         MPIR_CVAR_CH4_OFI_RANK_BITS;
     MPIDI_Global.settings.tag_bits =
         MPIR_CVAR_CH4_OFI_TAG_BITS !=
-        20 ? MPIR_CVAR_CH4_OFI_TAG_BITS : prov_name ?
+        -1 ? MPIR_CVAR_CH4_OFI_TAG_BITS : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].tag_bits :
         MPIR_CVAR_CH4_OFI_TAG_BITS;
     MPIDI_Global.settings.major_version =
         MPIR_CVAR_CH4_OFI_MAJOR_VERSION !=
-        FI_MAJOR_VERSION ? MPIR_CVAR_CH4_OFI_MAJOR_VERSION : prov_name ?
+        -1 ? MPIR_CVAR_CH4_OFI_MAJOR_VERSION : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].major_version :
         MPIR_CVAR_CH4_OFI_MAJOR_VERSION;
     MPIDI_Global.settings.minor_version =
         MPIR_CVAR_CH4_OFI_MINOR_VERSION !=
-        FI_MINOR_VERSION ? MPIR_CVAR_CH4_OFI_MINOR_VERSION : prov_name ?
+        -1 ? MPIR_CVAR_CH4_OFI_MINOR_VERSION : prov_name ?
         MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(prov_name)].minor_version :
         MPIR_CVAR_CH4_OFI_MINOR_VERSION;
     return MPI_SUCCESS;
