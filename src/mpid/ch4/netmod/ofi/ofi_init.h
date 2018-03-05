@@ -603,15 +603,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, hints, &prov), addrinfo);
     MPIDI_OFI_CHOOSE_PROVIDER(prov, &prov_use, "No suitable provider provider found");
 
-    /* Tag_ub is initialized as maximum suppported
-     * tag value in AM if that code path is chosen instead of
-     * maximum supported value in the provider because some
-     * providers support bigger tag than the maximum supported
-     * tag value in AM */
-    if (MPIDI_OFI_ENABLE_TAGGED)
-        *tag_ub = (1ULL << MPIDI_OFI_TAG_BITS) - 1;
-    else
-        *tag_ub = (1ULL << MPIDI_CH4U_TAG_SHIFT) - 1;
+    *tag_ub = (1ULL << MPIDI_OFI_TAG_BITS) - 1;
 
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
         /* ------------------------------------------------------------------------ */
