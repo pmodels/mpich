@@ -6,7 +6,7 @@ How to contribute to MPICH
 
 3. Use the git pre-commit hook included with MPICH (https://github.com/pmodels/mpich/blob/master/maint/hooks/pre-commit) to catch whitespace violations in new code. Patches with improper whitespace may be automatically rejected for inclusion in MPICH. To activate the pre-commit hook (from the top-level of your working copy):
 
-  ln -s maint/hooks/pre-commit .git/hooks/pre-commit
+  ln -s ../../maint/hooks/pre-commit .git/hooks/pre-commit
 
 4. Open a Pull Request on Github (https://github.com/pmodels/mpich/pulls). Your pull request will be tested and reviewed by an MPICH maintainer. Be sure to pay attention to review comments, as they may request changes to the PR before it can be merged.
 
