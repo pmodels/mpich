@@ -521,8 +521,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                 prov = prov_use->next;
                 continue;
             } else if (MPIDI_OFI_ENABLE_AM &&
-                       ((prov_use->caps & (FI_MSG | FI_MULTI_RECV | FI_SEND | FI_RECV)) !=
-                        (FI_MSG | FI_MULTI_RECV | FI_SEND | FI_RECV))) {
+                       ((prov_use->caps & (FI_MSG | FI_MULTI_RECV | FI_SEND | FI_RECV | FI_READ)) !=
+                        (FI_MSG | FI_MULTI_RECV | FI_SEND | FI_RECV | FI_READ))) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                                 (MPL_DBG_FDEST, "Provider doesn't support active messages"));
                 prov = prov_use->next;
