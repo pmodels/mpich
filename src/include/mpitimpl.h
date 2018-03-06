@@ -75,7 +75,7 @@ typedef union MPIR_T_cvar_value_s {
     unsigned ul;
     unsigned ull;
     MPI_Count c;
-    const char *str;
+    char *str;
     double f;
     MPIR_T_cvar_range_value_t range;
 } MPIR_T_cvar_value_t;
