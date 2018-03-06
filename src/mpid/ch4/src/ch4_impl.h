@@ -617,6 +617,17 @@ static inline int MPIDI_CH4I_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_G
         }                                                               \
     } while (0)
 
+/* Generic routine for checking synchronization at every RMA operation.*/
+#define MPIDI_CH4U_RMA_OP_CHECK_SYNC(target_rank, win)                                 \
+    do {                                                                               \
+        MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);                     \
+        MPIDI_CH4U_EPOCH_OP_REFENCE(win);                                              \
+        /* Check target sync status for any target_rank except PROC_NULL. */           \
+        if (target_rank != MPI_PROC_NULL)                                              \
+            MPIDI_CH4U_EPOCH_CHECK_TARGET_SYNC(win, target_rank, mpi_errno,            \
+                                               goto fn_fail);                          \
+    } while (0);
+
 /*
   Calculate base address of the target window at the origin side
   Return zero to let the target side calculate the actual address
