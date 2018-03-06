@@ -907,10 +907,8 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
 {
     int i = 0, fd = -1, rc, first = 0, mpi_errno = MPI_SUCCESS, shm_key_size;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    void *baseP = NULL;
     MPIR_Win *win = NULL;
     ssize_t total_size = 0LL;
-    MPI_Aint size_out = 0;
     MPIDI_CH4U_win_shared_info_t *shared_table = NULL;
     char *shm_key = NULL;
     void *map_ptr;
@@ -928,6 +926,7 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
     shared_table = MPIDI_CH4U_WIN(win, shared_table);
     shared_table[comm_ptr->rank].size = size;
     shared_table[comm_ptr->rank].disp_unit = disp_unit;
+    shared_table[comm_ptr->rank].shm_base_addr = NULL;
 
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE,
                                0,
@@ -1069,15 +1068,21 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
     MPIDI_CH4U_WIN(win, mmap_addr) = map_ptr;
     MPIDI_CH4U_WIN(win, mmap_sz) = mapsize;
 
-    /* Scan for my offset into the buffer             */
-    /* Could use exscan if this is expensive at scale */
-    for (i = 0; i < comm_ptr->rank; i++)
-        size_out += shared_table[i].size;
+    /* compute the base addresses of each process within the shared memory segment */
+    {
+        char *cur_base = (char *) map_ptr;
+        for (i = 0; i < comm_ptr->local_size; i++) {
+            if (shared_table[i].size)
+                shared_table[i].shm_base_addr = cur_base;
+            else
+                shared_table[i].shm_base_addr = NULL;
+
+            cur_base += shared_table[i].size;
+        }
+    }
 
   fn_zero:
-
-    baseP = (total_size == 0) ? NULL : (void *) ((char *) map_ptr + size_out);
-    win->base = baseP;
+    win->base = shared_table[comm_ptr->rank].shm_base_addr;
     win->size = size;
 
     *(void **) base_ptr = (void *) win->base;
@@ -1127,8 +1132,7 @@ static inline int MPIDI_CH4R_mpi_win_shared_query(MPIR_Win * win,
                                                   MPI_Aint * size, int *disp_unit, void *baseptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    uintptr_t base = (uintptr_t) MPIDI_CH4U_WIN(win, mmap_addr);
-    int offset = rank, i;
+    int offset = rank;
     MPIDI_CH4U_win_shared_info_t *shared_table = MPIDI_CH4U_WIN(win, shared_table);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_SHARED_QUERY);
@@ -1138,12 +1142,7 @@ static inline int MPIDI_CH4R_mpi_win_shared_query(MPIR_Win * win,
         offset = 0;
     *size = shared_table[offset].size;
     *disp_unit = shared_table[offset].disp_unit;
-    if (*size > 0) {
-        for (i = 0; i < offset; i++)
-            base += shared_table[i].size;
-        *(void **) baseptr = (void *) base;
-    } else
-        *(void **) baseptr = NULL;
+    *(void **) baseptr = shared_table[offset].shm_base_addr;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_SHARED_QUERY);
     return mpi_errno;
