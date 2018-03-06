@@ -203,6 +203,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_destroy_hook(struct MPIR_Request *req
 typedef struct MPIDI_CH4U_win_shared_info {
     uint32_t disp_unit;
     size_t size;
+    void *shm_base_addr;
 } MPIDI_CH4U_win_shared_info_t;
 
 #define MPIDI_CH4I_ACCU_ORDER_RAR (1)
