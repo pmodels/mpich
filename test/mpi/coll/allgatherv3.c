@@ -10,9 +10,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-/* Gather data from a vector to contiguous.  This is
-   the trivial version based on the allgather test (allgatherv but with
-   constant data sizes) */
+/* Test Allgatherv on array of doubles, same as allgatherv2 but without
+ * MPI_IN_PLACE. This is the trivial version based on the allgather3
+ * test (allgatherv but with constant data sizes) */
 
 int main(int argc, char **argv)
 {
