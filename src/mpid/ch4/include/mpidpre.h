@@ -258,6 +258,7 @@ typedef struct MPIDI_CH4U_win_info_args_t {
      * and it means the user window buffer is allocated over shared memory,
      * thus RMA operation can use shm routines. */
     int alloc_shm;
+    int num_vnis;               /* number of vnis per window */
 } MPIDI_CH4U_win_info_args_t;
 
 struct MPIDI_CH4U_win_lock {

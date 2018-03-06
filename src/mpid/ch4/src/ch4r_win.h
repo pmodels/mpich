@@ -94,7 +94,7 @@ static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
 
     MPIR_Info *curr_ptr;
     char *value, *token, *savePtr = NULL;
-    int save_ordering;
+    int save_ordering, num_vnis;
 
     curr_ptr = info->next;
 
@@ -164,6 +164,13 @@ static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
                 MPIDI_CH4U_WIN(win, info_args).alloc_shm = 1;
             else if (!strcmp(curr_ptr->value, "false"))
                 MPIDI_CH4U_WIN(win, info_args).alloc_shm = 0;
+        } else if (!strcmp(curr_ptr->key, "num_vnis")) {
+            /* Info key controlling number of vnis per window. */
+            num_vnis = atoi(curr_ptr->value);
+            MPIDI_CH4U_WIN(win, info_args).num_vnis =
+                num_vnis > 0 ? MPL_MIN(num_vnis,
+                                       MPIDI_CH4_Global.
+                                       n_netmod_vnis) : MPIDI_CH4_Global.n_netmod_vnis;
         }
       next:
         curr_ptr = curr_ptr->next;
@@ -239,6 +246,7 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
     } else {
         MPIDI_CH4U_WIN(win, info_args).alloc_shm = 0;
     }
+    MPIDI_CH4U_WIN(win, info_args).num_vnis = MPIDI_CH4_Global.n_netmod_vnis;
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
         mpi_errno = MPIDI_CH4R_mpi_win_set_info(win, info);
