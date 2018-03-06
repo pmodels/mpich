@@ -10,7 +10,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-/* Gather data from a vector to contiguous. */
+/* Tests Allgather on array of doubles. Same as allgather2 test
+ * but without MPI_IN_PLACE. */
 
 int main(int argc, char **argv)
 {
