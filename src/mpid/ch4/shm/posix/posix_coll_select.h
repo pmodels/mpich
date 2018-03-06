@@ -42,6 +42,8 @@ MPL_STATIC_INLINE_PREFIX
                 MPIDI_POSIX_Bcast_intra_scatter_ring_allgather_cnt;
         }
     }
+
+    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -67,6 +69,8 @@ MPL_STATIC_INLINE_PREFIX
         return (MPIDI_POSIX_coll_algo_container_t *) &
             MPIDI_POSIX_Allreduce_intra_reduce_scatter_allgather_cnt;
     }
+
+    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -90,6 +94,8 @@ MPL_STATIC_INLINE_PREFIX
     } else {
         return (MPIDI_POSIX_coll_algo_container_t *) & MPIDI_POSIX_Reduce_intra_binomial_cnt;
     }
+
+    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -186,6 +192,8 @@ MPL_STATIC_INLINE_PREFIX
     } else {
         return (MPIDI_POSIX_coll_algo_container_t *) & MPIDI_POSIX_Alltoall_intra_pairwise_cnt;
     }
+
+    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -208,6 +216,8 @@ MPL_STATIC_INLINE_PREFIX
     } else {
         return (MPIDI_POSIX_coll_algo_container_t *) & MPIDI_POSIX_Alltoallv_intra_scattered_cnt;
     }
+
+    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -230,6 +240,8 @@ MPL_STATIC_INLINE_PREFIX
     } else {
         return (MPIDI_POSIX_coll_algo_container_t *) & MPIDI_POSIX_Alltoallw_intra_scattered_cnt;
     }
+
+    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -258,6 +270,8 @@ MPL_STATIC_INLINE_PREFIX
     } else {
         return (MPIDI_POSIX_coll_algo_container_t *) & MPIDI_POSIX_Allgather_intra_ring_cnt;
     }
+
+    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -296,6 +310,8 @@ MPL_STATIC_INLINE_PREFIX
     } else {
         return (MPIDI_POSIX_coll_algo_container_t *) & MPIDI_POSIX_Allgatherv_intra_ring_cnt;
     }
+
+    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -369,6 +385,8 @@ MPL_STATIC_INLINE_PREFIX
                 MPIDI_POSIX_Reduce_scatter_intra_recursive_doubling_cnt;
         }
     }
+
+    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX
@@ -431,6 +449,8 @@ MPL_STATIC_INLINE_PREFIX
                 MPIDI_POSIX_Reduce_scatter_block_intra_recursive_doubling_cnt;
         }
     }
+
+    return NULL;
 }
 
 MPL_STATIC_INLINE_PREFIX
