@@ -167,3 +167,5 @@ nbicscatterv 8 mpiversion=3.0
 nbicalltoall 8 mpiversion=3.0
 nbicalltoallv 8 mpiversion=3.0
 nbicalltoallw 8 mpiversion=3.0
+
+neighb_coll 4 mpiversion=3.0
