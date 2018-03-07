@@ -64,6 +64,14 @@ int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
         for (i = 0; i < incount; i++) {
+            if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
+                mpi_errno = MPID_Progress_test();
+                if (mpi_errno != MPI_SUCCESS) {
+                    MPID_Progress_end(&progress_state);
+                    goto fn_fail;
+                }
+            }
+
             if (request_ptrs[i] != NULL) {
                 if (MPIR_Request_is_complete(request_ptrs[i])) {
                     if (MPIR_Request_is_active(request_ptrs[i])) {
