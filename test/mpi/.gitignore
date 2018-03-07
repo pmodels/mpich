@@ -97,6 +97,7 @@
 /coll/nbredscat
 /coll/nbredscat3
 /coll/nbredscatinter
+/coll/neighb_coll
 /coll/nonblocking
 /coll/nonblocking2
 /coll/nonblocking3
@@ -1227,7 +1228,6 @@
 /topo/graphcr
 /topo/graphcr2
 /topo/graphmap1
-/topo/neighb_coll
 /topo/topodup
 /topo/topotest
 /ft/die

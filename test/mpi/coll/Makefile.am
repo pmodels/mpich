@@ -121,7 +121,8 @@ noinst_PROGRAMS =      \
     nbicgatherv        \
     nbicreduce         \
     nbicscatter        \
-    nbicscatterv
+    nbicscatterv       \
+    neighb_coll
 allgatherv4_LDADD = $(LDADD) -lm
 
 bcast_full_SOURCES = bcast.c
