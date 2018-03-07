@@ -8,6 +8,9 @@
 #include "adio_extern.h"
 
 #ifdef ROMIO_DAOS
+#include <daos_types.h>
+#include <daos_api.h>
+
 extern daos_handle_t daos_pool_oh;
 extern bool daos_initialized;
 #endif /* ROMIO_DAOS */

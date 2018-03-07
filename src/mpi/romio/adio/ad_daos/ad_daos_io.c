@@ -69,8 +69,8 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     }
 
     /** set memory location */
-    sgl->sg_nr.num = 1;
-    sgl->sg_nr.num_out = 0;
+    sgl->sg_nr = 1;
+    sgl->sg_nr_out = 0;
     daos_iov_set(iov, buf, len);
     sgl->sg_iovs = iov;
     //fprintf(stderr, "MEM : off %lld len %zu\n", buf, len);

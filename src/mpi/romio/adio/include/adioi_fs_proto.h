@@ -56,7 +56,9 @@ extern struct ADIOI_Fns_struct ADIO_IME_operations;
 #endif
 
 #ifdef ROMIO_DAOS
+#include <daos_types.h>
 #include <daos_api.h>
+
 /* prototypes are in adio/ad_daos/ad_daos.h */
 extern struct ADIOI_Fns_struct ADIO_DAOS_operations;
 

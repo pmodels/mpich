@@ -20,6 +20,7 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
 #endif
     if (cont->amode == DAOS_COO_RW) {
         MPI_Comm_rank(fd->comm, &rank);
+
         if (rank == 0)
             rc = daos_epoch_commit(cont->coh, cont->epoch, NULL, NULL);
 

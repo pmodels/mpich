@@ -224,7 +224,6 @@ AC_ARG_WITH(file-system,[
 --with-file-system=name - Build with support for the named file systems],,)
 AC_ARG_WITH(pvfs2,[
 --with-pvfs2=path - Path to installation of PVFS (version 2)],,)
-AC_ARG_WITH(daos,[--with-daos=path - Path to installation of DAOS],,)
 AC_ARG_WITH(mpi-impl,[
 --with-mpi-impl=name - Specify MPI implementation to build ROMIO for],,)
 dnl
@@ -777,6 +776,56 @@ if test -n "$FILE_SYSTEM" ; then
    done
 fi
 
+AC_ARG_WITH([cart],
+    [AS_HELP_STRING([--with-cart],
+            [Build DAOS ROMIO driver[default=no]])],,
+    [with_cart=no])
+
+AS_IF([test "x$with_cart" != xno],
+    CART="yes"
+    LDFLAGS="$LDFLAGS -L$with_cart/lib"
+    CPPFLAGS="$CPPFLAGS -I$with_cart/include/"
+    AC_CHECK_HEADERS(gurt/common.h,, [unset CART])
+    AC_CHECK_LIB([gurt], [d_rank_list_alloc],, [unset CART]))
+
+AC_ARG_WITH([daos],
+    [AS_HELP_STRING([--with-daos],
+	    [Build DAOS ROMIO driver[default=no]])],,
+    [with_daos=no])
+
+AS_IF([test "x$with_daos" != xno],
+    DAOS="yes"
+    LDFLAGS="$LDFLAGS -L$with_daos/lib"
+    CPPFLAGS="$CPPFLAGS -I$with_daos/include"
+    AC_CHECK_HEADERS(daos_types.h,, [unset DAOS])
+    AC_CHECK_LIB([uuid], [uuid_generate],, [unset DAOS])
+    AC_CHECK_LIB([daos_common], [daos_sgl_init],, [unset DAOS])
+    AC_CHECK_LIB([daos], [daos_init],, [unset DAOS]))
+
+AS_IF([test "x$CART" != xyes], [unset DAOS])
+
+if test -n "$file_system_daos" ; then
+    if test "x$DAOS" == xyes ; then
+	AC_DEFINE(ROMIO_DAOS,1,[Define for ROMIO with DAOS])
+    else
+	AC_MSG_ERROR([DAOS support requested but not found (--with-daos, --with-cart)])
+    fi
+fi
+
+##DAOS=no
+##if test -n "$file_system_daos" ; then
+##    DAOS=yes
+##    AC_CHECK_LIB([cart], [d_rank_list_alloc],, [unset DAOS])
+##    AC_CHECK_HEADERS(daos_types.h,, [unset DAOS])
+##    AC_CHECK_LIB([uuid], [uuid_generate],, [unset DAOS])
+##    AC_CHECK_LIB([daos_common], [daos_sgl_init],, [unset DAOS])
+##    AC_CHECK_LIB([daos], [daos_init],, [unset DAOS])
+##fi
+##
+##AS_IF([test "x$DAOS" == xyes],
+##    AC_MSG_NOTICE("Building with DAOS $DAOS") 
+##    AC_DEFINE(ROMIO_DAOS,1,[Define for ROMIO with DAOS]))
+
 #############################################
 # This PVFS2 logic is special because it's hard to get it right if it comes
 # before the known_filesystems check loop above.  So we handle it down here,
@@ -965,18 +1014,6 @@ if test -n "$file_system_pvfs2"; then
        , AC_DEFINE(HAVE_PVFS2_CREATE_WITHOUT_LAYOUT, 1, 
        		[Define if PVFS_sys_create does not have layout parameter])
        )
-fi
-
-#
-# Verify presence of daos_api.h
-#
-if test -n "$file_system_daos"; then
-    CPPFLAGS="$CPPFLAGS $CFLAGS"
-    AC_CHECK_HEADERS(daos_types.h,
-	AC_DEFINE(ROMIO_DAOS,1,[Define for ROMIO with DAOS])
-	AC_DEFINE(HAVE_DAOS_LIB, 1, [Define if DAOS available.]),
-        AC_MSG_ERROR([DAOS support requested but cannot find daos_types.h header file])
-    )
 fi
 
 AS_IF([test -n "$file_system_gpfs"],

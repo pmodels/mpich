@@ -2,7 +2,6 @@
 
 #include <libgen.h>
 #include "ad_daos.h"
-#include "daos/common.h"
 #include <uuid/uuid.h>
 
 #define OID_SEED 5731
@@ -367,8 +366,8 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
 
     /* Hash object name to create obj id */
     cont->oid.hi = 0;
-    cont->oid.lo = daos_hash_murmur64(cont->obj_name, strlen(cont->obj_name),
-                                      OID_SEED);
+    cont->oid.lo = d_hash_murmur64(cont->obj_name, strlen(cont->obj_name),
+                                   OID_SEED);
 
     /* MSC - add hint for object class */
     daos_obj_id_generate(&cont->oid, DAOS_OC_REPL_MAX_RW);
