@@ -1137,6 +1137,11 @@ int foo_c(CFI_cdesc_t * a_desc, CFI_cdesc_t * b_desc)
 	if (a_desc->dim[1].extent != b_desc->dim[0].extent) { return 3; }
 	return 0;
 }
+
+void test_assumed_rank_async_impl_c(CFI_cdesc_t * a_desc)
+{
+	return;
+}
 ]])],[mv conftest.$OBJEXT conftest1.$OBJEXT],[f08_works=no])
 AC_LANG_POP([C])
 
@@ -1171,9 +1176,11 @@ INTERFACE
     END FUNCTION FOO
 END INTERFACE
 
+
 ! Test assumed-rank + asynchronous
 INTERFACE TEST_ASSUMED_RANK_ASYNC
-    SUBROUTINE TEST_ASSUMED_RANK_ASYNC_IMPL(BUF)
+    SUBROUTINE TEST_ASSUMED_RANK_ASYNC_IMPL(BUF) &
+        BIND(C,name="test_assumed_rank_async_impl_c")
         IMPLICIT NONE
         TYPE(*), DIMENSION(..), ASYNCHRONOUS :: BUF
     END SUBROUTINE TEST_ASSUMED_RANK_ASYNC_IMPL
