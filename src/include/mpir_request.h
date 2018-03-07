@@ -8,6 +8,28 @@
 #ifndef MPIR_REQUEST_H_INCLUDED
 #define MPIR_REQUEST_H_INCLUDED
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories :
+    - name : REQUEST
+      description : A category for requests mangement variables
+
+cvars:
+    - name        : MPIR_CVAR_REQUEST_POLL_FREQ
+      category    : REQUEST
+      type        : int
+      default     : 8
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        How frequent to poll during completion calls (wait/test) in terms
+        of number of processed requests before polling.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* NOTE-R1: MPIR_REQUEST_KIND__MPROBE signifies that this is a request created by
  * MPI_Mprobe or MPI_Improbe.  Since we use MPI_Request objects as our
  * MPI_Message objects, we use this separate kind in order to provide stronger

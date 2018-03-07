@@ -29,6 +29,14 @@ int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_S
         found_nonnull_req = FALSE;
 
         for (i = 0; i < count; i++) {
+            if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
+                mpi_errno = MPID_Progress_test();
+                if (mpi_errno != MPI_SUCCESS) {
+                    MPID_Progress_end(&progress_state);
+                    goto fn_fail;
+                }
+            }
+
             if (request_ptrs[i] == NULL) {
                 ++n_inactive;
                 continue;

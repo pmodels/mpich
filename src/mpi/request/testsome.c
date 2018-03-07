@@ -52,6 +52,12 @@ int MPIR_Testsome_impl(int incount, MPIR_Request * request_ptrs[],
     *outcount = 0;
 
     for (i = 0; i < incount; i++) {
+        if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
+            mpi_errno = MPID_Progress_test();
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+        }
+
         if (request_ptrs[i] != NULL &&
             request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
             request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
