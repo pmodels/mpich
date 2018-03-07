@@ -48,6 +48,12 @@ int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
 
     if (requests_property & MPIR_REQUESTS_PROPERTY__NO_GREQUESTS) {
         for (i = 0; i < count; i++) {
+            if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
+                mpi_errno = MPID_Progress_test();
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+            }
+
             if (request_ptrs[i] == NULL || MPIR_Request_is_complete(request_ptrs[i])) {
                 n_completed++;
             } else {
@@ -56,6 +62,12 @@ int MPIR_Testall_impl(int count, MPIR_Request * request_ptrs[], int *flag,
         }
     } else {
         for (i = 0; i < count; i++) {
+            if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
+                mpi_errno = MPID_Progress_test();
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+            }
+
             if (request_ptrs[i] != NULL) {
                 if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
                     request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
