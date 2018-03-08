@@ -64,8 +64,10 @@ extern const MPIDI_coll_algo_container_t MPIDI_CH4I_Reduce_scatter_intra_composi
 extern const MPIDI_coll_algo_container_t MPIDI_CH4I_Reduce_scatter_inter_composition_alpha_cnt;
 
 /* Reduce_scatter_block CH4 level containers declaration */
-extern const MPIDI_coll_algo_container_t MPIDI_CH4I_Reduce_scatter_block_intra_composition_alpha_cnt;
-extern const MPIDI_coll_algo_container_t MPIDI_CH4I_Reduce_scatter_block_inter_composition_alpha_cnt;
+extern const MPIDI_coll_algo_container_t
+    MPIDI_CH4I_Reduce_scatter_block_intra_composition_alpha_cnt;
+extern const MPIDI_coll_algo_container_t
+    MPIDI_CH4I_Reduce_scatter_block_inter_composition_alpha_cnt;
 
 /* Scan CH4 level containers declaration */
 extern const MPIDI_coll_algo_container_t MPIDI_CH4I_Scan_intra_composition_alpha_cnt;

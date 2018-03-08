@@ -553,7 +553,7 @@ static void ADIO_FileSysType_prefix(const char *filename, int *fstype, int *erro
         *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__, MPI_ERR_IO,
                                            "**iofstypeunsupported",
-					   "*iofstypeunsupported %s", filename);
+                                           "*iofstypeunsupported %s", filename);
         /* --END ERROR HANDLING-- */
     }
 }

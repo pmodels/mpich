@@ -8,7 +8,8 @@ const MPIDI_PTL_coll_algo_container_t MPIDI_PTL_Bcast_intra_binomial_cnt = {
     .id = MPIDI_PTL_Bcast_intra_binomial_id
 };
 
-const MPIDI_PTL_coll_algo_container_t MPIDI_PTL_Bcast_intra_scatter_recursive_doubling_allgather_cnt = {
+const MPIDI_PTL_coll_algo_container_t MPIDI_PTL_Bcast_intra_scatter_recursive_doubling_allgather_cnt
+    = {
     .id = MPIDI_PTL_Bcast_intra_scatter_recursive_doubling_allgather_id
 };
 

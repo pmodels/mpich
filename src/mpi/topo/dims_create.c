@@ -775,7 +775,8 @@ PMPI_LOCAL int MPIR_Dims_create_impl(int nnodes, int ndims, int dims[])
      * have already trimmed off some large factors */
     /* First, find all of the divisors given by the remaining factors */
     ndivs = ndivisors_from_factor(nf, (const Factors *) f);
-    MPIR_CHKLMEM_MALLOC(divs, int *, ((unsigned int) ndivs) * sizeof(int), mpi_errno, "divs", MPL_MEM_COMM);
+    MPIR_CHKLMEM_MALLOC(divs, int *, ((unsigned int) ndivs) * sizeof(int), mpi_errno, "divs",
+                        MPL_MEM_COMM);
     ndivs = factor_to_divisors(nf, f, ndivs, divs);
     if (MPIR_CVAR_DIMS_VERBOSE) {
         for (i = 0; i < ndivs; i++) {

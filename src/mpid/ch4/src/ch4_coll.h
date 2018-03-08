@@ -538,8 +538,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE_SCATTER);
 
     ch4_algo_parameters_container =
-        MPIDI_CH4_Reduce_scatter_select(sendbuf, recvbuf, recvcounts, datatype,
-                                        op, comm, errflag);
+        MPIDI_CH4_Reduce_scatter_select(sendbuf, recvbuf, recvcounts, datatype, op, comm, errflag);
 
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_CH4_Reduce_scatter_intra_composition_alpha_id:
