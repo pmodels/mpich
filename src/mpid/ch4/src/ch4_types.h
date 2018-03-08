@@ -14,7 +14,6 @@
 #include <mpidimpl.h>
 #include <stdio.h>
 #include "mpir_cvars.h"
-#include "pmi.h"
 
 /* Macros and inlines */
 #define MPIDI_CH4U_MAP_NOT_FOUND      ((void*)(-1UL))
