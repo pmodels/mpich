@@ -12,6 +12,10 @@
 #include "hwloc.h"
 #endif
 
+#ifdef USE_PMIX_API
+#include "pmix.h"
+#endif
+
 /* Per process data */
 typedef struct PreDefined_attrs {
     int appnum;                 /* Application number provided by mpiexec (MPI-2) */
@@ -42,6 +46,12 @@ typedef struct MPIR_Process_t {
     int bindset_is_valid;       /* Flag to indicate if the bind set of the process is valid:
                                  * 0 if invalid, 1 if valid */
 #endif
+
+#ifdef USE_PMIX_API
+    pmix_proc_t pmix_proc;
+    pmix_proc_t pmix_wcproc;
+#endif
+
     /* The topology routines dimsCreate is independent of any communicator.
      * If this pointer is null, the default routine is used */
     int (*dimsCreate) (int, int, int *);
