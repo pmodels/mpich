@@ -26,11 +26,13 @@ extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Alltoall_intra_pairwise_s
 
 /* Alltoallv OFI containers declaration */
 extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Alltoallv_intra_scattered_cnt;
-extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Alltoallv_intra_pairwise_sendrecv_replace_cnt;
+extern const MPIDI_OFI_coll_algo_container_t
+    MPIDI_OFI_Alltoallv_intra_pairwise_sendrecv_replace_cnt;
 
 /* Alltoallw OFI containers declaration */
 extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Alltoallw_intra_scattered_cnt;
-extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Alltoallw_intra_pairwise_sendrecv_replace_cnt;
+extern const MPIDI_OFI_coll_algo_container_t
+    MPIDI_OFI_Alltoallw_intra_pairwise_sendrecv_replace_cnt;
 
 /* Allgather OFI containers declaration */
 extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Allgather_intra_recursive_doubling_cnt;
@@ -61,10 +63,13 @@ extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Reduce_scatter_intra_recu
 extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Reduce_scatter_intra_recursive_halving_cnt;
 
 /* Reduce_scatter_block OFI containers declaration */
-extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Reduce_scatter_block_intra_noncommutative_cnt;
+extern const MPIDI_OFI_coll_algo_container_t
+    MPIDI_OFI_Reduce_scatter_block_intra_noncommutative_cnt;
 extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Reduce_scatter_block_intra_pairwise_cnt;
-extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Reduce_scatter_block_intra_recursive_doubling_cnt;
-extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Reduce_scatter_block_intra_recursive_halving_cnt;
+extern const MPIDI_OFI_coll_algo_container_t
+    MPIDI_OFI_Reduce_scatter_block_intra_recursive_doubling_cnt;
+extern const MPIDI_OFI_coll_algo_container_t
+    MPIDI_OFI_Reduce_scatter_block_intra_recursive_halving_cnt;
 
 /* Scan OFI containers declaration */
 extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Scan_intra_recursive_doubling_cnt;

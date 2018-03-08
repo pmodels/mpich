@@ -476,7 +476,9 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
             MPIR_Comm_add_ref(root_comm);
             MPIDI_CH4U_enqueue_unexp(rreq, &MPIDI_CH4U_COMM(root_comm, unexp_list));
         } else {
-            MPIDI_CH4U_enqueue_unexp(rreq, MPIDI_CH4U_context_id_to_uelist(MPIDI_CH4U_REQUEST(rreq, context_id)));
+            MPIDI_CH4U_enqueue_unexp(rreq,
+                                     MPIDI_CH4U_context_id_to_uelist(MPIDI_CH4U_REQUEST
+                                                                     (rreq, context_id)));
         }
         /* MPIDI_CS_EXIT(); */
     } else {

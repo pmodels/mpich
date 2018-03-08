@@ -8,8 +8,8 @@ const MPIDI_STUBNM_coll_algo_container_t MPIDI_STUBNM_Bcast_intra_binomial_cnt =
     .id = MPIDI_STUBNM_Bcast_intra_binomial_id
 };
 
-const MPIDI_STUBNM_coll_algo_container_t MPIDI_STUBNM_Bcast_intra_scatter_recursive_doubling_allgather_cnt
-    = {
+const MPIDI_STUBNM_coll_algo_container_t
+    MPIDI_STUBNM_Bcast_intra_scatter_recursive_doubling_allgather_cnt = {
     .id = MPIDI_STUBNM_Bcast_intra_scatter_recursive_doubling_allgather_id
 };
 
@@ -53,7 +53,8 @@ const MPIDI_STUBNM_coll_algo_container_t MPIDI_STUBNM_Alltoall_intra_pairwise_cn
 };
 
 /* Alltoallv default STUBNM containers initialization */
-const MPIDI_STUBNM_coll_algo_container_t MPIDI_STUBNM_Alltoallv_intra_pairwise_sendrecv_replace_cnt = {
+const MPIDI_STUBNM_coll_algo_container_t MPIDI_STUBNM_Alltoallv_intra_pairwise_sendrecv_replace_cnt
+    = {
     .id = MPIDI_STUBNM_Alltoallv_intra_pairwise_sendrecv_replace_id
 };
 
@@ -62,7 +63,8 @@ const MPIDI_STUBNM_coll_algo_container_t MPIDI_STUBNM_Alltoallv_intra_scattered_
 };
 
 /* Alltoallw default STUBNM containers initialization */
-const MPIDI_STUBNM_coll_algo_container_t MPIDI_STUBNM_Alltoallw_intra_pairwise_sendrecv_replace_cnt = {
+const MPIDI_STUBNM_coll_algo_container_t MPIDI_STUBNM_Alltoallw_intra_pairwise_sendrecv_replace_cnt
+    = {
     .id = MPIDI_STUBNM_Alltoallw_intra_pairwise_sendrecv_replace_id
 };
 
@@ -134,7 +136,8 @@ const MPIDI_STUBNM_coll_algo_container_t MPIDI_STUBNM_Reduce_scatter_intra_recur
 };
 
 /* Reduce_scatter_block default STUBNM containers initialization*/
-const MPIDI_STUBNM_coll_algo_container_t MPIDI_STUBNM_Reduce_scatter_block_intra_noncommutative_cnt = {
+const MPIDI_STUBNM_coll_algo_container_t MPIDI_STUBNM_Reduce_scatter_block_intra_noncommutative_cnt
+    = {
     .id = MPIDI_STUBNM_Reduce_scatter_block_intra_noncommutative_id
 };
 
@@ -142,11 +145,13 @@ const MPIDI_STUBNM_coll_algo_container_t MPIDI_STUBNM_Reduce_scatter_block_intra
     .id = MPIDI_STUBNM_Reduce_scatter_block_intra_pairwise_id
 };
 
-const MPIDI_STUBNM_coll_algo_container_t MPIDI_STUBNM_Reduce_scatter_block_intra_recursive_doubling_cnt = {
+const MPIDI_STUBNM_coll_algo_container_t
+    MPIDI_STUBNM_Reduce_scatter_block_intra_recursive_doubling_cnt = {
     .id = MPIDI_STUBNM_Reduce_scatter_block_intra_recursive_doubling_id
 };
 
-const MPIDI_STUBNM_coll_algo_container_t MPIDI_STUBNM_Reduce_scatter_block_intra_recursive_halving_cnt = {
+const MPIDI_STUBNM_coll_algo_container_t
+    MPIDI_STUBNM_Reduce_scatter_block_intra_recursive_halving_cnt = {
     .id = MPIDI_STUBNM_Reduce_scatter_block_intra_recursive_halving_id
 };
 
