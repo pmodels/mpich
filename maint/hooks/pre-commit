@@ -58,17 +58,17 @@ git diff-index --cached --name-only --diff-filter=D -z HEAD | \
 # This will check the previous commit again when not amending a commit, but that
 # should be ok if the patches are correct.
 filestring=`git diff --cached --name-only --diff-filter=ACM HEAD~1`
-IFS=', ' read -r -a file_array <<< "$filestring"
 
 # Everything else happens in the temporary build tree
 pushd $MIRROR > /dev/null
 
 ret=0
 
-for file in "${file_array[@]}"
+# This won't work if we ever have a file with a space in the name
+for file in $filestring
 do
     if [[ ($file == *.c || $file == *.h || $file == *.c.in || $file == *.h.in) &&
-          !($file == *mpi.h.in || $file == *mpio.h.in || $file == src/mpid/ch3/*) ]]; then
+          !($file == *mpi.h.in || $file == *mpio.h.in || $file == src/mpid/ch3/* || $file == doc/*) ]]; then
         cp ${file} ${TMP_FILENAME}
         maint/code-cleanup.sh ${file}
         git --no-pager diff ${file} ${TMP_FILENAME}
