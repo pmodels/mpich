@@ -99,6 +99,8 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
         MPL_exit(exit_code);
 #ifndef USE_PMIX_API
     PMI_Abort(exit_code, error_msg);
+#else
+    PMIx_Abort(exit_code, error_msg, NULL, 0);
 #endif
     return 0;
 }

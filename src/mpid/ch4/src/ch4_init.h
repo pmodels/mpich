@@ -149,7 +149,32 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
                              "**pmi_job_getid %d", pmi_errno);
     }
 #elif defined(USE_PMIX_API)
-    MPIR_Assert(0);
+    {
+        pmix_value_t *pvalue = NULL;
+
+        pmi_errno = PMIx_Init(&MPIR_Process.pmix_proc, NULL, 0);
+        if (pmi_errno != PMIX_SUCCESS) {
+            MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_init", "**pmix_init %d",
+                                 pmi_errno);
+        }
+        rank = MPIR_Process.pmix_proc.rank;
+
+        PMIX_PROC_CONSTRUCT(&MPIR_Process.pmix_wcproc);
+        MPL_strncpy(MPIR_Process.pmix_wcproc.nspace, MPIR_Process.pmix_proc.nspace, PMIX_MAX_NSLEN);
+        MPIR_Process.pmix_wcproc.rank = PMIX_RANK_WILDCARD;
+
+        pmi_errno = PMIx_Get(&MPIR_Process.pmix_wcproc, PMIX_JOB_SIZE, NULL, 0, &pvalue);
+        if (pmi_errno != PMIX_SUCCESS) {
+            MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_get", "**pmix_get %d",
+                                 pmi_errno);
+        }
+        size = pvalue->data.uint32;
+        PMIX_VALUE_RELEASE(pvalue);
+
+        /* appnum, has_parent is not set for now */
+        appnum = 0;
+        has_parent = 0;
+    }
 #else
     pmi_errno = PMI_Init(&has_parent);
 
@@ -414,7 +439,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
 MPL_STATIC_INLINE_PREFIX int MPID_Get_universe_size(int *universe_size)
 {
     int mpi_errno = MPI_SUCCESS;
-    int pmi_errno = PMI_SUCCESS;
+    int pmi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET_UNIVERSE_SIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GET_UNIVERSE_SIZE);
 
@@ -426,7 +451,16 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_universe_size(int *universe_size)
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
                              "**pmi_get_universe_size", "**pmi_get_universe_size %d", pmi_errno);
 #else
-    MPIR_Assert(0);
+    {
+        pmix_value_t *pvalue = NULL;
+
+        pmi_errno = PMIx_Get(&MPIR_Process.pmix_wcproc, PMIX_UNIV_SIZE, NULL, 0, &pvalue);
+        if (pmi_errno != PMIX_SUCCESS)
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
+                                 "**pmix_get", "**pmix_get %d", pmi_errno);
+        *universe_size = pvalue->data.uint32;
+        PMIX_VALUE_RELEASE(pvalue);
+    }
 #endif
 
     if (*universe_size < 0)
