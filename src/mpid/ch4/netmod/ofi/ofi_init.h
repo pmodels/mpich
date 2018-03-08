@@ -1461,7 +1461,7 @@ static inline int MPIDI_OFI_choose_provider(struct fi_info *prov, struct fi_info
 
 static inline int MPIDI_OFI_application_hints(int rank)
 {
-    int world_size, mpi_errno;
+    int mpi_errno;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_DATA: %d", MPIDI_OFI_ENABLE_DATA));
@@ -1538,12 +1538,8 @@ static inline int MPIDI_OFI_application_hints(int rank)
     }
 
     /* Check that the desired number of ranks is possible and abort if not */
-    mpi_errno = PMI_Get_size(&world_size);
-    if (mpi_errno != 0) {
-        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_get_size",
-                             "**pmi_get_size %d", mpi_errno);
-    }
-    if (MPIDI_OFI_MAX_RANK_BITS < 32 && world_size > (1 << MPIDI_OFI_MAX_RANK_BITS)) {
+    if (MPIDI_OFI_MAX_RANK_BITS < 32 &&
+        MPIR_Comm_size(MPIR_Process.comm_world) > (1 << MPIDI_OFI_MAX_RANK_BITS)) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|too_many_ranks");
     }
 
