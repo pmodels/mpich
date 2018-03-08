@@ -196,7 +196,8 @@ const MPIDI_coll_algo_container_t MPIDI_CH4I_Allgatherv_inter_composition_alpha_
 const MPIDI_coll_algo_container_t MPIDI_CH4I_Reduce_scatter_intra_composition_alpha_cnt = {
     .id = MPIDI_CH4_Reduce_scatter_intra_composition_alpha_id,
     .params.ch4_reduce_scatter_params.ch4_reduce_scatter_alpha = {
-                                                                  .reduce_scatter = MPIDI_CH4_COLL_AUTO_SELECT}
+                                                                  .reduce_scatter =
+                                                                  MPIDI_CH4_COLL_AUTO_SELECT}
 };
 
 const MPIDI_coll_algo_container_t MPIDI_CH4I_Reduce_scatter_inter_composition_alpha_cnt = {
@@ -208,7 +209,8 @@ const MPIDI_coll_algo_container_t MPIDI_CH4I_Reduce_scatter_block_intra_composit
     .id = MPIDI_CH4_Reduce_scatter_block_intra_composition_alpha_id,
     .params.ch4_reduce_scatter_block_params.ch4_reduce_scatter_block_alpha = {
                                                                               .reduce_scatter_block
-                                                                              = MPIDI_CH4_COLL_AUTO_SELECT}
+                                                                              =
+                                                                              MPIDI_CH4_COLL_AUTO_SELECT}
 };
 
 const MPIDI_coll_algo_container_t MPIDI_CH4I_Reduce_scatter_block_inter_composition_alpha_cnt = {

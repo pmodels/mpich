@@ -46,9 +46,11 @@ int main(int argc, char *argv[])
 
     for (i = 0; i < NCOMMS; i++) {
         if (rank == 0)
-            MPI_Isend(buff + COUNT*i, COUNT, MPI_INT, 1 /* dest */, 0 /* tag */, comms[i], &reqs[i]);
+            MPI_Isend(buff + COUNT * i, COUNT, MPI_INT, 1 /* dest */ , 0 /* tag */ , comms[i],
+                      &reqs[i]);
         else
-            MPI_Irecv(buff + COUNT*i, COUNT, MPI_INT, 0 /* src */, 0 /* tag */, comms[i], &reqs[i]);
+            MPI_Irecv(buff + COUNT * i, COUNT, MPI_INT, 0 /* src */ , 0 /* tag */ , comms[i],
+                      &reqs[i]);
     }
     MPI_Waitall(NCOMMS, reqs, MPI_STATUSES_IGNORE);
 

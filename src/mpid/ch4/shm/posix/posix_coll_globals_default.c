@@ -8,7 +8,8 @@ const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Bcast_intra_binomial_cnt = {
     .id = MPIDI_POSIX_Bcast_intra_binomial_id
 };
 
-const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Bcast_intra_scatter_recursive_doubling_allgather_cnt = {
+const MPIDI_POSIX_coll_algo_container_t
+    MPIDI_POSIX_Bcast_intra_scatter_recursive_doubling_allgather_cnt = {
     .id = MPIDI_POSIX_Bcast_intra_scatter_recursive_doubling_allgather_id
 };
 
@@ -141,11 +142,13 @@ const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_scatter_block_intra_p
     .id = MPIDI_POSIX_Reduce_scatter_block_intra_pairwise_id
 };
 
-const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_scatter_block_intra_recursive_doubling_cnt = {
+const MPIDI_POSIX_coll_algo_container_t
+    MPIDI_POSIX_Reduce_scatter_block_intra_recursive_doubling_cnt = {
     .id = MPIDI_POSIX_Reduce_scatter_block_intra_recursive_doubling_id
 };
 
-const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_scatter_block_intra_recursive_halving_cnt = {
+const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_scatter_block_intra_recursive_halving_cnt
+    = {
     .id = MPIDI_POSIX_Reduce_scatter_block_intra_recursive_halving_id
 };
 
