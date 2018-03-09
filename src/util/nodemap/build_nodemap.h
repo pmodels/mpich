@@ -8,7 +8,11 @@
 #define BUILD_NODEMAP_H_INCLUDED
 
 #include "mpl.h"
+#ifndef USE_PMIX_API
 #include "pmi.h"
+#else
+#include "pmix.h"
+#endif
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -429,7 +433,32 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
                              "unable to populate node ids from PMI_process_mapping");
     }
 #elif defined(USE_PMIX_API)
-    MPIR_Assert(0);
+    {
+        char *nodelist = NULL, *node = NULL;
+        pmix_proc_t *procs = NULL;
+        size_t nprocs, node_id = 0;
+        int i;
+
+        pmi_errno = PMIx_Resolve_nodes(MPIR_Process.pmix_proc.nspace, &nodelist);
+        MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                             "**pmix_resolve_nodes", "**pmix_resolve_nodes %d", pmi_errno);
+        MPIR_Assert(nodelist);
+
+        node = strtok(nodelist, ",");
+        while (node) {
+            pmi_errno = PMIx_Resolve_peers(node, MPIR_Process.pmix_proc.nspace, &procs, &nprocs);
+            MPIR_ERR_CHKANDJUMP1(pmi_errno != PMIX_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                                 "**pmix_resolve_peers", "**pmix_resolve_peers %d", pmi_errno);
+            for (i = 0; i < nprocs; i++) {
+                out_nodemap[procs[i].rank] = node_id;
+            }
+            node_id++;
+            node = strtok(NULL, ",");
+        }
+        *out_max_node_id = node_id - 1;
+        MPL_free(nodelist);
+        PMIX_PROC_FREE(procs, nprocs);
+    }
 #else /* USE_PMI2_API */
     if (myrank == -1) {
         /* fixme this routine can't handle the dynamic process case at this
