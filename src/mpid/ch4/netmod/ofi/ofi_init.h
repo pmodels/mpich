@@ -13,7 +13,11 @@
 
 #include "ofi_impl.h"
 #include "mpir_cvars.h"
+#ifndef USE_PMIX_API
 #include "pmi.h"
+#else
+#include "pmix.h"
+#endif
 #include "mpidu_shm.h"
 
 /*
@@ -901,7 +905,38 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Put(keyS, val), pmi);
         MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Fence(), pmi);
 #elif defined(USE_PMIX_API)
-        MPIR_Assert(0);
+        {
+            pmix_value_t value;
+            pmix_info_t *info;
+            int flag = 1;
+
+            value.type = PMIX_STRING;
+            value.data.string = val;
+            pmi_errno = PMIx_Put(PMIX_LOCAL, keyS, &value);
+            if (pmi_errno != PMIX_SUCCESS) {
+                MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_put", "**pmix_put %d",
+                                     pmi_errno);
+            }
+            pmi_errno = PMIx_Put(PMIX_REMOTE, keyS, &value);
+            if (pmi_errno != PMIX_SUCCESS) {
+                MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_put", "**pmix_put %d",
+                                     pmi_errno);
+            }
+            pmi_errno = PMIx_Commit();
+            if (pmi_errno != PMIX_SUCCESS) {
+                MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_commit", "**pmix_commit %d",
+                                     pmi_errno);
+            }
+
+            PMIX_INFO_CREATE(info, 1);
+            PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
+            pmi_errno = PMIx_Fence(&MPIR_Process.pmix_wcproc, 1, info, 1);
+            if (pmi_errno != PMIX_SUCCESS) {
+                MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_fence", "**pmix_fence %d",
+                                     pmi_errno);
+            }
+            PMIX_INFO_FREE(info, 1);
+        }
 #else
         MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Put(MPIDI_Global.kvsname, keyS, val), pmi);
         MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Commit(MPIDI_Global.kvsname), pmi);
@@ -943,7 +978,21 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                    (NULL, -1, keyS, valS, MPIDI_KVSAPPSTRLEN, &vallen), pmi);
             MPIR_Assert(vallen > 0);
 #elif defined(USE_PMIX_API)
-            MPIR_Assert(0);
+            {
+                pmix_proc_t proc;
+                pmix_value_t *pvalue = NULL;
+
+                PMIX_PROC_CONSTRUCT(&proc);
+                MPL_strncpy(proc.nspace, MPIR_Process.pmix_proc.nspace, PMIX_MAX_NSLEN);
+                proc.rank = i;
+                pmi_errno = PMIx_Get(&proc, keyS, NULL, 0, &pvalue);
+                if (pmi_errno != PMIX_SUCCESS) {
+                    MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_get", "**pmix_get %d",
+                                         pmi_errno);
+                }
+                MPL_strncpy(valS, pvalue->data.string, MPIDI_KVSAPPSTRLEN);
+                PMIX_VALUE_RELEASE(pvalue);
+            }
 #else
             MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get
                                    (MPIDI_Global.kvsname, keyS, valS, MPIDI_KVSAPPSTRLEN), pmi);
@@ -980,6 +1029,12 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDU_shm_seg_destroy(&memory, num_local);
 #ifndef USE_PMIX_API
         PMI_Barrier();
+#else
+        pmi_errno = PMIx_Fence(&MPIR_Process.pmix_wcproc, 1, NULL, 0);
+        if (pmi_errno != PMIX_SUCCESS) {
+            MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_fence", "**pmix_fence %d",
+                                 pmi_errno);
+        }
 #endif
     }
 
@@ -1167,7 +1222,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
 #ifdef USE_PMI2_API
     PMI2_Finalize();
 #elif defined(USE_PMIX_API)
-    MPIR_Assert(0);
+    PMIx_Finalize(NULL, 0);
 #else
     PMI_Finalize();
 #endif
