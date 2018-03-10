@@ -21,6 +21,18 @@ cvars:
       description : >-
         k value for tree based ibcast (for tree_kary and tree_knomial)
 
+    - name        : MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Maximum chunk size (in bytes) for pipelining in tree based
+        ibcast (tree_kary and tree_knomial). Default value is 0, that is,
+        no pipelining by default
+
     - name        : MPIR_CVAR_IBCAST_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string

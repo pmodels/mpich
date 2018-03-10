@@ -29,7 +29,8 @@ int MPIR_Ibcast_intra_tree_kary(void *buffer, int count,
 
     mpi_errno = MPII_Gentran_Ibcast_intra_tree(buffer, count, datatype, root,
                                                comm_ptr, request, TREE_TYPE_KARY,
-                                               MPIR_CVAR_IBCAST_TREE_KVAL, 0);
+                                               MPIR_CVAR_IBCAST_TREE_KVAL,
+                                               MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE);
 
     return mpi_errno;
 }
