@@ -42,7 +42,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_TREE);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Scheduling pipelined broadcast on %d ranks, root=%d\n",
+                    (MPL_DBG_FDEST, "Scheduling pipelined tree broadcast on %d ranks, root=%d\n",
                      MPIR_Comm_size(comm), root));
 
     size = MPIR_Comm_size(comm);
@@ -67,7 +67,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
         MPIR_ERR_POP(mpi_errno);
     num_children = my_tree.num_children;
 
-    /* do pipelined broadcast */
+    /* do pipelined tree broadcast */
     /* NOTE: Make sure you are handling non-contiguous datatypes
      * correctly with pipelined broadcast, for example, buffer+offset
      * if being calculated correctly */
