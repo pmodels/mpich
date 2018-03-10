@@ -14,7 +14,7 @@
 
 /* generate gentran algo prototypes */
 #include "tsp_gentran.h"
-#include "ibcast_tsp_algos_prototypes.h"
+#include "ibcast_tsp_tree_algos_prototypes.h"
 #include "tsp_undef.h"
 
 #undef FUNCNAME

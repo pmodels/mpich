@@ -13,7 +13,7 @@
 
 /* instantiate ibcast tree algorithms for the gentran transport */
 #include "tsp_gentran.h"
-#include "ibcast_tsp_algos_prototypes.h"
-#include "ibcast_tsp_algos.h"
-#include "ibcast_tsp_algos_undef.h"
+#include "ibcast_tsp_tree_algos_prototypes.h"
+#include "ibcast_tsp_tree_algos.h"
+#include "ibcast_tsp_tree_algos_undef.h"
 #include "tsp_undef.h"
