@@ -7,9 +7,9 @@
 
 if BUILD_AD_PVFS2
 
-noinst_HEADERS +=
-    adio/ad_pvfs2/ad_pvfs2.h 		\
-    adio/ad_pvfs2/ad_pvfs2_io.h 	\
+noinst_HEADERS +=                       \
+    adio/ad_pvfs2/ad_pvfs2.h            \
+    adio/ad_pvfs2/ad_pvfs2_io.h         \
     adio/ad_pvfs2/ad_pvfs2_common.h
 
 romio_other_sources +=                          \
