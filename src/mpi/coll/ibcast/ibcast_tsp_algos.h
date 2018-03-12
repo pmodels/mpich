@@ -62,7 +62,6 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
                                              maxbytes, count, num_chunks,
                                              chunk_size_floor, chunk_size_ceil));
 
-    my_tree.children = NULL;
     mpi_errno = MPII_Treealgo_tree_create(rank, size, tree_type, k, root, &my_tree);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
