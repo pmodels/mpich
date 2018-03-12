@@ -9,6 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
+#include "mpiimpl.h"
+#include "utarray.h"
 #include "treealgo_types.h"
 #include "treeutil.h"
 #include "mpiimpl.h"
@@ -21,14 +23,8 @@ static int tree_add_child(MPII_Treealgo_tree_t * t, int rank)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_Assert(t->num_children <= t->max_children);
-
-    if (t->num_children == t->max_children) {
-        t->children = MPL_realloc(t->children, sizeof(int) * 2 * t->max_children, MPL_MEM_COLL);
-        MPIR_ERR_CHKANDJUMP(t->children, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    }
-
-    t->children[t->num_children++] = rank;
+    utarray_push_back(t->children, &rank, MPL_MEM_COLL);
+    t->num_children++;
 
   fn_exit:
     return mpi_errno;
@@ -49,10 +45,9 @@ int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPII_Tre
 
     ct->rank = rank;
     ct->nranks = nranks;
-    ct->num_children = 0;
     ct->parent = -1;
-    ct->children = (int *) MPL_malloc(sizeof(int) * k, MPL_MEM_COLL);
-    ct->max_children = k;
+    utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
+    ct->num_children = 0;
 
     MPIR_Assert(nranks >= 0);
 
@@ -96,7 +91,6 @@ int MPII_Treeutil_tree_knomial_init(int rank, int nranks, int k, int root,
 
     ct->rank = rank;
     ct->nranks = nranks;
-    ct->num_children = 0;
     ct->parent = -1;
 
     MPIR_Assert(nranks >= 0);
@@ -112,14 +106,8 @@ int MPII_Treeutil_tree_knomial_init(int rank, int nranks, int k, int root,
     for (tmp = nranks - 1; tmp; tmp /= k)
         maxtime++;
 
-    /* initialize to NULL first, so that there are no issues during
-     * free'ing ct */
-    ct->children = NULL;
-    ct->max_children = 0;
-
-    if (maxtime)
-        ct->children = (int *) MPL_malloc(sizeof(int) * (maxtime) * (k - 1), MPL_MEM_COLL);
-    ct->max_children = maxtime * (k - 1);
+    utarray_new(ct->children, &ut_int_icd, MPL_MEM_COLL);
+    ct->num_children = 0;
     time = 0;
     parent = -1;        /* root has no parent */
     current_rank = 0;   /* start at root of the tree */

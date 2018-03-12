@@ -84,7 +84,7 @@ int MPII_Genutil_sched_isend(const void *buf,
 int MPII_Genutil_sched_imcast(const void *buf,
                               int count,
                               MPI_Datatype dt,
-                              int *dests,
+                              UT_array * dests,
                               int num_dests,
                               int tag,
                               MPIR_Comm * comm_ptr,
@@ -92,6 +92,7 @@ int MPII_Genutil_sched_imcast(const void *buf,
 {
     vtx_t *vtxp;
     int vtx_id;
+    int *dest, i;
 
     /* assign a new vertex */
     vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
@@ -105,7 +106,11 @@ int MPII_Genutil_sched_imcast(const void *buf,
     vtxp->u.imcast.dt = dt;
     vtxp->u.imcast.num_dests = num_dests;
     vtxp->u.imcast.dests = (int *) MPL_malloc(sizeof(int) * num_dests, MPL_MEM_COLL);
-    memcpy(vtxp->u.imcast.dests, dests, sizeof(int) * num_dests);
+    dest = NULL;
+    i = 0;
+    while ((dest = (int *) utarray_next(dests, dest))) {
+        vtxp->u.imcast.dests[i++] = *dest;
+    }
 
     vtxp->u.imcast.comm = comm_ptr;
     vtxp->u.imcast.req =
