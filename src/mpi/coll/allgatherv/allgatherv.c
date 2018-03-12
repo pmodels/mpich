@@ -129,8 +129,7 @@ int MPIR_Allgatherv_intra_auto(const void *sendbuf,
     }
 
     else if (total_count * recvtype_size < MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE) {
-        /* Short message and non-power-of-two no. of processes. Use
-         * Bruck algorithm (see description above). */
+        /* Short message and non-power-of-two no. of processes. Use Bruck algorithm. */
 
         mpi_errno =
             MPIR_Allgatherv_intra_brucks(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
