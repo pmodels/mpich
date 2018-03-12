@@ -432,6 +432,11 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
                 MPIR_ERR_POP(mpi_errno);
             /* don't call MPIR_Comm_commit here */
 
+            /* Init collective selection infrastructure for node_comm */
+            mpi_errno = MPID_Comm_collective_selection_init(comm->node_comm);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+
             /* Create collectives-specific infrastructure */
             mpi_errno = MPIR_Coll_comm_init(comm->node_comm);
             if (mpi_errno)
@@ -469,6 +474,11 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
                 MPIR_ERR_POP(mpi_errno);
             /* don't call MPIR_Comm_commit here */
 
+            /* Init collective selection infrastructure for node_roots_comm */
+            mpi_errno = MPID_Comm_collective_selection_init(comm->node_roots_comm);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+
             /* Create collectives-specific infrastructure */
             mpi_errno = MPIR_Coll_comm_init(comm->node_roots_comm);
             if (mpi_errno)
@@ -488,6 +498,10 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
         MPIR_Comm_map_free(comm);
     }
+    /* Init collective selection infrastructure for comm */
+    mpi_errno = MPID_Comm_collective_selection_init(comm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     if (external_procs != NULL)
         MPL_free(external_procs);
@@ -782,6 +796,11 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
 
         /* Cleanup collectives-specific infrastructure */
         mpi_errno = MPII_Coll_comm_cleanup(comm_ptr);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        /* Cleanup collective selection infrastructure */
+        mpi_errno = MPID_Comm_collective_selection_finalize(comm_ptr);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 

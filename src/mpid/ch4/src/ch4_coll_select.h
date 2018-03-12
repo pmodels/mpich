@@ -14,6 +14,7 @@
 #include "ch4_impl.h"
 #include "ch4r_proc.h"
 #include "ch4_coll_impl.h"
+#include "ch4_coll_select_init.h"
 
 #include "../shm/include/shm.h"
 

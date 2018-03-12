@@ -481,6 +481,9 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 #define MPID_Comm_create_hook   MPIDI_Comm_create_hook
 #define MPID_Comm_free_hook     MPIDI_Comm_free_hook
 
+#define MPID_Comm_collective_selection_init       MPIDI_Comm_collective_selection_init
+#define MPID_Comm_collective_selection_finalize   MPIDI_Comm_collective_selection_finalize
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_Type_commit_hook(MPIR_Datatype * type);
 MPL_STATIC_INLINE_PREFIX int MPIDI_Type_free_hook(MPIR_Datatype * type);
 

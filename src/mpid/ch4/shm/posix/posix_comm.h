@@ -12,6 +12,7 @@
 
 #include "posix_impl.h"
 #include "utlist.h"
+#include "posix_coll_select_init.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_POSIX_mpi_comm_create_hook

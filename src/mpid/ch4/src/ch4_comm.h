@@ -313,6 +313,52 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_Comm_collective_selection_init
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_collective_selection_init(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_COLLECTIVE_SELECTION_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_COLLECTIVE_SELECTION_INIT);
+
+    mpi_errno = MPIDI_CH4_mpi_comm_collective_selection_init(comm);
+    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        mpi_errno = MPIDI_NM_mpi_comm_collective_selection_init(comm);
+#ifdef MPIDI_BUILD_CH4_SHM
+        mpi_errno = MPIDI_SHM_mpi_comm_collective_selection_init(comm);
+#endif /* MPIDI_BUILD_CH4_SHM */
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_COLLECTIVE_SELECTION_INIT);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Comm_collective_selection_finalize
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_collective_selection_finalize(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_COLLECTIVE_SELECTION_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_COLLECTIVE_SELECTION_FINALIZE);
+
+    mpi_errno = MPIDI_CH4_mpi_comm_collective_selection_finalize(comm);
+    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        mpi_errno = MPIDI_NM_mpi_comm_collective_selection_finalize(comm);
+#ifdef MPIDI_BUILD_CH4_SHM
+        mpi_errno = MPIDI_SHM_mpi_comm_collective_selection_finalize(comm);
+#endif /* MPIDI_BUILD_CH4_SHM */
+    }
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_COLLECTIVE_SELECTION_FINALIZE);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPID_Intercomm_exchange_map
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)

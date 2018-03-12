@@ -35,5 +35,28 @@ static inline int MPIDI_NM_mpi_comm_free_hook(MPIR_Comm * comm)
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_comm_collective_selection_init
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_NM_mpi_comm_collective_selection_init(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(0);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_comm_collective_selection_finalize
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_NM_mpi_comm_collective_selection_finalize(MPIR_Comm * comm)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(0);
+    return mpi_errno;
+}
 
 #endif /* STUBNM_COMM_H_INCLUDED */

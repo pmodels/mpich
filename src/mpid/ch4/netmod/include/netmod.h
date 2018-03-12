@@ -470,6 +470,8 @@ typedef int (*MPIDI_NM_mpi_type_commit_hook_t) (MPIR_Datatype * datatype_p);
 typedef int (*MPIDI_NM_mpi_type_free_hook_t) (MPIR_Datatype * datatype_p);
 typedef int (*MPIDI_NM_mpi_op_commit_hook_t) (MPIR_Op * op_p);
 typedef int (*MPIDI_NM_mpi_op_free_hook_t) (MPIR_Op * op_p);
+typedef int (*MPIDI_NM_mpi_comm_collective_selection_init_t) (MPIR_Comm * comm);
+typedef int (*MPIDI_NM_mpi_comm_collective_selection_finalize_t) (MPIR_Comm * comm);
 
 typedef struct MPIDI_NM_funcs {
     MPIDI_NM_mpi_init_t mpi_init;
@@ -501,6 +503,8 @@ typedef struct MPIDI_NM_funcs {
     MPIDI_NM_rma_win_local_cmpl_hook_t rma_win_local_cmpl_hook;
     MPIDI_NM_rma_target_cmpl_hook_t rma_target_cmpl_hook;
     MPIDI_NM_rma_target_local_cmpl_hook_t rma_target_local_cmpl_hook;
+    MPIDI_NM_mpi_comm_collective_selection_init_t mpi_comm_collective_selection_init;
+    MPIDI_NM_mpi_comm_collective_selection_finalize_t mpi_comm_collective_selection_finalize;
     /* Request allocation routines */
     MPIDI_NM_am_request_init_t am_request_init;
     MPIDI_NM_am_request_finalize_t am_request_finalize;
@@ -1348,5 +1352,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype *
                                                          datatype_p) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_commit_hook(MPIR_Op * op_p) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_free_hook(MPIR_Op * op_p) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_collective_selection_init(MPIR_Comm *
+                                                                         comm)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_collective_selection_finalize(MPIR_Comm *
+                                                                             comm)
+    MPL_STATIC_INLINE_SUFFIX;
 
 #endif /* NETMOD_H_INCLUDED */

@@ -2620,6 +2620,32 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_free_hook(MPIR_Op * op_p)
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_collective_selection_init(MPIR_Comm * comm)
+{
+    int ret = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_COLLECTIVE_SELECTION_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_COLLECTIVE_SELECTION_INIT);
+
+    ret = MPIDI_NM_func->mpi_comm_collective_selection_init(comm);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_COLLECTIVE_SELECTION_INIT);
+    return ret;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_collective_selection_finalize(MPIR_Comm * comm)
+{
+    int ret = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_COLLECTIVE_SELECTION_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_COLLECTIVE_SELECTION_FINALIZE);
+
+    ret = MPIDI_NM_func->mpi_comm_collective_selection_finalize(comm);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_COLLECTIVE_SELECTION_FINALIZE);
+    return ret;
+}
+
 #endif /* NETMOD_DISABLE_INLINES  */
 
 #else
