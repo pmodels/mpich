@@ -1461,7 +1461,7 @@ static inline int MPIDI_OFI_choose_provider(struct fi_info *prov, struct fi_info
 
 static inline int MPIDI_OFI_application_hints(int rank)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_DATA: %d", MPIDI_OFI_ENABLE_DATA));
