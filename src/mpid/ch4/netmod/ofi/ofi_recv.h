@@ -340,43 +340,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
                                                     int context_offset, MPIDI_av_entry_t * addr,
                                                     MPIR_Request ** request)
 {
-    MPIR_Request *rreq;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RECV_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RECV_INIT);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
-        mpi_errno =
-            MPIDIG_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
-        goto fn_exit;
-    }
+    mpi_errno =
+        MPIDIG_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 
-    MPIDI_OFI_REQUEST_CREATE((rreq), MPIR_REQUEST_KIND__PREQUEST_RECV);
-
-    *request = rreq;
-    rreq->comm = comm;
-    MPIR_Comm_add_ref(comm);
-
-    MPIDI_OFI_REQUEST(rreq, util.persist.buf) = (void *) buf;
-    MPIDI_OFI_REQUEST(rreq, util.persist.count) = count;
-    MPIDI_OFI_REQUEST(rreq, datatype) = datatype;
-    MPIDI_OFI_REQUEST(rreq, util.persist.rank) = rank;
-    MPIDI_OFI_REQUEST(rreq, util.persist.tag) = tag;
-    MPIDI_OFI_REQUEST(rreq, util_comm) = comm;
-    MPIDI_OFI_REQUEST(rreq, util_id) = comm->context_id + context_offset;
-    rreq->u.persist.real_request = NULL;
-
-    MPIDI_CH4U_request_complete(rreq);
-
-    MPIDI_OFI_REQUEST(rreq, util.persist.type) = MPIDI_PTYPE_RECV;
-
-    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-        MPIR_Datatype *dt_ptr;
-        MPIR_Datatype_get_ptr(datatype, dt_ptr);
-        MPIR_Datatype_ptr_add_ref(dt_ptr);
-    }
-
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RECV_INIT);
     return mpi_errno;
 }
