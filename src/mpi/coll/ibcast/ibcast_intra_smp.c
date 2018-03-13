@@ -7,12 +7,6 @@
 #include "mpiimpl.h"
 #include "ibcast.h"
 
-struct ibcast_status {
-    int curr_bytes;
-    int n_bytes;
-    MPI_Status status;
-};
-
 #undef FUNCNAME
 #define FUNCNAME sched_test_length
 #undef FCNAME
@@ -21,7 +15,7 @@ static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     int recv_size;
-    struct ibcast_status *status = (struct ibcast_status *) state;
+    struct MPII_Ibcast_state *status = (struct MPII_Ibcast_state *) state;
     MPIR_Get_count_impl(&status->status, MPI_BYTE, &recv_size);
     if (status->n_bytes != recv_size || status->status.MPI_ERROR != MPI_SUCCESS) {
         mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
@@ -41,14 +35,14 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_size;
-    struct ibcast_status *status;
+    struct MPII_Ibcast_state *status;
     MPIR_SCHED_CHKPMEM_DECL(1);
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(MPIR_Comm_is_node_aware(comm_ptr));
 #endif
-    MPIR_SCHED_CHKPMEM_MALLOC(status, struct ibcast_status *,
-                              sizeof(struct ibcast_status), mpi_errno, "MPI_Status",
+    MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPII_Ibcast_state *,
+                              sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Status",
                               MPL_MEM_BUFFER);
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
