@@ -15,13 +15,13 @@ static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     int recv_size;
-    struct MPII_Ibcast_state *status = (struct MPII_Ibcast_state *) state;
-    MPIR_Get_count_impl(&status->status, MPI_BYTE, &recv_size);
-    if (status->n_bytes != recv_size || status->status.MPI_ERROR != MPI_SUCCESS) {
+    struct MPII_Ibcast_state *ibcast_state = (struct MPII_Ibcast_state *) state;
+    MPIR_Get_count_impl(&ibcast_state->status, MPI_BYTE, &recv_size);
+    if (ibcast_state->n_bytes != recv_size || ibcast_state->status.MPI_ERROR != MPI_SUCCESS) {
         mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
                                          FCNAME, __LINE__, MPI_ERR_OTHER,
                                          "**collective_size_mismatch",
-                                         "**collective_size_mismatch %d %d", status->n_bytes,
+                                         "**collective_size_mismatch %d %d", ibcast_state->n_bytes,
                                          recv_size);
     }
     return mpi_errno;
@@ -35,19 +35,19 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_size;
-    struct MPII_Ibcast_state *status;
+    struct MPII_Ibcast_state *ibcast_state;
     MPIR_SCHED_CHKPMEM_DECL(1);
 
 #ifdef HAVE_ERROR_CHECKING
     MPIR_Assert(MPIR_Comm_is_node_aware(comm_ptr));
 #endif
-    MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPII_Ibcast_state *,
+    MPIR_SCHED_CHKPMEM_MALLOC(ibcast_state, struct MPII_Ibcast_state *,
                               sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Status",
                               MPL_MEM_BUFFER);
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
-    status->n_bytes = type_size * count;
+    ibcast_state->n_bytes = type_size * count;
     /* TODO insert packing here */
 
     /* send to intranode-rank 0 on the root's node */
@@ -58,12 +58,12 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
             mpi_errno =
                 MPIR_Sched_recv_status(buffer, count, datatype,
                                        MPIR_Get_intranode_rank(comm_ptr, root), comm_ptr->node_comm,
-                                       &status->status, s);
+                                       &ibcast_state->status, s);
         }
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
-        mpi_errno = MPIR_Sched_cb(&sched_test_length, status, s);
+        mpi_errno = MPIR_Sched_cb(&sched_test_length, ibcast_state, s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIR_SCHED_BARRIER(s);
