@@ -88,6 +88,8 @@ int PMIServGetPort(int *fdout, char *portString, int portLen)
 {
     int fd = -1;
     struct sockaddr_in sa;
+    struct sockaddr_in6 sa6;
+    struct sockaddr_storage sa_storage;
     int optval = 1;
     int portnum;
     char *range_ptr;
@@ -127,13 +129,26 @@ int PMIServGetPort(int *fdout, char *portString, int portLen)
         }
     }
 
+    memset((void *) &sa_storage, 0, sizeof(sa_storage));
+
     for (portnum = low_port; portnum <= high_port; portnum++) {
+        /*IPV6
+         * if (ipv6_set_flag) {
+         * memset((void *) &sa6, 0, sizeof(sa6));
+         * sa6.sin6_family = AF_INET6;
+         * sa6.sin6_port = htons(portnum);
+         * sa6.sin6_addr.s_addr = INADDR_ANY;
+         * memcpy(&sa_storage, &sa6, sizeof(sa6));
+         * fd = socket(AF_INET6, SOCK_STREAM, TCP);
+         * }
+         * else { */
         memset((void *) &sa, 0, sizeof(sa));
         sa.sin_family = AF_INET;
         sa.sin_port = htons(portnum);
         sa.sin_addr.s_addr = INADDR_ANY;
-
+        memcpy(&sa_storage, &sa, sizeof(sa));
         fd = socket(AF_INET, SOCK_STREAM, TCP);
+        //}
         if (fd < 0) {
             /* Failure; return immediately */
             return fd;
@@ -143,7 +158,7 @@ int PMIServGetPort(int *fdout, char *portString, int portLen)
             MPL_internal_sys_error_printf("setsockopt", errno, 0);
         }
 
-        if (bind(fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
+        if (bind(fd, (struct sockaddr *) &sa_storage, sizeof(sa_storage)) < 0) {
             close(fd);
             fd = -1;
             if (errno != EADDRINUSE && errno != EADDRNOTAVAIL) {
@@ -169,11 +184,13 @@ int PMIServGetPort(int *fdout, char *portString, int portLen)
 
     *fdout = fd;
     if (portnum == 0) {
-        socklen_t sinlen = sizeof(sa);
+        socklen_t sinlen = sizeof(sa_storage);
         /* We asked for *any* port, so we need to find which
          * port we actually got */
-        getsockname(fd, (struct sockaddr *) &sa, &sinlen);
-        portnum = ntohs(sa.sin_port);
+        getsockname(fd, (struct sockaddr *) &sa_storage, &sinlen);
+        //IPV6
+        //portnum = ipv6_flag_set ? ntohs((struct sockaddr_in6 *) &sa_storage.sin6_port) : ntohs((struct sockaddr_in *) &sa_storage.sin_port);
+        portnum = ntohs(((struct sockaddr *) &sa_storage).sin_port);
     }
 
     /* Create the port string */
@@ -350,13 +367,14 @@ int PMIServEndPort(void)
    interface name) and port.  It returns the fd, or -1 on failure */
 int MPIE_ConnectToPort(char *hostname, int portnum)
 {
-    struct hostent *hp;
-    struct sockaddr_in sa;
-    int fd;
-    int optval = 1;
+    struct addrinfo hints;
+    struct addrinfo *result, *rp;
+    //struct sockaddr_in sa;
+    int fd, status;
+    int optval = 1, connect_failed = 0;
     int q_wait = 1;
     char defaultHostname[MAX_HOST_NAME + 1];
-
+    char port[16];
 
     DBG_PRINTF(("Connecting to %s:%d\n", hostname, portnum));
     /* FIXME: simple_pmi should *never* start mpiexec with a bogus
@@ -367,54 +385,63 @@ int MPIE_ConnectToPort(char *hostname, int portnum)
         hostname = defaultHostname;
         DBG_PRINTF(("Connecting to %s:%d\n", hostname, portnum));
     }
-    hp = gethostbyname(hostname);
-    if (!hp) {
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = 0;
+    hints.ai_protocol = 0;
+    snprintf(port, 16, "%d", portnum);
+    status = getaddrinfo(hostname, port, &hints, &result);
+    if (status != 0) {
         return -1;
     }
-
-    memset((void *) &sa, 0, sizeof(sa));
+    //memset((void *) &sa, 0, sizeof(sa));
     /* POSIX might define h_addr_list only and not define h_addr */
-#ifdef HAVE_H_ADDR_LIST
+/*#ifdef HAVE_H_ADDR_LIST
     memcpy((void *) &sa.sin_addr, (void *) hp->h_addr_list[0], hp->h_length);
 #else
     memcpy((void *) &sa.sin_addr, (void *) hp->h_addr, hp->h_length);
 #endif
     sa.sin_family = hp->h_addrtype;
     sa.sin_port = htons((unsigned short) portnum);
+	*/
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+        connect_failed = 0;
+        fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if (fd < 0) {
+            continue;
+        }
 
-    fd = socket(AF_INET, SOCK_STREAM, TCP);
-    if (fd < 0) {
-        return -1;
-    }
+        if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &optval, sizeof(optval))) {
+            perror("Error calling setsockopt:");
+        }
 
-    if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &optval, sizeof(optval))) {
-        perror("Error calling setsockopt:");
-    }
-
-    /* We wait here for the connection to succeed */
-    if (connect(fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
-        switch (errno) {
-            case ECONNREFUSED:
-                /* (close socket, get new socket, try again) */
-                if (q_wait)
-                    close(fd);
-                return -1;
-
-            case EINPROGRESS:  /*  (nonblocking) - select for writing. */
-                break;
-
-            case EISCONN:      /*  (already connected) */
-                break;
-
-            case ETIMEDOUT:    /* timed out */
-                return -1;
-
-            default:
-                return -1;
+        /* We wait here for the connection to succeed */
+        if (connect(fd, rp->ai_addr, rp->ai_addrlen) != -1) {   //Success
+            break;
+        } else {        //Fail
+            switch (errno) {
+                case ECONNREFUSED:
+                    /* (close socket, get new socket, try again) */
+                    if (q_wait)
+                        close(fd);
+                    connect_failed = 1;
+                    break;
+                case EINPROGRESS:      /*  (nonblocking) - select for writing. */
+                    break;
+                case EISCONN:  /*  (already connected) */
+                    break;
+                case ETIMEDOUT:        /* timed out */
+                    connect_failed = 1;
+                    break;
+                default:
+                    connect_failed = 1;
+                    break;
+            }
         }
     }
-
     /* The first message must also be received: cmd=initack */
-
-    return fd;
+    freeaddrinfo(result);
+    return (connect_failed == 1 ? -1 : fd);
 }

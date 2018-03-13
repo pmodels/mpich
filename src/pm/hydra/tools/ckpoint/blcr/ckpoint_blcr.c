@@ -78,32 +78,49 @@ static HYD_status create_stdinouterr_sock(int *port)
 {
     HYD_status status = HYD_SUCCESS;
     int ret;
+    int ipv6_found = 0;
     struct sockaddr_in sin;
+    struct sockaddr_in6 sin6;
+    struct sockaddr_storage sin_storage;
     socklen_t len;
     HYDU_FUNC_ENTER();
-
+    memset((void *) &sin_storage, 0, sizeof(sin_storage));
     listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    HYDU_ERR_CHKANDJUMP(status, listen_fd < 0, HYD_INTERNAL_ERROR, "socket() failed, %s\n",
-                        strerror(errno));
-
-    memset((void *) &sin, 0, sizeof(sin));
-    sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    sin.sin_port = htons(0);
-
-    ret = bind(listen_fd, (struct sockaddr *) &sin, sizeof(sin));
+    if (listen_fd < 0) {
+        listen_fd = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+        if (listen_fd < 0) {
+            HYDU_ERR_CHKANDJUMP(status, listen_fd < 0, HYD_INTERNAL_ERROR, "socket() failed, %s\n",
+                                strerror(errno));
+        }
+        ipv6_found = 1;
+    }
+    if (!ipv6_found) {
+        memset((void *) &sin, 0, sizeof(sin));
+        sin.sin_family = AF_INET;
+        sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+        sin.sin_port = htons(0);
+        memcpy(&sin_storage, &sin, sizeof(sin));
+    } else {
+        memset((void *) &sin6, 0, sizeof(sin6));
+        sin6.sin6_family = AF_INET6;
+        sin6.sin6_addr = in6addr_loopback;
+        sin6.sin6_port = htons(0);
+        memcpy(&sin_storage, &sin6, sizeof(sin6));
+    }
+    ret = bind(listen_fd, (struct sockaddr *) &sin_storage, sizeof(sin_storage));
     HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "bind() failed, %s\n", strerror(errno));
 
     ret = listen(listen_fd, SOMAXCONN);
     HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "listen() failed, %s\n", strerror(errno));
 
-    len = sizeof(sin);
-    ret = getsockname(listen_fd, (struct sockaddr *) &sin, &len);
+    len = sizeof(sin_storage);
+    ret = getsockname(listen_fd, (struct sockaddr *) &sin_storage, &len);
     HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "getsockname() failed, %s\n",
                         strerror(errno));
-
-    *port = ntohs(sin.sin_port);
-
+    //IPV6
+    *port =
+        ipv6_found ? ntohs(((struct sockaddr_in6 *) &sin_storage).sin6_port) :
+        ntohs(((struct sockaddr_in *) &sin_storage).sin_port);
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;
@@ -145,7 +162,7 @@ static HYD_status wait_for_stdinouterr_sockets(int num_ranks, int *ranks, int *i
         char *id_p;
         /* wait for a connection */
         do {
-            struct sockaddr_in rmt_addr;
+            struct sockaddr_storage rmt_addr;
             socklen_t sa_len = sizeof(rmt_addr);;
             fd = accept(listen_fd, (struct sockaddr *) &rmt_addr, &sa_len);
         } while (fd && errno == EINTR);

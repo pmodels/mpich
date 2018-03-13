@@ -1639,6 +1639,8 @@ int MPIDI_CH3I_Sock_post_connect_ifaddr( struct MPIDI_CH3I_Sock_set * sock_set,
     struct pollinfo * pollinfo;
     int fd = -1;
     struct sockaddr_in addr;
+    struct sockaddr_in6 addr6;
+    struct sockaddr_storage addr_storage;
     long flags;
     int nodelay;
     int rc;
@@ -1652,7 +1654,10 @@ int MPIDI_CH3I_Sock_post_connect_ifaddr( struct MPIDI_CH3I_Sock_set * sock_set,
     /*
      * Create a non-blocking socket with Nagle's algorithm disabled
      */
-    fd = socket(PF_INET, SOCK_STREAM, 0);
+    if (ifaddr->type == PF_INET6)
+        fd = socket(PF_INET6, SOCK_STREAM, 0);
+    else
+        fd = socket(PF_INET, SOCK_STREAM, 0);
     if (fd == -1) {
 	/* FIXME: It would be better to include a special formatting
 	   clue for system error messages (e.g., %dSE; in the recommended
@@ -1710,11 +1715,22 @@ int MPIDI_CH3I_Sock_post_connect_ifaddr( struct MPIDI_CH3I_Sock_set * sock_set,
     pollinfo->state = MPIDI_CH3I_SOCKI_STATE_CONNECTED_RW;
     pollinfo->os_errno = 0;
 
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    memcpy(&addr.sin_addr.s_addr, ifaddr->ifaddr,
-	   sizeof(addr.sin_addr.s_addr));
-    addr.sin_port = htons( (unsigned short)port);
+    if (ifaddr->type = AF_INET6) {
+        memset(&addr6, 0, sizeof(addr6));
+        addr6.sin6_family = AF_INET6;
+        memcpy(&addr6.sin6_addr.s_addr, ifaddr->ifaddr,
+            sizeof(addr6.sin6_addr.s_addr));
+        addr6.sin6_port = htons( (unsigned short)port);
+        memcpy(&addr_storage, &addr6, sizeof(addr6));
+    }
+    else {
+        memset(&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        memcpy(&addr.sin_addr.s_addr, ifaddr->ifaddr,
+               sizeof(addr.sin_addr.s_addr));
+        addr.sin_port = htons( (unsigned short)port);
+        memcpy(&addr_storage, &addr, sizeof(addr));
+    }
 
     /*
      * Set and verify the socket buffer size
@@ -1734,7 +1750,7 @@ int MPIDI_CH3I_Sock_post_connect_ifaddr( struct MPIDI_CH3I_Sock_set * sock_set,
 
     do
     {
-        rc = connect(fd, (struct sockaddr *) &addr, sizeof(addr));
+        rc = connect(fd, (struct sockaddr *) &addr_storage, sizeof(addr_storage));
     }
     while (rc == -1 && errno == EINTR);
 
@@ -1810,9 +1826,11 @@ int MPIDI_CH3I_Sock_post_connect(struct MPIDI_CH3I_Sock_set * sock_set, void * u
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_Sock_ifaddr_t ifaddr;
-    struct hostent * hostent;
-
-    /*
+    struct addrinfo hints;
+    struct addrinfo *result, *rp;
+    int status_code = 0;
+    char port_str[16];
+	/*
      * Convert hostname to IP address
      *
      * FIXME: this should handle failures caused by a backed up listener queue
@@ -1823,20 +1841,47 @@ int MPIDI_CH3I_Sock_post_connect(struct MPIDI_CH3I_Sock_set * sock_set, void * u
        the host description be a const char [] and not modified by this
        routine? */
     strtok(host_description, " ");
-    /* FIXME: For ipv6, we should use getaddrinfo */
-    hostent = gethostbyname(host_description);
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = 0;
+    hints.ai_protocol = 0;
+    memset(port_str, 0, 16);
+    snprintf(port_str, 16, "%d", port);
+
+    status_code = getaddrinfo(host_description, port_str, &hints, &result);
     /* --BEGIN ERROR HANDLING-- */
-    if (hostent == NULL || hostent->h_addrtype != AF_INET) {
+    if (status_code != 0) {
 	/* FIXME: Set error */
-	goto fn_exit;
+	    goto fn_exit;
     }
     /* --END ERROR HANDLING-- */
-    /* These are correct for IPv4 */
-    memcpy( ifaddr.ifaddr, (unsigned char *)hostent->h_addr_list[0], 4 );
-    ifaddr.len  = 4;
-    ifaddr.type = AF_INET;
-    mpi_errno = MPIDI_CH3I_Sock_post_connect_ifaddr( sock_set, user_ptr,
-						&ifaddr, port, sockp );
+    //IPV6
+	/* Get IPV4 first */
+	for (rp = result; rp; rp = rp->ai_next) {
+        if (rp->ai_socktype == IPV4) {
+            memcpy(ifaddr.ifaddr, result->ai_addr, sizeof(struct sockaddr));
+            ifaddr.len  = result->ai_addrlen;
+            ifaddr.type = result->ai_socktype;
+            mpi_errno = MPIDI_CH3I_Sock_post_connect_ifaddr( sock_set, user_ptr,
+                        &ifaddr, port, sockp );
+            ipv4_found = 1;
+            break;
+        }
+    }
+    /* If IPV4 failed to be found, we search IPV6 again */
+    if (!ipv4_found) {
+        for (rp = result; rp; rp = rp->ai_next) {
+            memcpy(ifaddr.ifaddr, result->ai_addr, sizeof(struct sockaddr));
+            ifaddr.len  = result->ai_addrlen;
+            ifaddr.type = result->ai_socktype;
+            mpi_errno = MPIDI_CH3I_Sock_post_connect_ifaddr( sock_set, user_ptr,
+                        &ifaddr, port, sockp );
+            if (mpi_errno == MPIDI_CH3I_SOCK_ERR_FAIL)
+                continue
+            break;
+        }
+    }
  fn_exit:
     return mpi_errno;
 }

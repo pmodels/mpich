@@ -114,6 +114,7 @@ static MPIDI_CH3_PktHandler_Fcn *pkt_handlers[MPIDI_NEM_TCP_PKT_NUM_TYPES ? MPID
 
 MPL_dbg_class MPIDI_NEM_TCP_DBG_DET;
 
+int tcp_ipv6 = 0;
 #undef FUNCNAME
 #define FUNCNAME set_up_listener
 #undef FCNAME
@@ -126,9 +127,19 @@ static int set_up_listener(void)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_SET_UP_LISTENER);
 
-    MPID_nem_tcp_g_lstn_plfd.fd = MPID_nem_tcp_g_lstn_sc.fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    MPIR_ERR_CHKANDJUMP2(MPID_nem_tcp_g_lstn_sc.fd == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIR_Strerror(errno), errno);
-
+    int sock_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sock_fd == -1) {
+        sock_fd = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+        if (sock_fd == -1) {
+            MPIR_ERR_CHKANDJUMP2(MPID_nem_tcp_g_lstn_sc.fd == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIR_Strerror(errno), errno);
+        } else {
+            MPID_nem_tcp_g_lstn_plfd.fd = MPID_nem_tcp_g_lstn_sc.fd = sock_fd;
+            tcp_ipv6 = 1;
+        }
+    } else {
+        MPID_nem_tcp_g_lstn_plfd.fd = MPID_nem_tcp_g_lstn_sc.fd = sock_fd;
+        tcp_ipv6 = 0;
+    }
     mpi_errno = MPID_nem_tcp_set_sockopts(MPID_nem_tcp_g_lstn_sc.fd);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
@@ -624,6 +635,8 @@ int MPID_nem_tcp_bind (int sockfd)
     int mpi_errno = MPI_SUCCESS;
     int ret;
     struct sockaddr_in sin;
+    struct sockaddr_in6 sin6;
+    struct sockaddr_storage sin_storage;
     int port;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_BIND);
 
@@ -635,12 +648,22 @@ int MPID_nem_tcp_bind (int sockfd)
     ret = 0;
     for (port = MPIR_CVAR_CH3_PORT_RANGE.low; port <= MPIR_CVAR_CH3_PORT_RANGE.high; ++port)
     {
-        memset ((void *)&sin, 0, sizeof(sin));
-        sin.sin_family      = AF_INET;
-        sin.sin_addr.s_addr = htonl(INADDR_ANY);
-        sin.sin_port        = htons(port);
-
-        ret = bind (sockfd, (struct sockaddr *)&sin, sizeof(sin));
+        /* IPV6 */
+        if (tcp_ipv6) {
+            char tmp[16];
+            memset ((void *)&sin6, 0, sizeof(sin6));
+            sin6.sin6_family      = AF_INET6;
+            sin6.sin6_addr        = in6addr_any;
+            sin6.sin6_port        = htons(port);
+            memcpy(&sin_storage, &sin6, sizeof(sin6));
+        } else {
+            memset ((void *)&sin, 0, sizeof(sin));
+            sin.sin_family      = AF_INET;
+            sin.sin_addr.s_addr = htonl(INADDR_ANY);
+            sin.sin_port        = htons(port);
+            memcpy(&sin_storage, &sin, sizeof(sin));
+        }
+        ret = bind (sockfd, (struct sockaddr *)&sin_storage, sizeof(sin));
         if (ret == 0)
             break;
         

@@ -870,65 +870,73 @@ static int GetResponse(const char request[], const char expectedCmd[], int check
    specified fd inherited from a parent process */
 static int PMII_Connect_to_pm(char *hostname, int portnum)
 {
-    struct hostent *hp;
-    struct sockaddr_in sa;
+    struct addrinfo hints;
+    struct addrinfo *result, *rp;
     int fd;
     int optval = 1;
     int q_wait = 1;
+    int status_code = 0, connect_failed = 0;
+    char port[16];
 
-    hp = gethostbyname(hostname);
-    if (!hp) {
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = 0;
+    hints.ai_protocol = 0;
+
+    snprintf(port, 16, "%d", portnum);
+
+    status_code = getaddrinfo(hostname, port, &hints, &result);
+    if (status_code != 0) {
         PMIU_printf(1, "Unable to get host entry for %s\n", hostname);
         return PMI_FAIL;
     }
 
-    memset((void *) &sa, 0, sizeof(sa));
-    /* POSIX might define h_addr_list only and node define h_addr */
-#ifdef HAVE_H_ADDR_LIST
-    memcpy((void *) &sa.sin_addr, (void *) hp->h_addr_list[0], hp->h_length);
-#else
-    memcpy((void *) &sa.sin_addr, (void *) hp->h_addr, hp->h_length);
-#endif
-    sa.sin_family = hp->h_addrtype;
-    sa.sin_port = htons((unsigned short) portnum);
-
-    fd = socket(AF_INET, SOCK_STREAM, TCP);
-    if (fd < 0) {
-        PMIU_printf(1, "Unable to get AF_INET socket\n");
-        return PMI_FAIL;
-    }
-
-    if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &optval, sizeof(optval))) {
-        perror("Error calling setsockopt:");
-    }
-
-    /* We wait here for the connection to succeed */
-    if (connect(fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
-        switch (errno) {
-            case ECONNREFUSED:
-                PMIU_printf(1, "connect failed with connection refused\n");
-                /* (close socket, get new socket, try again) */
-                if (q_wait)
-                    close(fd);
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+        fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if (fd < 0) {
+            if (rp->ai_next == NULL) {
+                PMIU_printf(1, "Unable to get AF_INET socket\n");
                 return PMI_FAIL;
+            }
+            continue;
+        }
 
-            case EINPROGRESS:  /*  (nonblocking) - select for writing. */
-                break;
+        if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &optval, sizeof(optval))) {
+            perror("Error calling setsockopt:");
+        }
+        connect_failed = 0;
+        /* We wait here for the connection to succeed */
+        if (connect(fd, rp->ai_addr, rp->ai_addrlen) < 0) {
+            switch (errno) {
+                case ECONNREFUSED:
+                    PMIU_printf(1, "connect failed with connection refused\n");
+                    /* (close socket, get new socket, try again) */
+                    if (q_wait)
+                        close(fd);
+                    connect_failed = 1;
+                    break;
+                case EINPROGRESS:      /*  (nonblocking) - select for writing. */
+                    break;
 
-            case EISCONN:      /*  (already connected) */
-                break;
+                case EISCONN:  /*  (already connected) */
+                    break;
 
-            case ETIMEDOUT:    /* timed out */
-                PMIU_printf(1, "connect failed with timeout\n");
-                return PMI_FAIL;
-
-            default:
-                PMIU_printf(1, "connect failed with errno %d\n", errno);
-                return PMI_FAIL;
+                case ETIMEDOUT:        /* timed out */
+                    PMIU_printf(1, "connect failed with timeout\n");
+                    connect_failed = 1;
+                    break;
+                default:
+                    PMIU_printf(1, "connect failed with errno %d\n", errno);
+                    connect_failed = 1;
+                    break;
+            }
         }
     }
 
-    return fd;
+    freeaddrinfo(result);
+
+    return (connect_failed ? PMI_FAIL : fd);
 }
 
 static int PMII_Set_from_port(int fd, int id)

@@ -199,13 +199,15 @@ static int MPIDI_CH3U_GetIPInterface( MPIDI_CH3I_Sock_ifaddr_t *ifaddr, int *fou
 	rc = MPL_env2bool( "MPICH_DBG_IFNAME", &dbg_ifname );
 	if (rc != 1) dbg_ifname = 0;
     }
-
+    /* Open IPV4 socket first then try IPV6 socket if failed  */
     fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0) {
-	fprintf( stderr, "Unable to open an AF_INET socket\n" );
-	return 1;
+	if (fd < 0) {
+        fd = socket(AF_INET6, SOCK_DGRAM, 0);
+        if (fd < 0) {
+	        fprintf( stderr, "Unable to open an AF_INET or AF_INET6 socket\n" );
+	        return 1;
+        }
     }
-
     /* Use MSB localhost if necessary */
 #ifdef WORDS_BIGENDIAN
     localhost = MSBlocalhost;
@@ -304,6 +306,40 @@ static int MPIDI_CH3U_GetIPInterface( MPIDI_CH3I_Sock_ifaddr_t *ifaddr, int *fou
 		myifaddr.len  = 4;
 		MPIR_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
 	    }
+	}
+	else if (ifreq->ifr_addr.sa_family == AF_INET6) {
+		struct in6_addr		addr;
+
+	    addr = ((struct sockaddr_in6 *) &(ifreq->ifr_addr))->sin6_addr;
+	    if (dbg_ifname) {
+		char straddr[INET6_ADDRSTRLEN];
+		inet_ntop(AF_INET6, &addr, straddr, sizeof(straddr));
+		fprintf( stdout, "IPv6 address = %08x (%s)\n", addr.s6_addr, 
+			 straddr);
+	    }
+
+	    if (addr.s_addr == localhost && dbg_ifname) {
+		fprintf( stdout, "Found local host\n" );
+	    }
+	    /* Save localhost if we find it.  Let any new interface 
+	       overwrite localhost.  However, if we find more than 
+	       one non-localhost interface, then we'll choose none for the 
+	       interfaces */
+	    if (addr.s_addr == localhost) {
+		foundLocalhost = 1;
+		if (nfound == 0) {
+		    myifaddr.type = AF_INET6;
+		    myifaddr.len  = 16;
+		    MPIR_Memcpy( myifaddr.ifaddr, &addr.s6_addr, 16 );
+		}
+	    }
+	    else {
+		nfound++;
+		myifaddr.type = AF_INET6;
+		myifaddr.len  = 16;
+		MPIR_Memcpy( myifaddr.ifaddr, &addr.s6_addr, 16 );
+	    }
+
 	}
 	else {
 	    if (dbg_ifname) {

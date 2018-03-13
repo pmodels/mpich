@@ -1730,65 +1730,73 @@ int PMIi_WriteSimpleCommandStr(int fd, PMI2_Command * resp, const char cmd[], ..
    specified fd inherited from a parent process */
 static int PMII_Connect_to_pm(char *hostname, int portnum)
 {
-    struct hostent *hp;
-    struct sockaddr_in sa;
+    struct addrinfo hints;
+    struct addrinfo *result, *rp;
+    char port[16];
     int fd;
     int optval = 1;
     int q_wait = 1;
+    int status_code = 0, connect_failed = 0;
+    memset(&hints, 0, sizeof(struct addrinfo));
+    memset(port, 0, 16);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = 0;
+    hints.ai_protocol = 0;
 
-    hp = gethostbyname(hostname);
-    if (!hp) {
+    snprintf(port, 16, "%d", portnum);
+
+    status_code = getaddrinfo(hostname, port, &hints, &result);
+
+    if (status_code != 0) {
         PMI2U_printf(1, "Unable to get host entry for %s\n", hostname);
         return -1;
     }
 
-    memset((void *) &sa, 0, sizeof(sa));
-    /* POSIX might define h_addr_list only and node define h_addr */
-#ifdef HAVE_H_ADDR_LIST
-    PMI2U_Memcpy((void *) &sa.sin_addr, (void *) hp->h_addr_list[0], hp->h_length);
-#else
-    PMI2U_Memcpy((void *) &sa.sin_addr, (void *) hp->h_addr, hp->h_length);
-#endif
-    sa.sin_family = hp->h_addrtype;
-    sa.sin_port = htons((unsigned short) portnum);
-
-    fd = socket(AF_INET, SOCK_STREAM, TCP);
-    if (fd < 0) {
-        PMI2U_printf(1, "Unable to get AF_INET socket\n");
-        return -1;
-    }
-
-    if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &optval, sizeof(optval))) {
-        perror("Error calling setsockopt:");
-    }
-
-    /* We wait here for the connection to succeed */
-    if (connect(fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
-        switch (errno) {
-            case ECONNREFUSED:
-                PMI2U_printf(1, "connect failed with connection refused\n");
-                /* (close socket, get new socket, try again) */
-                if (q_wait)
-                    close(fd);
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+        fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if (fd < 0) {
+            if (rp->ai_next == NULL) {
+                PMI2U_printf(1, "Unable to get AF_INET socket\n");
                 return -1;
+            }
+            continue;
+        }
 
-            case EINPROGRESS:  /*  (nonblocking) - select for writing. */
-                break;
+        if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &optval, sizeof(optval))) {
+            perror("Error calling setsockopt:");
+        }
+        connect_failed = 0;
+        /* We wait here for the connection to succeed */
+        if (connect(fd, rp->ai_addr, rp->ai_addrlen) < 0) {
+            switch (errno) {
+                case ECONNREFUSED:
+                    PMI2U_printf(1, "connect failed with connection refused\n");
+                    /* (close socket, get new socket, try again) */
+                    if (q_wait)
+                        close(fd);
+                    connect_failed = 1;
+                    break;
 
-            case EISCONN:      /*  (already connected) */
-                break;
+                case EINPROGRESS:      /*  (nonblocking) - select for writing. */
+                    break;
 
-            case ETIMEDOUT:    /* timed out */
-                PMI2U_printf(1, "connect failed with timeout\n");
-                return -1;
+                case EISCONN:  /*  (already connected) */
+                    break;
 
-            default:
-                PMI2U_printf(1, "connect failed with errno %d\n", errno);
-                return -1;
+                case ETIMEDOUT:        /* timed out */
+                    PMI2U_printf(1, "connect failed with timeout\n");
+                    connect_failed = 1;
+                    break;
+                default:
+                    PMI2U_printf(1, "connect failed with errno %d\n", errno);
+                    connect_failed = 1;
+                    break;
+            }
         }
     }
-
-    return fd;
+    freeaddrinfo(result);
+    return (connect_failed ? -1 : fd);
 }
 
 /* ------------------------------------------------------------------------- */
