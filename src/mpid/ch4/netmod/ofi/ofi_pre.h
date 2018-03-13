@@ -127,14 +127,6 @@ typedef struct {
         struct iovec *nopack;
     } noncontig;
     union {
-        /* persistent send fields */
-        struct {
-            int type;
-            int rank;
-            int tag;
-            int count;
-            void *buf;
-        } persist;
 #if defined (MPL_HAVE_VAR_ATTRIBUTE_ALIGNED)
         struct iovec iov MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
 #else
