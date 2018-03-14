@@ -8,6 +8,7 @@
 #define BUILD_NODEMAP_H_INCLUDED
 
 #include "mpl.h"
+#include "pmi.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
