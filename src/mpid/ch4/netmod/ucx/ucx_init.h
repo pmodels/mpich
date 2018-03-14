@@ -12,7 +12,11 @@
 #include "ucx_impl.h"
 #include "mpir_cvars.h"
 #include "ucx_types.h"
+#ifndef USE_PMIX_API
 #include "pmi.h"
+#else
+#include "pmix.h"
+#endif
 #include <ucp/api/ucp.h>
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_init_hook
@@ -89,7 +93,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     val_max_sz = PMI2_MAX_VALLEN;
     key_max_sz = PMI2_MAX_KEYLEN;
 #elif defined(USE_PMIX_API)
-    MPIR_Assert(0);
+    val_max_sz = 1024;
+    key_max_sz = PMIX_MAX_KEYLEN;
 #else
     pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
     MPIDI_UCX_PMI_ERROR(pmi_errno);
@@ -215,7 +220,71 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_UCX_CHK_STATUS(ucx_status);
     }
 #else
-    MPIR_Assert(0);
+    {
+        pmix_value_t value;
+        pmix_info_t *info;
+        int flag = 1;
+
+        value.type = PMIX_STRING;
+        value.data.string = string_addr;
+        MPL_snprintf(keyS, key_max_sz, "UCX-%d", rank);
+        pmi_errno = PMIx_Put(PMIX_LOCAL, keyS, &value);
+        if (pmi_errno != PMIX_SUCCESS) {
+            MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_put", "**pmix_put %d",
+                                 pmi_errno);
+        }
+        pmi_errno = PMIx_Put(PMIX_REMOTE, keyS, &value);
+        if (pmi_errno != PMIX_SUCCESS) {
+            MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_put", "**pmix_put %d",
+                                 pmi_errno);
+        }
+        pmi_errno = PMIx_Commit();
+        if (pmi_errno != PMIX_SUCCESS) {
+            MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_commit", "**pmix_commit %d",
+                                 pmi_errno);
+        }
+
+        PMIX_INFO_CREATE(info, 1);
+        PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
+        pmi_errno = PMIx_Fence(&MPIR_Process.pmix_wcproc, 1, info, 1);
+        if (pmi_errno != PMIX_SUCCESS) {
+            MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_fence", "**pmix_fence %d",
+                                 pmi_errno);
+        }
+        PMIX_INFO_FREE(info, 1);
+
+        pmix_proc_t proc;
+        pmix_value_t *pvalue = NULL;
+        /* Set to NULL now, only created if required in MPI_Intercomm_create */
+        MPIDI_UCX_global.pmi_addr_table = NULL;
+        MPIDI_UCX_global.max_addr_len = MPIDI_UCX_global.addrname_len;
+
+        for (i = 0; i < size; i++) {
+            MPL_snprintf(keyS, PMIX_MAX_KEYLEN, "UCX-%d", i);
+            PMIX_PROC_CONSTRUCT(&proc);
+            MPL_strncpy(proc.nspace, MPIR_Process.pmix_proc.nspace, PMIX_MAX_NSLEN);
+            proc.rank = i;
+            pmi_errno = PMIx_Get(&proc, keyS, NULL, 0, &pvalue);
+            if (pmi_errno != PMIX_SUCCESS) {
+                MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_get", "**pmix_get %d",
+                                     pmi_errno);
+            }
+            MPL_strncpy(string_addr, pvalue->data.string, max_string);
+            PMIX_VALUE_RELEASE(pvalue);
+            str_errno =
+                MPL_str_get_binary_arg(string_addr, "U", remote_addr, max_string, &addr_size);
+            MPIDI_UCX_STR_ERRCHK(str_errno);
+
+            if (addr_size > MPIDI_UCX_global.max_addr_len)
+                MPIDI_UCX_global.max_addr_len = addr_size;
+
+            ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
+            ep_params.address = (ucp_address_t *) remote_addr;
+            ucx_status = ucp_ep_create(MPIDI_UCX_global.worker,
+                                       &ep_params, &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
+            MPIDI_UCX_CHK_STATUS(ucx_status);
+        }
+    }
 #endif
 
     MPIDIG_init(comm_world, comm_self, *n_vnis_provided);
@@ -282,6 +351,19 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
 #ifndef USE_PMIX_API
     pmi_errno = PMI_Barrier();
     MPIDI_UCX_PMI_ERROR(pmi_errno);
+#else
+    pmix_value_t value;
+    pmix_info_t *info;
+    int flag = 1;
+
+    PMIX_INFO_CREATE(info, 1);
+    PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
+    pmi_errno = PMIx_Fence(&MPIR_Process.pmix_wcproc, 1, info, 1);
+    if (pmi_errno != PMIX_SUCCESS) {
+        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_fence", "**pmix_fence %d",
+                             pmi_errno);
+    }
+    PMIX_INFO_FREE(info, 1);
 #endif
 
 
@@ -301,6 +383,8 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     MPIDIG_finalize();
 #ifndef USE_PMIX_API
     PMI_Finalize();
+#else
+    PMIx_Finalize(NULL, 0);
 #endif
 
 #ifndef HAVE_DEBUGGER_SUPPORT
@@ -358,7 +442,8 @@ static inline int MPIDI_NMI_allocate_address_table()
     val_max_sz = PMI2_MAX_VALLEN;
     key_max_sz = PMI2_MAX_KEYLEN;
 #elif defined(USE_PMIX_API)
-    MPIR_Assert(0);
+    val_max_sz = 1024;
+    key_max_sz = PMIX_MAX_KEYLEN;
 #else
     pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
     MPIDI_UCX_PMI_ERROR(pmi_errno);
@@ -379,7 +464,25 @@ static inline int MPIDI_NMI_allocate_address_table()
     memset(MPIDI_UCX_global.pmi_addr_table, 0x0, len * size);
 
 #ifdef USE_PMIX_API
-    MPIR_Assert(0);
+    pmix_proc_t proc;
+    pmix_value_t *pvalue = NULL;
+    for (i = 0; i < size; i++) {
+        MPL_snprintf(keyS, PMIX_MAX_KEYLEN, "UCX-%d", i);
+        PMIX_PROC_CONSTRUCT(&proc);
+        MPL_strncpy(proc.nspace, MPIR_Process.pmix_proc.nspace, PMIX_MAX_NSLEN);
+        proc.rank = i;
+        pmi_errno = PMIx_Get(&proc, keyS, NULL, 0, &pvalue);
+        if (pmi_errno != PMIX_SUCCESS) {
+            MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_get", "**pmix_get %d",
+                                 pmi_errno);
+        }
+        MPL_strncpy(string_addr, pvalue->data.string, max_string);
+        PMIX_VALUE_RELEASE(pvalue);
+        str_errno =
+            MPL_str_get_binary_arg(string_addr, "U", &MPIDI_UCX_global.pmi_addr_table[i * len],
+                                   max_string, &addr_size);
+        MPIDI_UCX_STR_ERRCHK(str_errno);
+    }
 #else
     for (i = 0; i < size; i++) {
         /*first get the size */
