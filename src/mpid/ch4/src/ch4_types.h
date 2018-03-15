@@ -100,7 +100,6 @@ enum {
 };
 
 typedef struct MPIDI_CH4U_hdr_t {
-    short protocol;
     int src_rank;
     int tag;
     MPIR_Context_id_t context_id;

@@ -115,7 +115,6 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
         if (root_comm)
             match_req =
                 MPIDI_CH4U_dequeue_posted(MPIDI_CH4U_REQUEST(rreq, rank),
-                                          MPIDI_CH4U_REQUEST(rreq, protocol),
                                           MPIDI_CH4U_REQUEST(rreq, tag),
                                           MPIDI_CH4U_REQUEST(rreq, context_id),
                                           &MPIDI_CH4U_COMM(root_comm, posted_list));
@@ -382,7 +381,7 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
     root_comm = MPIDI_CH4U_context_id_to_comm(hdr->context_id);
     if (root_comm) {
         /* MPIDI_CS_ENTER(); */
-        rreq = MPIDI_CH4U_dequeue_posted(hdr->src_rank, hdr->protocol, hdr->tag, hdr->context_id,
+        rreq = MPIDI_CH4U_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
                                          &MPIDI_CH4U_COMM(root_comm, posted_list));
         /* MPIDI_CS_EXIT(); */
     }
@@ -398,7 +397,6 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
             MPIDI_CH4U_REQUEST(rreq, count) = 0;
         }
         MPIDI_CH4U_REQUEST(rreq, rank) = hdr->src_rank;
-        MPIDI_CH4U_REQUEST(rreq, protocol) = hdr->protocol;
         MPIDI_CH4U_REQUEST(rreq, tag) = hdr->tag;
         MPIDI_CH4U_REQUEST(rreq, context_id) = hdr->context_id;
         MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_BUSY;
@@ -417,7 +415,6 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
         /* Decrement the refcnt when popping a request out from posted_list */
         MPIR_Comm_release(root_comm);
         MPIDI_CH4U_REQUEST(rreq, rank) = hdr->src_rank;
-        MPIDI_CH4U_REQUEST(rreq, protocol) = hdr->protocol;
         MPIDI_CH4U_REQUEST(rreq, tag) = hdr->tag;
         MPIDI_CH4U_REQUEST(rreq, context_id) = hdr->context_id;
     }
@@ -453,7 +450,7 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
     root_comm = MPIDI_CH4U_context_id_to_comm(hdr->context_id);
     if (root_comm) {
         /* MPIDI_CS_ENTER(); */
-        rreq = MPIDI_CH4U_dequeue_posted(hdr->src_rank, hdr->protocol, hdr->tag, hdr->context_id,
+        rreq = MPIDI_CH4U_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
                                          &MPIDI_CH4U_COMM(root_comm, posted_list));
         /* MPIDI_CS_EXIT(); */
     }
@@ -467,7 +464,6 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
         MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_LONG_RTS;
         MPIDI_CH4U_REQUEST(rreq, req->rreq.peer_req_ptr) = lreq_hdr->sreq_ptr;
         MPIDI_CH4U_REQUEST(rreq, rank) = hdr->src_rank;
-        MPIDI_CH4U_REQUEST(rreq, protocol) = hdr->protocol;
         MPIDI_CH4U_REQUEST(rreq, tag) = hdr->tag;
         MPIDI_CH4U_REQUEST(rreq, context_id) = hdr->context_id;
 
@@ -487,7 +483,6 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
         MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_LONG_RTS;
         MPIDI_CH4U_REQUEST(rreq, req->rreq.peer_req_ptr) = lreq_hdr->sreq_ptr;
         MPIDI_CH4U_REQUEST(rreq, rank) = hdr->src_rank;
-        MPIDI_CH4U_REQUEST(rreq, protocol) = hdr->protocol;
         MPIDI_CH4U_REQUEST(rreq, tag) = hdr->tag;
         MPIDI_CH4U_REQUEST(rreq, context_id) = hdr->context_id;
         mpi_errno = MPIDI_NM_am_recv(rreq);
