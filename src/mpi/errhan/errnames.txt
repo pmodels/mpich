@@ -338,6 +338,8 @@ be in the range 0 to %d
 **infonkey %d %d:Requested key %d but this MPI_Info only has %d keys
 **io:Other I/O error 
 **io %s:Other I/O error %s
+**iobadoverlap: write voilates monotonically non-decreasing
+**iobadoverlap %s: write voilates monotonically non-decreasing %s
 **ioetype:Only an integral number of etypes can be accessed
 **iofstypeunsupported:Specified filesystem is not available
 **iosplitcoll:Only one active split collective I/O operation is allowed per file handle

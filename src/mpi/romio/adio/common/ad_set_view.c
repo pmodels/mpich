@@ -45,7 +45,7 @@ int check_type(ADIOI_Flatlist_node * flat_type,
   err_check:
     *error_code = MPIO_Err_create_code(*error_code,
                                        MPIR_ERR_RECOVERABLE, caller,
-                                       __LINE__, MPI_ERR_IO, "**iofiletype", err_msg);
+                                       __LINE__, MPI_ERR_IO, "**iobadoverlap", " **iobadoverlap %s", err_msg);
     return 0;
 }
 
