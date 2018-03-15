@@ -129,7 +129,7 @@ static inline int MPIDI_do_irecv(void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_DO_IRECV);
 
     root_comm = MPIDI_CH4U_context_id_to_comm(comm->recvcontext_id);
-    unexp_req = MPIDI_CH4U_dequeue_unexp(rank, 0, tag, context_id,
+    unexp_req = MPIDI_CH4U_dequeue_unexp(rank, tag, context_id,
                                          &MPIDI_CH4U_COMM(root_comm, unexp_list));
 
     if (unexp_req) {
@@ -176,7 +176,6 @@ static inline int MPIDI_do_irecv(void *buf,
 
     MPIR_Datatype_add_ref_if_not_builtin(datatype);
     MPIDI_CH4U_REQUEST(rreq, rank) = rank;
-    MPIDI_CH4U_REQUEST(rreq, protocol) = 0;
     MPIDI_CH4U_REQUEST(rreq, tag) = tag;
     MPIDI_CH4U_REQUEST(rreq, context_id) = context_id;
     MPIDI_CH4U_REQUEST(rreq, datatype) = datatype;
@@ -259,7 +258,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv_init(void *buf,
     MPIDI_CH4U_REQUEST(rreq, count) = count;
     MPIDI_CH4U_REQUEST(rreq, datatype) = datatype;
     MPIDI_CH4U_REQUEST(rreq, rank) = rank;
-    MPIDI_CH4U_REQUEST(rreq, protocol) = 0;
     MPIDI_CH4U_REQUEST(rreq, tag) = tag;
     MPIDI_CH4U_REQUEST(rreq, context_id) = comm->context_id + context_offset;
     rreq->u.persist.real_request = NULL;

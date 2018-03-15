@@ -47,7 +47,6 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
     *request = sreq;
 
     am_hdr.src_rank = comm->rank;
-    am_hdr.protocol = 0;
     am_hdr.tag = tag;
     am_hdr.context_id = comm->context_id + context_offset;
     if (type == MPIDI_CH4U_SSEND_REQ) {
@@ -100,7 +99,6 @@ static inline int MPIDI_psend_init(const void *buf,
     MPIDI_CH4U_REQUEST(sreq, count) = count;
     MPIDI_CH4U_REQUEST(sreq, datatype) = datatype;
     MPIDI_CH4U_REQUEST(sreq, rank) = rank;
-    MPIDI_CH4U_REQUEST(sreq, protocol) = 0;
     MPIDI_CH4U_REQUEST(sreq, tag) = tag;
     MPIDI_CH4U_REQUEST(sreq, context_id) = comm->context_id + context_offset;
 

@@ -38,7 +38,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_iprobe(int source,
     root_comm = MPIDI_CH4U_context_id_to_comm(comm->context_id);
 
     /* MPIDI_CS_ENTER(); */
-    unexp_req = MPIDI_CH4U_find_unexp(source, 0, tag, root_comm->recvcontext_id + context_offset,
+    unexp_req = MPIDI_CH4U_find_unexp(source, tag, root_comm->recvcontext_id + context_offset,
                                       &MPIDI_CH4U_COMM(root_comm, unexp_list));
 
     if (unexp_req) {
@@ -92,7 +92,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_improbe(int source,
     root_comm = MPIDI_CH4U_context_id_to_comm(comm->context_id);
 
     /* MPIDI_CS_ENTER(); */
-    unexp_req = MPIDI_CH4U_dequeue_unexp(source, 0, tag, root_comm->recvcontext_id + context_offset,
+    unexp_req = MPIDI_CH4U_dequeue_unexp(source, tag, root_comm->recvcontext_id + context_offset,
                                          &MPIDI_CH4U_COMM(root_comm, unexp_list));
 
     if (unexp_req) {
