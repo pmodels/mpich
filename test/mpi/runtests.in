@@ -1087,58 +1087,6 @@ sub TestStatusNoErrors {
     return ($found_error,$inline);
 }
 #
-# TestTimeout is a special test that reports success *only* when the 
-# status return is NONZERO and there are no processes left over.
-# This test currently checks only for the return status.
-sub TestTimeout {
-    my $MPIOUT = $_[0];
-    my $programname = $_[1];
-    my $found_error = 0;
-
-    my $inline = "";
-    while (<$MPIOUT>) {
-	#print STDOUT $_ if $verbose;
-	# Skip FORTRAN STOP
-	if (/FORTRAN STOP/) { next; }
-	$inline .= $_;
-	if (/[Tt]imeout/) { next; }
-	# Allow 'signaled with Interrupt' (see gforker mpiexec)
-	if (/signaled with Interrupt/) { next; }
-	# Allow 'APPLICATION TIMED OUT' (hydra)
-	if (/\[mpiexec@.*\] APPLICATION TIMED OUT/) { last; }
-	# ANY output is an error (other than timeout) 
-	if (! /^\s*$/) {
-	    print STDERR "Unexpected output in $programname: $_";
-	    if (!$found_error) {
-		$found_error = 1;
-		$err_count ++;
-	    }
-	}
-    }
-    $rc = close ( MPIOUT );
-    if ($rc == 0) {
-	$run_status = $?;
-	$signal_num = $run_status & 127;
-	if ($run_status > 255) { $run_status >>= 8; }
-    }
-    else {
-	# This test *requires* non-zero return codes
-	if (!$found_error) {
-	    $found_error = 1;
-	    $err_count ++;
-        }
-	$inline .= "$mpiexec returned a zero status but the program returned a nonzero status\n";
-    }
-    #
-    # Here should go a check of the processes
-    # open( PFD, "ps -fu $LOGNAME | grep -v grep | grep $programname |" );
-    # while (<PFD>) {
-    #     
-    # }
-    # close PFD;
-    return ($found_error,$inline);
-}
-#
 # TestErrFatal is a special test that reports success *only* when the 
 # status return is NONZERO; it ignores error messages
 sub TestErrFatal {
