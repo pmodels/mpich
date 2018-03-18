@@ -5411,8 +5411,10 @@ AC_SUBST(MPI_MAX_ERROR_STRING)
 # Get the value of libtool_static_flag
 if test ! -z "$MPID_LIBTOOL_STATIC_FLAG" ; then
    mpich_libtool_static_flag="$MPID_LIBTOOL_STATIC_FLAG"
-else
+elif test "$enable_static" = "yes" ; then
    mpich_libtool_static_flag="-static"
+else
+   mpich_libtool_static_flag=
 fi
 AC_SUBST([mpich_libtool_static_flag])
 
