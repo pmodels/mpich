@@ -102,5 +102,4 @@ int main(int argc, char *argv[])
      * (see separate test) */
 
     return 0;
-
 }

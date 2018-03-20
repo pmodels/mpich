@@ -204,7 +204,6 @@ static int verify_comm(MPI_Comm comm)
                 ++local_errs;
             }
         }
-
     }
 
     if (dupcomm != MPI_COMM_NULL)
@@ -395,7 +394,6 @@ int main(int argc, char *argv[])
             errs += verify_comm(comm);
             MPI_Comm_free(&comm);
         }
-
     }
 
     /* now tests that don't depend on the layout[][] array */

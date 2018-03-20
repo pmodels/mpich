@@ -48,7 +48,6 @@ int main(int argc, char **argv)
                 break;
             }
         }
-
     }
 
     for (i = 0; i < n; i++) {

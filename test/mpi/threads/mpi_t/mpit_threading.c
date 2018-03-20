@@ -261,7 +261,6 @@ int PrintCategories(FILE * fp, int myThreadId)
                                     &isReadonly, &isContinuous, &isAtomic);
                 if (DOPRINT)
                     fprintf(fp, "%s, ", varname);
-
             }
             free(pvarIndex);
             if (DOPRINT)
@@ -282,7 +281,6 @@ int PrintCategories(FILE * fp, int myThreadId)
                                         &ncvars, &npvars, &nsubcats);
                 if (DOPRINT)
                     fprintf(fp, "%s, ", catname);
-
             }
             free(subcatIndex);
             if (DOPRINT)

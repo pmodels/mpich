@@ -75,7 +75,6 @@ int main(int argc, char *argv[])
                                                sendtype.datatype, resbuf, recvtype.count,
                                                recvtype.datatype, dest, 0, recvtype.count,
                                                recvtype.datatype, MPI_REPLACE, win);
-
                         }
                     MPI_Win_flush_local_all(win);
                     /* reset the send buffer to test local completion */

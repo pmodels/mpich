@@ -66,7 +66,6 @@ MTEST_THREAD_RETURN_TYPE test_comm_create_group(void *arg)
         MPI_Comm_free(&comm);
         if (verbose)
             printf("%d: Thread %d - Comm_create_group %d finish\n", rank, *(int *) arg, i);
-
     }
 
     if (verbose)
