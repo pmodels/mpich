@@ -161,6 +161,12 @@ static inline int MPIDI_OFI_progress_do_queue(int vni_idx)
         goto fn_fail;
     }
 
+    /* If only FI_MULTI_RECV flag bit is provided, the provider is reporting that
+     * the multi-recv buffer has been released, and the completion entry is not
+     * associated with a received message. */
+    if (cq_entry.flags == FI_MULTI_RECV)
+        goto multi_recv;
+
     /* If the statically allocated buffered list is full or we've already
      * started using the dynamic list, continue using it. */
     if (((MPIDI_Global.cq_buffered_static_head + 1) %
@@ -179,7 +185,8 @@ static inline int MPIDI_OFI_progress_do_queue(int vni_idx)
             (MPIDI_Global.cq_buffered_static_head + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
     }
 
-    if ((cq_entry.flags & FI_RECV) && (cq_entry.flags & FI_MULTI_RECV)) {
+    if (cq_entry.flags & FI_MULTI_RECV) {
+      multi_recv:
         mpi_errno = MPIDI_OFI_repost_buffer(cq_entry.op_context,
                                             MPIDI_OFI_context_to_request(cq_entry.op_context));
 
