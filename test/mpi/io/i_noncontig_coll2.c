@@ -145,7 +145,6 @@ int cb_gather_name_array(MPI_Comm comm, ADIO_cb_name_array * arrayp)
         for (i = 1; i < commsize; i++) {
             disp[i] = (int) (procname[i] - procname[0]);
         }
-
     }
 
     /* now gather strings */

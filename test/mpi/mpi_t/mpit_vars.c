@@ -229,7 +229,6 @@ int PrintCategories(FILE * fp)
                                     &isReadonly, &isContinuous, &isAtomic);
                 if (verbose)
                     fprintf(fp, "%s, ", varname);
-
             }
             free(pvarIndex);
             if (verbose)
@@ -251,7 +250,6 @@ int PrintCategories(FILE * fp)
                                         &ncvars, &npvars, &nsubcats);
                 if (verbose)
                     fprintf(fp, "%s, ", catname);
-
             }
             free(subcatIndex);
             if (verbose)

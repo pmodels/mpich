@@ -80,7 +80,6 @@ int main(int argc, char *argv[])
 
         compute(i, data[j]);
         MPI_Rput(data[j], N, MPI_DOUBLE, target, i * N, N, MPI_DOUBLE, win, &put_req[j]);
-
     }
 
     MPI_Waitall(M, put_req, MPI_STATUSES_IGNORE);

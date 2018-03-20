@@ -404,7 +404,6 @@ int main(int argc, char *argv[])
 
                 if (streamopt)
                     bwdata[n].variance = t2 / TRIALS - t1 / TRIALS * t1 / TRIALS;
-
             }
             tlast = bwdata[n].t;
             bwdata[n].bits = args.bufflen * CHARSIZE;

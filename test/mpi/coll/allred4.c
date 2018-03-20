@@ -140,7 +140,6 @@ static int checkResult(int nmat, int mat[], const char *msg)
                 if (errs == 1) {
                     printf("Errors for communicators %s\n", MTestGetIntracommName());
                     fflush(stdout);
-
                 }
                 if (errs < 10) {
                     printf("[%d]matrix #%d(%s): Expected mat[%d,%d] = %d, got %d\n",

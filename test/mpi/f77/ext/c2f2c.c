@@ -244,7 +244,6 @@ void f2crequest_(MPI_Fint * req)
     MPI_Irecv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &cReq);
     MPI_Cancel(&cReq);
     *req = MPI_Request_c2f(cReq);
-
 }
 
 void f2cop_(MPI_Fint * op)

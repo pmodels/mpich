@@ -57,7 +57,6 @@ MTEST_THREAD_RETURN_TYPE listener(void *extra)
         /* no more requests can arrive */
         if (no_fins == size)
             break;
-
     }
 
     DEBUG(printf("node %d has stopped listener\n", rank));
