@@ -78,7 +78,6 @@ int main(int argc, char *argv[])
         for (i = 0; i < 32; i++) {
             MPI_Win_free_keyval(&key[i]);
         }
-
     }
     MTest_Finalize(errs);
     MPI_Finalize();

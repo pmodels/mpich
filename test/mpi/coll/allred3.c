@@ -107,7 +107,6 @@ static void initMat(MPI_Comm comm, int mat[])
                     mat[offset] = 1;
             }
         }
-
     }
 }
 

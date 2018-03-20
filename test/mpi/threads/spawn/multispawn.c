@@ -133,7 +133,6 @@ int main(int argc, char *argv[])
 
         /* Let the parent free the intercomms */
         MPI_Comm_disconnect(&parentcomm);
-
     }
 
     if (wasParent)

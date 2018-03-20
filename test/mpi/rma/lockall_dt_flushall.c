@@ -72,7 +72,6 @@ int main(int argc, char *argv[])
                                                sendtype.datatype, resbuf, recvtype.count,
                                                recvtype.datatype, dest, 0, recvtype.count,
                                                recvtype.datatype, MPI_REPLACE, win);
-
                         }
                     MPI_Win_flush_all(win);
                     /*signal to dest that the ops are flushed so that it starts checking the result */

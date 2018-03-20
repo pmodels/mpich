@@ -81,7 +81,6 @@ int main(int argc, char *argv[])
             printf(" Found %d errors\n", errs);
     }
     return 0;
-
 }
 
 int checkAttrs(MPI_Comm comm, int n, int lkey[], int attrval[])

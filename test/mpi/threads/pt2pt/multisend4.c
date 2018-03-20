@@ -64,7 +64,6 @@ MTEST_THREAD_RETURN_TYPE run_test_sendrecv(void *arg)
                 MTest_thread_barrier(nthreads);
                 if (thread_num == 1)
                     MPI_Waitall(2 * wsize, r, MPI_STATUSES_IGNORE);
-
             }
         }
         t = MPI_Wtime() - t;

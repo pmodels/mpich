@@ -1133,7 +1133,6 @@ int MTestGetWin(MPI_Win * win, int mustBePassive)
         merr = MPI_Win_create_keyval(MPI_WIN_NULL_COPY_FN, MPI_WIN_NULL_DELETE_FN, &mem_keyval, 0);
         if (merr)
             MTestPrintError(merr);
-
     }
 
     switch (win_index) {

@@ -493,13 +493,10 @@ int MTestGetDatatypes(MTestDatatype * sendtype, MTestDatatype * recvtype, MPI_Ai
     /* Start generating tests */
     if (datatype_index < MTEST_BDT_RANGE) {
         merr = MTestGetBasicDatatypes(sendtype, recvtype, tot_count);
-
     } else if (datatype_index < MTEST_SEND_DDT_RANGE) {
         merr = MTestGetSendDerivedDatatypes(sendtype, recvtype, tot_count);
-
     } else if (datatype_index < MTEST_RECV_DDT_RANGE) {
         merr = MTestGetRecvDerivedDatatypes(sendtype, recvtype, tot_count);
-
     } else {
         /* out of range */
         datatype_index = -1;

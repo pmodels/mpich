@@ -91,7 +91,6 @@ static int checkType(const char str[], int p, int r, int f90kind, int err, MPI_D
                     printf("Unrecognized combiner for %s\n", str);
                     break;
             }
-
         }
     }
 
