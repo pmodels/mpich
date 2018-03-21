@@ -39,7 +39,8 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype
     MPI_Status status;
     MPI_Aint extent = 0;
     int rank, comm_size, sendtype_size;
-    int curr_cnt, relative_rank, nbytes, send_subtree_cnt;
+    int relative_rank, nbytes;
+    MPI_Aint curr_cnt, send_subtree_cnt;
     int mask, recvtype_size = 0, src, dst;
     int tmp_buf_size = 0;
     void *tmp_buf = NULL;

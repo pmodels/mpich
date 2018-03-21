@@ -29,19 +29,18 @@ int MPI_Get_count(const MPI_Status * status, MPI_Datatype datatype, int *count)
 #define FUNCNAME MPIR_Get_count_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, int *count)
+void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, MPI_Aint * count)
 {
-    MPI_Count size;
+    MPI_Aint size;
 
     MPIR_Datatype_get_size_macro(datatype, size);
     MPIR_Assert(size >= 0 && MPIR_STATUS_GET_COUNT(*status) >= 0);
     if (size != 0) {
         /* MPI-3 says return MPI_UNDEFINED if too large for an int */
-        if ((MPIR_STATUS_GET_COUNT(*status) % size) != 0 ||
-            ((MPIR_STATUS_GET_COUNT(*status) / size) > INT_MAX))
+        if ((MPIR_STATUS_GET_COUNT(*status) % size) != 0)
             (*count) = MPI_UNDEFINED;
         else
-            (*count) = (int) (MPIR_STATUS_GET_COUNT(*status) / size);
+            (*count) = (MPI_Aint) (MPIR_STATUS_GET_COUNT(*status) / size);
     } else {
         if (MPIR_STATUS_GET_COUNT(*status) > 0) {
             /* --BEGIN ERROR HANDLING-- */
@@ -93,6 +92,7 @@ size of 'datatype' (so that 'count' would not be integral), a 'count' of
 int MPI_Get_count(const MPI_Status * status, MPI_Datatype datatype, int *count)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPI_Aint count_x;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_COUNT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -124,7 +124,10 @@ int MPI_Get_count(const MPI_Status * status, MPI_Datatype datatype, int *count)
 
     /* ... body of routine ...  */
 
-    MPIR_Get_count_impl(status, datatype, count);
+    MPIR_Get_count_impl(status, datatype, &count_x);
+
+    /* clip the value if it cannot be correctly returned to the user */
+    *count = (count_x > INT_MAX) ? MPI_UNDEFINED : (int) count_x;
 
     /* ... end of body of routine ... */
 
