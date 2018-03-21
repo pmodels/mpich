@@ -1315,9 +1315,7 @@ for option in $enable_izem ; do
         no|none)
         ;;
         *)
-            IFS=$save_IFS
-            AC_MSG_WARN([Unknown value $option for enable-debug])
-            IFS=","
+            AC_MSG_ERROR([Unknown value $option for enable-izem])
         ;;
     esac
 done
