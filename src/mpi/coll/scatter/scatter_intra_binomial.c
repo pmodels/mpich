@@ -53,8 +53,6 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype
     if (((rank == root) && (sendcount == 0)) || ((rank != root) && (recvcount == 0)))
         return MPI_SUCCESS;
 
-/* Use binomial tree algorithm */
-
     if (rank == root)
         MPIR_Datatype_get_extent_macro(sendtype, extent);
 
