@@ -100,7 +100,7 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
     scatter_size = (nbytes + comm_size - 1) / comm_size;        /* ceiling division */
 
     mpi_errno = MPII_Scatter_for_bcast(buffer, count, datatype, root, comm_ptr,
-                                       nbytes, tmp_buf, is_contig, 1, errflag);
+                                       nbytes, tmp_buf, is_contig, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         *errflag =
