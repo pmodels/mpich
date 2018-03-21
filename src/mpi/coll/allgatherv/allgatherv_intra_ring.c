@@ -43,9 +43,6 @@ int MPIR_Allgatherv_intra_ring(const void *sendbuf,
     MPI_Status status;
     MPI_Aint recvtype_extent;
     int total_count;
-#ifdef MPID_HAS_HETERO
-    int tmp_buf_size, nbytes;
-#endif
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;

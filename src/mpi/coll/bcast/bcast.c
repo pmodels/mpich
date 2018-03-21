@@ -168,7 +168,6 @@ int MPIR_Bcast_intra_auto(void *buffer,
     int mpi_errno_ret = MPI_SUCCESS;
     int comm_size;
     int nbytes = 0;
-    int is_homogeneous;
     MPI_Aint type_size;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_BCAST);
 
@@ -195,25 +194,7 @@ int MPIR_Bcast_intra_auto(void *buffer,
 
     comm_size = comm_ptr->local_size;
 
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
-
-    /* MPI_Type_size() might not give the accurate size of the packed
-     * datatype for heterogeneous systems (because of padding, encoding,
-     * etc). On the other hand, MPI_Pack_size() can become very
-     * expensive, depending on the implementation, especially for
-     * heterogeneous systems. We want to use MPI_Type_size() wherever
-     * possible, and MPI_Pack_size() in other places.
-     */
-    if (is_homogeneous)
-        MPIR_Datatype_get_size_macro(datatype, type_size);
-    else
-        /* --BEGIN HETEROGENEOUS-- */
-        MPIR_Pack_size_impl(1, datatype, &type_size);
-    /* --END HETEROGENEOUS-- */
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     nbytes = type_size * count;
     if (nbytes == 0)

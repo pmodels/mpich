@@ -28,7 +28,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
     int nbytes = 0;
     int recvd_size;
     MPI_Status status;
-    int is_contig, is_homogeneous;
+    int is_contig;
     MPI_Aint type_size;
     MPI_Aint position;
     void *tmp_buf = NULL;
@@ -47,31 +47,13 @@ int MPIR_Bcast_intra_binomial(void *buffer,
         MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
-
-    /* MPI_Type_size() might not give the accurate size of the packed
-     * datatype for heterogeneous systems (because of padding, encoding,
-     * etc). On the other hand, MPI_Pack_size() can become very
-     * expensive, depending on the implementation, especially for
-     * heterogeneous systems. We want to use MPI_Type_size() wherever
-     * possible, and MPI_Pack_size() in other places.
-     */
-    if (is_homogeneous)
-        MPIR_Datatype_get_size_macro(datatype, type_size);
-    else
-        /* --BEGIN HETEROGENEOUS-- */
-        MPIR_Pack_size_impl(1, datatype, &type_size);
-    /* --END HETEROGENEOUS-- */
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     nbytes = type_size * count;
     if (nbytes == 0)
         goto fn_exit;   /* nothing to do */
 
-    if (!is_contig || !is_homogeneous) {
+    if (!is_contig) {
         MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         /* TODO: Pipeline the packing and communication */
@@ -116,7 +98,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
             src = rank - mask;
             if (src < 0)
                 src += comm_size;
-            if (!is_contig || !is_homogeneous)
+            if (!is_contig)
                 mpi_errno = MPIC_Recv(tmp_buf, nbytes, MPI_BYTE, src,
                                       MPIR_BCAST_TAG, comm_ptr, &status, errflag);
             else
@@ -133,8 +115,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
 
             /* check that we received as much as we expected */
             MPIR_Get_count_impl(&status, MPI_BYTE, &recvd_size);
-            /* recvd_size may not be accurate for packed heterogeneous data */
-            if (is_homogeneous && recvd_size != nbytes) {
+            if (recvd_size != nbytes) {
                 if (*errflag == MPIR_ERR_NONE)
                     *errflag = MPIR_ERR_OTHER;
                 MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
@@ -164,7 +145,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
             dst = rank + mask;
             if (dst >= comm_size)
                 dst -= comm_size;
-            if (!is_contig || !is_homogeneous)
+            if (!is_contig)
                 mpi_errno = MPIC_Send(tmp_buf, nbytes, MPI_BYTE, dst,
                                       MPIR_BCAST_TAG, comm_ptr, errflag);
             else
@@ -182,7 +163,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
         mask >>= 1;
     }
 
-    if (!is_contig || !is_homogeneous) {
+    if (!is_contig) {
         if (rank != root) {
             position = 0;
             mpi_errno = MPIR_Unpack_impl(tmp_buf, nbytes, &position, buffer, count, datatype);

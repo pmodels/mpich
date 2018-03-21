@@ -34,7 +34,7 @@ int MPIR_Ibcast_sched_intra_scatter_ring_allgather(void *buffer, int count, MPI_
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank;
-    int is_contig, is_homogeneous ATTRIBUTE((unused)), type_size, nbytes;
+    int is_contig, type_size, nbytes;
     int scatter_size, curr_size;
     int i, j, jnext, left, right;
     MPI_Aint true_extent, true_lb;
@@ -56,12 +56,6 @@ int MPIR_Ibcast_sched_intra_scatter_ring_allgather(void *buffer, int count, MPI_
         MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
-    MPIR_Assert(is_homogeneous);        /* we don't handle the hetero case yet */
     MPIR_SCHED_CHKPMEM_MALLOC(ibcast_state, struct MPII_Ibcast_state *,
                               sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Status",
                               MPL_MEM_BUFFER);

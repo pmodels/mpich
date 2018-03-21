@@ -82,23 +82,9 @@ int MPIR_Iallreduce_sched_intra_auto(const void *sendbuf, void *recvbuf, int cou
                                      MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_homogeneous, pof2, type_size;
+    int pof2, type_size;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
-
-    is_homogeneous = TRUE;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = FALSE;
-#endif
-
-    if (!is_homogeneous) {
-        mpi_errno =
-            MPIR_Iallreduce_sched_intra_naive(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-        goto fn_exit;
-    }
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 

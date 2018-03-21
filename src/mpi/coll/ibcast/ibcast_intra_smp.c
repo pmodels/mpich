@@ -40,7 +40,6 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
                                 MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_homogeneous;
     MPI_Aint type_size;
     struct ibcast_status *status;
     MPIR_SCHED_CHKPMEM_DECL(1);
@@ -52,25 +51,7 @@ int MPIR_Ibcast_sched_intra_smp(void *buffer, int count, MPI_Datatype datatype, 
                               sizeof(struct ibcast_status), mpi_errno, "MPI_Status",
                               MPL_MEM_BUFFER);
 
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
-
-    MPIR_Assert(is_homogeneous);        /* we don't handle the hetero case yet */
-
-    /* MPI_Type_size() might not give the accurate size of the packed
-     * datatype for heterogeneous systems (because of padding, encoding,
-     * etc). On the other hand, MPI_Pack_size() can become very
-     * expensive, depending on the implementation, especially for
-     * heterogeneous systems. We want to use MPI_Type_size() wherever
-     * possible, and MPI_Pack_size() in other places.
-     */
-    if (is_homogeneous)
-        MPIR_Datatype_get_size_macro(datatype, type_size);
-    else
-        MPIR_Pack_size_impl(1, datatype, &type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     status->n_bytes = type_size * count;
     /* TODO insert packing here */

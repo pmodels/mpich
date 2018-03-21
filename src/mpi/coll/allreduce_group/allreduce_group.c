@@ -36,14 +36,6 @@ int MPII_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
     int cdst, csrc;
     MPIR_CHKLMEM_DECL(3);
 
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        MPIR_Assert_fmt_msg(FALSE,
-                            ("heterogeneous support for Allreduce_group_intra not yet implemented"));
-#endif
-
-    /* homogeneous case */
-
     group_rank = group_ptr->rank;
     group_size = group_ptr->size;
     MPIR_ERR_CHKANDJUMP(group_rank == MPI_UNDEFINED, mpi_errno, MPI_ERR_OTHER, "**rank");
