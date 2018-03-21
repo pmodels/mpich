@@ -936,7 +936,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                                          (int) i, e->u.recv.rreq));
                         MPIR_Process_status(&e->u.recv.rreq->status, &s->req->u.nbc.errflag);
                         if (e->u.recv.status != MPI_STATUS_IGNORE) {
-                            int recvd;
+                            MPI_Aint recvd;
                             e->u.recv.status->MPI_ERROR = e->u.recv.rreq->status.MPI_ERROR;
                             MPIR_Get_count_impl(&e->u.recv.rreq->status, MPI_BYTE, &recvd);
                             MPIR_STATUS_SET_COUNT(*(e->u.recv.status), recvd);

@@ -26,7 +26,7 @@ int MPIR_Bcast_intra_binomial(void *buffer,
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int nbytes = 0;
-    int recvd_size;
+    MPI_Aint recvd_size;
     MPI_Status status;
     int is_contig;
     MPI_Aint type_size;

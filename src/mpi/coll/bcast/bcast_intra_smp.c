@@ -23,7 +23,7 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint type_size, nbytes = 0;
     MPI_Status status;
-    int recvd_size;
+    MPI_Aint recvd_size;
 
 #ifdef HAVE_ERROR_CHECKING
     if (!MPIR_CVAR_ENABLE_SMP_COLLECTIVES || !MPIR_CVAR_ENABLE_SMP_BCAST) {

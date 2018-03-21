@@ -328,7 +328,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
 
     for (i = 0; i < in_out_peers[0]; ++i) {
         MPI_Status status;
-        int count;
+        MPI_Aint count;
         int *buf;
         /* receive inbound edges */
         mpi_errno = MPIC_Probe(MPI_ANY_SOURCE, MPIR_TOPO_A_TAG, comm_old, &status);
@@ -369,7 +369,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
 
     for (i = 0; i < in_out_peers[1]; ++i) {
         MPI_Status status;
-        int count;
+        MPI_Aint count;
         int *buf;
         /* receive outbound edges */
         mpi_errno = MPIC_Probe(MPI_ANY_SOURCE, MPIR_TOPO_B_TAG, comm_old, &status);

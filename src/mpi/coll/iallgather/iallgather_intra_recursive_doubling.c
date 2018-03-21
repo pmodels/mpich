@@ -16,7 +16,7 @@ struct shared_state {
 static int get_count(MPIR_Comm * comm, int tag, void *state)
 {
     struct shared_state *ss = state;
-    int recv_count;
+    MPI_Aint recv_count;
     MPIR_Get_count_impl(&ss->status, ss->recvtype, &recv_count);
     ss->last_recv_count = recv_count;
     ss->curr_count += ss->last_recv_count;

@@ -40,9 +40,8 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     int j, i, is_contig;
     MPI_Aint nbytes, type_size, position;
     int left, right, jnext;
-    int curr_size = 0;
     void *tmp_buf;
-    int recvd_size;
+    MPI_Aint recvd_size, curr_size = 0;
     MPI_Status status;
     MPI_Aint true_extent, true_lb;
     MPIR_CHKLMEM_DECL(1);

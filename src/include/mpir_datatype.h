@@ -644,7 +644,7 @@ void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count * true_lb
                                       MPI_Count * true_extent);
 int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count * size);
 
-void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, int *count);
+void MPIR_Get_count_impl(const MPI_Status * status, MPI_Datatype datatype, MPI_Aint * count);
 int MPIR_Type_commit_impl(MPI_Datatype * datatype);
 int MPIR_Type_create_struct_impl(int count,
                                  const int array_of_blocklengths[],
