@@ -38,10 +38,11 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     MPI_Aint recvtype_extent, recvtype_true_extent, recvtype_true_lb;
-    int curr_cnt, dst, total_count;
+    MPI_Aint curr_cnt, last_recv_cnt;
+    int dst, total_count;
     void *tmp_buf;
     int mask, dst_tree_root, my_tree_root, position,
-        send_offset, recv_offset, last_recv_cnt, nprocs_completed, k, offset, tmp_mask, tree_root;
+        send_offset, recv_offset, nprocs_completed, k, offset, tmp_mask, tree_root;
     MPIR_CHKLMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
