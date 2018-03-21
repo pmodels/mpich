@@ -39,9 +39,6 @@ int MPIR_Allgatherv_intra_brucks(const void *sendbuf,
     int pof2, src, recv_cnt, rem, send_cnt;
     int curr_cnt, dst, total_count;
     void *tmp_buf;
-#ifdef MPID_HAS_HETERO
-    int tmp_buf_size, nbytes;
-#endif
     MPIR_CHKLMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;

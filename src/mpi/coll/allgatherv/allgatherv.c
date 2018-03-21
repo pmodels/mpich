@@ -104,10 +104,6 @@ int MPIR_Allgatherv_intra_auto(const void *sendbuf,
     int mpi_errno = MPI_SUCCESS;
     int total_count, recvtype_size;
 
-#ifdef MPID_HAS_HETERO
-    int tmp_buf_size, nbytes;
-#endif
-
     comm_size = comm_ptr->local_size;
 
     total_count = 0;

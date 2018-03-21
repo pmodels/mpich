@@ -37,7 +37,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int scatter_size;
-    int j, i, is_contig, is_homogeneous;
+    int j, i, is_contig;
     MPI_Aint nbytes, type_size, position;
     int left, right, jnext;
     int curr_size = 0;
@@ -60,32 +60,14 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
         MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
-
-    /* MPI_Type_size() might not give the accurate size of the packed
-     * datatype for heterogeneous systems (because of padding, encoding,
-     * etc). On the other hand, MPI_Pack_size() can become very
-     * expensive, depending on the implementation, especially for
-     * heterogeneous systems. We want to use MPI_Type_size() wherever
-     * possible, and MPI_Pack_size() in other places.
-     */
-    if (is_homogeneous)
-        MPIR_Datatype_get_size_macro(datatype, type_size);
-    else
-        /* --BEGIN HETEROGENEOUS-- */
-        MPIR_Pack_size_impl(1, datatype, &type_size);
-    /* --END HETEROGENEOUS-- */
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     nbytes = type_size * count;
     if (nbytes == 0)
         goto fn_exit;   /* nothing to do */
 
-    if (is_contig && is_homogeneous) {
-        /* contiguous and homogeneous. no need to pack. */
+    if (is_contig) {
+        /* contiguous. no need to pack. */
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
         tmp_buf = (char *) buffer + true_lb;
@@ -104,7 +86,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     scatter_size = (nbytes + comm_size - 1) / comm_size;        /* ceiling division */
 
     mpi_errno = MPII_Scatter_for_bcast(buffer, count, datatype, root, comm_ptr,
-                                       nbytes, tmp_buf, is_contig, is_homogeneous, errflag);
+                                       nbytes, tmp_buf, is_contig, 1, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         *errflag =
@@ -159,8 +141,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
     }
 
     /* check that we received as much as we expected */
-    /* recvd_size may not be accurate for packed heterogeneous data */
-    if (is_homogeneous && curr_size != nbytes) {
+    if (curr_size != nbytes) {
         if (*errflag == MPIR_ERR_NONE)
             *errflag = MPIR_ERR_OTHER;
         MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER,
@@ -169,7 +150,7 @@ int MPIR_Bcast_intra_scatter_ring_allgather(void *buffer,
         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
     }
 
-    if (!is_contig || !is_homogeneous) {
+    if (!is_contig) {
         if (rank != root) {
             position = 0;
             mpi_errno = MPIR_Unpack_impl(tmp_buf, nbytes, &position, buffer, count, datatype);
