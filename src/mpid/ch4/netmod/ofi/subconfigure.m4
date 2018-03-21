@@ -75,6 +75,8 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_udp="no"
         enable_rxm="no"
         enable_rxd="no"
+        enable_tcp="no"
+        enable_shm="no"
     else
         enable_psm="yes"
         enable_psm2="yes"
@@ -87,6 +89,8 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_udp="yes"
         enable_rxm="yes"
         enable_rxd="yes"
+        enable_tcp="yes"
+        enable_shm="yes"
     fi
 
     for provider in $netmod_args ; do
@@ -134,6 +138,14 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 ;;
             "rxd")
                 enable_rxd="yes"
+                runtime_capabilities="yes"
+                ;;
+            "tcp")
+                enable_tcp="yes"
+                runtime_capabilities="yes"
+                ;;
+            "shm")
+                enable_shm="yes"
                 runtime_capabilities="yes"
                 ;;
             *)
@@ -189,6 +201,14 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
                 enable_rxd="yes"
                 ;;
+            "tcp")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_tcp="yes"
+                ;;
+            "shm")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_shm="yes"
+                ;;
             *)
                 AC_MSG_WARN("Invalid provider $netmod_args")
         esac
@@ -211,6 +231,8 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             prov_config+=" --enable-udp=${enable_udp}"
             prov_config+=" --enable-rxm=${enable_rxm}"
             prov_config+=" --enable-rxd=${enable_rxd}"
+            prov_config+=" --enable-tcp=${enable_tcp}"
+            prov_config+=" --enable-shm=${enable_shm}"
         fi
 
         if test "x${ofi_direct_provider}" != "x" ; then
