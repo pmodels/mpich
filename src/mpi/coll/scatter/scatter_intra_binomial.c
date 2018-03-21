@@ -233,7 +233,8 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype
         if (rank == root) {
             MPIR_Pack_size_impl(sendcount * comm_size, sendtype, &tmp_buf_size);
 
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf",
+                                MPL_MEM_BUFFER);
 
             /* calculate the value of nbytes, the number of bytes in packed
              * representation that each process receives. We can't
@@ -290,7 +291,8 @@ int MPIR_Scatter_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype
             }
         } else {
             MPIR_Pack_size_impl(recvcount * (comm_size / 2), recvtype, &tmp_buf_size);
-            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf",
+                                MPL_MEM_BUFFER);
 
             /* calculate nbytes */
             position = 0;

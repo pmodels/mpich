@@ -300,7 +300,7 @@ int MPIR_Igather_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Da
         else
             MPIR_Pack_size_impl(sendcount * (comm_size / 2), sendtype, &tmp_buf_size);
 
-        MPIR_CHKPMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+        MPIR_CHKPMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
         position = 0;
         if (sendbuf != MPI_IN_PLACE) {

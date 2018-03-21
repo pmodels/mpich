@@ -207,7 +207,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
         char *addr;
 
         MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIDU_SHM_CACHE_LINE_LEN, mpi_errno,
-                            "segment");
+                            "segment", class);
 
         memory->base_addr = addr;
         current_addr =
