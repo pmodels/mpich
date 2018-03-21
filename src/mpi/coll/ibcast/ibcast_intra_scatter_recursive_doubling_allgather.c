@@ -60,7 +60,7 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
     int rank, comm_size, dst;
     int relative_rank, mask;
     int scatter_size, nbytes, curr_size, incoming_count;
-    int type_size, j, k, i, tmp_mask, is_contig, is_homogeneous ATTRIBUTE((unused));
+    int type_size, j, k, i, tmp_mask, is_contig;
     int relative_dst, dst_tree_root, my_tree_root, send_offset;
     int recv_offset, tree_root, nprocs_completed, offset;
     MPI_Aint true_extent, true_lb;
@@ -91,12 +91,6 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
     MPIR_SCHED_CHKPMEM_MALLOC(ibcast_state, struct MPII_Ibcast_state *,
                               sizeof(struct MPII_Ibcast_state), mpi_errno, "MPI_Status",
                               MPL_MEM_BUFFER);
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
-    MPIR_Assert(is_homogeneous);        /* we don't handle the hetero case right now */
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
@@ -104,7 +98,7 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
     ibcast_state->n_bytes = nbytes;
     ibcast_state->curr_bytes = 0;
     if (is_contig) {
-        /* contiguous and homogeneous. no need to pack. */
+        /* contiguous. no need to pack. */
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
         tmp_buf = (char *) buffer + true_lb;
@@ -279,11 +273,9 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
         mask <<= 1;
         i++;
     }
-    if (is_homogeneous) {
-        mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_curr_length, ibcast_state, s);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-    }
+    mpi_errno = MPIR_Sched_cb(&MPII_Ibcast_sched_test_curr_length, ibcast_state, s);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
     if (!is_contig) {
         if (rank != root) {
             mpi_errno = MPIR_Sched_copy(tmp_buf, nbytes, MPI_BYTE, buffer, count, datatype, s);

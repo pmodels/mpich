@@ -51,10 +51,6 @@ int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf,
                                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     MPIR_CHKLMEM_DECL(3);
-#ifdef MPID_HAS_HETERO
-    int is_homogeneous;
-    int rc;
-#endif
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;

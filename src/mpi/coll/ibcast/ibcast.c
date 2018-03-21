@@ -97,17 +97,10 @@ int MPIR_Ibcast_sched_intra_auto(void *buffer, int count, MPI_Datatype datatype,
                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size, is_homogeneous ATTRIBUTE((unused));
+    int comm_size;
     MPI_Aint type_size, nbytes;
 
     MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
-
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
-    MPIR_Assert(is_homogeneous);        /* we don't handle the hetero case right now */
 
     comm_size = comm_ptr->local_size;
     MPIR_Datatype_get_size_macro(datatype, type_size);
