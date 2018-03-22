@@ -75,7 +75,7 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
         old_loop_depth = 0;
     } else {
         DLOOP_Handle_get_extent_macro(oldtype, old_extent);
-        DLOOP_Handle_get_loopdepth_macro(oldtype, old_loop_depth, flag);
+        DLOOP_Handle_get_loopdepth_macro(oldtype, old_loop_depth);
     }
 
     for (i = first; i < count; i++) {
@@ -186,8 +186,8 @@ int MPIR_Dataloop_create_indexed(DLOOP_Count icount,
         DLOOP_Dataloop *old_loop_ptr = NULL;
         MPI_Aint old_loop_sz = 0;
 
-        DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr, flag);
-        DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz, flag);
+        DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr);
+        DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz);
 
         MPIR_Dataloop_alloc_and_copy(DLOOP_KIND_INDEXED,
                                      contig_count,

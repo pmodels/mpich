@@ -255,8 +255,8 @@ int MPIR_Segment_init(const DLOOP_Buffer buf,
         depth = 1;
     } else if (count == 1) {
         /* don't use the builtin */
-        DLOOP_Handle_get_loopptr_macro(handle, dlp, flag);
-        DLOOP_Handle_get_loopdepth_macro(handle, depth, flag);
+        DLOOP_Handle_get_loopptr_macro(handle, dlp);
+        DLOOP_Handle_get_loopdepth_macro(handle, depth);
     } else {
         /* default: need to use builtin to handle contig; must check
          * loop depth first
@@ -265,9 +265,9 @@ int MPIR_Segment_init(const DLOOP_Buffer buf,
         DLOOP_Offset type_size, type_extent;
         DLOOP_Type el_type;
 
-        DLOOP_Handle_get_loopdepth_macro(handle, depth, flag);
+        DLOOP_Handle_get_loopdepth_macro(handle, depth);
 
-        DLOOP_Handle_get_loopptr_macro(handle, oldloop, flag);
+        DLOOP_Handle_get_loopptr_macro(handle, oldloop);
         DLOOP_Assert(oldloop != NULL);
         DLOOP_Handle_get_size_macro(handle, type_size);
         DLOOP_Handle_get_extent_macro(handle, type_extent);
