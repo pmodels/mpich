@@ -204,8 +204,8 @@ int MPIR_Dataloop_create_struct(DLOOP_Count count,
             int tmp_loop_depth;
             MPI_Aint tmp_loop_sz;
 
-            DLOOP_Handle_get_loopdepth_macro(oldtypes[i], tmp_loop_depth, flag);
-            DLOOP_Handle_get_loopsize_macro(oldtypes[i], tmp_loop_sz, flag);
+            DLOOP_Handle_get_loopdepth_macro(oldtypes[i], tmp_loop_depth);
+            DLOOP_Handle_get_loopsize_macro(oldtypes[i], tmp_loop_sz);
 
             if (tmp_loop_depth > old_loop_depth) {
                 old_loop_depth = tmp_loop_depth;
@@ -301,8 +301,8 @@ int MPIR_Dataloop_create_struct(DLOOP_Count count,
             DLOOP_Dataloop *old_loop_ptr;
             DLOOP_Offset old_extent;
 
-            DLOOP_Handle_get_loopptr_macro(oldtypes[i], old_loop_ptr, flag);
-            DLOOP_Handle_get_loopsize_macro(oldtypes[i], old_loop_sz, flag);
+            DLOOP_Handle_get_loopptr_macro(oldtypes[i], old_loop_ptr);
+            DLOOP_Handle_get_loopsize_macro(oldtypes[i], old_loop_sz);
             DLOOP_Handle_get_extent_macro(oldtypes[i], old_extent);
 
             MPIR_Dataloop_copy(curpos, old_loop_ptr, old_loop_sz);
