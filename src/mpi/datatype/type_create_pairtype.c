@@ -80,9 +80,6 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
     new_dtp->dataloop = NULL;
     new_dtp->dataloop_size = -1;
     new_dtp->dataloop_depth = -1;
-    new_dtp->hetero_dloop = NULL;
-    new_dtp->hetero_dloop_size = -1;
-    new_dtp->hetero_dloop_depth = -1;
 
     switch (type) {
         case MPI_FLOAT_INT:
@@ -187,13 +184,6 @@ int MPIR_Type_create_pairtype(MPI_Datatype type, MPIR_Datatype * new_dtp)
                                         &(new_dtp->dataloop_depth), MPIR_DATALOOP_HOMOGENEOUS);
 #endif
 
-    if (!err) {
-        err = MPIR_Dataloop_create_pairtype(type,
-                                            &(new_dtp->hetero_dloop),
-                                            &(new_dtp->hetero_dloop_size),
-                                            &(new_dtp->hetero_dloop_depth),
-                                            MPIR_DATALOOP_HETEROGENEOUS);
-    }
 #ifdef MPID_Type_commit_hook
     if (!err) {
         err = MPID_Type_commit_hook(new_dtp);
