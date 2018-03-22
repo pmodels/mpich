@@ -66,7 +66,6 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
     MPIR_CHKLMEM_MALLOC(tmp_buf, MPI_Aint *, 4 * comm_size * sizeof(MPI_Aint),
                         mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
-    /* FIXME: This needs to be fixed for heterogeneous systems */
     /* FIXME: If we wanted to validate the transfer as within range at the
      * origin, we'd also need the window size. */
     tmp_buf[4 * rank] = MPIR_Ptr_to_aint(base);

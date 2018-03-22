@@ -537,7 +537,6 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPIR_Info *
     MPIR_CHKLMEM_MALLOC(node_sizes, MPI_Aint *, node_size * sizeof(MPI_Aint), mpi_errno,
                         "node_sizes", MPL_MEM_RMA);
 
-    /* FIXME: This needs to be fixed for heterogeneous systems */
     node_sizes[node_rank] = (MPI_Aint) size;
 
     mpi_errno = MPIR_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
