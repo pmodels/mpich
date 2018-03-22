@@ -39,13 +39,8 @@ int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
 
     MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING HCOLL BCAST.");
     dtype = mpi_dtype_2_dte_dtype(datatype);
-    int is_homogeneous = 1;
     MPI_Comm comm = comm_ptr->handle;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
-    if (HCOL_DTE_IS_COMPLEX(dtype) || HCOL_DTE_IS_ZERO(dtype) || (0 == is_homogeneous)) {
+    if (HCOL_DTE_IS_COMPLEX(dtype) || HCOL_DTE_IS_ZERO(dtype)) {
         /*If we are here then datatype is not simple predefined datatype */
         /*In future we need to add more complex mapping to the dte_data_representation_t */
         /* Now use fallback */
@@ -68,12 +63,7 @@ int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
     dte_data_representation_t Dtype;
     hcoll_dte_op_t *Op;
     int rc = -1;
-    int is_homogeneous = 1;
     MPI_Comm comm = comm_ptr->handle;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
 
     if (!comm_ptr->hcoll_priv.is_hcoll_init)
         return rc;
@@ -84,8 +74,7 @@ int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
     if (MPI_IN_PLACE == sendbuf) {
         sendbuf = HCOLL_IN_PLACE;
     }
-    if (HCOL_DTE_IS_COMPLEX(Dtype) || HCOL_DTE_IS_ZERO(Dtype) || (0 == is_homogeneous) ||
-        (HCOL_DTE_OP_NULL == Op->id)) {
+    if (HCOL_DTE_IS_COMPLEX(Dtype) || HCOL_DTE_IS_ZERO(Dtype) || (HCOL_DTE_OP_NULL == Op->id)) {
         MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE,
                     "unsupported data layout, calling fallback allreduce.");
         rc = -1;
@@ -104,16 +93,10 @@ int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
                     void *rbuf, int rcount, MPI_Datatype rdtype, MPIR_Comm * comm_ptr,
                     MPIR_Errflag_t * err)
 {
-    int is_homogeneous = 1;
     MPI_Comm comm = comm_ptr->handle;
     dte_data_representation_t stype;
     dte_data_representation_t rtype;
     int rc = -1;
-    is_homogeneous = 1;
-#ifdef MPID_HAS_HETERO
-    if (comm_ptr->is_hetero)
-        is_homogeneous = 0;
-#endif
 
     if (!comm_ptr->hcoll_priv.is_hcoll_init)
         return rc;
@@ -125,7 +108,7 @@ int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
         sbuf = HCOLL_IN_PLACE;
     }
     if (HCOL_DTE_IS_COMPLEX(stype) || HCOL_DTE_IS_ZERO(stype) || HCOL_DTE_IS_ZERO(rtype) ||
-        HCOL_DTE_IS_COMPLEX(rtype) || is_homogeneous == 0) {
+        HCOL_DTE_IS_COMPLEX(rtype)) {
         MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE,
                     "unsupported data layout; calling fallback allgather.");
         rc = -1;
