@@ -136,11 +136,6 @@ struct MPIR_Datatype {
     struct MPIR_Dataloop *dataloop;     /* might be optimized for homogenous */
     MPI_Aint dataloop_size;
     int dataloop_depth;
-#if defined(MPID_HAS_HETERO) || 1
-    struct MPIR_Dataloop *hetero_dloop; /* heterogeneous dataloop */
-    MPI_Aint hetero_dloop_size;
-    int hetero_dloop_depth;
-#endif                          /* MPID_HAS_HETERO */
     /* MPI-2 attributes and name */
     struct MPIR_Attribute *attributes;
     char name[MPI_MAX_OBJECT_NAME];
@@ -526,11 +521,6 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr)
     if (ptr->dataloop) {
         MPIR_Dataloop_free(&(ptr->dataloop));
     }
-#if defined(MPID_HAS_HETERO) || 1
-    if (ptr->hetero_dloop) {
-        MPIR_Dataloop_free(&(ptr->hetero_dloop));
-    }
-#endif /* MPID_HAS_HETERO */
     MPIR_Handle_obj_free(&MPIR_Datatype_mem, ptr);
 }
 
