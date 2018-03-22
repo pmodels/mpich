@@ -56,12 +56,12 @@ void MPIR_Dataloop_create(MPI_Datatype type,
      *    check above enough to weed out everything that wouldn't
      *    have a loop?
      */
-    DLOOP_Handle_get_loopptr_macro(type, old_dlp, flag);
+    DLOOP_Handle_get_loopptr_macro(type, old_dlp);
     if (old_dlp != NULL) {
         /* dataloop already created; just return it. */
         *dlp_p = old_dlp;
-        DLOOP_Handle_get_loopsize_macro(type, *dlsz_p, flag);
-        DLOOP_Handle_get_loopdepth_macro(type, *dldepth_p, flag);
+        DLOOP_Handle_get_loopsize_macro(type, *dlsz_p);
+        DLOOP_Handle_get_loopdepth_macro(type, *dldepth_p);
         return;
     }
 
@@ -97,17 +97,17 @@ void MPIR_Dataloop_create(MPI_Datatype type,
      */
     MPIR_Type_get_envelope(types[0], &dummy1, &dummy2, &dummy3, &type0_combiner);
     if (type0_combiner != MPI_COMBINER_NAMED) {
-        DLOOP_Handle_get_loopptr_macro(types[0], old_dlp, flag);
+        DLOOP_Handle_get_loopptr_macro(types[0], old_dlp);
         if (old_dlp == NULL) {
             /* no dataloop already present; create and store one */
             MPIR_Dataloop_create(types[0], &old_dlp, &old_dlsz, &old_dldepth, flag);
 
-            DLOOP_Handle_set_loopptr_macro(types[0], old_dlp, flag);
-            DLOOP_Handle_set_loopsize_macro(types[0], old_dlsz, flag);
-            DLOOP_Handle_set_loopdepth_macro(types[0], old_dldepth, flag);
+            DLOOP_Handle_set_loopptr_macro(types[0], old_dlp);
+            DLOOP_Handle_set_loopsize_macro(types[0], old_dlsz);
+            DLOOP_Handle_set_loopdepth_macro(types[0], old_dldepth);
         } else {
-            DLOOP_Handle_get_loopsize_macro(types[0], old_dlsz, flag);
-            DLOOP_Handle_get_loopdepth_macro(types[0], old_dldepth, flag);
+            DLOOP_Handle_get_loopsize_macro(types[0], old_dlsz);
+            DLOOP_Handle_get_loopdepth_macro(types[0], old_dldepth);
         }
     }
 
@@ -226,13 +226,13 @@ void MPIR_Dataloop_create(MPI_Datatype type,
                 MPIR_Type_get_envelope(types[i], &dummy1, &dummy2, &dummy3, &type_combiner);
 
                 if (type_combiner != MPI_COMBINER_NAMED) {
-                    DLOOP_Handle_get_loopptr_macro(types[i], old_dlp, flag);
+                    DLOOP_Handle_get_loopptr_macro(types[i], old_dlp);
                     if (old_dlp == NULL) {
                         MPIR_Dataloop_create(types[i], &old_dlp, &old_dlsz, &old_dldepth, flag);
 
-                        DLOOP_Handle_set_loopptr_macro(types[i], old_dlp, flag);
-                        DLOOP_Handle_set_loopsize_macro(types[i], old_dlsz, flag);
-                        DLOOP_Handle_set_loopdepth_macro(types[i], old_dldepth, flag);
+                        DLOOP_Handle_set_loopptr_macro(types[i], old_dlp);
+                        DLOOP_Handle_set_loopsize_macro(types[i], old_dlsz);
+                        DLOOP_Handle_set_loopdepth_macro(types[i], old_dldepth);
                     }
                 }
             }
@@ -327,12 +327,12 @@ static void DLOOP_Dataloop_create_named(MPI_Datatype type,
      */
     if (type == MPI_FLOAT_INT || type == MPI_DOUBLE_INT ||
         type == MPI_LONG_INT || type == MPI_SHORT_INT || type == MPI_LONG_DOUBLE_INT) {
-        DLOOP_Handle_get_loopptr_macro(type, dlp, flag);
+        DLOOP_Handle_get_loopptr_macro(type, dlp);
         if (dlp != NULL) {
             /* dataloop already created; just return it. */
             *dlp_p = dlp;
-            DLOOP_Handle_get_loopsize_macro(type, *dlsz_p, flag);
-            DLOOP_Handle_get_loopdepth_macro(type, *dldepth_p, flag);
+            DLOOP_Handle_get_loopsize_macro(type, *dlsz_p);
+            DLOOP_Handle_get_loopdepth_macro(type, *dldepth_p);
         } else {
             MPIR_Dataloop_create_pairtype(type, dlp_p, dlsz_p, dldepth_p, flag);
         }
