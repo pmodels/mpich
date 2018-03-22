@@ -84,15 +84,11 @@ $lineLeader4 = '^\s*[0-9-]+:\s*\d+:\s*[\{\}]?\s*';
 #         through places where user-provided functions may be called
 #    OPTIONALINIT - Code that provides for lazy initialization of 
 #         datastructures, particularly function tables.  
-#    HETEROGENEOUS - Code that provides for heterogenous data representations
-#         Note that MPICH current does not support such code, and it is
-#         more correct for any such experimental code to be ifdef'ed out
-#         the the #ifdef MPID_HAS_HETERO ... #endif
 #  Code that is executed only with erroneous input (e.g., user errors) or
 #  exceptional events (e.g., socket unexpectedly closes).
 #    ERROR HANDLING - Code for handling or reporting errors
 @BlockNames = ( "DEBUG", "ERROR HANDLING", "EXPERIMENTAL", "USEREXTENSION",
-    "OPTIONALINIT", "HETEROGENEOUS" );
+    "OPTIONALINIT" );
 #
 # Keep track of coverage amounts
 $GrandTotal       = 0;
@@ -382,7 +378,6 @@ sub AnnotateUncoveredLines {
 		       "DEBUG" => "lightblue", 
 		       "EXPERIMENTAL" => "lightblue",
 		       "USEREXTENSION" => "lightyellow", 
-		       "HETEROGENEOUS" => "lightgreen",
 		       "OPTIONALINIT"  => "lightgreen",
 		       );
     my $outfile  = $_[2];
