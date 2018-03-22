@@ -96,9 +96,6 @@ int MPIR_Type_indexed(int count,
     new_dtp->dataloop = NULL;
     new_dtp->dataloop_size = -1;
     new_dtp->dataloop_depth = -1;
-    new_dtp->hetero_dloop = NULL;
-    new_dtp->hetero_dloop_size = -1;
-    new_dtp->hetero_dloop_depth = -1;
 
     is_builtin = (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN);
 
