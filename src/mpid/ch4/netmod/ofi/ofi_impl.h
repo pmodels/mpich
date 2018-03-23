@@ -671,7 +671,7 @@ MPL_STATIC_INLINE_PREFIX
         params.last_loc = 0;
         params.start_loc = 0;
         params.last_chunk = 0;
-        MPIR_Segment_init(NULL, 1, dt_datatype, &dt_seg, 0);
+        MPIR_Segment_init(NULL, 1, dt_datatype, &dt_seg);
         MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
                                 MPIDI_OFI_contig_count_block,
                                 NULL, NULL, NULL, NULL, (void *) &params);
@@ -680,7 +680,7 @@ MPL_STATIC_INLINE_PREFIX
         params.last_loc = 0;
         params.start_loc = 0;
         params.last_chunk = 0;
-        MPIR_Segment_init(NULL, dtc, dt_datatype, &dt_seg, 0);
+        MPIR_Segment_init(NULL, dtc, dt_datatype, &dt_seg);
         MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
                                 MPIDI_OFI_contig_count_block,
                                 NULL, NULL, NULL, NULL, (void *) &params);

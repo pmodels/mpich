@@ -101,7 +101,7 @@ static inline int MPIDI_do_put(const void *origin_addr,
     segment_ptr = MPIR_Segment_alloc();
     MPIR_Assert(segment_ptr);
 
-    MPIR_Segment_init(NULL, target_count, target_datatype, segment_ptr, 0);
+    MPIR_Segment_init(NULL, target_count, target_datatype, segment_ptr);
     last = data_sz;
     MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
     n_iov = (int) num_iov;
@@ -241,7 +241,7 @@ static inline int MPIDI_do_get(void *origin_addr,
     segment_ptr = MPIR_Segment_alloc();
     MPIR_Assert(segment_ptr);
 
-    MPIR_Segment_init(NULL, target_count, target_datatype, segment_ptr, 0);
+    MPIR_Segment_init(NULL, target_count, target_datatype, segment_ptr);
     last = data_sz;
     MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
     n_iov = (int) num_iov;
@@ -372,7 +372,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     MPIR_Assert(segment_ptr);
 
 
-    MPIR_Segment_init(NULL, target_count, target_datatype, segment_ptr, 0);
+    MPIR_Segment_init(NULL, target_count, target_datatype, segment_ptr);
     last = data_sz;
     MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
     n_iov = (int) num_iov;
@@ -533,7 +533,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     MPIR_Assert(segment_ptr);
 
 
-    MPIR_Segment_init(NULL, target_count, target_datatype, segment_ptr, 0);
+    MPIR_Segment_init(NULL, target_count, target_datatype, segment_ptr);
     last = data_sz;
     MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
     n_iov = (int) num_iov;

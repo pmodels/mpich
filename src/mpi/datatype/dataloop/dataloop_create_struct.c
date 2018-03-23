@@ -477,7 +477,7 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
             /* if the derived type has some data to contribute,
              * add to flattened representation */
             if (sz > 0) {
-                err = MPIR_Segment_init(NULL, (DLOOP_Count) blklens[i], oldtypes[i], segp, flag);
+                err = MPIR_Segment_init(NULL, (DLOOP_Count) blklens[i], oldtypes[i], segp);
                 if (err)
                     return err;
 
@@ -542,8 +542,7 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
         if (oldtypes[i] != MPI_UB &&
             oldtypes[i] != MPI_LB && blklens[i] != 0 && (is_basic || sz > 0)) {
             err = MPIR_Segment_init((char *) DLOOP_OFFSET_CAST_TO_VOID_PTR disps[i],
-                                    (DLOOP_Count) blklens[i],
-                                    oldtypes[i], segp, 0 /* homogeneous */);
+                                    (DLOOP_Count) blklens[i], oldtypes[i], segp);
             if (err)
                 return err;
 

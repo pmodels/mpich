@@ -87,7 +87,7 @@ static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
         segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv MPIR_Segment_alloc");
-        MPIR_Segment_init(buf, count, datatype, segment_ptr, 0);
+        MPIR_Segment_init(buf, count, datatype, segment_ptr);
 
         last = count * dt_sz;
         MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, buffer));

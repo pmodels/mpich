@@ -132,12 +132,7 @@
 #define DLOOP_Dataloop_stackelm     MPIR_Dataloop_stackelm
 
 /* These flags are used at creation time to specify what types of
- * optimizations may be applied. They are also passed in at Segment_init
- * time to specify which dataloop to use.
- *
- * Note: The flag to MPIR_Segment_init() was originally simply "hetero"
- * and was a boolean value (0 meaning homogeneous). Some MPICH code
- * may still rely on HOMOGENEOUS being "0" and HETEROGENEOUS being "1".
+ * optimizations may be applied.
  */
 #define DLOOP_DATALOOP_HOMOGENEOUS   0
 #define DLOOP_DATALOOP_HETEROGENEOUS 1
@@ -431,7 +426,7 @@ DLOOP_Segment *MPIR_Segment_alloc(void);
 void MPIR_Segment_free(DLOOP_Segment * segp);
 
 int MPIR_Segment_init(const DLOOP_Buffer buf,
-                      DLOOP_Count count, DLOOP_Handle handle, DLOOP_Segment * segp, int hetero);
+                      DLOOP_Count count, DLOOP_Handle handle, DLOOP_Segment * segp);
 
 void
 MPIR_Segment_manipulate(DLOOP_Segment * segp,
