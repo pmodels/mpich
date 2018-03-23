@@ -425,7 +425,8 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
         if (!strncmp(hintval, "pci:", strlen("pci:")))
             mpi_errno = node_split_pci_device(comm_ptr, key, hintval, newcomm_ptr);
         else if (!strncmp(hintval, "ib", strlen("ib")) ||
-                 !strncmp(hintval, "en", strlen("en")) || !strncmp(hintval, "hfi", strlen("hfi")))
+                 !strncmp(hintval, "en", strlen("en")) ||
+                 !strncmp(hintval, "eth", strlen("eth")) || !strncmp(hintval, "hfi", strlen("hfi")))
             mpi_errno = node_split_network_device(comm_ptr, key, hintval, newcomm_ptr);
         else if (!strncmp(hintval, "gpu", strlen("gpu")))
             mpi_errno = node_split_gpu_device(comm_ptr, key, hintval, newcomm_ptr);
