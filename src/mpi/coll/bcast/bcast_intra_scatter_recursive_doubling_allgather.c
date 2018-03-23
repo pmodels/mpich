@@ -12,11 +12,11 @@
  *
  * We first scatter the buffer using a binomial tree algorithm. This costs
  * lgp.alpha + n.((p-1)/p).beta
- * If the datatype is contiguous and the communicator is homogeneous,
- * we treat the data as bytes and divide (scatter) it among processes
- * by using ceiling division. For the noncontiguous or heterogeneous
- * cases, we first pack the data into a temporary buffer by using
- * MPI_Pack, scatter it as bytes, and unpack it after the allgather.
+ * If the datatype is contiguous, we treat the data as bytes and
+ * divide (scatter) it among processes by using ceiling division.
+ * For the noncontiguous, we first pack the data into a temporary
+ * buffer by using MPI_Pack, scatter it as bytes, and unpack it
+ * after the allgather.
  *
  * For the allgather, we use a recursive doubling algorithm for
  * medium-size messages and power-of-two number of processes. This
