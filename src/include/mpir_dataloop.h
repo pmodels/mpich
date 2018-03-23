@@ -117,9 +117,8 @@
 /* These flags are used at creation time to specify what types of
  * optimizations may be applied.
  */
-#define DLOOP_DATALOOP_HOMOGENEOUS   0
-#define DLOOP_DATALOOP_HETEROGENEOUS 1
-#define DLOOP_DATALOOP_ALL_BYTES     2
+#define DLOOP_DATALOOP_DEFAULT       0
+#define DLOOP_DATALOOP_ALL_BYTES     1
 
 /* NOTE: ASSUMING LAST TYPE IS SIGNED */
 #define SEGMENT_IGNORE_LAST ((DLOOP_Offset) -1)
@@ -579,8 +578,7 @@ void MPIR_Segment_unpack_external32(struct DLOOP_Segment *segp,
  * Note: DLOOP_DATALOOP_ALL_BYTES is used only when the device
  * defines MPID_NEEDS_DLOOP_ALL_BYTES.
  */
-#define MPIR_DATALOOP_HETEROGENEOUS DLOOP_DATALOOP_HETEROGENEOUS
-#define MPIR_DATALOOP_HOMOGENEOUS   DLOOP_DATALOOP_HOMOGENEOUS
+#define MPIR_DATALOOP_DEFAULT       DLOOP_DATALOOP_DEFAULT
 #define MPIR_DATALOOP_ALL_BYTES     DLOOP_DATALOOP_ALL_BYTES
 
 DLOOP_Count DLOOP_Stackelm_blocksize(struct DLOOP_Dataloop_stackelm *elmp);

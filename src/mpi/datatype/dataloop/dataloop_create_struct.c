@@ -172,8 +172,7 @@ int MPIR_Dataloop_create_struct(DLOOP_Count count,
      * homogeneous system or the "all bytes" conversion, convert
      * everything to bytes and use an indexed type.
      */
-    if (nr_derived == 0 && ((flag == DLOOP_DATALOOP_HOMOGENEOUS) ||
-                            (flag == DLOOP_DATALOOP_ALL_BYTES))) {
+    if (nr_derived == 0 && ((flag == DLOOP_DATALOOP_DEFAULT) || (flag == DLOOP_DATALOOP_ALL_BYTES))) {
         return DLOOP_Dataloop_create_basic_all_bytes_struct(count,
                                                             blklens,
                                                             disps,
@@ -187,7 +186,7 @@ int MPIR_Dataloop_create_struct(DLOOP_Count count,
      * flatten the type and store it as an indexed type so that
      * there are no branches in the dataloop tree.
      */
-    if ((flag == DLOOP_DATALOOP_HOMOGENEOUS) || (flag == DLOOP_DATALOOP_ALL_BYTES)) {
+    if ((flag == DLOOP_DATALOOP_DEFAULT) || (flag == DLOOP_DATALOOP_ALL_BYTES)) {
         return DLOOP_Dataloop_create_flattened_struct(count,
                                                       blklens,
                                                       disps,
