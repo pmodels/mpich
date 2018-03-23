@@ -232,6 +232,26 @@ static int node_split_pci_device(MPIR_Comm * comm_ptr, int key,
     goto fn_exit;
 }
 
+static int io_device_found(const char *resource, const char *devname, hwloc_obj_t io_device,
+                           hwloc_obj_osdev_type_t obj_type)
+{
+    if (!strncmp(resource, devname, strlen(devname))) {
+        /* device type does not match */
+        if (io_device->attr->osdev.type != obj_type)
+            return 0;
+
+        /* device prefix does not match */
+        if (strncmp(io_device->name, devname, strlen(devname)))
+            return 0;
+
+        /* specific device is supplied, but does not match */
+        if (strlen(resource) != strlen(devname) && strcmp(io_device->name, resource))
+            return 0;
+    }
+
+    return 1;
+}
+
 static int node_split_network_device(MPIR_Comm * comm_ptr, int key,
                                      const char *hintval, MPIR_Comm ** newcomm_ptr)
 {
@@ -247,23 +267,32 @@ static int node_split_network_device(MPIR_Comm * comm_ptr, int key,
     MPIR_Assert(obj_containing_cpuset != NULL);
 
     color = MPI_UNDEFINED;
-    while ((io_device = hwloc_get_next_osdev(MPIR_Process.topology, io_device))
-           != NULL) {
-        if ((!strncmp(hintval, "hfi", strlen("hfi")) &&
-             io_device->attr->osdev.type == HWLOC_OBJ_OSDEV_OPENFABRICS) ||
-            io_device->attr->osdev.type == HWLOC_OBJ_OSDEV_NETWORK) {
-            if (strcmp(io_device->name, hintval))
-                continue;
-            hwloc_obj_t non_io_ancestor =
-                hwloc_get_non_io_ancestor_obj(MPIR_Process.topology, io_device);
-            MPIR_Assert(non_io_ancestor);
-            if (hwloc_obj_is_in_subtree
-                (MPIR_Process.topology, obj_containing_cpuset, non_io_ancestor)) {
-                color =
-                    (non_io_ancestor->type << (sizeof(int) * 4)) + non_io_ancestor->logical_index;
-                break;
-            }
-        }
+    while ((io_device = hwloc_get_next_osdev(MPIR_Process.topology, io_device))) {
+        hwloc_obj_t non_io_ancestor;
+        uint32_t depth;
+
+        if (!io_device_found(hintval, "hfi", io_device, HWLOC_OBJ_OSDEV_OPENFABRICS))
+            continue;
+        if (!io_device_found(hintval, "ib", io_device, HWLOC_OBJ_OSDEV_NETWORK))
+            continue;
+        if (!io_device_found(hintval, "eth", io_device, HWLOC_OBJ_OSDEV_NETWORK) &&
+            !io_device_found(hintval, "en", io_device, HWLOC_OBJ_OSDEV_NETWORK))
+            continue;
+
+        non_io_ancestor = hwloc_get_non_io_ancestor_obj(MPIR_Process.topology, io_device);
+        while (!hwloc_obj_type_is_normal(non_io_ancestor->type))
+            non_io_ancestor = non_io_ancestor->parent;
+        MPIR_Assert(non_io_ancestor && non_io_ancestor->depth >= 0);
+
+        if (!hwloc_obj_is_in_subtree(MPIR_Process.topology, obj_containing_cpuset, non_io_ancestor))
+            continue;
+
+        /* Get a unique ID for the non-IO object.  Use fixed width
+         * unsigned integers, so bit shift operations are well
+         * defined */
+        depth = (uint32_t) non_io_ancestor->depth;
+        color = (int) ((depth << 16) + non_io_ancestor->logical_index);
+        break;
     }
 
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
