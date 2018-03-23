@@ -73,7 +73,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_iov(void *buf, MPI_Aint count,
     MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = MPL_aligned_alloc(iov_align, size, MPL_MEM_BUFFER);
     memset(MPIDI_OFI_REQUEST(rreq, noncontig.nopack), 0, size);
 
-    MPIR_Segment_init(buf, count, MPIDI_OFI_REQUEST(rreq, datatype), &seg, 0);
+    MPIR_Segment_init(buf, count, MPIDI_OFI_REQUEST(rreq, datatype), &seg);
     MPIR_Segment_pack_vector(&seg, 0, &last, MPIDI_OFI_REQUEST(rreq, noncontig.nopack),
                              &num_contig);
 
@@ -244,8 +244,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                              mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "Recv Pack Buffer alloc");
         recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig.pack->pack_buffer);
-        MPIR_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(rreq, noncontig.pack->segment),
-                          0);
+        MPIR_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(rreq, noncontig.pack->segment));
     } else {
         MPIDI_OFI_REQUEST(rreq, noncontig.pack) = NULL;
         MPIDI_OFI_REQUEST(rreq, noncontig.nopack) = NULL;

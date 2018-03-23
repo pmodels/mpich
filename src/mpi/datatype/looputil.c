@@ -209,18 +209,13 @@ static int external32_float_convert(char *dest_buf,
  * count  - number of instances of the datatype in the buffer
  * handle - handle for datatype (could be derived or not)
  * segp   - pointer to previously allocated segment structure
- * flag   - flag indicating which optimizations are valid
- *          should be one of DLOOP_DATALOOP_HOMOGENEOUS, _HETEROGENEOUS,
- *          of _ALL_BYTES.
  *
  * Notes:
  * - Assumes that the segment has been allocated.
- * - Older MPICH code may pass "0" to indicate HETEROGENEOUS or "1" to
- *   indicate HETEROGENEOUS.
  *
  */
 int MPIR_Segment_init(const DLOOP_Buffer buf,
-                      DLOOP_Count count, DLOOP_Handle handle, struct DLOOP_Segment *segp, int flag)
+                      DLOOP_Count count, DLOOP_Handle handle, struct DLOOP_Segment *segp)
 {
     DLOOP_Offset elmsize = 0;
     int i, depth = 0;
@@ -228,9 +223,6 @@ int MPIR_Segment_init(const DLOOP_Buffer buf,
 
     struct DLOOP_Dataloop_stackelm *elmp;
     struct DLOOP_Dataloop *dlp = 0, *sblp = &segp->builtin_loop;
-
-    DLOOP_Assert(flag == DLOOP_DATALOOP_HETEROGENEOUS ||
-                 flag == DLOOP_DATALOOP_HOMOGENEOUS || flag == DLOOP_DATALOOP_ALL_BYTES);
 
 #ifdef DLOOP_DEBUG_MANIPULATE
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE, VERBOSE,

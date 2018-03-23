@@ -358,7 +358,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
 
         MPIR_Segment_init(rma_op->origin_addr, rma_op->origin_count,
-                          rma_op->origin_datatype, req->dev.segment_ptr, 0);
+                          rma_op->origin_datatype, req->dev.segment_ptr);
         req->dev.segment_first = stream_offset;
         req->dev.segment_size = stream_offset + stream_size;
 

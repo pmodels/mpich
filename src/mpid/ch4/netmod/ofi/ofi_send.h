@@ -134,7 +134,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_iov(const void *buf, MPI_Aint count,
     MPIDI_OFI_REQUEST(sreq, noncontig.nopack) = MPL_aligned_alloc(iov_align, size, MPL_MEM_BUFFER);
     memset(MPIDI_OFI_REQUEST(sreq, noncontig.nopack), 0, size);
 
-    MPIR_Segment_init(buf, count, MPIDI_OFI_REQUEST(sreq, datatype), &seg, 0);
+    MPIR_Segment_init(buf, count, MPIDI_OFI_REQUEST(sreq, datatype), &seg);
     MPIR_Segment_pack_vector(&seg, 0, &last_byte, MPIDI_OFI_REQUEST(sreq, noncontig.nopack),
                              &num_contig);
 
@@ -306,8 +306,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         segment_first = 0;
         last = data_sz;
 
-        MPIR_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment),
-                          0);
+        MPIR_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment));
         MPIR_Segment_pack(&MPIDI_OFI_REQUEST(sreq, noncontig.pack->segment), segment_first, &last,
                           MPIDI_OFI_REQUEST(sreq, noncontig.pack->pack_buffer));
         send_buf = MPIDI_OFI_REQUEST(sreq, noncontig.pack->pack_buffer);

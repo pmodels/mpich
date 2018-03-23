@@ -560,7 +560,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
                                  MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
 
             MPIR_Segment_init(get_pkt->addr, get_pkt->count,
-                              get_pkt->datatype, req->dev.segment_ptr, 0);
+                              get_pkt->datatype, req->dev.segment_ptr);
             req->dev.segment_first = 0;
             req->dev.segment_size = get_pkt->count * type_size;
 
@@ -1691,7 +1691,7 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
 
             req->dev.segment_ptr = MPIR_Segment_alloc();
             MPIR_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype,
-                              req->dev.segment_ptr, 0);
+                              req->dev.segment_ptr);
             req->dev.segment_first = contig_stream_offset;
             req->dev.segment_size = contig_stream_offset + req->dev.recv_data_sz;
 
