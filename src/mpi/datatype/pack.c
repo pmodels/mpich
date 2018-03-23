@@ -73,7 +73,7 @@ int MPIR_Pack_impl(const void *inbuf,
     MPIR_ERR_CHKANDJUMP1(segp == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                          "MPIR_Segment");
 
-    mpi_errno = MPIR_Segment_init(inbuf, incount, datatype, segp, 0);
+    mpi_errno = MPIR_Segment_init(inbuf, incount, datatype, segp);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

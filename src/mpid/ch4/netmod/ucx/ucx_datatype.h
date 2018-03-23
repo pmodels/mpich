@@ -29,7 +29,7 @@ static inline void *MPIDI_UCX_Start_pack(void *context, const void *buffer, size
     segment_ptr = MPIR_Segment_alloc();
     MPIR_Pack_size_impl(count, *datatype, &packsize);
     /* Todo: Add error handling */
-    MPIR_Segment_init(buffer, count, *datatype, segment_ptr, 1);
+    MPIR_Segment_init(buffer, count, *datatype, segment_ptr);
     state->packsize = packsize;
     state->segment_ptr = segment_ptr;
 
@@ -47,7 +47,7 @@ static inline void *MPIDI_UCX_Start_unpack(void *context, void *buffer, size_t c
     MPIR_Pack_size_impl(count, *datatype, &packsize);
     segment_ptr = MPIR_Segment_alloc();
     /* Todo: Add error handling */
-    MPIR_Segment_init(buffer, count, *datatype, segment_ptr, 1);
+    MPIR_Segment_init(buffer, count, *datatype, segment_ptr);
     state->packsize = packsize;
     state->segment_ptr = segment_ptr;
 

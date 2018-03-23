@@ -470,7 +470,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
         segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIR_Segment_alloc");
-        MPIR_Segment_init(buf, count, datatype, segment_ptr, 0);
+        MPIR_Segment_init(buf, count, datatype, segment_ptr);
         segment_first = 0;
         last = data_sz;
         MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = (char *) MPL_malloc(data_sz, MPL_MEM_BUFFER);

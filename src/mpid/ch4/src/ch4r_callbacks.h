@@ -158,7 +158,7 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv MPIR_Segment_alloc");
         MPIR_Segment_init(MPIDI_CH4U_REQUEST(match_req, buffer), count,
-                          MPIDI_CH4U_REQUEST(match_req, datatype), segment_ptr, 0);
+                          MPIDI_CH4U_REQUEST(match_req, datatype), segment_ptr);
 
         last = count * dt_sz;
         MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, buffer));
@@ -233,7 +233,7 @@ static inline int MPIDI_do_send_target(void **data,
 
         MPIR_Segment_init(MPIDI_CH4U_REQUEST(rreq, buffer),
                           MPIDI_CH4U_REQUEST(rreq, count),
-                          MPIDI_CH4U_REQUEST(rreq, datatype), segment_ptr, 0);
+                          MPIDI_CH4U_REQUEST(rreq, datatype), segment_ptr);
 
         if (*p_data_sz > data_sz) {
             rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;

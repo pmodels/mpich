@@ -626,7 +626,7 @@ static inline int MPIDI_do_accumulate_op(void *source_buf, int source_count,
             goto fn_exit;
         }
         /* --END ERROR HANDLING-- */
-        MPIR_Segment_init(NULL, target_count, target_dtp, segp, 0);
+        MPIR_Segment_init(NULL, target_count, target_dtp, segp);
         first = stream_offset;
         last = first + source_count * source_dtp_size;
 
@@ -1403,7 +1403,7 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
 
         MPIR_Segment_init(MPIDI_CH4U_REQUEST(areq, req->areq.result_addr),
                           MPIDI_CH4U_REQUEST(areq, req->areq.result_count),
-                          MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype), segment_ptr, 0);
+                          MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype), segment_ptr);
 
         last = data_sz;
         MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
@@ -1608,8 +1608,7 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
         segment_ptr = MPIR_Segment_alloc();
         MPIR_Assert(segment_ptr);
 
-        MPIR_Segment_init((void *) (offset + base), msg_hdr->count, msg_hdr->datatype,
-                          segment_ptr, 0);
+        MPIR_Segment_init((void *) (offset + base), msg_hdr->count, msg_hdr->datatype, segment_ptr);
         last = data_sz;
         MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
         n_iov = (int) num_iov;
@@ -2337,7 +2336,7 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
 
         MPIR_Segment_init((void *) MPIDI_CH4U_REQUEST(rreq, req->greq.addr),
                           MPIDI_CH4U_REQUEST(rreq, req->greq.count),
-                          MPIDI_CH4U_REQUEST(rreq, req->greq.datatype), segment_ptr, 0);
+                          MPIDI_CH4U_REQUEST(rreq, req->greq.datatype), segment_ptr);
         last = data_sz;
         MPIR_Segment_count_contig_blocks(segment_ptr, 0, &last, &num_iov);
         n_iov = (int) num_iov;

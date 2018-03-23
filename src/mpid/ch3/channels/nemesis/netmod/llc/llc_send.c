@@ -123,7 +123,7 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
         sreq->dev.segment_ptr = segment_ptr;
 #endif /* notdef_leak_0001_hack */
 
-        MPIR_Segment_init(buf, count, datatype, segment_ptr, 0);
+        MPIR_Segment_init(buf, count, datatype, segment_ptr);
         intptr_t segment_first = 0;
         intptr_t segment_size = data_sz;
         intptr_t last = segment_size;
@@ -831,7 +831,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
 
                         /* user_buf etc. are set in MPID_irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
                         MPIR_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype,
-                                          &seg, 0);
+                                          &seg);
                         last = unpack_sz;
                         MPIR_Segment_unpack(&seg, 0, &last, REQ_FIELD(req, pack_buf));
                         if (last != unpack_sz) {
@@ -1042,7 +1042,7 @@ int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
         /*     in src/mpid/ch3/src/ch3u_request.c */
         sreq->dev.segment_ptr = segment_ptr;
 
-        MPIR_Segment_init(buf, count, datatype, segment_ptr, 0);
+        MPIR_Segment_init(buf, count, datatype, segment_ptr);
         intptr_t segment_first = 0;
         intptr_t segment_size = data_sz;
         intptr_t last = segment_size;

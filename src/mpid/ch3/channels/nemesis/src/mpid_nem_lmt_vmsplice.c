@@ -118,7 +118,7 @@ static int populate_iov_from_req(MPIR_Request *req)
                              MPI_ERR_OTHER, "**nomem",
                              "**nomem %s", "MPIR_Segment_alloc");
         MPIR_Segment_init(req->dev.user_buf, req->dev.user_count,
-                          req->dev.datatype, req->dev.segment_ptr, 0);
+                          req->dev.datatype, req->dev.segment_ptr);
         req->dev.segment_first = 0;
         req->dev.segment_size = data_sz;
 
