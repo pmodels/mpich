@@ -42,12 +42,6 @@
         if (mpi_errno!=MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);      \
     } while (0)
 
-#define MPIDI_OFI_PROGRESS_NONINLINE()                            \
-    do {                                                          \
-        mpi_errno = MPIDI_OFI_progress_test_no_inline();          \
-        if (mpi_errno!=MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);      \
-    } while (0)
-
 #define MPIDI_OFI_PROGRESS_WHILE(cond)                 \
     while (cond) MPIDI_OFI_PROGRESS()
 
@@ -110,7 +104,9 @@
                             "**eagain");                    \
         if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
             MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);     \
-        MPIDI_OFI_PROGRESS_NONINLINE();                              \
+        mpi_errno = MPIDI_OFI_retry_progress();                      \
+        if (mpi_errno != MPI_SUCCESS)                                \
+            MPIR_ERR_POP(mpi_errno);                                 \
         if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
             MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);    \
         _retry--;                                           \
@@ -135,7 +131,9 @@
                               __LINE__,                     \
                               FCNAME,                       \
                               fi_strerror(-_ret));          \
-        MPIDI_OFI_PROGRESS_NONINLINE();                         \
+        mpi_errno = MPIDI_OFI_retry_progress();                      \
+        if (mpi_errno != MPI_SUCCESS)                                \
+            MPIR_ERR_POP(mpi_errno);                                 \
         MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);   \
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
@@ -236,7 +234,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
 
 /* Externs:  see util.c for definition */
 int MPIDI_OFI_handle_cq_error_util(int ep_idx, ssize_t ret);
-int MPIDI_OFI_progress_test_no_inline(void);
+int MPIDI_OFI_retry_progress(void);
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               void **data, size_t * data_sz, int *is_contig,
                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
