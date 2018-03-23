@@ -59,7 +59,7 @@ int MPIR_Type_commit(MPI_Datatype * datatype_p)
         MPIR_Dataloop_create(*datatype_p,
                              &datatype_ptr->dataloop,
                              &datatype_ptr->dataloop_size,
-                             &datatype_ptr->dataloop_depth, MPIR_DATALOOP_HOMOGENEOUS);
+                             &datatype_ptr->dataloop_depth, MPIR_DATALOOP_DEFAULT);
 #endif
 
         MPL_DBG_MSG_D(MPIR_DBG_DATATYPE, TERSE, "# contig blocks = %d\n",
