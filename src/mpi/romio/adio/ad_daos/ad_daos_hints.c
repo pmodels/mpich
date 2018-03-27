@@ -30,6 +30,8 @@ void ADIOI_DAOS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	}
     }
 
+    /* set the values for collective I/O and data sieving parameters */
     ADIOI_GEN_SetInfo(fd, users_info, error_code);
+
     *error_code = MPI_SUCCESS;
 }

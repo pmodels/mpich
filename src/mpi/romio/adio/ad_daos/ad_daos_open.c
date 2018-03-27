@@ -377,7 +377,7 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
                                    OID_SEED);
 
     /* MSC - add hint for object class */
-    daos_obj_id_generate(&cont->oid, DAOS_OC_REPL_MAX_RW);
+    daos_obj_id_generate(&cont->oid, DAOS_OC_LARGE_RW);
 
 #if 0
     {
