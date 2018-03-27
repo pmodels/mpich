@@ -24,40 +24,40 @@ using namespace std;
 
 static char MTEST_Descrip[] = "Test of Win_get_group";
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     int errs = 0;
     int result;
     int buf[10];
-    MPI::Win   win;
+    MPI::Win win;
     MPI::Group group, wingroup;
     int minsize = 2;
-    MPI::Intracomm      comm;
+    MPI::Intracomm comm;
 
     MTest_Init();
 
-    /* The following illustrates the use of the routines to 
-       run through a selection of communicators and datatypes.
-       Use subsets of these for tests that do not involve combinations 
-       of communicators, datatypes, and counts of datatypes */
-    while (MTestGetIntracommGeneral( comm, minsize, true )) {
-	if (comm == MPI::COMM_NULL) continue;
+    /* The following illustrates the use of the routines to
+     * run through a selection of communicators and datatypes.
+     * Use subsets of these for tests that do not involve combinations
+     * of communicators, datatypes, and counts of datatypes */
+    while (MTestGetIntracommGeneral(comm, minsize, true)) {
+        if (comm == MPI::COMM_NULL)
+            continue;
 
-	win = MPI::Win::Create( buf, sizeof(int) * 10, sizeof(int), 
-			MPI::INFO_NULL, comm );
-	wingroup = win.Get_group();
-	group = comm.Get_group();
-	result = MPI::Group::Compare( group, wingroup );
-	if (result != MPI::IDENT) {
-	    errs++;
-	    cout << "Group returned by Win_get_group not the same as the input group\n";
-	}
-	wingroup.Free();
-	group.Free();
-	win.Free();
-	MTestFreeComm( comm );
+        win = MPI::Win::Create(buf, sizeof(int) * 10, sizeof(int), MPI::INFO_NULL, comm);
+        wingroup = win.Get_group();
+        group = comm.Get_group();
+        result = MPI::Group::Compare(group, wingroup);
+        if (result != MPI::IDENT) {
+            errs++;
+            cout << "Group returned by Win_get_group not the same as the input group\n";
+        }
+        wingroup.Free();
+        group.Free();
+        win.Free();
+        MTestFreeComm(comm);
     }
 
-    MTest_Finalize( errs );
+    MTest_Finalize(errs);
     return 0;
 }

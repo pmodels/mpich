@@ -19,14 +19,12 @@
 
 /* #define VERBOSE */
 
-template <class T>
-void efn(T &obj, int *, ...)
+template < class T > void efn(T & obj, int *, ...)
 {
 }
 
 /* returns number of errors found */
-template <class T>
-int testRetrieveErrhandler(T &obj)
+template < class T > int testRetrieveErrhandler(T & obj)
 {
     int errs = 0;
     MPI::Errhandler retrieved_handler;
@@ -39,19 +37,23 @@ int testRetrieveErrhandler(T &obj)
 
     obj.Set_errhandler(MPI::ERRORS_THROW_EXCEPTIONS);
     retrieved_handler = obj.Get_errhandler();
-    if (retrieved_handler != MPI::ERRORS_THROW_EXCEPTIONS) errs++;
+    if (retrieved_handler != MPI::ERRORS_THROW_EXCEPTIONS)
+        errs++;
 
     obj.Set_errhandler(MPI::ERRORS_RETURN);
     retrieved_handler = obj.Get_errhandler();
-    if (retrieved_handler != MPI::ERRORS_RETURN) errs++;
+    if (retrieved_handler != MPI::ERRORS_RETURN)
+        errs++;
 
     obj.Set_errhandler(MPI::ERRORS_ARE_FATAL);
     retrieved_handler = obj.Get_errhandler();
-    if (retrieved_handler != MPI::ERRORS_ARE_FATAL) errs++;
+    if (retrieved_handler != MPI::ERRORS_ARE_FATAL)
+        errs++;
 
     obj.Set_errhandler(custom_handler);
     retrieved_handler = obj.Get_errhandler();
-    if (retrieved_handler != custom_handler) errs++;
+    if (retrieved_handler != custom_handler)
+        errs++;
     retrieved_handler.Free();
 
     custom_handler.Free();
@@ -59,12 +61,12 @@ int testRetrieveErrhandler(T &obj)
     return errs;
 }
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     int errs = 0;
     MPI::Win win = MPI::WIN_NULL;
 
-    MTest_Init( );
+    MTest_Init();
 
     const unsigned int rank = MPI::COMM_WORLD.Get_rank();
 
@@ -77,7 +79,7 @@ int main( int argc, char *argv[] )
 
     win.Free();
 
-    MTest_Finalize( errs );
+    MTest_Finalize(errs);
 
     return 0;
 }

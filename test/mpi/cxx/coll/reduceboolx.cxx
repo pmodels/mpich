@@ -23,45 +23,44 @@ using namespace std;
 #endif
 #include "mpitestcxx.h"
 
-int main( int argc, char **argv )
+int main(int argc, char **argv)
 {
     MPI::Intracomm comm = MPI::COMM_WORLD;
     int errs = 0;
     int size, i, count, root, rank;
 
-    MTest_Init( );
+    MTest_Init();
 
     size = comm.Get_size();
     rank = comm.Get_rank();
 
     for (count = 1; count < 66000; count = count * 2) {
         bool *vin, *vout;
-        vin  = new bool[count];
+        vin = new bool[count];
         vout = new bool[count];
 
         for (root = 0; root < size; root++) {
-            for (i=0; i<count; i++) {
+            for (i = 0; i < count; i++) {
                 // only rank 0's elements are set to true
-                vin[i]  = (rank ? false : true);
+                vin[i] = (rank ? false : true);
                 vout[i] = false;
             }
             comm.Reduce(vin, vout, count, MPI::BOOL, MPI::LOR, root);
             if (rank == root) {
-                for (i=0; i<count; i++) {
+                for (i = 0; i < count; i++) {
                     if (vout[i] != true) {
                         errs++;
                         if (errs < 10)
                             cerr << rank << ": " << "count=" << count
-                                 << " root=" << root
-                                 << " vout[" << i << "]=" << vout[i] << endl;
+                                << " root=" << root << " vout[" << i << "]=" << vout[i] << endl;
                     }
                 }
             }
         }
-        delete[] vin;
-        delete[] vout;
+        delete[]vin;
+        delete[]vout;
     }
 
-    MTest_Finalize( errs );
+    MTest_Finalize(errs);
     return 0;
 }

@@ -19,7 +19,7 @@ using namespace std;
 #endif
 
 
-int main( int argc, char **argv )
+int main(int argc, char **argv)
 {
     bool flag;
     int errs = 0;
@@ -27,8 +27,8 @@ int main( int argc, char **argv )
     int rank, size;
 
     if (MPI::Is_initialized()) {
-	cout << "Is_initialized returned true before init\n";
-	errs ++;
+        cout << "Is_initialized returned true before init\n";
+        errs++;
     }
 
     MPI::Init();
@@ -37,37 +37,35 @@ int main( int argc, char **argv )
     size = MPI::COMM_WORLD.Get_size();
 
     if (!MPI::Is_initialized()) {
-	cout << "Is_initialized returned false after init\n";
-	errs ++;
+        cout << "Is_initialized returned false after init\n";
+        errs++;
     }
 
-    MPI::Get_version( ver, subver );
+    MPI::Get_version(ver, subver);
     if (ver != MPI_VERSION || subver != MPI_SUBVERSION) {
-	cout << "Inconsistent values for version and/or subversion\n";
-	errs++;
+        cout << "Inconsistent values for version and/or subversion\n";
+        errs++;
     }
 
     if (MPI::Is_finalized()) {
-	cout << "Is_finalized returned true before finalize\n";
-	errs ++;
+        cout << "Is_finalized returned true before finalize\n";
+        errs++;
     }
 
     MPI::Finalize();
 
     if (!MPI::Is_finalized()) {
-	cout << "Is_finalized returned false after finalize\n";
-	errs ++;
+        cout << "Is_finalized returned false after finalize\n";
+        errs++;
     }
-
     // Ignore the other processes for this test, particularly
     // since we need to execute code after the Finalize
     if (rank == 0) {
-	if (errs) {
-	    cout << " Found " << errs << " errors\n";
-	}
-	else {
-	    cout << " No Errors\n"; 
-	}
+        if (errs) {
+            cout << " Found " << errs << " errors\n";
+        } else {
+            cout << " No Errors\n";
+        }
     }
     return 0;
 }

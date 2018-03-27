@@ -21,8 +21,8 @@
 /* #define VERBOSE */
 
 /* returns number of errors found */
-template <class T>
-int testCallErrhandler(T &obj, int errorClass, int errorCode, std::string errorString)
+template < class T >
+    int testCallErrhandler(T & obj, int errorClass, int errorCode, std::string errorString)
 {
     int errs = 0;
 
@@ -31,7 +31,7 @@ int testCallErrhandler(T &obj, int errorClass, int errorCode, std::string errorS
         std::cerr << "Do Not See This" << std::endl;
         errs++;
     }
-    catch (MPI::Exception &ex) {
+    catch(MPI::Exception & ex) {
 #ifdef VERBOSE
         std::cerr << "MPI Exception: " << ex.Get_error_string() << std::endl;
 #endif
@@ -48,7 +48,7 @@ int testCallErrhandler(T &obj, int errorClass, int errorCode, std::string errorS
             errs++;
         }
     }
-    catch (...) {
+    catch(...) {
         std::cerr << "Caught Unknown Exception" << std::endl;
         errs++;
     }
@@ -56,12 +56,12 @@ int testCallErrhandler(T &obj, int errorClass, int errorCode, std::string errorS
     return errs;
 }
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     int errs = 0;
     MPI::File file = MPI::FILE_NULL;
 
-    MTest_Init( );
+    MTest_Init();
 
     const unsigned int rank = MPI::COMM_WORLD.Get_rank();
     const unsigned int size = MPI::COMM_WORLD.Get_size();
@@ -71,9 +71,9 @@ int main( int argc, char *argv[] )
     std::string errorString = "Internal-use Error Code";
     MPI::Add_error_string(errorCode, errorString.c_str());
 
-    file = MPI::File::Open(MPI::COMM_WORLD, "testfile", 
-	   MPI::MODE_WRONLY | MPI::MODE_CREATE | MPI::MODE_DELETE_ON_CLOSE, 
-	   MPI::INFO_NULL);
+    file = MPI::File::Open(MPI::COMM_WORLD, "testfile",
+                           MPI::MODE_WRONLY | MPI::MODE_CREATE | MPI::MODE_DELETE_ON_CLOSE,
+                           MPI::INFO_NULL);
 
     // first sanity check that ERRORS_RETURN actually returns in erroneous
     // conditions and doesn't throw an exception
@@ -84,7 +84,7 @@ int main( int argc, char *argv[] )
         // Do something that should cause an exception.
         file.Write(NULL, -1, MPI_DATATYPE_NULL);
     }
-    catch (...) {
+    catch(...) {
         std::cerr << "file threw when it shouldn't have" << std::endl;
         ++errs;
     }
@@ -95,7 +95,7 @@ int main( int argc, char *argv[] )
 
     if (0 == rank) {
         errs += testCallErrhandler(MPI::COMM_WORLD, errorClass, errorCode, errorString);
-        errs += testCallErrhandler(file,            errorClass, errorCode, errorString);
+        errs += testCallErrhandler(file, errorClass, errorCode, errorString);
 
         try {
             int buf[10];
@@ -103,10 +103,10 @@ int main( int argc, char *argv[] )
             std::cout << "Invalid Send did not throw" << std::endl;
             errs++;
         }
-        catch (MPI::Exception &ex) {
+        catch(MPI::Exception & ex) {
             // expected
         }
-        catch (...) {
+        catch(...) {
             std::cout << "Caught Unknown Exception" << std::endl;
             errs++;
         }
@@ -114,7 +114,7 @@ int main( int argc, char *argv[] )
 
     file.Close();
 
-    MTest_Finalize( errs );
+    MTest_Finalize(errs);
 
     return 0;
 }

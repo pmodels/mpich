@@ -22,45 +22,44 @@ using namespace std;
 /* Needed for strcmp */
 #include <string.h>
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     int errs = 0;
     bool flag;
     int provided, claimed;
 
     // This test must be invoked with two arguments: myarg1 myarg2
-    provided = MPI::Init_thread( argc, argv, MPI::THREAD_MULTIPLE );
-    
+    provided = MPI::Init_thread(argc, argv, MPI::THREAD_MULTIPLE);
+
     if (argc != 3) {
-	errs++;
-	cout << "Expected argc=3 but saw argc=" << argc << "\n";
-    }
-    else {
-	if (strcmp( argv[1], "myarg1" ) != 0) {
-	    errs++;
-	    cout << "Expected myarg1 for 1st argument but saw " << argv[1] 
-		 << "\n";
-	}
-	if (strcmp( argv[2], "myarg2" ) != 0) {
-	    errs++;
-	    cout << "Expected myarg2 for 1st argument but saw " << argv[2] 
-		 << "\n";
-	}
+        errs++;
+        cout << "Expected argc=3 but saw argc=" << argc << "\n";
+    } else {
+        if (strcmp(argv[1], "myarg1") != 0) {
+            errs++;
+            cout << "Expected myarg1 for 1st argument but saw " << argv[1]
+                << "\n";
+        }
+        if (strcmp(argv[2], "myarg2") != 0) {
+            errs++;
+            cout << "Expected myarg2 for 1st argument but saw " << argv[2]
+                << "\n";
+        }
     }
 
     // Confirm that MPI is properly initialized
     flag = MPI::Is_thread_main();
     if (!flag) {
-	errs++;
-	cout << "This thread call init_thread but Is_thread_main gave false\n";
+        errs++;
+        cout << "This thread call init_thread but Is_thread_main gave false\n";
     }
     claimed = MPI::Query_thread();
     if (claimed != provided) {
-	errs++;
-	cout << "Query thread gave thread level " << claimed << 
-	    " but Init_thread gave " << provided << "\n";
+        errs++;
+        cout << "Query thread gave thread level " << claimed <<
+            " but Init_thread gave " << provided << "\n";
     }
 
-    MTest_Finalize( errs );
+    MTest_Finalize(errs);
     return 0;
 }

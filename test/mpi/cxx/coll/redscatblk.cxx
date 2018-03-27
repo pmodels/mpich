@@ -65,8 +65,8 @@ int main(int argc, char **argv)
         }
     }
 
-    delete [] sendbuf;
-    delete [] recvbuf;
+    delete[]sendbuf;
+    delete[]recvbuf;
 
     MTest_Finalize(err);
 
