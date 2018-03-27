@@ -1,0 +1,47 @@
+#! /bin/sh
+FILENAME=$1
+echo '**** Testing I/O functions ****'
+echo '**** Testing simple.c ****'
+mpirun -np 4 ./simple -fname "${FILENAME}_1"
+echo '**** Testing async.c ****'
+mpirun -np 4 ./async -fname "${FILENAME}_2"
+echo '**** Testing async-multiple.c ****'
+mpirun -np 4 ./async-multiple -fname "${FILENAME}_3"
+echo '**** Testing coll_test.c ****'
+mpirun -np 4 ./coll_test -fname "${FILENAME}_4"
+echo '**** Testing excl.c ****'
+mpirun -np 4 ./excl -fname "${FILENAME}_5"
+echo '**** Testing file_info.c ****'
+mpirun -np 4 ./file_info -fname "${FILENAME}_6"
+echo '**** Testing i_noncontig.c ****'
+mpirun -np 2 ./i_noncontig -fname "${FILENAME}_7"
+echo '**** Testing noncontig.c ****'
+mpirun -np 2 ./noncontig -fname "${FILENAME}_8"
+echo '**** Testing noncontig_coll.c ****'
+mpirun -np 2 ./noncontig_coll -fname "${FILENAME}9"
+echo '**** Testing noncontig_coll2.c ****'
+mpirun -np 4 ./noncontig_coll2 -fname "${FILENAME}_10"
+echo '**** Testing aggregation1.c ****'
+mpirun -np 4 ./aggregation1 -h -f "${FILENAME}_11"
+echo '**** Testing aggregation2.c ****'
+mpirun -np 4 ./aggregation2 "${FILENAME}_12"
+echo '**** Testing hindexed ****'
+mpirun -np 4 ./hindexed "${FILENAME}_13"
+echo '**** Testing split_coll.c ****'
+mpirun -np 4 ./split_coll -fname "${FILENAME}_14"
+echo '**** Testing psimple.c ****'
+mpirun -np 4 ./psimple -fname "${FILENAME}_15"
+echo '**** Testing error.c ****'
+mpirun -np 1 ./error -fname "${FILENAME}_16"
+echo '**** Testing status.c ****'
+mpirun -np 1 ./status -fname "${FILENAME}_17"
+echo '**** Testing types_with_zeros ****'
+mpirun -np 2 ./types_with_zeros "${FILENAME}_18"
+echo '**** Testing darray_read ****'
+mpirun -np 4 ./darray_read "${FILENAME}_19"
+echo '**** Testing fcoll_test.f ****'
+mpirun -np 4 ./fcoll_test -fname "${FILENAME}_20"
+echo '**** Testing pfcoll_test.f ****'
+mpirun -np 4 ./pfcoll_test -fname "${FILENAME}_21"
+exit 0
+ 
