@@ -2,6 +2,8 @@
 /*
  *   Copyright (C) 1997 University of Chicago.
  *   See COPYRIGHT notice in top-level directory.
+ *
+ *   Copyright (C) 2018 Intel Corporation
  */
 
 #include "adio.h"

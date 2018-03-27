@@ -1,4 +1,11 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *
+ *   Copyright (C) 1997 University of Chicago.
+ *   See COPYRIGHT notice in top-level directory.
+ *
+ *   Copyright (C) 2018 Intel Corporation
+ */
 
 #include <libgen.h>
 #include "ad_daos.h"
@@ -265,10 +272,10 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 
     /* check & Fail if object exists for EXCL mode */
     if (fd->access_mode & ADIO_EXCL) {
-        daos_size_t elem_size, block_size;
+        daos_size_t elem_size, chunk_size;
 
         rc = daos_array_open(cont->coh, cont->oid, cont->epoch, DAOS_OO_RW,
-                             &elem_size, &block_size, &cont->oh, NULL);
+                             &elem_size, &chunk_size, &cont->oh, NULL);
         if (rc == 0) {
             rc = -DER_EXIST;
             PRINT_MSG(stderr, "Array exists (EXCL mode) (%d)\n", rc);
@@ -284,7 +291,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
     /* Create a DAOS byte array for the file */
     if (fd->access_mode & ADIO_CREATE) {
         rc = daos_array_create(cont->coh, cont->oid, cont->epoch, 1,
-                               cont->block_size, &cont->oh, NULL);
+                               cont->chunk_size, &cont->oh, NULL);
         if (rc != 0) {
             PRINT_MSG(stderr, "daos_array_create() failed (%d)\n", rc);
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
@@ -298,7 +305,7 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
         daos_size_t elem_size;
 
         rc = daos_array_open(cont->coh, cont->oid, cont->epoch, DAOS_OO_RW,
-                             &elem_size, &cont->block_size, &cont->oh, NULL);
+                             &elem_size, &cont->chunk_size, &cont->oh, NULL);
         if (rc != 0) {
             PRINT_MSG(stderr, "daos_array_open() failed (%d)\n", rc);
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
@@ -381,10 +388,10 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
         fprintf(stderr, "File %s OID %" PRIx64".%" PRIx64"\n",
                 cont->obj_name, cont->oid.hi, cont->oid.lo);
     }
-    fprintf(stderr, "block_size  = %d\n", fd->hints->fs_hints.daos.block_size);
+    fprintf(stderr, "chunk_size  = %d\n", fd->hints->fs_hints.daos.chunk_size);
 #endif
 
-    cont->block_size = fd->hints->fs_hints.daos.block_size;
+    cont->chunk_size = fd->hints->fs_hints.daos.chunk_size;
 
     fd->fs_ptr = cont;
 
@@ -416,10 +423,10 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
     /* open array on other ranks */
     if (rank != 0) {
         daos_size_t elem_size;
-        daos_size_t block_size;
+        daos_size_t chunk_size;
 
         rc = daos_array_open(cont->coh, cont->oid, cont->epoch, DAOS_OO_RW,
-                             &elem_size, &block_size, &cont->oh, NULL);
+                             &elem_size, &chunk_size, &cont->oh, NULL);
         if (rc != 0) {
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                MPIR_ERR_RECOVERABLE,
@@ -428,7 +435,7 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
                                                "Array Open Failed", 0);
             goto err_free;
         }
-        if (elem_size != 1 || block_size != cont->block_size) {
+        if (elem_size != 1 || chunk_size != cont->chunk_size) {
             *error_code = MPI_UNDEFINED;
             goto err_free;
         }

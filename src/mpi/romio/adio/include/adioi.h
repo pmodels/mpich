@@ -53,7 +53,7 @@ struct ADIOI_Hints_struct {
     int *ranklist;
     union {
         struct {
-            int block_size;
+            int chunk_size;
             int grp_size;
             int block_nr;
         } daos;

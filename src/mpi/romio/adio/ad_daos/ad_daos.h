@@ -1,4 +1,11 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *
+ *   Copyright (C) 1997 University of Chicago.
+ *   See COPYRIGHT notice in top-level directory.
+ *
+ *   Copyright (C) 2018 Intel Corporation
+ */
 
 #ifndef AD_DAOS_INCLUDE
 #define AD_DAOS_INCLUDE
@@ -29,8 +36,8 @@ struct ADIO_DAOS_cont {
     daos_obj_id_t	oid;
     /** Array OH for the MPI file */
     daos_handle_t	oh;
-    /** data to store in a dkey block */
-    daos_size_t		block_size;
+    /** data size to store in a dkey */
+    daos_size_t		chunk_size;
     /** file open mode */
     unsigned int	amode;
     /** Event queue to store all async requests on file */
