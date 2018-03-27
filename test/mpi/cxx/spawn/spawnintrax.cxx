@@ -203,6 +203,8 @@ int main( int argc, char *argv[] )
        if both call MTest_Finalize */
     if (parentcomm == MPI::COMM_NULL) {
 	MTest_Finalize( errs );
+    } else {
+        MPI_Finalize();
     }
 
     return 0;

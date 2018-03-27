@@ -117,6 +117,8 @@ int main( int argc, char *argv[] )
     /* Note that the MTest_Finalize get errs only over COMM_WORLD */
     if (parentcomm == MPI::COMM_NULL) {
 	MTest_Finalize( errs );
+    } else {
+        MPI_Finalize();
     }
 
     return 0;

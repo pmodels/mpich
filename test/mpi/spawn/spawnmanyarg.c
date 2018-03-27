@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
             /* Note that worker also send errs to the parent */
             errs += worker(argc, argv, parentcomm, outargv, np);
             MPI_Comm_free(&parentcomm);
+            MPI_Finalize();
             return MTestReturnValue(errs);
         }
 
