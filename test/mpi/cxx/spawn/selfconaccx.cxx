@@ -18,7 +18,7 @@ using namespace std;
 #endif
 #include "mpitestcxx.h"
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     int error;
     int rank, size;
@@ -33,24 +33,21 @@ int main( int argc, char *argv[] )
     size = MPI::COMM_WORLD.Get_size();
     rank = MPI::COMM_WORLD.Get_rank();
 
-    if (size < 2)
-    {
-	cout << "Two processes needed.\n"; 
-	return 0;
+    if (size < 2) {
+        cout << "Two processes needed.\n";
+        return 0;
     }
 
-    if (rank == 0)
-    {
-	MPI::Open_port(MPI::INFO_NULL, port);
-	MPI::COMM_WORLD.Send(port, MPI::MAX_PORT_NAME, MPI::CHAR, 1, 0 );
-	comm = MPI::COMM_SELF.Accept(port, MPI::INFO_NULL, 0 );
-	MPI::Close_port(port);
-	comm.Disconnect();
-    }
-    else if (rank == 1) {
-	MPI::COMM_WORLD.Recv(port, MPI::MAX_PORT_NAME, MPI::CHAR, 0, 0 );
-	comm = MPI::COMM_SELF.Connect(port, MPI::INFO_NULL, 0 );
-	comm.Disconnect();
+    if (rank == 0) {
+        MPI::Open_port(MPI::INFO_NULL, port);
+        MPI::COMM_WORLD.Send(port, MPI::MAX_PORT_NAME, MPI::CHAR, 1, 0);
+        comm = MPI::COMM_SELF.Accept(port, MPI::INFO_NULL, 0);
+        MPI::Close_port(port);
+        comm.Disconnect();
+    } else if (rank == 1) {
+        MPI::COMM_WORLD.Recv(port, MPI::MAX_PORT_NAME, MPI::CHAR, 0, 0);
+        comm = MPI::COMM_SELF.Connect(port, MPI::INFO_NULL, 0);
+        comm.Disconnect();
     }
 
     MPI::COMM_WORLD.Barrier();

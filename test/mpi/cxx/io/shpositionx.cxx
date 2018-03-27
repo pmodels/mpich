@@ -22,7 +22,7 @@ using namespace std;
 #endif
 #include "mpitestcxx.h"
 
-int main( int argc, char **argv )
+int main(int argc, char **argv)
 {
     MPI::Intracomm comm;
     MPI::File fh;
@@ -34,38 +34,37 @@ int main( int argc, char **argv )
 
     MTest_Init();
 
-    strcpy( filename,"iotest.txt");
+    strcpy(filename, "iotest.txt");
     comm = MPI::COMM_WORLD;
     s = comm.Get_size();
     r = comm.Get_rank();
     // Try writing the file, then check it
-    fh = MPI::File::Open( comm, filename, MPI::MODE_RDWR | MPI::MODE_CREATE, 
-			  MPI::INFO_NULL );
+    fh = MPI::File::Open(comm, filename, MPI::MODE_RDWR | MPI::MODE_CREATE, MPI::INFO_NULL);
 
     // Get the size of an INT in the file
-    fileintsize = fh.Get_type_extent( MPI::INT );
+    fileintsize = fh.Get_type_extent(MPI::INT);
 
-    // We let each process write in turn, getting the position after each 
+    // We let each process write in turn, getting the position after each
     // write
-    for (i=0; i<s; i++) {
-	if (i == r) {
-	    fh.Write_shared( &i, 1, MPI::INT );
-	}
+    for (i = 0; i < s; i++) {
+        if (i == r) {
+            fh.Write_shared(&i, 1, MPI::INT);
+        }
         comm.Barrier();
-	offset = fh.Get_position_shared();
-	if (offset != fileintsize * (i+1)) {
-	    errs++;
-	    cout << r << " Shared position is " <<  offset <<
-		" should be " << fileintsize * (i+1) << "\n";
-	}
+        offset = fh.Get_position_shared();
+        if (offset != fileintsize * (i + 1)) {
+            errs++;
+            cout << r << " Shared position is " << offset <<
+                " should be " << fileintsize * (i + 1) << "\n";
+        }
         comm.Barrier();
     }
 
     fh.Close();
     comm.Barrier();
     if (r == 0) {
-	MPI::File::Delete( filename, MPI::INFO_NULL );
+        MPI::File::Delete(filename, MPI::INFO_NULL);
     }
-    
-    MTest_Finalize( errs );
+
+    MTest_Finalize(errs);
 }
