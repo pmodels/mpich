@@ -134,6 +134,8 @@ int main(int argc, char *argv[])
         }
     }
 
+    /* TODO: struct types are currently not supported for C++ */
+
     err = DTP_pool_create(basic_type, count, &dtp);
     if (err != DTP_SUCCESS) {
         basic_type.Get_name(dtypename, tnlen);
