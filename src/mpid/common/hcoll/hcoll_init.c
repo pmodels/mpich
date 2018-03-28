@@ -4,6 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "mpiimpl.h"
 #include "hcoll.h"
 
 /*
