@@ -7,9 +7,8 @@
 #ifndef HCOLL_H_INCLUDED
 #define HCOLL_H_INCLUDED
 
-#include "mpidimpl.h"
 #include "hcoll/api/hcoll_api.h"
-#include "hcoll/api/hcoll_constants.h"
+#include "hcoll_dtypes.h"
 
 extern int world_comm_destroying;
 

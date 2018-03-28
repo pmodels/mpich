@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "mpiimpl.h"
 #include "hcoll.h"
-#include "hcoll_dtypes.h"
 
 #undef FUNCNAME
 #define FUNCNAME hcoll_Barrier
