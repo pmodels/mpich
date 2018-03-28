@@ -90,14 +90,18 @@ int main(int argc, char *argv[])
     int obj_idx;
     int count;
     int tnlen;
+    int basic_type_num;
+    int *basic_type_counts = NULL;
     MPI_Datatype type, duptype;
     MPI_Datatype basic_type;
+    MPI_Datatype *basic_types = NULL;
     DTP_t dtp;
     char typename[MPI_MAX_OBJECT_NAME];
     MPI_Comm comm = MPI_COMM_WORLD;
 
     MTest_Init(&argc, &argv);
 
+#ifndef USE_DTP_POOL_TYPE__STRUCT       /* set in 'test/mpi/structtypetest.txt' to split tests */
     /* TODO: parse input parameters using optarg */
     if (argc < 3) {
         fprintf(stdout, "Usage: %s -type=[TYPE] -count=[COUNT]\n", argv[0]);
@@ -129,6 +133,56 @@ int main(int argc, char *argv[])
         fprintf(stdout, "Error while creating pool (%s,%d)\n", typename, count);
         fflush(stdout);
     }
+#else
+    int k;
+    char *input_string, *token;
+
+    /* TODO: parse input parameters using optarg */
+    if (argc < 4) {
+        fprintf(stdout, "Usage: %s -type=[TYPE] -numtypes=[NUM] -types=[TYPES] -counts=[COUNTS]\n",
+                argv[0]);
+        return MTestReturnValue(1);
+    } else {
+        for (i = 1; i < argc; i++) {
+            if (!strncmp(argv[i], "-numtypes=", strlen("-numtypes="))) {
+                basic_type_num = atoi(argv[i] + strlen("-numtypes="));
+
+                /* allocate arrays */
+                basic_type_counts = (int *) malloc(basic_type_num * sizeof(int));
+                basic_types = (MPI_Datatype *) malloc(basic_type_num * sizeof(MPI_Datatype));
+            } else if (!strncmp(argv[i], "-types=", strlen("-type="))) {
+                input_string = strdup(argv[i] + strlen("-types="));
+                for (k = 0, token = strtok(input_string, ","); token; token = strtok(NULL, ",")) {
+                    j = 0;
+                    while (strcmp(typelist[j].typename, "MPI_DATATYPE_NULL") &&
+                           strcmp(token, typelist[j].typename)) {
+                        j++;
+                    }
+
+                    if (strcmp(typelist[j].typename, "MPI_DATATYPE_NULL")) {
+                        basic_types[k++] = typelist[j].type;
+                    } else {
+                        fprintf(stdout, "Error: datatype not recognized\n");
+                        return MTestReturnValue(1);
+                    }
+                }
+                free(input_string);
+            } else if (!strncmp(argv[i], "-counts=", strlen("-counts="))) {
+                input_string = strdup(argv[i] + strlen("-counts="));
+                for (k = 0, token = strtok(input_string, ","); token; token = strtok(NULL, ",")) {
+                    basic_type_counts[k++] = atoi(token);
+                }
+                free(input_string);
+            }
+        }
+    }
+
+    err = DTP_pool_create_struct(basic_type_num, basic_types, basic_type_counts, &dtp);
+    if (err != DTP_SUCCESS) {
+        fprintf(stdout, "Error while creating struct pool\n");
+        fflush(stdout);
+    }
+#endif
 
     for (obj_idx = 0; obj_idx < dtp->DTP_num_objs; obj_idx++) {
         err = DTP_obj_create(dtp, obj_idx, 0, 0, 0);
@@ -186,6 +240,15 @@ int main(int argc, char *argv[])
     }
 
     DTP_pool_free(dtp);
+
+    /* cleanup array if any */
+    if (basic_types) {
+        free(basic_types);
+    }
+    if (basic_type_counts) {
+        free(basic_type_counts);
+    }
+
     MTest_Finalize(errs);
 
     return MTestReturnValue(errs);
