@@ -222,18 +222,18 @@ static inline int MPIDI_NM_mpi_allgatherv(const void *sendbuf, int sendcount, MP
                                     ch4_algo_parameters_container_in);
 
     switch (nm_algo_parameters_container_out->id) {
-        case MPIDI_OFI_Allgather_intra_recursive_doubling_id:
+        case MPIDI_OFI_Allgatherv_intra_recursive_doubling_id:
             mpi_errno =
                 MPIR_Allgatherv_intra_recursive_doubling(sendbuf, sendcount, sendtype,
                                                          recvbuf, recvcounts, displs,
                                                          recvtype, comm, errflag);
             break;
-        case MPIDI_OFI_Allgather_intra_brucks_id:
+        case MPIDI_OFI_Allgatherv_intra_brucks_id:
             mpi_errno =
                 MPIR_Allgatherv_intra_brucks(sendbuf, sendcount, sendtype,
                                              recvbuf, recvcounts, displs, recvtype, comm, errflag);
             break;
-        case MPIDI_OFI_Allgather_intra_ring_id:
+        case MPIDI_OFI_Allgatherv_intra_ring_id:
             mpi_errno =
                 MPIR_Allgatherv_intra_ring(sendbuf, sendcount, sendtype,
                                            recvbuf, recvcounts, displs, recvtype, comm, errflag);
