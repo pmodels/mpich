@@ -165,16 +165,17 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
     int context_destroyed;
     mpi_errno = MPI_SUCCESS;
 
-    if (0 == hcoll_enable) {
-        comm_ptr->hcoll_priv.is_hcoll_init = 0;
-        goto fn_exit;
-    }
-
     if (0 == hcoll_initialized) {
         mpi_errno = hcoll_initialize();
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
+
+    if (0 == hcoll_enable) {
+        comm_ptr->hcoll_priv.is_hcoll_init = 0;
+        goto fn_exit;
+    }
+
     if (MPIR_Process.comm_world == comm_ptr) {
         hcoll_comm_world_initialized = 1;
     }
