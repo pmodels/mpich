@@ -41,10 +41,12 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     else
         remote_proc = MPIDI_OFI_av_to_phys(addr);
 
-    if (message)
+    if (message) {
         rreq = MPIR_Request_create(MPIR_REQUEST_KIND__MPROBE);
-    else
+        MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
+    } else {
         rreq = &r;
+    }
 
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, comm->context_id + context_offset, source, tag);
 
@@ -130,6 +132,8 @@ static inline int MPIDI_NM_mpi_improbe(int source,
     /* Set flags for mprobe peek, when ready */
     mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, addr,
                                     flag, status, message, FI_CLAIM | FI_COMPLETION);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_exit;
 
     if (*flag && *message) {
         (*message)->comm = comm;

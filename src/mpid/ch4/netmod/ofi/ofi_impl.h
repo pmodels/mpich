@@ -65,7 +65,7 @@
       MPIR_Status_set_procnull(&(rreq_)->status);                       \
     }                                                                   \
     else {                                                              \
-      MPIR_ERR_SETANDJUMP(mpi_errno_,MPI_ERR_OTHER,"**nomemreq");       \
+      MPIR_ERR_SETANDJUMP(mpi_errno_,MPIX_ERR_NOREQ,"**nomemreq");       \
     }                                                                   \
   } while (0)
 
@@ -221,6 +221,7 @@
 #define MPIDI_OFI_REQUEST_CREATE(req, kind)                 \
     do {                                                      \
         (req) = MPIR_Request_create(kind);  \
+        MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
         MPIR_Request_add_ref((req));                                \
     } while (0)
 
@@ -234,6 +235,7 @@
 #define MPIDI_OFI_SEND_REQUEST_CREATE_LW(req)                   \
     do {                                                                \
         (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);           \
+        MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
         MPIR_cc_set(&(req)->cc, 0);                                     \
     } while (0)
 #endif
@@ -337,14 +339,20 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_set_rma_fi_info(MPIR_Win * win, struct f
 
 MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_alloc_and_init(int extra)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_win_request_t *req;
     req = (MPIDI_OFI_win_request_t *) MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     memset((char *) req + MPIDI_REQUEST_HDR_SIZE, 0,
            sizeof(MPIDI_OFI_win_request_t) - MPIDI_REQUEST_HDR_SIZE);
     req->noncontig =
         (MPIDI_OFI_win_noncontig_t *) MPL_calloc(1, (extra) + sizeof(*(req->noncontig)),
                                                  MPL_MEM_BUFFER);
+  fn_exit:
     return req;
+  fn_fail:
+    req = NULL;
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * req)

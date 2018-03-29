@@ -518,7 +518,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
     size_t len;
 
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
-    MPIR_Assert(sreq);
+    MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     len = am_hdr_sz + sizeof(*msg_hdrp);
     ibuf = (char *) MPL_malloc(len, MPL_MEM_BUFFER);
     MPIR_Assert(ibuf);
