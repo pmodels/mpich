@@ -33,6 +33,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
 
     if (unlikely(rank == MPI_PROC_NULL)) {
         MPIR_Request *rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+        MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         *request = rreq;
         MPIR_Request_add_ref(rreq);
         rreq->status.MPI_SOURCE = rank;
@@ -272,13 +273,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
                                         MPIR_Comm * comm, int context_offset,
                                         MPIR_Request ** request)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IRECV);
 
     if (unlikely(rank == MPI_PROC_NULL)) {
         MPIR_Request *rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+        MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         *request = rreq;
         MPIR_Request_add_ref(rreq);
         rreq->status.MPI_SOURCE = rank;

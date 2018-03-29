@@ -388,6 +388,7 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
 
     if (rreq == NULL) {
         rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV, 2);
+        MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIDI_CH4U_REQUEST(rreq, datatype) = MPI_BYTE;
         if (p_data_sz) {
             MPIDI_CH4U_REQUEST(rreq, buffer) = (char *) MPL_malloc(*p_data_sz, MPL_MEM_BUFFER);
@@ -423,8 +424,11 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
 
     mpi_errno = MPIDI_do_send_target(data, p_data_sz, is_contig, target_cmpl_cb, rreq);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SEND_TARGET_MSG_CB);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -457,6 +461,7 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
 
     if (rreq == NULL) {
         rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV, 2);
+        MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
         MPIDI_CH4U_REQUEST(rreq, buffer) = NULL;
         MPIDI_CH4U_REQUEST(rreq, datatype) = MPI_BYTE;
