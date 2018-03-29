@@ -143,6 +143,7 @@ static inline int MPIDI_UCX_recv(void *buf,
         ucp_request_release(ucp_request);
     } else {
         req = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+        MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(req);
         MPIDI_UCX_REQ(req).a.ucp_request = ucp_request;
         ucp_request->req = req;
