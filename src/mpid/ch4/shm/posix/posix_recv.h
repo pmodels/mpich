@@ -147,8 +147,11 @@ static inline int MPIDI_POSIX_mpi_recv_init(void *buf,
     MPIDI_POSIX_REQUEST(rreq)->datatype = datatype;
     *request = rreq;
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_RECV_INIT);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 

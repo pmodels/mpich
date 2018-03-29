@@ -254,6 +254,8 @@ static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_PROGRESS_RECV);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* ----------------------------------------------------- */
