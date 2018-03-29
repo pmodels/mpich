@@ -81,3 +81,4 @@ MPI_ERR_RMA_SHARED  57      **rmashared
 MPI_ERR_RMA_FLAVOR  58      **rmaflavor
 MPIX_ERR_REVOKED    59      **revoked
 MPIX_ERR_EAGAIN     60      **eagain
+MPIX_ERR_NOREQ      61      **nomemreq
