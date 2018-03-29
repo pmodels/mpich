@@ -50,10 +50,6 @@ static inline void MPIDI_UCX_am_send_callback(void *request, ucs_status_t status
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 static inline int MPIDI_NM_am_isend(int rank,
                                     MPIR_Comm * comm,
@@ -158,10 +154,6 @@ static inline int MPIDI_NM_am_isend(int rank,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_isendv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_am_isendv(int rank,
                                      MPIR_Comm * comm,
                                      int handler_id,
@@ -249,10 +241,6 @@ static inline int MPIDI_NM_am_isendv(int rank,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_isend_reply
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
                                           int src_rank,
                                           int handler_id,

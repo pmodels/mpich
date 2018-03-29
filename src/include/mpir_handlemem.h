@@ -213,10 +213,6 @@ Input Parameters:
   locking with a single global mutex and with a mutex specific for handles.
 
   +*/
-#undef FUNCNAME
-#define FUNCNAME MPIR_Handle_obj_alloc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t * objmem)
 {
     void *ret;
@@ -226,10 +222,6 @@ static inline void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t * objmem)
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Handle_obj_alloc_unsafe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem)
 {
     MPIR_Handle_common *ptr;

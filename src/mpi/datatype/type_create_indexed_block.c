@@ -27,10 +27,6 @@ int MPI_Type_create_indexed_block(int count, int blocklength, const int array_of
 #undef MPI_Type_create_indexed_block
 #define MPI_Type_create_indexed_block PMPI_Type_create_indexed_block
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_create_indexed_block_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_create_indexed_block_impl(int count,
                                         int blocklength,
                                         const int array_of_displacements[],
@@ -76,10 +72,6 @@ int MPIR_Type_create_indexed_block_impl(int count,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_indexed_block
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_indexed_block - Create an indexed
      datatype with constant-sized blocks
@@ -182,13 +174,13 @@ int MPI_Type_create_indexed_block(int count,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_create_indexed_block",
                                  "**mpi_type_create_indexed_block %d %d %p %D %p", count,
                                  blocklength, array_of_displacements, oldtype, newtype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

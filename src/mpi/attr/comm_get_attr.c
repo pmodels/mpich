@@ -26,10 +26,7 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *
 #undef MPI_Comm_get_attr
 #define MPI_Comm_get_attr PMPI_Comm_get_attr
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Comm_get_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /* Find the requested attribute.  If it exists, return either the attribute
    entry or the address of the entry, based on whether the request is for
    a pointer-valued attribute (C or C++) or an integer-valued attribute
@@ -270,12 +267,12 @@ int MPII_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpir_comm_get_attr", "**mpir_comm_get_attr %C %d %p %p", comm,
                                  comm_keyval, attribute_val, flag);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -298,10 +295,6 @@ int MPII_Comm_get_attr_fort(MPI_Comm comm, int comm_keyval, void *attribute_val,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_get_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /* FIXME: Attributes must be visable from all languages */
 /*@
@@ -361,7 +354,7 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_comm_get_attr", "**mpi_comm_get_attr %C %d %p %p", comm,
                                  comm_keyval, attribute_val, flag);
     }

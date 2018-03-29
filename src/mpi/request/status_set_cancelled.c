@@ -28,10 +28,7 @@ int MPI_Status_set_cancelled(MPI_Status * status, int flag)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Status_set_cancelled
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Status_set_cancelled - Sets the cancelled state associated with a
    Status object
@@ -50,6 +47,8 @@ Input Parameters:
 @*/
 int MPI_Status_set_cancelled(MPI_Status * status, int flag)
 {
+#ifdef HAVE_ERROR_CHECKING
+#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_STATUS_SET_CANCELLED);
 
@@ -84,11 +83,11 @@ int MPI_Status_set_cancelled(MPI_Status * status, int flag)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_status_set_cancelled", "**mpi_status_set_cancelled %p %d",
                                  status, flag);
     }
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

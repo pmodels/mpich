@@ -13,10 +13,6 @@
 #include "ucx_impl.h"
 #include "ucx_types.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_startall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_startall(int count, MPIR_Request * requests[])
 {
     return MPIDIG_mpi_startall(count, requests);

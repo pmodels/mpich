@@ -24,10 +24,6 @@
  * Application" from EuroPVM/MPI 2005.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_block_intra_noncommutative
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter_block_intra_noncommutative(const void *sendbuf,
                                                    void *recvbuf,
                                                    int recvcount,

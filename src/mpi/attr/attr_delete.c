@@ -28,10 +28,7 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval) __attribute__ ((weak, alias("PMPI
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Attr_delete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
 
 MPI_Attr_delete - Deletes an attribute value associated with a key on a
@@ -115,11 +112,11 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_attr_delete", "**mpi_attr_delete %C %d", comm, keyval);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

@@ -175,7 +175,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     if ((err == MPI_SUCCESS) && !((ptr)->is_committed))         \
         err = MPIR_Err_create_code(MPI_SUCCESS,                 \
                                    MPIR_ERR_RECOVERABLE,        \
-                                   FCNAME,                      \
+                                   __func__,                      \
                                    __LINE__,                    \
                                    MPI_ERR_TYPE,                \
                                    "**dtypecommit",             \
@@ -293,7 +293,7 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
          mpi_errno = (datatype_ptr->free_fn)(datatype_ptr);               \
           if (mpi_errno) {                                                  \
            MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_FREE);                  \
-           return MPIR_Err_return_comm(0, FCNAME, mpi_errno);             \
+           return MPIR_Err_return_comm(0, __func__, mpi_errno);             \
           }                                                                 \
      } */                                                                   \
         if (lmpi_errno == MPI_SUCCESS) {                                    \

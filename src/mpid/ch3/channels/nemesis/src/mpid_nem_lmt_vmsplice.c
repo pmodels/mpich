@@ -171,10 +171,6 @@ fn_exit:
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_vmsplice_initiate_lmt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIR_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -251,10 +247,6 @@ fn_exit:
 }
 
 /* This function is called when an RTS message comes in. */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_vmsplice_start_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPIR_Request *rreq, MPL_IOV s_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -373,10 +365,6 @@ fn_fail:
 }
 
 /* called when a CTS message is received */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_vmsplice_start_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV r_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -422,10 +410,6 @@ fn_exit:
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_MPID_nem_lmt_vmsplice_vc_terminated
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -451,10 +435,6 @@ int MPIDI_CH3_MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc)
    -------------------------------------------------------------------------- */
 
 /* called when a DONE message is received for a receive request */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_vmsplice_done_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_vmsplice_done_recv(MPIDI_VC_t *vc, MPIR_Request *rreq)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_RECV);
@@ -467,10 +447,6 @@ int MPID_nem_lmt_vmsplice_done_recv(MPIDI_VC_t *vc, MPIR_Request *rreq)
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_vmsplice_done_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_vmsplice_done_send(MPIDI_VC_t *vc, MPIR_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -485,10 +461,6 @@ int MPID_nem_lmt_vmsplice_done_send(MPIDI_VC_t *vc, MPIR_Request *sreq)
 }
 
 /* called when a COOKIE message is received */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_lmt_vmsplice_handle_cookie
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_vmsplice_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV cookie)
 {
     int mpi_errno = MPI_SUCCESS;

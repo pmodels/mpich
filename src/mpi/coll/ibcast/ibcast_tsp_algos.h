@@ -18,10 +18,6 @@
 #include "tsp_namespace_def.h"
 
 /* Routine to schedule a pipelined tree based broadcast */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ibcast_sched_intra_tree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datatype, int root,
                                      int tag, MPIR_Comm * comm, int tree_type, int k, int maxbytes,
                                      MPIR_TSP_sched_t * sched)
@@ -102,10 +98,6 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
 
 
 /* Non-blocking tree based broadcast */
-#undef FUNCNAME
-#define FUNCNAME MPIR_TSP_Ibcast_intra_tree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ibcast_intra_tree(void *buffer, int count, MPI_Datatype datatype, int root,
                                MPIR_Comm * comm, MPIR_Request ** req, int tree_type, int k,
                                int maxbytes)

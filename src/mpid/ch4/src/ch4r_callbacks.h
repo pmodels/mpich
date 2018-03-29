@@ -22,10 +22,6 @@
 
 static inline int MPIDI_recv_target_cmpl_cb(MPIR_Request * rreq);
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_check_cmpl_order
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_check_cmpl_order(MPIR_Request * req,
                                          MPIDIG_am_target_cmpl_cb target_cmpl_cb)
 {
@@ -48,10 +44,6 @@ static inline int MPIDI_check_cmpl_order(MPIR_Request * req,
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_progress_cmpl_list
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_progress_cmpl_list(void)
 {
     MPIR_Request *req;
@@ -76,10 +68,6 @@ static inline void MPIDI_progress_cmpl_list(void)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROGRESS_CMPL_LIST);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_handle_unexp_cmpl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, in_use;
@@ -194,10 +182,6 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_do_send_target
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_do_send_target(void **data,
                                        size_t * p_data_sz,
                                        int *is_contig,
@@ -262,10 +246,6 @@ static inline int MPIDI_do_send_target(void **data,
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_recv_target_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_recv_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -317,10 +297,6 @@ static inline int MPIDI_recv_target_cmpl_cb(MPIR_Request * rreq)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_send_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_send_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -331,10 +307,6 @@ static inline int MPIDI_send_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_send_long_lmt_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_send_long_lmt_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -346,10 +318,6 @@ static inline int MPIDI_send_long_lmt_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_ssend_ack_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_ssend_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -361,10 +329,6 @@ static inline int MPIDI_ssend_ack_origin_cb(MPIR_Request * req)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_send_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
                                            void **data,
                                            size_t * p_data_sz,
@@ -427,10 +391,6 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_send_long_req_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr,
                                                     void **data,
                                                     size_t * p_data_sz,
@@ -497,10 +457,6 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_send_long_lmt_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr,
                                                     void **data,
                                                     size_t * p_data_sz,
@@ -525,10 +481,6 @@ static inline int MPIDI_send_long_lmt_target_msg_cb(int handler_id, void *am_hdr
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_ssend_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_ssend_target_msg_cb(int handler_id, void *am_hdr,
                                             void **data,
                                             size_t * p_data_sz,
@@ -558,10 +510,6 @@ static inline int MPIDI_ssend_target_msg_cb(int handler_id, void *am_hdr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_ssend_ack_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_ssend_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                 void **data,
                                                 size_t * p_data_sz, int *is_contig,
@@ -586,10 +534,6 @@ static inline int MPIDI_ssend_ack_target_msg_cb(int handler_id, void *am_hdr,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_send_long_ack_target_msg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_send_long_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                     void **data,
                                                     size_t * p_data_sz, int *is_contig,

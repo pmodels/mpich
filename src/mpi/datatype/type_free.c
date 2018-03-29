@@ -25,10 +25,6 @@ int MPI_Type_free(MPI_Datatype * datatype) __attribute__ ((weak, alias("PMPI_Typ
 #undef MPI_Type_free
 #define MPI_Type_free PMPI_Type_free
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_free_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Type_free_impl(MPI_Datatype * datatype)
 {
     MPIR_Datatype *datatype_ptr = NULL;
@@ -40,10 +36,6 @@ void MPIR_Type_free_impl(MPI_Datatype * datatype)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_free - Frees the datatype
 
@@ -103,7 +95,8 @@ int MPI_Type_free(MPI_Datatype * datatype)
             if (HANDLE_GET_KIND(*datatype) == HANDLE_KIND_BUILTIN) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
-                                                 FCNAME, __LINE__, MPI_ERR_TYPE, "**dtypeperm", 0);
+                                                 __func__, __LINE__,
+                                                 MPI_ERR_TYPE, "**dtypeperm", 0);
                 goto fn_fail;
             }
 
@@ -116,7 +109,8 @@ int MPI_Type_free(MPI_Datatype * datatype)
                 *datatype == MPI_SHORT_INT || *datatype == MPI_LONG_DOUBLE_INT) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
-                                                 FCNAME, __LINE__, MPI_ERR_TYPE, "**dtypeperm", 0);
+                                                 __func__, __LINE__,
+                                                 MPI_ERR_TYPE, "**dtypeperm", 0);
                 goto fn_fail;
             }
             /* Validate parameters, especially handles needing to be converted */
@@ -149,10 +143,10 @@ int MPI_Type_free(MPI_Datatype * datatype)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_free", "**mpi_type_free %p", datatype);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

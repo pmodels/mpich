@@ -141,10 +141,6 @@ static inline int MPIDI_STUBSHM_create_intercomm_from_lpids(MPIR_Comm * newcomm_
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_type_commit_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_type_commit_hook(MPIR_Datatype * type)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -155,10 +151,6 @@ static inline int MPIDI_STUBSHM_mpi_type_commit_hook(MPIR_Datatype * type)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_type_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_type_free_hook(MPIR_Datatype * type)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -169,10 +161,6 @@ static inline int MPIDI_STUBSHM_mpi_type_free_hook(MPIR_Datatype * type)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_op_commit_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_op_commit_hook(MPIR_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -183,10 +171,6 @@ static inline int MPIDI_STUBSHM_mpi_op_commit_hook(MPIR_Op * op)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_STUBSHM_mpi_op_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_op_free_hook(MPIR_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;

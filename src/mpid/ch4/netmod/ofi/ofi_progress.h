@@ -15,10 +15,6 @@
 #include "ofi_events.h"
 #include "ofi_am_events.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_progress
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vni, int blocking)
 {
     int mpi_errno;

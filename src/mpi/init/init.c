@@ -79,10 +79,7 @@ int MPI_Init(int *argc, char ***argv) __attribute__ ((weak, alias("PMPI_Init")))
 int MPIR_async_thread_initialized = 0;
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Init - Initialize the MPI execution environment
 
@@ -137,7 +134,7 @@ int MPI_Init(int *argc, char ***argv)
         {
             if (OPA_load_int(&MPIR_Process.mpich_state) != MPICH_MPI_STATE__PRE_INIT) {
                 mpi_errno =
-                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                    MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPI_ERR_OTHER, "**inittwice", NULL);
             }
             if (mpi_errno)
@@ -207,11 +204,11 @@ int MPI_Init(int *argc, char ***argv)
 #ifdef HAVE_ERROR_REPORTING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_init", "**mpi_init %p %p", argc, argv);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     return mpi_errno;
     /* --END ERROR HANDLING-- */
 }

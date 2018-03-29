@@ -29,10 +29,6 @@ int MPIX_Comm_failure_get_acked(MPI_Comm comm, MPI_Group * failedgrp)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIX_Comm_failure_get_acked
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPIX_Comm_failure_get_acked - Get the group of acknowledged failures.
@@ -113,12 +109,12 @@ int MPIX_Comm_failure_get_acked(MPI_Comm comm, MPI_Group * failedgrp)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpix_comm_failure_get_acked",
                                  "**mpix_comm_failure_get_acked %C %p", comm, failedgrp);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

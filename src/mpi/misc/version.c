@@ -28,10 +28,7 @@ int MPI_Get_version(int *version, int *subversion)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Get_version
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Get_version - Return the version number of MPI
 
@@ -48,6 +45,8 @@ Output Parameters:
 @*/
 int MPI_Get_version(int *version, int *subversion)
 {
+#ifdef HAVE_ERROR_CHECKING
+#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_VERSION);
 
@@ -86,11 +85,11 @@ int MPI_Get_version(int *version, int *subversion)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_get_version", "**mpi_get_version %p %p", version,
                                  subversion);
     }
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

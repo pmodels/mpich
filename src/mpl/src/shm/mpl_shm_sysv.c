@@ -18,10 +18,6 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 /* A template function which creates/attaches shm seg handle
  * to the shared memory. Used by user-exposed functions below
  */
-#undef FUNCNAME
-#define FUNCNAME MPL_shm_seg_create_attach_templ
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPL_shm_seg_create_attach_templ(MPL_shm_hnd_t hnd, intptr_t seg_sz,
                                                   char **shm_addr_ptr, int offset, int flag)
 {
@@ -111,10 +107,6 @@ int MPL_shm_seg_attach(MPL_shm_hnd_t hnd, intptr_t seg_sz, char **shm_addr_ptr, 
  * shm_addr_ptr : Pointer to the shm address to detach
  * seg_sz : Size of shm segment
  */
-#undef FUNCNAME
-#define FUNCNAME MPL_shm_seg_detach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, char **shm_addr_ptr, intptr_t seg_sz)
 {
     int rc = -1;
@@ -131,10 +123,6 @@ int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, char **shm_addr_ptr, intptr_t seg_sz)
 /* Remove a shared memory segment
  * hnd : Handle to the shared memory segment to be removed
  */
-#undef FUNCNAME
-#define FUNCNAME MPL_shm_seg_remove
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPL_shm_seg_remove(MPL_shm_hnd_t hnd)
 {
     struct shmid_ds ds;

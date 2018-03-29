@@ -12,10 +12,6 @@
 #ifndef ALGO_COMMON_H_INCLUDED
 #define ALGO_COMMON_H_INCLUDED
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Algo_calculate_pipeline_chunk_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPII_Algo_calculate_pipeline_chunk_info(int maxbytes,
                                                    int type_size, int count,
                                                    int *num_segments,

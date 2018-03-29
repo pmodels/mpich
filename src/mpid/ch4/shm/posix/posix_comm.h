@@ -13,10 +13,6 @@
 #include "posix_impl.h"
 #include "utlist.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_mpi_comm_create_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_POSIX_mpi_comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -27,10 +23,6 @@ static inline int MPIDI_POSIX_mpi_comm_create_hook(MPIR_Comm * comm)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_mpi_comm_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_POSIX_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;

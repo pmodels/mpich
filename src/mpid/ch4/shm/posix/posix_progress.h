@@ -16,8 +16,6 @@
 /* ----------------------------------------------------- */
 /* MPIDI_POSIX_progress_recv                     */
 /* ----------------------------------------------------- */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_progress_recv)
 static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -259,8 +257,6 @@ static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
 /* ----------------------------------------------------- */
 /* MPIDI_POSIX_progress_send                     */
 /* ----------------------------------------------------- */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_progress_send)
 static inline int MPIDI_POSIX_progress_send(int blocking, int *completion_count)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -366,8 +362,6 @@ static inline int MPIDI_POSIX_progress_send(int blocking, int *completion_count)
     return mpi_errno;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_progress)
 static inline int MPIDI_POSIX_progress(int blocking)
 {
     int complete = 0;

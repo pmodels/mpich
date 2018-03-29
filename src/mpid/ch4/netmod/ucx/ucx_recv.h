@@ -11,10 +11,6 @@
 
 #include "ucx_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_recv_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
                                           ucp_tag_recv_info_t * info)
 {
@@ -52,10 +48,6 @@ static inline void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_mrecv_cmpl_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
                                            ucp_tag_recv_info_t * info)
 {
@@ -93,10 +85,6 @@ static inline void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_MRECV_CMPL_CB);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_UCX_recv(void *buf,
                                  MPI_Aint count,
                                  MPI_Datatype datatype,

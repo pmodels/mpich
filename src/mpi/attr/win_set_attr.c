@@ -27,10 +27,6 @@ int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
 #undef MPI_Win_set_attr
 #define MPI_Win_set_attr PMPI_Win_set_attr
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Win_set_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val, MPIR_Attr_type attrType)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -152,21 +148,17 @@ int MPII_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val, MPIR_Att
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_win_set_attr", "**mpi_win_set_attr %W %d %p", win,
                                  win_keyval, attribute_val);
     }
 #endif
-    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_set_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
    MPI_Win_set_attr - Stores attribute value associated with a key
@@ -217,7 +209,7 @@ int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_win_set_attr", "**mpi_win_set_attr %W %d %p", win,
                                  win_keyval, attribute_val);
     }

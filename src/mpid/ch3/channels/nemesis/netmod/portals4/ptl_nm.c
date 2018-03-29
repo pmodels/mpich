@@ -29,10 +29,6 @@ static GENERIC_Q_DECL(struct MPIR_Request) reorder_queue;
 static char *expected_recv_ptr, *max_recv_ptr[NUM_RECV_BUFS];
 static int expected_recv_idx;
 
-#undef FUNCNAME
-#define FUNCNAME incr_expected_recv_ptr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void incr_expected_recv_ptr(size_t size)
 {
     expected_recv_ptr += size > PTL_MAX_EAGER ? PTL_MAX_EAGER : size;
@@ -44,10 +40,6 @@ static inline void incr_expected_recv_ptr(size_t size)
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME handle_request
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int handle_request(MPIR_Request *req)
 {
     int mpi_errno = MPID_nem_handle_pkt(req->ch.vc, TMPBUF(req), REQ_PTL(req)->bytes_put);
@@ -58,10 +50,6 @@ static inline int handle_request(MPIR_Request *req)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME progress_reorder
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int progress_reorder(void)
 {
     MPIR_Request *req;
@@ -86,10 +74,6 @@ static inline int progress_reorder(void)
 /* END AUX STUFF FOR REORDERING LOGIC */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_nm_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_nm_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -154,10 +138,6 @@ int MPID_nem_ptl_nm_init(void)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_nm_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_nm_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -187,10 +167,6 @@ int MPID_nem_ptl_nm_finalize(void)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME send_pkt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, intptr_t data_sz,
                            MPIR_Request *sreq)
 {
@@ -254,10 +230,6 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, intptr_t d
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME send_noncontig_pkt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int send_noncontig_pkt(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -329,10 +301,6 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr_p)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_SendNoncontig
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr, intptr_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -351,10 +319,6 @@ int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr, in
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_iStartContigMsg
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, void *data,
                                  intptr_t data_sz, MPIR_Request **sreq_ptr)
 {
@@ -381,10 +345,6 @@ int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, voi
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_iSendContig
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr, intptr_t hdr_sz,
                                void *data, intptr_t data_sz)
 {
@@ -404,10 +364,6 @@ int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr, intp
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME on_data_avail
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int on_data_avail(MPIR_Request * req)
 {
     int (*reqFn) (MPIDI_VC_t *, MPIR_Request *, int *);
@@ -446,10 +402,6 @@ static inline int on_data_avail(MPIR_Request * req)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_nm_ctl_event_handler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;

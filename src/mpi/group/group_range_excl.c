@@ -26,10 +26,6 @@ int MPI_Group_range_excl(MPI_Group group, int n, int ranges[][3], MPI_Group * ne
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Group_range_excl
 #define MPI_Group_range_excl PMPI_Group_range_excl
-#undef FUNCNAME
-#define FUNCNAME MPIR_Group_range_excl_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Group_range_excl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
                                MPIR_Group ** new_group_ptr)
 {
@@ -115,10 +111,6 @@ int MPIR_Group_range_excl_impl(MPIR_Group * group_ptr, int n, int ranges[][3],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Group_range_excl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 
@@ -221,12 +213,12 @@ int MPI_Group_range_excl(MPI_Group group, int n, int ranges[][3], MPI_Group * ne
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_group_range_excl", "**mpi_group_range_excl %G %d %p %p",
                                  group, n, ranges, newgroup);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

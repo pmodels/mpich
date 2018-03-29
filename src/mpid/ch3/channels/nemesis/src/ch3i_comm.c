@@ -11,10 +11,6 @@
 
 #define NULL_CONTEXT_ID -1
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_comm_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_comm_create(MPIR_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -38,10 +34,6 @@ int MPIDI_CH3I_comm_create(MPIR_Comm *comm, void *param)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_comm_destroy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -64,10 +56,6 @@ int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_barrier_vars_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -89,10 +77,6 @@ int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME nem_coll_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int nem_coll_finalize(void *param ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
@@ -108,10 +92,6 @@ static int nem_coll_finalize(void *param ATTRIBUTE((unused)))
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_coll_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;

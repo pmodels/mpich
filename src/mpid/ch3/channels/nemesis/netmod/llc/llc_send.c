@@ -16,10 +16,6 @@
 #define dprintf(...)
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
                        int dest, int tag, MPIR_Comm * comm, int context_offset,
                        struct MPIR_Request **req_out)
@@ -157,10 +153,6 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_iStartContigMsg
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, void *data,
                                  intptr_t data_sz, MPIR_Request ** sreq_ptr)
 {
@@ -248,10 +240,6 @@ int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_iSendContig
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz,
                              void *data, intptr_t data_sz)
 {
@@ -332,10 +320,6 @@ int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, in
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_SendNoncontig
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr,
                                intptr_t hdr_sz)
 {
@@ -408,10 +392,6 @@ int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_send_queued
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_send_queued(MPIDI_VC_t * vc, rque_t * send_queue)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -466,10 +446,6 @@ int MPID_nem_llc_send_queued(MPIDI_VC_t * vc, rque_t * send_queue)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_nem_llc_Rqst_iov_update
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_nem_llc_Rqst_iov_update(MPIR_Request * mreq, intptr_t consume)
 {
     int ret = TRUE;
@@ -841,7 +817,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                              * datatype */
                             MPIR_STATUS_SET_COUNT(req->status, last);
                             req->status.MPI_ERROR =
-                                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME,
+                                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__,
                                                      __LINE__, MPI_ERR_TYPE, "**llc_poll", 0);
                             /* --END ERROR HANDLING-- */
                         }
@@ -947,10 +923,6 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_issend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
                         int dest, int tag, MPIR_Comm * comm, int context_offset,
                         struct MPIR_Request **request)

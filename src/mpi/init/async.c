@@ -20,10 +20,6 @@ static volatile int progress_thread_done = 0;
  * for communicating with the progress thread. */
 #define WAKE_TAG 100
 
-#undef FUNCNAME
-#define FUNCNAME progress_fn
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void progress_fn(void *data)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -71,10 +67,6 @@ static void progress_fn(void *data)
 
 #endif /* MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Init_async_thread
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Init_async_thread(void)
 {
 #if MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE
@@ -115,10 +107,6 @@ int MPIR_Init_async_thread(void)
 #endif /* MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE */
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Finalize_async_thread
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Finalize_async_thread(void)
 {
     int mpi_errno = MPI_SUCCESS;

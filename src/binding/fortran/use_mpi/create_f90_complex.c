@@ -41,10 +41,7 @@ typedef struct realModel {
     MPI_Datatype dtype;
 } realModel;
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_f90_complex
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Type_create_f90_complex - Return a predefined type that matches
    the specified range
@@ -134,12 +131,12 @@ int MPI_Type_create_f90_complex(int precision, int range, MPI_Datatype * newtype
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_create_f90_complex",
                                  "**mpi_type_create_f90_complex %d %d", precision, range);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

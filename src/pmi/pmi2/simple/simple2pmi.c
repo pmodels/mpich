@@ -601,10 +601,6 @@ int PMI2_Job_GetId(char jobid[], int jobid_size)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME PMI2_Job_Connect
-#undef FCNAME
-#define FCNAME PMI2DI_QUOTE(FUNCNAME)
 int PMI2_Job_Connect(const char jobid[], PMI2_Connect_comm_t * conn)
 {
     int pmi2_errno = PMI2_SUCCESS;

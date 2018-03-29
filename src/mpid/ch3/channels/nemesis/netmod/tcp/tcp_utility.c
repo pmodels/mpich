@@ -11,10 +11,6 @@
    the remote process associated with this VC.  [NOTE: I'm not sure
    yet, if the pg_id parameters will be char* or char**.  I'd like to
    avoid a copy on this.] */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_get_conninfo
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_get_conninfo (struct MPIDI_VC *vc, struct sockaddr_in *addr, char **pg_id, int *pg_rank)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -29,10 +25,6 @@ int MPID_nem_tcp_get_conninfo (struct MPIDI_VC *vc, struct sockaddr_in *addr, ch
 
 /* MPID_nem_tcp_get_vc_from_conninfo -- This function takes
    the pg_id and pg_rank and returns the corresponding VC. */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_get_vc_from_conninfo
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_get_vc_from_conninfo (char *pg_id, int pg_rank, struct MPIDI_VC **vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -58,10 +50,6 @@ int MPID_nem_tcp_get_vc_from_conninfo (char *pg_id, int pg_rank, struct MPIDI_VC
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME set_sockopts
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_set_sockopts (int fd)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -69,7 +57,7 @@ int MPID_nem_tcp_set_sockopts (int fd)
     int ret;
     socklen_t len;
 
-/*     fprintf(stdout, FCNAME " Enter\n"); fflush(stdout); */
+/*     fprintf(stdout, __func__ " Enter\n"); fflush(stdout); */
     /* I heard you have to read the options after setting them in some implementations */
 
     option = 1;
@@ -90,7 +78,7 @@ int MPID_nem_tcp_set_sockopts (int fd)
     MPIR_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %s %d", MPIR_Strerror (errno), errno);
 
  fn_exit:
-/*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
+/*     fprintf(stdout, __func__ " Exit\n"); fflush(stdout); */
     return mpi_errno;
  fn_fail:
 /*     fprintf(stdout, "failure. mpi_errno = %d\n", mpi_errno); */
@@ -125,10 +113,6 @@ FIXME : Above comments are inconsistent now with the changes. No check for EOF i
 actually done now in this function.
 */
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_check_sock_status
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPID_NEM_TCP_SOCK_STATUS_t 
 MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd)
 {
@@ -160,10 +144,6 @@ MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd)
 
 /*
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_is_sock_connected
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_is_sock_connected(int fd)
 {
     int rc = FALSE;
@@ -191,10 +171,6 @@ int MPID_nem_tcp_is_sock_connected(int fd)
 
 
 /* --BEGIN ERROR HANDLING-- */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_dbg_print_all_sendq
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPID_nem_tcp_vc_dbg_print_sendq(FILE *stream, MPIDI_VC_t *vc)
 {
     int i;

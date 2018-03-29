@@ -10,10 +10,6 @@
 #include "ch4r_comm.h"
 #include "utlist.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_map_size
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_map_size(MPIR_Comm_map_t map)
 {
     int ret = 0;
@@ -41,10 +37,6 @@ enum MPIDI_src_mapper_models {
     MPIDI_SRC_MAPPER_STRIDE = 3
 };
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_detect_regular_model
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_detect_regular_model(int *lpid, int size,
                                              int *offset, int *blocksize, int *stride)
 {
@@ -101,10 +93,6 @@ static inline int MPIDI_detect_regular_model(int *lpid, int size,
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_src_comm_to_lut
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_src_comm_to_lut(MPIDI_rank_map_t * src,
                                         MPIDI_rank_map_t * dest,
                                         int size, int total_mapper_size, int mapper_offset)
@@ -190,10 +178,6 @@ static inline int MPIDI_src_comm_to_lut(MPIDI_rank_map_t * src,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_src_comm_to_mlut
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_src_comm_to_mlut(MPIDI_rank_map_t * src,
                                          MPIDI_rank_map_t * dest,
                                          int size, int total_mapper_size, int mapper_offset)
@@ -292,10 +276,6 @@ static inline int MPIDI_src_comm_to_mlut(MPIDI_rank_map_t * src,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_src_mlut_to_mlut
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_src_mlut_to_mlut(MPIDI_rank_map_t * src,
                                          MPIDI_rank_map_t * dest,
                                          MPIR_Comm_map_t * mapper,
@@ -334,10 +314,6 @@ static inline int MPIDI_src_mlut_to_mlut(MPIDI_rank_map_t * src,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_src_map_to_lut
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_src_map_to_lut(MPIDI_rank_map_t * src,
                                        MPIDI_rank_map_t * dest,
                                        MPIR_Comm_map_t * mapper,
@@ -427,10 +403,6 @@ static inline int MPIDI_src_map_to_lut(MPIDI_rank_map_t * src,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_direct_of_src_rmap
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_direct_of_src_rmap(MPIDI_rank_map_t * src,
                                             MPIDI_rank_map_t * dest, MPIR_Comm_map_t * mapper)
 {
@@ -484,10 +456,6 @@ static inline void MPIDI_direct_of_src_rmap(MPIDI_rank_map_t * src,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_DIRECT_OF_SRC_RMAP);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_offset_of_src_rmap
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_offset_of_src_rmap(MPIDI_rank_map_t * src,
                                             MPIDI_rank_map_t * dest,
                                             MPIR_Comm_map_t * mapper, int offset)
@@ -556,10 +524,6 @@ static inline void MPIDI_offset_of_src_rmap(MPIDI_rank_map_t * src,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFFSET_OF_SRC_RMAP);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_stride_of_src_rmap
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_stride_of_src_rmap(MPIDI_rank_map_t * src,
                                             MPIDI_rank_map_t * dest,
                                             MPIR_Comm_map_t * mapper,
@@ -657,10 +621,6 @@ static inline void MPIDI_stride_of_src_rmap(MPIDI_rank_map_t * src,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STRIDE_OF_SRC_RMAP);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_check_convert_mlut_to_lut
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_check_convert_mlut_to_lut(MPIDI_rank_map_t * src)
 {
     int mpi_errno = MPI_SUCCESS, i;
@@ -711,10 +671,6 @@ static inline int MPIDI_check_convert_mlut_to_lut(MPIDI_rank_map_t * src)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_check_convert_lut_to_regular
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_check_convert_lut_to_regular(MPIDI_rank_map_t * src)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -794,10 +750,6 @@ static inline int MPIDI_check_convert_lut_to_regular(MPIDI_rank_map_t * src)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_set_map
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_set_map(MPIDI_rank_map_t * src_rmap,
                                 MPIDI_rank_map_t * dest_rmap,
                                 MPIR_Comm_map_t * mapper,
@@ -868,10 +820,6 @@ static inline int MPIDI_set_map(MPIDI_rank_map_t * src_rmap,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_comm_create_rank_map
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1063,10 +1011,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_check_disjoint_lupids
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_check_disjoint_lupids(int lupids1[], int n1,
                                                          int lupids2[], int n2)
 {

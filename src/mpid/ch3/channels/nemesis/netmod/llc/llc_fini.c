@@ -10,10 +10,6 @@
 #include "llc_impl.h"
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;

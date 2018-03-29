@@ -142,10 +142,6 @@ int MPIR_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_contiguous_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_contiguous_impl(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -173,10 +169,6 @@ int MPIR_Type_contiguous_impl(int count, MPI_Datatype oldtype, MPI_Datatype * ne
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_contiguous_x_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_contiguous_x_impl(MPI_Count count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
     /* to make 'count' fit MPI-3 type processing routines (which take integer
@@ -226,10 +218,6 @@ int MPIR_Type_contiguous_x_impl(MPI_Count count, MPI_Datatype oldtype, MPI_Datat
 #endif
 
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_contiguous
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_contiguous - Creates a contiguous datatype
 
@@ -299,12 +287,12 @@ int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype * newtype)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_contiguous", "**mpi_type_contiguous %d %D %p", count,
                                  oldtype, newtype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

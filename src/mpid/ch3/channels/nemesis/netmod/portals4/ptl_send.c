@@ -7,10 +7,6 @@
 #include "ptl_impl.h"
 #include "rptl.h"
 
-#undef FUNCNAME
-#define FUNCNAME big_meappend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void big_meappend(void *buf, ptl_size_t left_to_send, MPIDI_VC_t *vc, ptl_match_bits_t match_bits, MPIR_Request *sreq)
 {
     int i, ret, was_incomplete;
@@ -52,10 +48,6 @@ static void big_meappend(void *buf, ptl_size_t left_to_send, MPIDI_VC_t *vc, ptl
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME handler_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int handler_send(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -96,10 +88,6 @@ static int handler_send(const ptl_event_t *e)
 }
 
 /* Send message for either isend or issend */
-#undef FUNCNAME
-#define FUNCNAME send_msg
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
                     int tag, MPIR_Comm *comm, int context_offset, struct MPIR_Request **request)
 {
@@ -331,10 +319,6 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_isend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                        MPIR_Comm *comm, int context_offset, struct MPIR_Request **request)
 {
@@ -350,10 +334,6 @@ int MPID_nem_ptl_isend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_issend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_issend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                         MPIR_Comm *comm, int context_offset, struct MPIR_Request **request)
 {
@@ -368,10 +348,6 @@ int MPID_nem_ptl_issend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MP
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_cancel_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_cancel_send(struct MPIDI_VC *vc,  struct MPIR_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -31,10 +31,6 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
 #undef MPI_Waitall
 #define MPI_Waitall PMPI_Waitall
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Waitall_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array_of_statuses[],
                       int requests_property)
 {
@@ -116,10 +112,6 @@ int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Waitall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_statuses[])
 {
     int mpi_errno = MPI_SUCCESS;
@@ -291,10 +283,6 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Waitall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Waitall - Waits for all given MPI Requests to complete
 
@@ -381,12 +369,12 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
     mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-                                     FCNAME, __LINE__, MPI_ERR_OTHER,
+                                     __func__, __LINE__, MPI_ERR_OTHER,
                                      "**mpi_waitall",
                                      "**mpi_waitall %d %p %p",
                                      count, array_of_requests, array_of_statuses);
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

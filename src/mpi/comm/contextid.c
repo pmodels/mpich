@@ -288,10 +288,6 @@ static volatile int mask_in_use = 0;
  * used.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Get_contextid_sparse
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Get_contextid_sparse(MPIR_Comm * comm_ptr, MPIR_Context_id_t * context_id, int ignore_id)
 {
     return MPIR_Get_contextid_sparse_group(comm_ptr, NULL /*group_ptr */ ,
@@ -320,10 +316,6 @@ struct gcn_state *next_gcn = NULL;
  * according to the context_id of of parrent communicator and the tag, wherby blocking context_id
  * allocations  can have the same tag, while nonblocking operations cannot. In the non-blocking
  * case, the user is reponsible for the right tags if "comm_create_group" is used */
-#undef FUNCNAME
-#define FUNCNAME add_gcn_to_list
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int add_gcn_to_list(struct gcn_state *new_state)
 {
     int mpi_errno = 0;
@@ -365,10 +357,6 @@ static int add_gcn_to_list(struct gcn_state *new_state)
  * in the group should call this routine.  That is, it is collective only over
  * the given group.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Get_contextid_sparse_group
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
                                     MPIR_Context_id_t * context_id, int ignore_id)
 {
@@ -649,10 +637,6 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
 static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state);
 static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state);
 static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state);
-#undef FUNCNAME
-#define FUNCNAME sched_cb_commit_comm
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int sched_cb_commit_comm(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -667,10 +651,6 @@ static int sched_cb_commit_comm(MPIR_Comm * comm, int tag, void *state)
 
 }
 
-#undef FUNCNAME
-#define FUNCNAME sched_cb_gcn_bcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -722,10 +702,6 @@ static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
  * execute and insert wrong order of entries to the nonblocking schedule and
  * cause errors.
  */
-#undef FUNCNAME
-#define FUNCNAME sched_cb_gcn_allocate_cid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -834,10 +810,6 @@ static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME sched_cb_gcn_copy_mask
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -928,10 +900,6 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
  * To avoid deadlock or livelock, it uses the same eager protocol as
  * multi-threaded MPIR_Get_contextid_sparse_group.
  */
-#undef FUNCNAME
-#define FUNCNAME sched_get_cid_nonblock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
                                   MPIR_Context_id_t * ctx0, MPIR_Context_id_t * ctx1,
                                   MPIR_Sched_t s, MPIR_Comm_kind_t gcn_cid_kind)
@@ -984,10 +952,6 @@ static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
     /* --END ERROR HANDLING-- */
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Get_contextid_nonblock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1027,10 +991,6 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR
     /* --END ERROR HANDLING-- */
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Get_intercomm_contextid_nonblock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp,
                                           MPIR_Request ** req)
 {
@@ -1096,10 +1056,6 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
  * This uses the thread-safe (if necessary) routine to get a context id
  * and does not need its own thread-safe version.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Get_intercomm_contextid
-#undef FCNAME
-#define FCNAME "MPIR_Get_intercomm_contextid"
 int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, MPIR_Context_id_t * context_id,
                                  MPIR_Context_id_t * recvcontext_id)
 {
@@ -1156,10 +1112,6 @@ int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, MPIR_Context_id_t * conte
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Free_contextid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Free_contextid(MPIR_Context_id_t context_id)
 {
     int idx, bitpos, raw_prefix;

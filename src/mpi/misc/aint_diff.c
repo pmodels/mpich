@@ -28,8 +28,6 @@ MPI_Aint MPI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Aint_diff
 
 /*@
 MPI_Aint_diff - Returns the difference between addr1 and addr2

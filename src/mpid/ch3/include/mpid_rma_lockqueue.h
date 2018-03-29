@@ -15,10 +15,6 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_winlock_getlocallock ATTRIBUTE((unused
 
 /* MPIDI_CH3I_Win_target_lock_entry_alloc(): return a new lock queue entry and
  * initialize it. If we cannot get one, return NULL. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_target_lock_entry_alloc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline MPIDI_RMA_Target_lock_entry_t *MPIDI_CH3I_Win_target_lock_entry_alloc(MPIR_Win *
                                                                                     win_ptr,
                                                                                     MPIDI_CH3_Pkt_t
@@ -45,10 +41,6 @@ static inline MPIDI_RMA_Target_lock_entry_t *MPIDI_CH3I_Win_target_lock_entry_al
 
 /* MPIDI_CH3I_Win_target_lock_entry_free(): put a lock queue entry back to
  * the global pool. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_target_lock_entry_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_target_lock_entry_free(MPIR_Win * win_ptr,
                                                         MPIDI_RMA_Target_lock_entry_t *
                                                         target_lock_entry)

@@ -42,8 +42,6 @@ cvars:
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_init)
 int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int ret, fi_version, i, len, pmi_errno;
@@ -56,7 +54,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     fi_addr_t *fi_addrs = NULL;
     MPIDI_VC_t *vc;
 
-    BEGIN_FUNC(FCNAME);
+    BEGIN_FUNC(__func__);
     MPIR_CHKLMEM_DECL(2);
 
     compile_time_checking();
@@ -119,7 +117,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
           getinfo);
     MPIR_ERR_CHKANDJUMP4(prov_tagged == NULL, mpi_errno, MPI_ERR_OTHER,
                          "**ofi_getinfo", "**ofi_getinfo %s %d %s %s",
-                         __SHORT_FILE__, __LINE__, FCNAME, "No tag matching provider found");
+                         __SHORT_FILE__, __LINE__, __func__, "No tag matching provider found");
     /* ------------------------------------------------------------------------ */
     /* Open fabric                                                              */
     /* The getinfo struct returns a fabric attribute struct that can be used to */
@@ -295,19 +293,17 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     if (fi_addrs)
         MPL_free(fi_addrs);
     MPIR_CHKLMEM_FREEALL();
-    END_FUNC(FCNAME);
+    END_FUNC(__func__);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_finalize)
 int MPID_nem_ofi_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t ret = MPIR_ERR_NONE;
-    BEGIN_FUNC(FCNAME);
+    BEGIN_FUNC(__func__);
 
     while(gl_data.rts_cts_in_flight) {
         MPID_nem_ofi_poll(0);
@@ -324,11 +320,9 @@ int MPID_nem_ofi_finalize(void)
     FI_RC(fi_close((fid_t) gl_data.cq), cqclose);
     FI_RC(fi_close((fid_t) gl_data.domain), domainclose);
     FI_RC(fi_close((fid_t) gl_data.fabric), fabricclose);
-    END_FUNC_RC(FCNAME);
+    END_FUNC_RC(__func__);
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_get_ordering)
 int MPID_nem_ofi_get_ordering(int *ordering)
 {
     (*ordering) = 1;

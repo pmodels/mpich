@@ -24,10 +24,6 @@
 
 /* See the comments above about request creation.  Some routines will
    use macros in mpidimpl.h *instead* of this routine */
-#undef FUNCNAME
-#define FUNCNAME MPID_Request_create_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPID_Request_create_hook(MPIR_Request *req)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REQUEST_INIT);
@@ -83,10 +79,6 @@ void MPID_Request_create_hook(MPIR_Request *req)
  *
  * Expects sreq->dev.OnFinal to be initialized (even if it's NULL).
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Request_load_send_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 				     MPL_IOV * const iov, int * const iov_n)
 {
@@ -137,7 +129,7 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 	    {
 		MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,TYPICAL,"SRBuf allocation failure");
 		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, 
-                                FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 
+                                __func__, __LINE__, MPI_ERR_OTHER, "**nomem", 
 						 "**nomem %d", data_sz);
 		sreq->status.MPI_ERROR = mpi_errno;
 		goto fn_exit;
@@ -194,10 +186,6 @@ int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
  * structure).  If the density of IOV is not sufficient, allocate a 
  * send/receive buffer and point the IOV at the buffer.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Request_load_recv_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 {
     MPI_Aint last;
@@ -286,7 +274,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	       the segment info so that the remaining data is received and 
 	       thrown away. */
 	    rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
-		       MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TYPE,
+		       MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TYPE,
 		       "**dtypemismatch", 0);
             MPIR_STATUS_SET_COUNT(rreq->status, rreq->dev.segment_first);
 	    rreq->dev.segment_size = rreq->dev.segment_first;
@@ -335,7 +323,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 		   a fatal error? */
 		MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,"SRBuf allocation failure");
 		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, 
-			      FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 
+			      __func__, __LINE__, MPI_ERR_OTHER, "**nomem", 
 			 "**nomem %d", 
 			 rreq->dev.segment_size - rreq->dev.segment_first);
 		rreq->status.MPI_ERROR = mpi_errno;
@@ -362,7 +350,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 	    {
 		MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,TYPICAL,"SRBuf allocation failure");
 		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, 
-			       FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
+			       __func__, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
 		rreq->status.MPI_ERROR = mpi_errno;
 		goto fn_exit;
 	    }
@@ -402,10 +390,6 @@ int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
  *
  * Unpack data from a send/receive buffer into the user buffer.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Request_unpack_srbuf
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
 {
     MPI_Aint last;
@@ -433,7 +417,7 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
 	rreq->dev.segment_size = rreq->dev.segment_first;
 	rreq->dev.segment_first += tmpbuf_last;
 	rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
-		       MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TYPE,
+		       MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TYPE,
 		       "**dtypemismatch", 0);
 	/* --END ERROR HANDLING-- */
     }
@@ -451,7 +435,7 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
 	    rreq->dev.segment_size = last;
 	    rreq->dev.segment_first = tmpbuf_last;
 	    rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
-		  MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TYPE,
+		  MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TYPE,
 							  "**dtypemismatch", 0);
 	}
 	/* --END ERROR HANDLING-- */
@@ -479,10 +463,6 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
  *
  * Copy/unpack data from an "unexpected eager buffer" into the user buffer.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Request_unpack_uebuf
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 {
     int dt_contig;
@@ -513,7 +493,7 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 	unpack_sz = userbuf_sz;
 	MPIR_STATUS_SET_COUNT(rreq->status, userbuf_sz);
 	rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
-		 MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TRUNCATE,
+		 MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TRUNCATE,
 		 "**truncate", "**truncate %d %d", 
                  rreq->dev.recv_data_sz, userbuf_sz);
 	/* --END ERROR HANDLING-- */
@@ -549,7 +529,7 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 		   datatype */
 		MPIR_STATUS_SET_COUNT(rreq->status, last);
 		rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
-                         MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TYPE,
+                         MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TYPE,
 			 "**dtypemismatch", 0);
 		/* --END ERROR HANDLING-- */
 	    }

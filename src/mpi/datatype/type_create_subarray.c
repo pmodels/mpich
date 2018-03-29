@@ -29,10 +29,7 @@ int MPI_Type_create_subarray(int ndims, const int array_of_sizes[],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_subarray
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Type_create_subarray - Create a datatype for a subarray of a regular,
     multidimensional array
@@ -108,7 +105,7 @@ int MPI_Type_create_subarray(int ndims,
                 if (array_of_subsizes[i] > array_of_sizes[i]) {
                     mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                      MPIR_ERR_RECOVERABLE,
-                                                     FCNAME,
+                                                     __func__,
                                                      __LINE__,
                                                      MPI_ERR_ARG,
                                                      "**argrange",
@@ -120,7 +117,7 @@ int MPI_Type_create_subarray(int ndims,
                 if (array_of_starts[i] > (array_of_sizes[i] - array_of_subsizes[i])) {
                     mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                      MPIR_ERR_RECOVERABLE,
-                                                     FCNAME,
+                                                     __func__,
                                                      __LINE__,
                                                      MPI_ERR_ARG,
                                                      "**argrange",
@@ -134,7 +131,7 @@ int MPI_Type_create_subarray(int ndims,
             if (order != MPI_ORDER_FORTRAN && order != MPI_ORDER_C) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
-                                                 FCNAME,
+                                                 __func__,
                                                  __LINE__,
                                                  MPI_ERR_ARG, "**arg", "**arg %s", "order");
                 goto fn_fail;
@@ -154,7 +151,7 @@ int MPI_Type_create_subarray(int ndims,
             if (size_with_aint != size_with_offset) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_FATAL,
-                                                 FCNAME,
+                                                 __func__,
                                                  __LINE__,
                                                  MPI_ERR_ARG,
                                                  "**subarrayoflow",
@@ -324,14 +321,14 @@ int MPI_Type_create_subarray(int ndims,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_create_subarray",
                                  "**mpi_type_create_subarray %d %p %p %p %d %D %p", ndims,
                                  array_of_sizes, array_of_subsizes, array_of_starts, order, oldtype,
                                  newtype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

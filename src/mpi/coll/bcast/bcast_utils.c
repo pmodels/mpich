@@ -18,10 +18,6 @@
 
    At the moment this function always scatters a buffer of nbytes starting at
    tmp_buf address. */
-#undef FUNCNAME
-#define FUNCNAME MPII_Scatter_for_bcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
                            int count ATTRIBUTE((unused)),
                            MPI_Datatype datatype ATTRIBUTE((unused)),

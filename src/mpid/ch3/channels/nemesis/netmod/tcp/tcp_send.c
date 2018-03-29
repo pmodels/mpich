@@ -36,10 +36,6 @@ static struct {MPID_nem_tcp_send_q_element_t *top;} free_buffers = {0};
 #define FREE_Q_ELEMENTS(e0, e1) S_PUSH_MULTIPLE (&free_buffers, e0, e1)
 #define FREE_Q_ELEMENT(e) S_PUSH (&free_buffers, e)
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_send_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_send_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -63,10 +59,6 @@ int MPID_nem_tcp_send_init(void)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_send_queued
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send_queue)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -182,10 +174,6 @@ fn_fail:
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_send_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_send_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -201,10 +189,6 @@ int MPID_nem_tcp_send_finalize(void)
 
 /* MPID_nem_tcp_conn_est -- this function is called when the
    connection is finally established to send any pending sends */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_conn_est
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_conn_est (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -231,10 +215,6 @@ int MPID_nem_tcp_conn_est (MPIDI_VC_t *vc)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_iStartContigMsg
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz,
                                  MPIR_Request **sreq_ptr)
 {
@@ -370,10 +350,6 @@ fn_fail:
 }
 
 /* This sends the message even if the vc is in a paused state */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_iStartContigMsg_paused
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz,
                                         MPIR_Request **sreq_ptr)
 {
@@ -503,10 +479,6 @@ fn_fail:
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_iSendContig
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr, intptr_t hdr_sz,
                              void *data, intptr_t data_sz)
 {
@@ -693,10 +665,6 @@ fn_fail:
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_SendNoncontig
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, intptr_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -860,10 +828,6 @@ fn_fail:
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_error_out_send_queue
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_error_out_send_queue(struct MPIDI_VC *const vc, int req_errno)
 {
     int mpi_errno = MPI_SUCCESS;

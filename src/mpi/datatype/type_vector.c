@@ -170,10 +170,6 @@ int MPIR_Type_vector(int count,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_vector_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype oldtype,
                           MPI_Datatype * newtype)
 {
@@ -209,10 +205,6 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_vector
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_vector - Creates a vector (strided) datatype
 
@@ -287,12 +279,12 @@ int MPI_Type_vector(int count,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_vector", "**mpi_type_vector %d %d %d %D %p", count,
                                  blocklength, stride, oldtype, newtype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

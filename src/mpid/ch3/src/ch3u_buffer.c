@@ -28,10 +28,6 @@ Used indirectly by mpid_irecv, mpid_recv (through MPIDI_CH3_RecvFromSelf) and
  and receive from self.  We may want to put all of the "from self" routines
  into a single file, and make MPIDI_CH3U_Buffer_copy static to this file. */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Buffer_copy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIDI_CH3U_Buffer_copy(
     const void * const sbuf, MPI_Aint scount, MPI_Datatype sdt, int * smpi_errno,
     void * const rbuf, MPI_Aint rcount, MPI_Datatype rdt, intptr_t * rsz,
@@ -61,7 +57,7 @@ void MPIDI_CH3U_Buffer_copy(
 	    "message truncated, sdata_sz=%" PRIdPTR " rdata_sz=%" PRIdPTR,
 			  sdata_sz, rdata_sz));
 	sdata_sz = rdata_sz;
-	*rmpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TRUNCATE, "**truncate", "**truncate %d %d", sdata_sz, rdata_sz );
+	*rmpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TRUNCATE, "**truncate", "**truncate %d %d", sdata_sz, rdata_sz );
     }
     /* --END ERROR HANDLING-- */
     
@@ -93,7 +89,7 @@ void MPIDI_CH3U_Buffer_copy(
 	/* --BEGIN ERROR HANDLING-- */
 	if (last != sdata_sz)
 	{
-	    *rmpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TYPE, "**dtypemismatch", 0);
+	    *rmpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TYPE, "**dtypemismatch", 0);
 	}
 	/* --END ERROR HANDLING-- */
 
@@ -114,7 +110,7 @@ void MPIDI_CH3U_Buffer_copy(
 	/* --BEGIN ERROR HANDLING-- */
 	if (last != sdata_sz)
 	{
-	    *rmpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TYPE, "**dtypemismatch", 0);
+	    *rmpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TYPE, "**dtypemismatch", 0);
 	}
 	/* --END ERROR HANDLING-- */
 
@@ -134,7 +130,7 @@ void MPIDI_CH3U_Buffer_copy(
 	if (buf == NULL)
 	{
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,TYPICAL,"SRBuf allocation failure");
-	    *smpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
+	    *smpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
 	    *rmpi_errno = *smpi_errno;
 	    *rsz = 0;
 	    goto fn_exit;
@@ -199,7 +195,7 @@ void MPIDI_CH3U_Buffer_copy(
 	    if (sfirst == sdata_sz)
 	    {
 		/* datatype mismatch -- remaining bytes could not be unpacked */
-		*rmpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TYPE, "**dtypemismatch", 0);
+		*rmpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_TYPE, "**dtypemismatch", 0);
 		break;
 	    }
 	    /* --END ERROR HANDLING-- */

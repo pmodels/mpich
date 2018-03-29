@@ -28,10 +28,7 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
     MPI_Recv - Blocking receive for a message
 
@@ -197,12 +194,12 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_recv", "**mpi_recv %p %d %D %i %t %C %p", buf, count,
                                  datatype, source, tag, comm, status);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

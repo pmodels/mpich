@@ -14,10 +14,6 @@
 #include "ofi_impl.h"
 #include <../mpi/pt2pt/bsendutil.h>
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_startall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * requests[])
 {
     int mpi_errno = MPI_SUCCESS;

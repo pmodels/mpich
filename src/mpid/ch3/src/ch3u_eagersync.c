@@ -13,10 +13,6 @@
  * MPI_Issend for short messages.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_EagerSyncNoncontigSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIDI_CH3_EagerSyncNoncontigSend - Eagerly send noncontiguous data in
    synchronous mode.
 
@@ -208,10 +204,6 @@ int MPIDI_CH3_EagerSyncAck( MPIDI_VC_t *vc, MPIR_Request *rreq )
     MPIDI_Request_set_msg_type((rreq_), (msg_type_));		\
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_EagerSyncSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data,
 					intptr_t *buflen, MPIR_Request **rreqp )
 {
@@ -339,10 +331,6 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, vo
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_EagerSyncAck
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerSyncAck( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data ATTRIBUTE((unused)),
 				       intptr_t *buflen, MPIR_Request **rreqp )
 {

@@ -7,10 +7,6 @@
 #include "mpidi_ch3_impl.h"
 
 /* This routine is called by MPID_Finalize to finalize the channel. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Finalize( void )
 {
     int mpi_errno = MPI_SUCCESS;

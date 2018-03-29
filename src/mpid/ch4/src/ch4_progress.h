@@ -26,10 +26,6 @@
  *      that's why MPIDI_Progress_test call with MPIDI_PROGRESS_HOOKS set isn't reentrant safe, and shouldn't be called from netmod's fallback logic.
  * MPIDI_PROGRESS_NM and MPIDI_PROGRESS_SHM enables progress on transports only, and guarantee reentrant-safety.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Progress_test
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
 {
     int mpi_errno, made_progress, i;
@@ -75,10 +71,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
     goto fn_exit;;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Progress_test
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_test(void)
 {
     return MPIDI_Progress_test(MPIDI_PROGRESS_ALL);
@@ -129,10 +121,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_wait(MPID_Progress_state * state)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Progress_register
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_register(int (*progress_fn) (int *), int *id)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -167,10 +155,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_register(int (*progress_fn) (int *), 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Progress_deregister
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_deregister(int id)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -190,10 +174,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_deregister(int id)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Progress_activate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_activate(int id)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -212,10 +192,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_activate(int id)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Progress_deactivate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_deactivate(int id)
 {
     int mpi_errno = MPI_SUCCESS;

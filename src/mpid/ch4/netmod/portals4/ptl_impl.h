@@ -51,7 +51,7 @@ static inline const char *MPIDI_PTL_strerror(int ret)
                               "**"#STR" %s %d %s %s",                   \
                               __FILE__,                                 \
                               __LINE__,                                 \
-                              FCNAME,                                   \
+                              __func__,                                   \
                               MPIDI_PTL_strerror(STATUS));      \
     } while (0)
 

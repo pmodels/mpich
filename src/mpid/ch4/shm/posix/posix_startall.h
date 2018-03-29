@@ -14,8 +14,6 @@
 #include "posix_impl.h"
 #include "ch4_impl.h"
 
-#undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_STARTALL)
 static inline int MPIDI_POSIX_mpi_startall(int count, MPIR_Request * requests[])
 {
     int i, mpi_errno = MPI_SUCCESS;

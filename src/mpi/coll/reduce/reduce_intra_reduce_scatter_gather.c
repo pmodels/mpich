@@ -34,10 +34,6 @@
    Cost = (2.floor(lgp)+1).alpha + (2.((p-1)/p) + 1).n.beta +
            n.(1+(p-1)/p).gamma
 */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_intra_reduce_scatter_gather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf,
                                             void *recvbuf,
                                             int count,

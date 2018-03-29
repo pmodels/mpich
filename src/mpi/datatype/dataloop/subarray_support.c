@@ -9,10 +9,6 @@
 
 #include "mpiimpl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_Type_convert_subarray
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_convert_subarray(int ndims,
                                int *array_of_sizes,
                                int *array_of_subsizes,

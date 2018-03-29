@@ -27,8 +27,6 @@ double MPI_Wtick(void) __attribute__ ((weak, alias("PMPI_Wtick")));
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Wtick
 
 /*@
   MPI_Wtick - Returns the resolution of MPI_Wtime

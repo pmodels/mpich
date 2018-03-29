@@ -35,10 +35,6 @@
 #define MPIDI_POSIX_Q_assert(a_) \
     do {/*nothing*/} while (0)
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_cell_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_POSIX_cell_init(MPIDI_POSIX_cell_ptr_t cell, int rank)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_CELL_INIT);
@@ -54,10 +50,6 @@ static inline void MPIDI_POSIX_cell_init(MPIDI_POSIX_cell_ptr_t cell, int rank)
 
 #ifdef MPIDI_POSIX_USE_LOCK_FREE_QUEUES
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_queue_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_POSIX_queue_init(MPIDI_POSIX_queue_ptr_t qhead)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_QUEUE_INIT);
@@ -233,10 +225,6 @@ static inline void MPIDI_POSIX_queue_dequeue(MPIDI_POSIX_queue_ptr_t qhead,
 #define MPIDI_POSIX_queue_mutex_unlock MPID_Thread_mutex_unlock
 
 /* must be called by exactly one process per queue */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_queue_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_POSIX_queue_init(MPIDI_POSIX_queue_ptr_t qhead)
 {
     int err = 0;

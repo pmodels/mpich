@@ -47,10 +47,6 @@
 /*
  * MPID_Startall()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Startall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Startall(int count, MPIR_Request * requests[])
 {
     int i;
@@ -119,7 +115,7 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 	    default:
 	    {
 		/* --BEGIN ERROR HANDLING-- */
-		rc = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_INTERN, "**ch3|badreqtype",
+		rc = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_INTERN, "**ch3|badreqtype",
 					  "**ch3|badreqtype %d", MPIDI_Request_get_type(preq));
 		/* --END ERROR HANDLING-- */
 	    }
@@ -157,10 +153,6 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 /*
  * MPID_Send_init()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Send_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Send_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 		   MPIR_Request ** request)
 {
@@ -187,10 +179,6 @@ int MPID_Send_init(const void * buf, int count, MPI_Datatype datatype, int rank,
 /*
  * MPID_Ssend_init()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Ssend_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Ssend_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 		    MPIR_Request ** request)
 {
@@ -217,10 +205,6 @@ int MPID_Ssend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 /*
  * MPID_Rsend_init()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Rsend_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Rsend_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 		    MPIR_Request ** request)
 {
@@ -247,10 +231,6 @@ int MPID_Rsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 /*
  * MPID_Bsend_init()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Bsend_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Bsend_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 		    MPIR_Request ** request)
 {
@@ -285,10 +265,6 @@ int MPID_Bsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 /*
  * MPID_Recv_init()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Recv_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 		   MPIR_Request ** request)
 {
@@ -302,7 +278,7 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
     if (rreq == NULL)
     {
 	/* --BEGIN ERROR HANDLING-- */
-	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomemreq", 0);
+	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER, "**nomemreq", 0);
 	/* --END ERROR HANDLING-- */
 	goto fn_exit;
     }

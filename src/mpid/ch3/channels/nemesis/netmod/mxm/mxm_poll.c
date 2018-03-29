@@ -21,10 +21,6 @@ static int _mxm_process_rdtype(MPIR_Request ** rreq_p, MPI_Datatype datatype,
                                MPIR_Datatype* dt_ptr, intptr_t data_sz, const void *buf,
                                int count, mxm_req_buffer_t ** iov_buf, int *iov_count);
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mxm_poll
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_poll(int in_blocking_progress)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -68,10 +64,6 @@ static int _mxm_poll(void)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mxm_get_adi_msg
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPID_nem_mxm_get_adi_msg(mxm_conn_h conn, mxm_imm_t imm, void *data,
                               size_t length, size_t offset, int last)
 {
@@ -88,10 +80,6 @@ void MPID_nem_mxm_get_adi_msg(mxm_conn_h conn, mxm_imm_t imm, void *data,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mxm_anysource_posted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPID_nem_mxm_anysource_posted(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -110,10 +98,6 @@ void MPID_nem_mxm_anysource_posted(MPIR_Request * req)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mxm_anysource_matched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_anysource_matched(MPIR_Request * req)
 {
     mxm_error_t ret = MXM_OK;
@@ -148,10 +132,6 @@ int MPID_nem_mxm_anysource_matched(MPIR_Request * req)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mxm_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -262,7 +242,7 @@ static int _mxm_handle_rreq(MPIR_Request * req)
         data_sz = req->dev.recv_data_sz;
         if (req->status.MPI_ERROR == MPI_ERR_TRUNCATE) {
             req->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS,
-                                                         MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                                         MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                          MPI_ERR_TRUNCATE, "**truncate",
                                                          "**truncate %d %d %d %d",
                                                          req->status.MPI_SOURCE,
@@ -278,7 +258,7 @@ static int _mxm_handle_rreq(MPIR_Request * req)
                                               PRIdPTR ", userbuf_sz="
                                               PRIdPTR, req->dev.recv_data_sz, userbuf_sz));
         req->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS,
-                                                     MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                                     MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                      MPI_ERR_TRUNCATE, "**truncate",
                                                      "**truncate %d %d %d %d",
                                                      req->status.MPI_SOURCE, req->status.MPI_TAG,

@@ -127,8 +127,6 @@ typedef struct {
 /* ******************************** */
 /* Logging and function macros      */
 /* ******************************** */
-#undef FUNCNAME
-#define FUNCNAME nothing
 #define BEGIN_FUNC(FUNCNAME)                    \
   MPIR_FUNC_VERBOSE_STATE_DECL(FUNCNAME);                   \
   MPIR_FUNC_VERBOSE_ENTER(FUNCNAME);
@@ -160,7 +158,7 @@ fn_fail:                      \
                            "**ofi_"#STR" %s %d %s %s",          \
                            __SHORT_FILE__,                      \
                            __LINE__,                            \
-                           FCNAME,                              \
+                           __func__,                              \
                            fi_strerror(-_ret));                 \
     } while (0)
 
@@ -177,7 +175,7 @@ fn_fail:                      \
 					       "**ofi_"#STR" %s %d %s %s", \
 					       __SHORT_FILE__,		\
 					       __LINE__,		\
-					       FCNAME,			\
+					       __func__,			\
 					       fi_strerror(-_ret));	\
 				mpi_errno = MPID_nem_ofi_poll(0);	\
 				if(mpi_errno != MPI_SUCCESS)		\
@@ -197,7 +195,7 @@ fn_fail:                      \
                            "**ofi_"#STR" %s %d %s %s",          \
                            __SHORT_FILE__,                      \
                            __LINE__,                            \
-                           FCNAME,                              \
+                           __func__,                              \
                            #STR);                               \
     } while (0)
 

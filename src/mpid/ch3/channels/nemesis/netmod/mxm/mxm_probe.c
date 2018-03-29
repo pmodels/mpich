@@ -13,10 +13,6 @@
 #include "mxm_impl.h"
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mxm_probe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_probe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, int context_offset,
                        MPI_Status * status)
 {
@@ -59,10 +55,6 @@ int MPID_nem_mxm_probe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, i
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mxm_iprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_iprobe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, int context_offset,
                         int *flag, MPI_Status * status)
 {
@@ -105,10 +97,6 @@ int MPID_nem_mxm_iprobe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, 
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mxm_improbe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, int context_offset,
                          int *flag, MPIR_Request ** message, MPI_Status * status)
 {
@@ -196,10 +184,6 @@ int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mxm_anysource_iprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_anysource_iprobe(int tag, MPIR_Comm * comm, int context_offset, int *flag,
                                   MPI_Status * status)
 {
@@ -207,10 +191,6 @@ int MPID_nem_mxm_anysource_iprobe(int tag, MPIR_Comm * comm, int context_offset,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mxm_anysource_iprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset, int *flag,
                                    MPIR_Request ** message, MPI_Status * status)
 {

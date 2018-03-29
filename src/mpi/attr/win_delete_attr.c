@@ -29,10 +29,7 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_delete_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Win_delete_attr - Deletes an attribute value associated with a key on
    a datatype
@@ -152,12 +149,12 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_win_delete_attr", "**mpi_win_delete_attr %W %d", win,
                                  win_keyval);
     }
 #endif
-    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

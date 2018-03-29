@@ -720,10 +720,6 @@ int MPIR_Segment_index_m2m(DLOOP_Offset * blocks_p,
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Segment_contig_pack_external32_to_buf
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPII_Segment_contig_pack_external32_to_buf(DLOOP_Offset * blocks_p,
                                                       DLOOP_Type el_type,
                                                       DLOOP_Offset rel_off,
@@ -771,10 +767,6 @@ static int MPII_Segment_contig_pack_external32_to_buf(DLOOP_Offset * blocks_p,
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Segment_contig_unpack_external32_to_buf
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPII_Segment_contig_unpack_external32_to_buf(DLOOP_Offset * blocks_p,
                                                         DLOOP_Type el_type,
                                                         DLOOP_Offset rel_off,
@@ -825,10 +817,6 @@ static int MPII_Segment_contig_unpack_external32_to_buf(DLOOP_Offset * blocks_p,
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Segment_pack_external32
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Segment_pack_external32(struct DLOOP_Segment *segp,
                                   DLOOP_Offset first, DLOOP_Offset * lastp, void *pack_buffer)
 {
@@ -847,10 +835,6 @@ void MPIR_Segment_pack_external32(struct DLOOP_Segment *segp,
     return;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Segment_unpack_external32
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Segment_unpack_external32(struct DLOOP_Segment *segp,
                                     DLOOP_Offset first,
                                     DLOOP_Offset * lastp, DLOOP_Buffer unpack_buffer)
@@ -923,10 +907,6 @@ void MPIR_Type_release_contents(MPI_Datatype type,
     return;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Segment_pack_vector
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIR_Segment_pack_vector
 *
 * Parameters:
@@ -969,10 +949,6 @@ void MPIR_Segment_pack_vector(struct DLOOP_Segment *segp,
 *
 * Q: Should this be any different from pack vector?
 */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Segment_unpack_vector
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Segment_unpack_vector(struct DLOOP_Segment *segp,
                                 DLOOP_Offset first,
                                 DLOOP_Offset * lastp, DLOOP_VECTOR * vectorp, int *lengthp)
@@ -986,10 +962,6 @@ void MPIR_Segment_unpack_vector(struct DLOOP_Segment *segp,
     return;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Segment_flatten
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIR_Segment_flatten
 *
 * offp    - pointer to array to fill in with offsets
@@ -1032,10 +1004,6 @@ void MPIR_Segment_flatten(struct DLOOP_Segment *segp,
 
 /********** FUNCTIONS FOR CREATING AN IOV DESCRIBING BUFFER **********/
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Segment_contig_pack_to_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPII_Segment_contig_pack_to_iov
 */
 static int MPII_Segment_contig_pack_to_iov(DLOOP_Offset * blocks_p,
@@ -1087,10 +1055,6 @@ static int MPII_Segment_contig_pack_to_iov(DLOOP_Offset * blocks_p,
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Segment_vector_pack_to_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPII_Segment_vector_pack_to_iov
  *
  * Input Parameters:
@@ -1199,10 +1163,6 @@ static int MPII_Segment_vector_pack_to_iov(DLOOP_Offset * blocks_p, DLOOP_Count 
 
 /********** FUNCTIONS FOR FLATTENING A TYPE **********/
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Segment_contig_flatten
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPII_Segment_contig_flatten
  */
 static int MPII_Segment_contig_flatten(DLOOP_Offset * blocks_p,
@@ -1252,10 +1212,6 @@ static int MPII_Segment_contig_flatten(DLOOP_Offset * blocks_p,
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Segment_vector_flatten
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPII_Segment_vector_flatten
  *
  * Notes:

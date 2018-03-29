@@ -78,10 +78,6 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_set_completed(MPIR_Request * req)
    the request because it does not know about the internals of
    the ch4r/netmod/shmmod fields of the request.
 */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_request_complete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
 {
     int incomplete, notify_counter;

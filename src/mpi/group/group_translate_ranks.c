@@ -28,10 +28,6 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[], MPI_G
 #undef MPI_Group_translate_ranks
 #define MPI_Group_translate_ranks PMPI_Group_translate_ranks
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Group_translate_ranks_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Group_translate_ranks_impl(MPIR_Group * gp1, int n, const int ranks1[],
                                     MPIR_Group * gp2, int ranks2[])
 {
@@ -107,10 +103,6 @@ int MPIR_Group_translate_ranks_impl(MPIR_Group * gp1, int n, const int ranks1[],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Group_translate_ranks
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
  MPI_Group_translate_ranks - Translates the ranks of processes in one group to
                              those in another group
@@ -185,7 +177,7 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
                 for (i = 0; i < n; i++) {
                     if ((ranks1[i] < 0 && ranks1[i] != MPI_PROC_NULL) || ranks1[i] >= size1) {
                         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                         MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                                         MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                                          MPI_ERR_RANK,
                                                          "**rank", "**rank %d %d",
                                                          ranks1[i], size1);
@@ -216,12 +208,12 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_group_translate_ranks",
                                  "**mpi_group_translate_ranks %G %d %p %G %p", group1, n, ranks1,
                                  group2, ranks2);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

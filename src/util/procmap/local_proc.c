@@ -50,10 +50,6 @@
                          containing rank i in comm.  It is of size
                          comm->remote_size.
 */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Find_local_and_external
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 int MPIR_Find_local_and_external(MPIR_Comm * comm, int *local_size_p, int *local_rank_p,
                                  int **local_ranks_p, int *external_size_p, int *external_rank_p,
@@ -213,10 +209,6 @@ int MPIR_Find_local_and_external(MPIR_Comm * comm, int *local_size_p, int *local
 
    This function does NOT use mpich error handling.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Get_internode_rank
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Get_internode_rank(MPIR_Comm * comm_ptr, int r)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -234,10 +226,6 @@ int MPIR_Get_internode_rank(MPIR_Comm * comm_ptr, int r)
 
    This function does NOT use mpich error handling.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Get_intranode_rank
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Get_intranode_rank(MPIR_Comm * comm_ptr, int r)
 {
     int mpi_errno = MPI_SUCCESS;

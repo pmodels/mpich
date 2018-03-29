@@ -16,10 +16,6 @@
 /* This file includes all RMA callback routines on the packet issuing side.
  * All handler functions are named with suffix "_origin_cb". */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_put_ack_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_put_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -30,10 +26,6 @@ static inline int MPIDI_put_ack_origin_cb(MPIR_Request * req)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_acc_ack_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_acc_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -44,10 +36,6 @@ static inline int MPIDI_acc_ack_origin_cb(MPIR_Request * req)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_get_acc_ack_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_acc_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -61,10 +49,6 @@ static inline int MPIDI_get_acc_ack_origin_cb(MPIR_Request * req)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_cswap_ack_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_cswap_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -79,10 +63,6 @@ static inline int MPIDI_cswap_ack_origin_cb(MPIR_Request * req)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_get_ack_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -99,10 +79,6 @@ static inline int MPIDI_get_ack_origin_cb(MPIR_Request * req)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_put_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_put_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -113,10 +89,6 @@ static inline int MPIDI_put_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_cswap_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_cswap_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -127,10 +99,6 @@ static inline int MPIDI_cswap_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_acc_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_acc_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -141,10 +109,6 @@ static inline int MPIDI_acc_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_get_acc_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_acc_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -155,10 +119,6 @@ static inline int MPIDI_get_acc_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_put_data_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_put_data_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -169,10 +129,6 @@ static inline int MPIDI_put_data_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_acc_data_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_acc_data_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -183,10 +139,6 @@ static inline int MPIDI_acc_data_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_get_acc_data_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_acc_data_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -197,10 +149,6 @@ static inline int MPIDI_get_acc_data_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_put_iov_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_put_iov_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -211,10 +159,6 @@ static inline int MPIDI_put_iov_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_acc_iov_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_acc_iov_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -225,10 +169,6 @@ static inline int MPIDI_acc_iov_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_get_acc_iov_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_acc_iov_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -239,10 +179,6 @@ static inline int MPIDI_get_acc_iov_origin_cb(MPIR_Request * sreq)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_get_origin_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_origin_cb(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;

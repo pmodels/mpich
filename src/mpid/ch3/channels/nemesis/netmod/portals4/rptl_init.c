@@ -7,10 +7,6 @@
 #include "ptl_impl.h"
 #include "rptl.h"
 
-#undef FUNCNAME
-#define FUNCNAME rptli_post_control_buffer
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int rptli_post_control_buffer(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt,
                               ptl_handle_me_t * me_handle)
 {
@@ -51,10 +47,6 @@ int rptli_post_control_buffer(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_rptl_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_rptl_init(int world_size, uint64_t max_origin_events,
                            int (*get_target_info) (int rank, ptl_process_t * id,
                                                    ptl_pt_index_t local_data_pt,
@@ -82,10 +74,6 @@ int MPID_nem_ptl_rptl_init(int world_size, uint64_t max_origin_events,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_rptl_drain_eq
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_rptl_drain_eq(int eq_count, ptl_handle_eq_t *eq)
 {
     int ret = PTL_OK;
@@ -133,10 +121,6 @@ int MPID_nem_ptl_rptl_drain_eq(int eq_count, ptl_handle_eq_t *eq)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_rptl_ptinit
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_rptl_ptinit(ptl_handle_ni_t ni_handle, ptl_handle_eq_t eq_handle, ptl_pt_index_t data_pt,
                              ptl_pt_index_t control_pt)
 {
@@ -201,10 +185,6 @@ int MPID_nem_ptl_rptl_ptinit(ptl_handle_ni_t ni_handle, ptl_handle_eq_t eq_handl
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_rptl_ptfini
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_rptl_ptfini(ptl_pt_index_t pt_index)
 {
     int i;

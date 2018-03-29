@@ -17,10 +17,6 @@
 #include "ibcast_tsp_algos_prototypes.h"
 #include "tsp_undef.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ibcast_intra_tree_knomial
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibcast_intra_tree_knomial(void *buffer, int count,
                                    MPI_Datatype datatype, int root, MPIR_Comm * comm_ptr,
                                    MPIR_Request ** request)

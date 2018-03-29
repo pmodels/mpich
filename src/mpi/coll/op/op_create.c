@@ -67,10 +67,7 @@ void MPII_Op_set_fc(MPI_Op op)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Op_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
   MPI_Op_create - Creates a user-defined combination function handle
 
@@ -120,8 +117,8 @@ int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
     /* --BEGIN ERROR HANDLING-- */
     if (!op_ptr) {
         mpi_errno =
-            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-                                 "**nomem", "**nomem %s", "MPI_Op");
+            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
+                                 MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPI_Op");
         goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
@@ -149,12 +146,12 @@ int MPI_Op_create(MPI_User_function * user_fn, int commute, MPI_Op * op)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_op_create", "**mpi_op_create %p %d %p", user_fn, commute,
                                  op);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

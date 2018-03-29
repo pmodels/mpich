@@ -30,10 +30,7 @@ int MPI_Rget(void *origin_addr, int origin_count,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Rget
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
 MPI_Rget - Get data from a memory window on a remote process
 
@@ -175,13 +172,13 @@ int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_rget", "**mpi_rget %p %d %D %d %d %d %D %W %p", origin_addr,
                                  origin_count, origin_datatype, target_rank, target_disp,
                                  target_count, target_datatype, win, request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

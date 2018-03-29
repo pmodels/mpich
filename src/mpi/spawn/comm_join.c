@@ -102,10 +102,7 @@ PMPI_LOCAL int MPIR_fd_recv(int fd, void *buffer, int length)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_join
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Comm_join - Create a communicator by joining two processes connected by
      a socket.
@@ -199,11 +196,11 @@ int MPI_Comm_join(int fd, MPI_Comm * intercomm)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_comm_join", "**mpi_comm_join %d %p", fd, intercomm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

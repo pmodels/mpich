@@ -74,10 +74,6 @@ static asym_check_region *asym_check_region_p = NULL;
    and the *ptr_p pointer will be valid only after
    MPIDU_SHM_Seg_commit() is called.
 */
-#undef FUNCNAME
-#define FUNCNAME MPIDU_shm_seg_alloc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -127,10 +123,6 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr_p, MPL_memory_class class)
    At least one call to MPIDU_SHM_Seg_alloc() must be made before
    calling MPIDU_SHM_Seg_commit().
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDU_shm_seg_commit
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrier,
                          int num_local, int local_rank, int local_procs_0, int rank,
                          MPL_memory_class class)
@@ -500,10 +492,6 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t ** barrie
 }
 
 /* MPIDU_SHM_Seg_destroy() free the shared memory segment */
-#undef FUNCNAME
-#define FUNCNAME MPIDU_shm_seg_destroy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_shm_seg_destroy(MPIDU_shm_seg_t * memory, int num_local)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -530,10 +518,6 @@ int MPIDU_shm_seg_destroy(MPIDU_shm_seg_t * memory, int num_local)
 /* check_alloc() checks to see whether the shared memory segment is
    allocated at the same virtual memory address at each process.
 */
-#undef FUNCNAME
-#define FUNCNAME check_alloc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int check_alloc(MPIDU_shm_seg_t * memory, MPIDU_shm_barrier_t * barrier,
                        int num_local, int local_rank)
 {

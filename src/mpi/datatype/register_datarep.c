@@ -25,10 +25,7 @@
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Register_datarep
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Register_datarep - Register a set of user-provided data conversion
    functions
@@ -77,7 +74,7 @@ int MPI_Register_datarep(char *datarep,
 
     /* FIXME UNIMPLEMENTED */
     mpi_errno =
-        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                              "**notimpl", 0);
 
     /* ... end of body of routine ... */
@@ -95,13 +92,13 @@ int MPI_Register_datarep(char *datarep,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_register_datarep", "**mpi_register_datarep %s %p %p %p %p",
                                  datarep, read_conversion_fn, write_conversion_fn,
                                  dtype_file_extent_fn, extra_state);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

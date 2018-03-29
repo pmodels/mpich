@@ -13,10 +13,6 @@
 
 #include "ofi_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_do_iprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_do_iprobe(int source,
                                       int tag,
                                       MPIR_Comm * comm,
@@ -106,10 +102,6 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_improbe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_improbe(int source,
                                        int tag,
                                        MPIR_Comm * comm,
@@ -141,10 +133,6 @@ static inline int MPIDI_NM_mpi_improbe(int source,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_iprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_iprobe(int source,
                                       int tag,
                                       MPIR_Comm * comm,

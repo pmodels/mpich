@@ -71,10 +71,6 @@ PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data ATTRIBUTE
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Grequest_start
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Grequest_start(MPI_Grequest_query_function * query_fn,
                         MPI_Grequest_free_function * free_fn,
                         MPI_Grequest_cancel_function * cancel_fn,
@@ -124,10 +120,6 @@ extern int MPIR_Grequest_registered_finalizer;
 extern MPIR_Grequest_class *MPIR_Grequest_class_list;
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Grequest_start
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Grequest_start - Create and return a user-defined request
 
@@ -219,12 +211,12 @@ int MPI_Grequest_start(MPI_Grequest_query_function * query_fn,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_grequest_start", "**mpi_grequest_start %p %p %p %p %p",
                                  query_fn, free_fn, cancel_fn, extra_state, request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -254,10 +246,6 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function * query_fn,
 #define MPIX_Grequest_class_create PMPIX_Grequest_class_create
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIX_Grequest_class_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* extensions for Generalized Request redesign paper */
 int MPIX_Grequest_class_create(MPI_Grequest_query_function * query_fn,
                                MPI_Grequest_free_function * free_fn,
@@ -274,7 +262,7 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function * query_fn,
     /* --BEGIN ERROR HANDLING-- */
     if (!class_ptr) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                         MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                         MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPI_ERR_OTHER, "**nomem",
                                          "**nomem %s", "MPIX_Grequest_class");
         goto fn_fail;
@@ -313,13 +301,13 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function * query_fn,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpix_grequest_class_create",
                                  "**mpix_grequest_class_create %p %p %p %p %p", query_fn, free_fn,
                                  cancel_fn, poll_fn, wait_fn);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -345,8 +333,6 @@ int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class, void *extra_sta
 #define MPIX_Grequest_class_allocate PMPIX_Grequest_class_allocate
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIX_Grequest_class_allocate
 
 int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class,
                                  void *extra_state, MPI_Request * request)
@@ -393,8 +379,6 @@ int MPIX_Grequest_start(MPI_Grequest_query_function * query_fn,
 #define MPIX_Grequest_start PMPIX_Grequest_start
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIX_Grequest_start
 
 int MPIX_Grequest_start(MPI_Grequest_query_function * query_fn,
                         MPI_Grequest_free_function * free_fn,
@@ -421,10 +405,6 @@ int MPIX_Grequest_start(MPI_Grequest_query_function * query_fn,
 
 #ifndef MPICH_MPI_FROM_PMPI
 
-#undef FUNCNAME
-#define FUNCNAME MPIX_Grequest_start_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIX_Grequest_start_impl(MPI_Grequest_query_function * query_fn,
                              MPI_Grequest_free_function * free_fn,
                              MPI_Grequest_cancel_function * cancel_fn,

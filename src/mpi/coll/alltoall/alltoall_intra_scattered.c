@@ -29,10 +29,6 @@
  * block (when there are only a few isend/irecvs left).
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Alltoall_intra_scattered
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Alltoall_intra_scattered(const void *sendbuf,
                                   int sendcount,
                                   MPI_Datatype sendtype,

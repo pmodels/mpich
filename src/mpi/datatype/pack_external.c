@@ -29,10 +29,7 @@ int MPI_Pack_external(const char datarep[], const void *inbuf, int incount,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Pack_external
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Pack_external - Packs a datatype into contiguous memory, using the
      external32 format
@@ -114,7 +111,7 @@ int MPI_Pack_external(const char datarep[],
     if (segp == NULL) {
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                          MPIR_ERR_RECOVERABLE,
-                                         FCNAME,
+                                         __func__,
                                          __LINE__,
                                          MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment");
         goto fn_fail;
@@ -151,12 +148,12 @@ int MPI_Pack_external(const char datarep[],
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_pack_external", "**mpi_pack_external %s %p %d %D %p %d %p",
                                  datarep, inbuf, incount, datatype, outbuf, outsize, position);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

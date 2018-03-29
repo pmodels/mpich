@@ -115,15 +115,13 @@
 /* Handles SEND-side events only.  We cannot rely on wc->tag field being    */
 /* set for these events, so we must use the TAG stored in the sreq.         */
 /* ------------------------------------------------------------------------ */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_data_callback)
 static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPIR_Request * sreq)
 {
     int complete = 0, mpi_errno = MPI_SUCCESS;
     MPIDI_VC_t *vc;
     req_fn reqFn;
     uint64_t tag = 0;
-    BEGIN_FUNC(FCNAME);
+    BEGIN_FUNC(__func__);
     switch (REQ_OFI(sreq)->tag & MPID_PROTOCOL_MASK) {
     case MPID_MSG_CTS | MPID_MSG_RTS | MPID_MSG_DATA:
         /* Verify request is complete prior to freeing buffers.
@@ -155,7 +153,7 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPIR_Request * sre
         MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
         break;
     }
-    END_FUNC_RC(FCNAME);
+    END_FUNC_RC(__func__);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -164,14 +162,12 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPIR_Request * sre
 /* Handles RECV-side events only.  We rely on wc->tag field being set for   */
 /* these events.                                                            */
 /* ------------------------------------------------------------------------ */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_cts_recv_callback)
 static int MPID_nem_ofi_cts_recv_callback(cq_tagged_entry_t * wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *preq;
     MPIDI_VC_t *vc;
-    BEGIN_FUNC(FCNAME);
+    BEGIN_FUNC(__func__);
     preq = REQ_OFI(rreq)->parent;
     switch (wc->tag & MPID_PROTOCOL_MASK) {
     case MPID_MSG_CTS | MPID_MSG_RTS:
@@ -204,15 +200,13 @@ static int MPID_nem_ofi_cts_recv_callback(cq_tagged_entry_t * wc, MPIR_Request *
     }
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(rreq));
 
-    END_FUNC_RC(FCNAME);
+    END_FUNC_RC(__func__);
 }
 
 /* ------------------------------------------------------------------------ */
 /* The nemesis API implementations:                                         */
 /* Use packing if iovecs are not supported by the OFI provider              */
 /* ------------------------------------------------------------------------ */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_iSendContig)
 int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
                              MPIR_Request * sreq,
                              void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz)
@@ -223,7 +217,7 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
     MPIR_Request *cts_req;
     intptr_t buf_offset = 0;
     size_t         pkt_len;
-    BEGIN_FUNC(FCNAME);
+    BEGIN_FUNC(__func__);
     MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
     MPID_nem_ofi_init_req(sreq);
     pkt_len = sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz + data_sz;
@@ -266,11 +260,9 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
       MPIR_Memcpy(pack_buffer + buf_offset, data, data_sz);
     }
     START_COMM();
-    END_FUNC_RC(FCNAME);
+    END_FUNC_RC(__func__);
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_SendNoncontig)
 int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
                                MPIR_Request * sreq, void *hdr, intptr_t hdr_sz)
 {
@@ -283,7 +275,7 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
     intptr_t buf_offset = 0;
     void          *data       = NULL;
     size_t         pkt_len;
-    BEGIN_FUNC(FCNAME);
+    BEGIN_FUNC(__func__);
     MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
     MPID_nem_ofi_init_req(sreq);
     first = sreq->dev.segment_first;
@@ -302,11 +294,9 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
     MPIR_Segment_pack(sreq->dev.segment_ptr, first, &last, pack_buffer + buf_offset);
     START_COMM();
     MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
-    END_FUNC_RC(FCNAME);
+    END_FUNC_RC(__func__);
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_iStartContigMsg)
 int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
                                  void *hdr,
                                  intptr_t hdr_sz,
@@ -318,7 +308,7 @@ int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
     char    *pack_buffer = NULL;
     uint64_t match_bits;
     size_t   pkt_len;
-    BEGIN_FUNC(FCNAME);
+    BEGIN_FUNC(__func__);
     MPIR_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
 
     MPID_nem_ofi_create_req(&sreq, 2);
@@ -345,5 +335,5 @@ int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
     }
     START_COMM();
     *sreq_ptr = sreq;
-    END_FUNC_RC(FCNAME);
+    END_FUNC_RC(__func__);
 }

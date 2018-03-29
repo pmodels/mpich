@@ -143,10 +143,6 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
 
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_UCX_Win_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_UCX_Win_init(MPI_Aint length,
                                      int disp_unit,
                                      MPIR_Win ** win_ptr,

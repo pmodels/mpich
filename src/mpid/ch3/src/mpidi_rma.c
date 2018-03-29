@@ -82,10 +82,6 @@ cvars:
 MPIDI_RMA_Op_t *global_rma_op_pool_head = NULL, *global_rma_op_pool_start = NULL;
 MPIDI_RMA_Target_t *global_rma_target_pool_head = NULL, *global_rma_target_pool_start = NULL;
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_RMA_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_RMA_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -122,10 +118,6 @@ int MPIDI_RMA_init(void)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_RMA_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIDI_RMA_finalize(void)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RMA_FINALIZE);
@@ -139,10 +131,6 @@ void MPIDI_RMA_finalize(void)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_free(MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;

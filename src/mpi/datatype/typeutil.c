@@ -143,10 +143,6 @@ static MPI_Datatype mpi_pairtypes[] = {
     (MPI_Datatype) - 1
 };
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Datatype_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Datatype_init(void)
 {
     int i;
@@ -192,10 +188,6 @@ int MPIR_Datatype_init(void)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Datatype_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIR_Datatype_finalize(void *dummy ATTRIBUTE((unused)))
 {
     int i;
@@ -215,10 +207,6 @@ static int MPIR_Datatype_finalize(void *dummy ATTRIBUTE((unused)))
    That routine calls it from within a single-init section to
    ensure thread-safety. */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Datatype_builtin_fillin
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Datatype_builtin_fillin(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -252,7 +240,7 @@ int MPIR_Datatype_builtin_fillin(void)
             if (dptr < MPIR_Datatype_builtin ||
                 dptr > MPIR_Datatype_builtin + MPIR_DATATYPE_N_BUILTIN) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
-                                                 MPIR_ERR_FATAL, FCNAME,
+                                                 MPIR_ERR_FATAL, __func__,
                                                  __LINE__, MPI_ERR_INTERN,
                                                  "**typeinitbadmem", "**typeinitbadmem %d", i);
                 return mpi_errno;
@@ -274,7 +262,7 @@ int MPIR_Datatype_builtin_fillin(void)
         if (d != -1 && i < sizeof(mpi_dtypes) / sizeof(*mpi_dtypes) && mpi_dtypes[i] != -1) {
             /* We did not hit the end-of-list */
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                             FCNAME, __LINE__,
+                                             __func__, __LINE__,
                                              MPI_ERR_INTERN, "**typeinitfail",
                                              "**typeinitfail %d", i - 1);
             return mpi_errno;

@@ -27,10 +27,6 @@ int MPI_Type_get_extent_x(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * ext
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_get_extent_x_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * extent)
 {
     MPIR_Datatype *datatype_ptr = NULL;
@@ -48,10 +44,6 @@ void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count * lb, MPI_Coun
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_get_extent_x
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Type_get_extent_x - Get the lower bound and extent as MPI_Count values
  for a Datatype
@@ -133,11 +125,11 @@ int MPI_Type_get_extent_x(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * ext
     /* --BEGIN ERROR HANDLING-- */
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_get_extent_x", "**mpi_type_get_extent_x %D %p %p",
                                  datatype, lb, extent);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 #endif

@@ -36,10 +36,6 @@ static int MPIR_FreeF90Datatypes(void *d)
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Create_unnamed_predefined
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Create_unnamed_predefined(MPI_Datatype old, int combiner,
                                    int r, int p, MPI_Datatype * new_ptr)
 {

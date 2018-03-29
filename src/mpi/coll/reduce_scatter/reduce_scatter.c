@@ -99,10 +99,6 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[
    End Algorithm: MPI_Reduce_scatter
 */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter_intra_auto(const void *sendbuf, void *recvbuf, const int recvcounts[],
                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                    MPIR_Errflag_t * errflag)
@@ -229,10 +225,6 @@ int MPIR_Reduce_scatter_intra_auto(const void *sendbuf, void *recvbuf, const int
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter_inter_auto(const void *sendbuf, void *recvbuf, const int recvcounts[],
                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                    MPIR_Errflag_t * errflag)
@@ -245,10 +237,6 @@ int MPIR_Reduce_scatter_inter_auto(const void *sendbuf, void *recvbuf, const int
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf,
                              const int recvcounts[], MPI_Datatype datatype,
                              MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
@@ -322,10 +310,6 @@ int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_scatter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf,
                         const int recvcounts[], MPI_Datatype datatype,
                         MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
@@ -345,10 +329,6 @@ int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Reduce_scatter
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Reduce_scatter - Combines values and scatters the results
@@ -483,12 +463,12 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_reduce_scatter", "**mpi_reduce_scatter %p %p %p %D %O %C",
                                  sendbuf, recvbuf, recvcounts, datatype, op, comm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

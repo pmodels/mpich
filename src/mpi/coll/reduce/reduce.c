@@ -163,10 +163,6 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_intra_auto(const void *sendbuf,
                            void *recvbuf,
                            int count,
@@ -240,10 +236,6 @@ int MPIR_Reduce_intra_auto(const void *sendbuf,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_inter_auto(const void *sendbuf,
                            void *recvbuf,
                            int count,
@@ -258,10 +250,6 @@ int MPIR_Reduce_inter_auto(const void *sendbuf,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count,
                      MPI_Datatype datatype, MPI_Op op, int root,
                      MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
@@ -321,10 +309,6 @@ int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                 MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
@@ -343,10 +327,6 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 #endif
 
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Reduce
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 
@@ -520,12 +500,12 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-                                         FCNAME, __LINE__, MPI_ERR_OTHER,
+                                         __func__, __LINE__, MPI_ERR_OTHER,
                                          "**mpi_reduce", "**mpi_reduce %p %p %d %D %O %d %C",
                                          sendbuf, recvbuf, count, datatype, op, root, comm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

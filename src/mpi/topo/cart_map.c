@@ -26,10 +26,6 @@ int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[]
 #undef MPI_Cart_map
 #define MPI_Cart_map PMPI_Cart_map
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Cart_map
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Cart_map(const MPIR_Comm * comm_ptr, int ndims, const int dims[],
                   const int periodic[], int *newrank)
 {
@@ -66,10 +62,6 @@ int MPIR_Cart_map(const MPIR_Comm * comm_ptr, int ndims, const int dims[],
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Cart_map_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Cart_map_impl(const MPIR_Comm * comm_ptr, int ndims, const int dims[],
                        const int periods[], int *newrank)
 {
@@ -97,10 +89,6 @@ int MPIR_Cart_map_impl(const MPIR_Comm * comm_ptr, int ndims, const int dims[],
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Cart_map
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Cart_map - Maps process to Cartesian topology information
 
@@ -166,7 +154,7 @@ int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[]
             if (ndims < 0) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
-                                                 FCNAME, __LINE__, MPI_ERR_DIMS,
+                                                 __func__, __LINE__, MPI_ERR_DIMS,
                                                  "**dims", "**dims %d", ndims);
                 goto fn_fail;
             }
@@ -191,12 +179,12 @@ int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[]
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_cart_map", "**mpi_cart_map %C %d %p %p %p", comm, ndims,
                                  dims, periods, newrank);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

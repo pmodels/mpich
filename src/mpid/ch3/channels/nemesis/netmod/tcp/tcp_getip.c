@@ -54,10 +54,6 @@ static int dbg_ifname = 0;
 
 #define NUM_IFREQS 10
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_GetIPInterface
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_GetIPInterface( MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -240,10 +236,6 @@ int MPIDI_GetIPInterface( MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found )
  * etc).  If that name is detected as a valid interface name then 'ifaddr' will
  * be populated with the corresponding address and '*found' will be set to TRUE.
  * Otherwise '*found' will be set to FALSE. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Get_IP_for_iface
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Get_IP_for_iface(const char *ifname, MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -279,10 +271,6 @@ fn_fail:
 
 #else /* things needed to determine address for a given interface name */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Get_IP_for_iface
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Get_IP_for_iface(const char *ifname, MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found)
 {
     if (found != NULL)

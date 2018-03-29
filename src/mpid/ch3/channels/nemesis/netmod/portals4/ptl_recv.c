@@ -7,10 +7,6 @@
 #include "ptl_impl.h"
 #include "rptl.h"
 
-#undef FUNCNAME
-#define FUNCNAME dequeue_req
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void dequeue_req(const ptl_event_t *e)
 {
     int found;
@@ -45,10 +41,6 @@ static void dequeue_req(const ptl_event_t *e)
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME handler_recv_complete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int handler_recv_complete(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -82,10 +74,6 @@ static int handler_recv_complete(const ptl_event_t *e)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME handler_recv_dequeue_complete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int handler_recv_dequeue_complete(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -138,10 +126,6 @@ static int handler_recv_dequeue_complete(const ptl_event_t *e)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME handler_recv_big_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int handler_recv_big_get(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -175,10 +159,6 @@ static int handler_recv_big_get(const ptl_event_t *e)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME big_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void big_get(void *buf, ptl_size_t left_to_get, MPIDI_VC_t *vc, ptl_match_bits_t match_bits, MPIR_Request *rreq)
 {
     int ret;
@@ -207,10 +187,6 @@ static void big_get(void *buf, ptl_size_t left_to_get, MPIDI_VC_t *vc, ptl_match
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME handler_recv_unpack_complete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int handler_recv_unpack_complete(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -243,10 +219,6 @@ static int handler_recv_unpack_complete(const ptl_event_t *e)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME handler_recv_dequeue_unpack_complete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int handler_recv_dequeue_unpack_complete(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -266,10 +238,6 @@ static int handler_recv_dequeue_unpack_complete(const ptl_event_t *e)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME handler_recv_dequeue_large
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int handler_recv_dequeue_large(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -366,10 +334,6 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME handler_recv_dequeue_unpack_large
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int handler_recv_dequeue_unpack_large(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -420,10 +384,6 @@ static int handler_recv_dequeue_unpack_large(const ptl_event_t *e)
     goto fn_exit2;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_recv_posted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPIR_Request *rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -573,10 +533,6 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPIR_Request *rreq)
     goto fn_exit2;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_anysource_posted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPID_nem_ptl_anysource_posted(MPIR_Request *rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -594,10 +550,6 @@ void MPID_nem_ptl_anysource_posted(MPIR_Request *rreq)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_POSTED);
 }
 
-#undef FUNCNAME
-#define FUNCNAME cancel_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int cancel_recv(MPIR_Request *rreq, int *cancelled)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -626,10 +578,6 @@ static int cancel_recv(MPIR_Request *rreq, int *cancelled)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_anysource_matched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_anysource_matched(MPIR_Request *rreq)
 {
     int mpi_errno, cancelled;
@@ -653,10 +601,6 @@ int MPID_nem_ptl_anysource_matched(MPIR_Request *rreq)
 
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_cancel_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_cancel_recv(MPIDI_VC_t *vc,  MPIR_Request *rreq)
 {
     int mpi_errno, cancelled;
@@ -680,10 +624,6 @@ int MPID_nem_ptl_cancel_recv(MPIDI_VC_t *vc,  MPIR_Request *rreq)
 
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_lmt_start_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPIR_Request *rreq, MPL_IOV s_cookie)
 {
     /* This function should only be called as a result of an Mrecv because of the CH3 protocol for

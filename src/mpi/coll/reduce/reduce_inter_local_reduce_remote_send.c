@@ -15,10 +15,6 @@
  * Cost: (lgp+1).alpha + n.(lgp+1).beta
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Reduce_inter_local_reduce_remote_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_inter_local_reduce_remote_send(const void *sendbuf,
                                                void *recvbuf,
                                                int count,

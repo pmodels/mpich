@@ -29,10 +29,7 @@ int MPI_Ssend_init(const void *buf, int count, MPI_Datatype datatype, int dest, 
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Ssend_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
     MPI_Ssend_init - Creates a persistent request for a synchronous send
 
@@ -145,12 +142,12 @@ int MPI_Ssend_init(const void *buf, int count, MPI_Datatype datatype, int dest,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_ssend_init", "**mpi_ssend_init %p %d %D %i %t %C %p", buf,
                                  count, datatype, dest, tag, comm, request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

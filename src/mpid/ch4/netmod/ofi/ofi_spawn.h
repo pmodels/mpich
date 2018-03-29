@@ -517,10 +517,6 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
 
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_comm_connect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
                                             MPIR_Info * info,
                                             int root,
@@ -636,10 +632,6 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_comm_disconnect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -656,10 +648,6 @@ static inline int MPIDI_NM_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_comm_open_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -687,10 +675,6 @@ static inline int MPIDI_NM_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_comm_close_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_close_port(const char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -712,10 +696,6 @@ static inline int MPIDI_NM_mpi_close_port(const char *port_name)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_comm_close_port
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
                                            MPIR_Info * info,
                                            int root, MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm)

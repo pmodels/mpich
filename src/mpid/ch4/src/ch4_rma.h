@@ -13,10 +13,6 @@
 
 #include "ch4_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Put
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Put(const void *origin_addr,
                                       int origin_count,
                                       MPI_Datatype origin_datatype,
@@ -41,10 +37,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Put(const void *origin_addr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Get(void *origin_addr,
                                       int origin_count,
                                       MPI_Datatype origin_datatype,
@@ -69,10 +61,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get(void *origin_addr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Accumulate(const void *origin_addr,
                                              int origin_count,
                                              MPI_Datatype origin_datatype,
@@ -98,10 +86,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Accumulate(const void *origin_addr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Compare_and_swap
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Compare_and_swap(const void *origin_addr,
                                                    const void *compare_addr,
                                                    void *result_addr,
@@ -124,10 +108,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Compare_and_swap(const void *origin_addr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Raccumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Raccumulate(const void *origin_addr,
                                               int origin_count,
                                               MPI_Datatype origin_datatype,
@@ -153,10 +133,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Raccumulate(const void *origin_addr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Rget_accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Rget_accumulate(const void *origin_addr,
                                                   int origin_count,
                                                   MPI_Datatype origin_datatype,
@@ -187,10 +163,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rget_accumulate(const void *origin_addr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Fetch_and_op
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Fetch_and_op(const void *origin_addr,
                                                void *result_addr,
                                                MPI_Datatype datatype,
@@ -213,10 +185,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Fetch_and_op(const void *origin_addr,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Rget
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Rget(void *origin_addr,
                                        int origin_count,
                                        MPI_Datatype origin_datatype,
@@ -242,10 +210,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rget(void *origin_addr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Rput
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Rput(const void *origin_addr,
                                        int origin_count,
                                        MPI_Datatype origin_datatype,
@@ -271,10 +235,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rput(const void *origin_addr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Get_accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Get_accumulate(const void *origin_addr,
                                                  int origin_count,
                                                  MPI_Datatype origin_datatype,

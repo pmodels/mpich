@@ -21,10 +21,6 @@
 static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid);
 static void MPID_nem_llc_recv_handler(void *vp_vc, uint64_t raddr, void *buf, size_t bsz);
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_poll
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_poll(int in_blocking_progress)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -48,10 +44,6 @@ int MPID_nem_llc_poll(int in_blocking_progress)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_send_handler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
 {
     /* int mpi_errno = 0; */
@@ -173,10 +165,6 @@ static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_recv_handler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static void MPID_nem_llc_recv_handler(void *vp_vc, uint64_t raddr, void *buf, size_t bsz)
 {
     int mpi_errno = 0;
@@ -227,10 +215,6 @@ static void MPID_nem_llc_recv_handler(void *vp_vc, uint64_t raddr, void *buf, si
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_recv_posted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPIR_Request *req)
 {
     int mpi_errno = MPI_SUCCESS, llc_errno;
@@ -342,10 +326,6 @@ int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPIR_Request *req)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_anysource_posted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPID_nem_llc_anysource_posted(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -358,10 +338,6 @@ void MPID_nem_llc_anysource_posted(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LLC_AYSOURCE_POSTED);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_anysource_matched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_anysource_matched(MPIR_Request * req)
 {
     int matched = FALSE;

@@ -7,10 +7,6 @@
 #include "mpidimpl.h"
 #include "mpidrma.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Handle_send_req
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Handle_send_req(MPIDI_VC_t * vc, MPIR_Request * sreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -103,10 +99,6 @@ int MPIDI_CH3_ReqHandler_GetSendComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_GaccumSendComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -172,10 +164,6 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_CASSendComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -240,10 +228,6 @@ int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_FOPSendComplete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;

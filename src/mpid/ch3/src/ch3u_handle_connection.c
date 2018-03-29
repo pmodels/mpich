@@ -22,10 +22,6 @@ MPIR_Group *MPIDI_Failed_procs_group = NULL;
 int MPIDI_last_known_failed = MPI_PROC_NULL;
 char *MPIDI_failed_procs_string = NULL;
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Handle_connection
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPIDI_CH3U_Handle_connection - handle connection event
 
@@ -148,7 +144,7 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 		{
 		    MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL, "Unhandled connection state %d when closing connection",vc->state);
 		    mpi_errno = MPIR_Err_create_code(
-			MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, 
+			MPI_SUCCESS, MPIR_ERR_FATAL, __func__, __LINE__, 
                         MPI_ERR_INTERN, "**ch3|unhandled_connection_state",
 			"**ch3|unhandled_connection_state %p %d", vc, vc->state);
                     goto fn_fail;
@@ -197,10 +193,6 @@ fn_fail:
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_VC_SendClose
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPIDI_CH3U_VC_SendClose - Initiate a close on a virtual connection
   
@@ -272,10 +264,6 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
 
 /* Here is the matching code that processes a close packet when it is 
    received */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_Close
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data ATTRIBUTE((unused)),
 				intptr_t *buflen, MPIR_Request **rreqp )
 {
@@ -360,10 +348,6 @@ int MPIDI_CH3_PktPrint_Close( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
  * (initiated in the SendClose routine above) are completed.  It is 
  * used in MPID_Finalize and MPID_Comm_disconnect.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_VC_WaitForClose
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPIDI_CH3U_VC_WaitForClose - Wait for all virtual connections to close
   @*/
@@ -394,10 +378,6 @@ int MPIDI_CH3U_VC_WaitForClose( void )
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME terminate_failed_VCs
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int terminate_failed_VCs(MPIR_Group *new_failed_group)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -439,10 +419,6 @@ static int terminate_failed_VCs(MPIR_Group *new_failed_group)
  * >= 0 = The last failure acknowledged. All failures returned will have
  *        been acknowledged previously.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Get_failed_group
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Get_failed_group(int last_rank, MPIR_Group **failed_group)
 {
     char *c;
@@ -507,10 +483,6 @@ fn_fail:
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Check_for_failed_procs
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Check_for_failed_procs(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -588,10 +560,6 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
 
 /* for debugging */
 int MPIDI_CH3U_Dump_vc_states(void);
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Dump_vc_states
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Dump_vc_states(void)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -28,10 +28,6 @@ int MPI_Type_create_struct(int count, const int array_of_blocklengths[],
 #undef MPI_Type_create_struct
 #define MPI_Type_create_struct PMPI_Type_create_struct
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_create_struct_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_create_struct_impl(int count,
                                  const int array_of_blocklengths[],
                                  const MPI_Aint array_of_displacements[],
@@ -77,10 +73,6 @@ int MPIR_Type_create_struct_impl(int count,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_struct
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_struct - Create an MPI datatype from a general set of
    datatypes, displacements, and block sizes
@@ -169,14 +161,14 @@ int MPI_Type_create_struct(int count,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_create_struct",
                                  "**mpi_type_create_struct %d %p %p %p %p", count,
                                  array_of_blocklengths, array_of_displacements, array_of_types,
                                  newtype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

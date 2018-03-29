@@ -27,10 +27,6 @@ int MPI_Status_set_elements_x(MPI_Status * status, MPI_Datatype datatype, MPI_Co
 
 /* any non-MPI functions go here, especially non-static ones */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Status_set_elements_x_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Status_set_elements_x_impl(MPI_Status * status, MPI_Datatype datatype, MPI_Count count)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -51,10 +47,6 @@ int MPIR_Status_set_elements_x_impl(MPI_Status * status, MPI_Datatype datatype, 
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Status_set_elements_x
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Status_set_elements_x - Set the number of elements in a status
 
@@ -134,12 +126,12 @@ int MPI_Status_set_elements_x(MPI_Status * status, MPI_Datatype datatype, MPI_Co
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_status_set_elements_x",
                                  "**mpi_status_set_elements_x %p %D %c", status, datatype, count);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

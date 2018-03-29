@@ -61,10 +61,6 @@ static inline int issue_ops_win(MPIR_Win * win_ptr, int *made_progress);
      (win_)->states.access_state == MPIDI_RMA_LOCK_ALL_GRANTED)
 
 
-#undef FUNCNAME
-#define FUNCNAME check_and_switch_target_state
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int check_and_switch_target_state(MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                                 int *is_able_to_issue, int *made_progress)
 {
@@ -235,10 +231,6 @@ static inline int check_and_switch_target_state(MPIR_Win * win_ptr, MPIDI_RMA_Ta
 
 /* Note: we should prevent this function to be re-entrant. It has the risk of
  * causing too many re-entrance and using up function stack. */
-#undef FUNCNAME
-#define FUNCNAME issue_ops_target
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int issue_ops_target(MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                    int *made_progress)
 {
@@ -377,10 +369,6 @@ static inline int issue_ops_target(MPIR_Win * win_ptr, MPIDI_RMA_Target_t * targ
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME issue_ops_win
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int issue_ops_win(MPIR_Win * win_ptr, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -429,10 +417,6 @@ static inline int issue_ops_win(MPIR_Win * win_ptr, int *made_progress)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_RMA_Cleanup_ops_aggressive
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPIR_Win * win_ptr)
 {
     int i, local_completed = 0, remote_completed ATTRIBUTE((unused)) = 0;
@@ -482,10 +466,6 @@ int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPIR_Win * win_ptr)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_RMA_Cleanup_target_aggressive
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPIR_Win * win_ptr, MPIDI_RMA_Target_t ** target)
 {
     int i, local_completed ATTRIBUTE((unused)) = 0, remote_completed = 0;
@@ -564,10 +544,6 @@ int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPIR_Win * win_ptr, MPIDI_RMA_Targe
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_RMA_Make_progress_target
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Make_progress_target(MPIR_Win * win_ptr, int target_rank, int *made_progress)
 {
     int temp_progress = 0;
@@ -624,10 +600,6 @@ int MPIDI_CH3I_RMA_Make_progress_target(MPIR_Win * win_ptr, int target_rank, int
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_RMA_Make_progress_win
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Make_progress_win(MPIR_Win * win_ptr, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -664,10 +636,6 @@ int MPIDI_CH3I_RMA_Make_progress_win(MPIR_Win * win_ptr, int *made_progress)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_RMA_Make_progress_global
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress)
 {
     MPIR_Win *win_ptr;

@@ -6,10 +6,6 @@
 
 #include "ptl_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME handle_probe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int handle_probe(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -97,20 +93,12 @@ static int handle_mprobe(const ptl_event_t *e)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_probe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_probe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, int context_offset, MPI_Status *status)
 {
     MPIR_Assertp(0 && "This function shouldn't be called.");
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_iprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, int context_offset, int *flag, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -180,10 +168,6 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, in
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_improbe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, int context_offset, int *flag,
                          MPIR_Request **message, MPI_Status *status)
 {
@@ -260,10 +244,6 @@ int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, i
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_anysource_iprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_anysource_iprobe(int tag, MPIR_Comm * comm, int context_offset, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -280,10 +260,6 @@ int MPID_nem_ptl_anysource_iprobe(int tag, MPIR_Comm * comm, int context_offset,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_anysource_improbe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset, int *flag, MPIR_Request **message,
                                    MPI_Status * status)
 {
@@ -301,10 +277,6 @@ int MPID_nem_ptl_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_pkt_cancel_send_req_handler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
                                              void *data ATTRIBUTE((unused)),
                                                     intptr_t *buflen, MPIR_Request **rreqp)
@@ -377,10 +349,6 @@ int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pk
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_pkt_cancel_send_resp_handler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
                                               void *data ATTRIBUTE((unused)),
                                               intptr_t *buflen, MPIR_Request **rreqp)

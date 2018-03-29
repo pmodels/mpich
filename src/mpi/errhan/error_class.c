@@ -29,10 +29,7 @@ int MPI_Error_class(int errorcode, int *errorclass)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Error_class
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Error_class - Converts an error code into an error class
 
@@ -51,6 +48,8 @@ Output Parameters:
 @*/
 int MPI_Error_class(int errorcode, int *errorclass)
 {
+#ifdef HAVE_ERROR_CHECKING
+#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ERROR_CLASS);
 
@@ -88,11 +87,11 @@ int MPI_Error_class(int errorcode, int *errorclass)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_error_class", "**mpi_error_class %d %p", errorcode,
                                  errorclass);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

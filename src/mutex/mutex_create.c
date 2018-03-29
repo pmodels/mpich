@@ -34,10 +34,6 @@ int MPIX_Mutex_create(int my_count, MPI_Comm comm, MPIX_Mutex * hdl_out)
 #define MPIX_Mutex_create PMPIX_Mutex_create
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIX_Mutex_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /** Create a group of MPI mutexes.  Collective on the given communicator.
   *

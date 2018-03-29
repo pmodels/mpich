@@ -11,10 +11,6 @@
  * for MPI point-to-point messaging.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_RndvSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIDI_CH3_RndvSend - Send a request to perform a rendezvous send */
 int MPIDI_CH3_RndvSend( MPIR_Request **sreq_p, const void * buf, MPI_Aint count,
 			MPI_Datatype datatype, int dt_contig, intptr_t data_sz,
@@ -103,10 +99,6 @@ int MPIDI_CH3_RndvSend( MPIR_Request **sreq_p, const void * buf, MPI_Aint count,
     MPIDI_Request_set_msg_type((rreq_), (msg_type_));		\
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_RndvReqToSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_RndvReqToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data ATTRIBUTE((unused)),
 					intptr_t *buflen, MPIR_Request **rreqp )
 {
@@ -191,10 +183,6 @@ int MPIDI_CH3_PktHandler_RndvReqToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, vo
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_RndvClrToSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data ATTRIBUTE((unused)),
 					intptr_t *buflen, MPIR_Request **rreqp )
 {
@@ -276,10 +264,6 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, vo
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_RndvSend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_RndvSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data,
 				   intptr_t *buflen, MPIR_Request **rreqp )
 {
@@ -336,10 +320,6 @@ int MPIDI_CH3_PktHandler_RndvSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *d
  * This routine processes a rendezvous message once the message is matched.
  * It is used in mpid_recv and mpid_irecv.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_RecvRndv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_RecvRndv( MPIDI_VC_t * vc, MPIR_Request *rreq )
 {
     int mpi_errno = MPI_SUCCESS;

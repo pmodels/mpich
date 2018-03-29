@@ -55,10 +55,6 @@ typedef struct progress_hook_slot {
 
 static progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3i_Progress_test
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3i_Progress_test(void)
 {
     MPIDI_CH3I_Sock_event_t event;
@@ -132,10 +128,6 @@ static int MPIDI_CH3i_Progress_test(void)
 /* end MPIDI_CH3_Progress_test() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3i_Progress_wait
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
 {
     MPIDI_CH3I_Sock_event_t event;
@@ -276,10 +268,6 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
 /* end MPIDI_CH3_Progress_wait() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Connection_terminate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -301,10 +289,6 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
 /* end MPIDI_CH3_Connection_terminate() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress_init(void)
 {
     int i;
@@ -358,10 +342,6 @@ int MPIDI_CH3I_Progress_init(void)
 /* end MIPDI_CH3I_Progress_init() */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress_finalize(void)
 {
     int mpi_errno;
@@ -418,10 +398,6 @@ int MPIDI_CH3I_Progress_finalize(void)
 
 
 #ifdef MPICH_IS_THREADED
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_wakeup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIDI_CH3I_Progress_wakeup(void)
 {
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,TYPICAL,"progress_wakeup called");
@@ -429,20 +405,12 @@ void MPIDI_CH3I_Progress_wakeup(void)
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Get_business_card
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Get_business_card(int myRank, char *value, int length)
 {
     return MPIDI_CH3U_Get_business_card_sock(myRank, &value, &length);
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_handle_sock_event
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -617,7 +585,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
 			/* --BEGIN ERROR HANDLING-- */
 			if (mpi_errno != MPI_SUCCESS)
 			{
-			    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER,
+			    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER,
 							     "**ch3|sock|immedwrite", "ch3|sock|immedwrite %p %p %p",
 							     sreq, conn, conn->vc);
 			    goto fn_fail;
@@ -662,7 +630,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
 			    if (mpi_errno != MPI_SUCCESS)
 			    {
 				mpi_errno = MPIR_Err_create_code(
-				    mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**ch3|sock|postwrite",
+				    mpi_errno, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER, "**ch3|sock|postwrite",
 				    "ch3|sock|postwrite %p %p %p", sreq, conn, conn->vc);
 				goto fn_fail;
 			    }
@@ -729,10 +697,6 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event
 /* Note that this routine is only called if threads are enabled; 
    it does not need to check whether runtime threads are enabled */
 /* FIXME: Test for runtime thread level (here or where used) */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_delay
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
 {
     int mpi_errno = MPI_SUCCESS, err;
@@ -753,10 +717,6 @@ static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
 /* end MPIDI_CH3I_Progress_delay() */
 
 /* FIXME: Test for runtime thread level */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_continue
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Progress_continue(unsigned int completion_count)
 {
     int mpi_errno = MPI_SUCCESS,err;
@@ -779,10 +739,6 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count)
 
 /* FIXME: (a) what does this do and where is it used and (b) 
    we could replace it with a #define for the single-method case */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_VC_post_connect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_VC_post_connect(MPIDI_VC_t * vc)
 {
     return MPIDI_CH3I_VC_post_sockconnect( vc );
@@ -790,10 +746,6 @@ int MPIDI_CH3I_VC_post_connect(MPIDI_VC_t * vc)
 /* end MPIDI_CH3I_VC_post_connect() */
 
 /* FIXME: This function also used in ch3u_connect_sock.c */
-#undef FUNCNAME
-#define FUNCNAME connection_pop_sendq_req
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int connection_pop_sendq_req(MPIDI_CH3I_Connection_t * conn)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -823,10 +775,6 @@ static inline int connection_pop_sendq_req(MPIDI_CH3I_Connection_t * conn)
 
 
 
-#undef FUNCNAME
-#define FUNCNAME connection_post_recv_pkt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -844,10 +792,6 @@ static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn)
 }
 
 /* FIXME: What is this routine for? */
-#undef FUNCNAME
-#define FUNCNAME adjust_iov
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int adjust_iov(MPL_IOV ** iovp, int * countp, size_t nb)
 {
     MPL_IOV * const iov = *iovp;
@@ -892,7 +836,7 @@ static int ReadMoreData( MPIDI_CH3I_Connection_t * conn, MPIR_Request *rreq )
 				     rreq->dev.iov_count, &nb);
 	/* --BEGIN ERROR HANDLING-- */
 	if (mpi_errno != MPI_SUCCESS) {
-	    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER,
+	    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER,
 					     "**ch3|sock|immedread", "ch3|sock|immedread %p %p %p",
 					     rreq, conn, conn->vc);
 	    goto fn_fail;
@@ -940,7 +884,7 @@ static int ReadMoreData( MPIDI_CH3I_Connection_t * conn, MPIR_Request *rreq )
 	    /* --BEGIN ERROR HANDLING-- */
 	    if (mpi_errno != MPI_SUCCESS) {
 		mpi_errno = MPIR_Err_create_code(
-		 mpi_errno, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**ch3|sock|postread",
+		 mpi_errno, MPIR_ERR_FATAL, __func__, __LINE__, MPI_ERR_OTHER, "**ch3|sock|postread",
 		"ch3|sock|postread %p %p %p", rreq, conn, conn->vc);
 		goto fn_fail;
 	    }
@@ -966,10 +910,6 @@ int MPIDI_CH3I_Progress( int blocking, MPID_Progress_state *state )
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_register_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1004,10 +944,6 @@ int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_deregister_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress_deregister_hook(int id)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1030,10 +966,6 @@ int MPIDI_CH3I_Progress_deregister_hook(int id)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_activate_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress_activate_hook(int id)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1056,10 +988,6 @@ int MPIDI_CH3I_Progress_activate_hook(int id)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_deactivate_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Progress_deactivate_hook(int id)
 {
     int mpi_errno = MPI_SUCCESS;

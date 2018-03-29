@@ -29,10 +29,7 @@ int MPI_Type_create_hvector(int count, int blocklength, MPI_Aint stride, MPI_Dat
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_hvector
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Type_create_hvector - Create a datatype with a constant stride given
      in bytes
@@ -122,13 +119,13 @@ int MPI_Type_create_hvector(int count,
     /* --BEGIN ERROR HANDLING-- */
 #ifdef HAVE_ERROR_CHECKING
     {
-        mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+        mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                          MPI_ERR_OTHER, "**mpi_type_create_hvector",
                                          "**mpi_type_create_hvector %d %d %d %D %p", count,
                                          blocklength, stride, oldtype, newtype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

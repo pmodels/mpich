@@ -94,10 +94,6 @@ static MPIDI_Comm_ops_t comm_ops = {
 
 static MPIDI_CH3_PktHandler_Fcn *MPID_nem_ptl_pkt_handlers[2]; /* for CANCEL_SEND_REQ and CANCEL_SEND_RESP */
 
-#undef FUNCNAME
-#define FUNCNAME get_target_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_target_info(int rank, ptl_process_t *id, ptl_pt_index_t local_data_pt, ptl_pt_index_t *target_data_pt,
                            ptl_pt_index_t *target_control_pt)
 {
@@ -142,10 +138,6 @@ static int get_target_info(int rank, ptl_process_t *id, ptl_pt_index_t local_dat
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME ptl_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -292,10 +284,6 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME ptl_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int ptl_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -362,10 +350,6 @@ static int ptl_finalize(void)
 
 
 
-#undef FUNCNAME
-#define FUNCNAME get_business_card
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -434,10 +418,6 @@ static int get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME connect_to_root
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int connect_to_root(const char *business_card, MPIDI_VC_t *new_vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -455,10 +435,6 @@ static int connect_to_root(const char *business_card, MPIDI_VC_t *new_vc)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME vc_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int vc_init(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -500,10 +476,6 @@ static int vc_init(MPIDI_VC_t *vc)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME vc_destroy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int vc_destroy(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -514,10 +486,6 @@ static int vc_destroy(MPIDI_VC_t *vc)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_get_id_from_bc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t *id, ptl_pt_index_t *pt, ptl_pt_index_t *ptg, ptl_pt_index_t *ptc, ptl_pt_index_t *ptr, ptl_pt_index_t *ptrg, ptl_pt_index_t *ptrc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -558,10 +526,6 @@ int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t *id, pt
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME vc_terminate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int vc_terminate(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -594,10 +558,6 @@ int vc_terminate(MPIDI_VC_t *vc)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_vc_terminated
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_vc_terminated(MPIDI_VC_t *vc)
 {
     /* This is called when the VC is to be terminated once all queued
@@ -618,10 +578,6 @@ int MPID_nem_ptl_vc_terminated(MPIDI_VC_t *vc)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_init_id
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_init_id(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -656,10 +612,6 @@ int MPID_nem_ptl_init_id(MPIDI_VC_t *vc)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_get_ordering
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_get_ordering(int *ordering)
 {
     (*ordering) = 1;

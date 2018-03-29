@@ -11,10 +11,6 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #ifdef ENABLE_CHECKPOINTING
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_ckpt_pause_send_vc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_ckpt_pause_send_vc(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -33,10 +29,6 @@ fn_fail:
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_ckpt_unpause_handler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
                                      void *data ATTRIBUTE((unused)),
                                      intptr_t *buflen, MPIR_Request **rreqp)
@@ -70,10 +62,6 @@ fn_fail:
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_ckpt_continue_vc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_ckpt_continue_vc(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -104,10 +92,6 @@ fn_fail:
 
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_ckpt_restart_vc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_ckpt_restart_vc(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;

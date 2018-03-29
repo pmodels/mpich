@@ -26,10 +26,6 @@
    implies that CH3_iStartMsgv() can only be used when the entire message can be described by a single iovec of size
    MPL_IOV_LIMIT. */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_iStartMsgv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPIR_Request **sreq_ptr)
 {
     MPIR_Request * sreq = *sreq_ptr = NULL;

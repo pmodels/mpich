@@ -32,10 +32,7 @@ int MPI_Get_processor_name(char *name, int *resultlen)
    into nothing otherwise. */
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Get_processor_name
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
   MPI_Get_processor_name - Gets the name of the processor
 
@@ -109,12 +106,12 @@ int MPI_Get_processor_name(char *name, int *resultlen)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_get_processor_name", "**mpi_get_processor_name %p %p", name,
                                  resultlen);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

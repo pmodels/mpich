@@ -33,10 +33,6 @@ int MPIX_Mutex_unlock(MPIX_Mutex hdl, int mutex, int proc)
 #define MPIX_Mutex_unlock PMPIX_Mutex_unlock
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIX_Mutex_unlock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /** Unlock a mutex.
   *

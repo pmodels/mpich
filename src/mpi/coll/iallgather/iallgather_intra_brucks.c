@@ -15,10 +15,6 @@
  * Cost = lgp.alpha + n.((p-1)/p).beta
  * where n is total size of data gathered on each process.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_sched_intra_brucks
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_sched_intra_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                        MPIR_Comm * comm_ptr, MPIR_Sched_t s)

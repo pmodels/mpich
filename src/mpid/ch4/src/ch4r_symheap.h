@@ -70,10 +70,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4R_get_mapsize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline size_t MPIDI_CH4R_get_mapsize(size_t size, size_t * psz)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_GET_MAPSIZE);
@@ -87,19 +83,11 @@ static inline size_t MPIDI_CH4R_get_mapsize(size_t size, size_t * psz)
     return mapsize;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4R_is_valid_mapaddr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH4R_is_valid_mapaddr(void *start)
 {
     return ((uintptr_t) start == -1ULL) ? 0 : 1;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4R_check_maprange_ok
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH4R_check_maprange_ok(void *start, size_t size)
 {
     int rc = 0;
@@ -130,10 +118,6 @@ static inline int MPIDI_CH4R_check_maprange_ok(void *start, size_t size)
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4R_generate_random_addr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void *MPIDI_CH4R_generate_random_addr(size_t size)
 {
     /* starting position for pointer to map
@@ -193,10 +177,6 @@ static inline void *MPIDI_CH4R_generate_random_addr(size_t size)
     return (void *) map_pointer;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4R_get_symmetric_heap
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
                                                 MPIR_Comm * comm, void **base, MPIR_Win * win)
 {

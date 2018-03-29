@@ -44,10 +44,6 @@ MPIR_Topology *MPIR_Topology_get(MPIR_Comm * comm_ptr)
     return NULL;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Topology_put
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Topology_put(MPIR_Comm * comm_ptr, MPIR_Topology * topo_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -120,10 +116,6 @@ static int *MPIR_Copy_array(int n, const int a[], int *err)
    of enough integers for all fields (including the ones in the structure)
    and freeing the single object later.
 */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Topology_copy_fn
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIR_Topology_copy_fn(MPI_Comm comm ATTRIBUTE((unused)),
                                  int keyval ATTRIBUTE((unused)),
                                  void *extra_data ATTRIBUTE((unused)),
@@ -198,10 +190,6 @@ static int MPIR_Topology_copy_fn(MPI_Comm comm ATTRIBUTE((unused)),
     /* --END ERROR HANDLING-- */
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Topology_delete_fn
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIR_Topology_delete_fn(MPI_Comm comm ATTRIBUTE((unused)),
                                    int keyval ATTRIBUTE((unused)),
                                    void *attr_val, void *extra_data ATTRIBUTE((unused)))
@@ -264,10 +252,6 @@ static int MPIR_Topology_delete_fn(MPI_Comm comm ATTRIBUTE((unused)),
  *     to be MPI_PROC_NULL.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Topo_canon_nhb_count
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Topo_canon_nhb_count(MPIR_Comm * comm_ptr, int *indegree, int *outdegree, int *weighted)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -301,10 +285,6 @@ int MPIR_Topo_canon_nhb_count(MPIR_Comm * comm_ptr, int *indegree, int *outdegre
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Topo_canon_nhb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Topo_canon_nhb(MPIR_Comm * comm_ptr,
                         int indegree, int sources[], int inweights[],
                         int outdegree, int dests[], int outweights[])

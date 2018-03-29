@@ -15,10 +15,6 @@ static void *overflow_buf[NUM_OVERFLOW_ME];
 
 static int append_overflow(int i);
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_poll_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_poll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -47,10 +43,6 @@ int MPID_nem_ptl_poll_init(void)
 
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_poll_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_poll_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -75,10 +67,6 @@ int MPID_nem_ptl_poll_finalize(void)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME append_overflow
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int append_overflow(int i)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -118,10 +106,6 @@ static int append_overflow(int i)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_poll
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_poll(int is_blocking_poll)
 {
     int mpi_errno = MPI_SUCCESS;

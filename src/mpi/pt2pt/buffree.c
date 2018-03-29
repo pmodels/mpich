@@ -29,10 +29,7 @@ int MPI_Buffer_detach(void *buffer_addr, int *size)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Buffer_detach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
   MPI_Buffer_detach - Removes an existing buffer (for use in MPI_Bsend etc)
 
@@ -131,12 +128,12 @@ int MPI_Buffer_detach(void *buffer_addr, int *size)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_buffer_detach", "**mpi_buffer_detach %p %p", buffer_addr,
                                  size);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

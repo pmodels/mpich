@@ -56,10 +56,6 @@ MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_data ATTRIBUTE((unused));
 pthread_mutex_t MPIDI_Mutex_lock[MPIDI_NUM_LOCKS];
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Abort
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error_msg)
 {
     char sys_str[MPI_MAX_ERROR_STRING + 5] = "";

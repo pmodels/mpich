@@ -19,10 +19,6 @@ MPIDI_PG_t *MPIDI_CH3I_my_pg = NULL;
 
 static int nemesis_initialized = 0;
 
-#undef FUNCNAME
-#define FUNCNAME split_type
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int split_type(MPIR_Comm * user_comm_ptr, int stype, int key,
                       MPIR_Info *info_ptr, MPIR_Comm ** newcomm_ptr)
 {
@@ -86,10 +82,6 @@ static MPIR_Commops comm_fns = {
 };
 
 /* MPIDI_CH3_Init():  Initialize the nemesis channel */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -142,10 +134,6 @@ int MPIDI_CH3_PortFnsInit( MPIDI_PortFns *portFns )
     return 0;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Get_business_card
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Get_business_card(int myRank, char *value, int length)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -164,10 +152,6 @@ fn_fail:
 }
 
 /* Perform the channel-specific vc initialization */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_VC_Init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_VC_Init( MPIDI_VC_t *vc )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -210,10 +194,6 @@ int MPIDI_CH3_VC_Init( MPIDI_VC_t *vc )
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_VC_Destroy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_VC_Destroy(MPIDI_VC_t *vc )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -236,10 +216,6 @@ fn_exit:
 }
 
 /* MPIDI_CH3_Connect_to_root() create a new vc, and connect it to the process listening on port_name */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Connect_to_root
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -328,10 +304,6 @@ static struct {initcomp_cb_t *top;} initcomp_cb_stack = {0};
 #define INITCOMP_S_PUSH(ep) GENERIC_S_PUSH(&initcomp_cb_stack, ep, next)
 
 /* register a function to be called when all initialization is finished */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_register_initcomp_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_register_initcomp_cb(int (* callback)(void))
 {
     int mpi_errno = MPI_SUCCESS;
@@ -354,10 +326,6 @@ int MPID_nem_register_initcomp_cb(int (* callback)(void))
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_InitCompleted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_InitCompleted(void)
 {
     int mpi_errno = MPI_SUCCESS;

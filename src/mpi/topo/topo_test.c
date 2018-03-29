@@ -27,10 +27,7 @@ int MPI_Topo_test(MPI_Comm comm, int *status) __attribute__ ((weak, alias("PMPI_
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Topo_test
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
 
 MPI_Topo_test - Determines the type of topology (if any) associated with a
@@ -117,10 +114,10 @@ int MPI_Topo_test(MPI_Comm comm, int *status)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_topo_test", "**mpi_topo_test %C %p", comm, status);
     }
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

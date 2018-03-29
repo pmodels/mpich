@@ -31,10 +31,6 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
 #undef MPI_Comm_split_type
 #define MPI_Comm_split_type PMPI_Comm_split_type
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_self
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key,
                               MPIR_Comm ** newcomm_ptr)
 {
@@ -68,10 +64,6 @@ int MPIR_Comm_split_type_self(MPIR_Comm * user_comm_ptr, int split_type, int key
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_node
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_node(MPIR_Comm * user_comm_ptr, int split_type, int key,
                               MPIR_Comm ** newcomm_ptr)
 {
@@ -348,10 +340,6 @@ static int compare_info_args(const void *sendbuf, void *recvbuf, int count, MPIR
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_node_topo
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, int key,
                                    MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
@@ -452,10 +440,6 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
                          MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
@@ -520,10 +504,6 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_type_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
                               MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
@@ -550,10 +530,6 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_split_type
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_split_type - Creates new communicators based on split types and keys
@@ -649,12 +625,12 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
         /* FIXME this error code is wrong, it's the error code for
          * regular MPI_Comm_split */
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPI_ERR_OTHER, "**mpi_comm_split",
                                  "**mpi_comm_split %C %d %d %p", comm, split_type, key, newcomm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

@@ -28,10 +28,6 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader, MPI_Comm peer_co
 #undef MPI_Intercomm_create
 #define MPI_Intercomm_create PMPI_Intercomm_create
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Intercomm_create_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
                                MPIR_Comm * peer_comm_ptr, int remote_leader, int tag,
                                MPIR_Comm ** new_intercomm_ptr)
@@ -162,10 +158,6 @@ int MPIR_Intercomm_create_impl(MPIR_Comm * local_comm_ptr, int local_leader,
 #endif /* MPICH_MPI_FROM_PMPI */
 
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Intercomm_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Intercomm_create - Creates an intercommuncator from two intracommunicators
@@ -333,13 +325,13 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_intercomm_create",
                                  "**mpi_intercomm_create %C %d %C %d %d %p", local_comm,
                                  local_leader, peer_comm, remote_leader, tag, newintercomm);
     }
 #endif /* HAVE_ERROR_CHECKING */
-    mpi_errno = MPIR_Err_return_comm(local_comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(local_comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

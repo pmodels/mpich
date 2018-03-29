@@ -59,10 +59,6 @@ static int MPIDI_CH3U_GetIPInterface( MPIDI_CH3I_Sock_ifaddr_t *, int * );
  *             ipv4 (AF_INET) is used so far.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDU_CH3U_GetSockInterfaceAddr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_CH3U_GetSockInterfaceAddr( int myRank, char *ifname, int maxIfname,
 				     MPIDI_CH3I_Sock_ifaddr_t *ifaddr )
 {

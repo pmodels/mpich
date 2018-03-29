@@ -21,8 +21,6 @@
 extern MPIDI_POSIX_mem_region_t MPIDI_POSIX_mem_region;
 extern char *MPIDI_POSIX_asym_base_addr;
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_init_hook)
 static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_provided, int *tag_ub)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -237,8 +235,6 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *n_vnis_prov
     /* --END ERROR HANDLING-- */
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_finalize_hook)
 static inline int MPIDI_POSIX_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -332,10 +328,6 @@ static inline int MPIDI_POSIX_create_intercomm_from_lpids(MPIR_Comm * newcomm_pt
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_mpi_type_commit_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_POSIX_mpi_type_commit_hook(MPIR_Datatype * type)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -346,10 +338,6 @@ static inline int MPIDI_POSIX_mpi_type_commit_hook(MPIR_Datatype * type)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_mpi_type_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_POSIX_mpi_type_free_hook(MPIR_Datatype * type)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -360,10 +348,6 @@ static inline int MPIDI_POSIX_mpi_type_free_hook(MPIR_Datatype * type)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_mpi_op_commit_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_POSIX_mpi_op_commit_hook(MPIR_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -374,10 +358,6 @@ static inline int MPIDI_POSIX_mpi_op_commit_hook(MPIR_Op * op)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_mpi_op_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_POSIX_mpi_op_free_hook(MPIR_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;

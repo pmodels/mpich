@@ -29,10 +29,7 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Sendrecv_replace
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
     MPI_Sendrecv_replace - Sends and receives using a single buffer
 
@@ -220,13 +217,13 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_sendrecv_replace",
                                  "**mpi_sendrecv_replace %p %d %D %i %t %i %t %C %p", buf, count,
                                  datatype, dest, sendtag, source, recvtag, comm, status);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

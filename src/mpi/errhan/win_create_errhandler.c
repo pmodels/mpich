@@ -29,10 +29,7 @@ int MPI_Win_create_errhandler(MPI_Win_errhandler_function * win_errhandler_fn,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_create_errhandler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Win_create_errhandler - Create an error handler for use with MPI window
    objects
@@ -98,12 +95,12 @@ int MPI_Win_create_errhandler(MPI_Win_errhandler_function * win_errhandler_fn,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_win_create_errhandler", "**mpi_win_create_errhandler %p %p",
                                  win_errhandler_fn, errhandler);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

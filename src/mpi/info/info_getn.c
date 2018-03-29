@@ -26,10 +26,6 @@ int MPI_Info_get_nkeys(MPI_Info info, int *nkeys)
 #undef MPI_Info_get_nkeys
 #define MPI_Info_get_nkeys PMPI_Info_get_nkeys
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Info_get_nkeys_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Info_get_nkeys_impl(MPIR_Info * info_ptr, int *nkeys)
 {
     int n;
@@ -66,10 +62,6 @@ Output Parameters:
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-#undef FUNCNAME
-#define FUNCNAME MPI_Info_get_nkeys
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPI_Info_get_nkeys(MPI_Info info, int *nkeys)
 {
     MPIR_Info *info_ptr = 0;
@@ -128,10 +120,10 @@ int MPI_Info_get_nkeys(MPI_Info info, int *nkeys)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_info_get_nkeys", "**mpi_info_get_nkeys %I %p", info, nkeys);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 #endif

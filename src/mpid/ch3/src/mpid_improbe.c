@@ -10,10 +10,6 @@ int (*MPIDI_Anysource_improbe_fn)(int tag, MPIR_Comm * comm, int context_offset,
                                   int *flag, MPIR_Request **message,
                                   MPI_Status * status) = NULL;
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Improbe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Improbe(int source, int tag, MPIR_Comm *comm, int context_offset,
                  int *flag, MPIR_Request **message, MPI_Status *status)
 {

@@ -40,7 +40,7 @@ static inline int MPIDI_OFI_progress_do_queue(int vni_idx);
                                    "**ofi_"#STR" %s %d %s %s",          \
                                    __SHORT_FILE__,                      \
                                    __LINE__,                            \
-                                   FCNAME,                              \
+                                   __func__,                              \
                                    fi_strerror(-_ret));                 \
             if (LOCK) MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX); \
             mpi_errno = MPIDI_OFI_progress_do_queue(0 /* vni_idx */);    \
@@ -50,10 +50,6 @@ static inline int MPIDI_OFI_progress_do_queue(int vni_idx);
         } while (_ret == -FI_EAGAIN);                                   \
     } while (0)
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_am_clear_request
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_OFI_am_clear_request(MPIR_Request * sreq)
 {
     MPIDI_OFI_am_request_header_t *req_hdr;
@@ -75,10 +71,6 @@ static inline void MPIDI_OFI_am_clear_request(MPIR_Request * sreq)
     return;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_am_init_request
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
                                             size_t am_hdr_sz, MPIR_Request * sreq)
 {
@@ -116,10 +108,6 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_repost_buffer
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -137,10 +125,6 @@ static inline int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * req)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_progress_do_queue
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_progress_do_queue(int vni_idx)
 {
     int mpi_errno = MPI_SUCCESS, ret;
@@ -201,10 +185,6 @@ static inline int MPIDI_OFI_progress_do_queue(int vni_idx)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_do_am_isend_header
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_do_am_isend_header(int rank,
                                                MPIR_Comm * comm,
                                                int handler_id,
@@ -258,10 +238,6 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_am_isend_long
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_am_isend_long(int rank,
                                           MPIR_Comm * comm,
                                           int handler_id,
@@ -357,10 +333,6 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_am_isend_short
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_am_isend_short(int rank,
                                            MPIR_Comm * comm,
                                            int handler_id,
@@ -411,10 +383,6 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_do_am_isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_do_am_isend(int rank,
                                         MPIR_Comm * comm,
                                         int handler_id,
@@ -503,10 +471,6 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_do_emulated_inject
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
                                                           const MPIDI_OFI_am_header_t * msg_hdrp,
                                                           const void *am_hdr,
@@ -538,10 +502,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_do_inject
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_do_inject(int rank,
                                       MPIR_Comm * comm,
                                       int handler_id,

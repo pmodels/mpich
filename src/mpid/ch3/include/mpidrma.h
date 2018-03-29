@@ -13,10 +13,6 @@
 #include "mpid_rma_issue.h"
 #include "mpid_rma_lockqueue.h"
 
-#undef FUNCNAME
-#define FUNCNAME send_lock_msg
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int send_lock_msg(int dest, int lock_type, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -60,10 +56,6 @@ static inline int send_lock_msg(int dest, int lock_type, MPIR_Win * win_ptr)
     /* --END ERROR HANDLING-- */
 }
 
-#undef FUNCNAME
-#define FUNCNAME send_unlock_msg
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int send_unlock_msg(int dest, MPIR_Win * win_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -104,10 +96,6 @@ static inline int send_unlock_msg(int dest, MPIR_Win * win_ptr, MPIDI_CH3_Pkt_fl
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Send_lock_ack_pkt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Send_lock_ack_pkt(MPIDI_VC_t * vc, MPIR_Win * win_ptr,
                                                MPIDI_CH3_Pkt_flags_t flags,
                                                MPI_Win source_win_handle,
@@ -151,10 +139,6 @@ static inline int MPIDI_CH3I_Send_lock_ack_pkt(MPIDI_VC_t * vc, MPIR_Win * win_p
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Send_lock_op_ack_pkt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Send_lock_op_ack_pkt(MPIDI_VC_t * vc, MPIR_Win * win_ptr,
                                                   MPIDI_CH3_Pkt_flags_t flags,
                                                   MPI_Win source_win_handle,
@@ -198,10 +182,6 @@ static inline int MPIDI_CH3I_Send_lock_op_ack_pkt(MPIDI_VC_t * vc, MPIR_Win * wi
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Send_ack_pkt
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Send_ack_pkt(MPIDI_VC_t * vc, MPIR_Win * win_ptr,
                                           MPI_Win source_win_handle)
 {
@@ -235,10 +215,6 @@ static inline int MPIDI_CH3I_Send_ack_pkt(MPIDI_VC_t * vc, MPIR_Win * win_ptr,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME send_decr_at_cnt_msg
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int send_decr_at_cnt_msg(int dst, MPIR_Win * win_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_CH3_Pkt_t upkt;
@@ -277,10 +253,6 @@ static inline int send_decr_at_cnt_msg(int dst, MPIR_Win * win_ptr, MPIDI_CH3_Pk
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME send_flush_msg
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int send_flush_msg(int dest, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -633,10 +605,6 @@ static inline int handle_lock_ack(MPIR_Win * win_ptr, int target_rank, MPIDI_CH3
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME check_and_set_req_completion
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int check_and_set_req_completion(MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                                MPIDI_RMA_Op_t * rma_op, int *op_completed)
 {
@@ -790,10 +758,6 @@ static inline int handle_lock_ack_with_op(MPIR_Win * win_ptr,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME acquire_local_lock
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int acquire_local_lock(MPIR_Win * win_ptr, int lock_type)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -852,10 +816,6 @@ static inline int acquire_local_lock(MPIR_Win * win_ptr, int lock_type)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_RMA_Handle_ack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_RMA_Handle_ack(MPIR_Win * win_ptr, int target_rank)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -878,10 +838,6 @@ static inline int MPIDI_CH3I_RMA_Handle_ack(MPIR_Win * win_ptr, int target_rank)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME do_accumulate_op
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datatype source_dtp,
                                    void *target_buf, int target_count, MPI_Datatype target_dtp,
                                    MPI_Aint stream_offset, MPI_Op acc_op)
@@ -911,7 +867,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
     else {
         /* --BEGIN ERROR HANDLING-- */
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                         FCNAME, __LINE__, MPI_ERR_OP,
+                                         __func__, __LINE__, MPI_ERR_OP,
                                          "**opnotpredefined", "**opnotpredefined %d", acc_op);
         return mpi_errno;
         /* --END ERROR HANDLING-- */
@@ -951,7 +907,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         /* --BEGIN ERROR HANDLING-- */
         if (!segp) {
             mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPI_ERR_OTHER, "**nomem", 0);
             MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DO_ACCUMULATE_OP);
             return mpi_errno;
@@ -969,7 +925,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         /* --BEGIN ERROR HANDLING-- */
         if (!dloop_vec) {
             mpi_errno =
-                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                      MPI_ERR_OTHER, "**nomem", 0);
             MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_DO_ACCUMULATE_OP);
             return mpi_errno;

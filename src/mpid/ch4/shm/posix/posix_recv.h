@@ -23,8 +23,6 @@ extern MPIDI_POSIX_request_queue_t MPIDI_POSIX_recvq_unexpected;
 /* ---------------------------------------------------- */
 /* MPIDI_POSIX_do_irecv                                             */
 /* ---------------------------------------------------- */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_do_irecv)
 static inline int MPIDI_POSIX_do_irecv(void *buf,
                                        MPI_Aint count,
                                        MPI_Datatype datatype,
@@ -92,8 +90,6 @@ static inline int MPIDI_POSIX_do_irecv(void *buf,
     goto fn_exit;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_recv)
 static inline int MPIDI_POSIX_mpi_recv(void *buf,
                                        MPI_Aint count,
                                        MPI_Datatype datatype,
@@ -118,8 +114,6 @@ static inline int MPIDI_POSIX_mpi_recv(void *buf,
     return mpi_errno;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_recv)
 static inline int MPIDI_POSIX_mpi_recv_init(void *buf,
                                             int count,
                                             MPI_Datatype datatype,
@@ -291,8 +285,6 @@ static inline int MPIDI_POSIX_mpi_imrecv(void *buf,
     goto fn_exit;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_irecv)
 static inline int MPIDI_POSIX_mpi_irecv(void *buf,
                                         MPI_Aint count,
                                         MPI_Datatype datatype,
@@ -315,8 +307,6 @@ static inline int MPIDI_POSIX_mpi_irecv(void *buf,
     return mpi_errno;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_cancel_recv)
 static inline int MPIDI_POSIX_mpi_cancel_recv(MPIR_Request * rreq)
 {
     MPIR_Request *req = MPIDI_POSIX_recvq_posted.head;

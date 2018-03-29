@@ -7,10 +7,6 @@
 #include "mpiimpl.h"
 
 /* also known as "Rabenseifner's algorithm" */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallreduce_sched_intra_reduce_scatter_allgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallreduce_sched_intra_reduce_scatter_allgather(const void *sendbuf, void *recvbuf,
                                                          int count, MPI_Datatype datatype,
                                                          MPI_Op op, MPIR_Comm * comm_ptr,

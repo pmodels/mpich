@@ -30,10 +30,7 @@ int MPI_Rput(const void *origin_addr, int origin_count,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Rput
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
 MPI_Rput - Put data into a memory window on a remote process and return a
 request handle for the operation.
@@ -177,13 +174,13 @@ int MPI_Rput(const void *origin_addr, int origin_count, MPI_Datatype
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_rput", "**mpi_rput %p %d %D %d %d %d %D %W %p", origin_addr,
                                  origin_count, origin_datatype, target_rank, target_disp,
                                  target_count, target_datatype, win, request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

@@ -77,10 +77,6 @@ void MPIR_T_env_init(void)
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_T_init_thread
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_init_thread - Initialize the MPI_T execution environment
 

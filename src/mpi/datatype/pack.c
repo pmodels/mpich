@@ -26,10 +26,6 @@ int MPI_Pack(const void *inbuf, int incount, MPI_Datatype datatype, void *outbuf
 #undef MPI_Pack
 #define MPI_Pack PMPI_Pack
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Pack_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Pack_impl(const void *inbuf,
                    MPI_Aint incount,
                    MPI_Datatype datatype, void *outbuf, MPI_Aint outsize, MPI_Aint * position)
@@ -104,10 +100,6 @@ int MPIR_Pack_impl(const void *inbuf,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Pack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Pack - Packs a datatype into contiguous memory
 
@@ -251,12 +243,12 @@ int MPI_Pack(const void *inbuf,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_pack", "**mpi_pack %p %d %D %p %d %p %C", inbuf, incount,
                                  datatype, outbuf, outsize, position, comm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

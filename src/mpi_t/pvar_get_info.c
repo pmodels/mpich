@@ -28,10 +28,6 @@ int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosit
 #define MPI_T_pvar_get_info PMPI_T_pvar_get_info
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_T_pvar_get_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_pvar_get_info - Get the inforamtion about a performance variable
 
@@ -137,14 +133,14 @@ int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosit
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_t_pvar_get_info",
                                  "**mpi_t_pvar_get_info %d %p %p %p %p %p %p %p %p %p %p %p %p",
                                  pvar_index, name, name_len, verbosity, var_class, datatype,
                                  enumtype, desc, desc_len, binding, readonly, continuous, atomic);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

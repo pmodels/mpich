@@ -231,7 +231,7 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
         if (HANDLE_GET_MPI_KIND(req->handle) != MPIR_REQUEST) {
             int mpi_errno;
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                             FCNAME, __LINE__, MPI_ERR_OTHER,
+                                             __func__, __LINE__, MPI_ERR_OTHER,
                                              "**invalid_handle", "**invalid_handle %d",
                                              req->handle);
             MPID_Abort(MPIR_Process.comm_world, mpi_errno, -1, NULL);
@@ -297,7 +297,7 @@ static inline void MPIR_Request_free(MPIR_Request * req)
 #ifdef MPICH_DBG_OUTPUT
         if (HANDLE_GET_MPI_KIND(req->handle) != MPIR_REQUEST) {
             int mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                                 FCNAME, __LINE__, MPI_ERR_OTHER,
+                                                 __func__, __LINE__, MPI_ERR_OTHER,
                                                  "**invalid_handle", "**invalid_handle %d",
                                                  req->handle);
             MPID_Abort(MPIR_Process.comm_world, mpi_errno, -1, NULL);
@@ -305,7 +305,7 @@ static inline void MPIR_Request_free(MPIR_Request * req)
 
         if (req->ref_count != 0) {
             int mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                                 FCNAME, __LINE__, MPI_ERR_OTHER,
+                                                 __func__, __LINE__, MPI_ERR_OTHER,
                                                  "**invalid_refcount", "**invalid_refcount %d",
                                                  req->ref_count);
             MPID_Abort(MPIR_Process.comm_world, mpi_errno, -1, NULL);
@@ -338,10 +338,6 @@ static inline void MPIR_Request_free(MPIR_Request * req)
  * routine (or some a variation of it) is an unfortunately necessary stunt to
  * get high message rates on key benchmarks for high-end systems.
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Request_completion_processing_fastpath
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIR_Request_completion_processing_fastpath(MPI_Request * request,
                                                                          MPIR_Request * request_ptr)
 {

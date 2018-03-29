@@ -27,10 +27,6 @@ int MPI_Address(void *location, MPI_Aint * address) __attribute__ ((weak, alias(
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Address
-#undef FCNAME
-#define FCNAME "MPI_Address"
 
 /*@
     MPI_Address - Gets the address of a location in memory
@@ -115,10 +111,10 @@ int MPI_Address(void *location, MPI_Aint * address)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_address", "**mpi_address %p %p", location, address);
     }
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

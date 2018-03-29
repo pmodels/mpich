@@ -31,10 +31,6 @@ int MPIX_Mutex_free(MPIX_Mutex * hdl_ptr) __attribute__ ((weak, alias("PMPIX_Mut
 #define MPIX_Mutex_free PMPIX_Mutex_free
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPIX_Mutex_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /** Free a group of MPI mutexes.  Collective on communicator used at the
   * time of creation.

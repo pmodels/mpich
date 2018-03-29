@@ -13,10 +13,6 @@
 #include "mpidig.h"
 #include "mpidch4r.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_am_reg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_am_reg_cb(int handler_id,
                      MPIDIG_am_origin_cb origin_cb, MPIDIG_am_target_msg_cb target_msg_cb)
 {
@@ -31,10 +27,6 @@ int MPIDIG_am_reg_cb(int handler_id,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vnis)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -247,10 +239,6 @@ int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self, int n_vnis)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIG_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIDIG_finalize(void)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_FINALIZE);

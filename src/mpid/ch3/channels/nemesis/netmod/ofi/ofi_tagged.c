@@ -35,85 +35,29 @@ MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
 /* ------------------------------------------------------------------------ */
 /* Receive callback called after sending a syncronous send acknowledgement. */
 /* ------------------------------------------------------------------------ */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_sync_recv_callback)
 static inline int MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
                                                   MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    BEGIN_FUNC(FCNAME);
+    BEGIN_FUNC(__func__);
 
     MPIDI_CH3U_Recvq_DP(REQ_OFI(rreq)->parent);
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(REQ_OFI(rreq)->parent));
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(rreq));
 
-    END_FUNC_RC(FCNAME);
+    END_FUNC_RC(__func__);
 }
 
 /* ------------------------------------------------------------------------ */
 /* Send done callback                                                       */
 /* Free any temporary/pack buffers and complete the send request            */
 /* ------------------------------------------------------------------------ */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_send_callback)
-static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
-                                             MPIR_Request * sreq)
-{
-    int mpi_errno = MPI_SUCCESS;
-    BEGIN_FUNC(FCNAME);
-    if (REQ_OFI(sreq)->pack_buffer)
-        MPL_free(REQ_OFI(sreq)->pack_buffer);
-    MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
-    END_FUNC_RC(FCNAME);
-}
-
-#define DO_CANCEL(req)                                  \
-({                                                      \
-  int mpi_errno = MPI_SUCCESS;                          \
-  int ret;                                              \
-  BEGIN_FUNC(FCNAME);                                   \
-  MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);             \
-  ret = fi_cancel((fid_t)gl_data.endpoint,              \
-                  &(REQ_OFI(req)->ofi_context));        \
-  if (ret == 0) {                                        \
-      while (!MPIR_STATUS_GET_CANCEL_BIT(req->status)) {		\
-	  if ((mpi_errno = MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL)) != \
-	      MPI_SUCCESS) {						\
-	      MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);	        \
-	      return mpi_errno;						\
-	  }								\
-      }									\
-    MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);      \
-  } else {                                              \
-    MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);     \
-  }                                                     \
-  END_FUNC(FCNAME);                                     \
-  return mpi_errno;                                     \
-})
-
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_cancel_send)
-int MPID_nem_ofi_cancel_send(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPIR_Request *sreq)
-{
-    DO_CANCEL(sreq);
-}
-
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_cancel_recv)
-int MPID_nem_ofi_cancel_recv(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPIR_Request *rreq)
-{
-    DO_CANCEL(rreq);
-}
-
-
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_anysource_matched)
 int MPID_nem_ofi_anysource_matched(MPIR_Request * rreq)
 {
     int matched = FALSE;
     int ret;
-    BEGIN_FUNC(FCNAME);
+    BEGIN_FUNC(__func__);
     /* ----------------------------------------------------- */
     /* Netmod has notified us that it has matched an any     */
     /* source request on another device.  We have the chance */
@@ -138,6 +82,6 @@ int MPID_nem_ofi_anysource_matched(MPIR_Request * rreq)
          */
         matched = TRUE;
     }
-    END_FUNC(FCNAME);
+    END_FUNC(__func__);
     return matched;
 }

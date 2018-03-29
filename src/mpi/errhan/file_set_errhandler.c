@@ -29,10 +29,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_File_set_errhandler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_File_set_errhandler - Set the error handler for an MPI file
 
@@ -89,7 +86,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
                 if (!mpi_errno) {
                     if (errhan_ptr->kind != MPIR_FILE) {
                         mpi_errno =
-                            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME,
+                            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__,
                                                  __LINE__, MPI_ERR_ARG, "**errhandnotfile", NULL);
                     }
                 }
@@ -143,7 +140,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_file_set_errhandler", "**mpi_file_set_errhandler %F %E",
                                  file, errhandler);
     }
@@ -159,10 +156,6 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 #ifndef MPICH_MPI_FROM_PMPI
 /* Export this routine only once (if we need to compile this file twice
    to get the PMPI and MPI versions without weak symbols */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Get_file_error_routine
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Get_file_error_routine(MPI_Errhandler e, void (**c) (MPI_File *, int *, ...), int *kind)
 {
     MPIR_Errhandler *e_ptr = 0;

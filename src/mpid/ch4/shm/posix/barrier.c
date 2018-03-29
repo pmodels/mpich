@@ -16,10 +16,6 @@
 /* from mpid/ch3/channels/nemesis/src/ch3i_comm.c          */
 /* ------------------------------------------------------- */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_POSIX_barrier_vars_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_POSIX_barrier_vars_init(MPIDI_POSIX_barrier_vars_t * barrier_region)
 {
     int mpi_errno = MPI_SUCCESS;

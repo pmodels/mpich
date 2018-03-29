@@ -125,10 +125,6 @@ static inline MPIR_Context_id_t MPIDI_CH4U_win_to_context(const MPIR_Win * win)
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_request_complete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_complete(MPIR_Request * req)
 {
     int incomplete;
@@ -143,10 +139,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_complete(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_REQUEST_COMPLETE);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_win_target_add
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_add(MPIR_Win * win,
                                                                             int rank)
 {
@@ -170,10 +162,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_add(MPIR
     return target_ptr;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_win_target_find
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_find(MPIR_Win * win,
                                                                              int rank)
 {
@@ -187,10 +175,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_find(MPI
     return target_ptr;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_win_target_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_get(MPIR_Win * win,
                                                                             int rank)
 {
@@ -200,10 +184,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_CH4U_win_target_t *MPIDI_CH4U_win_target_get(MPIR
     return target_ptr;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_win_target_delete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_target_delete(MPIR_Win * win,
                                                            MPIDI_CH4U_win_target_t * target_ptr)
 {
@@ -216,10 +196,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_target_delete(MPIR_Win * win,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_WIN_TARGET_DELETE);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_win_target_cleanall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_target_cleanall(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_WIN_TARGET_CLEANALL);
@@ -234,10 +210,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_target_cleanall(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_WIN_TARGET_CLEANALL);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_win_hash_clear
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_hash_clear(MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_WIN_HASH_CLEAR);
@@ -417,10 +389,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_hash_clear(MPIR_Win * win)
 #define IS_BUILTIN(_datatype)                           \
     (HANDLE_GET_KIND(_datatype) == HANDLE_KIND_BUILTIN)
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4I_valid_group_rank
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH4I_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_Group * grp)
 {
     int lpid;
@@ -651,10 +619,6 @@ static inline uintptr_t MPIDI_CH4I_win_base_at_target(const MPIR_Win * win)
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_win_cmpl_cnts_incr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_win_cmpl_cnts_incr(MPIR_Win * win, int target_rank,
                                             MPIR_cc_t ** local_cmpl_cnts_ptr)
 {
@@ -688,10 +652,6 @@ static inline void MPIDI_win_cmpl_cnts_incr(MPIR_Win * win, int target_rank,
 }
 
 /* Increase counter for active message acc ops. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_win_remote_acc_cmpl_cnt_incr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_win_remote_acc_cmpl_cnt_incr(MPIR_Win * win, int target_rank)
 {
     int c = 0;
@@ -711,10 +671,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_win_remote_acc_cmpl_cnt_incr(MPIR_Win * win,
 }
 
 /* Decrease counter for active message acc ops. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_win_remote_acc_cmpl_cnt_decr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_win_remote_acc_cmpl_cnt_decr(MPIR_Win * win, int target_rank)
 {
     int c = 0;
@@ -735,10 +691,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_win_remote_acc_cmpl_cnt_decr(MPIR_Win * win,
 
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_win_remote_cmpl_cnt_decr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_win_remote_cmpl_cnt_decr(MPIR_Win * win, int target_rank)
 {
     int c = 0;
@@ -761,10 +713,6 @@ static inline void MPIDI_win_remote_cmpl_cnt_decr(MPIR_Win * win, int target_ran
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_win_check_all_targets_remote_completed
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_win_check_all_targets_remote_completed(MPIR_Win * win, int *allcompleted)
 {
     int rank = 0;
@@ -782,10 +730,6 @@ static inline void MPIDI_win_check_all_targets_remote_completed(MPIR_Win * win, 
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_win_check_all_targets_local_completed
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_win_check_all_targets_local_completed(MPIR_Win * win, int *allcompleted)
 {
     int rank = 0;
@@ -803,10 +747,6 @@ static inline void MPIDI_win_check_all_targets_local_completed(MPIR_Win * win, i
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_win_check_group_local_completed
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_win_check_group_local_completed(MPIR_Win * win,
                                                          int *ranks_in_win_grp,
                                                          int grp_siz, int *allcompleted)
@@ -828,10 +768,6 @@ static inline void MPIDI_win_check_group_local_completed(MPIR_Win * win,
 }
 
 /* Map function interfaces in CH4 level */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_map_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_create(void **out_map, MPL_memory_class class)
 {
     MPIDI_CH4U_map_t *map;
@@ -841,10 +777,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_create(void **out_map, MPL_memory_c
     *out_map = map;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_map_destroy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_destroy(void *in_map)
 {
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
@@ -854,10 +786,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_destroy(void *in_map)
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_map_set
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_set(void *in_map, uint64_t id, void *val,
                                                  MPL_memory_class class)
 {
@@ -873,10 +801,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_set(void *in_map, uint64_t id, void
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_map_erase
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_erase(void *in_map, uint64_t id)
 {
     MPIDI_CH4U_map_t *map;
@@ -890,10 +814,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_erase(void *in_map, uint64_t id)
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_map_lookup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_map_lookup(void *in_map, uint64_t id)
 {
     void *rc;
@@ -911,10 +831,6 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_map_lookup(void *in_map, uint64_t id)
     return rc;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_map_lookup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* Wait until active message acc ops are done. */
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_wait_am_acc(MPIR_Win * win, int target_rank,
                                                     int order_needed)

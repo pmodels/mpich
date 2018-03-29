@@ -29,10 +29,7 @@ int MPI_Unpack_external(const char datarep[], const void *inbuf, MPI_Aint insize
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Unpack_external
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Unpack_external - Unpack a buffer (packed with MPI_Pack_external)
    according to a datatype into contiguous memory
@@ -143,13 +140,13 @@ int MPI_Unpack_external(const char datarep[],
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_unpack_external",
                                  "**mpi_unpack_external %s %p %d %p %p %d %D", datarep, inbuf,
                                  insize, position, outbuf, outcount, datatype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

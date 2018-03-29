@@ -605,10 +605,6 @@ Environment variables\n\
 
 /* creates a temporary file in the same directory the user specified
  * for the log file */
-#undef FUNCNAME
-#define FUNCNAME dbg_open_tmpfile
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int dbg_open_tmpfile(FILE ** dbg_fp)
 {
     int mpl_errno = MPL_DBG_SUCCESS;
@@ -650,10 +646,6 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
 
 /* creates a temporary file in the same directory the user specified
  * for the log file */
-#undef FUNCNAME
-#define FUNCNAME dbg_open_tmpfile
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int dbg_open_tmpfile(FILE ** dbg_fp)
 {
     int mpl_errno = MPL_DBG_SUCCESS;
@@ -701,10 +693,6 @@ static int dbg_open_tmpfile(FILE ** dbg_fp)
  * Note that this is not safe: By the time we call fopen(), another
  * file with the same name may exist.  That file would get clobbered.
 */
-#undef FUNCNAME
-#define FUNCNAME dbg_open_tmpfile
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int dbg_open_tmpfile(FILE ** dbg_fp)
 {
     int mpl_errno = MPL_DBG_SUCCESS;

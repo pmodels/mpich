@@ -123,10 +123,6 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     Create a communicator structure and perform basic initialization
     (mostly clearing fields and updating the reference count).
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_create
-#undef FCNAME
-#define FCNAME "MPIR_Comm_create"
 int MPIR_Comm_create(MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -158,10 +154,6 @@ int MPIR_Comm_create(MPIR_Comm ** newcomm_ptr)
 /* Create a local intra communicator from the local group of the
    specified intercomm. */
 /* FIXME this is an alternative constructor that doesn't use MPIR_Comm_create! */
-#undef FUNCNAME
-#define FUNCNAME MPII_Setup_intercomm_localcomm
-#undef FCNAME
-#define FCNAME "MPII_Setup_intercomm_localcomm"
 int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
 {
     MPIR_Comm *localcomm_ptr;
@@ -217,10 +209,6 @@ int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_map_irregular
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
                             int *src_mapping, int src_mapping_size,
                             MPIR_Comm_map_dir_t dir, MPIR_Comm_map_t ** map)
@@ -266,10 +254,6 @@ int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_map_dup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_map_dup(MPIR_Comm * newcomm, MPIR_Comm * src_comm, MPIR_Comm_map_dir_t dir)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -300,10 +284,6 @@ int MPIR_Comm_map_dup(MPIR_Comm * newcomm, MPIR_Comm * src_comm, MPIR_Comm_map_d
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_map_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_map_free(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -330,10 +310,6 @@ int MPIR_Comm_map_free(MPIR_Comm * comm)
 
    For example, we create sub-communicators for SMP-aware collectives at this
    step. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_commit
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_commit(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -529,10 +505,6 @@ int MPII_Comm_is_node_consecutive(MPIR_Comm * comm)
  *
  * Used by cart_create, graph_create, and dup_create
  */
-#undef FUNCNAME
-#define FUNCNAME MPII_Comm_copy
-#undef FCNAME
-#define FCNAME "MPII_Comm_copy"
 int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -665,10 +637,6 @@ int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
  *
  * Used by comm_idup.
  */
-#undef FUNCNAME
-#define FUNCNAME MPII_Comm_copy_data
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -731,10 +699,6 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
  *
  * !!! This routine should *never* be called outside of MPIR_Comm_release{,_always} !!!
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_delete_internal
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
 {
     int in_use;
@@ -856,10 +820,6 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
    references, delete the communicator and recover all storage and
    context ids.  This version of the function always manipulates the reference
    counts, even for predefined objects. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_release_always
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_release_always(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -886,10 +846,6 @@ int MPIR_Comm_release_always(MPIR_Comm * comm_ptr)
 
 /* Apply all known info hints in the specified info chain to the given
  * communicator. */
-#undef FUNCNAME
-#define FUNCNAME MPII_Comm_apply_hints
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -924,10 +880,6 @@ int MPII_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME free_hint_handles
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int free_hint_handles(void *ignore)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -949,10 +901,6 @@ static int free_hint_handles(void *ignore)
 
 /* The hint logic is stored in a uthash, with hint name as key and
  * the function responsible for applying the hint as the value. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_register_hint
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *state)
 {
     int mpi_errno = MPI_SUCCESS;

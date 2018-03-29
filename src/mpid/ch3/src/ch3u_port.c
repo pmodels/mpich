@@ -247,10 +247,6 @@ static MPIDI_CH3I_Port_connreq_q_t revoked_connreq_q = {NULL, NULL, 0};
  * connect and accept.
  */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Create_inter_root_communicator_connect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_Create_inter_root_communicator_connect(const char *port_name, 
 							int timeout, MPIR_Comm **comm_pptr,
 							MPIDI_VC_t **vc_pptr)
@@ -371,10 +367,6 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
 /* Creates a communicator for the purpose of communicating with one other 
    process (the root of the other group).  It also returns the virtual
    connection */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Create_inter_root_communicator_accept
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_Create_inter_root_communicator_accept(const char *port_name, 
 						MPIR_Comm **comm_pptr,
 						MPIDI_VC_t **vc_pptr)
@@ -502,10 +494,6 @@ fn_fail:
 /* This is a utility routine used to initialize temporary communicators
    used in connect/accept operations, and is only used in the above two 
    routines */
-#undef FUNCNAME
-#define FUNCNAME  MPIDI_CH3I_Initialize_tmp_comm
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
 					  MPIDI_VC_t *vc_ptr, int is_low_group, int context_id_offset)
 {
@@ -601,10 +589,6 @@ fn_fail:
    because there can be multiple process groups on each side. 
 */ 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Comm_connect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
 		       MPIR_Comm *comm_ptr, MPIR_Comm **newcomm)
 {
@@ -862,10 +846,6 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
  * all of the process groups that have made up the communicator that
  * will define the "remote group".  
  */
-#undef FUNCNAME
-#define FUNCNAME ExtractLocalPGInfo
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int ExtractLocalPGInfo( MPIR_Comm *comm_p,
 			       pg_translation local_translation[], 
 			       pg_node **pg_list_p,
@@ -969,10 +949,6 @@ static int ExtractLocalPGInfo( MPIR_Comm *comm_p,
    process groups and then distributes them to the other processes
    in comm_ptr.
    See SendPGToPeer for the routine that sends the descriptions */
-#undef FUNCNAME
-#define FUNCNAME ReceivePGAndDistribute
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int ReceivePGAndDistribute( MPIR_Comm *tmp_comm, MPIR_Comm *comm_ptr,
 				   int root, int *recvtag_p, 
 				   int n_remote_pgs, MPIDI_PG_t *remote_pg[] )
@@ -1048,10 +1024,6 @@ static int ReceivePGAndDistribute( MPIR_Comm *tmp_comm, MPIR_Comm *comm_ptr,
  all processes in comm.  The process with rank root in comm is the 
  process in peercomm from which the process groups are taken. This routine 
  is collective over comm_p . */
-#undef FUNCNAME
-#define FUNCNAME MPID_PG_BCast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
 {
     int n_local_pgs=0, mpi_errno = MPI_SUCCESS;
@@ -1152,10 +1124,6 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
 
 /* Sends the process group information to the peer and frees the 
    pg_list */
-#undef FUNCNAME
-#define FUNCNAME SendPGtoPeerAndFree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int SendPGtoPeerAndFree( MPIR_Comm *tmp_comm, int *sendtag_p,
 				pg_node *pg_list )
 {
@@ -1214,10 +1182,6 @@ static int SendPGtoPeerAndFree( MPIR_Comm *tmp_comm, int *sendtag_p,
    process groups on each side.
 
  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Comm_accept
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
 		      MPIR_Comm *comm_ptr, MPIR_Comm **newcomm)
 {
@@ -1435,10 +1399,6 @@ Input/Output Parameters:
    Note:
    This routine performance a barrier over 'comm_ptr'.  Why?
 */
-#undef FUNCNAME
-#define FUNCNAME SetupNewIntercomm
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
 			      pg_translation remote_translation[],
 			      MPIDI_PG_t **remote_pg, 
@@ -1492,10 +1452,6 @@ static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
 
 /* Free new_vc. It was explicitly allocated in MPIDI_CH3_Connect_to_root. */
 /* FIXME: The free and the create routines should be in the same file */
-#undef FUNCNAME
-#define FUNCNAME FreeNewVC
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int FreeNewVC( MPIDI_VC_t *new_vc )
 {
     MPID_Progress_state progress_state;
@@ -1547,10 +1503,6 @@ static int FreeNewVC( MPIDI_VC_t *new_vc )
  * enqueue the request to that port's accept queue to wait for an accept call to
  * serve it; otherwise, such request should be discarded, thus we immediately send
  * nack back to client and start closing. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Acceptq_enqueue
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Acceptq_enqueue(MPIDI_VC_t * vc, int port_name_tag )
 {
     int mpi_errno=MPI_SUCCESS;
@@ -1611,10 +1563,6 @@ int MPIDI_CH3I_Acceptq_enqueue(MPIDI_VC_t * vc, int port_name_tag )
 
 /* Attempt to dequeue a connection request from the accept queue. If the queue
  * is empty return a NULL object. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Acceptq_dequeue
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Acceptq_dequeue(MPIDI_CH3I_Port_connreq_t ** connreq_ptr, int port_name_tag)
 {
     int mpi_errno=MPI_SUCCESS;
@@ -1643,10 +1591,6 @@ int MPIDI_CH3I_Acceptq_dequeue(MPIDI_CH3I_Port_connreq_t ** connreq_ptr, int por
  * MPIDI_CH3I_Port_destroy(close_port) and MPIDI_Port_finalize (finalize).
  * Note that we already deleted port from active_port queue before cleaning up
  * its accept queue, thus no new VC can be enqueued concurrently. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Acceptq_cleanup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Acceptq_cleanup(MPIDI_CH3I_Port_connreq_q_t * accept_connreq_q)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1688,10 +1632,6 @@ static int MPIDI_CH3I_Acceptq_cleanup(MPIDI_CH3I_Port_connreq_q_t * accept_connr
  * We do not want to wait for these VCs being freed in timed out connect,
  * because it is blocked till the server calls a matching accept or close_port.
  * This routine is called in finalize on client process. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Revokeq_cleanup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Revokeq_cleanup(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1731,10 +1671,6 @@ static int MPIDI_CH3I_Revokeq_cleanup(void)
 /*** Packet handlers exposed to progress engine  ***/
 
 /* Packet handler to handle response (connection ACK) on client process. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_ConnAck
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_ConnAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                  void *data ATTRIBUTE((unused)),
                                  intptr_t * buflen, MPIR_Request ** rreqp)
@@ -1812,10 +1748,6 @@ int MPIDI_CH3_PktHandler_ConnAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 }
 
 /* Packet handler to handle response (acceptance ACK) on server process. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_AcceptAck
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_AcceptAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                    void *data ATTRIBUTE((unused)),
                                    intptr_t * buflen, MPIR_Request ** rreqp)
@@ -1859,10 +1791,6 @@ int MPIDI_CH3_PktHandler_AcceptAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
 /*** Routines for connection request creation and freeing  ***/
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Port_connreq_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Port_connreq_create(MPIDI_VC_t * vc, MPIDI_CH3I_Port_connreq_t ** connreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1891,10 +1819,6 @@ static int MPIDI_CH3I_Port_connreq_create(MPIDI_VC_t * vc, MPIDI_CH3I_Port_connr
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Port_connreq_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Port_connreq_free(MPIDI_CH3I_Port_connreq_t * connreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1926,10 +1850,6 @@ static int MPIDI_CH3I_Port_connreq_free(MPIDI_CH3I_Port_connreq_t * connreq)
 /*** Routines to initialize / destroy dynamic connection  ***/
 
 /* Initialize port's accept queue. It is called in MPIDI_Open_port. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Port_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Port_init(int port_name_tag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1960,10 +1880,6 @@ int MPIDI_CH3I_Port_init(int port_name_tag)
 }
 
 /* Destroy port's accept queue. It is called in MPIDI_Close_port. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Port_destroy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Port_destroy(int port_name_tag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1992,10 +1908,6 @@ int MPIDI_CH3I_Port_destroy(int port_name_tag)
 }
 
 /* This routine is called by MPID_Finalize to clean up dynamic connections. */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Port_finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Port_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;

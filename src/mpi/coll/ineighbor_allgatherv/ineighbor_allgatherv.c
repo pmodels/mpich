@@ -72,10 +72,6 @@ int MPI_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype se
 #undef MPI_Ineighbor_allgatherv
 #define MPI_Ineighbor_allgatherv PMPI_Ineighbor_allgatherv
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_allgatherv_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_allgatherv_sched_intra_auto(const void *sendbuf, int sendcount,
                                                MPI_Datatype sendtype, void *recvbuf,
                                                const int recvcounts[], const int displs[],
@@ -97,10 +93,6 @@ int MPIR_Ineighbor_allgatherv_sched_intra_auto(const void *sendbuf, int sendcoun
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_allgatherv_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_allgatherv_sched_inter_auto(const void *sendbuf, int sendcount,
                                                MPI_Datatype sendtype, void *recvbuf,
                                                const int recvcounts[], const int displs[],
@@ -122,10 +114,6 @@ int MPIR_Ineighbor_allgatherv_sched_inter_auto(const void *sendbuf, int sendcoun
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_allgatherv_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_allgatherv_sched_impl(const void *sendbuf, int sendcount,
                                          MPI_Datatype sendtype, void *recvbuf,
                                          const int recvcounts[], const int displs[],
@@ -171,10 +159,6 @@ int MPIR_Ineighbor_allgatherv_sched_impl(const void *sendbuf, int sendcount,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_allgatherv_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_allgatherv_sched(const void *sendbuf, int sendcount,
                                     MPI_Datatype sendtype, void *recvbuf,
                                     const int recvcounts[], const int displs[],
@@ -193,10 +177,6 @@ int MPIR_Ineighbor_allgatherv_sched(const void *sendbuf, int sendcount,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_allgatherv_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount,
                                    MPI_Datatype sendtype, void *recvbuf,
                                    const int recvcounts[], const int displs[],
@@ -230,10 +210,6 @@ int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ineighbor_allgatherv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_allgatherv(const void *sendbuf, int sendcount,
                               MPI_Datatype sendtype, void *recvbuf,
                               const int recvcounts[], const int displs[],
@@ -254,10 +230,6 @@ int MPIR_Ineighbor_allgatherv(const void *sendbuf, int sendcount,
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Ineighbor_allgatherv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Ineighbor_allgatherv - Nonblocking version of MPI_Neighbor_allgatherv.
 
@@ -374,14 +346,14 @@ int MPI_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype se
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_ineighbor_allgatherv",
                                  "**mpi_ineighbor_allgatherv %p %d %D %p %p %p %D %C %p", sendbuf,
                                  sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm,
                                  request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

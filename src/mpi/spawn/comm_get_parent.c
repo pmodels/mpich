@@ -27,10 +27,7 @@ int MPI_Comm_get_parent(MPI_Comm * parent) __attribute__ ((weak, alias("PMPI_Com
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_get_parent
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Comm_get_parent - Return the parent communicator for this process
 
@@ -61,6 +58,8 @@ Output Parameters:
 @*/
 int MPI_Comm_get_parent(MPI_Comm * parent)
 {
+#ifdef HAVE_ERROR_CHECKING
+#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_GET_PARENT);
 
@@ -96,10 +95,10 @@ int MPI_Comm_get_parent(MPI_Comm * parent)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_comm_get_parent", "**mpi_comm_get_parent %p", parent);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

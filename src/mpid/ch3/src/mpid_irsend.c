@@ -11,10 +11,6 @@
 /*
  * MPID_Irsend()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Irsend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 		MPIR_Request ** request)
 {

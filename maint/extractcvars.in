@@ -223,10 +223,6 @@ foreach my $p (@cvars) {
 # Generate the init function.
 print OUTPUT_C <<EOT;
 
-#undef FUNCNAME
-#define FUNCNAME ${fn_ns}_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int ${fn_ns}_init(void)
 {
     int mpi_errno = MPI_SUCCESS;

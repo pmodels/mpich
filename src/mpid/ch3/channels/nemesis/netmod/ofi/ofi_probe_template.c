@@ -14,13 +14,11 @@
 /* ------------------------------------------------------------------------ */
 /* peek_callback called when a successful peek is completed                 */
 /* ------------------------------------------------------------------------ */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(peek_callback)
 static int
 ADD_SUFFIX(peek_callback)(cq_tagged_entry_t * wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    BEGIN_FUNC(FCNAME);
+    BEGIN_FUNC(__func__);
     REQ_OFI(rreq)->match_state = PEEK_FOUND;
 #if API_SET == API_SET_1
     rreq->status.MPI_SOURCE    = get_source(wc->tag);
@@ -30,12 +28,10 @@ ADD_SUFFIX(peek_callback)(cq_tagged_entry_t * wc, MPIR_Request * rreq)
     rreq->status.MPI_TAG       = get_tag(wc->tag);
     MPIR_STATUS_SET_COUNT(rreq->status, wc->len);
     rreq->status.MPI_ERROR     = MPI_SUCCESS;
-    END_FUNC(FCNAME);
+    END_FUNC(__func__);
     return mpi_errno;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_iprobe_impl)
 int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl)(struct MPIDI_VC *vc,
                              int source,
                              int tag,
@@ -49,7 +45,7 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl)(struct MPIDI_VC *vc,
     size_t len;
     MPIR_Request rreq_s, *rreq;
 
-    BEGIN_FUNC(FCNAME);
+    BEGIN_FUNC(__func__);
     if (rreq_ptr) {
         MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_create_req(&rreq, 1));
         rreq->kind = MPIR_REQUEST_KIND__RECV;
@@ -108,7 +104,7 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl)(struct MPIDI_VC *vc,
     }
     MPIR_ERR_CHKANDJUMP4((ret < 0), mpi_errno, MPI_ERR_OTHER,
                          "**ofi_peek", "**ofi_peek %s %d %s %s",
-                         __SHORT_FILE__, __LINE__, FCNAME, fi_strerror(-ret));
+                         __SHORT_FILE__, __LINE__, __func__, fi_strerror(-ret));
 
     while (PEEK_INIT == REQ_OFI(rreq)->match_state)
         MPID_nem_ofi_poll(MPID_BLOCKING_POLL);
@@ -129,28 +125,24 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl)(struct MPIDI_VC *vc,
     if (rreq_ptr)
         MPIR_Request_add_ref(rreq);
     *flag = 1;
-    END_FUNC_RC(FCNAME);
+    END_FUNC_RC(__func__);
 }
 
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_iprobe)
 int ADD_SUFFIX(MPID_nem_ofi_iprobe)(struct MPIDI_VC *vc,
                         int source,
                         int tag,
                         MPIR_Comm * comm, int context_offset, int *flag, MPI_Status * status)
 {
     int rc;
-    BEGIN_FUNC(FCNAME);
+    BEGIN_FUNC(__func__);
     *flag = 0;
     rc = ADD_SUFFIX(MPID_nem_ofi_iprobe_impl)(vc, source,
                                               tag, comm, context_offset, flag, status, NULL);
-    END_FUNC(FCNAME);
+    END_FUNC(__func__);
     return rc;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_improbe)
 int ADD_SUFFIX(MPID_nem_ofi_improbe)(struct MPIDI_VC *vc,
                          int source,
                          int tag,
@@ -160,7 +152,7 @@ int ADD_SUFFIX(MPID_nem_ofi_improbe)(struct MPIDI_VC *vc,
 {
     int old_error = status->MPI_ERROR;
     int s;
-    BEGIN_FUNC(FCNAME);
+    BEGIN_FUNC(__func__);
     *flag = CLAIM_PEEK;
     s = ADD_SUFFIX(MPID_nem_ofi_iprobe_impl)(vc, source,
                                              tag, comm, context_offset, flag, status, message);
@@ -168,37 +160,33 @@ int ADD_SUFFIX(MPID_nem_ofi_improbe)(struct MPIDI_VC *vc,
         status->MPI_ERROR = old_error;
         (*message)->kind = MPIR_REQUEST_KIND__MPROBE;
     }
-    END_FUNC(FCNAME);
+    END_FUNC(__func__);
     return s;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_anysource_iprobe)
 int ADD_SUFFIX(MPID_nem_ofi_anysource_iprobe)(int tag,
                                   MPIR_Comm * comm,
                                   int context_offset, int *flag, MPI_Status * status)
 {
     int rc;
-    BEGIN_FUNC(FCNAME);
+    BEGIN_FUNC(__func__);
     *flag = NORMAL_PEEK;
     rc = ADD_SUFFIX(MPID_nem_ofi_iprobe)(NULL, MPI_ANY_SOURCE,
                                          tag, comm, context_offset, flag, status);
-    END_FUNC(FCNAME);
+    END_FUNC(__func__);
     return rc;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPID_nem_ofi_anysource_improbe)
 int ADD_SUFFIX(MPID_nem_ofi_anysource_improbe)(int tag,
                                    MPIR_Comm * comm,
                                    int context_offset,
                                    int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int rc;
-    BEGIN_FUNC(FCNAME);
+    BEGIN_FUNC(__func__);
     *flag = CLAIM_PEEK;
     rc = ADD_SUFFIX(MPID_nem_ofi_improbe)(NULL, MPI_ANY_SOURCE, tag, comm,
                               context_offset, flag, message, status);
-    END_FUNC(FCNAME);
+    END_FUNC(__func__);
     return rc;
 }

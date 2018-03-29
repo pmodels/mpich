@@ -114,10 +114,6 @@ static MPIDI_CH3_PktHandler_Fcn *pkt_handlers[MPIDI_NEM_TCP_PKT_NUM_TYPES ? MPID
 
 MPL_dbg_class MPIDI_NEM_TCP_DBG_DET;
 
-#undef FUNCNAME
-#define FUNCNAME set_up_listener
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int set_up_listener(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -149,10 +145,6 @@ fn_fail:
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -203,7 +195,7 @@ int MPID_nem_tcp_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_
     
  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_INIT);
-/*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
+/*     fprintf(stdout, __func__ " Exit\n"); fflush(stdout); */
     return mpi_errno;
  fn_fail:
 /*     fprintf(stdout, "failure. mpi_errno = %d\n", mpi_errno); */
@@ -212,10 +204,6 @@ int MPID_nem_tcp_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_
 
 #ifdef ENABLE_CHECKPOINTING
 
-#undef FUNCNAME
-#define FUNCNAME ckpt_restart
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int ckpt_restart(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -404,10 +392,6 @@ fn_fail:
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_get_business_card
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -465,10 +449,6 @@ int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_s
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_connect_to_root
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -497,10 +477,6 @@ int MPID_nem_tcp_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_vc_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_vc_init (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -546,10 +522,6 @@ int MPID_nem_tcp_vc_init (MPIDI_VC_t *vc)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_vc_destroy
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_vc_destroy(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -565,10 +537,6 @@ int MPID_nem_tcp_vc_destroy(MPIDI_VC_t *vc)
    This should be removed and use only one function eventually.
 */
    
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_get_addr_port_from_bc
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr *addr, in_port_t *port)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -580,7 +548,7 @@ int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_GET_ADDR_PORT_FROM_BC);
     
-    /*     fprintf(stdout, FCNAME " Enter\n"); fflush(stdout); */
+    /*     fprintf(stdout, __func__ " Enter\n"); fflush(stdout); */
     /* desc_str is only used for debugging
     ret = MPL_str_get_string_arg (business_card, MPIDI_CH3I_HOST_DESCRIPTION_KEY, desc_str, sizeof(desc_str));
     MPIR_ERR_CHKANDJUMP (ret != MPL_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
@@ -603,7 +571,7 @@ int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr
     MPIR_ERR_CHKANDJUMP(ret < 0, mpi_errno, MPI_ERR_OTHER, "**afinetinvalid");
     
  fn_exit:
-/*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
+/*     fprintf(stdout, __func__ " Exit\n"); fflush(stdout); */
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_GET_ADDR_PORT_FROM_BC);
     return mpi_errno;
  fn_fail:
@@ -615,10 +583,6 @@ int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr
 /* MPID_nem_tcp_bind -- if MPICH_PORT_RANGE is set, this
    binds the socket to an available port number in the range.
    Otherwise, it binds it to any addr and any port */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_bind
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_bind (int sockfd)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -653,7 +617,7 @@ int MPID_nem_tcp_bind (int sockfd)
  fn_exit:
 /*     if (ret == 0) */
 /*         fprintf(stdout, "sockfd=%d  port=%d bound\n", sockfd, port); */
-/*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
+/*     fprintf(stdout, __func__ " Exit\n"); fflush(stdout); */
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_BIND);
     return mpi_errno;
  fn_fail:
@@ -662,10 +626,6 @@ int MPID_nem_tcp_bind (int sockfd)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_vc_terminate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_vc_terminate(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -706,10 +666,6 @@ int MPID_nem_tcp_vc_terminate(MPIDI_VC_t *vc)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_vc_terminated
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_vc_terminated(MPIDI_VC_t *vc)
 {
     /* This is called when the VC is to be terminated once all queued
@@ -733,10 +689,6 @@ int MPID_nem_tcp_vc_terminated(MPIDI_VC_t *vc)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_tcp_get_ordering
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_get_ordering(int *ordering)
 {
     (*ordering) = 1;

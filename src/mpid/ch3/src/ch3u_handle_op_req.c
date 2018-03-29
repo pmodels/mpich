@@ -8,10 +8,6 @@
 #include "mpidrma.h"
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Req_handler_rma_op_complete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Req_handler_rma_op_complete(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;

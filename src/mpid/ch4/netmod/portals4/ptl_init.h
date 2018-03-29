@@ -39,10 +39,6 @@ static inline int MPIDI_PTL_append_overflow(size_t i)
                        &MPIDI_PTL_global.overflow_me_handles[i]);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_init_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int size,
                                          int appnum,

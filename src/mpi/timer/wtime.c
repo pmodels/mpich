@@ -24,8 +24,6 @@ double MPI_Wtime(void) __attribute__ ((weak, alias("PMPI_Wtime")));
 #define MPI_Wtime PMPI_Wtime
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Wtime
 
 /*@
   MPI_Wtime - Returns an elapsed time on the calling processor

@@ -30,10 +30,7 @@ int MPI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype origi
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Accumulate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Accumulate - Accumulate data into the target process using remote
    memory access
@@ -167,13 +164,13 @@ int MPI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_accumulate", "**mpi_accumulate %p %d %D %d %d %d %D %O %W",
                                  origin_addr, origin_count, origin_datatype, target_rank,
                                  target_disp, target_count, target_datatype, op, win);
     }
 #endif
-    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

@@ -28,10 +28,7 @@ int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Graphdims_get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
 
 MPI_Graphdims_get - Retrieves graph topology information associated with a
@@ -121,12 +118,12 @@ int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_graphdims_get", "**mpi_graphdims_get %C %p %p", comm,
                                  nnodes, nedges);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

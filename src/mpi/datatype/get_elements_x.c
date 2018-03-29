@@ -261,10 +261,6 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count * bytes_p,
     }
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Get_elements_x_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIR_Get_elements_x_impl
  *
  * Arguments:
@@ -339,10 +335,6 @@ int MPIR_Get_elements_x_impl(MPI_Count * byte_count, MPI_Datatype datatype, MPI_
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Get_elements_x
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* N.B. "count" is the name mandated by the MPI-3 standard, but it should
  * probably be called "elements" instead and is handled that way in the _impl
  * routine [goodell@ 2012-11-05 */
@@ -428,12 +420,12 @@ int MPI_Get_elements_x(const MPI_Status * status, MPI_Datatype datatype, MPI_Cou
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_get_elements_x", "**mpi_get_elements_x %p %D %p", status,
                                  datatype, count);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

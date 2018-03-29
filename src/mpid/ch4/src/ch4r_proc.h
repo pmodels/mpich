@@ -18,10 +18,6 @@
 #include "ch4_types.h"
 #include "build_nodemap.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_comm_rank_to_pid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank, int *index,
                                                      int *avtid)
 {
@@ -87,10 +83,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank,
     return *index;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_comm_rank_to_av
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * comm, int rank)
 {
     MPIDI_av_entry_t *ret = NULL;
@@ -162,10 +154,6 @@ MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * co
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_comm_rank_to_pid_local
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int rank, int *index,
                                                            int *avtid)
 {
@@ -290,10 +278,6 @@ static inline int MPIDI_CH4U_get_max_node_id(MPIR_Comm * comm, int *max_id_p)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_build_nodemap
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH4U_build_nodemap(int myrank,
                                            MPIR_Comm * comm, int sz, int *out_nodemap, int *sz_out)
 {
@@ -347,10 +331,6 @@ static inline int MPIDIU_get_avt_size(int avtid)
     return ret;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_alloc_globals_for_avtid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIU_alloc_globals_for_avtid(int avtid)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -369,10 +349,6 @@ static inline int MPIDIU_alloc_globals_for_avtid(int avtid)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_free_globals_for_avtid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIU_free_globals_for_avtid(int avtid)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_FREE_GLOBALS_FOR_AVTID);

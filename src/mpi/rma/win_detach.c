@@ -27,10 +27,7 @@ int MPI_Win_detach(MPI_Win win, const void *base) __attribute__ ((weak, alias("P
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_detach
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
 MPI_Win_detach - Detach memory from a dynamic window
 
@@ -120,11 +117,11 @@ int MPI_Win_detach(MPI_Win win, const void *base)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_win_detach", "**mpi_win_detach %W %p", win, base);
     }
 #endif
-    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

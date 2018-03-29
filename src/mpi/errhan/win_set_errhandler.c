@@ -28,10 +28,7 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_set_errhandler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Win_set_errhandler - Set window error handler
 
@@ -49,6 +46,8 @@ Input Parameters:
 @*/
 int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
 {
+#ifdef HAVE_ERROR_CHECKING
+#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     int in_use;
@@ -89,9 +88,9 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
                 /* Also check for a valid errhandler kind */
                 if (!mpi_errno) {
                     if (errhan_ptr->kind != MPIR_WIN) {
-                        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME,
-                                                         __LINE__, MPI_ERR_ARG, "**errhandnotwin",
-                                                         NULL);
+                        mpi_errno =
+                            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__,
+                                                 __LINE__, MPI_ERR_ARG, "**errhandnotwin", NULL);
                     }
                 }
             }
@@ -131,11 +130,11 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_win_set_errhandler", "**mpi_win_set_errhandler %W %E", win,
                                  errhandler);
     }
-    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

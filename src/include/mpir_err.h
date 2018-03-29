@@ -48,7 +48,7 @@ MPICH_API_PUBLIC int MPIR_Err_return_file(MPI_File, const char[], int); /* Romio
  A typical use is\:
 .vb
    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-               FCNAME, __LINE__, MPI_ERR_RANK,
+               __func__, __LINE__, MPI_ERR_RANK,
                "Invalid Rank", "Invalid rank %d", rank);
 .ve
 
@@ -204,21 +204,21 @@ cvars:
  */
 #define MPIR_ERRTEST_SEND_TAG(tag,err)                                  \
     if ((tag) < 0 || (tag) > MPIR_Process.attrs.tag_ub) {               \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_TAG, "**tag", "**tag %d", tag); \
         goto fn_fail;                                                   \
     }
 
 #define MPIR_ERRTEST_RECV_TAG(tag,err)                                  \
     if ((tag) < MPI_ANY_TAG || (tag) > MPIR_Process.attrs.tag_ub) {     \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_TAG, "**tag", "**tag %d", tag); \
         goto fn_fail;                                                   \
     }
 
 #define MPIR_ERRTEST_RANK(comm_ptr,rank,err)                            \
     if ((rank) < 0 || (rank) >= (comm_ptr)->remote_size) {              \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_RANK, "**rank", "**rank %d %d", rank, \
                                    (comm_ptr)->remote_size);            \
         goto fn_fail;                                                   \
@@ -226,7 +226,7 @@ cvars:
 
 #define MPIR_ERRTEST_SEND_RANK(comm_ptr,rank,err)                       \
     if ((rank) < MPI_PROC_NULL || (rank) >= (comm_ptr)->remote_size) {  \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_RANK, "**rank", "**rank %d %d", rank, \
                                    (comm_ptr)->remote_size);            \
         goto fn_fail;                                                   \
@@ -234,7 +234,7 @@ cvars:
 
 #define MPIR_ERRTEST_RECV_RANK(comm_ptr,rank,err)                       \
     if ((rank) < MPI_ANY_SOURCE || (rank) >= (comm_ptr)->remote_size) { \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_RANK, "**rank", "**rank %d %d", rank, \
                                    (comm_ptr)->remote_size);            \
         goto fn_fail;                                                   \
@@ -244,7 +244,7 @@ cvars:
     if ((count) < 0) {                                          \
         err = MPIR_Err_create_code(MPI_SUCCESS,                 \
                                    MPIR_ERR_RECOVERABLE,        \
-                                   FCNAME, __LINE__,            \
+                                   __func__, __LINE__,            \
                                    MPI_ERR_COUNT,               \
                                    "**countneg",                \
                                    "**countneg %d",             \
@@ -256,7 +256,7 @@ cvars:
     if ((disp) < 0) {                                           \
         err = MPIR_Err_create_code(MPI_SUCCESS,                 \
                                    MPIR_ERR_RECOVERABLE,        \
-                                   FCNAME, __LINE__,            \
+                                   __func__, __LINE__,            \
                                    MPI_ERR_DISP,                \
                                    "**rmadisp", 0);             \
         goto fn_fail;                                           \
@@ -266,7 +266,7 @@ cvars:
     if ((ptr1)==(ptr2) && (ptr1) != MPI_BOTTOM) {               \
         err = MPIR_Err_create_code(MPI_SUCCESS,                 \
                                    MPIR_ERR_RECOVERABLE,        \
-                                   FCNAME, __LINE__,            \
+                                   __func__, __LINE__,            \
                                    MPI_ERR_BUFFER,              \
                                    "**bufalias", 0);            \
         goto fn_fail;                                           \
@@ -278,7 +278,7 @@ cvars:
     if (MPIR_CVAR_COLL_ALIAS_CHECK && (ptr1)==(ptr2)) {         \
         err = MPIR_Err_create_code(MPI_SUCCESS,                 \
                                    MPIR_ERR_RECOVERABLE,        \
-                                   FCNAME, __LINE__,            \
+                                   __func__, __LINE__,            \
                                    MPI_ERR_BUFFER,              \
                                    "**bufalias", 0);            \
         goto fn_fail;                                           \
@@ -288,7 +288,7 @@ cvars:
     if (!(arg)) {                                               \
         err = MPIR_Err_create_code(MPI_SUCCESS,                 \
                                    MPIR_ERR_RECOVERABLE,        \
-                                   FCNAME, __LINE__,            \
+                                   __func__, __LINE__,            \
                                    MPI_ERR_ARG,                 \
                                    "**nullptr",                 \
                                    "**nullptr %s",              \
@@ -299,7 +299,7 @@ cvars:
 #define MPIR_ERRTEST_ARGNEG(arg,arg_name,err)                           \
     if ((arg) < 0) {                                                    \
         err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,   \
-                                   FCNAME, __LINE__, MPI_ERR_ARG,       \
+                                   __func__, __LINE__, MPI_ERR_ARG,       \
                                    "**argneg",                          \
                                    "**argneg %s %d", arg_name, arg);    \
         goto fn_fail;                                                   \
@@ -309,7 +309,7 @@ cvars:
     if ((arg) <= 0) {                                           \
         err = MPIR_Err_create_code(MPI_SUCCESS,                 \
                                    MPIR_ERR_RECOVERABLE,        \
-                                   FCNAME, __LINE__,            \
+                                   __func__, __LINE__,            \
                                    errclass,                    \
                                    "**argnonpos",               \
                                    "**argnonpos %s %d",         \
@@ -321,7 +321,7 @@ cvars:
 /* intercomm can be between MPI_PROC_NULL (or MPI_ROOT) and remote_size-1 */
 #define MPIR_ERRTEST_INTRA_ROOT(comm_ptr,root,err)                      \
     if ((root) < 0 || (root) >= (comm_ptr)->local_size) {               \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_ROOT, "**root", "**root %d", root); \
         goto fn_fail;                                                   \
     }
@@ -330,14 +330,14 @@ cvars:
    intercomm test */
 #define MPIR_ERRTEST_INTER_ROOT(comm_ptr,root,err)                      \
     if ((root) < -3 || (root) >= (comm_ptr)->remote_size) {             \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_ROOT, "**root", "**root %d", root); \
         goto fn_fail;                                                   \
     }
 
 #define MPIR_ERRTEST_PERSISTENT(reqp,err)                               \
     if ((reqp)->kind != MPIR_REQUEST_KIND__PREQUEST_SEND && (reqp)->kind != MPIR_REQUEST_KIND__PREQUEST_RECV) { \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_REQUEST, "**requestnotpersist", 0); \
         goto fn_fail;                                                   \
     }
@@ -345,21 +345,21 @@ cvars:
 #define MPIR_ERRTEST_PERSISTENT_ACTIVE(reqp,err)                        \
     if (((reqp)->kind == MPIR_REQUEST_KIND__PREQUEST_SEND ||            \
          (reqp)->kind == MPIR_REQUEST_KIND__PREQUEST_RECV) && (reqp)->u.persist.real_request != NULL) { \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_REQUEST, "**requestpersistactive", 0); \
         goto fn_fail;                                                   \
     }
 
 #define MPIR_ERRTEST_COMM_INTRA(comm_ptr, err)                          \
     if ((comm_ptr)->comm_kind != MPIR_COMM_KIND__INTRACOMM) {           \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_COMM,"**commnotintra",0);    \
         goto fn_fail;                                                   \
     }
 
 #define MPIR_ERRTEST_COMM_TAG(tag,err)                                  \
     if ((tag) < 0 || (tag) > MPIR_Process.attrs.tag_ub) {               \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_TAG, "**tag", "**tag %d", tag); \
         goto fn_fail;                                                   \
     }
@@ -375,7 +375,7 @@ cvars:
         {                                                               \
             err_ = MPIR_Err_create_code(MPI_SUCCESS,                    \
                                         MPIR_ERR_RECOVERABLE,           \
-                                        FCNAME, __LINE__,               \
+                                        __func__, __LINE__,               \
                                         MPI_ERR_TYPE,                   \
                                         "**dtype", 0);                  \
             goto fn_fail;                                               \
@@ -384,7 +384,7 @@ cvars:
         {                                                               \
             err_ = MPIR_Err_create_code(MPI_SUCCESS,                    \
                                         MPIR_ERR_RECOVERABLE,           \
-                                        FCNAME, __LINE__,               \
+                                        __func__, __LINE__,               \
                                         MPI_ERR_TYPE,                   \
                                         "**dtypenull",                  \
                                         "**dtypenull %s",               \
@@ -398,7 +398,7 @@ cvars:
         if (!MPIR_Type_is_rma_atomic(datatype_)) {                      \
             err_ = MPIR_Err_create_code(MPI_SUCCESS,                    \
                                         MPIR_ERR_RECOVERABLE,           \
-                                        FCNAME, __LINE__,               \
+                                        __func__, __LINE__,               \
                                         MPI_ERR_TYPE,                   \
                                         "**rmatypenotatomic",           \
                                         "**rmatypenotatomic %D",        \
@@ -418,21 +418,21 @@ cvars:
 
 #define MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf,count,err)                 \
     if (count > 0 && sendbuf == MPI_IN_PLACE) {                         \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_BUFFER, "**sendbuf_inplace", 0); \
         goto fn_fail;                                                   \
     }
 
 #define MPIR_ERRTEST_RECVBUF_INPLACE(recvbuf,count,err)                 \
     if (count > 0 && recvbuf == MPI_IN_PLACE) {                         \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_BUFFER, "**recvbuf_inplace", 0); \
         goto fn_fail;                                                   \
     }
 
 #define MPIR_ERRTEST_BUF_INPLACE(buf,count,err)                         \
     if (count > 0 && buf == MPI_IN_PLACE) {                             \
-        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
+        err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, \
                                    MPI_ERR_BUFFER, "**buf_inplace", 0); \
         goto fn_fail;                                                   \
     }
@@ -470,7 +470,7 @@ cvars:
         if (ferr) {                                                     \
             err = MPIR_Err_create_code(MPI_SUCCESS,                     \
                                        MPIR_ERR_RECOVERABLE,            \
-                                       FCNAME, __LINE__,                \
+                                       __func__, __LINE__,                \
                                        MPI_ERR_BUFFER,                  \
                                        "**bufnull", 0);                 \
             goto fn_fail;                                               \
@@ -796,79 +796,79 @@ cvars:
 */
 #ifdef HAVE_ERROR_CHECKING
 #define MPIR_ERR_SETSIMPLE(err_,class_,msg_)                            \
-    err_ = MPIR_Err_create_code(MPI_SUCCESS,MPIR_ERR_RECOVERABLE,FCNAME, \
+    err_ = MPIR_Err_create_code(MPI_SUCCESS,MPIR_ERR_RECOVERABLE,__func__, \
                                 __LINE__, class_, msg_, 0)
 #define MPIR_ERR_SET(err_,class_,msg_)                                  \
-    err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,FCNAME,       \
+    err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,__func__,       \
                                 __LINE__, class_, msg_, 0)
 #define MPIR_ERR_SET1(err_,class_,gmsg_,smsg_,arg1_)                    \
-    err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,FCNAME,       \
+    err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,__func__,       \
                                 __LINE__, class_, gmsg_, smsg_, arg1_)
 #define MPIR_ERR_SET2(err_,class_,gmsg_,smsg_,arg1_,arg2_)              \
-    err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,FCNAME,       \
+    err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,__func__,       \
                                 __LINE__, class_, gmsg_, smsg_, arg1_, arg2_)
 #define MPIR_ERR_SETANDSTMT(err_,class_,stmt_,msg_)                     \
     do {                                                                \
-        err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,FCNAME,   \
+        err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,__func__,   \
                                     __LINE__, class_, msg_, 0); stmt_ ; \
     } while (0)
 #define MPIR_ERR_SETANDSTMT1(err_,class_,stmt_,gmsg_,smsg_,arg1_)       \
     do {                                                                \
-        err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,FCNAME,   \
+        err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,__func__,   \
                                     __LINE__, class_, gmsg_, smsg_, arg1_); stmt_ ; \
     } while (0)
 #define MPIR_ERR_SETANDSTMT2(err_,class_,stmt_,gmsg_,smsg_,arg1_,arg2_) \
     do {                                                                \
-        err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,FCNAME,   \
+        err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,__func__,   \
                                     __LINE__, class_, gmsg_, smsg_, arg1_, arg2_); stmt_ ; \
     } while (0)
 #define MPIR_ERR_SETANDSTMT3(err_,class_,stmt_,gmsg_,smsg_,arg1_,arg2_, arg3_) \
     do {                                                                \
-        err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,FCNAME,   \
+        err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,__func__,   \
                                     __LINE__, class_, gmsg_, smsg_, arg1_, arg2_, arg3_); stmt_ ; \
     } while (0)
 #define MPIR_ERR_SETANDSTMT4(err_,class_,stmt_,gmsg_,smsg_,arg1_,arg2_, arg3_, arg4_) \
     do {                                                                \
-        err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,FCNAME,   \
+        err_ = MPIR_Err_create_code(err_,MPIR_ERR_RECOVERABLE,__func__,   \
                                     __LINE__, class_, gmsg_, smsg_, arg1_, \
                                     arg2_, arg3_, arg4_); stmt_ ;       \
     } while (0)
 
 #define MPIR_ERR_SETFATALSIMPLE(err_,class_,msg_)                       \
-    err_ = MPIR_Err_create_code(MPI_SUCCESS,MPIR_ERR_FATAL,FCNAME,      \
+    err_ = MPIR_Err_create_code(MPI_SUCCESS,MPIR_ERR_FATAL,__func__,      \
                                 __LINE__, class_, msg_, 0)
 #define MPIR_ERR_SETFATAL(err_,class_,msg_)                     \
-    err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,FCNAME,     \
+    err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,__func__,     \
                                 __LINE__, class_, msg_, 0)
 #define MPIR_ERR_SETFATAL1(err_,class_,gmsg_,smsg_,arg1_)               \
-    err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,FCNAME,             \
+    err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,__func__,             \
                                 __LINE__, class_, gmsg_, smsg_, arg1_)
 #define MPIR_ERR_SETFATAL2(err_,class_,gmsg_,smsg_,arg1_,arg2_)         \
-    err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,FCNAME,             \
+    err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,__func__,             \
                                 __LINE__, class_, gmsg_, smsg_, arg1_, arg2_)
 #define MPIR_ERR_SETFATALANDSTMT(err_,class_,stmt_,msg_)                \
     do {                                                                \
-        err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,FCNAME,         \
+        err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,__func__,         \
                                     __LINE__, class_, msg_, 0); stmt_ ; \
     } while (0)
 #define MPIR_ERR_SETFATALANDSTMT1(err_,class_,stmt_,gmsg_,smsg_,arg1_)  \
     do {                                                                \
-        err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,FCNAME,         \
+        err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,__func__,         \
                                     __LINE__, class_, gmsg_, smsg_, arg1_); stmt_ ; \
     } while (0)
 #define MPIR_ERR_SETFATALANDSTMT2(err_,class_,stmt_,gmsg_,smsg_,arg1_,arg2_) \
     do {                                                                \
-        err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,FCNAME,         \
+        err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,__func__,         \
                                     __LINE__, class_, gmsg_, smsg_, arg1_, arg2_); stmt_ ; \
     } while (0)
 #define MPIR_ERR_SETFATALANDSTMT3(err_,class_,stmt_,gmsg_,smsg_,arg1_,arg2_, arg3_) \
     do {                                                                \
-        err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,FCNAME,         \
+        err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,__func__,         \
                                     __LINE__, class_, gmsg_, smsg_, arg1_, arg2_, arg3_); stmt_ ; \
     } while (0)
 #define MPIR_ERR_SETFATALANDSTMT4(err_,class_,stmt_,gmsg_,smsg_,arg1_,arg2_, arg3_, arg4_) \
     do {                                                                \
-        err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,FCNAME,         \
+        err_ = MPIR_Err_create_code(err_,MPIR_ERR_FATAL,__func__,         \
                                     __LINE__, class_, gmsg_, smsg_, arg1_, arg2_, arg3_, arg4_); stmt_ ; \
     } while (0)
 #define MPIR_ERR_ADD(err_, newerr_)                             \

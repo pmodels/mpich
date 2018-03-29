@@ -14,10 +14,6 @@
 #include "ucx_types.h"
 #include "pmi.h"
 #include <ucp/api/ucp.h>
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_init_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int size,
                                          int appnum,

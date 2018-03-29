@@ -14,10 +14,6 @@
 #include "ch4_types.h"
 #include "ch4r_buf.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4I_am_request_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kind, int ref_count)
 {
     MPIR_Request *req;

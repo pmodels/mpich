@@ -13,10 +13,6 @@
 
 #include "ofi_am_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_do_control_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_do_control_send(MPIDI_OFI_send_control_t * control,
                                             char *send_buf,
                                             size_t msgsize,

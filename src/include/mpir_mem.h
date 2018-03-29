@@ -116,7 +116,7 @@ extern "C" {
 #ifdef HAVE_ERROR_CHECKING
 #define MPIR_CHKMEM_SETERR(rc_,nbytes_,name_)                           \
     rc_=MPIR_Err_create_code(MPI_SUCCESS,                               \
-                             MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,    \
+                             MPIR_ERR_RECOVERABLE, __func__, __LINE__,    \
                              MPI_ERR_OTHER, "**nomem2", "**nomem2 %d %s", nbytes_, name_)
 #else
 #define MPIR_CHKMEM_SETERR(rc_,nbytes_,name_) rc_=MPI_ERR_OTHER

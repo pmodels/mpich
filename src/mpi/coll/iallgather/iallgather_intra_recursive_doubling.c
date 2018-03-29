@@ -42,10 +42,6 @@ static int dtp_release_ref(MPIR_Comm * comm, int tag, void *state)
  * property of recursive doubling (see Benson et al paper in Euro
  * PVM/MPI 2003).
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Iallgather_sched_intra_recursive_doubling
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgather_sched_intra_recursive_doubling(const void *sendbuf, int sendcount,
                                                    MPI_Datatype sendtype, void *recvbuf,
                                                    int recvcount, MPI_Datatype recvtype,

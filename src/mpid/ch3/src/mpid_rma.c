@@ -54,10 +54,6 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
                     MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr);
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_create(void *base, MPI_Aint size, int disp_unit, MPIR_Info * info,
                     MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
@@ -89,10 +85,6 @@ int MPID_Win_create(void *base, MPI_Aint size, int disp_unit, MPIR_Info * info,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_allocate
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info,
                       MPIR_Comm * comm_ptr, void *baseptr, MPIR_Win ** win_ptr)
 {
@@ -119,10 +111,6 @@ int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info * info,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_create_dynamic
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -152,10 +140,6 @@ int MPID_Win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** 
 
 
 /* The memory allocation functions */
-#undef FUNCNAME
-#define FUNCNAME MPID_Alloc_mem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr, MPL_memory_class class)
 {
     void *ap = NULL;
@@ -170,10 +154,6 @@ void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr, MPL_memory_class class)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Free_mem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Free_mem(void *ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -189,10 +169,6 @@ int MPID_Free_mem(void *ptr)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_allocate_shared
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info, MPIR_Comm * comm_ptr,
                              void *base_ptr, MPIR_Win ** win_ptr)
 {
@@ -217,10 +193,6 @@ int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info * info, MPI
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_shared_query
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_shared_query(MPIR_Win * win, int rank, MPI_Aint * size, int *disp_unit, void *baseptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -241,10 +213,6 @@ int MPID_Win_shared_query(MPIR_Win * win, int rank, MPI_Aint * size, int *disp_u
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME win_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, MPIR_Info * info,
                     MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {

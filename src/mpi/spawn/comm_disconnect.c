@@ -27,10 +27,7 @@ int MPI_Comm_disconnect(MPI_Comm * comm) __attribute__ ((weak, alias("PMPI_Comm_
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_disconnect
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Comm_disconnect - Disconnect from a communicator
 
@@ -137,11 +134,11 @@ int MPI_Comm_disconnect(MPI_Comm * comm)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_comm_disconnect", "**mpi_comm_disconnect %C", *comm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

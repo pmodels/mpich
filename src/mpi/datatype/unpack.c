@@ -26,10 +26,6 @@ int MPI_Unpack(const void *inbuf, int insize, int *position, void *outbuf, int o
 #undef MPI_Unpack
 #define MPI_Unpack PMPI_Unpack
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Unpack_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
                      void *outbuf, int outcount, MPI_Datatype datatype)
 {
@@ -99,10 +95,6 @@ int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint * position,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Unpack
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Unpack - Unpack a buffer according to a datatype into contiguous memory
 
@@ -213,12 +205,12 @@ int MPI_Unpack(const void *inbuf, int insize, int *position,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_unpack", "**mpi_unpack %p %d %p %p %d %D %C", inbuf, insize,
                                  position, outbuf, outcount, datatype, comm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

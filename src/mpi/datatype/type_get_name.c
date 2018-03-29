@@ -141,12 +141,10 @@ static mpi_names_t mpi_maxloc_names[] = {
 #undef type_name_entry
 /* This routine is also needed by type_set_name */
 
-#undef  FUNCNAME
-#define FUNCNAME MPIR_Datatype_init_names
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Datatype_init_names(void)
 {
+#ifdef HAVE_ERROR_CHECKING
+#endif
     int mpi_errno = MPI_SUCCESS;
     int i;
     MPIR_Datatype *datatype_ptr = NULL;
@@ -214,10 +212,7 @@ int MPIR_Datatype_init_names(void)
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_get_name
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Type_get_name - Get the print name for a datatype
 
@@ -311,12 +306,12 @@ int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_get_name", "**mpi_type_get_name %D %p %p", datatype,
                                  type_name, resultlen);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

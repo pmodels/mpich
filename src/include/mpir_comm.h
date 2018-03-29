@@ -217,10 +217,6 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr);
    This routine has been inlined because keeping it as a separate routine
    results in a >5% performance hit for the SQMR benchmark.
 */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_release
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIR_Comm_release(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -237,9 +233,6 @@ static inline int MPIR_Comm_release(MPIR_Comm * comm_ptr)
 
     return mpi_errno;
 }
-
-#undef FUNCNAME
-#undef FCNAME
 
 /* MPIR_Comm_release_always is the same as MPIR_Comm_release except it uses
    MPIR_Comm_release_ref_always instead.

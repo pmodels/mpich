@@ -12,10 +12,6 @@
    particularly contiguous ones?  See also the FIXME about buffering
    short messages */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Isend_self
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 		     int type, MPIR_Request ** request)
 {
@@ -128,7 +124,7 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
 	    /* --BEGIN ERROR HANDLING-- */
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,TYPICAL,
 			 "ready send unable to find matching recv req");
-	    sreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+	    sreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
 							  "**rsendnomatch", "**rsendnomatch %d %d", rank, tag);
 	    rreq->status.MPI_ERROR = sreq->status.MPI_ERROR;
 	    

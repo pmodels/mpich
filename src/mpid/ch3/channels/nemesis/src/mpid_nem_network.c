@@ -33,10 +33,6 @@ int MPID_nem_netmod_id = -1;
 
 MPID_nem_net_module_vc_dbg_print_sendq_t  MPID_nem_net_module_vc_dbg_print_sendq = 0;
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_choose_netmod
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_choose_netmod(void)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -105,10 +105,7 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_get_contents
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Type_get_contents - get type contents
 
@@ -167,7 +164,7 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
             if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
-                                                 FCNAME, __LINE__,
+                                                 __func__, __LINE__,
                                                  MPI_ERR_TYPE, "**contentspredef", 0);
                 goto fn_fail;
             }
@@ -181,7 +178,7 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
                 datatype == MPI_SHORT_INT || datatype == MPI_LONG_DOUBLE_INT) {
                 mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
                                                  MPIR_ERR_RECOVERABLE,
-                                                 FCNAME, __LINE__,
+                                                 __func__, __LINE__,
                                                  MPI_ERR_TYPE, "**contentspredef", 0);
                 goto fn_fail;
             }
@@ -221,14 +218,14 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_get_contents",
                                  "**mpi_type_get_contents %D %d %d %d %p %p %p", datatype,
                                  max_integers, max_addresses, max_datatypes, array_of_integers,
                                  array_of_addresses, array_of_datatypes);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

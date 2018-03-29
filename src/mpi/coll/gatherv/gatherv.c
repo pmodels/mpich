@@ -75,10 +75,6 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void 
 #undef MPI_Gatherv
 #define MPI_Gatherv PMPI_Gatherv
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Gatherv_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Gatherv_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                             void *recvbuf, const int *recvcounts, const int *displs,
                             MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
@@ -101,10 +97,6 @@ int MPIR_Gatherv_intra_auto(const void *sendbuf, int sendcount, MPI_Datatype sen
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Gatherv_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Gatherv_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                             void *recvbuf, const int *recvcounts, const int *displs,
                             MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
@@ -127,10 +119,6 @@ int MPIR_Gatherv_inter_auto(const void *sendbuf, int sendcount, MPI_Datatype sen
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Gatherv_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
                       MPI_Datatype sendtype, void *recvbuf,
                       const int *recvcounts, const int *displs,
@@ -192,10 +180,6 @@ int MPIR_Gatherv_impl(const void *sendbuf, int sendcount,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Gatherv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                  void *recvbuf, const int *recvcounts, const int *displs,
                  MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
@@ -215,10 +199,6 @@ int MPIR_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Gatherv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Gatherv - Gathers into specified locations from all processes in a group
@@ -413,13 +393,13 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_gatherv", "**mpi_gatherv %p %d %D %p %p %p %D %d %C",
                                  sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs,
                                  recvtype, root, comm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

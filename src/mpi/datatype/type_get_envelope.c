@@ -27,10 +27,6 @@ int MPI_Type_get_envelope(MPI_Datatype datatype, int *num_integers, int *num_add
 #undef MPI_Type_get_envelope
 #define MPI_Type_get_envelope PMPI_Type_get_envelope
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_get_envelope
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Type_get_envelope(MPI_Datatype datatype,
                             int *num_integers,
                             int *num_addresses, int *num_datatypes, int *combiner)
@@ -58,10 +54,6 @@ void MPIR_Type_get_envelope(MPI_Datatype datatype,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_get_envelope
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_get_envelope - get type envelope
 
@@ -139,12 +131,12 @@ int MPI_Type_get_envelope(MPI_Datatype datatype,
     /* --BEGIN ERROR HANDLING-- */
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_get_envelope",
                                  "**mpi_type_get_envelope %D %p %p %p %p", datatype, num_integers,
                                  num_addresses, num_datatypes, combiner);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 #endif

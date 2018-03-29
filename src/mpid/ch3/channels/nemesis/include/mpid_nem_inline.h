@@ -93,10 +93,6 @@ cvars:
      MPIR_Coll_safe_to_block() &&  \
      !MPIDI_RMA_Win_active_list_head)
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich_send_header
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
 {
@@ -221,10 +217,6 @@ MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
   iov will describe unsent data
   sets again to 1 if it can't get a free cell, 0 otherwise
 */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich_sendv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
 {
@@ -323,10 +315,6 @@ MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
 
 /* MPID_nem_mpich_sendv_header (struct iovec **iov, int *n_iov, int dest)
    same as above but first iov element is an MPICH header */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich_sendv_header
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov,
                              void *ext_hdr_ptr, intptr_t ext_hdr_sz,
@@ -484,10 +472,6 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov,
                          been sent (i.e., *segment_first > 0) )
                      i.e.: we will never send only the header
 */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich_send_seg_header
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void
 MPID_nem_mpich_send_seg_header (MPIR_Segment *segment, intptr_t *segment_first, intptr_t segment_size,
                                 void *header, intptr_t header_sz, void *ext_header, intptr_t ext_header_sz,
@@ -634,10 +618,6 @@ MPID_nem_mpich_send_seg_header (MPIR_Segment *segment, intptr_t *segment_first, 
 
 /* similar to MPID_nem_mpich_send_seg_header, except there is no
    header to send.  This need not be the first packet of a message. */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich_send_seg
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void
 MPID_nem_mpich_send_seg (MPIR_Segment *segment, intptr_t *segment_first, intptr_t segment_size, MPIDI_VC_t *vc, int *again)
 {
@@ -725,10 +705,6 @@ MPID_nem_mpich_send_seg (MPIR_Segment *segment, intptr_t *segment_first, intptr_
   This function is called whenever a receive for a process on this node is matched.
   Fastboxes on fbox queue are polled regularly for incoming messages.
 */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich_dequeue_fastbox
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPID_nem_mpich_dequeue_fastbox(int local_rank)
 {
     MPID_nem_fboxq_elem_t *el;
@@ -772,10 +748,6 @@ static inline void MPID_nem_mpich_dequeue_fastbox(int local_rank)
   This function is called whenever a receive is posted for a process on this node.
   Fastboxes on fbox queue are polled regularly for incoming messages.
 */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich_dequeue_fastbox
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPID_nem_mpich_enqueue_fastbox(int local_rank)
 {
     MPID_nem_fboxq_elem_t *el;
@@ -816,10 +788,6 @@ static inline void MPID_nem_mpich_enqueue_fastbox(int local_rank)
   expected from the sender of that cell
   We only check these for processes in COMM_WORLD (i.e. the ones initially allocated)
 */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_recv_seqno_matches
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead)
 {
@@ -841,10 +809,6 @@ MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead)
   sets cell to the received cell, or NULL if there is nothing to receive. in_fbox is true iff the cell was found in a fbox
   the cell must be released back to the subsystem with MPID_nem_mpich_release_cell() once the packet has been copied out
 */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich_test_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress)
 {
@@ -918,10 +882,6 @@ MPID_nem_mpich_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blockin
   sets cell to the received cell, or NULL if there is nothing to receive. in_fbox is true iff the cell was found in a fbox
   the cell must be released back to the subsystem with MPID_nem_mpich_release_cell() once the packet has been copied out
 */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich_test_recv_wait
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout)
 {
@@ -978,10 +938,6 @@ MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int time
   found in a fbox the cell must be released back to the subsystem with
   MPID_nem_mpich_release_cell() once the packet has been copied out
 */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich_blocking_recv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int completions)
 {
@@ -1066,10 +1022,6 @@ MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int comple
 
   releases the cell back to the subsystem to be used for subsequent receives
 */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich_release_cell
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc)
 {

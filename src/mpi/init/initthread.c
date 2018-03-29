@@ -181,10 +181,6 @@ MPID_Thread_mutex_t MPIR_THREAD_POBJ_PMI_MUTEX;
 #endif
 
 /* These routine handle any thread initialization that my be required */
-#undef FUNCNAME
-#define FUNCNAME thread_cs_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int thread_cs_init(void)
 {
     int err;
@@ -227,10 +223,6 @@ static int thread_cs_init(void)
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Thread_CS_Finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Thread_CS_Finalize(void)
 {
     int err;
@@ -313,10 +305,6 @@ MPL_dbg_class MPIR_DBG_ASSERT;
 MPL_dbg_class MPIR_DBG_STRING;
 #endif /* MPL_USE_DBG_LOGGING */
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Init_thread
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -631,10 +619,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
 }
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Init_thread
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Init_thread - Initialize the MPI execution environment
 
@@ -750,12 +734,12 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
 #ifdef HAVE_ERROR_REPORTING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_init_thread", "**mpi_init_thread %p %p %d %p", argc, argv,
                                  required, provided);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     MPIR_FUNC_TERSE_INIT_EXIT(MPID_STATE_MPI_INIT_THREAD);
 
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);

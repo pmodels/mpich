@@ -28,10 +28,7 @@ int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint * size, int *disp_unit,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_shared_query
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
 MPI_Win_shared_query - Query the size and base pointer for a patch of a shared
 memory window.
@@ -140,12 +137,12 @@ int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint * size, int *disp_unit,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_win_shared_query", "**mpi_win_shared_query %W %d %p %p",
                                  win, rank, size, baseptr);
     }
 #endif
-    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

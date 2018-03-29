@@ -35,10 +35,6 @@ int MPII_Treealgo_comm_cleanup(MPIR_Comm * comm)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Treealgo_tree_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int root,
                               MPII_Treealgo_tree_t * ct)
 {
@@ -79,10 +75,6 @@ int MPII_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int ro
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Treealgo_tree_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPII_Treealgo_tree_free(MPII_Treealgo_tree_t * tree)
 {
     MPL_free(tree->children);

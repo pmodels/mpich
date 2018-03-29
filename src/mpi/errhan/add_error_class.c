@@ -28,10 +28,7 @@ int MPI_Add_error_class(int *errorclass) __attribute__ ((weak, alias("PMPI_Add_e
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Add_error_class
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Add_error_class - Add an MPI error class to the known classes
 
@@ -92,11 +89,11 @@ int MPI_Add_error_class(int *errorclass)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_add_error_class", "**mpi_add_error_class %p", errorclass);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

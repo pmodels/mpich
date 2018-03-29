@@ -25,8 +25,6 @@
 /* ---------------------------------------------------- */
 /* MPIDI_POSIX_do_isend                                             */
 /* ---------------------------------------------------- */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_do_isend)
 static inline int MPIDI_POSIX_do_isend(const void *buf,
                                        MPI_Aint count,
                                        MPI_Datatype datatype,
@@ -88,8 +86,6 @@ static inline int MPIDI_POSIX_do_isend(const void *buf,
     goto fn_exit;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_SEND)
 static inline int MPIDI_POSIX_mpi_send(const void *buf,
                                        MPI_Aint count,
                                        MPI_Datatype datatype,
@@ -166,8 +162,6 @@ static inline int MPIDI_POSIX_irsend(const void *buf,
     return mpi_errno;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_SSEND)
 static inline int MPIDI_POSIX_mpi_ssend(const void *buf,
                                         MPI_Aint count,
                                         MPI_Datatype datatype,
@@ -189,8 +183,6 @@ static inline int MPIDI_POSIX_mpi_ssend(const void *buf,
     return mpi_errno;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_SEND_INIT)
 static inline int MPIDI_POSIX_mpi_send_init(const void *buf,
                                             int count,
                                             MPI_Datatype datatype,
@@ -223,8 +215,6 @@ static inline int MPIDI_POSIX_mpi_send_init(const void *buf,
     return mpi_errno;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_SSEND_INIT)
 static inline int MPIDI_POSIX_mpi_ssend_init(const void *buf,
                                              int count,
                                              MPI_Datatype datatype,
@@ -319,8 +309,6 @@ static inline int MPIDI_POSIX_mpi_rsend_init(const void *buf,
     return mpi_errno;
 }
 
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_isend)
 static inline int MPIDI_POSIX_mpi_isend(const void *buf,
                                         MPI_Aint count,
                                         MPI_Datatype datatype,

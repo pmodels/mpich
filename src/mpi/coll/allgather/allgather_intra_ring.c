@@ -22,10 +22,6 @@
  * performs twice as fast as recursive doubling for long messages (on
  * Myrinet and IBM SP).
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Allgather_intra_ring
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Allgather_intra_ring(const void *sendbuf,
                               int sendcount,
                               MPI_Datatype sendtype,

@@ -26,10 +26,6 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag) __attribute__ ((weak, alias("PMPIX
 #undef MPIX_Comm_agree
 #define MPIX_Comm_agree PMPIX_Comm_agree
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_agree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_agree(MPIR_Comm * comm_ptr, int *flag)
 {
     int mpi_errno = MPI_SUCCESS, mpi_errno_tmp = MPI_SUCCESS;
@@ -111,10 +107,6 @@ int MPIR_Comm_agree(MPIR_Comm * comm_ptr, int *flag)
 
 #endif /* !defined(MPICH_MPI_FROM_PMPI) */
 
-#undef FUNCNAME
-#define FUNCNAME MPIX_Comm_agree
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPIX_Comm_agree - Performs agreement operation on comm
 
@@ -187,11 +179,11 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
                                  MPI_ERR_OTHER, "**mpix_comm_agree", "**mpix_comm_agree %C", comm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

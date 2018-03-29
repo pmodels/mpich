@@ -27,10 +27,7 @@ int MPI_Win_flush(int rank, MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_f
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_flush
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
 MPI_Win_flush - Complete all outstanding RMA operations at the given target.
 
@@ -120,11 +117,11 @@ int MPI_Win_flush(int rank, MPI_Win win)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_win_flush", "**mpi_win_flush %d %W", rank, win);
     }
 #endif
-    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

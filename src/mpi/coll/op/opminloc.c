@@ -71,10 +71,6 @@ typedef struct MPIR_longdoubleint_loctype {
     }                                                   \
     break
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_MINLOC
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_MINLOC(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -137,10 +133,6 @@ void MPIR_MINLOC(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
 
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_MINLOC_check_dtype
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_MINLOC_check_dtype(MPI_Datatype type)
 {
     int mpi_errno = MPI_SUCCESS;

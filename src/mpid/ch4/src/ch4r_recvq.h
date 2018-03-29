@@ -41,10 +41,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_match_unexp(int rank, int tag,
          tag == MPI_ANY_TAG) && context_id == MPIDI_CH4U_REQUEST(req, context_id);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_Recvq_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_Recvq_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -79,10 +75,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_Recvq_init(void)
 
 #ifdef MPIDI_CH4U_USE_PER_COMM_QUEUE
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_enqueue_posted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_posted(MPIR_Request * req,
                                                         MPIDI_CH4U_rreq_t ** list)
 {
@@ -94,10 +86,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_posted(MPIR_Request * req,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_ENQUEUE_POSTED);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_enqueue_unexp
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_unexp(MPIR_Request * req,
                                                        MPIDI_CH4U_rreq_t ** list)
 {
@@ -109,10 +97,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_unexp(MPIR_Request * req,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_ENQUEUE_UNEXP);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_delete_unexp
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_delete_unexp(MPIR_Request * req, MPIDI_CH4U_rreq_t ** list)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_DELETE_UNEXP);
@@ -122,10 +106,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_delete_unexp(MPIR_Request * req, MPIDI_
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_DELETE_UNEXP);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_dequeue_unexp_strict
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp_strict(int rank,
                                                                        int tag,
                                                                        MPIR_Context_id_t context_id,
@@ -153,10 +133,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp_strict(int rank,
     return req;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_dequeue_unexp
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp(int rank,
                                                                 int tag,
                                                                 MPIR_Context_id_t context_id,
@@ -183,10 +159,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp(int rank,
     return req;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_find_unexp
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_find_unexp(int rank,
                                                              int tag,
                                                              MPIR_Context_id_t context_id,
@@ -211,10 +183,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_find_unexp(int rank,
     return req;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_dequeue_posted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_posted(int rank,
                                                                  int tag,
                                                                  MPIR_Context_id_t context_id,
@@ -243,10 +211,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_posted(int rank,
     return req;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_delete_posted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_delete_posted(MPIDI_CH4U_rreq_t * req,
                                                       MPIDI_CH4U_rreq_t ** list)
 {
@@ -275,10 +239,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_delete_posted(MPIDI_CH4U_rreq_t * req,
 
 /* Use global queue */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_enqueue_posted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_posted(MPIR_Request * req,
                                                         MPIDI_CH4U_rreq_t ** list)
 {
@@ -290,10 +250,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_posted(MPIR_Request * req,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_ENQUEUE_POSTED);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_enqueue_unexp
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_unexp(MPIR_Request * req,
                                                        MPIDI_CH4U_rreq_t ** list)
 {
@@ -305,10 +261,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_unexp(MPIR_Request * req,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_ENQUEUE_UNEXP);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_delete_unexp
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_delete_unexp(MPIR_Request * req, MPIDI_CH4U_rreq_t ** list)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_DELETE_UNEXP);
@@ -318,10 +270,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_delete_unexp(MPIR_Request * req, MPIDI_
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_DELETE_UNEXP);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_dequeue_unexp_strict
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp_strict(int rank,
                                                                        int tag,
                                                                        MPIR_Context_id_t context_id,
@@ -349,10 +297,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp_strict(int rank,
     return req;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_dequeue_unexp
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp(int rank,
                                                                 int tag,
                                                                 MPIR_Context_id_t context_id,
@@ -379,10 +323,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_unexp(int rank,
     return req;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_find_unexp
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_find_unexp(int rank,
                                                              int tag,
                                                              MPIR_Context_id_t context_id,
@@ -407,10 +347,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_find_unexp(int rank,
     return req;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_dequeue_posted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_posted(int rank,
                                                                  int tag,
                                                                  MPIR_Context_id_t context_id,
@@ -439,10 +375,6 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_CH4U_dequeue_posted(int rank,
     return req;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_delete_posted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_delete_posted(MPIDI_CH4U_rreq_t * req,
                                                       MPIDI_CH4U_rreq_t ** list)
 {

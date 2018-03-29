@@ -29,10 +29,7 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Get - Get data from a memory window on a remote process
 
@@ -158,13 +155,13 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_get", "**mpi_get %p %d %D %d %d %d %D %W", origin_addr,
                                  origin_count, origin_datatype, target_rank, target_disp,
                                  target_count, target_datatype, win);
     }
 #endif
-    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

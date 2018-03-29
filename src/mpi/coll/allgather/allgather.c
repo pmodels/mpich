@@ -100,10 +100,6 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, voi
 #undef MPI_Allgather
 #define MPI_Allgather PMPI_Allgather
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Allgather_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Allgather_intra_auto(const void *sendbuf,
                               int sendcount,
                               MPI_Datatype sendtype,
@@ -151,10 +147,6 @@ int MPIR_Allgather_intra_auto(const void *sendbuf,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Allgather_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Allgather_inter_auto(const void *sendbuf,
                               int sendcount,
                               MPI_Datatype sendtype,
@@ -171,10 +163,6 @@ int MPIR_Allgather_inter_auto(const void *sendbuf,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Allgather_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Allgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
                         MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
@@ -244,10 +232,6 @@ int MPIR_Allgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Allgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
                    MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
@@ -268,10 +252,6 @@ int MPIR_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #endif
 
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Allgather
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Allgather - Gathers data from all tasks and distribute the combined
     data to all tasks
@@ -418,12 +398,12 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_allgather", "**mpi_allgather %p %d %D %p %d %D %C", sendbuf,
                                  sendcount, sendtype, recvbuf, recvcount, recvtype, comm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

@@ -27,10 +27,6 @@ int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function * comm_errhandler_fn
 #undef MPI_Comm_create_errhandler
 #define MPI_Comm_create_errhandler PMPI_Comm_create_errhandler
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_create_errhandler_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function * comm_errhandler_fn,
                                      MPI_Errhandler * errhandler)
 {
@@ -55,10 +51,6 @@ int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function * comm_errhand
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_create_errhandler
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_create_errhandler - Create a communicator error handler
 
@@ -123,13 +115,13 @@ int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function * comm_errhandler_fn
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_comm_create_errhandler",
                                  "**mpi_comm_create_errhandler %p %p", comm_errhandler_fn,
                                  errhandler);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

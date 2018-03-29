@@ -61,10 +61,6 @@ cvars:
 
 #if !defined(USE_PMI2_API)
 /* this function is not used in pmi2 */
-#undef FUNCNAME
-#define FUNCNAME MPIR_NODEMAP_publish_node_id
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIR_NODEMAP_publish_node_id(int sz, int myrank)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -145,10 +141,6 @@ typedef struct map_block {
     int size;
 } MPIR_NODEMAP_map_block_t;
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_NODEMAP_parse_mapping
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIR_NODEMAP_parse_mapping(char *map_str,
                                              MPIR_NODEMAP_mapping_type_t * type,
                                              MPIR_NODEMAP_map_block_t ** map, int *nblocks)
@@ -247,10 +239,6 @@ static inline int MPIR_NODEMAP_parse_mapping(char *map_str,
     /* --END ERROR HANDLING-- */
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_NODEMAP_populate_ids_from_mapping
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
                                                          int sz,
                                                          int *out_nodemap,
@@ -342,10 +330,6 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
      is recorded for that matching process.  Otherwise, the hostname is
      added to the list of node names.
 */
-#undef FUNCNAME
-#define FUNCNAME MPIR_NODEMAP_build_nodemap
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIR_NODEMAP_build_nodemap(int sz,
                                              int myrank, int *out_nodemap, int *out_max_node_id)
 {

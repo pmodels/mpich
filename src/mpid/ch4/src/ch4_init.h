@@ -57,10 +57,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_choose_netmod
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_choose_netmod(void)
 {
     int i, mpi_errno = MPI_SUCCESS;
@@ -107,10 +103,6 @@ static inline int MPIDI_choose_netmod(void)
 #error "Thread Granularity:  Invalid"
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
                                        char ***argv,
                                        int requested, int *provided, int *has_args, int *has_env)
@@ -351,10 +343,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_InitCompleted
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_InitCompleted(void)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INITCOMPLETED);
@@ -364,10 +352,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_InitCompleted(void)
     return MPI_SUCCESS;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Finalize
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
 {
     int mpi_errno, thr_err;
@@ -405,10 +389,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Get_universe_size
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Get_universe_size(int *universe_size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -433,10 +413,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_universe_size(int *universe_size)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Get_processor_name
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Get_processor_name(char *name, int namelen, int *resultlen)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -476,10 +452,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_processor_name(char *name, int namelen, in
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Alloc_mem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr,
                                               MPL_memory_class class)
 {
@@ -493,10 +465,6 @@ MPL_STATIC_INLINE_PREFIX void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr,
     return p;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Free_mem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Free_mem(void *ptr)
 {
     int mpi_errno;
@@ -515,10 +483,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Free_mem(void *ptr)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Comm_get_lpid
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_get_lpid(MPIR_Comm * comm_ptr,
                                                 int idx, int *lpid_ptr, MPL_bool is_remote)
 {
@@ -541,10 +505,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_get_lpid(MPIR_Comm * comm_ptr,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Get_node_id
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Get_node_id(MPIR_Comm * comm, int rank, int *id_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -557,10 +517,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_node_id(MPIR_Comm * comm, int rank, int *i
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Get_max_node_id
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Get_max_node_id(MPIR_Comm * comm, int *max_id_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -573,10 +529,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_max_node_id(MPIR_Comm * comm, int *max_id_
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Create_intercomm_from_lpids
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
                                                               int size, const int lpids[])
 {
@@ -612,10 +564,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcom
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Aint_add
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
 {
     MPI_Aint result;
@@ -626,10 +574,6 @@ MPL_STATIC_INLINE_PREFIX MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
     return result;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Aint_diff
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
 {
     MPI_Aint result;
@@ -642,10 +586,6 @@ MPL_STATIC_INLINE_PREFIX MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
     return result;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Type_commit_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Type_commit_hook(MPIR_Datatype * type)
 {
     int mpi_errno;
@@ -671,10 +611,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Type_commit_hook(MPIR_Datatype * type)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Type_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Type_free_hook(MPIR_Datatype * type)
 {
     int mpi_errno;
@@ -700,10 +636,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Type_free_hook(MPIR_Datatype * type)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Op_commit_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Op_commit_hook(MPIR_Op * op)
 {
     int mpi_errno;
@@ -729,10 +661,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Op_commit_hook(MPIR_Op * op)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Op_free_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Op_free_hook(MPIR_Op * op)
 {
     int mpi_errno;

@@ -29,10 +29,7 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status * status)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Request_get_status
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Request_get_status - Nondestructive test for the completion of a Request
 
@@ -242,13 +239,13 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status * status)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-                                         FCNAME, __LINE__, MPI_ERR_OTHER,
+                                         __func__, __LINE__, MPI_ERR_OTHER,
                                          "**mpi_request_get_status",
                                          "**mpi_request_get_status %R %p %p", request, flag,
                                          status);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(0, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

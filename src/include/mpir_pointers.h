@@ -18,7 +18,7 @@
 /* This test is lame.  Should eventually include cookie test
    and in-range addresses */
 #define MPIR_Valid_ptr_class(kind,ptr,errclass,err) \
-  {if (!(ptr)) { err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, errclass, \
+  {if (!(ptr)) { err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, errclass, \
                                              "**nullptrtype", "**nullptrtype %s", #kind); } }
 
 #define MPIR_Info_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Info,ptr,MPI_ERR_INFO,err)

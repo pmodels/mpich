@@ -20,10 +20,6 @@
 #include "mpidig.h"
 #include "uthash.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_init_comm
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_init_comm(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm;
@@ -73,10 +69,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_init_comm(MPIR_Comm * comm)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_destroy_comm
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_destroy_comm(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS, comm_idx, subcomm_type, is_localcomm;
@@ -106,10 +98,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_destroy_comm(MPIR_Comm * comm)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_mpi_alloc_mem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr,
                                                         MPL_memory_class class)
 {
@@ -121,10 +109,6 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_mpi_alloc_mem(size_t size, MPIR_Info *
     return p;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_mpi_free_mem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_free_mem(void *ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -135,10 +119,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_free_mem(void *ptr)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_update_node_map
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDIU_update_node_map(int avtid, int size, int node_map[])
 {
     int i;

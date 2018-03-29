@@ -22,10 +22,6 @@ UT_icd vtx_t_icd = {
     MPII_Genutil_vtx_dtor
 };
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched, int tag)
 {
     sched->total_vtcs = 0;
@@ -42,10 +38,6 @@ int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched, int tag)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_sched_isend(const void *buf,
                              int count,
                              MPI_Datatype dt,
@@ -77,10 +69,6 @@ int MPII_Genutil_sched_isend(const void *buf,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_imcast
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_sched_imcast(const void *buf,
                               int count,
                               MPI_Datatype dt,
@@ -119,10 +107,6 @@ int MPII_Genutil_sched_imcast(const void *buf,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_irecv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_sched_irecv(void *buf,
                              int count,
                              MPI_Datatype dt,
@@ -155,10 +139,6 @@ int MPII_Genutil_sched_irecv(void *buf,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Genutil_sched_start
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;

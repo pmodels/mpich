@@ -19,10 +19,6 @@
  * property of recursive doubling (see Benson et al paper in Euro
  * PVM/MPI 2003).
  */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Allgather_intra_recursive_doubling
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Allgather_intra_recursive_doubling(const void *sendbuf,
                                             int sendcount,
                                             MPI_Datatype sendtype,

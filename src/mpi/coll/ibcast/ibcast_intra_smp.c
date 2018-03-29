@@ -13,10 +13,6 @@ struct ibcast_status {
     MPI_Status status;
 };
 
-#undef FUNCNAME
-#define FUNCNAME sched_test_length
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -25,7 +21,7 @@ static int sched_test_length(MPIR_Comm * comm, int tag, void *state)
     MPIR_Get_count_impl(&status->status, MPI_BYTE, &recv_size);
     if (status->n_bytes != recv_size || status->status.MPI_ERROR != MPI_SUCCESS) {
         mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE,
-                                         FCNAME, __LINE__, MPI_ERR_OTHER,
+                                         __func__, __LINE__, MPI_ERR_OTHER,
                                          "**collective_size_mismatch",
                                          "**collective_size_mismatch %d %d", status->n_bytes,
                                          recv_size);

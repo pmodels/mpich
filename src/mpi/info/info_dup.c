@@ -27,10 +27,6 @@ int MPI_Info_dup(MPI_Info info, MPI_Info * newinfo) __attribute__ ((weak, alias(
 #undef MPI_Info_dup
 #define MPI_Info_dup PMPI_Info_dup
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Info_dup_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Info_dup_impl(MPIR_Info * info_ptr, MPIR_Info ** new_info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -72,10 +68,6 @@ int MPIR_Info_dup_impl(MPIR_Info * info_ptr, MPIR_Info ** new_info_ptr)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Info_dup
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Info_dup - Returns a duplicate of the info object
 
@@ -151,11 +143,11 @@ int MPI_Info_dup(MPI_Info info, MPI_Info * newinfo)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_info_dup", "**mpi_info_dup %I %p", info, newinfo);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

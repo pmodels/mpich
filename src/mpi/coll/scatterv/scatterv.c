@@ -75,10 +75,6 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 #undef MPI_Scatterv
 #define MPI_Scatterv PMPI_Scatterv
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scatterv_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scatterv_intra_auto(const void *sendbuf, const int *sendcounts, const int *displs,
                              MPI_Datatype sendtype, void *recvbuf, int recvcount,
                              MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
@@ -101,10 +97,6 @@ int MPIR_Scatterv_intra_auto(const void *sendbuf, const int *sendcounts, const i
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scatterv_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scatterv_inter_auto(const void *sendbuf, const int *sendcounts, const int *displs,
                              MPI_Datatype sendtype, void *recvbuf, int recvcount,
                              MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
@@ -127,10 +119,6 @@ int MPIR_Scatterv_inter_auto(const void *sendbuf, const int *sendcounts, const i
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scatterv_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts,
                        const int *displs, MPI_Datatype sendtype, void *recvbuf,
                        int recvcount, MPI_Datatype recvtype, int root,
@@ -190,10 +178,6 @@ int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts,
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Scatterv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scatterv(const void *sendbuf, const int *sendcounts,
                   const int *displs, MPI_Datatype sendtype, void *recvbuf,
                   int recvcount, MPI_Datatype recvtype, int root,
@@ -214,10 +198,6 @@ int MPIR_Scatterv(const void *sendbuf, const int *sendcounts,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Scatterv
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Scatterv - Scatters a buffer in parts to all processes in a communicator
@@ -415,13 +395,13 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_scatterv", "**mpi_scatterv %p %p %p %D %p %d %D %d %C",
                                  sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount,
                                  recvtype, root, comm);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

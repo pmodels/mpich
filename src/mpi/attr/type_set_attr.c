@@ -27,10 +27,6 @@ int MPI_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_va
 #undef MPI_Type_set_attr
 #define MPI_Type_set_attr PMPI_Type_set_attr
 
-#undef FUNCNAME
-#define FUNCNAME MPII_Type_set_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPII_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_val,
                        MPIR_Attr_type attrType)
 {
@@ -150,22 +146,19 @@ int MPII_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_v
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_set_attr", "**mpi_type_set_attr %D %d %p", datatype,
                                  type_keyval, attribute_val);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_set_attr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Type_set_attr - Stores attribute value associated with a key
 
@@ -211,12 +204,12 @@ int MPI_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_va
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_set_attr", "**mpi_type_set_attr %D %d %p", datatype,
                                  type_keyval, attribute_val);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

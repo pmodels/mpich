@@ -40,10 +40,7 @@ int MPI_Type_create_keyval(MPI_Type_copy_attr_function * type_copy_attr_fn,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_create_keyval
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
    MPI_Type_create_keyval - Create an attribute keyval for MPI datatypes
 
@@ -136,12 +133,12 @@ int MPI_Type_create_keyval(MPI_Type_copy_attr_function * type_copy_attr_fn,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_create_keyval", "**mpi_type_create_keyval %p %p %p %p",
                                  type_copy_attr_fn, type_delete_attr_fn, type_keyval, extra_state);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

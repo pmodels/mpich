@@ -15,10 +15,6 @@
 /* FIXME: This routine *or* MPI_Abort should provide abort callbacks,
    similar to the support in MPI_Finalize */
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Abort
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code,
 	       const char *error_msg)
 {

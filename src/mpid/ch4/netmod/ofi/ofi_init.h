@@ -286,7 +286,7 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints);
         struct fi_info *p = prov;                                               \
         MPIR_ERR_CHKANDJUMP4(p==NULL, mpi_errno,MPI_ERR_OTHER,"**ofid_addrinfo", \
                              "**ofid_addrinfo %s %d %s %s",__SHORT_FILE__, \
-                             __LINE__,FCNAME, errstr);                  \
+                             __LINE__,__func__, errstr);                  \
         MPIDI_OFI_choose_provider(prov,prov_use);                           \
     } while (0);
 
@@ -411,10 +411,6 @@ static inline int MPIDI_OFI_conn_manager_destroy()
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_init_hook
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int size,
                                          int appnum,
@@ -722,7 +718,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                   MPI_ERR_OTHER,
                                   "**ofid_rma_init",
                                   "**ofid_rma_init %s %d %s %s",
-                                  __SHORT_FILE__, __LINE__, FCNAME, "Key space too small");
+                                  __SHORT_FILE__, __LINE__, __func__, "Key space too small");
     }
 
     /* ------------------------------------------------------------------------ */
@@ -851,7 +847,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                       MPI_ERR_OTHER,
                                       "**ofid_ep",
                                       "**ofid_ep %s %d %s %s",
-                                      __SHORT_FILE__, __LINE__, FCNAME,
+                                      __SHORT_FILE__, __LINE__, __func__,
                                       "Not enough scalable endpoints");
         }
         /* Specify the number of TX/RX contexts we want */
@@ -1343,10 +1339,6 @@ static inline int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_create_endpoint
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                                             struct fid_domain *domain,
                                             struct fid_cq *p2p_cq,

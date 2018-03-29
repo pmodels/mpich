@@ -17,10 +17,6 @@ MPIR_Object_alloc_t MPIR_Request_mem = {
     MPIR_REQUEST_PREALLOC
 };
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Progress_wait_request
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPIR_Progress_wait_request
 
@@ -52,10 +48,6 @@ int MPIR_Progress_wait_request(MPIR_Request * req)
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Request_completion_processing
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* Complete a request, saving the status data if necessary.
    "active" has meaning only if the request is a persistent request; this
    allows the completion routines to indicate that a persistent request
@@ -216,10 +208,6 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Request_get_error
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /* FIXME: What is this routine for?
  *
  * [BRT] it is used by testall, although looking at testall now, I think the
@@ -345,10 +333,6 @@ void MPII_Grequest_set_lang_f77(MPI_Request greq)
 #endif
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Grequest_cancel
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete)
 {
     int rc;
@@ -398,10 +382,6 @@ int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Grequest_query
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Grequest_query(MPIR_Request * request_ptr)
 {
     int rc;
@@ -451,10 +431,6 @@ int MPIR_Grequest_query(MPIR_Request * request_ptr)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Grequest_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Grequest_free(MPIR_Request * request_ptr)
 {
     int rc;
@@ -506,10 +482,6 @@ int MPIR_Grequest_free(MPIR_Request * request_ptr)
  * Invokes poll_fn for each request in request_ptrs.  Waits for completion of
  * multiple requests if possible (all outstanding generalized requests are of
  * same greq class) */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Grequest_progress_poke
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Grequest_progress_poke(int count,
                                 MPIR_Request ** request_ptrs, MPI_Status array_of_statuses[])
 {
@@ -561,10 +533,6 @@ int MPIR_Grequest_progress_poke(int count,
 /* MPIR_Grequest_wait: Waits until all generalized requests have
    completed.  This routine groups grequests by class and calls the
    wait_fn on the whole class. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Grequest_waitall
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Grequest_waitall(int count, MPIR_Request * const *request_ptrs)
 {
     void **state_ptrs;

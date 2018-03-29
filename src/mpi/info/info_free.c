@@ -26,10 +26,7 @@ int MPI_Info_free(MPI_Info * info) __attribute__ ((weak, alias("PMPI_Info_free")
 #define MPI_Info_free PMPI_Info_free
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Info_free
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
     MPI_Info_free - Frees an info object
 
@@ -47,6 +44,8 @@ Input Parameters:
 @*/
 int MPI_Info_free(MPI_Info * info)
 {
+#ifdef HAVE_ERROR_CHECKING
+#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = 0;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INFO_FREE);
@@ -103,10 +102,10 @@ int MPI_Info_free(MPI_Info * info)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_info_free", "**mpi_info_free %p", info);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

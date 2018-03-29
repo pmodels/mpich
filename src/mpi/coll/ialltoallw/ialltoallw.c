@@ -73,10 +73,6 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 #undef MPI_Ialltoallw
 #define MPI_Ialltoallw PMPI_Ialltoallw
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_sched_intra_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw_sched_intra_auto(const void *sendbuf, const int sendcounts[],
                                      const int sdispls[], const MPI_Datatype sendtypes[],
                                      void *recvbuf, const int recvcounts[], const int rdispls[],
@@ -98,10 +94,6 @@ int MPIR_Ialltoallw_sched_intra_auto(const void *sendbuf, const int sendcounts[]
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_sched_inter_auto
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw_sched_inter_auto(const void *sendbuf, const int sendcounts[],
                                      const int sdispls[], const MPI_Datatype sendtypes[],
                                      void *recvbuf, const int recvcounts[], const int rdispls[],
@@ -117,10 +109,6 @@ int MPIR_Ialltoallw_sched_inter_auto(const void *sendbuf, const int sendcounts[]
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_sched_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw_sched_impl(const void *sendbuf, const int sendcounts[], const int sdispls[],
                                const MPI_Datatype sendtypes[], void *recvbuf,
                                const int recvcounts[], const int rdispls[],
@@ -171,10 +159,6 @@ int MPIR_Ialltoallw_sched_impl(const void *sendbuf, const int sendcounts[], cons
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_sched
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw_sched(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                           const int rdispls[], const MPI_Datatype recvtypes[],
@@ -193,10 +177,6 @@ int MPIR_Ialltoallw_sched(const void *sendbuf, const int sendcounts[], const int
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int sdispls[],
                          const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                          const int rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
@@ -231,10 +211,6 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Ialltoallw
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispls[],
                     const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                     const int rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm * comm_ptr,
@@ -255,10 +231,6 @@ int MPIR_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdisp
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Ialltoallw
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Ialltoallw - Nonblocking generalized all-to-all communication allowing
    different datatypes, counts, and displacements for each partner
@@ -368,14 +340,14 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_ialltoallw",
                                  "**mpi_ialltoallw %p %p %p %p %p %p %p %p %C %p", sendbuf,
                                  sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls,
                                  recvtypes, comm, request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

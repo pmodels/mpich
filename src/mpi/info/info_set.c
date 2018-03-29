@@ -29,10 +29,7 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
 #define MPI_Info_set PMPI_Info_set
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Info_set
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
     MPI_Info_set - Adds a (key,value) pair to info
 
@@ -120,10 +117,10 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
     /* --BEGIN ERROR HANDLING-- */
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_info_set", "**mpi_info_set %I %s %s", info, key, value);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 #endif
@@ -132,10 +129,6 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
 
 #ifndef MPICH_MPI_FROM_PMPI
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Info_set_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Info_set_impl(MPIR_Info * info_ptr, const char *key, const char *value)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -26,10 +26,6 @@ int MPI_Comm_free_keyval(int *comm_keyval) __attribute__ ((weak, alias("PMPI_Com
 #undef MPI_Comm_free_keyval
 #define MPI_Comm_free_keyval PMPI_Comm_free_keyval
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_free_keyval_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Comm_free_keyval_impl(int keyval)
 {
     int in_use;
@@ -49,10 +45,6 @@ void MPIR_Comm_free_keyval_impl(int keyval)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Comm_free_keyval
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_free_keyval - Frees an attribute key for communicators
 
@@ -131,11 +123,11 @@ int MPI_Comm_free_keyval(int *comm_keyval)
   fn_fail:
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_comm_free_keyval", "**mpi_comm_free_keyval %p",
                                  comm_keyval);
     }
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
 #endif
     /* --END ERROR HANDLING-- */

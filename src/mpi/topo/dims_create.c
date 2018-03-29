@@ -258,8 +258,6 @@ static int ndivisors_from_factor(int nf, const Factors * factors)
     return ndiv;
 }
 
-#undef FCNAME
-#define FCNAME "factor_to_divisors"
 static int factor_to_divisors(int nf, Factors * factors, int ndiv, int divs[])
 {
     int i, powers[MAX_FACTORS], curbase[MAX_FACTORS], nd, idx, val, mpi_errno;
@@ -834,10 +832,6 @@ extern volatile int MPIR_DIMS_initPCVars;
 
 #endif /* PMPI Local */
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Dims_create
-#undef FCNAME
-#define FCNAME "MPI_Dims_create"
 
 /*@
     MPI_Dims_create - Creates a division of processors in a cartesian grid
@@ -907,12 +901,12 @@ int MPI_Dims_create(int nnodes, int ndims, int dims[])
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_dims_create", "**mpi_dims_create %d %d %p", nnodes, ndims,
                                  dims);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

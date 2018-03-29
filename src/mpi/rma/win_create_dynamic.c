@@ -28,10 +28,7 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win * win)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_create_dynamic
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
 MPI_Win_create_dynamic - Create an MPI Window object for one-sided
 communication.  This window allows memory to be dynamically exposed and
@@ -156,12 +153,12 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win * win)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_win_create_dynamic", "**mpi_win_create_dynamic %I %C %p",
                                  info, comm, win);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

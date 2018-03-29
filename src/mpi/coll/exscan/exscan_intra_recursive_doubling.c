@@ -46,10 +46,6 @@
    }
 .ve
 */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Exscan_intra_recursive_doubling
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Exscan_intra_recursive_doubling(const void *sendbuf,
                                          void *recvbuf,
                                          int count,

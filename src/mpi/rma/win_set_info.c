@@ -27,10 +27,7 @@ int MPI_Win_set_info(MPI_Win win, MPI_Info info) __attribute__ ((weak, alias("PM
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Win_set_info
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
 MPI_Win_set_info - Set new values for the hints of the window associated with
 win.
@@ -128,11 +125,11 @@ int MPI_Win_set_info(MPI_Win win, MPI_Info info)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_win_set_info", "**mpi_win_set_info %W %I", win, info);
     }
 #endif
-    mpi_errno = MPIR_Err_return_win(win_ptr, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_win(win_ptr, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

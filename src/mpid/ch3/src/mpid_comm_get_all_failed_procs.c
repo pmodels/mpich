@@ -82,10 +82,6 @@ static MPIR_Group *bitarray_to_group(MPIR_Comm *comm_ptr, int *bitarray)
     return ret_group;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Comm_get_all_failed_procs
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPIR_Group **failed_group, int tag)
 {
     int mpi_errno = MPI_SUCCESS, ret_errno;

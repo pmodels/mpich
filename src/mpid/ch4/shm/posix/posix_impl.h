@@ -143,8 +143,6 @@ typedef struct {
  * Helper routines and macros for request completion
  */
 
-#undef FUNCNAME
-#define FUNCNAME nothing
 #define BEGIN_FUNC(FUNCNAME)                    \
     MPIR_FUNC_VERBOSE_STATE_DECL(FUNCNAME);     \
     MPIR_FUNC_VERBOSE_ENTER(FUNCNAME);

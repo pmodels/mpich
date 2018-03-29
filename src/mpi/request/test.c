@@ -26,10 +26,6 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
 #undef MPI_Test
 #define MPI_Test PMPI_Test
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Test_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -59,10 +55,6 @@ int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Test
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -107,10 +99,6 @@ int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Test
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Test  - Tests for the completion of a request
 
@@ -197,11 +185,11 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_test", "**mpi_test %p %p %p", request, flag, status);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(request_ptr ? request_ptr->comm : NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(request_ptr ? request_ptr->comm : NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

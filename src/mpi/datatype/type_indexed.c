@@ -232,10 +232,6 @@ int MPIR_Type_indexed(int count,
     return mpi_errno;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_Type_indexed_impl
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
                            const int *array_of_displacements,
                            MPI_Datatype oldtype, MPI_Datatype * newtype)
@@ -285,10 +281,6 @@ int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Type_indexed
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_indexed - Creates an indexed datatype
 
@@ -397,12 +389,12 @@ int MPI_Type_indexed(int count,
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_indexed", "**mpi_type_indexed %d %p %p %D %p", count,
                                  array_of_blocklengths, array_of_displacements, oldtype, newtype);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

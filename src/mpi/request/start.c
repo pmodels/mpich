@@ -27,10 +27,7 @@ int MPI_Start(MPI_Request * request) __attribute__ ((weak, alias("PMPI_Start")))
 
 #endif
 
-#undef FUNCNAME
-#define FUNCNAME MPI_Start
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+
 /*@
     MPI_Start - Initiates a communication with a persistent request handle
 
@@ -105,11 +102,11 @@ int MPI_Start(MPI_Request * request)
 #ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
-            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+            MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_start", "**mpi_start %p", request);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(NULL, __func__, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

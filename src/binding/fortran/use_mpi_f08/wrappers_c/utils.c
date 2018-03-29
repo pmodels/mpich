@@ -26,10 +26,6 @@
 
   Note: The caller needs to free memory of strs_c
 */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Fortran_array_of_string_f2c
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 extern int MPIR_Fortran_array_of_string_f2c(const char *strs_f, char ***strs_c, int str_len,
                                             int know_size, int size)
 {

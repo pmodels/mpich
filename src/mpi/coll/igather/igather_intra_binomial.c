@@ -27,10 +27,6 @@
 
    End Algorithm: MPI_Gather
 */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Igather_sched_intra_binomial
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Igather_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
                                       MPIR_Comm * comm_ptr, MPIR_Sched_t s)

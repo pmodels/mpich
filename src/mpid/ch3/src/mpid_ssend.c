@@ -11,10 +11,6 @@
 /*
  * MPID_Ssend()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Ssend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Ssend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 	       MPIR_Request ** request)
 {
@@ -57,7 +53,7 @@ int MPID_Ssend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
 	    /* --BEGIN ERROR HANDLING-- */
 	    if (sreq != NULL && MPIR_cc_get(sreq->cc) != 0)
 	    {
-		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
+		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__, MPI_ERR_OTHER,
 						 "**dev|selfsenddeadlock", 0);
 		goto fn_exit;
 	    }

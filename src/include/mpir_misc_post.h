@@ -9,10 +9,6 @@
 #define MPIR_MISC_POST_H_INCLUDED
 
 /* Pull the error status out of the tag space and put it into an errflag. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_process_status
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIR_Process_status(MPI_Status * status, MPIR_Errflag_t * errflag)
 {
     if (MPI_PROC_NULL != status->MPI_SOURCE &&

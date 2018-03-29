@@ -41,10 +41,6 @@ MPID_nem_netmod_funcs_t MPIDI_nem_llc_funcs = {
 
 int MPID_nem_llc_my_llc_rank;
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_kvs_put_binary
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_kvs_put_binary(int from, const char *postfix, const uint8_t * buf, int length)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -77,10 +73,6 @@ int MPID_nem_llc_kvs_put_binary(int from, const char *postfix, const uint8_t * b
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_kvs_get_binary
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_kvs_get_binary(int from, const char *postfix, char *buf, int length)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -118,10 +110,6 @@ int MPID_nem_llc_kvs_get_binary(int from, const char *postfix, char *buf, int le
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno, llc_errno;
@@ -161,10 +149,6 @@ int MPID_nem_llc_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_get_business_card
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -179,10 +163,6 @@ int MPID_nem_llc_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_connect_to_root
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -201,10 +181,6 @@ int MPID_nem_llc_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
 /* ================ llc_probe.c ================ */
 /* ============================================== */
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_anysource_iprobe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_anysource_iprobe(int tag, MPIR_Comm * comm, int context_offset, int *flag,
                                   MPI_Status * status)
 {
@@ -212,10 +188,6 @@ int MPID_nem_llc_anysource_iprobe(int tag, MPIR_Comm * comm, int context_offset,
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_anysource_improbe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset, int *flag,
                                    MPIR_Request ** message, MPI_Status * status)
 {
@@ -223,10 +195,6 @@ int MPID_nem_llc_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset
                                 status);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_llc_get_ordering
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_get_ordering(int *ordering)
 {
     (*ordering) = 1;

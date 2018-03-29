@@ -23,10 +23,6 @@
 /*
  * MPID_Isend()
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Isend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Isend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 	       int tag, MPIR_Comm * comm, int context_offset,
                MPIR_Request ** request)
