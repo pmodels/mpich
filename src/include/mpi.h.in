@@ -895,8 +895,9 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
                                                               * to be pending */
 #define MPIX_ERR_REVOKED              MPICH_ERR_FIRST_MPIX+3 /* The communciation object has been revoked */
 #define MPIX_ERR_EAGAIN               MPICH_ERR_FIRST_MPIX+4 /* Operation could not be issued */
+#define MPIX_ERR_NOREQ                MPICH_ERR_FIRST_MPIX+5 /* Cannot allocate request */
 
-#define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+4
+#define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+5
 
 
 /* End of MPI's error classes */
