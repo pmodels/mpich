@@ -12,7 +12,7 @@ resized2 1
 bigtype 1
 hindexed_io 1
 tst_fileview 1
-simple_collective 1 arg="simple_collective.testfile"
+simple_collective 1 arg=simple_collective.testfile
 external32_derived_dtype 1
 i_bigtype 1 mpiversion=3.1
 i_hindexed_io 1 mpiversion=3.1
