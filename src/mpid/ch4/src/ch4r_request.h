@@ -27,6 +27,8 @@ static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kin
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_AM_REQUEST_CREATE);
 
     req = MPIR_Request_create(kind);
+    if (req == NULL)
+        goto fn_fail;
 
     /* as long as ref_count is a constant, any compiler should be able
      * to unroll the below loop.  when threading is not enabled, the
@@ -48,8 +50,11 @@ static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kin
     MPIR_Assert(MPIDI_CH4U_REQUEST(req, req));
     MPIDI_CH4U_REQUEST(req, req->status) = 0;
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_AM_REQUEST_CREATE);
     return req;
+  fn_fail:
+    goto fn_exit;
 }
 
 /* This function should be called any time an anysource request is matched so
