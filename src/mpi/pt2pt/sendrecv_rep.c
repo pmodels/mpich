@@ -164,6 +164,8 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
                                sendtag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, &sreq);
         if (mpi_errno != MPI_SUCCESS) {
             /* --BEGIN ERROR HANDLING-- */
+            if (mpi_errno == MPIX_ERR_NOREQ)
+                MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
             /* FIXME: should we cancel the pending (possibly completed) receive request or wait for it to complete? */
             MPIR_Request_free(rreq);
             goto fn_fail;
