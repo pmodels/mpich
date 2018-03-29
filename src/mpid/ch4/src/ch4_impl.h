@@ -410,7 +410,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_hash_clear(MPIR_Win * win)
             MPIR_Status_set_procnull(&(rreq_)->status);                 \
         }                                                               \
         else {                                                          \
-            MPIR_ERR_SETANDJUMP(mpi_errno_,MPI_ERR_OTHER,"**nomemreq"); \
+            MPIR_ERR_SETANDJUMP(mpi_errno_,MPIX_ERR_NOREQ,"**nomemreq"); \
         }                                                               \
     } while (0)
 
