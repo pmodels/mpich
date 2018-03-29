@@ -200,6 +200,7 @@ static inline int MPIDI_OFI_handle_long_am_hdr(MPIDI_OFI_am_header_t * msg_hdr)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM_HDR);
 
     rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+    MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     mpi_errno = MPIDI_OFI_am_init_request(NULL, 0, rreq);
 

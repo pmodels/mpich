@@ -175,6 +175,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * w
         + MPIDI_OFI_IOVEC_ALIGN - 1;    /* in case iov_store[0] is not aligned as we want */
 
     req = MPIDI_OFI_win_request_alloc_and_init(alloc_iov_size);
+    MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *winreq = req;
 
     req->noncontig->iov.put_get.originv =
@@ -185,8 +186,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * w
     MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, flags);
     *ep = MPIDI_OFI_WIN(win).ep;
     req->target_rank = target_rank;
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_PUT_GET);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win * win,
@@ -219,6 +224,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win 
         + MPIDI_OFI_IOVEC_ALIGN - 1;    /* in case iov_store[0] is not aligned as we want */
 
     req = MPIDI_OFI_win_request_alloc_and_init(alloc_iov_size);
+    MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *winreq = req;
 
     req->noncontig->iov.accumulate.originv =
@@ -229,8 +235,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win 
     MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, flags);
     *ep = MPIDI_OFI_WIN(win).ep;
     req->target_rank = target_rank;
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_ACCUMULATE);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_Win * win,
@@ -274,6 +284,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
         + MPIDI_OFI_IOVEC_ALIGN - 1;    /* in case iov_store[0] is not aligned as we want */
 
     req = MPIDI_OFI_win_request_alloc_and_init(alloc_iov_size);
+    MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *winreq = req;
 
     req->noncontig->iov.get_accumulate.originv =
@@ -287,8 +298,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
     MPIDI_OFI_INIT_SIGNAL_REQUEST(win, sigreq, flags);
     *ep = MPIDI_OFI_WIN(win).ep;
     req->target_rank = target_rank;
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_GET_ACCUMULATE);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -662,11 +677,15 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
     if (unlikely((origin_bytes == 0) || (target_rank == MPI_PROC_NULL))) {
         mpi_errno = MPI_SUCCESS;
         *request = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
         MPIR_Request_add_ref(*request);
         MPIDI_CH4U_request_complete(*request);
     } else if (target_rank == win->comm_ptr->rank) {
         *request = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
         MPIR_Request_add_ref(*request);
+        MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         mpi_errno = MPIR_Localcopy(origin_addr,
                                    origin_count,
@@ -684,6 +703,8 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RPUT);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -991,6 +1012,8 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     mpi_errno = MPI_SUCCESS;
     if (sigreq) {
         *sigreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIR_ERR_CHKANDSTMT((*sigreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
         MPIR_Request_add_ref(*sigreq);
         MPIDI_CH4U_request_complete(*sigreq);
     }
@@ -1184,6 +1207,8 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     mpi_errno = MPI_SUCCESS;
     if (sigreq) {
         *sigreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIR_ERR_CHKANDSTMT((*sigreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
         MPIR_Request_add_ref(*sigreq);
         MPIDI_CH4U_request_complete(*sigreq);
     }
@@ -1329,6 +1354,8 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
     if (unlikely((origin_bytes == 0) || (target_rank == MPI_PROC_NULL))) {
         mpi_errno = MPI_SUCCESS;
         *request = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
         MPIR_Request_add_ref(*request);
         MPIDI_CH4U_request_complete(*request);
         goto fn_exit;
@@ -1336,6 +1363,8 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
 
     if (target_rank == win->comm_ptr->rank) {
         *request = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                            "**nomemreq");
         MPIR_Request_add_ref(*request);
         offset = win->disp_unit * target_disp;
         mpi_errno = MPIR_Localcopy((char *) win->base + offset,
@@ -1354,6 +1383,8 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RGET);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
