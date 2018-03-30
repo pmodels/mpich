@@ -13,19 +13,6 @@
 
 #include "ch4_impl.h"
 
-#define MPIDI_PROGRESS_HOOKS  (1)
-#define MPIDI_PROGRESS_NM     (1<<1)
-#define MPIDI_PROGRESS_SHM    (1<<2)
-
-#define MPIDI_PROGRESS_ALL (MPIDI_PROGRESS_HOOKS|MPIDI_PROGRESS_NM|MPIDI_PROGRESS_SHM)
-
-/* Flags argument allows to control execution of different parts of progress function,
- * for aims of prioritization of different transports and reentrant-safety of progress call.
- *
- * MPIDI_PROGRESS_HOOKS - enables progress on progress hooks. Hooks may invoke upper-level logic internaly,
- *      that's why MPIDI_Progress_test call with MPIDI_PROGRESS_HOOKS set isn't reentrant safe, and shouldn't be called from netmod's fallback logic.
- * MPIDI_PROGRESS_NM and MPIDI_PROGRESS_SHM enables progress on transports only, and guarantee reentrant-safety.
- */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Progress_test
 #undef FCNAME
