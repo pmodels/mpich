@@ -15,6 +15,8 @@
 #include <mpidch4.h>
 #include "mpidig.h"
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags);
+
 /* Static inlines */
 static inline int MPIDI_CH4U_get_context_index(uint64_t context_id)
 {
