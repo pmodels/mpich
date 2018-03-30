@@ -904,27 +904,24 @@ static void bind_to_help_fn(void)
     printf("            socket{:<n>}     -- bind to 'n' sockets\n");
     printf("            core{:<n>}       -- bind to 'n' cores\n");
     printf("            hwthread{:<n>}   -- bind to 'n' hardware threads\n");
-    printf("            l1cache{:<n>}    -- bind to processes on 'n' L1 cache domains\n");
-    printf("            l1dcache{:<n>}   -- bind to processes on 'n' L1 data cache domain\n");
-    printf
-        ("            l1icache{:<n>}   -- bind to processes on 'n' L1 instruction cache domain\n");
-    printf("            l1ucache{:<n>}   -- bind to processes on 'n' L1 unified cache domain\n");
-    printf("            l2cache{:<n>}    -- bind to processes on 'n' L2 cache domains\n");
-    printf("            l2dcache{:<n>}   -- bind to processes on 'n' L2 data cache domain\n");
-    printf
-        ("            l2icache{:<n>}   -- bind to processes on 'n' L2 instruction cache domain\n");
-    printf("            l2ucache{:<n>}   -- bind to processes on 'n' L2 unified cache domain\n");
-    printf("            l3cache{:<n>}    -- bind to processes on 'n' L3 cache domain\n");
-    printf("            l3dcache{:<n>}   -- bind to processes on 'n' L3 data cache domain\n");
-    printf
-        ("            l3icache{:<n>}   -- bind to processes on 'n' L3 instruction cache domain\n");
-    printf("            l3ucache{:<n>}   -- bind to processes on 'n' L3 unified cache domain\n");
-    printf("            l4cache{:<n>}    -- bind to processes on 'n' L4 cache domain\n");
-    printf("            l4dcache{:<n>}   -- bind to processes on 'n' L4 data cache domain\n");
-    printf("            l4ucache{:<n>}   -- bind to processes on 'n' L4 unified cache domain\n");
-    printf("            l5cache{:<n>}    -- bind to processes on 'n' L5 cache domain\n");
-    printf("            l5dcache{:<n>}   -- bind to processes on 'n' L5 data cache domain\n");
-    printf("            l5ucache{:<n>}   -- bind to processes on 'n' L5 unified cache domain\n");
+    printf("            l1cache{:<n>}    -- bind to 'n' L1 cache domains\n");
+    printf("            l1dcache{:<n>}   -- bind to 'n' L1 data cache domain\n");
+    printf("            l1icache{:<n>}   -- bind to 'n' L1 instruction cache domain\n");
+    printf("            l1ucache{:<n>}   -- bind to 'n' L1 unified cache domain\n");
+    printf("            l2cache{:<n>}    -- bind to 'n' L2 cache domains\n");
+    printf("            l2dcache{:<n>}   -- bind to 'n' L2 data cache domain\n");
+    printf("            l2icache{:<n>}   -- bind to 'n' L2 instruction cache domain\n");
+    printf("            l2ucache{:<n>}   -- bind to 'n' L2 unified cache domain\n");
+    printf("            l3cache{:<n>}    -- bind to 'n' L3 cache domain\n");
+    printf("            l3dcache{:<n>}   -- bind to 'n' L3 data cache domain\n");
+    printf("            l3icache{:<n>}   -- bind to 'n' L3 instruction cache domain\n");
+    printf("            l3ucache{:<n>}   -- bind to 'n' L3 unified cache domain\n");
+    printf("            l4cache{:<n>}    -- bind to 'n' L4 cache domain\n");
+    printf("            l4dcache{:<n>}   -- bind to 'n' L4 data cache domain\n");
+    printf("            l4ucache{:<n>}   -- bind to 'n' L4 unified cache domain\n");
+    printf("            l5cache{:<n>}    -- bind to 'n' L5 cache domain\n");
+    printf("            l5dcache{:<n>}   -- bind to 'n' L5 data cache domain\n");
+    printf("            l5ucache{:<n>}   -- bind to 'n' L5 unified cache domain\n");
 
 
     printf("\n\n");
