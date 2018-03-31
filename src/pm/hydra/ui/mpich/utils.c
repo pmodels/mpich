@@ -922,6 +922,11 @@ static void bind_to_help_fn(void)
     printf("            l5cache{:<n>}    -- bind to 'n' L5 cache domain\n");
     printf("            l5dcache{:<n>}   -- bind to 'n' L5 data cache domain\n");
     printf("            l5ucache{:<n>}   -- bind to 'n' L5 unified cache domain\n");
+    printf("            pci:<id>         -- bind to non-io ancestor of PCI device\n");
+    printf("            gpu{<id>|:<n>}   -- bind to non-io ancestor of GPU device(s)\n");
+    printf("            ib{<id>|:<n>}    -- bind to non-io ancestor of IB device(s)\n");
+    printf("            en|eth{<id>|:<n>} -- bind to non-io ancestor of Ethernet device(s)\n");
+    printf("            hfi{<id>|:<n>}   -- bind to non-io ancestor of OPA device(s)\n");
 
 
     printf("\n\n");
@@ -954,6 +959,16 @@ static void bind_to_help_fn(void)
     printf("            l5cache{:<n>}    -- map by 'n' L5 cache domain\n");
     printf("            l5dcache{:<n>}   -- map by 'n' L5 data cache domain\n");
     printf("            l5ucache{:<n>}   -- map by 'n' L5 unified cache domain\n");
+    printf("            pci:<id>         -- map to non-io ancestor of PCI device\n");
+    printf("                                (must match binding)\n");
+    printf("            gpu{<id>|:<n>}   -- map to non-io ancestor of GPU device(s)\n");
+    printf("                                (must match binding)\n");
+    printf("            ib{<id>|:<n>}    -- map to non-io ancestor of IB device(s)\n");
+    printf("                                (must match binding)\n");
+    printf("            en|eth{<id>|:<n>} -- map to non-io ancestor of Ethernet device(s)\n");
+    printf("                                (must match binding)\n");
+    printf("            hfi{<id>|:<n>}   -- map to non-io ancestor of OPA device(s)\n");
+    printf("                                (must match binding)\n");
 
     printf("\n\n");
 
