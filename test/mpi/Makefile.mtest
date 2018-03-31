@@ -17,8 +17,6 @@
 # AM_CPPFLAGS are used for C++ code as well
 AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
 LDADD = $(top_builddir)/util/mtest.o
-LDADD += $(top_builddir)/util/mtest_datatype.o
-LDADD += $(top_builddir)/util/mtest_datatype_gen.o
 
 # Add libdtpools support
 AM_CPPFLAGS += -I$(top_builddir)/dtpoos/include -I$(top_srcdir)/dtpools/include
@@ -31,12 +29,6 @@ LDADD += $(top_builddir)/dtpools/src/.libs/libdtpools.a
 
 $(top_builddir)/util/mtest.$(OBJEXT): $(top_srcdir)/util/mtest.c
 	(cd $(top_builddir)/util && $(MAKE) mtest.$(OBJEXT))
-
-$(top_builddir)/util/mtest_datatype.$(OBJEXT): $(top_srcdir)/util/mtest_datatype.c
-	(cd $(top_builddir)/util && $(MAKE) mtest_datatype.$(OBJEXT))
-
-$(top_builddir)/util/mtest_datatype_gen.$(OBJEXT): $(top_srcdir)/util/mtest_datatype_gen.c
-	(cd $(top_builddir)/util && $(MAKE) mtest_datatype_gen.$(OBJEXT))
 
 $(top_builddir)/dtpools/src/.libs/libdtpools.a: $(top_srcdir)/dtpools/src/*.c
 	(cd $(top_builddir)/dtpools && $(MAKE))
