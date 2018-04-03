@@ -1421,6 +1421,12 @@ fi
 export NEEDSPLIB
 
 AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "$NEEDSPLIB" = "yes"])
+PAC_CHECK_VISIBILITY
+AC_SUBST(VISIBILITY_CFLAGS)
+# disable visibility if building profiling library
+if test "$NEEDSPLIB" = "yes" ; then
+    VISIBILITY_CFLAGS=""
+fi
 
 
 # ----------------------------------------------------------------------------
@@ -2958,12 +2964,6 @@ AC_C_INLINE
 
 PAC_C_GNU_ATTRIBUTE
 PAC_C_BUILTIN_EXPECT
-PAC_CHECK_VISIBILITY
-AC_SUBST(VISIBILITY_CFLAGS)
-# disable visibility if building profiling library
-if test "$NEEDSPLIB" = "yes" ; then
-    VISIBILITY_CFLAGS=""
-fi
 
 # We need to check for the endianess in order to implement the
 # "external32" representations.  This defines "WORDS_BIGENDIAN when
