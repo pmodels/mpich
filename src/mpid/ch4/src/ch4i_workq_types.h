@@ -47,14 +47,23 @@ static const char *MPIDI_CH4_mt_model_names[MPIDI_CH4_NUM_MT_MODELS] = {
 typedef void *MPIDI_workq_t;
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_init(MPIDI_workq_t * q)
 {
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    MPIR_Assert(0);
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_enqueue(MPIDI_workq_t * q, void *p)
 {
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    MPIR_Assert(0);
+#endif
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_dequeue(MPIDI_workq_t * q, void **pp)
 {
+#ifdef MPIDI_CH4_USE_WORK_QUEUES
+    MPIR_Assert(0);
+#endif
 }
 #endif
 
