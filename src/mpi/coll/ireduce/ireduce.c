@@ -20,6 +20,18 @@ cvars:
       description : >-
         k value for tree based ireduce (for tree_kary and tree_knomial)
 
+    - name        : MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Maximum chunk size (in bytes) for pipelining in tree based
+        ireduce (tree_kary and tree_knomial). Default value is 0, that is,
+        no pipelining by default
+
     - name        : MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD
       category    : COLLECTIVE
       type        : boolean
