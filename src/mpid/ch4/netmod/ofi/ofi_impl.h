@@ -48,28 +48,6 @@
 #define MPIDI_OFI_ssendack_request_t_tls_free(req) \
   MPIR_Handle_obj_free(&MPIR_Request_mem, (req))
 
-#define MPIDI_OFI_ssendack_request_t_alloc_and_init(req)        \
-    do {                                                                \
-        MPIDI_OFI_ssendack_request_t_tls_alloc(req);            \
-        MPIR_Assert(req != NULL);                                       \
-        MPIR_Assert(HANDLE_GET_MPI_KIND(req->handle)                    \
-                    == MPID_SSENDACK_REQUEST);                          \
-    } while (0)
-
-#define MPIDI_OFI_request_create_null_rreq(rreq_, mpi_errno_, FAIL_) \
-  do {                                                                  \
-    (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);             \
-    if ((rreq_) != NULL) {                                              \
-      MPIR_cc_set(&(rreq_)->cc, 0);                                     \
-      (rreq_)->kind = MPIR_REQUEST_KIND__RECV;                                \
-      MPIR_Status_set_procnull(&(rreq_)->status);                       \
-    }                                                                   \
-    else {                                                              \
-      MPIR_ERR_SETANDJUMP(mpi_errno_,MPIX_ERR_NOREQ,"**nomemreq");       \
-    }                                                                   \
-  } while (0)
-
-
 #define MPIDI_OFI_PROGRESS()                                      \
     do {                                                          \
         mpi_errno = MPID_Progress_test();                        \
