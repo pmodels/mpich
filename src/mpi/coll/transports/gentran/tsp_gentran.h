@@ -74,6 +74,10 @@ int MPII_Genutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Da
                                  void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                  MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
 
+/* Transport function to schedule a vertex that completes when all the incoming vertices have
+ * completed */
+int MPII_Genutil_sched_selective_sink(MPII_Genutil_sched_t * sched, int n_in_vtcs, int *invtcs);
+
 /* Transport function to allocata memory required for schedule execution */
 void *MPII_Genutil_sched_malloc(size_t size, MPII_Genutil_sched_t * sched);
 

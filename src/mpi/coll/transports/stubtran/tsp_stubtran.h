@@ -23,6 +23,7 @@
 #define MPIR_TSP_sched_imcast               MPII_Stubutil_sched_imcast
 #define MPIR_TSP_sched_reduce_local         MPII_Stubutil_sched_reduce_local
 #define MPIR_TSP_sched_localcopy            MPII_Stubutil_sched_localcopy
+#define MPIR_TSP_sched_selective_sink       MPII_Stubutil_sched_selective_sink
 #define MPIR_TSP_sched_malloc               MPII_Stubutil_sched_malloc
 #define MPIR_TSP_sched_start                MPII_Stubutil_sched_start
 
@@ -42,6 +43,7 @@ int MPII_Stubutil_sched_reduce_local(const void *inbuf, void *inoutbuf, int coun
 int MPII_Stubutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                   MPII_Stubutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
+int MPII_Stubutil_sched_selective_sink(MPII_Stubutil_sched_t * sched, int n_in_vtcs, int *invtcs);
 void *MPII_Stubutil_sched_malloc(size_t size, MPII_Stubutil_sched_t * sched);
 int MPII_Stubutil_sched_start(MPII_Stubutil_sched_t * sched, MPIR_Comm * comm,
                               MPII_Coll_req_t ** request);
