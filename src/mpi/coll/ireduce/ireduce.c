@@ -61,6 +61,7 @@ cvars:
         reduce_scatter_gather - Force reduce scatter gather algorithm
         tree_kary             - Force Generic Transport Tree Kary
         tree_knomial          - Force Generic Transport Tree Knomial
+        ring                  - Force Generic Transport Ring
 
     - name        : MPIR_CVAR_IREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -276,6 +277,14 @@ int MPIR_Ireduce_impl(const void *sendbuf, void *recvbuf, int count,
                 mpi_errno =
                     MPIR_Ireduce_intra_tree_kary(sendbuf, recvbuf, count, datatype, op, root,
                                                  comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IREDUCE_INTRA_ALGO_GENTRAN_RING:
+                mpi_errno =
+                    MPIR_Ireduce_intra_ring(sendbuf, recvbuf, count, datatype, op, root,
+                                            comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
