@@ -634,6 +634,8 @@ int MPII_Coll_init(void)
         MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_GENTRAN_TREE_KNOMIAL;
     else if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "tree_kary"))
         MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_GENTRAN_TREE_KARY;
+    else if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "ring"))
+        MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_GENTRAN_RING;
     else
         MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_AUTO;
 
