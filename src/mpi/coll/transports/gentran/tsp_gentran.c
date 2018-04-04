@@ -30,6 +30,7 @@ int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched)
 {
     sched->total_vtcs = 0;
     sched->completed_vtcs = 0;
+    sched->last_fence = -1;
 
     /* initialize array for storing vertices */
     utarray_new(sched->vtcs, &vtx_t_icd, MPL_MEM_COLL);
@@ -217,7 +218,86 @@ int MPII_Genutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Da
 }
 
 
+/* Transport function that adds a no op vertex in the graph that has
+ * all the vertices posted before it as incoming vertices */
 #undef FUNCNAME
+#define FUNCNAME MPII_Genutil_sched_sink
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPII_Genutil_sched_sink(MPII_Genutil_sched_t * sched)
+{
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                    (MPL_DBG_FDEST, "Gentran: sched [sink] total=%d \n", sched->total_vtcs));
+
+    vtx_t *vtxp;
+    int i, n_in_vtcs = 0, vtx_id;
+    int *in_vtcs;
+
+    /* assign a new vertex */
+    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+
+    vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__SINK;
+
+    in_vtcs = MPL_malloc(sizeof(int) * vtx_id, MPL_MEM_COLL);
+    /* record incoming vertices */
+    for (i = vtx_id - 1; i >= 0; i--) {
+        vtx_t *sched_fence = (vtx_t *) utarray_eltptr(sched->vtcs, i);
+        if (sched_fence->vtx_kind == MPII_GENUTIL_VTX_KIND__FENCE)
+            /* no need to record this and any vertex before fence.
+             * Dependency on the last fence call will be added by
+             * the subsequent call to MPIC_Genutil_vtx_add_dependencies function */
+            break;
+        else {
+            in_vtcs[vtx_id - 1 - i] = i;
+            n_in_vtcs++;
+        }
+    }
+
+    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
+    MPL_free(in_vtcs);
+    return vtx_id;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPII_Genutil_sched_fence
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched)
+{
+    int fence_id;
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Gentran: scheduling a fence\n"));
+
+    /* fence operation is an extension to fence, so we can resuse the fence call */
+    fence_id = MPII_Genutil_sched_sink(sched);
+    /* change the vertex kind from SINK to FENCE */
+    vtx_t *sched_fence = (vtx_t *) utarray_eltptr(sched->vtcs, fence_id);
+    sched_fence->vtx_kind = MPII_GENUTIL_VTX_KIND__FENCE;
+    sched->last_fence = fence_id;
+    return fence_id;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPII_Genutil_sched_selective_sink
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPII_Genutil_sched_selective_sink(MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs)
+{
+    vtx_t *vtxp;
+    int vtx_id;
+
+    /* assign a new vertex */
+    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+
+    vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__SELECTIVE_SINK;
+    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
+
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] selective_sink task \n", vtx_id));
+
+    return vtx_id;
+
+}
+
 #define FUNCNAME MPII_Genutil_sched_malloc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)

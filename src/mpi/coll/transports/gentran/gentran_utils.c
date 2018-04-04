@@ -133,6 +133,31 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                     vtx_record_completion(vtxp, sched);
                 }
                 break;
+            case MPII_GENUTIL_VTX_KIND__SELECTIVE_SINK:{
+                    vtx_record_issue(vtxp, sched);
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST,
+                                     "  --> GENTRAN transport (selective sink) performed\n"));
+                    /* Nothin to do, just record completion */
+                    vtx_record_completion(vtxp, sched);
+                }
+                break;
+            case MPII_GENUTIL_VTX_KIND__SINK:{
+                    vtx_record_issue(vtxp, sched);
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST, "  --> GENTRAN transport (sink) performed\n"));
+                    /* Nothin to do, just record completion */
+                    vtx_record_completion(vtxp, sched);
+                }
+                break;
+            case MPII_GENUTIL_VTX_KIND__FENCE:{
+                    vtx_record_issue(vtxp, sched);
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST, "  --> GENTRAN transport (fence) performed\n"));
+                    /* Nothin to do, just record completion */
+                    vtx_record_completion(vtxp, sched);
+                }
+                break;
         }
 
 #ifdef MPL_USE_DBG_LOGGING
@@ -308,6 +333,24 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
         /* increment pending_dependencies only if the incoming
          * vertex is not complete yet */
         if (in_vtx->vtx_state != MPII_GENUTIL_VTX_STATE__COMPLETE)
+            vtx->pending_dependencies++;
+    }
+
+    /* check if there was any fence operation and add appropriate dependencies.
+     * The application will never explicity specify a dependency on it,
+     * the transport has to make sure that the dependency on the fence operation is met */
+    if (sched->last_fence != -1 && sched->last_fence != vtx_id) {
+        /* add the last fence vertex as an incoming vertex to vtx */
+        vtx_extend_utarray(in, 1, &(sched->last_fence));
+
+        /* add vtx as outgoing vtx of last_fence */
+        vtx_t *sched_fence = (vtx_t *) utarray_eltptr(sched->vtcs, sched->last_fence);
+        out_vtcs = sched_fence->out_vtcs;
+        vtx_extend_utarray(out_vtcs, 1, &vtx_id);
+
+        /* increment pending_dependencies only if the incoming
+         * vertex is not complete yet */
+        if (sched_fence->vtx_state != MPII_GENUTIL_VTX_STATE__COMPLETE)
             vtx->pending_dependencies++;
     }
 }
