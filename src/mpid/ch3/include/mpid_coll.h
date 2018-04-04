@@ -7,7 +7,7 @@
 #ifndef MPID_COLL_H_INCLUDED
 #define MPID_COLL_H_INCLUDED
 
-#include "mpidimpl.h"
+#include "mpiimpl.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPID_Barrier
