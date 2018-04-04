@@ -26,6 +26,9 @@
 #define MPIR_TSP_sched_imcast              MPII_Genutil_sched_imcast
 #define MPIR_TSP_sched_reduce_local        MPII_Genutil_sched_reduce_local
 #define MPIR_TSP_sched_localcopy           MPII_Genutil_sched_localcopy
+#define MPIR_TSP_sched_selective_sink      MPII_Genutil_sched_selective_sink
+#define MPIR_TSP_sched_sink                MPII_Genutil_sched_sink
+#define MPIR_TSP_sched_fence               MPII_Genutil_sched_fence
 #define MPIR_TSP_sched_malloc              MPII_Genutil_sched_malloc
 #define MPIR_TSP_sched_start               MPII_Genutil_sched_start
 
@@ -74,6 +77,10 @@ int MPII_Genutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Da
                                  void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype,
                                  MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
 
+/* Transport function to schedule a vertex that completes when all the incoming vertices have
+ * completed */
+int MPII_Genutil_sched_selective_sink(MPII_Genutil_sched_t * sched, int n_in_vtcs, int *invtcs);
+
 /* Transport function to allocate memory required for schedule execution */
 void *MPII_Genutil_sched_malloc(size_t size, MPII_Genutil_sched_t * sched);
 
@@ -81,5 +88,12 @@ void *MPII_Genutil_sched_malloc(size_t size, MPII_Genutil_sched_t * sched);
  * collective */
 int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm,
                              MPIR_Request ** request);
+
+
+/* Transport function to schedule a sink */
+int MPII_Genutil_sched_sink(MPII_Genutil_sched_t * sched);
+
+/* Transport function to schedule a fence */
+int MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched);
 
 #endif /* TSP_GENTRAN_H_INCLUDED */

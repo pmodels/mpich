@@ -18,7 +18,10 @@ typedef enum {
     MPII_GENUTIL_VTX_KIND__IRECV,
     MPII_GENUTIL_VTX_KIND__IMCAST,
     MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL,
-    MPII_GENUTIL_VTX_KIND__LOCALCOPY
+    MPII_GENUTIL_VTX_KIND__LOCALCOPY,
+    MPII_GENUTIL_VTX_KIND__SELECTIVE_SINK,
+    MPII_GENUTIL_VTX_KIND__SINK,
+    MPII_GENUTIL_VTX_KIND__FENCE,
 } MPII_Genutil_vtx_kind_e;
 
 typedef enum {
@@ -91,6 +94,7 @@ typedef struct {
     UT_array *vtcs;
     int total_vtcs;
     int completed_vtcs;
+    int last_fence;
 
     /* array of buffers allocated for schedule execution */
     UT_array *buffers;
