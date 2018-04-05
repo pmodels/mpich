@@ -632,6 +632,7 @@
 /f08/topo/cartcrf90
 /f08/topo/dgraph_unwgtf90
 /f08/topo/dgraph_wgtf90
+/f08/testlist
 /f77/attr/attraints.h
 /f77/attr/attrmpi1f
 /f77/attr/baseattr

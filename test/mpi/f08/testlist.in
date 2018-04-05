@@ -3,14 +3,14 @@ pt2pt
 coll
 datatype
 comm
-rma
+@rmadir@
 subarray
 topo
 ext
 info
 init
-io
+@iodir@
 misc
-spawn
+@spawndir@
 timer
 profile
