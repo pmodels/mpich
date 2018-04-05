@@ -1690,6 +1690,7 @@ AC_OUTPUT(maint/testmerge \
 	  cxx/topo/testlist \
           f77/testlist \
           f90/testlist \
+          f08/testlist \
           threads/testlist \
           errors/testlist \
           errors/cxx/testlist \
