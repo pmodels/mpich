@@ -20,6 +20,7 @@
 #include "ofi_pre.h"
 #include "ch4_types.h"
 #include "mpidch4r.h"
+#include "opa_queue.h"
 
 #define __SHORT_FILE__                          \
     (strrchr(__FILE__,'/')                      \
@@ -30,7 +31,6 @@
 #define MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE  (16 * 1024)
 #define MPIDI_OFI_NUM_AM_BUFFERS           (8)
 #define MPIDI_OFI_AM_BUFF_SZ               (1 * 1024 * 1024)
-#define MPIDI_OFI_CACHELINE_SIZE           (64)
 #define MPIDI_OFI_IOV_MAX                  (32)
 #define MPIDI_OFI_BUF_POOL_SIZE            (1024)
 #define MPIDI_OFI_BUF_POOL_NUM             (1024)
@@ -276,8 +276,8 @@ typedef struct {
 
 typedef union {
     MPID_Thread_mutex_t m;
-    char cacheline[MPIDI_OFI_CACHELINE_SIZE];
-} MPIDI_OFI_cacheline_mutex_t MPL_ATTR_ALIGNED(MPIDI_OFI_CACHELINE_SIZE);
+    char cacheline[OPA_QUEUE_CACHELINE_PADDING];
+} MPIDI_OFI_cacheline_mutex_t MPL_ATTR_ALIGNED(OPA_QUEUE_CACHELINE_PADDING);
 
 typedef struct MPIDI_OFI_cq_list_t {
     struct fi_cq_tagged_entry cq_entry;

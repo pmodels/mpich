@@ -10,16 +10,14 @@
 #ifndef MPID_TICKETLOCK_H_INCLUDED
 #define MPID_TICKETLOCK_H_INCLUDED
 
-#define MPIDI_CH4_CACHELINE_SIZE 64
-
 typedef union MPIDI_CH4_Ticket_lock {
     unsigned u;
-    char cacheline[MPIDI_CH4_CACHELINE_SIZE];
+    char cacheline[OPA_QUEUE_CACHELINE_PADDING];
     struct {
         unsigned short ticket;
         unsigned short clients;
     } s;
-} MPIDI_CH4_Ticket_lock MPL_ATTR_ALIGNED(MPIDI_CH4_CACHELINE_SIZE);
+} MPIDI_CH4_Ticket_lock MPL_ATTR_ALIGNED(OPA_QUEUE_CACHELINE_PADDING);
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_acquire(MPIDI_CH4_Ticket_lock * m)
 {
