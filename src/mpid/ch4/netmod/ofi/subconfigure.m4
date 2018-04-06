@@ -39,7 +39,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     dnl Use embedded libfabric if we specify to do so or we didn't specify and the source is present
     if test "${with_libfabric}" = "embedded" ; then
         ofi_embedded="yes"
-    elif test -z "${with_libfabric}" && -z "${with_libfabric_lib}" && -z "${with_libfabric_include}" ; then
+    elif test -z "${with_libfabric}" && test -z "${with_libfabric_lib}" && test -z "${with_libfabric_include}" ; then
         if test -f ${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/configure ; then
             ofi_embedded="yes"
         else
