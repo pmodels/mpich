@@ -416,8 +416,18 @@ sub RunList {
     my $ResultTest = "";
     my $InitForRun = "";
     my $listfileSource = $listfile;
-    my @TYPES = split ' ', $ENV{"DTP_RUNTIME_TYPES"};
-    my $numtypes = @TYPES;
+    my @TYPES = "";
+
+    if (! defined $ENV{"DTP_NUM_OBJS"}) {
+        $ENV{"DTP_NUM_OBJS"} = "5";
+    }
+
+    if (! defined $ENV{"DTP_RUNTIME_TYPES"}) {
+        @TYPES = split ' ', "MPI_INT MPI_DOUBLE";
+    }
+    else {
+        @TYPES = split ' ', $ENV{"DTP_RUNTIME_TYPES"};
+    }
 
     print "Looking in $curdir/$listfile\n" if $debug;
     if (! -s "$listfile" && -s "$srcdir/$curdir/$listfile" ) {
@@ -481,15 +491,10 @@ sub RunList {
 		}
 		elsif ($key eq "arg") {
             # match allowed datatypes here
-            if ($numtypes > 0) {
-                for my $j (@TYPES) {
-                    if ($value eq "-type=$j") {
-                        $enable_test=1;
-                    }
+            for my $j (@TYPES) {
+                if ($value eq "-type=$j") {
+                    $enable_test=1;
                 }
-            }
-            else {
-                $enable_test=1;
             }
 
             $progArgs = "$progArgs $value";
