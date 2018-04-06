@@ -139,7 +139,7 @@ static _opa_inline
 /* Pick an arbitrary cacheline size for now, we can setup a mechanism to detect
    it at build time later on.  This should work well on most intel systems at
    the very least. */
-#define OPA_QUEUE_CACHELINE_PADDING 128
+#define OPA_QUEUE_CACHELINE_PADDING 64
 
 /* All absolute and relative pointers point to the start of the enclosing element. */
 typedef struct OPA_Queue_info_t {
