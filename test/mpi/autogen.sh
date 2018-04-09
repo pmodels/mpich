@@ -170,13 +170,3 @@ do
     rm -f ${dir}/testlist.dtp
     printf "done\n"
 done
-
-printf "Generate basictypelist.txt for dtpools ... "
-printf "" > dtpools/basictypelist.txt
-while read -r line; do
-    if [ ! `echo $line | head -c 1` = "#" ]; then
-        echo "$line," >> dtpools/basictypelist.txt
-    fi
-done < basictypelist.txt
-echo "MPI_DATATYPE_NULL" >> dtpools/basictypelist.txt
-printf "done\n"
