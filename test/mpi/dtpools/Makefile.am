@@ -5,3 +5,4 @@
 #
 ACLOCAL_AMFLAGS = -I confdb
 SUBDIRS = src include
+EXTRA_DIST = basictypelist.txt
