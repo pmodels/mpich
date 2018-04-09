@@ -321,7 +321,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
                                    MPI_Aint target_disp,
                                    int target_count,
                                    MPI_Datatype target_datatype,
-                                   MPIR_Win * win, MPIR_Request ** sigreq)
+                                   MPIR_Win * win, MPIDI_av_entry_t * addr, MPIR_Request ** sigreq)
 {
     int rc, mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_win_request_t *req;
@@ -333,6 +333,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     struct iovec *originv;
     struct fi_rma_iov *targetv;
     MPIDI_OFI_seg_state_t p;
+    int vni_idx = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_PUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_PUT);
@@ -350,7 +351,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
 
     req->event_id = MPIDI_OFI_EVENT_ABORT;
     msg.desc = NULL;
-    msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, req->target_rank);
+    msg.addr = MPIDI_OFI_av_vni_to_phys(addr, vni_idx);
     msg.context = NULL;
     msg.data = 0;
     req->next = MPIDI_OFI_WIN(win).syncQ;
@@ -446,10 +447,11 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
     }
 
     if (origin_contig && target_contig && origin_bytes <= MPIDI_Global.max_buffered_write) {
-        MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_win_cntr_incr(win, 0),
-                              fi_inject_write(MPIDI_OFI_WIN(win).eps[0],
+        int vni_idx = 0;
+        MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_win_cntr_incr(win, vni_idx),
+                              fi_inject_write(MPIDI_OFI_WIN(win).eps[vni_idx],
                                               (char *) origin_addr + origin_true_lb, target_bytes,
-                                              MPIDI_OFI_comm_to_phys(win->comm_ptr, target_rank),
+                                              MPIDI_OFI_av_vni_to_phys(addr, vni_idx),
                                               (uint64_t) MPIDI_OFI_winfo_base(win, target_rank)
                                               + target_disp * MPIDI_OFI_winfo_disp_unit(win,
                                                                                         target_rank)
@@ -461,7 +463,7 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
                                      origin_count,
                                      origin_datatype,
                                      target_rank,
-                                     target_disp, target_count, target_datatype, win, NULL);
+                                     target_disp, target_count, target_datatype, win, addr, NULL);
     }
 
   fn_exit:
@@ -482,7 +484,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
                                    MPI_Aint target_disp,
                                    int target_count,
                                    MPI_Datatype target_datatype,
-                                   MPIR_Win * win, MPIR_Request ** sigreq)
+                                   MPIR_Win * win, MPIDI_av_entry_t * addr, MPIR_Request ** sigreq)
 {
     int rc, mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_win_request_t *req;
@@ -494,6 +496,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     struct fi_rma_iov *targetv;
     unsigned i;
     MPIDI_OFI_seg_state_t p;
+    int vni_idx = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_GET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET);
@@ -507,7 +510,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
     req->event_id = MPIDI_OFI_EVENT_ABORT;
     msg.desc = NULL;
-    msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, req->target_rank);
+    msg.addr = MPIDI_OFI_av_vni_to_phys(addr, vni_idx);
     msg.context = NULL;
     msg.data = 0;
     req->next = MPIDI_OFI_WIN(win).syncQ;
@@ -607,13 +610,14 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
                                         target_bytes, target_true_lb);
 
     if (origin_contig && target_contig) {
+        int vni_idx = 0;
         offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
         MPIR_ERR_CHKANDJUMP((origin_bytes != target_bytes), mpi_errno, MPI_ERR_SIZE, "**rmasize");
 
         msg.desc = NULL;
         msg.msg_iov = &iov;
         msg.iov_count = 1;
-        msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, target_rank);
+        msg.addr = MPIDI_OFI_av_vni_to_phys(addr, vni_idx);
         msg.rma_iov = &riov;
         msg.rma_iov_count = 1;
         msg.context = NULL;
@@ -630,7 +634,7 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
                                      origin_count,
                                      origin_datatype,
                                      target_rank,
-                                     target_disp, target_count, target_datatype, win, NULL);
+                                     target_disp, target_count, target_datatype, win, addr, NULL);
     }
 
   fn_exit:
@@ -694,7 +698,8 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
                                      origin_count,
                                      origin_datatype,
                                      target_rank,
-                                     target_disp, target_count, target_datatype, win, request);
+                                     target_disp, target_count, target_datatype, win, addr,
+                                     request);
     }
 
   fn_exit:
@@ -1367,7 +1372,7 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
                                  origin_count,
                                  origin_datatype,
                                  target_rank,
-                                 target_disp, target_count, target_datatype, win, request);
+                                 target_disp, target_count, target_datatype, win, addr, request);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RGET);
