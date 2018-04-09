@@ -33,7 +33,6 @@ VERSION=MPICH_VERSION_m4
 AC_SUBST(VERSION)
 AC_CONFIG_AUX_DIR([confdb])
 AC_CONFIG_MACRO_DIR([confdb])
-AC_CONFIG_SUBDIRS([dtpools])
 dnl
 echo "RUNNING CONFIGURE FOR MPI TESTS"
 
@@ -594,6 +593,11 @@ else
         AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME)
     fi
 fi
+
+# Make sure we export this before configuring DTPools since MPI is needed
+# to build the library.
+export CC
+AC_CONFIG_SUBDIRS([dtpools])
 
 # Running C compiler tests
 PAC_PROG_CC
