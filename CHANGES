@@ -12,6 +12,10 @@
 
  # Fixed SLURM integration in Hydra for new node list format.
 
+ # Added support for PMIx (https://pmix.github.io/pmix/) client
+   library in CH4 netmods. Note that you must use a compatible PMIx
+   server in this configuration.
+
  # Better organization of collectives in the MPI layer. The new
    scheme, which de-couples implementation from selection logic,
    enables easier integration of additional algorithms.
@@ -20,6 +24,12 @@
    collective algorithms is added to allow single collective
    implementation to move data over generic or device-specific
    transport functions.
+
+ # Improvements to derived datatype testing (DTPools -
+   https://wiki.mpich.org/mpich/index.php/DTPools).
+
+ # Added new "non-catastrophic" error codes to expose internal
+   resource exhaustion.
 
  # Cleanup of whitespace (ch3 excluded) using the
    maint/code-cleanup.sh script. For instructions on how to update
