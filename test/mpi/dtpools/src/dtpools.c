@@ -57,8 +57,9 @@ int DTP_pool_create(MPI_Datatype basic_type, MPI_Aint basic_type_count, DTP_t * 
     }
 
     if (basic_type_count == 1) {
-        num_objs = (env_num_objs < DTPI_OBJ_LAYOUT_SIMPLE__NUM) ?
-            env_num_objs : DTPI_OBJ_LAYOUT_SIMPLE__NUM;
+        num_objs =
+            (env_num_objs < DTPI_OBJ_LAYOUT_SIMPLE__NUM &&
+             env_num_objs > 0) ? env_num_objs : DTPI_OBJ_LAYOUT_SIMPLE__NUM;
     } else {
         num_objs =
             (env_num_objs < DTPI_OBJ_LAYOUT_LARGE__NUM &&
