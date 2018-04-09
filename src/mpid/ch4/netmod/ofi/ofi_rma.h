@@ -725,7 +725,9 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     size_t offset, max_count, max_size, dt_size, bytes;
     MPI_Aint true_lb;
     void *buffer, *tbuffer, *rbuffer;
-    struct fi_ioc originv, resultv, comparev;
+    struct fi_ioc originv MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
+    struct fi_ioc resultv MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
+    struct fi_ioc comparev MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
     struct fi_rma_ioc targetv;
     struct fi_msg_atomic msg;
 
