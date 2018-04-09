@@ -347,6 +347,7 @@ typedef struct MPIDI_CH4U_win_t {
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
     MPIR_cc_t remote_acc_cmpl_cnts;     /* for acc only, increase at OP issuing, decrease at remote completion */
+    OPA_int_t local_enq_cnts;   /* increase at OP enqueuing, decrease at OP issuing */
 
     MPIDI_CH4U_win_sync_t sync;
     MPIDI_CH4U_win_info_args_t info_args;
