@@ -152,18 +152,17 @@ thread that initialized MPI with either 'MPI_Init' or 'MPI_Init_thread'.
 int MPI_Finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
-
-#ifdef HAVE_HWLOC
-    hwloc_topology_destroy(MPIR_Process.topology);
-    hwloc_bitmap_free(MPIR_Process.bindset);
-#endif
-
 #if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
     int rank = 0;
 #endif
     MPIR_FUNC_TERSE_FINALIZE_STATE_DECL(MPID_STATE_MPI_FINALIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
+
+#ifdef HAVE_HWLOC
+    hwloc_topology_destroy(MPIR_Process.topology);
+    hwloc_bitmap_free(MPIR_Process.bindset);
+#endif
 
     /* Note: Only one thread may ever call MPI_Finalize (MPI_Finalize may
      * be called at most once in any program) */
