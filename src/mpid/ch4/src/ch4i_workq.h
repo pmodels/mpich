@@ -175,6 +175,54 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
     MPIR_Request *req;
 
     switch (workq_elemt->op) {
+        case SEND:
+            MPIDI_NM_mpi_send(workq_elemt->pt2pt.send_buf, workq_elemt->pt2pt.count,
+                              workq_elemt->pt2pt.datatype, workq_elemt->pt2pt.rank,
+                              workq_elemt->pt2pt.tag, workq_elemt->pt2pt.comm_ptr,
+                              workq_elemt->pt2pt.context_offset, workq_elemt->pt2pt.addr,
+                              &workq_elemt->pt2pt.request);
+            MPIDI_workq_release_pt2pt_elemt(workq_elemt);
+            break;
+        case ISEND:
+            MPIDI_NM_mpi_isend(workq_elemt->pt2pt.send_buf, workq_elemt->pt2pt.count,
+                               workq_elemt->pt2pt.datatype, workq_elemt->pt2pt.rank,
+                               workq_elemt->pt2pt.tag, workq_elemt->pt2pt.comm_ptr,
+                               workq_elemt->pt2pt.context_offset, workq_elemt->pt2pt.addr,
+                               &workq_elemt->pt2pt.request);
+            MPIDI_workq_release_pt2pt_elemt(workq_elemt);
+            break;
+        case SSEND:
+            MPIDI_NM_mpi_ssend(workq_elemt->pt2pt.send_buf, workq_elemt->pt2pt.count,
+                               workq_elemt->pt2pt.datatype, workq_elemt->pt2pt.rank,
+                               workq_elemt->pt2pt.tag, workq_elemt->pt2pt.comm_ptr,
+                               workq_elemt->pt2pt.context_offset, workq_elemt->pt2pt.addr,
+                               &workq_elemt->pt2pt.request);
+            MPIDI_workq_release_pt2pt_elemt(workq_elemt);
+            break;
+        case ISSEND:
+            MPIDI_NM_mpi_issend(workq_elemt->pt2pt.send_buf, workq_elemt->pt2pt.count,
+                                workq_elemt->pt2pt.datatype, workq_elemt->pt2pt.rank,
+                                workq_elemt->pt2pt.tag, workq_elemt->pt2pt.comm_ptr,
+                                workq_elemt->pt2pt.context_offset, workq_elemt->pt2pt.addr,
+                                &workq_elemt->pt2pt.request);
+            MPIDI_workq_release_pt2pt_elemt(workq_elemt);
+            break;
+        case RECV:
+            MPIDI_NM_mpi_recv(workq_elemt->pt2pt.recv_buf, workq_elemt->pt2pt.count,
+                              workq_elemt->pt2pt.datatype, workq_elemt->pt2pt.rank,
+                              workq_elemt->pt2pt.tag, workq_elemt->pt2pt.comm_ptr,
+                              workq_elemt->pt2pt.context_offset, workq_elemt->pt2pt.addr,
+                              workq_elemt->pt2pt.status, &workq_elemt->pt2pt.request);
+            MPIDI_workq_release_pt2pt_elemt(workq_elemt);
+            break;
+        case IRECV:
+            MPIDI_NM_mpi_irecv(workq_elemt->pt2pt.recv_buf, workq_elemt->pt2pt.count,
+                               workq_elemt->pt2pt.datatype, workq_elemt->pt2pt.rank,
+                               workq_elemt->pt2pt.tag, workq_elemt->pt2pt.comm_ptr,
+                               workq_elemt->pt2pt.context_offset, workq_elemt->pt2pt.addr,
+                               &workq_elemt->pt2pt.request);
+            MPIDI_workq_release_pt2pt_elemt(workq_elemt);
+            break;
         default:
             mpi_errno = MPI_ERR_OTHER;
             goto fn_fail;
