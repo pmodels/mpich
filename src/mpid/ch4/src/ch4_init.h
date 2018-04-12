@@ -231,7 +231,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 {
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
     int avtid;
-    int n_nm_vnis_provided;
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     int n_shm_vnis_provided;
 #endif
@@ -461,7 +460,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
         mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_ub,
                                            MPIR_Process.comm_world,
-                                           MPIR_Process.comm_self, has_parent, &n_nm_vnis_provided);
+                                           MPIR_Process.comm_self, has_parent,
+                                           &MPIDI_CH4_Global.n_netmod_vnis);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
@@ -469,6 +469,38 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
         /* Use the minimum tag_ub from the netmod and shmod */
         MPIR_Process.attrs.tag_ub = MPL_MIN(shm_tag_ub, nm_tag_ub);
     }
+
+    MPIDI_CH4_Global.vni_locks =
+        (MPID_Thread_mutex_t *) MPL_malloc(MPIDI_CH4_Global.n_netmod_vnis *
+                                           sizeof(MPID_Thread_mutex_t), MPL_MEM_THREAD);
+    for (i = 0; i < MPIDI_CH4_Global.n_netmod_vnis; i++) {
+        MPID_Thread_mutex_create(&MPIDI_CH4_Global.vni_locks[i], &mpi_errno);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
+    }
+
+#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+    if (MPIDI_CH4_ENABLE_POBJ_WORKQUEUES) {
+        MPIDI_CH4_Global.workqueues.pobj =
+            (MPIDI_workq_list_t **) MPL_malloc(MPIDI_CH4_Global.n_netmod_vnis *
+                                               sizeof(MPIDI_workq_list_t *), MPL_MEM_BUFFER);
+    } else {
+        MPIDI_CH4_Global.workqueues.pvni =
+            (MPIDI_workq_t *) MPL_malloc(MPIDI_CH4_Global.n_netmod_vnis * sizeof(MPIDI_workq_t),
+                                         MPL_MEM_BUFFER);
+    }
+
+    for (i = 0; i < MPIDI_CH4_Global.n_netmod_vnis; i++) {
+        if (MPIDI_CH4_ENABLE_POBJ_WORKQUEUES)
+            MPIDI_CH4_Global.workqueues.pobj[i] = NULL;
+        else
+            MPIDI_workq_init(&MPIDI_CH4_Global.workqueues.pvni[i]);
+    }
+
+    MPID_Progress_register(MPIDI_workq_global_progress, &MPIDI_CH4_Global.progress_hook_id);
+    MPID_Progress_activate(MPIDI_CH4_Global.progress_hook_id);
+#endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
 
     /* Override split_type */
     MPIDI_CH4_Global.MPIR_Comm_fns_store.split_type = MPIDI_Comm_split_type;
@@ -554,6 +586,24 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
 
     MPIDIU_avt_destroy();
     MPL_free(MPIDI_CH4_Global.jobid);
+
+#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+    if (MPIDI_CH4_Global.progress_hook_id >= 0) {
+        MPID_Progress_deactivate(MPIDI_CH4_Global.progress_hook_id);
+        MPID_Progress_deregister(MPIDI_CH4_Global.progress_hook_id);
+    }
+
+    if (MPIDI_CH4_ENABLE_POBJ_WORKQUEUES)
+        MPL_free(MPIDI_CH4_Global.workqueues.pobj);
+    else
+        MPL_free(MPIDI_CH4_Global.workqueues.pvni);
+#endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
+
+    for (i = 0; i < MPIDI_CH4_Global.n_netmod_vnis; i++) {
+        MPID_Thread_mutex_destroy(&MPIDI_CH4_Global.vni_locks[i], &thr_err);
+    }
+
+    MPL_free(MPIDI_CH4_Global.vni_locks);
 
 #ifdef USE_PMIX_API
     PMIx_Finalize(NULL, 0);

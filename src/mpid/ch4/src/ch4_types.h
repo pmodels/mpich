@@ -14,6 +14,7 @@
 #include <mpidimpl.h>
 #include <stdio.h>
 #include "mpir_cvars.h"
+#include "ch4i_workq_types.h"
 
 /* Macros and inlines */
 #define MPIDI_CH4U_MAP_NOT_FOUND      ((void*)(-1UL))
@@ -301,6 +302,22 @@ typedef struct MPIDI_CH4_Global_t {
     int my_sigusr1_count;
 #endif
     OPA_int_t progress_count;
+
+    int n_netmod_vnis;
+    MPID_Thread_mutex_t *vni_locks;
+
+#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+    /* Work queues */
+    union {
+        /* Per-object queue, when MPIDI_CH4_ENABLE_POBJ_WORKQUEUES */
+        MPIDI_workq_list_t **pobj;
+        /* Per-VNI queue, when !MPIDI_CH4_ENABLE_POBJ_WORKQUEUES */
+        MPIDI_workq_t *pvni;
+    } workqueues;
+#endif
+
+    int progress_hook_id;
+
     MPIDI_CH4_configurations_t settings;
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_CH4_Global;
