@@ -188,44 +188,6 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_handle_long_am_hdr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_handle_long_am_hdr(MPIDI_OFI_am_header_t * msg_hdr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_OFI_lmt_msg_payload_t *lmt_msg;
-    MPIR_Request *rreq;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM_HDR);
-
-    rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
-    MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
-
-    mpi_errno = MPIDI_OFI_am_init_request(NULL, 0, rreq);
-
-    if (mpi_errno != MPI_SUCCESS)
-        MPIR_ERR_POP(mpi_errno);
-
-    lmt_msg = (MPIDI_OFI_lmt_msg_payload_t *) msg_hdr->payload;
-    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info) = *lmt_msg;
-    MPIDI_OFI_AMREQUEST_HDR(rreq, msg_hdr) = *msg_hdr;
-    MPIDI_OFI_AMREQUEST_HDR(rreq, rreq_ptr) = (void *) rreq;
-    MPIDI_OFI_AMREQUEST_HDR(rreq, am_hdr) = MPL_malloc(msg_hdr->am_hdr_sz, MPL_MEM_BUFFER);
-    MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_cntr) =
-        ((msg_hdr->am_hdr_sz - 1) / MPIDI_Global.max_send) + 1;
-    MPIDI_OFI_do_rdma_read(MPIDI_OFI_AMREQUEST_HDR(rreq, am_hdr), lmt_msg->am_hdr_src,
-                           msg_hdr->am_hdr_sz, lmt_msg->context_id, lmt_msg->src_rank, rreq);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM_HDR);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_OFI_do_handle_long_am
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
