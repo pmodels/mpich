@@ -481,6 +481,32 @@ if test "$enable_ch4_mt" != "direct"; then
     fi
 fi
 
+AC_ARG_ENABLE(ch4-pobj-workqueue,
+    [--enable-ch4-pobj-workqueue=option
+       Enable use of per-object workqueue for handoff/trylock multi-threading model
+         yes     - Enable per-object workqueue
+         no      - Disable per-object workqueue, use per-VNI workqueue instead (default)
+         runtime - Determine the model by a CVAR
+    ],,enable_ch4_pobj_workqueue=no)
+
+case $enable_ch4_pobj_workqueue in
+     yes)
+         AC_DEFINE([MPIDI_CH4_USE_POBJ_WORKQUEUES], [1],
+            [Define to enable per-object workqueue])
+        ;;
+     no)
+         AC_DEFINE([MPIDI_CH4_USE_PVNI_WORKQUEUES], [1],
+            [Define to enable per-VNI workqueue])
+        ;;
+     runtime)
+         AC_DEFINE([MPIDI_CH4_USE_RUNTIME_WORKQUEUES], [1],
+            [Define to enable runtime workqueue model selection])
+        ;;
+     *)
+        AC_MSG_ERROR([Unsupported value for --enable-ch4-pobj-workqueue: ${enable_ch4_pobj_workqueue}])
+        ;;
+esac
+
 AC_CHECK_HEADERS(sys/mman.h sys/stat.h fcntl.h)
 AC_CHECK_FUNC(mmap, [], [AC_MSG_ERROR(mmap is required to build CH4)])
 

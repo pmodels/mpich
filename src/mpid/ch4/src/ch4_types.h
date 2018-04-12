@@ -265,6 +265,7 @@ typedef struct MPIDI_CH4U_map_t {
 
 typedef struct {
     unsigned mt_model;
+    unsigned enable_pobj_workqueues:1;
 } MPIDI_CH4_configurations_t;
 
 typedef struct MPIDI_CH4_Global_t {
