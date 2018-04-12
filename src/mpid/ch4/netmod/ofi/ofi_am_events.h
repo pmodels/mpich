@@ -370,10 +370,15 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
     sreq = (MPIR_Request *) ack_msg->sreq_ptr;
 
     if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
-        uint64_t index =
-            fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)) >> MPIDI_Global.huge_rma_shift;
+        uint32_t idx_back;
+        int key_type;
+        uint64_t mr_key = fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr));
+
+        MPIDI_OFI_rma_key_unpack(mr_key, NULL, &key_type, &idx_back);
+        MPIR_Assert(MPIDI_OFI_KEY_TYPE_HUGE_RMA == key_type);
+
         MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(MPIR_Process.comm_world).rma_id_allocator,
-                                       index);
+                                       idx_back);
     }
     MPIDI_OFI_CALL_NOLOCK(fi_close(&MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)->fid), mr_unreg);
     OPA_decr_int(&MPIDI_Global.am_inflight_rma_send_mrs);

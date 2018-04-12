@@ -25,38 +25,13 @@ static inline int MPIDI_OFI_win_allgather(MPIR_Win * win, void *base, int disp_u
     uint32_t first;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Comm *comm_ptr = win->comm_ptr;
-    int raw_prefix, idx, bitpos;
-    unsigned gen_id;
     MPIDI_OFI_win_targetinfo_t *winfo;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_ALLGATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_ALLGATHER);
 
-    /* Calculate a canonical context id */
-    raw_prefix = MPIR_CONTEXT_READ_FIELD(PREFIX, comm_ptr->context_id);
-    idx = raw_prefix / MPIR_CONTEXT_INT_BITS;
-    bitpos = raw_prefix % MPIR_CONTEXT_INT_BITS;
-    gen_id = (idx * MPIR_CONTEXT_INT_BITS) + (31 - bitpos);
-
-    int total_bits_avail = MPIDI_Global.max_mr_key_size * 8;
-    uint64_t window_instance = (uint64_t) (MPIDI_OFI_WIN(win).win_id) >> 32;
-    int bits_for_instance_id = MPIDI_Global.max_windows_bits;
-    int bits_for_context_id;
-    uint64_t max_contexts_allowed;
-    uint64_t max_instances_allowed;
-
-    bits_for_context_id = total_bits_avail -
-        MPIDI_Global.max_windows_bits - MPIDI_Global.max_huge_rma_bits;
-    max_contexts_allowed = (uint64_t) 1 << (bits_for_context_id);
-    max_instances_allowed = (uint64_t) 1 << (bits_for_instance_id);
-    MPIR_ERR_CHKANDSTMT(gen_id >= max_contexts_allowed, mpi_errno, MPI_ERR_OTHER,
-                        goto fn_fail, "**ofid_mr_reg");
-    MPIR_ERR_CHKANDSTMT(window_instance >= max_instances_allowed, mpi_errno, MPI_ERR_OTHER,
-                        goto fn_fail, "**ofid_mr_reg");
-
     if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
-        /* Context id in lower bits, instance in upper bits */
-        MPIDI_OFI_WIN(win).mr_key = (gen_id << MPIDI_Global.context_shift) | window_instance;
+        MPIDI_OFI_WIN(win).mr_key = MPIDI_OFI_WIN(win).win_id;
     } else {
         MPIDI_OFI_WIN(win).mr_key = 0;
     }
@@ -432,7 +407,7 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
                                      MPIR_Comm * comm_ptr, int create_flavor, int model)
 {
     int mpi_errno = MPI_SUCCESS;
-    uint64_t window_instance;
+    uint64_t window_instance, max_contexts_allowed;
     MPIR_Win *win = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT);
@@ -453,7 +428,18 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
     window_instance =
         MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator,
                                         MPL_MEM_RMA);
-    MPIDI_OFI_WIN(win).win_id = ((uint64_t) comm_ptr->context_id) | (window_instance << 32);
+    MPIR_ERR_CHKANDSTMT(window_instance >= MPIDI_Global.max_huge_rmas, mpi_errno,
+                        MPI_ERR_OTHER, goto fn_fail, "**ofid_mr_reg");
+
+    max_contexts_allowed =
+        (uint64_t) 1 << (MPIDI_Global.max_rma_key_bits - MPIDI_Global.context_shift);
+    MPIR_ERR_CHKANDSTMT(MPIR_CONTEXT_READ_FIELD(PREFIX, win->comm_ptr->context_id)
+                        >= max_contexts_allowed, mpi_errno, MPI_ERR_OTHER,
+                        goto fn_fail, "**ofid_mr_reg");
+
+    MPIDI_OFI_WIN(win).win_id = MPIDI_OFI_rma_key_pack(win->comm_ptr->context_id,
+                                                       MPIDI_OFI_KEY_TYPE_WINDOW, window_instance);
+
     MPIDI_CH4U_map_set(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id, win, MPL_MEM_RMA);
 
     MPIDI_OFI_WIN(win).sep_tx_idx = -1; /* By default, -1 means not using scalable EP. */
@@ -719,6 +705,7 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Win *win = *win_ptr;
     uint32_t window_instance;
+    int key_type;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FREE);
 
@@ -735,7 +722,8 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    window_instance = (uint32_t) (MPIDI_OFI_WIN(win).win_id >> 32);
+    MPIDI_OFI_rma_key_unpack(MPIDI_OFI_WIN(win).win_id, NULL, &key_type, &window_instance);
+    MPIR_Assert(key_type == MPIDI_OFI_KEY_TYPE_WINDOW);
 
     MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator, window_instance);
     MPIDI_CH4U_map_erase(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id);
