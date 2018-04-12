@@ -559,13 +559,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_event(struct fi_cq_tagged_entry 
         case MPIDI_AMTYPE_LMT_REQ:
             goto fn_exit;
 
+        case MPIDI_AMTYPE_LMT_DATA:
+            if (--MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_cntr) != 0)
+                goto fn_exit;
+
         default:
             break;
-    }
-
-    if (MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer)) {
-        MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
-        MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
     }
 
     mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
@@ -621,6 +620,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_recv_event(struct fi_cq_tagged_entry *
 
         case MPIDI_AMTYPE_LMT_ACK:
             mpi_errno = MPIDI_OFI_handle_lmt_ack(am_hdr);
+
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+
+            break;
+
+        case MPIDI_AMTYPE_LMT_DATA:
+            mpi_errno = MPIDI_OFI_handle_lmt_data(am_hdr);
 
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
@@ -715,6 +722,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_ent
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_SEND)) {
         mpi_errno = MPIDI_OFI_am_isend_event(wc, req);
         goto fn_exit;
+    } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_LMT)) {
+        mpi_errno = MPIDI_OFI_am_isend_event(wc, req);
+        goto fn_exit;
     } else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_RECV)) {
         if (wc->flags & FI_RECV)
             mpi_errno = MPIDI_OFI_am_recv_event(wc, req);
@@ -782,6 +792,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_ent
 
             case MPIDI_OFI_EVENT_ABORT:
             default:
+                //printf("event_id %d for request %p\n", MPIDI_OFI_REQUEST(req, event_id), req);
                 mpi_errno = MPI_SUCCESS;
                 MPIR_Assert(0);
                 break;

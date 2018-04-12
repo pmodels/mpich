@@ -62,11 +62,23 @@ static inline void MPIDI_OFI_am_clear_request(MPIR_Request * sreq)
 
     req_hdr = MPIDI_OFI_AMREQUEST(sreq, req_hdr);
 
+    //printf("clearing sreq %p, req_hdr = %p\n", sreq, req_hdr);
+
     if (!req_hdr)
         return;
 
     if (req_hdr->am_hdr != &req_hdr->am_hdr_buf[0]) {
         MPL_free(req_hdr->am_hdr);
+    }
+
+    if (MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer)) {
+        MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
+        MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
+    }
+
+    if (MPIDI_OFI_AMREQUEST_HDR(sreq, iovs)) {
+        MPL_free(MPIDI_OFI_AMREQUEST_HDR(sreq, iovs));
+        MPIDI_OFI_AMREQUEST_HDR(sreq, iovs) = NULL;
     }
 
     MPIDI_CH4R_release_buf(req_hdr);
@@ -98,6 +110,8 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
     } else {
         req_hdr = MPIDI_OFI_AMREQUEST(sreq, req_hdr);
     }
+
+    MPIDI_OFI_AMREQUEST_HDR(sreq, iovs) = NULL;
 
     if (am_hdr_sz > req_hdr->am_hdr_sz) {
         if (req_hdr->am_hdr != &req_hdr->am_hdr_buf[0])
@@ -289,48 +303,65 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     lmt_info = &MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_info);
     lmt_info->context_id = comm->context_id;
     lmt_info->src_rank = comm->rank;
-    lmt_info->src_offset = MPIDI_OFI_ENABLE_MR_SCALABLE ? (uint64_t) 0 /* MR_SCALABLE */ : (uint64_t) data;     /* MR_BASIC */
     lmt_info->sreq_ptr = (uint64_t) sreq;
-    if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
-        /* Always allocates RMA ID from COMM_WORLD as the actual associated communicator
-         * is not available here */
-        uint64_t index =
-            MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM
-                                            (MPIR_Process.comm_world).rma_id_allocator,
-                                            MPL_MEM_RMA);
-        MPIR_Assert(index < MPIDI_Global.max_huge_rmas);
-        lmt_info->rma_key = MPIDI_OFI_rma_key_pack(comm->context_id,
-                                                   MPIDI_OFI_KEY_TYPE_HUGE_RMA, index);
+    if (!MPIDI_OFI_ENABLE_RMA) {
+        MPIDI_OFI_lmt_msg_t *lmt_msg = &MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_msg);
+        lmt_msg->comm = comm;
+        lmt_msg->rank = rank;
+        lmt_msg->data = data;
+        lmt_msg->data_sz = data_sz;
+
+        lmt_info = &MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_info);
+        lmt_info->context_id = comm->context_id;
+        lmt_info->src_rank = comm->rank;
+        lmt_info->sreq_ptr = (uint64_t) sreq;
+        MPIR_cc_incr(sreq->cc_ptr, &c); /* send completion */
+        //printf("doing LMT_REQ for sreq %p\n", sreq);
+        //printf("message size is %lu\n", data_sz);
+        //printf("req_hdr = %p\n", MPIDI_OFI_AMREQUEST(sreq, req_hdr));
     } else {
-        lmt_info->rma_key = 0;
-    }
+        lmt_info->src_offset = MPIDI_OFI_ENABLE_MR_SCALABLE ? (uint64_t) 0 /* MR_SCALABLE */ : (uint64_t) data; /* MR_BASIC */
+        if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+            /* Always allocates RMA ID from COMM_WORLD as the actual associated communicator
+             * is not available here */
+            uint64_t index =
+                MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM
+                                                (MPIR_Process.comm_world).rma_id_allocator,
+                                                MPL_MEM_RMA);
+            MPIR_Assert(index < MPIDI_Global.max_huge_rmas);
+            lmt_info->rma_key = MPIDI_OFI_rma_key_pack(comm->context_id,
+                                                       MPIDI_OFI_KEY_TYPE_HUGE_RMA, index);
+        } else {
+            lmt_info->rma_key = 0;
+        }
 
-    MPIR_cc_incr(sreq->cc_ptr, &c);     /* send completion */
-    MPIR_cc_incr(sreq->cc_ptr, &c);     /* lmt ack handler */
-    MPIR_Assert((sizeof(*msg_hdr) + sizeof(*lmt_info) + am_hdr_sz) <=
-                MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
-    if (need_lock)
-        MPIDI_OFI_CALL(fi_mr_reg(MPIDI_Global.domain,
-                                 data,
-                                 data_sz,
-                                 FI_REMOTE_READ,
-                                 0ULL,
-                                 lmt_info->rma_key,
-                                 0ULL, &MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr), NULL), mr_reg);
-    else
-        MPIDI_OFI_CALL_NOLOCK(fi_mr_reg(MPIDI_Global.domain,
-                                        data,
-                                        data_sz,
-                                        FI_REMOTE_READ,
-                                        0ULL,
-                                        lmt_info->rma_key,
-                                        0ULL,
-                                        &MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr), NULL), mr_reg);
-    OPA_incr_int(&MPIDI_Global.am_inflight_rma_send_mrs);
+        MPIR_cc_incr(sreq->cc_ptr, &c); /* send completion */
+        MPIR_cc_incr(sreq->cc_ptr, &c); /* lmt ack handler */
+        MPIR_Assert((sizeof(*msg_hdr) + sizeof(*lmt_info) + am_hdr_sz) <=
+                    MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE);
+        if (need_lock)
+            MPIDI_OFI_CALL(fi_mr_reg(MPIDI_Global.domain,
+                                     data,
+                                     data_sz,
+                                     FI_REMOTE_READ,
+                                     0ULL,
+                                     lmt_info->rma_key,
+                                     0ULL, &MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr), NULL), mr_reg);
+        else
+            MPIDI_OFI_CALL_NOLOCK(fi_mr_reg(MPIDI_Global.domain,
+                                            data,
+                                            data_sz,
+                                            FI_REMOTE_READ,
+                                            0ULL,
+                                            lmt_info->rma_key,
+                                            0ULL,
+                                            &MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr), NULL), mr_reg);
+        OPA_incr_int(&MPIDI_Global.am_inflight_rma_send_mrs);
 
-    if (!MPIDI_OFI_ENABLE_MR_SCALABLE) {
-        /* MR_BASIC */
-        lmt_info->rma_key = fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr));
+        if (!MPIDI_OFI_ENABLE_MR_SCALABLE) {
+            /* MR_BASIC */
+            lmt_info->rma_key = fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr));
+        }
     }
 
     iov = MPIDI_OFI_AMREQUEST_HDR(sreq, iov);

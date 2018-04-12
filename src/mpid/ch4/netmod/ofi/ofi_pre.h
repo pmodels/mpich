@@ -49,6 +49,7 @@ enum {
     MPIDI_AMTYPE_SHORT_HDR = 0,
     MPIDI_AMTYPE_SHORT,
     MPIDI_AMTYPE_LMT_REQ,
+    MPIDI_AMTYPE_LMT_DATA,
     MPIDI_AMTYPE_LMT_ACK
 };
 
@@ -83,15 +84,29 @@ typedef struct {
 } MPIDI_OFI_ack_msg_t;
 
 typedef struct {
+    uint64_t rreq_ptr;
+    const uint64_t data[0];
+} MPIDI_OFI_lmt_data_t;
+
+typedef struct {
     MPIDI_OFI_am_header_t hdr;
-    MPIDI_OFI_lmt_msg_payload_t pyld;
+    MPIDI_OFI_lmt_data_t lmt_data;
+} MPIDI_OFI_lmt_data_msg_t;
+
+typedef struct {
+    MPIR_Comm *comm;
+    int rank;
+    const void *data;
+    size_t data_sz;
 } MPIDI_OFI_lmt_msg_t;
 
 typedef struct {
     MPIDI_OFI_lmt_msg_payload_t lmt_info;
     uint64_t lmt_cntr;
     struct fid_mr *lmt_mr;
+    MPIDI_OFI_lmt_msg_t lmt_msg;
     void *pack_buffer;
+    size_t data_sz;
     void *rreq_ptr;
     void *am_hdr;
     int (*target_cmpl_cb) (struct MPIR_Request * req);
@@ -101,6 +116,10 @@ typedef struct {
     uint8_t am_hdr_buf[MPIDI_OFI_MAX_AM_HDR_SIZE];
     /* FI_ASYNC_IOV requires an iov storage to be alive until a request completes */
     struct iovec iov[3] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
+    struct iovec *iovs;
+    int iov_len;
+    MPI_Aint last;
+    bool recv_contig;
 } MPIDI_OFI_am_request_header_t;
 
 typedef struct {
