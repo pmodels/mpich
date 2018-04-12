@@ -349,8 +349,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
             ctrl.rma_key =
                 MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(comm).rma_id_allocator, MPL_MEM_RMA);
             MPIR_Assert(ctrl.rma_key < MPIDI_Global.max_huge_rmas);
-            rma_key = ctrl.rma_key << MPIDI_Global.huge_rma_shift;
+            rma_key = MPIDI_OFI_rma_key_pack(comm->context_id, MPIDI_OFI_KEY_TYPE_HUGE_RMA,
+                                             ctrl.rma_key);
+            ctrl.rma_key = rma_key;
         }
+
         MPIDI_OFI_CALL_NOLOCK(fi_mr_reg(MPIDI_Global.domain,    /* In:  Domain Object       */
                                         send_buf,       /* In:  Lower memory address */
                                         data_sz,        /* In:  Length              */
