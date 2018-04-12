@@ -23,6 +23,19 @@
 #include "shmpre.h"
 #include "uthash.h"
 #include "ch4_coll_params.h"
+#include "ch4i_workq_types.h"
+
+#ifdef MPIDI_CH4_USE_MT_DIRECT
+#define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_DIRECT
+#elif defined MPIDI_CH4_USE_MT_HANDOFF
+#define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_HANDOFF
+#elif defined MPIDI_CH4_USE_MT_TRYLOCK
+#define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_TRYLOCK
+#elif defined MPIDI_CH4_USE_MT_RUNTIME
+#define MPIDI_CH4_MT_MODEL MPIDI_CH4_Global.settings.mt_model
+#else
+#error "Unknown MT model or MT model not defined"
+#endif
 
 typedef struct {
     union {

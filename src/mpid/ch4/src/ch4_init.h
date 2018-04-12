@@ -78,6 +78,19 @@ cvars:
       description : >-
         If enabled, CH4-level runtime configurations are printed out
 
+    - name        : MPIR_CVAR_CH4_MT_MODEL
+      category    : CH4
+      type        : string
+      default     : ""
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Specifies the CH4 multi-threading model. Possible values are:
+        direct (default)
+        handoff
+        trylock
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -133,15 +146,53 @@ static inline int MPIDI_choose_netmod(void)
 #error "Thread Granularity:  Invalid"
 #endif
 
+MPL_STATIC_INLINE_PREFIX const char *MPIDI_get_mt_model_name(int mt)
+{
+    if (mt < 0 || mt >= MPIDI_CH4_NUM_MT_MODELS)
+        return "(invalid)";
+
+    return MPIDI_CH4_mt_model_names[mt];
+}
+
 MPL_STATIC_INLINE_PREFIX void MPIDI_print_runtime_configurations(void)
 {
     printf("==== CH4 runtime configurations ====\n");
+    printf("MPIDI_CH4_MT_MODEL: %d (%s)\n",
+           MPIDI_CH4_MT_MODEL, MPIDI_get_mt_model_name(MPIDI_CH4_MT_MODEL));
     printf("================================\n");
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_parse_mt_model(const char *name)
+{
+    int i;
+
+    if (!strcmp("", name))
+        return 0;       /* default */
+
+    for (i = 0; i < MPIDI_CH4_NUM_MT_MODELS; i++) {
+        if (!strcasecmp(name, MPIDI_CH4_mt_model_names[i]))
+            return i;
+    }
+    return -1;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_set_runtime_configurations(void)
 {
     int mpi_errno = MPI_SUCCESS;
+
+#ifdef MPIDI_CH4_USE_MT_RUNTIME
+    int mt = MPIDI_parse_mt_model(MPIR_CVAR_CH4_MT_MODEL);
+    if (mt < 0)
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
+                             "**ch4|invalid_mt_model", "**ch4|invalid_mt_model %s",
+                             MPIR_CVAR_CH4_MT_MODEL);
+    MPIDI_CH4_Global.settings.mt_model = mt;
+#else
+    /* Static configuration - no runtime selection */
+    if (strcmp(MPIR_CVAR_CH4_MT_MODEL, "") != 0)
+        printf("Warning: MPIR_CVAR_CH4_MT_MODEL will be ignored "
+               "unless --enable-ch4-mt=runtime is given at the configure time.\n");
+#endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
 
   fn_fail:
     return mpi_errno;
