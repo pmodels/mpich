@@ -359,6 +359,11 @@ typedef struct {
     MPIDI_CH4U_win_t ch4u;
     union {
     MPIDI_NM_WIN_DECL} netmod;
+
+#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+    int nqueues;
+    MPIDI_workq_list_t *work_queues;
+#endif
 } MPIDI_Devwin_t;
 
 #define MPIDI_CH4U_WIN(win,field)        (((win)->dev.ch4u).field)
@@ -450,6 +455,11 @@ typedef struct MPIDI_Devcomm_t {
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
     } ch4;
+
+#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+    int nqueues;
+    MPIDI_workq_list_t *work_queues;
+#endif
 } MPIDI_Devcomm_t;
 #define MPIDI_CH4U_COMM(comm,field) ((comm)->dev.ch4.ch4u).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field
