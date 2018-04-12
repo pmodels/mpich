@@ -72,7 +72,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_dequeue(MPIDI_workq_t * q, void **pp)
 typedef enum MPIDI_workq_op MPIDI_workq_op_t;
 
 /* Indentifies the delegated operation */
-enum MPIDI_workq_op { SEND, ISEND, SSEND, ISSEND, RSEND, IRSEND, RECV, IRECV, IPROBE,
+enum MPIDI_workq_op { SEND, ISEND, SSEND, ISSEND, RSEND, IRSEND, RECV, IRECV, IMRECV, IPROBE,
     IMPROBE, PUT, GET, POST, COMPLETE, FENCE, LOCK, UNLOCK, LOCK_ALL, UNLOCK_ALL,
     FLUSH, FLUSH_ALL, FLUSH_LOCAL, FLUSH_LOCAL_ALL
 };
