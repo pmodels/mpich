@@ -38,6 +38,26 @@ typedef MPIDU_Thread_mutex_t MPID_Thread_mutex_t;
 #define MPID_THREAD_CS_TRYENTER    MPIDU_THREAD_CS_TRYENTER
 #define MPID_THREAD_CS_EXIT        MPIDU_THREAD_CS_EXIT
 #define MPID_THREAD_CS_YIELD       MPIDU_THREAD_CS_YIELD
+
+#define MPID_THREAD_SAFE_BEGIN(name, mutex, cs_acq)                     \
+do {                                                                    \
+    cs_acq = 1;                                                         \
+    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_TRYLOCK) {                   \
+        MPID_THREAD_CS_TRYENTER(name, mutex, cs_acq);                   \
+    } else if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF) {            \
+        cs_acq = 0;                                                     \
+    } else {                                                            \
+        /* Direct */                                                    \
+        MPIDU_THREAD_CS_ENTER(name, mutex);                             \
+    }                                                                   \
+} while (0)
+
+#define MPID_THREAD_SAFE_END(name, mutex, cs_acq)                       \
+do {                                                                    \
+    if (cs_acq)                                                         \
+        MPIDU_THREAD_CS_EXIT(name, mutex);                              \
+} while (0)
+
 #define MPID_Thread_mutex_create   MPIDU_Thread_mutex_create
 #define MPID_Thread_mutex_destroy  MPIDU_Thread_mutex_destroy
 #define MPID_Thread_mutex_lock     MPIDU_Thread_mutex_lock
