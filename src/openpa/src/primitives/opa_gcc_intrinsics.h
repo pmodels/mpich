@@ -125,6 +125,7 @@ static _opa_inline int OPA_swap_int(OPA_int_t * ptr, int val)
 #define OPA_read_barrier()       __sync_synchronize()
 #define OPA_read_write_barrier() __sync_synchronize()
 #define OPA_compiler_barrier()   __asm__ __volatile__  (""  ::: "memory")
+#define OPA_pause()   __asm__ __volatile__  ("pause"  ::: "memory")
 
 
 

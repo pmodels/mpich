@@ -54,6 +54,7 @@ static _opa_inline void OPA_store_ptr(OPA_ptr_t * ptr, void *val)
 #define OPA_read_barrier()       OPA_arm_dmb_()
 #define OPA_read_write_barrier() OPA_arm_dsb_()
 #define OPA_compiler_barrier()   __asm__ __volatile__  ("" ::: "memory")
+#define OPA_pause()   __asm__ __volatile__  ("yield" ::: "memory")
 
 
 static _opa_inline int OPA_load_acquire_int(_opa_const OPA_int_t * ptr)

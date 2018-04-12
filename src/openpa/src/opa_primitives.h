@@ -79,6 +79,9 @@
    // reordering (may be a macro):
    static _opa_inline void OPA_compiler_barrier();
 
+   // Pause function (for spin locks, may be a macro)
+   static _opa_inline void OPA_pause();
+
    // The following need to be ported only for architectures supporting LL/SC:
    static _opa_inline int OPA_LL_int(OPA_int_t *ptr);
    static _opa_inline int OPA_SC_int(OPA_int_t *ptr, int val);

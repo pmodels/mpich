@@ -60,6 +60,7 @@ static _opa_inline void OPA_store_ptr(OPA_ptr_t * ptr, void *val)
 #define OPA_read_barrier()       OPA_ppc_lwsync_()
 #define OPA_read_write_barrier() OPA_ppc_hwsync_()
 #define OPA_compiler_barrier()   __asm__ __volatile__  ("" ::: "memory")
+#define OPA_pause()   __asm__ __volatile__  ("pause" ::: "memory")
 
 /* NOTE-PPC-1 we use lwsync, although I think we might be able to use
  * conditional-branch+isync in some cases (load_acquire?) once we understand it
