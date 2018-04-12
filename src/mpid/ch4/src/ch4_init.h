@@ -328,6 +328,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);
 
+    MPID_Thread_mutex_create(&MPIDI_CH4_Global.vni_lock, &mpi_errno);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POPFATAL(mpi_errno);
+    }
+#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+    MPIDI_workq_init(&MPIDI_CH4_Global.workqueue);
+#endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
+
+
     if (MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG && rank == 0)
         MPIDI_print_runtime_configurations();
 
@@ -531,6 +540,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
 
     MPIDIU_avt_destroy();
     MPL_free(MPIDI_CH4_Global.jobid);
+
+    MPID_Thread_mutex_destroy(&MPIDI_CH4_Global.vni_lock, &thr_err);
 
 #ifdef USE_PMIX_API
     PMIx_Finalize(NULL, 0);
