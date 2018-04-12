@@ -91,6 +91,16 @@ cvars:
         handoff
         trylock
 
+    - name        : MPIR_CVAR_CH4_ENABLE_POBJ_WORKQUEUES
+      category    : CH4
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Enables per-object workqueues rather than per-VNI workqueues
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -159,6 +169,9 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_print_runtime_configurations(void)
     printf("==== CH4 runtime configurations ====\n");
     printf("MPIDI_CH4_MT_MODEL: %d (%s)\n",
            MPIDI_CH4_MT_MODEL, MPIDI_get_mt_model_name(MPIDI_CH4_MT_MODEL));
+#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+    printf("MPIDI_CH4_ENABLE_POBJ_WORKQUEUES: %d\n", MPIDI_CH4_ENABLE_POBJ_WORKQUEUES);
+#endif
     printf("================================\n");
 }
 
@@ -193,6 +206,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_set_runtime_configurations(void)
         printf("Warning: MPIR_CVAR_CH4_MT_MODEL will be ignored "
                "unless --enable-ch4-mt=runtime is given at the configure time.\n");
 #endif /* #ifdef MPIDI_CH4_USE_MT_RUNTIME */
+
+#ifdef MPIDI_CH4_USE_RUNTIME_WORKQUEUES
+    /* Per-object work queue. Default is disabled (as in subconfigure.ac) */
+    MPIDI_CH4_Global.settings.enable_pobj_workqueues
+        = MPIR_CVAR_CH4_ENABLE_POBJ_WORKQUEUES == -1 ? 0 : MPIR_CVAR_CH4_ENABLE_POBJ_WORKQUEUES;
+#else
+    if (MPIR_CVAR_CH4_ENABLE_POBJ_WORKQUEUES != -1)
+        printf("Warning: MPIR_CVAR_CH4_ENABLE_POBJ_WORKQUEUES will be ignored "
+               "unless --enable-ch4-pobj-workqueue=runtime is given at the configure time.\n");
+#endif
 
   fn_fail:
     return mpi_errno;

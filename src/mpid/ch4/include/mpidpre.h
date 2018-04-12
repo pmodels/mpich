@@ -37,6 +37,16 @@
 #error "Unknown MT model or MT model not defined"
 #endif
 
+#if defined MPIDI_CH4_USE_POBJ_WORKQUEUES
+#define MPIDI_CH4_ENABLE_POBJ_WORKQUEUES 1
+#elif defined MPIDI_CH4_USE_PVNI_WORKQUEUES
+#define MPIDI_CH4_ENABLE_POBJ_WORKQUEUES 0
+#elif defined MPIDI_CH4_USE_RUNTIME_WORKQUEUES
+#define MPIDI_CH4_ENABLE_POBJ_WORKQUEUES MPIDI_CH4_Global.settings.enable_pobj_workqueues
+#else
+#error "Unknown work queue model or not defined"
+#endif
+
 typedef struct {
     union {
     MPIDI_NM_DT_DECL} netmod;
