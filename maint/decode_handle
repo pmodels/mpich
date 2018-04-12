@@ -27,6 +27,7 @@ my @kind_table = qw(
     REQUEST
     PROCGROUP
     VCONN
+    WORKQ_ELEM
     GREQ_CLASS
 );
 
@@ -74,6 +75,7 @@ while (scalar @ARGV) {
 ##   MPIR_REQUEST    = 0xb,
 ##   MPIR_PROCGROUP  = 0xc,               /* These are internal device objects */
 ##   MPIR_VCONN      = 0xd,
+##   MPIR_WORKQ_ELEM = 0xe,
 ##   MPIR_GREQ_CLASS = 0xf
 ##   } MPII_Object_kind;
 ##
