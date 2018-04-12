@@ -137,9 +137,49 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
     return mpi_errno;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vni_progress_unsafe(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_workq_elemt_t *workq_elemt = NULL;
+
+    MPIDI_workq_dequeue(&MPIDI_CH4_Global.workqueue, (void **) &workq_elemt);
+    while (workq_elemt != NULL) {
+        mpi_errno = MPIDI_workq_dispatch(workq_elemt);
+        if (mpi_errno != MPI_SUCCESS)
+            goto fn_fail;
+        MPIDI_workq_dequeue(&MPIDI_CH4_Global.workqueue, (void **) &workq_elemt);
+    }
+
+  fn_fail:
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vni_progress(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
+
+    mpi_errno = MPIDI_workq_vni_progress_unsafe();
+
+    MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
+  fn_fail:
+    return mpi_errno;
+}
+
 #else /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
 #define MPIDI_workq_pt2pt_enqueue(...)
 #define MPIDI_workq_rma_enqueue(...)
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vni_progress_unsafe(void)
+{
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vni_progress(void)
+{
+    return MPI_SUCCESS;
+}
 #endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
 
 #endif /* CH4I_WORKQ_H_INCLUDED */
