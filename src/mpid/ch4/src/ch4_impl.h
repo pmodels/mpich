@@ -451,10 +451,16 @@ static inline int MPIDI_CH4I_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_G
     return ret;
 }
 
+/* TODO: Several unbounded loops call this macro. One way to avoid holding the
+ * ALLFUNC_MUTEX lock forever is to insert YIELD in each loop. We choose to
+ * insert it here for simplicity, but this might not be the best place. One
+ * needs to investigate the appropriate place to yield the lock. */
+
 #define MPIDI_CH4R_PROGRESS()                                   \
     do {                                                        \
         mpi_errno = MPID_Progress_test();                       \
         if (mpi_errno != MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);  \
+        MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); \
     } while (0)
 
 #define MPIDI_CH4R_PROGRESS_WHILE(cond)         \
