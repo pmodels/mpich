@@ -11,6 +11,30 @@
 #ifndef CH4I_WORKQ_TYPES_H_INCLUDED
 #define CH4I_WORKQ_TYPES_H_INCLUDED
 
+/*
+  Multi-threading models
+*/
+enum {
+    MPIDI_CH4_MT_DIRECT,
+    MPIDI_CH4_MT_HANDOFF,
+    MPIDI_CH4_MT_TRYLOCK,
+
+    MPIDI_CH4_NUM_MT_MODELS,
+};
+
+/* For now any thread safety model that is not "direct" requires
+ * work queues. These queues might be used for different reasons,
+ * thus a new macro to capture that. */
+#if !defined(MPIDI_CH4_USE_MT_DIRECT)
+#define MPIDI_CH4_USE_WORK_QUEUES
+#endif
+
+static const char *MPIDI_CH4_mt_model_names[MPIDI_CH4_NUM_MT_MODELS] = {
+    "direct",
+    "handoff",
+    "trylock",
+};
+
 /* Define the work queue implementation type */
 #if defined(ENABLE_IZEM_QUEUE)
 #include <queue/zm_queue.h>
