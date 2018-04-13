@@ -53,7 +53,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_iprobe(int source,
         MPIR_STATUS_SET_COUNT(*status, MPIDI_CH4U_REQUEST(unexp_req, count));
     } else {
         *flag = 0;
+        /* FIXME: we do this because vni_lock is not a recursive lock that can
+         * be yielded easily. Recursive locking currently only works for the global
+         * lock. One way to improve this is to fix the lock yielding API to avoid this
+         * constraint.*/
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
         MPIDI_CH4R_PROGRESS();
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
     }
     /* MPIDI_CS_EXIT(); */
 
@@ -116,7 +122,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_improbe(int source,
         MPIR_STATUS_SET_COUNT(*status, MPIDI_CH4U_REQUEST(unexp_req, count));
     } else {
         *flag = 0;
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
         MPIDI_CH4R_PROGRESS();
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
     }
     /* MPIDI_CS_EXIT(); */
 
