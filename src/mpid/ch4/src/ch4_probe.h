@@ -14,6 +14,150 @@
 #include "ch4_impl.h"
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_iprobe_unsafe
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_unsafe(int source,
+                                                 int tag, MPIR_Comm * comm, int context_offset,
+                                                 MPIDI_av_entry_t * av, int *flag,
+                                                 MPI_Status * status)
+{
+    int mpi_errno;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROBE_UNSAFE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PROBE_UNSAFE);
+
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, flag, status);
+#else
+    if (unlikely(source == MPI_ANY_SOURCE)) {
+        mpi_errno = MPIDI_SHM_mpi_iprobe(source, tag, comm, context_offset, flag, status);
+        if (!*flag)
+            mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, flag, status);
+    } else if (MPIDI_CH4_rank_is_local(source, comm)) {
+        mpi_errno = MPIDI_SHM_mpi_iprobe(source, tag, comm, context_offset, flag, status);
+    } else {
+        mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, flag, status);
+    }
+#endif
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROBE_UNSAFE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_improbe_unsafe
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_unsafe(int source,
+                                                  int tag, MPIR_Comm * comm,
+                                                  int context_offset,
+                                                  MPIDI_av_entry_t * av,
+                                                  int *flag, MPIR_Request ** message,
+                                                  MPI_Status * status)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMPROBE_UNSAFE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IMPROBE_UNSAFE);
+
+#ifdef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
+#else
+    if (unlikely(source == MPI_ANY_SOURCE)) {
+        mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
+        if (*flag) {
+            MPIDI_CH4I_REQUEST(*message, is_local) = 1;
+        } else {
+            mpi_errno =
+                MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
+            if (*flag) {
+                MPIDI_CH4I_REQUEST(*message, is_local) = 0;
+            }
+        }
+    } else if (MPIDI_av_is_local(av)) {
+        mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
+        if (*flag)
+            MPIDI_CH4I_REQUEST(*message, is_local) = 1;
+    } else {
+        mpi_errno =
+            MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
+        if (*flag)
+            MPIDI_CH4I_REQUEST(*message, is_local) = 0;
+    }
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IMPROBE_UNSAFE);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_iprobe_safe
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_iprobe_safe(int source,
+                                               int tag, MPIR_Comm * comm, int context_offset,
+                                               MPIDI_av_entry_t * av, int *flag,
+                                               MPI_Status * status)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPROBE_SAFE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPROBE_SAFE);
+
+    MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
+
+    MPIDI_workq_vni_progress_unsafe();
+    mpi_errno = MPIDI_iprobe_unsafe(source, tag, comm, context_offset, av, flag, status);
+
+    MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPROBE_SAFE);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_improbe_safe
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_improbe_safe(int source,
+                                                int tag, MPIR_Comm * comm,
+                                                int context_offset,
+                                                MPIDI_av_entry_t * av,
+                                                int *flag, MPIR_Request ** message,
+                                                MPI_Status * status)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMPROBE_SAFE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IMPROBE_SAFE);
+
+    MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_lock);
+
+    MPIDI_workq_vni_progress_unsafe();
+    mpi_errno = MPIDI_improbe_unsafe(source, tag, comm, context_offset, av, flag, message, status);
+
+    MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_lock);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IMPROBE_SAFE);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPID_Probe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -34,19 +178,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
 
     av = MPIDIU_comm_rank_to_av(comm, source);
     while (!flag) {
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-        mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, &flag, status);
-#else
-        if (unlikely(source == MPI_ANY_SOURCE)) {
-            mpi_errno = MPIDI_SHM_mpi_iprobe(source, tag, comm, context_offset, &flag, status);
-            if (!flag)
-                mpi_errno =
-                    MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, &flag, status);
-        } else if (MPIDI_av_is_local(av))
-            mpi_errno = MPIDI_SHM_mpi_iprobe(source, tag, comm, context_offset, &flag, status);
-        else
-            mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, &flag, status);
-#endif
+        mpi_errno = MPIDI_iprobe_safe(source, tag, comm, context_offset, av, &flag, status);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
@@ -63,6 +195,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
   fn_fail:
     goto fn_exit;
 }
+
 
 
 #undef FUNCNAME
@@ -89,34 +222,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
 
     av = MPIDIU_comm_rank_to_av(comm, source);
     while (!flag) {
-#ifdef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
-            MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, &flag, message, status);
-#else
-        if (unlikely(source == MPI_ANY_SOURCE)) {
-            mpi_errno =
-                MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, &flag, message, status);
-            if (flag) {
-                MPIDI_CH4I_REQUEST(*message, is_local) = 1;
-            } else {
-                mpi_errno =
-                    MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, &flag, message,
-                                         status);
-                if (flag)
-                    MPIDI_CH4I_REQUEST(*message, is_local) = 0;
-            }
-        } else if (MPIDI_av_is_local(av)) {
-            mpi_errno =
-                MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, &flag, message, status);
-            if (flag)
-                MPIDI_CH4I_REQUEST(*message, is_local) = 1;
-        } else {
-            mpi_errno =
-                MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, &flag, message, status);
-            if (flag)
-                MPIDI_CH4I_REQUEST(*message, is_local) = 0;
-        }
-#endif
+            MPIDI_improbe_safe(source, tag, comm, context_offset, av, &flag, message, status);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
@@ -157,32 +264,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
         goto fn_exit;
     }
 
+    *flag = 0;
     av = MPIDIU_comm_rank_to_av(comm, source);
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
-#else
-    if (unlikely(source == MPI_ANY_SOURCE)) {
-        mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
-        if (*flag) {
-            MPIDI_CH4I_REQUEST(*message, is_local) = 1;
-        } else {
-            mpi_errno =
-                MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
-            if (*flag) {
-                MPIDI_CH4I_REQUEST(*message, is_local) = 0;
-            }
-        }
-    } else if (MPIDI_av_is_local(av)) {
-        mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
-        if (*flag)
-            MPIDI_CH4I_REQUEST(*message, is_local) = 1;
-    } else {
-        mpi_errno =
-            MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, av, flag, message, status);
-        if (*flag)
-            MPIDI_CH4I_REQUEST(*message, is_local) = 0;
-    }
-#endif
+
+    mpi_errno = MPIDI_improbe_safe(source, tag, comm, context_offset, av, flag, message, status);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -223,19 +308,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
         goto fn_exit;
     }
 
+    *flag = 0;
     av = MPIDIU_comm_rank_to_av(comm, source);
-#ifdef MPIDI_CH4_DIRECT_NETMOD
-    mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, flag, status);
-#else
-    if (unlikely(source == MPI_ANY_SOURCE)) {
-        mpi_errno = MPIDI_SHM_mpi_iprobe(source, tag, comm, context_offset, flag, status);
-        if (!*flag)
-            mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, flag, status);
-    } else if (MPIDI_av_is_local(av))
-        mpi_errno = MPIDI_SHM_mpi_iprobe(source, tag, comm, context_offset, flag, status);
-    else
-        mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, av, flag, status);
-#endif
+
+    mpi_errno = MPIDI_iprobe_safe(source, tag, comm, context_offset, av, flag, status);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
