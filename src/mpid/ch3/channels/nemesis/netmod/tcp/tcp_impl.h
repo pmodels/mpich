@@ -37,7 +37,7 @@ typedef GENERIC_Q_DECL(struct MPIR_Request) MPIDI_nem_tcp_request_queue_t;
    on the network module, facilitating dynamic module loading. */
 typedef struct
 {
-    struct sockaddr_in sock_id;
+    struct sockaddr sock_id;
     MPID_nem_tcp_vc_state_t state;
     struct MPID_nem_new_tcp_sockconn *sc;
     int send_paused;
@@ -86,7 +86,7 @@ MPID_NEM_TCP_SOCK_STATUS_t MPID_nem_tcp_check_sock_status(const struct pollfd *c
 int MPID_nem_tcp_send_finalize(void);
 int MPID_nem_tcp_bind(int sockfd);
 int MPID_nem_tcp_conn_est(MPIDI_VC_t *vc);
-int MPID_nem_tcp_get_conninfo(struct MPIDI_VC *vc, struct sockaddr_in *addr, char **pg_id, int *pg_rank);
+int MPID_nem_tcp_get_conninfo(struct MPIDI_VC *vc, struct sockaddr *addr, char **pg_id, int *pg_rank);
 int MPID_nem_tcp_get_vc_from_conninfo(char *pg_id, int pg_rank, struct MPIDI_VC **vc);
 int MPID_nem_tcp_is_sock_connected(int fd);
 int MPID_nem_tcp_disconnect(struct MPIDI_VC *const vc);
@@ -103,7 +103,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, voi
 int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz,
                                         MPIR_Request **sreq_ptr);
 int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, intptr_t hdr_sz);
-int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr *addr, in_port_t *port);
+int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct sockaddr *addr);
 
 void MPID_nem_tcp_vc_dbg_print_sendq(FILE *stream, MPIDI_VC_t *vc);
 

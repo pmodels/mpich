@@ -807,8 +807,7 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
         MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
 
     if (vc_tcp->state == MPID_NEM_TCP_VC_STATE_DISCONNECTED) {
-        struct sockaddr_in *sock_addr;
-	struct in_addr addr;
+        struct sockaddr *sock_addr;
         int rc = 0;
 
         if (vc_tcp->connect_retry_count > MPIDI_NEM_TCP_MAX_CONNECT_RETRIES) {
@@ -852,8 +851,7 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
             mpi_errno = vc->pg->getConnInfo(vc->pg_rank, bc, val_max_sz, vc->pg);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-            mpi_errno = MPID_nem_tcp_get_addr_port_from_bc(bc, &addr, &(vc_tcp->sock_id.sin_port));
-            vc_tcp->sock_id.sin_addr.s_addr = addr.s_addr;
+            mpi_errno = MPID_nem_tcp_get_addr_port_from_bc(bc, &(vc_tcp->sock_id));
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         else {
@@ -864,6 +862,9 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
         sock_addr = &(vc_tcp->sock_id);
 
         CHECK_EINTR(sc->fd, socket(AF_INET, SOCK_STREAM, 0));
+        if (sc->fd == -1) {
+            CHECK_EINTR(sc->fd, socket(AF_INET6, SOCK_STREAM, 0));
+        }
         MPIR_ERR_CHKANDJUMP2(sc->fd == -1, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIR_Strerror(errno), errno);
 
         plfd->fd = sc->fd;
@@ -872,7 +873,7 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
         if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
         MPL_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE, (MPL_DBG_FDEST, "connecting to 0x%08X:%d", sock_addr->sin_addr.s_addr, sock_addr->sin_port));
-        rc = connect(sc->fd, (SA*)sock_addr, sizeof(*sock_addr));
+        rc = connect(sc->fd, sock_addr, sizeof(*sock_addr));
         /* connect should not be called with CHECK_EINTR macro */
         MPIR_ERR_CHKANDJUMP2(rc < 0 && errno != EINPROGRESS, mpi_errno, MPI_ERR_OTHER, "**sock_connect", "**sock_connect %d %s", errno, MPIR_Strerror(errno));
         

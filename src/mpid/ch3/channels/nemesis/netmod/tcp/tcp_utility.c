@@ -15,7 +15,7 @@
 #define FUNCNAME MPID_nem_tcp_get_conninfo
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_tcp_get_conninfo (struct MPIDI_VC *vc, struct sockaddr_in *addr, char **pg_id, int *pg_rank)
+int MPID_nem_tcp_get_conninfo (struct MPIDI_VC *vc, struct sockaddr *addr, char **pg_id, int *pg_rank)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);

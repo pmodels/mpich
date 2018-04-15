@@ -385,29 +385,75 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 
     /* If we don't have an IP address, try to get it from the name */
     if (!ifaddrFound) {
-        int i;
-	struct hostent *info = NULL;
+        int i, status = 0, ipv4_found = 0, ipv6_found = 0;
+        struct addrinfo hints;
+        struct addrinfo *result, *rp;
+        memset(&hints, 0, sizeof(struct addrinfo));
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_socktype = SOCK_STREAM;
+        hints.ai_protocol = 0;
+        hints.ai_flags = 0;
+        /* First try getting IPV4 network address */
         for (i = 0; i < MPIR_CVAR_NEMESIS_TCP_HOST_LOOKUP_RETRIES; ++i) {
-            info = gethostbyname( ifname_string );
-            if (info || h_errno != TRY_AGAIN)
+            status = getaddrinfo( ifname_string, NULL, &hints, &result);
+            /* If connection failed, skip to next try */
+            if (status != 0)
+                continue;
+            /* Only grep those IPV4 address*/
+            for (rp = result; rp; rp = rp->ai_next) {
+                if (rp->ai_family == AF_INET) {
+                    ifaddr->len  = rp->ai_addrlen;
+                    ifaddr->type = AF_INET;
+                    if (ifaddr->len > sizeof(ifaddr->ifaddr)) {
+                        ifaddr->len = 0;
+                        ifaddr->type = -1;
+                        MPIR_ERR_INTERNAL(mpi_errno, "Address too long to fit in field");
+                    }
+                    else {
+                        MPIR_Memcpy( ifaddr->ifaddr, &(((struct sockaddr_in* )rp->ai_addr)->sin_addr), ifaddr->len);
+                        /* If we found the address and successfully copied it break from current address loop and retry loop*/
+                        ipv4_found = 1;
+                        break;
+                    }
+                }
+            }
+            if (ipv4_found)
                 break;
         }
-        MPIR_ERR_CHKANDJUMP2(!info || !info->h_addr_list, mpi_errno, MPI_ERR_OTHER, "**gethostbyname", "**gethostbyname %s %d", ifname_string, h_errno);
-        
-        /* Use the primary address */
-        ifaddr->len  = info->h_length;
-        ifaddr->type = info->h_addrtype;
-        if (ifaddr->len > sizeof(ifaddr->ifaddr)) {
-            /* If the address won't fit in the field, reset to
-               no address */
-            ifaddr->len = 0;
-            ifaddr->type = -1;
-            MPIR_ERR_INTERNAL(mpi_errno, "Address too long to fit in field");
-        } else {
-            MPIR_Memcpy( ifaddr->ifaddr, info->h_addr_list[0], ifaddr->len );
-	}
+        /* If we unable to call getaddrinfo, we break from retry loop*/
+        MPIR_ERR_CHKANDJUMP2(status != 0, mpi_errno, MPI_ERR_OTHER, "**getaddrinfo", "**getaddrinfo %s %d", ifname_string, h_errno);
+        /* If ipv4 not found we retry with IPV6*/
+        if(!ipv4_found) {
+            for (i = 0; i < MPIR_CVAR_NEMESIS_TCP_HOST_LOOKUP_RETRIES; ++i) {
+                status = getaddrinfo( ifname_string, NULL, &hints, &result);
+                /* If connection failed, skip to next try */
+                if (status != 0)
+                    continue;
+                /* Only grep the result with IPV6*/
+                for (rp = result; rp; rp = rp->ai_next) {
+                    if (rp->ai_family == AF_INET6) {
+                        ifaddr->len  = rp->ai_addrlen;
+                        ifaddr->type = AF_INET6;
+                        if (ifaddr->len > sizeof(ifaddr->ifaddr)){
+                            ifaddr->len = 0;
+                            ifaddr->type = -1;
+                            MPIR_ERR_INTERNAL(mpi_errno, "Address too long to fit in field");
+                        }
+                        else {
+                            MPIR_Memcpy( ifaddr->ifaddr, &(((struct sockaddr_in6 *)rp->ai_addr)->sin6_addr), ifaddr->len);
+                            /* If we found it and successfully copied it we break from current loop and rety loop */
+                            ipv6_found = 1;
+                            break;
+                        }
+                    }
+                }
+                if (ipv6_found)
+                    break;
+            }
+        }
+        MPIR_ERR_CHKANDJUMP2(status != 0, mpi_errno, MPI_ERR_OTHER, "**getaddrinfo", "**get    addrinfo %s %d", ifname_string, h_errno);
+        freeaddrinfo(result);
     }
-
 fn_exit:
     return mpi_errno;
 fn_fail:
@@ -426,7 +472,7 @@ int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_s
     MPIDI_CH3I_nem_tcp_ifaddr_t ifaddr;
     char ifname[MAX_HOST_DESCRIPTION_LEN];
     int ret;
-    struct sockaddr_in sock_id;
+    struct sockaddr sock_id;
     socklen_t len;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_GET_BUSINESS_CARD);
 
@@ -443,10 +489,13 @@ int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_s
     }
 
     len = sizeof(sock_id);
-    ret = getsockname (MPID_nem_tcp_g_lstn_sc.fd, (struct sockaddr *)&sock_id, &len);
+    ret = getsockname (MPID_nem_tcp_g_lstn_sc.fd, &sock_id, &len);
     MPIR_ERR_CHKANDJUMP1 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**getsockname", "**getsockname %s", MPIR_Strerror (errno));
 
-    str_errno = MPL_str_add_int_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY, ntohs(sock_id.sin_port));
+    if (sock_id.sa_family == AF_INET)
+        str_errno = MPL_str_add_int_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY, ntohs(((struct sockaddr_in *)&sock_id)->sin_port));
+    else
+        str_errno = MPL_str_add_int_arg (bc_val_p, val_max_sz_p, MPIDI_CH3I_PORT_KEY, ntohs(((struct sockaddr_in6 *)&sock_id)->sin6_port));
     if (str_errno) {
         MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
@@ -454,13 +503,20 @@ int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_s
     
     if (ifaddr.len > 0 && ifaddr.type == AF_INET)
     {
-        unsigned char *p;
-        p = (unsigned char *)(ifaddr.ifaddr);
-        MPL_snprintf( ifname, sizeof(ifname), "%u.%u.%u.%u", p[0], p[1], p[2], p[3] );
+        inet_ntop(AF_INET, &(ifaddr.ifaddr), ifname, sizeof(ifname));
         MPL_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"ifname = %s",ifname );
         str_errno = MPL_str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_IFNAME_KEY, ifname);
         if (str_errno) {
             MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
+        }
+    }
+    else if (ifaddr.len > 0 && ifaddr.type == AF_INET6) {
+        inet_ntop(AF_INET6, &(ifaddr.ifaddr), ifname, sizeof(ifname));
+        MPL_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"ifname = %s",ifname );
+        str_errno = MPL_str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_IFNAME_KEY, ifname);
+        if (str_errno) {
+            MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**bu    scard_len");
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
         }
     }
@@ -483,7 +539,7 @@ int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_s
 int MPID_nem_tcp_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct in_addr addr;
+    struct sockaddr addr;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(new_vc);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_CONNECT_TO_ROOT);
 
@@ -491,8 +547,7 @@ int MPID_nem_tcp_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 
     /* vc is already allocated before reaching this point */
 
-    mpi_errno = MPID_nem_tcp_get_addr_port_from_bc(business_card, &addr, &vc_tcp->sock_id.sin_port);
-    vc_tcp->sock_id.sin_addr.s_addr = addr.s_addr;
+    mpi_errno = MPID_nem_tcp_get_addr_port_from_bc(business_card,  &(vc_tcp->sock_id));
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIDI_GetTagFromPort(business_card, &new_vc->port_name_tag);
@@ -538,7 +593,7 @@ int MPID_nem_tcp_vc_init (MPIDI_VC_t *vc)
     vc_ch->num_pkt_handlers = MPIDI_NEM_TCP_PKT_NUM_TYPES;
 
     memset(&vc_tcp->sock_id, 0, sizeof(vc_tcp->sock_id));
-    vc_tcp->sock_id.sin_family = AF_INET;
+    vc_tcp->sock_id.sa_family = AF_INET;
 
     vc_ch->next = NULL;
     vc_ch->prev = NULL;
@@ -580,11 +635,12 @@ int MPID_nem_tcp_vc_destroy(MPIDI_VC_t *vc)
 #define FUNCNAME MPID_nem_tcp_get_addr_port_from_bc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr *addr, in_port_t *port)
+int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct sockaddr *addr)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
     int port_int;
+    in_port_t *port;
     /*char desc_str[256];*/
     char ifname[256];
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_GET_ADDR_PORT_FROM_BC);
@@ -604,15 +660,20 @@ int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr
      * instead of mpi_errno. */
     MPIR_ERR_CHKANDJUMP (ret != MPL_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingport");
     MPIR_Assert((port_int >> (8*sizeof(*port))) == 0); /* ensure port_int isn't too large for *port */
-    *port = htons((in_port_t)port_int);
-
     ret = MPL_str_get_string_arg(business_card, MPIDI_CH3I_IFNAME_KEY, ifname, sizeof(ifname));
     MPIR_ERR_CHKANDJUMP (ret != MPL_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingifname");
 
-    ret = inet_pton (AF_INET, (const char *)ifname, addr);
-    MPIR_ERR_CHKANDJUMP(ret == 0, mpi_errno,MPI_ERR_OTHER,"**ifnameinvalid");
-    MPIR_ERR_CHKANDJUMP(ret < 0, mpi_errno, MPI_ERR_OTHER, "**afinetinvalid");
-    
+    ret = inet_pton (AF_INET, (const char *)ifname, &((struct sockaddr_in *)addr)->sin_addr);
+    if (ret != 1) {
+        ret = inet_pton (AF_INET6, (const char *)ifname, &((struct sockaddr_in6 *)addr)->sin6_addr);
+        MPIR_ERR_CHKANDJUMP(ret == 0, mpi_errno,MPI_ERR_OTHER,"**ifnameinvalid");
+        MPIR_ERR_CHKANDJUMP(ret < 0, mpi_errno, MPI_ERR_OTHER, "**afinetinvalid");
+        addr->sa_family = AF_INET6;
+        ((struct sockaddr_in6 *)addr)->sin6_port = htons((in_port_t)port_int);
+    } else {
+        addr->sa_family = AF_INET;
+        ((struct sockaddr_in *)addr)->sin_port = htons((in_port_t)port_int);
+    }
  fn_exit:
 /*     fprintf(stdout, FCNAME " Exit\n"); fflush(stdout); */
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_GET_ADDR_PORT_FROM_BC);

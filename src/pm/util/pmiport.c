@@ -130,34 +130,32 @@ int PMIServGetPort(int *fdout, char *portString, int portLen)
     }
 
     memset((void *) &sa_storage, 0, sizeof(sa_storage));
-
+    int ipv6_found = 0;
     for (portnum = low_port; portnum <= high_port; portnum++) {
-        /*IPV6
-         * if (ipv6_set_flag) {
-         * memset((void *) &sa6, 0, sizeof(sa6));
-         * sa6.sin6_family = AF_INET6;
-         * sa6.sin6_port = htons(portnum);
-         * sa6.sin6_addr.s_addr = INADDR_ANY;
-         * memcpy(&sa_storage, &sa6, sizeof(sa6));
-         * fd = socket(AF_INET6, SOCK_STREAM, TCP);
-         * }
-         * else { */
-        memset((void *) &sa, 0, sizeof(sa));
-        sa.sin_family = AF_INET;
-        sa.sin_port = htons(portnum);
-        sa.sin_addr.s_addr = INADDR_ANY;
-        memcpy(&sa_storage, &sa, sizeof(sa));
         fd = socket(AF_INET, SOCK_STREAM, TCP);
-        //}
         if (fd < 0) {
-            /* Failure; return immediately */
-            return fd;
+            fd = socket(AF_INET6, SOCK_STREAM, TCP);
+            if (fd < 0)
+                /* Failure; return immediately */
+                return fd;
+            ipv6_found = 1;
         }
-
         if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &optval, sizeof(optval))) {
             MPL_internal_sys_error_printf("setsockopt", errno, 0);
         }
-
+        if (ipv6_found) {
+            memset((void *) &sa6, 0, sizeof(sa6));
+            sa6.sin6_family = AF_INET6;
+            sa6.sin6_port = htons(portnum);
+            sa6.sin6_addr = in6addr_any;
+            memcpy(&sa_storage, &sa6, sizeof(sa6));
+        } else {
+            memset((void *) &sa, 0, sizeof(sa));
+            sa.sin_family = AF_INET;
+            sa.sin_port = htons(portnum);
+            sa.sin_addr.s_addr = INADDR_ANY;
+            memcpy(&sa_storage, &sa, sizeof(sa));
+        }
         if (bind(fd, (struct sockaddr *) &sa_storage, sizeof(sa_storage)) < 0) {
             close(fd);
             fd = -1;
@@ -189,8 +187,9 @@ int PMIServGetPort(int *fdout, char *portString, int portLen)
          * port we actually got */
         getsockname(fd, (struct sockaddr *) &sa_storage, &sinlen);
         //IPV6
-        //portnum = ipv6_flag_set ? ntohs((struct sockaddr_in6 *) &sa_storage.sin6_port) : ntohs((struct sockaddr_in *) &sa_storage.sin_port);
-        portnum = ntohs(((struct sockaddr *) &sa_storage).sin_port);
+        portnum =
+            ipv6_flag_set ? ntohs((struct sockaddr_in6 *) &sa_storage.sin6_port) :
+            ntohs((struct sockaddr_in *) &sa_storage.sin_port);
     }
 
     /* Create the port string */
