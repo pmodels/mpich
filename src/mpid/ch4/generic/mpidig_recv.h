@@ -128,7 +128,7 @@ static inline int MPIDI_do_irecv(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_DO_IRECV);
 
-    root_comm = MPIDI_CH4U_context_id_to_comm(comm->recvcontext_id);
+    root_comm = MPIDI_CH4U_context_id_to_comm(context_id);
     unexp_req = MPIDI_CH4U_dequeue_unexp(rank, tag, context_id,
                                          &MPIDI_CH4U_COMM(root_comm, unexp_list));
 
@@ -202,6 +202,7 @@ static inline int MPIDI_do_irecv(void *buf,
         /* MPIDI_CS_EXIT(); */
     } else {
         MPIDI_CH4U_REQUEST(unexp_req, req->rreq.match_req) = (uint64_t) rreq;
+        MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_IN_PROGRESS;
     }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_DO_IRECV);
@@ -421,22 +422,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_CANCEL_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_CANCEL_RECV);
 
-    root_comm = MPIDI_CH4U_context_id_to_comm(MPIDI_CH4U_REQUEST(rreq, context_id));
+    if (!MPIR_Request_is_complete(rreq) &&
+        !MPIR_STATUS_GET_CANCEL_BIT(rreq->status) && !MPIDI_CH4U_REQUEST_IN_PROGRESS(rreq)) {
+        root_comm = MPIDI_CH4U_context_id_to_comm(MPIDI_CH4U_REQUEST(rreq, context_id));
 
-    /* MPIDI_CS_ENTER(); */
-    found =
-        MPIDI_CH4U_delete_posted(&rreq->dev.ch4.am.req->rreq,
-                                 &MPIDI_CH4U_COMM(root_comm, posted_list));
-    /* MPIDI_CS_EXIT(); */
+        /* MPIDI_CS_ENTER(); */
+        found =
+            MPIDI_CH4U_delete_posted(&rreq->dev.ch4.am.req->rreq,
+                                     &MPIDI_CH4U_COMM(root_comm, posted_list));
+        /* MPIDI_CS_EXIT(); */
 
-    if (found) {
+        if (found) {
+            MPIR_Comm_release(root_comm);       /* -1 for posted_list */
+        }
+
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
         MPIR_STATUS_SET_COUNT(rreq->status, 0);
-        MPIR_Comm_release(root_comm);   /* -1 for posted_list */
         MPID_Request_complete(rreq);
-    } else {
-        MPIR_STATUS_SET_CANCEL_BIT(rreq->status, FALSE);
     }
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_CANCEL_RECV);
     return mpi_errno;
 }

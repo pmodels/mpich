@@ -97,6 +97,10 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
     size_t dt_sz;
     MPIR_Segment *segment_ptr;
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIR_Request *anysource_partner = NULL;
+#endif
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_HANDLE_UNEXP_CMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_HANDLE_UNEXP_CMPL);
 
@@ -114,14 +118,61 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
 
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_MATCHED) {
         match_req = (MPIR_Request *) MPIDI_CH4U_REQUEST(rreq, req->rreq.match_req);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        if (unlikely(match_req && MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(match_req))) {
+            anysource_partner = MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(match_req);
+            if (!MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status)) {
+                mpi_errno = MPID_Cancel_recv(anysource_partner);
+                if (mpi_errno != MPI_SUCCESS) {
+                    goto fn_fail;
+                }
+                /* What should we do if the anysource partner request is not canceled? */
+                MPIR_Assertp(MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status));
+            }
+            MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(match_req) = NULL;
+            MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(anysource_partner) = NULL;
+        }
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
+
     } else {
         /* MPIDI_CS_ENTER(); */
-        if (root_comm)
+        if (root_comm) {
+#ifdef MPIDI_CH4_DIRECT_NETMOD
             match_req =
                 MPIDI_CH4U_dequeue_posted(MPIDI_CH4U_REQUEST(rreq, rank),
                                           MPIDI_CH4U_REQUEST(rreq, tag),
                                           MPIDI_CH4U_REQUEST(rreq, context_id),
                                           &MPIDI_CH4U_COMM(root_comm, posted_list));
+#else /* MPIDI_CH4_DIRECT_NETMOD */
+            while (TRUE) {
+                match_req =
+                    MPIDI_CH4U_dequeue_posted(MPIDI_CH4U_REQUEST(rreq, rank),
+                                              MPIDI_CH4U_REQUEST(rreq, tag),
+                                              MPIDI_CH4U_REQUEST(rreq, context_id),
+                                              &MPIDI_CH4U_COMM(root_comm, posted_list));
+
+                if (match_req && MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(match_req)) {
+                    anysource_partner = MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(match_req);
+                    if (!MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status)) {
+                        mpi_errno = MPID_Cancel_recv(anysource_partner);
+                        if (mpi_errno != MPI_SUCCESS) {
+                            goto fn_fail;
+                        }
+                        if (!MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status)) {
+                            anysource_partner = NULL;
+                            MPIR_Comm_release(root_comm);       /* -1 for posted_list */
+                            continue;
+                        }
+                    }
+                    MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(match_req) = NULL;
+                    MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(anysource_partner) = NULL;
+                }
+
+                break;
+            }
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
+        }
 
         if (match_req) {
             MPIDI_CH4U_delete_unexp(rreq, &MPIDI_CH4U_COMM(root_comm, unexp_list));
@@ -184,6 +235,11 @@ static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (unlikely(anysource_partner)) {
+        anysource_partner->status = match_req->status;
+    }
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
 
     MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(match_req, datatype));
     MPL_free(MPIDI_CH4U_REQUEST(rreq, buffer));
@@ -302,8 +358,14 @@ static inline int MPIDI_recv_target_cmpl_cb(MPIR_Request * rreq)
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) {
         int continue_matching = 1;
-        MPIDI_CH4R_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDI_CH4R_NETMOD,
-                                     &continue_matching);
+        if (MPIDI_CH4I_REQUEST(rreq, is_local)) {
+            MPIDI_CH4R_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDI_CH4R_SHM,
+                                         &continue_matching);
+        } else {
+            MPIDI_CH4R_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq),
+                                         MPIDI_CH4R_NETMOD, &continue_matching);
+        }
+
         if (unlikely(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq))) {
             MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) = NULL;
             MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
@@ -380,13 +442,44 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_Request *rreq = NULL;
     MPIR_Comm *root_comm;
     MPIDI_CH4U_hdr_t *hdr = (MPIDI_CH4U_hdr_t *) am_hdr;
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIR_Request *anysource_partner = NULL;
+#endif
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SEND_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SEND_TARGET_MSG_CB);
     root_comm = MPIDI_CH4U_context_id_to_comm(hdr->context_id);
     if (root_comm) {
         /* MPIDI_CS_ENTER(); */
+#ifdef MPIDI_CH4_DIRECT_NETMOD
         rreq = MPIDI_CH4U_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
                                          &MPIDI_CH4U_COMM(root_comm, posted_list));
+#else /* MPIDI_CH4_DIRECT_NETMOD */
+        while (TRUE) {
+            rreq = MPIDI_CH4U_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
+                                             &MPIDI_CH4U_COMM(root_comm, posted_list));
+
+            if (rreq && MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) {
+                anysource_partner = MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq);
+                if (!MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status)) {
+                    mpi_errno = MPID_Cancel_recv(anysource_partner);
+                    if (mpi_errno != MPI_SUCCESS) {
+                        goto fn_fail;
+                    }
+                    if (!MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status)) {
+                        anysource_partner = NULL;
+                        MPIR_Comm_release(root_comm);   /* -1 for posted_list */
+                        continue;
+                    }
+                }
+                MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
+                MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(anysource_partner) = NULL;
+            }
+
+            break;
+        }
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
         /* MPIDI_CS_EXIT(); */
     }
 
@@ -424,9 +517,17 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
         MPIDI_CH4U_REQUEST(rreq, context_id) = hdr->context_id;
     }
 
+    MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_IN_PROGRESS;
+
     *req = rreq;
 
     mpi_errno = MPIDI_do_send_target(data, p_data_sz, is_contig, target_cmpl_cb, rreq);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (unlikely(anysource_partner)) {
+        anysource_partner->status = rreq->status;
+    }
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SEND_TARGET_MSG_CB);
@@ -452,14 +553,44 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
     MPIDI_CH4U_hdr_t *hdr = (MPIDI_CH4U_hdr_t *) am_hdr;
     MPIDI_CH4U_send_long_req_msg_t *lreq_hdr = (MPIDI_CH4U_send_long_req_msg_t *) am_hdr;
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    MPIR_Request *anysource_partner = NULL;
+#endif
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SEND_LONG_REQ_TARGET_MSG_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SEND_LONG_REQ_TARGET_MSG_CB);
 
     root_comm = MPIDI_CH4U_context_id_to_comm(hdr->context_id);
     if (root_comm) {
         /* MPIDI_CS_ENTER(); */
+#ifdef MPIDI_CH4_DIRECT_NETMOD
         rreq = MPIDI_CH4U_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
                                          &MPIDI_CH4U_COMM(root_comm, posted_list));
+#else /* MPIDI_CH4_DIRECT_NETMOD */
+        while (TRUE) {
+            rreq = MPIDI_CH4U_dequeue_posted(hdr->src_rank, hdr->tag, hdr->context_id,
+                                             &MPIDI_CH4U_COMM(root_comm, posted_list));
+
+            if (rreq && MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) {
+                anysource_partner = MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq);
+                if (!MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status)) {
+                    mpi_errno = MPID_Cancel_recv(anysource_partner);
+                    if (mpi_errno != MPI_SUCCESS) {
+                        goto fn_fail;
+                    }
+                    if (!MPIR_STATUS_GET_CANCEL_BIT(anysource_partner->status)) {
+                        anysource_partner = NULL;
+                        MPIR_Comm_release(root_comm);   /* -1 for posted_list */
+                        continue;
+                    }
+                }
+                MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
+                MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(anysource_partner) = NULL;
+            }
+
+            break;
+        }
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
         /* MPIDI_CS_EXIT(); */
     }
 
@@ -475,6 +606,7 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
         MPIDI_CH4U_REQUEST(rreq, rank) = hdr->src_rank;
         MPIDI_CH4U_REQUEST(rreq, tag) = hdr->tag;
         MPIDI_CH4U_REQUEST(rreq, context_id) = hdr->context_id;
+        MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_IN_PROGRESS;
 
         /* MPIDI_CS_ENTER(); */
         if (root_comm) {
@@ -494,6 +626,7 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
         MPIDI_CH4U_REQUEST(rreq, rank) = hdr->src_rank;
         MPIDI_CH4U_REQUEST(rreq, tag) = hdr->tag;
         MPIDI_CH4U_REQUEST(rreq, context_id) = hdr->context_id;
+        MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_IN_PROGRESS;
 
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         if (MPIDI_CH4I_REQUEST(rreq, is_local))
@@ -506,6 +639,12 @@ static inline int MPIDI_send_long_req_target_msg_cb(int handler_id, void *am_hdr
 
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+        if (unlikely(anysource_partner)) {
+            anysource_partner->status = rreq->status;
+        }
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
 
   fn_exit:
