@@ -58,9 +58,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
 
     /* Netmod progress */
     for (i = 0; i < MPIDI_CH4_Global.n_netmod_vnis; i++) {
-        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_locks[i]);
+        if (flags & MPIDI_PROGRESS_NM_VNI_LOCK)
+            MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_locks[i]);
         mpi_errno = MPIDI_NM_progress(i, 0);
-        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_locks[i]);
+        if (flags & MPIDI_PROGRESS_NM_VNI_LOCK)
+            MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_locks[i]);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
