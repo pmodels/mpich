@@ -829,7 +829,9 @@ static inline int MPIDI_CH4R_win_finalize(MPIR_Win ** win_ptr)
     do {
         int all_local_completed = 0, all_remote_completed = 0;
 
-        MPIDI_CH4R_PROGRESS();
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno != MPI_SUCCESS)
+            MPIR_ERR_POP(mpi_errno);
 
         MPIDI_win_check_all_targets_local_completed(win, &all_local_completed);
         MPIDI_win_check_all_targets_remote_completed(win, &all_remote_completed);
