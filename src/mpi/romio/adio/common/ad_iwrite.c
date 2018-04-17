@@ -56,13 +56,12 @@ void ADIOI_GEN_IwriteContig(ADIO_File fd, const void *buf, int count,
 
     MPI_Type_size_x(datatype, &typesize);
     len = count * typesize;
-    ADIOI_Assert(len == (int) ((ADIO_Offset) count * (ADIO_Offset) typesize));  /* the count is an int parm */
 
     if (file_ptr_type == ADIO_INDIVIDUAL)
         offset = fd->fp_ind;
     /* Cast away the const'ness of 'buf' as ADIOI_GEN_aio is used for
      * both read and write calls */
-    aio_errno = ADIOI_GEN_aio(fd, (char *) buf, len, offset, 1, request);
+    aio_errno = ADIOI_GEN_aio(fd, (char *) buf, count, datatype, offset, 1, request);
     if (file_ptr_type == ADIO_INDIVIDUAL)
         fd->fp_ind += len;
 
@@ -84,8 +83,8 @@ void ADIOI_GEN_IwriteContig(ADIO_File fd, const void *buf, int count,
  *
  * Returns 0 on success, -errno on failure.
  */
-int ADIOI_GEN_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
-                  int wr, MPI_Request * request)
+int ADIOI_GEN_aio(ADIO_File fd, void *buf, int count, MPI_Datatype type,
+                  ADIO_Offset offset, int wr, MPI_Request * request)
 {
     int err = -1, fd_sys;
 
@@ -93,6 +92,11 @@ int ADIOI_GEN_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
     struct aiocb *aiocbp = NULL;
     ADIOI_AIO_Request *aio_req = NULL;
     MPI_Status status;
+    MPI_Count len, typesize;
+
+    MPI_Type_size_x(type, &typesize);
+    len = count * typesize;
+
 #if defined(ROMIO_XFS)
     unsigned maxiosz = wr ? fd->hints->fs_hints.xfs.write_chunk_sz :
         fd->hints->fs_hints.xfs.read_chunk_sz;
@@ -158,10 +162,10 @@ int ADIOI_GEN_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
              * or, aio routines are not actually implemented
              * treat this as a blocking request and return.  */
             if (wr)
-                ADIO_WriteContig(fd, buf, len, MPI_BYTE,
+                ADIO_WriteContig(fd, buf, count, type,
                                  ADIO_EXPLICIT_OFFSET, offset, &status, &error_code);
             else
-                ADIO_ReadContig(fd, buf, len, MPI_BYTE,
+                ADIO_ReadContig(fd, buf, count, type,
                                 ADIO_EXPLICIT_OFFSET, offset, &status, &error_code);
 
             MPIO_Completed_request_create(&fd, len, &error_code, request);

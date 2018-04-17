@@ -371,8 +371,8 @@ void ADIOI_GEN_Delete(const char *filename, int *error_code);
 void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
                           MPI_Datatype datatype, int file_ptr_type,
                           ADIO_Offset offset, ADIO_Status * status, int *error_code);
-int ADIOI_GEN_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
-                  int wr, MPI_Request * request);
+int ADIOI_GEN_aio(ADIO_File fd, void *buf, int count, MPI_Datatype type,
+                  ADIO_Offset offset, int wr, MPI_Request * request);
 void ADIOI_GEN_IreadContig(ADIO_File fd, void *buf, int count,
                            MPI_Datatype datatype, int file_ptr_type,
                            ADIO_Offset offset, ADIO_Request * request, int *error_code);
