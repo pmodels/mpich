@@ -1175,7 +1175,7 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
 
             ADIO_Offset segment_stripe_offset = segmentFirstFileOffset;
             for (i = 0; i < numStripedAggs; i++) {
-                if (firstFileOffset > segmentFirstFileOffset)
+                if (firstFileOffset > segment_stripe_offset)
                     segment_stripe_start[i] = firstFileOffset;
                 else
                     segment_stripe_start[i] = segment_stripe_offset;
