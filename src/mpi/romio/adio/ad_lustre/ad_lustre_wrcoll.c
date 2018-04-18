@@ -1076,16 +1076,14 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    /* The maximum number of aggregators we can use is the number of
-     * stripes used in the file - each agg writes exactly 1 stripe.
+    /* Based on the co_ratio the number of aggregators we can use is the number of
+     * stripes used in the file times this co_ratio - each stripe is written by
+     * co_ratio aggregators this information is contained in the striping_info.
      */
     int numStripedAggs = striping_info[2];
 
     int orig_cb_nodes = fd->hints->cb_nodes;
-    if (fd->hints->cb_nodes > numStripedAggs)
-        fd->hints->cb_nodes = numStripedAggs;
-    else if (fd->hints->cb_nodes < numStripedAggs)
-        numStripedAggs = fd->hints->cb_nodes;
+    fd->hints->cb_nodes = numStripedAggs;
 
     /* Declare ADIOI_OneSidedStripeParms here as some fields will not change.
      */
