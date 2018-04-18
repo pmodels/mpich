@@ -36,7 +36,7 @@ int amountOfStripedDataExpected;        /* used to determine holes in this segme
 MPI_Aint bufTypeExtent_global;
 ADIOI_Flatlist_node *flatBuf_global;
 /* These three variables track the state of the source buffer advancement through multiple calls */
-int lastDataTypeExtent;
+ADIO_Offset lastDataTypeExtent;
 int lastFlatBufIndice;
 ADIO_Offset lastIndiceOffset;
 /* This data structure holds the number of extents, the index into the flattened buffer and the remnant length
@@ -44,7 +44,7 @@ ADIO_Offset lastIndiceOffset;
  * for the range to be written coresponding to the round and target agg.
  */
 typedef struct NonContigSourceBufOffset {
-    int dataTypeExtent;
+    ADIO_Offset dataTypeExtent;
     int flatBufIndice;
     ADIO_Offset indiceOffset;
 } NonContigSourceBufOffset;
@@ -64,7 +64,7 @@ typedef struct FDSourceBufferState {
 
     ADIO_Offset indiceOffset;
     MPI_Aint bufTypeExtent;
-    int dataTypeExtent;
+    ADIO_Offset dataTypeExtent;
     int flatBufIndice;
 
     ADIO_Offset sourceBufferOffset;
@@ -127,7 +127,7 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
     // used in offset calculations
     ADIO_Offset currentIndiceOffset = currentFDSourceBufferState->indiceOffset;
     ADIO_Offset bufTypeExtent = (ADIO_Offset) currentFDSourceBufferState->bufTypeExtent;
-    ADIO_Offset currentDataTypeExtent = (ADIO_Offset) currentFDSourceBufferState->dataTypeExtent;
+    ADIO_Offset currentDataTypeExtent = currentFDSourceBufferState->dataTypeExtent;
     int currentFlatBufIndice = currentFDSourceBufferState->flatBufIndice;
 
     int targetSendDataIndex = 0;
@@ -206,7 +206,7 @@ inline static void nonContigSourceDataBufferAdvance(char *sourceDataBuffer,
     /* update machinery with new flatbuf position
      */
     currentFDSourceBufferState->indiceOffset = currentIndiceOffset;
-    currentFDSourceBufferState->dataTypeExtent = (int) currentDataTypeExtent;
+    currentFDSourceBufferState->dataTypeExtent = currentDataTypeExtent;
     currentFDSourceBufferState->flatBufIndice = currentFlatBufIndice;
 #ifdef onesidedtrace
     printf
@@ -448,7 +448,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     int maxNumNonContigSourceChunks = 0;
 
     ADIO_Offset currentSourceBufferOffset = 0;
-    int currentDataTypeExtent = 0;
+    ADIO_Offset currentDataTypeExtent = 0;
     int currentFlatBufIndice = 0;
     ADIO_Offset currentIndiceOffset = 0;
 
@@ -458,7 +458,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         currentFlatBufIndice = lastFlatBufIndice;
         currentIndiceOffset = lastIndiceOffset;
 #ifdef onesidedtrace
-        printf("using lastDataTypeExtent %d lastFlatBufIndice %d lastIndiceOffset %ld\n",
+        printf("using lastDataTypeExtent %ld lastFlatBufIndice %d lastIndiceOffset %ld\n",
                lastDataTypeExtent, lastFlatBufIndice, lastIndiceOffset);
 #endif
     }
@@ -527,7 +527,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
 #ifdef onesidedtrace
                     printf
-                        ("blockiter %d currentFlatBufIndice is now %d currentDataTypeExtent is now %d currentIndiceOffset is now %ld maxNumContigOperations is now %d\n",
+                        ("blockiter %d currentFlatBufIndice is now %d currentDataTypeExtent is now %ld currentIndiceOffset is now %ld maxNumContigOperations is now %d\n",
                          blockIter, currentFlatBufIndice, currentDataTypeExtent,
                          currentIndiceOffset, maxNumContigOperations);
 #endif
@@ -645,7 +645,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                             currentFlatBufIndice;
 #ifdef onesidedtrace
                         printf
-                            ("For agg %d dataTypeExtent initialized to %d flatBufIndice to %d indiceOffset to %ld\n",
+                            ("For agg %d dataTypeExtent initialized to %ld flatBufIndice to %d indiceOffset to %ld\n",
                              numTargetAggs, currentDataTypeExtent, currentFlatBufIndice,
                              currentIndiceOffset);
 #endif
@@ -808,7 +808,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                                                              [numTargetAggs], NULL);
 #ifdef onesidedtrace
                             printf
-                                ("Crossed into new FD - for agg %d dataTypeExtent initialized to %d flatBufIndice to %d indiceOffset to %ld amountToAdvanceSBOffsetForFD is %d\n",
+                                ("Crossed into new FD - for agg %d dataTypeExtent initialized to %ld flatBufIndice to %d indiceOffset to %ld amountToAdvanceSBOffsetForFD is %d\n",
                                  numTargetAggs,
                                  currentFDSourceBufferState[numTargetAggs].dataTypeExtent,
                                  currentFDSourceBufferState[numTargetAggs].flatBufIndice,
@@ -1347,7 +1347,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                 lastIndiceOffset = currentFDSourceBufferState[numTargetAggs - 1].indiceOffset;
 
 #ifdef onesidedtrace
-                printf("setting lastDataTypeExtent %d lastFlatBufIndice %d lastIndiceOffset %ld\n",
+                printf("setting lastDataTypeExtent %ld lastFlatBufIndice %d lastIndiceOffset %ld\n",
                        lastDataTypeExtent, lastFlatBufIndice, lastIndiceOffset);
 #endif
 
@@ -1812,7 +1812,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     int maxNumNonContigSourceChunks = 0;
 
     ADIO_Offset currentRecvBufferOffset = 0;
-    int currentDataTypeExtent = 0;
+    ADIO_Offset currentDataTypeExtent = 0;
     int currentFlatBufIndice = 0;
     ADIO_Offset currentIndiceOffset = 0;
 
@@ -1877,7 +1877,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
 #ifdef onesidedtrace
                     printf
-                        ("block iter %d currentFlatBufIndice is now %d currentDataTypeExtent is now %d currentIndiceOffset is now %ld maxNumContigOperations is now %d\n",
+                        ("block iter %d currentFlatBufIndice is now %d currentDataTypeExtent is now %ld currentIndiceOffset is now %ld maxNumContigOperations is now %d\n",
                          blockIter, currentFlatBufIndice, currentDataTypeExtent,
                          currentIndiceOffset, maxNumContigOperations);
 #endif
@@ -1985,7 +1985,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                             currentFlatBufIndice;
 #ifdef onesidedtrace
                         printf
-                            ("For agg %d dataTypeExtent initialized to %d flatBufIndice to %d indiceOffset to %ld\n",
+                            ("For agg %d dataTypeExtent initialized to %ld flatBufIndice to %d indiceOffset to %ld\n",
                              numSourceAggs, currentDataTypeExtent, currentFlatBufIndice,
                              currentIndiceOffset);
 #endif
@@ -2152,7 +2152,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                                                              [numSourceAggs], NULL);
 #ifdef onesidedtrace
                             printf
-                                ("Crossed into new FD - for agg %d dataTypeExtent initialized to %d flatBufIndice to %d indiceOffset to %ld amountToAdvanceSBOffsetForFD is %d\n",
+                                ("Crossed into new FD - for agg %d dataTypeExtent initialized to %ld flatBufIndice to %d indiceOffset to %ld amountToAdvanceSBOffsetForFD is %d\n",
                                  numSourceAggs,
                                  currentFDSourceBufferState[numSourceAggs].dataTypeExtent,
                                  currentFDSourceBufferState[numSourceAggs].flatBufIndice,
