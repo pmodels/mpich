@@ -139,13 +139,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     pmi_errno = PMI2_Init(&has_parent, &size, &rank, &appnum);
 
     if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_init", "**pmi_init %d", pmi_errno);
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_init", "**pmi_init %d", pmi_errno);
     }
 
     MPIDI_CH4_Global.jobid = (char *) MPL_malloc(MPIDI_MAX_JOBID_LEN, MPL_MEM_OTHER);
     pmi_errno = PMI2_Job_GetId(MPIDI_CH4_Global.jobid, MPIDI_MAX_JOBID_LEN);
     if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_job_getid",
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_job_getid",
                              "**pmi_job_getid %d", pmi_errno);
     }
 #elif defined(USE_PMIX_API)
@@ -154,7 +154,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
         pmi_errno = PMIx_Init(&MPIR_Process.pmix_proc, NULL, 0);
         if (pmi_errno != PMIX_SUCCESS) {
-            MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_init", "**pmix_init %d",
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmix_init", "**pmix_init %d",
                                  pmi_errno);
         }
         rank = MPIR_Process.pmix_proc.rank;
@@ -165,7 +165,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
         pmi_errno = PMIx_Get(&MPIR_Process.pmix_wcproc, PMIX_JOB_SIZE, NULL, 0, &pvalue);
         if (pmi_errno != PMIX_SUCCESS) {
-            MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_get", "**pmix_get %d",
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmix_get", "**pmix_get %d",
                                  pmi_errno);
         }
         size = pvalue->data.uint32;
@@ -179,40 +179,40 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     pmi_errno = PMI_Init(&has_parent);
 
     if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_init", "**pmi_init %d", pmi_errno);
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_init", "**pmi_init %d", pmi_errno);
     }
 
     pmi_errno = PMI_Get_rank(&rank);
 
     if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_get_rank",
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_get_rank",
                              "**pmi_get_rank %d", pmi_errno);
     }
 
     pmi_errno = PMI_Get_size(&size);
 
     if (pmi_errno != 0) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_get_size",
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_get_size",
                              "**pmi_get_size %d", pmi_errno);
     }
 
     pmi_errno = PMI_Get_appnum(&appnum);
 
     if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_get_appnum",
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_get_appnum",
                              "**pmi_get_appnum %d", pmi_errno);
     }
 
     pmi_errno = PMI_KVS_Get_name_length_max(&max_pmi_name_length);
     if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_name_length_max",
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_name_length_max",
                              "**pmi_kvs_get_name_length_max %d", pmi_errno);
     }
 
     MPIDI_CH4_Global.jobid = (char *) MPL_malloc(max_pmi_name_length, MPL_MEM_OTHER);
     pmi_errno = PMI_KVS_Get_my_name(MPIDI_CH4_Global.jobid, max_pmi_name_length);
     if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_my_name",
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_my_name",
                              "**pmi_kvs_get_my_name %d", pmi_errno);
     }
 #endif
