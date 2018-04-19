@@ -32,7 +32,7 @@ rma/accfence1.c::1 8 64 512 32768 262144:timeLimit=900:4
 rma/accpscw1.c::1 8 64 512 32768 262144:timeLimit=900:4
 rma/epochtest.c::1 8 64 512 32768 262144:timeLimit=900:4
 rma/getfence1.c::1 8 64 512 32768 262144::2
-rma/getfence1.c:LARGE_CNT:16000000:timeLimit=1800:2
+rma/getfence1.c::16000000:timeLimit=1800:2
 rma/lock_contention_dt.c::1 8 64 512 32768 262144:timeLimit=600:4
 rma/lock_dt.c::1 8 64 512 32768 262144::2
 rma/lock_dt_flush.c::1 8 64 512 32768 262144::2
@@ -43,5 +43,5 @@ rma/lockall_dt_flushall.c::1 8 64 512 32768 262144:timeLimit=1800:4
 rma/lockall_dt_flushlocal.c::1 8 64 512 32768 262144:timeLimit=1800:4
 rma/lockall_dt_flushlocalall.c::1 8 64 512 32768 262144:timeLimit=1800:4
 rma/putfence1.c::1 8 64 512 32768 262144::2
-rma/putfence1.c:LARGE_CNT:16000000:timeLimit=1800:2
+rma/putfence1.c::16000000:timeLimit=1800:2
 rma/putpscw1.c::1 8 64 512 32768 262144:timeLimit=900:4
