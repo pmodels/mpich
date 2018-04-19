@@ -832,6 +832,29 @@ static inline int MPIDI_CH4R_mpi_win_free(MPIR_Win ** win_ptr)
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_CH4R_win_fence_flush
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_CH4R_win_fence_flush(int massert, MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_WIN_FENCE_FLUSH);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_WIN_FENCE_FLUSH);
+
+    MPIDI_CH4U_FENCE_EPOCH_CHECK(win, mpi_errno, goto fn_fail);
+    do {
+        MPIDI_CH4R_PROGRESS();
+    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) != 0);
+    MPIDI_CH4U_EPOCH_FENCE_EVENT(win, massert);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_WIN_FENCE_FLUSH);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_CH4R_mpi_win_fence
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
