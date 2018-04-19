@@ -302,6 +302,24 @@ static inline int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
     goto fn_exit;
 }
 
+static inline int MPIDI_NM_win_fence_flush(int assert, MPIR_Win * win)
+{
+    int mpi_errno;
+    ucs_status_t ucp_status;
+    /* make sure all local and remote operations are completed */
+    ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
+
+    mpi_errno = MPIDI_CH4R_win_fence_flush(assert, win);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    MPIDI_UCX_CHK_STATUS(ucp_status);
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 static inline int MPIDI_NM_mpi_win_create(void *base,
                                           MPI_Aint length,
                                           int disp_unit,

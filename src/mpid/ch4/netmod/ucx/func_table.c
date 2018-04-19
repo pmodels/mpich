@@ -78,6 +78,7 @@ MPIDI_NM_native_funcs_t MPIDI_NM_native_ucx_funcs = {
     .mpi_get = MPIDI_NM_mpi_get,
     .mpi_win_free = MPIDI_NM_mpi_win_free,
     .mpi_win_fence = MPIDI_NM_mpi_win_fence,
+    .win_fence_flush = MPIDI_NM_win_fence_flush,
     .mpi_win_create = MPIDI_NM_mpi_win_create,
     .mpi_accumulate = MPIDI_NM_mpi_accumulate,
     .mpi_win_attach = MPIDI_NM_mpi_win_attach,
