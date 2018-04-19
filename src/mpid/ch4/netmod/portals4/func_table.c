@@ -78,6 +78,7 @@ MPIDI_NM_native_funcs_t MPIDI_NM_native_portals4_funcs = {
     MPIDI_NM_mpi_get,
     MPIDI_NM_mpi_win_free,
     MPIDI_NM_mpi_win_fence,
+    MPIDI_NM_win_fence_flush,
     MPIDI_NM_mpi_win_create,
     MPIDI_NM_mpi_accumulate,
     MPIDI_NM_mpi_win_attach,
