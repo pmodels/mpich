@@ -58,7 +58,8 @@ noinst_PROGRAMS =  \
     huge_dupcomm   \
     dtype_send		 \
     recv_any		\
-    irecv_any
+    irecv_any   \
+    large_tag
 
 irecv_any_CPPFLAGS = -DTEST_NB $(AM_CPPFLAGS)
 irecv_any_SOURCES  = recv_any.c
