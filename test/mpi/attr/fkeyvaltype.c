@@ -17,7 +17,7 @@ executed";
 */
 
 typedef struct {
-    char *typename;
+    const char *typename;
     MPI_Datatype type;
 } Type_t;
 
@@ -90,18 +90,15 @@ int main(int argc, char *argv[])
     int obj_idx;
     int count;
     int tnlen;
-    int basic_type_num;
-    int *basic_type_counts = NULL;
     MPI_Datatype type, duptype;
-    MPI_Datatype basic_type;
-    MPI_Datatype *basic_types = NULL;
     DTP_t dtp;
     char typename[MPI_MAX_OBJECT_NAME];
-    MPI_Comm comm = MPI_COMM_WORLD;
 
     MTest_Init(&argc, &argv);
 
 #ifndef USE_DTP_POOL_TYPE__STRUCT       /* set in 'test/mpi/structtypetest.txt' to split tests */
+    MPI_Datatype basic_type;
+
     /* TODO: parse input parameters using optarg */
     if (argc < 3) {
         fprintf(stdout, "Usage: %s -type=[TYPE] -count=[COUNT]\n", argv[0]);
@@ -134,6 +131,9 @@ int main(int argc, char *argv[])
         fflush(stdout);
     }
 #else
+    MPI_Datatype *basic_types = NULL;
+    int basic_type_num;
+    int *basic_type_counts = NULL;
     int k;
     char *input_string, *token;
 
@@ -182,6 +182,8 @@ int main(int argc, char *argv[])
         fprintf(stdout, "Error while creating struct pool\n");
         fflush(stdout);
     }
+
+    count = 0;
 #endif
 
     for (obj_idx = 0; obj_idx < dtp->DTP_num_objs; obj_idx++) {
@@ -241,6 +243,7 @@ int main(int argc, char *argv[])
 
     DTP_pool_free(dtp);
 
+#ifdef USE_DTP_POOL_TYPE__STRUCT
     /* cleanup array if any */
     if (basic_types) {
         free(basic_types);
@@ -248,6 +251,7 @@ int main(int argc, char *argv[])
     if (basic_type_counts) {
         free(basic_type_counts);
     }
+#endif
 
     MTest_Finalize(errs);
 
