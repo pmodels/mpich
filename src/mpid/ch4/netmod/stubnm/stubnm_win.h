@@ -75,6 +75,11 @@ static inline int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
     return MPIDI_CH4R_mpi_win_fence(assert, win);
 }
 
+static inline int MPIDI_NM_win_fence_flush(int assert, MPIR_Win * win)
+{
+    return MPIDI_CH4R_win_fence_flush(assert, win);
+}
+
 static inline int MPIDI_NM_mpi_win_create(void *base,
                                           MPI_Aint length,
                                           int disp_unit,
