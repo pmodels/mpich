@@ -1561,7 +1561,7 @@ int DTPI_Subarray_c_create(struct DTPI_Par *par, DTP_t dtp)
         free(buf);
     }
 
-    goto fn_fail;
+    goto fn_exit;
 }
 
 int DTPI_Subarray_f_create(struct DTPI_Par *par, DTP_t dtp)
@@ -1682,7 +1682,7 @@ int DTPI_Subarray_f_create(struct DTPI_Par *par, DTP_t dtp)
         free(buf);
     }
 
-    goto fn_fail;
+    goto fn_exit;
 }
 
 
