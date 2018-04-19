@@ -126,8 +126,7 @@ int main(int argc, char *argv[])
 
     /* TODO: parse input parameters using optarg */
     if (argc < 4) {
-        fprintf(stdout, "Usage: %s -type=[TYPE] -numtypes=[NUM] -types=[TYPES] -counts=[COUNTS]\n",
-                argv[0]);
+        fprintf(stdout, "Usage: %s -numtypes=[NUM] -types=[TYPES] -counts=[COUNTS]\n", argv[0]);
         return MTestReturnValue(1);
     } else {
         for (i = 1; i < argc; i++) {
