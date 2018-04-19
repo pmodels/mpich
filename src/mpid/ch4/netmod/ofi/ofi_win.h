@@ -797,6 +797,31 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_fence_flush
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+/* Flush RMA operations in win_fence */
+static inline int MPIDI_NM_win_fence_flush(int massert, MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_WIN_FENCE_FLUSH);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_WIN_FENCE_FLUSH);
+
+    if (MPIDI_OFI_ENABLE_RMA) {
+        /* network completion */
+        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
+    }
+
+    mpi_errno = MPIDI_CH4R_win_fence_flush(massert, win);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_WIN_FENCE_FLUSH);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_win_fence
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
