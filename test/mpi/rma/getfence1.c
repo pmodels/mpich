@@ -20,7 +20,7 @@ static char MTEST_Descrip[] = "Get with Fence";
 #define MAX_TYPE_SIZE  (16)
 
 typedef struct {
-    char *typename;
+    const char *typename;
     MPI_Datatype type;
 } Type_t;
 
@@ -146,20 +146,18 @@ int main(int argc, char *argv[])
     int minsize = 2;
     int i, j;
     int count;
-    int len;
-    int basic_type_num;
-    int *basic_type_counts = NULL;
     MPI_Aint bufsize;
-    MPI_Aint lb, extent;
     MPI_Comm comm;
-    MPI_Datatype basic_type;
-    MPI_Datatype *basic_types = NULL;
     DTP_t orig_dtp, target_dtp;
-    char type_name[MPI_MAX_OBJECT_NAME] = { 0 };
 
     MTest_Init(&argc, &argv);
 
 #ifndef USE_DTP_POOL_TYPE__STRUCT       /* set in 'test/mpi/structtypetest.txt' to split tests */
+    MPI_Datatype basic_type;
+    MPI_Aint lb, extent;
+    int len;
+    char type_name[MPI_MAX_OBJECT_NAME] = { 0 };
+
     /* TODO: parse input parameters using optarg */
     if (argc < 3) {
         fprintf(stdout, "Usage: %s -type=[TYPE] -count=[COUNT]\n", argv[0]);
@@ -204,6 +202,9 @@ int main(int argc, char *argv[])
         fflush(stdout);
     }
 #else
+    MPI_Datatype *basic_types = NULL;
+    int *basic_type_counts = NULL;
+    int basic_type_num;
     int k;
     char *input_string, *token;
 
@@ -312,6 +313,7 @@ int main(int argc, char *argv[])
     DTP_pool_free(orig_dtp);
     DTP_pool_free(target_dtp);
 
+#ifdef USE_DTP_POOL_TYPE__STRUCT
     /* cleanup array if any */
     if (basic_types) {
         free(basic_types);
@@ -319,6 +321,7 @@ int main(int argc, char *argv[])
     if (basic_type_counts) {
         free(basic_type_counts);
     }
+#endif
 
     MTest_Finalize(errs);
     return MTestReturnValue(errs);

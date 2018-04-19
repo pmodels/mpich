@@ -16,7 +16,7 @@ static char MTEST_Descrip[] = "Test for streaming ACC-like operations with lock+
 */
 
 typedef struct {
-    char *typename;
+    const char *typename;
     MPI_Datatype type;
 } Type_t;
 
@@ -63,24 +63,22 @@ int main(int argc, char *argv[])
     int err = 0;
     int rank, size, orig, target;
     int minsize = 2, count;
-    int len;
     int i, j;
-    int basic_type_num;
-    int *basic_type_counts = NULL;
     MPI_Aint origcount, targetcount;
     MPI_Comm comm;
     MPI_Win win;
     MPI_Aint lb, extent;
     MPI_Datatype origtype, targettype;
-    MPI_Datatype basic_type;
-    MPI_Datatype *basic_types = NULL;
     DTP_t orig_dtp, target_dtp;
-    char type_name[MPI_MAX_OBJECT_NAME] = { 0 };
     void *origbuf, *targetbuf;
 
     MTest_Init(&argc, &argv);
 
 #ifndef USE_DTP_POOL_TYPE__STRUCT       /* set in 'test/mpi/structtypetest.txt' to split tests */
+    MPI_Datatype basic_type;
+    int len;
+    char type_name[MPI_MAX_OBJECT_NAME] = { 0 };
+
     /* TODO: parse input parameters using optarg */
     if (argc < 3) {
         fprintf(stdout, "Usage: %s -type=[TYPE] -count=[COUNT]\n", argv[0]);
@@ -121,6 +119,9 @@ int main(int argc, char *argv[])
         fflush(stdout);
     }
 #else
+    MPI_Datatype *basic_types = NULL;
+    int *basic_type_counts = NULL;
+    int basic_type_num;
     int k;
     char *input_string, *token;
 
@@ -291,6 +292,7 @@ int main(int argc, char *argv[])
     DTP_pool_free(orig_dtp);
     DTP_pool_free(target_dtp);
 
+#ifdef USE_DTP_POOL_TYPE__STRUCT
     /* cleanup array if any */
     if (basic_types) {
         free(basic_types);
@@ -298,6 +300,7 @@ int main(int argc, char *argv[])
     if (basic_type_counts) {
         free(basic_type_counts);
     }
+#endif
 
     MTest_Finalize(errs);
     return MTestReturnValue(errs);

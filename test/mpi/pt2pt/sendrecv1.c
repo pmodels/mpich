@@ -14,7 +14,7 @@
 static char MTEST_Descrip[] = "Send-Recv";
 */
 typedef struct {
-    char *typename;
+    const char *typename;
     MPI_Datatype type;
 } Type_t;
 
@@ -61,23 +61,20 @@ int main(int argc, char *argv[])
     int rank, size, source, dest;
     int minsize = 2, count[2];
     int i, j, len;
-    int basic_type_num;
-    int *basic_type_counts = NULL;
     MPI_Aint sendcount, recvcount;
     MPI_Comm comm;
     MPI_Datatype sendtype, recvtype;
-    MPI_Datatype basic_type;
-    MPI_Datatype *basic_types = NULL;
     DTP_t send_dtp, recv_dtp;
     void *sendbuf, *recvbuf;
-    char *max_num_objs_str = NULL;
-    char type_name[MPI_MAX_OBJECT_NAME] = { 0 };
     char send_name[MPI_MAX_OBJECT_NAME] = { 0 };
     char recv_name[MPI_MAX_OBJECT_NAME] = { 0 };
 
     MTest_Init(&argc, &argv);
 
 #ifndef USE_DTP_POOL_TYPE__STRUCT       /* set in 'test/mpi/structtypetest.txt' to split tests */
+    MPI_Datatype basic_type;
+    char type_name[MPI_MAX_OBJECT_NAME] = { 0 };
+
     /* TODO: parse input parameters using optarg */
     if (argc < 4) {
         fprintf(stdout, "Usage: %s -type=[TYPE] -sendcnt=[COUNT] -recvcnt=[COUNT]\n", argv[0]);
@@ -119,6 +116,9 @@ int main(int argc, char *argv[])
         fflush(stdout);
     }
 #else
+    MPI_Datatype *basic_types = NULL;
+    int *basic_type_counts = NULL;
+    int basic_type_num;
     int k;
     char *input_string, *token;
 
@@ -259,6 +259,7 @@ int main(int argc, char *argv[])
     DTP_pool_free(send_dtp);
     DTP_pool_free(recv_dtp);
 
+#ifdef USE_DTP_POOL_TYPE__STRUCT
     /* cleanup array if any */
     if (basic_types) {
         free(basic_types);
@@ -266,6 +267,7 @@ int main(int argc, char *argv[])
     if (basic_type_counts) {
         free(basic_type_counts);
     }
+#endif
 
     MTest_Finalize(errs);
     return MTestReturnValue(errs);
