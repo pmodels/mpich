@@ -29,6 +29,8 @@ void ADIOI_FAKE_IreadContig(ADIO_File fd, void *buf, int count,
     ADIO_ReadContig(fd, buf, (int) len, MPI_BYTE, file_ptr_type, offset, &status, error_code);
     if (*error_code != MPI_SUCCESS) {
         len = 0;
+    } else {
+        MPI_Get_count(&status, MPI_BYTE, &len);
     }
     MPIO_Completed_request_create(&fd, len, error_code, request);
 }
