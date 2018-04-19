@@ -193,7 +193,6 @@ int DTP_obj_create(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Ai
     int err = DTP_SUCCESS;
     int basic_type_count;
     int factor;
-    MPI_Datatype basic_type;
     struct DTPI_Par par;
 
     /* init user defined params */
@@ -204,7 +203,6 @@ int DTP_obj_create(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Ai
 
     if (dtp->DTP_pool_type == DTP_POOL_TYPE__BASIC) {
         /* get type signature for pool */
-        basic_type = dtp->DTP_type_signature.DTP_pool_basic.DTP_basic_type;
         basic_type_count = dtp->DTP_type_signature.DTP_pool_basic.DTP_basic_type_count;
 
         /* get biggest factor for count */
