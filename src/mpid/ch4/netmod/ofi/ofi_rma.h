@@ -661,7 +661,7 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RPUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RPUT);
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     size_t origin_bytes;
     size_t offset;
 
@@ -1340,7 +1340,7 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RGET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RGET);
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     size_t origin_bytes;
     size_t offset;
 
