@@ -28,6 +28,10 @@
 #define MPIR_TSP_sched_localcopy           MPII_Genutil_sched_localcopy
 #define MPIR_TSP_sched_malloc              MPII_Genutil_sched_malloc
 #define MPIR_TSP_sched_start               MPII_Genutil_sched_start
+#define MPIR_TSP_sched_dtcopy              MPII_Genutil_sched_dtcopy
+#define MPIR_TSP_sched_reduce_local        MPII_Genutil_sched_reduce_local
+#define MPIR_TSP_sched_sink                MPII_Genutil_sched_sink
+#define MPIR_TSP_sched_fence                MPII_Genutil_sched_fence
 
 extern MPII_Coll_queue_t coll_queue;
 extern int MPII_Genutil_progress_hook_id;
@@ -85,5 +89,12 @@ void *MPII_Genutil_sched_malloc(size_t size, MPII_Genutil_sched_t * sched);
  * collective */
 int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm,
                              MPIR_Request ** request);
+
+
+/* Transport function to schedule a sink */
+int MPII_Genutil_sched_sink(MPII_Genutil_sched_t * sched);
+
+/* Transport function to schedule a fence */
+int MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched);
 
 #endif /* TSP_GENTRAN_H_INCLUDED */

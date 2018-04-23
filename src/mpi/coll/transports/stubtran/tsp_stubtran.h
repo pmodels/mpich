@@ -26,6 +26,8 @@
 #define MPIR_TSP_sched_selective_sink       MPII_Stubutil_sched_selective_sink
 #define MPIR_TSP_sched_malloc               MPII_Stubutil_sched_malloc
 #define MPIR_TSP_sched_start                MPII_Stubutil_sched_start
+#define MPIR_TSP_sched_sink                 MPII_Stubutil_sched_sink
+#define MPIR_TSP_sched_fence                MPII_Stubutil_sched_fence
 
 int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched);
 int MPII_Stubutil_sched_isend(const void *buf, int count, MPI_Datatype dt, int dest, int tag,
@@ -47,5 +49,7 @@ int MPII_Stubutil_sched_selective_sink(MPII_Stubutil_sched_t * sched, int n_in_v
 void *MPII_Stubutil_sched_malloc(size_t size, MPII_Stubutil_sched_t * sched);
 int MPII_Stubutil_sched_start(MPII_Stubutil_sched_t * sched, MPIR_Comm * comm,
                               MPII_Coll_req_t ** request);
+int MPII_Genutil_sched_sink(MPII_Genutil_sched_t * sched);
+int MPII_Genutil_sched_wait(MPII_Genutil_sched_t * sched);
 
 #endif /* TSP_STUBTRAN_H_INCLUDED */
