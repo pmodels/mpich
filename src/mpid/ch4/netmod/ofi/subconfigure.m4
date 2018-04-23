@@ -243,9 +243,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         ofi_subdir_args+=" $prov_config"
 
         dnl Unset all of these env vars so they don't pollute the libfabric configuration
-        PAC_PUSH_FLAG(CPPFLAGS)
+        PAC_PUSH_ALL_FLAGS()
+        PAC_RESET_ALL_FLAGS()
         PAC_CONFIG_SUBDIR_ARGS([src/mpid/ch4/netmod/ofi/libfabric],[$ofi_subdir_args],[],[AC_MSG_ERROR(libfabric configure failed)])
-        PAC_POP_FLAG(CPPFLAGS)
+        PAC_POP_ALL_FLAGS()
         PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric/include], [CPPFLAGS])
         PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/include], [CPPFLAGS])
 
