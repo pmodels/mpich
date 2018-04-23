@@ -466,7 +466,7 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 /* now send the calculated offsets and lengths to respective processes */
 
     requests = (MPI_Request *)
-        ADIOI_Malloc(1 + 2 * (count_my_req_procs + count_others_req_procs) * sizeof(MPI_Request));
+        ADIOI_Malloc(1 + (count_my_req_procs + count_others_req_procs) * sizeof(MPI_Request));
 /* +1 to avoid a 0-size malloc */
 
     j = 0;
@@ -485,6 +485,7 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
     }
 
     if (j) {
+        /* TODO: consider using MPI_STATUSES_IGNORE to avoid malloc */
         statuses = (MPI_Status *) ADIOI_Malloc(j * sizeof(MPI_Status));
         MPI_Waitall(j, requests, statuses);
         ADIOI_Free(statuses);
