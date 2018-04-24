@@ -112,6 +112,7 @@ static inline int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t * msg_hdr,
         goto fn_exit;
 
     if (target_cmpl_cb) {
+        MPIR_STATUS_SET_COUNT(rreq->status, 0);
         target_cmpl_cb(rreq);
     }
 
