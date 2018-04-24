@@ -186,7 +186,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
                                                 MPIR_Request ** request, int mode, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *rreq = NULL;
+    MPIR_Request *rreq = *request;
     uint64_t match_bits, mask_bits;
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
     size_t data_sz;
@@ -200,11 +200,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IRECV);
 
     if (mode == MPIDI_OFI_ON_HEAP) {    /* Branch should compile out */
-        MPIDI_OFI_REQUEST_CREATE(rreq, MPIR_REQUEST_KIND__RECV);
+        MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(rreq, MPIR_REQUEST_KIND__RECV);
         /* Need to set the source to UNDEFINED for anysource matching */
         rreq->status.MPI_SOURCE = MPI_UNDEFINED;
     } else if (mode == MPIDI_OFI_USE_EXISTING) {
-        rreq = *request;
         rreq->kind = MPIR_REQUEST_KIND__RECV;
     } else {
         MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nullptr");
