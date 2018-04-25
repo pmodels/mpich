@@ -1853,17 +1853,17 @@ int MPIDI_CH3I_Sock_post_connect(struct MPIDI_CH3I_Sock_set * sock_set, void * u
     /* --BEGIN ERROR HANDLING-- */
     if (status_code != 0) {
 	/* FIXME: Set error */
-	    goto fn_exit;
+        goto fn_exit;
     }
     /* --END ERROR HANDLING-- */
     //IPV6
 	/* Get IPV4 first */
-	for (rp = result; rp; rp = rp->ai_next) {
+    for (rp = result; rp; rp = rp->ai_next) {
         if (rp->ai_socktype == IPV4) {
             memcpy(ifaddr.ifaddr, result->ai_addr, sizeof(struct sockaddr));
             ifaddr.len  = result->ai_addrlen;
             ifaddr.type = result->ai_socktype;
-            mpi_errno = MPIDI_CH3I_Sock_post_connect_ifaddr( sock_set, user_ptr,
+            mpi_errno = MPIDI_CH3I_Sock_post_connect_ifaddr(sock_set, user_ptr,
                         &ifaddr, port, sockp );
             ipv4_found = 1;
             break;
@@ -1875,8 +1875,8 @@ int MPIDI_CH3I_Sock_post_connect(struct MPIDI_CH3I_Sock_set * sock_set, void * u
             memcpy(ifaddr.ifaddr, result->ai_addr, sizeof(struct sockaddr));
             ifaddr.len  = result->ai_addrlen;
             ifaddr.type = result->ai_socktype;
-            mpi_errno = MPIDI_CH3I_Sock_post_connect_ifaddr( sock_set, user_ptr,
-                        &ifaddr, port, sockp );
+            mpi_errno = MPIDI_CH3I_Sock_post_connect_ifaddr(sock_set, user_ptr,
+                                                            &ifaddr, port, sockp );
             if (mpi_errno == MPIDI_CH3I_SOCK_ERR_FAIL)
                 continue
             break;

@@ -884,7 +884,7 @@ static int PMII_Connect_to_pm(char *hostname, int portnum)
     hints.ai_flags = 0;
     hints.ai_protocol = 0;
 
-    snprintf(port, 16, "%d", portnum);
+    MPL_snprintf(port, 16, "%d", portnum);
 
     status_code = getaddrinfo(hostname, port, &hints, &result);
     if (status_code != 0) {

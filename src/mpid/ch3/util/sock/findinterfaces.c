@@ -97,6 +97,7 @@ static int GetLocalIPs(int32_t *pIP, int max)
     int					buf_len_prev;
     char *				ptr;
     int n = 0;
+
     fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0)
 	return 0;

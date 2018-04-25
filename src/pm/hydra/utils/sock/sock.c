@@ -59,11 +59,6 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
     }
 
   setup_socket:
-    /* IPV6
-     * if (ipv6_flag_set) {
-     * listen_fd = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
-     * }
-     * else */
     *listen_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (*listen_fd < 0) {
         *listen_fd = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
@@ -132,10 +127,10 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
         if (getsockname(*listen_fd, (struct sockaddr *) &sa_storage, &sinlen) < 0)
             HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "getsockname error (%s)\n",
                                 MPL_strerror(errno));
-        //IPV6
-        *port =
-            ipv6_found ? ntohs(((struct sockaddr_in6 *) &sa_storage)->sin6_port) :
-            ntohs(((struct sockaddr_in *) &sa_storage)->sin_port);
+        if (ipv6_found)
+            *port = ntohs(((struct sockaddr_in6 *) &sa_storage)->sin6_port);
+        else
+            *port = ntohs(((struct sockaddr_in *) &sa_storage)->sin_port);
     }
 
   fn_exit:

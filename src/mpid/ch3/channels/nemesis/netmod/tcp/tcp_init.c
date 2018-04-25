@@ -395,7 +395,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
         hints.ai_flags = 0;
         /* First try getting IPV4 network address */
         for (i = 0; i < MPIR_CVAR_NEMESIS_TCP_HOST_LOOKUP_RETRIES; ++i) {
-            status = getaddrinfo( ifname_string, NULL, &hints, &result);
+            status = getaddrinfo(ifname_string, NULL, &hints, &result);
             /* If connection failed, skip to next try */
             if (status != 0)
                 continue;
@@ -489,7 +489,7 @@ int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_s
     }
 
     len = sizeof(sock_id);
-    ret = getsockname (MPID_nem_tcp_g_lstn_sc.fd, &sock_id, &len);
+    ret = getsockname(MPID_nem_tcp_g_lstn_sc.fd, &sock_id, &len);
     MPIR_ERR_CHKANDJUMP1 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**getsockname", "**getsockname %s", MPIR_Strerror (errno));
 
     if (sock_id.sa_family == AF_INET)

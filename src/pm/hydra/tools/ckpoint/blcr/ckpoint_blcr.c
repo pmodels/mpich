@@ -117,10 +117,10 @@ static HYD_status create_stdinouterr_sock(int *port)
     ret = getsockname(listen_fd, (struct sockaddr *) &sin_storage, &len);
     HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "getsockname() failed, %s\n",
                         strerror(errno));
-    //IPV6
-    *port =
-        ipv6_found ? ntohs(((struct sockaddr_in6 *) &sin_storage).sin6_port) :
-        ntohs(((struct sockaddr_in *) &sin_storage).sin_port);
+    if (ipv6_found)
+        *port = ntohs(((struct sockaddr_in6 *) &sin_storage).sin6_port);
+    else
+        *port = ntohs(((struct sockaddr_in *) &sin_storage).sin_port);
   fn_exit:
     HYDU_FUNC_EXIT();
     return status;

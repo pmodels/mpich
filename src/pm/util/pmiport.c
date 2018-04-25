@@ -368,7 +368,6 @@ int MPIE_ConnectToPort(char *hostname, int portnum)
 {
     struct addrinfo hints;
     struct addrinfo *result, *rp;
-    //struct sockaddr_in sa;
     int fd, status;
     int optval = 1, connect_failed = 0;
     int q_wait = 1;
@@ -390,21 +389,11 @@ int MPIE_ConnectToPort(char *hostname, int portnum)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = 0;
     hints.ai_protocol = 0;
-    snprintf(port, 16, "%d", portnum);
+    MPL_snprintf(port, 16, "%d", portnum);
     status = getaddrinfo(hostname, port, &hints, &result);
     if (status != 0) {
         return -1;
     }
-    //memset((void *) &sa, 0, sizeof(sa));
-    /* POSIX might define h_addr_list only and not define h_addr */
-/*#ifdef HAVE_H_ADDR_LIST
-    memcpy((void *) &sa.sin_addr, (void *) hp->h_addr_list[0], hp->h_length);
-#else
-    memcpy((void *) &sa.sin_addr, (void *) hp->h_addr, hp->h_length);
-#endif
-    sa.sin_family = hp->h_addrtype;
-    sa.sin_port = htons((unsigned short) portnum);
-	*/
     for (rp = result; rp != NULL; rp = rp->ai_next) {
         connect_failed = 0;
         fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
