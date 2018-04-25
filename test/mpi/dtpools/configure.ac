@@ -49,7 +49,9 @@ AC_ARG_VAR([DTP_DATATYPE_FILE],
 
 # we must have a valid file containing MPI datatypes for framework initialization
 DTP_DATATYPE_FILE=${DTP_DATATYPE_FILE:-$srcdir/basictypelist.txt}
-AC_CHECK_FILE([$DTP_DATATYPE_FILE],,[AC_MSG_ERROR([Need a valid file for MPI datatypes.])])
+if test ! -f "$DTP_DATATYPE_FILE" ; then
+   AC_MSG_ERROR([Need a valid file for MPI datatypes.])
+fi
 
 # get comma separated list of MPI datatypes for static datatype array initialization in src/dtpools.c
 DTP_DATATYPES=$(types=""; while read -r line; do types+="$line"; done < $DTP_DATATYPE_FILE; echo "$types")
