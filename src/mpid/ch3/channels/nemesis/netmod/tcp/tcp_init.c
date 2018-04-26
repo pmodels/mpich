@@ -663,9 +663,9 @@ int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct sockadd
     ret = MPL_str_get_string_arg(business_card, MPIDI_CH3I_IFNAME_KEY, ifname, sizeof(ifname));
     MPIR_ERR_CHKANDJUMP (ret != MPL_STR_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**argstr_missingifname");
 
-    ret = inet_pton (AF_INET, (const char *)ifname, &((struct sockaddr_in *)addr)->sin_addr);
+    ret = inet_pton(AF_INET, (const char *)ifname, &((struct sockaddr_in *)addr)->sin_addr);
     if (ret != 1) {
-        ret = inet_pton (AF_INET6, (const char *)ifname, &((struct sockaddr_in6 *)addr)->sin6_addr);
+        ret = inet_pton(AF_INET6, (const char *)ifname, &((struct sockaddr_in6 *)addr)->sin6_addr);
         MPIR_ERR_CHKANDJUMP(ret == 0, mpi_errno,MPI_ERR_OTHER,"**ifnameinvalid");
         MPIR_ERR_CHKANDJUMP(ret < 0, mpi_errno, MPI_ERR_OTHER, "**afinetinvalid");
         addr->sa_family = AF_INET6;
@@ -712,19 +712,19 @@ int MPID_nem_tcp_bind (int sockfd)
         /* IPV6 */
         if (tcp_ipv6) {
             char tmp[16];
-            memset ((void *)&sin6, 0, sizeof(sin6));
-            sin6.sin6_family      = AF_INET6;
-            sin6.sin6_addr        = in6addr_any;
-            sin6.sin6_port        = htons(port);
+            memset((void *)&sin6, 0, sizeof(sin6));
+            sin6.sin6_family    = AF_INET6;
+            sin6.sin6_addr      = in6addr_any;
+            sin6.sin6_port      = htons(port);
             memcpy(&sin_storage, &sin6, sizeof(sin6));
         } else {
-            memset ((void *)&sin, 0, sizeof(sin));
+            memset((void *)&sin, 0, sizeof(sin));
             sin.sin_family      = AF_INET;
             sin.sin_addr.s_addr = htonl(INADDR_ANY);
             sin.sin_port        = htons(port);
             memcpy(&sin_storage, &sin, sizeof(sin));
         }
-        ret = bind (sockfd, (struct sockaddr *)&sin_storage, sizeof(sin));
+        ret = bind(sockfd, (struct sockaddr *)&sin_storage, sizeof(sin));
         if (ret == 0)
             break;
         

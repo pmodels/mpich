@@ -1719,8 +1719,8 @@ int MPIDI_CH3I_Sock_post_connect_ifaddr( struct MPIDI_CH3I_Sock_set * sock_set,
         memset(&addr6, 0, sizeof(addr6));
         addr6.sin6_family = AF_INET6;
         memcpy(&addr6.sin6_addr.s_addr, ifaddr->ifaddr,
-            sizeof(addr6.sin6_addr.s_addr));
-        addr6.sin6_port = htons( (unsigned short)port);
+               sizeof(addr6.sin6_addr.s_addr));
+        addr6.sin6_port = htons((unsigned short)port);
         memcpy(&addr_storage, &addr6, sizeof(addr6));
     }
     else {
@@ -1728,7 +1728,7 @@ int MPIDI_CH3I_Sock_post_connect_ifaddr( struct MPIDI_CH3I_Sock_set * sock_set,
         addr.sin_family = AF_INET;
         memcpy(&addr.sin_addr.s_addr, ifaddr->ifaddr,
                sizeof(addr.sin_addr.s_addr));
-        addr.sin_port = htons( (unsigned short)port);
+        addr.sin_port = htons((unsigned short)port);
         memcpy(&addr_storage, &addr, sizeof(addr));
     }
 
@@ -1847,7 +1847,7 @@ int MPIDI_CH3I_Sock_post_connect(struct MPIDI_CH3I_Sock_set * sock_set, void * u
     hints.ai_flags = 0;
     hints.ai_protocol = 0;
     memset(port_str, 0, 16);
-    snprintf(port_str, 16, "%d", port);
+    MPL_snprintf(port_str, 16, "%d", port);
 
     status_code = getaddrinfo(host_description, port_str, &hints, &result);
     /* --BEGIN ERROR HANDLING-- */
@@ -1864,7 +1864,7 @@ int MPIDI_CH3I_Sock_post_connect(struct MPIDI_CH3I_Sock_set * sock_set, void * u
             ifaddr.len  = result->ai_addrlen;
             ifaddr.type = result->ai_socktype;
             mpi_errno = MPIDI_CH3I_Sock_post_connect_ifaddr(sock_set, user_ptr,
-                        &ifaddr, port, sockp );
+                                                            &ifaddr, port, sockp);
             ipv4_found = 1;
             break;
         }
@@ -1876,7 +1876,7 @@ int MPIDI_CH3I_Sock_post_connect(struct MPIDI_CH3I_Sock_set * sock_set, void * u
             ifaddr.len  = result->ai_addrlen;
             ifaddr.type = result->ai_socktype;
             mpi_errno = MPIDI_CH3I_Sock_post_connect_ifaddr(sock_set, user_ptr,
-                                                            &ifaddr, port, sockp );
+                                                            &ifaddr, port, sockp);
             if (mpi_errno == MPIDI_CH3I_SOCK_ERR_FAIL)
                 continue
             break;

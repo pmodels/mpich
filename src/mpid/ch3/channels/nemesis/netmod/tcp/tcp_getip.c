@@ -284,7 +284,10 @@ int MPIDI_Get_IP_for_iface(const char *ifname, MPIDI_CH3I_nem_tcp_ifaddr_t *ifad
         fd = socket(AF_INET, SOCK_DGRAM, 0);
     MPIR_ERR_CHKANDJUMP2(fd < 0, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIR_Strerror(errno), errno);
     /* IPV6 */
-    ifr.ifr_addr.sa_family = tcp_ipv6 ? AF_INET6 : AF_INET;
+    if (tcp_ipv6)
+        ifr.ifr_addr.sa_family = AF_INET6;
+    else
+        ifr.ifr_addr.sa_family = AF_INET;
     
     MPL_strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
     ret = ioctl(fd, SIOCGIFADDR, &ifr);
