@@ -538,8 +538,8 @@ unexpected messages queued.
 **ioctlsocket: ioctl on socket failed
 **ioctlsocket %s %d: ioctl on socket failed, %s (errno %d)
 
-**gethostbyname:gethostbyname failed
-**gethostbyname %s %d:gethostbyname failed, %s (errno %d)
+**getaddrinfo:getaddrinfo failed
+**getaddrinfo %s %d:getaddrinfo failed, %s (errno %d)
 **sock_gethost:gethostname failed
 **sock_gethost %s %d:gethostname failed, %s (errno %d)
 **getinfo:getaddrinfo failed

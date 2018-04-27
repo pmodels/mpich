@@ -451,7 +451,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
                     break;
             }
         }
-        MPIR_ERR_CHKANDJUMP2(status != 0, mpi_errno, MPI_ERR_OTHER, "**getaddrinfo", "**get    addrinfo %s %d", ifname_string, h_errno);
+        MPIR_ERR_CHKANDJUMP2(status != 0, mpi_errno, MPI_ERR_OTHER, "**getaddrinfo", "**getaddrinfo %s %d", ifname_string, h_errno);
         freeaddrinfo(result);
     }
 fn_exit:
@@ -516,7 +516,7 @@ int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_s
         MPL_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"ifname = %s",ifname );
         str_errno = MPL_str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_IFNAME_KEY, ifname);
         if (str_errno) {
-            MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**bu    scard_len");
+            MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
         }
     }
