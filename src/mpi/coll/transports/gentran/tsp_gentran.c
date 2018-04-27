@@ -105,13 +105,8 @@ int MPII_Genutil_sched_imcast(const void *buf,
     vtxp->u.imcast.count = count;
     vtxp->u.imcast.dt = dt;
     vtxp->u.imcast.num_dests = num_dests;
-    vtxp->u.imcast.dests = (int *) MPL_malloc(sizeof(int) * num_dests, MPL_MEM_COLL);
-    dest = NULL;
-    i = 0;
-    while ((dest = (int *) utarray_next(dests, dest))) {
-        vtxp->u.imcast.dests[i++] = *dest;
-    }
-
+    utarray_new(vtxp->u.imcast.dests, &ut_int_icd, MPL_MEM_COLL);
+    utarray_concat(vtxp->u.imcast.dests, dests, MPL_MEM_COLL);
     vtxp->u.imcast.comm = comm_ptr;
     vtxp->u.imcast.req =
         (struct MPIR_Request **) MPL_malloc(sizeof(struct MPIR_Request *) * num_dests,
