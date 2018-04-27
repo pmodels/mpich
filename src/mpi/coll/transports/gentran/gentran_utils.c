@@ -81,7 +81,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                         MPIC_Isend(vtxp->u.imcast.buf,
                                    vtxp->u.imcast.count,
                                    vtxp->u.imcast.dt,
-                                   vtxp->u.imcast.dests[i],
+                                   *(int *) utarray_eltptr(vtxp->u.imcast.dests, i),
                                    sched->tag, vtxp->u.imcast.comm, &vtxp->u.imcast.req[i],
                                    &errflag);
 
@@ -433,7 +433,7 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
 
             if (vtx->vtx_kind == MPII_GENUTIL_VTX_KIND__IMCAST) {
                 MPL_free(vtx->u.imcast.req);
-                MPL_free(vtx->u.imcast.dests);
+                utarray_free(vtx->u.imcast.dests);
             }
         }
 
