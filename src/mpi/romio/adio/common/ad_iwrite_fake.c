@@ -18,7 +18,8 @@ void ADIOI_FAKE_IwriteContig(ADIO_File fd, const void *buf, int count,
 {
     ADIO_Status status;
     MPI_Offset len;
-    MPI_Count typesize, write_count;
+    MPI_Count typesize;
+    int write_count;
     MPI_Offset nbytes = 0;
 
     MPI_Type_size_x(datatype, &typesize);
