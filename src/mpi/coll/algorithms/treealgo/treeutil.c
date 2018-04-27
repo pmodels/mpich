@@ -26,11 +26,7 @@ static int tree_add_child(MPII_Treealgo_tree_t * t, int rank)
     utarray_push_back(t->children, &rank, MPL_MEM_COLL);
     t->num_children++;
 
-  fn_exit:
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
