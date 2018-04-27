@@ -48,10 +48,6 @@ dnl    MPID_MAX_PROCESSOR_NAME - The maximum number of character in a processor
 dnl                            name.  If not set, 128 will be used.
 dnl    MPID_MAX_ERROR_STRING - The maximum number of character in an error
 dnl                            string.  If not set, 1024 will be used.
-dnl    MPID_LIBTOOL_STATIC_FLAG - The static compilation flag to use
-dnl                               for the example executables within
-dnl                               mpich.  If not set, -static will be
-dnl                               used.
 dnl    PM_REQUIRES_PMI       - if set, provides the name of the PMI 
 dnl                            interface implementation.  If not set,
 dnl                            the "simple" PMI implementation is used.
@@ -5480,14 +5476,6 @@ else
     MPI_MAX_ERROR_STRING=$MPID_MAX_ERROR_STRING
 fi
 AC_SUBST(MPI_MAX_ERROR_STRING)
-
-# Get the value of libtool_static_flag
-if test ! -z "$MPID_LIBTOOL_STATIC_FLAG" ; then
-   mpich_libtool_static_flag="$MPID_LIBTOOL_STATIC_FLAG"
-else
-   mpich_libtool_static_flag="-static"
-fi
-AC_SUBST([mpich_libtool_static_flag])
 
 # Add a definition that is used to help support Windows DLLs (used in mpi.h.in)
 MPIU_DLL_SPEC_DEF="#define MPIU_DLL_SPEC"
