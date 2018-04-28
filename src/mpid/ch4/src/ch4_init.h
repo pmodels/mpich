@@ -160,6 +160,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
         MPIDI_CH4_Global.prev_sighandler = NULL;
 #endif
 
+    /* Setup default tag size. Will be redefined by netmod if necessary. */
+    MPIR_Process.attrs.tag_bits = MPIR_TAG_BITS_DEFAULT;
+
     MPIDI_choose_netmod();
 #ifdef USE_PMI2_API
     pmi_errno = PMI2_Init(&has_parent, &size, &rank, &appnum);

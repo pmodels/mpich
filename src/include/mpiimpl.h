@@ -225,7 +225,6 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_dataloop.h"
 #include "mpir_datatype.h"
 #include "mpir_cvars.h"
-#include "mpir_misc_post.h"
 #include "mpit.h"
 #include "mpir_handlemem.h"
 
@@ -234,6 +233,12 @@ typedef struct MPIR_Topology MPIR_Topology;
 /*****************************************************************************/
 
 #include "mpidpost.h"
+
+/*****************************************************************************/
+/*********** PART 7: DEVICE IMPLEMENTATION DEPENDENT HEADERS *****************/
+/*****************************************************************************/
+
+#include "mpir_misc_post.h"
 
 /* avoid conflicts in source files with old-style "char FCNAME[]" vars */
 #undef FUNCNAME

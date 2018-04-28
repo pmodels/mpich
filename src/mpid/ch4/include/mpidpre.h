@@ -24,6 +24,8 @@
 #include "uthash.h"
 #include "ch4_coll_params.h"
 
+#define MPID_TAG_BITS (MPIR_Process.attrs.tag_bits)
+
 typedef struct {
     union {
     MPIDI_NM_DT_DECL} netmod;

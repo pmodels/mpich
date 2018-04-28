@@ -161,6 +161,11 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 #endif
 
     /*
+     * Set default number of tag bits (overwritten by netmod)
+     */
+    MPIR_Process.attrs.tag_bits = MPIR_TAG_BITS_DEFAULT;
+
+    /*
      * Set global process attributes.  These can be overridden by the channel 
      * if necessary.
      */

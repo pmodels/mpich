@@ -644,7 +644,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     if (MPIR_CVAR_OFI_DUMP_PROVIDERS)
         MPIDI_OFI_dump_providers(prov);
 
-    *tag_ub = (1ULL << MPIDI_OFI_TAG_BITS) - 1;
+    *tag_ub = (1ULL << (MPIDI_OFI_TAG_BITS - (MPIR_TAG_ERROR_BITS + 1))) - 1;
+    MPIR_Process.attrs.tag_bits = MPIDI_OFI_TAG_BITS;
 
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
         /* ------------------------------------------------------------------------ */
