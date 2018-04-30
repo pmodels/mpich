@@ -480,6 +480,11 @@ do {                                                                    \
 do {                                                                    \
     *err_ptr_ = zm_lock_acquire_l(mutex_ptr_);                          \
 } while (0)
+#define MPIDUI_thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr_)  \
+do {                                                                    \
+    /* FIXME: implement izem version of trylock */                      \
+    MPIR_Assert(0);                                                     \
+} while (0)
 #define MPIDUI_thread_mutex_unlock(mutex_ptr_, err_ptr_)                \
 do {                                                                    \
     *err_ptr_ = zm_lock_release(mutex_ptr_);                            \
