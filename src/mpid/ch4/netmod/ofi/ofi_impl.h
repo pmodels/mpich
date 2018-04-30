@@ -36,18 +36,6 @@
 /*
  * Helper routines and macros for request completion
  */
-#define MPIDI_OFI_ssendack_request_t_tls_alloc(req)             \
-    do {                                                                \
-        (req) = (MPIDI_OFI_ssendack_request_t*)                 \
-            MPIR_Request_create(MPIR_REQUEST_KIND__SEND);               \
-        if (req == NULL)                                                \
-            MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1,                      \
-                       "Cannot allocate Ssendack Request");             \
-    } while (0)
-
-#define MPIDI_OFI_ssendack_request_t_tls_free(req) \
-  MPIR_Handle_obj_free(&MPIR_Request_mem, (req))
-
 #define MPIDI_OFI_PROGRESS()                                      \
     do {                                                          \
         mpi_errno = MPID_Progress_test();                        \
@@ -217,11 +205,6 @@
         MPIR_cc_set(&(req)->cc, 0);                                     \
     } while (0)
 #endif
-
-#define MPIDI_OFI_SSEND_ACKREQUEST_CREATE(req)            \
-    do {                                                          \
-        MPIDI_OFI_ssendack_request_t_tls_alloc(req);      \
-    } while (0)
 
 #define WINFO(w,rank) MPIDI_CH4U_WINFO(w,rank)
 
