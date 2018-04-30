@@ -28,16 +28,6 @@ categories :
       description : A category for CH4 OFI netmod variables
 
 cvars:
-    - name        : MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG
-      category    : CH4_OFI
-      type        : int
-      default     : 0
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Prints out the configuration of each capability selected via the capability sets interface.
-
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_DATA
       category    : CH4_OFI
       type        : int
