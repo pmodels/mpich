@@ -260,7 +260,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
         int c = 1;
         uint64_t ssend_match, ssend_mask;
         MPIDI_OFI_ssendack_request_t *ackreq;
-        MPIDI_OFI_SSEND_ACKREQUEST_CREATE(ackreq);
+        ackreq = MPL_malloc(sizeof(MPIDI_OFI_ssendack_request_t), MPL_MEM_OTHER);
+        MPIR_ERR_CHKANDJUMP1(ackreq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem",
+                             "**nomem %s", "Ssend ack request alloc");
         ackreq->event_id = MPIDI_OFI_EVENT_SSEND_ACK;
         ackreq->signal_req = sreq;
         MPIR_cc_incr(sreq->cc_ptr, &c);
