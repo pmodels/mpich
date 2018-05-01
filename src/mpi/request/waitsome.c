@@ -60,9 +60,6 @@ int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
     for (;;) {
         n_inactive = 0;
 
-        mpi_errno = MPIR_Grequest_progress_poke(incount, request_ptrs, array_of_statuses);
-        if (mpi_errno != MPI_SUCCESS)
-            goto fn_fail;
         for (i = 0; i < incount; i++) {
             if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
                 mpi_errno = MPID_Progress_test();
@@ -73,6 +70,16 @@ int MPIR_Waitsome_impl(int incount, MPIR_Request * request_ptrs[],
             }
 
             if (request_ptrs[i] != NULL) {
+                if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
+                    request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
+                    /* poll_fn only exists in Extended Generalized request (non-standard). */
+                    mpi_errno =
+                        (request_ptrs[i]->u.ureq.greq_fns->poll_fn) (request_ptrs[i]->u.ureq.
+                                                                     greq_fns->grequest_extra_state,
+                                                                     &array_of_statuses[i]);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
+                }
                 if (MPIR_Request_is_complete(request_ptrs[i])) {
                     if (MPIR_Request_is_active(request_ptrs[i])) {
                         array_of_indices[n_active] = i;

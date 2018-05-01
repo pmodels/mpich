@@ -38,7 +38,14 @@ int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
 
     MPID_Progress_start(&progress_state);
     while (!MPIR_Request_is_complete(request_ptr)) {
-        mpi_errno = MPIR_Grequest_progress_poke(1, &request_ptr, status);
+        if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
+            request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
+            /* poll_fn only exists in Extended Generalized request (non-standard). */
+            mpi_errno =
+                (request_ptrs[i]->u.ureq.greq_fns->poll_fn) (request_ptrs[i]->u.ureq.
+                                                             greq_fns->grequest_extra_state,
+                                                             &array_of_statuses[i]);
+        }
         if (request_ptr->kind == MPIR_REQUEST_KIND__GREQUEST &&
             request_ptr->u.ureq.greq_fns->wait_fn != NULL) {
             if (mpi_errno) {
