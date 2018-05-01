@@ -221,7 +221,7 @@ int main(int argc, char **argv)
     MPI_Comm newcomm;
     int toterrs = 0;
 
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
     check(provided == MPI_THREAD_MULTIPLE);
     check(NUM_IDUPS1 >= 1 && NUM_IDUPS2 >= 1);
@@ -280,6 +280,5 @@ int main(int argc, char **argv)
         MTestFreeComm(&newcomm);
     }
     MTest_Finalize(toterrs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(toterrs);
 }

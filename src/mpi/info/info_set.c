@@ -31,7 +31,8 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Info_set
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Info_set - Adds a (key,value) pair to info
 
@@ -52,7 +53,6 @@ Input Parameters:
 @*/
 int MPI_Info_set(MPI_Info info, const char *key, const char *value)
 {
-    static const char FCNAME[] = "MPI_Info_set";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INFO_SET);
@@ -108,23 +108,25 @@ int MPI_Info_set(MPI_Info info, const char *key, const char *value)
     MPIR_Info_set_impl(info_ptr, key, value);
     /* ... end of body of routine ... */
 
+#ifdef HAVE_ERROR_CHECKING
   fn_exit:
+#endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_INFO_SET);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
+#ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_info_set", "**mpi_info_set %I %s %s", info, key, value);
     }
-#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
+#endif
 }
 
 

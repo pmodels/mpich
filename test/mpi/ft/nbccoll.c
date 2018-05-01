@@ -7,6 +7,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 /*
  * This test checks if a non-blocking collective failing impacts the result
@@ -72,5 +73,5 @@ int main(int argc, char **argv)
 
     MPI_Finalize();
 
-    return 0;
+    return MTestReturnValue(err);
 }

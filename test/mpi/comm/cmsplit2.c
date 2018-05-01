@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 #define ERRLIMIT (10)
 
@@ -39,7 +40,7 @@ int main(int argc, char **argv)
     MPI_Comm comm, splitcomm;
     MPI_Group wgroup, newgroup;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;
@@ -125,13 +126,6 @@ int main(int argc, char **argv)
     if (identity != NULL)
         free(identity);
 
-    if (rank == 0) {
-        if (errs)
-            printf("found %d errors\n", errs);
-        else
-            printf(" No errors\n");
-    }
-
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }

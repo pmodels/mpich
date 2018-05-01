@@ -330,7 +330,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
     int local_size_send = 0, remote_size_recv = 0;
     int cts_tag = 0;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    int pure_intracomm = 0;
+    int pure_intracomm = 1;
     int local_size = 0;
     int *local_node_ids = NULL, *remote_node_ids = NULL;
     int *local_lupids = NULL;
@@ -348,21 +348,32 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(5);
 
-    cts_tag = 0 | MPIR_Process.tagged_coll_mask;
+    cts_tag = 0 | MPIR_TAG_COLL_BIT;
     local_size = local_comm->local_size;
 
     /*
      * Stage 1: UPID exchange and LUPID conversion in leaders
      */
     if (local_comm->rank == local_leader) {
-        /* embedded dynamic process info in size */
-        MPIDIU_comm_rank_to_pid(local_comm, local_leader, &lpid, &local_avtid);
-        MPIDIU_comm_rank_to_pid(peer_comm, remote_leader, &lpid, &remote_avtid);
-        if (local_avtid == 0 && remote_avtid == 0) {
-            pure_intracomm = 1;
-            local_size_send = local_size;
-        } else {
-            local_size_send = local_size | MPIDI_DYNPROC_MASK;
+        /* We need to check all processes in local group to decide there
+         * is no dynamic spawned process. */
+        for (i = 0; i < local_size; i++) {
+            MPIDIU_comm_rank_to_pid(local_comm, i, &lpid, &local_avtid);
+            if (local_avtid > 0) {
+                pure_intracomm = 0;
+                break;
+            }
+        }
+        if (pure_intracomm) {
+            /* check if remote leader is dynamic spawned process */
+            MPIDIU_comm_rank_to_pid(peer_comm, remote_leader, &lpid, &remote_avtid);
+            if (remote_avtid > 0)
+                pure_intracomm = 0;
+        }
+        local_size_send = local_size;
+        if (!pure_intracomm) {
+            /* embedded dynamic process info in size */
+            local_size_send |= MPIDI_DYNPROC_MASK;
         }
 
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM, VERBOSE,
@@ -496,10 +507,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
         } else {
             if (local_upid_size[0] == remote_upid_size[0]) {
                 *is_low_group = memcmp(local_upids, remote_upids, local_upid_size[0]);
+                MPIR_Assert(*is_low_group != 0);
+                if (*is_low_group < 0)
+                    *is_low_group = 0;
+                else
+                    *is_low_group = 1;
             } else {
                 *is_low_group = local_upid_size[0] < remote_upid_size[0];
             }
-            (*is_low_group) |= MPIDI_DYNPROC_MASK;
         }
 
         /* At this point, we're done with the local lpids; they'll

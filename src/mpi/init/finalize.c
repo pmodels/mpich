@@ -129,7 +129,8 @@ PMPI_LOCAL void MPIR_Call_finalize_callbacks(int, int);
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Finalize
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Finalize - Terminates MPI execution environment
 
@@ -150,20 +151,18 @@ thread that initialized MPI with either 'MPI_Init' or 'MPI_Init_thread'.
 @*/
 int MPI_Finalize(void)
 {
-    static const char FCNAME[] = "MPI_Finalize";
     int mpi_errno = MPI_SUCCESS;
-
-#ifdef HAVE_HWLOC
-    hwloc_topology_destroy(MPIR_Process.topology);
-    hwloc_bitmap_free(MPIR_Process.bindset);
-#endif
-
 #if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
     int rank = 0;
 #endif
     MPIR_FUNC_TERSE_FINALIZE_STATE_DECL(MPID_STATE_MPI_FINALIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
+
+#ifdef HAVE_HWLOC
+    hwloc_topology_destroy(MPIR_Process.topology);
+    hwloc_bitmap_free(MPIR_Process.bindset);
+#endif
 
     /* Note: Only one thread may ever call MPI_Finalize (MPI_Finalize may
      * be called at most once in any program) */
@@ -175,7 +174,7 @@ int MPI_Finalize(void)
     /* If the user requested for asynchronous progress, we need to
      * shutdown the progress thread */
     if (MPIR_async_thread_initialized) {
-        mpi_errno = MPIR_Finalize_async_thread();
+        mpi_errno = MPID_Finalize_async_thread();
         if (mpi_errno)
             goto fn_fail;
     }

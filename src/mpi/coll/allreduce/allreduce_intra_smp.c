@@ -31,7 +31,9 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, int count,
                 MPIR_Reduce(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                *errflag =
+                    MPIX_ERR_PROC_FAILED ==
+                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                 MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
@@ -40,7 +42,9 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, int count,
                 MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                *errflag =
+                    MPIX_ERR_PROC_FAILED ==
+                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                 MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
@@ -61,7 +65,9 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, int count,
                            errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+            *errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -72,7 +78,9 @@ int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, int count,
         mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, comm_ptr->node_comm, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+            *errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }

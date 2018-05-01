@@ -23,7 +23,7 @@
 
       errs = 0
 
-      call MPI_Init(ierr)
+      call MTest_Init(ierr)
       call MPI_Comm_rank(MPI_COMM_WORLD, mynod, ierr )
       call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr )
 
@@ -184,18 +184,8 @@
 
       call MPI_Barrier(MPI_COMM_WORLD, ierr )
 
-      call MPI_Allreduce( errs, toterrs, 1, MPI_INTEGER, MPI_SUM, &
-      &     MPI_COMM_WORLD, ierr )
-      if (mynod .eq. 0) then
-         if( toterrs .gt. 0) then
-            print *, "Found ", toterrs, " errors"
-         else
-            print *, " No Errors"
-         endif
-      endif
-
       call MPI_Type_free(newtype, ierr )
       call MPI_Info_free(info, ierr )
 
-      call MPI_Finalize(ierr)
+      call MTEST_Finalize(errs)
       end

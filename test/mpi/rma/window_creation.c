@@ -8,6 +8,7 @@
 #include <stdlib.h>
 
 #include <mpi.h>
+#include "mpitest.h"
 
 #define DATA_NELTS  1000
 #define NUM_WIN     1000
@@ -21,7 +22,7 @@ int main(int argc, char **argv)
     void *base_ptrs[NUM_WIN];
     MPI_Win windows[NUM_WIN];
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -52,10 +53,7 @@ int main(int argc, char **argv)
         MPI_Free_mem(base_ptrs[i]);
     }
 
-    if (rank == 0)
-        printf(" No Errors\n");
-
-    MPI_Finalize();
+    MTest_Finalize(0);
 
     return 0;
 }

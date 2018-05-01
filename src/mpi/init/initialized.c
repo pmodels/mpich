@@ -27,7 +27,8 @@ int MPI_Initialized(int *flag) __attribute__ ((weak, alias("PMPI_Initialized")))
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Initialized
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Initialized - Indicates whether 'MPI_Init' has been called.
 
@@ -44,9 +45,6 @@ Output Parameters:
 @*/
 int MPI_Initialized(int *flag)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Initialized";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INITIALIZED);
 

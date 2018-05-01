@@ -175,7 +175,7 @@ int MPID_Send_init(const void * buf, int count, MPI_Datatype datatype, int rank,
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
     {
 	MPIR_Datatype_get_ptr(datatype, sreq->dev.datatype_ptr);
-	MPIR_Datatype_add_ref(sreq->dev.datatype_ptr);
+    MPIR_Datatype_ptr_add_ref(sreq->dev.datatype_ptr);
     }
     *request = sreq;
 
@@ -205,7 +205,7 @@ int MPID_Ssend_init(const void * buf, int count, MPI_Datatype datatype, int rank
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
     {
 	MPIR_Datatype_get_ptr(datatype, sreq->dev.datatype_ptr);
-	MPIR_Datatype_add_ref(sreq->dev.datatype_ptr);
+    MPIR_Datatype_ptr_add_ref(sreq->dev.datatype_ptr);
     }
     *request = sreq;
 
@@ -235,7 +235,7 @@ int MPID_Rsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
     {
 	MPIR_Datatype_get_ptr(datatype, sreq->dev.datatype_ptr);
-	MPIR_Datatype_add_ref(sreq->dev.datatype_ptr);
+    MPIR_Datatype_ptr_add_ref(sreq->dev.datatype_ptr);
     }
     *request = sreq;
 
@@ -265,7 +265,7 @@ int MPID_Bsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
     {
 	MPIR_Datatype_get_ptr(datatype, sreq->dev.datatype_ptr);
-	MPIR_Datatype_add_ref(sreq->dev.datatype_ptr);
+    MPIR_Datatype_ptr_add_ref(sreq->dev.datatype_ptr);
     }
     *request = sreq;
 
@@ -322,7 +322,7 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
     {
 	MPIR_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
-	MPIR_Datatype_add_ref(rreq->dev.datatype_ptr);
+    MPIR_Datatype_ptr_add_ref(rreq->dev.datatype_ptr);
     }
     *request = rreq;
 

@@ -7,9 +7,8 @@
 #ifndef HCOLL_H_INCLUDED
 #define HCOLL_H_INCLUDED
 
-#include "mpidimpl.h"
 #include "hcoll/api/hcoll_api.h"
-#include "hcoll/api/hcoll_constants.h"
+#include "hcoll_dtypes.h"
 
 extern int world_comm_destroying;
 
@@ -28,17 +27,6 @@ int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
                     MPIR_Errflag_t * err);
 int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
                     MPIR_Comm * comm_ptr, MPIR_Errflag_t * err);
-
-#if 0
-int hcoll_Ibarrier_req(MPIR_Comm * comm_ptr, MPIR_Request ** request);
-int hcoll_Ibcast_req(void *buffer, int count, MPI_Datatype datatype, int root,
-                     MPIR_Comm * comm_ptr, MPIR_Request ** request);
-int hcoll_Iallgather_req(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
-                         int recvcount, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                         MPIR_Request ** request);
-int hcoll_Iallreduce_req(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                         MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request);
-#endif
 
 int hcoll_do_progress(int *made_progress);
 

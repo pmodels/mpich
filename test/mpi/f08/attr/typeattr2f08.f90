@@ -99,5 +99,4 @@
       endif
 
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
       end

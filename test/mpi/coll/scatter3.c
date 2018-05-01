@@ -80,8 +80,7 @@ int main(int argc, char **argv)
 
     free(vecin);
     free(vecout);
-    MTest_Finalize(errs);
     MPI_Type_free(&vec);
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }

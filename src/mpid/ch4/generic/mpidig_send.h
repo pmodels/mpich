@@ -25,7 +25,6 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIR_Request *sreq = NULL;
-    uint64_t match_bits;
     MPIDI_CH4U_hdr_t am_hdr;
     MPIDI_CH4U_ssend_req_msg_t ssend_req;
 
@@ -37,19 +36,21 @@ static inline int MPIDI_am_isend(const void *buf, MPI_Aint count, MPI_Datatype d
         /* for blocking calls, we directly complete the request */
         if (!is_blocking) {
             *request = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
+            MPIR_ERR_CHKANDSTMT((*request) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                                "**nomemreq");
             MPID_Request_complete((*request));
         }
         goto fn_exit;
     }
 
     sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
-    MPIR_Assert(sreq);
+    MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     *request = sreq;
-    match_bits = MPIDI_CH4U_init_send_tag(comm->context_id + context_offset, comm->rank, tag);
 
-    am_hdr.msg_tag = match_bits;
     am_hdr.src_rank = comm->rank;
+    am_hdr.tag = tag;
+    am_hdr.context_id = comm->context_id + context_offset;
     if (type == MPIDI_CH4U_SSEND_REQ) {
         ssend_req.hdr = am_hdr;
         ssend_req.sreq_ptr = (uint64_t) sreq;
@@ -85,32 +86,36 @@ static inline int MPIDI_psend_init(const void *buf,
                                    int tag, MPIR_Comm * comm, int context_offset,
                                    MPIR_Request ** request)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
-    uint64_t match_bits;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PSEND_INIT);
 
     sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__PREQUEST_SEND, 2);
+    MPIR_ERR_CHKANDSTMT(sreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *request = sreq;
 
     MPIR_Comm_add_ref(comm);
     sreq->comm = comm;
-    match_bits = MPIDI_CH4U_init_send_tag(comm->context_id + context_offset, rank, tag);
 
     MPIDI_CH4U_REQUEST(sreq, buffer) = (void *) buf;
     MPIDI_CH4U_REQUEST(sreq, count) = count;
     MPIDI_CH4U_REQUEST(sreq, datatype) = datatype;
-    MPIDI_CH4U_REQUEST(sreq, match_bits) = match_bits;
     MPIDI_CH4U_REQUEST(sreq, rank) = rank;
+    MPIDI_CH4U_REQUEST(sreq, tag) = tag;
+    MPIDI_CH4U_REQUEST(sreq, context_id) = comm->context_id + context_offset;
 
     sreq->u.persist.real_request = NULL;
     MPID_Request_complete(sreq);
 
-    dtype_add_ref_if_not_builtin(datatype);
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PSEND_INIT);
-    return MPI_SUCCESS;
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 

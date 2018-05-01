@@ -165,7 +165,7 @@ extern MPIR_Object_alloc_t MPIR_Datatype_mem;
 
 static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
 
-#define MPIR_Datatype_add_ref(datatype_ptr) MPIR_Object_add_ref((datatype_ptr))
+#define MPIR_Datatype_ptr_add_ref(datatype_ptr) MPIR_Object_add_ref((datatype_ptr))
 
 /* to be used only after MPIR_Datatype_valid_ptr(); the check on
  * err == MPI_SUCCESS ensures that we won't try to dereference the
@@ -274,11 +274,11 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
         }                                                                      \
     } while (0)
 
-/* MPIR_Datatype_release decrements the reference count on the MPIR_Datatype
+/* MPIR_Datatype_ptr_release decrements the reference count on the MPIR_Datatype
  * and, if the refct is then zero, frees the MPIR_Datatype and associated
  * structures.
  */
-#define MPIR_Datatype_release(datatype_ptr) do {                            \
+#define MPIR_Datatype_ptr_release(datatype_ptr) do {                            \
     int inuse_;                                                             \
                                                                             \
     MPIR_Object_release_ref((datatype_ptr),&inuse_);                        \
@@ -439,6 +439,30 @@ static inline void MPIR_Datatype_free(MPIR_Datatype * ptr);
     }                                                               \
 } while (0)
 
+/* we pessimistically assume that MPI_DATATYPE_NULL may be passed as a "valid" type
+ * for send/recv when MPI_PROC_NULL is the destination/src */
+#define MPIR_Datatype_add_ref_if_not_builtin(datatype_)             \
+    do {                                                            \
+    if ((datatype_) != MPI_DATATYPE_NULL &&                         \
+        HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)        \
+    {                                                               \
+        MPIR_Datatype *dtp_ = NULL;                                 \
+        MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
+        MPIR_Datatype_ptr_add_ref(dtp_);                            \
+    }                                                               \
+    } while (0)
+
+#define MPIR_Datatype_release_if_not_builtin(datatype_)             \
+    do {                                                            \
+    if ((datatype_) != MPI_DATATYPE_NULL &&                         \
+        HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)        \
+    {                                                               \
+        MPIR_Datatype *dtp_ = NULL;                                 \
+        MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
+        MPIR_Datatype_ptr_release(dtp_);                            \
+    }                                                               \
+    } while (0)
+
 static inline void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
 {
     int i, struct_sz = sizeof(MPIR_Datatype_contents);
@@ -456,7 +480,7 @@ static inline void MPIR_Datatype_free_contents(MPIR_Datatype * dtp)
     for (i = 0; i < dtp->contents->nr_types; i++) {
         if (HANDLE_GET_KIND(array_of_types[i]) != HANDLE_KIND_BUILTIN) {
             MPIR_Datatype_get_ptr(array_of_types[i], old_dtp);
-            MPIR_Datatype_release(old_dtp);
+            MPIR_Datatype_ptr_release(old_dtp);
         }
     }
 
@@ -599,7 +623,7 @@ static inline int MPIR_Datatype_set_contents(MPIR_Datatype * new_dtp,
     for (i = 0; i < nr_types; i++) {
         if (HANDLE_GET_KIND(array_of_types[i]) != HANDLE_KIND_BUILTIN) {
             MPIR_Datatype_get_ptr(array_of_types[i], old_dtp);
-            MPIR_Datatype_add_ref(old_dtp);
+            MPIR_Datatype_ptr_add_ref(old_dtp);
         }
     }
 

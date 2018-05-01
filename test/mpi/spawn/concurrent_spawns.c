@@ -113,6 +113,7 @@ int main(int argc, char *argv[])
         if (parentcomm != MPI_COMM_NULL) {
             MPI_Send(&errs, 1, MPI_INT, 0, 0, parentcomm);
             MPI_Comm_disconnect(&parentcomm);
+            MPI_Finalize();
         } else {
             /* Note that the MTest_Finalize get errs only over COMM_WORLD */
             /* Note also that both the parent and child will generate "No Errors"
@@ -124,6 +125,5 @@ int main(int argc, char *argv[])
     }
 
     IF_VERBOSE(("calling finalize\n"));
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

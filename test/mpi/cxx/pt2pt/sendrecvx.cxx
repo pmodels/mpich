@@ -1,5 +1,5 @@
 /* -*- Mode: C++; c-basic-offset:4 ; -*- */
-/*  
+/*
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  *
@@ -27,7 +27,7 @@ using namespace std;
 #include <iostream.h>
 #endif
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     int rank, size, errs = 0;
 
@@ -43,24 +43,23 @@ int main( int argc, char *argv[] )
     if (rank == 0) {
         int *buf = new int[100];
         int i;
-        for (i=0; i<100; i++) buf[i] = i;
-        MPI::COMM_WORLD.Send( buf, 100, MPI::INT, size-1, 0 );
-        delete[] buf;
-    }
-    else if (rank == size - 1) {
+        for (i = 0; i < 100; i++)
+            buf[i] = i;
+        MPI::COMM_WORLD.Send(buf, 100, MPI::INT, size - 1, 0);
+        delete[]buf;
+    } else if (rank == size - 1) {
         int *buf = new int[100];
         int i;
-        MPI::COMM_WORLD.Recv( buf, 100, MPI::INT, 0, 0 );
-        for (i=0; i<100; i++) {
+        MPI::COMM_WORLD.Recv(buf, 100, MPI::INT, 0, 0);
+        for (i = 0; i < 100; i++) {
             if (buf[i] != i) {
                 errs++;
                 cerr << "Error: buf[" << i << "] = " << buf[i] << "\n";
             }
         }
-        delete[] buf;
+        delete[]buf;
     }
 
-    MTest_Finalize( errs );
-    MPI::Finalize();
+    MTest_Finalize(errs);
     return 0;
 }

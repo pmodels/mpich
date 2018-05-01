@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 int main(int argc, char **argv)
 {
@@ -14,7 +15,7 @@ int main(int argc, char **argv)
     MPI_Request request;
     MPI_Status status;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -42,8 +43,5 @@ int main(int argc, char **argv)
         MPI_Send(&msg, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
     }
 
-    if (rank == 0)
-        printf(" No Errors\n");
-
-    MPI_Finalize();
+    MTest_Finalize(0);
 }

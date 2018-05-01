@@ -303,7 +303,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
 
         if (origin_dtp != NULL) {
             if (req == NULL) {
-                MPIR_Datatype_release(origin_dtp);
+                MPIR_Datatype_ptr_release(origin_dtp);
             }
             else {
                 /* this will cause the datatype to be freed when the request
@@ -374,7 +374,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
   fn_exit:
     /* release the target datatype */
     if (target_dtp)
-        MPIR_Datatype_release(target_dtp);
+        MPIR_Datatype_ptr_release(target_dtp);
     (*req_ptr) = req;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
@@ -382,7 +382,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
   fn_fail:
     if (req) {
         if (req->dev.datatype_ptr)
-            MPIR_Datatype_release(req->dev.datatype_ptr);
+            MPIR_Datatype_ptr_release(req->dev.datatype_ptr);
         if (req->dev.ext_hdr_ptr)
             MPL_free(req->dev.ext_hdr_ptr);
         MPIR_Request_free(req);
@@ -968,7 +968,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
 
         /* release the target datatype */
-        MPIR_Datatype_release(dtp);
+        MPIR_Datatype_ptr_release(dtp);
 
         /* If send is finished, we free extended header immediately.
          * Otherwise, store its pointer in request thus it can be freed when request is freed.*/

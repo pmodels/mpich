@@ -200,6 +200,7 @@ static inline int MPIDI_OFI_handle_long_am_hdr(MPIDI_OFI_am_header_t * msg_hdr)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM_HDR);
 
     rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+    MPIR_ERR_CHKANDSTMT((rreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     mpi_errno = MPIDI_OFI_am_init_request(NULL, 0, rreq);
 
@@ -362,15 +363,18 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
     MPIR_Request *sreq;
     MPIDI_OFI_ack_msg_payload_t *ack_msg;
     int handler_id;
-    uint64_t index;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_HANDLE_LMT_ACK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_LMT_ACK);
 
     ack_msg = (MPIDI_OFI_ack_msg_payload_t *) msg_hdr->payload;
     sreq = (MPIR_Request *) ack_msg->sreq_ptr;
 
-    index = fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)) >> MPIDI_Global.huge_rma_shift;
-    MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(MPIR_Process.comm_world).rma_id_allocator, index);
+    if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+        uint64_t index =
+            fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)) >> MPIDI_Global.huge_rma_shift;
+        MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(MPIR_Process.comm_world).rma_id_allocator,
+                                       index);
+    }
     MPIDI_OFI_CALL_NOLOCK(fi_close(&MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr)->fid), mr_unreg);
     OPA_decr_int(&MPIDI_Global.am_inflight_rma_send_mrs);
 

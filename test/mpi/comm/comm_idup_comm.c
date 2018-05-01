@@ -114,6 +114,5 @@ int main(int argc, char **argv)
     MPI_Group_free(&world_group);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 int main(int argc, char **argv)
 {
@@ -14,7 +15,7 @@ int main(int argc, char **argv)
     MPI_Comm primary[2], secondary[2], tmp;
     MPI_Request req[2];
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -43,10 +44,7 @@ int main(int argc, char **argv)
         MPI_Comm_free(&secondary[i]);
     }
 
-    if (rank == 0)
-        printf(" No Errors\n");
-
-    MPI_Finalize();
+    MTest_Finalize(0);
 
     return 0;
 }

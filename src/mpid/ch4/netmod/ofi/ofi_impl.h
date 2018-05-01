@@ -18,6 +18,9 @@
 #include "ch4_impl.h"
 #include "ofi_iovec_util.h"
 
+#define MPIDI_OFI_ENAVAIL   -1  /* OFI resource not available */
+#define MPIDI_OFI_EPERROR   -2  /* OFI endpoint error */
+
 #define MPIDI_OFI_DT(dt)         ((dt)->dev.netmod.ofi)
 #define MPIDI_OFI_OP(op)         ((op)->dev.netmod.ofi)
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
@@ -62,7 +65,7 @@
       MPIR_Status_set_procnull(&(rreq_)->status);                       \
     }                                                                   \
     else {                                                              \
-      MPIR_ERR_SETANDJUMP(mpi_errno_,MPI_ERR_OTHER,"**nomemreq");       \
+      MPIR_ERR_SETANDJUMP(mpi_errno_,MPIX_ERR_NOREQ,"**nomemreq");       \
     }                                                                   \
   } while (0)
 
@@ -115,9 +118,10 @@
 
 #define MPIDI_OFI_CALL_LOCK 1
 #define MPIDI_OFI_CALL_NO_LOCK 0
-#define MPIDI_OFI_CALL_RETRY(FUNC,STR,LOCK)                               \
+#define MPIDI_OFI_CALL_RETRY(FUNC,STR,LOCK,EAGAIN)          \
     do {                                                    \
     ssize_t _ret;                                           \
+    int _retry = MPIR_CVAR_CH4_OFI_MAX_EAGAIN_RETRY;        \
     do {                                                    \
         if (LOCK == MPIDI_OFI_CALL_LOCK)                    \
             MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);   \
@@ -134,11 +138,16 @@
                               __LINE__,                     \
                               FCNAME,                       \
                               fi_strerror(-_ret));          \
+        MPIR_ERR_CHKANDJUMP(_retry == 0 && EAGAIN,          \
+                            mpi_errno,                      \
+                            MPIX_ERR_EAGAIN,                \
+                            "**eagain");                    \
         if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
             MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);     \
         MPIDI_OFI_PROGRESS_NONINLINE();                              \
         if (LOCK == MPIDI_OFI_CALL_NO_LOCK)                 \
             MPID_THREAD_CS_ENTER(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);    \
+        _retry--;                                           \
     } while (_ret == -FI_EAGAIN);                           \
     } while (0)
 
@@ -212,6 +221,7 @@
 #define MPIDI_OFI_REQUEST_CREATE(req, kind)                 \
     do {                                                      \
         (req) = MPIR_Request_create(kind);  \
+        MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
         MPIR_Request_add_ref((req));                                \
     } while (0)
 
@@ -225,6 +235,7 @@
 #define MPIDI_OFI_SEND_REQUEST_CREATE_LW(req)                   \
     do {                                                                \
         (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);           \
+        MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
         MPIR_cc_set(&(req)->cc, 0);                                     \
     } while (0)
 #endif
@@ -301,16 +312,51 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_OFI_check_acc_order_size(MPIR_Win * win, s
     return max_size;
 }
 
+/* Set OFI attributes and capabilities for RMA. */
+MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_set_rma_fi_info(MPIR_Win * win, struct fi_info *finfo)
+{
+    finfo->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
+    finfo->tx_attr->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
+
+    /* Update msg_order by accumulate ordering in window info.
+     * Accumulate ordering cannot easily be changed once the window has been created.
+     * OFI implementation ignores acc ordering hints issued in MPI_WIN_SET_INFO()
+     * after window is created. */
+    finfo->tx_attr->msg_order = FI_ORDER_NONE;  /* FI_ORDER_NONE is an alias for the value 0 */
+    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAR) ==
+        MPIDI_CH4I_ACCU_ORDER_RAR)
+        finfo->tx_attr->msg_order |= FI_ORDER_RAR;
+    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW) ==
+        MPIDI_CH4I_ACCU_ORDER_RAW)
+        finfo->tx_attr->msg_order |= FI_ORDER_RAW;
+    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAR) ==
+        MPIDI_CH4I_ACCU_ORDER_WAR)
+        finfo->tx_attr->msg_order |= FI_ORDER_WAR;
+    if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAW) ==
+        MPIDI_CH4I_ACCU_ORDER_WAW)
+        finfo->tx_attr->msg_order |= FI_ORDER_WAW;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_win_request_alloc_and_init
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_alloc_and_init(int extra)
 {
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_win_request_t *req;
     req = (MPIDI_OFI_win_request_t *) MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+    MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     memset((char *) req + MPIDI_REQUEST_HDR_SIZE, 0,
            sizeof(MPIDI_OFI_win_request_t) - MPIDI_REQUEST_HDR_SIZE);
     req->noncontig =
         (MPIDI_OFI_win_noncontig_t *) MPL_calloc(1, (extra) + sizeof(*(req->noncontig)),
                                                  MPL_MEM_BUFFER);
+  fn_exit:
     return req;
+  fn_fail:
+    req = NULL;
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_request_t * req)
@@ -431,25 +477,26 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_OFI_context_to_request(void *contex
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const void *buf, size_t len,
-                                                    void *desc, uint32_t dest, fi_addr_t dest_addr,
+                                                    void *desc, uint32_t src, fi_addr_t dest_addr,
                                                     uint64_t tag, void *context, int is_inject,
-                                                    int do_lock)
+                                                    int do_lock, int do_eagain)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (is_inject) {
         if (MPIDI_OFI_ENABLE_DATA)
-            MPIDI_OFI_CALL_RETRY(fi_tinjectdata(ep, buf, len, dest, dest_addr, tag), tinjectdata,
-                                 do_lock);
+            MPIDI_OFI_CALL_RETRY(fi_tinjectdata(ep, buf, len, src, dest_addr, tag), tinjectdata,
+                                 do_lock, do_eagain);
         else
-            MPIDI_OFI_CALL_RETRY(fi_tinject(ep, buf, len, dest_addr, tag), tinject, do_lock);
+            MPIDI_OFI_CALL_RETRY(fi_tinject(ep, buf, len, dest_addr, tag), tinject, do_lock,
+                                 do_eagain);
     } else {
         if (MPIDI_OFI_ENABLE_DATA)
-            MPIDI_OFI_CALL_RETRY(fi_tsenddata(ep, buf, len, desc, dest, dest_addr, tag, context),
-                                 tsenddata, do_lock);
+            MPIDI_OFI_CALL_RETRY(fi_tsenddata(ep, buf, len, desc, src, dest_addr, tag, context),
+                                 tsenddata, do_lock, do_eagain);
         else
             MPIDI_OFI_CALL_RETRY(fi_tsend(ep, buf, len, desc, dest_addr, tag, context), tsend,
-                                 do_lock);
+                                 do_lock, do_eagain);
     }
 
   fn_exit:
@@ -554,7 +601,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
         MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_Global.ctx[0].tx, &msg,
                                          FI_COMPLETION | FI_TRANSMIT_COMPLETE |
                                          (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0)), tsendmsg,
-                             MPIDI_OFI_CALL_LOCK);
+                             MPIDI_OFI_CALL_LOCK, FALSE);
         MPIDI_OFI_PROGRESS_WHILE(!req.done);
     }
 

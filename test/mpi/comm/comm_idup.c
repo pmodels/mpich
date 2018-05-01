@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     MPI_Comm newcomm, ic, localcomm, stagger_comm;
     MPI_Request rreq;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -119,16 +119,7 @@ int main(int argc, char **argv)
     MPI_Comm_free(&newcomm);
     MPI_Comm_free(&ic);
 
-    MPI_Reduce((rank == 0 ? MPI_IN_PLACE : &errs), &errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (errs) {
-            printf("found %d errors\n", errs);
-        } else {
-            printf(" No errors\n");
-        }
-    }
+    MTest_Finalize(errs);
 
-    MPI_Finalize();
-
-    return 0;
+    return MTestReturnValue(errs);
 }

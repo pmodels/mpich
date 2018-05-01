@@ -32,7 +32,7 @@ static inline MPIR_Request *context_to_req(void *ofi_context)
 
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_poll)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_poll)
 int MPID_nem_ofi_poll(int in_blocking_poll)
 {
     int complete = 0, mpi_errno = MPI_SUCCESS;

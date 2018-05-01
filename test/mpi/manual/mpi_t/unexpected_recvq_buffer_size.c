@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include "mpitest.h"
 
 #define TRY(func)                           \
     do {                                    \
@@ -160,5 +161,5 @@ int main(int argc, char *argv[])
     TRY(MPI_T_finalize());
     MPI_Finalize();
 
-    return 0;
+    return MTestReturnValue(found);
 }

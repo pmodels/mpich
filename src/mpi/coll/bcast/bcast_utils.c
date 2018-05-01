@@ -78,7 +78,9 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
                                       MPIR_BCAST_TAG, comm_ptr, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
-                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                    *errflag =
+                        MPIX_ERR_PROC_FAILED ==
+                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                     MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                     curr_size = 0;
@@ -111,7 +113,9 @@ int MPII_Scatter_for_bcast(void *buffer ATTRIBUTE((unused)),
                                       send_size, MPI_BYTE, dst, MPIR_BCAST_TAG, comm_ptr, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
-                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                    *errflag =
+                        MPIX_ERR_PROC_FAILED ==
+                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                     MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }

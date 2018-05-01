@@ -10,13 +10,14 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <unistd.h>
+#include "mpitest.h"
 
 int main(int argc, char *argv[])
 {
     MPI_Request barrier;
     int rank, i, done;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Ibarrier(MPI_COMM_WORLD, &barrier);
     for (i = 0, done = 0; !done; i++) {
@@ -25,9 +26,6 @@ int main(int argc, char *argv[])
         MPI_Test(&barrier, &done, MPI_STATUS_IGNORE);
     }
 
-    if (rank == 0)
-        printf(" No Errors\n");
-
-    MPI_Finalize();
+    MTest_Finalize(0);
     return 0;
 }

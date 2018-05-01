@@ -48,11 +48,10 @@ static inline int MPIDI_UCX_noncontig_put(const void *origin_addr,
                                           MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
     MPIDI_UCX_win_info_t *win_info = &(MPIDI_UCX_WIN_INFO(win, target_rank));
-    size_t offset, last;
-    uint64_t base;
+    MPI_Aint segment_first, last;
+    size_t base, offset;
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t status;
-    size_t segment_first;
     struct MPIR_Segment *segment_ptr;
     char *buffer = NULL;
     MPIR_Comm *comm = win->comm_ptr;
@@ -92,8 +91,7 @@ static inline int MPIDI_UCX_contig_get(void *origin_addr,
 {
 
     MPIDI_UCX_win_info_t *win_info = &(MPIDI_UCX_WIN_INFO(win, target_rank));
-    size_t offset;
-    uint64_t base;
+    size_t base, offset;
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t status;
     MPIR_Comm *comm = win->comm_ptr;

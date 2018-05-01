@@ -11,7 +11,7 @@
       integer ierr, errs
 
       errs = 0
-      call mpi_init( ierr )
+      call mtest_init( ierr )
 
       call mpi_comm_size( MPI_COMM_WORLD, commsize, ierr )
       call mpi_attr_get( MPI_COMM_WORLD, MPI_UNIVERSE_SIZE, value, flag &
@@ -50,14 +50,7 @@
          endif
       endif
 
-      ! Check for errors
-      if (errs .eq. 0) then
-         print *, " No Errors"
-      else
-         print *, " Found ", errs, " errors"
-      endif
-
-      call MPI_Finalize( ierr )
+      call MTest_Finalize( errs )
 
       end
 

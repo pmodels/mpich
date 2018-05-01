@@ -48,6 +48,8 @@ char *MPL_strerror(int errnum);
 #endif /* MPL_HAVE_STRERROR */
 
 int MPL_strnapp(char *dest, const char *src, size_t n);
+void MPL_create_pathname(char *dest_filename, const char *dirname,
+                         const char *prefix, const int is_dir);
 
 /* *INDENT-ON* */
 #if defined(__cplusplus)

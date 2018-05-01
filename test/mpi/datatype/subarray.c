@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 #define X 64
 #define Y 8
@@ -24,7 +25,7 @@ int main(int argc, char *argv[])
     int i, j, k;
     int errs = 0;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
     for (i = 0; i < X; ++i) {
@@ -58,14 +59,7 @@ int main(int argc, char *argv[])
 
     MPI_Type_free(&subarray);
 
-    MPI_Allreduce(MPI_IN_PLACE, &errs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (myrank == 0) {
-        if (errs)
-            printf("Found %d errors\n", errs);
-        else
-            printf(" No Errors\n");
-    }
-    MPI_Finalize();
+    MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

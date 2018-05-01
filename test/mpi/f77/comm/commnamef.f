@@ -78,5 +78,4 @@ C     Now test them all
       enddo
 C      
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
       end

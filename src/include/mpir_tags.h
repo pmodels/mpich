@@ -66,6 +66,14 @@
 #define MPIR_TAG_PROC_FAILURE_BIT
 #endif
 
+/* This bitmask is used to differentiate between collective operations
+   with user-supplied tags and internally-defined tags. */
+#ifdef HAVE_TAG_ERROR_BITS
+#define MPIR_TAG_COLL_BIT (1 << 28)
+#else
+#define MPIR_TAG_COLL_BIT (1 << 30)
+#endif
+
 /* This macro checks the value of the error bit in the MPI tag and returns 1
  * if the tag is set and 0 if it is not. */
 #ifdef HAVE_TAG_ERROR_BITS
@@ -108,6 +116,13 @@
 #define MPIR_TAG_MASK_ERROR_BITS(tag) ((tag) & ~(MPIR_TAG_ERROR_BIT ^ MPIR_TAG_PROC_FAILURE_BIT))
 #else
 #define MPIR_TAG_MASK_ERROR_BITS(tag) (tag)
+#endif
+
+/* This macro defines tags bits which are reserved by the MPI layer */
+#ifdef HAVE_TAG_ERROR_BITS
+#define MPIR_TAG_USABLE_BITS (INT_MAX & ~(MPIR_TAG_ERROR_BIT | MPIR_TAG_PROC_FAILURE_BIT | MPIR_TAG_COLL_BIT))
+#else
+#define MPIR_TAG_USABLE_BITS (INT_MAX & ~MPIR_TAG_COLL_BIT)
 #endif
 
 #endif /* MPIR_TAGS_H_INCLUDED */

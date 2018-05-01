@@ -172,6 +172,8 @@ static int DLOOP_Leaf_vector_mpi_flatten(DLOOP_Offset * blocks_p, DLOOP_Count co
     DLOOP_Handle_get_size_macro(el_type, el_size);
     blocks_left = *blocks_p;
 
+    DLOOP_Assert(el_size != 0);
+
     for (i = 0; i < count && blocks_left > 0; i++) {
         int last_idx;
         char *last_end = NULL;
@@ -261,6 +263,8 @@ static int DLOOP_Leaf_blkidx_mpi_flatten(DLOOP_Offset * blocks_p,
     DLOOP_Handle_get_size_macro(el_type, el_size);
     blocks_left = *blocks_p;
 
+    DLOOP_Assert(el_size != 0);
+
     for (i = 0; i < count && blocks_left > 0; i++) {
         int last_idx;
         char *last_end = NULL;
@@ -334,6 +338,8 @@ static int DLOOP_Leaf_index_mpi_flatten(DLOOP_Offset * blocks_p,
 
     DLOOP_Handle_get_size_macro(el_type, el_size);
     blocks_left = *blocks_p;
+
+    DLOOP_Assert(el_size != 0);
 
     for (i = 0; i < count && blocks_left > 0; i++) {
         int last_idx;

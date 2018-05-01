@@ -30,7 +30,8 @@ int MPI_Win_get_info(MPI_Win win, MPI_Info * info_used)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_get_info
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_get_info - Returns a new info object containing the hints of the window
 associated with win.
@@ -69,7 +70,6 @@ set.
 @*/
 int MPI_Win_get_info(MPI_Win win, MPI_Info * info_used)
 {
-    static const char FCNAME[] = "MPI_Win_get_info";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_Info *info_ptr = NULL;

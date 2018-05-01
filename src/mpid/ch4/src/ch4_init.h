@@ -14,8 +14,10 @@
 #include "ch4_impl.h"
 #include "ch4r_proc.h"
 #include "ch4i_comm.h"
+#include "ch4_comm.h"
 #include "strings.h"
 #include "datatype.h"
+#include "ch4r_recvq.h"
 
 #ifdef USE_PMI2_API
 /* PMI does not specify a max size for jobid_size in PMI2_Job_GetId.
@@ -137,53 +139,80 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     pmi_errno = PMI2_Init(&has_parent, &size, &rank, &appnum);
 
     if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_init", "**pmi_init %d", pmi_errno);
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_init", "**pmi_init %d", pmi_errno);
     }
 
     MPIDI_CH4_Global.jobid = (char *) MPL_malloc(MPIDI_MAX_JOBID_LEN, MPL_MEM_OTHER);
     pmi_errno = PMI2_Job_GetId(MPIDI_CH4_Global.jobid, MPIDI_MAX_JOBID_LEN);
     if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_job_getid",
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_job_getid",
                              "**pmi_job_getid %d", pmi_errno);
+    }
+#elif defined(USE_PMIX_API)
+    {
+        pmix_value_t *pvalue = NULL;
+
+        pmi_errno = PMIx_Init(&MPIR_Process.pmix_proc, NULL, 0);
+        if (pmi_errno != PMIX_SUCCESS) {
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmix_init", "**pmix_init %d",
+                                 pmi_errno);
+        }
+        rank = MPIR_Process.pmix_proc.rank;
+
+        PMIX_PROC_CONSTRUCT(&MPIR_Process.pmix_wcproc);
+        MPL_strncpy(MPIR_Process.pmix_wcproc.nspace, MPIR_Process.pmix_proc.nspace, PMIX_MAX_NSLEN);
+        MPIR_Process.pmix_wcproc.rank = PMIX_RANK_WILDCARD;
+
+        pmi_errno = PMIx_Get(&MPIR_Process.pmix_wcproc, PMIX_JOB_SIZE, NULL, 0, &pvalue);
+        if (pmi_errno != PMIX_SUCCESS) {
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmix_get", "**pmix_get %d",
+                                 pmi_errno);
+        }
+        size = pvalue->data.uint32;
+        PMIX_VALUE_RELEASE(pvalue);
+
+        /* appnum, has_parent is not set for now */
+        appnum = 0;
+        has_parent = 0;
     }
 #else
     pmi_errno = PMI_Init(&has_parent);
 
     if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_init", "**pmi_init %d", pmi_errno);
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_init", "**pmi_init %d", pmi_errno);
     }
 
     pmi_errno = PMI_Get_rank(&rank);
 
     if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_get_rank",
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_get_rank",
                              "**pmi_get_rank %d", pmi_errno);
     }
 
     pmi_errno = PMI_Get_size(&size);
 
     if (pmi_errno != 0) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_get_size",
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_get_size",
                              "**pmi_get_size %d", pmi_errno);
     }
 
     pmi_errno = PMI_Get_appnum(&appnum);
 
     if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_get_appnum",
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_get_appnum",
                              "**pmi_get_appnum %d", pmi_errno);
     }
 
     pmi_errno = PMI_KVS_Get_name_length_max(&max_pmi_name_length);
     if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_name_length_max",
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_name_length_max",
                              "**pmi_kvs_get_name_length_max %d", pmi_errno);
     }
 
     MPIDI_CH4_Global.jobid = (char *) MPL_malloc(max_pmi_name_length, MPL_MEM_OTHER);
     pmi_errno = PMI_KVS_Get_my_name(MPIDI_CH4_Global.jobid, max_pmi_name_length);
     if (pmi_errno != PMI_SUCCESS) {
-        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_my_name",
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_my_name",
                              "**pmi_kvs_get_my_name %d", pmi_errno);
     }
 #endif
@@ -246,9 +275,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     }
 #endif
 
-    MPIR_Process.attrs.tag_ub = (1ULL << MPIDI_CH4U_TAG_SHIFT) - 1;
-    /* discuss */
-
     /* Call any and all MPID_Init type functions */
     MPIR_Err_init();
     MPIR_Datatype_init();
@@ -290,20 +316,30 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     }
 #endif
 
+    {
+        int shm_tag_ub = MPIR_Process.attrs.tag_ub, nm_tag_ub = MPIR_Process.attrs.tag_ub;
 #ifdef MPIDI_BUILD_CH4_SHM
-    mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vnis_provided);
+        mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size, &n_shm_vnis_provided, &shm_tag_ub);
 
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POPFATAL(mpi_errno);
-    }
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
 #endif
 
-    mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &MPIR_Process.attrs.tag_ub,
-                                       MPIR_Process.comm_world,
-                                       MPIR_Process.comm_self, has_parent, &n_nm_vnis_provided);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POPFATAL(mpi_errno);
+        mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &nm_tag_ub,
+                                           MPIR_Process.comm_world,
+                                           MPIR_Process.comm_self, has_parent, &n_nm_vnis_provided);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
+
+        /* Use the minimum tag_ub from the netmod and shmod */
+        MPIR_Process.attrs.tag_ub = MPL_MIN(shm_tag_ub, nm_tag_ub);
     }
+
+    /* Override split_type */
+    MPIDI_CH4_Global.MPIR_Comm_fns_store.split_type = MPIDI_Comm_split_type;
+    MPIR_Comm_fns = &MPIDI_CH4_Global.MPIR_Comm_fns_store;
 
     MPIR_Process.attrs.appnum = appnum;
     MPIR_Process.attrs.wtime_is_global = 1;
@@ -403,16 +439,29 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
 MPL_STATIC_INLINE_PREFIX int MPID_Get_universe_size(int *universe_size)
 {
     int mpi_errno = MPI_SUCCESS;
-    int pmi_errno = PMI_SUCCESS;
+    int pmi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GET_UNIVERSE_SIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GET_UNIVERSE_SIZE);
 
 
+#ifndef USE_PMIX_API
     pmi_errno = PMI_Get_universe_size(universe_size);
 
     if (pmi_errno != PMI_SUCCESS)
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
                              "**pmi_get_universe_size", "**pmi_get_universe_size %d", pmi_errno);
+#else
+    {
+        pmix_value_t *pvalue = NULL;
+
+        pmi_errno = PMIx_Get(&MPIR_Process.pmix_wcproc, PMIX_UNIV_SIZE, NULL, 0, &pvalue);
+        if (pmi_errno != PMIX_SUCCESS)
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
+                                 "**pmix_get", "**pmix_get %d", pmi_errno);
+        *universe_size = pvalue->data.uint32;
+        PMIX_VALUE_RELEASE(pvalue);
+    }
+#endif
 
     if (*universe_size < 0)
         *universe_size = MPIR_UNIVERSE_SIZE_NOT_AVAILABLE;

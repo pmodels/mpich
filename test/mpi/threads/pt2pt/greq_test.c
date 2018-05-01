@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
             verbose = 1;
     }
 
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
     if (provided != MPI_THREAD_MULTIPLE) {
         printf("This test requires MPI_THREAD_MULTIPLE\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
@@ -117,6 +117,5 @@ int main(int argc, char *argv[])
 
     IF_VERBOSE(("Goodbye !!!\n"));
     MTest_Finalize(0);
-    MPI_Finalize();
     return 0;
 }

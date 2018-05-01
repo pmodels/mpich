@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     int pos;
 
     /* Initialize MPI */
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     parse_args(argc, argv);
 
     pos = 0;
@@ -70,14 +70,8 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Wrong value for b; got %f expected %f\n", b, 2.2);
     }
 
-    /* print message and exit */
-    if (errs) {
-        fprintf(stderr, "Found %d errors\n", errs);
-    } else {
-        printf(" No Errors\n");
-    }
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }
 
 int parse_args(int argc, char **argv)

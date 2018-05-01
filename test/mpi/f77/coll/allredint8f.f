@@ -19,5 +19,4 @@ C A simple test of allreduce for the optional integer*8 type
      &                   MPI_COMM_WORLD, ierr)
       
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
       end

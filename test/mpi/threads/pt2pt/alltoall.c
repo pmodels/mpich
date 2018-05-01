@@ -57,7 +57,6 @@ MTEST_THREAD_RETURN_TYPE listener(void *extra)
         /* no more requests can arrive */
         if (no_fins == size)
             break;
-
     }
 
     DEBUG(printf("node %d has stopped listener\n", rank));
@@ -70,7 +69,7 @@ int main(int argc, char *argv[])
     int buf = 0;
     long int i, j;
 
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
     if (provided != MPI_THREAD_MULTIPLE) {
         printf("This test requires MPI_THREAD_MULTIPLE\n");
@@ -98,12 +97,7 @@ int main(int argc, char *argv[])
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
-    MPI_Finalize();
-
-    /* This program works if it gets here */
-    if (rank == 0) {
-        printf(" No Errors\n");
-    }
+    MTest_Finalize(0);
 
     return 0;
 }

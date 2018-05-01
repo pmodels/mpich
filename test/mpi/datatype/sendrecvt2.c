@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "dtypes.h"
+#include "mpitest.h"
 
 /*
    This program is derived from one in the MPICH-1 test suite.  It
@@ -102,6 +103,5 @@ int main(int argc, char **argv)
 
     MTestDatatype2Free(types, inbufs, outbufs, counts, bytesize, ntype);
     MTest_Finalize(err);
-    MPI_Finalize();
     return MTestReturnValue(err);
 }

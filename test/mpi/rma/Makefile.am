@@ -25,15 +25,6 @@ noinst_PROGRAMS =          \
     lockcontention2        \
     lockcontention3        \
     lockopts               \
-    lock_dt                \
-    lock_dt_flush          \
-    lock_dt_flushlocal     \
-    lockall_dt             \
-    lockall_dt_flush       \
-    lockall_dt_flushall    \
-    lockall_dt_flushlocal  \
-    lockall_dt_flushlocalall\
-    lock_contention_dt     \
     contention_put         \
     contention_putget      \
     put_base               \
@@ -52,15 +43,9 @@ noinst_PROGRAMS =          \
     fetchandadd            \
     fetchandadd_tree       \
     winname                \
-    putfence1              \
     putfidx                \
-    epochtest              \
-    getfence1              \
-    accfence1              \
     accfence2              \
     adlb_mimic1            \
-    putpscw1               \
-    accpscw1               \
     getgroup               \
     contig_displ           \
     test1_am               \
@@ -141,13 +126,13 @@ noinst_PROGRAMS =          \
     mutex_bench_shared     \
     mutex_bench_shm        \
     mutex_bench_shm_ordered\
-    rma-contig             \
+    rma_contig             \
     badrma                 \
     nb_test                \
-    acc-loc                \
+    acc_loc                \
     acc_ordering           \
     fence_shm              \
-    get-struct             \
+    get_struct             \
     rput_local_comp        \
     racc_local_comp        \
     at_complete            \
@@ -155,11 +140,11 @@ noinst_PROGRAMS =          \
     atomic_rmw_cas         \
     atomic_rmw_gacc	   \
     atomic_get             \
-    acc-pairtype           \
+    acc_pairtype           \
     manyget                \
-    derived-acc-flush_local\
-    large-acc-flush_local  \
-    large-small-acc        \
+    derived_acc_flush_local\
+    large_acc_flush_local  \
+    large_small_acc        \
     put_flush_get  \
     acc_flush_get  \
     gacc_flush_get \
@@ -175,9 +160,9 @@ noinst_PROGRAMS =          \
     overlap_wins_gacc  \
     overlap_wins_fop  \
     overlap_wins_cas  \
-    rget-unlock  \
+    rget_unlock  \
     lock_nested  \
-    rget-testall
+    rget_testall
 
 if BUILD_MPIX_TESTS
 noinst_PROGRAMS += aint
@@ -247,13 +232,13 @@ test2_am_shm_SOURCES             = test2_am.c
 test3_shm_SOURCES                = test3.c
 test3_am_shm_SOURCES             = test3_am.c
 
-mutex_bench_SOURCES              = mutex_bench.c mcs-mutex.c mcs-mutex.h
+mutex_bench_SOURCES              = mutex_bench.c mcs_mutex.c mcs_mutex.h
 mutex_bench_shared_CPPFLAGS      = -DUSE_WIN_SHARED $(AM_CPPFLAGS)
-mutex_bench_shared_SOURCES       = mutex_bench.c mcs-mutex.c mcs-mutex.h
+mutex_bench_shared_SOURCES       = mutex_bench.c mcs_mutex.c mcs_mutex.h
 mutex_bench_shm_CPPFLAGS         = -DUSE_WIN_ALLOC_SHM $(AM_CPPFLAGS)
-mutex_bench_shm_SOURCES          = mutex_bench.c mcs-mutex.c mcs-mutex.h
+mutex_bench_shm_SOURCES          = mutex_bench.c mcs_mutex.c mcs_mutex.h
 mutex_bench_shm_ordered_CPPFLAGS = -DUSE_WIN_ALLOC_SHM -DUSE_CONTIGUOUS_RANK $(AM_CPPFLAGS)
-mutex_bench_shm_ordered_SOURCES  = mutex_bench.c mcs-mutex.c mcs-mutex.h
+mutex_bench_shm_ordered_SOURCES  = mutex_bench.c mcs_mutex.c mcs_mutex.h
 
 linked_list_bench_lock_shr_nocheck_SOURCES  = linked_list_bench_lock_shr.c
 linked_list_bench_lock_shr_nocheck_CPPFLAGS = -DUSE_MODE_NOCHECK $(AM_CPPFLAGS)
@@ -297,3 +282,5 @@ overlap_wins_acc_CPPFLAGS  = -DTEST_ACC $(AM_CPPFLAGS)
 overlap_wins_gacc_CPPFLAGS = -DTEST_GACC $(AM_CPPFLAGS)
 overlap_wins_fop_CPPFLAGS  = -DTEST_FOP $(AM_CPPFLAGS)
 overlap_wins_cas_CPPFLAGS  = -DTEST_CAS $(AM_CPPFLAGS)
+
+include Makefile.dtp

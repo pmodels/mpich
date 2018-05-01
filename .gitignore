@@ -108,8 +108,6 @@ summary.tap
 tags
 apply-xfail.sh
 
-# the hooks dir shouldn't be accidentally committed
-/maint/hooks
 /maint/getfuncstack
 
 # directories copied by autogen.sh from other directories and (generally) should

@@ -44,12 +44,11 @@ void ADIOI_GEN_IreadContig(ADIO_File fd, void *buf, int count,
     static char myname[] = "ADIOI_GEN_IREADCONTIG";
 
     MPI_Type_size_x(datatype, &typesize);
-    ADIOI_Assert((count * typesize) == ((ADIO_Offset) (unsigned) count * (ADIO_Offset) typesize));
     len = count * typesize;
 
     if (file_ptr_type == ADIO_INDIVIDUAL)
         offset = fd->fp_ind;
-    aio_errno = ADIOI_GEN_aio(fd, buf, len, offset, 0, request);
+    aio_errno = ADIOI_GEN_aio(fd, buf, count, datatype, offset, 0, request);
     if (file_ptr_type == ADIO_INDIVIDUAL)
         fd->fp_ind += len;
 

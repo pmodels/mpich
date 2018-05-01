@@ -141,7 +141,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig.nopack));
     }
 
-    dtype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(rreq, datatype));
 
     /* If syncronous, ack and complete when the ack is done */
     if (unlikely(MPIDI_OFI_is_tag_sync(wc->tag))) {
@@ -155,7 +155,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
                                            MPIDI_OFI_REQUEST(rreq, util_comm->rank),
                                            MPIDI_OFI_comm_to_phys(c, r),
                                            ss_bits, NULL, MPIDI_OFI_DO_INJECT,
-                                           MPIDI_OFI_CALL_NO_LOCK);
+                                           MPIDI_OFI_CALL_NO_LOCK, FALSE);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -284,7 +284,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(struct fi_cq_tagged_entry *wc,
                  MPIDI_OFI_REQUEST(sreq, noncontig.nopack))
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.nopack));
 
-        dtype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
+        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
         MPIR_Request_free(sreq);
     }
     /* c != 0, ssend */
@@ -310,8 +310,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
         MPIR_Comm *comm;
         void *ptr;
         struct fid_mr *huge_send_mr;
-        uint64_t key;
-        int key_back;
 
         comm = MPIDI_OFI_REQUEST(sreq, util_comm);
 
@@ -327,15 +325,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
         MPIDI_CH4U_map_erase(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
 
         /* Clean up the memory region */
-        key = fi_mr_key(huge_send_mr);
-        key_back = (key >> MPIDI_Global.huge_rma_shift);
-        MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(comm).rma_id_allocator, key_back);
+        if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+            uint64_t key = fi_mr_key(huge_send_mr);
+            int key_back = (key >> MPIDI_Global.huge_rma_shift);
+            MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(comm).rma_id_allocator, key_back);
+        }
         MPIDI_OFI_CALL_NOLOCK(fi_close(&huge_send_mr->fid), mr_unreg);
 
         if (MPIDI_OFI_REQUEST(sreq, noncontig.pack))
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig.pack));
 
-        dtype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
+        MPIR_Datatype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
         MPIR_Request_free(sreq);
     }
     /* c != 0, ssend */
@@ -426,7 +426,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
                                      MPIDI_OFI_recv_rbase(recv) + recv->cur_offset,     /* remote maddr */
                                      remote_key,        /* Key          */
                                      (void *) &recv->context), rdma_readfrom,   /* Context */
-                             MPIDI_OFI_CALL_NO_LOCK);
+                             MPIDI_OFI_CALL_NO_LOCK, FALSE);
         recv->cur_offset += bytesToGet;
     }
 

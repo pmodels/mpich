@@ -115,6 +115,5 @@ int main(int argc, char *argv[])
 
   fn_fail:
     MTest_Finalize(errs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

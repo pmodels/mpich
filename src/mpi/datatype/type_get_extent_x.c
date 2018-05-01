@@ -121,22 +121,24 @@ int MPI_Type_get_extent_x(MPI_Datatype datatype, MPI_Count * lb, MPI_Count * ext
 
     /* ... end of body of routine ... */
 
+#ifdef HAVE_ERROR_CHECKING
   fn_exit:
+#endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_GET_EXTENT_X);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
+#ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_type_get_extent_x", "**mpi_type_get_extent_x %D %p %p",
                                  datatype, lb, extent);
     }
-#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
+#endif
 }

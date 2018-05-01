@@ -6,6 +6,7 @@
  */
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 /*
  * This test checks to see if we can create a simple datatype
@@ -21,7 +22,7 @@ int main(int argc, char **argv)
     MPI_Datatype oldtypes[8];
     MPI_Datatype ntype1, ntype2;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     for (i = 0; i < 8; i++) {
@@ -38,12 +39,6 @@ int main(int argc, char **argv)
     MPI_Type_free(&ntype2);
     MPI_Type_free(&ntype1);
 
-    /* The only failure mode has been SEGV or aborts within the datatype
-     * routines */
-    if (rank == 0) {
-        printf(" No Errors\n");
-    }
-
-    MPI_Finalize();
+    MTest_Finalize(0);
     return 0;
 }

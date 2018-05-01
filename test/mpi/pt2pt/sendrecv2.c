@@ -11,6 +11,7 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
+#include "mpitest.h"
 
 static int verbose = 0;
 
@@ -23,7 +24,7 @@ int main(int argc, char *argv[])
     MPI_Datatype newtype;
     char *buf = NULL;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     parse_args(argc, argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -105,16 +106,8 @@ int main(int argc, char *argv[])
   fn_exit:
 
     free(buf);
-    /* print message and exit */
-    if (errs) {
-        if (rank == 0)
-            fprintf(stderr, "Found %d errors\n", errs);
-    } else {
-        if (rank == 0)
-            printf(" No Errors\n");
-    }
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }
 
 static int parse_args(int argc, char **argv)

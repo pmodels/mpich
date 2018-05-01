@@ -27,10 +27,10 @@ int MPI_Cancel(MPI_Request * request) __attribute__ ((weak, alias("PMPI_Cancel")
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Cancel_impl
+#define FUNCNAME MPIR_Cancel
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Cancel_impl(MPIR_Request * request_ptr)
+int MPIR_Cancel(MPIR_Request * request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -173,7 +173,7 @@ int MPI_Cancel(MPI_Request * request)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_PT2PT_ENTER(MPID_STATE_MPI_CANCEL);
+    MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_CANCEL);
 
     /* Convert MPI object handles to object pointers */
     MPIR_Request_get_ptr(*request, request_ptr);
@@ -194,14 +194,14 @@ int MPI_Cancel(MPI_Request * request)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Cancel_impl(request_ptr);
+    mpi_errno = MPIR_Cancel(request_ptr);
     if (mpi_errno)
         goto fn_fail;
 
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_CANCEL);
+    MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_CANCEL);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

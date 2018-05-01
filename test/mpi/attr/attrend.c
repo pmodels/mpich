@@ -42,8 +42,7 @@ int main(int argc, char **argv)
     MPI_Keyval_free(&exit_key);
 
     /* Now, exit MPI */
-    /* MTest_Finalize(errs); */
-    MPI_Finalize();
+    MTest_Finalize(errs);
 
     /* Check that the exit handler was called, and without error */
     if (wrank == 0) {
@@ -65,7 +64,7 @@ int main(int argc, char **argv)
         fflush(stdout);
     }
 
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int delete_fn(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state)

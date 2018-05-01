@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 /* tests noncontiguous reads/writes using nonblocking collective I/O */
 
@@ -145,7 +146,6 @@ int cb_gather_name_array(MPI_Comm comm, ADIO_cb_name_array * arrayp)
         for (i = 1; i < commsize; i++) {
             disp[i] = (int) (procname[i] - procname[0]);
         }
-
     }
 
     /* now gather strings */
@@ -256,7 +256,7 @@ int main(int argc, char **argv)
     ADIO_cb_name_array array;
 
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
 
@@ -322,19 +322,11 @@ int main(int argc, char **argv)
     errs += test_file(filename, mynod, nprocs, cb_config_string,
                       "collective w/ hinting: permutation2", verbose);
 
-    MPI_Allreduce(&errs, &sum_errs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
-    if (!mynod) {
-        if (sum_errs)
-            fprintf(stderr, "Found %d error cases\n", sum_errs);
-        else
-            printf(" No Errors\n");
-    }
     if (mynod)
         free(filename);
     free(cb_config_string);
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }
 
 #define SEEDER(x,y,z) ((x)*1000000 + (y) + (x)*(z))
@@ -394,7 +386,10 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
         handle_error(errcode, "MPI_File_open");
     }
 
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
+    errcode = MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
+    if (errcode != MPI_SUCCESS) {
+        handle_error(errcode, "MPI_File_set_view");
+    }
 
     for (i = 0; i < SIZE; i++)
         buf[i] = SEEDER(mynod, i, SIZE);
@@ -515,7 +510,10 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char 
 
     MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
 
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
+    errcode = MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
+    if (errcode != MPI_SUCCESS) {
+        handle_error(errcode, "MPI_File_set_view");
+    }
 
     for (i = 0; i < SIZE; i++)
         buf[i] = SEEDER(mynod, i, SIZE);

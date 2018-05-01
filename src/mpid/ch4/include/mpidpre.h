@@ -63,7 +63,9 @@ typedef struct MPIDI_CH4U_lreq_t {
     const void *src_buf;
     MPI_Count count;
     MPI_Datatype datatype;
-    uint64_t match_bits;
+    int rank;
+    int tag;
+    MPIR_Context_id_t context_id;
 } MPIDI_CH4U_lreq_t;
 
 typedef struct MPIDI_CH4U_rreq_t {
@@ -155,8 +157,9 @@ typedef struct MPIDI_CH4U_req_t {
     MPIDI_ptype p_type;         /* persistent request type */
     void *buffer;
     uint64_t count;
-    uint64_t match_bits;
     int rank;
+    int tag;
+    MPIR_Context_id_t context_id;
     MPI_Datatype datatype;
 } MPIDI_CH4U_req_t;
 
@@ -290,7 +293,7 @@ typedef struct MPIDI_CH4U_win_sync {
 typedef struct MPIDI_CH4U_win_target {
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
-    MPIR_cc_t remote_acc_cmpl_cnts; /* for acc only, increase at OP issuing, decrease at remote completion */
+    MPIR_cc_t remote_acc_cmpl_cnts;     /* for acc only, increase at OP issuing, decrease at remote completion */
     MPIDI_CH4U_win_target_sync_t sync;
     int rank;
     UT_hash_handle hash_handle;
@@ -304,7 +307,7 @@ typedef struct MPIDI_CH4U_win_t {
     /* per-window OP completion for fence */
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
-    MPIR_cc_t remote_acc_cmpl_cnts; /* for acc only, increase at OP issuing, decrease at remote completion */
+    MPIR_cc_t remote_acc_cmpl_cnts;     /* for acc only, increase at OP issuing, decrease at remote completion */
 
     MPI_Aint *sizes;
     MPIDI_CH4U_win_sync_t sync;

@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     int *buf;
     MPI_Win win;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     buf = malloc(BUFSIZE);
     MTEST_VG_MEM_INIT(buf, BUFSIZE);
@@ -50,11 +50,8 @@ int main(int argc, char *argv[])
     MPI_Win_fence(0, win);
     MPI_Win_free(&win);
 
-    if (rank == 0)
-        printf(" No Errors\n");
-
     free(buf);
-    MPI_Finalize();
+    MTest_Finalize(0);
 
     return 0;
 }

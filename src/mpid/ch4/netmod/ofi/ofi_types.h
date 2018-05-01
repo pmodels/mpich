@@ -344,7 +344,8 @@ typedef struct {
     struct fid_ep *ep;
     struct fid_cq *p2p_cq;
     struct fid_cntr *rma_cmpl_cntr;
-    struct fid_stx *stx_ctx;    /* shared TX context for RMA */
+    struct fid_stx *rma_stx_ctx;        /* shared TX context for RMA */
+    struct fid_ep *rma_sep;     /* dedicated scalable EP for RMA */
 
     /* Queryable limits */
     uint64_t max_buffered_send;
@@ -362,6 +363,7 @@ typedef struct {
     size_t rx_iov_limit;
     size_t rma_iov_limit;
     int max_ch4_vnis;
+    int max_rma_sep_tx_cnt;     /* Max number of transmit context on one RMA scalable EP */
     size_t max_order_raw;
     size_t max_order_war;
     size_t max_order_waw;
@@ -378,6 +380,7 @@ typedef struct {
     void *win_map;
     uint64_t rma_issued_cntr;
     MPIDI_OFI_atomic_valid_t win_op_table[MPIDI_OFI_DT_SIZES][MPIDI_OFI_OP_SIZES];
+    UT_array *rma_sep_idx_array;        /* Array of available indexes of transmit contexts on sep */
 
     /* Active Message Globals */
     struct iovec am_iov[MPIDI_OFI_NUM_AM_BUFFERS] MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
@@ -445,21 +448,21 @@ typedef struct MPIDI_OFI_seg_state {
     MPIR_Segment origin_seg;    /* Segment structure */
     size_t origin_cursor;       /* First byte to pack */
     size_t origin_end;          /* Last byte to pack */
-    size_t origin_iov_len;      /* Length of data actually packed */
+    DLOOP_Count origin_iov_len; /* Length of data actually packed */
     DLOOP_VECTOR origin_iov;    /* IOVEC returned after pack */
     uintptr_t origin_addr;      /* Address of data actually packed */
 
     MPIR_Segment target_seg;
     size_t target_cursor;
     size_t target_end;
-    size_t target_iov_len;
+    DLOOP_Count target_iov_len;
     DLOOP_VECTOR target_iov;
     uintptr_t target_addr;
 
     MPIR_Segment result_seg;
     size_t result_cursor;
     size_t result_end;
-    size_t result_iov_len;
+    DLOOP_Count result_iov_len;
     DLOOP_VECTOR result_iov;
     uintptr_t result_addr;
 } MPIDI_OFI_seg_state_t;

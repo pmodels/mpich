@@ -68,5 +68,4 @@ C Jump to 111 on a failure to open
         enddo
 
         call MTest_Finalize( errs )
-        call mpi_finalize( ierr )
         end

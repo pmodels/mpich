@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     int tmp, errs = 0;
     MPI_Comm newcomm;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
@@ -52,11 +52,9 @@ int main(int argc, char *argv[])
     }
 
     MPI_Comm_free(&newcomm);
-    MPI_Finalize();
+    MTest_Finalize(0);
 
-    printf(" No Errors\n");
-
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int ReportErr(int errcode, const char name[])

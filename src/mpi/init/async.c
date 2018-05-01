@@ -49,7 +49,7 @@ static void progress_fn(void *data)
                            MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     MPIR_Assert(!mpi_errno);
     request = request_ptr->handle;
-    mpi_errno = MPIR_Wait_impl(&request, &status);
+    mpi_errno = MPIR_Wait(&request, &status);
     MPIR_Assert(!mpi_errno);
 
     /* Send a signal to the main thread saying we are done */
@@ -134,7 +134,7 @@ int MPIR_Finalize_async_thread(void)
                            MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     MPIR_Assert(!mpi_errno);
     request = request_ptr->handle;
-    mpi_errno = MPIR_Wait_impl(&request, &status);
+    mpi_errno = MPIR_Wait(&request, &status);
     MPIR_Assert(!mpi_errno);
 
     /* XXX DJG why is this unlock/lock necessary?  Should we just YIELD here or later?  */

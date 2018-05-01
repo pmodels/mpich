@@ -27,11 +27,11 @@ int main(int argc, char **argv)
     int *sbuf, *rbuf;
     int rank, size;
     int *sendcounts, *recvcounts, *rdispls, *sdispls;
-    int i, *p, err;
+    int i, *p, errs;
     int left, right, length;
 
     MTest_Init(&argc, &argv);
-    err = 0;
+    errs = 0;
 
     while (MTestGetIntracommGeneral(&comm, 2, 1)) {
         if (comm == MPI_COMM_NULL)
@@ -98,22 +98,22 @@ int main(int argc, char **argv)
 
             for (i = 0; i < length; i++) {
                 if (p[i] != i + 100000 * left) {
-                    if (err < 10) {
+                    if (errs < 10) {
                         fprintf(stderr, "[%d from %d] got %d expected %d for %dth\n",
                                 rank, left, p[i], i + 100000 * left, i);
                     }
-                    err++;
+                    errs++;
                 }
             }
 
             p = rbuf + length;  /* right */
             for (i = 0; i < length; i++) {
                 if (p[i] != i + 100000 * right) {
-                    if (err < 10) {
+                    if (errs < 10) {
                         fprintf(stderr, "[%d from %d] got %d expected %d for %dth\n",
                                 rank, right, p[i], i + 100000 * right, i);
                     }
-                    err++;
+                    errs++;
                 }
             }
 
@@ -128,7 +128,6 @@ int main(int argc, char **argv)
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(err);
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }

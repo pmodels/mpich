@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     int err, toterrs, errs = 0;
     MPI_Comm newcomm;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
@@ -82,17 +82,9 @@ int main(int argc, char *argv[])
         errs += ReportErr(err, "Allreduce");
     MPI_Comm_free(&newcomm);
 
-    MPI_Finalize();
+    MTest_Finalize(toterrs);
 
-    if (wrank == 0) {
-        if (toterrs > 0) {
-            printf(" Found %d errors\n", toterrs);
-        } else {
-            printf(" No Errors\n");
-        }
-    }
-
-    return 0;
+    return MTestReturnValue(errs);
 }
 
 int ReportErr(int errcode, const char name[])

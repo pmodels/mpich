@@ -19,27 +19,26 @@ using namespace std;
 #endif
 #include "mpitestcxx.h"
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     int errs = 0;
     bool flag;
     int provided, claimed;
 
-    provided = MPI::Init_thread( MPI::THREAD_MULTIPLE );
-    
+    provided = MPI::Init_thread(MPI::THREAD_MULTIPLE);
+
     flag = MPI::Is_thread_main();
     if (!flag) {
-	errs++;
-	cout << "This thread call init_thread but Is_thread_main gave false\n";
+        errs++;
+        cout << "This thread call init_thread but Is_thread_main gave false\n";
     }
     claimed = MPI::Query_thread();
     if (claimed != provided) {
-	errs++;
-	cout << "Query thread gave thread level " << claimed << 
-	    " but Init_thread gave " << provided << "\n";
+        errs++;
+        cout << "Query thread gave thread level " << claimed <<
+            " but Init_thread gave " << provided << "\n";
     }
 
-    MTest_Finalize( errs );
-    MPI::Finalize();
+    MTest_Finalize(errs);
     return 0;
 }

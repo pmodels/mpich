@@ -223,6 +223,8 @@ static inline int MPIDI_NM_am_send_hdr(int rank,
 
     /* create an internal request for the inject */
     inject_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+    MPIR_ERR_CHKANDSTMT((inject_req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                        "**nomemreq");
     MPIDI_NM_am_request_init(inject_req);
     send_buf = MPL_malloc(am_hdr_sz, MPL_MEM_BUFFER);
     MPIR_Memcpy(send_buf, am_hdr, am_hdr_sz);
@@ -260,6 +262,8 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
 
     /* create an internal request for the inject */
     inject_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
+    MPIR_ERR_CHKANDSTMT((inject_req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail,
+                        "**nomemreq");
     MPIDI_NM_am_request_init(inject_req);
     send_buf = MPL_malloc(am_hdr_sz, MPL_MEM_BUFFER);
     MPIR_Memcpy(send_buf, am_hdr, am_hdr_sz);

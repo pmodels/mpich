@@ -345,7 +345,8 @@ typedef struct MPIR_T_pvar_session_s {
 
 extern void MPIR_T_PVAR_REGISTER_impl(MPIR_T_pvar_class_t varclass, MPI_Datatype dtype,
                                       const char *name, void *addr, int count,
-                                      MPIR_T_enum_t * etype, int verb, int bind, int flags,
+                                      MPIR_T_enum_t * etype, MPIR_T_verbosity_t verb,
+                                      MPIR_T_bind_t bind, int flags,
                                       MPIR_T_pvar_get_value_cb get_value,
                                       MPIR_T_pvar_get_count_cb get_count, const char *cat,
                                       const char *desc);

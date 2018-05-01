@@ -31,7 +31,8 @@ int MPI_Ssend_init(const void *buf, int count, MPI_Datatype datatype, int dest, 
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Ssend_init
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Ssend_init - Creates a persistent request for a synchronous send
 
@@ -61,7 +62,6 @@ Output Parameters:
 int MPI_Ssend_init(const void *buf, int count, MPI_Datatype datatype, int dest,
                    int tag, MPI_Comm comm, MPI_Request * request)
 {
-    static const char FCNAME[] = "MPI_Ssend_init";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;

@@ -10,7 +10,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-/* Gather data from a vector to contiguous. */
+/* Tests Allgather on array of doubles. Same as allgather2 test
+ * but without MPI_IN_PLACE. */
 
 int main(int argc, char **argv)
 {
@@ -56,6 +57,5 @@ int main(int argc, char **argv)
     MPI_Allgather(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, NULL, 0, MPI_BYTE, MPI_COMM_WORLD);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

@@ -11,6 +11,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 MPI_Comm comm_all;
 
@@ -72,5 +73,5 @@ int main(int argc, char *argv[])
 
     MPI_Finalize();
 
-    return 0;
+    return MTestReturnValue(errs);
 }

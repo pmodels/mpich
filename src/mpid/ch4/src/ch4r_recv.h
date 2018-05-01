@@ -28,7 +28,7 @@ static inline int MPIDI_reply_ssend(MPIR_Request * rreq)
     ack_msg.sreq_ptr = MPIDI_CH4U_REQUEST(rreq, req->rreq.peer_req_ptr);
 
     mpi_errno =
-        MPIDI_NM_am_isend_reply(MPIDI_CH4U_get_context(MPIDI_CH4U_REQUEST(rreq, match_bits)),
+        MPIDI_NM_am_isend_reply(MPIDI_CH4U_REQUEST(rreq, context_id),
                                 MPIDI_CH4U_REQUEST(rreq, rank), MPIDI_CH4U_SSEND_ACK, &ack_msg,
                                 sizeof(ack_msg), NULL, 0, MPI_DATATYPE_NULL, rreq);
     if (mpi_errno)
@@ -63,7 +63,7 @@ static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_HANDLE_UNEXP_MRECV);
 
     rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
-    rreq->status.MPI_TAG = MPIDI_CH4U_request_get_tag(rreq);
+    rreq->status.MPI_TAG = MPIDI_CH4U_REQUEST(rreq, tag);
 
     buf = MPIDI_CH4U_REQUEST(rreq, req->rreq.mrcv_buffer);
     count = MPIDI_CH4U_REQUEST(rreq, req->rreq.mrcv_count);

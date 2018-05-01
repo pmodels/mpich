@@ -16,16 +16,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpicolltest.h"
+#include "mpitest.h"
 
 int main(int argc, char **argv)
 {
-    int err = 0, toterr;
+    int err = 0;
     int *sendbuf, recvbuf, *recvcounts;
     int size, rank, i, sumval;
     MPI_Comm comm;
 
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     comm = MPI_COMM_WORLD;
 
     MPI_Comm_size(comm, &size);
@@ -47,14 +48,9 @@ int main(int argc, char **argv)
         fprintf(stdout, "[%d] Got %d expected %d\n", rank, recvbuf, sumval);
     }
 
-    MPI_Allreduce(&err, &toterr, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0 && toterr == 0) {
-        printf(" No Errors\n");
-    }
-
     free(sendbuf);
     free(recvcounts);
-    MPI_Finalize();
+    MTest_Finalize(err);
 
-    return toterr;
+    return MTestReturnValue(err);
 }

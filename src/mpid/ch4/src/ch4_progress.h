@@ -33,6 +33,7 @@
 MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
 {
     int mpi_errno, made_progress, i;
+    mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_TEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PROGRESS_TEST);
@@ -72,7 +73,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROGRESS_TEST);
     return mpi_errno;
   fn_fail:
-    goto fn_exit;;
+    goto fn_exit;
 }
 
 #undef FUNCNAME

@@ -21,7 +21,7 @@
 /* is enough to look up the VC.                                             */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(ofi_tag_to_vc)
+#define FCNAME MPL_QUOTE(ofi_tag_to_vc)
 static inline MPIDI_VC_t *ofi_wc_to_vc(cq_tagged_entry_t * wc)
 {
     int pgid = 0, port = 0;
@@ -93,7 +93,7 @@ static inline MPIDI_VC_t *ofi_wc_to_vc(cq_tagged_entry_t * wc)
 /* other VC's because they may not be part of a process group.              */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_conn_req_callback)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_conn_req_callback)
 static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPIR_Request * rreq)
 {
     int ret, len, mpi_errno = MPI_SUCCESS;
@@ -157,7 +157,7 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPIR_Re
 /* decrement the ref counter via request completion                         */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_handle_packet)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_handle_packet)
 static inline int MPID_nem_ofi_handle_packet(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
                                              MPIR_Request * rreq)
 {
@@ -181,7 +181,7 @@ static inline int MPID_nem_ofi_handle_packet(cq_tagged_entry_t * wc ATTRIBUTE((u
 /* the parent request's counter, and cleans up the CTS request              */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_cts_send_callback)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_cts_send_callback)
 static inline int MPID_nem_ofi_cts_send_callback(cq_tagged_entry_t * wc, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -201,7 +201,7 @@ static inline int MPID_nem_ofi_cts_send_callback(cq_tagged_entry_t * wc, MPIR_Re
 /*   * Re-Post the RTS receive and handler to handle the next message       */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_preposted_callback)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_preposted_callback)
 static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPIR_Request * rreq)
 {
     int c, mpi_errno = MPI_SUCCESS;
@@ -270,7 +270,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPIR_R
 /* Complete and clean up the request                                        */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_connect_to_root_callback)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_connect_to_root_callback)
 int MPID_nem_ofi_connect_to_root_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
                                           MPIR_Request * sreq)
 {
@@ -292,7 +292,7 @@ int MPID_nem_ofi_connect_to_root_callback(cq_tagged_entry_t * wc ATTRIBUTE((unus
 /* messages.                                                                */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_cm_init)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_cm_init)
 int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
@@ -366,7 +366,7 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
 /* Clean up and cancle the requests initiated by the cm_init routine        */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_cm_finalize)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_cm_finalize)
 int MPID_nem_ofi_cm_finalize()
 {
     int mpi_errno = MPI_SUCCESS;
@@ -393,7 +393,7 @@ int MPID_nem_ofi_cm_finalize()
 /*   * Use fi_av_insert to register the address name with OFI               */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_vc_connect)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_vc_connect)
 int MPID_nem_ofi_vc_connect(MPIDI_VC_t * vc)
 {
     int len, ret, mpi_errno = MPI_SUCCESS;
@@ -427,7 +427,7 @@ int MPID_nem_ofi_vc_connect(MPIDI_VC_t * vc)
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_vc_init)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_vc_init)
 int MPID_nem_ofi_vc_init(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -460,7 +460,7 @@ int MPID_nem_ofi_vc_init(MPIDI_VC_t * vc)
 /* TODO:  Verify this code has no leaks                                     */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_vc_destroy)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_vc_destroy)
 int MPID_nem_ofi_vc_destroy(MPIDI_VC_t * vc)
 {
     BEGIN_FUNC(FCNAME);
@@ -491,7 +491,7 @@ int MPID_nem_ofi_vc_destroy(MPIDI_VC_t * vc)
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_vc_terminate)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_vc_terminate)
 int MPID_nem_ofi_vc_terminate(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -518,7 +518,7 @@ int MPID_nem_ofi_vc_terminate(MPIDI_VC_t * vc)
 /*    during the SendContig family of routines.                             */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(nm_connect_to_root)
+#define FCNAME MPL_QUOTE(nm_connect_to_root)
 int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
 {
     int len, ret, mpi_errno = MPI_SUCCESS, str_errno = MPI_SUCCESS;
@@ -590,7 +590,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_get_business_card)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_get_business_card)
 int MPID_nem_ofi_get_business_card(int my_rank ATTRIBUTE((unused)),
                                    char **bc_val_p, int *val_max_sz_p)
 {

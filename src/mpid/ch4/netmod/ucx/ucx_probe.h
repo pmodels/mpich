@@ -33,7 +33,7 @@ static inline int MPIDI_NM_mpi_improbe(int source,
     if (message_h) {
         *flag = 1;
         req = (MPIR_Request *) MPIR_Request_create(MPIR_REQUEST_KIND__MPROBE);
-        MPIR_Assert(req);
+        MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(req);
         MPIDI_UCX_REQ(req).a.message_handler = message_h;
 
@@ -48,7 +48,10 @@ static inline int MPIDI_NM_mpi_improbe(int source,
     }
     *message = req;
 
+  fn_exit:
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 

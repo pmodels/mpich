@@ -20,7 +20,7 @@
 
 int main(int argc, char **argv)
 {
-    int err = 0;
+    int errs = 0;
     int size, rsize, rank, i;
     int recvcount,              /* Each process receives this much data */
      sendcount,                 /* Each process contributes this much data */
@@ -77,8 +77,8 @@ int main(int argc, char **argv)
             sumval = (long long) (sendcount) * (long long) ((rsize * (rsize - 1)) / 2) +
                 (long long) (i + rank * rsize * basecount) * (long long) rsize;
             if (recvbuf[i] != sumval) {
-                err++;
-                if (err < 4) {
+                errs++;
+                if (errs < 4) {
                     fprintf(stdout, "Did not get expected value for reduce scatter\n");
                     fprintf(stdout, "[%d] %s recvbuf[%d] = %lld, expected %lld\n",
                             rank, isLeftGroup ? "L" : "R", i, recvbuf[i], sumval);
@@ -92,9 +92,8 @@ int main(int argc, char **argv)
         MTestFreeComm(&comm);
     }
 
-    MTest_Finalize(err);
+    MTest_Finalize(errs);
 
-    MPI_Finalize();
 
-    return 0;
+    return MTestReturnValue(errs);
 }

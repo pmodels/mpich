@@ -66,7 +66,7 @@ int main(int argc, char **argv)
     TYPE_C *val_ptr, *res_ptr;
     MPI_Win win;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -320,14 +320,9 @@ int main(int argc, char **argv)
 
     MPI_Win_free(&win);
 
-    MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
-    if (rank == 0 && all_errors == 0)
-        printf(" No Errors\n");
-
     free(val_ptr);
     free(res_ptr);
-    MPI_Finalize();
+    MTest_Finalize(errors);
 
-    return 0;
+    return MTestReturnValue(all_errors);
 }

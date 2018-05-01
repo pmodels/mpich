@@ -93,6 +93,5 @@
       call mpi_op_free( myop, ierr )
 
       call mtest_finalize(errs)
-      call mpi_finalize(ierr)
 
       end

@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     int flag;
     MPI_Comm shm_comm = MPI_COMM_NULL;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -164,12 +164,7 @@ int main(int argc, char **argv)
 
     MPI_Win_free(&win);
 
-    MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    MTest_Finalize(errors);
 
-    if (rank == 0 && all_errors == 0)
-        printf(" No Errors\n");
-
-    MPI_Finalize();
-
-    return 0;
+    return MTestReturnValue(all_errors);
 }

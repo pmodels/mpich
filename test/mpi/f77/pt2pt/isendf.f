@@ -26,7 +26,6 @@ C      verbose = .true.
       enddo
 C
       call MTest_Finalize( errs )
-      call MPI_Finalize(ierr)
 C
       end
 C

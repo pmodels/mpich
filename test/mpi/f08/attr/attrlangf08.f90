@@ -148,7 +148,7 @@
       integer(MPI_ADDRESS_KIND) tmp
 
       errs = 0
-      call MPI_INIT( ierr )
+      call MTEST_INIT( ierr )
       call MPI_COMM_RANK( MPI_COMM_WORLD, rank, ierr )
 !
 !     Let the C routines know about debugging
@@ -246,14 +246,7 @@
       call MPI_REDUCE( MPI_IN_PLACE, errs, 1, MPI_INT, MPI_SUM, 0,&
            & MPI_COMM_WORLD, ierr )
 
-      if (rank .eq. 0) then
-         if (errs .eq. 0) then
-            print *, " No Errors"
-         else
-            print *, " Found ", errs, " errors"
-         endif
-      endif
-      call MPI_FINALIZE( ierr )
+      call MTEST_FINALIZE( errs )
 
       end
 !

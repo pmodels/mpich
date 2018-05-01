@@ -43,7 +43,6 @@ MTEST_THREAD_RETURN_TYPE test_comm_create(void *arg)
         MPI_Comm_free(&comm);
 
         MPI_Group_free(&world_group);
-
     }
 
     return NULL;
@@ -55,7 +54,7 @@ int main(int argc, char **argv)
     int thread_args[NUM_THREADS];
     int i, err, provided;
 
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
     check(provided == MPI_THREAD_MULTIPLE);
 
@@ -77,10 +76,7 @@ int main(int argc, char **argv)
         MPI_Comm_free(&comms[i]);
     }
 
-    if (rank == 0)
-        printf(" No Errors\n");
-
-    MPI_Finalize();
+    MTest_Finalize(0);
 
     return 0;
 }

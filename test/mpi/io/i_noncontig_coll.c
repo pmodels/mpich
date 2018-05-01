@@ -8,16 +8,27 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 /* tests noncontiguous reads/writes using nonblocking collective I/O */
 
 #define SIZE 5000
 
 #define VERBOSE 0
+
+#define HANDLE_ERROR(err) \
+    if (err != MPI_SUCCESS) { \
+        char msg[MPI_MAX_ERROR_STRING]; \
+        int resultlen; \
+        MPI_Error_string(err, msg, &resultlen); \
+        fprintf(stderr, "%s line %d: %s\n", __FILE__, __LINE__, msg); \
+        MPI_Abort(MPI_COMM_WORLD, 1); \
+    }
+
 int main(int argc, char **argv)
 {
     int *buf, i, mynod, nprocs, len, b[3];
-    int errs = 0, toterrs;
+    int errs = 0, err = MPI_SUCCESS;
     MPI_Aint d[3];
     MPI_File fh;
     MPI_Request request;
@@ -25,7 +36,7 @@ int main(int argc, char **argv)
     char *filename;
     MPI_Datatype typevec, newtype, t[3];
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
 
@@ -71,22 +82,30 @@ int main(int argc, char **argv)
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
+    err =
+        MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL,
+                      &fh);
+    HANDLE_ERROR(err);
 
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
+    err = MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
+    HANDLE_ERROR(err);
 
     for (i = 0; i < SIZE; i++)
         buf[i] = i + mynod * SIZE;
-    MPI_File_iwrite_all(fh, buf, 1, newtype, &request);
+    err = MPI_File_iwrite_all(fh, buf, 1, newtype, &request);
+    HANDLE_ERROR(err);
 
     MPI_Barrier(MPI_COMM_WORLD);
-    MPI_Wait(&request, &status);
+    err = MPI_Wait(&request, &status);
+    HANDLE_ERROR(err);
 
     for (i = 0; i < SIZE; i++)
         buf[i] = -1;
 
-    MPI_File_iread_at_all(fh, 0, buf, 1, newtype, &request);
-    MPI_Wait(&request, &status);
+    err = MPI_File_iread_at_all(fh, 0, buf, 1, newtype, &request);
+    HANDLE_ERROR(err);
+    err = MPI_Wait(&request, &status);
+    HANDLE_ERROR(err);
 
     for (i = 0; i < SIZE; i++) {
         if (!mynod) {
@@ -111,7 +130,8 @@ int main(int argc, char **argv)
         }
     }
 
-    MPI_File_close(&fh);
+    err = MPI_File_close(&fh);
+    HANDLE_ERROR(err);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -124,20 +144,27 @@ int main(int argc, char **argv)
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
+    err =
+        MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL,
+                      &fh);
+    HANDLE_ERROR(err);
 
     for (i = 0; i < SIZE; i++)
         buf[i] = i + mynod * SIZE;
-    MPI_File_iwrite_at_all(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1, newtype, &request);
+    err = MPI_File_iwrite_at_all(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1, newtype, &request);
+    HANDLE_ERROR(err);
 
     MPI_Barrier(MPI_COMM_WORLD);
-    MPI_Wait(&request, &status);
+    err = MPI_Wait(&request, &status);
+    HANDLE_ERROR(err);
 
     for (i = 0; i < SIZE; i++)
         buf[i] = -1;
 
-    MPI_File_iread_at_all(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1, newtype, &request);
-    MPI_Wait(&request, &status);
+    err = MPI_File_iread_at_all(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1, newtype, &request);
+    HANDLE_ERROR(err);
+    err = MPI_Wait(&request, &status);
+    HANDLE_ERROR(err);
 
     for (i = 0; i < SIZE; i++) {
         if (!mynod) {
@@ -162,7 +189,8 @@ int main(int argc, char **argv)
         }
     }
 
-    MPI_File_close(&fh);
+    err = MPI_File_close(&fh);
+    HANDLE_ERROR(err);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -175,22 +203,30 @@ int main(int argc, char **argv)
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
+    err =
+        MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL,
+                      &fh);
+    HANDLE_ERROR(err);
 
-    MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
+    err = MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
+    HANDLE_ERROR(err);
 
     for (i = 0; i < SIZE; i++)
         buf[i] = i + mynod * SIZE;
-    MPI_File_iwrite_all(fh, buf, SIZE, MPI_INT, &request);
+    err = MPI_File_iwrite_all(fh, buf, SIZE, MPI_INT, &request);
+    HANDLE_ERROR(err);
 
     MPI_Barrier(MPI_COMM_WORLD);
-    MPI_Wait(&request, &status);
+    err = MPI_Wait(&request, &status);
+    HANDLE_ERROR(err);
 
     for (i = 0; i < SIZE; i++)
         buf[i] = -1;
 
-    MPI_File_iread_at_all(fh, 0, buf, SIZE, MPI_INT, &request);
-    MPI_Wait(&request, &status);
+    err = MPI_File_iread_at_all(fh, 0, buf, SIZE, MPI_INT, &request);
+    HANDLE_ERROR(err);
+    err = MPI_Wait(&request, &status);
+    HANDLE_ERROR(err);
 
     for (i = 0; i < SIZE; i++) {
         if (!mynod) {
@@ -207,21 +243,13 @@ int main(int argc, char **argv)
         }
     }
 
-    MPI_File_close(&fh);
-
-    MPI_Allreduce(&errs, &toterrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (mynod == 0) {
-        if (toterrs > 0) {
-            fprintf(stderr, "Found %d errors\n", toterrs);
-        } else {
-            fprintf(stdout, " No Errors\n");
-        }
-    }
+    err = MPI_File_close(&fh);
+    HANDLE_ERROR(err);
 
     MPI_Type_free(&newtype);
     free(buf);
     if (mynod)
         free(filename);
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }

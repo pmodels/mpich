@@ -92,8 +92,9 @@ C       Note also that both the parent and child will generate "No
 C       Errors" if both call MTest_Finalize 
         if (parentcomm .eq. MPI_COMM_NULL) then
            call MTest_Finalize( errs )
+        else
+           call MPI_Finalize( ierr )
         endif
 
  300    continue
-        call MPI_Finalize( ierr )
         end

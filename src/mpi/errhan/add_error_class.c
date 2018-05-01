@@ -30,7 +30,8 @@ int MPI_Add_error_class(int *errorclass) __attribute__ ((weak, alias("PMPI_Add_e
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Add_error_class
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Add_error_class - Add an MPI error class to the known classes
 
@@ -47,7 +48,6 @@ Output Parameters:
 @*/
 int MPI_Add_error_class(int *errorclass)
 {
-    static const char FCNAME[] = "MPI_Add_error_class";
     int mpi_errno = MPI_SUCCESS;
     int new_class;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ADD_ERROR_CLASS);

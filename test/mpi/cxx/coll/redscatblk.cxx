@@ -16,6 +16,8 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitestconf.h"
+#include "mpitestcxx.h"
 
 int main(int argc, char **argv)
 {
@@ -63,13 +65,10 @@ int main(int argc, char **argv)
         }
     }
 
-    delete [] sendbuf;
-    delete [] recvbuf;
+    delete[]sendbuf;
+    delete[]recvbuf;
 
-    MPI_Finalize();
-
-    if (err == 0 && rank == 0)
-        printf(" No Errors\n");
+    MTest_Finalize(err);
 
     return 0;
 }

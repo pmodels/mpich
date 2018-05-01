@@ -31,7 +31,8 @@ int MPI_Error_class(int errorcode, int *errorclass)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Error_class
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Error_class - Converts an error code into an error class
 
@@ -50,9 +51,6 @@ Output Parameters:
 @*/
 int MPI_Error_class(int errorcode, int *errorclass)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Error_class";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ERROR_CLASS);
 

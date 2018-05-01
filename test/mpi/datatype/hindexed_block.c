@@ -10,6 +10,7 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
+#include "mpitest.h"
 
 #if !defined(USE_STRICT_MPI) && defined(MPICH)
 #define TEST_HINDEXED_BLOCK 1
@@ -30,7 +31,7 @@ int main(int argc, char **argv)
     int err, errs = 0;
     int rank;
 
-    MPI_Init(&argc, &argv);     /* MPI-1.2 doesn't allow for MPI_Init(0,0) */
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #if defined(TEST_HINDEXED_BLOCK)
     parse_args(argc, argv);
@@ -51,16 +52,8 @@ int main(int argc, char **argv)
     errs += err;
 #endif /*defined(TEST_HINDEXED_BLOCK) */
 
-    /* print message and exit */
-    if (rank == 0) {
-        if (errs) {
-            fprintf(stderr, "Found %d errors\n", errs);
-        } else {
-            printf(" No Errors\n");
-        }
-    }
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }
 
 #if defined(TEST_HINDEXED_BLOCK)

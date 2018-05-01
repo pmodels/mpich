@@ -113,6 +113,10 @@ enum {
    globally accessible linked list. Once attribute caching on a
    datatype is available (in MPI-2), that should be used instead. */
 
+#define ADIOI_TYPE_DECREASE 0x00000001  /* if not monotonic nondecreasing */
+#define ADIOI_TYPE_OVERLAP  0x00000002  /* if contains overlapping regions */
+#define ADIOI_TYPE_NEGATIVE 0x00000004  /* if one of displacements is negative */
+
 typedef struct ADIOI_Fl_node {
     MPI_Datatype type;
     MPI_Count count;            /* no. of contiguous blocks */
@@ -131,6 +135,7 @@ typedef struct ADIOI_Fl_node {
     int refct;                  /* when storing flattened representation on a
                                  * type, attribute copy and delete routines
                                  * will manage refct */
+    int flag;                   /* ADIOI_TYPE_XXX */
 } ADIOI_Flatlist_node;
 
 #ifdef ROMIO_PVFS2
@@ -141,7 +146,7 @@ typedef struct ADIOI_Fl_node {
 #endif
 
 typedef struct ADIOI_AIO_req_str {
-    /* very wierd: if this MPI_Request is a pointer, some C++ compilers
+    /* very weird: if this MPI_Request is a pointer, some C++ compilers
      * will clobber it when the MPICH C++ bindings are used */
     MPI_Request req;
     MPI_Offset nbytes;
@@ -377,8 +382,8 @@ void ADIOI_GEN_Delete(const char *filename, int *error_code);
 void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
                           MPI_Datatype datatype, int file_ptr_type,
                           ADIO_Offset offset, ADIO_Status * status, int *error_code);
-int ADIOI_GEN_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
-                  int wr, MPI_Request * request);
+int ADIOI_GEN_aio(ADIO_File fd, void *buf, int count, MPI_Datatype type,
+                  ADIO_Offset offset, int wr, MPI_Request * request);
 void ADIOI_GEN_IreadContig(ADIO_File fd, void *buf, int count,
                            MPI_Datatype datatype, int file_ptr_type,
                            ADIO_Offset offset, ADIO_Request * request, int *error_code);
@@ -666,7 +671,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
                                     ADIO_Offset * end_offset,
                                     ADIO_Offset * fd_start, ADIO_Offset * fd_end);
 
-/* This data structure holds parameters releated to file   */
+/* This data structure holds parameters related to file   */
 /* striping needed by the one-sided aggregation algorithm. */
 /* A stripeSize of 0 indicates there is no striping.       */
 typedef struct ADIOI_OneSidedStripeParms {
@@ -682,9 +687,9 @@ typedef struct ADIOI_OneSidedStripeParms {
     ADIO_Offset stripedLastFileOffset;  /* since we are now just calling the onesided algorithm */
     /* with the offset range of segment, we still need to   */
     /* know the actual last offset of the file.             */
-    int firstStripedWriteCall;  /* whether this is the first call in the first segement of the  */
+    int firstStripedWriteCall;  /* whether this is the first call in the first segment of the  */
     /* onesided algorithm.                                          */
-    int lastStripedWriteCall;   /* whether this is the last call in the last segement of the  */
+    int lastStripedWriteCall;   /* whether this is the last call in the last segment of the  */
     /* onesided algorithm.                                        */
 } ADIOI_OneSidedStripeParms;
 

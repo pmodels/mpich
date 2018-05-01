@@ -63,7 +63,7 @@ typedef struct {
     {                                                                   \
         int incomplete__;                                               \
         MPIR_cc_decr((req_)->cc_ptr, &incomplete__);                    \
-        dtype_release_if_not_builtin(MPIDI_POSIX_REQUEST(req_)->datatype); \
+        MPIR_Datatype_release_if_not_builtin(MPIDI_POSIX_REQUEST(req_)->datatype); \
         if (!incomplete__)                                              \
             MPIR_Request_free(req_);                                    \
     }
@@ -106,6 +106,7 @@ typedef struct {
 #define MPIDI_POSIX_REQUEST_CREATE_SREQ(sreq_)                  \
     {                                                           \
         (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND); \
+        MPIR_ERR_CHKANDSTMT((sreq_) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
         MPIR_Request_add_ref((sreq_));                          \
         (sreq_)->u.persist.real_request   = NULL;               \
     }
@@ -113,6 +114,7 @@ typedef struct {
 #define MPIDI_POSIX_REQUEST_CREATE_RREQ(rreq_)                  \
     {                                                           \
         (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__RECV); \
+        MPIR_ERR_CHKANDSTMT((rreq_) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq"); \
         MPIR_Request_add_ref((rreq_));                          \
         (rreq_)->u.persist.real_request   = NULL;               \
     }
@@ -142,7 +144,6 @@ typedef struct {
 /*
  * Helper routines and macros for request completion
  */
-#define DECL_FUNC(FUNCNAME)  MPL_QUOTE(FUNCNAME)
 
 #undef FUNCNAME
 #define FUNCNAME nothing

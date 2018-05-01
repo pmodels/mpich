@@ -6,7 +6,7 @@
 
 #include "hydra.h"
 
-char *HYD_dbg_prefix = (char *) "unknown";
+char *HYD_dbg_prefix = NULL;
 
 HYD_status HYDU_dbg_init(const char *str)
 {

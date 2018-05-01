@@ -7,6 +7,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 /*
  * This test attempts MPI_Irecv with the source being a dead process. It should fail
@@ -16,7 +17,7 @@
  */
 int main(int argc, char **argv)
 {
-    int rank, size, err, errclass;
+    int rank, size, err, errclass, toterrs = 0;;
     MPI_Request request;
     char buf[10];
 
@@ -35,8 +36,10 @@ int main(int argc, char **argv)
     if (rank == 0) {
         MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
         err = MPI_Irecv(buf, 1, MPI_CHAR, 1, 0, MPI_COMM_WORLD, &request);
-        if (err)
+        if (err) {
             fprintf(stderr, "MPI_Irecv returned an error");
+            toterrs++;
+        }
 
         err = MPI_Wait(&request, MPI_STATUS_IGNORE);
 #if defined (MPICH) && (MPICH_NUMVERSION >= 30100102)
@@ -47,6 +50,7 @@ int main(int argc, char **argv)
         } else {
             fprintf(stderr, "Wrong error code (%d) returned. Expected MPIX_ERR_PROC_FAILED\n",
                     errclass);
+            toterrs++;
         }
 #else
         if (err) {
@@ -54,11 +58,12 @@ int main(int argc, char **argv)
             fflush(stdout);
         } else {
             fprintf(stderr, "Program reported MPI_SUCCESS, but an error code was expected.\n");
+            toterrs++;
         }
 #endif
     }
 
     MPI_Finalize();
 
-    return 0;
+    return MTestReturnValue(toterrs);
 }

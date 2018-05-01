@@ -15,14 +15,14 @@ int main(int argc, char **argv)
 {
     int i, j, rank;
     MPI_Info info_in, info_out;
-    int errors = 0, all_errors = 0;
+    int errors = 0, errs = 0;
     MPI_Comm comm;
     void *base;
     char invalid_key[] = "invalid_test_key";
     char buf[MPI_MAX_INFO_VAL];
     int flag;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -49,12 +49,9 @@ int main(int argc, char **argv)
     MPI_Info_free(&info_out);
     MPI_Comm_free(&comm);
 
-    MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&errors, &errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
-    if (rank == 0 && all_errors == 0)
-        printf(" No Errors\n");
+    MTest_Finalize(errs);
 
-    MPI_Finalize();
-
-    return 0;
+    return MTestReturnValue(errs);
 }

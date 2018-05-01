@@ -30,7 +30,8 @@ int MPI_Cart_get(MPI_Comm comm, int maxdims, int dims[], int periods[], int coor
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Cart_get
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Cart_get - Retrieves Cartesian topology information associated with a
@@ -60,7 +61,6 @@ Output Parameters:
 @*/
 int MPI_Cart_get(MPI_Comm comm, int maxdims, int dims[], int periods[], int coords[])
 {
-    static const char FCNAME[] = "MPI_Cart_get";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Topology *cart_ptr;
@@ -143,21 +143,23 @@ int MPI_Cart_get(MPI_Comm comm, int maxdims, int dims[], int periods[], int coor
 
     /* ... end of body of routine ... */
 
+#ifdef HAVE_ERROR_CHECKING
   fn_exit:
+#endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_CART_GET);
     return mpi_errno;
 
+#ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_cart_get", "**mpi_cart_get %C %d %p %p %p", comm, maxdims,
                                  dims, periods, coords);
     }
-#endif
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
+#endif
 }

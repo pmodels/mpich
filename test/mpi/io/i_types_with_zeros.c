@@ -12,6 +12,7 @@
 #include <sys/uio.h>
 
 #include <mpi.h>
+#include "mpitest.h"
 
 #define MAXLEN 9
 
@@ -32,7 +33,7 @@ enum {
 
 static int test_indexed_with_zeros(char *filename, int testcase)
 {
-    int i, rank, np, buflen, num, err, nr_errors = 0;
+    int i, rank, np, buflen, num, err, errs = 0;
     int nelms[MAXLEN], buf[MAXLEN], indices[MAXLEN], blocklen[MAXLEN];
     MPI_File fh;
     MPI_Request request;
@@ -129,39 +130,35 @@ static int test_indexed_with_zeros(char *filename, int testcase)
             handle_error(err, "MPI_File_close");
         for (i = 0; i < MAXLEN; i++) {
             if (buf[i] < 0) {
-                nr_errors++;
+                errs++;
                 printf("Error: unexpected value for case %d at buf[%d] == %d\n",
                        testcase, i, buf[i]);
             }
         }
     }
-    return nr_errors;
+    return errs;
 }
 
 int main(int argc, char **argv)
 {
-    int nr_errors, rank, np;
+    int errs, rank, np;
     char *filename;
 
     filename = (argc > 1) ? argv[1] : "testfile";
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
     if (np != 2) {
         if (rank == 0)
             fprintf(stderr, "Must run on 2 MPI processes\n");
-        MPI_Finalize();
         return 1;
     }
-    nr_errors = test_indexed_with_zeros(filename, INDEXED);
-    nr_errors += test_indexed_with_zeros(filename, HINDEXED);
-    nr_errors += test_indexed_with_zeros(filename, STRUCT);
+    errs = test_indexed_with_zeros(filename, INDEXED);
+    errs += test_indexed_with_zeros(filename, HINDEXED);
+    errs += test_indexed_with_zeros(filename, STRUCT);
 
-    if (rank == 0 && nr_errors == 0)
-        printf(" No Errors\n");
-
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }

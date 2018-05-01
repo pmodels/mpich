@@ -28,7 +28,7 @@ program get_elem_d
   integer :: ibuff(imax)
   character :: cbuff(cmax)='X'
 
-  call MPI_Init(ierror)
+  call MTest_Init(ierror)
   comm=MPI_COMM_WORLD
   types(1) = MPI_DOUBLE_PRECISION
   types(2) = MPI_INTEGER
@@ -115,15 +115,7 @@ program get_elem_d
      endif
   enddo
 
-  if (rank .eq. dest) then
-     if (errs .eq. 0) then
-        write (*,*) " No Errors"
-     else
-        print *, 'errs=',errs
-     endif
-  endif
-
   call MPI_Type_free(newtype, ierror)
-  call MPI_Finalize(ierror)
+  call MTest_Finalize(errs)
 
 end program get_elem_d

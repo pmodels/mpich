@@ -30,7 +30,8 @@ int MPI_Status_set_cancelled(MPI_Status * status, int flag)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Status_set_cancelled
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Status_set_cancelled - Sets the cancelled state associated with a
    Status object
@@ -49,9 +50,6 @@ Input Parameters:
 @*/
 int MPI_Status_set_cancelled(MPI_Status * status, int flag)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Status_set_cancelled";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_STATUS_SET_CANCELLED);
 

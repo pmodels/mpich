@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     MPI_Group world, newgroup;
     MPI_Comm newcomm;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     }
 
     if (rank == 0) {
-        strcpy(buf, "No Errors");
+        strcpy(buf, "a1b2c3d4e");
     }
 
     /* do a small bcast first */
@@ -72,24 +72,10 @@ int main(int argc, char **argv)
     }
 #endif
 
-    rc = MPI_Reduce(&errs, &toterrs, 1, MPI_INT, MPI_SUM, 0, newcomm);
-    if (rc)
-        fprintf(stderr, "Failed to get errors from other processes\n");
-
-    if (rank == 0) {
-        if (toterrs) {
-            printf(" Found %d errors\n", toterrs);
-        } else {
-            printf(" No Errors\n");
-        }
-        fflush(stdout);
-    }
-
     MPI_Group_free(&world);
     MPI_Group_free(&newgroup);
     MPI_Comm_free(&newcomm);
-    MPI_Finalize();
+    MTest_Finalize(errs);
 
-    return 0;
-
+    return MTestReturnValue(errs);
 }

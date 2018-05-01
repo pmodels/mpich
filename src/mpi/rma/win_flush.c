@@ -29,7 +29,8 @@ int MPI_Win_flush(int rank, MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_f
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_flush
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_flush - Complete all outstanding RMA operations at the given target.
 
@@ -56,7 +57,6 @@ Input Parameters:
 @*/
 int MPI_Win_flush(int rank, MPI_Win win)
 {
-    static const char FCNAME[] = "MPI_Win_flush";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_FLUSH);

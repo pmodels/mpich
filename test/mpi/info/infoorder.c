@@ -161,7 +161,5 @@ int main(int argc, char *argv[])
     MPI_Info_free(&info);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
-    return 0;
-
+    return MTestReturnValue(errs);
 }

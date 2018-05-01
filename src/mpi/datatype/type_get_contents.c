@@ -96,7 +96,7 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
     for (i = 0; i < cp->nr_types; i++) {
         if (HANDLE_GET_KIND(array_of_datatypes[i]) != HANDLE_KIND_BUILTIN) {
             MPIR_Datatype_get_ptr(array_of_datatypes[i], dtp);
-            MPIR_Datatype_add_ref(dtp);
+            MPIR_Datatype_ptr_add_ref(dtp);
         }
     }
 
@@ -107,7 +107,8 @@ int MPIR_Type_get_contents(MPI_Datatype datatype,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_get_contents
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_get_contents - get type contents
 
@@ -136,7 +137,6 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
                           int array_of_integers[],
                           MPI_Aint array_of_addresses[], MPI_Datatype array_of_datatypes[])
 {
-    static const char FCNAME[] = "MPI_Type_get_contents";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_GET_CONTENTS);
 

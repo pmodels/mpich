@@ -113,16 +113,16 @@ extern MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN];
 extern MPIR_Op MPIR_Op_direct[];
 extern MPIR_Object_alloc_t MPIR_Op_mem;
 
-#define MPIR_Op_add_ref(_op) \
-    do { MPIR_Object_add_ref(_op); } while (0)
-#define MPIR_Op_release_ref(_op, _inuse) \
-    do { MPIR_Object_release_ref(_op, _inuse); } while (0)
+#define MPIR_Op_ptr_add_ref(op_p_) \
+    do { MPIR_Object_add_ref(op_p_); } while (0)
+#define MPIR_Op_ptr_release_ref(op_p_, inuse_) \
+    do { MPIR_Object_release_ref(op_p_, inuse_); } while (0)
 
 /* release and free-if-not-in-use helper */
-#define MPIR_Op_release(op_p_)                           \
+#define MPIR_Op_ptr_release(op_p_)                       \
     do {                                                 \
         int in_use_;                                     \
-        MPIR_Op_release_ref((op_p_), &in_use_);          \
+        MPIR_Op_ptr_release_ref((op_p_), &in_use_);      \
         if (!in_use_) {                                  \
             MPIR_Handle_obj_free(&MPIR_Op_mem, (op_p_)); \
         }                                                \
@@ -157,6 +157,25 @@ int MPIR_MAXLOC_check_dtype(MPI_Datatype);
 int MPIR_MINLOC_check_dtype(MPI_Datatype);
 int MPIR_REPLACE_check_dtype(MPI_Datatype);
 int MPIR_NO_OP_check_dtype(MPI_Datatype);
+
+#define MPIR_Op_add_ref_if_not_builtin(op)               \
+    do {                                                 \
+        if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {\
+            MPIR_Op *op_ptr = NULL;                      \
+            MPIR_Op_get_ptr(op, op_ptr);                 \
+            MPIR_Op_ptr_add_ref(op_ptr);                 \
+        }                                                \
+    } while (0)                                          \
+
+
+#define MPIR_Op_release_if_not_builtin(op)               \
+    do {                                                 \
+        if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {\
+            MPIR_Op *op_ptr = NULL;                      \
+            MPIR_Op_get_ptr(op, op_ptr);                 \
+            MPIR_Op_ptr_release(op_ptr);                 \
+        }                                                \
+    } while (0)                                          \
 
 #define MPIR_PREDEF_OP_COUNT 14
 extern MPI_User_function *MPIR_Op_table[];

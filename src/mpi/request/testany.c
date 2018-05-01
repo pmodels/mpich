@@ -30,11 +30,66 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx, int *flag
 #undef MPI_Testany
 #define MPI_Testany PMPI_Testany
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Testany_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Testany_impl(int count, MPIR_Request * request_ptrs[],
+                      int *indx, int *flag, MPI_Status * status)
+{
+    int i;
+    int n_inactive = 0;
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPID_Progress_test();
+    /* --BEGIN ERROR HANDLING-- */
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+    /* --END ERROR HANDLING-- */
+
+    for (i = 0; i < count; i++) {
+        if ((i + 1) % MPIR_CVAR_REQUEST_POLL_FREQ == 0) {
+            mpi_errno = MPID_Progress_test();
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+        }
+
+        if (request_ptrs[i] != NULL &&
+            request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
+            request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
+            mpi_errno =
+                (request_ptrs[i]->u.ureq.greq_fns->poll_fn) (request_ptrs[i]->u.ureq.
+                                                             greq_fns->grequest_extra_state,
+                                                             status);
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
+        }
+        if (!MPIR_Request_is_active(request_ptrs[i])) {
+            n_inactive += 1;
+        } else if (MPIR_Request_is_complete(request_ptrs[i])) {
+            *flag = TRUE;
+            *indx = i;
+            goto fn_exit;
+        }
+    }
+
+    if (n_inactive == count) {
+        *flag = TRUE;
+        *indx = MPI_UNDEFINED;
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Testany
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Testany - Tests for completion of any previdously initiated
                   requests
@@ -67,13 +122,13 @@ program to unexecpectedly terminate or produce incorrect results.
 int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
                 int *flag, MPI_Status * status)
 {
-    static const char FCNAME[] = "MPI_Testany";
     MPIR_Request *request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPIR_Request **request_ptrs = request_ptr_array;
     int i;
     int n_inactive;
     int active_flag;
     int last_disabled_anysource = -1;
+    int first_nonnull = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TESTANY);
@@ -81,7 +136,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIR_FUNC_TERSE_PT2PT_ENTER(MPID_STATE_MPI_TESTANY);
+    MPIR_FUNC_TERSE_REQUEST_ENTER(MPID_STATE_MPI_TESTANY);
 
     /* Check the arguments */
 #ifdef HAVE_ERROR_CHECKING
@@ -115,6 +170,9 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     }
 
     n_inactive = 0;
+    *flag = FALSE;
+    *indx = MPI_UNDEFINED;
+
     for (i = 0; i < count; i++) {
         if (array_of_requests[i] != MPI_REQUEST_NULL) {
             MPIR_Request_get_ptr(array_of_requests[i], request_ptrs[i]);
@@ -130,6 +188,25 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
                 MPID_END_ERROR_CHECKS;
             }
 #endif
+            if (unlikely(MPIR_CVAR_ENABLE_FT &&
+                         MPID_Request_is_anysource(request_ptrs[i]) &&
+                         !MPID_Comm_AS_enabled(request_ptrs[i]->comm) &&
+                         !MPIR_Request_is_complete(request_ptrs[i]))) {
+                last_disabled_anysource = i;
+            }
+
+            if (MPIR_Request_is_complete(request_ptrs[i])) {
+                if (MPIR_Request_is_active(request_ptrs[i])) {
+                    *indx = i;
+                    *flag = TRUE;
+                    break;
+                } else {
+                    request_ptrs[i] = NULL;
+                }
+            } else {
+                if (!first_nonnull)
+                    first_nonnull = i;
+            }
         } else {
             request_ptrs[i] = NULL;
             n_inactive += 1;
@@ -144,50 +221,29 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
         goto fn_exit;
     }
 
-    *flag = FALSE;
-    *indx = MPI_UNDEFINED;
+    if (*indx == MPI_UNDEFINED) {
+        mpi_errno =
+            MPID_Testany(count - first_nonnull, &request_ptrs[first_nonnull], indx, flag, status);
+        /* --BEGIN ERROR HANDLING-- */
+        if (mpi_errno != MPI_SUCCESS) {
+            goto fn_fail;
+        }
+        /* --END ERROR HANDLING-- */
 
-    mpi_errno = MPID_Progress_test();
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno != MPI_SUCCESS) {
-        goto fn_fail;
+        if (*indx != MPI_UNDEFINED) {
+            *indx += first_nonnull;
+        }
     }
-    /* --END ERROR HANDLING-- */
 
-    for (i = 0; i < count; i++) {
-        if (request_ptrs[i] != NULL &&
-            request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
-            request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
-            mpi_errno =
-                (request_ptrs[i]->u.ureq.greq_fns->poll_fn) (request_ptrs[i]->u.ureq.
-                                                             greq_fns->grequest_extra_state,
-                                                             status);
-            if (mpi_errno != MPI_SUCCESS)
-                goto fn_fail;
+    if (*indx != MPI_UNDEFINED) {
+        mpi_errno = MPIR_Request_completion_processing(request_ptrs[*indx], status, &active_flag);
+        if (!MPIR_Request_is_persistent(request_ptrs[*indx])) {
+            MPIR_Request_free(request_ptrs[*indx]);
+            array_of_requests[*indx] = MPI_REQUEST_NULL;
         }
-        if (request_ptrs[i] != NULL) {
-            if (MPIR_Request_is_complete(request_ptrs[i])) {
-                mpi_errno = MPIR_Request_completion_processing(request_ptrs[i], status,
-                                                               &active_flag);
-                if (!MPIR_Request_is_persistent(request_ptrs[i])) {
-                    MPIR_Request_free(request_ptrs[i]);
-                    array_of_requests[i] = MPI_REQUEST_NULL;
-                }
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
-                if (active_flag) {
-                    *flag = TRUE;
-                    *indx = i;
-                    goto fn_exit;
-                } else {
-                    n_inactive += 1;
-                }
-            } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                                MPID_Request_is_anysource(request_ptrs[i]) &&
-                                !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
-                last_disabled_anysource = i;
-            }
-        }
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        goto fn_exit;
     }
 
     /* If none of the requests completed, mark the last anysource request as
@@ -200,12 +256,6 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
         goto fn_fail;
     }
 
-    if (n_inactive == count) {
-        *flag = TRUE;
-        *indx = MPI_UNDEFINED;
-        /* status set to empty by MPIR_Request_completion_processing() */
-    }
-
     /* ... end of body of routine ... */
 
   fn_exit:
@@ -213,7 +263,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
         MPIR_CHKLMEM_FREEALL();
     }
 
-    MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_TESTANY);
+    MPIR_FUNC_TERSE_REQUEST_EXIT(MPID_STATE_MPI_TESTANY);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

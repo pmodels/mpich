@@ -30,7 +30,8 @@ int MPI_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Ssend
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Ssend - Blocking synchronous send
 
@@ -56,7 +57,6 @@ Input Parameters:
 @*/
 int MPI_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
 {
-    static const char FCNAME[] = "MPI_Ssend";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;

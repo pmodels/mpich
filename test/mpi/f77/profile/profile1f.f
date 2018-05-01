@@ -60,7 +60,6 @@ C     check that we used the profiling versions of the routines
           endif
        endif
 C
-       call mpi_finalize( ierr )
        end
 C
        subroutine mpi_send( smsg, count, dtype, dest, tag, comm, ierr )

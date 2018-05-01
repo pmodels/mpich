@@ -93,11 +93,9 @@ int main(int argc, char *argv[])
 
         free(A_data);
         free(A);
-
     }
 
     MPI_Comm_free(&CommDeuce);
     MTest_Finalize(errs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

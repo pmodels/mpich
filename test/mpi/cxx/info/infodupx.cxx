@@ -22,7 +22,7 @@ using namespace std;
 #include <string.h>
 #endif
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     int errs = 0;
     MPI::Info info1, infodup;
@@ -30,74 +30,70 @@ int main( int argc, char *argv[] )
     char *key, *keydup;
     char *value, *valdup;
 
-    MTest_Init( );
+    MTest_Init();
 
-    key = new char [MPI::MAX_INFO_KEY];
-    keydup = new char [MPI::MAX_INFO_KEY];
-    value = new char [MPI::MAX_INFO_VAL];
-    valdup = new char [MPI::MAX_INFO_VAL];
+    key = new char[MPI::MAX_INFO_KEY];
+    keydup = new char[MPI::MAX_INFO_KEY];
+    value = new char[MPI::MAX_INFO_VAL];
+    valdup = new char[MPI::MAX_INFO_VAL];
 
-    info1 = MPI::Info::Create( );
+    info1 = MPI::Info::Create();
     /* Use only named keys incase the info implementation only supports
-       the predefined keys (e.g., IBM) */
-    info1.Set( "host", "myhost.myorg.org" );
-    info1.Set( "file", "runfile.txt" );
-    info1.Set( "soft", "2:1000:4,3:1000:7" );
+     * the predefined keys (e.g., IBM) */
+    info1.Set("host", "myhost.myorg.org");
+    info1.Set("file", "runfile.txt");
+    info1.Set("soft", "2:1000:4,3:1000:7");
 
     infodup = info1.Dup();
 
     nkeysdup = infodup.Get_nkeys();
-    nkeys    = info1.Get_nkeys();
+    nkeys = info1.Get_nkeys();
     if (nkeys != nkeysdup) {
-	errs++;
-	cout << "Dup'ed info has a different number of keys; is " <<
-	    nkeysdup << " should be " << nkeys << "\n";
+        errs++;
+        cout << "Dup'ed info has a different number of keys; is " <<
+            nkeysdup << " should be " << nkeys << "\n";
     }
     vallen = MPI::MAX_INFO_VAL;
-    for (i=0; i<nkeys; i++) {
-	/* MPI requires that the keys are in the same order after the dup */
-	info1.Get_nthkey( i, key );
-	infodup.Get_nthkey( i, keydup );
-	if (strcmp(key, keydup)) {
-	    errs++;
-	    cout << "keys do not match: " << keydup << " should be " <<
-		key << "\n";
-	}
+    for (i = 0; i < nkeys; i++) {
+        /* MPI requires that the keys are in the same order after the dup */
+        info1.Get_nthkey(i, key);
+        infodup.Get_nthkey(i, keydup);
+        if (strcmp(key, keydup)) {
+            errs++;
+            cout << "keys do not match: " << keydup << " should be " << key << "\n";
+        }
 
-	vallen = MPI::MAX_INFO_VAL;
-	flag = info1.Get( key, vallen, value );
-	flagdup = infodup.Get( keydup, vallen, valdup );
-	if (!flag || !flagdup) {
-	    errs++;
-	    cout << "Info get failed for key " << key << "\n";
-	}
-	else if (strcmp( value, valdup )) {
-	    errs++;
-	    cout << "Info values for key " << key << 
-		" not the same after dup\n";
-	}
+        vallen = MPI::MAX_INFO_VAL;
+        flag = info1.Get(key, vallen, value);
+        flagdup = infodup.Get(keydup, vallen, valdup);
+        if (!flag || !flagdup) {
+            errs++;
+            cout << "Info get failed for key " << key << "\n";
+        } else if (strcmp(value, valdup)) {
+            errs++;
+            cout << "Info values for key " << key << " not the same after dup\n";
+        }
     }
 
-    /* Change info and check that infodup does NOT have the new value 
-       (ensure that lazy dups are still duped) */
-    info1.Set( "path", "/a:/b:/c/d" );
+    /* Change info and check that infodup does NOT have the new value
+     * (ensure that lazy dups are still duped) */
+    info1.Set("path", "/a:/b:/c/d");
 
-    flag = infodup.Get( "path", vallen, value );
+    flag = infodup.Get("path", vallen, value);
     if (flag) {
-	errs++;
-	cout << "inserting path into info changed infodup\n";
+        errs++;
+        cout << "inserting path into info changed infodup\n";
     }
-    
+
     info1.Free();
     infodup.Free();
-    
-    MTest_Finalize( errs );
-    delete [] key;
-    delete [] keydup;
-    delete [] value;
-    delete [] valdup;
 
-    MPI::Finalize();
+    MTest_Finalize(errs);
+    delete[]key;
+    delete[]keydup;
+    delete[]value;
+    delete[]valdup;
 
-    return 0;  
+
+    return 0;
 }

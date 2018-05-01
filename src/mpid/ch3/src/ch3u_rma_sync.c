@@ -767,7 +767,7 @@ int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPIR_Win * win_ptr)
             }
         }
 
-        mpi_errno = MPIR_Waitall_impl(post_grp_size, req, status);
+        mpi_errno = MPIR_Waitall(post_grp_size, req, status);
         if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
             MPIR_ERR_POP(mpi_errno);
 
@@ -911,7 +911,7 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
 
         /* for targets on SHM, waiting until their IRECVs to be finished */
         if (intra_cnt) {
-            mpi_errno = MPIR_Waitall_impl(intra_cnt, intra_start_req, intra_start_status);
+            mpi_errno = MPIR_Waitall(intra_cnt, intra_start_req, intra_start_status);
             if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
                 MPIR_ERR_POP(mpi_errno);
             /* --BEGIN ERROR HANDLING-- */

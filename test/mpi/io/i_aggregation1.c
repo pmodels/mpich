@@ -15,6 +15,7 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <string.h>
+#include "mpitest.h"
 
 #define NUM_OBJS 4
 #define OBJ_SIZE 1048576
@@ -137,17 +138,6 @@ static void write_file(char *target, int rank, MPI_Info * info)
     free(request);
 }
 
-static int reduce_corruptions(int corrupt_blocks)
-{
-    int mpi_ret;
-    int sum;
-    if ((mpi_ret = MPI_Reduce(&corrupt_blocks, &sum, 1, MPI_INT, MPI_SUM, 0,
-                              MPI_COMM_WORLD)) != MPI_SUCCESS) {
-        fatal_error(mpi_ret, NULL, "MPI_Reduce");
-    }
-    return sum;
-}
-
 static void read_file(char *target, int rank, MPI_Info * info, int *corrupt_blocks)
 {
     MPI_File rfh;
@@ -253,7 +243,7 @@ int main(int argc, char *argv[])
     int mpi_ret;
     int corrupt_blocks = 0;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -291,17 +281,9 @@ int main(int argc, char *argv[])
     write_file(target, rank, &info);
     read_file(target, rank, &info, &corrupt_blocks);
 
-    corrupt_blocks = reduce_corruptions(corrupt_blocks);
-    if (rank == 0) {
-        if (corrupt_blocks == 0) {
-            fprintf(stdout, " No Errors\n");
-        } else {
-            fprintf(stdout, "%d/%d blocks corrupt\n", corrupt_blocks, nproc * NUM_OBJS);
-        }
-    }
     MPI_Info_free(&info);
 
-    MPI_Finalize();
+    MTest_Finalize(corrupt_blocks);
     free(prog);
-    exit(0);
+    return MTestReturnValue(corrupt_blocks);
 }

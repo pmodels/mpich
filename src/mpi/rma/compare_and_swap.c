@@ -32,7 +32,8 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Compare_and_swap
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Compare_and_swap - Perform one-sided atomic compare-and-swap.
 
@@ -76,7 +77,6 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
                          void *result_addr, MPI_Datatype datatype, int target_rank,
                          MPI_Aint target_disp, MPI_Win win)
 {
-    static const char FCNAME[] = "MPI_Compare_and_swap";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMPARE_AND_SWAP);

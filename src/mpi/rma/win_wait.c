@@ -29,7 +29,8 @@ int MPI_Win_wait(MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_wait")));
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_wait
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_wait - Completes an RMA exposure epoch begun with MPI_Win_post
 
@@ -47,7 +48,6 @@ Input Parameters:
 @*/
 int MPI_Win_wait(MPI_Win win)
 {
-    static const char FCNAME[] = "MPI_Win_wait";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_WAIT);

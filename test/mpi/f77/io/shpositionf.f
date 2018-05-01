@@ -68,5 +68,4 @@ C write
         endif
 c
         call MTest_Finalize( errs )
-        call mpi_finalize( ierr )
         end

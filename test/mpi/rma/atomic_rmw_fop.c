@@ -15,6 +15,7 @@
 
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 #define AM_BUF_SIZE  10
 #define SHM_BUF_SIZE 1000
@@ -26,14 +27,14 @@
 int main(int argc, char *argv[])
 {
     int rank, size, i, j, k;
-    int errors = 0, all_errors = 0;
+    int errors = 0;
     int origin_shm, origin_am, dest;
     int my_buf_size;
     int *orig_buf = NULL, *result_buf = NULL, *target_buf = NULL, *check_buf = NULL;
     MPI_Win win;
     MPI_Status status;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -130,11 +131,7 @@ int main(int argc, char *argv[])
     }
 
   exit_test:
-    MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
-    if (rank == 0 && all_errors == 0)
-        printf(" No Errors\n");
-
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errors);
+    return MTestReturnValue(errors);
 }

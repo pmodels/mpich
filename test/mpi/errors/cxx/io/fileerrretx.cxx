@@ -26,12 +26,12 @@ using namespace std;
 static int verbose = 0;
 
 static int ncalls = 0;
-void efn( MPI::File &fh, int *code, ... )
+void efn(MPI::File & fh, int *code, ...)
 {
-    ncalls ++;
+    ncalls++;
 }
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     MPI::File fh;
     MPI::Errhandler eh;
@@ -43,62 +43,54 @@ int main( int argc, char *argv[] )
     // Test that the default error handler is errors return for files
 
     filename = new char[10];
-    strncpy( filename, "t1", 10 );
+    strncpy(filename, "t1", 10);
 
     MPI::FILE_NULL.Set_errhandler(MPI::ERRORS_THROW_EXCEPTIONS);
     sawErr = 0;
     try {
-	fh = MPI::File::Open(MPI::COMM_WORLD, filename, 
-			 MPI::MODE_RDWR, MPI::INFO_NULL );
-    } catch (MPI::Exception ex) {
-	if (verbose) cout << "Caught exception from open\n";
-	if (ex.Get_error_class() == MPI_SUCCESS) {
-	    errs++;
-	    cout << "Unexpected error from Open" << endl;
-	}
-	sawErr = 1;
+        fh = MPI::File::Open(MPI::COMM_WORLD, filename, MPI::MODE_RDWR, MPI::INFO_NULL);
+    } catch(MPI::Exception ex) {
+        if (verbose)
+            cout << "Caught exception from open\n";
+        if (ex.Get_error_class() == MPI_SUCCESS) {
+            errs++;
+            cout << "Unexpected error from Open" << endl;
+        }
+        sawErr = 1;
     }
     if (!sawErr) {
-	errs++;
-	cout << "Did not see error when opening a non-existent file for writing and reading (without MODE_CREATE)\n";
+        errs++;
+        cout <<
+            "Did not see error when opening a non-existent file for writing and reading (without MODE_CREATE)\n";
     }
-
     // Test that we can change the default error handler by changing
     // the error handler on MPI::FILE_NULL.
-    eh = MPI::File::Create_errhandler( efn );
-    MPI::FILE_NULL.Set_errhandler( eh );
+    eh = MPI::File::Create_errhandler(efn);
+    MPI::FILE_NULL.Set_errhandler(eh);
     eh.Free();
     sawErr = 0;
     try {
-	fh = MPI::File::Open(MPI::COMM_WORLD, filename, 
-			 MPI::MODE_RDWR, MPI::INFO_NULL );
-    } catch (MPI::Exception ex) {
-	cout << "Caught exception from open (should have called error handler instead)\n";
-	errs++;
-	if (ex.Get_error_class() == MPI_SUCCESS) {
-	    errs++;
-	    cout << "Unexpected error from Open" << endl;
-	}
-	sawErr = 1;
+        fh = MPI::File::Open(MPI::COMM_WORLD, filename, MPI::MODE_RDWR, MPI::INFO_NULL);
+    }
+    catch(MPI::Exception ex) {
+        cout << "Caught exception from open (should have called error handler instead)\n";
+        errs++;
+        if (ex.Get_error_class() == MPI_SUCCESS) {
+            errs++;
+            cout << "Unexpected error from Open" << endl;
+        }
+        sawErr = 1;
     }
     if (ncalls != 1) {
-	errs++;
-	cout << "Did not invoke error handler when opening a non-existent file for writing and reading (without MODE_CREATE)" << endl;
+        errs++;
+        cout <<
+            "Did not invoke error handler when opening a non-existent file for writing and reading (without MODE_CREATE)"
+            << endl;
     }
 
-    // Find out how many errors we saw
-    MPI::COMM_WORLD.Allreduce( &errs, &toterrs, 1, MPI::INT, MPI::SUM );
-    if (MPI::COMM_WORLD.Get_rank() == 0) {
-	if (toterrs == 0) {
-	    cout << " No Errors" << endl;
-	}
-	else {
-	    cout << " Saw " << toterrs << " errors" << endl;
-	}
-    }
+    MTest_Finalize(errs);
 
-    delete[] filename;
-    MPI::Finalize();
+    delete[]filename;
 
     return 0;
 }

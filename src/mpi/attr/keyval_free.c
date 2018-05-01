@@ -30,7 +30,8 @@ int MPI_Keyval_free(int *keyval) __attribute__ ((weak, alias("PMPI_Keyval_free")
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Keyval_free
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Keyval_free - Frees an attribute key for communicators
@@ -57,7 +58,6 @@ The replacement for this routine is 'MPI_Comm_free_keyval'.
 @*/
 int MPI_Keyval_free(int *keyval)
 {
-    static const char FCNAME[] = "MPI_Keyval_free";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_KEYVAL_FREE);
 
@@ -100,21 +100,23 @@ int MPI_Keyval_free(int *keyval)
 
     /* ... end of body of routine ... */
 
+#ifdef HAVE_ERROR_CHECKING
   fn_exit:
+#endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_KEYVAL_FREE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
+#ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_keyval_free", "**mpi_keyval_free %p", keyval);
     }
-#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
+#endif
 }

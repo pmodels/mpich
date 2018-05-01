@@ -128,7 +128,7 @@ static inline int MPIDI_UCX_recv(void *buf,
                                                         ucp_dt_make_contig(1),
                                                         ucp_tag, tag_mask, &MPIDI_UCX_recv_cmpl_cb);
     } else {
-        MPIR_Datatype_add_ref(dt_ptr);
+        MPIR_Datatype_ptr_add_ref(dt_ptr);
         ucp_request =
             (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.worker,
                                                         buf, count,
@@ -143,6 +143,7 @@ static inline int MPIDI_UCX_recv(void *buf,
         ucp_request_release(ucp_request);
     } else {
         req = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
+        MPIR_ERR_CHKANDSTMT((req) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Request_add_ref(req);
         MPIDI_UCX_REQ(req).a.ucp_request = ucp_request;
         ucp_request->req = req;
@@ -179,7 +180,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                             a.message_handler,
                                                             &MPIDI_UCX_mrecv_cmpl_cb);
     } else {
-        MPIR_Datatype_add_ref(dt_ptr);
+        MPIR_Datatype_ptr_add_ref(dt_ptr);
         ucp_request =
             (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker,
                                                             buf, count,

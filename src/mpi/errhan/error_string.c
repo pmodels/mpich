@@ -31,7 +31,8 @@ int MPI_Error_string(int errorcode, char *string, int *resultlen)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Error_string
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Error_string - Return a string for a given error code
 
@@ -56,9 +57,6 @@ with the routine 'MPI_Error_class'.
 @*/
 int MPI_Error_string(int errorcode, char *string, int *resultlen)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Error_string";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ERROR_STRING);
 

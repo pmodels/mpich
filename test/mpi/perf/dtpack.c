@@ -21,7 +21,7 @@
 #include "mpi.h"
 
 /* Needed for restrict and const definitions */
-#include "mpitestconf.h"
+#include "mpitest.h"
 
 static int verbose = 0;
 
@@ -437,7 +437,7 @@ int main(int argc, char *argv[])
     void *dest, *src;
     double avgTimeUser, avgTimeMPI;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;
 
@@ -471,16 +471,8 @@ int main(int argc, char *argv[])
     free(dest);
     free(src);
 
-
-
-    if (errs == 0) {
-        printf(" No Errors\n");
-    } else {
-        printf(" Found %d performance problems\n", errs);
-    }
-
     fflush(stdout);
-    MPI_Finalize();
+    MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

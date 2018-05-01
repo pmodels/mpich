@@ -140,7 +140,6 @@ static int checkResult(int nmat, int mat[], const char *msg)
                 if (errs == 1) {
                     printf("Errors for communicators %s\n", MTestGetIntracommName());
                     fflush(stdout);
-
                 }
                 if (errs < 10) {
                     printf("[%d]matrix #%d(%s): Expected mat[%d,%d] = %d, got %d\n",
@@ -233,6 +232,5 @@ int main(int argc, char *argv[])
     MPI_Type_free(&mattype);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

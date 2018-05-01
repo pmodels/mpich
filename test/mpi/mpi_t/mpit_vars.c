@@ -14,6 +14,7 @@
 #include <string.h>     /* For strncpy */
 #include <stdlib.h>
 #include "mpi.h"
+#include "mpitest.h"
 
 char *mpit_scopeToStr(int scope);
 char *mpit_bindingToStr(int binding);
@@ -35,7 +36,7 @@ int main(int argc, char *argv[])
     required = MPI_THREAD_SINGLE;
 
     MPI_T_init_thread(required, &provided);
-    MPI_Init_thread(&argc, &argv, required, &provided);
+    MTest_Init_thread(&argc, &argv, required, &provided);
 
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;
@@ -55,9 +56,7 @@ int main(int argc, char *argv[])
      * are freed in MPI_T_finalize().
      */
     MPI_T_finalize();
-    MPI_Finalize();
-
-    fprintf(stdout, " No Errors\n");
+    MTest_Finalize(0);
 
     return 0;
 }
@@ -229,7 +228,6 @@ int PrintCategories(FILE * fp)
                                     &isReadonly, &isContinuous, &isAtomic);
                 if (verbose)
                     fprintf(fp, "%s, ", varname);
-
             }
             free(pvarIndex);
             if (verbose)
@@ -251,7 +249,6 @@ int PrintCategories(FILE * fp)
                                         &ncvars, &npvars, &nsubcats);
                 if (verbose)
                     fprintf(fp, "%s, ", catname);
-
             }
             free(subcatIndex);
             if (verbose)

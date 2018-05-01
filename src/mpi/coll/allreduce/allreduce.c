@@ -174,7 +174,9 @@ int MPIR_Allreduce_intra_auto(const void *sendbuf,
 
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+            *errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -198,7 +200,9 @@ int MPIR_Allreduce_intra_auto(const void *sendbuf,
         mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+            *errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -206,7 +210,9 @@ int MPIR_Allreduce_intra_auto(const void *sendbuf,
         mpi_errno = MPIR_Bcast(recvbuf, count, datatype, 0, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+            *errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -223,7 +229,9 @@ int MPIR_Allreduce_intra_auto(const void *sendbuf,
                                                         comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                *errflag =
+                    MPIX_ERR_PROC_FAILED ==
+                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                 MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
@@ -233,7 +241,9 @@ int MPIR_Allreduce_intra_auto(const void *sendbuf,
                                                               comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                *errflag =
+                    MPIX_ERR_PROC_FAILED ==
+                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                 MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
@@ -352,7 +362,7 @@ int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 #undef FUNCNAME
 #define FUNCNAME MPI_Allreduce
 #undef FCNAME
-
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Allreduce - Combines values from all processes and distributes the result
                 back to all processes
@@ -383,7 +393,6 @@ Output Parameters:
 int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
                   MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
-    static const char FCNAME[] = "MPI_Allreduce";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;

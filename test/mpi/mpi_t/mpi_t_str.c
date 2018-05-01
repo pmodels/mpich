@@ -15,7 +15,7 @@
 #include <assert.h>
 #include <math.h>
 #include <limits.h>
-#include "mpitestconf.h"
+#include "mpitest.h"
 
 /* assert-like macro that bumps the err count and emits a message */
 #define check(x_)                                                                 \
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     /* Init'ed to a garbage value, to trigger MPI_T bugs easily if there are. */
     MPI_T_enum enumtype = (MPI_T_enum) 0x31415926;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -212,17 +212,8 @@ int main(int argc, char **argv)
         }
     }
 
-    MPI_Allreduce(MPI_IN_PLACE, &errs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (errs) {
-            printf("found %d errors\n", errs);
-        } else {
-            printf(" No errors\n");
-        }
-    }
-
     MPI_T_finalize();
-    MPI_Finalize();
+    MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

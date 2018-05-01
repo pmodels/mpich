@@ -8,6 +8,7 @@
 #include "mpitestconf.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 /* FIXME: This test only checks that the MPI_Comm_split_type routine
    doesn't fail.  It does not check for correct behavior */
@@ -16,7 +17,8 @@
 static const char *split_topo[] = {
     "machine", "socket", "package", "numanode", "core", "hwthread", "pu", "l1cache",
     "l1ucache", "l1dcache", "l1icache", "l2cache", "l2ucache",
-    "l2dcache", "l2icache", "l3cache", "l3ucache", "l3dcache", "l3icache", NULL
+    "l2dcache", "l2icache", "l3cache", "l3ucache", "l3dcache", "l3icache", "pci:x",
+    "ib", "ibx", "gpu", "gpux", "en", "enx", "eth", "ethx", "hfi", "hfix", NULL
 };
 
 int main(int argc, char *argv[])
@@ -26,7 +28,7 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Info info;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;
@@ -53,14 +55,11 @@ int main(int argc, char *argv[])
         MPI_Info_create(&info);
         MPI_Info_set(info, "shmem_topo", split_topo[i]);
         MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
-        if (comm == MPI_COMM_NULL) {
-            printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
-            errs++;
-        } else {
+        if (comm != MPI_COMM_NULL) {
             int newsize;
             MPI_Comm_size(comm, &newsize);
             if (newsize > size) {
-                printf("Expected comm size to be smaller than node size\n");
+                printf("Expected comm size to be at most the node size\n");
                 errs++;
             }
             MPI_Comm_free(&comm);
@@ -77,14 +76,11 @@ int main(int argc, char *argv[])
         MPI_Info_set(info, "shmem_topo", split_topo[1]);
     }
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
-    if (comm == MPI_COMM_NULL) {
-        printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
-        errs++;
-    } else {
+    if (comm != MPI_COMM_NULL) {
         int newsize;
         MPI_Comm_size(comm, &newsize);
         if (newsize > size) {
-            printf("Expected comm size to be smaller than node size\n");
+            printf("Expected comm size to be at most the node size\n");
             errs++;
         }
         MPI_Comm_free(&comm);
@@ -100,14 +96,11 @@ int main(int argc, char *argv[])
     } else
         info = MPI_INFO_NULL;
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, info, &comm);
-    if (comm == MPI_COMM_NULL) {
-        printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
-        errs++;
-    } else {
+    if (comm != MPI_COMM_NULL) {
         int newsize;
         MPI_Comm_size(comm, &newsize);
         if (newsize > size) {
-            printf("Expected comm size to be smaller than node size\n");
+            printf("Expected comm size to be at most the node size\n");
             errs++;
         }
         MPI_Comm_free(&comm);
@@ -196,14 +189,7 @@ int main(int argc, char *argv[])
     }
     MPI_Reduce(&errs, &tot_errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
-    /* Use wrank because Comm_split_type may return more than one communicator
-     * across the job, and if so, each will have a rank 0 entry.  Test
-     * output rules are for a single process to write the successful
-     * test (No Errors) output. */
-    if (wrank == 0 && errs == 0)
-        printf(" No errors\n");
+    MTest_Finalize(errs);
 
-    MPI_Finalize();
-
-    return 0;
+    return MTestReturnValue(errs);
 }

@@ -68,11 +68,9 @@ int main(int argc, char **argv)
                 printf("Created a non-null communicator with MPI_UNDEFINED\n");
             }
         }
-
     }
 
     MTest_Finalize(errs);
-    MPI_Finalize();
 
-    return 0;
+    return MTestReturnValue(errs);
 }
