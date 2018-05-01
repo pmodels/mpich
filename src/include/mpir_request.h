@@ -376,11 +376,6 @@ int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete);
 int MPIR_Grequest_query(MPIR_Request * request_ptr);
 int MPIR_Grequest_free(MPIR_Request * request_ptr);
 
-/* this routine was added to support our extension relaxing the progress rules
- * for generalized requests */
-int MPIR_Grequest_progress_poke(int count, MPIR_Request ** request_ptrs,
-                                MPI_Status array_of_statuses[]);
-
 void MPIR_Grequest_complete(MPIR_Request * request_ptr);
 int MPIR_Grequest_start(MPI_Grequest_query_function * query_fn,
                         MPI_Grequest_free_function * free_fn,
