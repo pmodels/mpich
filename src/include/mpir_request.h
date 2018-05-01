@@ -380,7 +380,6 @@ int MPIR_Grequest_free(MPIR_Request * request_ptr);
  * for generalized requests */
 int MPIR_Grequest_progress_poke(int count, MPIR_Request ** request_ptrs,
                                 MPI_Status array_of_statuses[]);
-int MPIR_Grequest_waitall(int count, MPIR_Request * const *request_ptrs);
 
 void MPIR_Grequest_complete(MPIR_Request * request_ptr);
 int MPIR_Grequest_start(MPI_Grequest_query_function * query_fn,
