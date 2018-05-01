@@ -81,12 +81,6 @@ int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array
         }
         MPID_Progress_end(&progress_state);
     } else {
-        /* Grequest_waitall may run the progress engine - thus, we don't
-         * invoke progress_start until after running Grequest_waitall */
-        /* first, complete any generalized requests */
-        mpi_errno = MPIR_Grequest_waitall(count, request_ptrs);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
         MPID_Progress_start(&progress_state);
         for (i = 0; i < count; i++) {
             if (request_ptrs[i] == NULL) {
@@ -94,9 +88,18 @@ int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array
             }
             /* wait for ith request to complete */
             while (!MPIR_Request_is_complete(request_ptrs[i])) {
-                /* generalized requests should already be finished */
-                MPIR_Assert(request_ptrs[i]->kind != MPIR_REQUEST_KIND__GREQUEST);
-
+                if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
+                    request_ptrs[i]->u.ureq.greq_fns->wait_fn != NULL) {
+                    /* wait_fn only exists in Extended Generalized request (non-standard). */
+                    mpi_errno =
+                        (request_ptrs[i]->u.ureq.greq_fns->wait_fn) (1,
+                                                                     &request_ptrs[i]->u.
+                                                                     ureq.greq_fns->
+                                                                     grequest_extra_state, 0, NULL);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
+                    continue;
+                }
                 mpi_errno = MPID_Progress_wait(&progress_state);
                 if (mpi_errno != MPI_SUCCESS) {
                     /* --BEGIN ERROR HANDLING-- */
