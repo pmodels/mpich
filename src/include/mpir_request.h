@@ -387,4 +387,31 @@ int MPIX_Grequest_start_impl(MPI_Grequest_query_function *,
                              MPIX_Grequest_poll_function *,
                              MPIX_Grequest_wait_function *, void *, MPIR_Request **);
 
+/* These routines below are helpers for the Extended generalized requests. */
+
+MPL_STATIC_INLINE_PREFIX int MPIR_Request_has_poll_fn(MPIR_Request * request_ptr)
+{
+    return (request_ptr->kind == MPIR_REQUEST_KIND__GREQUEST &&
+            request_ptr->u.ureq.greq_fns != NULL && request_ptr->u.ureq.greq_fns->poll_fn != NULL);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_Request_has_wait_fn(MPIR_Request * request_ptr)
+{
+    return (request_ptr->kind == MPIR_REQUEST_KIND__GREQUEST &&
+            request_ptr->u.ureq.greq_fns != NULL && request_ptr->u.ureq.greq_fns->wait_fn != NULL);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_Grequest_wait(MPIR_Request * request_ptr, MPI_Status * status)
+{
+    return (request_ptr->u.ureq.greq_fns->wait_fn) (1,
+                                                    &request_ptr->u.ureq.greq_fns->
+                                                    grequest_extra_state, 0, status);
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIR_Grequest_poll(MPIR_Request * request_ptr, MPI_Status * status)
+{
+    return (request_ptr->u.ureq.greq_fns->poll_fn) (request_ptr->u.ureq.
+                                                    greq_fns->grequest_extra_state, status);
+}
+
 #endif /* MPIR_REQUEST_H_INCLUDED */
