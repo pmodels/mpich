@@ -526,8 +526,8 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset * offset_list, ADIO_Offset
     for (i = 0; i < nprocs; i++) {
         if (count_my_req_per_proc[i]) {
             my_req[i].offsets = (ADIO_Offset *)
-                ADIOI_Malloc(count_my_req_per_proc[i] * sizeof(ADIO_Offset));
-            my_req[i].lens = ADIOI_Malloc(count_my_req_per_proc[i] * sizeof(ADIO_Offset));
+                ADIOI_Malloc(count_my_req_per_proc[i] * 2 * sizeof(ADIO_Offset));
+            my_req[i].lens = my_req[i].offsets + count_my_req_per_proc[i];
             count_my_req_procs++;
         }
         my_req[i].count = 0;    /* will be incremented where needed
@@ -654,10 +654,7 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
      * to be sent/received for offsets and lengths.  Initialize to
      * the highest possible address which is the current minimum.
      */
-    void *sendBufForOffsets = (void *) 0xFFFFFFFFFFFFFFFF,
-        *sendBufForLens = (void *) 0xFFFFFFFFFFFFFFFF,
-        *recvBufForOffsets = (void *) 0xFFFFFFFFFFFFFFFF,
-        *recvBufForLens = (void *) 0xFFFFFFFFFFFFFFFF;
+    void *sendBuf = (void *) 0xFFFFFFFFFFFFFFFF, *recvBuf = (void *) 0xFFFFFFFFFFFFFFFF;
 
 /* first find out how much to send/recv and from/to whom */
 #ifdef AGGREGATION_PROFILE
@@ -700,13 +697,11 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
             others_req[i].count = count_others_req_per_proc[i];
 
             others_req[i].offsets = (ADIO_Offset *)
-                ADIOI_Malloc(count_others_req_per_proc[i] * sizeof(ADIO_Offset));
-            others_req[i].lens = ADIOI_Malloc(count_others_req_per_proc[i] * sizeof(ADIO_Offset));
+                ADIOI_Malloc(count_others_req_per_proc[i] * 2 * sizeof(ADIO_Offset));
+            others_req[i].lens = others_req[i].offsets + count_others_req_per_proc[i];
 
-            if ((uintptr_t) others_req[i].offsets < (uintptr_t) recvBufForOffsets)
-                recvBufForOffsets = others_req[i].offsets;
-            if ((uintptr_t) others_req[i].lens < (uintptr_t) recvBufForLens)
-                recvBufForLens = others_req[i].lens;
+            if ((uintptr_t) others_req[i].offsets < (uintptr_t) recvBuf)
+                recvBuf = others_req[i].offsets;
 
             others_req[i].mem_ptrs = (MPI_Aint *)
                 ADIOI_Malloc(count_others_req_per_proc[i] * sizeof(MPI_Aint));
@@ -719,10 +714,8 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
         }
     }
     /* If no recv buffer was allocated in the loop above, make it NULL */
-    if (recvBufForOffsets == (void *) 0xFFFFFFFFFFFFFFFF)
-        recvBufForOffsets = NULL;
-    if (recvBufForLens == (void *) 0xFFFFFFFFFFFFFFFF)
-        recvBufForLens = NULL;
+    if (recvBuf == (void *) 0xFFFFFFFFFFFFFFFF)
+        recvBuf = NULL;
 
     /* Now send the calculated offsets and lengths to respective processes */
 
@@ -730,77 +723,42 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
     /* Exchange the offsets */
     /************************/
 
-    /* Determine the lowest sendBufForOffsets/Lens */
+    /* Determine the lowest sendBuf */
     for (i = 0; i < nprocs; i++) {
-        if ((my_req[i].count) && ((uintptr_t) my_req[i].offsets <= (uintptr_t) sendBufForOffsets)) {
-            sendBufForOffsets = my_req[i].offsets;
+        if ((my_req[i].count) && ((uintptr_t) my_req[i].offsets <= (uintptr_t) sendBuf)) {
+            sendBuf = my_req[i].offsets;
         }
-
-        if ((my_req[i].count) && ((uintptr_t) my_req[i].lens <= (uintptr_t) sendBufForLens)) {
-            sendBufForLens = my_req[i].lens;
-        }
+        /* my_req[i].offsets and my_req[i].lens have been malloc-ed together */
     }
 
     /* If no send buffer was found in the loop above, make it NULL */
-    if (sendBufForOffsets == (void *) 0xFFFFFFFFFFFFFFFF)
-        sendBufForOffsets = NULL;
-    if (sendBufForLens == (void *) 0xFFFFFFFFFFFFFFFF)
-        sendBufForLens = NULL;
+    if (sendBuf == (void *) 0xFFFFFFFFFFFFFFFF)
+        sendBuf = NULL;
 
-    /* Calculate the displacements from the sendBufForOffsets/Lens */
+    /* Calculate the displacements from the sendBuf */
     for (i = 0; i < nprocs; i++) {
-        /* Send these offsets to process i. */
-        scounts[i] = count_my_req_per_proc[i];
+        /* Send these offsets and lengths to process i. */
+        scounts[i] = count_my_req_per_proc[i] * 2;
         if (scounts[i] == 0)
             sdispls[i] = 0;
         else
             sdispls[i] = (int)
                 (((uintptr_t) my_req[i].offsets -
-                  (uintptr_t) sendBufForOffsets) / (uintptr_t) sizeof(ADIO_Offset));
+                  (uintptr_t) sendBuf) / (uintptr_t) sizeof(ADIO_Offset));
 
-        /* Receive these offsets from process i. */
-        rcounts[i] = count_others_req_per_proc[i];
+        /* Receive these offsets and lengths from process i. */
+        rcounts[i] = count_others_req_per_proc[i] * 2;
         if (rcounts[i] == 0)
             rdispls[i] = 0;
         else
             rdispls[i] = (int)
                 (((uintptr_t) others_req[i].offsets -
-                  (uintptr_t) recvBufForOffsets) / (uintptr_t) sizeof(ADIO_Offset));
+                  (uintptr_t) recvBuf) / (uintptr_t) sizeof(ADIO_Offset));
     }
 
-    /* Exchange the offsets */
-    MPI_Alltoallv(sendBufForOffsets,
-                  scounts, sdispls, ADIO_OFFSET,
-                  recvBufForOffsets, rcounts, rdispls, ADIO_OFFSET, fd->comm);
-
-    /************************/
-    /* Exchange the lengths */
-    /************************/
-
-    for (i = 0; i < nprocs; i++) {
-        /* Send these lengths to process i. */
-        scounts[i] = count_my_req_per_proc[i];
-        if (scounts[i] == 0)
-            sdispls[i] = 0;
-        else
-            sdispls[i] = (int)
-                (((uintptr_t) my_req[i].lens -
-                  (uintptr_t) sendBufForLens) / (uintptr_t) sizeof(ADIO_Offset));
-
-        /* Receive these offsets from process i. */
-        rcounts[i] = count_others_req_per_proc[i];
-        if (rcounts[i] == 0)
-            rdispls[i] = 0;
-        else
-            rdispls[i] = (int)
-                (((uintptr_t) others_req[i].lens -
-                  (uintptr_t) recvBufForLens) / (uintptr_t) sizeof(ADIO_Offset));
-    }
-
-    /* Exchange the lengths */
-    MPI_Alltoallv(sendBufForLens,
-                  scounts, sdispls, ADIO_OFFSET,
-                  recvBufForLens, rcounts, rdispls, ADIO_OFFSET, fd->comm);
+    /* Exchange the offsets and lengths */
+    MPI_Alltoallv(sendBuf, scounts, sdispls, ADIO_OFFSET,
+                  recvBuf, rcounts, rdispls, ADIO_OFFSET, fd->comm);
 
     /* Clean up */
     ADIOI_Free(count_others_req_per_proc);

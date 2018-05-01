@@ -93,7 +93,7 @@ static inline int MPIDI_handle_unexpected(void *buf,
     MPL_free(MPIDI_CH4U_REQUEST(rreq, buffer));
 
     rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
-    rreq->status.MPI_TAG = MPIDI_CH4U_request_get_tag(rreq);
+    rreq->status.MPI_TAG = MPIDI_CH4U_REQUEST(rreq, tag);
 
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_PEER_SSEND) {
         mpi_errno = MPIDI_reply_ssend(rreq);
@@ -123,15 +123,13 @@ static inline int MPIDI_do_irecv(void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL, *unexp_req = NULL;
-    uint64_t match_bits, mask_bits;
     MPIR_Context_id_t context_id = comm->recvcontext_id + context_offset;
     MPIR_Comm *root_comm;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_DO_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_DO_IRECV);
 
-    match_bits = MPIDI_CH4U_init_recvtag(&mask_bits, context_id, rank, tag);
     root_comm = MPIDI_CH4U_context_id_to_comm(comm->recvcontext_id);
-    unexp_req = MPIDI_CH4U_dequeue_unexp(match_bits, mask_bits,
+    unexp_req = MPIDI_CH4U_dequeue_unexp(rank, tag, context_id,
                                          &MPIDI_CH4U_COMM(root_comm, unexp_list));
 
     if (unexp_req) {
@@ -140,7 +138,7 @@ static inline int MPIDI_do_irecv(void *buf,
             MPIDI_CH4U_REQUEST(unexp_req, req->status) |= MPIDI_CH4U_REQ_MATCHED;
         } else if (MPIDI_CH4U_REQUEST(unexp_req, req->status) & MPIDI_CH4U_REQ_LONG_RTS) {
             /* Matching receive is now posted, tell the netmod */
-            dtype_add_ref_if_not_builtin(datatype);
+            MPIR_Datatype_add_ref_if_not_builtin(datatype);
             MPIDI_CH4U_REQUEST(unexp_req, datatype) = datatype;
             MPIDI_CH4U_REQUEST(unexp_req, buffer) = (char *) buf;
             MPIDI_CH4U_REQUEST(unexp_req, count) = count;
@@ -161,6 +159,7 @@ static inline int MPIDI_do_irecv(void *buf,
 
     if (alloc_req) {
         rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV, 2);
+        MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     } else {
         rreq = *request;
         MPIR_Assert(0);
@@ -176,9 +175,10 @@ static inline int MPIDI_do_irecv(void *buf,
         goto fn_exit;
     }
 
-    dtype_add_ref_if_not_builtin(datatype);
-    MPIDI_CH4U_REQUEST(rreq, match_bits) = match_bits;
-    MPIDI_CH4U_REQUEST(rreq, req->rreq.ignore) = mask_bits;
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
+    MPIDI_CH4U_REQUEST(rreq, rank) = rank;
+    MPIDI_CH4U_REQUEST(rreq, tag) = tag;
+    MPIDI_CH4U_REQUEST(rreq, context_id) = context_id;
     MPIDI_CH4U_REQUEST(rreq, datatype) = datatype;
 
     mpi_errno = MPIDI_prepare_recv_req(buf, count, datatype, rreq);
@@ -250,6 +250,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv_init(void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_RECV_INIT);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__PREQUEST_RECV, 2);
+    MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     *request = rreq;
     rreq->comm = comm;
@@ -259,15 +260,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv_init(void *buf,
     MPIDI_CH4U_REQUEST(rreq, count) = count;
     MPIDI_CH4U_REQUEST(rreq, datatype) = datatype;
     MPIDI_CH4U_REQUEST(rreq, rank) = rank;
-    MPIDI_CH4U_REQUEST(rreq, match_bits) =
-        MPIDI_CH4U_init_send_tag(comm->context_id + context_offset, rank, tag);
+    MPIDI_CH4U_REQUEST(rreq, tag) = tag;
+    MPIDI_CH4U_REQUEST(rreq, context_id) = comm->context_id + context_offset;
     rreq->u.persist.real_request = NULL;
     MPID_Request_complete(rreq);
     MPIDI_CH4U_REQUEST(rreq, p_type) = MPIDI_PTYPE_RECV;
-    dtype_add_ref_if_not_builtin(datatype);
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_MPI_RECV_INIT);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -303,7 +307,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
     } else if (MPIDI_CH4U_REQUEST(message, req->status) & MPIDI_CH4U_REQ_LONG_RTS) {
         /* Matching receive is now posted, tell the netmod */
         message->kind = MPIR_REQUEST_KIND__RECV;
-        dtype_add_ref_if_not_builtin(datatype);
+        MPIR_Datatype_add_ref_if_not_builtin(datatype);
         MPIDI_CH4U_REQUEST(message, datatype) = datatype;
         MPIDI_CH4U_REQUEST(message, buffer) = (char *) buf;
         MPIDI_CH4U_REQUEST(message, count) = count;
@@ -394,13 +398,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, found;
     MPIR_Comm *root_comm;
-    uint64_t msg_tag;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MPI_CANCEL_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MPI_CANCEL_RECV);
 
-    msg_tag = MPIDI_CH4U_REQUEST(rreq, match_bits);
-    root_comm = MPIDI_CH4U_context_id_to_comm(MPIDI_CH4U_get_context(msg_tag));
+    root_comm = MPIDI_CH4U_context_id_to_comm(MPIDI_CH4U_REQUEST(rreq, context_id));
 
     /* MPIDI_CS_ENTER(); */
     found =

@@ -10,6 +10,7 @@
 #include "mpi.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "mpitest.h"
 
 int main(int argc, char **argv)
 {
@@ -21,7 +22,7 @@ int main(int argc, char **argv)
     int i;
     int shm_win_size = 1024 * 1024 * 1024 * sizeof(char);       /* 1GB */
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
@@ -88,10 +89,7 @@ int main(int argc, char **argv)
             MPI_Info_free(&win_info);
     }
 
-    if (my_rank == 0)
-        printf(" No Errors\n");
-
-    MPI_Finalize();
+    MTest_Finalize(0);
 
     return 0;
 }

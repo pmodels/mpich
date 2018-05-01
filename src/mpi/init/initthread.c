@@ -340,6 +340,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     MPIR_Process.bindset = hwloc_bitmap_alloc();
     hwloc_topology_init(&MPIR_Process.topology);
     MPIR_Process.bindset_is_valid = 0;
+    hwloc_topology_set_io_types_filter(MPIR_Process.topology, HWLOC_TYPE_FILTER_KEEP_ALL);
     if (!hwloc_topology_load(MPIR_Process.topology)) {
         MPIR_Process.bindset_is_valid =
             !hwloc_get_proc_cpubind(MPIR_Process.topology, getpid(), MPIR_Process.bindset,
@@ -403,7 +404,7 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     MPIR_Process.attrs.host = MPI_PROC_NULL;
     MPIR_Process.attrs.io = MPI_PROC_NULL;
     MPIR_Process.attrs.lastusedcode = MPI_ERR_LASTCODE;
-    MPIR_Process.attrs.tag_ub = 0;
+    MPIR_Process.attrs.tag_ub = MPIR_TAG_USABLE_BITS;
     MPIR_Process.attrs.universe = MPIR_UNIVERSE_SIZE_NOT_SET;
     MPIR_Process.attrs.wtime_is_global = 0;
 
@@ -530,16 +531,6 @@ int MPIR_Init_thread(int *argc, char ***argv, int required, int *provided)
     /* Assert: tag_ub should be a power of 2 minus 1 */
     MPIR_Assert(((unsigned) MPIR_Process.
                  attrs.tag_ub & ((unsigned) MPIR_Process.attrs.tag_ub + 1)) == 0);
-
-    /* Set aside tag space for tagged collectives and failure notification */
-#ifdef HAVE_TAG_ERROR_BITS
-    MPIR_Process.attrs.tag_ub >>= 3;
-#else
-    MPIR_Process.attrs.tag_ub >>= 1;
-#endif
-    /* The bit for error checking is set in a macro in mpiimpl.h for
-     * performance reasons. */
-    MPIR_Process.tagged_coll_mask = MPIR_Process.attrs.tag_ub + 1;
 
     /* Assert: tag_ub is at least the minimum asked for in the MPI spec */
     MPIR_Assert(MPIR_Process.attrs.tag_ub >= 32767);
@@ -738,7 +729,7 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided)
         goto fn_fail;
 #else
         if (*provided == MPI_THREAD_MULTIPLE) {
-            mpi_errno = MPIR_Init_async_thread();
+            mpi_errno = MPID_Init_async_thread();
             if (mpi_errno)
                 goto fn_fail;
 

@@ -165,12 +165,13 @@ int main(int argc, char *argv[])
          * if both call MTest_Finalize */
         if (parentcomm == MPI_COMM_NULL) {
             MTest_Finalize(errs);
+        } else {
+            MPI_Finalize();
         }
     } else {
         MTest_Finalize(errs);
     }
 
     IF_VERBOSE(("[%d] calling finalize\n", rank));
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

@@ -63,6 +63,5 @@
        call mpi_type_free( ntype2, ierr )
 
        call MTest_Finalize( errs )
-       call MPI_Finalize( ierr )
 
        end

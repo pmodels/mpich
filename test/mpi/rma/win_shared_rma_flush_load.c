@@ -164,7 +164,7 @@ static int run_test()
 int main(int argc, char *argv[])
 {
     int i;
-    int errors = 0, all_errors = 0;
+    int errors = 0;
     MPI_Comm shm_comm = MPI_COMM_NULL;
     int shm_rank;
     int *shm_ranks = NULL, *shm_root_ranks = NULL;
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
     int win_unit = sizeof(int);
     int shm_root_rank = -1, shm_target = -1, target_shm_root = -1;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
@@ -268,12 +268,7 @@ int main(int argc, char *argv[])
     MPI_Win_unlock_all(shm_win);
     MPI_Win_unlock_all(win);
 
-    MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
   exit:
-
-    if (rank == 0 && all_errors == 0)
-        printf(" No Errors\n");
 
     if (shm_ranks)
         free(shm_ranks);
@@ -289,7 +284,7 @@ int main(int argc, char *argv[])
     if (shm_comm != MPI_COMM_NULL)
         MPI_Comm_free(&shm_comm);
 
-    MPI_Finalize();
+    MTest_Finalize(errors);
 
-    return 0;
+    return MTestReturnValue(errors);
 }

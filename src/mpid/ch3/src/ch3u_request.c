@@ -602,7 +602,7 @@ void MPID_Request_free_hook(MPIR_Request *req)
 void MPID_Request_destroy_hook(MPIR_Request *req)
 {
     if (req->dev.datatype_ptr != NULL) {
-        MPIR_Datatype_release(req->dev.datatype_ptr);
+        MPIR_Datatype_ptr_release(req->dev.datatype_ptr);
     }
 
     if (req->dev.segment_ptr != NULL) {

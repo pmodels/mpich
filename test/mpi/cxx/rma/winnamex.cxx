@@ -23,7 +23,7 @@ using namespace std;
 #include <string.h>
 #endif
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     int errs = 0;
     MPI::Win win;
@@ -32,35 +32,34 @@ int main( int argc, char *argv[] )
 
     MTest_Init();
 
-    name = new char [MPI::MAX_OBJECT_NAME];
-    nameout = new char [MPI::MAX_OBJECT_NAME];
+    name = new char[MPI::MAX_OBJECT_NAME];
+    nameout = new char[MPI::MAX_OBJECT_NAME];
 
     cnt = 0;
-    while (MTestGetWin( win, true )) {
-	if (win == MPI::WIN_NULL) continue;
-    
-	sprintf( name, "win-%d", cnt );
-	cnt++;
-	win.Set_name( name );
-	nameout[0] = 0;
-	win.Get_name( nameout, namelen );
-	if (strcmp( name, nameout )) {
-	    errs++;
-	    cout << "Unexpected name, was " << nameout << 
-		" but should be " << name << "\n";
-	}
+    while (MTestGetWin(win, true)) {
+        if (win == MPI::WIN_NULL)
+            continue;
 
-	MTestFreeWin(win);
+        sprintf(name, "win-%d", cnt);
+        cnt++;
+        win.Set_name(name);
+        nameout[0] = 0;
+        win.Get_name(nameout, namelen);
+        if (strcmp(name, nameout)) {
+            errs++;
+            cout << "Unexpected name, was " << nameout << " but should be " << name << "\n";
+        }
+
+        MTestFreeWin(win);
     }
     if (cnt == 0) {
         errs++;
         cout << "No windows created\n";
     }
 
-    delete [] name;
-    delete [] nameout;
+    delete[]name;
+    delete[]nameout;
 
-    MTest_Finalize( errs );
-    MPI::Finalize();
+    MTest_Finalize(errs);
     return 0;
 }

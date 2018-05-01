@@ -19,6 +19,5 @@ program testf90_mpi
   call MPI_Type_free(ctype, ierr)
 
   call mtest_finalize(errs)
-  call MPI_Finalize(ierr)
 
 end program testf90_mpi

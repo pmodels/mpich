@@ -354,7 +354,7 @@ void MPIR_Dataloop_alloc_and_copy(int kind,
 #ifdef HAVE_MAX_STRUCT_ALIGNMENT
     align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
 #else
-    align_sz = 8; /* default aligns everything to 8-byte boundaries */
+    align_sz = 8;       /* default aligns everything to 8-byte boundaries */
 #endif
 
     if (old_loop != NULL) {
@@ -533,7 +533,7 @@ void MPIR_Dataloop_struct_alloc(DLOOP_Count count,
 #ifdef HAVE_MAX_STRUCT_ALIGNMENT
     align_sz = HAVE_MAX_STRUCT_ALIGNMENT;
 #else
-    align_sz = 8; /* default aligns everything to 8-byte boundaries */
+    align_sz = 8;       /* default aligns everything to 8-byte boundaries */
 #endif
 
     /* calculate the space that we actually need for everything */

@@ -7,12 +7,12 @@
 
 include $(top_srcdir)/Makefile_cxx.mtest
 
-EXTRA_DIST = testlist
+EXTRA_DIST = testlist.in
 
-noinst_PROGRAMS = packsizex typecntsx typenamex typemiscx
+noinst_PROGRAMS = typecntsx typenamex typemiscx
 
-packsizex_SOURCES = packsizex.cxx
 typecntsx_SOURCES = typecntsx.cxx
 typenamex_SOURCES = typenamex.cxx
 typemiscx_SOURCES = typemiscx.cxx
 
+include Makefile.dtp

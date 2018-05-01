@@ -23,7 +23,7 @@ int MPIR_Barrier_allcomm_nb(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
     if (req_ptr)
         req = req_ptr->handle;
 
-    mpi_errno = MPIR_Wait_impl(&req, MPI_STATUS_IGNORE);
+    mpi_errno = MPIR_Wait(&req, MPI_STATUS_IGNORE);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     int tmp;
     MPI_Comm newcomm;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
@@ -44,9 +44,7 @@ int main(int argc, char *argv[])
     }
 
     MPI_Comm_free(&newcomm);
-    MPI_Finalize();
-
-    printf(" No Errors\n");
+    MTest_Finalize(0);
 
     return 0;
 }

@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "mpitest.h"
 
 #define MAX_COUNT 65536*4/16
 #define MAX_RMA_SIZE 2  /* 16 in manyrma performance test */
@@ -51,7 +52,7 @@ int main(int argc, char *argv[])
     int maxSz = MAX_RMA_SIZE;
     double start, end;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     for (i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-put") == 0) {
@@ -221,11 +222,7 @@ int main(int argc, char *argv[])
     MPI_Group_free(&accessGroup);
     MPI_Group_free(&exposureGroup);
 
-    /* If we get here without timing out or failing, we succeeded */
-    if (wrank == 0)
-        printf(" No Errors\n");
-
-    MPI_Finalize();
+    MTest_Finalize(0);
     return 0;
 }
 

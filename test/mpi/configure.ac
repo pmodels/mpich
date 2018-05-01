@@ -593,6 +593,10 @@ else
         AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME)
     fi
 fi
+# Make sure we export CC before configuring DTPools, since MPI is
+# needed to build the library.
+export CC
+AC_CONFIG_SUBDIRS([dtpools])
 
 # Running C compiler tests
 PAC_PROG_CC
@@ -1502,7 +1506,9 @@ if test "$FROM_MPICH" = yes ; then
     F77=$mpibindir/$MPIF77_NAME
     FC=$mpibindir/$MPIFORT_NAME
     CXX=$mpibindir/$MPICXX_NAME
-    MPIEXEC=$mpibindir/$MPIEXEC_NAME
+    if test -z "$MPIEXEC" ; then
+        MPIEXEC=$mpibindir/$MPIEXEC_NAME
+    fi
 
     # Zero out the flags, since they are already contained in the compiler
     # wrapper scripts.  Note that this will kill any flags that have been added
@@ -1539,6 +1545,7 @@ AC_OUTPUT(maint/testmerge \
           Makefile \
           basic/Makefile \
           attr/Makefile \
+          attr/testlist \
           util/Makefile \
           coll/Makefile \
 	  coll/testlist \
@@ -1550,6 +1557,7 @@ AC_OUTPUT(maint/testmerge \
           info/Makefile \
           init/Makefile \
           pt2pt/Makefile \
+          pt2pt/testlist \
           mpi_t/Makefile \
           rma/Makefile \
           rma/testlist \
@@ -1629,12 +1637,14 @@ AC_OUTPUT(maint/testmerge \
      cxx/Makefile \
           cxx/util/Makefile \
           cxx/attr/Makefile \
+          cxx/attr/testlist \
           cxx/pt2pt/Makefile \
           cxx/comm/Makefile \
           cxx/coll/Makefile \
 	  cxx/errhan/Makefile \
           cxx/info/Makefile \
           cxx/datatype/Makefile \
+          cxx/datatype/testlist \
           cxx/io/Makefile \
           cxx/init/Makefile \
           cxx/rma/Makefile \
@@ -1688,6 +1698,7 @@ AC_OUTPUT(maint/testmerge \
 	  cxx/topo/testlist \
           f77/testlist \
           f90/testlist \
+          f08/testlist \
           threads/testlist \
           errors/testlist \
           errors/cxx/testlist \

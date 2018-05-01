@@ -43,6 +43,8 @@ C
                 print *, " No Errors"
            endif
         endif
+
+        call MPI_Finalize( ierr )
         end
 C
 C A simple get intracomm for now

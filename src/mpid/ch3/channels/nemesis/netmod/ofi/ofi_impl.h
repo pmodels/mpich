@@ -146,7 +146,6 @@ fn_fail:                      \
    ? strrchr(__FILE__,'/')+1                    \
    : __FILE__                                   \
 )
-#define DECL_FUNC(FUNCNAME)  MPL_QUOTE(FUNCNAME)
 #define OFI_COMPILE_TIME_ASSERT(expr_)                                  \
   do { switch(0) { case 0: case (expr_): default: break; } } while (0)
 

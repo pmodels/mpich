@@ -201,5 +201,4 @@ C          endif
 C      endif
 
       call mtest_finalize( errs )
-      call MPI_Finalize( ierr )
       end

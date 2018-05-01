@@ -41,8 +41,8 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm->revoked &&
-            MPIR_AGREE_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_Process.tagged_coll_mask) &&
-            MPIR_SHRINK_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_Process.tagged_coll_mask)) {
+            MPIR_AGREE_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_TAG_COLL_BIT) &&
+            MPIR_SHRINK_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_TAG_COLL_BIT)) {
         MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
     }
 
@@ -120,7 +120,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 		if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
 		{
 		    MPIR_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
-		    MPIR_Datatype_add_ref(rreq->dev.datatype_ptr);
+            MPIR_Datatype_ptr_add_ref(rreq->dev.datatype_ptr);
 		}
 	    }
 	}
@@ -133,7 +133,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 	    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
 	    {
 		MPIR_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
-		MPIR_Datatype_add_ref(rreq->dev.datatype_ptr);
+        MPIR_Datatype_ptr_add_ref(rreq->dev.datatype_ptr);
 	    }
 	}
 	else if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_SELF_MSG)
@@ -173,7 +173,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 	if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
 	{
 	    MPIR_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
-	    MPIR_Datatype_add_ref(rreq->dev.datatype_ptr);
+        MPIR_Datatype_ptr_add_ref(rreq->dev.datatype_ptr);
 	}
 
 	rreq->dev.recv_pending_count = 1;

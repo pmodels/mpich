@@ -19,7 +19,7 @@ const int verbose = 0;
 int main(int argc, char *argv[])
 {
     int rank, nproc, i, x;
-    int errors = 0, all_errors = 0;
+    int errors = 0;
     MPI_Win win = MPI_WIN_NULL;
 
     MPI_Comm shm_comm = MPI_COMM_NULL;
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     int shm_root_rank_in_world;
     int origin = -1, put_target, get_target;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_group(MPI_COMM_WORLD, &world_group);
@@ -164,12 +164,7 @@ int main(int argc, char *argv[])
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
   exit:
-
-    if (rank == 0 && all_errors == 0)
-        printf(" No Errors\n");
 
     if (shm_bases)
         free(shm_bases);
@@ -193,7 +188,7 @@ int main(int argc, char *argv[])
     if (world_group != MPI_GROUP_NULL)
         MPI_Group_free(&world_group);
 
-    MPI_Finalize();
+    MTest_Finalize(errors);
 
-    return 0;
+    return MTestReturnValue(errors);
 }

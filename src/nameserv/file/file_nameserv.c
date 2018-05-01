@@ -64,9 +64,10 @@ struct MPID_NS_Handle {
    publishing.  */
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Create
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
 {
-    static const char FCNAME[] = "MPID_NS_Create";
     const char *dirname;
     struct stat st;
     int err, ret;
@@ -114,10 +115,11 @@ int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Publish
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                     const char service_name[], const char port[])
 {
-    static const char FCNAME[] = "MPID_NS_Publish";
     FILE *fp;
     char filename[MAXPATHLEN];
     int err;
@@ -194,15 +196,14 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Lookup
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                    const char service_name[], char port[])
 {
     FILE *fp;
     char filename[MAXPATHLEN];
     int mpi_errno = MPI_SUCCESS;
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPID_NS_Lookup";
-#endif
 
     /* Determine file and directory name.  The file name is from
      * the service name */
@@ -241,9 +242,10 @@ int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Unpublish
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const char service_name[])
 {
-    static const char FCNAME[] = "MPID_NS_Unpublish";
     char filename[MAXPATHLEN];
     int err;
     int i;
@@ -282,9 +284,10 @@ int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const c
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Free
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Free(MPID_NS_Handle * handle_ptr)
 {
-    /* static const char FCNAME[] = "MPID_NS_Free"; */
     int i;
     MPID_NS_Handle handle = *handle_ptr;
 

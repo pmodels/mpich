@@ -7,6 +7,10 @@
  * Build Issues
    - CH4 will not build with Solaris compilers.
 
+ * Dynamic process support
+   - Requires fi_tagged capability in OFI netmod
+   - Not supported in UCX netmod at this time
+
  * Test failures
    - CH4 will not currently pass 100% of the testsuite.
    - Test failures differ based on experimental setup and network

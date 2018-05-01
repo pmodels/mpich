@@ -7,6 +7,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 int main(int argc, char *argv[])
 {
@@ -15,7 +16,7 @@ int main(int argc, char *argv[])
     int errs = 0;
     int i, rin[16], rout[16], result;
 
-    MPI_Init(0, 0);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_group(MPI_COMM_WORLD, &g1);
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
@@ -165,14 +166,6 @@ int main(int argc, char *argv[])
     MPI_Group_free(&g45);
     MPI_Group_free(&g1);
 
-    if (myrank == 0) {
-        if (errs == 0) {
-            printf(" No Errors\n");
-        } else {
-            printf("Found %d errors\n", errs);
-        }
-    }
-
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }

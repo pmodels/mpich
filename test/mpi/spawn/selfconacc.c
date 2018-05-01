@@ -41,8 +41,7 @@ int main(int argc, char *argv[])
         printf("init.\n");
         fflush(stdout);
     }
-    error = MPI_Init(&argc, &argv);
-    check_error(error, "MPI_Init");
+    MTest_Init(&argc, &argv);
 
     /* To improve reporting of problems about operations, we
      * change the error handler to errors return */
@@ -66,7 +65,7 @@ int main(int argc, char *argv[])
     if (size < 2) {
         printf("Two processes needed.\n");
         MPI_Finalize();
-        return 0;
+        return 1;
     }
 
     if (rank == 0) {
@@ -140,9 +139,6 @@ int main(int argc, char *argv[])
     error = MPI_Barrier(MPI_COMM_WORLD);
     check_error(error, "MPI_Barrier");
 
-    if (rank == 0) {
-        printf(" No Errors\n");
-    }
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(0);
+    return MTestReturnValue(0);
 }

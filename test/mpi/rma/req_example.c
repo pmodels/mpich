@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     double data[M][N];          /* M buffers of length N */
     MPI_Info win_info;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
@@ -80,7 +80,6 @@ int main(int argc, char *argv[])
 
         compute(i, data[j]);
         MPI_Rput(data[j], N, MPI_DOUBLE, target, i * N, N, MPI_DOUBLE, win, &put_req[j]);
-
     }
 
     MPI_Waitall(M, put_req, MPI_STATUSES_IGNORE);
@@ -90,12 +89,7 @@ int main(int argc, char *argv[])
 
     MPI_Info_free(&win_info);
 
-    MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    MTest_Finalize(errors);
 
-    if (rank == 0 && all_errors == 0)
-        printf(" No Errors\n");
-
-    MPI_Finalize();
-
-    return 0;
+    return MTestReturnValue(all_errors);
 }

@@ -6,6 +6,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 int add(double *, double *, int *, MPI_Datatype *);
 /*
@@ -25,10 +26,10 @@ int add(double *invec, double *inoutvec, int *len, MPI_Datatype * dtype)
 int main(int argc, char **argv)
 {
     MPI_Op op;
-    int i, rank, size, bufsize, errcnt = 0, toterr;
+    int i, rank, size, bufsize, errcnt = 0;
     double *inbuf, *outbuf, value;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Op_create((MPI_User_function *) add, 1, &op);
@@ -63,16 +64,7 @@ int main(int argc, char **argv)
         bufsize *= 2;
     }
 
-    MPI_Allreduce(&errcnt, &toterr, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    if (rank == 0) {
-        if (toterr == 0)
-            printf(" No Errors\n");
-        else
-            printf("*! %d errors!\n", toterr);
-    }
-
     MPI_Op_free(&op);
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errcnt);
+    return MTestReturnValue(errcnt);
 }

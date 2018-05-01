@@ -58,5 +58,4 @@
       call mpi_type_free( dtype, ierr )
 !
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
       end

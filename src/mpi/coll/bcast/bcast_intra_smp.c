@@ -67,7 +67,9 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
                                       MPIR_BCAST_TAG, comm_ptr->node_comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
-                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                    *errflag =
+                        MPIX_ERR_PROC_FAILED ==
+                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                     MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
@@ -77,7 +79,9 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
                               MPIR_BCAST_TAG, comm_ptr->node_comm, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
-                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                    *errflag =
+                        MPIX_ERR_PROC_FAILED ==
+                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                     MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
@@ -103,7 +107,9 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
                                    comm_ptr->node_roots_comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                *errflag =
+                    MPIX_ERR_PROC_FAILED ==
+                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                 MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
@@ -114,7 +120,9 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
             mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, comm_ptr->node_comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                *errflag =
+                    MPIX_ERR_PROC_FAILED ==
+                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                 MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
@@ -137,7 +145,9 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
                                        comm_ptr->node_comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
-                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                    *errflag =
+                        MPIX_ERR_PROC_FAILED ==
+                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                     MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
@@ -150,7 +160,9 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
                                        comm_ptr->node_roots_comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
-                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                    *errflag =
+                        MPIX_ERR_PROC_FAILED ==
+                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                     MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
@@ -164,7 +176,9 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
                 mpi_errno = MPIR_Bcast(buffer, count, datatype, 0, comm_ptr->node_comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
-                    *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                    *errflag =
+                        MPIX_ERR_PROC_FAILED ==
+                        MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                     MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
@@ -179,7 +193,9 @@ int MPIR_Bcast_intra_smp(void *buffer, int count, MPI_Datatype datatype, int roo
                                                         errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
-                *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+                *errflag =
+                    MPIX_ERR_PROC_FAILED ==
+                    MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
                 MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
                 MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }

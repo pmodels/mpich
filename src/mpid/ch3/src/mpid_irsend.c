@@ -40,8 +40,8 @@ int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, in
 
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm->revoked &&
-            MPIR_AGREE_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_Process.tagged_coll_mask) &&
-            MPIR_SHRINK_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_Process.tagged_coll_mask)) {
+            MPIR_AGREE_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_TAG_COLL_BIT) &&
+            MPIR_SHRINK_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_TAG_COLL_BIT)) {
         MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
     }
     
@@ -127,7 +127,7 @@ int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, in
             /* If we're not complete, then add a reference to the datatype */
             if (sreq) {
                 sreq->dev.datatype_ptr = dt_ptr;
-                MPIR_Datatype_add_ref(dt_ptr);
+                MPIR_Datatype_ptr_add_ref(dt_ptr);
             }
         }
     } else {
@@ -140,7 +140,7 @@ int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, in
                                      context_offset );
 	if (sreq && dt_ptr != NULL) {
 	    sreq->dev.datatype_ptr = dt_ptr;
-	    MPIR_Datatype_add_ref(dt_ptr);
+        MPIR_Datatype_ptr_add_ref(dt_ptr);
 	}
     }
 

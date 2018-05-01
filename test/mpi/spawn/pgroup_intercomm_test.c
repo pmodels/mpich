@@ -19,6 +19,7 @@
 #include <assert.h>
 
 #include <mpi.h>
+#include "mpitest.h"
 
 #define INTERCOMM_TAG 0
 
@@ -112,7 +113,7 @@ int main(int argc, char **argv)
     int gsize, *glist;
     MPI_Comm group;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &me);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -145,9 +146,6 @@ int main(int argc, char **argv)
 
     free(glist);
 
-    if (me == 0)
-        printf(" No Errors\n");
-
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(0);
+    return MTestReturnValue(0);
 }

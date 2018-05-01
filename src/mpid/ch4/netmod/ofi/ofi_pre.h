@@ -46,6 +46,7 @@ typedef struct {
     void *rma_id_allocator;
     /* support for connection */
     int conn_id;
+    int eagain;
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_SHORT_HDR = 0,
@@ -127,14 +128,6 @@ typedef struct {
         struct iovec *nopack;
     } noncontig;
     union {
-        /* persistent send fields */
-        struct {
-            int type;
-            int rank;
-            int tag;
-            int count;
-            void *buf;
-        } persist;
 #if defined (MPL_HAVE_VAR_ATTRIBUTE_ALIGNED)
         struct iovec iov MPL_ATTR_ALIGNED(MPIDI_OFI_IOVEC_ALIGN);
 #else
@@ -169,6 +162,8 @@ typedef struct {
     struct fid_mr *mr;
     uint64_t mr_key;
     struct fid_ep *ep;          /* EP with counter & completion */
+    int sep_tx_idx;             /* transmit context index for scalable EP,
+                                 * -1 means using non scalable EP. */
     uint64_t *issued_cntr;
     uint64_t issued_cntr_v;     /* main body of an issued counter,
                                  * if we are to use per-window counter */

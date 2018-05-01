@@ -82,5 +82,4 @@ C Test the delete function on window free
       endif
 
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
       end

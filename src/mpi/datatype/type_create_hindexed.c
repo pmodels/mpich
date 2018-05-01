@@ -32,7 +32,8 @@ int MPI_Type_create_hindexed(int count, const int array_of_blocklengths[],
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_create_hindexed
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_hindexed - Create a datatype for an indexed datatype with
    displacements in bytes
@@ -61,7 +62,6 @@ int MPI_Type_create_hindexed(int count,
                              const MPI_Aint array_of_displacements[],
                              MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
-    static const char FCNAME[] = "MPI_Type_create_hindexed";
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
     MPIR_Datatype *new_dtp;

@@ -48,6 +48,5 @@ int main(int argc, char **argv)
     MPI_Win_free(&windows[1]);  /* fourth MPI_Win_free_keyval */
     MPI_Free_mem(base_ptr[1]);
     MTest_Finalize(errs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

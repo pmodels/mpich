@@ -116,7 +116,5 @@ C   All processes must provide the same file view for MODE_SEQUENTIAL
       endif
 
       call MTest_Finalize( errs )
-
-      call MPI_Finalize( ierr )
       end
 

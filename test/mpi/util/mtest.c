@@ -51,7 +51,7 @@ static void MTestResourceSummary(FILE *);
 static int dbgflag = 0;         /* Flag used for debugging */
 static int wrank = -1;          /* World rank */
 static int verbose = 0;         /* Message level (0 is none) */
-static int returnWithVal = 0;   /* Allow programs to return with a non-zero
+static int returnWithVal = 1;   /* Allow programs to return with a non-zero
                                  * if there was an error (may cause problems
                                  * with some runtime systems) */
 static int usageOutput = 0;     /* */
@@ -184,7 +184,6 @@ void MTest_Init(int *argc, char ***argv)
   Finalize MTest.  errs is the number of errors on the calling process;
   this routine will write the total number of errors over all of MPI_COMM_WORLD
   to the process with rank zero, or " No Errors".
-  It does *not* finalize MPI.
  */
 void MTest_Finalize(int errs)
 {
@@ -212,6 +211,8 @@ void MTest_Finalize(int errs)
 
     /* Clean up any persistent objects that we allocated */
     MTestRMACleanup();
+
+    MPI_Finalize();
 }
 
 /* ------------------------------------------------------------------------ */
@@ -1133,7 +1134,6 @@ int MTestGetWin(MPI_Win * win, int mustBePassive)
         merr = MPI_Win_create_keyval(MPI_WIN_NULL_COPY_FN, MPI_WIN_NULL_DELETE_FN, &mem_keyval, 0);
         if (merr)
             MTestPrintError(merr);
-
     }
 
     switch (win_index) {

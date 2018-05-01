@@ -128,11 +128,11 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
          * reference counts */
         if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
             MPIR_Datatype_get_ptr(origin_datatype, dtp);
-            MPIR_Datatype_add_ref(dtp);
+            MPIR_Datatype_ptr_add_ref(dtp);
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             MPIR_Datatype_get_ptr(target_datatype, dtp);
-            MPIR_Datatype_add_ref(dtp);
+            MPIR_Datatype_ptr_add_ref(dtp);
         }
 
         MPIR_Datatype_is_contig(origin_datatype, &is_origin_contig);
@@ -307,11 +307,11 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
          * reference counts */
         if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
             MPIR_Datatype_get_ptr(origin_datatype, dtp);
-            MPIR_Datatype_add_ref(dtp);
+            MPIR_Datatype_ptr_add_ref(dtp);
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             MPIR_Datatype_get_ptr(target_datatype, dtp);
-            MPIR_Datatype_add_ref(dtp);
+            MPIR_Datatype_ptr_add_ref(dtp);
         }
 
         MPIR_Datatype_is_contig(origin_datatype, &is_origin_contig);
@@ -507,10 +507,10 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
 
         for (i = 0; i < stream_unit_count; i++) {
             if (origin_dtp != NULL) {
-                MPIR_Datatype_add_ref(origin_dtp);
+                MPIR_Datatype_ptr_add_ref(origin_dtp);
             }
             if (target_dtp != NULL) {
-                MPIR_Datatype_add_ref(target_dtp);
+                MPIR_Datatype_ptr_add_ref(target_dtp);
             }
         }
 
@@ -747,13 +747,13 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
         for (i = 0; i < stream_unit_count; i++) {
             if (origin_dtp != NULL) {
-                MPIR_Datatype_add_ref(origin_dtp);
+                MPIR_Datatype_ptr_add_ref(origin_dtp);
             }
             if (target_dtp != NULL) {
-                MPIR_Datatype_add_ref(target_dtp);
+                MPIR_Datatype_ptr_add_ref(target_dtp);
             }
             if (result_dtp != NULL) {
-                MPIR_Datatype_add_ref(result_dtp);
+                MPIR_Datatype_ptr_add_ref(result_dtp);
             }
         }
 

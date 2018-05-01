@@ -75,8 +75,8 @@ static inline ucs_status_t MPIDI_UCX_Unpack(void *state, size_t offset, const vo
                                             size_t count)
 {
     struct MPIDI_UCX_pack_state *pack_state = (struct MPIDI_UCX_pack_state *) state;
-    size_t last = MPL_MIN(pack_state->packsize, offset + count);
-    size_t last_pack = last;
+    MPI_Aint last = MPL_MIN(pack_state->packsize, offset + count);
+    MPI_Aint last_pack = last;
 
     MPIR_Segment_unpack(pack_state->segment_ptr, offset, &last, (void *) src);
     if (unlikely(last != last_pack)) {
@@ -92,7 +92,7 @@ static inline void MPIDI_UCX_Finish_pack(void *state)
     struct MPIDI_UCX_pack_state *pack_state = (struct MPIDI_UCX_pack_state *) state;
     MPIR_Datatype_get_ptr(pack_state->segment_ptr->handle, dt_ptr);
     MPIR_Segment_free(pack_state->segment_ptr);
-    MPIR_Datatype_release(dt_ptr);
+    MPIR_Datatype_ptr_release(dt_ptr);
     MPL_free(pack_state);
 }
 

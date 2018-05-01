@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     int size, rank;
     int one = 1, two = 2, isum, sum;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     assert(size == 2);
@@ -26,9 +26,7 @@ int main(int argc, char *argv[])
 
     assert(isum == 2);
     assert(sum == 4);
-    if (rank == 0)
-        printf(" No errors\n");
 
-    MPI_Finalize();
+    MTest_Finalize(0);
     return 0;
 }

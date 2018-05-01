@@ -1,7 +1,7 @@
 exitst1 2 resultTest=TestStatus
 exitst2 4 resultTest=TestStatus
 initstat 1
-timeout 2 resultTest=TestTimeout timeLimit=10
+timeout 2 resultTest=TestErrFatal timeLimit=10
 version 1
 finalized 1
 attrself 1

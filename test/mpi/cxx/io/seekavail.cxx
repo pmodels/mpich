@@ -5,7 +5,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 /* Include stdio.h first to see if the MPI implementation can handle the
-   conflicting definitions in stdio.h for the SEEK_SET, SEEK_CUR, and 
+   conflicting definitions in stdio.h for the SEEK_SET, SEEK_CUR, and
    SEEK_END */
 #include "mpitestconf.h"
 
@@ -30,38 +30,37 @@ using namespace std;
 
 static char MTEST_Descrip[] = "Test availability of MPI::SEEK_SET and SEEK_SET from stdio.h";
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
-    int             errs = 0, err;
-    int             rank;
-    MPI::Intracomm  comm;
-    MPI::Status     status;
-    int             seekValues;
+    int errs = 0, err;
+    int rank;
+    MPI::Intracomm comm;
+    MPI::Status status;
+    int seekValues;
 
-    MTest_Init( );
+    MTest_Init();
     comm = MPI::COMM_WORLD;
 
     // Make sure that we can access each value
     // First, the MPI C++ values
     seekValues = MPI::SEEK_SET;
     if (MPI::SEEK_CUR == seekValues) {
-	errs++;
+        errs++;
     }
     if (MPI::SEEK_END == seekValues) {
-	errs++;
+        errs++;
     }
-
     // Second, the stdio values
     seekValues = SEEK_SET;
     if (SEEK_CUR == seekValues) {
-	errs++;
+        errs++;
     }
     if (SEEK_END == seekValues) {
-	errs++;
+        errs++;
     }
 
     /* some workarounds for the SEEK_SET problem prevent its
-       use as a case label */
+     * use as a case label */
     seekValues = SEEK_SET;
     switch (seekValues) {
         case SEEK_SET:
@@ -72,8 +71,7 @@ int main( int argc, char *argv[] )
             errs++;
             break;
     }
-    
-    MTest_Finalize( errs );
-    MPI::Finalize( );
+
+    MTest_Finalize(errs);
     return 0;
 }

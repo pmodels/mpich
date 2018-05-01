@@ -6,14 +6,16 @@
  */
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 int main(int argc, char **argv)
 {
     int blockcnt[2], rank;
     MPI_Aint offsets[2], lb, ub, extent;
     MPI_Datatype tmp_type, newtype;
+    int errs = 0;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     /* Set some values in locations that should not be accessed */
     blockcnt[1] = -1;
@@ -41,14 +43,13 @@ int main(int argc, char **argv)
         if (lb != 4 || ub != 5 || extent != 1) {
             printf("lb = %d (should be 4), ub = %d (should be 5) extent = %d should be 1\n",
                    (int) lb, (int) ub, (int) extent);
-        } else {
-            printf(" No Errors\n");
+            errs++;
         }
 
         MPI_Type_free(&tmp_type);
         MPI_Type_free(&newtype);
     }
 
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }

@@ -31,7 +31,8 @@ int MPI_Win_create_errhandler(MPI_Win_errhandler_function * win_errhandler_fn,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_create_errhandler
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_create_errhandler - Create an error handler for use with MPI window
    objects
@@ -53,7 +54,6 @@ Output Parameters:
 int MPI_Win_create_errhandler(MPI_Win_errhandler_function * win_errhandler_fn,
                               MPI_Errhandler * errhandler)
 {
-    static const char FCNAME[] = "MPI_Win_create_errhandler";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errhandler *errhan_ptr;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_CREATE_ERRHANDLER);

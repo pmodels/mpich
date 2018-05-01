@@ -54,7 +54,6 @@
          print *, ' Found ', errs, ' errors'
       endif
 
-      call mpi_finalize(ierr)
       end
 !
       subroutine mycopyfn( oldcomm, keyval, extrastate, valin, valout, &

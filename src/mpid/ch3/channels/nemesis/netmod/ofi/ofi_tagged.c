@@ -36,7 +36,7 @@ MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
 /* Receive callback called after sending a syncronous send acknowledgement. */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_sync_recv_callback)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_sync_recv_callback)
 static inline int MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
                                                   MPIR_Request * rreq)
 {
@@ -56,7 +56,7 @@ static inline int MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBU
 /* Free any temporary/pack buffers and complete the send request            */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_send_callback)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_send_callback)
 static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
                                              MPIR_Request * sreq)
 {
@@ -93,14 +93,14 @@ static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((u
 })
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_cancel_send)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_cancel_send)
 int MPID_nem_ofi_cancel_send(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPIR_Request *sreq)
 {
     DO_CANCEL(sreq);
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_cancel_recv)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_cancel_recv)
 int MPID_nem_ofi_cancel_recv(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPIR_Request *rreq)
 {
     DO_CANCEL(rreq);
@@ -108,7 +108,7 @@ int MPID_nem_ofi_cancel_recv(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPI
 
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_anysource_matched)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_anysource_matched)
 int MPID_nem_ofi_anysource_matched(MPIR_Request * rreq)
 {
     int matched = FALSE;

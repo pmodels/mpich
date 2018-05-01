@@ -29,7 +29,8 @@ int MPI_Win_fence(int assert, MPI_Win win) __attribute__ ((weak, alias("PMPI_Win
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_fence
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_fence - Perform an MPI fence synchronization on a MPI window
 
@@ -65,7 +66,6 @@ Input Parameters:
 @*/
 int MPI_Win_fence(int assert, MPI_Win win)
 {
-    static const char FCNAME[] = "MPI_Win_fence";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_FENCE);

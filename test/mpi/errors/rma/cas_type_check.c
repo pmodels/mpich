@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     int rank;
     MPI_Datatype my_int;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* C Integer */
@@ -85,9 +85,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    if (rank == 0)
-        printf(" No Errors\n");
-    MPI_Finalize();
+    MTest_Finalize(0);
 
     return 0;
 }

@@ -30,7 +30,8 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_allocate
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_allocate - Create and allocate an MPI Window object for one-sided communication.
 
@@ -71,7 +72,6 @@ Output Parameters:
 int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
                      MPI_Comm comm, void *baseptr, MPI_Win * win)
 {
-    static const char FCNAME[] = "MPI_Win_allocate";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_Comm *comm_ptr = NULL;

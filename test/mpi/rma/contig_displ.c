@@ -91,14 +91,12 @@ int main(int argc, char **argv)
     }
 
     MTest_Finalize(errs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 
   err_return:
     printf("MPI function error returned an error\n");
     MTestPrintError(mpi_err);
     errs++;
     MTest_Finalize(errs);
-    MPI_Finalize();
     return 1;
 }

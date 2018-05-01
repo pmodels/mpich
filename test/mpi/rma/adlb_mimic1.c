@@ -159,7 +159,6 @@ int main(int argc, char **argv)
     MPI_Free_mem(local_buf);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
 
-    return 0;
+    return MTestReturnValue(errs);
 }

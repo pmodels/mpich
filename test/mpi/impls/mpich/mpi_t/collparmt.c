@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     MTEST_VG_MEM_INIT(buf2, 400 * sizeof(char));
     MTEST_VG_MEM_INIT(buf3, 400 * sizeof(char));
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
@@ -134,16 +134,8 @@ int main(int argc, char *argv[])
     /* For full coverage, should address all parameters for collective
      * algorithm selection */
 
-    if (wrank == 0) {
-        if (errs) {
-            printf("found %d errors\n", errs);
-        } else {
-            printf(" No errors\n");
-        }
-    }
-
     MPI_T_finalize();
-    MPI_Finalize();
+    MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

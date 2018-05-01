@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
         MPI_Abort(MPI_COMM_WORLD, -1);
     }
 
-    MPI_Init_thread(&argc, &argv, required, &provided);
+    MTest_Init_thread(&argc, &argv, required, &provided);
     if (provided != MPI_THREAD_MULTIPLE) {
         fprintf(stderr, "MPI_THREAD_MULTIPLE not supported by the MPI implementation\n");
         MPI_Abort(MPI_COMM_WORLD, -1);
@@ -89,9 +89,7 @@ int main(int argc, char *argv[])
      * are freed in MPI_T_finalize().
      */
     MPI_T_finalize();
-    MPI_Finalize();
-
-    fprintf(stdout, " No Errors\n");
+    MTest_Finalize(0);
 
     return 0;
 }
@@ -261,7 +259,6 @@ int PrintCategories(FILE * fp, int myThreadId)
                                     &isReadonly, &isContinuous, &isAtomic);
                 if (DOPRINT)
                     fprintf(fp, "%s, ", varname);
-
             }
             free(pvarIndex);
             if (DOPRINT)
@@ -282,7 +279,6 @@ int PrintCategories(FILE * fp, int myThreadId)
                                         &ncvars, &npvars, &nsubcats);
                 if (DOPRINT)
                     fprintf(fp, "%s, ", catname);
-
             }
             free(subcatIndex);
             if (DOPRINT)

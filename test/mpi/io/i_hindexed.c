@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 #define YLEN 5
 #define XLEN 10
@@ -46,6 +47,15 @@ char compare_buf[XLEN * 4][YLEN * 4] = {
 #define VERBOSE 1
 */
 
+#define HANDLE_ERROR(err) \
+    if (err != MPI_SUCCESS) { \
+        char msg[MPI_MAX_ERROR_STRING]; \
+        int resultlen; \
+        MPI_Error_string(err, msg, &resultlen); \
+        fprintf(stderr, "%s line %d: %s\n", __FILE__, __LINE__, msg); \
+        MPI_Abort(MPI_COMM_WORLD, 1); \
+    }
+
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
@@ -62,19 +72,18 @@ int main(int argc, char **argv)
     MPI_Status *statuses;
     MPI_Status status;
     MPI_Offset offset = 0;
-    int nr_errors = 0;
+    int errs = 0;
 #ifdef VERBOSE
     int k;
 #endif
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
     if (np != 4) {
         if (!rank)
             printf("Please run with 4 processes. Exiting ...\n\n");
-        MPI_Finalize();
         return 1;
     }
 
@@ -152,10 +161,13 @@ int main(int argc, char **argv)
     /* zero file contents --------------------------------------------------- */
     if (rank == 0) {
         char *wr_buf = (char *) calloc(num_io * global_array_size, 1);
-        MPI_File_open(MPI_COMM_SELF, filename,
-                      MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh);
-        MPI_File_write(fh, wr_buf, num_io * global_array_size, MPI_CHAR, &status);
-        MPI_File_close(&fh);
+        err = MPI_File_open(MPI_COMM_SELF, filename,
+                            MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh);
+        HANDLE_ERROR(err);
+        err = MPI_File_write(fh, wr_buf, num_io * global_array_size, MPI_CHAR, &status);
+        HANDLE_ERROR(err);
+        err = MPI_File_close(&fh);
+        HANDLE_ERROR(err);
         free(wr_buf);
     }
     /* open the file -------------------------------------------------------- */
@@ -171,20 +183,26 @@ int main(int argc, char **argv)
     for (i = 0; i < num_io; i++) {
         offset = i * global_array_size;
         /* set the file view */
-        MPI_File_set_view(fh, offset, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
-        MPI_File_iwrite_all(fh, buf, ftype_size, MPI_CHAR, &request[i]);
+        err = MPI_File_set_view(fh, offset, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
+        HANDLE_ERROR(err);
+        err = MPI_File_iwrite_all(fh, buf, ftype_size, MPI_CHAR, &request[i]);
+        HANDLE_ERROR(err);
     }
-    MPI_Waitall(num_io, request, statuses);
-    MPI_File_close(&fh);
+    err = MPI_Waitall(num_io, request, statuses);
+    HANDLE_ERROR(err);
+    err = MPI_File_close(&fh);
+    HANDLE_ERROR(err);
 
     /* read and print file contents ----------------------------------------- */
     if (rank == 0) {
         char *ptr;
         char *rd_buf = (char *) calloc(num_io * global_array_size, 1);
-        MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
-        MPI_File_read(fh, rd_buf, num_io * global_array_size, MPI_CHAR, &status);
-        MPI_File_close(&fh);
-
+        err = MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+        HANDLE_ERROR(err);
+        err = MPI_File_read(fh, rd_buf, num_io * global_array_size, MPI_CHAR, &status);
+        HANDLE_ERROR(err);
+        err = MPI_File_close(&fh);
+        HANDLE_ERROR(err);
 #ifdef VERBOSE
         printf("-------------------------------------------------------\n");
         printf("   [");
@@ -220,17 +238,12 @@ int main(int argc, char **argv)
                 if (*ptr != compare_buf[i][j]) {
                     fprintf(stderr, "expected %d got %d at [%d][%d]\n",
                             *ptr, compare_buf[i][j], i, j);
-                    nr_errors++;
+                    errs++;
                 }
                 ptr++;
             }
         }
         free(rd_buf);
-
-        if (nr_errors == 0)
-            fprintf(stdout, " No Errors\n");
-        else
-            fprintf(stderr, "Found %d errors\n", nr_errors);
     }
 
     free(blocklengths);
@@ -239,8 +252,8 @@ int main(int argc, char **argv)
     free(request);
     free(statuses);
     MPI_Type_free(&ftype);
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }
 
 /* command-line outputs are: (the global array is written twice)

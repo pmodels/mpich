@@ -136,7 +136,7 @@ static inline int MPIDI_STUBSHM_mpi_rsend_init(const void *buf,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_STUBSHM_mpi_isend)
+#define FCNAME MPL_QUOTE(MPIDI_STUBSHM_mpi_isend)
 static inline int MPIDI_STUBSHM_mpi_isend(const void *buf,
                                           MPI_Aint count,
                                           MPI_Datatype datatype,

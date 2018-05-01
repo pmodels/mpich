@@ -67,21 +67,23 @@ int MPI_T_pvar_get_num(int *num_pvar)
 
     /* ... end of body of routine ... */
 
+#ifdef HAVE_ERROR_CHECKING
   fn_exit:
+#endif
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_PVAR_GET_NUM);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
+#ifdef HAVE_ERROR_CHECKING
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-#ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno =
             MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
                                  "**mpi_t_pvar_get_num", "**mpi_t_pvar_get_num %p", num_pvar);
     }
-#endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
+#endif
 }

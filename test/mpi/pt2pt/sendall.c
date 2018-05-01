@@ -61,7 +61,6 @@ int main(int argc, char *argv[])
                 if (i != self)
                     MPI_Wait(&request[i], &status);
             }
-
         }
         MPI_Barrier(MPI_COMM_WORLD);
         secs += MPI_Wtime();
@@ -76,6 +75,5 @@ int main(int argc, char *argv[])
 
     MTest_Finalize(0);
 
-    MPI_Finalize();
     return 0;
 }

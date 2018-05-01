@@ -16,35 +16,6 @@
 #include "mpidig.h"
 
 /* Static inlines */
-static inline int MPIDI_CH4U_get_tag(uint64_t match_bits)
-{
-    int tag = (match_bits & MPIDI_CH4U_TAG_MASK);
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_GET_TAG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_GET_TAG);
-
-    /* Left shift and right shift by MPIDI_CH4U_TAG_SHIFT_UNPACK is to make sure the sign of tag is retained */
-    ret = ((tag << MPIDI_CH4U_TAG_SHIFT_UNPACK) >> MPIDI_CH4U_TAG_SHIFT_UNPACK);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_GET_TAG);
-    return ret;
-}
-
-static inline int MPIDI_CH4U_get_context(uint64_t match_bits)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_GET_CONTEXT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_GET_CONTEXT);
-
-    ret = ((int) ((match_bits & MPIDI_CH4U_CONTEXT_MASK) >>
-                  (MPIDI_CH4U_TAG_SHIFT + MPIDI_CH4U_SOURCE_SHIFT)));
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_GET_CONTEXT);
-    return ret;
-}
-
 static inline int MPIDI_CH4U_get_context_index(uint64_t context_id)
 {
     int raw_prefix, idx, bitpos, gen_id;
@@ -61,32 +32,14 @@ static inline int MPIDI_CH4U_get_context_index(uint64_t context_id)
     return gen_id;
 }
 
-static inline int MPIDI_CH4U_request_get_tag(MPIR_Request * req)
-{
-    int tag;
-    uint64_t match_bits;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_REQUEST_GET_TAG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_REQUEST_GET_TAG);
-
-    match_bits = MPIDI_CH4U_REQUEST(req, match_bits);
-    tag = MPIDI_CH4U_get_tag(match_bits);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_REQUEST_GET_TAG);
-
-    return tag;
-}
-
 static inline int MPIDI_CH4U_request_get_context_offset(MPIR_Request * req)
 {
     int context_offset;
-    uint64_t match_bits;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_REQUEST_GET_CONTEXT_OFFSET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_REQUEST_GET_CONTEXT_OFFSET);
 
-    match_bits = MPIDI_CH4U_REQUEST(req, match_bits);
-    context_offset = MPIDI_CH4U_get_context(match_bits) - req->comm->context_id;
+    context_offset = MPIDI_CH4U_REQUEST(req, context_id) - req->comm->context_id;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_REQUEST_GET_CONTEXT_OFFSET);
 
@@ -295,32 +248,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_hash_clear(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_WIN_HASH_CLEAR);
 }
 
-#ifndef dtype_add_ref_if_not_builtin
-#define dtype_add_ref_if_not_builtin(datatype_)                         \
-    do {                                                                \
-        if ((datatype_) != MPI_DATATYPE_NULL &&                         \
-            HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)        \
-        {                                                               \
-            MPIR_Datatype *dtp_ = NULL;                                 \
-            MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
-            MPIR_Datatype_add_ref(dtp_);                                \
-        }                                                               \
-    } while (0)
-#endif
-
-#ifndef dtype_release_if_not_builtin
-#define dtype_release_if_not_builtin(datatype_)                         \
-    do {                                                                \
-        if ((datatype_) != MPI_DATATYPE_NULL &&                         \
-            HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)        \
-        {                                                               \
-            MPIR_Datatype *dtp_ = NULL;                                 \
-            MPIR_Datatype_get_ptr((datatype_), dtp_);                   \
-            MPIR_Datatype_release(dtp_);                                \
-        }                                                               \
-    } while (0)
-#endif
-
 #define MPIDI_Datatype_get_info(_count, _datatype,              \
                                 _dt_contig_out, _data_sz_out,   \
                                 _dt_ptr, _dt_true_lb)           \
@@ -483,58 +410,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_win_hash_clear(MPIR_Win * win)
             MPIR_Status_set_procnull(&(rreq_)->status);                 \
         }                                                               \
         else {                                                          \
-            MPIR_ERR_SETANDJUMP(mpi_errno_,MPI_ERR_OTHER,"**nomemreq"); \
+            MPIR_ERR_SETANDJUMP(mpi_errno_,MPIX_ERR_NOREQ,"**nomemreq"); \
         }                                                               \
     } while (0)
 
 #define IS_BUILTIN(_datatype)                           \
     (HANDLE_GET_KIND(_datatype) == HANDLE_KIND_BUILTIN)
-
-static inline uint64_t MPIDI_CH4U_init_send_tag(MPIR_Context_id_t contextid, int source, int tag)
-{
-    uint64_t match_bits;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_INIT_SEND_TAG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_INIT_SEND_TAG);
-
-    match_bits = contextid;
-    match_bits = (match_bits << MPIDI_CH4U_SOURCE_SHIFT);
-    match_bits |= (source & (MPIDI_CH4U_SOURCE_MASK >> MPIDI_CH4U_TAG_SHIFT));
-    match_bits = (match_bits << MPIDI_CH4U_TAG_SHIFT);
-    match_bits |= (MPIDI_CH4U_TAG_MASK & tag);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_INIT_SEND_TAG);
-    return match_bits;
-}
-
-static inline uint64_t MPIDI_CH4U_init_recvtag(uint64_t * mask_bits,
-                                               MPIR_Context_id_t contextid, int source, int tag)
-{
-    uint64_t match_bits = 0;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_INIT_RECVTAG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_INIT_RECVTAG);
-
-    *mask_bits = MPIDI_CH4U_PROTOCOL_MASK;
-    match_bits = contextid;
-    match_bits = (match_bits << MPIDI_CH4U_SOURCE_SHIFT);
-
-    if (MPI_ANY_SOURCE == source) {
-        match_bits = (match_bits << MPIDI_CH4U_TAG_SHIFT);
-        *mask_bits |= MPIDI_CH4U_SOURCE_MASK;
-    } else {
-        match_bits |= source;
-        match_bits = (match_bits << MPIDI_CH4U_TAG_SHIFT);
-    }
-
-    if (MPI_ANY_TAG == tag)
-        *mask_bits |= MPIDI_CH4U_TAG_MASK;
-    else
-        match_bits |= (MPIDI_CH4U_TAG_MASK & tag);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_INIT_RECVTAG);
-    return match_bits;
-}
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH4I_valid_group_rank
@@ -815,17 +696,17 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_win_remote_acc_cmpl_cnt_incr(MPIR_Win * win,
 {
     int c = 0;
     switch (MPIDI_CH4U_WIN(win, sync).access_epoch_type) {
-    case MPIDI_CH4U_EPOTYPE_LOCK:
-    case MPIDI_CH4U_EPOTYPE_LOCK_ALL:
-    case MPIDI_CH4U_EPOTYPE_START:
-        {
-            MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_get(win, target_rank);
-            MPIR_cc_incr(&target_ptr->remote_acc_cmpl_cnts, &c);
+        case MPIDI_CH4U_EPOTYPE_LOCK:
+        case MPIDI_CH4U_EPOTYPE_LOCK_ALL:
+        case MPIDI_CH4U_EPOTYPE_START:
+            {
+                MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_get(win, target_rank);
+                MPIR_cc_incr(&target_ptr->remote_acc_cmpl_cnts, &c);
+                break;
+            }
+        default:
+            MPIR_cc_incr(&MPIDI_CH4U_WIN(win, remote_acc_cmpl_cnts), &c);
             break;
-        }
-    default:
-        MPIR_cc_incr(&MPIDI_CH4U_WIN(win, remote_acc_cmpl_cnts), &c);
-        break;
     }
 }
 
@@ -838,18 +719,18 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_win_remote_acc_cmpl_cnt_decr(MPIR_Win * win,
 {
     int c = 0;
     switch (MPIDI_CH4U_WIN(win, sync).access_epoch_type) {
-    case MPIDI_CH4U_EPOTYPE_LOCK:
-    case MPIDI_CH4U_EPOTYPE_LOCK_ALL:
-    case MPIDI_CH4U_EPOTYPE_START:
-        {
-            MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, target_rank);
-            MPIR_Assert(target_ptr);
-            MPIR_cc_decr(&target_ptr->remote_acc_cmpl_cnts, &c);
+        case MPIDI_CH4U_EPOTYPE_LOCK:
+        case MPIDI_CH4U_EPOTYPE_LOCK_ALL:
+        case MPIDI_CH4U_EPOTYPE_START:
+            {
+                MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, target_rank);
+                MPIR_Assert(target_ptr);
+                MPIR_cc_decr(&target_ptr->remote_acc_cmpl_cnts, &c);
+                break;
+            }
+        default:
+            MPIR_cc_decr(&MPIDI_CH4U_WIN(win, remote_acc_cmpl_cnts), &c);
             break;
-        }
-    default:
-        MPIR_cc_decr(&MPIDI_CH4U_WIN(win, remote_acc_cmpl_cnts), &c);
-        break;
     }
 
 }
@@ -1035,12 +916,14 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_map_lookup(void *in_map, uint64_t id)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* Wait until active message acc ops are done. */
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_wait_am_acc(MPIR_Win * win, int target_rank, int order_needed)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_wait_am_acc(MPIR_Win * win, int target_rank,
+                                                    int order_needed)
 {
     int mpi_errno = MPI_SUCCESS;
     if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & order_needed) {
         MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, target_rank);
-        while ((target_ptr && MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0) || MPIR_cc_get(MPIDI_CH4U_WIN(win, remote_acc_cmpl_cnts)) != 0) {
+        while ((target_ptr && MPIR_cc_get(target_ptr->remote_acc_cmpl_cnts) != 0) ||
+               MPIR_cc_get(MPIDI_CH4U_WIN(win, remote_acc_cmpl_cnts)) != 0) {
             MPIDI_CH4R_PROGRESS();
         }
     }

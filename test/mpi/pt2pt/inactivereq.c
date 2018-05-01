@@ -69,8 +69,7 @@ int main(int argc, char *argv[])
         printf("Flag not true after MPI_Test (send)\n");
         printf("Aborting further tests to avoid hanging in MPI_Wait\n");
         MTest_Finalize(errs);
-        MPI_Finalize();
-        return 0;
+        return MTestReturnValue(errs);
     }
     if (!StatusEmpty(&s)) {
         errs++;
@@ -110,8 +109,7 @@ int main(int argc, char *argv[])
         printf("Flag not true after MPI_Test (send)\n");
         printf("Aborting further tests to avoid hanging in MPI_Wait\n");
         MTest_Finalize(errs);
-        MPI_Finalize();
-        return 0;
+        return MTestReturnValue(errs);
     }
     if (!StatusEmpty(&s)) {
         errs++;
@@ -142,8 +140,7 @@ int main(int argc, char *argv[])
         printf("Flag not true after MPI_Test (recv)\n");
         printf("Aborting further tests to avoid hanging in MPI_Wait\n");
         MTest_Finalize(errs);
-        MPI_Finalize();
-        return 0;
+        return MTestReturnValue(errs);
     }
     if (!StatusEmpty(&s)) {
         errs++;
@@ -161,6 +158,5 @@ int main(int argc, char *argv[])
     MPI_Request_free(&r);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

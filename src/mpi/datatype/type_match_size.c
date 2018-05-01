@@ -30,7 +30,8 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype * datatype)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_match_size
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_match_size - Find an MPI datatype matching a specified size
 
@@ -57,7 +58,6 @@ The function returns an MPI datatype matching a local variable of type
 @*/
 int MPI_Type_match_size(int typeclass, int size, MPI_Datatype * datatype)
 {
-    static const char FCNAME[] = "MPI_Type_match_size";
     int mpi_errno = MPI_SUCCESS;
 #ifdef HAVE_ERROR_CHECKING
     static const char *tname = 0;

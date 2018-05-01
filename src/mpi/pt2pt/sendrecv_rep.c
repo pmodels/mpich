@@ -31,7 +31,8 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Sendrecv_replace
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Sendrecv_replace - Sends and receives using a single buffer
 
@@ -69,7 +70,6 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
                          int dest, int sendtag, int source, int recvtag,
                          MPI_Comm comm, MPI_Status * status)
 {
-    static const char FCNAME[] = "MPI_Sendrecv_replace";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_CHKLMEM_DECL(1);
@@ -164,6 +164,8 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
                                sendtag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, &sreq);
         if (mpi_errno != MPI_SUCCESS) {
             /* --BEGIN ERROR HANDLING-- */
+            if (mpi_errno == MPIX_ERR_NOREQ)
+                MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
             /* FIXME: should we cancel the pending (possibly completed) receive request or wait for it to complete? */
             MPIR_Request_free(rreq);
             goto fn_fail;

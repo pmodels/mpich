@@ -30,7 +30,8 @@ int MPI_Win_start(MPI_Group group, int assert, MPI_Win win)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_start
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_start - Start an RMA access epoch for MPI
 
@@ -65,7 +66,6 @@ Input Parameters:
 @*/
 int MPI_Win_start(MPI_Group group, int assert, MPI_Win win)
 {
-    static const char FCNAME[] = "MPI_Win_start";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_Group *group_ptr = NULL;

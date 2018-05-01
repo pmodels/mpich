@@ -91,7 +91,6 @@ static int checkType(const char str[], int p, int r, int f90kind, int err, MPI_D
                     printf("Unrecognized combiner for %s\n", str);
                     break;
             }
-
         }
     }
 
@@ -169,6 +168,5 @@ int main(int argc, char *argv[])
     }
 
     MTest_Finalize(errs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

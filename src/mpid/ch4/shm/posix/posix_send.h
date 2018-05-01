@@ -26,7 +26,7 @@
 /* MPIDI_POSIX_do_isend                                             */
 /* ---------------------------------------------------- */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_do_isend)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_do_isend)
 static inline int MPIDI_POSIX_do_isend(const void *buf,
                                        MPI_Aint count,
                                        MPI_Datatype datatype,
@@ -71,7 +71,7 @@ static inline int MPIDI_POSIX_do_isend(const void *buf,
         MPIDI_POSIX_REQUEST(sreq)->segment_size = data_sz;
     }
 
-    dtype_add_ref_if_not_builtin(datatype);
+    MPIR_Datatype_add_ref_if_not_builtin(datatype);
     /* enqueue sreq */
     MPIDI_POSIX_REQUEST_ENQUEUE(sreq, MPIDI_POSIX_sendq);
     *request = sreq;
@@ -89,7 +89,7 @@ static inline int MPIDI_POSIX_do_isend(const void *buf,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_SEND)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_SEND)
 static inline int MPIDI_POSIX_mpi_send(const void *buf,
                                        MPI_Aint count,
                                        MPI_Datatype datatype,
@@ -167,7 +167,7 @@ static inline int MPIDI_POSIX_irsend(const void *buf,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_SSEND)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_SSEND)
 static inline int MPIDI_POSIX_mpi_ssend(const void *buf,
                                         MPI_Aint count,
                                         MPI_Datatype datatype,
@@ -190,7 +190,7 @@ static inline int MPIDI_POSIX_mpi_ssend(const void *buf,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_SEND_INIT)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_SEND_INIT)
 static inline int MPIDI_POSIX_mpi_send_init(const void *buf,
                                             int count,
                                             MPI_Datatype datatype,
@@ -219,12 +219,15 @@ static inline int MPIDI_POSIX_mpi_send_init(const void *buf,
     MPIDI_POSIX_REQUEST(sreq)->type = MPIDI_POSIX_TYPESTANDARD;
     *request = sreq;
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_SEND_INIT);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_SSEND_INIT)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_SSEND_INIT)
 static inline int MPIDI_POSIX_mpi_ssend_init(const void *buf,
                                              int count,
                                              MPI_Datatype datatype,
@@ -252,8 +255,11 @@ static inline int MPIDI_POSIX_mpi_ssend_init(const void *buf,
     MPIDI_POSIX_REQUEST(sreq)->type = MPIDI_POSIX_TYPESYNC;
     *request = sreq;
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_SSEND_INIT);
     return mpi_errno;
+  fn_fail:
+    goto fn_fail;
 }
 
 static inline int MPIDI_POSIX_mpi_bsend_init(const void *buf,
@@ -283,8 +289,11 @@ static inline int MPIDI_POSIX_mpi_bsend_init(const void *buf,
     MPIDI_POSIX_REQUEST(sreq)->type = MPIDI_POSIX_TYPEBUFFERED;
     *request = sreq;
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_BSEND_INIT);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static inline int MPIDI_POSIX_mpi_rsend_init(const void *buf,
@@ -315,12 +324,15 @@ static inline int MPIDI_POSIX_mpi_rsend_init(const void *buf,
     MPIDI_POSIX_REQUEST(sreq)->type = MPIDI_POSIX_TYPEREADY;
     *request = sreq;
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_RSEND_INIT);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_POSIX_mpi_isend)
+#define FCNAME MPL_QUOTE(MPIDI_POSIX_mpi_isend)
 static inline int MPIDI_POSIX_mpi_isend(const void *buf,
                                         MPI_Aint count,
                                         MPI_Datatype datatype,
@@ -337,9 +349,12 @@ static inline int MPIDI_POSIX_mpi_isend(const void *buf,
     mpi_errno =
         MPIDI_POSIX_do_isend(buf, count, datatype, rank, tag, comm, context_offset, request,
                              MPIDI_POSIX_TYPESTANDARD);
+  fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_ISEND);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static inline int MPIDI_POSIX_mpi_issend(const void *buf,
@@ -359,9 +374,12 @@ static inline int MPIDI_POSIX_mpi_issend(const void *buf,
     mpi_errno =
         MPIDI_POSIX_do_isend(buf, count, datatype, rank, tag, comm, context_offset, request,
                              MPIDI_POSIX_TYPESYNC);
+  fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_ISSEND);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static inline int MPIDI_POSIX_mpi_cancel_send(MPIR_Request * sreq)
@@ -388,9 +406,12 @@ static inline int MPIDI_POSIX_mpi_cancel_send(MPIR_Request * sreq)
         req = MPIDI_POSIX_REQUEST(req)->next;
     }
 
+  fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_CANCEL_SEND);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #endif /* POSIX_SEND_H_INCLUDED */

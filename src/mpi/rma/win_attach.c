@@ -30,7 +30,8 @@ int MPI_Win_attach(MPI_Win win, void *base, MPI_Aint size)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_attach
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Win_attach - Attach memory to a dynamic window.
 
@@ -63,7 +64,6 @@ Input Parameters:
 @*/
 int MPI_Win_attach(MPI_Win win, void *base, MPI_Aint size)
 {
-    static const char FCNAME[] = "MPI_Win_attach";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_ATTACH);

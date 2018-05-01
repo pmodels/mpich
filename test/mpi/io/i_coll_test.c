@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "mpitest.h"
 
 /* A 32^3 array. For other array sizes, change array_of_gsizes below. */
 
@@ -44,7 +45,7 @@ int main(int argc, char **argv)
     MPI_Info info = MPI_INFO_NULL;
     int errcode;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &mynod);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
@@ -133,7 +134,7 @@ int main(int argc, char **argv)
         handle_error(errcode, "MPI_File_close");
 
     if (!mynod) {
-        /* wkl suggests potential for false " No Errors" if both read
+        /* wkl suggests potential for false pass if both read
          * and write use the same file view */
         /* solution: rank 0 reads entire file and checks write values */
         errcode = MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_RDONLY, info, &fh);
@@ -185,21 +186,12 @@ int main(int argc, char **argv)
         }
     }
 
-    MPI_Allreduce(&errs, &toterrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (mynod == 0) {
-        if (toterrs > 0) {
-            fprintf(stderr, "Found %d errors\n", toterrs);
-        } else {
-            fprintf(stdout, " No Errors\n");
-        }
-    }
-
     MPI_Type_free(&newtype);
     free(readbuf);
     free(writebuf);
     if (mynod)
         free(filename);
 
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }

@@ -122,6 +122,5 @@
       call mpi_comm_disconnect( intercomm, ierr )
 
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
 
       end

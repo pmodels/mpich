@@ -85,7 +85,6 @@ C
      $     key, ierr)
       call mpi_comm_free_keyval(key,
      $     ierr)
-      call mpi_finalize(ierr)
 
       if (errs .eq. 0) then
          print *, " No Errors"

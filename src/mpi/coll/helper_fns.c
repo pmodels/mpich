@@ -39,6 +39,8 @@ int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status)
   fn_exit:
     return mpi_errno;
   fn_fail:
+    if (mpi_errno == MPIX_ERR_NOREQ)
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
     goto fn_exit;
 }
 
@@ -87,6 +89,8 @@ int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t * errflag)
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
+    if (mpi_errno == MPIX_ERR_NOREQ)
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -160,6 +164,8 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
+    if (mpi_errno == MPIX_ERR_NOREQ)
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
     if (request_ptr)
         MPIR_Request_free(request_ptr);
     if (mpi_errno && !*errflag) {
@@ -227,6 +233,8 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
+    if (mpi_errno == MPIX_ERR_NOREQ)
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
     if (request_ptr)
         MPIR_Request_free(request_ptr);
     goto fn_exit;
@@ -281,6 +289,8 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
+    if (mpi_errno == MPIX_ERR_NOREQ)
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
     if (request_ptr)
         MPIR_Request_free(request_ptr);
     if (mpi_errno && !*errflag) {
@@ -368,6 +378,8 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_SENDRECV);
     return mpi_errno;
   fn_fail:
+    if (mpi_errno == MPIX_ERR_NOREQ)
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
     if (send_req_ptr)
         MPIR_Request_free(send_req_ptr);
     if (recv_req_ptr)
@@ -472,6 +484,8 @@ int MPIC_Sendrecv_replace(void *buf, MPI_Aint count, MPI_Datatype datatype,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_SENDRECV_REPLACE);
     return mpi_errno;
   fn_fail:
+    if (mpi_errno == MPIX_ERR_NOREQ)
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
     if (sreq)
         MPIR_Request_free(sreq);
     if (rreq)
@@ -518,6 +532,8 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_ISEND);
     return mpi_errno;
   fn_fail:
+    if (mpi_errno == MPIX_ERR_NOREQ)
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
     goto fn_exit;
 }
 
@@ -560,6 +576,8 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_ISSEND);
     return mpi_errno;
   fn_fail:
+    if (mpi_errno == MPIX_ERR_NOREQ)
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
     goto fn_exit;
 }
 
@@ -590,6 +608,8 @@ int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIC_IRECV);
     return mpi_errno;
   fn_fail:
+    if (mpi_errno == MPIX_ERR_NOREQ)
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**nomem");
     goto fn_exit;
 }
 
@@ -636,7 +656,7 @@ int MPIC_Waitall(int numreq, MPIR_Request * requests[], MPI_Status statuses[],
         request_ptrs[i] = requests[i]->handle;
     }
 
-    mpi_errno = MPIR_Waitall_impl(numreq, request_ptrs, status_array);
+    mpi_errno = MPIR_Waitall(numreq, request_ptrs, status_array);
 
     /* The errflag value here is for all requests, not just a single one.  If
      * in the future, this function is used for multiple collectives at a

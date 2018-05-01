@@ -17,6 +17,7 @@
 
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 #define LOOP 100
 #define DATA_SIZE 100
@@ -32,7 +33,7 @@ int main(int argc, char *argv[])
 {
     int rank, nproc;
     int i, j, k;
-    int errors = 0, curr_errors = 0;
+    int errs = 0, curr_errors = 0;
     MPI_Win win;
     pair_struct_t *tar_buf = NULL;
     pair_struct_t *orig_buf = NULL;
@@ -40,7 +41,7 @@ int main(int argc, char *argv[])
 
     /* This test needs to work with 3 processes. */
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -156,7 +157,7 @@ int main(int argc, char *argv[])
         }
 
         if (j % LOOP == 0) {
-            errors += curr_errors;
+            errs += curr_errors;
             curr_errors = 0;
         }
     }
@@ -166,11 +167,7 @@ int main(int argc, char *argv[])
     MPI_Free_mem(orig_buf);
     MPI_Free_mem(result_buf);
 
-    if (rank == 1) {
-        if (errors == 0)
-            printf(" No Errors\n");
-    }
+    MTest_Finalize(errs);
 
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

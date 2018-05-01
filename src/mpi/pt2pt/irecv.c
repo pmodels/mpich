@@ -30,7 +30,8 @@ int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Irecv
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Irecv - Begins a nonblocking receive
 
@@ -61,7 +62,6 @@ Output Parameters:
 int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
               int tag, MPI_Comm comm, MPI_Request * request)
 {
-    static const char FCNAME[] = "MPI_Irecv";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Request *request_ptr = NULL;

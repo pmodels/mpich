@@ -35,6 +35,5 @@ int main(int argc, char *argv[])
     MPI_File_close(&fh);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

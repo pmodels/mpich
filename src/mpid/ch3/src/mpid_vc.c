@@ -528,7 +528,7 @@ int MPID_Intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(3);
 
-    cts_tag = 0 | MPIR_Process.tagged_coll_mask;
+    cts_tag = 0 | MPIR_TAG_COLL_BIT;
 
     if (local_comm_ptr->rank == local_leader) {
 

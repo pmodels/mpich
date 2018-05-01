@@ -30,7 +30,8 @@ int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Graphdims_get
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Graphdims_get - Retrieves graph topology information associated with a
@@ -55,7 +56,6 @@ Output Parameters:
 @*/
 int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
 {
-    static const char FCNAME[] = "MPI_Graphdims_get";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Topology *topo_ptr;

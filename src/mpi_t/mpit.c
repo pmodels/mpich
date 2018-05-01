@@ -356,8 +356,9 @@ void MPIR_T_CVAR_REGISTER_impl(MPI_Datatype dtype, const char *name, const void 
  * IN: desc, Description of the pvar
  */
 void MPIR_T_PVAR_REGISTER_impl(MPIR_T_pvar_class_t varclass, MPI_Datatype dtype, const char *name,
-                               void *addr, int count, MPIR_T_enum_t * etype, int verb, int binding,
-                               int flags, MPIR_T_pvar_get_value_cb get_value,
+                               void *addr, int count, MPIR_T_enum_t * etype,
+                               MPIR_T_verbosity_t verb, MPIR_T_bind_t binding, int flags,
+                               MPIR_T_pvar_get_value_cb get_value,
                                MPIR_T_pvar_get_count_cb get_count, const char *cat,
                                const char *desc)
 {

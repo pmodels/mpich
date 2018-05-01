@@ -39,7 +39,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     dnl Use embedded libfabric if we specify to do so or we didn't specify and the source is present
     if test "${with_libfabric}" = "embedded" ; then
         ofi_embedded="yes"
-    elif test -z "${with_libfabric}" ; then
+    elif test -z "${with_libfabric}" && test -z "${with_libfabric_lib}" && test -z "${with_libfabric_include}" ; then
         if test -f ${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/configure ; then
             ofi_embedded="yes"
         else
@@ -75,6 +75,8 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_udp="no"
         enable_rxm="no"
         enable_rxd="no"
+        enable_tcp="no"
+        enable_shm="no"
     else
         enable_psm="yes"
         enable_psm2="yes"
@@ -87,91 +89,129 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_udp="yes"
         enable_rxm="yes"
         enable_rxd="yes"
+        enable_tcp="yes"
+        enable_shm="yes"
     fi
 
     for provider in $netmod_args ; do
-        dnl For these providers, we know which capabilities we want to select by default.
-        dnl We want to enable compiling with them, but we don't need to enable runtime checks.
-        if test "$provider" = "psm" ; then
-            enable_psm="yes"
-        fi
-        if test "$provider" = "psm2" || test "$provider" = "opa" ; then
-            enable_psm2="yes"
-        fi
-        if test "$provider" = "sockets" ; then
-            enable_sockets="yes"
-        fi
-        if test "$provider" = "gni" ; then
-            enable_gni="yes"
-        fi
-        if test "$provider" = "bgq" ; then
-            enable_bgq="yes"
-        fi
+        case "$providers" in
+            dnl For these providers, we know which capabilities we want to select by default.
+            dnl We want to enable compiling with them, but we don't need to enable runtime checks.
+            "psm")
+                enable_psm="yes"
+                ;;
+            "psm2" | "opa")
+                enable_psm2="yes"
+                ;;
+            "sockets")
+                enable_sockets="yes"
+                ;;
+            "gni")
+                enable_gni="yes"
+                ;;
+            "bgq")
+                enable_bgq="yes"
+                ;;
 
-        dnl For these providers, we don't know exactly which capabilities we
-        dnl want to select by default so we turn on runtime checks. At some point
-        dnl in the future, we may create a specific capability set for them.
-        if test "$provider" = "verbs" ; then
-            enable_verbs="yes"
-            runtime_capabilities="yes"
-        fi
-        if test "$provider" = "usnic" ; then
-            enable_usnic="yes"
-            runtime_capabilities="yes"
-        fi
-        if test "$provider" = "mxm" ; then
-            enable_mxm="yes"
-            runtime_capabilities="yes"
-        fi
-        if test "$provider" = "udp" ; then
-            enable_udp="yes"
-            runtime_capabilities="yes"
-        fi
-        if test "$provider" = "rxm" ; then
-            enable_rxm="yes"
-            runtime_capabilities="yes"
-        fi
-        if test "$provider" = "rxd" ; then
-            enable_rxd="yes"
-            runtime_capabilities="yes"
-        fi
+            dnl For these providers, we don't know exactly which capabilities we
+            dnl want to select by default so we turn on runtime checks. At some point
+            dnl in the future, we may create a specific capability set for them.
+            "verbs")
+                enable_verbs="yes"
+                runtime_capabilities="yes"
+                ;;
+            "usnic")
+                enable_usnic="yes"
+                runtime_capabilities="yes"
+                ;;
+            "mxm")
+                enable_mxm="yes"
+                runtime_capabilities="yes"
+                ;;
+            "udp")
+                enable_udp="yes"
+                runtime_capabilities="yes"
+                ;;
+            "rxm")
+                enable_rxm="yes"
+                runtime_capabilities="yes"
+                ;;
+            "rxd")
+                enable_rxd="yes"
+                runtime_capabilities="yes"
+                ;;
+            "tcp")
+                enable_tcp="yes"
+                runtime_capabilities="yes"
+                ;;
+            "shm")
+                enable_shm="yes"
+                runtime_capabilities="yes"
+                ;;
+            *)
+                AC_MSG_WARN("Invalid provider $provider")
+        esac
     done
 
     if test "$runtime_capabilities" = "yes" ; then
         AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
-    elif test "$netmod_args" = "psm" ; then
-        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_PSM], [1], [Define to use PSM capability set])
-        enable_psm="yes"
-    elif test "$netmod_args" = "psm2" || test "$netmod_args" = "opa" ; then
-        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_PSM2], [1], [Define to use PSM2 capability set])
-        enable_psm2="yes"
-    elif test "$netmod_args" = "sockets" ; then
-        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_SOCKETS], [1], [Define to use sockets capability set])
-        enable_sockets="yes"
-    elif test "$netmod_args" = "verbs" ; then
-        enable_verbs="yes"
-        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
-    elif test "$netmod_args" = "usnic" ; then
-        enable_usnic="yes"
-        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
-    elif test "$netmod_args" = "mxm" ; then
-        enable_mxm="yes"
-        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
-    elif test "$netmod_args" = "gni" ; then
-        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_GNI], [1], [Define to use gni capability set])
-        enable_gni="yes"
-    elif test "$netmod_args" = "bgq" ; then
-        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_BGQ], [1], [Define to use bgq capability set])
-        enable_bgq="yes"
-    elif test "$netmod_args" = "udp" ; then
-        enable_udp="yes"
-        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
-    elif test "$netmod_args" = "rxm" ; then
-        enable_rxm="yes"
-        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
-    elif test "$netmod_args" = "rxd" ; then
-        enable_rxd="yes"
-        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+    else
+        case "$netmod_args" in
+            "psm")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_PSM], [1], [Define to use PSM capability set])
+                enable_psm="yes"
+                ;;
+            "psm2" | "opa")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_PSM2], [1], [Define to use PSM2 capability set])
+                enable_psm2="yes"
+                ;;
+            "sockets")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_SOCKETS], [1], [Define to use sockets capability set])
+                enable_sockets="yes"
+                ;;
+            "gni")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_GNI], [1], [Define to use gni capability set])
+                enable_gni="yes"
+                ;;
+            "bgq")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_BGQ], [1], [Define to use bgq capability set])
+                enable_bgq="yes"
+                ;;
+            "verbs")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_verbs="yes"
+                ;;
+            "usnic")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_usnic="yes"
+                ;;
+            "mxm")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_mxm="yes"
+                ;;
+            "udp")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_udp="yes"
+                ;;
+            "rxm")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_rxm="yes"
+                ;;
+            "rxd")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_rxd="yes"
+                ;;
+            "tcp")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_tcp="yes"
+                ;;
+            "shm")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_shm="yes"
+                ;;
+            *)
+                AC_MSG_WARN("Invalid provider $netmod_args")
+        esac
     fi
 
     if test "${ofi_embedded}" = "yes" ; then
@@ -191,6 +231,8 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             prov_config+=" --enable-udp=${enable_udp}"
             prov_config+=" --enable-rxm=${enable_rxm}"
             prov_config+=" --enable-rxd=${enable_rxd}"
+            prov_config+=" --enable-tcp=${enable_tcp}"
+            prov_config+=" --enable-shm=${enable_shm}"
         fi
 
         if test "x${ofi_direct_provider}" != "x" ; then
@@ -201,9 +243,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         ofi_subdir_args+=" $prov_config"
 
         dnl Unset all of these env vars so they don't pollute the libfabric configuration
-        PAC_PUSH_FLAG(CPPFLAGS)
+        PAC_PUSH_ALL_FLAGS()
+        PAC_RESET_ALL_FLAGS()
         PAC_CONFIG_SUBDIR_ARGS([src/mpid/ch4/netmod/ofi/libfabric],[$ofi_subdir_args],[],[AC_MSG_ERROR(libfabric configure failed)])
-        PAC_POP_FLAG(CPPFLAGS)
+        PAC_POP_ALL_FLAGS()
         PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric/include], [CPPFLAGS])
         PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/include], [CPPFLAGS])
 

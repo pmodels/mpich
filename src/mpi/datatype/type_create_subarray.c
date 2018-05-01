@@ -31,7 +31,8 @@ int MPI_Type_create_subarray(int ndims, const int array_of_sizes[],
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_create_subarray
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_subarray - Create a datatype for a subarray of a regular,
     multidimensional array
@@ -65,7 +66,6 @@ int MPI_Type_create_subarray(int ndims,
                              const int array_of_starts[],
                              int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
-    static const char FCNAME[] = "MPI_Type_create_subarray";
     int mpi_errno = MPI_SUCCESS, i;
     MPI_Datatype new_handle;
 

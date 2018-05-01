@@ -4,8 +4,9 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "mpiimpl.h"
+#include "mpidimpl.h"
 #include "hcoll.h"
-#include "hcoll/api/hcoll_dte.h"
 
 static int recv_nb(dte_data_representation_t data,
                    uint32_t count,

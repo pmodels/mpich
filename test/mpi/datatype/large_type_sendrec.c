@@ -15,6 +15,7 @@
 #include <limits.h>
 
 #include <mpi.h>
+#include "mpitest.h"
 
 #include <assert.h>
 static void verbose_abort(int errorcode)
@@ -117,7 +118,9 @@ int main(int argc, char *argv[])
     char *rbuf = NULL;
     char *sbuf = NULL;
 
-    MPI_ASSERT(MPI_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &provided));
+    int errs = 0;
+
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &provided);
 
     MPI_ASSERT(MPI_Comm_rank(MPI_COMM_WORLD, &rank));
     MPI_ASSERT(MPI_Comm_size(MPI_COMM_WORLD, &size));
@@ -158,16 +161,11 @@ int main(int argc, char *argv[])
 
     /* correctness check */
     if (rank == (size - 1)) {
-        MPI_Count j, errors = 0;
+        MPI_Count j;
         for (j = 0; j < count; j++)
-            errors += (rbuf[j] != 'z');
+            errs += (rbuf[j] != 'z');
         if (count != ocount)
-            ++errors;
-        if (errors == 0) {
-            printf(" No Errors\n");
-        } else {
-            printf("errors = %lld \n", errors);
-        }
+            ++errs;
     }
 
     if (rbuf)
@@ -177,7 +175,7 @@ int main(int argc, char *argv[])
 
     MPI_ASSERT(MPI_Type_free(&bigtype));
 
-    MPI_ASSERT(MPI_Finalize());
+    MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

@@ -12,6 +12,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpitest.h"
 
 #define MAXTESTS 32
 #define ERROR_MARGIN 1.0        /* FIXME: This number is pretty much randomly chosen */
@@ -26,7 +27,7 @@ int main(int argc, char *argv[])
     char *rbuf, *sbuf;
     double times[3][MAXTESTS];
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;
 
@@ -206,8 +207,8 @@ int main(int argc, char *argv[])
      * increases in bandwidth.  This test was created because of a
      * fall-off in performance noted in the ch3:sock device:channel */
 
+    int nPerfErrors = 0;
     if (wrank == 0) {
-        int nPerfErrors = 0;
         len = 1;
         for (k = 0; k < 20; k++) {
             double T0, T1, T2;
@@ -240,21 +241,13 @@ int main(int argc, char *argv[])
             }
             len *= 2;
         }
-        if (nPerfErrors > 8) {
-            /* Allow for 1-2 errors for eager-rendezvous shifting
-             * point and cache effects. There should be a better way
-             * of doing this. */
-            printf(" Found %d performance errors\n", nPerfErrors);
-        } else {
-            printf(" No Errors\n");
-        }
         fflush(stdout);
     }
 
     free(sbuf);
     free(rbuf);
 
-    MPI_Finalize();
+    MTest_Finalize(nPerfErrors);
 
-    return 0;
+    return MTestReturnValue(nPerfErrors);
 }

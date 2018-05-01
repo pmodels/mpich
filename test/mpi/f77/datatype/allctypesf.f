@@ -86,7 +86,6 @@ C address/offset types
        endif
 C
        call mtest_finalize( ierr )
-       call MPI_Finalize( ierr )
        end
 C
 C Check name of datatype

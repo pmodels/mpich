@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
         verbose = 1;
     }
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -210,14 +210,8 @@ int main(int argc, char *argv[])
     errs = RUN_TEST(intra_comm, rank % 2);
 
     MPI_Comm_free(&intra_comm);
-    MPI_Reduce(&errs, &allerrs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
-    if (rank == 0 && allerrs == 0) {
-        printf(" No Errors\n");
-        fflush(stdout);
-    }
 
   exit:
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }

@@ -110,6 +110,5 @@
   endif
 !
   call MTEST_FINALIZE(errs)
-  call MPI_FINALIZE(ierr)
 
   end

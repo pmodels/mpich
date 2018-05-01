@@ -60,6 +60,5 @@ int main(int argc, char *argv[])
      * remote, exclusive locks */
     MTest_Finalize(errs);
 
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

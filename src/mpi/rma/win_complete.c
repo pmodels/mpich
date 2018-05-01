@@ -29,7 +29,8 @@ int MPI_Win_complete(MPI_Win win) __attribute__ ((weak, alias("PMPI_Win_complete
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_complete
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_complete - Completes an RMA operations begun after an MPI_Win_start.
 
@@ -47,7 +48,6 @@ Input Parameters:
 @*/
 int MPI_Win_complete(MPI_Win win)
 {
-    static const char FCNAME[] = "MPI_Win_complete";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_COMPLETE);

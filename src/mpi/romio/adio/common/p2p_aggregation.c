@@ -36,6 +36,9 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
     MPI_Comm_size(fd->comm, &nprocs);
     MPI_Comm_rank(fd->comm, &myrank);
 
+    /* Initialize to self here to avoid uninitialized warnings. */
+    io_thread = pthread_self();
+
     ADIO_Offset myOffsetStart = st_offsets[myrank], myOffsetEnd = end_offsets[myrank];
 
     int myAggRank = -1;         /* if I am an aggregor this is my index into fd->hints->ranklist */
@@ -176,7 +179,6 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
 #ifdef ROMIO_GPFS
     if (gpfsmpio_pthreadio && (numberOfRounds > 1)) {
         useIOBuffer = 1;
-        io_thread = pthread_self();
     }
 #endif
 
@@ -565,6 +567,9 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
     MPI_Comm_size(fd->comm, &nprocs);
     MPI_Comm_rank(fd->comm, &myrank);
 
+    /* Initialize to self here to avoid uninitialized warnings. */
+    io_thread = pthread_self();
+
     ADIO_Offset myOffsetStart = st_offsets[myrank], myOffsetEnd = end_offsets[myrank];
 
     int myAggRank = -1;         /* if I am an aggregor this is my index into fd->hints->ranklist */
@@ -700,7 +705,6 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
 #ifdef ROMIO_GPFS
     if (gpfsmpio_pthreadio && (numberOfRounds > 1)) {
         useIOBuffer = 1;
-        io_thread = pthread_self();
     }
 #endif
 

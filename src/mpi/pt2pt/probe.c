@@ -30,7 +30,8 @@ int MPI_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Probe
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Probe - Blocking test for a message
 
@@ -54,7 +55,6 @@ Output Parameters:
 @*/
 int MPI_Probe(int source, int tag, MPI_Comm comm, MPI_Status * status)
 {
-    static const char FCNAME[] = "MPI_Probe";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PROBE);

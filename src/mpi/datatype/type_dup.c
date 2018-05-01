@@ -214,7 +214,7 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype * newtype)
         new_dtp->attributes = 0;
         mpi_errno = MPIR_Process.attr_dup(oldtype, datatype_ptr->attributes, &new_dtp->attributes);
         if (mpi_errno) {
-            MPIR_Datatype_release(new_dtp);
+            MPIR_Datatype_ptr_release(new_dtp);
             goto fn_fail;
         }
     }

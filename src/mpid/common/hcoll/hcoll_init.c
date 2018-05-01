@@ -4,6 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#include "mpiimpl.h"
 #include "hcoll.h"
 
 /*
@@ -164,15 +165,17 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
     int context_destroyed;
     mpi_errno = MPI_SUCCESS;
 
-    if (0 == hcoll_enable) {
-        goto fn_exit;
-    }
-
     if (0 == hcoll_initialized) {
         mpi_errno = hcoll_initialize();
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
+
+    if (0 == hcoll_enable) {
+        comm_ptr->hcoll_priv.is_hcoll_init = 0;
+        goto fn_exit;
+    }
+
     if (MPIR_Process.comm_world == comm_ptr) {
         hcoll_comm_world_initialized = 1;
     }
@@ -202,22 +205,6 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
         comm_ptr->hcoll_priv.is_hcoll_init = 0;
         MPIR_ERR_POP(mpi_errno);
     }
-    comm_ptr->hcoll_priv.hcoll_origin_coll_fns = comm_ptr->coll_fns;
-    comm_ptr->coll_fns = (MPIR_Collops *) MPL_malloc(sizeof(MPIR_Collops), MPL_MEM_COMM);
-    memset(comm_ptr->coll_fns, 0, sizeof(MPIR_Collops));
-    if (comm_ptr->hcoll_priv.hcoll_origin_coll_fns != 0) {
-        memcpy(comm_ptr->coll_fns, comm_ptr->hcoll_priv.hcoll_origin_coll_fns,
-               sizeof(MPIR_Collops));
-    }
-    INSTALL_COLL_WRAPPER(barrier, Barrier);
-    INSTALL_COLL_WRAPPER(bcast, Bcast);
-    INSTALL_COLL_WRAPPER(allreduce, Allreduce);
-    INSTALL_COLL_WRAPPER(allgather, Allgather);
-
-    /* INSTALL_COLL_WRAPPER(ibarrier, Ibarrier_req); */
-    /* INSTALL_COLL_WRAPPER(ibcast, Ibcast_req); */
-    /* INSTALL_COLL_WRAPPER(iallreduce, Iallreduce_req); */
-    /* INSTALL_COLL_WRAPPER(iallgather, Iallgather_req); */
 
     comm_ptr->hcoll_priv.is_hcoll_init = 1;
   fn_exit:
@@ -248,10 +235,6 @@ int hcoll_comm_destroy(MPIR_Comm * comm_ptr, void *param)
 
     context_destroyed = 0;
     if ((NULL != comm_ptr) && (0 != comm_ptr->hcoll_priv.is_hcoll_init)) {
-        if (NULL != comm_ptr->coll_fns) {
-            MPL_free(comm_ptr->coll_fns);
-        }
-        comm_ptr->coll_fns = comm_ptr->hcoll_priv.hcoll_origin_coll_fns;
         hcoll_destroy_context(comm_ptr->hcoll_priv.hcoll_context,
                               (rte_grp_handle_t) comm_ptr, &context_destroyed);
         comm_ptr->hcoll_priv.is_hcoll_init = 0;

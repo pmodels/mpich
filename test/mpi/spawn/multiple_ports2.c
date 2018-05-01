@@ -46,14 +46,14 @@ int main(int argc, char *argv[])
         verbose = 1;
     }
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (size < 4) {
         printf("Four processes needed to run this test.\n");
         MPI_Finalize();
-        return 0;
+        return 1;
     }
 
     if (rank == 0) {
@@ -159,15 +159,6 @@ int main(int argc, char *argv[])
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_Reduce(&num_errors, &total_num_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (total_num_errors) {
-            printf(" Found %d errors\n", total_num_errors);
-        } else {
-            printf(" No Errors\n");
-        }
-        fflush(stdout);
-    }
-    MPI_Finalize();
-    return total_num_errors;
+    MTest_Finalize(num_errors);
+    return MTestReturnValue(total_num_errors);
 }

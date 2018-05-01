@@ -4,11 +4,6 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-/* This is a very weak sanity test that all nonblocking collectives specified by
- * MPI-3 are present in the library and take arguments as expected.  This test
- * does not check for progress, matching issues, or sensible output buffer
- * values. */
-
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,10 +33,7 @@ int main(int argc, char **argv)
     MPI_Datatype *types = NULL;
     MPI_Comm comm;
 
-    /* intentionally not using MTest_Init/MTest_Finalize in order to make it
-     * easy to take this test and use it as an NBC sanity test outside of the
-     * MPICH test suite */
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
 
@@ -147,12 +139,6 @@ int main(int argc, char **argv)
     if (types)
         free(types);
 
-    if (rank == 0) {
-        if (errs)
-            fprintf(stderr, "Found %d errors\n", errs);
-        else
-            printf(" No errors\n");
-    }
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }

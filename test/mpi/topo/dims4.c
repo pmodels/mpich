@@ -5,6 +5,7 @@
  */
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 int main(int argc, char **argv)
 {
@@ -12,7 +13,7 @@ int main(int argc, char **argv)
     int ret[3] = { 0, 0, 0 };
     int errs = 0, i, rank;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     MPI_Dims_create(nproc, 3, ret);
@@ -21,9 +22,6 @@ int main(int argc, char **argv)
         if (ret[i] != 1000)
             errs++;
 
-    if (!errs && rank == 0)
-        printf(" No Errors\n");
-
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }

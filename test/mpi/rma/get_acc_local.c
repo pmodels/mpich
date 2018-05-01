@@ -10,7 +10,7 @@
 
 #include "mpitest.h"
 
-int errors = 0;
+int errs = 0;
 const int NITER = 1000;
 const int acc_val = 3;
 
@@ -20,7 +20,7 @@ int main(int argc, char **argv)
     int out_val, i, counter = 0;
     MPI_Win win;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
         MPI_Win_unlock(rank, win);
 
         if (out_val != acc_val * i) {
-            errors++;
+            errs++;
             printf("Error: got %d, expected %d at iter %d\n", out_val, acc_val * i, i);
             break;
         }
@@ -42,10 +42,7 @@ int main(int argc, char **argv)
 
     MPI_Win_free(&win);
 
-    if (errors == 0 && rank == 0)
-        printf(" No errors\n");
+    MTest_Finalize(errs);
 
-    MPI_Finalize();
-
-    return 0;
+    return MTestReturnValue(errs);
 }

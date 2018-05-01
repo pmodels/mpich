@@ -144,16 +144,28 @@ static struct shmem_processor_info_table shmem_processor_info[] = {
     {NULL, HWLOC_OBJ_TYPE_MAX}
 };
 
-static int node_split_processor(MPIR_Comm * comm_ptr, int key, hwloc_obj_type_t obj_type,
+static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintval,
                                 MPIR_Comm ** newcomm_ptr)
 {
     int color;
     hwloc_obj_t obj_containing_cpuset;
-    hwloc_obj_type_t query_obj_type = obj_type;
-    int mpi_errno = MPI_SUCCESS;
+    hwloc_obj_type_t query_obj_type = HWLOC_OBJ_TYPE_MAX;
+    int i, mpi_errno = MPI_SUCCESS;
 
     /* assign the node id as the color, initially */
     MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
+
+    /* try to find the info value in the processor object
+     * table */
+    for (i = 0; shmem_processor_info[i].val; i++) {
+        if (!strcmp(shmem_processor_info[i].val, hintval)) {
+            query_obj_type = shmem_processor_info[i].obj_type;
+            break;
+        }
+    }
+
+    if (query_obj_type == HWLOC_OBJ_TYPE_MAX)
+        goto split_id;
 
     obj_containing_cpuset =
         hwloc_get_obj_covering_cpuset(MPIR_Process.topology, MPIR_Process.bindset);
@@ -165,6 +177,163 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, hwloc_obj_type_t 
                                                           obj_containing_cpuset);
         if (hobj)
             color = hobj->logical_index;
+        else
+            color = MPI_UNDEFINED;
+    }
+
+  split_id:
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static int node_split_pci_device(MPIR_Comm * comm_ptr, int key,
+                                 const char *hintval, MPIR_Comm ** newcomm_ptr)
+{
+    hwloc_obj_t obj_containing_cpuset, io_device = NULL;
+    int mpi_errno = MPI_SUCCESS;
+    int color;
+
+    obj_containing_cpuset =
+        hwloc_get_obj_covering_cpuset(MPIR_Process.topology, MPIR_Process.bindset);
+    MPIR_Assert(obj_containing_cpuset != NULL);
+
+    io_device = hwloc_get_pcidev_by_busidstring(MPIR_Process.topology, hintval + strlen("pci:"));
+
+    if (io_device != NULL) {
+        hwloc_obj_t non_io_ancestor =
+            hwloc_get_non_io_ancestor_obj(MPIR_Process.topology, io_device);
+
+        /* An io object will never be the root of the topology and is
+         * hence guaranteed to have a non io ancestor */
+        MPIR_Assert(non_io_ancestor);
+
+        if (hwloc_obj_is_in_subtree(MPIR_Process.topology, obj_containing_cpuset, non_io_ancestor)) {
+            color = non_io_ancestor->logical_index;
+        } else
+            color = MPI_UNDEFINED;
+    } else
+        color = MPI_UNDEFINED;
+
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static int io_device_found(const char *resource, const char *devname, hwloc_obj_t io_device,
+                           hwloc_obj_osdev_type_t obj_type)
+{
+    if (!strncmp(resource, devname, strlen(devname))) {
+        /* device type does not match */
+        if (io_device->attr->osdev.type != obj_type)
+            return 0;
+
+        /* device prefix does not match */
+        if (strncmp(io_device->name, devname, strlen(devname)))
+            return 0;
+
+        /* specific device is supplied, but does not match */
+        if (strlen(resource) != strlen(devname) && strcmp(io_device->name, resource))
+            return 0;
+    }
+
+    return 1;
+}
+
+static int node_split_network_device(MPIR_Comm * comm_ptr, int key,
+                                     const char *hintval, MPIR_Comm ** newcomm_ptr)
+{
+    hwloc_obj_t obj_containing_cpuset, io_device = NULL;
+    int mpi_errno = MPI_SUCCESS;
+    int color;
+
+    /* assign the node id as the color, initially */
+    MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
+
+    obj_containing_cpuset =
+        hwloc_get_obj_covering_cpuset(MPIR_Process.topology, MPIR_Process.bindset);
+    MPIR_Assert(obj_containing_cpuset != NULL);
+
+    color = MPI_UNDEFINED;
+    while ((io_device = hwloc_get_next_osdev(MPIR_Process.topology, io_device))) {
+        hwloc_obj_t non_io_ancestor;
+        uint32_t depth;
+
+        if (!io_device_found(hintval, "hfi", io_device, HWLOC_OBJ_OSDEV_OPENFABRICS))
+            continue;
+        if (!io_device_found(hintval, "ib", io_device, HWLOC_OBJ_OSDEV_NETWORK))
+            continue;
+        if (!io_device_found(hintval, "eth", io_device, HWLOC_OBJ_OSDEV_NETWORK) &&
+            !io_device_found(hintval, "en", io_device, HWLOC_OBJ_OSDEV_NETWORK))
+            continue;
+
+        non_io_ancestor = hwloc_get_non_io_ancestor_obj(MPIR_Process.topology, io_device);
+        while (!hwloc_obj_type_is_normal(non_io_ancestor->type))
+            non_io_ancestor = non_io_ancestor->parent;
+        MPIR_Assert(non_io_ancestor && non_io_ancestor->depth >= 0);
+
+        if (!hwloc_obj_is_in_subtree(MPIR_Process.topology, obj_containing_cpuset, non_io_ancestor))
+            continue;
+
+        /* Get a unique ID for the non-IO object.  Use fixed width
+         * unsigned integers, so bit shift operations are well
+         * defined */
+        depth = (uint32_t) non_io_ancestor->depth;
+        color = (int) ((depth << 16) + non_io_ancestor->logical_index);
+        break;
+    }
+
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static int node_split_gpu_device(MPIR_Comm * comm_ptr, int key,
+                                 const char *hintval, MPIR_Comm ** newcomm_ptr)
+{
+    hwloc_obj_t obj_containing_cpuset, io_device = NULL;
+    int mpi_errno = MPI_SUCCESS;
+    int color;
+
+    obj_containing_cpuset =
+        hwloc_get_obj_covering_cpuset(MPIR_Process.topology, MPIR_Process.bindset);
+    MPIR_Assert(obj_containing_cpuset != NULL);
+
+    color = MPI_UNDEFINED;
+    while ((io_device = hwloc_get_next_osdev(MPIR_Process.topology, io_device))
+           != NULL) {
+        if (io_device->attr->osdev.type == HWLOC_OBJ_OSDEV_GPU) {
+            if ((*(hintval + strlen("gpu")) != '\0') &&
+                atoi(hintval + strlen("gpu")) != io_device->logical_index)
+                continue;
+            hwloc_obj_t non_io_ancestor =
+                hwloc_get_non_io_ancestor_obj(MPIR_Process.topology, io_device);
+            MPIR_Assert(non_io_ancestor);
+            if (hwloc_obj_is_in_subtree
+                (MPIR_Process.topology, obj_containing_cpuset, non_io_ancestor)) {
+                color =
+                    (non_io_ancestor->type << (sizeof(int) * 4)) + non_io_ancestor->logical_index;
+                break;
+            }
+        }
     }
 
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
@@ -181,6 +350,33 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, hwloc_obj_type_t 
 
 static const char *SHMEM_INFO_KEY = "shmem_topo";
 
+static int compare_info_args(const void *sendbuf, void *recvbuf, int count, MPIR_Comm * comm_ptr,
+                             int *info_args_global)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+    int info_args_are_equal = 0;
+
+    mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, MPI_BYTE, MPI_BAND, comm_ptr, &errflag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (!memcmp(sendbuf, recvbuf, count))
+        info_args_are_equal = 1;
+
+    mpi_errno =
+        MPIR_Allreduce(&info_args_are_equal, info_args_global, 1, MPI_INT, MPI_MIN, comm_ptr,
+                       &errflag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_split_type_node_topo
 #undef FCNAME
@@ -190,14 +386,12 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
 {
     MPIR_Comm *comm_ptr;
     int mpi_errno = MPI_SUCCESS;
-
-#ifdef HAVE_HWLOC
+    int hintval_size, hintval_size_global;
+    char *hintval_global = NULL;
+    int flag = 0;
     char hintval[MPI_MAX_INFO_VAL + 1];
-    int i, flag = 0;
-    hwloc_obj_type_t obj_type, obj_type_global;
     int info_args_are_equal;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-#endif
+    *newcomm_ptr = NULL;
 
     mpi_errno = MPIR_Comm_split_type_node(user_comm_ptr, split_type, key, &comm_ptr);
     if (mpi_errno)
@@ -209,44 +403,40 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
         goto fn_exit;
     }
 
-    /* check if the info arguments match across processes */
-#ifdef HAVE_HWLOC
-    /* if our bindset is not valid, skip topology-aware comm split */
-    if (!MPIR_Process.bindset_is_valid)
-        goto use_node_comm;
-
-    /* initially point to HWLOC_OBJ_TYPE_MAX and then see if there is
-     * an info argument pointing to a different object */
-    obj_type = HWLOC_OBJ_TYPE_MAX;
     if (info_ptr) {
         MPIR_Info_get_impl(info_ptr, SHMEM_INFO_KEY, MPI_MAX_INFO_VAL, hintval, &flag);
-        if (flag) {
-            /* try to find the info value in the processor object
-             * table */
-            for (i = 0; shmem_processor_info[i].val; i++) {
-                if (!strcmp(shmem_processor_info[i].val, hintval)) {
-                    obj_type = shmem_processor_info[i].obj_type;
-                    break;
-                }
-            }
-        }
     }
 
-    /* even if we did not give an info key, do an allreduce since
-     * other processes might have given an info key */
+    if (!flag) {
+        hintval[0] = '\0';
+    }
+
+    /* Compare hintval string length */
+    hintval_size = strlen(hintval);
     mpi_errno =
-        MPIR_Allreduce(&obj_type, &obj_type_global, sizeof(obj_type), MPI_BYTE, MPI_BAND, comm_ptr,
-                       &errflag);
+        compare_info_args(&hintval_size, &hintval_size_global, sizeof(int) / sizeof(char), comm_ptr,
+                          &info_args_are_equal);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    info_args_are_equal = (obj_type == obj_type_global);
+    /* if all processes do not give the same length of hintval, skip
+     * topology-aware comm split */
+    if (!info_args_are_equal)
+        goto use_node_comm;
+
+    hintval_global = MPL_malloc(sizeof(hintval), MPL_MEM_OTHER);
+    /* Compare the hintval strings */
     mpi_errno =
-        MPIR_Allreduce(MPI_IN_PLACE, &info_args_are_equal, 1, MPI_INT, MPI_MIN, comm_ptr, &errflag);
+        compare_info_args(hintval, hintval_global, (strlen(hintval) + 1) * sizeof(char), comm_ptr,
+                          &info_args_are_equal);
+
+    if (hintval_global != NULL)
+        MPL_free(hintval_global);
+
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    /* if all processes did not give the same info key, skip
+    /* if all processes do not have the same hintval, skip
      * topology-aware comm split */
     if (!info_args_are_equal)
         goto use_node_comm;
@@ -255,17 +445,30 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
     if (!info_ptr)
         goto use_node_comm;
 
-    /* if the info key is not something we recognize, skip
-     * topology-aware comm split */
-    if (obj_type == HWLOC_OBJ_TYPE_MAX)
+#ifdef HAVE_HWLOC
+    /* if our bindset is not valid, skip topology-aware comm split */
+    if (!MPIR_Process.bindset_is_valid)
         goto use_node_comm;
 
-    mpi_errno = node_split_processor(comm_ptr, key, obj_type, newcomm_ptr);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    if (flag) {
+        if (!strncmp(hintval, "pci:", strlen("pci:")))
+            mpi_errno = node_split_pci_device(comm_ptr, key, hintval, newcomm_ptr);
+        else if (!strncmp(hintval, "ib", strlen("ib")) ||
+                 !strncmp(hintval, "en", strlen("en")) ||
+                 !strncmp(hintval, "eth", strlen("eth")) || !strncmp(hintval, "hfi", strlen("hfi")))
+            mpi_errno = node_split_network_device(comm_ptr, key, hintval, newcomm_ptr);
+        else if (!strncmp(hintval, "gpu", strlen("gpu")))
+            mpi_errno = node_split_gpu_device(comm_ptr, key, hintval, newcomm_ptr);
+        else
+            mpi_errno = node_split_processor(comm_ptr, key, hintval, newcomm_ptr);
 
-    MPIR_Comm_free_impl(comm_ptr);
-    goto fn_exit;
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        MPIR_Comm_free_impl(comm_ptr);
+
+        goto fn_exit;
+    }
 #endif /* HAVE_HWLOC */
 
   use_node_comm:

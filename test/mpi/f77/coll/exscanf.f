@@ -103,5 +103,4 @@ C (rank)(rank-1)/2 and -i
       call mpi_op_free( sumop, ierr )
       
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
       end

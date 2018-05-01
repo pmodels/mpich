@@ -29,7 +29,8 @@ int MPI_Free_mem(void *base) __attribute__ ((weak, alias("PMPI_Free_mem")));
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Free_mem
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Free_mem - Free memory allocated with MPI_Alloc_mem
 
@@ -46,7 +47,6 @@ Input Parameters:
 @*/
 int MPI_Free_mem(void *base)
 {
-    static const char FCNAME[] = "MPI_Free_mem";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FREE_MEM);
 

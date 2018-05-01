@@ -66,7 +66,6 @@ MTEST_THREAD_RETURN_TYPE test_comm_create_group(void *arg)
         MPI_Comm_free(&comm);
         if (verbose)
             printf("%d: Thread %d - Comm_create_group %d finish\n", rank, *(int *) arg, i);
-
     }
 
     if (verbose)
@@ -78,9 +77,9 @@ MTEST_THREAD_RETURN_TYPE test_comm_create_group(void *arg)
 int main(int argc, char **argv)
 {
     int thread_args[NUM_THREADS];
-    int i, err, provided;
+    int i, errs, provided;
 
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
     check(provided == MPI_THREAD_MULTIPLE);
 
@@ -94,13 +93,12 @@ int main(int argc, char **argv)
         MTest_Start_thread(test_comm_create_group, (void *) &thread_args[i]);
     }
 
-    err = MTest_Join_threads();
+    errs = MTest_Join_threads();
 
     MPI_Group_free(&global_group);
 
-    MTest_Finalize(err);
+    MTest_Finalize(errs);
 
-    MPI_Finalize();
 
-    return 0;
+    return MTestReturnValue(errs);
 }

@@ -100,5 +100,4 @@
       call mpi_comm_free( comm1, ierr )
 
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
       end

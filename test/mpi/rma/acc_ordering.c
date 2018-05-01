@@ -30,35 +30,32 @@ typedef struct {
 
 static int errs = 0;
 
-void verify_result(twoint_t *data,
-                  int len,
-                  twoint_t expected,
-                  const char *test_name)
+void verify_result(twoint_t * data, int len, twoint_t expected, const char *test_name)
 {
     int i;
     for (i = 0; i < len; i++) {
         if ((data[i].val != expected.val) || (data[i].loc != expected.loc)) {
             errs++;
             printf("%s: Expected: { loc = %d, val = %d }  Actual: { loc = %d, val = %d }\n",
-                test_name, expected.loc, expected.val, data[i].loc, data[i].val);
+                   test_name, expected.loc, expected.val, data[i].loc, data[i].val);
         }
     }
 }
 
 /* Check non-deterministic result of none ordering.
  * Expected result has two possibilities. */
-void verify_nondeterministic_result(twoint_t *data,
-                                   int len,
-                                   twoint_t *expected,
-                                   const char *test_name)
+void verify_nondeterministic_result(twoint_t * data,
+                                    int len, twoint_t * expected, const char *test_name)
 {
     int i;
     for (i = 0; i < len; i++) {
-        if ( ! ((data[i].loc == expected[0].loc && data[0].val == expected[0].val)
-                    || (data[i].loc == expected[1].loc && data[i].val == expected[1].val))) {
+        if (!((data[i].loc == expected[0].loc && data[0].val == expected[0].val)
+              || (data[i].loc == expected[1].loc && data[i].val == expected[1].val))) {
             errs++;
-            printf("%s: Expected: { loc = %d, val = %d } or { loc = %d, val = %d }; Actual: { loc = %d, val = %d }\n",
-                test_name, expected[0].loc, expected[0].val, expected[1].loc, expected[1].val, data[i].loc, data[i].val);
+            printf
+                ("%s: Expected: { loc = %d, val = %d } or { loc = %d, val = %d }; Actual: { loc = %d, val = %d }\n",
+                 test_name, expected[0].loc, expected[0].val, expected[1].loc, expected[1].val,
+                 data[i].loc, data[i].val);
         }
     }
 }
@@ -80,14 +77,14 @@ int main(int argc, char **argv)
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    data = (twoint_t*)calloc(ARRAY_LEN, sizeof(twoint_t));
+    data = (twoint_t *) calloc(ARRAY_LEN, sizeof(twoint_t));
     if (me == 0) {
         /* length of 2 in order to store all results for none ordering. */
-        expected = (twoint_t*)malloc(2*sizeof(twoint_t));
+        expected = (twoint_t *) malloc(2 * sizeof(twoint_t));
     }
-    if (me == nproc -1) {
-        mine = (twoint_t*)malloc(ARRAY_LEN * sizeof(twoint_t));
-        mine_plus = (twoint_t*)malloc(ARRAY_LEN * sizeof(twoint_t));
+    if (me == nproc - 1) {
+        mine = (twoint_t *) malloc(ARRAY_LEN * sizeof(twoint_t));
+        mine_plus = (twoint_t *) malloc(ARRAY_LEN * sizeof(twoint_t));
         for (i = 0; i < ARRAY_LEN; i++) {
             mine[i].val = me + 1;
             mine[i].loc = me;
@@ -136,7 +133,7 @@ int main(int argc, char **argv)
     /* 2. None ordering */
     if (me == 0) {
         /* reset data on rank 0. */
-        memset((void*)data, 0, ARRAY_LEN * sizeof(twoint_t));
+        memset((void *) data, 0, ARRAY_LEN * sizeof(twoint_t));
     }
 
     MPI_Info_create(&info_in);
@@ -159,7 +156,8 @@ int main(int argc, char **argv)
         expected[0].val = nproc;
         expected[1].loc = nproc;
         expected[1].val = nproc + 1;
-        verify_nondeterministic_result(data, 1, expected, "Single data test case for none ordering");
+        verify_nondeterministic_result(data, 1, expected,
+                                       "Single data test case for none ordering");
     }
 
     if (me == 0) {
@@ -175,7 +173,8 @@ int main(int argc, char **argv)
 
     MPI_Win_fence(0, win);
     if (me == 0) {
-        verify_nondeterministic_result(data, ARRAY_LEN, expected, "Large array test case for none ordering");
+        verify_nondeterministic_result(data, ARRAY_LEN, expected,
+                                       "Large array test case for none ordering");
     }
 
     MPI_Win_free(&win);
@@ -183,7 +182,7 @@ int main(int argc, char **argv)
     /* 3. Mix MAX_LOC/MIN_LOC and MPI_REPLACE */
     if (me == 0) {
         /* reset data on rank 0. */
-        memset((void*)data, 0, ARRAY_LEN * sizeof(twoint_t));
+        memset((void *) data, 0, ARRAY_LEN * sizeof(twoint_t));
     }
 
     MPI_Win_create(data, sizeof(twoint_t) * ARRAY_LEN, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
@@ -268,8 +267,7 @@ int main(int argc, char **argv)
         free(expected);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
     free(data);
 
-    return errs != 0;
+    return MTestReturnValue(errs);
 }

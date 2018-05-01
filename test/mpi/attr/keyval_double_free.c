@@ -38,6 +38,5 @@ int main(int argc, char **argv)
     MPI_Keyval_free(&keyval);   /* second MPI_Keyval_free */
     MPI_Keyval_free(&keyval_copy);      /* third MPI_Keyval_free */
     MTest_Finalize(errs);
-    MPI_Finalize();     /* fourth MPI_Keyval_free */
-    return 0;
+    return MTestReturnValue(errs);
 }

@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     MPI_Comm communicator;
     int bs;
 
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
     if (provided != MPI_THREAD_MULTIPLE) {
         printf("Error\n");
@@ -153,12 +153,11 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
 
     pthread_attr_destroy(&attr);
-    if (!rank)
-        printf(" No Errors\n");
 
     MPI_Comm_free(&communicator);
     MPI_Buffer_detach(&ptr_dt, &bs);
     free(buffer);
-    MPI_Finalize();
+
+    MTest_Finalize(0);
     return 0;
 }

@@ -74,5 +74,4 @@ C Now, set a name and check it
 C      
       call mpi_win_free( win, ierr )
       call mtest_finalize( errs )
-      call mpi_finalize( ierr )
       end

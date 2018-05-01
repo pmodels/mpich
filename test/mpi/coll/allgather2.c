@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-/* Gather data from a vector to contiguous.  Use IN_PLACE */
+/* Tests Allgather on array of doubles. Use IN_PLACE */
 
 int main(int argc, char **argv)
 {
@@ -51,6 +51,5 @@ int main(int argc, char **argv)
     }
 
     MTest_Finalize(errs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

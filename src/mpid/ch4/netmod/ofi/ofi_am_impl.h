@@ -161,6 +161,12 @@ static inline int MPIDI_OFI_progress_do_queue(int vni_idx)
         goto fn_fail;
     }
 
+    /* If only FI_MULTI_RECV flag bit is provided, the provider is reporting that
+     * the multi-recv buffer has been released, and the completion entry is not
+     * associated with a received message. */
+    if (cq_entry.flags == FI_MULTI_RECV)
+        goto multi_recv;
+
     /* If the statically allocated buffered list is full or we've already
      * started using the dynamic list, continue using it. */
     if (((MPIDI_Global.cq_buffered_static_head + 1) %
@@ -179,7 +185,8 @@ static inline int MPIDI_OFI_progress_do_queue(int vni_idx)
             (MPIDI_Global.cq_buffered_static_head + 1) % MPIDI_OFI_NUM_CQ_BUFFERED;
     }
 
-    if ((cq_entry.flags & FI_RECV) && (cq_entry.flags & FI_MULTI_RECV)) {
+    if (cq_entry.flags & FI_MULTI_RECV) {
+      multi_recv:
         mpi_errno = MPIDI_OFI_repost_buffer(cq_entry.op_context,
                                             MPIDI_OFI_context_to_request(cq_entry.op_context));
 
@@ -267,7 +274,6 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     MPIDI_OFI_am_header_t *msg_hdr;
     MPIDI_OFI_lmt_msg_payload_t *lmt_info;
     struct iovec *iov;
-    uint64_t index;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
@@ -288,13 +294,18 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     lmt_info->src_rank = comm->rank;
     lmt_info->src_offset = MPIDI_OFI_ENABLE_MR_SCALABLE ? (uint64_t) 0 /* MR_SCALABLE */ : (uint64_t) data;     /* MR_BASIC */
     lmt_info->sreq_ptr = (uint64_t) sreq;
-    /* Always allocates RMA ID from COMM_WORLD as the actual associated communicator
-     * is not available here */
-    index =
-        MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(MPIR_Process.comm_world).rma_id_allocator,
-                                        MPL_MEM_RMA);
-    MPIR_Assert((int) index < MPIDI_Global.max_huge_rmas);
-    lmt_info->rma_key = MPIDI_OFI_ENABLE_MR_SCALABLE ? index << MPIDI_Global.huge_rma_shift : 0;
+    if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+        /* Always allocates RMA ID from COMM_WORLD as the actual associated communicator
+         * is not available here */
+        uint64_t index =
+            MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM
+                                            (MPIR_Process.comm_world).rma_id_allocator,
+                                            MPL_MEM_RMA);
+        MPIR_Assert(index < MPIDI_Global.max_huge_rmas);
+        lmt_info->rma_key = index << MPIDI_Global.huge_rma_shift;
+    } else {
+        lmt_info->rma_key = 0;
+    }
 
     MPIR_cc_incr(sreq->cc_ptr, &c);     /* send completion */
     MPIR_cc_incr(sreq->cc_ptr, &c);     /* lmt ack handler */
@@ -435,9 +446,11 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
         lreq_hdr.sreq_ptr = (uint64_t) sreq;
         MPIDI_CH4U_REQUEST(sreq, req->lreq).src_buf = buf;
         MPIDI_CH4U_REQUEST(sreq, req->lreq).count = count;
-        dtype_add_ref_if_not_builtin(datatype);
+        MPIR_Datatype_add_ref_if_not_builtin(datatype);
         MPIDI_CH4U_REQUEST(sreq, req->lreq).datatype = datatype;
-        MPIDI_CH4U_REQUEST(sreq, req->lreq).match_bits = lreq_hdr.hdr.msg_tag;
+        MPIDI_CH4U_REQUEST(sreq, req->lreq).tag = lreq_hdr.hdr.tag;
+        MPIDI_CH4U_REQUEST(sreq, req->lreq).rank = lreq_hdr.hdr.src_rank;
+        MPIDI_CH4U_REQUEST(sreq, req->lreq).context_id = lreq_hdr.hdr.context_id;
         MPIDI_CH4U_REQUEST(sreq, rank) = rank;
         mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDI_CH4U_SEND_LONG_REQ,
                                          &lreq_hdr, sizeof(lreq_hdr));
@@ -505,7 +518,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_emulated_inject(fi_addr_t addr,
     size_t len;
 
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
-    MPIR_Assert(sreq);
+    MPIR_ERR_CHKANDSTMT((sreq) == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     len = am_hdr_sz + sizeof(*msg_hdrp);
     ibuf = (char *) MPL_malloc(len, MPL_MEM_BUFFER);
     MPIR_Assert(ibuf);

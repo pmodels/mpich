@@ -72,10 +72,10 @@ PMPI_LOCAL int MPIR_Ibsend_cancel(void *extra, int complete)
 
 
     /* Try to cancel the underlying request */
-    mpi_errno = MPIR_Cancel_impl(req);
+    mpi_errno = MPIR_Cancel(req);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Wait_impl(&req_hdl, &status);
+    mpi_errno = MPIR_Wait(&req_hdl, &status);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     ibsend_info->cancelled = MPIR_STATUS_GET_CANCEL_BIT(status);
@@ -116,13 +116,13 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
     ibinfo = (ibsend_req_info *) MPL_malloc(sizeof(ibsend_req_info), MPL_MEM_BUFFER);
     ibinfo->req = request_ptr;
     ibinfo->cancelled = 0;
-    mpi_errno = MPIR_Grequest_start_impl(MPIR_Ibsend_query, MPIR_Ibsend_free,
-                                         MPIR_Ibsend_cancel, ibinfo, &new_request_ptr);
+    mpi_errno = MPIR_Grequest_start(MPIR_Ibsend_query, MPIR_Ibsend_free,
+                                    MPIR_Ibsend_cancel, ibinfo, &new_request_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     /* The request is immediately complete because the MPIR_Bsend_isend has
      * already moved the data out of the user's buffer */
-    MPIR_Grequest_complete_impl(new_request_ptr);
+    MPIR_Grequest_complete(new_request_ptr);
     MPIR_OBJ_PUBLISH_HANDLE(*request, new_request_ptr->handle);
 
   fn_exit:

@@ -104,6 +104,5 @@ C          Alltoallw's displs[] are in bytes not in type extents.
        enddo
 
        call mtest_finalize( errs )
-       call mpi_finalize( ierr )
 
        end

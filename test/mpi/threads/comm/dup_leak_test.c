@@ -41,11 +41,11 @@ int main(int argc, char **argv)
 {
     int x;
     int threaded;
-    int err;
+    int errs;
     MPI_Comm comms[NTHREADS];
     int num_threads_obtained = 1;
 
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &threaded);
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &threaded);
     if (threaded != MPI_THREAD_MULTIPLE) {
         printf("unable to initialize with MPI_THREAD_MULTIPLE\n");
         goto fn_fail;
@@ -54,8 +54,8 @@ int main(int argc, char **argv)
     for (x = 0; x < NTHREADS; ++x) {
         MPI_Comm_dup(MPI_COMM_WORLD, &comms[x]);
         if (x != 0) {
-            err = MTest_Start_thread(do_thread, (void *) &comms[x]);
-            if (err) {
+            errs = MTest_Start_thread(do_thread, (void *) &comms[x]);
+            if (errs) {
                 /* attempt to continue with fewer threads, we may be on a
                  * thread-constrained platform like BG/P in DUAL mode */
                 MPI_Comm_free(&comms[x]);
@@ -72,9 +72,9 @@ int main(int argc, char **argv)
 
     do_thread((void *) &comms[0]);      /* we are thread 0 */
 
-    err = MTest_Join_threads();
-    if (err) {
-        printf("error joining threads, err=%d", err);
+    errs = MTest_Join_threads();
+    if (errs) {
+        printf("error joining threads, errs=%d", errs);
         goto fn_fail;
     }
 
@@ -83,10 +83,9 @@ int main(int argc, char **argv)
     }
 
   fn_exit:
-    MTest_Finalize(err);
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
   fn_fail:
-    err = 1;
+    errs = 1;
     goto fn_exit;
 }

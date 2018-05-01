@@ -1,0 +1,49 @@
+sendrecv2 2
+sendrecv3 2
+sendflood 8 timeLimit=600
+sendall 4
+anyall 2
+eagerdt 2
+bottom 2
+bsend1 1
+bsend2 1
+bsend3 1
+bsend4 1
+bsend5 4
+bsendalign 2
+bsendpending 2
+isendself 1
+issendselfcancel 1 xfail=ticket2276
+isendirecv 10
+bsendfrag 2
+icsend 4
+rqstatus 2
+rqfreeb 4
+greq1 1
+probe_unexp 4
+probenull 1
+# For testing, scancel will run with 1 process as well
+scancel 2 xfail=ticket2266 xfail=ticket2270
+scancel2 2 xfail=ticket2266 xfail=ticket2270
+pscancel 2 xfail=ticket2266 xfail=ticket2270
+rcancel 2
+cancelrecv 2 xfail=ticket2266 xfail=ticket2270
+scancel_unmatch 2 xfail=ticket2276
+cancelanysrc 2
+isendselfprobe 1
+inactivereq 1
+waittestnull 1
+waitany_null 1
+# this should be run only on machines with large amount of memory (>=8GB)
+# perhaps disable in the release tarball
+large_message 3
+mprobe 2 mpiversion=3.0
+big_count_status 1 mpiversion=3.0
+many_isend 3
+manylmt 2
+huge_underflow 2
+huge_anysrc 2
+huge_dupcomm 2
+dtype_send 2
+recv_any 2
+irecv_any 2

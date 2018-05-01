@@ -1421,6 +1421,12 @@ fi
 export NEEDSPLIB
 
 AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "$NEEDSPLIB" = "yes"])
+PAC_CHECK_VISIBILITY
+AC_SUBST(VISIBILITY_CFLAGS)
+# disable visibility if building profiling library
+if test "$NEEDSPLIB" = "yes" ; then
+    VISIBILITY_CFLAGS=""
+fi
 
 
 # ----------------------------------------------------------------------------
@@ -1455,6 +1461,8 @@ if test "$with_hwloc_prefix" = "embedded" ; then
       hwlocsrcdir="src/hwloc"
       hwloclib="$HWLOC_EMBEDDED_LDADD"
       PAC_PREPEND_FLAG([$HWLOC_EMBEDDED_LIBS], [WRAPPER_LIBS])
+      # if possible, do not expose hwloc symbols in libmpi.so
+      PAC_PREPEND_FLAG([$VISIBILITY_CFLAGS], [HWLOC_CFLAGS])
    fi
    PAC_POP_FLAG([enable_visibility])
 else
@@ -1795,6 +1803,21 @@ else
     # Add the device to the configure list
     devsubsystems="$devsubsystems $devicereldir"
     # Make device_name available to subdirs
+fi
+
+PAC_SET_HEADER_LIB_PATH(pmix)
+if test -n "${with_pmix}" -a "${with_pmix}" != "no" ; then
+    # disable built-in PMI and process managers
+    with_pmi="no"
+    with_pm="no"
+    if test "${device_name}" != "ch4" ; then
+        AC_MSG_ERROR([$device_name does not support PMIx])
+    fi
+    PAC_PUSH_FLAG([LIBS])
+    PAC_CHECK_HEADER_LIB_FATAL(pmix, pmix.h, pmix, PMIx_Init)
+    PAC_APPEND_FLAG([-lpmix],[WRAPPER_LIBS])
+    PAC_POP_FLAG([LIBS])
+    AC_DEFINE(USE_PMIX_API, 1, [Define if PMIx API must be used])
 fi
 
 # with-pm
@@ -2958,12 +2981,6 @@ AC_C_INLINE
 
 PAC_C_GNU_ATTRIBUTE
 PAC_C_BUILTIN_EXPECT
-PAC_CHECK_VISIBILITY
-AC_SUBST(VISIBILITY_CFLAGS)
-# disable visibility if building profiling library
-if test "$NEEDSPLIB" = "yes" ; then
-    VISIBILITY_CFLAGS=""
-fi
 
 # We need to check for the endianess in order to implement the
 # "external32" representations.  This defines "WORDS_BIGENDIAN when

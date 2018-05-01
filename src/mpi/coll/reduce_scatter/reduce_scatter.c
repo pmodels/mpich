@@ -198,7 +198,9 @@ int MPIR_Reduce_scatter_intra_auto(const void *sendbuf, void *recvbuf, const int
         }
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+            *errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -291,7 +293,7 @@ int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf,
         }
     } else {
         /* intercommunicator */
-        switch (MPIR_Reduce_scatter_intra_algo_choice) {
+        switch (MPIR_Reduce_scatter_inter_algo_choice) {
             case MPIR_REDUCE_SCATTER_INTER_ALGO_REMOTE_REDUCE_LOCAL_SCATTER:
                 mpi_errno =
                     MPIR_Reduce_scatter_inter_remote_reduce_local_scatter(sendbuf, recvbuf,

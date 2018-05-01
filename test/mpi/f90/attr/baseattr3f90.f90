@@ -15,7 +15,7 @@
         integer (KIND=MPI_ADDRESS_KIND) value
 
         errs = 0
-        call mpi_init( ierr )
+        call mtest_init( ierr )
 
         call mpi_comm_size( MPI_COMM_WORLD, commsize, ierr )
         call mpi_comm_rank( MPI_COMM_WORLD, commrank, ierr )
@@ -106,13 +106,6 @@
             print *, "MPI_LASTUSECODE is not defined"
          endif
 
-!     Check for errors
-      if (errs .eq. 0) then
-         print *, " No Errors"
-      else
-         print *, " Found ", errs, " errors"
-      endif
-
-      call MPI_Finalize( ierr )
+      call MTEST_Finalize( errs )
 
       end

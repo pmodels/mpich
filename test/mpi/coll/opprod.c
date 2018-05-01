@@ -318,6 +318,5 @@ int main(int argc, char *argv[])
 #endif /* HAVE_LONG_LONG */
 
     MTest_Finalize(errs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

@@ -8,6 +8,40 @@
 #ifndef MPIR_REQUEST_H_INCLUDED
 #define MPIR_REQUEST_H_INCLUDED
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories :
+    - name : REQUEST
+      description : A category for requests mangement variables
+
+cvars:
+    - name        : MPIR_CVAR_REQUEST_POLL_FREQ
+      category    : REQUEST
+      type        : int
+      default     : 8
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        How frequent to poll during completion calls (wait/test) in terms
+        of number of processed requests before polling.
+
+    - name        : MPIR_CVAR_REQUEST_BATCH_SIZE
+      category    : REQUEST
+      type        : int
+      default     : 64
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        The number of requests to make completion as a batch
+        in MPI_Waitall and MPI_Testall implementation. A large number
+        is likely to cause more cache misses.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* NOTE-R1: MPIR_REQUEST_KIND__MPROBE signifies that this is a request created by
  * MPI_Mprobe or MPI_Improbe.  Since we use MPI_Request objects as our
  * MPI_Message objects, we use this separate kind in order to provide stronger
@@ -166,6 +200,25 @@ static inline int MPIR_Request_is_persistent(MPIR_Request * req_ptr)
             req_ptr->kind == MPIR_REQUEST_KIND__PREQUEST_RECV);
 }
 
+/* Return whether a request is active.
+ * A persistent request and the handle to it are "inactive"
+ * if the request is not associated with any ongoing communication.
+ * A handle is "active" if it is neither null nor "inactive". */
+static inline int MPIR_Request_is_active(MPIR_Request * req_ptr)
+{
+    if (req_ptr == NULL)
+        return 0;
+    else
+        return (!MPIR_Request_is_persistent(req_ptr) || (req_ptr)->u.persist.real_request != NULL);
+}
+
+#define MPIR_REQUESTS_PROPERTY__NO_NULL        (1 << 1)
+#define MPIR_REQUESTS_PROPERTY__NO_GREQUESTS   (1 << 2)
+#define MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY (1 << 3)
+#define MPIR_REQUESTS_PROPERTY__OPT_ALL (MPIR_REQUESTS_PROPERTY__NO_NULL          \
+                                         | MPIR_REQUESTS_PROPERTY__NO_GREQUESTS   \
+                                         | MPIR_REQUESTS_PROPERTY__SEND_RECV_ONLY)
+
 static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 {
     MPIR_Request *req;
@@ -222,11 +275,11 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
     return req;
 }
 
-#define MPIR_Request_add_ref(_req) \
-    do { MPIR_Object_add_ref(_req); } while (0)
+#define MPIR_Request_add_ref(req_p_) \
+    do { MPIR_Object_add_ref(req_p_); } while (0)
 
-#define MPIR_Request_release_ref(_req, _inuse) \
-    do { MPIR_Object_release_ref(_req, _inuse); } while (0)
+#define MPIR_Request_release_ref(req_p_, inuse_) \
+    do { MPIR_Object_release_ref(req_p_, inuse_); } while (0)
 
 static inline void MPIR_Request_free(MPIR_Request * req)
 {
@@ -278,6 +331,39 @@ static inline void MPIR_Request_free(MPIR_Request * req)
     }
 }
 
+/* The "fastpath" version of MPIR_Request_completion_processing.  It only handles
+ * MPIR_REQUEST_KIND__SEND and MPIR_REQUEST_KIND__RECV kinds, and it does not attempt to
+ * deal with status structures under the assumption that bleeding fast code will
+ * pass either MPI_STATUS_IGNORE or MPI_STATUSES_IGNORE as appropriate.  This
+ * routine (or some a variation of it) is an unfortunately necessary stunt to
+ * get high message rates on key benchmarks for high-end systems.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Request_completion_processing_fastpath
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIR_Request_completion_processing_fastpath(MPI_Request * request,
+                                                                         MPIR_Request * request_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Assert(request_ptr->kind == MPIR_REQUEST_KIND__SEND ||
+                request_ptr->kind == MPIR_REQUEST_KIND__RECV);
+
+    if (request_ptr->kind == MPIR_REQUEST_KIND__SEND) {
+        /* FIXME: are Ibsend requests added to the send queue? */
+        MPII_SENDQ_FORGET(request_ptr);
+    }
+
+    /* the completion path for SEND and RECV is the same at this time, modulo
+     * the SENDQ hook above */
+    mpi_errno = request_ptr->status.MPI_ERROR;
+    MPIR_Request_free(request_ptr);
+    *request = MPI_REQUEST_NULL;
+
+    return mpi_errno;
+}
+
 int MPIR_Request_completion_processing(MPIR_Request *, MPI_Status *, int *);
 int MPIR_Request_get_error(MPIR_Request *);
 int MPIR_Progress_wait_request(MPIR_Request * req);
@@ -296,11 +382,11 @@ int MPIR_Grequest_progress_poke(int count, MPIR_Request ** request_ptrs,
                                 MPI_Status array_of_statuses[]);
 int MPIR_Grequest_waitall(int count, MPIR_Request * const *request_ptrs);
 
-void MPIR_Grequest_complete_impl(MPIR_Request * request_ptr);
-int MPIR_Grequest_start_impl(MPI_Grequest_query_function * query_fn,
-                             MPI_Grequest_free_function * free_fn,
-                             MPI_Grequest_cancel_function * cancel_fn,
-                             void *extra_state, MPIR_Request ** request_ptr);
+void MPIR_Grequest_complete(MPIR_Request * request_ptr);
+int MPIR_Grequest_start(MPI_Grequest_query_function * query_fn,
+                        MPI_Grequest_free_function * free_fn,
+                        MPI_Grequest_cancel_function * cancel_fn,
+                        void *extra_state, MPIR_Request ** request_ptr);
 int MPIX_Grequest_start_impl(MPI_Grequest_query_function *,
                              MPI_Grequest_free_function *,
                              MPI_Grequest_cancel_function *,

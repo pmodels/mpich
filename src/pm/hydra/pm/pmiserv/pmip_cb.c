@@ -800,7 +800,7 @@ static HYD_status parse_exec_params(char **t_argv)
                             "no executable given and doesn't look like a restart either\n");
 
     /* Set default values */
-    if (HYD_pmcd_pmip.user_global.topolib == NULL && HYDRA_DEFAULT_TOPOLIB)
+    if (HYD_pmcd_pmip.user_global.topolib == NULL && HYDRA_DEFAULT_TOPOLIB != NULL)
         HYD_pmcd_pmip.user_global.topolib = MPL_strdup(HYDRA_DEFAULT_TOPOLIB);
 
 #ifdef HYDRA_DEFAULT_CKPOINTLIB

@@ -107,7 +107,6 @@ static void initMat(MPI_Comm comm, int mat[])
                     mat[offset] = 1;
             }
         }
-
     }
 }
 
@@ -204,6 +203,5 @@ int main(int argc, char *argv[])
     MPI_Op_free(&op);
 
     MTest_Finalize(errs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

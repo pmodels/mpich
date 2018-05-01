@@ -98,6 +98,5 @@ int main(int argc, char **argv)
     MPI_Op_free(&op_addem);
 
     MTest_Finalize(errors);
-    MPI_Finalize();
     return MTestReturnValue(errors);
 }

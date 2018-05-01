@@ -262,8 +262,7 @@ int main(int argc, char *argv[])
     free(vals);
 
     MTest_Finalize(toterrs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(toterrs);
 }
 
 /* Test the values in the rmabuf against the expected values.  Return the

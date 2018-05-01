@@ -12,6 +12,8 @@
 #include "namepub.h"
 #ifdef USE_PMI2_API
 #include "pmi2.h"
+#elif defined(USE_PMIX_API)
+#include "pmix.h"
 #else
 #include "pmi.h"
 #endif
@@ -56,6 +58,8 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     rc = PMI2_Nameserv_publish(service_name, info_ptr, port);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#elif defined(USE_PMIX_API)
+    MPIR_Assert(0);
 #else
     rc = PMI_Publish_name(service_name, port);
 #endif
@@ -83,6 +87,8 @@ int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     rc = PMI2_Nameserv_lookup(service_name, info_ptr, port, MPI_MAX_PORT_NAME);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#elif defined(USE_PMIX_API)
+    MPIR_Assert(0);
 #else
     rc = PMI_Lookup_name(service_name, port);
 #endif
@@ -109,6 +115,8 @@ int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const c
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     rc = PMI2_Nameserv_unpublish(service_name, info_ptr);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+#elif defined(USE_PMIX_API)
+    MPIR_Assert(0);
 #else
     rc = PMI_Unpublish_name(service_name);
 #endif
@@ -121,6 +129,8 @@ int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const c
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Free
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Free(MPID_NS_Handle * handle_ptr)
 {
     /* MPID_NS_Handle is Null */
@@ -152,9 +162,10 @@ struct MPID_NS_Handle {
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Create
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
 {
-    static const char FCNAME[] = "MPID_NS_Create";
     int err;
     int length;
     char *pmi_namepub_kvs;
@@ -208,10 +219,11 @@ int MPID_NS_Create(const MPIR_Info * info_ptr, MPID_NS_Handle * handle_ptr)
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Publish
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                     const char service_name[], const char port[])
 {
-    static const char FCNAME[] = "MPID_NS_Publish";
     int err;
 
     /*printf("publish kvs: <%s>\n", handle->kvsname);fflush(stdout); */
@@ -239,10 +251,11 @@ int MPID_NS_Publish(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Lookup
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
                    const char service_name[], char port[])
 {
-    static const char FCNAME[] = "MPID_NS_Lookup";
     int err;
 
     /*printf("lookup kvs: <%s>\n", handle->kvsname);fflush(stdout); */
@@ -264,9 +277,10 @@ int MPID_NS_Lookup(MPID_NS_Handle handle, const MPIR_Info * info_ptr,
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Unpublish
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const char service_name[])
 {
-    static const char FCNAME[] = "MPID_NS_Unpublish";
     int err;
 
     /*printf("unpublish kvs: <%s>\n", handle->kvsname);fflush(stdout); */
@@ -295,9 +309,10 @@ int MPID_NS_Unpublish(MPID_NS_Handle handle, const MPIR_Info * info_ptr, const c
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Free
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Free(MPID_NS_Handle * handle_ptr)
 {
-    static const char FCNAME[] = "MPID_NS_Free";
     int err;
 
     MPL_free((*handle_ptr)->kvsname);

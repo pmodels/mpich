@@ -196,7 +196,9 @@ int MPIR_Reduce_intra_auto(const void *sendbuf,
 
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
-            *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+            *errflag =
+                MPIX_ERR_PROC_FAILED ==
+                MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
@@ -206,7 +208,7 @@ int MPIR_Reduce_intra_auto(const void *sendbuf,
 
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
-    /* get nearest power-of-two less than or equal to comm_size */
+    /* get nearest power-of-two less than or equal to number of ranks in the communicator */
     pof2 = comm_ptr->pof2;
 
     if ((count * type_size > MPIR_CVAR_REDUCE_SHORT_MSG_SIZE) &&
@@ -223,7 +225,9 @@ int MPIR_Reduce_intra_auto(const void *sendbuf,
     }
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
-        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+        *errflag =
+            MPIX_ERR_PROC_FAILED ==
+            MPIR_ERR_GET_CLASS(mpi_errno) ? MPIR_ERR_PROC_FAILED : MPIR_ERR_OTHER;
         MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
         MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
     }

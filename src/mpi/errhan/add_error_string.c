@@ -31,7 +31,8 @@ int MPI_Add_error_string(int errorcode, const char *string)
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Add_error_string
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Add_error_string - Associates an error string with an MPI error code or
    class
@@ -61,7 +62,6 @@ with this routine.
 @*/
 int MPI_Add_error_string(int errorcode, const char *string)
 {
-    static const char FCNAME[] = "MPI_Add_error_string";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ADD_ERROR_STRING);
 

@@ -33,7 +33,7 @@ noinst_PROGRAMS =     \
     comm_create_group \
     comm_group_half   \
     comm_group_rand   \
-    probe-intercomm   \
+    probe_intercomm   \
     comm_idup         \
     comm_idup_mul     \
     comm_idup_overlap \

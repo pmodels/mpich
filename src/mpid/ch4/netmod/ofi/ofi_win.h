@@ -111,6 +111,316 @@ static inline int MPIDI_OFI_win_allgather(MPIR_Win * win, void *base, int disp_u
     goto fn_exit;
 }
 
+/*
+ * Setup per-window sync using independent counter.
+ *
+ * Return value:
+ * MPI_SUCCESS: Endpoint is successfully initialized.
+ * MPIDI_OFI_ENAVAIL: OFI resource is not available.
+ * MPIDI_OFI_EPERROR: OFI endpoint related failures.
+ * MPI_ERR_OTHER: Other error occurs.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_win_set_per_win_sync
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_set_per_win_sync(MPIR_Win * win)
+{
+    int ret, mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_SET_PER_WIN_SYNC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_SET_PER_WIN_SYNC);
+
+    struct fi_cntr_attr cntr_attr;
+    memset(&cntr_attr, 0, sizeof(cntr_attr));
+    cntr_attr.events = FI_CNTR_EVENTS_COMP;
+    MPIDI_OFI_CALL_RETURN(fi_cntr_open(MPIDI_Global.domain,     /* In:  Domain Object        */
+                                       &cntr_attr,      /* In:  Configuration object */
+                                       &MPIDI_OFI_WIN(win).cmpl_cntr,   /* Out: Counter Object       */
+                                       NULL), ret);     /* Context: counter events   */
+    if (ret < 0) {
+        MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to open completion counter.\n");
+        mpi_errno = MPIDI_OFI_ENAVAIL;
+        goto fn_fail;
+    }
+
+    MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_OFI_WIN(win).issued_cntr_v;
+
+    MPIDI_OFI_CALL_RETURN(fi_ep_bind
+                          (MPIDI_OFI_WIN(win).ep, &MPIDI_OFI_WIN(win).cmpl_cntr->fid,
+                           FI_READ | FI_WRITE), ret);
+
+    if (ret < 0) {
+        MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    "Failed to bind completion counter to endpoint.\n");
+        /* Close and release completion counter resource. */
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntr->fid), cntrclose);
+        mpi_errno = MPIDI_OFI_EPERROR;
+        goto fn_fail;
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_SET_PER_WIN_SYNC);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+/*
+ * Initialize endpoint using scalable endpoint.
+ *
+ * Return value:
+ * MPI_SUCCESS: Endpoint is successfully initialized.
+ * MPIDI_OFI_ENAVAIL: OFI resource is not available.
+ * MPIDI_OFI_EPERROR: OFI endpoint related failures.
+ * MPI_ERR_OTHER: Other error occurs.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_win_init_sep
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init_sep(MPIR_Win * win)
+{
+    int i, ret, mpi_errno = MPI_SUCCESS;
+    struct fi_info *finfo;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT_SEP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_INIT_SEP);
+
+    finfo = fi_dupinfo(MPIDI_Global.prov_use);
+    MPIR_Assert(finfo);
+
+    /* Initialize scalable EP when first window is created. */
+    if (MPIDI_Global.rma_sep == NULL) {
+        /* Specify number of transmit context according user input and provider limit. */
+        MPIDI_Global.max_rma_sep_tx_cnt = MPL_MIN(MPIDI_Global.prov_use->domain_attr->max_ep_tx_ctx,
+                                                  MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX);
+        finfo->ep_attr->tx_ctx_cnt = MPIDI_Global.max_rma_sep_tx_cnt;
+
+        MPIDI_OFI_CALL_RETURN(fi_scalable_ep
+                              (MPIDI_Global.domain, finfo, &MPIDI_Global.rma_sep, NULL), ret);
+        if (ret < 0) {
+            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to create scalable endpoint.\n");
+            MPIDI_Global.rma_sep = NULL;
+            mpi_errno = MPIDI_OFI_ENAVAIL;
+            goto fn_fail;
+        }
+
+        MPIDI_OFI_CALL_RETURN(fi_scalable_ep_bind(MPIDI_Global.rma_sep, &(MPIDI_Global.av->fid), 0),
+                              ret);
+        if (ret < 0) {
+            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        "Failed to bind scalable endpoint to address vector.\n");
+            MPIDI_Global.rma_sep = NULL;
+            mpi_errno = MPIDI_OFI_ENAVAIL;
+            goto fn_fail;
+        }
+
+        /* Allocate and initilize tx index array. */
+        utarray_new(MPIDI_Global.rma_sep_idx_array, &ut_int_icd, MPL_MEM_RMA);
+        for (i = 0; i < MPIDI_Global.max_rma_sep_tx_cnt; i++) {
+            utarray_push_back(MPIDI_Global.rma_sep_idx_array, &i, MPL_MEM_RMA);
+        }
+    }
+    /* Set per window transmit attributes. */
+    MPIDI_OFI_set_rma_fi_info(win, finfo);
+    /* Get available transmit context index. */
+    int *index = (int *) utarray_back(MPIDI_Global.rma_sep_idx_array);
+    if (index == NULL) {
+        mpi_errno = MPIDI_OFI_ENAVAIL;
+        goto fn_fail;
+    }
+    /* Retrieve transmit context on scalable EP. */
+    MPIDI_OFI_CALL_RETURN(fi_tx_context
+                          (MPIDI_Global.rma_sep, *index, finfo->tx_attr, &(MPIDI_OFI_WIN(win).ep),
+                           NULL), ret);
+    if (ret < 0) {
+        MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    "Failed to retrieve transmit context from scalable endpoint.\n");
+        mpi_errno = MPIDI_OFI_ENAVAIL;
+        goto fn_fail;
+    }
+
+    MPIDI_OFI_WIN(win).sep_tx_idx = *index;
+    /* Pop this index out of reserving array. */
+    utarray_pop_back(MPIDI_Global.rma_sep_idx_array);
+
+    MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep,
+                                     &MPIDI_Global.ctx[0].cq->fid,
+                                     FI_TRANSMIT | FI_SELECTIVE_COMPLETION), ret);
+    if (ret < 0) {
+        MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    "Failed to bind endpoint to completion queue.\n");
+        mpi_errno = MPIDI_OFI_EPERROR;
+        goto fn_fail;
+    }
+
+    if (MPIDI_OFI_win_set_per_win_sync(win) == MPI_SUCCESS) {
+        MPIDI_OFI_CALL_RETURN(fi_enable(MPIDI_OFI_WIN(win).ep), ret);
+        if (ret < 0) {
+            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to activate endpoint.\n");
+            mpi_errno = MPIDI_OFI_EPERROR;
+            goto fn_fail;
+        }
+    } else {
+        /* Fail in per-window sync initialization,
+         * we are not using scalable endpoint without per-win sync support. */
+        mpi_errno = MPIDI_OFI_EPERROR;
+        goto fn_fail;
+    }
+
+  fn_exit:
+    fi_freeinfo(finfo);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT_SEP);
+    return mpi_errno;
+  fn_fail:
+    if (MPIDI_OFI_WIN(win).sep_tx_idx != -1) {
+        /* Push tx idx back into available pool. */
+        utarray_push_back(MPIDI_Global.rma_sep_idx_array, &i, MPL_MEM_RMA);
+        MPIDI_OFI_WIN(win).sep_tx_idx = -1;
+    }
+    if (MPIDI_OFI_WIN(win).ep != NULL) {
+        /* Close an endpoint and release all resources associated with it. */
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
+        MPIDI_OFI_WIN(win).ep = NULL;
+    }
+    goto fn_exit;
+}
+
+/*
+ * Initialize endpoint using shared transmit context.
+ *
+ * Return value:
+ * MPI_SUCCESS: Endpoint is successfully initialized.
+ * MPIDI_OFI_ENAVAIL: OFI resource is not available.
+ * MPIDI_OFI_EPERROR: OFI endpoint related failures.
+ * MPI_ERR_OTHER: Other error occurs.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_win_init_stx
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win)
+{
+    /* Activate per-window EP/counter using STX */
+    int ret, mpi_errno = MPI_SUCCESS;
+    struct fi_info *finfo;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT_STX);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_INIT_STX);
+
+    finfo = fi_dupinfo(MPIDI_Global.prov_use);
+    MPIR_Assert(finfo);
+
+    /* Create shared context only in first call. */
+    if (MPIDI_Global.rma_stx_ctx == NULL) {
+        memset(finfo->tx_attr, 0, sizeof(struct fi_tx_attr));
+        /* A shared transmit context’s attributes must be a union of all associated
+         * endpoints' transmit capabilities. */
+        finfo->tx_attr->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
+        finfo->tx_attr->msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
+        finfo->tx_attr->op_flags = FI_DELIVERY_COMPLETE | FI_COMPLETION;
+        MPIDI_OFI_CALL_RETURN(fi_stx_context(MPIDI_Global.domain,
+                                             finfo->tx_attr,
+                                             &MPIDI_Global.rma_stx_ctx, NULL /* context */), ret);
+        if (ret < 0) {
+            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        "Failed to create shared TX context for RMA, "
+                        "falling back to global EP/counter scheme");
+            MPIDI_Global.rma_stx_ctx = NULL;
+            mpi_errno = MPIDI_OFI_ENAVAIL;
+            goto fn_fail;
+        }
+    }
+
+    /* Set per window transmit attributes. */
+    MPIDI_OFI_set_rma_fi_info(win, finfo);
+    /* Still need to take out rx capabilities for shared context. */
+    finfo->rx_attr->caps = 0ULL;        /* RX capabilities not needed */
+
+    finfo->ep_attr->tx_ctx_cnt = FI_SHARED_CONTEXT;     /* Request a shared context */
+    finfo->ep_attr->rx_ctx_cnt = 0;     /* We don't need RX contexts */
+    MPIDI_OFI_CALL_RETURN(fi_endpoint(MPIDI_Global.domain,
+                                      finfo, &MPIDI_OFI_WIN(win).ep, NULL), ret);
+    if (ret < 0) {
+        MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    "Failed to create per-window EP using shared TX context, "
+                    "falling back to global EP/counter scheme");
+        mpi_errno = MPIDI_OFI_ENAVAIL;
+        goto fn_fail;
+    }
+
+    if (MPIDI_OFI_win_set_per_win_sync(win) == MPI_SUCCESS) {
+        MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.rma_stx_ctx->fid, 0),
+                              ret);
+        if (ret < 0) {
+            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        "Failed to bind endpoint to shared transmit contxt.\n");
+            mpi_errno = MPIDI_OFI_EPERROR;
+            goto fn_fail;
+        }
+
+        MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep,
+                                         &MPIDI_Global.ctx[0].cq->fid,
+                                         FI_TRANSMIT | FI_SELECTIVE_COMPLETION), ret);
+        if (ret < 0) {
+            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        "Failed to bind endpoint to completion queue.\n");
+            mpi_errno = MPIDI_OFI_EPERROR;
+            goto fn_fail;
+        }
+
+        MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.av->fid, 0), ret);
+        if (ret < 0) {
+            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        "Failed to bind endpoint to address vector.\n");
+            mpi_errno = MPIDI_OFI_EPERROR;
+            goto fn_fail;
+        }
+
+        MPIDI_OFI_CALL_RETURN(fi_enable(MPIDI_OFI_WIN(win).ep), ret);
+        if (ret < 0) {
+            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to activate endpoint.\n");
+            mpi_errno = MPIDI_OFI_EPERROR;
+            goto fn_fail;
+        }
+    } else {
+        /* If per-win sync initialization is failed, we are not using shared transmit context. */
+        mpi_errno = MPIDI_OFI_EPERROR;
+        goto fn_fail;
+    }
+
+  fn_exit:
+    fi_freeinfo(finfo);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT_STX);
+    return mpi_errno;
+  fn_fail:
+    if (MPIDI_OFI_WIN(win).ep != NULL) {
+        /* Close an endpoint and release all resources associated with it. */
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
+        MPIDI_OFI_WIN(win).ep = NULL;
+    }
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_win_init_global
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_OFI_win_init_global(MPIR_Win * win)
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT_GLOBAL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_INIT_GLOBAL);
+
+    MPIDI_OFI_WIN(win).ep = MPIDI_Global.ctx[0].tx;
+    MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_Global.rma_cmpl_cntr;
+    MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_Global.rma_issued_cntr;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT_GLOBAL);
+
+    return 0;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_OFI_win_init
 #undef FCNAME
@@ -124,8 +434,6 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
     int mpi_errno = MPI_SUCCESS;
     uint64_t window_instance;
     MPIR_Win *win = NULL;
-    struct fi_info *finfo;
-    struct fi_cntr_attr cntr_attr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_INIT);
@@ -148,74 +456,24 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
     MPIDI_OFI_WIN(win).win_id = ((uint64_t) comm_ptr->context_id) | (window_instance << 32);
     MPIDI_CH4U_map_set(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id, win, MPL_MEM_RMA);
 
-    if (MPIR_CVAR_CH4_OFI_ENABLE_PER_WIN_SYNC && MPIDI_Global.stx_ctx != NULL) {
-        /* Activate per-window EP/counter */
-        int ret;
+    MPIDI_OFI_WIN(win).sep_tx_idx = -1; /* By default, -1 means not using scalable EP. */
 
-        finfo = fi_dupinfo(MPIDI_Global.prov_use);
-        MPIR_Assert(finfo);
-        finfo->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
-        finfo->tx_attr->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
-        /* Update msg_order by accumulate ordering in window info.
-         * Accumulate ordering cannot easily be changed once the window has been created.
-         * OFI implementation ignores acc ordering hints issued in MPI_WIN_SET_INFO()
-         * after window is created. */
-        finfo->tx_attr->msg_order = FI_ORDER_NONE;  /* FI_ORDER_NONE is an alias for the value 0 */
-        if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAR) ==
-                MPIDI_CH4I_ACCU_ORDER_RAR )
-            finfo->tx_attr->msg_order |= FI_ORDER_RAR;
-        if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAW) ==
-                MPIDI_CH4I_ACCU_ORDER_RAW )
-            finfo->tx_attr->msg_order |= FI_ORDER_RAW;
-        if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAR) ==
-                MPIDI_CH4I_ACCU_ORDER_WAR )
-            finfo->tx_attr->msg_order |= FI_ORDER_WAR;
-        if ((MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_WAW) ==
-                MPIDI_CH4I_ACCU_ORDER_WAW )
-            finfo->tx_attr->msg_order |= FI_ORDER_WAW;
-
-        finfo->rx_attr->caps = 0ULL; /* RX capabilities not needed */
-
-        finfo->ep_attr->tx_ctx_cnt = FI_SHARED_CONTEXT; /* Request a shared context */
-        finfo->ep_attr->rx_ctx_cnt = 0; /* We don't need RX contexts */
-        MPIDI_OFI_CALL_RETURN(fi_endpoint(MPIDI_Global.domain,
-                                          finfo, &MPIDI_OFI_WIN(win).ep, NULL), ret);
-        if (ret < 0) {
-            MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
-                        "Failed to create per-window EP (with completion), "
-                        "falling back to global EP/counter scheme");
-            fi_freeinfo(finfo);
-            goto fallback_global;
+    /* First, try to enable scalable EP. */
+    if (MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS && MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX > 0) {
+        /* Create tx based on scalable EP. */
+        if (MPIDI_OFI_win_init_sep(win) == MPI_SUCCESS) {
+            goto fn_exit;
         }
-
-        memset(&cntr_attr, 0, sizeof(cntr_attr));
-        cntr_attr.events = FI_CNTR_EVENTS_COMP;
-        MPIDI_OFI_CALL(fi_cntr_open(MPIDI_Global.domain,        /* In:  Domain Object        */
-                                    &cntr_attr, /* In:  Configuration object */
-                                    &MPIDI_OFI_WIN(win).cmpl_cntr,      /* Out: Counter Object       */
-                                    NULL), openct);     /* Context: counter events   */
-        MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_OFI_WIN(win).issued_cntr_v;
-
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.stx_ctx->fid, 0), bind);
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep,
-                                  &MPIDI_Global.ctx[0].cq->fid,
-                                  FI_TRANSMIT | FI_SELECTIVE_COMPLETION), bind);
-        MPIDI_OFI_CALL(fi_ep_bind
-                       (MPIDI_OFI_WIN(win).ep, &MPIDI_OFI_WIN(win).cmpl_cntr->fid,
-                        FI_READ | FI_WRITE), bind);
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.av->fid, 0), bind);
-
-        fi_freeinfo(finfo);
-
-        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_WIN(win).ep), ep_enable);
-    } else {
-      fallback_global:
-
-        /* Fallback for the traditional global EP/counter model */
-        MPIDI_OFI_WIN(win).ep = MPIDI_Global.ctx[0].tx;
-        MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_Global.rma_cmpl_cntr;
-        MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_Global.rma_issued_cntr;
     }
+
+    /* If scalable EP is not available, try shared transmit context next. */
+    /* Create tx using shared transmit context. */
+    if (MPIDI_OFI_win_init_stx(win) == MPI_SUCCESS) {
+        goto fn_exit;
+    }
+
+    /* Fall back to use global EP, without per-window sync support. */
+    MPIDI_OFI_win_init_global(win);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT);
@@ -481,6 +739,11 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
 
     MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator, window_instance);
     MPIDI_CH4U_map_erase(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id);
+    /* For scalable EP: push transmit context index back into available pool. */
+    if (MPIDI_OFI_WIN(win).sep_tx_idx != -1) {
+        utarray_push_back(MPIDI_Global.rma_sep_idx_array, &(MPIDI_OFI_WIN(win).sep_tx_idx),
+                          MPL_MEM_RMA);
+    }
     if (MPIDI_OFI_WIN(win).ep != MPIDI_Global.ctx[0].tx)
         MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
     if (MPIDI_OFI_WIN(win).cmpl_cntr != MPIDI_Global.rma_cmpl_cntr)

@@ -17,7 +17,7 @@
 /* Handle an incoming receive completion event                              */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_recv_callback)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_recv_callback)
 static inline
 int ADD_SUFFIX(MPID_nem_ofi_recv_callback)(cq_tagged_entry_t * wc, MPIR_Request * rreq)
 {
@@ -105,7 +105,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_callback)(cq_tagged_entry_t * wc, MPIR_Request 
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(send_normal)
+#define FCNAME MPL_QUOTE(send_normal)
 static inline int ADD_SUFFIX(send_normal)(struct MPIDI_VC *vc,
                               const void *buf, int count, MPI_Datatype datatype,
                               int dest, int tag, MPIR_Comm *comm,
@@ -219,7 +219,7 @@ fn_fail:
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(send_lightweight)
+#define FCNAME MPL_QUOTE(send_lightweight)
 static inline int
 ADD_SUFFIX(send_lightweight)(struct MPIDI_VC *vc,
                              const void *buf,
@@ -259,7 +259,7 @@ ADD_SUFFIX(send_lightweight)(struct MPIDI_VC *vc,
 
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(do_isend)
+#define FCNAME MPL_QUOTE(do_isend)
 static inline int
 ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
          const void *buf,
@@ -303,7 +303,7 @@ ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_send)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_send)
 int ADD_SUFFIX(MPID_nem_ofi_send)(struct MPIDI_VC *vc,
                       const void *buf,
                       MPI_Aint count,
@@ -321,7 +321,7 @@ int ADD_SUFFIX(MPID_nem_ofi_send)(struct MPIDI_VC *vc,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_isend)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_isend)
 int ADD_SUFFIX(MPID_nem_ofi_isend)(struct MPIDI_VC *vc,
                        const void *buf,
                        MPI_Aint count,
@@ -338,7 +338,7 @@ int ADD_SUFFIX(MPID_nem_ofi_isend)(struct MPIDI_VC *vc,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_ssend)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_ssend)
 int ADD_SUFFIX(MPID_nem_ofi_ssend)(struct MPIDI_VC *vc,
                        const void *buf,
                        MPI_Aint count,
@@ -355,7 +355,7 @@ int ADD_SUFFIX(MPID_nem_ofi_ssend)(struct MPIDI_VC *vc,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_issend)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_issend)
 int ADD_SUFFIX(MPID_nem_ofi_issend)(struct MPIDI_VC *vc,
                         const void *buf,
                         MPI_Aint count,
@@ -374,7 +374,7 @@ int ADD_SUFFIX(MPID_nem_ofi_issend)(struct MPIDI_VC *vc,
 
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_recv_posted)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_recv_posted)
 int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPIR_Request *rreq)
 {
     int mpi_errno = MPI_SUCCESS, dt_contig, src, tag;
@@ -450,7 +450,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPIR_Reques
 
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_ofi_anysource_posted)
+#define FCNAME MPL_QUOTE(MPID_nem_ofi_anysource_posted)
 void ADD_SUFFIX(MPID_nem_ofi_anysource_posted)(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;

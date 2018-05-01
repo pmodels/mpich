@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "mpitest.h"
 
 /*
  * This test attempts collective communication after a process in
@@ -103,5 +104,5 @@ int main(int argc, char **argv)
 
     MPI_Finalize();
 
-    return 0;
+    return MTestReturnValue(errs);
 }

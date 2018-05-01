@@ -29,7 +29,8 @@ int MPI_Topo_test(MPI_Comm comm, int *status) __attribute__ ((weak, alias("PMPI_
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Topo_test
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Topo_test - Determines the type of topology (if any) associated with a
@@ -55,9 +56,6 @@ Output Parameters:
 @*/
 int MPI_Topo_test(MPI_Comm comm, int *status)
 {
-#ifdef HAVE_ERROR_CHECKING
-    static const char FCNAME[] = "MPI_Topo_test";
-#endif
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Topology *topo_ptr;

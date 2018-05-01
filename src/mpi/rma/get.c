@@ -31,7 +31,8 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Get
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Get - Get data from a memory window on a remote process
 
@@ -64,7 +65,6 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype
             origin_datatype, int target_rank, MPI_Aint target_disp,
             int target_count, MPI_Datatype target_datatype, MPI_Win win)
 {
-    static const char FCNAME[] = "MPI_Get";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET);

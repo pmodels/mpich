@@ -8,13 +8,8 @@ dnl characters in it.  Use AS_TR_SH (and possibly AS_VAR_* macros) to handle
 dnl this case if it ever arises.
 AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
     AC_ARG_WITH([$1],
-                [AC_HELP_STRING([--with-$1=PATH],
-                                [specify path where $1 include directory and lib directory can be found])],
-
-                [AS_CASE(["$withval"],
-                         [yes|no|''],
-                         [AC_MSG_WARN([--with[out]-$1=PATH expects a valid PATH])
-                          with_$1=""])],
+                [AC_HELP_STRING([--with-$1=[[PATH]]],
+                                [specify path where $1 include directory and lib directory can be found])],,
                 [with_$1=$2])
     AC_ARG_WITH([$1-include],
                 [AC_HELP_STRING([--with-$1-include=PATH],

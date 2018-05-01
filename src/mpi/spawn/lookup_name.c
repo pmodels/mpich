@@ -37,7 +37,8 @@ MPID_NS_Handle MPIR_Namepub = 0;
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Lookup_name
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Lookup_name - Lookup a port given a service name
 
@@ -66,7 +67,6 @@ If the 'service_name' is found, MPI copies the associated value into
 @*/
 int MPI_Lookup_name(const char *service_name, MPI_Info info, char *port_name)
 {
-    static const char FCNAME[] = "MPI_Lookup_name";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_LOOKUP_NAME);

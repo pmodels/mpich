@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "mpi.h"
 #include "mpithreadtest.h"
+#include "mpitest.h"
 
 int rank;
 
@@ -38,7 +39,7 @@ int main(int argc, char **argv)
 {
     int zero = 0, pmode, nprocs;
 
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &pmode);
+    MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &pmode);
     if (pmode != MPI_THREAD_MULTIPLE) {
         fprintf(stderr, "Thread Multiple not supported by the MPI implementation\n");
         MPI_Abort(MPI_COMM_WORLD, -1);
@@ -56,12 +57,7 @@ int main(int argc, char **argv)
     run_test(&zero);
     MTest_Join_threads();
 
-    MPI_Finalize();
-
-    /* This program works if it gets here */
-    if (rank == 0) {
-        printf(" No Errors\n");
-    }
+    MTest_Finalize(0);
 
     return 0;
 }

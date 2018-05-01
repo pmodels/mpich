@@ -34,7 +34,7 @@
 
 int main(int argc, char **argv)
 {
-    int i, j, rank, nranks, peer, bufsize, errors;
+    int i, j, rank, nranks, peer, bufsize, errs;
     double *win_buf, *src_buf, *dst_buf;
     MPI_Win buf_win;
 
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
     /* Verify that the results are correct */
 
     MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, buf_win);
-    errors = 0;
+    errs = 0;
     for (i = 0; i < SUB_XDIM; i++) {
         for (j = 0; j < SUB_YDIM; j++) {
             const double actual = *(win_buf + i + j * XDIM);
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
             if (actual - expected > 1e-10) {
                 SQUELCH(printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
                                rank, j, i, expected, actual););
-                errors++;
+                errs++;
                 fflush(stdout);
             }
         }
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
             if (actual - expected > 1e-10) {
                 SQUELCH(printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
                                rank, j, i, expected, actual););
-                errors++;
+                errs++;
                 fflush(stdout);
             }
         }
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
             if (actual - expected > 1e-10) {
                 SQUELCH(printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
                                rank, j, i, expected, actual););
-                errors++;
+                errs++;
                 fflush(stdout);
             }
         }
@@ -143,8 +143,7 @@ int main(int argc, char **argv)
     MPI_Free_mem(src_buf);
     MPI_Free_mem(dst_buf);
 
-    MTest_Finalize(errors);
-    MPI_Finalize();
+    MTest_Finalize(errs);
 
-    return 0;
+    return MTestReturnValue(errs);
 }

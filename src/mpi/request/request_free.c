@@ -29,7 +29,8 @@ int MPI_Request_free(MPI_Request * request) __attribute__ ((weak, alias("PMPI_Re
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Request_free
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Request_free - Frees a communication request object
 
@@ -65,7 +66,6 @@ MPI_Testsome
 @*/
 int MPI_Request_free(MPI_Request * request)
 {
-    static const char FCNAME[] = "MPI_Request_free";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_REQUEST_FREE);

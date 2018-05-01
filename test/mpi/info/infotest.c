@@ -12,6 +12,7 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
+#include "mpitest.h"
 
 int main(int argc, char *argv[])
 {
@@ -20,7 +21,7 @@ int main(int argc, char *argv[])
     char value[64];
     int flag;
 
-    MPI_Init(0, 0);
+    MTest_Init(&argc, &argv);
 
     MPI_Info_create(&i1);
     MPI_Info_create(&i2);
@@ -44,11 +45,6 @@ int main(int argc, char *argv[])
 
     MPI_Info_free(&i1);
     MPI_Info_free(&i2);
-    if (errs) {
-        printf(" Found %d errors\n", errs);
-    } else {
-        printf(" No Errors\n");
-    }
-    MPI_Finalize();
-    return 0;
+    MTest_Finalize(errs);
+    return MTestReturnValue(errs);
 }

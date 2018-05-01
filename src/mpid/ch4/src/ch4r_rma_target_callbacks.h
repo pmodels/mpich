@@ -1243,7 +1243,7 @@ static inline int MPIDI_get_acc_ack_target_cmpl_cb(MPIR_Request * areq)
     MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
     MPIDI_win_remote_acc_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
 
-    dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype));
     MPID_Request_complete(areq);
 
     MPIDI_progress_cmpl_list();
@@ -1562,7 +1562,7 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_put);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
-    MPIR_Assert(rreq);
+    MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *req = rreq;
 
     MPIDI_CH4U_REQUEST(*req, req->preq.preq_ptr) = msg_hdr->preq_ptr;
@@ -1631,6 +1631,8 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_put);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PUT_TARGET_MSG_CB);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -1655,7 +1657,7 @@ static inline int MPIDI_put_iov_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_put_iov);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
-    MPIR_Assert(rreq);
+    MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *req = rreq;
 
     MPIDI_CH4U_REQUEST(*req, req->preq.preq_ptr) = msg_hdr->preq_ptr;
@@ -1681,9 +1683,12 @@ static inline int MPIDI_put_iov_target_msg_cb(int handler_id, void *am_hdr,
     *data = dt_iov;
     *p_data_sz = msg_hdr->n_iov * sizeof(struct iovec);
 
+  fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_put_iov);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PUT_IOV_TARGET_MSG_CB);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -1708,7 +1713,7 @@ static inline int MPIDI_put_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_put_iov_ack);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
-    MPIR_Assert(rreq);
+    MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
     dat_msg.preq_ptr = msg_hdr->target_preq_ptr;
@@ -1723,7 +1728,7 @@ static inline int MPIDI_put_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
                                         rreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(origin_req, req->preq.origin_datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(origin_req, req->preq.origin_datatype));
 
     *target_cmpl_cb = NULL;
     *req = NULL;
@@ -1758,7 +1763,7 @@ static inline int MPIDI_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_acc_iov_ack);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
-    MPIR_Assert(rreq);
+    MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
     dat_msg.preq_ptr = msg_hdr->target_preq_ptr;
@@ -1773,7 +1778,7 @@ static inline int MPIDI_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
                                         rreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(origin_req, req->areq.origin_datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(origin_req, req->areq.origin_datatype));
 
     *target_cmpl_cb = NULL;
     *req = NULL;
@@ -1808,7 +1813,7 @@ static inline int MPIDI_get_acc_iov_ack_target_msg_cb(int handler_id, void *am_h
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get_acc_iov_ack);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
-    MPIR_Assert(rreq);
+    MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
     dat_msg.preq_ptr = msg_hdr->target_preq_ptr;
@@ -1823,7 +1828,7 @@ static inline int MPIDI_get_acc_iov_ack_target_msg_cb(int handler_id, void *am_h
                                         rreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(origin_req, req->areq.origin_datatype));
+    MPIR_Datatype_release_if_not_builtin(MPIDI_CH4U_REQUEST(origin_req, req->areq.origin_datatype));
 
     *target_cmpl_cb = NULL;
     *req = NULL;
@@ -1966,7 +1971,7 @@ static inline int MPIDI_cswap_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_cas);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
-    MPIR_Assert(rreq);
+    MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *req = rreq;
 
     *target_cmpl_cb = MPIDI_cswap_target_cmpl_cb;
@@ -1995,9 +2000,12 @@ static inline int MPIDI_cswap_target_msg_cb(int handler_id, void *am_hdr,
     *data = p_data;
     MPIDI_CH4U_REQUEST(*req, req->creq.data) = p_data;
 
+  fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_cas);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CSWAP_TARGET_MSG_CB);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -2027,7 +2035,7 @@ static inline int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_acc);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
-    MPIR_Assert(rreq);
+    MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *req = rreq;
 
     MPIDI_Datatype_check_size(msg_hdr->origin_datatype, msg_hdr->origin_count, data_sz);
@@ -2083,6 +2091,8 @@ static inline int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_acc);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ACC_TARGET_MSG_CB);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 
@@ -2139,7 +2149,7 @@ static inline int MPIDI_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_acc_iov);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
-    MPIR_Assert(rreq);
+    MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *req = rreq;
 
     win = (MPIR_Win *) MPIDI_CH4U_map_lookup(MPIDI_CH4_Global.win_map, msg_hdr->win_id);
@@ -2173,9 +2183,12 @@ static inline int MPIDI_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
     *target_cmpl_cb = MPIDI_acc_iov_target_cmpl_cb;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
 
+  fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_acc_iov);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ACC_IOV_TARGET_MSG_CB);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -2230,7 +2243,7 @@ static inline int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get);
 
     rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
-    MPIR_Assert(rreq);
+    MPIR_ERR_CHKANDSTMT(rreq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
 
     *req = rreq;
     *target_cmpl_cb = MPIDI_get_target_cmpl_cb;
@@ -2261,9 +2274,12 @@ static inline int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
         MPIDI_CH4U_REQUEST(rreq, req->greq.dt_iov) = iov;
     }
 
+  fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_TARGET_MSG_CB);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -2292,7 +2308,7 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_T_PVAR_TIMER_START(RMA, rma_targetcb_get_ack);
 
     greq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
-    MPIR_Assert(greq);
+    MPIR_ERR_CHKANDSTMT(greq == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
     *req = greq;
 
     rreq = (MPIR_Request *) msg_hdr->greq_ptr;
@@ -2339,9 +2355,12 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
         MPL_free(segment_ptr);
     }
 
+  fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_targetcb_get_ack);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACK_TARGET_MSG_CB);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #endif /* CH4R_RMA_TARGET_CALLBACKS_H_INCLUDED */

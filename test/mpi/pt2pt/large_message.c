@@ -26,8 +26,7 @@ int main(int argc, char *argv[])
 /* need large memory */
     if (sizeof(void *) < 8) {
         MTest_Finalize(errs);
-        MPI_Finalize();
-        return 0;
+        return MTestReturnValue(errs);
     }
 
     ierr = MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -42,8 +41,7 @@ int main(int argc, char *argv[])
         printf("malloc of >2GB array failed\n");
         errs++;
         MTest_Finalize(errs);
-        MPI_Finalize();
-        return 0;
+        return MTestReturnValue(errs);
     }
 
     if (rank == 0) {
@@ -71,6 +69,5 @@ int main(int argc, char *argv[])
         }
     }
     MTest_Finalize(errs);
-    MPI_Finalize();
-    return 0;
+    return MTestReturnValue(errs);
 }

@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     MPI_Comm shm_comm;
     int ELEM_PER_PROC = 0;
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -106,19 +106,14 @@ int main(int argc, char **argv)
     MPI_Win_unlock_all(shm_win);
     MPI_Win_free(&shm_win);
 
-    MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
   exit:
-
-    if (rank == 0 && all_errors == 0)
-        printf(" No Errors\n");
 
     MPI_Comm_free(&shm_comm);
 
-    MPI_Finalize();
+    MTest_Finalize(errors);
 
     if (bases)
         free(bases);
 
-    return 0;
+    return MTestReturnValue(all_errors);
 }

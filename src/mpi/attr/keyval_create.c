@@ -31,7 +31,8 @@ int MPI_Keyval_create(MPI_Copy_function * copy_fn, MPI_Delete_function * delete_
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Keyval_create
-
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Keyval_create - Greates a new attribute key
@@ -70,7 +71,6 @@ The replacement for this routine is 'MPI_Comm_create_keyval'.
 int MPI_Keyval_create(MPI_Copy_function * copy_fn,
                       MPI_Delete_function * delete_fn, int *keyval, void *extra_state)
 {
-    static const char FCNAME[] = "MPI_Keyval_create";
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_KEYVAL_CREATE);
 

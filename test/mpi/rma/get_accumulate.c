@@ -65,21 +65,19 @@ static void reset_bufs(TYPE_C * win_ptr, TYPE_C * res_ptr, TYPE_C * val_ptr, TYP
 int main(int argc, char **argv)
 {
     int i, rank, nproc;
-    int j, count, errors, errs;
-    int toterrs = 0;
+    int j, count, errors = 0;
     TYPE_C *win_ptr, *res_ptr, *val_ptr;
     MPI_Win win;
 #if defined (GACC_TYPE_DERIVED)
     MPI_Datatype derived_type;
 #endif
 
-    MPI_Init(&argc, &argv);
+    MTest_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
     for (j = 0; j < NUM_COUNT; j++) {
-        errors = 0;
         count = test_counts[j];
         win_ptr = malloc(sizeof(TYPE_C) * nproc * count);
         res_ptr = malloc(sizeof(TYPE_C) * nproc * count);
@@ -430,9 +428,6 @@ int main(int argc, char **argv)
 
         MPI_Win_free(&win);
 
-        MPI_Reduce(&errors, &errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-        toterrs += errs;
-
 #if defined (GACC_TYPE_DERIVED)
         MPI_Type_free(&derived_type);
 #endif
@@ -442,15 +437,7 @@ int main(int argc, char **argv)
         free(val_ptr);
     }
 
-    if (rank == 0) {
-        if (!toterrs) {
-            printf(" No Errors\n");
-        } else {
-            printf(" Found %d errors\n", toterrs);
-        }
-    }
+    MTest_Finalize(errors);
 
-    MPI_Finalize();
-
-    return 0;
+    return MTestReturnValue(errors);
 }
