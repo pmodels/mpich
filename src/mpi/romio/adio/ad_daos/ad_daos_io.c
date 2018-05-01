@@ -153,7 +153,7 @@ void ADIOI_DAOS_WriteContig(ADIO_File fd, const void *buf, int count,
 			    ADIO_Offset offset, ADIO_Status *status,
 			    int *error_code)
 {
-    DAOS_IOContig(fd, buf, count, datatype, file_ptr_type,
+    DAOS_IOContig(fd, (void *)buf, count, datatype, file_ptr_type,
 		  offset, status, NULL, DAOS_WRITE, error_code);
 }
 

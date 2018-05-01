@@ -18,8 +18,9 @@ void ADIOI_DAOS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct,
 
     switch(flag) {
     case ADIO_FCNTL_GET_FSIZE:
-	ret = daos_array_get_size(cont->oh, cont->epoch,
-				  &fcntl_struct->fsize, NULL);
+    {
+        daos_size_t fsize;
+	ret = daos_array_get_size(cont->oh, cont->epoch, &fsize, NULL);
 	if (ret != 0 ) {
 	    /* --BEGIN ERROR HANDLING-- */
 	    *error_code = MPIO_Err_create_code(MPI_SUCCESS,
@@ -33,12 +34,10 @@ void ADIOI_DAOS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct,
         else {
             *error_code = MPI_SUCCESS;
         }
+        fcntl_struct->fsize = (ADIO_Offset)fsize;
         break;
-
+    }
     case ADIO_FCNTL_SET_DISKSPACE:
-	ADIOI_GEN_Prealloc(fd, fcntl_struct->diskspace, error_code);
-	break;
-
     case ADIO_FCNTL_SET_ATOMICITY:
     default:
 	*error_code = MPIO_Err_create_code(MPI_SUCCESS,

@@ -1777,6 +1777,7 @@ if test ! -d mpi-io/glue ; then mkdir mpi-io/glue ; fi
 # Create makefiles for all of the adio devices.  Only the ones that 
 # are active will be called by the top level ROMIO make
 AC_OUTPUT_COMMANDS([chmod 755 util/romioinstall test/runtests])
+AC_OUTPUT_COMMANDS([chmod 755 util/romioinstall test/run_daos_tests])
 AC_CONFIG_FILES([
     Makefile
     localdefs
@@ -1786,6 +1787,7 @@ AC_CONFIG_FILES([
     test/misc.c
     test/large_file.c
     test/runtests
+    test/run_daos_tests
     test-internal/Makefile
     util/romioinstall
     include/mpio.h

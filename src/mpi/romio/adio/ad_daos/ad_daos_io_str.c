@@ -206,7 +206,7 @@ ADIOI_DAOS_StridedListIO(ADIO_File fd, const void *buf, int count,
         k = 1;
         iovs = (daos_iov_t *)ADIOI_Malloc(sizeof(daos_iov_t));
         file_length = bufsize;
-        daos_iov_set(iovs, buf, bufsize);
+        daos_iov_set(iovs, (void *)buf, bufsize);
         //fprintf(stderr, "(MEM SINGLE) off %lld len %zu\n", buf, bufsize);
     }
     sgl->sg_nr = k;
