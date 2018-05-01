@@ -88,14 +88,8 @@ int MPIR_Waitall_impl(int count, MPIR_Request * request_ptrs[], MPI_Status array
             }
             /* wait for ith request to complete */
             while (!MPIR_Request_is_complete(request_ptrs[i])) {
-                if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
-                    request_ptrs[i]->u.ureq.greq_fns->wait_fn != NULL) {
-                    /* wait_fn only exists in Extended Generalized request (non-standard). */
-                    mpi_errno =
-                        (request_ptrs[i]->u.ureq.greq_fns->wait_fn) (1,
-                                                                     &request_ptrs[i]->u.
-                                                                     ureq.greq_fns->
-                                                                     grequest_extra_state, 0, NULL);
+                if (MPIR_Request_has_wait_fn(request_ptrs[i])) {
+                    mpi_errno = MPIR_Grequest_wait(request_ptrs[i], &array_of_statuses[i]);
                     if (mpi_errno)
                         MPIR_ERR_POP(mpi_errno);
                     continue;

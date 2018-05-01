@@ -44,13 +44,8 @@ int MPIR_Waitany_impl(int count, MPIR_Request * request_ptrs[], int *indx, MPI_S
             /* we found at least one non-null request */
             found_nonnull_req = TRUE;
 
-            if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
-                request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL) {
-                /* this is a generalized request; make progress on it */
-                mpi_errno =
-                    (request_ptrs[i]->u.ureq.greq_fns->poll_fn) (request_ptrs[i]->u.ureq.
-                                                                 greq_fns->grequest_extra_state,
-                                                                 status);
+            if (MPIR_Request_has_poll_fn(request_ptrs[i])) {
+                mpi_errno = MPIR_Grequest_poll(request_ptrs[i], status);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
             }
