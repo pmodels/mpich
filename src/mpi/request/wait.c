@@ -45,9 +45,6 @@ int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
                 (request_ptrs[i]->u.ureq.greq_fns->poll_fn) (request_ptrs[i]->u.ureq.
                                                              greq_fns->grequest_extra_state,
                                                              &array_of_statuses[i]);
-        }
-        if (request_ptr->kind == MPIR_REQUEST_KIND__GREQUEST &&
-            request_ptr->u.ureq.greq_fns->wait_fn != NULL) {
             if (mpi_errno) {
                 /* --BEGIN ERROR HANDLING-- */
                 MPID_Progress_end(&progress_state);
