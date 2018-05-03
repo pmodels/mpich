@@ -761,14 +761,12 @@ static inline int MPIDI_CH4R_win_finalize(MPIR_Win ** win_ptr)
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
-        MPL_free(MPIDI_CH4U_WIN(win, sizes));
+
+
+        MPL_free(MPIDI_CH4U_WIN(win, shared_table));
     }
 
     MPIDI_CH4U_map_erase(MPIDI_CH4_Global.win_map, MPIDI_CH4U_WIN(win, win_id));
-
-    if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-        MPL_free(MPIDI_CH4U_WIN(win, shared_table));
-    }
 
     MPIR_Comm_release(win->comm_ptr);
     MPIR_Handle_obj_free(&MPIR_Win_mem, win);
