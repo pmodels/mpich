@@ -117,6 +117,13 @@ typedef int (*MPIDI_SHM_mpi_improbe_t) (int source, int tag, MPIR_Comm * comm,
                                         MPIR_Request ** message, MPI_Status * status);
 typedef int (*MPIDI_SHM_mpi_iprobe_t) (int source, int tag, MPIR_Comm * comm,
                                        int context_offset, int *flag, MPI_Status * status);
+typedef int (*MPIDI_SHM_mpi_win_create_hook_t) (MPIR_Win * win);
+typedef int (*MPIDI_SHM_mpi_win_allocate_hook_t) (MPIR_Win * win);
+typedef int (*MPIDI_SHM_mpi_win_allocate_shared_hook_t) (MPIR_Win * win);
+typedef int (*MPIDI_SHM_mpi_win_create_dynamic_hook_t) (MPIR_Win * win);
+typedef int (*MPIDI_SHM_mpi_win_attach_hook_t) (MPIR_Win * win, void *base, MPI_Aint size);
+typedef int (*MPIDI_SHM_mpi_win_detach_hook_t) (MPIR_Win * win, const void *base);
+typedef int (*MPIDI_SHM_mpi_win_free_hook_t) (MPIR_Win * win);
 typedef int (*MPIDI_SHM_mpi_win_set_info_t) (MPIR_Win * win, MPIR_Info * info);
 typedef int (*MPIDI_SHM_mpi_win_shared_query_t) (MPIR_Win * win, int rank,
                                                  MPI_Aint * size, int *disp_unit, void *baseptr);
@@ -428,6 +435,14 @@ typedef struct MPIDI_SHM_funcs {
     MPIDI_SHM_create_intercomm_from_lpids_t create_intercomm_from_lpids;
     MPIDI_SHM_mpi_comm_create_hook_t mpi_comm_create_hook;
     MPIDI_SHM_mpi_comm_free_hook_t mpi_comm_free_hook;
+    /* Window initialization/cleanup routines */
+    MPIDI_SHM_mpi_win_create_hook_t mpi_win_create_hook;
+    MPIDI_SHM_mpi_win_allocate_hook_t mpi_win_allocate_hook;
+    MPIDI_SHM_mpi_win_allocate_shared_hook_t mpi_win_allocate_shared_hook;
+    MPIDI_SHM_mpi_win_create_dynamic_hook_t mpi_win_create_dynamic_hook;
+    MPIDI_SHM_mpi_win_attach_hook_t mpi_win_attach_hook;
+    MPIDI_SHM_mpi_win_detach_hook_t mpi_win_detach_hook;
+    MPIDI_SHM_mpi_win_free_hook_t mpi_win_free_hook;
     /* Request allocation routines */
     MPIDI_SHM_am_request_init_t am_request_init;
     MPIDI_SHM_am_request_finalize_t am_request_finalize;
@@ -695,6 +710,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_improbe(int source, int tag, MPIR_Com
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_iprobe(int source, int tag, MPIR_Comm * comm,
                                                   int context_offset, int *flag,
                                                   MPI_Status * status) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_create_hook(MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_allocate_hook(MPIR_Win *
+                                                             win) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_allocate_shared_hook(MPIR_Win *
+                                                                    win) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_create_dynamic_hook(MPIR_Win *
+                                                                   win) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_attach_hook(MPIR_Win * win, void *base,
+                                                           MPI_Aint size) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_detach_hook(MPIR_Win * win,
+                                                           const void *base)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_free_hook(MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_set_info(MPIR_Win * win,
                                                         MPIR_Info * info) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_shared_query(MPIR_Win * win, int rank,
