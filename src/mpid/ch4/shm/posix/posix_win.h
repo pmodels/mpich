@@ -384,5 +384,139 @@ static inline int MPIDI_POSIX_mpi_win_lock_all(int assert, MPIR_Win * win)
     return mpi_errno;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_create_hook(MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_POSIX_win_t *posix_win ATTRIBUTE((unused)) = NULL;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_CREATE_HOOK);
+
+    posix_win = &win->dev.shm.posix;
+    posix_win->shm_mutex_ptr = NULL;
+
+    /* No optimization */
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_WIN_CREATE_HOOK);
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_allocate_hook(MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_POSIX_win_t *posix_win ATTRIBUTE((unused)) = NULL;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE_HOOK);
+
+    posix_win = &win->dev.shm.posix;
+    posix_win->shm_mutex_ptr = NULL;
+
+    /* No optimization */
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE_HOOK);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_mpi_win_allocate_shared_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_allocate_shared_hook(MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_POSIX_win_t *posix_win = NULL;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE_SHARED_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE_SHARED_HOOK);
+
+    /* Enable shm RMA only when interprocess mutex is supported */
+    if (!MPL_proc_mutex_enabled())
+        goto fn_exit;
+
+    posix_win = &win->dev.shm.posix;
+    MPIDI_CH4U_WIN(win, shm_allocated) = 1;
+
+    /* allocate interprocess mutex for RMA atomics over shared memory */
+    mpi_errno = MPIDI_CH4U_allocate_shm_segment(win->comm_ptr, sizeof(MPL_proc_mutex_t),
+                                                0 /* symmetric_flag */ ,
+                                                &posix_win->shm_mutex_segment_handle,
+                                                (void **) &posix_win->shm_mutex_ptr);
+
+    if (win->comm_ptr->rank == 0)
+        MPIDI_POSIX_RMA_MUTEX_INIT(posix_win->shm_mutex_ptr);
+
+    /* No barrier is needed here, because the CH4 generic routine does it */
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE_SHARED_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_mpi_win_create_dynamic_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_create_dynamic_hook(MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_POSIX_win_t *posix_win ATTRIBUTE((unused)) = NULL;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_CREATE_DYNAMIC_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_CREATE_DYNAMIC_HOOK);
+
+    posix_win = &win->dev.shm.posix;
+    posix_win->shm_mutex_ptr = NULL;
+
+    /* No optimization */
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_WIN_CREATE_DYNAMIC_HOOK);
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_attach_hook(MPIR_Win * win ATTRIBUTE((unused)),
+                                                             void *base ATTRIBUTE((unused)),
+                                                             MPI_Aint size ATTRIBUTE((unused)))
+{
+    /* No optimization */
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_detach_hook(MPIR_Win * win ATTRIBUTE((unused)),
+                                                             const void *base ATTRIBUTE((unused)))
+{
+    /* No optimization */
+    return MPI_SUCCESS;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_mpi_win_free_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_free_hook(MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_FREE_HOOK);
+
+    if (MPIDI_CH4U_WIN(win, shm_allocated)) {
+        MPIDI_POSIX_win_t *posix_win = &win->dev.shm.posix;
+        MPIR_Assert(posix_win->shm_mutex_ptr != NULL);
+
+        /* destroy and detach shared mutex */
+        if (win->comm_ptr->rank == 0)
+            MPIDI_POSIX_RMA_MUTEX_DESTROY(posix_win->shm_mutex_ptr);
+
+        mpi_errno = MPIDI_CH4U_destroy_shm_segment(sizeof(MPL_proc_mutex_t),
+                                                   &posix_win->shm_mutex_segment_handle,
+                                                   &posix_win->shm_mutex_ptr);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_WIN_FREE_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 #endif /* POSIX_WIN_H_INCLUDED */
