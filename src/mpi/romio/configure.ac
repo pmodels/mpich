@@ -886,10 +886,13 @@ fi
 #
 lustre_lockahead="no"
 if test -n "$file_system_lustre"; then
-    AC_CHECK_HEADERS(lustre/lustre_user.h,
-        AC_DEFINE(ROMIO_LUSTRE,1,[Define for ROMIO with LUSTRE]),
-        AC_MSG_ERROR([LUSTRE support requested but cannot find lustre/lustre_user.h header file])                                        
-    )
+    AC_CHECK_HEADERS([linux/lustre/lustre_user.h lustre/lustre_user.h],
+        break)
+    if test x"$ac_cv_header_linux_lustre_lustre_user_h" = "xyes" -o x"$ac_cv_header_lustre_lustre_user_h" = "xyes" ; then
+        AC_DEFINE(ROMIO_LUSTRE, 1, [Define for ROMIO with LUSTRE])
+    else
+        AC_MSG_ERROR([LUSTRE support requested but cannot find lustre/lustre_user.h header file])
+    fi
     AC_COMPILE_IFELSE([
         AC_LANG_SOURCE([
 #include <lustre/lustre_user.h>
