@@ -279,7 +279,8 @@ static inline int MPIDI_POSIX_get_vni_attr(int vni)
     return MPIDI_VNI_TX | MPIDI_VNI_RX;
 }
 
-static inline void *MPIDI_POSIX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+static inline void *MPIDI_POSIX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr,
+                                              MPL_memory_class class)
 {
     MPIR_Assert(0);
     return NULL;
