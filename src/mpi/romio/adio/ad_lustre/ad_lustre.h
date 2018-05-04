@@ -20,17 +20,25 @@
 #ifdef __linux__
 #include <sys/ioctl.h>  /* necessary for: */
 #include <time.h>
-#define __USE_GNU       /* O_DIRECT and */
+#ifndef __USE_GNU
+#define __USE_GNU 1       /* O_DIRECT and */
 #include <fcntl.h>      /* IO operations */
+#endif
 #undef __USE_GNU
 #endif /* __linux__ */
 
-/*#include <fcntl.h>*/
 #include <sys/ioctl.h>
-#include <lustre/lustre_user.h>
+
 #include "adio.h"
 #include "ad_tuning.h"
-/*#include "adioi.h"*/
+
+#ifdef HAVE_LUSTRE_LUSTRE_USER_H
+#include <lustre/lustre_user.h>
+#endif
+#ifdef HAVE_LINUX_LUSTRE_LUSTRE_USER_H
+#include <linux/lustre/lustre_user.h>
+#endif
+
 
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
