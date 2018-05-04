@@ -84,6 +84,19 @@ cvars:
         If set to false, the device-level reduce function will not be
         called.
 
+    - name        : MPIR_CVAR_COLLECTIVE_DECISION_TREE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        TODO - Move this to the correct place later.
+        If set to true, MPICH will use the collective decision tree
+        information to make a decision about which collective
+        algorithm to use. Otherwise, the older if/else model (or
+        CVARs if manually chosen) will be used.
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -322,6 +335,94 @@ int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count,
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Reduce_decision_tree
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Reduce_decision_tree(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                              MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+    size_t size;
+    cJSON *device_info;
+
+    /* TODO - Calculate size of buffer */
+
+    mpi_errno = MPIU_Decision_tree_traverse("reduce", comm_ptr, size, datatype, coll_info);
+
+    if (unlikely(mpi_errno != MPI_SUCCESS))
+        MPIR_ERR_POP(mpi_errno);
+    else {
+        cJSON *mpir = cJSON_GetObjectItemCaseSensitive(coll_info, "mpir");
+
+        /* If the JSON tree is using an MPIR-level collective, parse that information here. */
+        if (likely(cJSON_IsString(mpir) && 0 != strcmp(mpir->valuestring, "device"))) {
+            /* TODO - Combine MPIR_Reduce_intra_algo_t and MPIR_Reduce_inter_algo_t */
+            MPIR_Reduce_algo_t algo_choice;
+
+            /* TODO - Separate out all of the CVAR parsing from the MPII_Coll_init function so it
+             * can be called here with the string in the JSON object. */
+            MPIR_Coll_parse_name_reduce(mpir->valuestring, &algo_choice);
+
+            /* Call the algorithm chosen by the decision tree */
+            /* TODO - Separate out this part from this function and the function above to only write
+             * it once. */
+            switch (algo_choice) {
+                    mpi_errno =
+                        MPIR_Reduce_intra_binomial(sendbuf, recvbuf, count, datatype, op, root,
+                                                   comm_ptr, errflag);
+                    break;
+                case MPIR_REDUCE_INTRA_ALGO_REDUCE_SCATTER_GATHER:
+                    mpi_errno = MPIR_Reduce_intra_reduce_scatter_gather(sendbuf, recvbuf, count,
+                                                                        datatype, op, root,
+                                                                        comm_ptr, errflag);
+                    break;
+                case MPIR_REDUCE_INTRA_ALGO_NB:
+                    mpi_errno = MPIR_Reduce_allcomm_nb(sendbuf, recvbuf, count, datatype, op, root,
+                                                       comm_ptr, errflag);
+                    break;
+                case MPIR_REDUCE_INTER_ALGO_LOCAL_REDUCE_REMOTE_SEND:
+                    mpi_errno =
+                        MPIR_Reduce_inter_local_reduce_remote_send(sendbuf, recvbuf, count,
+                                                                   datatype, op, root, comm_ptr,
+                                                                   errflag);
+                    break;
+                case MPIR_REDUCE_INTER_ALGO_NB:
+                    mpi_errno = MPIR_Reduce_allcomm_nb(sendbuf, recvbuf, count, datatype, op, root,
+                                                       comm_ptr, errflag);
+                    break;
+                case MPIR_REDUCE_INTER_ALGO_AUTO:
+                    MPL_FALLTHROUGH;
+                case MPIR_REDUCE_INTRA_ALGO_AUTO:
+                    MPL_FALLTHROUGH;
+                default:
+                    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+                        mpi_errno =
+                            MPIR_Reduce_intra_auto(sendbuf, recvbuf, count, datatype, op, root,
+                                                   comm_ptr, errflag);
+                    } else {
+                        mpi_errno =
+                            MPIR_Reduce_inter_auto(sendbuf, recvbuf, count, datatype, op, root,
+                                                   comm_ptr, errflag);
+                    }
+                    break;
+            }
+        }
+        /* If the JSON object says we need to use a device-level collectie, pass that information to
+         * the device. */
+        else {
+            cJSON *device_coll_info = cJSON_GetObjectItemCaseSensitive(coll_info, "device");
+            /* TODO - We may want to combine this with the existing device interface where the
+             * device can do a NULL check on coll_info to see if there is decision tree information
+             * that needs to be parsed. */
+            mpi_errno = MPID_Reduce_decision_tree(sendbuf, recvbuf, count, datatype, op, root,
+                                                  comm_ptr, errflag, device_coll_info);
+        }
+    }
+
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Reduce
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -330,7 +431,10 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIR_CVAR_REDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
+    if (MPIR_CVAR_COLLECTIVE_DECISION_TREE) {
+        mpi_errno = MPIR_Reduce_decision_tree(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
+                                              errflag);
+    } else if (MPIR_CVAR_REDUCE_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
         mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
     } else {
         mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
