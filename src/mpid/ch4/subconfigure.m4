@@ -326,17 +326,26 @@ AM_SUBST_NOTMAKE(ch4_netmod_reduce_scatter_block_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_scan_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_exscan_params_decl)
 
+AC_ARG_ENABLE(ch4-netmod-inline,
+    [--enable-ch4-netmod-inline
+       Enables inlined netmod build when a single netmod is used
+       level:
+         yes       - Enabled (default)
+         no        - Disabled (may improve build times and code size)
+    ],,enable_ch4_netmod_inline=yes)
+
+
 AC_ARG_ENABLE(ch4-netmod-direct,
     [--enable-ch4-netmod-direct
+       (Deprecated in favor of ch4-netmod-inline)
        Enables inlined netmod build when a single netmod is used
        level:
          yes       - Enabled (default)
          no        - Disabled (may improve build times and code size)
     ],,enable_ch4_netmod_direct=yes)
 
-
-if test "$ch4_nets_array_sz" = "1" && test "$enable_ch4_netmod_direct" = "yes" ;  then
-   PAC_APPEND_FLAG([-DNETMOD_DIRECT=__netmod_direct_${ch4_netmods}__], [CPPFLAGS])
+if test "$ch4_nets_array_sz" = "1" && test "$enable_ch4_netmod_inline" = "yes" && test "$enable_ch4_netmod_direct" = "yes" ;  then
+   PAC_APPEND_FLAG([-DNETMOD_INLINE=__netmod_inline_${ch4_netmods}__], [CPPFLAGS])
 fi
 
 
@@ -352,8 +361,17 @@ AC_ARG_ENABLE(ch4-shm,
          posix     - POSIX shared memory implementation
     ],,enable_ch4_shm=default)
 
+AC_ARG_ENABLE(ch4-shm-inline,
+    [--enable-ch4-shm-inline
+       Enables inlined shared memory build when a single shared memory module is used
+       level:
+         yes       - Enabled (default)
+         no        - Disabled (may improve build times and code size)
+    ],,enable_ch4_shm_inline=yes)
+
 AC_ARG_ENABLE(ch4-shm-direct,
     [--enable-ch4-shm-direct
+       (Deprecated in favor of ch4-shm-inline)
        Enables inlined shared memory build when a single shared memory module is used
        level:
          yes       - Enabled (default)
@@ -402,8 +420,8 @@ else
 fi
 export ch4_shm
 
-if test "$enable_ch4_shm_direct" = "yes" ;  then
-   PAC_APPEND_FLAG([-DSHM_DIRECT=__shm_direct_${ch4_shm}__], [CPPFLAGS])
+if test "$enable_ch4_shm_inline" = "yes" && test "$enable_ch4_shm_direct" = "yes" ;  then
+   PAC_APPEND_FLAG([-DSHM_INLINE=__shm_inline_${ch4_shm}__], [CPPFLAGS])
 fi
 
 ])dnl end AM_COND_IF(BUILD_CH4,...)

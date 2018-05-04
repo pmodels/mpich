@@ -8,7 +8,7 @@
 #ifndef SHM_IMPL_H_INCLUDED
 #define SHM_IMPL_H_INCLUDED
 
-#ifndef SHM_DIRECT
+#ifndef SHM_INLINE
 #ifndef SHM_DISABLE_INLINES
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size, int *n_vnis_provided,
@@ -2053,8 +2053,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_free_hook(MPIR_Op * op_p)
 
 #else
 
-#include "../src/shm_direct.h"
+#include "../src/shm_inline.h"
 
-#endif /* SHM_DIRECT           */
+#endif /* SHM_INLINE           */
 
 #endif /* SHM_IMPL_H_INCLUDED */

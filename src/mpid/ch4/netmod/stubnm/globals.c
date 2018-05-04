@@ -9,10 +9,10 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#ifndef NETMOD_DIRECT
+#ifndef NETMOD_INLINE
 #define NETMOD_DISABLE_INLINES
 #include <mpidimpl.h>
-#include "netmod_direct.h"
+#include "netmod_inline.h"
 MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     MPIDI_NM_mpi_init_hook,
     MPIDI_NM_mpi_finalize_hook,

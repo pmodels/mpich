@@ -248,7 +248,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
 #endif
 
 /* Declare request functions here so netmods can refer to
-   them in the NETMOD_DIRECT mode */
+   them in the NETMOD_INLINE mode */
 #include "ch4_request.h"
 
 /* Include netmod and shm implementations  */

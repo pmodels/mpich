@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_DIRECT_H_INCLUDED
-#define NETMOD_DIRECT_H_INCLUDED
+#ifndef NETMOD_INLINE_H_INCLUDED
+#define NETMOD_INLINE_H_INCLUDED
 
 #include "ofi_am.h"
 #include "ofi_events.h"
@@ -29,4 +29,4 @@
 #include "ofi_spawn.h"
 #include "ofi_startall.h"
 
-#endif /* NETMOD_DIRECT_H_INCLUDED */
+#endif /* NETMOD_INLINE_H_INCLUDED */

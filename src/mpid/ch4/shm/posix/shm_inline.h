@@ -7,8 +7,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef POSIX_DIRECT_H_INCLUDED
-#define POSIX_DIRECT_H_INCLUDED
+#ifndef POSIX_INLINE_H_INCLUDED
+#define POSIX_INLINE_H_INCLUDED
 
 #include "posix_init.h"
 #include "posix_probe.h"
@@ -25,4 +25,4 @@
 #include "posix_coll.h"
 #include "posix_unimpl.h"
 
-#endif /* POSIX_DIRECT_H_INCLUDED */
+#endif /* POSIX_INLINE_H_INCLUDED */
