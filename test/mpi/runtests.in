@@ -1029,7 +1029,7 @@ sub BuildMPIProgram {
     } else {
         $test_opt->{need_remove} = 0;
     }
-    my $output = `make $programname 2>&1`;
+    my $output = `make $programname@EXEEXT@ 2>&1`;
     $rc = $?;
     if ($rc > 255) { $rc >>= 8; }
     if (! -x $programname) {
