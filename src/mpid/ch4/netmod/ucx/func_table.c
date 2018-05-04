@@ -11,10 +11,10 @@
 
 MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
-#ifndef NETMOD_DIRECT
+#ifndef NETMOD_INLINE
 #define NETMOD_DISABLE_INLINES
 #include <mpidimpl.h>
-#include "netmod_direct.h"
+#include "netmod_inline.h"
 MPIDI_NM_funcs_t MPIDI_NM_ucx_funcs = {
     .mpi_init = MPIDI_NM_mpi_init_hook,
     .mpi_finalize = MPIDI_NM_mpi_finalize_hook,

@@ -6,8 +6,8 @@
  *  Portions of this code were written by Mellanox Technologies Ltd.
  *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
  */
-#ifndef NETMOD_DIRECT_H_INCLUDED
-#define NETMOD_DIRECT_H_INCLUDED
+#ifndef NETMOD_INLINE_H_INCLUDED
+#define NETMOD_INLINE_H_INCLUDED
 
 #include "ucx_progress.h"
 #include "ucx_request.h"
@@ -34,4 +34,4 @@
 #include "ucx_op.h"
 #include "ucx_proc.h"
 #include "ucx_coll.h"
-#endif /* NETMOD_DIRECT_H_INCLUDED */
+#endif /* NETMOD_INLINE_H_INCLUDED */

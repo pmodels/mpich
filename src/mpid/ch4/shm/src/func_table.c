@@ -13,10 +13,10 @@
 
 MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
-#ifndef SHM_DIRECT
+#ifndef SHM_INLINE
 #define SHM_DISABLE_INLINES
 #include <mpidimpl.h>
-#include "shm_direct.h"
+#include "shm_inline.h"
 MPIDI_SHM_funcs_t MPIDI_SHM_src_funcs = {
     .mpi_init = MPIDI_SHM_mpi_init_hook,
     .mpi_finalize = MPIDI_SHM_mpi_finalize_hook,

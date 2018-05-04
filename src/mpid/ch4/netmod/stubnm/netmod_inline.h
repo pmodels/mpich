@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_DIRECT_H_INCLUDED
-#define NETMOD_DIRECT_H_INCLUDED
+#ifndef NETMOD_INLINE_H_INCLUDED
+#define NETMOD_INLINE_H_INCLUDED
 #include "stubnm_init.h"
 #include "stubnm_probe.h"
 #include "stubnm_progress.h"
@@ -27,4 +27,4 @@
 #include "stubnm_coll.h"
 #include "stubnm_datatype.h"
 #include "stubnm_op.h"
-#endif /* NETMOD_DIRECT_H_INCLUDED */
+#endif /* NETMOD_INLINE_H_INCLUDED */

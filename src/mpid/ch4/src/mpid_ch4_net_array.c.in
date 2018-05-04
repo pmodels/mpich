@@ -16,7 +16,7 @@
 extern MPIDI_NM_funcs_t @ch4_nets_func_decl@;
 extern MPIDI_NM_native_funcs_t @ch4_nets_native_func_decl@;
 
-#ifndef NETMOD_DIRECT
+#ifndef NETMOD_INLINE
 MPIDI_NM_funcs_t *MPIDI_NM_funcs[@ch4_nets_array_sz@] = { @ch4_nets_func_array@ };
 MPIDI_NM_native_funcs_t *MPIDI_NM_native_funcs[@ch4_nets_array_sz@] =
     { @ch4_nets_native_func_array@ };

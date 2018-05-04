@@ -9,7 +9,7 @@
 #define SHM_COLL_H_INCLUDED
 
 #include <shm.h>
-#include "../posix/shm_direct.h"
+#include "../posix/shm_inline.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag,
                                                    void *algo_parameters_container)

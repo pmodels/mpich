@@ -16,7 +16,7 @@
 extern MPIDI_SHM_funcs_t MPIDI_SHM_src_funcs;
 extern MPIDI_SHM_native_funcs_t MPIDI_SHM_native_src_funcs;
 
-#ifndef SHM_DIRECT
+#ifndef SHM_INLINE
 MPIDI_SHM_funcs_t *MPIDI_SHM_func = &MPIDI_SHM_src_funcs;
 MPIDI_SHM_native_funcs_t *MPIDI_SHM_native_func = &MPIDI_SHM_native_src_funcs;
 #else
