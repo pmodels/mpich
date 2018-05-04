@@ -9,7 +9,7 @@
 #define SHM_RMA_H_INCLUDED
 
 #include <shm.h>
-#include "../posix/shm_direct.h"
+#include "../posix/shm_inline.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
 {

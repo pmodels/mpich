@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_DIRECT_H_INCLUDED
-#define NETMOD_DIRECT_H_INCLUDED
+#ifndef NETMOD_INLINE_H_INCLUDED
+#define NETMOD_INLINE_H_INCLUDED
 #include "ptl_init.h"
 #include "ptl_types.h"
 #include "ptl_probe.h"
@@ -28,4 +28,4 @@
 #include "ptl_coll.h"
 #include "ptl_datatype.h"
 #include "ptl_op.h"
-#endif /* NETMOD_DIRECT_H_INCLUDED */
+#endif /* NETMOD_INLINE_H_INCLUDED */

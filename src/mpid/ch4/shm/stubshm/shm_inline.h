@@ -7,8 +7,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHM_DIRECT_H_INCLUDED
-#define SHM_DIRECT_H_INCLUDED
+#ifndef SHM_INLINE_H_INCLUDED
+#define SHM_INLINE_H_INCLUDED
 
 #include "stubshm_init.h"
 #include "stubshm_probe.h"
@@ -25,4 +25,4 @@
 #include "stubshm_coll.h"
 #include "stubshm_unimpl.h"
 
-#endif /* SHM_DIRECT_H_INCLUDED */
+#endif /* SHM_INLINE_H_INCLUDED */

@@ -9,7 +9,7 @@
 #define SHM_MEM_H_INCLUDED
 
 #include <shm.h>
-#include "../posix/shm_direct.h"
+#include "../posix/shm_inline.h"
 
 MPL_STATIC_INLINE_PREFIX void *MPIDI_SHM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr,
                                                        MPL_memory_class class)

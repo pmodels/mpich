@@ -13,7 +13,7 @@
 #define NETMOD_IMPL_H_INCLUDED
 
 
-#ifndef NETMOD_DIRECT
+#ifndef NETMOD_INLINE
 #ifndef NETMOD_DISABLE_INLINES
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_ub,
@@ -2481,22 +2481,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_free_hook(MPIR_Op * op_p)
 #endif /* NETMOD_DISABLE_INLINES  */
 
 #else
-#define __netmod_direct_stubnm__   0
-#define __netmod_direct_ofi__    1
-#define __netmod_direct_ucx__    2
-#define __netmod_direct_portals4__ 3
+#define __netmod_inline_stubnm__   0
+#define __netmod_inline_ofi__    1
+#define __netmod_inline_ucx__    2
+#define __netmod_inline_portals4__ 3
 
-#if NETMOD_DIRECT==__netmod_direct_stubnm__
-#include "../stubnm/netmod_direct.h"
-#elif NETMOD_DIRECT==__netmod_direct_ofi__
-#include "../ofi/netmod_direct.h"
-#elif NETMOD_DIRECT==__netmod_direct_ucx__
-#include "../ucx/netmod_direct.h"
-#elif NETMOD_DIRECT==__netmod_direct_portals4__
-#include "../portals4/netmod_direct.h"
+#if NETMOD_INLINE==__netmod_inline_stubnm__
+#include "../stubnm/netmod_inline.h"
+#elif NETMOD_INLINE==__netmod_inline_ofi__
+#include "../ofi/netmod_inline.h"
+#elif NETMOD_INLINE==__netmod_inline_ucx__
+#include "../ucx/netmod_inline.h"
+#elif NETMOD_INLINE==__netmod_inline_portals4__
+#include "../portals4/netmod_inline.h"
 #else
 #error "No direct netmod included"
 #endif
-#endif /* NETMOD_DIRECT           */
+#endif /* NETMOD_INLINE           */
 
 #endif /* NETMOD_IMPL_H_INCLUDED */
