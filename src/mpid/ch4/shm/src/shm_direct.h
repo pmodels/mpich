@@ -8,14 +8,18 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHMPRE_H_INCLUDED
-#define SHMPRE_H_INCLUDED
+#ifndef SHM_DIRECT_H_INCLUDED
+#define SHM_DIRECT_H_INCLUDED
 
-/* *INDENT-OFF* */
-@ch4_shm_pre_include@
-/* *INDENT-ON* */
+#include "shm_am.h"
+#include "shm_coll.h"
+#include "shm_dpm.h"
+#include "shm_hooks.h"
+#include "shm_init.h"
+#include "shm_mem.h"
+#include "shm_misc.h"
+#include "shm_p2p.h"
+#include "shm_startall.h"
+#include "shm_rma.h"
 
-#define MPIDI_SHM_REQUEST_DECL       @ch4_shm_request_decl@
-#define MPIDI_SHM_COMM_DECL          @ch4_shm_comm_decl@
-
-#endif /* SHMPRE_H_INCLUDED */
+#endif /* SHM_DIRECT_H_INCLUDED */

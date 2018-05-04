@@ -600,4 +600,3 @@ Makefile.am-stamp
 
 # /src/mpid/ch4/include
 /src/mpid/ch4/include/netmodpre.h
-/src/mpid/ch4/include/shmpre.h

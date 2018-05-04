@@ -241,5 +241,5 @@ const MPIDI_coll_algo_container_t MPIDI_CH4I_Exscan_intra_composition_alpha_cnt 
 
 /* *INDENT-OFF* */
 @ch4_netmod_coll_globals_default@
-@ch4_shm_coll_globals_default@
+#include "../shm/posix/posix_coll_globals_default.c"
 /* *INDENT-ON* */
