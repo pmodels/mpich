@@ -395,9 +395,6 @@ if test "$enable_ch4_direct" != "auto" -a "$enable_ch4_direct" != "netmod"; then
     AC_MSG_ERROR([Direct comunication option ${enable_ch4_direct} is unknown])
 fi
 
-AC_DEFINE([MPIDI_BUILD_CH4_SHM], [1],
-    [Define if CH4 will build the default shared memory implementation as opposed to only using a netmod implementation])
-
 if test "$enable_ch4_direct" = "auto" ; then
     # This variable can be set either when CH4 controls the data transfer routine
     # or when the netmod doesn't want to implement its own locality information
@@ -462,7 +459,6 @@ src/mpid/ch4/src/ch4_coll_globals_default.c
 ])
 ])dnl end AM_COND_IF(BUILD_CH4,...)
 
-AM_CONDITIONAL([BUILD_CH4_SHM],[test "$ch4_shm_level" = "yes" -o "$ch4_shm_level" = "exclusive"])
 AM_CONDITIONAL([BUILD_CH4_COLL_TUNING],[test -e "$srcdir/src/mpid/ch4/src/ch4_coll_globals.c"])
 
 ])dnl end _BODY

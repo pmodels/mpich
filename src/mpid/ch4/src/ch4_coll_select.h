@@ -15,9 +15,7 @@
 #include "ch4r_proc.h"
 #include "ch4_coll_impl.h"
 
-#ifdef MPIDI_BUILD_CH4_SHM
 #include "../shm/include/shm.h"
-#endif
 
 
 MPL_STATIC_INLINE_PREFIX const
