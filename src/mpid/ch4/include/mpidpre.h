@@ -164,7 +164,7 @@ typedef struct MPIDI_CH4U_req_t {
 } MPIDI_CH4U_req_t;
 
 typedef struct {
-#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     int is_local;
 #endif
     /* Anysource handling. Netmod and shm specific requests are cross
