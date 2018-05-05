@@ -399,12 +399,11 @@ AC_DEFINE([MPIDI_BUILD_CH4_SHM], [1],
     [Define if CH4 will build the default shared memory implementation as opposed to only using a netmod implementation])
 
 if test "$enable_ch4_direct" = "auto" ; then
-    # This variable is set only when the user wants CH4 to handle all shared memory operations
-    AC_DEFINE(MPIDI_CH4_EXCLUSIVE_SHM, 1, [Define if CH4 will be providing the exclusive implementation of shared memory])
-
     # This variable can be set either when CH4 controls the data transfer routine
     # or when the netmod doesn't want to implement its own locality information
     AC_DEFINE(MPIDI_BUILD_CH4_LOCALITY_INFO, 1, [CH4 should build locality info])
+elif test "$enable_ch4_direct" = "netmod" ; then
+    AC_DEFINE(MPIDI_CH4_DIRECT_NETMOD, 1, [CH4 Directly transfers data through the chosen netmode])
 fi
 
 if test "$enable_ch4_shm_inline" = "yes" && test "$enable_ch4_shm_direct" = "yes" ;  then

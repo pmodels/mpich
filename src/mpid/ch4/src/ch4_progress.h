@@ -60,7 +60,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
             MPIR_ERR_POP(mpi_errno);
         }
     }
-#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     if (flags & MPIDI_PROGRESS_SHM) {
         mpi_errno = MPIDI_SHM_progress(0, 0);
         if (mpi_errno != MPI_SUCCESS) {
