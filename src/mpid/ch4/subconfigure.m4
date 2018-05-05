@@ -348,18 +348,14 @@ if test "$ch4_nets_array_sz" = "1" && test "$enable_ch4_netmod_inline" = "yes" &
    PAC_APPEND_FLAG([-DNETMOD_INLINE=__netmod_inline_${ch4_netmods}__], [CPPFLAGS])
 fi
 
-
-AC_ARG_ENABLE(ch4-shm,
-    [--enable-ch4-shm=level:module
-       Control whether CH4 shared memory is built and/or used. Default
-       shm level depends on selected netmod(s). (OFI=exclusive, UCX=no).
+AC_ARG_ENABLE(ch4-direct,
+    [--enable-ch4-direct
+       Defines the direct communication routine used in CH4 device
        level:
-         no        - Do not build or use CH4 shared memory.
-         yes       - Build CH4 shared memory, but do not use it by default (Your chosen netmod must provide it).
-         exclusive - Build and exclusively use CH4 shared memory.
-       module-list(optional).  comma separated list of shared memory modules:
-         posix     - POSIX shared memory implementation
-    ],,enable_ch4_shm=default)
+         netmod     - Directly transfer data through the chosen netmode
+         auto       - The CH4 device controls whether transfer data through netmod
+                      or through shared memory based on locality
+    ],,enable_ch4_direct=default)
 
 AC_ARG_ENABLE(ch4-shm-inline,
     [--enable-ch4-shm-inline
@@ -379,46 +375,37 @@ AC_ARG_ENABLE(ch4-shm-direct,
     ],,enable_ch4_shm_direct=yes)
 
 # setup shared memory defaults
-if test "${enable_ch4_shm}" = "default" ; then
+# TODO: shm submodules should be chosen with similar configure option as that used for netmod.
+# We can add it when a shm submodule is added. Now we just simply set POSIX.
+ch4_shm=posix
+export ch4_shm
+
+# setup default direct communication routine
+if test "${enable_ch4_direct}" = "default" ; then
+    # ucx can only choose direct netmod because it does not handle any_src
+    # receive when both nemod and shared memory are used.
     if test "${ch4_netmods}" = "ucx" ; then
-        enable_ch4_shm=no
+        enable_ch4_direct=netmod
     else
-	enable_ch4_shm=exclusive:posix
+        enable_ch4_direct=auto
     fi
 fi
 
-ch4_shm_level=`echo $enable_ch4_shm | sed -e 's/:.*$//'`
-changequote(<<,>>)
-ch4_shm=`echo $enable_ch4_shm | sed -e 's/^[^:]*//' -e 's/^://'`
-changequote([,])
-
-if test "$ch4_shm_level" != "no" -a "$ch4_shm_level" != "yes" -a "$ch4_shm_level" != "exclusive"; then
-    AC_MSG_ERROR([Shared memory level ${ch4_shm_level} is unknown])
+if test "$enable_ch4_direct" != "auto" -a "$enable_ch4_direct" != "netmod"; then
+    AC_MSG_ERROR([Direct comunication option ${enable_ch4_direct} is unknown])
 fi
 
-if test "$ch4_shm_level" != "no" ; then
-    AC_DEFINE([MPIDI_BUILD_CH4_SHM], [1],
-        [Define if CH4 will build the default shared memory implementation as opposed to only using a netmod implementation])
-fi
+AC_DEFINE([MPIDI_BUILD_CH4_SHM], [1],
+    [Define if CH4 will build the default shared memory implementation as opposed to only using a netmod implementation])
 
-if test "$ch4_shm_level" = "exclusive" ; then
+if test "$enable_ch4_direct" = "auto" ; then
     # This variable is set only when the user wants CH4 to handle all shared memory operations
     AC_DEFINE(MPIDI_CH4_EXCLUSIVE_SHM, 1, [Define if CH4 will be providing the exclusive implementation of shared memory])
 
-    # This variable can be set either when the user asks for CH4 exclusive shared memory
+    # This variable can be set either when CH4 controls the data transfer routine
     # or when the netmod doesn't want to implement its own locality information
     AC_DEFINE(MPIDI_BUILD_CH4_LOCALITY_INFO, 1, [CH4 should build locality info])
 fi
-
-# $ch4_shm - contains the shm mods
-if test -z "${ch4_shm}" ; then
-   if test "$ch4_shm_level" != "no" ; then
-      ch4_shm="posix"
-   fi
-else
-   ch4_shm=`echo ${ch4_shm} | sed -e 's/,/ /g'`
-fi
-export ch4_shm
 
 if test "$enable_ch4_shm_inline" = "yes" && test "$enable_ch4_shm_direct" = "yes" ;  then
    PAC_APPEND_FLAG([-DSHM_INLINE=__shm_inline_${ch4_shm}__], [CPPFLAGS])
