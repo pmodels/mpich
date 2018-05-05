@@ -117,7 +117,7 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     int *striping_info = NULL;
     ADIO_Offset **buf_idx = NULL;
     int old_error, tmp_error;
-    ADIO_Offset *lustre_offsets0, *lustre_offsets, *count_sizes;
+    ADIO_Offset *lustre_offsets0, *lustre_offsets, *count_sizes=NULL;
 
     MPI_Comm_size(fd->comm, &nprocs);
     MPI_Comm_rank(fd->comm, &myrank);
