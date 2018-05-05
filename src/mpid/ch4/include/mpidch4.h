@@ -243,9 +243,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
 
 /* Include netmod prototypes */
 #include <netmod.h>
-#ifdef MPIDI_BUILD_CH4_SHM
 #include "shm.h"
-#endif
 
 /* Declare request functions here so netmods can refer to
    them in the NETMOD_INLINE mode */
@@ -255,9 +253,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_av_is_local(MPIDI_av_entry_t * av);
 /* Prototypes are split from impl to avoid */
 /* circular dependencies                   */
 #include <netmod_impl.h>
-#ifdef MPIDI_BUILD_CH4_SHM
 #include "shm_impl.h"
-#endif
 
 #include "ch4_init.h"
 #include "ch4_probe.h"

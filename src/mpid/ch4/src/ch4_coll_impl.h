@@ -32,7 +32,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * c
 
     /* do the intranode barrier on all nodes */
     if (comm->node_comm != NULL) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno = MPIDI_SHM_mpi_barrier(comm->node_comm, errflag, barrier_node_container);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -40,7 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * c
         mpi_errno = MPIDI_NM_mpi_barrier(comm->node_comm, errflag, barrier_node_container);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
 
     /* do the barrier across roots of all nodes */
@@ -55,7 +55,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * c
      * anything) */
     if (comm->node_comm != NULL) {
         int i = 0;
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_bcast(&i, 1, MPI_BYTE, 0, comm->node_comm, errflag, bcast_node_container);
         if (mpi_errno)
@@ -65,7 +65,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_alpha(MPIR_Comm * c
             MPIDI_NM_mpi_bcast(&i, 1, MPI_BYTE, 0, comm->node_comm, errflag, bcast_node_container);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
 
   fn_exit:
@@ -157,7 +157,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, i
             MPIR_ERR_POP(mpi_errno);
     }
     if (comm->node_comm != NULL) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_bcast(buffer, count, datatype, 0, comm->node_comm, errflag,
                                 bcast_node_container);
@@ -169,7 +169,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, i
                                bcast_node_container);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
 
   fn_exit:
@@ -199,7 +199,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, in
         MPIDI_coll_get_next_container(bcast_node_container_root_local);
 
     if (comm->node_comm != NULL && MPIR_Get_intranode_rank(comm, root) > 0) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_bcast(buffer, count, datatype, MPIR_Get_intranode_rank(comm, root),
                                 comm->node_comm, errflag, bcast_node_container_root_local);
@@ -211,7 +211,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, in
                                comm->node_comm, errflag, bcast_node_container_root_local);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
     if (comm->node_roots_comm != NULL) {
         mpi_errno =
@@ -221,7 +221,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, in
             MPIR_ERR_POP(mpi_errno);
     }
     if (comm->node_comm != NULL && MPIR_Get_intranode_rank(comm, root) <= 0) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_bcast(buffer, count, datatype, 0, comm->node_comm, errflag,
                                 bcast_node_container_root_remote);
@@ -233,7 +233,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, in
                                bcast_node_container_root_remote);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
 
   fn_exit:
@@ -316,7 +316,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
 
     if (comm->node_comm != NULL) {
         if ((sendbuf == MPI_IN_PLACE) && (comm->node_comm->rank != 0)) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
             mpi_errno =
                 MPIDI_SHM_mpi_reduce(recvbuf, NULL, count, datatype, op, 0, comm->node_comm,
                                      errflag, reduce_node_container);
@@ -328,9 +328,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
                                     reduce_node_container);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
         } else {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
             mpi_errno =
                 MPIDI_SHM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_comm,
                                      errflag, reduce_node_container);
@@ -342,7 +342,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
                                     errflag, reduce_node_container);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
         }
     } else {
         if (sendbuf != MPI_IN_PLACE) {
@@ -361,7 +361,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void 
     }
 
     if (comm->node_comm != NULL) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno = MPIDI_SHM_mpi_bcast(recvbuf, count, datatype, 0, comm->node_comm, errflag,
                                         bcast_node_container);
         if (mpi_errno)
@@ -480,7 +480,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
 
     /* do the intranode reduce on all nodes other than the root's node */
     if (comm->node_comm != NULL && MPIR_Get_intranode_rank(comm, root) == -1) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_reduce(sendbuf, tmp_buf, count, datatype, op, 0, comm->node_comm, errflag,
                                  reduce_node_container);
@@ -488,7 +488,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
         mpi_errno =
             MPIDI_NM_mpi_reduce(sendbuf, tmp_buf, count, datatype, op, 0, comm->node_comm, errflag,
                                 reduce_node_container);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =
@@ -561,7 +561,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
 
     /* do the intranode reduce on the root's node */
     if (comm->node_comm != NULL && MPIR_Get_intranode_rank(comm, root) != -1) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_reduce(sendbuf, recvbuf, count, datatype,
                                  op, MPIR_Get_intranode_rank(comm, root),
@@ -571,7 +571,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *se
             MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype,
                                 op, MPIR_Get_intranode_rank(comm, root),
                                 comm->node_comm, errflag, reduce_node_container);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag =
@@ -1428,7 +1428,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
     /* perform intranode scan to get temporary result in recvbuf. if there is only
      * one process, just copy the raw data. */
     if (comm_ptr->node_comm != NULL) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_scan(sendbuf, recvbuf, count, datatype,
                                op, comm_ptr->node_comm, errflag, scan_node_container);
@@ -1440,7 +1440,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
                               op, comm_ptr->node_comm, errflag, scan_node_container);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
     } else if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
         if (mpi_errno)
@@ -1501,7 +1501,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
      * reduce it with recvbuf to get final result if nessesary. */
 
     if (comm_ptr->node_comm != NULL) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_bcast(&noneed, 1, MPI_INT, 0, comm_ptr->node_comm, errflag,
                                 bcast_node_container);
@@ -1513,12 +1513,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
                                bcast_node_container);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
     }
 
     if (noneed == 0) {
         if (comm_ptr->node_comm != NULL) {
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
             mpi_errno =
                 MPIDI_SHM_mpi_bcast(tempbuf, count, datatype, 0, comm_ptr->node_comm, errflag,
                                     bcast_node_container);
@@ -1530,7 +1530,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_alpha(const void *send
                                    bcast_node_container);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
-#endif /* MPIDI_BUILD_CH4_SHM */
+#endif /* MPIDI_CH4_DIRECT_NETMOD */
         }
 
         mpi_errno = MPIR_Reduce_local(tempbuf, recvbuf, count, datatype, op);

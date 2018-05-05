@@ -170,7 +170,7 @@ typedef struct {
     /* Anysource handling. Netmod and shm specific requests are cross
      * referenced. This must be present all of the time to avoid lots of extra
      * ifdefs in the code. */
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     struct MPIR_Request *anysource_partner_request;
 #endif
 
@@ -190,7 +190,7 @@ typedef struct {
 #define MPIDI_CH4I_REQUEST(req,field)       (((req)->dev).field)
 #define MPIDI_CH4U_REQUEST(req,field)       (((req)->dev.ch4.am).field)
 
-#ifdef MPIDI_BUILD_CH4_SHM
+#ifndef MPIDI_CH4_DIRECT_NETMOD
 #define MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)  (((req)->dev).anysource_partner_request)
 #else
 #define MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)  NULL
