@@ -22,7 +22,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Startall(int count, MPIR_Request * requests[])
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_STARTALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_STARTALL);
-#ifndef MPIDI_CH4_EXCLUSIVE_SHM
+#ifdef MPIDI_CH4_DIRECT_NETMOD
     mpi_errno = MPIDI_NM_mpi_startall(count, requests);
 #else
     int i;
