@@ -44,6 +44,7 @@ cvars:
 */
 
 /* *INDENT-OFF* */
+
 MPIU_COLL_SELECTION_create_coll_tree_cb
     coll_inter_compositions[MPIU_COLL_SELECTION_COLLECTIVES_NUMBER] = {
         MPIU_COLL_SELECTION_create_coll_tree_inter_compositions_default,
@@ -437,4 +438,200 @@ MPIU_COLL_SELECTION_storage_handler MPIU_COLL_SELECTION_tree_load(char *filename
 
     return root;
 }
+
+void MPIU_COLL_SELECTION_set_match_pattern_key(MPIU_COLL_SELECTION_match_pattern_t * match_pattern,
+                                               MPIU_COLL_SELECTION_node_type_t layer_type, int key)
+{
+    switch (layer_type) {
+        case MPIU_COLL_SELECTION_STORAGE:
+            match_pattern->storage = key;
+            break;
+        case MPIU_COLL_SELECTION_COMM_KIND:
+            match_pattern->comm_kind = key;
+            break;
+        case MPIU_COLL_SELECTION_COMM_HIERARCHY:
+            match_pattern->comm_hierarchy_kind = key;
+            break;
+        case MPIU_COLL_SELECTION_COLLECTIVE:
+            match_pattern->coll_id = key;
+            break;
+        case MPIU_COLL_SELECTION_COMMSIZE:
+            match_pattern->comm_size = key;
+            break;
+        case MPIU_COLL_SELECTION_MSGSIZE:
+            match_pattern->msg_size = key;
+            break;
+        default:
+            break;
+    }
+}
+
+int MPIU_COLL_SELECTION_get_match_pattern_key(MPIU_COLL_SELECTION_match_pattern_t * match_pattern,
+                                              MPIU_COLL_SELECTION_node_type_t layer_type)
+{
+    switch (layer_type) {
+        case MPIU_COLL_SELECTION_STORAGE:
+            return match_pattern->storage;
+        case MPIU_COLL_SELECTION_COMM_KIND:
+            return match_pattern->comm_kind;
+        case MPIU_COLL_SELECTION_COMM_HIERARCHY:
+            return match_pattern->comm_hierarchy_kind;
+        case MPIU_COLL_SELECTION_COLLECTIVE:
+            return match_pattern->coll_id;
+        case MPIU_COLL_SELECTION_COMMSIZE:
+            return match_pattern->comm_size;
+        case MPIU_COLL_SELECTION_MSGSIZE:
+            return match_pattern->msg_size;
+        default:
+            break;
+    }
+}
+
+void MPIU_COLL_SELECTION_init_match_pattern(MPIU_COLL_SELECTION_match_pattern_t * match_pattern)
+{
+    MPIR_Assert(match_pattern != NULL);
+    match_pattern->terminal_node_type = MPIU_COLL_SELECTION_DEFAULT_TERMINAL_NODE_TYPE;
+
+    match_pattern->storage = -1;
+    match_pattern->comm_kind = -1;
+    match_pattern->comm_hierarchy_kind = -1;
+    match_pattern->coll_id = -1;
+    match_pattern->comm_size = -1;
+    match_pattern->msg_size = -1;
+}
+
+void MPIU_COLL_SELECTION_init_comm_match_pattern(MPIR_Comm * comm,
+                                                 MPIU_COLL_SELECTION_match_pattern_t *
+                                                 match_pattern, MPIU_COLL_SELECTION_node_type_t
+                                                 terminal_node_type)
+{
+    MPI_Aint type_size = 0;
+
+    MPIU_COLL_SELECTION_init_match_pattern(match_pattern);
+
+    match_pattern->terminal_node_type = terminal_node_type;
+    MPIR_Assert(comm != NULL);
+    MPIU_COLL_SELECTION_set_match_pattern_key(match_pattern, MPIU_COLL_SELECTION_COMMSIZE,
+                                              comm->local_size);
+    MPIU_COLL_SELECTION_set_match_pattern_key(match_pattern, MPIU_COLL_SELECTION_COMM_KIND,
+                                              comm->comm_kind);
+    switch (comm->hierarchy_kind) {
+        case MPIR_COMM_HIERARCHY_KIND__FLAT:
+            MPL_FALLTHROUGH;
+        case MPIR_COMM_HIERARCHY_KIND__PARENT:
+            MPIU_COLL_SELECTION_set_match_pattern_key(match_pattern,
+                                                      MPIU_COLL_SELECTION_COMM_HIERARCHY,
+                                                      comm->hierarchy_kind);
+            break;
+        case MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS:
+            MPL_FALLTHROUGH;
+        case MPIR_COMM_HIERARCHY_KIND__NODE:
+            MPIU_COLL_SELECTION_set_match_pattern_key(match_pattern,
+                                                      MPIU_COLL_SELECTION_COMM_HIERARCHY,
+                                                      MPIR_COMM_HIERARCHY_KIND__FLAT);
+            break;
+        default:
+            MPIR_Assert(0);
+            break;
+    }
+}
+
+void MPIU_COLL_SELECTION_init_coll_match_pattern(MPIU_COLL_SELECTON_coll_signature_t * coll_sig,
+                                                 MPIU_COLL_SELECTION_match_pattern_t *
+                                                 match_pattern, MPIU_COLL_SELECTION_node_type_t
+                                                 terminal_node_type)
+{
+    MPI_Aint type_size = 0;
+
+    MPIR_Assert(coll_sig != NULL);
+
+    MPIU_COLL_SELECTION_init_match_pattern(match_pattern);
+    match_pattern->terminal_node_type = terminal_node_type;
+
+    MPIU_COLL_SELECTION_set_match_pattern_key(match_pattern,
+                                              MPIU_COLL_SELECTION_COLLECTIVE, coll_sig->coll_id);
+
+    switch (coll_sig->coll_id) {
+        case MPIU_COLL_SELECTION_BCAST:
+            MPIR_Datatype_get_size_macro(coll_sig->coll.bcast.datatype, type_size);
+            MPIU_COLL_SELECTION_set_match_pattern_key(match_pattern,
+                                                      MPIU_COLL_SELECTION_MSGSIZE,
+                                                      (type_size * coll_sig->coll.bcast.count));
+            break;
+        case MPIU_COLL_SELECTION_BARRIER:
+            break;
+        default:
+            break;
+    }
+}
+
+
+MPIU_COLL_SELECTION_storage_handler
+MPIU_COLL_SELECTION_find_entry(MPIU_COLL_SELECTION_storage_handler root_node,
+                               MPIU_COLL_SELECTION_match_pattern_t * match_pattern)
+{
+    MPIU_COLL_SELECTION_node_type_t root_type = MPIU_COLL_SELECTION_DEFAULT_TERMINAL_NODE_TYPE;
+    MPIU_COLL_SELECTION_node_type_t next_layer_type =
+        MPIU_COLL_SELECTION_DEFAULT_TERMINAL_NODE_TYPE;
+    MPIU_COLL_SELECTION_storage_handler match_node = MPIU_COLL_SELECTION_NULL_ENTRY;
+    int match_pattern_key = 0;
+
+    if (root_node != MPIU_COLL_SELECTION_NULL_ENTRY) {
+
+        root_type = MPIU_COLL_SELECTION_NODE_FIELD(root_node, type);
+
+        while ((root_type != match_pattern->terminal_node_type) &&
+               (root_type != MPIU_COLL_SELECTION_DEFAULT_TERMINAL_NODE_TYPE)) {
+
+            next_layer_type = MPIU_COLL_SELECTION_NODE_FIELD(root_node, next_layer_type);
+            match_pattern_key =
+                MPIU_COLL_SELECTION_get_match_pattern_key(match_pattern, next_layer_type);
+
+            switch (next_layer_type) {
+                case MPIU_COLL_SELECTION_STORAGE:
+                    MPL_FALLTHROUGH;
+                case MPIU_COLL_SELECTION_COMM_KIND:
+                    MPL_FALLTHROUGH;
+                case MPIU_COLL_SELECTION_COMM_HIERARCHY:
+                    MPIU_COLL_SELECTION_level_match_condition(root_node, match_node,
+                                                              (match_pattern_key ==
+                                                               MPIU_COLL_SELECTION_NODE_FIELD
+                                                               (match_node, key)));
+                    break;
+                case MPIU_COLL_SELECTION_COLLECTIVE:
+                    MPIU_COLL_SELECTION_level_match_id(root_node, match_node, match_pattern_key,
+                                                       MPIU_COLL_SELECTION_COLLECTIVES_NUMBER);
+                    break;
+                case MPIU_COLL_SELECTION_COMMSIZE:
+                    MPIU_COLL_SELECTION_level_match_condition(root_node, match_node,
+                                                              (match_pattern_key <=
+                                                               MPIU_COLL_SELECTION_NODE_FIELD
+                                                               (match_node, key)));
+                    break;
+                case MPIU_COLL_SELECTION_MSGSIZE:
+                    MPIU_COLL_SELECTION_level_match_condition(root_node, match_node,
+                                                              (match_pattern_key <=
+                                                               MPIU_COLL_SELECTION_NODE_FIELD
+                                                               (match_node, key)));
+                    break;
+                default:
+                    /* Move to the next layer from the last element on current layer */
+                    MPIU_COLL_SELECTION_level_match_default(root_node, match_node);
+                    break;
+            }
+
+            /* Stop searching if a layer with a given key has not been found */
+            if (match_node == MPIU_COLL_SELECTION_NULL_ENTRY) {
+                return MPIU_COLL_SELECTION_NULL_ENTRY;
+            }
+            root_node = match_node;
+            root_type = MPIU_COLL_SELECTION_NODE_FIELD(root_node, type);
+        }
+
+        return root_node;
+    }
+
+    return MPIU_COLL_SELECTION_NULL_ENTRY;
+}
+
 #endif /* MPIU_COLL_SELECTION_TREE_H_INCLUDED */
