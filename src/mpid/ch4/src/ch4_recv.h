@@ -26,7 +26,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
                                        int context_offset, MPI_Status * status,
                                        MPIR_Request ** request)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV);

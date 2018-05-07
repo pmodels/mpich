@@ -25,7 +25,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
                                        MPIR_Comm * comm, int context_offset,
                                        MPIR_Request ** request)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEND);
@@ -77,7 +77,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
                                         MPIR_Comm * comm, int context_offset,
                                         MPIR_Request ** request)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ISEND);
@@ -130,7 +130,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
                                         MPIR_Comm * comm, int context_offset,
                                         MPIR_Request ** request)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RSEND);
@@ -183,7 +183,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
                                          MPIR_Comm * comm, int context_offset,
                                          MPIR_Request ** request)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IRSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IRSEND);
@@ -235,7 +235,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend(const void *buf,
                                         MPIR_Comm * comm, int context_offset,
                                         MPIR_Request ** request)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SSEND);
@@ -287,7 +287,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Issend(const void *buf,
                                          MPIR_Comm * comm, int context_offset,
                                          MPIR_Request ** request)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ISSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ISSEND);
@@ -339,7 +339,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send_init(const void *buf,
                                             MPIR_Comm * comm, int context_offset,
                                             MPIR_Request ** request)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEND_INIT);
@@ -381,7 +381,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend_init(const void *buf,
                                              MPIR_Comm * comm, int context_offset,
                                              MPIR_Request ** request)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SSEND_INIT);
@@ -424,7 +424,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bsend_init(const void *buf,
                                              MPIR_Comm * comm, int context_offset,
                                              MPIR_Request ** request)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BSEND_INIT);
@@ -467,7 +467,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend_init(const void *buf,
                                              MPIR_Comm * comm, int context_offset,
                                              MPIR_Request ** request)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_av_entry_t *av = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RSEND_INIT);
@@ -505,7 +505,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend_init(const void *buf,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Cancel_send(MPIR_Request * sreq)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CANCEL_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CANCEL_SEND);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
