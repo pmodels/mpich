@@ -93,11 +93,13 @@ static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
                     if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)) {
                         MPIR_Request_free(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
                         /* Decouple requests */
                         MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER
                                                              (req))
                             = NULL;
                         MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req) = NULL;
+#endif
                     }
 
                     if (continue_matching)
