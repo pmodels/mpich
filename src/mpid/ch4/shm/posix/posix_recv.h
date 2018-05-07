@@ -61,7 +61,9 @@ static inline int MPIDI_POSIX_do_irecv(void *buf,
     MPIDI_POSIX_REQUEST(rreq)->data_sz = data_sz;
     MPIDI_POSIX_REQUEST(rreq)->next = NULL;
     MPIDI_POSIX_REQUEST(rreq)->segment_ptr = NULL;
+#ifndef MPIDI_CH4_DIRECT_NETMOD
     MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
+#endif
     MPIR_STATUS_SET_COUNT(rreq->status, 0);
 
     if (!dt_contig) {
