@@ -1107,7 +1107,7 @@ int MPIDI_CH3U_Win_gather_info(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *,
 void* MPIDI_CH3I_Alloc_mem(size_t size, MPIR_Info *info_ptr);
 /* fallback to MPL_malloc if channel does not have its own RMA memory allocator */
 #else
-#define MPIDI_CH3I_Alloc_mem(size, info_ptr, class)    MPL_malloc(size, class)
+#define MPIDI_CH3I_Alloc_mem(size, info_ptr)    MPL_malloc(size, MPL_MEM_USER)
 #endif
 
 #ifdef MPIDI_CH3I_HAS_FREE_MEM

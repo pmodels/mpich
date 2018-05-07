@@ -48,8 +48,7 @@ static inline int MPIDI_STUBSHM_mpi_finalize_hook(void)
     return MPI_SUCCESS;
 }
 
-static inline void *MPIDI_STUBSHM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr,
-                                                MPL_memory_class class)
+static inline void *MPIDI_STUBSHM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_ALLOC_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_ALLOC_MEM);

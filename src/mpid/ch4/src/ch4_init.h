@@ -520,14 +520,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_processor_name(char *name, int namelen, in
 #define FUNCNAME MPID_Alloc_mem
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr,
-                                              MPL_memory_class class)
+MPL_STATIC_INLINE_PREFIX void *MPID_Alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
     void *p;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLOC_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLOC_MEM);
 
-    p = MPIDI_NM_mpi_alloc_mem(size, info_ptr, class);
+    p = MPIDI_NM_mpi_alloc_mem(size, info_ptr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLOC_MEM);
     return p;
