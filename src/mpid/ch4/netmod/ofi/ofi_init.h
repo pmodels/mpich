@@ -1262,12 +1262,11 @@ static inline int MPIDI_NM_get_vni_attr(int vni)
     return MPIDI_VNI_TX | MPIDI_VNI_RX;
 }
 
-static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr,
-                                           MPL_memory_class class)
+static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
 
     void *ap;
-    ap = MPL_malloc(size, class);
+    ap = MPL_malloc(size, MPL_MEM_USER);
     return ap;
 }
 
