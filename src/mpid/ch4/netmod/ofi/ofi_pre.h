@@ -74,8 +74,21 @@ typedef struct MPIDI_OFI_am_header_t {
     uint64_t am_type:MPIDI_OFI_AM_TYPE_BITS;
     uint64_t am_hdr_sz:MPIDI_OFI_AM_HDR_SZ_BITS;
     uint64_t data_sz:MPIDI_OFI_AM_DATA_SZ_BITS;
+    uint16_t seqno;             /* Sequence number of this message.
+                                 * Number is unique to (fi_src_addr, fi_dest_addr) pair. */
+    fi_addr_t fi_src_addr;      /* OFI address of the sender */
     uint64_t payload[0];
 } MPIDI_OFI_am_header_t;
+
+/* Represents early-arrived active messages.
+ * Queued to MPIDI_OFI_global.am_unordered_msgs */
+typedef struct MPIDI_OFI_am_unordered_msg {
+    struct MPIDI_OFI_am_unordered_msg *next;
+    struct MPIDI_OFI_am_unordered_msg *prev;
+    MPIDI_OFI_am_header_t am_hdr;
+    /* This is used as a variable-length structure.
+     * Additional memory region may follow. */
+} MPIDI_OFI_am_unordered_msg_t;
 
 typedef struct {
     MPIDI_OFI_am_header_t hdr;
