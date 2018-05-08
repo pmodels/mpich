@@ -760,7 +760,16 @@ int MPIR_Ibcast_sched(void *buffer, int count, MPI_Datatype datatype, int root,
                       MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 int MPIR_Ibcast_sched_impl(void *buffer, int count, MPI_Datatype datatype, int root,
                            MPIR_Comm * comm_ptr, MPIR_Sched_t s);
-
+/* sched create-start functions */
+int MPIR_Ibcast_intra_nbc_binomial(void *buffer, int count, MPI_Datatype datatype, int root,
+                                   MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Ibcast_intra_nbc_scatter_recursive_doubling_allgather(void *buffer, int count,
+                                                               MPI_Datatype datatype, int root,
+                                                               MPIR_Comm * comm_ptr,
+                                                               MPIR_Request ** request);
+int MPIR_Ibcast_intra_nbc_scatter_ring_allgather(void *buffer, int count, MPI_Datatype datatype,
+                                                 int root, MPIR_Comm * comm_ptr,
+                                                 MPIR_Request ** request);
 /* sched-based intracomm-only functions */
 int MPIR_Ibcast_sched_intra_auto(void *buffer, int count, MPI_Datatype datatype, int root,
                                  MPIR_Comm * comm_ptr, MPIR_Sched_t s);

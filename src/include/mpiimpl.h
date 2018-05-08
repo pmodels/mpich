@@ -97,6 +97,24 @@ int usleep(useconds_t usec);
 int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #endif
 
+#define MPIR_SCHED_CREATE_START(SCHED_FUNC, mpi_err_)            \
+    do {                                                         \
+        int tag = -1;                                            \
+        MPIR_Sched_t s = MPIR_SCHED_NULL;                        \
+        *request = NULL;                                         \
+        mpi_err_ = MPIR_Sched_next_tag(comm_ptr, &tag);          \
+        if (mpi_err_)                                            \
+            MPIR_ERR_POP(mpi_err_);                              \
+        mpi_err_ = MPIR_Sched_create(&s);                        \
+        if (mpi_err_)                                            \
+            MPIR_ERR_POP(mpi_err_);                              \
+        mpi_err_ = SCHED_FUNC;                                   \
+        if (mpi_err_)                                            \
+            MPIR_ERR_POP(mpi_err_);                              \
+        mpi_err_ = MPIR_Sched_start(&s, comm_ptr, tag, request); \
+        if (mpi_err_)                                            \
+            MPIR_ERR_POP(mpi_err_);                              \
+    } while (0)
 
 /*****************************************************************************
  * We use the following ordering of information in this file:

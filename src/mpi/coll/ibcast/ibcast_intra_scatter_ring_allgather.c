@@ -26,6 +26,25 @@
  * Total Cost = (lgp+p-1).alpha + 2.n.((p-1)/p).beta
  */
 #undef FUNCNAME
+#define FUNCNAME MPIR_Ibcast_intra_nbc_scatter_ring_allgather
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Ibcast_intra_nbc_scatter_ring_allgather(void *buffer, int count, MPI_Datatype datatype,
+                                                 int root, MPIR_Comm * comm_ptr,
+                                                 MPIR_Request ** request)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_SCHED_CREATE_START(MPIR_Ibcast_sched_intra_scatter_ring_allgather
+                            (buffer, count, datatype, root, comm_ptr, s), mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Ibcast_sched_intra_scatter_ring_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
