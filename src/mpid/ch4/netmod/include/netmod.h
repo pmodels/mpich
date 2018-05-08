@@ -378,8 +378,6 @@ typedef int (*MPIDI_NM_mpi_iscatterv_t) (const void *sendbuf, const int *sendcou
                                          int recvcount, MPI_Datatype recvtype, int root,
                                          MPIR_Comm * comm_ptr, MPIR_Request ** req);
 typedef int (*MPIDI_NM_mpi_ibarrier_sched_t) (MPIR_Comm * comm, MPIR_Sched_t s);
-typedef int (*MPIDI_NM_mpi_ibcast_sched_t) (void *buffer, int count, MPI_Datatype datatype,
-                                            int root, MPIR_Comm * comm, MPIR_Sched_t s);
 typedef int (*MPIDI_NM_mpi_iallgather_sched_t) (const void *sendbuf, int sendcount,
                                                 MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                                 MPI_Datatype recvtype, MPIR_Comm * comm,
@@ -617,7 +615,6 @@ typedef struct MPIDI_NM_native_funcs {
     MPIDI_NM_mpi_iscatter_t mpi_iscatter;
     MPIDI_NM_mpi_iscatterv_t mpi_iscatterv;
     MPIDI_NM_mpi_ibarrier_sched_t mpi_ibarrier_sched;
-    MPIDI_NM_mpi_ibcast_sched_t mpi_ibcast_sched;
     MPIDI_NM_mpi_iallgather_sched_t mpi_iallgather_sched;
     MPIDI_NM_mpi_iallgatherv_sched_t mpi_iallgatherv_sched;
     MPIDI_NM_mpi_iallreduce_sched_t mpi_iallreduce_sched;
@@ -1206,10 +1203,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iscatterv(const void *sendbuf, const i
                                                     MPIR_Request ** req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibarrier_sched(MPIR_Comm * comm,
                                                          MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ibcast_sched(void *buffer, int count,
-                                                       MPI_Datatype datatype, int root,
-                                                       MPIR_Comm * comm,
-                                                       MPIR_Sched_t s) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iallgather_sched(const void *sendbuf, int sendcount,
                                                            MPI_Datatype sendtype, void *recvbuf,
                                                            int recvcount, MPI_Datatype recvtype,

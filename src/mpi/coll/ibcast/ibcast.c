@@ -275,11 +275,7 @@ int MPIR_Ibcast_sched(void *buffer, int count, MPI_Datatype datatype, int root,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (MPIR_CVAR_IBCAST_DEVICE_COLLECTIVE && MPIR_CVAR_DEVICE_COLLECTIVES) {
-        mpi_errno = MPID_Ibcast_sched(buffer, count, datatype, root, comm_ptr, s);
-    } else {
-        mpi_errno = MPIR_Ibcast_sched_impl(buffer, count, datatype, root, comm_ptr, s);
-    }
+    mpi_errno = MPIR_Ibcast_sched_impl(buffer, count, datatype, root, comm_ptr, s);
 
     return mpi_errno;
 }

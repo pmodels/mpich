@@ -156,7 +156,6 @@ MPIDI_NM_native_funcs_t MPIDI_NM_native_portals4_funcs = {
     MPIDI_NM_mpi_iscatter,
     MPIDI_NM_mpi_iscatterv,
     MPIDI_NM_mpi_ibarrier_sched,
-    MPIDI_NM_mpi_ibcast_sched,
     MPIDI_NM_mpi_iallgather_sched,
     MPIDI_NM_mpi_iallgatherv_sched,
     MPIDI_NM_mpi_iallreduce_sched,

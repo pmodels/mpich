@@ -162,7 +162,6 @@ MPIDI_NM_native_funcs_t MPIDI_NM_native_ofi_funcs = {
     .mpi_iscatter = MPIDI_NM_mpi_iscatter,
     .mpi_iscatterv = MPIDI_NM_mpi_iscatterv,
     .mpi_ibarrier_sched = MPIDI_NM_mpi_ibarrier_sched,
-    .mpi_ibcast_sched = MPIDI_NM_mpi_ibcast_sched,
     .mpi_iallgather_sched = MPIDI_NM_mpi_iallgather_sched,
     .mpi_iallgatherv_sched = MPIDI_NM_mpi_iallgatherv_sched,
     .mpi_iallreduce_sched = MPIDI_NM_mpi_iallreduce_sched,
