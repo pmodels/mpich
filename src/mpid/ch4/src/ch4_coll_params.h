@@ -220,6 +220,21 @@ typedef union {
     } ch4_exscan_alpha;
 } MPIDI_Exscan_params_t;
 
+typedef enum {
+    MPIDI_Ibcast_intra_composition_alpha_id,
+    MPIDI_Ibcast_intra_composition_beta_id,
+    MPIDI_Ibcast_inter_composition_alpha_id
+} MPIDI_Ibcast_id_t;
+
+typedef union {
+    struct MPIDI_Ibcast_alpha {
+        int ibcast;
+    } ch4_ibcast_alpha;
+    struct MPIDI_Ibcast_beta {
+        int ibcast;
+    } ch4_ibcast_beta;
+} MPIDI_Ibcast_params_t;
+
 #define MPIDI_BARRIER_PARAMS_DECL MPIDI_Barrier_params_t ch4_barrier_params;
 #define MPIDI_BCAST_PARAMS_DECL MPIDI_Bcast_params_t ch4_bcast_params;
 #define MPIDI_REDUCE_PARAMS_DECL MPIDI_Reduce_params_t ch4_reduce_params;
@@ -237,6 +252,7 @@ typedef union {
 #define MPIDI_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDI_Reduce_scatter_block_params_t ch4_reduce_scatter_block_params
 #define MPIDI_SCAN_PARAMS_DECL MPIDI_Scan_params_t ch4_scan_params
 #define MPIDI_EXSCAN_PARAMS_DECL MPIDI_Exscan_params_t ch4_exscan_params
+#define MPIDI_IBCAST_PARAMS_DECL MPIDI_Ibcast_params_t ch4_ibcast_params
 
 typedef union {
     MPIDI_BARRIER_PARAMS_DECL;
@@ -256,7 +272,9 @@ typedef union {
     MPIDI_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
     MPIDI_SCAN_PARAMS_DECL;
     MPIDI_EXSCAN_PARAMS_DECL;
+    MPIDI_IBCAST_PARAMS_DECL;
 } MPIDI_coll_params_t;
+
 
 typedef struct MPIDI_coll_algo_container {
     int id;

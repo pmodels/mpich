@@ -146,6 +146,13 @@ typedef union MPIDIG_Exscan_algo_params {
     /* *INDENT-ON* */
 } MPIDIG_EXSCAN_ALGO_params_t;
 
+typedef union MPIDIG_Ibcast_algo_params {
+    /* *INDENT-OFF* */
+    MPIDI_IBCAST_PARAMS_DECL;
+    @ch4_netmod_ibcast_params_decl@
+    /* *INDENT-ON* */
+} MPIDIG_IBCAST_ALGO_params_t;
+
 #define MPIDIG_BARRIER_PARAMS_DECL MPIDIG_BARRIER_ALGO_params_t barrier_params;
 #define MPIDIG_BCAST_PARAMS_DECL MPIDIG_BCAST_ALGO_params_t bcast_params;
 #define MPIDIG_REDUCE_PARAMS_DECL MPIDIG_REDUCE_ALGO_params_t reduce_params;
@@ -163,6 +170,7 @@ typedef union MPIDIG_Exscan_algo_params {
 #define MPIDIG_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDIG_REDUCE_SCATTER_BLOCK_ALGO_params_t reduce_scatter_block_params;
 #define MPIDIG_SCAN_PARAMS_DECL MPIDIG_SCAN_ALGO_params_t scan_params;
 #define MPIDIG_EXSCAN_PARAMS_DECL MPIDIG_EXSCAN_ALGO_params_t exscan_params;
+#define MPIDIG_IBCAST_PARAMS_DECL MPIDIG_IBCAST_ALGO_params_t ibcast_params;
 
 typedef union MPIDIG_coll_algo_generic_params {
     MPIDIG_BARRIER_PARAMS_DECL;
@@ -182,6 +190,7 @@ typedef union MPIDIG_coll_algo_generic_params {
     MPIDIG_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
     MPIDIG_SCAN_PARAMS_DECL;
     MPIDIG_EXSCAN_PARAMS_DECL;
+    MPIDIG_IBCAST_PARAMS_DECL;
 } MPIDIG_coll_algo_generic_params_t;
 
 typedef struct MPIDIG_coll_algo_generic_container {

@@ -244,6 +244,12 @@ MPIDI_${net_upper}_SCAN_PARAMS_DECL;"
         ch4_netmod_exscan_params_decl="${ch4_netmod_exscan_params_decl} \\
 MPIDI_${net_upper}_EXSCAN_PARAMS_DECL;"
     fi
+    if test -z "$ch4_netmod_ibcast_params_decl" ; then
+        ch4_netmod_ibcast_params_decl="MPIDI_${net_upper}_IBCAST_PARAMS_DECL;"
+    else
+        ch4_netmod_ibcast_params_decl="${ch4_netmod_ibcast_params_decl} \\
+MPIDI_${net_upper}_IBCAST_PARAMS_DECL;"
+    fi
     if test -z "$ch4_netmod_win_decl" ; then
         ch4_netmod_win_decl="MPIDI_${net_upper}_win_t ${net};"
     else
@@ -300,6 +306,7 @@ AC_SUBST(ch4_netmod_reduce_scatter_params_decl)
 AC_SUBST(ch4_netmod_reduce_scatter_block_params_decl)
 AC_SUBST(ch4_netmod_scan_params_decl)
 AC_SUBST(ch4_netmod_exscan_params_decl)
+AC_SUBST(ch4_netmod_ibcast_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_pre_include)
 AM_SUBST_NOTMAKE(ch4_netmod_coll_globals_default)
 AM_SUBST_NOTMAKE(ch4_netmod_coll_params_include)
@@ -327,6 +334,7 @@ AM_SUBST_NOTMAKE(ch4_netmod_reduce_scatter_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_reduce_scatter_block_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_scan_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_exscan_params_decl)
+AM_SUBST_NOTMAKE(ch4_netmod_ibcast_params_decl)
 
 AC_ARG_ENABLE(ch4-netmod-inline,
     [--enable-ch4-netmod-inline
