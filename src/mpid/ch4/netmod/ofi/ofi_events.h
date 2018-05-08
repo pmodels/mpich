@@ -520,11 +520,33 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_recv_event(struct fi_cq_tagged_entry *
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t *am_hdr;
+    MPIDI_OFI_am_unordered_msg_t *uo_msg = NULL;
+    fi_addr_t fi_src_addr;
+    uint16_t expected_seqno, next_seqno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_RECV_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_RECV_EVENT);
 
     am_hdr = (MPIDI_OFI_am_header_t *) wc->buf;
 
+    expected_seqno = MPIDI_OFI_am_get_next_recv_seqno(am_hdr->fi_src_addr);
+    if (am_hdr->seqno != expected_seqno) {
+        /* This message came earlier than the one that we were expecting.
+         * Put it in the queue to process it later. */
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, TERSE,
+                        (MPL_DBG_FDEST,
+                         "Expected seqno=%d but got %d (am_type=%d addr=0x%016lx). "
+                         "Enqueueing it to the queue.\n",
+                         expected_seqno, am_hdr->seqno, am_hdr->am_type, am_hdr->fi_src_addr));
+        mpi_errno = MPIDI_OFI_am_enqueue_unordered_msg(am_hdr);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIR_ERR_POP(mpi_errno);
+        goto fn_exit;
+    }
+
+    /* Received an expected message */
+  repeat:
+    fi_src_addr = am_hdr->fi_src_addr;
+    next_seqno = am_hdr->seqno + 1;
     switch (am_hdr->am_type) {
         case MPIDI_AMTYPE_SHORT_HDR:
             mpi_errno = MPIDI_OFI_handle_short_am_hdr(am_hdr, am_hdr->payload);
@@ -561,6 +583,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_recv_event(struct fi_cq_tagged_entry *
         default:
             MPIR_Assert(0);
     }
+
+    /* For the first iteration (=in case we can process the message just received
+     * from OFI immediately), uo_msg is NULL, so freeing it is no-op.
+     * Otherwise, free it here before getting another uo_msg. */
+    MPL_free(uo_msg);
+
+    /* See if we can process other messages in the queue */
+    if ((uo_msg = MPIDI_OFI_am_claim_unordered_msg(fi_src_addr, next_seqno)) != NULL) {
+        am_hdr = &uo_msg->am_hdr;
+        goto repeat;
+    }
+
+    /* Record the next expected sequence number from fi_src_addr */
+    MPIDI_OFI_am_set_next_recv_seqno(fi_src_addr, next_seqno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_RECV_EVENT);
