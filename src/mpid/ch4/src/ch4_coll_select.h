@@ -333,4 +333,22 @@ MPIDI_coll_algo_container_t *MPIDI_Exscan_select(const void *sendbuf,
     return &MPIDI_Exscan_intra_composition_alpha_cnt;
 }
 
+MPL_STATIC_INLINE_PREFIX const
+MPIDI_coll_algo_container_t *MPIDI_Ibcast_select(void *buffer,
+                                                 int count,
+                                                 MPI_Datatype datatype,
+                                                 int root, MPIR_Comm * comm, MPIR_Request ** req)
+{
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
+        return &MPIDI_Ibcast_inter_composition_alpha_cnt;
+    }
+
+    if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT &&
+        MPIR_CVAR_ENABLE_SMP_COLLECTIVES && !MPIR_CVAR_ENABLE_SMP_BCAST) {
+        return &MPIDI_Ibcast_intra_composition_alpha_cnt;
+    } else {
+        return &MPIDI_Ibcast_intra_composition_beta_cnt;
+    }
+}
+
 #endif /* CH4_COLL_SELECT_H_INCLUDED */

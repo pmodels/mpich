@@ -1069,13 +1069,15 @@ static inline int MPIDI_NM_mpi_ibarrier(MPIR_Comm * comm, MPIR_Request ** req)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_ibcast(void *buffer, int count, MPI_Datatype datatype,
-                                      int root, MPIR_Comm * comm, MPIR_Request ** req)
+                                      int root, MPIR_Comm * comm_ptr, MPIR_Request ** request,
+                                      const void *ch4_algo_parameters_container_in
+                                      ATTRIBUTE((unused)))
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IBCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IBCAST);
 
-    mpi_errno = MPIR_Ibcast_impl(buffer, count, datatype, root, comm, req);
+    mpi_errno = MPIR_Ibcast_impl(buffer, count, datatype, root, comm_ptr, request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IBCAST);
     return mpi_errno;

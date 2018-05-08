@@ -867,15 +867,37 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ibarrier(MPIR_Comm * comm, MPIR_Request ** req
 MPL_STATIC_INLINE_PREFIX int MPID_Ibcast(void *buffer, int count, MPI_Datatype datatype,
                                          int root, MPIR_Comm * comm, MPIR_Request ** req)
 {
-    int ret;
+    int mpi_errno = MPI_SUCCESS;
+    const MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IBCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IBCAST);
 
-    ret = MPIDI_NM_mpi_ibcast(buffer, count, datatype, root, comm, req);
+    ch4_algo_parameters_container = MPIDI_Ibcast_select(buffer, count, datatype, root, comm, req);
+
+    switch (ch4_algo_parameters_container->id) {
+        case MPIDI_Ibcast_intra_composition_alpha_id:
+            mpi_errno =
+                MPIDI_Ibcast_intra_composition_alpha(buffer, count, datatype, root, comm, req,
+                                                     ch4_algo_parameters_container);
+            break;
+        case MPIDI_Ibcast_intra_composition_beta_id:
+            mpi_errno =
+                MPIDI_Ibcast_intra_composition_beta(buffer, count, datatype, root, comm, req,
+                                                    ch4_algo_parameters_container);
+            break;
+        case MPIDI_Ibcast_inter_composition_alpha_id:
+            mpi_errno =
+                MPIDI_Ibcast_inter_composition_alpha(buffer, count, datatype, root, comm, req,
+                                                     ch4_algo_parameters_container);
+            break;
+        default:
+            mpi_errno = MPIR_Ibcast_impl(buffer, count, datatype, root, comm, req);
+            break;
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IBCAST);
-    return ret;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Iallgather(const void *sendbuf, int sendcount,
