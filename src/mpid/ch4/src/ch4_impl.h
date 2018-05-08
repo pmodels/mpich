@@ -784,6 +784,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDIU_map_create(void **out_map, MPL_memory_class
 MPL_STATIC_INLINE_PREFIX void MPIDIU_map_destroy(void *in_map)
 {
     MPIDIU_map_t *map = in_map;
+    MPIDIU_map_entry_t *e, *etmp;
+    HASH_ITER(hh, map->head, e, etmp) {
+        /* Free all remaining entries in the hash */
+        HASH_DELETE(hh, map->head, e);
+        MPL_free(e);
+    }
     HASH_CLEAR(hh, map->head);
     MPL_free(map);
 }
