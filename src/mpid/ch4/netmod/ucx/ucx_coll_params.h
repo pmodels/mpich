@@ -211,6 +211,21 @@ typedef union {
     } ucx_exscan_empty_parameters;
 } MPIDI_UCX_Exscan_params_t;
 
+typedef enum {
+    MPIDI_UCX_Ibcast_intra_binomial_id,
+    MPIDI_UCX_Ibcast_intra_scatter_recursive_doubling_allgather_id,
+    MPIDI_UCX_Ibcast_intra_scatter_ring_allgather_id,
+    MPIDI_UCX_Ibcast_intra_tree_knomial_id,
+    MPIDI_UCX_Ibcast_intra_tree_kary_id,
+} MPIDI_UCX_Ibcast_id_t;
+
+typedef union {
+    /* reserved for parameters related to NETMOD specific collectives */
+    struct MPIDI_UCX_Ibcast_empty_parameters {
+        int empty;
+    } ucx_ibcast_empty_parameters;
+} MPIDI_UCX_Ibcast_params_t;
+
 #define MPIDI_UCX_BARRIER_PARAMS_DECL MPIDI_UCX_Barrier_params_t ucx_barrier_params;
 #define MPIDI_UCX_BCAST_PARAMS_DECL MPIDI_UCX_Bcast_params_t ucx_bcast_params;
 #define MPIDI_UCX_REDUCE_PARAMS_DECL MPIDI_UCX_Reduce_params_t ucx_reduce_params;
@@ -228,6 +243,7 @@ typedef union {
 #define MPIDI_UCX_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDI_UCX_Reduce_scatter_block_params_t ucx_reduce_scatter_block_params;
 #define MPIDI_UCX_SCAN_PARAMS_DECL MPIDI_UCX_Scan_params_t ucx_scan_params;
 #define MPIDI_UCX_EXSCAN_PARAMS_DECL MPIDI_UCX_Exscan_params_t ucx_exscan_params;
+#define MPIDI_UCX_IBCAST_PARAMS_DECL MPIDI_UCX_Ibcast_params_t ucx_ibcast_params;
 
 typedef union {
     MPIDI_UCX_BARRIER_PARAMS_DECL;
@@ -247,6 +263,7 @@ typedef union {
     MPIDI_UCX_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
     MPIDI_UCX_SCAN_PARAMS_DECL;
     MPIDI_UCX_EXSCAN_PARAMS_DECL;
+    MPIDI_UCX_IBCAST_PARAMS_DECL;
 } MPIDI_UCX_coll_params_t;
 
 typedef struct MPIDI_UCX_coll_algo_container {

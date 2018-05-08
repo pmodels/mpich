@@ -77,4 +77,12 @@ extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Scan_intra_recursive_doub
 /* Exscan OFI containers declaration */
 extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Exscan_intra_recursive_doubling_cnt;
 
+/* Ibcast OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_intra_nbc_binomial_cnt;
+extern const MPIDI_OFI_coll_algo_container_t
+    MPIDI_OFI_Ibcast_intra_nbc_scatter_recursive_doubling_allgather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_intra_nbc_scatter_ring_allgather_cnt;
+extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_intra_tree_knomial_cnt;
+extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Ibcast_intra_tree_kary_cnt;
+
 #endif /* OFI_COLL_CONTAINERS_H_INCLUDED */

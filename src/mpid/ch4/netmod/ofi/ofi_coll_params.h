@@ -211,6 +211,21 @@ typedef union {
     } ofi_exscan_empty_parameters;
 } MPIDI_OFI_Exscan_params_t;
 
+typedef enum {
+    MPIDI_OFI_Ibcast_intra_nbc_binomial_id,
+    MPIDI_OFI_Ibcast_intra_nbc_scatter_recursive_doubling_allgather_id,
+    MPIDI_OFI_Ibcast_intra_nbc_scatter_ring_allgather_id,
+    MPIDI_OFI_Ibcast_intra_tree_knomial_id,
+    MPIDI_OFI_Ibcast_intra_tree_kary_id,
+} MPIDI_OFI_Ibcast_id_t;
+
+typedef union {
+    /* reserved for parameters related to NETMOD specific collectives */
+    struct MPIDI_OFI_Ibcast_empty_parameters {
+        int empty;
+    } ofi_ibcast_empty_parameters;
+} MPIDI_OFI_Ibcast_params_t;
+
 #define MPIDI_OFI_BARRIER_PARAMS_DECL MPIDI_OFI_Barrier_params_t ofi_barrier_params;
 #define MPIDI_OFI_BCAST_PARAMS_DECL MPIDI_OFI_Bcast_params_t ofi_bcast_params;
 #define MPIDI_OFI_REDUCE_PARAMS_DECL MPIDI_OFI_Reduce_params_t ofi_reduce_params;
@@ -228,6 +243,7 @@ typedef union {
 #define MPIDI_OFI_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDI_OFI_Reduce_scatter_block_params_t ofi_reduce_scatter_block_params;
 #define MPIDI_OFI_SCAN_PARAMS_DECL MPIDI_OFI_Scan_params_t ofi_scan_params;
 #define MPIDI_OFI_EXSCAN_PARAMS_DECL MPIDI_OFI_Exscan_params_t ofi_exscan_params;
+#define MPIDI_OFI_IBCAST_PARAMS_DECL MPIDI_OFI_Ibcast_params_t ofi_ibcast_params;
 
 typedef union {
     MPIDI_OFI_BARRIER_PARAMS_DECL;
@@ -247,6 +263,7 @@ typedef union {
     MPIDI_OFI_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
     MPIDI_OFI_SCAN_PARAMS_DECL;
     MPIDI_OFI_EXSCAN_PARAMS_DECL;
+    MPIDI_OFI_IBCAST_PARAMS_DECL;
 } MPIDI_OFI_coll_params_t;
 
 typedef struct MPIDI_OFI_coll_algo_container {
