@@ -844,6 +844,29 @@ MPL_STATIC_INLINE_PREFIX void *MPIDIU_map_lookup(void *in_map, uint64_t id)
     return rc;
 }
 
+/* Updates a value in the map which has `id` as a key.
+   If `id` does not exist in the map, it will be added. Returns the old value. */
+MPL_STATIC_INLINE_PREFIX void *MPIDIU_map_update(void *in_map, uint64_t id, void *new_val,
+                                                 MPL_memory_class class)
+{
+    void *rc;
+    MPIDIU_map_t *map;
+    MPIDIU_map_entry_t *map_entry;
+
+    MPID_THREAD_CS_ENTER(POBJ, MPIDI_THREAD_UTIL_MUTEX);
+    map = (MPIDIU_map_t *) in_map;
+    HASH_FIND(hh, map->head, &id, sizeof(uint64_t), map_entry);
+    if (map_entry == NULL) {
+        rc = MPIDIU_MAP_NOT_FOUND;
+        MPIDIU_map_set_unsafe(in_map, id, new_val, class);
+    } else {
+        rc = map_entry->value;
+        map_entry->value = new_val;
+    }
+    MPID_THREAD_CS_EXIT(POBJ, MPIDI_THREAD_UTIL_MUTEX);
+    return rc;
+}
+
 /* Wait until active message acc ops are done. */
 MPL_STATIC_INLINE_PREFIX int MPIDIG_wait_am_acc(MPIR_Win * win, int target_rank, int order_needed)
 {
