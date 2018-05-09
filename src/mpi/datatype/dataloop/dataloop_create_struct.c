@@ -65,13 +65,6 @@ int MPIR_Dataloop_create_struct(DLOOP_Count count,
 
     DLOOP_Type first_basic = MPI_DATATYPE_NULL, first_derived = MPI_DATATYPE_NULL;
 
-    /* variables used in general case only */
-    int loop_idx, new_loop_depth;
-    int old_loop_depth = 0;
-    MPI_Aint new_loop_sz, old_loop_sz = 0;
-
-    DLOOP_Dataloop *new_dlp, *curpos;
-
     /* if count is zero, handle with contig code, call it a int */
     if (count == 0) {
         err = MPIR_Dataloop_create_contiguous(0, MPI_INT, dlp_p, dlsz_p, dldepth_p, flag);

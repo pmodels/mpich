@@ -40,7 +40,7 @@ int MPIR_Allgatherv_intra_recursive_doubling(const void *sendbuf,
     MPI_Aint recvtype_extent, recvtype_true_extent, recvtype_true_lb;
     int curr_cnt, dst, total_count;
     void *tmp_buf;
-    int mask, dst_tree_root, my_tree_root, is_homogeneous, position,
+    int mask, dst_tree_root, my_tree_root, position,
         send_offset, recv_offset, last_recv_cnt, nprocs_completed, k, offset, tmp_mask, tree_root;
     MPIR_CHKLMEM_DECL(1);
 
