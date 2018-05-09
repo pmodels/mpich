@@ -128,7 +128,6 @@ int MPII_Genutil_sched_imcast(const void *buf,
 {
     vtx_t *vtxp;
     int vtx_id;
-    int *dest, i;
 
     /* assign a new vertex */
     vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
