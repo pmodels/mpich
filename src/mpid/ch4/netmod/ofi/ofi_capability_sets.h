@@ -73,6 +73,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(const char *set_name)
  * MPIDI_OFI_FETCH_ATOMIC_IOVECS       The maximum number of iovecs that can be used for fetch_atomic operations
  * MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS Use a progress thread for normal data messages
  * MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS Use a progress thread for control messages
+ * MPIDI_OFI_ENABLE_PT2PT_NOPACK       Allow sending messages without packing
+ * MPIDI_OFI_NUM_AM_BUFFERS            Number of buffers available for active messages
  * MPIDI_OFI_CONTEXT_BITS              The number of bits used for the context ID in an OFI message
  * MPIDI_OFI_SOURCE_BITS               The number of bits used for the source rank in an OFI message
  * MPIDI_OFI_TAG_BITS                  The number of bits used for the tag in an OFI message
