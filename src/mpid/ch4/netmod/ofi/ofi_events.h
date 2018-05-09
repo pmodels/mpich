@@ -726,10 +726,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_ent
         goto fn_exit;
     } else if (unlikely(1)) {
         switch (MPIDI_OFI_REQUEST(req, event_id)) {
-            case MPIDI_OFI_EVENT_AM_MULTI:
-                mpi_errno = MPIDI_OFI_am_repost_event(wc, req);
-                break;
-
             case MPIDI_OFI_EVENT_PEEK:
                 mpi_errno = MPIDI_OFI_peek_event(wc, req);
                 break;
