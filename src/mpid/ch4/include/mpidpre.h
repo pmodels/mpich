@@ -24,7 +24,7 @@
 #include "uthash.h"
 #include "ch4_coll_params.h"
 #include "coll_algo_params.h"
-#include "coll_selection_tree_types.h"
+#include "coll_tree_bin_types.h"
 
 typedef struct {
     union {
@@ -437,10 +437,13 @@ typedef struct MPIDI_Devcomm_t {
 
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
+
+        MPIU_COLL_SELECTION_storage_handler *coll_tuning;
     } ch4;
 } MPIDI_Devcomm_t;
 #define MPIDI_CH4U_COMM(comm,field) ((comm)->dev.ch4.ch4u).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field
+#define MPIDI_CH4_COMM(comm)      ((comm)->dev.ch4)
 
 typedef struct {
     union {

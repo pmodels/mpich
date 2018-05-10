@@ -23,6 +23,9 @@
 #include <rdma/fi_errno.h>
 #include "ofi_capability_sets.h"
 
+#include "coll_algo_params.h"
+#include "coll_tree_bin_types.h"
+
 /* Defines */
 
 #define MPIDI_OFI_MAX_AM_HDR_SIZE    128

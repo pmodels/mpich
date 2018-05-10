@@ -1,6 +1,9 @@
 #ifndef POSIX_COLL_SELECT_INIT_H_INCLUDED
 #define POSIX_COLL_SELECT_INIT_H_INCLUDED
 
+#include "posix_coll_select_utils.h"
+#include "coll_tree_bin_types.h"
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_POSIX_mpi_comm_collective_selection_finalize
 #undef FCNAME

@@ -13,6 +13,8 @@
 #define POSIX_PRE_H_INCLUDED
 
 #include <mpi.h>
+#include "coll_algo_params.h"
+#include "coll_tree_bin_types.h"
 
 struct MPIR_Request;
 struct MPIR_Segment;

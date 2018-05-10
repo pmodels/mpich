@@ -1,7 +1,7 @@
 #ifndef MPIU_COLL_SELECTION_TREE_TYPES_H_INCLUDED
 #define MPIU_COLL_SELECTION_TREE_TYPES_H_INCLUDED
 
-#include "coll_selection_tree_pre.h"
+#include "coll_tree_bin_pre.h"
 
 typedef enum {
     MPIU_COLL_SELECTION_ALLGATHER = 0,
