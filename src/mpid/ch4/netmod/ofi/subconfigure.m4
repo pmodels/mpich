@@ -69,7 +69,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_sockets="no"
         enable_verbs="no"
         enable_usnic="no"
-        enable_mxm="no"
         enable_gni="no"
         enable_bgq="no"
         enable_udp="no"
@@ -83,7 +82,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_sockets="yes"
         enable_verbs="yes"
         enable_usnic="yes"
-        enable_mxm="yes"
         enable_gni="yes"
         enable_bgq="yes"
         enable_udp="yes"
@@ -122,10 +120,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 ;;
             "usnic")
                 enable_usnic="yes"
-                runtime_capabilities="yes"
-                ;;
-            "mxm")
-                enable_mxm="yes"
                 runtime_capabilities="yes"
                 ;;
             "udp")
@@ -185,10 +179,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
                 enable_usnic="yes"
                 ;;
-            "mxm")
-                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
-                enable_mxm="yes"
-                ;;
             "udp")
                 AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
                 enable_udp="yes"
@@ -225,7 +215,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             prov_config+=" --enable-sockets=${enable_sockets}"
             prov_config+=" --enable-verbs=${enable_verbs}"
             prov_config+=" --enable-usnic=${enable_usnic}"
-            prov_config+=" --enable-mxm=${enable_mxm}"
             prov_config+=" --enable-gni=${enable_gni}"
             prov_config+=" --enable-bgq=${enable_bgq}"
             prov_config+=" --enable-udp=${enable_udp}"
