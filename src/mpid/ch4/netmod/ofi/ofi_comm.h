@@ -37,9 +37,6 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
     /* eagain defaults to off */
     MPIDI_OFI_COMM(comm).eagain = FALSE;
 
-    /* Do not handle intercomms */
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
-        goto fn_exit;
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMM_CREATE_HOOK);
     return mpi_errno;
