@@ -251,7 +251,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init_sep(MPIR_Win * win)
   fn_fail:
     if (MPIDI_OFI_WIN(win).sep_tx_idx != -1) {
         /* Push tx idx back into available pool. */
-        utarray_push_back(MPIDI_Global.rma_sep_idx_array, &i, MPL_MEM_RMA);
+        utarray_push_back(MPIDI_Global.rma_sep_idx_array, &MPIDI_OFI_WIN(win).sep_tx_idx,
+                          MPL_MEM_RMA);
         MPIDI_OFI_WIN(win).sep_tx_idx = -1;
     }
     if (MPIDI_OFI_WIN(win).ep != NULL) {
