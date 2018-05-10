@@ -77,4 +77,7 @@ extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Scan_intra_recursive_doub
 /* Exscan OFI containers declaration */
 extern const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Exscan_intra_recursive_doubling_cnt;
 
+/* Default OFI containers declaration */
+extern const MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Coll_default_cnt[];
+
 #endif /* OFI_COLL_CONTAINERS_H_INCLUDED */

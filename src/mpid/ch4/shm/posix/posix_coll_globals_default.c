@@ -161,3 +161,40 @@ const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Scan_intra_recursive_doublin
 const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Exscan_intra_recursive_doubling_cnt = {
     .id = MPIDI_POSIX_Exscan_intra_recursive_doubling_id
 };
+
+/* Default POSIX containers initialization*/
+const MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Coll_default_cnt[] = {
+    &MPIDI_POSIX_Allgather_intra_recursive_doubling_cnt,
+    &MPIDI_POSIX_Allgatherv_intra_recursive_doubling_cnt,
+    &MPIDI_POSIX_Allreduce_intra_recursive_doubling_cnt,
+    &MPIDI_POSIX_Alltoall_intra_pairwise_sendrecv_replace_cnt,
+    &MPIDI_POSIX_Alltoallv_intra_pairwise_sendrecv_replace_cnt,
+    &MPIDI_POSIX_Alltoallw_intra_pairwise_sendrecv_replace_cnt,
+    &MPIDI_POSIX_Barrier_intra_dissemination_cnt,
+    &MPIDI_POSIX_Bcast_intra_binomial_cnt,
+    &MPIDI_POSIX_Exscan_intra_recursive_doubling_cnt,
+    &MPIDI_POSIX_Gather_intra_binomial_cnt,
+    &MPIDI_POSIX_Gatherv_allcomm_linear_cnt,
+    &MPIDI_POSIX_Reduce_scatter_intra_pairwise_cnt,
+    &MPIDI_POSIX_Reduce_scatter_block_intra_pairwise_cnt,
+    &MPIDI_POSIX_Reduce_intra_binomial_cnt,
+    &MPIDI_POSIX_Scan_intra_recursive_doubling_cnt,
+    &MPIDI_POSIX_Scatter_intra_binomial_cnt,
+    &MPIDI_POSIX_Scatterv_allcomm_linear_cnt,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+};

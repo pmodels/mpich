@@ -81,4 +81,7 @@ extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Scan_intra_recursive_
 /* Exscan POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Exscan_intra_recursive_doubling_cnt;
 
+/* Default POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Coll_default_cnt[];
+
 #endif /* POSIX_COLL_CONTAINERS_H_INCLUDED */

@@ -159,3 +159,40 @@ const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Scan_intra_recursive_doubling_cn
 const MPIDI_OFI_coll_algo_container_t MPIDI_OFI_Exscan_intra_recursive_doubling_cnt = {
     .id = MPIDI_OFI_Exscan_intra_recursive_doubling_id
 };
+
+/* Default OFI containers initialization*/
+const MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Coll_default_cnt[] = {
+    &MPIDI_OFI_Allgather_intra_recursive_doubling_cnt,
+    &MPIDI_OFI_Allgatherv_intra_recursive_doubling_cnt,
+    &MPIDI_OFI_Allreduce_intra_recursive_doubling_cnt,
+    &MPIDI_OFI_Alltoall_intra_pairwise_sendrecv_replace_cnt,
+    &MPIDI_OFI_Alltoallv_intra_pairwise_sendrecv_replace_cnt,
+    &MPIDI_OFI_Alltoallw_intra_pairwise_sendrecv_replace_cnt,
+    &MPIDI_OFI_Barrier_intra_dissemination_cnt,
+    &MPIDI_OFI_Bcast_intra_binomial_cnt,
+    &MPIDI_OFI_Exscan_intra_recursive_doubling_cnt,
+    &MPIDI_OFI_Gather_intra_binomial_cnt,
+    &MPIDI_OFI_Gatherv_allcomm_linear_cnt,
+    &MPIDI_OFI_Reduce_scatter_intra_pairwise_cnt,
+    &MPIDI_OFI_Reduce_scatter_block_intra_pairwise_cnt,
+    &MPIDI_OFI_Reduce_intra_binomial_cnt,
+    &MPIDI_OFI_Scan_intra_recursive_doubling_cnt,
+    &MPIDI_OFI_Scatter_intra_binomial_cnt,
+    &MPIDI_OFI_Scatterv_allcomm_linear_cnt,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+};

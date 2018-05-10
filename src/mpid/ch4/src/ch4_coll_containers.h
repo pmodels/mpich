@@ -124,4 +124,8 @@ extern const MPIDI_coll_algo_container_t MPIDI_Exscan_intra_composition_alpha_cn
 extern const MPIDI_coll_algo_container_t MPIDI_Exscan_intra_composition_beta_cnt;
 #endif /* MPIDI_BUILD_CH4_SHM */
 
+/* Default CH4 level containers declaration */
+extern const MPIDI_coll_algo_container_t *MPIDI_Coll_intra_composition_default_cnt[];
+extern const MPIDI_coll_algo_container_t *MPIDI_Coll_inter_composition_default_cnt[];
+
 #endif /* CH4_COLL_CONTAINERS_H_INCLUDED */
