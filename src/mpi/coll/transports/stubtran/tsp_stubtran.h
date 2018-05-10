@@ -26,7 +26,7 @@
 #define MPIR_TSP_sched_malloc               MPII_Stubutil_sched_malloc
 #define MPIR_TSP_sched_start                MPII_Stubutil_sched_start
 
-int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched, int tag);
+int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched);
 int MPII_Stubutil_sched_isend(const void *buf, int count, MPI_Datatype dt, int dest, int tag,
                               MPIR_Comm * comm_ptr, MPII_Stubutil_sched_t * sched,
                               int n_invtcs, int *invtcs);

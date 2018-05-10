@@ -23,7 +23,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int count,
-                                      MPI_Datatype datatype, MPI_Op op, int root, int tag,
+                                      MPI_Datatype datatype, MPI_Op op, int root,
                                       MPIR_Comm * comm, int tree_type, int k, int maxbytes,
                                       MPIR_TSP_sched_t * sched)
 {
@@ -50,6 +50,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
     int *vtcs, *recv_id, *reduce_id;    /* Arrays to store graph vertex ids */
     int nvtcs;
     int buffer_per_child = MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD;
+    int tag;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_SCHED_INTRA_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_SCHED_INTRA_TREE);
@@ -143,6 +144,11 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
     vtcs = MPL_malloc(sizeof(int) * (num_children + 1), MPL_MEM_COLL);
     reduce_id = MPL_malloc(sizeof(int) * num_children, MPL_MEM_COLL);
     recv_id = MPL_malloc(sizeof(int) * num_children, MPL_MEM_COLL);
+
+    /* For correctness, transport based collectives need to get the
+     * tag from the same pool as schedule based collectives */
+    MPIDU_Sched_next_tag(comm, &tag);
+
 
     /* do pipelined reduce */
     /* NOTE: Make sure you are handling non-contiguous datatypes
@@ -260,17 +266,13 @@ int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IREDUCE_INTRA_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IREDUCE_INTRA_TREE);
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    MPIDU_Sched_next_tag(comm, &tag);
-
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_TSP_sched_create(sched, tag);
+    MPIR_TSP_sched_create(sched);
 
     /* schedule pipelined tree algo */
     mpi_errno =
-        MPIR_TSP_Ireduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op, root, tag, comm,
+        MPIR_TSP_Ireduce_sched_intra_tree(sendbuf, recvbuf, count, datatype, op, root, comm,
                                           tree_type, k, maxbytes, sched);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
