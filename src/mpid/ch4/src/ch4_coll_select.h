@@ -14,6 +14,7 @@
 #include "ch4_impl.h"
 #include "ch4r_proc.h"
 #include "ch4_coll_impl.h"
+#include "ch4_coll_select_utils.h"
 #include "ch4_coll_select_init.h"
 
 #include "../shm/include/shm.h"
@@ -41,28 +42,18 @@ MPIDI_coll_algo_container_t *MPIDI_Bcast_select(void *buffer,
                                                 int root,
                                                 MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    int nbytes = 0;
-    MPI_Aint type_size = 0;
+    MPIU_COLL_SELECTON_coll_signature_t coll_sig = {
+        .coll_id = MPIU_COLL_SELECTION_BCAST,
+        .comm = comm,
+        .coll.bcast = {
+                       .buffer = buffer,
+                       .count = count,
+                       .datatype = datatype,
+                       .root = root,
+                       .errflag = errflag}
+    };
 
-    MPIR_Datatype_get_size_macro(datatype, type_size);
-
-    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Bcast_inter_composition_alpha_cnt;
-    }
-
-    nbytes = MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE ? type_size * count : 0;
-    if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BCAST &&
-        nbytes <= MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE && MPIR_Comm_is_node_aware(comm)) {
-        if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
-            (comm->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
-            return &MPIDI_Bcast_intra_composition_alpha_cnt;
-        } else {
-            if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm->local_size, NULL)) {
-                return &MPIDI_Bcast_intra_composition_beta_cnt;
-            }
-        }
-    }
-    return &MPIDI_Bcast_intra_composition_gamma_cnt;
+    return MPIDI_coll_select(&coll_sig);
 }
 
 MPL_STATIC_INLINE_PREFIX const

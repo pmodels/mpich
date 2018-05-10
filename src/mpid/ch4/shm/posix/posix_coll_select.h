@@ -3,6 +3,7 @@
 
 #include "posix_impl.h"
 #include "ch4_impl.h"
+#include "posix_coll_select_utils.h"
 #include "coll_algo_params.h"
 
 MPL_STATIC_INLINE_PREFIX const
@@ -23,24 +24,18 @@ MPIDI_POSIX_coll_algo_container_t *MPIDI_POSIX_Bcast_select(void *buffer,
                                                             *ch4_algo_parameters_container_in
                                                             ATTRIBUTE((unused)))
 {
-    int nbytes = 0;
-    MPI_Aint type_size = 0;
+    MPIU_COLL_SELECTON_coll_signature_t coll_sig = {
+        .coll_id = MPIU_COLL_SELECTION_BCAST,
+        .comm = comm,
+        .coll.bcast = {
+                       .buffer = buffer,
+                       .count = count,
+                       .datatype = datatype,
+                       .root = root,
+                       .errflag = errflag}
+    };
 
-    MPIR_Datatype_get_size_macro(datatype, type_size);
-
-    nbytes = type_size * count;
-
-    if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) || (comm->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
-        return &MPIDI_POSIX_Bcast_intra_binomial_cnt;
-    } else {
-        if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm->local_size, NULL)) {
-            return &MPIDI_POSIX_Bcast_intra_scatter_recursive_doubling_allgather_cnt;
-        } else {
-            return &MPIDI_POSIX_Bcast_intra_scatter_ring_allgather_cnt;
-        }
-    }
-
-    return NULL;
+    return MPIDI_POSIX_coll_select(&coll_sig, ch4_algo_parameters_container_in);
 }
 
 MPL_STATIC_INLINE_PREFIX const
