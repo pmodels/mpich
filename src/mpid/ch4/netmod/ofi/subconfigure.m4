@@ -76,6 +76,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_rxd="no"
         enable_tcp="no"
         enable_shm="no"
+        enable_mlx="no"
     else
         enable_psm="yes"
         enable_psm2="yes"
@@ -89,6 +90,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_rxd="yes"
         enable_tcp="yes"
         enable_shm="yes"
+        enable_mlx="yes"
     fi
 
     for provider in $netmod_args ; do
@@ -140,6 +142,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 ;;
             "shm")
                 enable_shm="yes"
+                runtime_capabilities="yes"
+                ;;
+            "mlx")
+                enable_mlx="yes"
                 runtime_capabilities="yes"
                 ;;
             *)
@@ -199,6 +205,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
                 AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
                 enable_shm="yes"
                 ;;
+            "mlx")
+                AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+                enable_mlx="yes"
+                ;;
             *)
                 AC_MSG_WARN("Invalid provider $netmod_args")
         esac
@@ -222,6 +232,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             prov_config+=" --enable-rxd=${enable_rxd}"
             prov_config+=" --enable-tcp=${enable_tcp}"
             prov_config+=" --enable-shm=${enable_shm}"
+            prov_config+=" --enable-mlx=${enable_mlx}"
         fi
 
         if test "x${ofi_direct_provider}" != "x" ; then
