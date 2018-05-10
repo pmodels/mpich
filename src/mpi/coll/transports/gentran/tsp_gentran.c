@@ -26,11 +26,10 @@ UT_icd vtx_t_icd = {
 #define FUNCNAME MPII_Genutil_sched_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched, int tag)
+int MPII_Genutil_sched_create(MPII_Genutil_sched_t * sched)
 {
     sched->total_vtcs = 0;
     sched->completed_vtcs = 0;
-    sched->tag = tag;
 
     /* initialize array for storing vertices */
     utarray_new(sched->vtcs, &vtx_t_icd, MPL_MEM_COLL);
@@ -61,7 +60,6 @@ int MPII_Genutil_sched_isend(const void *buf,
 
     /* assign a new vertex */
     vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
-    sched->tag = tag;
     vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__ISEND;
     MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
 
@@ -70,6 +68,7 @@ int MPII_Genutil_sched_isend(const void *buf,
     vtxp->u.isend.count = count;
     vtxp->u.isend.dt = dt;
     vtxp->u.isend.dest = dest;
+    vtxp->u.isend.tag = tag;
     vtxp->u.isend.comm = comm_ptr;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
@@ -97,7 +96,6 @@ int MPII_Genutil_sched_irecv(void *buf,
     /* assign a new vertex */
     vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
 
-    sched->tag = tag;
     vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__IRECV;
     MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
 
@@ -106,6 +104,7 @@ int MPII_Genutil_sched_irecv(void *buf,
     vtxp->u.irecv.count = count;
     vtxp->u.irecv.dt = dt;
     vtxp->u.irecv.src = source;
+    vtxp->u.irecv.tag = tag;
     vtxp->u.irecv.comm = comm_ptr;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
@@ -133,7 +132,6 @@ int MPII_Genutil_sched_imcast(const void *buf,
 
     /* assign a new vertex */
     vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
-    sched->tag = tag;
     vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__IMCAST;
     MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
 
@@ -144,6 +142,7 @@ int MPII_Genutil_sched_imcast(const void *buf,
     vtxp->u.imcast.num_dests = num_dests;
     utarray_new(vtxp->u.imcast.dests, &ut_int_icd, MPL_MEM_COLL);
     utarray_concat(vtxp->u.imcast.dests, dests, MPL_MEM_COLL);
+    vtxp->u.imcast.tag = tag;
     vtxp->u.imcast.comm = comm_ptr;
     vtxp->u.imcast.req =
         (struct MPIR_Request **) MPL_malloc(sizeof(struct MPIR_Request *) * num_dests,

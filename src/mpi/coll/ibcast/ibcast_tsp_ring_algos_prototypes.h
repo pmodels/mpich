@@ -21,7 +21,6 @@
 #define MPIR_TSP_Ibcast_sched_intra_ring                MPIR_TSP_NAMESPACE(Ibcast_sched_intra_ring)
 
 int MPIR_TSP_Ibcast_sched_intra_ring(void *buffer, int count, MPI_Datatype datatype, int root,
-                                     int tag, MPIR_Comm * comm, int segsize,
-                                     MPIR_TSP_sched_t * sched);
+                                     MPIR_Comm * comm, int segsize, MPIR_TSP_sched_t * sched);
 int MPIR_TSP_Ibcast_intra_ring(void *buffer, int count, MPI_Datatype datatype, int root,
                                MPIR_Comm * comm, MPIR_Request ** req, int segsize);
