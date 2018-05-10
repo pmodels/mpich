@@ -41,25 +41,6 @@ typedef enum {
     MPIU_COLL_SELECTION_COLLECTIVES_NUMBER
 } MPIU_COLL_SELECTION_coll_id_t;
 
-enum {
-    MPIU_COLL_SELECTION_INTRA_COMM,
-    MPIU_COLL_SELECTION_INTER_COMM,
-    MPIU_COLL_SELECTION_COMM_KIND_NUM
-};
-
-enum {
-    MPIU_COLL_SELECTION_FLAT_COMM,
-    MPIU_COLL_SELECTION_TOPO_COMM,
-    MPIU_COLL_SELECTION_COMM_HIERARCHY_NUM
-};
-
-enum {
-    MPIU_COLL_SELECTION_COMPOSITION,
-    MPIU_COLL_SELECTION_NET,
-    MPIU_COLL_SELECTION_SHM,
-    MPIU_COLL_SELECTION_STORAGE_NUM
-};
-
 typedef enum {
     MPIU_COLL_SELECTION_INTRA_COMM,
     MPIU_COLL_SELECTION_INTER_COMM,
@@ -109,5 +90,31 @@ MPIU_COLL_SELECTION_create_leaf(MPIU_COLL_SELECTION_storage_handler parent,
                                 int node_type, int containers_count, void *containers);
 
 void *MPIU_COLL_SELECTION_get_container(MPIU_COLL_SELECTION_storage_handler node);
+
+extern MPIU_COLL_SELECTION_storage_handler MPIU_COLL_SELECTION_tree_load(char *filename);
+
+extern int MPIU_COLL_SELECTION_init(void);
+
+extern int MPIU_COLL_SELECTION_dump(void);
+
+void
+MPIU_COLL_SELECTION_build_bin_tree_generic_part(MPIU_COLL_SELECTION_storage_handler *
+                                                root,
+                                                MPIU_COLL_SELECTION_storage_handler *
+                                                inter_comm_subtree,
+                                                MPIU_COLL_SELECTION_storage_handler *
+                                                topo_aware_comm_subtree,
+                                                MPIU_COLL_SELECTION_storage_handler *
+                                                flat_comm_subtree);
+
+void MPIU_COLL_SELECTION_build_bin_tree_default_inter(MPIU_COLL_SELECTION_storage_handler
+                                                      inter_comm_subtree);
+
+void
+MPIU_COLL_SELECTION_build_bin_tree_default_topo_aware(MPIU_COLL_SELECTION_storage_handler
+                                                      topo_aware_comm_subtree);
+
+void MPIU_COLL_SELECTION_build_bin_tree_default_flat(MPIU_COLL_SELECTION_storage_handler
+                                                     flat_comm_subtree);
 
 #endif /* MPIU_COLL_SELECTION_TREE_TYPES_H_INCLUDED */

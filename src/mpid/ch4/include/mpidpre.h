@@ -23,6 +23,8 @@
 #include "shmpre.h"
 #include "uthash.h"
 #include "ch4_coll_params.h"
+#include "coll_algo_params.h"
+#include "coll_selection_tree_types.h"
 
 typedef struct {
     union {

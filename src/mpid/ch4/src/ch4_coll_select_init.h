@@ -1,6 +1,8 @@
 #ifndef CH4_COLL_SELECT_INIT_H_INCLUDED
 #define CH4_COLL_SELECT_INIT_H_INCLUDED
 
+#include "coll_selection_tree_from_cvars.h"
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH4_mpi_comm_collective_selection_init
 #undef FCNAME
