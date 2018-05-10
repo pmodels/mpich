@@ -30,6 +30,7 @@ struct MPIU_COLL_SELECTION_tree_node;
 #define MPIU_COLL_SELECTION_NULL_ENTRY ((MPIU_COLL_SELECTION_storage_handler)-1)
 #define MPIU_COLL_SELECTION_STORAGE_SIZE (1024*1024)
 #define MPIU_COLL_SELECTION_COMPOSITION (0)
+#define MPIU_COLL_SELECTION_NAME_LENGTH  (256)
 
 /* *INDENT-OFF* */
 #define MPIU_COLL_SELECTION_level_match_condition(root_entry_, match_entry_, match_condition_) \
@@ -102,5 +103,9 @@ typedef MPIU_COLL_SELECTION_storage_handler(*MPIU_COLL_SELECTION_create_coll_tre
 
 extern MPIU_COLL_SELECTION_create_coll_tree_cb coll_topo_aware_compositions[];
 extern MPIU_COLL_SELECTION_create_coll_tree_cb coll_flat_compositions[];
+
+extern char *MPIU_COLL_SELECTION_coll_names[];
+extern char *MPIU_COLL_SELECTION_comm_kind_names[];
+extern char *MPIU_COLL_SELECTION_comm_hierarchy_names[];
 
 #endif /* MPIU_COLL_SELECTION_PRE_TYPES_H_INCLUDED */

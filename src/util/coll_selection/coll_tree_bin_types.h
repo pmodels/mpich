@@ -311,4 +311,10 @@ int
 MPIU_COLL_SELECTION_get_match_pattern_key(MPIU_COLL_SELECTION_match_pattern_t *
                                           match_pattern,
                                           MPIU_COLL_SELECTION_node_type_t layer_type);
+#if defined (MPL_USE_DBG_LOGGING)
+void
+MPIU_COLL_SELECTION_match_layer_and_key_to_str(char *layer, char *key_str,
+                                               MPIU_COLL_SELECTION_storage_handler match_node);
+#endif /* MPL_USE_DBG_LOGGING */
+
 #endif /* MPIU_COLL_SELECTION_TREE_TYPES_H_INCLUDED */

@@ -43,6 +43,53 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+char *MPIU_COLL_SELECTION_coll_names[] = {
+    "ALLGATHER",
+    "ALLGATHERV",
+    "ALLREDUCE",
+    "ALLTOALL",
+    "ALLTOALLV",
+    "ALLTOALLW",
+    "BARRIER",
+    "BCAST",
+    "EXSCAN",
+    "GATHER",
+    "GATHERV",
+    "REDUCE_SCATTER",
+    "REDUCE",
+    "SCAN",
+    "SCATTER",
+    "SCATTERV",
+    "REDUCE_SCATTER_BLOCK",
+    "IALLGATHER",
+    "IALLGATHERV",
+    "IALLREDUCE",
+    "IALLTOALL",
+    "IALLTOALLV",
+    "IALLTOALLW",
+    "IBARRIER",
+    "IBCAST",
+    "IEXSCAN",
+    "IGATHER",
+    "IGATHERV",
+    "IREDUCE_SCATTER",
+    "IREDUCE",
+    "ISCAN",
+    "ISCATTER",
+    "ISCATTERV",
+    "IREDUCE_SCATTER_BLOCK"
+};
+
+char *MPIU_COLL_SELECTION_comm_kind_names[] = {
+    "INTRA_COMM",
+    "INTER_COMM"
+};
+
+char *MPIU_COLL_SELECTION_comm_hierarchy_names[] = {
+    "FLAT_COMM",
+    "TOPO_COMM"
+};
+
 /* *INDENT-OFF* */
 
 MPIU_COLL_SELECTION_create_coll_tree_cb
@@ -565,6 +612,54 @@ void MPIU_COLL_SELECTION_init_coll_match_pattern(MPIU_COLL_SELECTON_coll_signatu
     }
 }
 
+#if defined (MPL_USE_DBG_LOGGING)
+void MPIU_COLL_SELECTION_match_layer_and_key_to_str(char *layer_str, char *key_str,
+                                                    MPIU_COLL_SELECTION_storage_handler match_node)
+{
+    switch (MPIU_COLL_SELECTION_NODE_FIELD(match_node, type)) {
+        case MPIU_COLL_SELECTION_COMM_KIND:
+            sprintf(layer_str, "%s", "COMM_KIND");
+            MPIR_Assert(sizeof(MPIU_COLL_SELECTION_comm_kind_names) /
+                        sizeof(MPIU_COLL_SELECTION_comm_kind_names[0]) >
+                        MPIU_COLL_SELECTION_NODE_FIELD(match_node, key));
+            sprintf(key_str, "%s",
+                    MPIU_COLL_SELECTION_comm_kind_names[MPIU_COLL_SELECTION_NODE_FIELD
+                                                        (match_node, key)]);
+            break;
+        case MPIU_COLL_SELECTION_COMM_HIERARCHY:
+            sprintf(layer_str, "%s", "COMM_HIERARCHY");
+            MPIR_Assert(sizeof(MPIU_COLL_SELECTION_comm_hierarchy_names) /
+                        sizeof(MPIU_COLL_SELECTION_comm_hierarchy_names[0]) >
+                        MPIU_COLL_SELECTION_NODE_FIELD(match_node, key));
+            sprintf(key_str, "%s",
+                    MPIU_COLL_SELECTION_comm_hierarchy_names[MPIU_COLL_SELECTION_NODE_FIELD
+                                                             (match_node, key)]);
+            break;
+        case MPIU_COLL_SELECTION_COLLECTIVE:
+            sprintf(layer_str, "%s", "COLLECTIVE");
+            MPIR_Assert(sizeof(MPIU_COLL_SELECTION_coll_names) /
+                        sizeof(MPIU_COLL_SELECTION_coll_names[0]) >
+                        MPIU_COLL_SELECTION_NODE_FIELD(match_node, key));
+            sprintf(key_str,
+                    MPIU_COLL_SELECTION_coll_names[MPIU_COLL_SELECTION_NODE_FIELD
+                                                   (match_node, key)]);
+            break;
+        case MPIU_COLL_SELECTION_COMMSIZE:
+            sprintf(layer_str, "%s", "COMMSIZE");
+            sprintf(key_str, "%d", MPIU_COLL_SELECTION_NODE_FIELD(match_node, key));
+            break;
+        case MPIU_COLL_SELECTION_MSGSIZE:
+            sprintf(layer_str, "%s", "MSGSIZE");
+            sprintf(key_str, "%d", MPIU_COLL_SELECTION_NODE_FIELD(match_node, key));
+            break;
+        default:
+            sprintf(layer_str, "%s", "UNKNOWN");
+            sprintf(key_str, "%d", MPIU_COLL_SELECTION_NODE_FIELD(match_node, key));
+            break;
+    }
+}
+
+#endif /* MPL_USE_DBG_LOGGING */
 
 MPIU_COLL_SELECTION_storage_handler
 MPIU_COLL_SELECTION_find_entry(MPIU_COLL_SELECTION_storage_handler root_node,
