@@ -12,6 +12,17 @@
 #ifndef ALGO_COMMON_H_INCLUDED
 #define ALGO_COMMON_H_INCLUDED
 
+/* This is a simple function to compare two integers.
+ * It is used for sorting list of ranks. */
+#undef FUNCNAME
+#define FUNCNAME MPII_Algo_compare_int
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static int MPII_Algo_compare_int(const void *a, const void *b)
+{
+    return (*(int *) a - *(int *) b);
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPII_Algo_calculate_pipeline_chunk_info
 #undef FCNAME
