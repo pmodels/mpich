@@ -50,7 +50,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
-        MPID_Progress_test();
+
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POP(mpi_errno);
+        }
     }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROBE);
@@ -115,7 +119,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
-        MPID_Progress_test();
+
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POP(mpi_errno);
+        }
     }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_MPROBE);
@@ -176,8 +184,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-    if (!*flag)
-        MPID_Progress_test();
+
+    if (!*flag) {
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POP(mpi_errno);
+        }
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IMPROBE);
@@ -224,8 +237,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-    if (!*flag)
-        MPID_Progress_test();
+
+    if (!*flag) {
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POP(mpi_errno);
+        }
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IPROBE);

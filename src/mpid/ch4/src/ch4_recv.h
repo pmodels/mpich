@@ -209,7 +209,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
         MPIR_ERR_POP(mpi_errno);
     }
     while (!MPIR_Request_is_complete(rreq)) {
-        MPID_Progress_test();
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
     }
 
     /* This should probably be moved to MPICH (above device) level */
