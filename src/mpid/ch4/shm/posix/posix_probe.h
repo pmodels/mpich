@@ -84,13 +84,18 @@ static inline int MPIDI_POSIX_mpi_improbe(int source,
         MPIR_STATUS_SET_COUNT(*status, count);
     } else {
         *flag = 0;
-        MPID_Progress_test();
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno) {
+            MPIR_ERR_POP(mpi_errno);
+        }
     }
 
   fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_IMPROBE);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 static inline int MPIDI_POSIX_mpi_iprobe(int source,
@@ -131,7 +136,10 @@ static inline int MPIDI_POSIX_mpi_iprobe(int source,
     } else {
         *flag = 0;
         MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
-        MPID_Progress_test();
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno) {
+            MPIR_ERR_POP(mpi_errno);
+        }
         MPID_THREAD_CS_ENTER(POBJ, MPIDI_POSIX_SHM_MUTEX);
     }
 
@@ -139,6 +147,8 @@ static inline int MPIDI_POSIX_mpi_iprobe(int source,
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_IPROBE);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #endif /* POSIX_PROBE_H_INCLUDED */
