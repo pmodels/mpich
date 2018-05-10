@@ -21,7 +21,7 @@
 #define MPIR_TSP_Ireduce_sched_intra_tree                MPIR_TSP_NAMESPACE(Ireduce_sched_intra_tree)
 
 int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int count,
-                                      MPI_Datatype datatype, MPI_Op op, int root, int tag,
+                                      MPI_Datatype datatype, MPI_Op op, int root,
                                       MPIR_Comm * comm, int tree_type, int k, int segsize,
                                       MPIR_TSP_sched_t * sched);
 int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,

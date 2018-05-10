@@ -63,12 +63,12 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                                vtxp->u.isend.count,
                                vtxp->u.isend.dt,
                                vtxp->u.isend.dest,
-                               sched->tag, vtxp->u.isend.comm, &vtxp->u.isend.req, &errflag);
+                               vtxp->u.isend.tag, vtxp->u.isend.comm, &vtxp->u.isend.req, &errflag);
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
                                      "  --> GENTRAN transport (isend) issued, tag = %d\n",
-                                     sched->tag));
+                                     vtxp->u.isend.tag));
                     vtx_record_issue(sched, vtxp);
                 }
                 break;
@@ -77,7 +77,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                     MPIC_Irecv(vtxp->u.irecv.buf,
                                vtxp->u.irecv.count,
                                vtxp->u.irecv.dt,
-                               vtxp->u.irecv.src, sched->tag, vtxp->u.irecv.comm,
+                               vtxp->u.irecv.src, vtxp->u.irecv.tag, vtxp->u.irecv.comm,
                                &vtxp->u.irecv.req);
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
@@ -94,13 +94,13 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                                    vtxp->u.imcast.count,
                                    vtxp->u.imcast.dt,
                                    *(int *) utarray_eltptr(vtxp->u.imcast.dests, i),
-                                   sched->tag, vtxp->u.imcast.comm, &vtxp->u.imcast.req[i],
+                                   vtxp->u.imcast.tag, vtxp->u.imcast.comm, &vtxp->u.imcast.req[i],
                                    &errflag);
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
                                      "  --> GENTRAN transport (imcast) issued, tag = %d\n",
-                                     sched->tag));
+                                     vtxp->u.imcast.tag));
                     vtx_record_issue(sched, vtxp);
                 }
                 break;
