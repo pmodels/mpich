@@ -8,6 +8,7 @@
 #include "simple2pmi.h"
 #include "simple_pmiutil.h"
 #include "pmi2.h"
+#include "mpl.h"
 
 
 #include <stdio.h>
@@ -57,9 +58,9 @@ static int PMI2_debug_init = 0; /* Set this to true to debug the init */
 int PMI2_pmiverbose = 0;        /* Set this to true to print PMI debugging info */
 
 #ifdef MPICH_IS_THREADED
-static MPID_Thread_mutex_t mutex;
+static MPL_thread_mutex_t mutex;
 static int blocked = FALSE;
-static MPID_Thread_cond_t cond;
+static MPL_thread_cond_t cond;
 #endif
 
 /* XXX DJG the "const"s on both of these functions and the Keyvalpair
@@ -199,9 +200,9 @@ int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     char *pmiid;
     int ret;
 
-    MPID_Thread_mutex_create(&mutex, &ret);
+    MPL_thread_mutex_create(&mutex, &ret);
     PMI2U_Assert(!ret);
-    MPID_Thread_cond_create(&cond, &ret);
+    MPL_thread_cond_create(&cond, &ret);
     PMI2U_Assert(!ret);
 
     /* FIXME: Why is setvbuf commented out? */
@@ -1324,18 +1325,18 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
 #ifdef MPICH_IS_THREADED
     MPIR_THREAD_CHECK_BEGIN;
     {
-        MPID_Thread_mutex_lock(&mutex, &err);
+        MPL_thread_mutex_lock(&mutex, &err);
 
         while (blocked && !cmd->complete)
-            MPID_Thread_cond_wait(&cond, &mutex);
+            MPL_thread_cond_wait(&cond, &mutex, &err);
 
         if (cmd->complete) {
-            MPID_Thread_mutex_unlock(&mutex, &err);
+            MPL_thread_mutex_unlock(&mutex, &err);
             goto fn_exit;
         }
 
         blocked = TRUE;
-        MPID_Thread_mutex_unlock(&mutex, &err);
+        MPL_thread_mutex_unlock(&mutex, &err);
     }
     MPIR_THREAD_CHECK_END;
 #endif
@@ -1467,10 +1468,10 @@ int PMIi_ReadCommand(int fd, PMI2_Command * cmd)
 #ifdef MPICH_IS_THREADED
     MPIR_THREAD_CHECK_BEGIN;
     {
-        MPID_Thread_mutex_lock(&mutex, &err);
+        MPL_thread_mutex_lock(&mutex, &err);
         blocked = FALSE;
-        MPID_Thread_cond_broadcast(&cond, &err);
-        MPID_Thread_mutex_unlock(&mutex, &err);
+        MPL_thread_cond_broadcast(&cond, &err);
+        MPL_thread_mutex_unlock(&mutex, &err);
     }
     MPIR_THREAD_CHECK_END;
 #endif
@@ -1604,13 +1605,13 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
 #ifdef MPICH_IS_THREADED
     MPIR_THREAD_CHECK_BEGIN;
     {
-        MPID_Thread_mutex_lock(&mutex, &err);
+        MPL_thread_mutex_lock(&mutex, &err);
 
         while (blocked)
-            MPID_Thread_cond_wait(&cond, &mutex, &err);
+            MPL_thread_cond_wait(&cond, &mutex, &err);
 
         blocked = TRUE;
-        MPID_Thread_mutex_unlock(&mutex, &err);
+        MPL_thread_mutex_unlock(&mutex, &err);
     }
     MPIR_THREAD_CHECK_END;
 #endif
@@ -1632,10 +1633,10 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
 #ifdef MPICH_IS_THREADED
     MPIR_THREAD_CHECK_BEGIN;
     {
-        MPID_Thread_mutex_lock(&mutex, &err);
+        MPL_thread_mutex_lock(&mutex, &err);
         blocked = FALSE;
-        MPID_Thread_cond_broadcast(&cond, &err);
-        MPID_Thread_mutex_unlock(&mutex, &err);
+        MPL_thread_cond_broadcast(&cond, &err);
+        MPL_thread_mutex_unlock(&mutex, &err);
     }
     MPIR_THREAD_CHECK_END;
 #endif
