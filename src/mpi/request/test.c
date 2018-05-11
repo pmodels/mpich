@@ -135,6 +135,7 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TEST);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -178,6 +179,10 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
 
     /* ... body of routine ...  */
 
+    /* MPIR_Test may free request_ptr, so make a copy of comm_ptr before calling MPIR_Test.
+     * comm_ptr will be used later at fn_fail when MPIR_Test returns an error. */
+    if (request_ptr)
+        comm_ptr = request_ptr->comm;
     mpi_errno = MPIR_Test(request, flag, status);
     if (mpi_errno)
         goto fn_fail;
@@ -198,7 +203,7 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
                                  "**mpi_test", "**mpi_test %p %p %p", request, flag, status);
     }
 #endif
-    mpi_errno = MPIR_Err_return_comm(request_ptr ? request_ptr->comm : NULL, FCNAME, mpi_errno);
+    mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
