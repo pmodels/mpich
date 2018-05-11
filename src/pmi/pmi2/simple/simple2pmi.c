@@ -537,7 +537,7 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
     if (jobId && jobIdSize) {
         found = getval(resp_cmd.pairs, resp_cmd.nPairs, JOBID_KEY, &jid, &jidlen);
         PMI2U_ERR_CHKANDJUMP(found != 1, pmi2_errno, PMI2_ERR_OTHER, "**intern");
-        PMI2U_Strncpy(jobId, jid, jobIdSize);
+        MPL_strncpy(jobId, jid, jobIdSize);
     }
 
     if (PMI2U_getval("errcodes", tempbuf, PMI2U_MAXLINE)) {
@@ -591,7 +591,7 @@ int PMI2_Job_GetId(char jobid[], int jobid_size)
     found = getval(cmd.pairs, cmd.nPairs, JOBID_KEY, &jid, &jidlen);
     PMI2U_ERR_CHKANDJUMP(found != 1, pmi2_errno, PMI2_ERR_OTHER, "**intern");
 
-    PMI2U_Strncpy(jobid, jid, jobid_size);
+    MPL_strncpy(jobid, jid, jobid_size);
 
   fn_exit:
     PMI2U_Free(cmd.command);
@@ -750,7 +750,7 @@ int PMI2_KVS_Get(const char *jobid, int src_pmi_id, const char key[], char value
     found = getval(cmd.pairs, cmd.nPairs, VALUE_KEY, &kvsvalue, &kvsvallen);
     PMI2U_ERR_CHKANDJUMP(found != 1, pmi2_errno, PMI2_ERR_OTHER, "**intern");
 
-    ret = PMI2U_Strncpy(value, kvsvalue, maxValue);
+    ret = MPL_strncpy(value, kvsvalue, maxValue);
     *valLen = ret ? -kvsvallen : kvsvallen;
 
 
@@ -794,7 +794,7 @@ int PMI2_Info_GetNodeAttr(const char name[], char value[], int valuelen, int *fl
         found = getval(cmd.pairs, cmd.nPairs, VALUE_KEY, &kvsvalue, &kvsvallen);
         PMI2U_ERR_CHKANDJUMP(found != 1, pmi2_errno, PMI2_ERR_OTHER, "**intern");
 
-        PMI2U_Strncpy(value, kvsvalue, valuelen);
+        MPL_strncpy(value, kvsvalue, valuelen);
     }
 
   fn_exit:
@@ -920,7 +920,7 @@ int PMI2_Info_GetJobAttr(const char name[], char value[], int valuelen, int *fla
         found = getval(cmd.pairs, cmd.nPairs, VALUE_KEY, &kvsvalue, &kvsvallen);
         PMI2U_ERR_CHKANDJUMP(found != 1, pmi2_errno, PMI2_ERR_OTHER, "**intern");
 
-        PMI2U_Strncpy(value, kvsvalue, valuelen);
+        MPL_strncpy(value, kvsvalue, valuelen);
     }
 
   fn_exit:
@@ -1042,7 +1042,7 @@ int PMI2_Nameserv_lookup(const char service_name[], const PMI2U_Info * info_ptr,
     found = getval(cmd.pairs, cmd.nPairs, VALUE_KEY, &found_port, &plen);
     PMI2U_ERR_CHKANDJUMP1(!found, pmi2_errno, PMI2_ERR_OTHER, "**pmi2_nameservlookup",
                           "**pmi2_nameservlookup %s", "not found");
-    PMI2U_Strncpy(port, found_port, portLen);
+    MPL_strncpy(port, found_port, portLen);
 
   fn_exit:
     PMI2U_Free(cmd.command);
@@ -1281,7 +1281,7 @@ static int create_keyval(PMI2_Keyvalpair ** kv, const char *key, const char *val
     PMI2U_CHKPMEM_MALLOC(*kv, PMI2_Keyvalpair *, sizeof(PMI2_Keyvalpair), pmi2_errno, "pair");
 
     PMI2U_CHKPMEM_MALLOC(key_p, char *, strlen(key) + 1, pmi2_errno, "key");
-    PMI2U_Strncpy(key_p, key, PMI2_MAX_KEYLEN + 1);
+    MPL_strncpy(key_p, key, PMI2_MAX_KEYLEN + 1);
 
     PMI2U_CHKPMEM_MALLOC(value_p, char *, vallen + 1, pmi2_errno, "value");
     PMI2U_Memcpy(value_p, val, vallen);
