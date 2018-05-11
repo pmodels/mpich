@@ -280,7 +280,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-static inline int MPIDI_OFI_choose_provider(struct fi_info *prov, struct fi_info **prov_use);
+static inline void MPIDI_OFI_dump_providers(struct fi_info *prov);
 static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                                             struct fid_domain *domain,
                                             struct fid_cq *p2p_cq,
@@ -289,15 +289,6 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
 static inline int MPIDI_OFI_application_hints(int rank);
 static inline int MPIDI_OFI_init_global_settings(const char *prov_name);
 static inline int MPIDI_OFI_init_hints(struct fi_info *hints);
-
-#define MPIDI_OFI_CHOOSE_PROVIDER(prov, prov_use,errstr)                          \
-    do {                                                                \
-        struct fi_info *p = prov;                                               \
-        MPIR_ERR_CHKANDJUMP4(p==NULL, mpi_errno,MPI_ERR_OTHER,"**ofid_addrinfo", \
-                             "**ofid_addrinfo %s %d %s %s",__SHORT_FILE__, \
-                             __LINE__,FCNAME, errstr);                  \
-        MPIDI_OFI_choose_provider(prov,prov_use);                           \
-    } while (0);
 
 static inline int MPIDI_OFI_set_eagain(MPIR_Comm * comm_ptr, MPIR_Info * info, void *state)
 {
@@ -516,7 +507,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, NULL, &prov), addrinfo);
         prov_first = prov;
         while (NULL != prov) {
-            MPIDI_OFI_CHOOSE_PROVIDER(prov, &prov_use, "No suitable provider provider found");
+            prov_use = prov;
 
             /* If we picked the provider already, make sure we grab the right provider */
             if ((NULL != provname) && (0 != strcmp(provname, prov_use->fabric_attr->prov_name))) {
@@ -612,7 +603,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             MPIDI_OFI_init_global_settings(prov_first->fabric_attr->prov_name);
             MPIDI_OFI_init_hints(hints);
             MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, hints, &prov), addrinfo);
-            MPIDI_OFI_CHOOSE_PROVIDER(prov, &prov_use, "No suitable provider found");
+            MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_addrinfo");
+            prov_use = prov;
 
             if (prov_use) {
                 /* If the provider passed the above tests, then run the selection
@@ -629,13 +621,17 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                 fi_freeinfo(prov);
         }
 
-        MPIR_Assert(prov);
+        /* If we did not find a provider, return an error */
+        MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_addrinfo");
 
         fi_freeinfo(prov_first);
     }
 
     MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, hints, &prov), addrinfo);
-    MPIDI_OFI_CHOOSE_PROVIDER(prov, &prov_use, "No suitable provider provider found");
+    MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_addrinfo");
+    prov_use = prov;
+    if (MPIR_CVAR_OFI_DUMP_PROVIDERS)
+        MPIDI_OFI_dump_providers(prov);
 
     *tag_ub = (1ULL << MPIDI_OFI_TAG_BITS) - 1;
 
@@ -1404,22 +1400,13 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
     goto fn_exit;
 }
 
-static inline int MPIDI_OFI_choose_provider(struct fi_info *prov, struct fi_info **prov_use)
+static inline void MPIDI_OFI_dump_providers(struct fi_info *prov)
 {
-    struct fi_info *p = prov;
-    int i = 0;
-    *prov_use = prov;
-
-    if (MPIR_CVAR_OFI_DUMP_PROVIDERS) {
-        fprintf(stdout, "Dumping Providers(first=%p):\n", prov);
-
-        while (p) {
-            fprintf(stdout, "%s", fi_tostr(p, FI_TYPE_INFO));
-            p = p->next;
-        }
+    fprintf(stdout, "Dumping Providers(first=%p):\n", prov);
+    while (prov) {
+        fprintf(stdout, "%s", fi_tostr(prov, FI_TYPE_INFO));
+        prov = prov->next;
     }
-
-    return i;
 }
 
 static inline int MPIDI_OFI_application_hints(int rank)
