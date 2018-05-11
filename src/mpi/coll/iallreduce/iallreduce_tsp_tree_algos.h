@@ -61,7 +61,7 @@ int MPIR_TSP_Iallreduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int
 
 
     /* calculate chunking information for pipelining */
-    MPII_Algo_calculate_pipeline_chunk_info(maxbytes, type_size, count, &num_chunks,
+    MPIR_Algo_calculate_pipeline_chunk_info(maxbytes, type_size, count, &num_chunks,
                                             &chunk_size_floor, &chunk_size_ceil);
     /* print chunking information */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST,
