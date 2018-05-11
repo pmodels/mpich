@@ -71,6 +71,10 @@ typedef union {
     MPIDI_POSIX_EXSCAN_PARAMS_DECL;
 } MPIDI_SHM_Exscan_params_t;
 
+typedef union {
+    MPIDI_POSIX_IBCAST_PARAMS_DECL;
+} MPIDI_SHM_Ibcast_params_t;
+
 #define MPIDI_SHM_BARRIER_PARAMS_DECL MPIDI_SHM_Barrier_params_t shm_barrier_params;
 #define MPIDI_SHM_BCAST_PARAMS_DECL MPIDI_SHM_Bcast_params_t shm_bcast_params;
 #define MPIDI_SHM_REDUCE_PARAMS_DECL MPIDI_SHM_Reduce_params_t shm_reduce_params;
@@ -88,6 +92,7 @@ typedef union {
 #define MPIDI_SHM_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDI_SHM_Reduce_scatter_block_params_t shm_reduce_scatter_block_params;
 #define MPIDI_SHM_SCAN_PARAMS_DECL MPIDI_SHM_Scan_params_t shm_scan_params;
 #define MPIDI_SHM_EXSCAN_PARAMS_DECL MPIDI_SHM_Exscan_params_t shm_exscan_params;
+#define MPIDI_SHM_IBCAST_PARAMS_DECL MPIDI_SHM_Ibcast_params_t shm_ibcast_params;
 
 typedef union {
     MPIDI_SHM_BARRIER_PARAMS_DECL;
@@ -107,6 +112,7 @@ typedef union {
     MPIDI_SHM_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
     MPIDI_SHM_SCAN_PARAMS_DECL;
     MPIDI_SHM_EXSCAN_PARAMS_DECL;
+    MPIDI_SHM_IBCAST_PARAMS_DECL;
 } MPIDI_SHM_coll_params_t;
 
 typedef struct MPIDI_SHM_coll_algo_container {

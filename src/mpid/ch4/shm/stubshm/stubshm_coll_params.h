@@ -211,6 +211,21 @@ typedef union {
     } stubshm_exscan_empty_parameters;
 } MPIDI_STUBSHM_Exscan_params_t;
 
+typedef enum {
+    MPIDI_STUBSHM_Ibcast_intra_nbc_binomial_id,
+    MPIDI_STUBSHM_Ibcast_intra_nbc_scatter_recursive_doubling_allgather_id,
+    MPIDI_STUBSHM_Ibcast_intra_nbc_scatter_ring_allgather_id,
+    MPIDI_STUBSHM_Ibcast_intra_tree_knomial_id,
+    MPIDI_STUBSHM_Ibcast_intra_tree_kary_id,
+} MPIDI_STUBSHM_Ibcast_id_t;
+
+typedef union {
+    /* reserved for parameters related to SHM specific collectives */
+    struct MPIDI_STUBSHM_Ibcast_empty_parameters {
+        int empty;
+    } stubshm_ibcast_empty_parameters;
+} MPIDI_STUBSHM_Ibcast_params_t;
+
 #define MPIDI_STUBSHM_BARRIER_PARAMS_DECL MPIDI_STUBSHM_Barrier_params_t stubshm_barrier_params;
 #define MPIDI_STUBSHM_BCAST_PARAMS_DECL MPIDI_STUBSHM_Bcast_params_t stubshm_bcast_params;
 #define MPIDI_STUBSHM_REDUCE_PARAMS_DECL MPIDI_STUBSHM_Reduce_params_t stubshm_reduce_params;
@@ -228,6 +243,7 @@ typedef union {
 #define MPIDI_STUBSHM_REDUCE_SCATTER_BLOCK_PARAMS_DECL MPIDI_STUBSHM_Reduce_scatter_block_params_t stubshm_reduce_scatter_block_params;
 #define MPIDI_STUBSHM_SCAN_PARAMS_DECL MPIDI_STUBSHM_Scan_params_t stubshm_scan_params;
 #define MPIDI_STUBSHM_EXSCAN_PARAMS_DECL MPIDI_STUBSHM_Exscan_params_t stubshm_exscan_params;
+#define MPIDI_STUBSHM_IBCAST_PARAMS_DECL MPIDI_STUBSHM_Ibcast_params_t stubshm_ibcast_params;
 
 typedef union {
     MPIDI_STUBSHM_BARRIER_PARAMS_DECL;
@@ -247,6 +263,7 @@ typedef union {
     MPIDI_STUBSHM_REDUCE_SCATTER_BLOCK_PARAMS_DECL;
     MPIDI_STUBSHM_SCAN_PARAMS_DECL;
     MPIDI_STUBSHM_EXSCAN_PARAMS_DECL;
+    MPIDI_STUBSHM_IBCAST_PARAMS_DECL;
 } MPIDI_STUBSHM_coll_params_t;
 
 typedef struct MPIDI_STUBSHM_coll_algo_container {

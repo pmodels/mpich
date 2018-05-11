@@ -167,3 +167,26 @@ const MPIDI_STUBSHM_coll_algo_container_t MPIDI_STUBSHM_Scan_intra_recursive_dou
 const MPIDI_STUBSHM_coll_algo_container_t MPIDI_STUBSHM_Exscan_intra_recursive_doubling_cnt = {
     .id = MPIDI_STUBSHM_Exscan_intra_recursive_doubling_id
 };
+
+/* Ibcast default STUBSHM containers initialization*/
+const MPIDI_STUBSHM_coll_algo_container_t MPIDI_STUBSHM_Ibcast_intra_nbc_binomial_cnt = {
+    .id = MPIDI_STUBSHM_Ibcast_intra_nbc_binomial_id
+};
+
+const MPIDI_STUBSHM_coll_algo_container_t
+    MPIDI_STUBSHM_Ibcast_intra_nbc_scatter_recursive_doubling_allgather_cnt = {
+    .id = MPIDI_STUBSHM_Ibcast_intra_nbc_scatter_recursive_doubling_allgather_id
+};
+
+const MPIDI_STUBSHM_coll_algo_container_t MPIDI_STUBSHM_Ibcast_intra_nbc_scatter_ring_allgather_cnt
+    = {
+    .id = MPIDI_STUBSHM_Ibcast_intra_nbc_scatter_ring_allgather_id
+};
+
+const MPIDI_STUBSHM_coll_algo_container_t MPIDI_STUBSHM_Ibcast_intra_tree_knomial_cnt = {
+    .id = MPIDI_STUBSHM_Ibcast_intra_tree_knomial_id
+};
+
+const MPIDI_STUBSHM_coll_algo_container_t MPIDI_STUBSHM_Ibcast_intra_tree_kary_cnt = {
+    .id = MPIDI_STUBSHM_Ibcast_intra_tree_kary_id
+};

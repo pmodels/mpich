@@ -81,4 +81,13 @@ extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Scan_intra_recursive_
 /* Exscan POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Exscan_intra_recursive_doubling_cnt;
 
+/* Ibcast POSIX containers declaration */
+extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Ibcast_intra_nbc_binomial_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t
+    MPIDI_POSIX_Ibcast_intra_nbc_scatter_recursive_doubling_allgather_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t
+    MPIDI_POSIX_Ibcast_intra_nbc_scatter_ring_allgather_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Ibcast_intra_tree_knomial_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Ibcast_intra_tree_kary_cnt;
+
 #endif /* POSIX_COLL_CONTAINERS_H_INCLUDED */

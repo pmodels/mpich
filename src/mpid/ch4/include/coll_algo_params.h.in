@@ -150,6 +150,7 @@ typedef union MPIDIG_Ibcast_algo_params {
     /* *INDENT-OFF* */
     MPIDI_IBCAST_PARAMS_DECL;
     @ch4_netmod_ibcast_params_decl@
+    MPIDI_SHM_IBCAST_PARAMS_DECL;
     /* *INDENT-ON* */
 } MPIDIG_IBCAST_ALGO_params_t;
 
