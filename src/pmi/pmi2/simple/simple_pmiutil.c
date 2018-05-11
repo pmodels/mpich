@@ -29,7 +29,7 @@
 #endif
 #include <errno.h>
 
-#include "pmi.h"
+#include "pmi2.h"
 #include "simple_pmiutil.h"
 
 #define MAXVALLEN 1024
@@ -192,12 +192,12 @@ int PMI2U_writeline(int fd, char *buf)
         if (n < 0) {
             PMI2U_printf(1, "write_line error; fd=%d buf=:%s:\n", fd, buf);
             perror("system msg for write_line failure ");
-            return PMI_FAIL;
+            return PMI2_FAIL;
         }
         if (n < size)
             PMI2U_printf(1, "write_line failed to write entire message\n");
     }
-    return PMI_SUCCESS;
+    return PMI2_SUCCESS;
 }
 
 /*
@@ -210,7 +210,7 @@ int PMI2U_parse_keyvals(char *st)
     int offset;
 
     if (!st)
-        return PMI_FAIL;
+        return PMI2_FAIL;
 
     PMI2U_keyval_tab_idx = 0;
     p = st;
@@ -221,10 +221,10 @@ int PMI2U_parse_keyvals(char *st)
         if (*p == '=') {
             PMI2U_printf(1, "PMI2U_parse_keyvals:  unexpected = at character %d in %s\n",
                          p - st, st);
-            return PMI_FAIL;
+            return PMI2_FAIL;
         }
         if (*p == '\n' || *p == '\0')
-            return PMI_SUCCESS; /* normal exit */
+            return PMI2_SUCCESS;        /* normal exit */
         /* got normal character */
         keystart = p;   /* remember where key started */
         while (*p != ' ' && *p != '=' && *p != '\n' && *p != '\0')
@@ -233,7 +233,7 @@ int PMI2U_parse_keyvals(char *st)
             PMI2U_printf(1,
                          "PMI2U_parse_keyvals: unexpected key delimiter at character %d in %s\n",
                          p - st, st);
-            return PMI_FAIL;
+            return PMI2_FAIL;
         }
         /* Null terminate the key */
         *p = 0;
@@ -254,7 +254,7 @@ int PMI2U_parse_keyvals(char *st)
         if (*p == ' ')
             continue;
         if (*p == '\n' || *p == '\0')
-            return PMI_FAIL;    /* value has been set to empty */
+            return PMI2_FAIL;   /* value has been set to empty */
     }
 }
 
