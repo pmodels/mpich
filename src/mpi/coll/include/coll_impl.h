@@ -62,6 +62,7 @@ typedef enum MPIR_Allreduce_intra_algo_t {
     MPIR_ALLREDUCE_INTRA_ALGO_NB,
     MPIR_ALLREDUCE_INTRA_ALGO_RECURSIVE_DOUBLING,
     MPIR_ALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER,
+    MPIR_ALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER_CONST_SPACE,
 } MPIR_Allreduce_intra_algo_t;
 extern MPIR_Allreduce_intra_algo_t MPIR_Allreduce_intra_algo_choice;
 
@@ -560,6 +561,7 @@ typedef enum MPIR_Reduce_intra_algo_t {
     MPIR_REDUCE_INTRA_ALGO_BINOMIAL,
     MPIR_REDUCE_INTRA_ALGO_NB,
     MPIR_REDUCE_INTRA_ALGO_REDUCE_SCATTER_GATHER,
+    MPIR_REDUCE_INTRA_ALGO_REDUCE_SCATTER_GATHER_CONST_SPACE,
 } MPIR_Reduce_intra_algo_t;
 extern MPIR_Reduce_intra_algo_t MPIR_Reduce_intra_algo_choice;
 

@@ -66,6 +66,17 @@ cvars:
         recursive_doubling       - Force recursive doubling algorithm
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
 
+    - name        : MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM_CONST_SPACE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select allreduce algorithm
+        reduce_scatter_allgather_const_space - Force reduce scatter allgather const space algorithm
+
     - name        : MPIR_CVAR_ALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : string
@@ -255,6 +266,12 @@ int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datat
                 mpi_errno = MPIR_Allreduce_intra_reduce_scatter_allgather(sendbuf, recvbuf, count,
                                                                           datatype, op, comm_ptr,
                                                                           errflag);
+                break;
+            case MPIR_ALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER_CONST_SPACE:
+                mpi_errno =
+                    MPIR_Allreduce_intra_reduce_scatter_allgather_const_space(sendbuf, recvbuf,
+                                                                              count, datatype, op,
+                                                                              comm_ptr, errflag);
                 break;
             case MPIR_ALLREDUCE_INTRA_ALGO_NB:
                 mpi_errno = MPIR_Allreduce_allcomm_nb(sendbuf, recvbuf, count,

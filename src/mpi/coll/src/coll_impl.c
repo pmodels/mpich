@@ -215,6 +215,10 @@ int MPII_Coll_init(void)
         MPIR_Allreduce_intra_algo_choice = MPIR_ALLREDUCE_INTRA_ALGO_RECURSIVE_DOUBLING;
     else if (0 == strcmp(MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM, "reduce_scatter_allgather"))
         MPIR_Allreduce_intra_algo_choice = MPIR_ALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER;
+    else if (0 ==
+             strcmp(MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM, "reduce_scatter_allgather_const_space"))
+        MPIR_Allreduce_intra_algo_choice =
+            MPIR_ALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER_CONST_SPACE;
     else
         MPIR_Allreduce_intra_algo_choice = MPIR_ALLREDUCE_INTRA_ALGO_AUTO;
 
@@ -786,6 +790,8 @@ int MPII_Coll_init(void)
         MPIR_Reduce_intra_algo_choice = MPIR_REDUCE_INTRA_ALGO_NB;
     else if (0 == strcmp(MPIR_CVAR_REDUCE_INTRA_ALGORITHM, "reduce_scatter_gather"))
         MPIR_Reduce_intra_algo_choice = MPIR_REDUCE_INTRA_ALGO_REDUCE_SCATTER_GATHER;
+    else if (0 == strcmp(MPIR_CVAR_REDUCE_INTRA_ALGORITHM, "reduce_scatter_gather_const_space"))
+        MPIR_Reduce_intra_algo_choice = MPIR_REDUCE_INTRA_ALGO_REDUCE_SCATTER_GATHER_CONST_SPACE;
     else
         MPIR_Reduce_intra_algo_choice = MPIR_REDUCE_INTRA_ALGO_AUTO;
 

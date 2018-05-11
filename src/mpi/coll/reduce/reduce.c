@@ -57,6 +57,17 @@ cvars:
         nb                    - Force nonblocking algorithm
         reduce_scatter_gather - Force reduce scatter gather algorithm
 
+    - name        : MPIR_CVAR_REDUCE_INTRA_ALGORITHM_CONST_SPACE
+      category    : COLLECTIVE
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : |-
+        Variable to select reduce algorithm
+        reduce_scatter_gather_const_space - Force reduce scatter gather const space algorithm
+
     - name        : MPIR_CVAR_REDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
       type        : string
@@ -267,9 +278,19 @@ int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count,
                      MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    int pof2;
+
+    pof2 = comm_ptr->pof2;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
+        if (MPIR_CVAR_REDUCE_INTRA_ALGORITHM_CONST_SPACE) {
+            if (count >= pof2)
+                MPIR_Reduce_intra_algo_choice =
+                    MPIR_REDUCE_INTRA_ALGO_REDUCE_SCATTER_GATHER_CONST_SPACE;
+            else
+                MPIR_Reduce_intra_algo_choice = MPIR_REDUCE_INTRA_ALGO_BINOMIAL;
+        }
         switch (MPIR_Reduce_intra_algo_choice) {
             case MPIR_REDUCE_INTRA_ALGO_BINOMIAL:
                 mpi_errno = MPIR_Reduce_intra_binomial(sendbuf, recvbuf,
@@ -280,6 +301,12 @@ int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count,
                 mpi_errno = MPIR_Reduce_intra_reduce_scatter_gather(sendbuf, recvbuf,
                                                                     count, datatype, op, root,
                                                                     comm_ptr, errflag);
+                break;
+            case MPIR_REDUCE_INTRA_ALGO_REDUCE_SCATTER_GATHER_CONST_SPACE:
+                mpi_errno = MPIR_Reduce_intra_reduce_scatter_gather_const_space(sendbuf, recvbuf,
+                                                                                count, datatype, op,
+                                                                                root, comm_ptr,
+                                                                                errflag);
                 break;
             case MPIR_REDUCE_INTRA_ALGO_NB:
                 mpi_errno = MPIR_Reduce_allcomm_nb(sendbuf, recvbuf,

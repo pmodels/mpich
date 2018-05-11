@@ -19,5 +19,6 @@ mpi_core_sources +=											\
     src/mpi/coll/allreduce/allreduce_allcomm_nb.c	\
     src/mpi/coll/allreduce/allreduce_intra_recursive_doubling.c	\
     src/mpi/coll/allreduce/allreduce_intra_reduce_scatter_allgather.c	\
+    src/mpi/coll/allreduce/allreduce_intra_reduce_scatter_allgather_const_space.c	\
     src/mpi/coll/allreduce/allreduce_intra_smp.c	\
     src/mpi/coll/allreduce/allreduce_inter_reduce_exchange_bcast.c

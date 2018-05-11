@@ -140,6 +140,10 @@ int MPIR_Allreduce_intra_recursive_doubling(const void *sendbuf, void *recvbuf, 
 int MPIR_Allreduce_intra_reduce_scatter_allgather(const void *sendbuf, void *recvbuf, int count,
                                                   MPI_Datatype datatype, MPI_Op op,
                                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
+int MPIR_Allreduce_intra_reduce_scatter_allgather_const_space(const void *sendbuf, void *recvbuf,
+                                                              int count, MPI_Datatype datatype,
+                                                              MPI_Op op, MPIR_Comm * comm_ptr,
+                                                              MPIR_Errflag_t * errflag);
 int MPIR_Allreduce_intra_smp(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                              MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
 
@@ -1452,6 +1456,10 @@ int MPIR_Reduce_intra_binomial(const void *sendbuf, void *recvbuf, int count, MP
 int MPIR_Reduce_intra_reduce_scatter_gather(const void *sendbuf, void *recvbuf, int count,
                                             MPI_Datatype datatype, MPI_Op op, int root,
                                             MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
+int MPIR_Reduce_intra_reduce_scatter_gather_const_space(const void *sendbuf, void *recvbuf,
+                                                        int count, MPI_Datatype datatype, MPI_Op op,
+                                                        int root, MPIR_Comm * comm_ptr,
+                                                        MPIR_Errflag_t * errflag);
 int MPIR_Reduce_intra_smp(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                           MPI_Op op, int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag);
 
