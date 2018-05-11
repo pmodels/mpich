@@ -1890,14 +1890,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ibarrier(MPIR_Comm * comm, MPIR_Reque
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ibcast(void *buffer, int count, MPI_Datatype datatype,
-                                                  int root, MPIR_Comm * comm, MPIR_Request ** req)
+                                                  int root, MPIR_Comm * comm, MPIR_Request ** req,
+                                                  void *algo_parameters_container)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IBCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IBCAST);
 
-    ret = MPIDI_SHM_native_src_funcs.mpi_ibcast(buffer, count, datatype, root, comm, req);
+    ret =
+        MPIDI_SHM_native_src_funcs.mpi_ibcast(buffer, count, datatype, root, comm, req,
+                                              algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IBCAST);
     return ret;

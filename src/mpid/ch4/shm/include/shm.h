@@ -360,7 +360,8 @@ typedef int (*MPIDI_SHM_mpi_ineighbor_alltoallw_t) (const void *sendbuf,
                                                     MPIR_Comm * comm, MPIR_Request ** req);
 typedef int (*MPIDI_SHM_mpi_ibarrier_t) (MPIR_Comm * comm, MPIR_Request ** req);
 typedef int (*MPIDI_SHM_mpi_ibcast_t) (void *buffer, int count, MPI_Datatype datatype,
-                                       int root, MPIR_Comm * comm, MPIR_Request ** req);
+                                       int root, MPIR_Comm * comm, MPIR_Request ** req,
+                                       void *algo_parameters_container);
 typedef int (*MPIDI_SHM_mpi_iallgather_t) (const void *sendbuf, int sendcount,
                                            MPI_Datatype sendtype, void *recvbuf,
                                            int recvcount, MPI_Datatype recvtype,
@@ -1053,7 +1054,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ibarrier(MPIR_Comm * comm,
                                                     MPIR_Request ** req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ibcast(void *buffer, int count, MPI_Datatype datatype,
                                                   int root, MPIR_Comm * comm,
-                                                  MPIR_Request ** req) MPL_STATIC_INLINE_SUFFIX;
+                                                  MPIR_Request ** req,
+                                                  const void *algo_parameters_container)
+    MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_iallgather(const void *sendbuf, int sendcount,
                                                       MPI_Datatype sendtype, void *recvbuf,
                                                       int recvcount, MPI_Datatype recvtype,

@@ -1077,7 +1077,9 @@ static inline int MPIDI_POSIX_mpi_ibarrier(MPIR_Comm * comm, MPIR_Request ** req
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_POSIX_mpi_ibcast(void *buffer, int count, MPI_Datatype datatype,
-                                         int root, MPIR_Comm * comm, MPIR_Request ** req)
+                                         int root, MPIR_Comm * comm_ptr, MPIR_Request ** request,
+                                         const void *ch4_algo_parameters_container_in
+                                         ATTRIBUTE((unused)))
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_IBCAST);

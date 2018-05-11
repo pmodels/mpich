@@ -562,7 +562,9 @@ static inline int MPIDI_STUBSHM_mpi_ibarrier(MPIR_Comm * comm_ptr, MPI_Request *
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_STUBSHM_mpi_ibcast(void *buffer, int count, MPI_Datatype datatype,
-                                           int root, MPIR_Comm * comm_ptr, MPI_Request * req)
+                                           int root, MPIR_Comm * comm_ptr, MPI_Request * req,
+                                           const void *algo_parameters_container
+                                           ATTRIBUTE((unused)))
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_IBCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_IBCAST);
