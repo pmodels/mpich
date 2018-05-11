@@ -12,6 +12,7 @@ AM_CONDITIONAL([BUILD_CH4],[test "$device_name" = "ch4"])
 build_mpid_common_sched=yes
 build_mpid_common_datatype=yes
 build_mpid_common_thread=yes
+build_mpid_common_bc=yes
 
 MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
 MPID_MAX_PROCESSOR_NAME=128
