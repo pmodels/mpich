@@ -564,12 +564,50 @@ static inline int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * win)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_create_hook(MPIR_Win * win)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_WIN_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_WIN_CREATE_HOOK);
+
+#ifndef MPICH_UCX_AM_ONLY
+    mpi_errno = MPIDI_UCX_Win_init(win);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    mpi_errno = MPIDI_UCX_Win_allgather(win, win->size, win->disp_unit, &win->base);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_WIN_CREATE_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_allocate_hook(MPIR_Win * win)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_WIN_ALLOCATE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_WIN_ALLOCATE_HOOK);
+
+#ifndef MPICH_UCX_AM_ONLY
+    mpi_errno = MPIDI_UCX_Win_init(win);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    mpi_errno = MPIDI_UCX_Win_allgather(win, win->size, win->disp_unit, &win->base);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_WIN_ALLOCATE_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_allocate_shared_hook(MPIR_Win * win)
@@ -594,7 +632,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_detach_hook(MPIR_Win * win, const 
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_WIN_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_WIN_FREE_HOOK);
+
+#ifndef MPICH_UCX_AM_ONLY
+    if (win->create_flavor != MPI_WIN_FLAVOR_SHARED && win->create_flavor != MPI_WIN_FLAVOR_DYNAMIC) {
+        if (win->size > 0)
+            ucp_mem_unmap(MPIDI_UCX_global.context, MPIDI_UCX_WIN(win).mem_h);
+        MPL_free(MPIDI_UCX_WIN(win).info_table);
+    }
+#endif
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_WIN_FREE_HOOK);
+    return mpi_errno;
 }
 
 #endif /* UCX_WIN_H_INCLUDED */
