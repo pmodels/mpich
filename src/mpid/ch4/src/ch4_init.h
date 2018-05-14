@@ -138,13 +138,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 #ifdef USE_PMI2_API
     pmi_errno = PMI2_Init(&has_parent, &size, &rank, &appnum);
 
-    if (pmi_errno != PMI_SUCCESS) {
+    if (pmi_errno != PMI2_SUCCESS) {
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_init", "**pmi_init %d", pmi_errno);
     }
 
     MPIDI_CH4_Global.jobid = (char *) MPL_malloc(MPIDI_MAX_JOBID_LEN, MPL_MEM_OTHER);
     pmi_errno = PMI2_Job_GetId(MPIDI_CH4_Global.jobid, MPIDI_MAX_JOBID_LEN);
-    if (pmi_errno != PMI_SUCCESS) {
+    if (pmi_errno != PMI2_SUCCESS) {
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_job_getid",
                              "**pmi_job_getid %d", pmi_errno);
     }
