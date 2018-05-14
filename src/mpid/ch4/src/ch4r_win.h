@@ -159,6 +159,11 @@ static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
                 MPIDI_CH4U_WIN(win, info_args).alloc_shared_noncontig = 1;
             else if (!strcmp(curr_ptr->value, "false"))
                 MPIDI_CH4U_WIN(win, info_args).alloc_shared_noncontig = 0;
+        } else if (!strcmp(curr_ptr->key, "alloc_shm")) {
+            if (!strcmp(curr_ptr->value, "true"))
+                MPIDI_CH4U_WIN(win, info_args).alloc_shm = 1;
+            else if (!strcmp(curr_ptr->value, "false"))
+                MPIDI_CH4U_WIN(win, info_args).alloc_shm = 0;
         }
       next:
         curr_ptr = curr_ptr->next;
@@ -228,6 +233,12 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
     MPIDI_CH4U_WIN(win, info_args).same_size = 0;
     MPIDI_CH4U_WIN(win, info_args).same_disp_unit = 0;
     MPIDI_CH4U_WIN(win, info_args).alloc_shared_noncontig = 0;
+    if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE
+        || win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        MPIDI_CH4U_WIN(win, info_args).alloc_shm = 1;
+    } else {
+        MPIDI_CH4U_WIN(win, info_args).alloc_shm = 0;
+    }
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
         mpi_errno = MPIDI_CH4R_mpi_win_set_info(win, info);
@@ -699,6 +710,11 @@ static inline int MPIDI_CH4R_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_disp_unit", "true");
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_disp_unit", "false");
+
+    if (MPIDI_CH4U_WIN(win, info_args).alloc_shm)
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "alloc_shm", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_p_p, "alloc_shm", "false");
 
     MPIR_Assert(mpi_errno == MPI_SUCCESS);
 
