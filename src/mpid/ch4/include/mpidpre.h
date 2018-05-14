@@ -227,6 +227,14 @@ typedef struct MPIDI_CH4U_win_info_args_t {
     int accumulate_ordering;
     int alloc_shared_noncontig;
     MPIDI_CH4U_win_info_accumulate_ops accumulate_ops;
+
+    /* alloc_shm: MPICH specific hint (same in CH3).
+     * If true, MPICH will try to use shared memory routines for the window.
+     * Default is true for allocate-based windows, and false for other
+     * windows. Note that this hint can be also used in create-based windows,
+     * and it means the user window buffer is allocated over shared memory,
+     * thus RMA operation can use shm routines. */
+    int alloc_shm;
 } MPIDI_CH4U_win_info_args_t;
 
 struct MPIDI_CH4U_win_lock {
