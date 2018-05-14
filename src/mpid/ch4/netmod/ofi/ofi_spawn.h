@@ -12,7 +12,6 @@
 #define OFI_SPAWN_H_INCLUDED
 
 #include "ofi_impl.h"
-#include "pmi.h"
 
 #define MPIDI_OFI_PORT_NAME_TAG_KEY "tag"
 #define MPIDI_OFI_CONNENTRY_TAG_KEY "connentry"
