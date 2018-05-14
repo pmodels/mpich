@@ -12,7 +12,6 @@
    key=value messages
 */
 #include "mpichconf.h"
-#define printf_d(x...)  /* printf(x) */
 
 #include "pmi2compat.h"
 
