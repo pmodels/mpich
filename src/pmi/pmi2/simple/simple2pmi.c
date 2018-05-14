@@ -1680,7 +1680,10 @@ int PMIi_WriteSimpleCommandStr(int fd, PMI2_Command * resp, const char cmd[], ..
         pairs_p[i] = &pairs[i];
         pairs[i].key = key;
         pairs[i].value = val;
-        pairs[i].valueLen = strlen(val);
+        if (val)
+            pairs[i].valueLen = strlen(val);
+        else
+            pairs[i].valueLen = 0;
         pairs[i].isCopy = FALSE;
         ++i;
     }
