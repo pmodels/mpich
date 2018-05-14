@@ -14,8 +14,6 @@
 #include <mpidimpl.h>
 #include "mpidch4r.h"
 
-#include "pmi.h"
-
 #include "mpidu_shm.h"
 
 /* ---------------------------------------------------- */
