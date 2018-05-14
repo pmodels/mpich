@@ -1113,7 +1113,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* -------------------------------- */
     /* Initialize Dynamic Tasking       */
     /* -------------------------------- */
-#ifndef USE_PMIX_API
+#if !defined(USE_PMIX_API) && !defined(USE_PMI2_API)
     MPIDI_OFI_conn_manager_init();
     if (spawned) {
         char parent_port[MPIDI_MAX_KVS_VALUE_LEN];
