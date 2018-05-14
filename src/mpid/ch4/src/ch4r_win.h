@@ -15,6 +15,7 @@
 #include "ch4i_util.h"
 #include <opa_primitives.h>
 #include "mpir_info.h"
+#include "ch4r_symheap.h"
 #include "uthash.h"
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
