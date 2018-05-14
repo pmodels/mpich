@@ -1044,11 +1044,27 @@ static inline int MPIDI_CH4R_mpi_win_shared_query(MPIR_Win * win,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_SHARED_QUERY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_SHARED_QUERY);
 
-    if (rank < 0)
-        offset = 0;
-    *size = shared_table[offset].size;
-    *disp_unit = shared_table[offset].disp_unit;
-    *(void **) baseptr = shared_table[offset].shm_base_addr;
+    /* When rank is MPI_PROC_NULL, return the memory region belonging the lowest
+     * rank that specified size > 0*/
+    if (rank == MPI_PROC_NULL) {
+        /* Default, if no process has size > 0. */
+        *size = 0;
+        *disp_unit = 0;
+        *((void **) baseptr) = NULL;
+
+        for (offset = 0; offset < win->comm_ptr->local_size; offset++) {
+            if (shared_table[offset].size > 0) {
+                *size = shared_table[offset].size;
+                *disp_unit = shared_table[offset].disp_unit;
+                *((void **) baseptr) = shared_table[offset].shm_base_addr;
+                break;
+            }
+        }
+    } else {
+        *size = shared_table[offset].size;
+        *disp_unit = shared_table[offset].disp_unit;
+        *(void **) baseptr = shared_table[offset].shm_base_addr;
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_SHARED_QUERY);
     return mpi_errno;
