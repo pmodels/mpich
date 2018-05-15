@@ -816,6 +816,10 @@ static inline int MPIDI_CH4R_win_finalize(MPIR_Win ** win_ptr)
             all_local_completed && all_remote_completed;
     } while (all_completed != 1);
 
+    mpi_errno = MPIDI_NM_mpi_win_free_hook(win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+
     MPIDI_CH4U_win_target_cleanall(win);
     MPIDI_CH4U_win_hash_clear(win);
 
@@ -948,6 +952,10 @@ static inline int MPIDI_CH4R_mpi_win_create(void *base,
     win = *win_ptr;
     win->base = base;
 
+    mpi_errno = MPIDI_NM_mpi_win_create_hook(win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+
     mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
 
     if (mpi_errno != MPI_SUCCESS)
@@ -972,6 +980,11 @@ static inline int MPIDI_CH4R_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint
 
     MPIR_ERR_CHKANDSTMT((win->create_flavor != MPI_WIN_FLAVOR_DYNAMIC), mpi_errno,
                         MPI_ERR_RMA_FLAVOR, goto fn_fail, "**rmaflavor");
+
+    mpi_errno = MPIDI_NM_mpi_win_attach_hook(win, base, size);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_ATTACH);
     return mpi_errno;
@@ -1058,6 +1071,10 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
     win->base = shared_table[comm_ptr->rank].shm_base_addr;
     win->size = size;
 
+    mpi_errno = MPIDI_NM_mpi_win_allocate_shared_hook(win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+
     *(void **) base_ptr = (void *) win->base;
     mpi_errno = MPIR_Barrier(comm_ptr, &errflag);
 
@@ -1081,6 +1098,11 @@ static inline int MPIDI_CH4R_mpi_win_detach(MPIR_Win * win, const void *base)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_DETACH);
     MPIR_ERR_CHKANDSTMT((win->create_flavor != MPI_WIN_FLAVOR_DYNAMIC), mpi_errno,
                         MPI_ERR_RMA_FLAVOR, goto fn_fail, "**rmaflavor");
+
+    mpi_errno = MPIDI_NM_mpi_win_detach_hook(win, base);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_DETACH);
     return mpi_errno;
@@ -1159,6 +1181,10 @@ static inline int MPIDI_CH4R_mpi_win_allocate(MPI_Aint size,
 
     win = *win_ptr;
     win->base = baseP;
+
+    mpi_errno = MPIDI_NM_mpi_win_allocate_hook(win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
 
     *(void **) baseptr = (void *) win->base;
     mpi_errno = MPIR_Barrier(comm, &errflag);
@@ -1319,6 +1345,10 @@ static inline int MPIDI_CH4R_mpi_win_create_dynamic(MPIR_Info * info,
 
     win = *win_ptr;
     win->base = MPI_BOTTOM;
+
+    mpi_errno = MPIDI_NM_mpi_win_create_dynamic_hook(win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Barrier(comm, &errflag);
 
