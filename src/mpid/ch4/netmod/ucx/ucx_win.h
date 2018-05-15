@@ -549,22 +549,100 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_WIN_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_WIN_CMPL_HOOK);
+
+#ifndef MPICH_UCX_AM_ONLY
+    ucs_status_t ucp_status;
+
+    /* maybe we just flush all eps here? More efficient for smaller communicators... */
+    ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
+    MPIDI_UCX_CHK_STATUS(ucp_status);
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_WIN_CMPL_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_WIN_LOCAL_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_WIN_LOCAL_CMPL_HOOK);
+
+#ifndef MPICH_UCX_AM_ONLY
+    ucs_status_t ucp_status;
+
+    /* currently, UCP does not support local flush, so we have to call
+     * a global flush. This is not good for performance - but OK for now */
+    if (MPIDI_UCX_WIN(win).need_local_flush == 1) {
+        ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
+        MPIDI_UCX_CHK_STATUS(ucp_status);
+        MPIDI_UCX_WIN(win).need_local_flush = 0;
+    }
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_WIN_LOCAL_CMPL_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * win)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_TARGET_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_TARGET_CMPL_HOOK);
+
+#ifndef MPICH_UCX_AM_ONLY
+    ucs_status_t ucp_status;
+
+    if (rank != MPI_PROC_NULL) {
+        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
+        /* only flush the endpoint */
+        ucp_status = ucp_ep_flush(ep);
+        MPIDI_UCX_CHK_STATUS(ucp_status);
+    }
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_TARGET_CMPL_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank, MPIR_Win * win)
 {
-    return MPI_SUCCESS;
-}
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_TARGET_LOCAL_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_TARGET_LOCAL_CMPL_HOOK);
 
+#ifndef MPICH_UCX_AM_ONLY
+    ucs_status_t ucp_status;
+
+    if (rank != MPI_PROC_NULL) {
+        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
+        /* currently, UCP does not support local flush, so we have to call
+         * a global flush. This is not good for performance - but OK for now */
+
+        if (MPIDI_UCX_WIN(win).need_local_flush == 1) {
+            ucp_status = ucp_ep_flush(ep);
+            MPIDI_UCX_CHK_STATUS(ucp_status);
+            MPIDI_UCX_WIN(win).need_local_flush = 0;
+        }
+    }
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_TARGET_LOCAL_CMPL_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 #endif /* UCX_WIN_H_INCLUDED */
