@@ -223,6 +223,7 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
     win->copySize = 0;
     MPIDI_CH4U_WIN(win, shared_table) = NULL;
     MPIDI_CH4U_WIN(win, sync).assert_mode = 0;
+    MPIDI_CH4U_WIN(win, shm_allocated) = 0;
 
     /* Initialize the info (hint) flags per window */
     MPIDI_CH4U_WIN(win, info_args).no_locks = 0;
