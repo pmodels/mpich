@@ -362,10 +362,16 @@ static inline int MPIDI_CH4R_mpi_win_complete(MPIR_Win * win)
     group = MPIDI_CH4U_WIN(win, sync).sc.group;
     MPIR_Assert(group != NULL);
 
-    /* Ensure op completion in netmod */
+    /* Ensure op completion in netmod and shmmod */
     mpi_errno = MPIDI_NM_rma_win_cmpl_hook(win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_rma_win_cmpl_hook(win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+#endif
 
     msg.win_id = MPIDI_CH4U_WIN(win, win_id);
     msg.origin_rank = win->comm_ptr->rank;
@@ -637,10 +643,16 @@ static inline int MPIDI_CH4R_mpi_win_unlock(int rank, MPIR_Win * win)
     /* NOTE: lock blocking waits till granted */
     MPIR_Assert(slock->locked == 1);
 
-    /* Ensure op completion in netmod */
+    /* Ensure op completion in netmod and shmmod */
     mpi_errno = MPIDI_NM_rma_target_cmpl_hook(rank, win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_rma_target_cmpl_hook(rank, win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+#endif
 
     /* Ensure completion of AM operations */
     do {
@@ -834,6 +846,12 @@ static inline int MPIDI_CH4R_win_finalize(MPIR_Win ** win_ptr)
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_mpi_win_free_hook(win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+#endif
+
     MPIDI_CH4U_win_target_cleanall(win);
     MPIDI_CH4U_win_hash_clear(win);
 
@@ -910,10 +928,16 @@ static inline int MPIDI_CH4R_mpi_win_fence(int massert, MPIR_Win * win)
 
     MPIDI_CH4U_FENCE_EPOCH_CHECK(win, mpi_errno, goto fn_fail);
 
-    /* Ensure op completion in netmod */
+    /* Ensure op completion in netmod and shmmod */
     mpi_errno = MPIDI_NM_rma_win_cmpl_hook(win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_rma_win_cmpl_hook(win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+#endif
 
     /* Ensure completion of AM operations */
     do {
@@ -974,6 +998,12 @@ static inline int MPIDI_CH4R_mpi_win_create(void *base,
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_mpi_win_create_hook(win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+#endif
+
     mpi_errno = MPIR_Barrier(win->comm_ptr, &errflag);
 
     if (mpi_errno != MPI_SUCCESS)
@@ -1002,6 +1032,12 @@ static inline int MPIDI_CH4R_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint
     mpi_errno = MPIDI_NM_mpi_win_attach_hook(win, base, size);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_mpi_win_attach_hook(win, base, size);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_ATTACH);
@@ -1093,6 +1129,12 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_mpi_win_allocate_shared_hook(win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+#endif
+
     *(void **) base_ptr = (void *) win->base;
     mpi_errno = MPIR_Barrier(comm_ptr, &errflag);
 
@@ -1120,6 +1162,12 @@ static inline int MPIDI_CH4R_mpi_win_detach(MPIR_Win * win, const void *base)
     mpi_errno = MPIDI_NM_mpi_win_detach_hook(win, base);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_mpi_win_detach_hook(win, base);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_DETACH);
@@ -1204,6 +1252,12 @@ static inline int MPIDI_CH4R_mpi_win_allocate(MPI_Aint size,
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_mpi_win_allocate_hook(win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+#endif
+
     *(void **) baseptr = (void *) win->base;
     mpi_errno = MPIR_Barrier(comm, &errflag);
 
@@ -1233,10 +1287,16 @@ static inline int MPIDI_CH4R_mpi_win_flush(int rank, MPIR_Win * win)
     if (rank == MPI_PROC_NULL)
         goto fn_exit;
 
-    /* Ensure op completion in netmod */
+    /* Ensure op completion in netmod and shmmod */
     mpi_errno = MPIDI_NM_rma_target_cmpl_hook(rank, win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_rma_target_cmpl_hook(rank, win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+#endif
 
     /* Ensure completion of AM operations */
     MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, rank);
@@ -1269,10 +1329,16 @@ static inline int MPIDI_CH4R_mpi_win_flush_local_all(MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_CHECK_PASSIVE(win, mpi_errno, goto fn_fail);
 
-    /* Ensure op local completion in netmod */
+    /* Ensure op local completion in netmod and shmmod */
     mpi_errno = MPIDI_NM_rma_win_local_cmpl_hook(win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_rma_win_local_cmpl_hook(win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+#endif
 
     /* Ensure completion of AM operations */
 
@@ -1307,10 +1373,16 @@ static inline int MPIDI_CH4R_mpi_win_unlock_all(MPIR_Win * win)
     /* NOTE: lockall blocking waits till all locks granted */
     MPIR_Assert(MPIDI_CH4U_WIN(win, sync).lockall.allLocked == win->comm_ptr->local_size);
 
-    /* Ensure op completion in netmod */
+    /* Ensure op completion in netmod and shmmod */
     mpi_errno = MPIDI_NM_rma_win_cmpl_hook(win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_rma_win_cmpl_hook(win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+#endif
 
     /* Ensure completion of AM operations */
 
@@ -1388,6 +1460,12 @@ static inline int MPIDI_CH4R_mpi_win_create_dynamic(MPIR_Info * info,
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_mpi_win_create_dynamic_hook(win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+#endif
+
     mpi_errno = MPIR_Barrier(comm, &errflag);
 
   fn_exit:
@@ -1413,10 +1491,16 @@ static inline int MPIDI_CH4R_mpi_win_flush_local(int rank, MPIR_Win * win)
     if (rank == MPI_PROC_NULL)
         goto fn_exit;
 
-    /* Ensure op local completion in netmod */
+    /* Ensure op local completion in netmod and shmmod */
     mpi_errno = MPIDI_NM_rma_target_local_cmpl_hook(rank, win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_rma_target_local_cmpl_hook(rank, win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+#endif
 
     /* Ensure local completion of AM operations */
     MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, rank);
@@ -1469,10 +1553,16 @@ static inline int MPIDI_CH4R_mpi_win_flush_all(MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_CHECK_PASSIVE(win, mpi_errno, goto fn_fail);
 
-    /* Ensure op completion in netmod */
+    /* Ensure op completion in netmod and shmmod */
     mpi_errno = MPIDI_NM_rma_win_cmpl_hook(win);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
+
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    mpi_errno = MPIDI_SHM_rma_win_cmpl_hook(win);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+#endif
 
     /* Ensure completion of AM operations */
     do {
