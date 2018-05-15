@@ -405,6 +405,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
 
         if (bytesToGet == 0ULL) {
             MPIDI_OFI_send_control_t ctrl;
+            /* recv->localreq may be freed during done_fn.
+             * Need to backup the handle here for later use with MPIDI_CH4U_map_erase. */
+            uint64_t key_to_erase = recv->localreq->handle;
             recv->wc.len = recv->cur_offset;
             recv->done_fn(&recv->wc, recv->localreq, recv->event_id);
             ctrl.type = MPIDI_OFI_CTRL_HUGEACK;
@@ -412,8 +415,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
                                    (&ctrl, NULL, 0, recv->remote_info.origin_rank, recv->comm_ptr,
                                     recv->remote_info.ackreq, FALSE));
 
-            MPIDI_CH4U_map_erase(MPIDI_OFI_COMM(recv->comm_ptr).huge_recv_counters,
-                                 recv->localreq->handle);
+            MPIDI_CH4U_map_erase(MPIDI_OFI_COMM(recv->comm_ptr).huge_recv_counters, key_to_erase);
             MPL_free(recv);
 
             goto fn_exit;
