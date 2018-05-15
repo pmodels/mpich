@@ -1206,24 +1206,89 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_rma_win_cmpl_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_cmpl_hook(MPIR_Win * win)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_RMA_WIN_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RMA_WIN_CMPL_HOOK);
+    if (MPIDI_OFI_ENABLE_RMA) {
+        /* network completion */
+        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_RMA_WIN_CMPL_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_rma_win_local_cmpl_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_win_local_cmpl_hook(MPIR_Win * win)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_RMA_WIN_LOCAL_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RMA_WIN_LOCAL_CMPL_HOOK);
+    if (MPIDI_OFI_ENABLE_RMA) {
+        /* network completion */
+        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_RMA_WIN_LOCAL_CMPL_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank, MPIR_Win * win)
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_rma_target_cmpl_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_cmpl_hook(int rank ATTRIBUTE((unused)),
+                                                           MPIR_Win * win)
 {
-    return MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_RMA_TARGET_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RMA_TARGET_CMPL_HOOK);
+    if (MPIDI_OFI_ENABLE_RMA) {
+        /* network completion */
+        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_RMA_TARGET_CMPL_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank, MPIR_Win * win)
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_rma_target_local_cmpl_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rma_target_local_cmpl_hook(int rank ATTRIBUTE((unused)),
+                                                                 MPIR_Win * win)
 {
-    return MPI_SUCCESS;
-}
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_RMA_TARGET_LOCAL_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RMA_TARGET_LOCAL_CMPL_HOOK);
+    if (MPIDI_OFI_ENABLE_RMA) {
+        /* network completion */
+        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
+    }
 
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_RMA_TARGET_LOCAL_CMPL_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 #endif /* OFI_WIN_H_INCLUDED */
