@@ -11,6 +11,10 @@
 #ifndef CH4R_PROC_H_INCLUDED
 #define CH4R_PROC_H_INCLUDED
 
+#ifdef HAVE_SYS_MMAN_H
+#include <sys/mman.h>
+#endif
+
 #include "ch4_types.h"
 #include "build_nodemap.h"
 
