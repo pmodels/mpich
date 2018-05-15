@@ -329,6 +329,10 @@ typedef struct MPIDI_CH4U_win_t {
     MPIDI_CH4U_win_sync_t sync;
     MPIDI_CH4U_win_info_args_t info_args;
     MPIDI_CH4U_win_shared_info_t *shared_table;
+    unsigned shm_allocated;     /* shm optimized flag (0 or 1), set at shmmod win initialization time.
+                                 * Equal to 1 if the window has a shared memory region associated with it
+                                 * and the shmmod supports load/store based RMA operations over the window
+                                 * (e.g., may rely on support of interprocess mutex). */
 
     /* per-target structure for sync and OP completion. */
     MPIDI_CH4U_win_target_t *targets;
