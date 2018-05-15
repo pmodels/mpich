@@ -519,4 +519,54 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_win_free_hook(MPIR_Win * win)
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_win_cmpl_hook(MPIR_Win * win ATTRIBUTE((unused)))
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_RMA_WIN_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_RMA_WIN_CMPL_HOOK);
+
+    /* Always perform barrier to ensure ordering of local load/store. */
+    OPA_read_write_barrier();
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_WIN_CMPL_HOOK);
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_win_local_cmpl_hook(MPIR_Win * win ATTRIBUTE((unused)))
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_RMA_WIN_LOCAL_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_RMA_WIN_LOCAL_CMPL_HOOK);
+
+    /* Always perform barrier to ensure ordering of local load/store. */
+    OPA_read_write_barrier();
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_WIN_LOCAL_CMPL_HOOK);
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_target_cmpl_hook(int rank ATTRIBUTE((unused)),
+                                                              MPIR_Win * win ATTRIBUTE((unused)))
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_RMA_TARGET_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_RMA_TARGET_CMPL_HOOK);
+
+    /* Always perform barrier to ensure ordering of local load/store. */
+    OPA_read_write_barrier();
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_TARGET_CMPL_HOOK);
+    return MPI_SUCCESS;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_target_local_cmpl_hook(int rank ATTRIBUTE((unused)),
+                                                                    MPIR_Win *
+                                                                    win ATTRIBUTE((unused)))
+{
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_RMA_TARGET_LOCAL_CMPL_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_RMA_TARGET_LOCAL_CMPL_HOOK);
+
+    /* Always perform barrier to ensure ordering of local load/store. */
+    OPA_read_write_barrier();
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_TARGET_LOCAL_CMPL_HOOK);
+    return MPI_SUCCESS;
+}
 #endif /* POSIX_WIN_H_INCLUDED */

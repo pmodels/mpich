@@ -42,6 +42,11 @@ MPIDI_SHM_funcs_t MPIDI_SHM_src_funcs = {
     .mpi_win_attach_hook = MPIDI_SHM_mpi_win_attach_hook,
     .mpi_win_detach_hook = MPIDI_SHM_mpi_win_detach_hook,
     .mpi_win_free_hook = MPIDI_SHM_mpi_win_free_hook,
+    /* RMA synchronization routines */
+    .rma_win_cmpl_hook = MPIDI_SHM_rma_win_cmpl_hook,
+    .rma_win_local_cmpl_hook = MPIDI_SHM_rma_win_local_cmpl_hook,
+    .rma_target_cmpl_hook = MPIDI_SHM_rma_target_cmpl_hook,
+    .rma_target_local_cmpl_hook = MPIDI_SHM_rma_target_local_cmpl_hook,
     /* Request initialization/cleanup routines */
     .am_request_init = MPIDI_SHM_am_request_init,
     .am_request_finalize = MPIDI_SHM_am_request_finalize,
