@@ -632,6 +632,8 @@ static inline int MPIDI_handle_acc_cmpl(MPIR_Request * rreq)
     struct iovec *iov;
     char *src_ptr;
     size_t data_sz;
+    int shm_locked ATTRIBUTE((unused)) = 0;
+    MPIR_Win *win ATTRIBUTE((unused)) = MPIDI_CH4U_REQUEST(rreq, req->areq.win_ptr);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_HANDLE_ACC_CMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_HANDLE_ACC_CMPL);
@@ -647,6 +649,15 @@ static inline int MPIDI_handle_acc_cmpl(MPIR_Request * rreq)
             MPIDI_CH4U_REQUEST(rreq, req->areq.target_count);
         MPIDI_CH4U_REQUEST(rreq, req->areq.data_sz) = data_sz;
     }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (MPIDI_CH4U_WIN(win, shm_allocated)) {
+        mpi_errno = MPIDI_SHM_rma_op_cs_enter_hook(win);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        shm_locked = 1;
+    }
+#endif
 
     if (MPIDI_CH4U_REQUEST(rreq, req->areq.dt_iov) == NULL) {
         mpi_errno = MPIDI_CH4U_compute_acc_op(MPIDI_CH4U_REQUEST(rreq, req->areq.data),
@@ -679,6 +690,14 @@ static inline int MPIDI_handle_acc_cmpl(MPIR_Request * rreq)
         MPL_free(iov);
     }
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (MPIDI_CH4U_WIN(win, shm_allocated)) {
+        mpi_errno = MPIDI_SHM_rma_op_cs_exit_hook(win);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
+#endif
+
     /* MPIDI_CS_EXIT(); */
     if (MPIDI_CH4U_REQUEST(rreq, req->areq.data))
         MPL_free(MPIDI_CH4U_REQUEST(rreq, req->areq.data));
@@ -693,6 +712,11 @@ static inline int MPIDI_handle_acc_cmpl(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_HANDLE_ACC_CMPL);
     return mpi_errno;
   fn_fail:
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    /* release lock if error is reported inside CS. */
+    if (shm_locked)
+        MPIDI_SHM_rma_op_cs_exit_hook(win);
+#endif
     goto fn_exit;
 }
 
@@ -707,6 +731,8 @@ static inline int MPIDI_handle_get_acc_cmpl(MPIR_Request * rreq)
     struct iovec *iov;
     char *src_ptr, *original = NULL;
     size_t data_sz;
+    int shm_locked ATTRIBUTE((unused)) = 0;
+    MPIR_Win *win ATTRIBUTE((unused)) = MPIDI_CH4U_REQUEST(rreq, req->areq.win_ptr);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_HANDLE_GET_ACC_CMPL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_HANDLE_GET_ACC_CMPL);
@@ -725,6 +751,14 @@ static inline int MPIDI_handle_get_acc_cmpl(MPIR_Request * rreq)
             MPIDI_CH4U_REQUEST(rreq, req->areq.target_count);
         MPIDI_CH4U_REQUEST(rreq, req->areq.data_sz) = data_sz;
     }
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (MPIDI_CH4U_WIN(win, shm_allocated)) {
+        mpi_errno = MPIDI_SHM_rma_op_cs_enter_hook(win);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        shm_locked = 1;
+    }
+#endif
 
     if (MPIDI_CH4U_REQUEST(rreq, req->areq.dt_iov) == NULL) {
 
@@ -764,6 +798,14 @@ static inline int MPIDI_handle_get_acc_cmpl(MPIR_Request * rreq)
         MPL_free(iov);
     }
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (MPIDI_CH4U_WIN(win, shm_allocated)) {
+        mpi_errno = MPIDI_SHM_rma_op_cs_exit_hook(win);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
+#endif
+
     /* MPIDI_CS_EXIT(); */
     if (MPIDI_CH4U_REQUEST(rreq, req->areq.data))
         MPL_free(MPIDI_CH4U_REQUEST(rreq, req->areq.data));
@@ -779,6 +821,11 @@ static inline int MPIDI_handle_get_acc_cmpl(MPIR_Request * rreq)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_HANDLE_GET_ACC_CMPL);
     return mpi_errno;
   fn_fail:
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    /* release lock if error is reported inside CS. */
+    if (shm_locked)
+        MPIDI_SHM_rma_op_cs_exit_hook(win);
+#endif
     goto fn_exit;
 }
 
@@ -1093,6 +1140,7 @@ static inline int MPIDI_cswap_target_cmpl_cb(MPIR_Request * rreq)
     void *compare_addr;
     void *origin_addr;
     size_t data_sz;
+    MPIR_Win *win ATTRIBUTE((unused)) = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CSWAP_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CSWAP_TARGET_CMPL_CB);
@@ -1105,6 +1153,14 @@ static inline int MPIDI_cswap_target_cmpl_cb(MPIR_Request * rreq)
     compare_addr = ((char *) MPIDI_CH4U_REQUEST(rreq, req->creq.data)) + data_sz;
 
     /* MPIDI_CS_ENTER(); */
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    win = MPIDI_CH4U_REQUEST(rreq, req->creq.win_ptr);
+    if (MPIDI_CH4U_WIN(win, shm_allocated)) {
+        mpi_errno = MPIDI_SHM_rma_op_cs_enter_hook(win);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
+#endif
 
     if (MPIR_Compare_equal((void *) MPIDI_CH4U_REQUEST(rreq, req->creq.addr), compare_addr,
                            MPIDI_CH4U_REQUEST(rreq, req->creq.datatype))) {
@@ -1114,6 +1170,13 @@ static inline int MPIDI_cswap_target_cmpl_cb(MPIR_Request * rreq)
         MPIR_Memcpy(compare_addr, (void *) MPIDI_CH4U_REQUEST(rreq, req->creq.addr), data_sz);
     }
 
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+    if (MPIDI_CH4U_WIN(win, shm_allocated)) {
+        mpi_errno = MPIDI_SHM_rma_op_cs_exit_hook(win);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+    }
+#endif
     /* MPIDI_CS_EXIT(); */
 
     mpi_errno = MPIDI_ack_cswap(rreq);
