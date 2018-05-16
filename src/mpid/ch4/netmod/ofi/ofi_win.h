@@ -561,11 +561,6 @@ static inline int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_COMPLETE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_COMPLETE);
 
-    if (MPIDI_OFI_ENABLE_RMA) {
-        /* network completion */
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
-    }
-
     mpi_errno = MPIDI_CH4R_mpi_win_complete(win);
 
   fn_exit:
@@ -654,11 +649,6 @@ static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_ent
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_UNLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_UNLOCK);
 
-    if (MPIDI_OFI_ENABLE_RMA) {
-        /* network completion */
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
-    }
-
     mpi_errno = MPIDI_CH4R_mpi_win_unlock(rank, win);
 
   fn_exit:
@@ -711,11 +701,6 @@ static inline int MPIDI_NM_mpi_win_fence(int massert, MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FENCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FENCE);
-
-    if (MPIDI_OFI_ENABLE_RMA) {
-        /* network completion */
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
-    }
 
     mpi_errno = MPIDI_CH4R_mpi_win_fence(massert, win);
 
@@ -849,11 +834,6 @@ static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win, MPIDI_av_entr
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH);
 
-    if (MPIDI_OFI_ENABLE_RMA) {
-        /* network completion */
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
-    }
-
     mpi_errno = MPIDI_CH4R_mpi_win_flush(rank, win);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH);
@@ -872,11 +852,6 @@ static inline int MPIDI_NM_mpi_win_flush_local_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL_ALL);
 
-    if (MPIDI_OFI_ENABLE_RMA) {
-        /* network completion */
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
-    }
-
     mpi_errno = MPIDI_CH4R_mpi_win_flush_local_all(win);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL_ALL);
@@ -894,11 +869,6 @@ static inline int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_UNLOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_UNLOCK_ALL);
-
-    if (MPIDI_OFI_ENABLE_RMA) {
-        /* network completion */
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
-    }
 
     mpi_errno = MPIDI_CH4R_mpi_win_unlock_all(win);
 
@@ -936,11 +906,6 @@ static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win, MPIDI_a
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL);
 
-    if (MPIDI_OFI_ENABLE_RMA) {
-        /* network completion */
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
-    }
-
     mpi_errno = MPIDI_CH4R_mpi_win_flush_local(rank, win);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL);
@@ -976,14 +941,6 @@ static inline int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_ALL);
 
-    if (MPIDI_OFI_ENABLE_RMA) {
-        /* network completion */
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
-    }
-
-    MPIDI_CH4U_EPOCH_CHECK_PASSIVE(win, mpi_errno, goto fn_fail);
-
-    /* AM completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush_all(win));
 
   fn_exit:
