@@ -177,20 +177,7 @@ static inline int MPIDI_NM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Wi
 
 static inline int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
 {
-    int mpi_errno = MPI_SUCCESS;
-
-#ifndef MPICH_UCX_AM_ONLY
-    ucs_status_t ucp_status;
-    ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
-    MPIDI_UCX_CHK_STATUS(ucp_status);
-#endif
-
-    mpi_errno = MPIDI_CH4R_mpi_win_complete(win);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return MPIDI_CH4R_mpi_win_complete(win);
 }
 
 static inline int MPIDI_NM_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
@@ -220,27 +207,7 @@ static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert,
 
 static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
-
-    int mpi_errno = MPI_SUCCESS;
-
-#ifndef MPICH_UCX_AM_ONLY
-    ucs_status_t ucp_status;
-
-    if (rank != MPI_PROC_NULL) {
-        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
-        /* make sure all operations are completed  */
-        ucp_status = ucp_ep_flush(ep);
-
-        MPIDI_UCX_CHK_STATUS(ucp_status);
-    }
-#endif
-
-    mpi_errno = MPIDI_CH4R_mpi_win_unlock(rank, win);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return MPIDI_CH4R_mpi_win_unlock(rank, win);
 }
 
 static inline int MPIDI_NM_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
@@ -256,25 +223,7 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
 
 static inline int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
 {
-    int mpi_errno;
-
-#ifndef MPICH_UCX_AM_ONLY
-    ucs_status_t ucp_status;
-    /*keep this for now to fence all none-natice operations */
-    /* make sure all local and remote operations are completed */
-    ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
-
-    MPIDI_UCX_CHK_STATUS(ucp_status);
-#endif
-
-    mpi_errno = MPIDI_CH4R_mpi_win_fence(assert, win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return MPIDI_CH4R_mpi_win_fence(assert, win);
 }
 
 static inline int MPIDI_NM_mpi_win_create(void *base,
@@ -325,72 +274,17 @@ static inline int MPIDI_NM_mpi_win_allocate(MPI_Aint length,
 
 static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
-
-    int mpi_errno;
-
-    mpi_errno = MPIDI_CH4R_mpi_win_flush(rank, win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-#ifndef MPICH_UCX_AM_ONLY
-    ucs_status_t ucp_status;
-    if (rank != MPI_PROC_NULL) {
-        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
-        /* only flush the endpoint */
-        ucp_status = ucp_ep_flush(ep);
-        MPIDI_UCX_CHK_STATUS(ucp_status);
-    }
-#endif
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-
+    return MPIDI_CH4R_mpi_win_flush(rank, win);
 }
 
 static inline int MPIDI_NM_mpi_win_flush_local_all(MPIR_Win * win)
 {
-    int mpi_errno = MPI_SUCCESS;
-    mpi_errno = MPIDI_CH4R_mpi_win_flush_local_all(win);
-
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-#ifndef MPICH_UCX_AM_ONLY
-    ucs_status_t ucp_status;
-    /* currently, UCP does not support local flush, so we have to call
-     * a global flush. This is not good for performance - but OK for now */
-    if (MPIDI_UCX_WIN(win).need_local_flush == 1) {
-        ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
-        MPIDI_UCX_CHK_STATUS(ucp_status);
-        MPIDI_UCX_WIN(win).need_local_flush = 0;
-    }
-#endif
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return MPIDI_CH4R_mpi_win_flush_local_all(win);
 }
 
 static inline int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
 {
-    int mpi_errno = MPI_SUCCESS;
-
-#ifndef MPICH_UCX_AM_ONLY
-    ucs_status_t ucp_status;
-
-    /*first we have to make sure that all operations are completed */
-    ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
-    MPIDI_UCX_CHK_STATUS(ucp_status);
-#endif
-
-    mpi_errno = MPIDI_CH4R_mpi_win_unlock_all(win);
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    return MPIDI_CH4R_mpi_win_unlock_all(win);
 }
 
 static inline int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm,
@@ -401,31 +295,7 @@ static inline int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * 
 
 static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win, MPIDI_av_entry_t * addr)
 {
-    int mpi_errno = MPI_SUCCESS;
-    mpi_errno = MPIDI_CH4R_mpi_win_flush_local(rank, win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-#ifndef MPICH_UCX_AM_ONLY
-    ucs_status_t ucp_status;
-    if (rank != MPI_PROC_NULL) {
-        ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
-        /* currently, UCP does not support local flush, so we have to call
-         * a global flush. This is not good for performance - but OK for now */
-
-        if (MPIDI_UCX_WIN(win).need_local_flush == 1) {
-            ucp_status = ucp_ep_flush(ep);
-            MPIDI_UCX_CHK_STATUS(ucp_status);
-            MPIDI_UCX_WIN(win).need_local_flush = 0;
-        }
-    }
-#endif
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-
+    return MPIDI_CH4R_mpi_win_flush_local(rank, win);
 }
 
 static inline int MPIDI_NM_mpi_win_sync(MPIR_Win * win)
@@ -435,25 +305,7 @@ static inline int MPIDI_NM_mpi_win_sync(MPIR_Win * win)
 
 static inline int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
 {
-
-    /*maybe we just flush all eps here? More efficient for smaller communicators... */
-    int mpi_errno = MPI_SUCCESS;
-    mpi_errno = MPIDI_CH4R_mpi_win_flush_all(win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-#ifndef MPICH_UCX_AM_ONLY
-    ucs_status_t ucp_status;
-    ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
-
-    MPIDI_UCX_CHK_STATUS(ucp_status);
-#endif
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-
+    return MPIDI_CH4R_mpi_win_flush_all(win);
 }
 
 static inline int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * win)
