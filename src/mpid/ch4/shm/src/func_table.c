@@ -47,6 +47,8 @@ MPIDI_SHM_funcs_t MPIDI_SHM_src_funcs = {
     .rma_win_local_cmpl_hook = MPIDI_SHM_rma_win_local_cmpl_hook,
     .rma_target_cmpl_hook = MPIDI_SHM_rma_target_cmpl_hook,
     .rma_target_local_cmpl_hook = MPIDI_SHM_rma_target_local_cmpl_hook,
+    .rma_op_cs_enter_hook = MPIDI_SHM_rma_op_cs_enter_hook,
+    .rma_op_cs_exit_hook = MPIDI_SHM_rma_op_cs_exit_hook,
     /* Request initialization/cleanup routines */
     .am_request_init = MPIDI_SHM_am_request_init,
     .am_request_finalize = MPIDI_SHM_am_request_finalize,

@@ -569,4 +569,39 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_target_local_cmpl_hook(int rank ATT
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_TARGET_LOCAL_CMPL_HOOK);
     return MPI_SUCCESS;
 }
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_op_cs_enter_hook(MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_POSIX_win_t *posix_win = NULL;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_RMA_OP_CS_ENTER_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_RMA_OP_CS_ENTER_HOOK);
+
+    posix_win = &win->dev.shm.posix;
+    MPIDI_POSIX_RMA_MUTEX_LOCK(posix_win->shm_mutex_ptr);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_OP_CS_ENTER_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_rma_op_cs_exit_hook(MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_POSIX_win_t *posix_win = NULL;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_RMA_OP_CS_EXIT_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_RMA_OP_CS_EXIT_HOOK);
+
+    posix_win = &win->dev.shm.posix;
+    MPIDI_POSIX_RMA_MUTEX_UNLOCK(posix_win->shm_mutex_ptr);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_RMA_OP_CS_EXIT_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #endif /* POSIX_WIN_H_INCLUDED */
