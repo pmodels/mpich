@@ -455,7 +455,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_universe_size(int *universe_size)
         *universe_size = pvalue->data.uint32;
         PMIX_VALUE_RELEASE(pvalue);
     }
-#elif USE_PMI2_API
+#elif defined(USE_PMI2_API)
     {
         char val[PMI2_MAX_VALLEN];
         int found = 0;
