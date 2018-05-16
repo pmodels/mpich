@@ -174,7 +174,7 @@ S*/
 typedef struct MPIDI_CH3I_nem_tcp_ifaddr_t {
     unsigned int len;
     int type;
-    unsigned char ifaddr[16];
+    unsigned char ifaddr[46];
 } MPIDI_CH3I_nem_tcp_ifaddr_t;
 int MPIDI_GetIPInterface( MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found );
 int MPIDI_Get_IP_for_iface(const char *ifname, MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found);
