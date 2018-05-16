@@ -270,7 +270,6 @@ if (-e "cdesc.h") {
 #include <stdlib.h>
 #include <ISO_Fortran_binding.h>
 #include <mpi.h>
-#include "mpi_fortimpl.h"
 
 extern int cdesc_create_datatype(CFI_cdesc_t *cdesc, int oldcount, MPI_Datatype oldtype, MPI_Datatype *newtype);
 extern int MPIR_Fortran_array_of_string_f2c(const char* strs_f, char*** strs_c, int str_len, int know_size, int size);
