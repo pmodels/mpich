@@ -130,7 +130,7 @@ int MPI_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
     /* If a request was returned, then we need to block until the request
      * is complete */
-    mpi_errno = MPIR_Progress_wait_request(request_ptr);
+    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
