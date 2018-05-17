@@ -33,6 +33,17 @@ cvars:
         ibcast (tree_kary and tree_knomial). Default value is 0, that is,
         no pipelining by default
 
+    - name        : MPIR_CVAR_IBCAST_RING_CHUNK_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Maximum chunk size (in bytes) for pipelining in ibcast ring algorithm.
+        Default value is 0, that is, no pipelining by default
+
     - name        : MPIR_CVAR_IBCAST_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
@@ -48,6 +59,7 @@ cvars:
         scatter_ring_allgather               - Force Scatter Ring Allgather algorithm
         tree_kary                            - Force Generic Transport Tree Kary
         tree_knomial                         - Force Generic Transport Tree Knomial
+        ring                                 - Force Generic Transport Ring algorithm
 
     - name        : MPIR_CVAR_IBCAST_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -271,6 +283,13 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root,
                 mpi_errno =
                     MPIR_Ibcast_intra_tree_knomial(buffer, count, datatype, root, comm_ptr,
                                                    request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IBCAST_INTRA_ALGO_GENTRAN_RING:
+                mpi_errno =
+                    MPIR_Ibcast_intra_ring(buffer, count, datatype, root, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
