@@ -18,41 +18,6 @@ MPIR_Object_alloc_t MPIR_Request_mem = {
 };
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Progress_wait_request
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-/*@
-  MPIR_Progress_wait_request
-
-  A helper routine that implements the very common case of running the progress
-  engine until the given request is complete.
-  @*/
-int MPIR_Progress_wait_request(MPIR_Request * req)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    if (!MPIR_Request_is_complete(req)) {
-        MPID_Progress_state progress_state;
-
-        MPID_Progress_start(&progress_state);
-        while (!MPIR_Request_is_complete(req)) {
-            mpi_errno = MPID_Progress_wait(&progress_state);
-            if (mpi_errno != MPI_SUCCESS) {
-                /* --BEGIN ERROR HANDLING-- */
-                MPID_Progress_end(&progress_state);
-                if (mpi_errno)
-                    MPIR_ERR_POP(mpi_errno);
-                /* --END ERROR HANDLING-- */
-            }
-        }
-        MPID_Progress_end(&progress_state);
-    }
-
-  fn_fail:
-    return mpi_errno;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIR_Request_completion_processing
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
