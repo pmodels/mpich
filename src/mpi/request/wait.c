@@ -38,18 +38,6 @@ int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
 
     MPID_Progress_start(&progress_state);
     while (!MPIR_Request_is_complete(request_ptr)) {
-        if (MPIR_Request_has_poll_fn(request_ptr)) {
-            mpi_errno = MPIR_Grequest_poll(request_ptr, status);
-            if (mpi_errno) {
-                /* --BEGIN ERROR HANDLING-- */
-                MPID_Progress_end(&progress_state);
-                MPIR_ERR_POP(mpi_errno);
-                /* --END ERROR HANDLING-- */
-            }
-            continue;   /* treating UREQUEST like normal request means we'll
-                         * poll indefinitely. skip over progress_wait */
-        }
-
         mpi_errno = MPID_Progress_wait(&progress_state);
         if (mpi_errno) {
             /* --BEGIN ERROR HANDLING-- */
@@ -95,9 +83,17 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
             goto fn_exit;
         }
 
-        mpi_errno = MPID_Wait(request_ptr, status);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        if (MPIR_Request_has_poll_fn(request_ptr)) {
+            while (!MPIR_Request_is_complete(request_ptr)) {
+                mpi_errno = MPIR_Grequest_poll(request_ptr, status);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+            }
+        } else {
+            mpi_errno = MPID_Wait(request_ptr, status);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+        }
     }
 
     mpi_errno = MPIR_Request_completion_processing(request_ptr, status, &active_flag);
