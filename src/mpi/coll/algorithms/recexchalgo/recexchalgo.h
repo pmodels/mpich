@@ -11,12 +11,10 @@
 #ifndef RECEXCHALGO_H_INCLUDED
 #define RECEXCHALGO_H_INCLUDED
 
-#include "recexchalgo_types.h"
-
 int MPII_Recexchalgo_init(void);
 int MPII_Recexchalgo_comm_init(MPIR_Comm * comm);
 int MPII_Recexchalgo_comm_cleanup(MPIR_Comm * comm);
 int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_, int *step1_sendto,
                                    int **step1_recvfrom_, int *step1_nrecvs,
-                                   int ***step2_nbrs_, int *step2_nphases, int *p_of_k_, int *T_)
-#endif                          /* RECEXCHALGO_H_INCLUDED */
+                                   int ***step2_nbrs_, int *step2_nphases, int *p_of_k_, int *T_);
+#endif /* RECEXCHALGO_H_INCLUDED */
