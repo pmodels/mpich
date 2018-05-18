@@ -83,6 +83,16 @@
         }                                                                    \
     } while (0)
 
+#define DTPI_OBJ_FREE(dtp)                                                   \
+    do {                                                                     \
+        err = MPI_Type_free(&dtp->DTP_obj_array[obj_idx].DTP_obj_type);      \
+        dtp->DTP_obj_array[obj_idx].DTP_obj_count = 0;                       \
+        free(dtp->DTP_obj_array[obj_idx].DTP_obj_buf);                       \
+        dtp->DTP_obj_array[obj_idx].DTP_obj_buf = NULL;                      \
+        free(dtp->DTP_obj_array[obj_idx].private_info);                      \
+        dtp->DTP_obj_array[obj_idx].private_info = NULL;                     \
+    } while (0)
+
 /*
  * Composite types
  */
@@ -192,49 +202,49 @@ void DTPI_Print_error(int errcode)
 void DTPI_Init_creators(DTPI_Creator * creators)
 {
     memset(creators, 0, sizeof(*creators));
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__BASIC] = DTPI_Basic_create;
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__CONTIG] = DTPI_Contig_create;
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__VECTOR] = DTPI_Vector_create;
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__HVECTOR] = DTPI_Hvector_create;
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__INDEXED] = DTPI_Indexed_create;
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__HINDEXED] = DTPI_Hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_INDEXED] = DTPI_Block_indexed_create;
-    creators[DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_HINDEXED] = DTPI_Block_hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__VECTOR] = DTPI_Vector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__HVECTOR] = DTPI_Hvector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__INDEXED] = DTPI_Indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__HINDEXED] = DTPI_Hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_INDEXED] = DTPI_Block_indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_HINDEXED] = DTPI_Block_hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_C] = DTPI_Subarray_c_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_F] = DTPI_Subarray_f_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__VECTOR] = DTPI_Vector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__HVECTOR] = DTPI_Hvector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__INDEXED] = DTPI_Indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__HINDEXED] = DTPI_Hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_INDEXED] = DTPI_Block_indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_HINDEXED] = DTPI_Block_hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_C] = DTPI_Subarray_c_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_F] = DTPI_Subarray_f_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__VECTOR] = DTPI_Vector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HVECTOR] = DTPI_Hvector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__INDEXED] = DTPI_Indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HINDEXED] = DTPI_Hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_INDEXED] = DTPI_Block_indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_HINDEXED] = DTPI_Block_hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_C] = DTPI_Subarray_c_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_F] = DTPI_Subarray_f_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__VECTOR] = DTPI_Vector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HVECTOR] = DTPI_Hvector_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__INDEXED] = DTPI_Indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HINDEXED] = DTPI_Hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_INDEXED] = DTPI_Block_indexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_HINDEXED] = DTPI_Block_hindexed_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_C] = DTPI_Subarray_c_create;
-    creators[DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_F] = DTPI_Subarray_f_create;
+    creators[DTPI_OBJ_TYPE__BASIC] = DTPI_Basic_create;
+    creators[DTPI_OBJ_TYPE__CONTIG] = DTPI_Contig_create;
+    creators[DTPI_OBJ_TYPE__VECTOR] = DTPI_Vector_create;
+    creators[DTPI_OBJ_TYPE__HVECTOR] = DTPI_Hvector_create;
+    creators[DTPI_OBJ_TYPE__INDEXED] = DTPI_Indexed_create;
+    creators[DTPI_OBJ_TYPE__HINDEXED] = DTPI_Hindexed_create;
+    creators[DTPI_OBJ_TYPE__BLOCK_INDEXED] = DTPI_Block_indexed_create;
+    creators[DTPI_OBJ_TYPE__BLOCK_HINDEXED] = DTPI_Block_hindexed_create;
+    creators[DTPI_OBJ_TYPE__SUBARRAY_C] = DTPI_Subarray_c_create;
+    creators[DTPI_OBJ_TYPE__SUBARRAY_F] = DTPI_Subarray_f_create;
 }
 
-static void DTPI_Type_init_buf(struct DTPI_Par *par, MPI_Datatype basic_type, void *buf)
+void DTPI_Init_destructors(DTPI_Destructor * destructors)
+{
+    memset(destructors, 0, sizeof(*destructors));
+    destructors[DTPI_OBJ_TYPE__BASIC] = DTPI_Basic_free;
+    destructors[DTPI_OBJ_TYPE__CONTIG] = DTPI_Contig_free;
+    destructors[DTPI_OBJ_TYPE__VECTOR] = DTPI_Vector_free;
+    destructors[DTPI_OBJ_TYPE__HVECTOR] = DTPI_Hvector_free;
+    destructors[DTPI_OBJ_TYPE__INDEXED] = DTPI_Indexed_free;
+    destructors[DTPI_OBJ_TYPE__HINDEXED] = DTPI_Hindexed_free;
+    destructors[DTPI_OBJ_TYPE__BLOCK_INDEXED] = DTPI_Block_indexed_free;
+    destructors[DTPI_OBJ_TYPE__BLOCK_HINDEXED] = DTPI_Block_hindexed_free;
+    destructors[DTPI_OBJ_TYPE__SUBARRAY_C] = DTPI_Subarray_c_free;
+    destructors[DTPI_OBJ_TYPE__SUBARRAY_F] = DTPI_Subarray_f_free;
+}
+
+void DTPI_Init_checkers(DTPI_Checker * checkers)
+{
+    memset(checkers, 0, sizeof(*checkers));
+    checkers[DTPI_OBJ_TYPE__BASIC] = DTPI_Basic_check_buf;
+    checkers[DTPI_OBJ_TYPE__CONTIG] = DTPI_Contig_check_buf;
+    checkers[DTPI_OBJ_TYPE__VECTOR] = DTPI_Vector_check_buf;
+    checkers[DTPI_OBJ_TYPE__HVECTOR] = DTPI_Hvector_check_buf;
+    checkers[DTPI_OBJ_TYPE__INDEXED] = DTPI_Indexed_check_buf;
+    checkers[DTPI_OBJ_TYPE__HINDEXED] = DTPI_Hindexed_check_buf;
+    checkers[DTPI_OBJ_TYPE__BLOCK_INDEXED] = DTPI_Block_indexed_check_buf;
+    checkers[DTPI_OBJ_TYPE__BLOCK_HINDEXED] = DTPI_Block_hindexed_check_buf;
+    checkers[DTPI_OBJ_TYPE__SUBARRAY_C] = DTPI_Subarray_c_check_buf;
+    checkers[DTPI_OBJ_TYPE__SUBARRAY_F] = DTPI_Subarray_f_check_buf;
+}
+
+static void DTPI_Basic_type_init_buf(struct DTPI_Par *par, MPI_Datatype basic_type, void *buf)
 {
     int i, j, k;
     int count;
@@ -322,7 +332,7 @@ static void DTPI_Type_init_buf(struct DTPI_Par *par, MPI_Datatype basic_type, vo
     }
 }
 
-static int DTPI_Type_check_buf(struct DTPI_Par *par, MPI_Datatype basic_type, void *buf)
+static int DTPI_Basic_type_check_buf(struct DTPI_Par *par, MPI_Datatype basic_type, void *buf)
 {
     int i, j, k, err = DTP_SUCCESS;
     int count;
@@ -493,7 +503,7 @@ int DTPI_Struct_create(struct DTPI_Par *par, DTP_t dtp)
         par->core.type_blklen = 1;
         par->core.type_totlen = (MPI_Aint) basic_type_counts[i];
         par->core.type_displ = basic_type_displs[i];
-        DTPI_Type_init_buf(par, basic_types[i], buf);
+        DTPI_Basic_type_init_buf(par, basic_types[i], buf);
     }
 
     /* allocate space for private datatype info */
@@ -504,7 +514,7 @@ int DTPI_Struct_create(struct DTPI_Par *par, DTP_t dtp)
     dtpi->type_extent = extent;
     dtpi->type_lb = lb;
     dtpi->type_ub = lb + extent;
-    dtpi->u.structure.displs = basic_type_displs;       /* freed in DTP_obj_free() */
+    dtpi->u.structure.displs = basic_type_displs;
 
     dtp->DTP_obj_array[obj_idx].DTP_obj_buf = buf;
     dtp->DTP_obj_array[obj_idx].private_info = dtpi;
@@ -519,9 +529,7 @@ int DTPI_Struct_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
   fn_exit:
-    if (basic_type_sizes) {
-        free(basic_type_sizes);
-    }
+    free(basic_type_sizes);
 
     return err;
 
@@ -532,15 +540,9 @@ int DTPI_Struct_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (basic_type_displs) {
-        free(basic_type_displs);
-    }
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(basic_type_displs);
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -587,7 +589,7 @@ int DTPI_Basic_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -625,12 +627,8 @@ int DTPI_Basic_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -692,7 +690,7 @@ int DTPI_Contig_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -732,12 +730,8 @@ int DTPI_Contig_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -798,7 +792,7 @@ int DTPI_Vector_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -839,12 +833,8 @@ int DTPI_Vector_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* clean up buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -908,7 +898,7 @@ int DTPI_Hvector_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -949,12 +939,8 @@ int DTPI_Hvector_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* clean up buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -1025,7 +1011,7 @@ int DTPI_Indexed_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -1057,12 +1043,8 @@ int DTPI_Indexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
   fn_exit:
-    if (type_displs) {
-        free(type_displs);
-    }
-    if (type_blklens) {
-        free(type_blklens);
-    }
+    free(type_displs);
+    free(type_blklens);
 
     return err;
 
@@ -1073,12 +1055,8 @@ int DTPI_Indexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -1150,7 +1128,7 @@ int DTPI_Hindexed_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -1182,12 +1160,8 @@ int DTPI_Hindexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
   fn_exit:
-    if (type_displs) {
-        free(type_displs);
-    }
-    if (type_blklens) {
-        free(type_blklens);
-    }
+    free(type_displs);
+    free(type_blklens);
 
     return err;
 
@@ -1198,12 +1172,8 @@ int DTPI_Hindexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -1272,7 +1242,7 @@ int DTPI_Block_indexed_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -1305,9 +1275,7 @@ int DTPI_Block_indexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
   fn_exit:
-    if (type_displs) {
-        free(type_displs);
-    }
+    free(type_displs);
 
     return err;
 
@@ -1318,12 +1286,8 @@ int DTPI_Block_indexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -1392,7 +1356,7 @@ int DTPI_Block_hindexed_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_displ = 0;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* allocate space for private datatype info */
     DTPI_OBJ_ALLOC_OR_FAIL(dtpi, sizeof(*dtpi));
@@ -1425,9 +1389,7 @@ int DTPI_Block_hindexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
   fn_exit:
-    if (type_displs) {
-        free(type_displs);
-    }
+    free(type_displs);
 
     return err;
 
@@ -1438,12 +1400,8 @@ int DTPI_Block_hindexed_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -1518,7 +1476,7 @@ int DTPI_Subarray_c_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = (extent - par->core.type_displ) / basic_type_size;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* initialize private datatype info data */
     dtpi->obj_type = DTPI_OBJ_TYPE__SUBARRAY_C;
@@ -1557,12 +1515,8 @@ int DTPI_Subarray_c_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
@@ -1639,7 +1593,7 @@ int DTPI_Subarray_f_create(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = (extent - par->core.type_displ) / basic_type_size;
 
     /* initialize buffer with requested DTPI_Par */
-    DTPI_Type_init_buf(par, basic_type, buf);
+    DTPI_Basic_type_init_buf(par, basic_type, buf);
 
     /* initialize private datatype info data */
     dtpi->obj_type = DTPI_OBJ_TYPE__SUBARRAY_F;
@@ -1678,16 +1632,119 @@ int DTPI_Subarray_f_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
-    if (dtpi) {
-        free(dtpi);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dtpi);
+    free(buf);
 
     goto fn_exit;
 }
 
+
+/* --------------------------------------------------------- */
+/* Datatype Pool Object Free Functions                       */
+/* --------------------------------------------------------- */
+
+int DTPI_Struct_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_t *dtpi = (DTPI_t *) dtp->DTP_obj_array[obj_idx].private_info;
+
+    free(dtpi->u.structure.displs);
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Basic_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Contig_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Vector_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Hvector_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Indexed_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Hindexed_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Block_indexed_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Block_hindexed_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Subarray_c_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
+
+int DTPI_Subarray_f_free(DTP_t dtp, int obj_idx)
+{
+    int err;
+
+    DTPI_OBJ_FREE(dtp);
+
+    return err;
+}
 
 /* --------------------------------------------------------- */
 /* Datatype Pool Buffer Check Functions                      */
@@ -1723,7 +1780,7 @@ int DTPI_Struct_check_buf(struct DTPI_Par *par, DTP_t dtp)
         par->core.type_blklen = 1;
         par->core.type_totlen = (MPI_Aint) basic_type_counts[i];
         par->core.type_displ = basic_type_displs[i];
-        err = DTPI_Type_check_buf(par, basic_types[i], buf);
+        err = DTPI_Basic_type_check_buf(par, basic_types[i], buf);
         if (err != DTP_SUCCESS) {
             break;
         }
@@ -1749,7 +1806,7 @@ int DTPI_Basic_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = basic_type_count;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Contig_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1769,7 +1826,7 @@ int DTPI_Contig_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = dtpi->type_extent / dtpi->type_basic_size;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Vector_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1789,7 +1846,7 @@ int DTPI_Vector_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = dtpi->type_extent / dtpi->type_basic_size;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Hvector_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1809,7 +1866,7 @@ int DTPI_Hvector_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = dtpi->type_extent / dtpi->type_basic_size;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Indexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1829,7 +1886,7 @@ int DTPI_Indexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = dtpi->type_extent / dtpi->type_basic_size;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Hindexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1849,7 +1906,7 @@ int DTPI_Hindexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = dtpi->type_extent / dtpi->type_basic_size;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Block_indexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1869,7 +1926,7 @@ int DTPI_Block_indexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = dtpi->type_extent / dtpi->type_basic_size;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Block_hindexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1889,7 +1946,7 @@ int DTPI_Block_hindexed_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_totlen = dtpi->type_extent / dtpi->type_basic_size;
     par->core.type_displ = 0;
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Subarray_c_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1911,7 +1968,7 @@ int DTPI_Subarray_c_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_stride = dtpi->u.subarray.arr_sizes[1];
     par->core.type_blklen = dtpi->u.subarray.arr_subsizes[1];
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
 
 int DTPI_Subarray_f_check_buf(struct DTPI_Par *par, DTP_t dtp)
@@ -1933,5 +1990,5 @@ int DTPI_Subarray_f_check_buf(struct DTPI_Par *par, DTP_t dtp)
     par->core.type_stride = dtpi->u.subarray.arr_sizes[0];
     par->core.type_blklen = dtpi->u.subarray.arr_subsizes[0];
 
-    return DTPI_Type_check_buf(par, basic_type, buf);
+    return DTPI_Basic_type_check_buf(par, basic_type, buf);
 }
