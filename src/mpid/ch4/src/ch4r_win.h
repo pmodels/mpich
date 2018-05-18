@@ -1298,16 +1298,19 @@ static inline int MPIDI_CH4R_mpi_win_flush(int rank, MPIR_Win * win)
         MPIR_ERR_POP(mpi_errno);
 #endif
 
-    /* Ensure completion of AM operations */
+    /* Ensure completion of AM operations issued to the target.
+     * If target object is not created (e.g., when all operations issued
+     * to the target were via shm and in lockall), we also need trigger
+     * progress once to handle remote AM. */
     MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, rank);
     if (target_ptr) {
         if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK)
             MPIDI_CH4U_EPOCH_CHECK_TARGET_LOCK(target_ptr, mpi_errno, goto fn_fail);
-
-        do {
-            MPIDI_CH4R_PROGRESS();
-        } while (MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0);
     }
+
+    do {
+        MPIDI_CH4R_PROGRESS();
+    } while (target_ptr && MPIR_cc_get(target_ptr->remote_cmpl_cnts) != 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_FLUSH);
@@ -1502,16 +1505,19 @@ static inline int MPIDI_CH4R_mpi_win_flush_local(int rank, MPIR_Win * win)
         MPIR_ERR_POP(mpi_errno);
 #endif
 
-    /* Ensure local completion of AM operations */
+    /* Ensure completion of AM operations issued to the target.
+     * If target object is not created (e.g., when all operations issued
+     * to the target were via shm and in lockall), we also need trigger
+     * progress once to handle remote AM. */
     MPIDI_CH4U_win_target_t *target_ptr = MPIDI_CH4U_win_target_find(win, rank);
     if (target_ptr) {
         if (MPIDI_CH4U_WIN(win, sync).access_epoch_type == MPIDI_CH4U_EPOTYPE_LOCK)
             MPIDI_CH4U_EPOCH_CHECK_TARGET_LOCK(target_ptr, mpi_errno, goto fn_fail);
-
-        do {
-            MPIDI_CH4R_PROGRESS();
-        } while (MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0);
     }
+
+    do {
+        MPIDI_CH4R_PROGRESS();
+    } while (target_ptr && MPIR_cc_get(target_ptr->local_cmpl_cnts) != 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_FLUSH_LOCAL);
