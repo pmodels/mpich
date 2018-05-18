@@ -21,7 +21,7 @@
 #include <sys/ioctl.h>  /* necessary for: */
 #include <time.h>
 #ifndef __USE_GNU
-#define __USE_GNU 1       /* O_DIRECT and */
+#define __USE_GNU 1     /* O_DIRECT and */
 #include <fcntl.h>      /* IO operations */
 #endif
 #undef __USE_GNU
