@@ -14,7 +14,10 @@
 MPI_Datatype DTP_Basic_type[] = { DTP_MPI_DATATYPE };
 
 /* pointer to create functions for datatypes */
-static DTPI_Creator creators[DTPI_OBJ_LAYOUT_LARGE__NUM];
+static DTPI_Creator creators[DTPI_OBJ_TYPE__NUM];
+static DTPI_Destructor destructors[DTPI_OBJ_TYPE__NUM];
+static DTPI_Checker checkers[DTPI_OBJ_TYPE__NUM];
+static int DTPI_Initialized = 0;
 
 /* return factor of count */
 static int DTPI_Get_max_fact(int count)
@@ -79,7 +82,12 @@ int DTP_pool_create(MPI_Datatype basic_type, MPI_Aint basic_type_count, DTP_t * 
     (*dtp)->DTP_type_signature.DTP_pool_basic.DTP_basic_type_count = basic_type_count;
     (*dtp)->DTP_obj_array = (struct DTP_obj_array_s *) obj_array;
 
-    DTPI_Init_creators(creators);
+    if (!DTPI_Initialized) {
+        DTPI_Init_creators(creators);
+        DTPI_Init_destructors(destructors);
+        DTPI_Init_checkers(checkers);
+        DTPI_Initialized = 1;
+    }
 
   fn_exit:
     return err;
@@ -189,6 +197,7 @@ int DTP_obj_create(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Ai
     int err = DTP_SUCCESS;
     int basic_type_count;
     int factor;
+    int obj_type;
     struct DTPI_Par par;
 
     /* init user defined params */
@@ -295,7 +304,11 @@ int DTP_obj_create(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Ai
                 fflush(stdout);
                 goto fn_exit;
         }
-        err = creators[obj_idx] (&par, dtp);
+
+        /* get type of object for creator array */
+        DTPI_GET_BASIC_OBJ_TYPE_FROM_IDX(obj_idx, obj_type);
+
+        err = creators[obj_type] (&par, dtp);
     } else {
         switch (obj_idx) {
             case DTPI_OBJ_LAYOUT_SIMPLE__STRUCT:
@@ -320,88 +333,16 @@ int DTP_obj_create(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI_Ai
 int DTP_obj_free(DTP_t dtp, int obj_idx)
 {
     int err = DTP_SUCCESS;
+    int obj_type;
     DTPI_t *dtpi;
 
     dtpi = (DTPI_t *) dtp->DTP_obj_array[obj_idx].private_info;
+    obj_type = dtpi->obj_type;
 
     if (dtp->DTP_pool_type == DTP_POOL_TYPE__BASIC) {
-        switch (obj_idx) {
-            case DTPI_OBJ_LAYOUT_SIMPLE__BASIC:
-            case DTPI_OBJ_LAYOUT_SIMPLE__CONTIG:
-            case DTPI_OBJ_LAYOUT_SIMPLE__VECTOR:
-            case DTPI_OBJ_LAYOUT_SIMPLE__HVECTOR:
-            case DTPI_OBJ_LAYOUT_SIMPLE__INDEXED:
-            case DTPI_OBJ_LAYOUT_SIMPLE__HINDEXED:
-            case DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_INDEXED:
-            case DTPI_OBJ_LAYOUT_SIMPLE__BLOCK_HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__VECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__HVECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__BLOCK_HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_C:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK__SUBARRAY_F:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__VECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__HVECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__BLOCK_HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_C:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT__SUBARRAY_F:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__VECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HVECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__BLOCK_HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_C:
-            case DTPI_OBJ_LAYOUT_LARGE_BLK_STRD__SUBARRAY_F:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__VECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HVECTOR:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_INDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__BLOCK_HINDEXED:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_C:
-            case DTPI_OBJ_LAYOUT_LARGE_CNT_STRD__SUBARRAY_F:
-                err = MPI_Type_free(&dtp->DTP_obj_array[obj_idx].DTP_obj_type);
-                if (err) {
-                    DTPI_Print_error(err);
-                }
-                dtp->DTP_obj_array[obj_idx].DTP_obj_count = 0;
-                free(dtp->DTP_obj_array[obj_idx].DTP_obj_buf);
-                dtp->DTP_obj_array[obj_idx].DTP_obj_buf = NULL;
-                free(dtp->DTP_obj_array[obj_idx].private_info);
-                dtp->DTP_obj_array[obj_idx].private_info = NULL;
-                break;
-            default:
-                err = DTP_ERR_OTHER;
-                fprintf(stdout, "Type structure %d is not defined\n", obj_idx);
-                fflush(stdout);
-        }
+        err = destructors[obj_type] (dtp, obj_idx);
     } else {
-        switch (obj_idx) {
-            case DTPI_OBJ_LAYOUT_SIMPLE__STRUCT:
-                if (dtpi) {
-                    free(dtpi->u.structure.displs);
-                }
-                err = MPI_Type_free(&dtp->DTP_obj_array[obj_idx].DTP_obj_type);
-                if (err) {
-                    DTPI_Print_error(err);
-                }
-                dtp->DTP_obj_array[obj_idx].DTP_obj_count = 0;
-                free(dtp->DTP_obj_array[obj_idx].DTP_obj_buf);
-                dtp->DTP_obj_array[obj_idx].DTP_obj_buf = NULL;
-                free(dtp->DTP_obj_array[obj_idx].private_info);
-                dtp->DTP_obj_array[obj_idx].private_info = NULL;
-                break;
-            default:
-                err = DTP_ERR_OTHER;
-                fprintf(stdout, "Type structure %d is not defined\n", obj_idx);
-                fflush(stdout);
-        }
+        err = DTPI_Struct_free(dtp, obj_idx);
     }
 
     return err;
@@ -433,47 +374,11 @@ int DTP_obj_buf_check(DTP_t dtp, int obj_idx, int val_start, int val_stride, MPI
     par.user.val_stride = val_stride;
     par.user.obj_idx = obj_idx;
 
-    pool_type = dtp->DTP_pool_type;
-    if (pool_type == DTP_POOL_TYPE__BASIC) {
-        dtpi = (DTPI_t *) dtp->DTP_obj_array[obj_idx].private_info;
-        obj_type = dtpi->obj_type;
+    dtpi = (DTPI_t *) dtp->DTP_obj_array[obj_idx].private_info;
+    obj_type = dtpi->obj_type;
 
-        switch (obj_type) {
-            case DTPI_OBJ_TYPE__BASIC:
-                err = DTPI_Basic_check_buf(&par, dtp);
-                break;
-            case DTPI_OBJ_TYPE__CONTIG:
-                err = DTPI_Contig_check_buf(&par, dtp);
-                break;
-            case DTPI_OBJ_TYPE__VECTOR:
-                err = DTPI_Vector_check_buf(&par, dtp);
-                break;
-            case DTPI_OBJ_TYPE__HVECTOR:
-                err = DTPI_Hvector_check_buf(&par, dtp);
-                break;
-            case DTPI_OBJ_TYPE__INDEXED:
-                err = DTPI_Indexed_check_buf(&par, dtp);
-                break;
-            case DTPI_OBJ_TYPE__HINDEXED:
-                err = DTPI_Hindexed_check_buf(&par, dtp);
-                break;
-            case DTPI_OBJ_TYPE__BLOCK_INDEXED:
-                err = DTPI_Block_indexed_check_buf(&par, dtp);
-                break;
-            case DTPI_OBJ_TYPE__BLOCK_HINDEXED:
-                err = DTPI_Block_hindexed_check_buf(&par, dtp);
-                break;
-            case DTPI_OBJ_TYPE__SUBARRAY_C:
-                err = DTPI_Subarray_c_check_buf(&par, dtp);
-                break;
-            case DTPI_OBJ_TYPE__SUBARRAY_F:
-                err = DTPI_Subarray_f_check_buf(&par, dtp);
-                break;
-            default:
-                err = DTP_ERR_OTHER;
-                fprintf(stdout, "No object at index %d\n", obj_idx);
-                fflush(stdout);
-        }
+    if (dtp->DTP_pool_type == DTP_POOL_TYPE__BASIC) {
+        err = checkers[obj_type] (&par, dtp);
     } else {
         err = DTPI_Struct_check_buf(&par, dtp);
     }
