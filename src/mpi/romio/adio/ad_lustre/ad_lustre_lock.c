@@ -113,7 +113,7 @@ int llapi_ladvise_lock(ADIO_File fd, unsigned long long flags, int num_advise,
     struct llapi_ladvise_hdr *ladvise_hdr;
     int rc;
     int i;
-    enum lock_mode_user mode=0;
+    enum lock_mode_user mode = 0;
 
     if (num_advise < 1 || num_advise >= LAH_COUNT_MAX) {
         errno = EINVAL;
@@ -251,7 +251,7 @@ int ADIOI_LUSTRE_request_only_lock_ioctl(ADIO_File fd)
    before attempting 'lock ahead' extent locking. */
 int ADIOI_LUSTRE_clear_locks(ADIO_File fd)
 {
-    int err=0;
+    int err = 0;
     int id;
 
     if (!fd->my_cb_nodes_index) {
