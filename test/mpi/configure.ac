@@ -233,6 +233,11 @@ AC_ARG_ENABLE(xfail,
 		[Run tests marked for expected failure])],,
 	[enable_xfail=no])
 
+AC_ARG_ENABLE(collective-algorithms,
+              [AC_HELP_STRING([--enable-collective-algorithms],
+                              [Run extended collective algorithm tests])],,
+              [enable_collective_algorithms=no])
+
 AC_ARG_WITH(mpi,
 	[AC_HELP_STRING([--with-mpi=dir],
 		[Use the selected MPI; compilation scripts for mpicc,
@@ -701,7 +706,11 @@ fi
 AC_SUBST(largetest)
 
 # Extended collectives test
-source $srcdir/coll/test_coll_algos.sh
+if test "$enable_collective_algorithms" = "yes" ; then
+    source $srcdir/coll/test_coll_algos.sh
+else
+    coll_algo_tests=""
+fi
 AC_SUBST(coll_algo_tests)
 AM_SUBST_NOTMAKE(coll_algo_tests)
 
