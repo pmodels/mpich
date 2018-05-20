@@ -173,8 +173,20 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintv
     if (obj_containing_cpuset->type == query_obj_type) {
         color = obj_containing_cpuset->logical_index;
     } else {
-        hwloc_obj_t hobj = hwloc_get_ancestor_obj_by_type(MPIR_Process.topology, query_obj_type,
-                                                          obj_containing_cpuset);
+        hwloc_obj_t hobj = NULL;
+        hwloc_obj_t tmp = NULL;
+        /* hwloc_get_ancestor_of_type call cannot be used here because HWLOC version 2.0 and above do not
+         * treat memory objects (NUMA) as objects in topology tree (Details can be found in
+         * https://www.open-mpi.org/projects/hwloc/doc/v2.0.1/a00327.php#upgrade_to_api_2x_memory_find)
+         */
+        while ((tmp =
+                hwloc_get_next_obj_by_type(MPIR_Process.topology, query_obj_type, tmp)) != NULL) {
+            if (hwloc_bitmap_isincluded(obj_containing_cpuset->cpuset, tmp->cpuset) ||
+                hwloc_bitmap_isequal(tmp->cpuset, obj_containing_cpuset->cpuset)) {
+                hobj = tmp;
+                break;
+            }
+        }
         if (hobj)
             color = hobj->logical_index;
         else
