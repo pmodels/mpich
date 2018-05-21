@@ -25,6 +25,46 @@ static int dbgflag = 0;         /* Flag used for debugging */
 static int wrank = -1;          /* World rank */
 static int verbose = 0;         /* Message level (0 is none) */
 
+static struct {
+    const char *type_name;
+     MPI::Datatype type;
+} typelist[] = {
+    {"MPI_CHAR", MPI_CHAR},
+    {"MPI_BYTE", MPI_BYTE},
+    {"MPI_WCHAR", MPI_WCHAR},
+    {"MPI_SHORT", MPI_SHORT},
+    {"MPI_INT", MPI_INT},
+    {"MPI_LONG", MPI_LONG},
+    {"MPI_LONG_LONG_INT", MPI_LONG_LONG_INT},
+    {"MPI_UNSIGNED_CHAR", MPI_UNSIGNED_CHAR},
+    {"MPI_UNSIGNED_SHORT", MPI_UNSIGNED_SHORT},
+    {"MPI_UNSIGNED", MPI_UNSIGNED},
+    {"MPI_UNSIGNED_LONG", MPI_UNSIGNED_LONG},
+    {"MPI_UNSIGNED_LONG_LONG", MPI_UNSIGNED_LONG_LONG},
+    {"MPI_FLOAT", MPI_FLOAT},
+    {"MPI_DOUBLE", MPI_DOUBLE},
+    {"MPI_LONG_DOUBLE", MPI_LONG_DOUBLE},
+    {"MPI_INT8_T", MPI_INT8_T},
+    {"MPI_INT16_T", MPI_INT16_T},
+    {"MPI_INT32_T", MPI_INT32_T},
+    {"MPI_INT64_T", MPI_INT64_T},
+    {"MPI_UINT8_T", MPI_UINT8_T},
+    {"MPI_UINT16_T", MPI_UINT16_T},
+    {"MPI_UINT32_T", MPI_UINT32_T},
+    {"MPI_UINT64_T", MPI_UINT64_T},
+    {"MPI_C_COMPLEX", MPI_C_COMPLEX},
+    {"MPI_C_FLOAT_COMPLEX", MPI_C_FLOAT_COMPLEX},
+    {"MPI_C_DOUBLE_COMPLEX", MPI_C_DOUBLE_COMPLEX},
+    {"MPI_C_LONG_DOUBLE_COMPLEX", MPI_C_LONG_DOUBLE_COMPLEX},
+    {"MPI_FLOAT_INT", MPI_FLOAT_INT},
+    {"MPI_DOUBLE_INT", MPI_DOUBLE_INT},
+    {"MPI_LONG_INT", MPI_LONG_INT},
+    {"MPI_2INT", MPI_2INT},
+    {"MPI_SHORT_INT", MPI_SHORT_INT},
+    {"MPI_LONG_DOUBLE_INT", MPI_LONG_DOUBLE_INT},
+    {"MPI_DATATYPE_NULL", MPI_DATATYPE_NULL}
+};
+
 static void MTestRMACleanup(void);
 
 /*
@@ -569,3 +609,35 @@ static void MTestRMACleanup(void)
 {
 }
 #endif
+
+int MTestInitBasicSignatureX(int argc, char *argv[], int *count, MPI::Datatype * basic_type)
+{
+    int i, j;
+
+    if (argc < 3) {
+        cout << "Usage: " << "-type=[TYPE] -count=[COUNT]\n";
+        return 1;
+    } else {
+        for (i = 1; i < argc; i++) {
+            if (!strncmp(argv[i], "-type=", strlen("-type="))) {
+                j = 0;
+
+                while (strcmp(typelist[j].type_name, "MPI_DATATYPE_NULL") &&
+                       strcmp(argv[i] + strlen("-type="), typelist[j].type_name)) {
+                    j++;
+                }
+
+                if (strcmp(typelist[j].type_name, "MPI_DATATYPE_NULL")) {
+                    *basic_type = typelist[j].type;
+                } else {
+                    cout << "Error: datatype not recognized\n";
+                    return 1;
+                }
+            } else if (!strncmp(argv[i], "-count=", strlen("-count="))) {
+                *count = atoi(argv[i] + strlen("-count="));
+            }
+        }
+    }
+
+    return 0;
+}
