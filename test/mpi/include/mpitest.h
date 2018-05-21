@@ -8,6 +8,7 @@
 #define MPITEST_H_INCLUDED
 
 #include <string.h>
+#include <mpi.h>
 #include "mpitestconf.h"
 
 /*
@@ -57,6 +58,10 @@ typedef struct _MTestDatatype {
     void *(*FreeBuf) (struct _MTestDatatype *);
     int (*CheckBuf) (struct _MTestDatatype *);
 } MTestDatatype;
+
+int MTestInitBasicSignature(int, char **, int *, MPI_Datatype *);
+int MTestInitBasicPt2ptSignature(int, char **, int *, MPI_Datatype *);
+int MTestInitStructSignature(int, char **, int *, int **, MPI_Datatype **);
 
 /* The max value of count must be very large to ensure that we
  *  reach the long message algorithms. (The maximal count or block length

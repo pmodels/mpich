@@ -45,6 +45,8 @@ typedef struct _MTestDatatype {
     int (*CheckBuf) (struct _MTestDatatype *);
 } MTestDatatype;
 
+int MTestInitBasicSignatureX(int, char **, int *, MPI::Datatype *);
+
 int MTestCheckRecv(MPI::Status &, MTestDatatype *);
 int MTestGetDatatypes(MTestDatatype *, MTestDatatype *, int);
 void MTestResetDatatypes(void);
