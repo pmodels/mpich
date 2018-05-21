@@ -56,6 +56,47 @@ static int returnWithVal = 1;   /* Allow programs to return with a non-zero
                                  * with some runtime systems) */
 static int usageOutput = 0;     /* */
 
+static struct {
+    const char *typename;
+    MPI_Datatype type;
+} typelist[] = {
+    {
+    "MPI_CHAR", MPI_CHAR}, {
+    "MPI_BYTE", MPI_BYTE}, {
+    "MPI_WCHAR", MPI_WCHAR}, {
+    "MPI_SHORT", MPI_SHORT}, {
+    "MPI_INT", MPI_INT}, {
+    "MPI_LONG", MPI_LONG}, {
+    "MPI_LONG_LONG_INT", MPI_LONG_LONG_INT}, {
+    "MPI_UNSIGNED_CHAR", MPI_UNSIGNED_CHAR}, {
+    "MPI_UNSIGNED_SHORT", MPI_UNSIGNED_SHORT}, {
+    "MPI_UNSIGNED", MPI_UNSIGNED}, {
+    "MPI_UNSIGNED_LONG", MPI_UNSIGNED_LONG}, {
+    "MPI_UNSIGNED_LONG_LONG", MPI_UNSIGNED_LONG_LONG}, {
+    "MPI_FLOAT", MPI_FLOAT}, {
+    "MPI_DOUBLE", MPI_DOUBLE}, {
+    "MPI_LONG_DOUBLE", MPI_LONG_DOUBLE}, {
+    "MPI_INT8_T", MPI_INT8_T}, {
+    "MPI_INT16_T", MPI_INT16_T}, {
+    "MPI_INT32_T", MPI_INT32_T}, {
+    "MPI_INT64_T", MPI_INT64_T}, {
+    "MPI_UINT8_T", MPI_UINT8_T}, {
+    "MPI_UINT16_T", MPI_UINT16_T}, {
+    "MPI_UINT32_T", MPI_UINT32_T}, {
+    "MPI_UINT64_T", MPI_UINT64_T}, {
+    "MPI_C_COMPLEX", MPI_C_COMPLEX}, {
+    "MPI_C_FLOAT_COMPLEX", MPI_C_FLOAT_COMPLEX}, {
+    "MPI_C_DOUBLE_COMPLEX", MPI_C_DOUBLE_COMPLEX}, {
+    "MPI_C_LONG_DOUBLE_COMPLEX", MPI_C_LONG_DOUBLE_COMPLEX}, {
+    "MPI_FLOAT_INT", MPI_FLOAT_INT}, {
+    "MPI_DOUBLE_INT", MPI_DOUBLE_INT}, {
+    "MPI_LONG_INT", MPI_LONG_INT}, {
+    "MPI_2INT", MPI_2INT}, {
+    "MPI_SHORT_INT", MPI_SHORT_INT}, {
+    "MPI_LONG_DOUBLE_INT", MPI_LONG_DOUBLE_INT}, {
+    "MPI_DATATYPE_NULL", MPI_DATATYPE_NULL}
+};
+
 /* Provide backward portability to MPI 1 */
 #ifndef MPI_VERSION
 #define MPI_VERSION 1
@@ -1316,3 +1357,117 @@ int MTestSpawnPossible(int *can_spawn)
 }
 
 /* ------------------------------------------------------------------------ */
+
+int MTestInitBasicSignature(int argc, char *argv[], int *count, MPI_Datatype * basic_type)
+{
+    int i, j;
+
+    if (argc < 3) {
+        fprintf(stdout, "Usage: %s -type=[TYPE] -count=[COUNT]\n", argv[0]);
+        return MTestReturnValue(1);
+    } else {
+        for (i = 1; i < argc; i++) {
+            if (!strncmp(argv[i], "-type=", strlen("-type="))) {
+                j = 0;
+                while (strcmp(typelist[j].typename, "MPI_DATATYPE_NULL") &&
+                       strcmp(argv[i] + strlen("-type="), typelist[j].typename)) {
+                    j++;
+                }
+
+                if (strcmp(typelist[j].typename, "MPI_DATATYPE_NULL")) {
+                    *basic_type = typelist[j].type;
+                } else {
+                    fprintf(stdout, "Error: datatype not recognized\n");
+                    return MTestReturnValue(1);
+                }
+            } else if (!strncmp(argv[i], "-count=", strlen("-count="))) {
+                *count = atoi(argv[i] + strlen("-count="));
+            }
+        }
+    }
+
+    return MTestReturnValue(0);
+}
+
+int MTestInitBasicPt2ptSignature(int argc, char *argv[], int *count, MPI_Datatype * basic_type)
+{
+    int i, j;
+
+    if (argc < 4) {
+        fprintf(stdout, "Usage: %s -type=[TYPE] -sendcnt=[COUNT] -recvcnt=[COUNT]\n", argv[0]);
+        return MTestReturnValue(1);
+    } else {
+        for (i = 1; i < argc; i++) {
+            if (!strncmp(argv[i], "-type=", strlen("-type="))) {
+                j = 0;
+                while (strcmp(typelist[j].typename, "MPI_DATATYPE_NULL") &&
+                       strcmp(argv[i] + strlen("-type="), typelist[j].typename)) {
+                    j++;
+                }
+
+                if (strcmp(typelist[j].typename, "MPI_DATATYPE_NULL")) {
+                    *basic_type = typelist[j].type;
+                } else {
+                    fprintf(stdout, "Error: datatype not recognized\n");
+                    return MTestReturnValue(1);
+                }
+            } else if (!strncmp(argv[i], "-sendcnt=", strlen("-sendcnt="))) {
+                count[0] = atoi(argv[i] + strlen("-sendcnt="));
+            } else if (!strncmp(argv[i], "-recvcnt=", strlen("-recvcnt="))) {
+                count[1] = atoi(argv[i] + strlen("-recvcnt="));
+            }
+        }
+    }
+
+    return MTestReturnValue(0);
+}
+
+int MTestInitStructSignature(int argc, char *argv[], int *numtypes, int **counts,
+                             MPI_Datatype ** basic_types)
+{
+    int i, j, k;
+    char *input_string, *token;
+
+    if (argc < 4) {
+        fprintf(stdout, "Usage: %s -numtypes=[NUM] -types=[TYPES] -counts=[COUNTS]\n", argv[0]);
+        return MTestReturnValue(1);
+    } else {
+        for (i = 1; i < argc; i++) {
+            if (!strncmp(argv[i], "-numtypes=", strlen("-numtypes="))) {
+                *numtypes = atoi(argv[i] + strlen("-numtypes="));
+                /* allocate arrays */
+                *counts = (int *) malloc(*numtypes * sizeof(int));
+                *basic_types = (MPI_Datatype *) malloc(*numtypes * sizeof(MPI_Datatype));
+            } else if (!strncmp(argv[i], "-types=", strlen("-types="))) {
+                input_string = strdup(argv[i] + strlen("-types="));
+
+                for (k = 0, token = strtok(input_string, ","); token; token = strtok(NULL, ",")) {
+                    j = 0;
+                    while (strcmp(typelist[j].typename, "MPI_DATATYPE_NULL") &&
+                           strcmp(token, typelist[j].typename)) {
+                        j++;
+                    }
+
+                    if (strcmp(typelist[j].typename, "MPI_DATATYPE_NULL")) {
+                        (*basic_types)[k++] = typelist[j].type;
+                    } else {
+                        fprintf(stdout, "Error: datatype not recognized\n");
+                        return MTestReturnValue(1);
+                    }
+                }
+
+                free(input_string);
+            } else if (!strncmp(argv[i], "-counts=", strlen("-counts="))) {
+                input_string = strdup(argv[i] + strlen("-counts="));
+
+                for (k = 0, token = strtok(input_string, ","); token; token = strtok(NULL, ",")) {
+                    (*counts)[k++] = atoi(token);
+                }
+
+                free(input_string);
+            }
+        }
+    }
+
+    return MTestReturnValue(0);
+}
