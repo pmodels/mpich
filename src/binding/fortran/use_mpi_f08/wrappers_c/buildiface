@@ -271,6 +271,10 @@ if (-e "cdesc.h") {
 #include <ISO_Fortran_binding.h>
 #include <mpi.h>
 
+#ifndef MPI_MODE_RDONLY
+#define MPIO_Request MPI_Request
+#endif
+
 extern int cdesc_create_datatype(CFI_cdesc_t *cdesc, int oldcount, MPI_Datatype oldtype, MPI_Datatype *newtype);
 extern int MPIR_Fortran_array_of_string_f2c(const char* strs_f, char*** strs_c, int str_len, int know_size, int size);
 extern int MPIR_Comm_spawn_c(const char *command, char *argv_f, int maxprocs, MPI_Info info, int root,
