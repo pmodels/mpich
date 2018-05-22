@@ -45,6 +45,21 @@ int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
             MPIR_ERR_POP(mpi_errno);
             /* --END ERROR HANDLING-- */
         }
+
+        if (unlikely(MPIR_CVAR_ENABLE_FT &&
+                     !MPIR_Request_is_complete(request_ptr) &&
+                     MPID_Request_is_anysource(request_ptr) &&
+                     !MPID_Comm_AS_enabled(request_ptr->comm))) {
+            /* A process fail during progress, which is manifested through this check. */
+            if (request_ptr->kind == MPIR_REQUEST_KIND__RECV) {
+                /* We only handle receive request at the moment. */
+                MPID_Cancel_recv(request_ptr);
+                MPIR_STATUS_SET_CANCEL_BIT(request_ptr->status, FALSE);
+            }
+            MPIR_ERR_SET(request_ptr->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
+            mpi_errno = request_ptr->status.MPI_ERROR;
+            goto fn_fail;
+        }
     }
     MPID_Progress_end(&progress_state);
 
