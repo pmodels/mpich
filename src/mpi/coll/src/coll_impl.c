@@ -369,6 +369,12 @@ int MPII_Coll_init(void)
         MPIR_Iallgather_intra_algo_choice = MPIR_IALLGATHER_INTRA_ALGO_RECURSIVE_DOUBLING;
     else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "ring"))
         MPIR_Iallgather_intra_algo_choice = MPIR_IALLGATHER_INTRA_ALGO_RING;
+    else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "recexch_distance_doubling"))
+        MPIR_Iallgather_intra_algo_choice =
+            MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_DOUBLING;
+    else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "recexch_distance_halving"))
+        MPIR_Iallgather_intra_algo_choice =
+            MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING;
     else
         MPIR_Iallgather_intra_algo_choice = MPIR_IALLGATHER_INTRA_ALGO_AUTO;
 
