@@ -401,6 +401,12 @@ int MPII_Coll_init(void)
         MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_RECURSIVE_DOUBLING;
     else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "reduce_scatter_allgather"))
         MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER;
+    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "recexch_single_buffer"))
+        MPIR_Iallreduce_intra_algo_choice =
+            MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_SINGLE_BUFFER;
+    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "recexch_multiple_buffer"))
+        MPIR_Iallreduce_intra_algo_choice =
+            MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_MULTIPLE_BUFFER;
     else
         MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_AUTO;
 
@@ -859,6 +865,7 @@ int MPII_Coll_init(void)
     /* initialize algorithms */
     MPII_Stubalgo_init();
     MPII_Treealgo_init();
+    MPII_Recexchalgo_init();
 
   fn_exit:
     return mpi_errno;
