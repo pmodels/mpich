@@ -10,6 +10,16 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
+    - name        : MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for recursive exchange based iallreduce
+
     - name        : MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
@@ -23,6 +33,8 @@ cvars:
         naive                    - Force naive algorithm
         recursive_doubling       - Force recursive doubling algorithm
         reduce_scatter_allgather - Force reduce scatter allgather algorithm
+        recexch_single_buffer    - Force generic transport recursive exchange with single buffer for receives
+        recexch_multiple_buffer  - Force generic transport recursive exchange with multiple buffers for receives
 
     - name        : MPIR_CVAR_IALLREDUCE_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -232,6 +244,35 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count,
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
+    /* If the user picks one of the transport-enabled algorithms, branch there
+     * before going down to the MPIR_Sched-based algorithms. */
+    /* TODO - Eventually the intention is to replace all of the
+     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * will require sufficient performance testing and replacement algorithms. */
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        /* intracommunicator */
+        switch (MPIR_Iallreduce_intra_algo_choice) {
+            case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_SINGLE_BUFFER:
+                mpi_errno =
+                    MPIR_Iallreduce_intra_recexch_single_buffer(sendbuf, recvbuf, count, datatype,
+                                                                op, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_MULTIPLE_BUFFER:
+                mpi_errno =
+                    MPIR_Iallreduce_intra_recexch_multiple_buffer(sendbuf, recvbuf, count, datatype,
+                                                                  op, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            default:
+                /* go down to the MPIR_Sched-based algorithms */
+                break;
+        }
+    }
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno)
