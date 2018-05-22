@@ -34,6 +34,12 @@ enum {
     IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER
 };
 
+/* enumerator for different recexch types */
+enum {
+    IALLGATHER_RECEXCH_TYPE_DISTANCE_DOUBLING = 0,
+    IALLGATHER_RECEXCH_TYPE_DISTANCE_HALVING
+};
+
 /* Collectives request data structure */
 typedef struct MPII_Coll_req_t {
     void *sched;                /* pointer to the schedule */
