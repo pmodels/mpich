@@ -168,7 +168,7 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintv
         goto split_id;
 
     obj_containing_cpuset =
-        hwloc_get_obj_covering_cpuset(MPIR_Process.topology, MPIR_Process.bindset);
+        hwloc_get_obj_covering_cpuset(MPIR_Process.hwloc_topology, MPIR_Process.bindset);
     MPIR_Assert(obj_containing_cpuset != NULL);
     if (obj_containing_cpuset->type == query_obj_type) {
         color = obj_containing_cpuset->logical_index;
@@ -180,7 +180,8 @@ static int node_split_processor(MPIR_Comm * comm_ptr, int key, const char *hintv
          * https://www.open-mpi.org/projects/hwloc/doc/v2.0.1/a00327.php#upgrade_to_api_2x_memory_find)
          */
         while ((tmp =
-                hwloc_get_next_obj_by_type(MPIR_Process.topology, query_obj_type, tmp)) != NULL) {
+                hwloc_get_next_obj_by_type(MPIR_Process.hwloc_topology, query_obj_type,
+                                           tmp)) != NULL) {
             if (hwloc_bitmap_isincluded(obj_containing_cpuset->cpuset, tmp->cpuset) ||
                 hwloc_bitmap_isequal(tmp->cpuset, obj_containing_cpuset->cpuset)) {
                 hobj = tmp;
@@ -213,20 +214,22 @@ static int node_split_pci_device(MPIR_Comm * comm_ptr, int key,
     int color;
 
     obj_containing_cpuset =
-        hwloc_get_obj_covering_cpuset(MPIR_Process.topology, MPIR_Process.bindset);
+        hwloc_get_obj_covering_cpuset(MPIR_Process.hwloc_topology, MPIR_Process.bindset);
     MPIR_Assert(obj_containing_cpuset != NULL);
 
-    io_device = hwloc_get_pcidev_by_busidstring(MPIR_Process.topology, hintval + strlen("pci:"));
+    io_device =
+        hwloc_get_pcidev_by_busidstring(MPIR_Process.hwloc_topology, hintval + strlen("pci:"));
 
     if (io_device != NULL) {
         hwloc_obj_t non_io_ancestor =
-            hwloc_get_non_io_ancestor_obj(MPIR_Process.topology, io_device);
+            hwloc_get_non_io_ancestor_obj(MPIR_Process.hwloc_topology, io_device);
 
         /* An io object will never be the root of the topology and is
          * hence guaranteed to have a non io ancestor */
         MPIR_Assert(non_io_ancestor);
 
-        if (hwloc_obj_is_in_subtree(MPIR_Process.topology, obj_containing_cpuset, non_io_ancestor)) {
+        if (hwloc_obj_is_in_subtree
+            (MPIR_Process.hwloc_topology, obj_containing_cpuset, non_io_ancestor)) {
             color = non_io_ancestor->logical_index;
         } else
             color = MPI_UNDEFINED;
@@ -275,11 +278,11 @@ static int node_split_network_device(MPIR_Comm * comm_ptr, int key,
     MPID_Get_node_id(comm_ptr, comm_ptr->rank, &color);
 
     obj_containing_cpuset =
-        hwloc_get_obj_covering_cpuset(MPIR_Process.topology, MPIR_Process.bindset);
+        hwloc_get_obj_covering_cpuset(MPIR_Process.hwloc_topology, MPIR_Process.bindset);
     MPIR_Assert(obj_containing_cpuset != NULL);
 
     color = MPI_UNDEFINED;
-    while ((io_device = hwloc_get_next_osdev(MPIR_Process.topology, io_device))) {
+    while ((io_device = hwloc_get_next_osdev(MPIR_Process.hwloc_topology, io_device))) {
         hwloc_obj_t non_io_ancestor;
         uint32_t depth;
 
@@ -291,12 +294,13 @@ static int node_split_network_device(MPIR_Comm * comm_ptr, int key,
             !io_device_found(hintval, "en", io_device, HWLOC_OBJ_OSDEV_NETWORK))
             continue;
 
-        non_io_ancestor = hwloc_get_non_io_ancestor_obj(MPIR_Process.topology, io_device);
+        non_io_ancestor = hwloc_get_non_io_ancestor_obj(MPIR_Process.hwloc_topology, io_device);
         while (!hwloc_obj_type_is_normal(non_io_ancestor->type))
             non_io_ancestor = non_io_ancestor->parent;
         MPIR_Assert(non_io_ancestor && non_io_ancestor->depth >= 0);
 
-        if (!hwloc_obj_is_in_subtree(MPIR_Process.topology, obj_containing_cpuset, non_io_ancestor))
+        if (!hwloc_obj_is_in_subtree
+            (MPIR_Process.hwloc_topology, obj_containing_cpuset, non_io_ancestor))
             continue;
 
         /* Get a unique ID for the non-IO object.  Use fixed width
@@ -326,21 +330,21 @@ static int node_split_gpu_device(MPIR_Comm * comm_ptr, int key,
     int color;
 
     obj_containing_cpuset =
-        hwloc_get_obj_covering_cpuset(MPIR_Process.topology, MPIR_Process.bindset);
+        hwloc_get_obj_covering_cpuset(MPIR_Process.hwloc_topology, MPIR_Process.bindset);
     MPIR_Assert(obj_containing_cpuset != NULL);
 
     color = MPI_UNDEFINED;
-    while ((io_device = hwloc_get_next_osdev(MPIR_Process.topology, io_device))
+    while ((io_device = hwloc_get_next_osdev(MPIR_Process.hwloc_topology, io_device))
            != NULL) {
         if (io_device->attr->osdev.type == HWLOC_OBJ_OSDEV_GPU) {
             if ((*(hintval + strlen("gpu")) != '\0') &&
                 atoi(hintval + strlen("gpu")) != io_device->logical_index)
                 continue;
             hwloc_obj_t non_io_ancestor =
-                hwloc_get_non_io_ancestor_obj(MPIR_Process.topology, io_device);
+                hwloc_get_non_io_ancestor_obj(MPIR_Process.hwloc_topology, io_device);
             MPIR_Assert(non_io_ancestor);
             if (hwloc_obj_is_in_subtree
-                (MPIR_Process.topology, obj_containing_cpuset, non_io_ancestor)) {
+                (MPIR_Process.hwloc_topology, obj_containing_cpuset, non_io_ancestor)) {
                 color =
                     (non_io_ancestor->type << (sizeof(int) * 4)) + non_io_ancestor->logical_index;
                 break;

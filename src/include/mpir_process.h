@@ -41,7 +41,7 @@ typedef struct MPIR_Process_t {
     PreDefined_attrs attrs;     /* Predefined attribute values */
 
 #ifdef HAVE_HWLOC
-    hwloc_topology_t topology;  /* HWLOC topology */
+    hwloc_topology_t hwloc_topology;    /* HWLOC topology */
     hwloc_cpuset_t bindset;     /* process binding */
     int bindset_is_valid;       /* Flag to indicate if the bind set of the process is valid:
                                  * 0 if invalid, 1 if valid */
