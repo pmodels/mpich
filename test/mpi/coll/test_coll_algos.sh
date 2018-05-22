@@ -41,7 +41,7 @@ testing_env="env=MPIR_CVAR_REDUCE_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_REDUCE_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IREDUCE_DEVICE_COLLECTIVE=0 "
-algo_names="tree_kary tree_knomial"
+algo_names="tree_kary tree_knomial ring"
 kvalues="3"
 
 for algo_name in ${algo_names}; do
