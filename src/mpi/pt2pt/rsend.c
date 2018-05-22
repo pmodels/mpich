@@ -131,21 +131,9 @@ int MPI_Rsend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
     /* If a request was returned, then we need to block until the request
      * is complete */
-    if (!MPIR_Request_is_complete(request_ptr)) {
-        MPID_Progress_state progress_state;
-
-        MPID_Progress_start(&progress_state);
-        while (!MPIR_Request_is_complete(request_ptr)) {
-            mpi_errno = MPID_Progress_wait(&progress_state);
-            if (mpi_errno != MPI_SUCCESS) {
-                /* --BEGIN ERROR HANDLING-- */
-                MPID_Progress_end(&progress_state);
-                goto fn_fail;
-                /* --END ERROR HANDLING-- */
-            }
-        }
-        MPID_Progress_end(&progress_state);
-    }
+    mpi_errno = MPID_Wait(request_ptr, MPI_STATUS_IGNORE);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = request_ptr->status.MPI_ERROR;
     MPIR_Request_free(request_ptr);
