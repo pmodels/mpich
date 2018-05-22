@@ -532,6 +532,9 @@ int DTPI_Struct_create(struct DTPI_Par *par, DTP_t dtp)
     }
 
     /* cleanup buffers */
+    if (basic_type_displs) {
+        free(basic_type_displs);
+    }
     if (dtpi) {
         free(dtpi);
     }
