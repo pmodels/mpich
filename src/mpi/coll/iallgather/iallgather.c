@@ -10,6 +10,16 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
+    - name        : MPIR_CVAR_IALLGATHER_RECEXCH_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for recursive exchange based iallgather
+
     - name        : MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
@@ -23,6 +33,8 @@ cvars:
         brucks             - Force brucks algorithm
         recursive_doubling - Force recursive doubling algorithm
         ring               - Force ring algorithm
+        recexch_distance_doubling    - Force generic transport recursive exchange with neighbours doubling in distance in each phase
+        recexch_distance_halving  - Force generic transport recursive exchange with neighbours halving in distance in each phase
 
     - name        : MPIR_CVAR_IALLGATHER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -270,6 +282,38 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
+
+    /* If the user picks one of the transport-enabled algorithms, branch there
+     * before going down to the MPIR_Sched-based algorithms. */
+    /* TODO - Eventually the intention is to replace all of the
+     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * will require sufficient performance testing and replacement algorithms. */
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        /* intracommunicator */
+        switch (MPIR_Iallgather_intra_algo_choice) {
+            case MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_DOUBLING:
+                mpi_errno =
+                    MPIR_Iallgather_intra_recexch_distance_doubling(sendbuf, sendcount, sendtype,
+                                                                    recvbuf, recvcount, recvtype,
+                                                                    comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING:
+                mpi_errno =
+                    MPIR_Iallgather_intra_recexch_distance_halving(sendbuf, sendcount, sendtype,
+                                                                   recvbuf, recvcount, recvtype,
+                                                                   comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            default:
+                /* go down to the MPIR_Sched-based algorithms */
+                break;
+        }
+    }
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno)
