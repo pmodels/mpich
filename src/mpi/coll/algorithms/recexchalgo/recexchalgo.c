@@ -194,3 +194,163 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
   fn_fail:
     goto fn_exit;
 }
+
+
+#undef FUNCNAME
+#define FUNCNAME MPII_Recexchalgo_origrank_to_step2rank
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPII_Recexchalgo_origrank_to_step2rank(int rank, int rem, int T, int k)
+{
+    int step2rank;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_ORGRANK_TO_STEP2RANK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_ORGRANK_TO_STEP2RANK);
+
+    step2rank = (rank < T) ? rank / k : rank - rem;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_ORGRANK_TO_STEP2RANK);
+
+    return step2rank;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPII_Recexchalgo_step2rank_to_origrank
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPII_Recexchalgo_step2rank_to_origrank(int rank, int rem, int T, int k)
+{
+    int orig_rank;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_STEP2RANK_TO_ORGRANK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_STEP2RANK_TO_ORGRANK);
+
+    orig_rank = (rank < rem / (k - 1)) ? (rank * k) + (k - 1) : rank + rem;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_STEP2RANK_TO_ORGRANK);
+
+    return orig_rank;
+}
+
+
+/* This function calculates the offset and count for send and receive for a given
+ * phase in recursive exchange algorithms in collective operations like Allgather,
+ * Allgatherv, Reducescatter.
+*/
+#undef FUNCNAME
+#define FUNCNAME MPII_Recexchalgo_get_count_and_offset
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPII_Recexchalgo_get_count_and_offset(int rank, int phase, int k, int nranks, int *count,
+                                          int *offset)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int step2rank, min, max, orig_max, orig_min;
+    int k_power_phase = 1;
+    int p_of_k = 1, rem, T;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_GET_COUNT_AND_OFFSET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_GET_COUNT_AND_OFFSET);
+
+    /* p_of_k is the largest power of k that is less than nranks */
+    while (p_of_k <= nranks) {
+        p_of_k *= k;
+    }
+    p_of_k /= k;
+
+    rem = nranks - p_of_k;
+    T = (rem * k) / (k - 1);
+
+    /* k_power_phase is k^phase */
+    while (phase > 0) {
+        k_power_phase *= k;
+        phase--;
+    }
+    /* Calculate rank in step2 */
+    step2rank = MPII_Recexchalgo_origrank_to_step2rank(rank, rem, T, k);
+    /* Calculate min and max ranks of the range of ranks that 'rank'
+     * represents in phase 'phase' */
+    min = ((step2rank / k_power_phase) * k_power_phase) - 1;
+    max = min + k_power_phase;
+    /* convert (min,max] to their original ranks */
+    orig_min = (min >= 0) ? MPII_Recexchalgo_step2rank_to_origrank(min, rem, T, k) : min;
+    orig_max = MPII_Recexchalgo_step2rank_to_origrank(max, rem, T, k);
+    *count = orig_max - orig_min;
+    *offset = orig_min + 1;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_GET_COUNT_AND_OFFSET);
+
+    return mpi_errno;
+}
+
+
+/* This function calculates the digit reversed (in base 'k' representation) rank of a given rank participating in Step 2. It does so in the following steps:
+ * 1. Converts the given rank to its Step2 rank
+ * 2. Calculates the digit reversed (in base 'k' representation) rank of the Step 2 rank
+ * 3. Convert the digit reversed rank in the previous Step to the original rank.
+*/
+#undef FUNCNAME
+#define FUNCNAME MPII_Recexchalgo_reverse_digits_step2
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
+{
+    int i, T, rem, power, step2rank, step2_reverse_rank = 0;
+    int pofk = 1, log_pofk = 0;
+    int *digit, *digit_reverse;
+    int remainder, index = 0;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS);
+
+    while (pofk <= comm_size) {
+        pofk *= k;
+        log_pofk++;
+    }
+    pofk /= k;
+    log_pofk--;
+
+    rem = comm_size - pofk;
+    T = (rem * k) / (k - 1);
+
+    /* step2rank is the rank in the particiapting ranks group of recursive exchange step2 */
+    step2rank = MPII_Recexchalgo_origrank_to_step2rank(rank, rem, T, k);
+
+    /* calculate the digits in base k representation of step2rank */
+    digit = MPL_malloc(sizeof(int) * log_pofk, MPL_MEM_COLL);
+    digit_reverse = MPL_malloc(sizeof(int) * log_pofk, MPL_MEM_COLL);
+    for (i = 0; i < log_pofk; i++)
+        digit[i] = 0;
+    while (step2rank != 0) {
+        remainder = step2rank % k;
+        step2rank = step2rank / k;
+        digit[index] = remainder;
+        index++;
+    }
+
+    /* reverse the number in base k representation to get the step2_reverse_rank
+     * which is the reversed rank in the participating ranks group of recursive exchange step2
+     */
+    for (i = 0; i < log_pofk; i++)
+        digit_reverse[i] = digit[log_pofk - 1 - i];
+    /*calculate the base 10 value of the reverse rank */
+    step2_reverse_rank = 0;
+    power = 1;
+    for (i = 0; i < log_pofk; i++) {
+        step2_reverse_rank += digit_reverse[i] * power;
+        power *= k;
+    }
+
+    /* calculate the actual rank from logical rank */
+    step2_reverse_rank = MPII_Recexchalgo_step2rank_to_origrank(step2_reverse_rank, rem, T, k);
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                    (MPL_DBG_FDEST, "reverse_rank is %d\n", step2_reverse_rank));
+
+    MPL_free(digit);
+    MPL_free(digit_reverse);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_REVERSE_DIGITS);
+
+    return step2_reverse_rank;
+}
