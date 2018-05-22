@@ -160,7 +160,7 @@ int MPI_Finalize(void)
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
 #ifdef HAVE_HWLOC
-    hwloc_topology_destroy(MPIR_Process.topology);
+    hwloc_topology_destroy(MPIR_Process.hwloc_topology);
     hwloc_bitmap_free(MPIR_Process.bindset);
 #endif
 
