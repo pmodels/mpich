@@ -49,8 +49,6 @@ int DTP_pool_create(MPI_Datatype basic_type, MPI_Aint basic_type_count, DTP_t * 
 
     DTPI_OBJ_ALLOC_OR_FAIL(*dtp, sizeof(**dtp));
 
-    (*dtp)->DTP_pool_type = DTP_POOL_TYPE__BASIC;
-
     /* get number of objects from environment */
     if ((env_num_objs_str = getenv("DTP_NUM_OBJS"))) {
         env_num_objs = atoi(env_num_objs_str);
@@ -115,8 +113,6 @@ int DTP_pool_create_struct(int num_types, MPI_Datatype * basic_types, int *basic
     struct DTP_obj_array_s *obj_array = NULL;
 
     DTPI_OBJ_ALLOC_OR_FAIL(*dtp, sizeof(**dtp));
-
-    (*dtp)->DTP_pool_type = DTP_POOL_TYPE__STRUCT;
 
     /* get number of objects from environment */
     if ((env_num_objs_str = getenv("DTP_NUM_OBJS"))) {
