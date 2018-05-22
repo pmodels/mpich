@@ -19,6 +19,7 @@
 
 #include "../algorithms/stubalgo/stubalgo.h"
 #include "../algorithms/treealgo/treealgo.h"
+#include "../algorithms/recexchalgo/recexchalgo.h"
 
 extern int MPIR_Nbc_progress_hook_id;
 
@@ -218,6 +219,8 @@ typedef enum MPIR_Iallreduce_intra_algo_t {
     MPIR_IALLREDUCE_INTRA_ALGO_NAIVE,
     MPIR_IALLREDUCE_INTRA_ALGO_RECURSIVE_DOUBLING,
     MPIR_IALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER,
+    MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_SINGLE_BUFFER,
+    MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_MULTIPLE_BUFFER,
 } MPIR_Iallreduce_intra_algo_t;
 extern MPIR_Iallreduce_intra_algo_t MPIR_Iallreduce_intra_algo_choice;
 

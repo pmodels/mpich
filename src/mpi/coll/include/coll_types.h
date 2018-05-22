@@ -28,6 +28,12 @@ enum {
     TREE_TYPE_KARY
 };
 
+/* enumerator for different recexch types */
+enum {
+    IALLREDUCE_RECEXCH_TYPE_SINGLE_BUFFER = 0,
+    IALLREDUCE_RECEXCH_TYPE_MULTIPLE_BUFFER
+};
+
 /* Collectives request data structure */
 typedef struct MPII_Coll_req_t {
     void *sched;                /* pointer to the schedule */
