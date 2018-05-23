@@ -686,30 +686,6 @@ void f1(void *a) { return; }],
 
         fi
 
-        # Check for PTHREAD_MUTEX_ERRORCHECK_NP and PTHREAD_MUTEX_ERRORCHECK
-        AC_CACHE_CHECK([whether pthread.h defines PTHREAD_MUTEX_ERRORCHECK_NP],
-        pac_cv_has_pthread_mutex_errorcheck_np,[
-        AC_TRY_COMPILE([#include <pthread.h>],
-                       [int a=PTHREAD_MUTEX_ERRORCHECK_NP;],
-                       pac_cv_has_pthread_mutex_errorcheck_np=yes,
-                       pac_cv_has_pthread_mutex_errorcheck_np=no)])
-        AC_CACHE_CHECK([whether pthread.h defines PTHREAD_MUTEX_ERRORCHECK],
-        pac_cv_has_pthread_mutex_errorcheck,[
-        AC_TRY_COMPILE([#include <pthread.h>],
-                       [int a=PTHREAD_MUTEX_ERRORCHECK;],
-                       pac_cv_has_pthread_mutex_errorcheck=yes,
-                       pac_cv_has_pthread_mutex_errorcheck=no)])
-
-        if test "$pac_cv_has_pthread_mutex_errorcheck" = yes ; then
-            AC_DEFINE(PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK,
-                      [Define to an expression that will result in an error checking mutex type.])
-        elif test "$pac_cv_has_pthread_mutex_errorcheck_np" = yes ; then
-            AC_DEFINE(PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK_NP,
-                      [Define to an expression that will result in an error checking mutex type.])
-        fi
-
-	PAC_FUNC_NEEDS_DECL([#include <pthread.h>],pthread_mutexattr_settype)
-
 	if test "${with_thread_package}" = "uti" ; then
 	    PAC_CHECK_HEADER_LIB(uti.h,uti,uti_attr_init,have_uti=yes,have_uti=no)
 	    if test "${have_uti}" = "yes" ; then
@@ -772,6 +748,37 @@ fi
 ## END OF THREADS CODE
 #######################################################################
 
+#######################################################################
+## START OF PTHREAD MUTEX COMMON CHECK
+#######################################################################
+if test "${with_thread_package}" = "pthreads"; then
+  # Check for PTHREAD_MUTEX_ERRORCHECK_NP and PTHREAD_MUTEX_ERRORCHECK
+  AC_CACHE_CHECK([whether pthread.h defines PTHREAD_MUTEX_ERRORCHECK_NP],
+  pac_cv_has_pthread_mutex_errorcheck_np,[
+  AC_TRY_COMPILE([#include <pthread.h>],
+                 [int a=PTHREAD_MUTEX_ERRORCHECK_NP;],
+                 pac_cv_has_pthread_mutex_errorcheck_np=yes,
+                 pac_cv_has_pthread_mutex_errorcheck_np=no)])
+  AC_CACHE_CHECK([whether pthread.h defines PTHREAD_MUTEX_ERRORCHECK],
+  pac_cv_has_pthread_mutex_errorcheck,[
+  AC_TRY_COMPILE([#include <pthread.h>],
+                 [int a=PTHREAD_MUTEX_ERRORCHECK;],
+                 pac_cv_has_pthread_mutex_errorcheck=yes,
+                 pac_cv_has_pthread_mutex_errorcheck=no)])
+
+  if test "$pac_cv_has_pthread_mutex_errorcheck" = yes ; then
+      AC_DEFINE(PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK_NPRRORCHECK,
+                [Define to an expression that will result in an error checking mutex type.])
+  elif test "$pac_cv_has_pthread_mutex_errorcheck_np" = yes ; then
+      AC_DEFINE(PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK_NP,
+                [Define to an expression that will result in an error checking mutex type.])
+  fi
+
+  PAC_FUNC_NEEDS_DECL([#include <pthread.h>],pthread_mutexattr_settype)
+fi
+#######################################################################
+## END OF PTHREAD MUTEX COMMON CHECK
+#######################################################################
 
 #######################################################################
 ## START OF DBG CODE
