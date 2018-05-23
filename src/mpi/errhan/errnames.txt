@@ -35,6 +35,9 @@
 **rankdup:Duplicate ranks in rank array 
 **rankdup %d %d %d:Duplicate ranks in rank array at index %d, has value %d which is \
 also the value at index %d
+**netloc_topo_load:Error loading netloc topology
+**netloc_topo_identification:Unsupported netloc topology type
+**netloc_endpoint_mismatch:Netloc topology does not contain the node
 **topotoolarge:Topology size is greater than communicator size
 **topotoolarge %d %d:Topology size %d is larger than communicator size (%d)
 **notcarttopo:No Cartesian topology associated with this communicator

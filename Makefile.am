@@ -50,7 +50,7 @@ pkgconfigdir = @pkgconfigdir@
 errnames_txt_files = 
 
 external_subdirs = @mplsrcdir@ @opasrcdir@ @zmsrcdir@ @hwlocsrcdir@
-external_ldflags = @mpllibdir@ @opalibdir@ @zmlibdir@ @hwloclibdir@
+external_ldflags = @mpllibdir@ @opalibdir@ @zmlibdir@ @hwloclibdir@ @netloclibdir@
 external_libs = @WRAPPER_LIBS@
 mpi_convenience_libs =
 pmpi_convenience_libs = @opalib@ @mpllib@ @zmlib@ @hwloclib@

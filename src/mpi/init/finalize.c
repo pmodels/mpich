@@ -164,6 +164,11 @@ int MPI_Finalize(void)
     hwloc_bitmap_free(MPIR_Process.bindset);
 #endif
 
+#ifdef HAVE_NETLOC
+    if (MPIR_Process.network_attr.u.tree.node_levels != NULL)
+        MPL_free(MPIR_Process.network_attr.u.tree.node_levels);
+#endif
+
     /* Note: Only one thread may ever call MPI_Finalize (MPI_Finalize may
      * be called at most once in any program) */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
