@@ -310,6 +310,8 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
                                       MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
                                          MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type_network_topo(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
+                                      MPIR_Comm ** newcomm_ptr);
 
 /* Preallocated comm objects.  There are 3: comm_world, comm_self, and
    a private (non-user accessible) dup of comm world that is provided

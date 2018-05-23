@@ -12,6 +12,10 @@
 #include "hwloc.h"
 #endif
 
+#ifdef HAVE_NETLOC
+#include "netloc_util.h"
+#endif
+
 /* -- Begin Profiling Symbol Block for routine MPI_Comm_split_type */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Comm_split_type = PMPI_Comm_split_type
@@ -364,7 +368,87 @@ static int node_split_gpu_device(MPIR_Comm * comm_ptr, int key,
 }
 #endif /* HAVE_HWLOC */
 
+#ifdef HAVE_NETLOC
+static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
+                                      int switch_level, MPIR_Comm ** newcomm_ptr)
+{
+    int i, color;
+    int mpi_errno = MPI_SUCCESS;
+    netloc_node_t *network_node;
+    netloc_node_t **traversal_stack;
+    int traversal_begin, traversal_end;
+
+    if (MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__FAT_TREE ||
+        MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK) {
+        netloc_node_t **switches_at_level;
+        int switch_count;
+        traversal_stack =
+            (netloc_node_t **) MPL_malloc(sizeof(netloc_node_t *) *
+                                          MPIR_Process.netloc_topology->num_nodes, MPL_MEM_OTHER);
+        mpi_errno =
+            MPIR_Netloc_get_network_end_point(MPIR_Process.network_attr,
+                                              MPIR_Process.netloc_topology,
+                                              MPIR_Process.hwloc_topology, MPIR_Process.bindset,
+                                              &network_node);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        traversal_begin = 0;
+        traversal_end = 0;
+        MPIR_Netloc_get_switches_at_level(MPIR_Process.netloc_topology, MPIR_Process.network_attr,
+                                          switch_level, &switches_at_level, &switch_count);
+        /* Find the switch `switch_level` steps away */
+        MPIR_Assert(traversal_end < MPIR_Process.netloc_topology->num_nodes);
+        traversal_stack[traversal_end++] = network_node;
+        color = 0;
+        while (traversal_end > traversal_begin) {
+            netloc_node_t *current_node = traversal_stack[traversal_begin++];
+            int num_edges;
+            netloc_edge_t **edges;
+            if (current_node->node_type == NETLOC_NODE_TYPE_SWITCH
+                && MPIR_Process.network_attr.u.tree.node_levels[current_node->__uid__]
+                == switch_level) {
+                for (i = 0; i < switch_count; i++) {
+                    if (switches_at_level[i] == current_node) {
+                        color = color & (1 < i);
+                        break;
+                    }
+                }
+            } else {
+                continue;
+            }
+            /*find all nodes not visited with an edge from the current node */
+            netloc_get_all_edges(MPIR_Process.netloc_topology, network_node, &num_edges, &edges);
+            for (i = 0; i < num_edges; i++) {
+                MPIR_Assert(traversal_end < MPIR_Process.netloc_topology->num_nodes);
+                traversal_stack[traversal_end++] = edges[i]->dest_node;
+            }
+        }
+
+        if (color == 0) {
+            color = MPI_UNDEFINED;
+        }
+
+        MPL_free(traversal_stack);
+        MPL_free(switches_at_level);
+    } else {
+        color = MPI_UNDEFINED;
+    }
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#endif
+
 static const char *SHMEM_INFO_KEY = "shmem_topo";
+static const char *NETWORK_INFO_KEY = "network_topo";
 
 static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *info_args_are_equal)
 {
@@ -508,6 +592,29 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Comm_split_type_network_topo
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char *hintval,
+                                      MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+#ifdef HAVE_NETLOC
+    if (!strncmp(hintval, ("switch_level:"), strlen("switch_level:"))
+        && *(hintval + strlen("switch_level:")) != '\0') {
+        int switch_level = atoi(hintval + strlen("switch_level:"));
+        mpi_errno = network_split_switch_level(comm_ptr, key, switch_level, newcomm_ptr);
+    }
+#endif
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Comm_split_type
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -610,12 +717,25 @@ int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int 
     if (info_args_are_equal && flag) {
         MPIR_Comm_split_type_nbhd_common_dir(comm_ptr, key, hintval, newcomm_ptr);
     } else {
-        /* In the mean time, the user passed in
-         * COMM_TYPE_NEIGHBORHOOD but did not give us an info we
-         * know how to work with.  Throw up our hands and treat it
-         * like UNDEFINED.  This will result in MPI_COMM_NULL
-         * being returned to the user. */
-        *newcomm_ptr = NULL;
+        /* Check if the info hint is a network topology hint */
+        if (info_ptr) {
+            MPIR_Info_get_impl(info_ptr, NETWORK_INFO_KEY, MPI_MAX_INFO_VAL, hintval, &flag);
+        }
+
+        if (!flag) {
+            hintval[0] = '\0';
+        }
+
+        mpi_errno = compare_info_hint(hintval, comm_ptr, &info_args_are_equal);
+
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        /* if all processes have the same hintval, perform
+         * topology-aware comm split */
+        if (info_args_are_equal) {
+            MPIR_Comm_split_type_network_topo(comm_ptr, key, hintval, newcomm_ptr);
+        }
     }
 
   fn_exit:
