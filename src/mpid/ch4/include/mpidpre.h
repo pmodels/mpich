@@ -305,6 +305,8 @@ typedef struct MPIDI_CH4U_win_t {
     void *mmap_addr;
     int64_t mmap_sz;
 
+    MPL_shm_hnd_t shm_segment_handle;
+
     /* per-window OP completion for fence */
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
