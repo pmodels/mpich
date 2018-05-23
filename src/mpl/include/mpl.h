@@ -24,5 +24,6 @@
 #include "mpl_dbg.h"
 #include "mpl_shm.h"
 #include "mpl_math.h"
+#include "mpl_proc_mutex.h"
 
 #endif /* MPL_H_INCLUDED */

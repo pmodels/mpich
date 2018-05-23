@@ -749,9 +749,74 @@ fi
 #######################################################################
 
 #######################################################################
+## START OF PROCESS MUTEX CODE
+#######################################################################
+
+AC_ARG_WITH([proc-mutex-package],
+[  --with-proc-mutex-package=package     Interprocess mutex package to use. Supported packages include:
+        posix or pthreads - POSIX threads (default, if required)
+        none - no interprocess mutex support
+],,with_proc_mutex_package=posix)
+
+if test "${with_proc_mutex_package}" = "no" ; then
+   with_proc_mutex_package=none
+fi
+if test "${with_proc_mutex_package}" = "yes" ; then
+   with_proc_mutex_package=posix
+fi
+
+PROC_MUTEX_PACKAGE_NAME=MPL_PROC_MUTEX_PACKAGE_INVALID
+case $with_proc_mutex_package in
+  posix|pthreads)
+    if test "${with_proc_mutex_package}" = "pthreads" ; then
+        with_proc_mutex_package=posix
+    fi
+
+    # Do not prepend -lpthread again if already checked by thread package
+    if test "${with_thread_package}" != "posix" ; then
+        AC_CHECK_HEADERS(pthread.h)
+
+        # If pthreads library is found, just include it on the link line. We don't try
+        # to test if the C compiler needs it or not, since the C++ or Fortran
+        # compilers might need it even if the C compiler doesn't
+        # (nvcc with gfortran, for example).
+        AC_CHECK_LIB([pthread],[pthread_mutex_init],have_pthreads=yes)
+        if test "$have_pthreads" = "yes" ; then
+           PAC_PREPEND_FLAG([-lpthread],[LIBS])
+        fi
+    fi
+
+    # this check should come after the AC_CHECK_LIB for -lpthread
+    AC_CHECK_FUNC([pthread_mutex_init],[],[AC_MSG_ERROR([unable to find pthreads library])])
+    # pthread_mutexattr_setpshared is first released in Issue 5
+    AC_CHECK_FUNCS(pthread_mutexattr_setpshared)
+    if test "$ac_cv_func_pthread_mutexattr_setpshared" = "no" ; then
+      AC_DEFINE(HAVE_PTHREAD_MUTEXATTR_SETPSHARED,1, [Define if pthread_mutexattr_setpshared is available.])
+    fi
+
+    AC_MSG_NOTICE([POSIX will be used for interprocess mutex package.])
+    PROC_MUTEX_PACKAGE_NAME=MPL_PROC_MUTEX_PACKAGE_POSIX
+  ;;
+  no|none)
+    with_proc_mutex_package=none
+    PROC_MUTEX_PACKAGE_NAME=MPL_PROC_MUTEX_PACKAGE_NONE
+  ;;
+  *)
+    AC_MSG_ERROR([The specified interprocess mutex package, $with_proc_mutex_package, is not supported.])
+  ;;
+esac
+
+# Define and export the selected interprocess mutex package so that other packages
+# know what's used in MPL
+AC_DEFINE_UNQUOTED([PROC_MUTEX_PACKAGE_NAME],[$PROC_MUTEX_PACKAGE_NAME],[set to the name of the interprocess mutex package])
+#######################################################################
+## END OF PROCESS MUTEX CODE
+#######################################################################
+
+#######################################################################
 ## START OF PTHREAD MUTEX COMMON CHECK
 #######################################################################
-if test "${with_thread_package}" = "pthreads"; then
+if test "${with_thread_package}" = "pthreads" -o "${with_proc_mutex_package}" = "pthreads"; then
   # Check for PTHREAD_MUTEX_ERRORCHECK_NP and PTHREAD_MUTEX_ERRORCHECK
   AC_CACHE_CHECK([whether pthread.h defines PTHREAD_MUTEX_ERRORCHECK_NP],
   pac_cv_has_pthread_mutex_errorcheck_np,[
