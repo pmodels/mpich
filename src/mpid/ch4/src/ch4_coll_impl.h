@@ -14,6 +14,8 @@
 #include "ch4_coll_params.h"
 #include "coll_algo_params.h"
 
+/* Do a local barrier, followed by a barrier across the node roots. Then the roots do a local bcast
+ * to unlock the local processes. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Barrier_intra_local_then_nodes
 #undef FCNAME
@@ -74,6 +76,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_local_then_nodes(MPIR_Comm * co
     goto fn_exit;
 }
 
+/* Just use the netmod barrier function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Barrier_intra_netmod
 #undef FCNAME
@@ -96,6 +99,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_netmod(MPIR_Comm * comm, MPIR_E
     goto fn_exit;
 }
 
+/* Fallback directly to the MPIR version of the Barrier algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Barrier_inter_fallback
 #undef FCNAME
@@ -118,6 +122,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_inter_fallback(MPIR_Comm * comm,
     goto fn_exit;
 }
 
+/* Broadcast the buffer first via the node_roots_comm, then use the local node_comm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Bcast_intra_noderoots_local
 #undef FCNAME
@@ -135,6 +140,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_noderoots_local(void *buffer, int
         MPIDI_coll_get_next_container(ch4_algo_parameters_container);
     const void *bcast_node_container = MPIDI_coll_get_next_container(bcast_roots_container);
 
+    /* First, make sure the root of the local communicator has the buffer to be broadcasted. */
     if (comm->node_roots_comm == NULL && comm->rank == root) {
         mpi_errno = MPIC_Send(buffer, count, datatype, 0, MPIR_BCAST_TAG, comm->node_comm, errflag);
     } else if (comm->node_roots_comm != NULL && comm->rank != root &&
@@ -144,6 +150,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_noderoots_local(void *buffer, int
                       comm->node_comm, MPI_STATUS_IGNORE, errflag);
     }
 
+    /* If I'm the root of the local communicator, do a broadcast over the netmod among the other
+     * local communicator roots. */
     if (comm->node_roots_comm != NULL) {
         mpi_errno =
             MPIDI_NM_mpi_bcast(buffer, count, datatype, MPIR_Get_internode_rank(comm, root),
@@ -151,6 +159,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_noderoots_local(void *buffer, int
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
+
+    /* If I'm not the only process on the local communcator, brodcast the message using shared
+     * memory (or the netmod if not available). */
     if (comm->node_comm != NULL) {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
@@ -173,6 +184,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_noderoots_local(void *buffer, int
     goto fn_exit;
 }
 
+/* Do a local bcast if the root is on the local node, then do a inter-node bcast afterward. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Bcast_intra_local_then_nodes
 #undef FCNAME
@@ -195,6 +207,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_local_then_nodes(void *buffer,
     const void *bcast_node_container_root_remote =
         MPIDI_coll_get_next_container(bcast_node_container_root_local);
 
+    /* If I'm not the root process (rank 0) of the node, call bcast on the node_comm first (with SHM
+     * if possible, NM if not). */
     if (comm->node_comm != NULL && MPIR_Get_intranode_rank(comm, root) > 0) {
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
@@ -209,7 +223,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_local_then_nodes(void *buffer,
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
-    } else {
+    }
+    /* If I am the root process of the node, call bcast among the other roots first (if
+     * applicable), then do the local bcast. */
+    else {
         if (comm->node_roots_comm != NULL) {
             mpi_errno =
                 MPIDI_NM_mpi_bcast(buffer, count, datatype, MPIR_Get_internode_rank(comm, root),
@@ -238,6 +255,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_local_then_nodes(void *buffer,
     goto fn_exit;
 }
 
+/* Simply call the netmod version of bcast */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Bcast_intra_netmod
 #undef FCNAME
@@ -263,6 +281,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_netmod(void *buffer, int count,
     goto fn_exit;
 }
 
+/* Fallback directly to the MPIR version of the Bcast algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Bcast_inter_fallback
 #undef FCNAME
@@ -286,6 +305,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_inter_fallback(void *buffer, int count,
     goto fn_exit;
 }
 
+/* Do a reduction on the local communicator first if it exists, then do an allreduce across the node
+ * roots, then broadcast the result to the local communicator again. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Allreduce_intra_local_node_bcast
 #undef FCNAME
@@ -372,6 +393,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_local_node_bcast(const void *
     goto fn_exit;
 }
 
+/* Just use the netmod allreduce function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Allreduce_intra_netmod
 #undef FCNAME
@@ -399,6 +421,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_netmod(const void *sendbuf, v
     goto fn_exit;
 }
 
+/* Fallback directly to the MPIR version of the Allreduce algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Allreduce_inter_fallback
 #undef FCNAME
@@ -423,6 +446,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_inter_fallback(const void *sendbuf,
     goto fn_exit;
 }
 
+/* Do intranode reductions on all nodes except the one with the root; then do a reduction between
+ * the node roots; then do a reduction on the root node. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Reduce_intra_remote_then_root
 #undef FCNAME
@@ -575,7 +600,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_remote_then_root(const void *sen
 
 }
 
-
+/* Just use the netmod reduce function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Reduce_intra_netmod
 #undef FCNAME
@@ -603,6 +628,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_netmod(const void *sendbuf, void
     goto fn_exit;
 }
 
+/* Fallback directly to the MPIR version of the reduce algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Reduce_inter_fallback
 #undef FCNAME
@@ -627,6 +653,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_inter_fallback(const void *sendbuf, vo
     goto fn_exit;
 }
 
+/* Just use the netmod alltoall function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Alltoall_intra_netmod
 #undef FCNAME
@@ -655,6 +682,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_intra_netmod(const void *sendbuf, in
     goto fn_exit;
 }
 
+/* Fallback directly to the MPIR version of the alltoall algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Alltoall_inter_fallback
 #undef FCNAME
@@ -681,6 +709,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoall_inter_fallback(const void *sendbuf, 
     goto fn_exit;
 }
 
+/* Just use the netmod alltoallv function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Alltoallv_intra_netmod
 #undef FCNAME
@@ -714,6 +743,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_intra_netmod(const void *sendbuf,
     goto fn_exit;
 }
 
+/* Fallback directly to the MPIR version of the alltoallv algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Alltoallv_inter_fallback
 #undef FCNAME
@@ -745,6 +775,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallv_inter_fallback(const void *sendbuf,
     goto fn_exit;
 }
 
+/* Just use the netmod alltoallw function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Alltoallw_intra_netmod
 #undef FCNAME
@@ -778,6 +809,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intra_netmod(const void *sendbuf,
     goto fn_exit;
 }
 
+/* Fallback directly to the MPIR version of the alltoallw algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Alltoallw_inter_fallback
 #undef FCNAME
@@ -814,6 +846,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_inter_fallback(const void *sendbuf,
     goto fn_exit;
 }
 
+/* Just use the netmod allgather function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Allgather_intra_netmod
 #undef FCNAME
@@ -843,6 +876,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_intra_netmod(const void *sendbuf, i
     goto fn_exit;
 }
 
+/* Fallback directly to the MPIR version of the allgather algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Allgather_inter_fallback
 #undef FCNAME
@@ -869,6 +903,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgather_inter_fallback(const void *sendbuf,
     goto fn_exit;
 }
 
+/* Just use the netmod allgatherv function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Allgatherv_intra_netmod
 #undef FCNAME
@@ -899,6 +934,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_intra_netmod(const void *sendbuf, 
     goto fn_exit;
 }
 
+/* Fallback directly to the MPIR version of the allgatherv algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Allgatherv_inter_fallback
 #undef FCNAME
@@ -928,6 +964,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_inter_fallback(const void *sendbuf
     goto fn_exit;
 }
 
+/* Just use the netmod gather function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Gather_intra_netmod
 #undef FCNAME
@@ -956,6 +993,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_intra_netmod(const void *sendbuf, int 
     goto fn_exit;
 }
 
+/* Fallback directly to the MPIR version of the gather algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Gather_inter_fallback
 #undef FCNAME
@@ -982,6 +1020,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gather_inter_fallback(const void *sendbuf, in
     goto fn_exit;
 }
 
+/* Just use the netmod gatherv function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Gatherv_intra_netmod
 #undef FCNAME
@@ -1010,6 +1049,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_intra_netmod(const void *sendbuf, int
     goto fn_exit;
 }
 
+/* Fallback directly to the MPIR version of the gatherv algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Gatherv_inter_fallback
 #undef FCNAME
@@ -1037,6 +1077,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Gatherv_inter_fallback(const void *sendbuf, i
     goto fn_exit;
 }
 
+/* Just use the netmod scatter function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Scatter_intra_netmod
 #undef FCNAME
@@ -1065,6 +1106,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_intra_netmod(const void *sendbuf, int
     goto fn_exit;
 }
 
+/* Fallback directly to the MPIR version of the scatter algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Scatter_inter_fallback
 #undef FCNAME
@@ -1091,6 +1133,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_inter_fallback(const void *sendbuf, i
     goto fn_exit;
 }
 
+/* Just use the netmod scatterv function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Scatterv_intra_netmod
 #undef FCNAME
@@ -1119,6 +1162,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_intra_netmod(const void *sendbuf, co
     goto fn_exit;
 }
 
+/* Fallback directly to the MPIR version of the scatterv algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Scatterv_inter_fallback
 #undef FCNAME
@@ -1147,6 +1191,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_inter_fallback(const void *sendbuf,
     goto fn_exit;
 }
 
+/* Fallback directly to the MPIR version of the reduce_scatter algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Reduce_scatter_inter_fallback
 #undef FCNAME
@@ -1173,6 +1218,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_inter_fallback(const void *sen
     goto fn_exit;
 }
 
+/* Just use the netmod reduce_scatter function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Reduce_scatter_intra_netmod
 #undef FCNAME
@@ -1202,6 +1248,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_intra_netmod(const void *sendb
     goto fn_exit;
 }
 
+/* Fallback directly to the MPIR version of the reduce_scatter_block algorithm. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Reduce_scatter_block_inter_fallback
 #undef FCNAME
@@ -1229,6 +1276,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_inter_fallback(const voi
     goto fn_exit;
 }
 
+/* Just use the netmod reduce_scatter_block function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Reduce_scatter_block_intra_netmod
 #undef FCNAME
@@ -1259,6 +1307,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_block_intra_netmod(const void 
     goto fn_exit;
 }
 
+/* Do a local scan, followed by a scan among all nodes, then a local scan again. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Scan_intra_local_node_local
 #undef FCNAME
@@ -1431,6 +1480,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_local_node_local(const void *sendb
     goto fn_exit;
 }
 
+/* Just use the netmod scan function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Scan_intra_netmod
 #undef FCNAME
@@ -1456,6 +1506,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_netmod(const void *sendbuf, void *
     goto fn_exit;
 }
 
+/* Just use the netmod exscan function. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Exscan_intra_netmod
 #undef FCNAME

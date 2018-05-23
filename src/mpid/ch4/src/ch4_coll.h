@@ -15,6 +15,8 @@
 #include "ch4r_proc.h"
 #include "ch4_coll_select.h"
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -23,8 +25,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BARRIER);
 
+    /* Pick a composition for the collective algorithm, not the algorithm itself. */
     ch4_algo_parameters_container = MPIDI_Barrier_select(comm, errflag);
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Barrier_intra_local_then_nodes_id:
             mpi_errno =
@@ -45,6 +49,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype datatype,
                                         int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
@@ -54,9 +60,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BCAST);
 
+    /* Pick a composition for the collective algorithm, not the algorithm itself. */
     ch4_algo_parameters_container =
         MPIDI_Bcast_select(buffer, count, datatype, root, comm, errflag);
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Bcast_intra_noderoots_local_id:
             mpi_errno =
@@ -87,6 +95,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, int count,
                                             MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                             MPIR_Errflag_t * errflag)
@@ -97,9 +107,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLREDUCE);
 
+    /* Pick a composition for the collective algorithm, not the algorithm itself. */
     ch4_algo_parameters_container =
         MPIDI_Allreduce_select(sendbuf, recvbuf, count, datatype, op, comm, errflag);
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Allreduce_intra_local_node_bcast_id:
             mpi_errno =
@@ -125,6 +137,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, 
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, int sendcount,
                                             MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                             MPI_Datatype recvtype, MPIR_Comm * comm,
@@ -136,10 +150,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, int sendcount,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLGATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLGATHER);
 
+    /* Pick a composition for the collective algorithm, not the algorithm itself. */
     ch4_algo_parameters_container =
         MPIDI_Allgather_select(sendbuf, sendcount, sendtype, recvbuf,
                                recvcount, recvtype, comm, errflag);
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Allgather_intra_netmod_id:
             mpi_errno =
@@ -163,6 +179,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, int sendcount,
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, int sendcount,
                                              MPI_Datatype sendtype, void *recvbuf,
                                              const int *recvcounts, const int *displs,
@@ -175,10 +193,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, int sendcount,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLGATHERV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLGATHERV);
 
+    /* Pick a composition for the collective algorithm, not the algorithm itself. */
     ch4_algo_parameters_container =
         MPIDI_Allgatherv_select(sendbuf, sendcount, sendtype, recvbuf,
                                 recvcounts, displs, recvtype, comm, errflag);
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Allgatherv_intra_netmod_id:
             mpi_errno =
@@ -202,6 +222,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, int sendcount,
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, int sendcount,
                                           MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                           MPI_Datatype recvtype, int root, MPIR_Comm * comm,
@@ -213,11 +235,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, int sendcount,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SCATTER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SCATTER);
 
+    /* Pick a composition for the collective algorithm, not the algorithm itself. */
     ch4_algo_parameters_container =
         MPIDI_Scatter_select(sendbuf, sendcount, sendtype, recvbuf,
                              recvcount, recvtype, root, comm, errflag);
 
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Scatter_intra_netmod_id:
             mpi_errno =
@@ -241,6 +265,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, int sendcount,
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const int *sendcounts,
                                            const int *displs, MPI_Datatype sendtype,
                                            void *recvbuf, int recvcount, MPI_Datatype recvtype,
@@ -252,11 +278,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const int *sendc
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SCATTERV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SCATTERV);
 
+    /* Pick a composition for the collective algorithm, not the algorithm itself. */
     ch4_algo_parameters_container =
         MPIDI_Scatterv_select(sendbuf, sendcounts, displs, sendtype,
                               recvbuf, recvcount, recvtype, root, comm, errflag);
 
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Scatterv_intra_netmod_id:
             mpi_errno =
@@ -280,6 +308,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const int *sendc
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                          int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
@@ -290,10 +320,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, int sendcount, MPI
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GATHER);
 
+    /* Pick a composition for the collective algorithm, not the algorithm itself. */
     ch4_algo_parameters_container =
         MPIDI_Gather_select(sendbuf, sendcount, sendtype, recvbuf,
                             recvcount, recvtype, root, comm, errflag);
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Gather_intra_netmod_id:
             mpi_errno =
@@ -317,6 +349,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, int sendcount, MPI
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, int sendcount,
                                           MPI_Datatype sendtype, void *recvbuf,
                                           const int *recvcounts, const int *displs,
@@ -329,10 +363,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, int sendcount,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_GATHERV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_GATHERV);
 
+    /* Pick a composition for the collective algorithm, not the algorithm itself. */
     ch4_algo_parameters_container =
         MPIDI_Gatherv_select(sendbuf, sendcount, sendtype, recvbuf,
                              recvcounts, displs, recvtype, root, comm, errflag);
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Gatherv_intra_netmod_id:
             mpi_errno =
@@ -356,6 +392,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, int sendcount,
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, int sendcount,
                                            MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                            MPI_Datatype recvtype, MPIR_Comm * comm,
@@ -367,10 +405,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, int sendcount,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALL);
 
+    /* Pick a composition for the collective algorithm, not the algorithm itself. */
     ch4_algo_parameters_container =
         MPIDI_Alltoall_select(sendbuf, sendcount, sendtype, recvbuf,
                               recvcount, recvtype, comm, errflag);
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Alltoall_intra_netmod_id:
             mpi_errno =
@@ -394,6 +434,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, int sendcount,
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const int *sendcounts,
                                             const int *sdispls, MPI_Datatype sendtype,
                                             void *recvbuf, const int *recvcounts,
@@ -406,10 +448,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const int *send
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALLV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALLV);
 
+    /* Pick a composition for the collective algorithm, not the algorithm itself. */
     ch4_algo_parameters_container =
         MPIDI_Alltoallv_select(sendbuf, sendcounts, sdispls, sendtype,
                                recvbuf, recvcounts, rdispls, recvtype, comm, errflag);
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Alltoallv_intra_netmod_id:
             mpi_errno =
@@ -436,6 +480,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const int *send
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const int sendcounts[],
                                             const int sdispls[], const MPI_Datatype sendtypes[],
                                             void *recvbuf, const int recvcounts[],
@@ -448,10 +494,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const int sendc
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLTOALLW);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLTOALLW);
 
+    /* Pick a composition for the collective algorithm, not the algorithm itself. */
     ch4_algo_parameters_container =
         MPIDI_Alltoallw_select(sendbuf, sendcounts, sdispls, sendtypes,
                                recvbuf, recvcounts, rdispls, recvtypes, comm, errflag);
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Alltoallw_intra_netmod_id:
             mpi_errno =
@@ -478,6 +526,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const int sendc
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
                                          int count, MPI_Datatype datatype, MPI_Op op,
                                          int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
@@ -488,9 +538,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE);
 
+    /* Pick a composition for the collective algorithm, not the algorithm itself. */
     ch4_algo_parameters_container =
         MPIDI_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, comm, errflag);
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Reduce_intra_remote_then_root_id:
             mpi_errno =
@@ -518,6 +570,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recvbuf,
                                                  const int recvcounts[], MPI_Datatype datatype,
                                                  MPI_Op op, MPIR_Comm * comm,
@@ -532,6 +586,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
     ch4_algo_parameters_container =
         MPIDI_Reduce_scatter_select(sendbuf, recvbuf, recvcounts, datatype, op, comm, errflag);
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Reduce_scatter_intra_netmod_id:
             mpi_errno =
@@ -554,6 +609,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recv
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
                                                        int recvcount, MPI_Datatype datatype,
                                                        MPI_Op op, MPIR_Comm * comm,
@@ -568,6 +625,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
     ch4_algo_parameters_container =
         MPIDI_Reduce_scatter_block_select(sendbuf, recvbuf, recvcount, datatype, op, comm, errflag);
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Reduce_scatter_block_intra_netmod_id:
             mpi_errno =
@@ -591,6 +649,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, int count,
                                        MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                        MPIR_Errflag_t * errflag)
@@ -601,9 +661,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, int c
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SCAN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SCAN);
 
+    /* Pick a composition for the collective algorithm, not the algorithm itself. */
     ch4_algo_parameters_container =
         MPIDI_Scan_select(sendbuf, recvbuf, count, datatype, op, comm, errflag);
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Scan_intra_local_node_local_id:
             mpi_errno =
@@ -625,6 +687,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, int c
     return mpi_errno;
 }
 
+/* Choose a composition of intra and internode collectives and call the appropriate function. If
+ * nothing is chosen, fall back to the MPIR-default algorithm selection. */
 MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *sendbuf, void *recvbuf, int count,
                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                          MPIR_Errflag_t * errflag)
@@ -635,9 +699,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *sendbuf, void *recvbuf, int
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_EXSCAN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_EXSCAN);
 
+    /* Pick a composition for the collective algorithm, not the algorithm itself. */
     ch4_algo_parameters_container =
         MPIDI_Exscan_select(sendbuf, recvbuf, count, datatype, op, comm, errflag);
 
+    /* Execute the chosen composition or fall back to the MPIR algorithm selection. */
     switch (ch4_algo_parameters_container->id) {
         case MPIDI_Exscan_intra_netmod_id:
             mpi_errno =

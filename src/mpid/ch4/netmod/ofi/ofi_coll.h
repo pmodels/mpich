@@ -16,6 +16,8 @@
 #include "ch4_coll_params.h"
 #include "ofi_coll_select.h"
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_barrier
 #undef FCNAME
@@ -52,6 +54,8 @@ static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm, MPIR_Errflag_t * errfla
     goto fn_exit;
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_bcast
 #undef FCNAME
@@ -100,6 +104,8 @@ static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datat
     goto fn_exit;
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_allreduce
 #undef FCNAME
@@ -146,6 +152,8 @@ static inline int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int
     goto fn_exit;
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_allgather
 #undef FCNAME
@@ -200,6 +208,8 @@ static inline int MPIDI_NM_mpi_allgather(const void *sendbuf, int sendcount, MPI
     goto fn_exit;
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_allgatherv
 #undef FCNAME
@@ -255,6 +265,8 @@ static inline int MPIDI_NM_mpi_allgatherv(const void *sendbuf, int sendcount, MP
     goto fn_exit;
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_gather
 #undef FCNAME
@@ -297,6 +309,8 @@ static inline int MPIDI_NM_mpi_gather(const void *sendbuf, int sendcount, MPI_Da
     goto fn_exit;
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_gatherv
 #undef FCNAME
@@ -342,6 +356,8 @@ static inline int MPIDI_NM_mpi_gatherv(const void *sendbuf, int sendcount, MPI_D
 
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_scatter
 #undef FCNAME
@@ -384,6 +400,8 @@ static inline int MPIDI_NM_mpi_scatter(const void *sendbuf, int sendcount, MPI_D
     goto fn_exit;
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_scatterv
 #undef FCNAME
@@ -428,6 +446,8 @@ static inline int MPIDI_NM_mpi_scatterv(const void *sendbuf, const int *sendcoun
     goto fn_exit;
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_alltoall
 #undef FCNAME
@@ -487,6 +507,8 @@ static inline int MPIDI_NM_mpi_alltoall(const void *sendbuf, int sendcount, MPI_
     goto fn_exit;
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_alltoallv
 #undef FCNAME
@@ -541,6 +563,8 @@ static inline int MPIDI_NM_mpi_alltoallv(const void *sendbuf, const int *sendcou
     goto fn_exit;
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_alltoallw
 #undef FCNAME
@@ -595,6 +619,8 @@ static inline int MPIDI_NM_mpi_alltoallw(const void *sendbuf, const int sendcoun
     goto fn_exit;
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_reduce
 #undef FCNAME
@@ -642,6 +668,8 @@ static inline int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int co
     goto fn_exit;
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_reduce_scatter
 #undef FCNAME
@@ -700,6 +728,8 @@ static inline int MPIDI_NM_mpi_reduce_scatter(const void *sendbuf, void *recvbuf
     goto fn_exit;
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_reduce_scatter_block
 #undef FCNAME
@@ -759,6 +789,8 @@ static inline int MPIDI_NM_mpi_reduce_scatter_block(const void *sendbuf, void *r
     goto fn_exit;
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_scan
 #undef FCNAME
@@ -800,6 +832,8 @@ static inline int MPIDI_NM_mpi_scan(const void *sendbuf, void *recvbuf, int coun
     goto fn_exit;
 }
 
+/* Select an algorithm and call the appropriate function. Fall back to the MPIR algorithm selection
+ * if nothing is chosen at the netmod level. */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_exscan
 #undef FCNAME

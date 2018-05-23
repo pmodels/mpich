@@ -4,6 +4,7 @@
 #include "ofi_impl.h"
 #include "coll_algo_params.h"
 
+/* Select the appropriate barrier algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Barrier_select(MPIR_Comm * comm,
                                                           MPIR_Errflag_t * errflag, const void
@@ -13,6 +14,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Barrier_select(MPIR_Comm * comm,
     return &MPIDI_OFI_Barrier_intra_dissemination_cnt;
 }
 
+/* Select the appropriate bcast algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Bcast_select(void *buffer, int count,
                                                         MPI_Datatype datatype,
@@ -42,6 +44,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Bcast_select(void *buffer, int count,
     return NULL;
 }
 
+/* Select the appropriate allreduce algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allreduce_select(const void *sendbuf,
                                                             void *recvbuf,
@@ -67,6 +70,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allreduce_select(const void *sendbuf,
     return NULL;
 }
 
+/* Select the appropriate reduce algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Reduce_select(const void *sendbuf,
                                                          void *recvbuf,
@@ -93,6 +97,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Reduce_select(const void *sendbuf,
     return NULL;
 }
 
+/* Select the appropriate gather algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Gather_select(const void *sendbuf,
                                                          int sendcount,
@@ -109,6 +114,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Gather_select(const void *sendbuf,
     return &MPIDI_OFI_Gather_intra_binomial_cnt;
 }
 
+/* Select the appropriate gatherv algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Gatherv_select(const void *sendbuf,
                                                           int sendcount,
@@ -126,6 +132,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Gatherv_select(const void *sendbuf,
     return &MPIDI_OFI_Gatherv_allcomm_linear_cnt;
 }
 
+/* Select the appropriate scatter algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Scatter_select(const void *sendbuf,
                                                           int sendcount,
@@ -142,6 +149,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Scatter_select(const void *sendbuf,
     return &MPIDI_OFI_Scatter_intra_binomial_cnt;
 }
 
+/* Select the appropriate scatterv algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Scatterv_select(const void *sendbuf,
                                                            const int *sendcounts,
@@ -159,6 +167,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Scatterv_select(const void *sendbuf,
     return &MPIDI_OFI_Scatterv_allcomm_linear_cnt;
 }
 
+/* Select the appropriate alltoall algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Alltoall_select(const void *sendbuf,
                                                            int sendcount,
@@ -190,6 +199,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Alltoall_select(const void *sendbuf,
     return NULL;
 }
 
+/* Select the appropriate alltoallv algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Alltoallv_select(const void *sendbuf,
                                                             const int *sendcounts,
@@ -213,6 +223,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Alltoallv_select(const void *sendbuf,
     return NULL;
 }
 
+/* Select the appropriate alltoallw algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Alltoallw_select(const void *sendbuf,
                                                             const int sendcounts[],
@@ -236,6 +247,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Alltoallw_select(const void *sendbuf,
     return NULL;
 }
 
+/* Select the appropriate allgather algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allgather_select(const void *sendbuf, int sendcount,
                                                             MPI_Datatype sendtype,
@@ -265,6 +277,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allgather_select(const void *sendbuf,
     return NULL;
 }
 
+/* Select the appropriate allgatherv algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allgatherv_select(const void *sendbuf,
                                                              int sendcount,
@@ -304,6 +317,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Allgatherv_select(const void *sendbuf
     return NULL;
 }
 
+/* Select the appropriate reduce_scatter algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Reduce_scatter_select(const void *sendbuf,
                                                                  void *recvbuf,
@@ -376,6 +390,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Reduce_scatter_select(const void *sen
     return NULL;
 }
 
+/* Select the appropriate reduce_scatter_block algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Reduce_scatter_block_select(const void *sendbuf,
                                                                        void *recvbuf,
@@ -436,6 +451,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Reduce_scatter_block_select(const voi
     return NULL;
 }
 
+/* Select the appropriate scan algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Scan_select(const void *sendbuf,
                                                        void *recvbuf,
@@ -451,6 +467,7 @@ MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Scan_select(const void *sendbuf,
     return &MPIDI_OFI_Scan_intra_recursive_doubling_cnt;
 }
 
+/* Select the appropriate exscan algorithm based on static conditional metrics. */
 MPL_STATIC_INLINE_PREFIX const
 MPIDI_OFI_coll_algo_container_t *MPIDI_OFI_Exscan_select(const void *sendbuf,
                                                          void *recvbuf,
