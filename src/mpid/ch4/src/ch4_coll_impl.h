@@ -119,16 +119,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_inter_fallback(MPIR_Comm * comm,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Bcast_intra_composition_alpha
+#define FUNCNAME MPIDI_Bcast_intra_noderoots_local
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, int count,
-                                                                 MPI_Datatype datatype,
-                                                                 int root, MPIR_Comm * comm,
-                                                                 MPIR_Errflag_t * errflag,
-                                                                 const
-                                                                 MPIDI_coll_algo_container_t
-                                                                 * ch4_algo_parameters_container)
+/* *INDENT-OFF* */
+MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_noderoots_local(void *buffer, int count,
+                                                               MPI_Datatype datatype, int root,
+                                                               MPIR_Comm * comm,
+                                                               MPIR_Errflag_t * errflag,
+                                                               const MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+/* *INDENT-ON* */
 {
     int mpi_errno = MPI_SUCCESS;
     const void *bcast_roots_container =

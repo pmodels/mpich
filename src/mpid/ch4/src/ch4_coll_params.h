@@ -19,17 +19,17 @@ typedef union {
 } MPIDI_Barrier_params_t;
 
 typedef enum {
-    MPIDI_Bcast_intra_composition_alpha_id,
+    MPIDI_Bcast_intra_noderoots_local_id,
     MPIDI_Bcast_intra_composition_beta_id,
     MPIDI_Bcast_intra_composition_gamma_id,
     MPIDI_Bcast_inter_composition_alpha_id,
 } MPIDI_Bcast_id_t;
 
 typedef union {
-    struct MPIDI_Bcast_alpha {
+    struct {
         int roots_bcast;
         int node_bcast;
-    } ch4_bcast_alpha;
+    } ch4_bcast_noderoots_local;
     struct MPIDI_Bcast_beta {
         int node_bcast_first;
         int roots_bcast;

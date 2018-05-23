@@ -54,7 +54,7 @@ MPIDI_coll_algo_container_t *MPIDI_Bcast_select(void *buffer,
         nbytes <= MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE && MPIR_Comm_is_node_aware(comm)) {
         if ((nbytes < MPIR_CVAR_BCAST_SHORT_MSG_SIZE) ||
             (comm->local_size < MPIR_CVAR_BCAST_MIN_PROCS)) {
-            return &MPIDI_Bcast_intra_composition_alpha_cnt;
+            return &MPIDI_Bcast_intra_noderoots_local_cnt;
         } else {
             if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm->local_size, NULL)) {
                 return &MPIDI_Bcast_intra_composition_beta_cnt;

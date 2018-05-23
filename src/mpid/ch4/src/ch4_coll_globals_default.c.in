@@ -30,11 +30,11 @@ const MPIDI_coll_algo_container_t MPIDI_Barrier_inter_fallback_cnt = {
 };
 
 /* Bcast default composition containers initialization*/
-const MPIDI_coll_algo_container_t MPIDI_Bcast_intra_composition_alpha_cnt = {
-    .id = MPIDI_Bcast_intra_composition_alpha_id,
-    .params.ch4_bcast_params.ch4_bcast_alpha = {
-                                                .roots_bcast = MPIDI_COLL_AUTO_SELECT,
-                                                .node_bcast = MPIDI_COLL_AUTO_SELECT}
+const MPIDI_coll_algo_container_t MPIDI_Bcast_intra_noderoots_local_cnt = {
+    .id = MPIDI_Bcast_intra_noderoots_local_id,
+    .params.ch4_bcast_params.ch4_bcast_noderoots_local = {
+        .roots_bcast = MPIDI_COLL_AUTO_SELECT,
+        .node_bcast = MPIDI_COLL_AUTO_SELECT}
 };
 
 const MPIDI_coll_algo_container_t MPIDI_Bcast_intra_composition_beta_cnt = {
