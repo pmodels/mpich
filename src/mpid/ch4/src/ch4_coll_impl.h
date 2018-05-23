@@ -140,10 +140,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_alpha(void *buffer, i
 
     if (comm->node_roots_comm == NULL && comm->rank == root) {
         mpi_errno = MPIC_Send(buffer, count, datatype, 0, MPIR_BCAST_TAG, comm->node_comm, errflag);
-    }
-
-    if (comm->node_roots_comm != NULL && comm->rank != root &&
-        MPIR_Get_intranode_rank(comm, root) != -1) {
+    } else if (comm->node_roots_comm != NULL && comm->rank != root &&
+               MPIR_Get_intranode_rank(comm, root) != -1) {
         mpi_errno =
             MPIC_Recv(buffer, count, datatype, MPIR_Get_intranode_rank(comm, root), MPIR_BCAST_TAG,
                       comm->node_comm, MPI_STATUS_IGNORE, errflag);
