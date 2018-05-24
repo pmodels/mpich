@@ -135,5 +135,6 @@ static _opa_inline int OPA_swap_int(OPA_int_t * ptr, int val)
 
 /* is this portable enough? */
 #define OPA_compiler_barrier()   __asm__ __volatile__  (""  ::: "memory")
+#define OPA_compiler_barrier()   __asm__ __volatile__  ("pause"  ::: "memory")
 
 #endif /* OPA_SUN_ATOMIC_OPS_H_INCLUDED */

@@ -8,6 +8,7 @@
 #define OPA_GCC_INTEL_32_64_P3BARRIER_H_INCLUDED
 
 #define OPA_compiler_barrier() __asm__ __volatile__ ("" ::: "memory")
+#define OPA_pause() __asm__ __volatile__ ("pause" ::: "memory")
 
 /* For all regular memory (write-back cacheable, not driver/graphics
  * memory), there is only one general ordering relaxation permitted by

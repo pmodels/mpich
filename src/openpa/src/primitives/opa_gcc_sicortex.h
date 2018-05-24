@@ -26,6 +26,7 @@ typedef struct {
 #define OPA_read_barrier()       __asm__ __volatile__  ("sync" ::: "memory")
 #define OPA_read_write_barrier() __asm__ __volatile__  ("sync" ::: "memory")
 #define OPA_compiler_barrier()   __asm__ __volatile__  (""    ::: "memory")
+#define OPA_pause()   __asm__ __volatile__  ("pause"    ::: "memory")
 
 /* Aligned loads and stores are atomic. */
 static _opa_inline int OPA_load_int(_opa_const OPA_int_t * ptr)

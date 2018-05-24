@@ -30,6 +30,7 @@ typedef struct {
 /* FIXME there mut be a more efficient way to implement this.  Is "asm {};"
  * sufficient? */
 #define OPA_compiler_barrier()   _ReadWriteBarrier()
+#define OPA_pause()              do {} while (0)
 
 static _opa_inline int OPA_load_int(_opa_const OPA_int_t * ptr)
 {
