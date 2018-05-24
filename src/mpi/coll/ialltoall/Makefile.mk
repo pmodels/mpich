@@ -20,4 +20,6 @@ mpi_core_sources +=                             \
     src/mpi/coll/ialltoall/ialltoall_intra_brucks.c   \
     src/mpi/coll/ialltoall/ialltoall_intra_permuted_sendrecv.c  \
     src/mpi/coll/ialltoall/ialltoall_intra_pairwise.c \
-    src/mpi/coll/ialltoall/ialltoall_inter_pairwise_exchange.c
+    src/mpi/coll/ialltoall/ialltoall_inter_pairwise_exchange.c	\
+    src/mpi/coll/ialltoall/ialltoall_intra_gentran_brucks.c	\
+    src/mpi/coll/ialltoall/ialltoall_gentran_algos.c
