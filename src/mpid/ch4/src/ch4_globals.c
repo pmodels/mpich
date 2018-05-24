@@ -114,15 +114,20 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ABORT);
     fflush(stderr);
     fflush(stdout);
-    if (NULL == comm || MPIR_Comm_size(comm) == 1)
+    if (NULL == comm || (MPIR_Comm_size(comm) == 1 && comm->comm_kind == MPIR_COMM_KIND__INTRACOMM))
         MPL_exit(exit_code);
+
+    if (comm != MPIR_Process.comm_world) {
+        MPIDIG_comm_abort(comm, exit_code);
+    } else {
 #ifdef USE_PMIX_API
-    PMIx_Abort(exit_code, error_msg, NULL, 0);
+        PMIx_Abort(exit_code, error_msg, NULL, 0);
 #elif defined(USE_PMI2_API)
-    PMI2_Abort(TRUE, error_msg);
+        PMI2_Abort(TRUE, error_msg);
 #else
-    PMI_Abort(exit_code, error_msg);
+        PMI_Abort(exit_code, error_msg);
 #endif
+    }
     return 0;
 }
 

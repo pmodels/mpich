@@ -138,8 +138,6 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
-    /* MPID_Abort() should never return MPI_SUCCESS */
-    MPIR_Assert(0);
     /* --END ERROR HANDLING-- */
     /* ... end of body of routine ... */
 
