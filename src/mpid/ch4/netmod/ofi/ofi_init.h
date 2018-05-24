@@ -425,7 +425,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     int mpi_errno = MPI_SUCCESS, pmi_errno, i, fi_version;
     int thr_err = 0;
     void *table = NULL, *provname = NULL;
-    struct fi_info *hints, *prov, *prov_use, *prov_first;
+    struct fi_info *hints, *prov = NULL, *prov_use, *prov_first;
     struct fi_cq_attr cq_attr;
     struct fi_cntr_attr cntr_attr;
     fi_addr_t *mapped_table;
@@ -625,10 +625,22 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_addrinfo");
 
         fi_freeinfo(prov_first);
+    } else {
+        /* If runtime checks are disabled, make sure that the user-specified
+         * provider matches the configure-specified provider. */
+        MPIR_ERR_CHKANDJUMP(provname != NULL &&
+                            MPIDI_OFI_SET_NUMBER != MPIDI_OFI_get_set_number(provname),
+                            mpi_errno, MPI_ERR_OTHER, "**ofi_provider_mismatch");
     }
 
     MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, hints, &prov), addrinfo);
     MPIR_ERR_CHKANDJUMP(prov == NULL, mpi_errno, MPI_ERR_OTHER, "**ofid_addrinfo");
+    /* When a specific provider is specified at configure time,
+     * make sure it is the one selected by fi_getinfo */
+    MPIR_ERR_CHKANDJUMP(!MPIDI_OFI_ENABLE_RUNTIME_CHECKS &&
+                        MPIDI_OFI_SET_NUMBER !=
+                        MPIDI_OFI_get_set_number(prov->fabric_attr->prov_name), mpi_errno,
+                        MPI_ERR_OTHER, "**ofi_provider_mismatch");
     prov_use = prov;
     if (MPIR_CVAR_OFI_DUMP_PROVIDERS)
         MPIDI_OFI_dump_providers(prov);
