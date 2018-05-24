@@ -395,8 +395,11 @@
 /errors/comm/comm_size_nullarg
 /errors/comm/comm_split_nullarg
 /errors/comm/comm_split_type_nullarg
+/errors/comm/intercomm_abort
 /errors/comm/intercomm_create_nullarg
 /errors/comm/manysplit
+/errors/comm/subcomm_abort
+/errors/comm/subcomm_abort2
 /errors/comm/too_many_comms
 /errors/comm/too_many_comms2
 /errors/comm/too_many_comms3
