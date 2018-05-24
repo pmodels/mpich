@@ -46,18 +46,8 @@ int MPIR_Wait_impl(MPIR_Request * request_ptr, MPI_Status * status)
             /* --END ERROR HANDLING-- */
         }
 
-        if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                     !MPIR_Request_is_complete(request_ptr) &&
-                     MPID_Request_is_anysource(request_ptr) &&
-                     !MPID_Comm_AS_enabled(request_ptr->comm))) {
-            /* A process fail during progress, which is manifested through this check. */
-            if (request_ptr->kind == MPIR_REQUEST_KIND__RECV) {
-                /* We only handle receive request at the moment. */
-                MPID_Cancel_recv(request_ptr);
-                MPIR_STATUS_SET_CANCEL_BIT(request_ptr->status, FALSE);
-            }
-            MPIR_ERR_SET(request_ptr->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
-            mpi_errno = request_ptr->status.MPI_ERROR;
+        if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
+            mpi_errno = MPIR_Request_handle_proc_failed(request_ptr);
             goto fn_fail;
         }
     }
@@ -91,9 +81,7 @@ int MPIR_Wait(MPI_Request * request, MPI_Status * status)
         /* If this is an anysource request including a communicator with
          * anysource disabled, convert the call to an MPI_Test instead so we
          * don't get stuck in the progress engine. */
-        if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                     MPID_Request_is_anysource(request_ptr) &&
-                     !MPID_Comm_AS_enabled(request_ptr->comm))) {
+        if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptr))) {
             mpi_errno = MPIR_Test(request, &active_flag, status);
             goto fn_exit;
         }

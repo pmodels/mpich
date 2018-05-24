@@ -394,6 +394,24 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Request_completion_processing_fastpath(MPI_Req
 int MPIR_Request_completion_processing(MPIR_Request *, MPI_Status *, int *);
 int MPIR_Request_get_error(MPIR_Request *);
 
+MPL_STATIC_INLINE_PREFIX int MPID_Request_is_anysource(MPIR_Request *);
+MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm *);
+extern int MPIR_CVAR_ENABLE_FT;
+
+/* The following routines are ULFM helpers. */
+
+/* This routine check if the request is "anysource" but the communicator is not,
+ * which happens usually due to a failure of a process in the communicator. */
+MPL_STATIC_INLINE_PREFIX int MPIR_Request_is_anysrc_mismatched(MPIR_Request * req_ptr)
+{
+    return (MPIR_CVAR_ENABLE_FT &&
+            !MPIR_Request_is_complete(req_ptr) &&
+            MPID_Request_is_anysource(req_ptr) && !MPID_Comm_AS_enabled((req_ptr)->comm));
+}
+
+/* This routine handle the request when its associated process failed. */
+int MPIR_Request_handle_proc_failed(MPIR_Request * request_ptr);
+
 /* The following routines perform the callouts to the user routines registered
    as part of a generalized request.  They handle any language binding issues
    that are necessary. They are used when completing, freeing, cancelling or
