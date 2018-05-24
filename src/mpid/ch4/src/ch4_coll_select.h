@@ -57,7 +57,7 @@ MPIDI_coll_algo_container_t *MPIDI_Bcast_select(void *buffer,
             return &MPIDI_Bcast_intra_noderoots_local_cnt;
         } else {
             if (nbytes < MPIR_CVAR_BCAST_LONG_MSG_SIZE && MPL_is_pof2(comm->local_size, NULL)) {
-                return &MPIDI_Bcast_intra_composition_beta_cnt;
+                return &MPIDI_Bcast_intra_local_then_nodes_cnt;
             }
         }
     }

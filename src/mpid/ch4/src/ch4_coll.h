@@ -63,9 +63,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
                 MPIDI_Bcast_intra_noderoots_local(buffer, count, datatype, root, comm,
                                                   errflag, ch4_algo_parameters_container);
             break;
-        case MPIDI_Bcast_intra_composition_beta_id:
+        case MPIDI_Bcast_intra_local_then_nodes_id:
             mpi_errno =
-                MPIDI_Bcast_intra_composition_beta(buffer, count, datatype, root, comm,
+                MPIDI_Bcast_intra_local_then_nodes(buffer, count, datatype, root, comm,
                                                    errflag, ch4_algo_parameters_container);
             break;
         case MPIDI_Bcast_intra_composition_gamma_id:

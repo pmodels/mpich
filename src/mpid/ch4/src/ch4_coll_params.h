@@ -20,6 +20,7 @@ typedef union {
 
 typedef enum {
     MPIDI_Bcast_intra_noderoots_local_id,
+    MPIDI_Bcast_intra_local_then_nodes_id,
     MPIDI_Bcast_intra_composition_beta_id,
     MPIDI_Bcast_intra_composition_gamma_id,
     MPIDI_Bcast_inter_composition_alpha_id,
@@ -30,11 +31,11 @@ typedef union {
         int roots_bcast;
         int node_bcast;
     } ch4_bcast_noderoots_local;
-    struct MPIDI_Bcast_beta {
+    struct {
         int node_bcast_first;
         int roots_bcast;
         int node_bcast_second;
-    } ch4_bcast_beta;
+    } ch4_bcast_local_then_nodes;
     struct MPIDI_Bcast_gamma {
         int bcast;
     } ch4_bcast_gamma;
