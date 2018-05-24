@@ -180,6 +180,20 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Request_handle_proc_failed
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Request_handle_proc_failed(MPIR_Request * request_ptr)
+{
+    if (request_ptr->kind == MPIR_REQUEST_KIND__RECV) {
+        /* We only handle receive request at the moment. */
+        MPID_Cancel_recv(request_ptr);
+        MPIR_STATUS_SET_CANCEL_BIT(request_ptr->status, FALSE);
+    }
+    MPIR_ERR_SET(request_ptr->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
+    return request_ptr->status.MPI_ERROR;
+}
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Request_get_error
