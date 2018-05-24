@@ -243,10 +243,7 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
             /* If one of the requests is an anysource on a communicator that's
              * disabled such communication, convert this operation to a testall
              * instead to prevent getting stuck in the progress engine. */
-            if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                         MPID_Request_is_anysource(request_ptrs[i]) &&
-                         !MPIR_Request_is_complete(request_ptrs[i]) &&
-                         !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
+            if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
                 disabled_anysource = TRUE;
             }
         } else {

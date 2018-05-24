@@ -186,10 +186,7 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
                 MPID_END_ERROR_CHECKS;
             }
 #endif
-            if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                         MPID_Request_is_anysource(request_ptrs[i]) &&
-                         !MPID_Comm_AS_enabled(request_ptrs[i]->comm) &&
-                         !MPIR_Request_is_complete(request_ptrs[i]))) {
+            if (unlikely(MPIR_Request_is_anysrc_mismatched(request_ptrs[i]))) {
                 proc_failure = TRUE;
                 MPIR_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
                 if (array_of_statuses != MPI_STATUSES_IGNORE)
