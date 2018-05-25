@@ -105,6 +105,29 @@ for algo_name in ${algo_names}; do
     done
 done
 
+######### Add tests for Allgatherv algorithms ###########
+
+#disable device collectives for allgatherv to test MPIR algorithms
+testing_env="env=MPIR_CVAR_ALLGATHERV_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_ALLGATHERV_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_IALLGATHERV_DEVICE_COLLECTIVE=0 "
+algo_names="recexch_distance_doubling recexch_distance_halving"
+kvalues="2 3 4"
+
+for algo_name in ${algo_names}; do
+    for kval in ${kvalues}; do
+        #set the environment
+        env="${testing_env} env=MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM=${algo_name} "
+        env+="env=MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL=${kval}"
+
+        coll_algo_tests+="allgatherv2 10 ${env}${nl}"
+        coll_algo_tests+="allgatherv3 10 ${env}${nl}"
+        coll_algo_tests+="allgatherv4 4 timeLimit=600 ${env}${nl}"
+    done
+done
+
 export coll_algo_tests
 
 ######### Add tests for Scatter algorithms ###########
