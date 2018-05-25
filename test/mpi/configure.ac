@@ -233,10 +233,10 @@ AC_ARG_ENABLE(xfail,
 		[Run tests marked for expected failure])],,
 	[enable_xfail=no])
 
-AC_ARG_ENABLE(collective-algorithms,
-              [AC_HELP_STRING([--enable-collective-algorithms],
+AC_ARG_ENABLE(collalgo-tests,
+              [AC_HELP_STRING([--enable-collalgo-tests],
                               [Run extended collective algorithm tests])],,
-              [enable_collective_algorithms=no])
+              [enable_collalgo_tests=no])
 
 AC_ARG_WITH(mpi,
 	[AC_HELP_STRING([--with-mpi=dir],
