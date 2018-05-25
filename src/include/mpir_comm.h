@@ -306,6 +306,10 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key, MPI
 int MPIR_Comm_set_attr_impl(MPIR_Comm * comm_ptr, int comm_keyval, void *attribute_val,
                             MPIR_Attr_type attrType);
 
+int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int key,
+                                      MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr);
+int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
+                                         MPIR_Comm ** newcomm_ptr);
 
 /* Preallocated comm objects.  There are 3: comm_world, comm_self, and
    a private (non-user accessible) dup of comm world that is provided
