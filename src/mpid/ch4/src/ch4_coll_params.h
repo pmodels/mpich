@@ -4,7 +4,7 @@
 typedef enum {
     MPIDI_Barrier_intra_local_then_nodes_id,
     MPIDI_Barrier_intra_netmod_id,
-    MPIDI_Barrier_inter_composition_alpha_id,
+    MPIDI_Barrier_inter_fallback_id,
 } MPIDI_Barrier_id_t;
 
 typedef union {

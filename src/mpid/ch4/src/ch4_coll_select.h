@@ -22,7 +22,7 @@ MPL_STATIC_INLINE_PREFIX const
 MPIDI_coll_algo_container_t *MPIDI_Barrier_select(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Barrier_inter_composition_alpha_cnt;
+        return &MPIDI_Barrier_inter_fallback_cnt;
     }
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BARRIER &&

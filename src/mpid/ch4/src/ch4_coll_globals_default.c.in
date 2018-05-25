@@ -25,8 +25,8 @@ const MPIDI_coll_algo_container_t MPIDI_Barrier_intra_netmod_cnt = {
         .barrier = MPIDI_COLL_AUTO_SELECT}
 };
 
-const MPIDI_coll_algo_container_t MPIDI_Barrier_inter_composition_alpha_cnt = {
-    .id = MPIDI_Barrier_inter_composition_alpha_id
+const MPIDI_coll_algo_container_t MPIDI_Barrier_inter_fallback_cnt = {
+    .id = MPIDI_Barrier_inter_fallback_id
 };
 
 /* Bcast default composition containers initialization*/

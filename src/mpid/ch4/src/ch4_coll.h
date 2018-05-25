@@ -33,9 +33,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
         case MPIDI_Barrier_intra_netmod_id:
             mpi_errno = MPIDI_Barrier_intra_netmod(comm, errflag, ch4_algo_parameters_container);
             break;
-        case MPIDI_Barrier_inter_composition_alpha_id:
-            mpi_errno =
-                MPIDI_Barrier_inter_composition_alpha(comm, errflag, ch4_algo_parameters_container);
+        case MPIDI_Barrier_inter_fallback_id:
+            mpi_errno = MPIDI_Barrier_inter_fallback(comm, errflag, ch4_algo_parameters_container);
             break;
         default:
             mpi_errno = MPIR_Barrier_impl(comm, errflag);
