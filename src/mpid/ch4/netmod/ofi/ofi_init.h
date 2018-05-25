@@ -1229,13 +1229,6 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         MPIR_Assert(MPIDI_Global.cq_buffered_static_head == MPIDI_Global.cq_buffered_static_tail);
         MPIR_Assert(NULL == MPIDI_Global.cq_buffered_dynamic_head);
     }
-#ifdef USE_PMI2_API
-    PMI2_Finalize();
-#elif defined(USE_PMIX_API)
-    PMIx_Finalize(NULL, 0);
-#else
-    PMI_Finalize();
-#endif
 
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_UTIL_MUTEX, &thr_err);
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_PROGRESS_MUTEX, &thr_err);
