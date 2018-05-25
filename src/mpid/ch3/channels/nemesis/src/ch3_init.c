@@ -39,18 +39,18 @@ static int split_type(MPIR_Comm * user_comm_ptr, int stype, int key,
         goto fn_exit;
     }
 
-    if (stype != MPI_COMM_TYPE_SHARED) {
+    if (stype == MPI_COMM_TYPE_SHARED) {
+        if (MPIDI_CH3I_Shm_supported()) {
+            mpi_errno = MPIR_Comm_split_type_node_topo(comm_ptr, stype, key, info_ptr, newcomm_ptr);
+        } else {
+            mpi_errno = MPIR_Comm_split_type_self(comm_ptr, stype, key, newcomm_ptr);
+        }
+    } else if (stype == MPIX_COMM_TYPE_NEIGHBORHOOD) {
+        mpi_errno = MPIR_Comm_split_type_neighborhood(comm_ptr, stype, key, info_ptr, newcomm_ptr);
+    } else {
         /* we don't know how to handle other split types; hand it back
          * to the upper layer */
         mpi_errno = MPIR_Comm_split_type(comm_ptr, stype, key, info_ptr, newcomm_ptr);
-        goto fn_exit;
-    }
-
-    if (MPIDI_CH3I_Shm_supported()) {
-        mpi_errno = MPIR_Comm_split_type_node_topo(comm_ptr, stype, key, info_ptr, newcomm_ptr);
-    }
-    else {
-        mpi_errno = MPIR_Comm_split_type_self(comm_ptr, stype, key, newcomm_ptr);
     }
 
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

@@ -533,35 +533,10 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     } else if (split_type == MPIX_COMM_TYPE_NEIGHBORHOOD) {
-        int flag;
-        char hintval[MPI_MAX_INFO_VAL + 1];
-
-        /* We plan on dispatching different NEIGHBORHOOD support to
-         * different parts of MPICH, based on the key provided in the
-         * info object.  Right now, the one NEIGHBORHOOD we support is
-         * "nbhd_common_dirname", implementation of which lives in ROMIO */
-
-        MPIR_Info_get_impl(info_ptr, "nbhd_common_dirname", MPI_MAX_INFO_VAL, hintval, &flag);
-        if (flag) {
-#ifdef HAVE_ROMIO
-            MPI_Comm dummycomm;
-            MPIR_Comm *dummycomm_ptr;
-
-            mpi_errno = MPIR_Comm_split_filesystem(comm_ptr->handle, key, hintval, &dummycomm);
-            if (mpi_errno)
-                MPIR_ERR_POP(mpi_errno);
-
-            MPIR_Comm_get_ptr(dummycomm, dummycomm_ptr);
-            *newcomm_ptr = dummycomm_ptr;
-#endif
-        } else {
-            /* In the mean time, the user passed in
-             * COMM_TYPE_NEIGHBORHOOD but did not give us an info we
-             * know how to work with.  Throw up our hands and treat it
-             * like UNDEFINED.  This will result in MPI_COMM_NULL
-             * being returned to the user. */
-            *newcomm_ptr = NULL;
-        }
+        mpi_errno =
+            MPIR_Comm_split_type_neighborhood(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
     } else {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_ARG, "**arg");
     }
@@ -569,6 +544,81 @@ int MPIR_Comm_split_type(MPIR_Comm * user_comm_ptr, int split_type, int key,
   fn_exit:
     if (comm_ptr)
         MPIR_Comm_free_impl(comm_ptr);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_split_type_nbhd_common_dir
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Comm_split_type_nbhd_common_dir(MPIR_Comm * user_comm_ptr, int key, const char *hintval,
+                                         MPIR_Comm ** newcomm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+#ifdef HAVE_ROMIO
+    MPI_Comm dummycomm;
+    MPIR_Comm *dummycomm_ptr;
+
+    mpi_errno = MPIR_Comm_split_filesystem(user_comm_ptr->handle, key, hintval, &dummycomm);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    MPIR_Comm_get_ptr(dummycomm, dummycomm_ptr);
+    *newcomm_ptr = dummycomm_ptr;
+#endif
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_split_type_neighborhood
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Comm_split_type_neighborhood(MPIR_Comm * comm_ptr, int split_type, int key,
+                                      MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
+{
+
+    int flag = 0;
+    char hintval[MPI_MAX_INFO_VAL + 1];
+    int mpi_errno = MPI_SUCCESS;
+    int info_args_are_equal;
+    int hintval_size, hintval_size_max;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+
+    *newcomm_ptr = NULL;
+
+    if (info_ptr) {
+        MPIR_Info_get_impl(info_ptr, "nbhd_common_dirname", MPI_MAX_INFO_VAL, hintval, &flag);
+    }
+    if (!flag) {
+        hintval[0] = '\0';
+    }
+
+    *newcomm_ptr = NULL;
+    mpi_errno = compare_info_hint(hintval, comm_ptr, &info_args_are_equal);
+
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (info_args_are_equal && flag) {
+        MPIR_Comm_split_type_nbhd_common_dir(comm_ptr, key, hintval, newcomm_ptr);
+    } else {
+        /* In the mean time, the user passed in
+         * COMM_TYPE_NEIGHBORHOOD but did not give us an info we
+         * know how to work with.  Throw up our hands and treat it
+         * like UNDEFINED.  This will result in MPI_COMM_NULL
+         * being returned to the user. */
+        *newcomm_ptr = NULL;
+    }
+
+  fn_exit:
     return mpi_errno;
 
   fn_fail:
