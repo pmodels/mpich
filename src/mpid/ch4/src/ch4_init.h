@@ -438,6 +438,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
     MPIDIU_avt_destroy();
     MPL_free(MPIDI_CH4_Global.jobid);
 
+#ifdef USE_PMIX_API
+    PMIx_Finalize(NULL, 0);
+#elif defined(USE_PMI2_API)
+    PMI2_Finalize();
+#else
+    PMI_Finalize();
+#endif
+
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_UTIL_MUTEX, &thr_err);

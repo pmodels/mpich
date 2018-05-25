@@ -384,11 +384,6 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         MPL_free(MPIDI_UCX_global.pmi_addr_table);
 
     MPIDIG_finalize();
-#ifndef USE_PMIX_API
-    PMI_Finalize();
-#else
-    PMIx_Finalize(NULL, 0);
-#endif
 
 #ifndef HAVE_DEBUGGER_SUPPORT
     MPIR_Request_free(MPIDI_UCX_global.lw_send_req);
