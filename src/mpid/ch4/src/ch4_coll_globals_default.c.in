@@ -9,13 +9,14 @@ const void *MPIDI_coll_get_next_container(const void *container)
     return NULL;
 }
 
+/* *INDENT-OFF* */
 /* Barrier default composition containers initialization*/
-const MPIDI_coll_algo_container_t MPIDI_Barrier_intra_composition_alpha_cnt = {
-    .id = MPIDI_Barrier_intra_composition_alpha_id,
-    .params.ch4_barrier_params.ch4_barrier_alpha = {
-                                                    .node_barrier = MPIDI_COLL_AUTO_SELECT,
-                                                    .roots_barrier = MPIDI_COLL_AUTO_SELECT,
-                                                    .node_bcast = MPIDI_COLL_AUTO_SELECT}
+const MPIDI_coll_algo_container_t MPIDI_Barrier_intra_local_then_nodes_cnt = {
+    .id = MPIDI_Barrier_intra_local_then_nodes_id,
+    .params.ch4_barrier_params.ch4_barrier_local_then_nodes = {
+        .node_barrier = MPIDI_COLL_AUTO_SELECT,
+        .roots_barrier = MPIDI_COLL_AUTO_SELECT,
+        .node_bcast = MPIDI_COLL_AUTO_SELECT}
 };
 
 const MPIDI_coll_algo_container_t MPIDI_Barrier_intra_composition_beta_cnt = {
@@ -238,7 +239,6 @@ const MPIDI_coll_algo_container_t MPIDI_Exscan_intra_composition_alpha_cnt = {
                                                   .exscan = MPIDI_COLL_AUTO_SELECT}
 };
 
-/* *INDENT-OFF* */
 @ch4_netmod_coll_globals_default@
 #include "../shm/posix/posix_coll_globals_default.c"
 /* *INDENT-ON* */

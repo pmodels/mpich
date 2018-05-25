@@ -2,7 +2,7 @@
 #define CH4_COLL_CONTAINERS_H_INCLUDED
 
 /* Barrier CH4 level containers declaration */
-extern const MPIDI_coll_algo_container_t MPIDI_Barrier_intra_composition_alpha_cnt;
+extern const MPIDI_coll_algo_container_t MPIDI_Barrier_intra_local_then_nodes_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Barrier_intra_composition_beta_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Barrier_inter_composition_alpha_cnt;
 
