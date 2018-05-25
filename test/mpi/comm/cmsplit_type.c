@@ -21,6 +21,10 @@ static const char *split_topo[] = {
     "ib", "ibx", "gpu", "gpux", "en", "enx", "eth", "ethx", "hfi", "hfix", NULL
 };
 
+static const char *split_topo_network[] = {
+    "switch_level:2", NULL
+};
+
 int main(int argc, char *argv[])
 {
     int rank, size, verbose = 0, errs = 0, tot_errs = 0;
@@ -182,6 +186,26 @@ int main(int argc, char *argv[])
 
 
     MPI_Info_free(&info);
+#endif
+
+#if defined(MPIX_COMM_TYPE_NEIGHBORHOOD)
+    /* Network topology tests */
+    for (i = 0; split_topo_network[i]; i++) {
+        MPI_Info_create(&info);
+        MPI_Info_set(info, "network_topo", split_topo_network[i]);
+        MPI_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_NEIGHBORHOOD, 0, info, &comm);
+        if (comm != MPI_COMM_NULL) {
+            int newsize, world_size;
+            MPI_Comm_size(comm, &newsize);
+            MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+            if (newsize > world_size) {
+                printf("Expected comm size to be at most the comm world size\n");
+                errs++;
+            }
+            MPI_Comm_free(&comm);
+        }
+        MPI_Info_free(&info);
+    }
 #endif
 
     /* Check to see if MPI_UNDEFINED is respected */
