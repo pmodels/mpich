@@ -3,7 +3,7 @@
 
 typedef enum {
     MPIDI_Barrier_intra_local_then_nodes_id,
-    MPIDI_Barrier_intra_composition_beta_id,
+    MPIDI_Barrier_intra_netmod_id,
     MPIDI_Barrier_inter_composition_alpha_id,
 } MPIDI_Barrier_id_t;
 
@@ -13,9 +13,9 @@ typedef union {
         int roots_barrier;
         int node_bcast;
     } ch4_barrier_local_then_nodes;
-    struct MPIDI_Barrier_beta {
+    struct {
         int barrier;
-    } ch4_barrier_beta;
+    } ch4_barrier_netmod;
 } MPIDI_Barrier_params_t;
 
 typedef enum {

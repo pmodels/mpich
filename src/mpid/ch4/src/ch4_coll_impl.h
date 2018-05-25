@@ -75,14 +75,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_local_then_nodes(MPIR_Comm * co
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Barrier_intra_composition_beta
+#define FUNCNAME MPIDI_Barrier_intra_netmod
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_composition_beta(MPIR_Comm * comm,
-                                                                  MPIR_Errflag_t * errflag,
-                                                                  const
-                                                                  MPIDI_coll_algo_container_t
-                                                                  * ch4_algo_parameters_container)
+/* *INDENT-OFF* */
+MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier_intra_netmod(MPIR_Comm * comm, MPIR_Errflag_t * errflag,
+                                                        const MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+/* *INDENT-ON* */
 {
     int mpi_errno = MPI_SUCCESS;
     const void *barrier_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
