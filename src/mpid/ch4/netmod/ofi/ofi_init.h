@@ -522,9 +522,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                 MPIDI_OFI_init_global_settings(prov_use->fabric_attr->prov_name);
 
             /* Check that this provider meets the minimum requirements for the user */
-            if (MPIDI_OFI_ENABLE_DATA &&
-                ((0ULL == (prov_use->caps & FI_DIRECTED_RECV)) ||
-                 (prov_use->domain_attr->cq_data_size < 4))) {
+            if (MPIDI_OFI_ENABLE_DATA && (!(prov_use->caps & FI_DIRECTED_RECV) ||
+                                          prov_use->domain_attr->cq_data_size < 4)) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                                 (MPL_DBG_FDEST, "Provider doesn't support immediate data"));
                 prov = prov_use->next;
@@ -535,41 +534,41 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                 (MPL_DBG_FDEST, "Provider doesn't support scalable endpoints"));
                 prov = prov_use->next;
                 continue;
-            } else if (MPIDI_OFI_ENABLE_TAGGED &&
-                       ((prov_use->caps & (FI_TAGGED | FI_SEND | FI_RECV)) !=
-                        (FI_TAGGED | FI_SEND | FI_RECV))) {
+            } else if (MPIDI_OFI_ENABLE_TAGGED && !(prov_use->caps & FI_TAGGED)) {
+                /* From the fi_getinfo manpage: "FI_TAGGED implies the
+                 * ability to send and receive tagged messages."
+                 * Therefore no need to specify FI_SEND|FI_RECV.
+                 * Moreover FI_SEND and FI_RECV are mutually
+                 * exclusive, so they should never be set both at the
+                 * same time. */
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                                 (MPL_DBG_FDEST, "Provider doesn't support tagged interfaces"));
                 prov = prov_use->next;
                 continue;
             } else if (MPIDI_OFI_ENABLE_AM &&
-                       ((prov_use->caps & (FI_MSG | FI_MULTI_RECV | FI_SEND | FI_RECV | FI_READ)) !=
-                        (FI_MSG | FI_MULTI_RECV | FI_SEND | FI_RECV | FI_READ))) {
+                       ((prov_use->caps & (FI_MSG | FI_MULTI_RECV)) != (FI_MSG | FI_MULTI_RECV))) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                                 (MPL_DBG_FDEST, "Provider doesn't support active messages"));
                 prov = prov_use->next;
                 continue;
-            } else if (MPIDI_OFI_ENABLE_RMA &&
-                       ((prov_use->caps &
-                         (FI_RMA | FI_WRITE | FI_READ | FI_REMOTE_WRITE | FI_REMOTE_READ)) !=
-                        (FI_RMA | FI_WRITE | FI_READ | FI_REMOTE_WRITE | FI_REMOTE_READ))) {
+            } else if (MPIDI_OFI_ENABLE_RMA && !(prov_use->caps & FI_RMA)) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                                 (MPL_DBG_FDEST, "Provider doesn't support RMA"));
                 prov = prov_use->next;
                 continue;
-            } else if (MPIDI_OFI_ENABLE_ATOMICS && 0ULL == (prov_use->caps & FI_ATOMICS)) {
+            } else if (MPIDI_OFI_ENABLE_ATOMICS && !(prov_use->caps & FI_ATOMICS)) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                                 (MPL_DBG_FDEST, "Provider doesn't support atomics"));
                 prov = prov_use->next;
                 continue;
             } else if (MPIDI_OFI_ENABLE_CONTROL_AUTO_PROGRESS &&
-                       0ULL == (hints->domain_attr->control_progress & FI_PROGRESS_AUTO)) {
+                       !(hints->domain_attr->control_progress & FI_PROGRESS_AUTO)) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                                 (MPL_DBG_FDEST, "Provider doesn't support auto control progress"));
                 prov = prov_use->next;
                 continue;
             } else if (MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS &&
-                       0ULL == (hints->domain_attr->data_progress & FI_PROGRESS_AUTO)) {
+                       !(hints->domain_attr->data_progress & FI_PROGRESS_AUTO)) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                                 (MPL_DBG_FDEST, "Provider doesn't support auto data progress"));
                 prov = prov_use->next;
@@ -651,39 +650,31 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         /* ------------------------------------------------------------------------ */
         /* Set global attributes attributes based on the provider choice            */
         /* ------------------------------------------------------------------------ */
-        MPIDI_Global.settings.enable_data = MPIDI_Global.settings.enable_data == 0 ? 0 :
-            ((prov_use->caps & FI_DIRECTED_RECV) > 0ULL &&
-             (prov_use->domain_attr->cq_data_size >= 4)) ? 1 : 0;
-        MPIDI_Global.settings.enable_av_table = MPIDI_Global.settings.enable_av_table == 0 ? 0 :
-            prov_use->domain_attr->av_type == FI_AV_TABLE ? 1 : 0;
+        MPIDI_Global.settings.enable_data = MPIDI_Global.settings.enable_data &&
+            (prov_use->caps & FI_DIRECTED_RECV) && prov_use->domain_attr->cq_data_size >= 4;
+        MPIDI_Global.settings.enable_av_table = MPIDI_Global.settings.enable_av_table &&
+            prov_use->domain_attr->av_type == FI_AV_TABLE;
         MPIDI_Global.settings.enable_scalable_endpoints =
-            MPIDI_Global.settings.enable_scalable_endpoints ==
-            0 ? 0 : prov_use->domain_attr->max_ep_tx_ctx > 1 ? 1 : 0;
+            MPIDI_Global.settings.enable_scalable_endpoints &&
+            prov_use->domain_attr->max_ep_tx_ctx > 1;
         MPIDI_Global.settings.enable_mr_scalable =
-            MPIDI_Global.settings.enable_mr_scalable == 0 ? 0 : prov_use->domain_attr->mr_mode ==
-            FI_MR_SCALABLE ? 1 : 0;
-        MPIDI_Global.settings.enable_tagged =
-            MPIDI_Global.settings.enable_tagged ==
-            0 ? 0 : (prov_use->caps & (FI_TAGGED | FI_SEND | FI_RECV)) ==
-            (FI_TAGGED | FI_SEND | FI_RECV) ? 1 : 0;
-        MPIDI_Global.settings.enable_am =
-            MPIDI_Global.settings.enable_am ==
-            0 ? 0 : (prov_use->caps & (FI_MSG | FI_MULTI_RECV | FI_SEND | FI_RECV)) ==
-            (FI_MSG | FI_MULTI_RECV | FI_SEND | FI_RECV) ? 1 : 0;
-        MPIDI_Global.settings.enable_rma =
-            MPIDI_Global.settings.enable_rma ==
-            0 ? 0 : (prov_use->caps &
-                     (FI_RMA | FI_WRITE | FI_READ | FI_REMOTE_WRITE | FI_REMOTE_READ)) ==
-            (FI_RMA | FI_WRITE | FI_READ | FI_REMOTE_WRITE | FI_REMOTE_READ) ? 1 : 0;
-        MPIDI_Global.settings.enable_atomics =
-            MPIDI_Global.settings.enable_atomics == 0 ? 0 : (prov_use->caps & (FI_ATOMICS)) >
-            0ULL ? 1 : 0;
+            MPIDI_Global.settings.enable_mr_scalable &&
+            prov_use->domain_attr->mr_mode == FI_MR_SCALABLE;
+        MPIDI_Global.settings.enable_tagged = MPIDI_Global.settings.enable_tagged &&
+            prov_use->caps & FI_TAGGED;
+        MPIDI_Global.settings.enable_am = MPIDI_Global.settings.enable_am &&
+            (prov_use->caps & (FI_MSG | FI_MULTI_RECV | FI_READ)) ==
+            (FI_MSG | FI_MULTI_RECV | FI_READ);
+        MPIDI_Global.settings.enable_rma = MPIDI_Global.settings.enable_rma &&
+            prov_use->caps & FI_RMA;
+        MPIDI_Global.settings.enable_atomics = MPIDI_Global.settings.enable_atomics &&
+            prov_use->caps & FI_ATOMICS;
         MPIDI_Global.settings.enable_data_auto_progress =
-            MPIDI_Global.settings.enable_data_auto_progress ==
-            0 ? 0 : ((hints->domain_attr->data_progress) & (FI_PROGRESS_AUTO)) > 0ULL ? 1 : 0;
+            MPIDI_Global.settings.enable_data_auto_progress &&
+            hints->domain_attr->data_progress & FI_PROGRESS_AUTO;
         MPIDI_Global.settings.enable_control_auto_progress =
-            MPIDI_Global.settings.enable_control_auto_progress ==
-            0 ? 0 : ((hints->domain_attr->control_progress) & (FI_PROGRESS_AUTO)) > 0ULL ? 1 : 0;
+            MPIDI_Global.settings.enable_control_auto_progress &&
+            hints->domain_attr->control_progress & FI_PROGRESS_AUTO;
 
         if (MPIDI_Global.settings.enable_scalable_endpoints) {
             MPIDI_Global.settings.max_endpoints = MPIDI_OFI_MAX_ENDPOINTS_SCALABLE;
@@ -1346,15 +1337,15 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         tx_attr.caps = 0;
 
         if (MPIDI_OFI_ENABLE_TAGGED)
-            tx_attr.caps = FI_TAGGED | FI_SEND;
+            tx_attr.caps = FI_TAGGED;
 
         /* RMA */
         if (MPIDI_OFI_ENABLE_RMA)
-            tx_attr.caps |= FI_RMA | FI_WRITE | FI_READ;
+            tx_attr.caps |= FI_RMA;
         if (MPIDI_OFI_ENABLE_ATOMICS)
             tx_attr.caps |= FI_ATOMICS;
         /* MSG */
-        tx_attr.caps |= FI_MSG | FI_SEND;
+        tx_attr.caps |= FI_MSG;
 
         MPIDI_OFI_CALL(fi_tx_context(*ep, index, &tx_attr, &MPIDI_Global.ctx[index].tx, NULL), ep);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_Global.ctx[index].tx,
@@ -1367,7 +1358,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         rx_attr.caps = 0;
 
         if (MPIDI_OFI_ENABLE_TAGGED)
-            rx_attr.caps |= FI_TAGGED | FI_RECV;
+            rx_attr.caps |= FI_TAGGED;
         if (MPIDI_OFI_ENABLE_DATA)
             rx_attr.caps |= FI_DIRECTED_RECV;
 
@@ -1375,7 +1366,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
             rx_attr.caps |= FI_RMA | FI_REMOTE_READ | FI_REMOTE_WRITE;
         if (MPIDI_OFI_ENABLE_ATOMICS)
             rx_attr.caps |= FI_ATOMICS;
-        rx_attr.caps |= FI_MSG | FI_RECV;
+        rx_attr.caps |= FI_MSG;
         rx_attr.caps |= FI_MULTI_RECV;
 
         MPIDI_OFI_CALL(fi_rx_context(*ep, index, &rx_attr, &MPIDI_Global.ctx[index].rx, NULL), ep);
@@ -1683,15 +1674,11 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
 
     if (MPIDI_OFI_ENABLE_TAGGED) {
         hints->caps |= FI_TAGGED;       /* Tag matching interface  */
-        hints->caps |= FI_SEND;
-        hints->caps |= FI_RECV;
     }
 
     if (MPIDI_OFI_ENABLE_AM) {
         hints->caps |= FI_MSG;  /* Message Queue apis      */
         hints->caps |= FI_MULTI_RECV;   /* Shared receive buffer   */
-        hints->caps |= FI_SEND;
-        hints->caps |= FI_RECV;
     }
 
     if (MPIDI_OFI_ENABLE_DATA) {
