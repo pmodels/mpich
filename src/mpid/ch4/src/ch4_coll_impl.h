@@ -210,15 +210,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_beta(void *buffer, in
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 #endif /* MPIDI_CH4_DIRECT_NETMOD */
-    }
-    if (comm->node_roots_comm != NULL) {
-        mpi_errno =
-            MPIDI_NM_mpi_bcast(buffer, count, datatype, MPIR_Get_internode_rank(comm, root),
-                               comm->node_roots_comm, errflag, bcast_roots_container);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-    }
-    if (comm->node_comm != NULL && MPIR_Get_intranode_rank(comm, root) <= 0) {
+    } else {
+        if (comm->node_roots_comm != NULL) {
+            mpi_errno =
+                MPIDI_NM_mpi_bcast(buffer, count, datatype, MPIR_Get_internode_rank(comm, root),
+                                   comm->node_roots_comm, errflag, bcast_roots_container);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+        }
 #ifndef MPIDI_CH4_DIRECT_NETMOD
         mpi_errno =
             MPIDI_SHM_mpi_bcast(buffer, count, datatype, 0, comm->node_comm, errflag,
