@@ -229,4 +229,25 @@ for algo_name in ${algo_names}; do
     done
 done
 
+######### Add tests for Alltoall algorithms ###########
+
+#disable device collectives for allgather to test MPIR algorithms
+testing_env="env=MPIR_CVAR_ALLTOALL_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_ALLTOALL_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_IALLTOALL_DEVICE_COLLECTIVE=0 "
+algo_names="gentran_brucks"
+kvalues="2 3 4"
+
+for algo_name in ${algo_names}; do
+    for kval in ${kvalues}; do
+        env="${testing_env} env=MPIR_CVAR_IALLTOALL_INTRA_ALGORITHM=${algo_name} "
+        env+="env=MPIR_CVAR_IALLTOALL_BRUCKS_KVAL=${kval} "
+
+        coll_algo_tests+="alltoall1 8 ${env} env=MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=0${nl}"
+        coll_algo_tests+="alltoall1 8 ${env} env=MPIR_CVAR_IALLTOALL_BRUCKS_BUFFER_PER_NBR=1${nl}"
+    done
+done
+
 export coll_algo_tests
