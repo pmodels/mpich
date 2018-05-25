@@ -23,7 +23,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datatype, int root,
-                                     int tag, MPIR_Comm * comm, int tree_type, int k, int maxbytes,
+                                     MPIR_Comm * comm, int tree_type, int k, int maxbytes,
                                      MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -37,6 +37,7 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
     int recv_id;
     int num_children;
     MPII_Treealgo_tree_t my_tree;
+    int tag;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_TREE);
@@ -66,6 +67,10 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     num_children = my_tree.num_children;
+
+    /* For correctness, transport based collectives need to get the
+     * tag from the same pool as schedule based collectives */
+    MPIDU_Sched_next_tag(comm, &tag);
 
     /* do pipelined tree broadcast */
     /* NOTE: Make sure you are handling non-contiguous datatypes
@@ -110,25 +115,18 @@ int MPIR_TSP_Ibcast_intra_tree(void *buffer, int count, MPI_Datatype datatype, i
                                int maxbytes)
 {
     int mpi_errno = MPI_SUCCESS;
-    int tag;
     MPIR_TSP_sched_t *sched;
     *req = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_INTRA_TREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_INTRA_TREE);
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_TSP_sched_create(sched, tag);
+    MPIR_TSP_sched_create(sched);
 
     /* schedule pipelined tree algo */
-    mpi_errno = MPIR_TSP_Ibcast_sched_intra_tree(buffer, count, datatype, root, tag, comm,
+    mpi_errno = MPIR_TSP_Ibcast_sched_intra_tree(buffer, count, datatype, root, comm,
                                                  tree_type, k, maxbytes, sched);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

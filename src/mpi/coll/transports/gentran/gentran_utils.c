@@ -14,6 +14,7 @@
 #include "gentran_utils.h"
 #include "utlist.h"
 
+static void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched);
 
 #undef FUNCNAME
 #define FUNCNAME vtx_extend_utarray
@@ -28,6 +29,15 @@ static void vtx_extend_utarray(UT_array * dst_array, int n_elems, int *elems)
     }
 }
 
+#undef FUNCNAME
+#define FUNCNAME vtx_record_issue
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static void vtx_record_issue(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t * vtxp)
+{
+    vtxp->vtx_state = MPII_GENUTIL_VTX_STATE__ISSUED;
+    LL_APPEND(sched->issued_head, sched->issued_tail, vtxp);
+}
 
 #undef FUNCNAME
 #define FUNCNAME vtx_issue
@@ -53,12 +63,13 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                                vtxp->u.isend.count,
                                vtxp->u.isend.dt,
                                vtxp->u.isend.dest,
-                               sched->tag, vtxp->u.isend.comm, &vtxp->u.isend.req, &errflag);
+                               vtxp->u.isend.tag, vtxp->u.isend.comm, &vtxp->u.isend.req, &errflag);
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
                                      "  --> GENTRAN transport (isend) issued, tag = %d\n",
-                                     sched->tag));
+                                     vtxp->u.isend.tag));
+                    vtx_record_issue(sched, vtxp);
                 }
                 break;
 
@@ -66,11 +77,12 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                     MPIC_Irecv(vtxp->u.irecv.buf,
                                vtxp->u.irecv.count,
                                vtxp->u.irecv.dt,
-                               vtxp->u.irecv.src, sched->tag, vtxp->u.irecv.comm,
+                               vtxp->u.irecv.src, vtxp->u.irecv.tag, vtxp->u.irecv.comm,
                                &vtxp->u.irecv.req);
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST, "  --> GENTRAN transport (irecv) issued\n"));
+                    vtx_record_issue(sched, vtxp);
                 }
                 break;
 
@@ -82,19 +94,69 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                                    vtxp->u.imcast.count,
                                    vtxp->u.imcast.dt,
                                    *(int *) utarray_eltptr(vtxp->u.imcast.dests, i),
-                                   sched->tag, vtxp->u.imcast.comm, &vtxp->u.imcast.req[i],
+                                   vtxp->u.imcast.tag, vtxp->u.imcast.comm, &vtxp->u.imcast.req[i],
                                    &errflag);
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
                                      "  --> GENTRAN transport (imcast) issued, tag = %d\n",
-                                     sched->tag));
+                                     vtxp->u.imcast.tag));
+                    vtx_record_issue(sched, vtxp);
+                }
+                break;
+
+            case MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL:{
+                    MPIR_Reduce_local(vtxp->u.reduce_local.inbuf,
+                                      vtxp->u.reduce_local.inoutbuf,
+                                      vtxp->u.reduce_local.count,
+                                      vtxp->u.reduce_local.datatype, vtxp->u.reduce_local.op);
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST,
+                                     "  --> GENTRAN transport (reduce_local) performed\n"));
+
+                    vtx_record_completion(vtxp, sched);
+                }
+                break;
+
+            case MPII_GENUTIL_VTX_KIND__LOCALCOPY:{
+                    MPIR_Localcopy(vtxp->u.localcopy.sendbuf,
+                                   vtxp->u.localcopy.sendcount,
+                                   vtxp->u.localcopy.sendtype,
+                                   vtxp->u.localcopy.recvbuf,
+                                   vtxp->u.localcopy.recvcount, vtxp->u.localcopy.recvtype);
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST,
+                                     "  --> GENTRAN transport (localcopy) performed\n"));
+
+                    vtx_record_completion(vtxp, sched);
+                }
+                break;
+            case MPII_GENUTIL_VTX_KIND__SELECTIVE_SINK:{
+                    vtx_record_issue(sched, vtxp);
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST,
+                                     "  --> GENTRAN transport (selective sink) performed\n"));
+                    /* Nothin to do, just record completion */
+                    vtx_record_completion(vtxp, sched);
+                }
+                break;
+            case MPII_GENUTIL_VTX_KIND__SINK:{
+                    vtx_record_issue(sched, vtxp);
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST, "  --> GENTRAN transport (sink) performed\n"));
+                    /* Nothin to do, just record completion */
+                    vtx_record_completion(vtxp, sched);
+                }
+                break;
+            case MPII_GENUTIL_VTX_KIND__FENCE:{
+                    vtx_record_issue(sched, vtxp);
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST, "  --> GENTRAN transport (fence) performed\n"));
+                    /* Nothin to do, just record completion */
+                    vtx_record_completion(vtxp, sched);
                 }
                 break;
         }
-
-        vtxp->vtx_state = MPII_GENUTIL_VTX_STATE__ISSUED;
-        LL_APPEND(sched->issued_head, sched->issued_tail, vtxp);
 
 #ifdef MPL_USE_DBG_LOGGING
         /* print issued vertex list */
@@ -271,6 +333,24 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
         if (in_vtx->vtx_state != MPII_GENUTIL_VTX_STATE__COMPLETE)
             vtx->pending_dependencies++;
     }
+
+    /* check if there was any fence operation and add appropriate dependencies.
+     * The application will never explicity specify a dependency on it,
+     * the transport has to make sure that the dependency on the fence operation is met */
+    if (sched->last_fence != -1 && sched->last_fence != vtx_id) {
+        /* add the last fence vertex as an incoming vertex to vtx */
+        vtx_extend_utarray(in, 1, &(sched->last_fence));
+
+        /* add vtx as outgoing vtx of last_fence */
+        vtx_t *sched_fence = (vtx_t *) utarray_eltptr(sched->vtcs, sched->last_fence);
+        out_vtcs = sched_fence->out_vtcs;
+        vtx_extend_utarray(out_vtcs, 1, &vtx_id);
+
+        /* increment pending_dependencies only if the incoming
+         * vertex is not complete yet */
+        if (sched_fence->vtx_state != MPII_GENUTIL_VTX_STATE__COMPLETE)
+            vtx->pending_dependencies++;
+    }
 }
 
 
@@ -307,6 +387,7 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
+    void **p;
     vtx_t *vtxp, *vtxp_tmp;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPII_GENUTIL_SCHED_POKE);
@@ -437,7 +518,13 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
             }
         }
 
+        /* free up the allocated buffers */
+        p = NULL;
+        while ((p = (void **) utarray_next(sched->buffers, p)))
+            MPL_free(*p);
+
         utarray_free(sched->vtcs);
+        utarray_free(sched->buffers);
         MPL_free(sched);
     }
 

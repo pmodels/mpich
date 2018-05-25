@@ -22,8 +22,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_TSP_Ibcast_sched_intra_ring(void *buffer, int count, MPI_Datatype datatype, int root,
-                                     int tag, MPIR_Comm * comm, int maxbytes,
-                                     MPIR_TSP_sched_t * sched)
+                                     MPIR_Comm * comm, int maxbytes, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -34,6 +33,7 @@ int MPIR_TSP_Ibcast_sched_intra_ring(void *buffer, int count, MPI_Datatype datat
     int size;
     int rank;
     int recv_id;
+    int tag;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_RING);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_SCHED_INTRA_RING);
@@ -58,6 +58,10 @@ int MPIR_TSP_Ibcast_sched_intra_ring(void *buffer, int count, MPI_Datatype datat
                                              "Broadcast pipeline info: maxbytes=%d count=%d num_chunks=%d chunk_size_floor=%d chunk_size_ceil=%d \n",
                                              maxbytes, count, num_chunks,
                                              chunk_size_floor, chunk_size_ceil));
+
+    /* For correctness, transport based collectives need to get the
+     * tag from the same pool as schedule based collectives */
+    MPIDU_Sched_next_tag(comm, &tag);
 
     /* do pipelined ring broadcast */
     /* NOTE: Make sure you are handling non-contiguous datatypes
@@ -105,16 +109,12 @@ int MPIR_TSP_Ibcast_intra_ring(void *buffer, int count, MPI_Datatype datatype, i
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIR_TSP_IBCAST_INTRA_RING);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIR_TSP_IBCAST_INTRA_RING);
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    MPIDU_Sched_next_tag(comm, &tag);
-
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
-    MPIR_TSP_sched_create(sched, tag);
+    MPIR_TSP_sched_create(sched);
 
     /* schedule pipelined ring algo */
-    mpi_errno = MPIR_TSP_Ibcast_sched_intra_ring(buffer, count, datatype, root, tag, comm,
+    mpi_errno = MPIR_TSP_Ibcast_sched_intra_ring(buffer, count, datatype, root, comm,
                                                  maxbytes, sched);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

@@ -369,6 +369,12 @@ int MPII_Coll_init(void)
         MPIR_Iallgather_intra_algo_choice = MPIR_IALLGATHER_INTRA_ALGO_RECURSIVE_DOUBLING;
     else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "ring"))
         MPIR_Iallgather_intra_algo_choice = MPIR_IALLGATHER_INTRA_ALGO_RING;
+    else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "recexch_distance_doubling"))
+        MPIR_Iallgather_intra_algo_choice =
+            MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_DOUBLING;
+    else if (0 == strcmp(MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM, "recexch_distance_halving"))
+        MPIR_Iallgather_intra_algo_choice =
+            MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING;
     else
         MPIR_Iallgather_intra_algo_choice = MPIR_IALLGATHER_INTRA_ALGO_AUTO;
 
@@ -401,6 +407,12 @@ int MPII_Coll_init(void)
         MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_RECURSIVE_DOUBLING;
     else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "reduce_scatter_allgather"))
         MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_REDUCE_SCATTER_ALLGATHER;
+    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "recexch_single_buffer"))
+        MPIR_Iallreduce_intra_algo_choice =
+            MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_SINGLE_BUFFER;
+    else if (0 == strcmp(MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM, "recexch_multiple_buffer"))
+        MPIR_Iallreduce_intra_algo_choice =
+            MPIR_IALLREDUCE_INTRA_ALGO_GENTRAN_RECEXCH_MULTIPLE_BUFFER;
     else
         MPIR_Iallreduce_intra_algo_choice = MPIR_IALLREDUCE_INTRA_ALGO_AUTO;
 
@@ -630,6 +642,12 @@ int MPII_Coll_init(void)
         MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_BINOMIAL;
     else if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "reduce_scatter_gather"))
         MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_REDUCE_SCATTER_GATHER;
+    else if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "tree_knomial"))
+        MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_GENTRAN_TREE_KNOMIAL;
+    else if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "tree_kary"))
+        MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_GENTRAN_TREE_KARY;
+    else if (0 == strcmp(MPIR_CVAR_IREDUCE_INTRA_ALGORITHM, "ring"))
+        MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_GENTRAN_RING;
     else
         MPIR_Ireduce_intra_algo_choice = MPIR_IREDUCE_INTRA_ALGO_AUTO;
 
@@ -853,6 +871,7 @@ int MPII_Coll_init(void)
     /* initialize algorithms */
     MPII_Stubalgo_init();
     MPII_Treealgo_init();
+    MPII_Recexchalgo_init();
 
   fn_exit:
     return mpi_errno;

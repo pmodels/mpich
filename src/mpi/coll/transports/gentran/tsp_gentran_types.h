@@ -17,6 +17,11 @@ typedef enum {
     MPII_GENUTIL_VTX_KIND__ISEND,
     MPII_GENUTIL_VTX_KIND__IRECV,
     MPII_GENUTIL_VTX_KIND__IMCAST,
+    MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL,
+    MPII_GENUTIL_VTX_KIND__LOCALCOPY,
+    MPII_GENUTIL_VTX_KIND__SELECTIVE_SINK,
+    MPII_GENUTIL_VTX_KIND__SINK,
+    MPII_GENUTIL_VTX_KIND__FENCE,
 } MPII_Genutil_vtx_kind_e;
 
 typedef enum {
@@ -41,6 +46,7 @@ typedef struct MPII_Genutil_vtx_t {
             int count;
             MPI_Datatype dt;
             int dest;
+            int tag;
             MPIR_Comm *comm;
             MPIR_Request *req;
         } isend;
@@ -49,6 +55,7 @@ typedef struct MPII_Genutil_vtx_t {
             int count;
             MPI_Datatype dt;
             int src;
+            int tag;
             MPIR_Comm *comm;
             MPIR_Request *req;
         } irecv;
@@ -58,22 +65,39 @@ typedef struct MPII_Genutil_vtx_t {
             MPI_Datatype dt;
             UT_array *dests;
             int num_dests;
+            int tag;
             MPIR_Comm *comm;
             MPIR_Request **req;
             int last_complete;
         } imcast;
+        struct {
+            const void *inbuf;
+            void *inoutbuf;
+            int count;
+            MPI_Datatype datatype;
+            MPI_Op op;
+        } reduce_local;
+        struct {
+            const void *sendbuf;
+            MPI_Aint sendcount;
+            MPI_Datatype sendtype;
+            void *recvbuf;
+            MPI_Aint recvcount;
+            MPI_Datatype recvtype;
+        } localcopy;
     } u;
 
     struct MPII_Genutil_vtx_t *next;
 } MPII_Genutil_vtx_t;
 
 typedef struct {
-    /* communication tag for this schedule */
-    int tag;
-
     UT_array *vtcs;
     int total_vtcs;
     int completed_vtcs;
+    int last_fence;
+
+    /* array of buffers allocated for schedule execution */
+    UT_array *buffers;
 
     /* issued vertices linked list */
     struct MPII_Genutil_vtx_t *issued_head;
