@@ -239,16 +239,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_local_then_nodes(void *buffer,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Bcast_intra_composition_gamma
+#define FUNCNAME MPIDI_Bcast_intra_netmod
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_composition_gamma(void *buffer, int count,
-                                                                 MPI_Datatype datatype,
-                                                                 int root, MPIR_Comm * comm,
-                                                                 MPIR_Errflag_t * errflag,
-                                                                 const
-                                                                 MPIDI_coll_algo_container_t
-                                                                 * ch4_algo_parameters_container)
+/* *INDENT-OFF* */
+MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_netmod(void *buffer, int count,
+                                                      MPI_Datatype datatype, int root,
+                                                      MPIR_Comm * comm,
+                                                      MPIR_Errflag_t * errflag,
+                                                      const MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+/* *INDENT-ON* */
 {
     int mpi_errno = MPI_SUCCESS;
     const void *bcast_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);

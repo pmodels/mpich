@@ -61,7 +61,7 @@ MPIDI_coll_algo_container_t *MPIDI_Bcast_select(void *buffer,
             }
         }
     }
-    return &MPIDI_Bcast_intra_composition_gamma_cnt;
+    return &MPIDI_Bcast_intra_netmod_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX const

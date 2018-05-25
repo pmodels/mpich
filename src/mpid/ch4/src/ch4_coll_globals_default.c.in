@@ -45,11 +45,10 @@ const MPIDI_coll_algo_container_t MPIDI_Bcast_intra_local_then_nodes_cnt = {
         .node_bcast_second = MPIDI_COLL_AUTO_SELECT}
 };
 
-const MPIDI_coll_algo_container_t MPIDI_Bcast_intra_composition_gamma_cnt = {
-    .id = MPIDI_Bcast_intra_composition_gamma_id,
-    .params.ch4_bcast_params.ch4_bcast_gamma = {
-                                                .bcast = MPIDI_COLL_AUTO_SELECT,
-                                                }
+const MPIDI_coll_algo_container_t MPIDI_Bcast_intra_netmod_cnt = {
+    .id = MPIDI_Bcast_intra_netmod_id,
+    .params.ch4_bcast_params.ch4_bcast_netmod = {
+        .bcast = MPIDI_COLL_AUTO_SELECT}
 };
 
 const MPIDI_coll_algo_container_t MPIDI_Bcast_inter_composition_alpha_cnt = {
