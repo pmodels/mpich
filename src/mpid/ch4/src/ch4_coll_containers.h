@@ -10,7 +10,7 @@ extern const MPIDI_coll_algo_container_t MPIDI_Barrier_inter_fallback_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Bcast_intra_noderoots_local_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Bcast_intra_local_then_nodes_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Bcast_intra_netmod_cnt;
-extern const MPIDI_coll_algo_container_t MPIDI_Bcast_inter_composition_alpha_cnt;
+extern const MPIDI_coll_algo_container_t MPIDI_Bcast_inter_fallback_cnt;
 
 /* Reduce  CH4 level containers declaration */
 extern const MPIDI_coll_algo_container_t MPIDI_Reduce_intra_composition_alpha_cnt;

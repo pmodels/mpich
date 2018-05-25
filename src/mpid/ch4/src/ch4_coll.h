@@ -73,10 +73,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype da
                 MPIDI_Bcast_intra_netmod(buffer, count, datatype, root, comm, errflag,
                                          ch4_algo_parameters_container);
             break;
-        case MPIDI_Bcast_inter_composition_alpha_id:
+        case MPIDI_Bcast_inter_fallback_id:
             mpi_errno =
-                MPIDI_Bcast_inter_composition_alpha(buffer, count, datatype, root, comm,
-                                                    errflag, ch4_algo_parameters_container);
+                MPIDI_Bcast_inter_fallback(buffer, count, datatype, root, comm, errflag,
+                                           ch4_algo_parameters_container);
             break;
         default:
             mpi_errno = MPIR_Bcast_impl(buffer, count, datatype, root, comm, errflag);

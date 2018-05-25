@@ -22,7 +22,7 @@ typedef enum {
     MPIDI_Bcast_intra_noderoots_local_id,
     MPIDI_Bcast_intra_local_then_nodes_id,
     MPIDI_Bcast_intra_netmod_id,
-    MPIDI_Bcast_inter_composition_alpha_id,
+    MPIDI_Bcast_inter_fallback_id,
 } MPIDI_Bcast_id_t;
 
 typedef union {

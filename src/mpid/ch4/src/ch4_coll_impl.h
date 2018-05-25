@@ -264,18 +264,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_intra_netmod(void *buffer, int count,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Bcast_inter_composition_alpha
+#define FUNCNAME MPIDI_Bcast_inter_fallback
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_inter_composition_alpha(void *buffer, int count,
-                                                                 MPI_Datatype datatype,
-                                                                 int root, MPIR_Comm * comm,
-                                                                 MPIR_Errflag_t * errflag,
-                                                                 const
-                                                                 MPIDI_coll_algo_container_t
-                                                                 *
-                                                                 ch4_algo_parameters_container
-                                                                 ATTRIBUTE((unused)))
+/* *INDENT-OFF* */
+MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_inter_fallback(void *buffer, int count,
+                                                        MPI_Datatype datatype, int root,
+                                                        MPIR_Comm * comm, MPIR_Errflag_t * errflag,
+                                                        const MPIDI_coll_algo_container_t * ch4_algo_parameters_container ATTRIBUTE((unused)))
+/* *INDENT-ON* */
 {
     int mpi_errno = MPI_SUCCESS;
 

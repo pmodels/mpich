@@ -51,8 +51,8 @@ const MPIDI_coll_algo_container_t MPIDI_Bcast_intra_netmod_cnt = {
         .bcast = MPIDI_COLL_AUTO_SELECT}
 };
 
-const MPIDI_coll_algo_container_t MPIDI_Bcast_inter_composition_alpha_cnt = {
-    .id = MPIDI_Bcast_inter_composition_alpha_id
+const MPIDI_coll_algo_container_t MPIDI_Bcast_inter_fallback_cnt = {
+    .id = MPIDI_Bcast_inter_fallback_id
 };
 
 /* Reduce default composition containers initialization*/

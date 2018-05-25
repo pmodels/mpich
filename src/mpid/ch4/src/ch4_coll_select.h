@@ -46,7 +46,7 @@ MPIDI_coll_algo_container_t *MPIDI_Bcast_select(void *buffer,
     MPIR_Datatype_get_size_macro(datatype, type_size);
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Bcast_inter_composition_alpha_cnt;
+        return &MPIDI_Bcast_inter_fallback_cnt;
     }
 
     nbytes = MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE ? type_size * count : 0;
