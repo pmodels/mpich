@@ -384,8 +384,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                     if (tproxy->pg->pgid == proxy->pg->pgid && tproxy->proxy_id == proxy->proxy_id)
                         continue;
 
-                    status = HYD_pmcd_pmiserv_send_signal(tproxy, SIGUSR1);
-                    HYDU_ERR_POP(status, "unable to send SIGUSR1 downstream\n");
+                    status = HYD_pmcd_pmiserv_send_signal(tproxy, SIGCHLD);
+                    HYDU_ERR_POP(status, "unable to send SIGCHLD downstream\n");
                 }
             }
         }

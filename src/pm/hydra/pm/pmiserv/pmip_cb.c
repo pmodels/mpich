@@ -260,8 +260,8 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
                  * information upstream */
 
                 /* FIXME: This code needs to change from sending the
-                 * SIGUSR1 signal to a PMI-2 notification message. */
-                HYD_pmcd_pmip_send_signal(SIGUSR1);
+                 * SIGCHLD signal to a PMI-2 notification message. */
+                HYD_pmcd_pmip_send_signal(SIGCHLD);
 
                 hdr.cmd = PROCESS_TERMINATED;
                 hdr.pid = HYD_pmcd_pmip.downstream.pmi_rank[pid];
