@@ -120,6 +120,8 @@ int MPIR_Reduce_scatter_block_intra_pairwise(const void *sendbuf,
              * end, we will copy back the result to the
              * beginning of recvbuf. */
         }
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
     }
 
     /* if MPI_IN_PLACE, move output data to the beginning of
