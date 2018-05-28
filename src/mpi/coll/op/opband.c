@@ -32,23 +32,9 @@ void MPIR_BAND(void *invec, void *inoutvec, int *Len, MPI_Datatype * type)
                 MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER_EXTRA)
                 MPIR_OP_TYPE_GROUP(BYTE_EXTRA)
 #undef MPIR_OP_TYPE_MACRO
-                /* --BEGIN ERROR HANDLING-- */
-        default:{
-                {
-                    MPIR_Per_thread_t *per_thread = NULL;
-                    int err = 0;
-
-                    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
-                                                 MPIR_Per_thread, per_thread, &err);
-                    MPIR_Assert(err == 0);
-                    per_thread->op_errno =
-                        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __func__, __LINE__,
-                                             MPI_ERR_OP, "**opundefined", "**opundefined %s",
-                                             "MPI_BAND");
-                }
-                break;
-            }
-            /* --END ERROR HANDLING-- */
+        default:
+            MPIR_Assert(0);
+            break;
     }
 }
 
