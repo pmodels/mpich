@@ -45,6 +45,11 @@ int MPIR_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype
         goto fn_exit;
 
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
+        /* --BEGIN ERROR HANDLING-- */
+        mpi_errno = (*MPIR_OP_HDL_TO_DTYPE_FN(op)) (datatype);
+        if (mpi_errno != MPI_SUCCESS)
+            goto fn_exit;
+        /* --END ERROR HANDLING-- */
         /* get the function by indexing into the op table */
         uop = MPIR_OP_HDL_TO_FN(op);
     } else {
