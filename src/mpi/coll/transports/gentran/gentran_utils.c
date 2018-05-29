@@ -69,6 +69,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                                     (MPL_DBG_FDEST,
                                      "  --> GENTRAN transport (isend) issued, tag = %d\n",
                                      sched->tag));
+                    vtx_record_issue(sched, vtxp);
                 }
                 break;
 
@@ -81,6 +82,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST, "  --> GENTRAN transport (irecv) issued\n"));
+                    vtx_record_issue(sched, vtxp);
                 }
                 break;
 
@@ -99,11 +101,24 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                                     (MPL_DBG_FDEST,
                                      "  --> GENTRAN transport (imcast) issued, tag = %d\n",
                                      sched->tag));
+                    vtx_record_issue(sched, vtxp);
+                }
+                break;
+
+            case MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL:{
+                    vtx_record_issue(sched, vtxp);
+                    MPIR_Reduce_local(vtxp->u.reduce_local.inbuf,
+                                      vtxp->u.reduce_local.inoutbuf,
+                                      vtxp->u.reduce_local.count,
+                                      vtxp->u.reduce_local.datatype, vtxp->u.reduce_local.op);
+                    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                                    (MPL_DBG_FDEST,
+                                     "  --> GENTRAN transport (reduce_local) performed\n"));
+
+                    vtx_record_completion(vtxp, sched);
                 }
                 break;
         }
-
-        vtx_record_issue(sched, vtxp);
 
 #ifdef MPL_USE_DBG_LOGGING
         /* print issued vertex list */

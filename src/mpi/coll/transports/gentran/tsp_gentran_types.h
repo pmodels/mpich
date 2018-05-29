@@ -17,6 +17,7 @@ typedef enum {
     MPII_GENUTIL_VTX_KIND__ISEND,
     MPII_GENUTIL_VTX_KIND__IRECV,
     MPII_GENUTIL_VTX_KIND__IMCAST,
+    MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL
 } MPII_Genutil_vtx_kind_e;
 
 typedef enum {
@@ -62,6 +63,13 @@ typedef struct MPII_Genutil_vtx_t {
             MPIR_Request **req;
             int last_complete;
         } imcast;
+        struct {
+            const void *inbuf;
+            void *inoutbuf;
+            int count;
+            MPI_Datatype datatype;
+            MPI_Op op;
+        } reduce_local;
     } u;
 
     struct MPII_Genutil_vtx_t *next;
