@@ -153,6 +153,35 @@ int MPII_Genutil_sched_imcast(const void *buf,
     return vtx_id;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPII_Genutil_sched_reduce_local
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPII_Genutil_sched_reduce_local(const void *inbuf, void *inoutbuf, int count,
+                                    MPI_Datatype datatype, MPI_Op op, MPII_Genutil_sched_t * sched,
+                                    int n_in_vtcs, int *in_vtcs)
+{
+    vtx_t *vtxp;
+    int vtx_id;
+
+    /* assign a new vertex */
+    vtx_id = MPII_Genutil_vtx_create(sched, &vtxp);
+
+    vtxp->vtx_kind = MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL;
+    MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
+
+    /* record the arguments */
+    vtxp->u.reduce_local.inbuf = inbuf;
+    vtxp->u.reduce_local.inoutbuf = inoutbuf;
+    vtxp->u.reduce_local.count = count;
+    vtxp->u.reduce_local.datatype = datatype;
+    vtxp->u.reduce_local.op = op;
+
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] reduce_local\n", vtx_id));
+
+    return vtx_id;
+}
 
 #undef FUNCNAME
 #define FUNCNAME MPII_Genutil_sched_start
