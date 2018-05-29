@@ -21,6 +21,7 @@
 #define MPIR_TSP_sched_isend                MPII_Stubutil_sched_isend
 #define MPIR_TSP_sched_irecv                MPII_Stubutil_sched_irecv
 #define MPIR_TSP_sched_imcast               MPII_Stubutil_sched_imcast
+#define MPIR_TSP_sched_reduce_local         MPII_Stubutil_sched_reduce_local
 #define MPIR_TSP_sched_start                MPII_Stubutil_sched_start
 
 int MPII_Stubutil_sched_create(MPII_Stubutil_sched_t * sched, int tag);
@@ -33,6 +34,9 @@ int MPII_Stubutil_sched_irecv(void *buf, int count, MPI_Datatype datatype, int s
 int MPII_Stubutil_sched_imcast(const void *buf, int count, MPI_Datatype dt, UT_array * destinations,
                                int num_destinations, int tag, MPIR_Comm * comm_ptr,
                                MPII_Stubutil_sched_t * sched, int n_invtcs, int *invtcs);
+int MPII_Stubutil_sched_reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype dt,
+                                     MPI_Op op, MPII_Stubutil_sched_t * sched, int n_invtcs,
+                                     int *invtcs);
 int MPII_Stubutil_sched_start(MPII_Stubutil_sched_t * sched, MPIR_Comm * comm,
                               MPII_Coll_req_t ** request);
 

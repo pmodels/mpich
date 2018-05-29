@@ -24,6 +24,7 @@
 #define MPIR_TSP_sched_isend               MPII_Genutil_sched_isend
 #define MPIR_TSP_sched_irecv               MPII_Genutil_sched_irecv
 #define MPIR_TSP_sched_imcast              MPII_Genutil_sched_imcast
+#define MPIR_TSP_sched_reduce_local        MPII_Genutil_sched_reduce_local
 #define MPIR_TSP_sched_start               MPII_Genutil_sched_start
 
 extern MPII_Coll_queue_t coll_queue;
@@ -60,6 +61,11 @@ int MPII_Genutil_sched_imcast(const void *buf,
                               MPIR_Comm * comm_ptr,
                               MPII_Genutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
 
+
+/* Transport function to schedule a local reduce vertex */
+int MPII_Genutil_sched_reduce_local(const void *inbuf, void *inoutbuf, int count,
+                                    MPI_Datatype datatype, MPI_Op op, MPII_Genutil_sched_t * sched,
+                                    int n_in_vtcs, int *in_vtcs);
 
 /* Transport function to enqueue and kick start a non-blocking
  * collective */
