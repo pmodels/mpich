@@ -93,10 +93,46 @@ MPL_STATIC_INLINE_PREFIX int MPID_Waitall(int count, MPIR_Request * request_ptrs
     return MPIR_Waitall_impl(count, request_ptrs, array_of_statuses, request_properties);
 }
 
+#ifdef MPICH_THREAD_USE_MDTA
+
+MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * status)
+{
+    const int single_threaded = !MPIR_ThreadInfo.isThreaded;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_Thread_sync_t *sync = NULL;
+
+    if (likely(single_threaded))
+        return MPIR_Wait_impl(request_ptr, status);
+
+    if (request_ptr == NULL || MPIR_Request_is_complete(request_ptr))
+        goto fn_exit;
+
+    /* The request cannot be completed immediately, wait on a sync. */
+    MPIR_Thread_sync_alloc(&sync, 1);
+    MPIR_Request_attach_sync(request_ptr, sync);
+    MPIR_Thread_sync_wait(sync);
+
+    /* Either being signaled, or become a server, so we poll from now. */
+    mpi_errno = MPIR_Wait_impl(request_ptr, status);
+
+    MPIR_Thread_sync_free(sync);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#else
+
 MPL_STATIC_INLINE_PREFIX int MPID_Wait(MPIR_Request * request_ptr, MPI_Status * status)
 {
     return MPIR_Wait_impl(request_ptr, status);
 }
+
+#endif /* MPICH_THREAD_USE_MDTA */
 
 MPL_STATIC_INLINE_PREFIX int MPID_Waitany(int count, MPIR_Request * request_ptrs[],
                                           int *indx, MPI_Status * status)
