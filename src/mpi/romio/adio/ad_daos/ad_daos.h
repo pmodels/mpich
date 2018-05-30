@@ -17,6 +17,9 @@
 
 #include "adio.h"
 
+/* #define D_PRINT_IO */
+/* #define D_PRINT_IO_MEM */
+
 #define PRINT_MSG(str, fmt, ...)                                            \
     do {                                                                \
         fprintf(str, "%s:%d %s() - " fmt"\n" ,                          \
@@ -107,4 +110,12 @@ void ADIOI_DAOS_IwriteStrided(ADIO_File fd, const void *buf, int count,
                               MPI_Datatype datatype, int file_ptr_type,
                               ADIO_Offset offset, MPI_Request *request,
                               int *error_code);
+void ADIOI_DAOS_ReadStridedColl(ADIO_File fd, void *buf, int count,
+                                MPI_Datatype datatype, int file_ptr_type,
+                                ADIO_Offset offset, ADIO_Status *status,
+                                int *error_code);
+void ADIOI_DAOS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
+                                 MPI_Datatype datatype, int file_ptr_type,
+                                 ADIO_Offset offset, ADIO_Status *status,
+                                 int *error_code);
 #endif

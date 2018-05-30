@@ -26,6 +26,11 @@ void ADIOI_DAOS_Close(ADIO_File fd, int *error_code)
     }
 #endif
     if (cont->amode == DAOS_COO_RW) {
+        daos_epoch_t max_epoch;
+
+        MPI_Allreduce(&cont->epoch, &max_epoch, 1, MPI_UINT64_T, MPI_MAX,
+                      fd->comm);
+        cont->epoch = max_epoch;
         MPI_Comm_rank(fd->comm, &rank);
 
         if (rank == 0)

@@ -80,7 +80,9 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     sgl->sg_nr_out = 0;
     daos_iov_set(iov, buf, len);
     sgl->sg_iovs = iov;
-    //fprintf(stderr, "MEM : off %lld len %zu\n", buf, len);
+#ifdef D_PRINT_IO_MEM
+    printf("MEM : off %lld len %zu\n", buf, len);
+#endif
     /** set array location */
     ranges->arr_nr = 1;
     rg->rg_len = len;
@@ -91,10 +93,16 @@ static void DAOS_IOContig(ADIO_File fd, void * buf, int count,
     MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
 #endif
 
-    //fprintf(stderr, "CONTIG IO Epoch %lld OP %d, Off %llu, Len %zu\n", cont->epoch, flag, offset, len);
+#ifdef D_PRINT_IO
+    int mpi_rank;
+
+    MPI_Comm_rank(fd->comm, &mpi_rank);
+    printf("(%d) CONTIG IO Epoch %lld OP %d, Off %llu, Len %zu\n",
+           mpi_rank, cont->epoch, flag, offset, len);
+#endif
 
     if (flag == DAOS_WRITE) {
-        ret = daos_array_write(cont->oh, cont->epoch, ranges, sgl, NULL,
+        ret = daos_array_write(cont->oh, cont->epoch++, ranges, sgl, NULL,
                                (request ? &aio_req->daos_event : NULL));
         if (ret != 0) {
             PRINT_MSG(stderr, "daos_array_write() failed with %d\n", ret);
@@ -195,6 +203,7 @@ int ADIOI_DAOS_aio_poll_fn(void *extra_state, MPI_Status *status)
     struct ADIO_DAOS_req *aio_req = (struct ADIO_DAOS_req *)extra_state;;
     int ret;
     bool flag;
+
     /* MSC - MPICH hangs if we just test with NOWAIT.. */
     ret = daos_event_test(&aio_req->daos_event, DAOS_EQ_WAIT, &flag);
     if (ret != 0)
@@ -205,7 +214,16 @@ int ADIOI_DAOS_aio_poll_fn(void *extra_state, MPI_Status *status)
     else
         return MPI_UNDEFINED;
 
-    return MPI_SUCCESS;
+    if (aio_req->daos_event.ev_error != 0)
+        ret = MPIO_Err_create_code(MPI_SUCCESS,
+                                   MPIR_ERR_RECOVERABLE,
+                                   "Async IO", __LINE__,
+                                   ADIOI_DAOS_error_convert(ret),
+                                   "Event Error", 0);
+    else
+        ret = MPI_SUCCESS;
+
+    return ret;
 }
 
 /* wait for multiple requests to complete */

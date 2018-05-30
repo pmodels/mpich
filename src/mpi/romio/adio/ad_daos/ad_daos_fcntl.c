@@ -20,6 +20,7 @@ void ADIOI_DAOS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct,
     case ADIO_FCNTL_GET_FSIZE:
     {
         daos_size_t fsize;
+
 	ret = daos_array_get_size(cont->oh, cont->epoch, &fsize, NULL);
 	if (ret != 0 ) {
 	    /* --BEGIN ERROR HANDLING-- */

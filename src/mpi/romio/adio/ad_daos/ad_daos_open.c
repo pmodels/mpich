@@ -242,8 +242,10 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
 
     /* if RW mode, do an epoch hold, otherwise just query HCE for read */
     if (cont->amode == DAOS_COO_RW) {
+        daos_epoch_state_t state;
+
         cont->epoch = 0;
-        rc = daos_epoch_hold(cont->coh, &cont->epoch, NULL, NULL);
+        rc = daos_epoch_hold(cont->coh, &cont->epoch, &state, NULL);
         if (rc != 0) {
             PRINT_MSG(stderr, "daos_epoch_hold failed (%d)\n", rc);
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
@@ -307,6 +309,8 @@ void ADIOI_DAOS_Open(ADIO_File fd, int *error_code)
         rc = daos_array_open(cont->coh, cont->oid, cont->epoch, DAOS_OO_RW,
                              &elem_size, &cont->chunk_size, &cont->oh, NULL);
         if (rc != 0) {
+            /* MSC - need to fix the array open return code */
+            rc = -DER_NONEXIST;
             PRINT_MSG(stderr, "daos_array_open() failed (%d)\n", rc);
             *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                                MPIR_ERR_RECOVERABLE,
@@ -462,90 +466,143 @@ void ADIOI_DAOS_Flush(ADIO_File fd, int *error_code)
 
     MPI_Comm_rank(fd->comm, &rank);
 
-    if (fd->is_open > 0) {
-        if (cont->amode == DAOS_COO_RW) {
-            MPI_Barrier(fd->comm);
+    if (fd->is_open <= 0)
+        goto out;
 
-            if (rank == 0) {
-                rc = daos_epoch_commit(cont->coh, cont->epoch, NULL, NULL);
-                if(rc == 0)
-                    rc = daos_epoch_hold(cont->coh, &cont->epoch, NULL, NULL);
+    if (cont->amode == DAOS_COO_RW) {
+        daos_epoch_t max_epoch;
+
+        MPI_Allreduce(&cont->epoch, &max_epoch, 1, MPI_UINT64_T, MPI_MAX,
+                      fd->comm);
+        cont->epoch = max_epoch;
+
+        if (rank == 0) {
+            rc = daos_epoch_commit(cont->coh, cont->epoch, NULL, NULL);
+            if(rc == 0) {
+                cont->epoch = 0;
+                rc = daos_epoch_hold(cont->coh, &cont->epoch, NULL, NULL);
             }
-
-            MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
-
-            if (rc != 0) {
-                PRINT_MSG(stderr, "Epoch Commit/Hold Failed\n");
-                *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                                   MPIR_ERR_RECOVERABLE,
-                                                   myname, __LINE__,
-                                                   ADIOI_DAOS_error_convert(rc),
-                                                   "Epoch Commit failed", 0);
-                return;
-            }
-
-            MPI_Bcast(&cont->epoch, 1, MPI_UINT64_T, 0, fd->comm);
-        } else {
-            if (rank == 0) {
-                daos_epoch_state_t state;
-
-                rc = daos_epoch_query(cont->coh, &state, NULL);
-                cont->epoch = state.es_ghce;
-            }
-
-            MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
-
-            if (rc != 0) {
-                PRINT_MSG(stderr, "Epoch Query Failed\n");
-                *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-                                                   MPIR_ERR_RECOVERABLE,
-                                                   myname, __LINE__,
-                                                   ADIOI_DAOS_error_convert(rc),
-                                                   "Epoch Query Failed", 0);
-                return;
-            }
-            MPI_Bcast(&cont->epoch, 1, MPI_UINT64_T, 0, fd->comm);
         }
+
+        MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
+
+        if (rc != 0) {
+            PRINT_MSG(stderr, "Epoch Commit/Hold Failed\n");
+            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                               MPIR_ERR_RECOVERABLE,
+                                               myname, __LINE__,
+                                               ADIOI_DAOS_error_convert(rc),
+                                               "Epoch Commit failed", 0);
+            return;
+        }
+
+        MPI_Bcast(&cont->epoch, 1, MPI_UINT64_T, 0, fd->comm);
+    } else {
+        if (rank == 0) {
+            daos_epoch_state_t state;
+
+            rc = daos_epoch_query(cont->coh, &state, NULL);
+            cont->epoch = state.es_ghce;
+        }
+
+        MPI_Bcast(&rc, 1, MPI_INT, 0, fd->comm);
+
+        if (rc != 0) {
+            PRINT_MSG(stderr, "Epoch Query Failed\n");
+            *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                               MPIR_ERR_RECOVERABLE,
+                                               myname, __LINE__,
+                                               ADIOI_DAOS_error_convert(rc),
+                                               "Epoch Query Failed", 0);
+            return;
+        }
+        MPI_Bcast(&cont->epoch, 1, MPI_UINT64_T, 0, fd->comm);
     }
 
+out:
     *error_code = MPI_SUCCESS;
 }
 
 void ADIOI_DAOS_Delete(const char *filename, int *error_code)
 {
-    int ret;
+    daos_handle_t coh, oh;
+    daos_epoch_t epoch = 0;
     uuid_t uuid;
     char *obj_name, *cont_name;
+    daos_obj_id_t oid;
     static char myname[] = "ADIOI_DAOS_DELETE";
+    int rc;
 
     parse_filename(filename, &obj_name, &cont_name);
     /* Hash container name to container uuid */
     duuid_hash128(cont_name, &uuid, NULL, NULL);
 
-#if 0
-    {
-        char uuid_str[37];
-        uuid_unparse(uuid, uuid_str);
-        fprintf(stderr, "File Delete %s %s\n", cont_name, uuid_str);
+    rc = daos_cont_open(daos_pool_oh, uuid, DAOS_COO_RW, &coh, NULL, NULL);
+    if (rc != 0) {
+        *error_code = MPI_SUCCESS;
+        goto out_free;
     }
-#endif
-    /* MSC for now, just destory the container. need to just punch the object
-     * when object punch is available */
 
-    ret = daos_cont_destroy(daos_pool_oh, uuid, 1, NULL);
-    if (ret != 0) {
-        PRINT_MSG(stderr, "failed to destroy container (%d)\n", ret);
+    /* Hash object name to create obj id */
+    oid.hi = 0;
+    oid.lo = d_hash_murmur64(obj_name, strlen(obj_name), OID_SEED);
+    daos_obj_id_generate(&oid, 0, DAOS_OC_LARGE_RW);
+
+    rc = daos_epoch_hold(coh, &epoch, NULL, NULL);
+    if (rc != 0) {
+        PRINT_MSG(stderr, "daos_epoch_hold failed (%d)\n", rc);
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                            MPIR_ERR_RECOVERABLE,
                                            myname, __LINE__,
-                                           ADIOI_DAOS_error_convert(ret),
-                                           "Container Create Failed", 0);
-        return;
+                                           ADIOI_DAOS_error_convert(rc),
+                                           "Epoch Hold Failed", 0);
+        goto out_cont;
+    }
+
+    rc = daos_obj_open(coh, oid, epoch, DAOS_OO_RW, &oh, NULL);
+    if (rc != 0) {
+        PRINT_MSG(stderr, "daos_obj_open failed (%d)\n", rc);
+        *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                           MPIR_ERR_RECOVERABLE,
+                                           myname, __LINE__,
+                                           ADIOI_DAOS_error_convert(rc),
+                                           "Object Open Failed", 0);
+        daos_epoch_discard(coh, epoch, NULL, NULL);
+        goto out_cont;
+    }
+
+    rc = daos_obj_punch(oh, epoch, NULL);
+    if (rc != 0) {
+        PRINT_MSG(stderr, "daos_obj_punch failed (%d)\n", rc);
+        *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                           MPIR_ERR_RECOVERABLE,
+                                           myname, __LINE__,
+                                           ADIOI_DAOS_error_convert(rc),
+                                           "Object Punch Failed", 0);
+        daos_epoch_discard(coh, epoch, NULL, NULL);
+        goto out_obj;
+    }
+
+    rc = daos_epoch_commit(coh, epoch, NULL, NULL);
+    if (rc != 0) {
+        PRINT_MSG(stderr, "daos_epoch_commit failed (%d)\n", rc);
+        *error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                           MPIR_ERR_RECOVERABLE,
+                                           myname, __LINE__,
+                                           ADIOI_DAOS_error_convert(rc),
+                                           "Epoch Commit Failed", 0);
+        daos_epoch_discard(coh, epoch, NULL, NULL);
+        goto out_obj;
     }
 
     *error_code = MPI_SUCCESS;
+
+out_obj:
+    daos_obj_close(oh, NULL);
+out_cont:
+    daos_cont_close(coh, NULL);
+out_free:
     free(obj_name);
     free(cont_name);
-
     return;
 }
