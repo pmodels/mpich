@@ -513,6 +513,12 @@ AC_ARG_ENABLE(thread-cs,
                          threads are present.  Values may be global
                          (default), per-object, lock-free]),,enable_thread_cs=global)
 
+AC_ARG_ENABLE(mdta,
+    AC_HELP_STRING([--enable-mdta],
+            [Optimize global granularity using message-driven thread activation.
+                         Only available for ch4 device with --enable-thread-cs=global]),
+    AC_DEFINE(MPICH_THREAD_USE_MDTA,1,[Define to enable message-driven thread activation]))
+
 AC_ARG_ENABLE(refcount,
 	AC_HELP_STRING([--enable-refcount=type],
 			[Choose the method for ensuring atomic updates
@@ -1638,6 +1644,12 @@ if test "$enable_threads" = "multiple" ; then
     esac
 fi
 AC_DEFINE_UNQUOTED([MPICH_THREAD_GRANULARITY],$thread_granularity,[Method used to implement atomic updates and access])
+
+if test "$enable_mdta" = "yes" ; then
+    if test "$enable_threads" != "multiple" -o "$device_name" != "ch4" -o "$enable_thread_cs" != "global" ; then
+        AC_MSG_ERROR([--enable-mdta is not supported for this setting])
+    fi
+fi
 
 if test "$enable_predefined_refcount" = "no" ; then
     AC_DEFINE([MPICH_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS],[1],[define to disable reference counting predefined objects like MPI_COMM_WORLD])
