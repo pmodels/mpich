@@ -19,6 +19,10 @@
 #include "datatype.h"
 #include "ch4r_recvq.h"
 
+#ifdef HAVE_SIGNAL_H
+#include <signal.h>
+#endif
+
 #ifdef USE_PMI2_API
 /* PMI does not specify a max size for jobid_size in PMI2_Job_GetId.
    CH3 uses jobid_size=MAX_JOBID_LEN=1024 when calling
@@ -134,6 +138,18 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIDI_CH4_DBG_COMM = MPL_dbg_class_alloc("CH4_COMM", "ch4_comm");
     MPIDI_CH4_DBG_MEMORY = MPL_dbg_class_alloc("CH4_MEMORY", "ch4_memory");
 #endif
+
+#ifdef HAVE_SIGNAL
+    /* install signal handler for process failure notifications from hydra */
+    MPIDI_CH4_Global.sigusr1_count = 0;
+    MPIDI_CH4_Global.my_sigusr1_count = 0;
+    MPIDI_CH4_Global.prev_sighandler = signal(SIGUSR1, MPIDI_sigusr1_handler);
+    MPIR_ERR_CHKANDJUMP1(MPIDI_CH4_Global.prev_sighandler == SIG_ERR, mpi_errno, MPI_ERR_OTHER,
+                         "**signal", "**signal %s", MPIR_Strerror(errno));
+    if (MPIDI_CH4_Global.prev_sighandler == SIG_IGN || MPIDI_CH4_Global.prev_sighandler == SIG_DFL)
+        MPIDI_CH4_Global.prev_sighandler = NULL;
+#endif
+
     MPIDI_choose_netmod();
 #ifdef USE_PMI2_API
     pmi_errno = PMI2_Init(&has_parent, &size, &rank, &appnum);
