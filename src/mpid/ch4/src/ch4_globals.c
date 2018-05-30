@@ -66,6 +66,15 @@ MPIR_T_pvar_timer_t PVAR_TIMER_rma_targetcb_get_acc_data ATTRIBUTE((unused));
 pthread_mutex_t MPIDI_Mutex_lock[MPIDI_NUM_LOCKS];
 #endif
 
+#ifdef HAVE_SIGNAL
+void MPIDI_sigusr1_handler(int sig)
+{
+    MPIDI_CH4_Global.sigusr1_count++;
+    if (MPIDI_CH4_Global.prev_sighandler)
+        MPIDI_CH4_Global.prev_sighandler(sig);
+}
+#endif
+
 #undef FUNCNAME
 #define FUNCNAME MPID_Abort
 #undef FCNAME
@@ -115,6 +124,67 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error
     PMI_Abort(exit_code, error_msg);
 #endif
     return 0;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_check_for_failed_procs
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIDI_check_for_failed_procs(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int pmi_errno;
+    int len;
+    char *kvsname;
+    char *failed_procs_string = NULL;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
+
+    /* FIXME: Currently this only handles failed processes in
+     * comm_world.  We need to fix hydra to include the pgid along
+     * with the rank, then we need to create the failed group from
+     * something bigger than comm_world. */
+#ifdef USE_PMI2_API
+    len = PMI2_MAX_VALLEN;
+#elif defined(USE_PMIX_API)
+    len = 1024;
+#else
+    pmi_errno = PMI_KVS_Get_value_length_max(&len);
+    if (pmi_errno != PMI_SUCCESS) {
+        mpi_errno = MPI_ERR_OTHER;
+        MPIR_ERR_POP(mpi_errno);
+    }
+#endif
+
+#ifndef USE_PMIX_API
+    pmi_errno = PMI_KVS_Get_my_name(kvsname, len);
+    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_value_length_max");
+#endif
+#ifdef USE_PMI2_API
+    {
+        int vallen = 0;
+        pmi_errno =
+            PMI2_KVS_Get(kvsname, PMI2_ID_NULL, "PMI_dead_processes", failed_procs_string,
+                         len, &vallen);
+        MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+    }
+#elif defined(USE_PMIX_API)
+    MPIR_Assert(0);
+#else
+    pmi_errno = PMI_KVS_Get(kvsname, "PMI_dead_processes", failed_procs_string, len);
+    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+#endif
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, "Received proc fail notification: %s", failed_procs_string));
+
+    /* FIXME: handle ULFM failed groups here */
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHECK_FOR_FAILED_PROCS);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_dbg_class MPIDI_CH4_DBG_GENERAL;

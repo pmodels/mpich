@@ -288,6 +288,12 @@ typedef struct MPIDI_CH4_Global_t {
     OPA_int_t exp_seq_no;
     OPA_int_t nxt_seq_no;
     MPIU_buf_pool_t *buf_pool;
+#ifdef HAVE_SIGNAL
+    void (*prev_sighandler) (int);
+    volatile int sigusr1_count;
+    int my_sigusr1_count;
+#endif
+
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_CH4_Global;
 #ifdef MPL_USE_DBG_LOGGING

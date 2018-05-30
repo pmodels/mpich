@@ -503,6 +503,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Type_free_hook(MPIR_Datatype * type);
 #define MPID_INTERCOMM_NO_DYNPROC(comm) \
     (MPIDI_COMM((comm),map).avtid == 0 && MPIDI_COMM((comm),local_map).avtid == 0)
 
+int MPIDI_check_for_failed_procs(void);
+
+#ifdef HAVE_SIGNAL
+void MPIDI_sigusr1_handler(int sig);
+#endif
 
 #include "mpidu_pre.h"
 
