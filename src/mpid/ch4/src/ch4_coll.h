@@ -186,12 +186,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, int sendcount,
                                               displs, recvtype, comm, errflag,
                                               ch4_algo_parameters_container);
             break;
-        case MPIDI_Allgatherv_inter_composition_alpha_id:
+        case MPIDI_Allgatherv_inter_fallback_id:
             mpi_errno =
-                MPIDI_Allgatherv_inter_composition_alpha(sendbuf, sendcount, sendtype,
-                                                         recvbuf, recvcounts, displs,
-                                                         recvtype, comm, errflag,
-                                                         ch4_algo_parameters_container);
+                MPIDI_Allgatherv_inter_fallback(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                                displs, recvtype, comm, errflag,
+                                                ch4_algo_parameters_container);
             break;
         default:
             mpi_errno = MPIR_Allgatherv_impl(sendbuf, sendcount, sendtype,

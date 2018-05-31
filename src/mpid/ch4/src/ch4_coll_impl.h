@@ -924,23 +924,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_intra_netmod(const void *sendbuf, 
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Allgatherv_inter_composition_alpha
+#define FUNCNAME MPIDI_Allgatherv_inter_fallback
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_inter_composition_alpha(const void *sendbuf,
-                                                                      int sendcount,
-                                                                      MPI_Datatype sendtype,
-                                                                      void *recvbuf,
-                                                                      const int *recvcounts,
-                                                                      const int *displs,
-                                                                      MPI_Datatype recvtype,
-                                                                      MPIR_Comm * comm_ptr,
-                                                                      MPIR_Errflag_t * errflag,
-                                                                      const
-                                                                      MPIDI_coll_algo_container_t
-                                                                      *
-                                                                      ch4_algo_parameters_container
-                                                                      ATTRIBUTE((unused)))
+/* *INDENT-OFF* */
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allgatherv_inter_fallback(const void *sendbuf, int sendcount,
+                                                             MPI_Datatype sendtype, void *recvbuf,
+                                                             const int *recvcounts,
+                                                             const int *displs,
+                                                             MPI_Datatype recvtype,
+                                                             MPIR_Comm * comm_ptr,
+                                                             MPIR_Errflag_t * errflag,
+                                                             const MPIDI_coll_algo_container_t * ch4_algo_parameters_container ATTRIBUTE((unused)))
+/* *INDENT-ON* */
 {
     int mpi_errno = MPI_SUCCESS;
 
