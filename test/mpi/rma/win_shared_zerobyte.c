@@ -18,7 +18,7 @@ int main(int argc, char **argv)
     int i, rank, nproc;
     int shm_rank, shm_nproc, last_shm_rank_w;
     MPI_Aint size;
-    int errors = 0, all_errors = 0;
+    int errors = 0;
     int **bases = NULL, *abs_base, *my_base;
     int disp_unit;
     MPI_Win shm_win;
@@ -115,5 +115,5 @@ int main(int argc, char **argv)
     if (bases)
         free(bases);
 
-    return MTestReturnValue(all_errors);
+    return MTestReturnValue(errors);
 }
