@@ -264,12 +264,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const int *sendc
                                             recvcount, recvtype, root, comm, errflag,
                                             ch4_algo_parameters_container);
             break;
-        case MPIDI_Scatterv_inter_composition_alpha_id:
+        case MPIDI_Scatterv_inter_fallback_id:
             mpi_errno =
-                MPIDI_Scatterv_inter_composition_alpha(sendbuf, sendcounts, displs, sendtype,
-                                                       recvbuf, recvcount, recvtype, root,
-                                                       comm, errflag,
-                                                       ch4_algo_parameters_container);
+                MPIDI_Scatterv_inter_fallback(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                                              recvcount, recvtype, root, comm, errflag,
+                                              ch4_algo_parameters_container);
             break;
         default:
             MPIR_Scatterv_impl(sendbuf, sendcounts, displs, sendtype, recvbuf,

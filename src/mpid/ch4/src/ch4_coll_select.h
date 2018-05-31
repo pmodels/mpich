@@ -190,7 +190,7 @@ MPIDI_coll_algo_container_t *MPIDI_Scatterv_select(const void *sendbuf,
 {
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Scatterv_inter_composition_alpha_cnt;
+        return &MPIDI_Scatterv_inter_fallback_cnt;
     }
 
     return &MPIDI_Scatterv_intra_netmod_cnt;
