@@ -225,11 +225,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatter(const void *sendbuf, int sendcount,
                                            recvtype, root, comm, errflag,
                                            ch4_algo_parameters_container);
             break;
-        case MPIDI_Scatter_inter_composition_alpha_id:
+        case MPIDI_Scatter_inter_fallback_id:
             mpi_errno =
-                MPIDI_Scatter_inter_composition_alpha(sendbuf, sendcount, sendtype, recvbuf,
-                                                      recvcount, recvtype, root, comm, errflag,
-                                                      ch4_algo_parameters_container);
+                MPIDI_Scatter_inter_fallback(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                             recvtype, root, comm, errflag,
+                                             ch4_algo_parameters_container);
             break;
         default:
             MPIR_Scatter_impl(sendbuf, sendcount, sendtype, recvbuf,

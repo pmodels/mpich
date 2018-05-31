@@ -171,7 +171,7 @@ MPIDI_coll_algo_container_t *MPIDI_Scatter_select(const void *sendbuf,
 {
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Scatter_inter_composition_alpha_cnt;
+        return &MPIDI_Scatter_inter_fallback_cnt;
     }
 
     return &MPIDI_Scatter_intra_netmod_cnt;
