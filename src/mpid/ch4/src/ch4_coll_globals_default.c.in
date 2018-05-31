@@ -203,12 +203,10 @@ const MPIDI_coll_algo_container_t MPIDI_Reduce_scatter_inter_fallback_cnt = {
 };
 
 /* Reduce_scatter_block default composition containers initialization */
-const MPIDI_coll_algo_container_t MPIDI_Reduce_scatter_block_intra_composition_alpha_cnt = {
-    .id = MPIDI_Reduce_scatter_block_intra_composition_alpha_id,
-    .params.ch4_reduce_scatter_block_params.ch4_reduce_scatter_block_alpha = {
-                                                                              .reduce_scatter_block
-                                                                              =
-                                                                              MPIDI_COLL_AUTO_SELECT}
+const MPIDI_coll_algo_container_t MPIDI_Reduce_scatter_block_intra_netmod_cnt = {
+    .id = MPIDI_Reduce_scatter_block_intra_netmod_id,
+    .params.ch4_reduce_scatter_block_params.ch4_reduce_scatter_block_netmod = {
+        .reduce_scatter_block = MPIDI_COLL_AUTO_SELECT}
 };
 
 const MPIDI_coll_algo_container_t MPIDI_Reduce_scatter_block_inter_composition_alpha_cnt = {

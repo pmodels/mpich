@@ -184,14 +184,14 @@ typedef union {
 } MPIDI_Reduce_scatter_params_t;
 
 typedef enum {
-    MPIDI_Reduce_scatter_block_intra_composition_alpha_id,
+    MPIDI_Reduce_scatter_block_intra_netmod_id,
     MPIDI_Reduce_scatter_block_inter_composition_alpha_id
 } MPIDI_Reduce_scatter_block_id_t;
 
 typedef union {
-    struct MPIDI_Reduce_scatter_block_alpha {
+    struct {
         int reduce_scatter_block;
-    } ch4_reduce_scatter_block_alpha;
+    } ch4_reduce_scatter_block_netmod;
 } MPIDI_Reduce_scatter_block_params_t;
 
 typedef enum {

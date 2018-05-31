@@ -569,11 +569,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
         MPIDI_Reduce_scatter_block_select(sendbuf, recvbuf, recvcount, datatype, op, comm, errflag);
 
     switch (ch4_algo_parameters_container->id) {
-        case MPIDI_Reduce_scatter_block_intra_composition_alpha_id:
+        case MPIDI_Reduce_scatter_block_intra_netmod_id:
             mpi_errno =
-                MPIDI_Reduce_scatter_block_intra_composition_alpha(sendbuf, recvbuf, recvcount,
-                                                                   datatype, op, comm, errflag,
-                                                                   ch4_algo_parameters_container);
+                MPIDI_Reduce_scatter_block_intra_netmod(sendbuf, recvbuf, recvcount,
+                                                        datatype, op, comm, errflag,
+                                                        ch4_algo_parameters_container);
             break;
         case MPIDI_Reduce_scatter_block_inter_composition_alpha_id:
             mpi_errno =
