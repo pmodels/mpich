@@ -301,7 +301,7 @@ MPIDI_coll_algo_container_t *MPIDI_Reduce_scatter_block_select(const void *sendb
 {
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Reduce_scatter_block_inter_composition_alpha_cnt;
+        return &MPIDI_Reduce_scatter_block_inter_fallback_cnt;
     }
 
     return &MPIDI_Reduce_scatter_block_intra_netmod_cnt;

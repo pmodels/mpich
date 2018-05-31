@@ -185,7 +185,7 @@ typedef union {
 
 typedef enum {
     MPIDI_Reduce_scatter_block_intra_netmod_id,
-    MPIDI_Reduce_scatter_block_inter_composition_alpha_id
+    MPIDI_Reduce_scatter_block_inter_fallback_id
 } MPIDI_Reduce_scatter_block_id_t;
 
 typedef union {

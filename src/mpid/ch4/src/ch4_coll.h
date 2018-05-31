@@ -575,11 +575,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter_block(const void *sendbuf, void
                                                         datatype, op, comm, errflag,
                                                         ch4_algo_parameters_container);
             break;
-        case MPIDI_Reduce_scatter_block_inter_composition_alpha_id:
+        case MPIDI_Reduce_scatter_block_inter_fallback_id:
             mpi_errno =
-                MPIDI_Reduce_scatter_block_inter_composition_alpha(sendbuf, recvbuf, recvcount,
-                                                                   datatype, op, comm, errflag,
-                                                                   ch4_algo_parameters_container);
+                MPIDI_Reduce_scatter_block_inter_fallback(sendbuf, recvbuf, recvcount,
+                                                          datatype, op, comm, errflag,
+                                                          ch4_algo_parameters_container);
             break;
         default:
             MPIR_Reduce_scatter_block_impl(sendbuf, recvbuf, recvcount, datatype, op, comm,
