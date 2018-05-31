@@ -79,7 +79,7 @@ MPIDI_coll_algo_container_t *MPIDI_Allreduce_select(const void *sendbuf,
 
     is_commutative = MPIR_Op_is_commutative(op);
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Allreduce_inter_composition_alpha_cnt;
+        return &MPIDI_Allreduce_inter_fallback_cnt;
     }
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_ALLREDUCE) {
