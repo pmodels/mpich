@@ -666,6 +666,8 @@ int MPII_Coll_init(void)
     /* Iscatter Intra */
     if (0 == strcmp(MPIR_CVAR_ISCATTER_INTRA_ALGORITHM, "binomial"))
         MPIR_Iscatter_intra_algo_choice = MPIR_ISCATTER_INTRA_ALGO_BINOMIAL;
+    else if (0 == strcmp(MPIR_CVAR_ISCATTER_INTRA_ALGORITHM, "tree"))
+        MPIR_Iscatter_intra_algo_choice = MPIR_ISCATTER_INTRA_ALGO_TREE;
     else
         MPIR_Iscatter_intra_algo_choice = MPIR_ISCATTER_INTRA_ALGO_AUTO;
 
