@@ -96,14 +96,14 @@ typedef union {
 } MPIDI_Alltoallv_params_t;
 
 typedef enum {
-    MPIDI_Alltoallw_intra_composition_alpha_id,
+    MPIDI_Alltoallw_intra_netmod_id,
     MPIDI_Alltoallw_inter_composition_alpha_id
 } MPIDI_Alltoallw_id_t;
 
 typedef union {
-    struct MPIDI_Alltoallw_alpha {
+    struct {
         int alltoallw;
-    } ch4_alltoallw_alpha;
+    } ch4_alltoallw_netmod;
 } MPIDI_Alltoallw_params_t;
 
 typedef enum {

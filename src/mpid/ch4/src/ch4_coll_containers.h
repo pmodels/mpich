@@ -31,7 +31,7 @@ extern const MPIDI_coll_algo_container_t MPIDI_Alltoallv_intra_netmod_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Alltoallv_inter_fallback_cnt;
 
 /* Alltoallw  CH4 level containers declaration */
-extern const MPIDI_coll_algo_container_t MPIDI_Alltoallw_intra_composition_alpha_cnt;
+extern const MPIDI_coll_algo_container_t MPIDI_Alltoallw_intra_netmod_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Alltoallw_inter_composition_alpha_cnt;
 
 /* Allgather  CH4 level containers declaration */
