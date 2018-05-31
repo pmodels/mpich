@@ -137,10 +137,10 @@ const MPIDI_coll_algo_container_t MPIDI_Scatterv_inter_fallback_cnt = {
 };
 
 /* Alltoall default containers initialization */
-const MPIDI_coll_algo_container_t MPIDI_Alltoall_intra_composition_alpha_cnt = {
-    .id = MPIDI_Alltoall_intra_composition_alpha_id,
-    .params.ch4_alltoall_params.ch4_alltoall_alpha = {
-                                                      .alltoall = MPIDI_COLL_AUTO_SELECT}
+const MPIDI_coll_algo_container_t MPIDI_Alltoall_intra_netmod_cnt = {
+    .id = MPIDI_Alltoall_intra_netmod_id,
+    .params.ch4_alltoall_params.ch4_alltoall_netmod = {
+        .alltoall = MPIDI_COLL_AUTO_SELECT}
 };
 
 const MPIDI_coll_algo_container_t MPIDI_Alltoall_inter_composition_alpha_cnt = {

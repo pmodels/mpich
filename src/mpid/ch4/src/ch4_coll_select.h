@@ -209,7 +209,7 @@ MPIDI_coll_algo_container_t *MPIDI_Alltoall_select(const void *sendbuf,
         return &MPIDI_Alltoall_inter_composition_alpha_cnt;
     }
 
-    return &MPIDI_Alltoall_intra_composition_alpha_cnt;
+    return &MPIDI_Alltoall_intra_netmod_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX const

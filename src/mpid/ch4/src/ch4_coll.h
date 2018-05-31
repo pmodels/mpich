@@ -372,12 +372,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoall(const void *sendbuf, int sendcount,
                               recvcount, recvtype, comm, errflag);
 
     switch (ch4_algo_parameters_container->id) {
-        case MPIDI_Alltoall_intra_composition_alpha_id:
+        case MPIDI_Alltoall_intra_netmod_id:
             mpi_errno =
-                MPIDI_Alltoall_intra_composition_alpha(sendbuf, sendcount, sendtype,
-                                                       recvbuf, recvcount, recvtype,
-                                                       comm, errflag,
-                                                       ch4_algo_parameters_container);
+                MPIDI_Alltoall_intra_netmod(sendbuf, sendcount, sendtype,
+                                            recvbuf, recvcount, recvtype,
+                                            comm, errflag, ch4_algo_parameters_container);
             break;
         case MPIDI_Alltoall_inter_composition_alpha_id:
             mpi_errno =
