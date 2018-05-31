@@ -330,7 +330,7 @@ MPIDI_coll_algo_container_t *MPIDI_Exscan_select(const void *sendbuf,
                                                  MPI_Op op, MPIR_Comm * comm,
                                                  MPIR_Errflag_t * errflag)
 {
-    return &MPIDI_Exscan_intra_composition_alpha_cnt;
+    return &MPIDI_Exscan_intra_netmod_cnt;
 }
 
 #endif /* CH4_COLL_SELECT_H_INCLUDED */

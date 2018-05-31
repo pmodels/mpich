@@ -211,13 +211,13 @@ typedef union {
 } MPIDI_Scan_params_t;
 
 typedef enum {
-    MPIDI_Exscan_intra_composition_alpha_id,
+    MPIDI_Exscan_intra_netmod_id,
 } MPIDI_Exscan_id_t;
 
 typedef union {
-    struct MPIDI_Exscan_alpha {
+    struct {
         int exscan;
-    } ch4_exscan_alpha;
+    } ch4_exscan_netmod;
 } MPIDI_Exscan_params_t;
 
 #define MPIDI_BARRIER_PARAMS_DECL MPIDI_Barrier_params_t ch4_barrier_params;

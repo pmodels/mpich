@@ -71,6 +71,6 @@ extern const MPIDI_coll_algo_container_t MPIDI_Scan_intra_local_node_local_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Scan_intra_netmod_cnt;
 
 /* Exscan CH4 level containers declaration */
-extern const MPIDI_coll_algo_container_t MPIDI_Exscan_intra_composition_alpha_cnt;
+extern const MPIDI_coll_algo_container_t MPIDI_Exscan_intra_netmod_cnt;
 
 #endif /* CH4_COLL_CONTAINERS_H_INCLUDED */

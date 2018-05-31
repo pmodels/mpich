@@ -639,11 +639,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Exscan(const void *sendbuf, void *recvbuf, int
         MPIDI_Exscan_select(sendbuf, recvbuf, count, datatype, op, comm, errflag);
 
     switch (ch4_algo_parameters_container->id) {
-        case MPIDI_Exscan_intra_composition_alpha_id:
+        case MPIDI_Exscan_intra_netmod_id:
             mpi_errno =
-                MPIDI_Exscan_intra_composition_alpha(sendbuf, recvbuf, count,
-                                                     datatype, op, comm, errflag,
-                                                     ch4_algo_parameters_container);
+                MPIDI_Exscan_intra_netmod(sendbuf, recvbuf, count,
+                                          datatype, op, comm, errflag,
+                                          ch4_algo_parameters_container);
             break;
         default:
             MPIR_Exscan_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);
