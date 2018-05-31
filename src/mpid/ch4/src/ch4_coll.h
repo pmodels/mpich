@@ -258,12 +258,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scatterv(const void *sendbuf, const int *sendc
 
 
     switch (ch4_algo_parameters_container->id) {
-        case MPIDI_Scatterv_intra_composition_alpha_id:
+        case MPIDI_Scatterv_intra_netmod_id:
             mpi_errno =
-                MPIDI_Scatterv_intra_composition_alpha(sendbuf, sendcounts, displs, sendtype,
-                                                       recvbuf, recvcount, recvtype, root,
-                                                       comm, errflag,
-                                                       ch4_algo_parameters_container);
+                MPIDI_Scatterv_intra_netmod(sendbuf, sendcounts, displs, sendtype, recvbuf,
+                                            recvcount, recvtype, root, comm, errflag,
+                                            ch4_algo_parameters_container);
             break;
         case MPIDI_Scatterv_inter_composition_alpha_id:
             mpi_errno =

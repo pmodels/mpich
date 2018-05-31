@@ -1131,21 +1131,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scatter_inter_fallback(const void *sendbuf, i
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Scatterv_intra_composition_alpha
+#define FUNCNAME MPIDI_Scatterv_intra_netmod
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_intra_composition_alpha(const void *sendbuf,
-                                                                    const int *sendcounts,
-                                                                    const int *displs,
-                                                                    MPI_Datatype sendtype,
-                                                                    void *recvbuf,
-                                                                    int recvcount,
-                                                                    MPI_Datatype recvtype,
-                                                                    int root, MPIR_Comm * comm,
-                                                                    MPIR_Errflag_t * errflag,
-                                                                    const
-                                                                    MPIDI_coll_algo_container_t
-                                                                    * ch4_algo_parameters_container)
+/* *INDENT-OFF* */
+MPL_STATIC_INLINE_PREFIX int MPIDI_Scatterv_intra_netmod(const void *sendbuf, const int *sendcounts,
+                                                         const int *displs, MPI_Datatype sendtype,
+                                                         void *recvbuf, int recvcount,
+                                                         MPI_Datatype recvtype, int root,
+                                                         MPIR_Comm * comm, MPIR_Errflag_t * errflag,
+                                                         const MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+/* *INDENT-ON* */
 {
     int mpi_errno = MPI_SUCCESS;
     const void *scatterv_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);

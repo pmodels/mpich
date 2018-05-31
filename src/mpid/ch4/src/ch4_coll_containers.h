@@ -55,7 +55,7 @@ extern const MPIDI_coll_algo_container_t MPIDI_Scatter_intra_netmod_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Scatter_inter_fallback_cnt;
 
 /* Scatterv CH4 level containers declaration */
-extern const MPIDI_coll_algo_container_t MPIDI_Scatterv_intra_composition_alpha_cnt;
+extern const MPIDI_coll_algo_container_t MPIDI_Scatterv_intra_netmod_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Scatterv_inter_composition_alpha_cnt;
 
 /* Reduce_scatter CH4 level containers declaration */
