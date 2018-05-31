@@ -271,7 +271,7 @@ MPIDI_coll_algo_container_t *MPIDI_Allgatherv_select(const void *sendbuf, int se
         return &MPIDI_Allgatherv_inter_composition_alpha_cnt;
     }
 
-    return &MPIDI_Allgatherv_intra_composition_alpha_cnt;
+    return &MPIDI_Allgatherv_intra_netmod_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX const

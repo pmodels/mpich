@@ -181,10 +181,10 @@ const MPIDI_coll_algo_container_t MPIDI_Allgather_inter_fallback_cnt = {
 };
 
 /* Allgatherv default containers initialization */
-const MPIDI_coll_algo_container_t MPIDI_Allgatherv_intra_composition_alpha_cnt = {
-    .id = MPIDI_Allgatherv_intra_composition_alpha_id,
-    .params.ch4_allgatherv_params.ch4_allgatherv_alpha = {
-                                                          .allgatherv = MPIDI_COLL_AUTO_SELECT}
+const MPIDI_coll_algo_container_t MPIDI_Allgatherv_intra_netmod_cnt = {
+    .id = MPIDI_Allgatherv_intra_netmod_id,
+    .params.ch4_allgatherv_params.ch4_allgatherv_netmod = {
+        .allgatherv = MPIDI_COLL_AUTO_SELECT}
 };
 
 const MPIDI_coll_algo_container_t MPIDI_Allgatherv_inter_composition_alpha_cnt = {

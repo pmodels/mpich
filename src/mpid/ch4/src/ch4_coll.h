@@ -180,12 +180,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Allgatherv(const void *sendbuf, int sendcount,
                                 recvcounts, displs, recvtype, comm, errflag);
 
     switch (ch4_algo_parameters_container->id) {
-        case MPIDI_Allgatherv_intra_composition_alpha_id:
+        case MPIDI_Allgatherv_intra_netmod_id:
             mpi_errno =
-                MPIDI_Allgatherv_intra_composition_alpha(sendbuf, sendcount, sendtype,
-                                                         recvbuf, recvcounts, displs,
-                                                         recvtype, comm, errflag,
-                                                         ch4_algo_parameters_container);
+                MPIDI_Allgatherv_intra_netmod(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
+                                              displs, recvtype, comm, errflag,
+                                              ch4_algo_parameters_container);
             break;
         case MPIDI_Allgatherv_inter_composition_alpha_id:
             mpi_errno =
