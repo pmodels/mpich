@@ -47,7 +47,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
     MPII_Treealgo_tree_t my_tree;
     void **child_buffer;        /* Buffer array in which data from children is received */
     void *reduce_buffer;        /* Buffer in which reduced data is present */
-    int *vtcs, *recv_id, *reduce_id;    /* Arrays to store graph vertex ids */
+    int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
     int nvtcs;
     int buffer_per_child = MPIR_CVAR_IREDUCE_TREE_BUFFER_PER_CHILD;
 
