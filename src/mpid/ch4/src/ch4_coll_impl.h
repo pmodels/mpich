@@ -1180,22 +1180,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_inter_composition_alpha(const 
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Reduce_scatter_intra_composition_alpha
+#define FUNCNAME MPIDI_Reduce_scatter_intra_netmod
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_intra_composition_alpha(const void *sendbuf,
-                                                                          void *recvbuf,
-                                                                          const int
-                                                                          recvcounts[],
-                                                                          MPI_Datatype
-                                                                          datatype, MPI_Op op,
-                                                                          MPIR_Comm * comm_ptr,
-                                                                          MPIR_Errflag_t *
-                                                                          errflag,
-                                                                          const
-                                                                          MPIDI_coll_algo_container_t
-                                                                          *
-                                                                          ch4_algo_parameters_container)
+/* *INDENT-OFF* */
+MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter_intra_netmod(const void *sendbuf, void *recvbuf,
+                                                               const int recvcounts[],
+                                                               MPI_Datatype datatype, MPI_Op op,
+                                                               MPIR_Comm * comm_ptr,
+                                                               MPIR_Errflag_t * errflag,
+                                                               const MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+/* *INDENT-ON* */
 {
     int mpi_errno = MPI_SUCCESS;
     const void *reduce_scatter_container =

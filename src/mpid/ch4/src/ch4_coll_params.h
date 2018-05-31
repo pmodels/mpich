@@ -173,14 +173,14 @@ typedef union {
 } MPIDI_Scatterv_params_t;
 
 typedef enum {
-    MPIDI_Reduce_scatter_intra_composition_alpha_id,
+    MPIDI_Reduce_scatter_intra_netmod_id,
     MPIDI_Reduce_scatter_inter_composition_alpha_id
 } MPIDI_Reduce_scatter_id_t;
 
 typedef union {
-    struct MPIDI_Reduce_scatter_alpha {
+    struct {
         int reduce_scatter;
-    } ch4_reduce_scatter_alpha;
+    } ch4_reduce_scatter_netmod;
 } MPIDI_Reduce_scatter_params_t;
 
 typedef enum {

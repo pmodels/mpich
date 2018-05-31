@@ -287,7 +287,7 @@ MPIDI_coll_algo_container_t *MPIDI_Reduce_scatter_select(const void *sendbuf,
         return &MPIDI_Reduce_scatter_inter_composition_alpha_cnt;
     }
 
-    return &MPIDI_Reduce_scatter_intra_composition_alpha_cnt;
+    return &MPIDI_Reduce_scatter_intra_netmod_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX const
