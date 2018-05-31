@@ -108,7 +108,7 @@ typedef union {
 
 typedef enum {
     MPIDI_Allgather_intra_netmod_id,
-    MPIDI_Allgather_inter_composition_alpha_id
+    MPIDI_Allgather_inter_fallback_id
 } MPIDI_Allgather_id_t;
 
 typedef union {
