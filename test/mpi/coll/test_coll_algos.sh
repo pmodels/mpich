@@ -106,3 +106,28 @@ for algo_name in ${algo_names}; do
 done
 
 export coll_algo_tests
+
+######### Add tests for Scatter algorithms ###########
+
+#disable device collectives for scatter to test MPIR algorithms
+testing_env="env=MPIR_CVAR_SCATTER_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_SCATTER_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_ISCATTER_DEVICE_COLLECTIVE=0 "
+algo_names="tree"
+kvalues="2 3 4"
+
+for algo_name in ${algo_names}; do
+    for kval in ${kvalues}; do
+        #set the environment
+        env="${testing_env} env=MPIR_CVAR_ISCATTER_INTRA_ALGORITHM=${algo_name} "
+        env+="env=MPIR_CVAR_ISCATTER_TREE_KVAL=${kval}"
+
+        coll_algo_tests+="scattern 4 ${env}${nl}"
+        coll_algo_tests+="scatter2 4 ${env}${nl}"
+        coll_algo_tests+="scatter3 4 ${env}${nl}"
+    done
+done
+
+export coll_algo_tests
