@@ -58,7 +58,7 @@ typedef union {
 
 typedef enum {
     MPIDI_Allreduce_intra_local_node_bcast_id,
-    MPIDI_Allreduce_intra_composition_beta_id,
+    MPIDI_Allreduce_intra_netmod_id,
     MPIDI_Allreduce_inter_composition_alpha_id,
 } MPIDI_Allreduce_id_t;
 
@@ -68,9 +68,9 @@ typedef union {
         int roots_allreduce;
         int node_bcast;
     } ch4_allreduce_local_node_bcast;
-    struct MPIDI_Allreduce_beta {
+    struct {
         int allreduce;
-    } ch4_allreduce_beta;
+    } ch4_allreduce_netmod;
 } MPIDI_Allreduce_params_t;
 
 typedef enum {

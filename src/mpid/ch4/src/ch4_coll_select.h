@@ -91,7 +91,7 @@ MPIDI_coll_algo_container_t *MPIDI_Allreduce_select(const void *sendbuf,
             return &MPIDI_Allreduce_intra_local_node_bcast_cnt;
         }
     }
-    return &MPIDI_Allreduce_intra_composition_beta_cnt;
+    return &MPIDI_Allreduce_intra_netmod_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX const
