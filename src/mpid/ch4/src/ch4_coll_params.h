@@ -42,7 +42,7 @@ typedef union {
 
 typedef enum {
     MPIDI_Reduce_intra_remote_then_root_id,
-    MPIDI_Reduce_intra_composition_beta_id,
+    MPIDI_Reduce_intra_netmod_id,
     MPIDI_Reduce_inter_composition_alpha_id,
 } MPIDI_Reduce_id_t;
 
@@ -51,9 +51,9 @@ typedef union {
         int node_reduce;
         int roots_reduce;
     } ch4_reduce_remote_then_root;
-    struct MPIDI_Reduce_beta {
+    struct {
         int reduce;
-    } ch4_reduce_beta;
+    } ch4_reduce_netmod;
 } MPIDI_Reduce_params_t;
 
 typedef enum {

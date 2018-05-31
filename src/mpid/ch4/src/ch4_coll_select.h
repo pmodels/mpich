@@ -121,7 +121,7 @@ MPIDI_coll_algo_container_t *MPIDI_Reduce_select(const void *sendbuf,
             return &MPIDI_Reduce_intra_remote_then_root_cnt;
         }
     }
-    return &MPIDI_Reduce_intra_composition_beta_cnt;
+    return &MPIDI_Reduce_intra_netmod_cnt;
 }
 
 MPL_STATIC_INLINE_PREFIX const

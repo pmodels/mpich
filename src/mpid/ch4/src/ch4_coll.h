@@ -498,11 +498,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
                                                     root, comm, errflag,
                                                     ch4_algo_parameters_container);
             break;
-        case MPIDI_Reduce_intra_composition_beta_id:
+        case MPIDI_Reduce_intra_netmod_id:
             mpi_errno =
-                MPIDI_Reduce_intra_composition_beta(sendbuf, recvbuf, count, datatype, op,
-                                                    root, comm, errflag,
-                                                    ch4_algo_parameters_container);
+                MPIDI_Reduce_intra_netmod(sendbuf, recvbuf, count, datatype, op,
+                                          root, comm, errflag, ch4_algo_parameters_container);
             break;
         case MPIDI_Reduce_inter_composition_alpha_id:
             mpi_errno =

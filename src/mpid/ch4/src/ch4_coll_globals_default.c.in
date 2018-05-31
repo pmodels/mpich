@@ -63,10 +63,10 @@ const MPIDI_coll_algo_container_t MPIDI_Reduce_intra_remote_then_root_cnt = {
         .node_reduce = MPIDI_COLL_AUTO_SELECT}
 };
 
-const MPIDI_coll_algo_container_t MPIDI_Reduce_intra_composition_beta_cnt = {
-    .id = MPIDI_Reduce_intra_composition_beta_id,
-    .params.ch4_reduce_params.ch4_reduce_beta = {
-                                                 .reduce = MPIDI_COLL_AUTO_SELECT}
+const MPIDI_coll_algo_container_t MPIDI_Reduce_intra_netmod_cnt = {
+    .id = MPIDI_Reduce_intra_netmod_id,
+    .params.ch4_reduce_params.ch4_reduce_netmod = {
+        .reduce = MPIDI_COLL_AUTO_SELECT}
 };
 
 const MPIDI_coll_algo_container_t MPIDI_Reduce_inter_composition_alpha_cnt = {
