@@ -43,7 +43,7 @@ typedef union {
 typedef enum {
     MPIDI_Reduce_intra_remote_then_root_id,
     MPIDI_Reduce_intra_netmod_id,
-    MPIDI_Reduce_inter_composition_alpha_id,
+    MPIDI_Reduce_inter_fallback_id,
 } MPIDI_Reduce_id_t;
 
 typedef union {

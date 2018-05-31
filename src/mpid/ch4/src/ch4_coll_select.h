@@ -107,7 +107,7 @@ MPIDI_coll_algo_container_t *MPIDI_Reduce_select(const void *sendbuf,
     int nbytes = 0;
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Reduce_inter_composition_alpha_cnt;
+        return &MPIDI_Reduce_inter_fallback_cnt;
     }
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_REDUCE) {
