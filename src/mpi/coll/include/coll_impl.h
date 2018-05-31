@@ -448,6 +448,7 @@ extern MPIR_Iscan_intra_algo_t MPIR_Iscan_intra_algo_choice;
 typedef enum MPIR_Iscatter_intra_algo_t {
     MPIR_ISCATTER_INTRA_ALGO_AUTO,
     MPIR_ISCATTER_INTRA_ALGO_BINOMIAL,
+    MPIR_ISCATTER_INTRA_ALGO_TREE
 } MPIR_Iscatter_intra_algo_t;
 extern MPIR_Iscatter_intra_algo_t MPIR_Iscatter_intra_algo_choice;
 
