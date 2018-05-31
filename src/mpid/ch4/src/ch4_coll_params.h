@@ -151,14 +151,14 @@ typedef union {
 } MPIDI_Gatherv_params_t;
 
 typedef enum {
-    MPIDI_Scatter_intra_composition_alpha_id,
+    MPIDI_Scatter_intra_netmod_id,
     MPIDI_Scatter_inter_composition_alpha_id
 } MPIDI_Scatter_id_t;
 
 typedef union {
-    struct MPIDI_Scatter_alpha {
+    struct {
         int scatter;
-    } ch4_scatter_alpha;
+    } ch4_scatter_netmod;
 } MPIDI_Scatter_params_t;
 
 typedef enum {
