@@ -44,7 +44,7 @@ extern const MPIDI_coll_algo_container_t MPIDI_Allgatherv_inter_fallback_cnt;
 
 /* Gather  CH4 level containers declaration */
 extern const MPIDI_coll_algo_container_t MPIDI_Gather_intra_netmod_cnt;
-extern const MPIDI_coll_algo_container_t MPIDI_Gather_inter_composition_alpha_cnt;
+extern const MPIDI_coll_algo_container_t MPIDI_Gather_inter_fallback_cnt;
 
 /* Gatherv  CH4 level containers declaration */
 extern const MPIDI_coll_algo_container_t MPIDI_Gatherv_intra_composition_alpha_cnt;

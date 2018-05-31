@@ -301,11 +301,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gather(const void *sendbuf, int sendcount, MPI
                                           recvtype, root, comm, errflag,
                                           ch4_algo_parameters_container);
             break;
-        case MPIDI_Gather_inter_composition_alpha_id:
+        case MPIDI_Gather_inter_fallback_id:
             mpi_errno =
-                MPIDI_Gather_inter_composition_alpha(sendbuf, sendcount, sendtype, recvbuf,
-                                                     recvcount, recvtype, root, comm, errflag,
-                                                     ch4_algo_parameters_container);
+                MPIDI_Gather_inter_fallback(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                            recvtype, root, comm, errflag,
+                                            ch4_algo_parameters_container);
             break;
         default:
             mpi_errno = MPIR_Gather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount,
