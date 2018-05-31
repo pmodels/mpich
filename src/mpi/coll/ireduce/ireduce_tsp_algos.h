@@ -268,7 +268,9 @@ int MPIR_TSP_Ireduce_intra_tree(const void *sendbuf, void *recvbuf, int count,
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    MPIDU_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIDU_Sched_next_tag(comm, &tag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* generate the schedule */
     sched = MPL_malloc(sizeof(MPIR_TSP_sched_t), MPL_MEM_COLL);
