@@ -465,7 +465,7 @@ static HYD_status launch_procs(void)
 {
     int i, j, process_id, dummy;
     int using_pmi_port = 0;
-    char *str, *envstr, *list, *pmi_port;
+    char *str, *envstr, *list, *pmi_port = NULL;
     struct HYD_string_stash stash;
     struct HYD_env *env, *force_env = NULL;
     struct HYD_exec *exec;
