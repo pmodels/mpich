@@ -287,19 +287,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_inter_fallback(void *buffer, int count,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Allreduce_intra_composition_alpha
+#define FUNCNAME MPIDI_Allreduce_intra_local_node_bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_composition_alpha(const void *sendbuf,
-                                                                     void *recvbuf, int count,
-                                                                     MPI_Datatype datatype,
-                                                                     MPI_Op op,
-                                                                     MPIR_Comm * comm,
-                                                                     MPIR_Errflag_t * errflag,
-                                                                     const
-                                                                     MPIDI_coll_algo_container_t
-                                                                     *
-                                                                     ch4_algo_parameters_container)
+/* *INDENT-OFF* */
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_intra_local_node_bcast(const void *sendbuf,
+                                                                    void *recvbuf,
+                                                                    int count,
+                                                                    MPI_Datatype datatype,
+                                                                    MPI_Op op, MPIR_Comm * comm,
+                                                                    MPIR_Errflag_t * errflag,
+                                                                    const MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+/* *INDENT-ON* */
 {
     int mpi_errno = MPI_SUCCESS;
     const void *reduce_node_container =

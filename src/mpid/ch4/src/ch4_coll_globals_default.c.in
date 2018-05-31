@@ -74,12 +74,12 @@ const MPIDI_coll_algo_container_t MPIDI_Reduce_inter_composition_alpha_cnt = {
 };
 
 /* Allreduce default composition containers initialization*/
-const MPIDI_coll_algo_container_t MPIDI_Allreduce_intra_composition_alpha_cnt = {
-    .id = MPIDI_Allreduce_intra_composition_alpha_id,
-    .params.ch4_allreduce_params.ch4_allreduce_alpha = {
-                                                        .node_reduce = MPIDI_COLL_AUTO_SELECT,
-                                                        .roots_allreduce = MPIDI_COLL_AUTO_SELECT,
-                                                        .node_bcast = MPIDI_COLL_AUTO_SELECT}
+const MPIDI_coll_algo_container_t MPIDI_Allreduce_intra_local_node_bcast_cnt = {
+    .id = MPIDI_Allreduce_intra_local_node_bcast_id,
+    .params.ch4_allreduce_params.ch4_allreduce_local_node_bcast = {
+        .node_reduce = MPIDI_COLL_AUTO_SELECT,
+        .roots_allreduce = MPIDI_COLL_AUTO_SELECT,
+        .node_bcast = MPIDI_COLL_AUTO_SELECT}
 };
 
 const MPIDI_coll_algo_container_t MPIDI_Allreduce_intra_composition_beta_cnt = {
