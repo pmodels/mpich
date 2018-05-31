@@ -223,7 +223,7 @@ MPIDI_coll_algo_container_t *MPIDI_Alltoallv_select(const void *sendbuf,
                                                     MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        return &MPIDI_Alltoallv_inter_composition_alpha_cnt;
+        return &MPIDI_Alltoallv_inter_fallback_cnt;
     }
 
     return &MPIDI_Alltoallv_intra_netmod_cnt;

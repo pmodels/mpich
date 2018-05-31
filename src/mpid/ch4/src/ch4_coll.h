@@ -418,12 +418,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallv(const void *sendbuf, const int *send
                                              rdispls, recvtype, comm, errflag,
                                              ch4_algo_parameters_container);
             break;
-        case MPIDI_Alltoallv_inter_composition_alpha_id:
+        case MPIDI_Alltoallv_inter_fallback_id:
             mpi_errno =
-                MPIDI_Alltoallv_inter_composition_alpha(sendbuf, sendcounts, sdispls,
-                                                        sendtype, recvbuf, recvcounts,
-                                                        rdispls, recvtype, comm, errflag,
-                                                        ch4_algo_parameters_container);
+                MPIDI_Alltoallv_inter_fallback(sendbuf, sendcounts, sdispls,
+                                               sendtype, recvbuf, recvcounts,
+                                               rdispls, recvtype, comm, errflag,
+                                               ch4_algo_parameters_container);
             break;
         default:
             mpi_errno = MPIR_Alltoallv_impl(sendbuf, sendcounts, sdispls,
