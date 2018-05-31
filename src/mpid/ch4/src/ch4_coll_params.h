@@ -140,14 +140,14 @@ typedef union {
 } MPIDI_Gather_params_t;
 
 typedef enum {
-    MPIDI_Gatherv_intra_composition_alpha_id,
+    MPIDI_Gatherv_intra_netmod_id,
     MPIDI_Gatherv_inter_composition_alpha_id
 } MPIDI_Gatherv_id_t;
 
 typedef union {
-    struct MPIDI_Gatherv_alpha {
+    struct {
         int gatherv;
-    } ch4_gatherv_alpha;
+    } ch4_gatherv_netmod;
 } MPIDI_Gatherv_params_t;
 
 typedef enum {
