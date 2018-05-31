@@ -141,7 +141,7 @@ typedef union {
 
 typedef enum {
     MPIDI_Gatherv_intra_netmod_id,
-    MPIDI_Gatherv_inter_composition_alpha_id
+    MPIDI_Gatherv_inter_fallback_id
 } MPIDI_Gatherv_id_t;
 
 typedef union {

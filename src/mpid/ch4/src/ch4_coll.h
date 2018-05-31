@@ -340,11 +340,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Gatherv(const void *sendbuf, int sendcount,
                                            recvcounts, displs, recvtype, root,
                                            comm, errflag, ch4_algo_parameters_container);
             break;
-        case MPIDI_Gatherv_inter_composition_alpha_id:
+        case MPIDI_Gatherv_inter_fallback_id:
             mpi_errno =
-                MPIDI_Gatherv_inter_composition_alpha(sendbuf, sendcount, sendtype, recvbuf,
-                                                      recvcounts, displs, recvtype, root,
-                                                      comm, errflag, ch4_algo_parameters_container);
+                MPIDI_Gatherv_inter_fallback(sendbuf, sendcount, sendtype, recvbuf,
+                                             recvcounts, displs, recvtype, root,
+                                             comm, errflag, ch4_algo_parameters_container);
             break;
         default:
             mpi_errno = MPIR_Gatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts,
