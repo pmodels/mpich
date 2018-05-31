@@ -56,11 +56,11 @@ const MPIDI_coll_algo_container_t MPIDI_Bcast_inter_fallback_cnt = {
 };
 
 /* Reduce default composition containers initialization*/
-const MPIDI_coll_algo_container_t MPIDI_Reduce_intra_composition_alpha_cnt = {
-    .id = MPIDI_Reduce_intra_composition_alpha_id,
-    .params.ch4_reduce_params.ch4_reduce_alpha = {
-                                                  .roots_reduce = MPIDI_COLL_AUTO_SELECT,
-                                                  .node_reduce = MPIDI_COLL_AUTO_SELECT}
+const MPIDI_coll_algo_container_t MPIDI_Reduce_intra_remote_then_root_cnt = {
+    .id = MPIDI_Reduce_intra_remote_then_root_id,
+    .params.ch4_reduce_params.ch4_reduce_remote_then_root = {
+        .roots_reduce = MPIDI_COLL_AUTO_SELECT,
+        .node_reduce = MPIDI_COLL_AUTO_SELECT}
 };
 
 const MPIDI_coll_algo_container_t MPIDI_Reduce_intra_composition_beta_cnt = {

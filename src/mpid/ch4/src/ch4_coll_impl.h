@@ -424,18 +424,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_inter_fallback(const void *sendbuf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Reduce_intra_composition_alpha
+#define FUNCNAME MPIDI_Reduce_intra_remote_then_root
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_composition_alpha(const void *sendbuf,
-                                                                  void *recvbuf, int count,
-                                                                  MPI_Datatype datatype,
-                                                                  MPI_Op op, int root,
-                                                                  MPIR_Comm * comm,
-                                                                  MPIR_Errflag_t * errflag,
-                                                                  const
-                                                                  MPIDI_coll_algo_container_t
-                                                                  * ch4_algo_parameters_container)
+/* *INDENT-OFF* */
+MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_intra_remote_then_root(const void *sendbuf,
+                                                                 void *recvbuf, int count,
+                                                                 MPI_Datatype datatype, MPI_Op op,
+                                                                 int root, MPIR_Comm * comm,
+                                                                 MPIR_Errflag_t * errflag,
+                                                                 const MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+/* *INDENT-ON* */
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;

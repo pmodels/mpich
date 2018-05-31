@@ -492,11 +492,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
         MPIDI_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, comm, errflag);
 
     switch (ch4_algo_parameters_container->id) {
-        case MPIDI_Reduce_intra_composition_alpha_id:
+        case MPIDI_Reduce_intra_remote_then_root_id:
             mpi_errno =
-                MPIDI_Reduce_intra_composition_alpha(sendbuf, recvbuf, count, datatype, op,
-                                                     root, comm, errflag,
-                                                     ch4_algo_parameters_container);
+                MPIDI_Reduce_intra_remote_then_root(sendbuf, recvbuf, count, datatype, op,
+                                                    root, comm, errflag,
+                                                    ch4_algo_parameters_container);
             break;
         case MPIDI_Reduce_intra_composition_beta_id:
             mpi_errno =
