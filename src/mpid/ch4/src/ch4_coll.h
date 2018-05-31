@@ -611,11 +611,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, int c
                                                   datatype, op, comm, errflag,
                                                   ch4_algo_parameters_container);
             break;
-        case MPIDI_Scan_intra_composition_beta_id:
+        case MPIDI_Scan_intra_netmod_id:
             mpi_errno =
-                MPIDI_Scan_intra_composition_beta(sendbuf, recvbuf, count,
-                                                  datatype, op, comm, errflag,
-                                                  ch4_algo_parameters_container);
+                MPIDI_Scan_intra_netmod(sendbuf, recvbuf, count, datatype, op, comm, errflag,
+                                        ch4_algo_parameters_container);
             break;
         default:
             MPIR_Scan_impl(sendbuf, recvbuf, count, datatype, op, comm, errflag);

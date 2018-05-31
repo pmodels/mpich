@@ -222,10 +222,10 @@ const MPIDI_coll_algo_container_t MPIDI_Scan_intra_local_node_local_cnt = {
         .node_bcast = MPIDI_COLL_AUTO_SELECT}
 };
 
-const MPIDI_coll_algo_container_t MPIDI_Scan_intra_composition_beta_cnt = {
-    .id = MPIDI_Scan_intra_composition_beta_id,
-    .params.ch4_scan_params.ch4_scan_beta = {
-                                             .scan = MPIDI_COLL_AUTO_SELECT}
+const MPIDI_coll_algo_container_t MPIDI_Scan_intra_netmod_cnt = {
+    .id = MPIDI_Scan_intra_netmod_id,
+    .params.ch4_scan_params.ch4_scan_netmod = {
+        .scan = MPIDI_COLL_AUTO_SELECT}
 };
 
 /* Exscan default containers initialization */

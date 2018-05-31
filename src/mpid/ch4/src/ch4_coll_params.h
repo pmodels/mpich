@@ -196,7 +196,7 @@ typedef union {
 
 typedef enum {
     MPIDI_Scan_intra_local_node_local_id,
-    MPIDI_Scan_intra_composition_beta_id
+    MPIDI_Scan_intra_netmod_id
 } MPIDI_Scan_id_t;
 
 typedef union {
@@ -205,9 +205,9 @@ typedef union {
         int roots_scan;
         int node_bcast;
     } ch4_scan_local_node_local;
-    struct MPIDI_Scan_beta {
+    struct {
         int scan;
-    } ch4_scan_beta;
+    } ch4_scan_netmod;
 } MPIDI_Scan_params_t;
 
 typedef enum {

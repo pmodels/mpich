@@ -1432,19 +1432,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_local_node_local(const void *sendb
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Scan_intra_composition_beta
+#define FUNCNAME MPIDI_Scan_intra_netmod
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_composition_beta(const void *sendbuf,
-                                                               void *recvbuf,
-                                                               int count,
-                                                               MPI_Datatype datatype,
-                                                               MPI_Op op,
-                                                               MPIR_Comm * comm_ptr,
-                                                               MPIR_Errflag_t * errflag,
-                                                               const
-                                                               MPIDI_coll_algo_container_t
-                                                               * ch4_algo_parameters_container)
+/* *INDENT-OFF* */
+MPL_STATIC_INLINE_PREFIX int MPIDI_Scan_intra_netmod(const void *sendbuf, void *recvbuf, int count,
+                                                     MPI_Datatype datatype, MPI_Op op,
+                                                     MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                                     const MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+/* *INDENT-ON* */
 {
     int mpi_errno = MPI_SUCCESS;
     const void *scan_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
