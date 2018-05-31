@@ -195,16 +195,16 @@ typedef union {
 } MPIDI_Reduce_scatter_block_params_t;
 
 typedef enum {
-    MPIDI_Scan_intra_composition_alpha_id,
+    MPIDI_Scan_intra_local_node_local_id,
     MPIDI_Scan_intra_composition_beta_id
 } MPIDI_Scan_id_t;
 
 typedef union {
-    struct MPIDI_Scan_alpha {
+    struct {
         int node_scan;
         int roots_scan;
         int node_bcast;
-    } ch4_scan_alpha;
+    } ch4_scan_local_node_local;
     struct MPIDI_Scan_beta {
         int scan;
     } ch4_scan_beta;

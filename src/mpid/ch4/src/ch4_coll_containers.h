@@ -67,7 +67,7 @@ extern const MPIDI_coll_algo_container_t MPIDI_Reduce_scatter_block_intra_netmod
 extern const MPIDI_coll_algo_container_t MPIDI_Reduce_scatter_block_inter_fallback_cnt;
 
 /* Scan CH4 level containers declaration */
-extern const MPIDI_coll_algo_container_t MPIDI_Scan_intra_composition_alpha_cnt;
+extern const MPIDI_coll_algo_container_t MPIDI_Scan_intra_local_node_local_cnt;
 extern const MPIDI_coll_algo_container_t MPIDI_Scan_intra_composition_beta_cnt;
 
 /* Exscan CH4 level containers declaration */

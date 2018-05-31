@@ -605,11 +605,11 @@ MPL_STATIC_INLINE_PREFIX int MPID_Scan(const void *sendbuf, void *recvbuf, int c
         MPIDI_Scan_select(sendbuf, recvbuf, count, datatype, op, comm, errflag);
 
     switch (ch4_algo_parameters_container->id) {
-        case MPIDI_Scan_intra_composition_alpha_id:
+        case MPIDI_Scan_intra_local_node_local_id:
             mpi_errno =
-                MPIDI_Scan_intra_composition_alpha(sendbuf, recvbuf, count,
-                                                   datatype, op, comm, errflag,
-                                                   ch4_algo_parameters_container);
+                MPIDI_Scan_intra_local_node_local(sendbuf, recvbuf, count,
+                                                  datatype, op, comm, errflag,
+                                                  ch4_algo_parameters_container);
             break;
         case MPIDI_Scan_intra_composition_beta_id:
             mpi_errno =

@@ -214,12 +214,12 @@ const MPIDI_coll_algo_container_t MPIDI_Reduce_scatter_block_inter_fallback_cnt 
 };
 
 /* Scan default containers initialization */
-const MPIDI_coll_algo_container_t MPIDI_Scan_intra_composition_alpha_cnt = {
-    .id = MPIDI_Scan_intra_composition_alpha_id,
-    .params.ch4_scan_params.ch4_scan_alpha = {
-                                              .node_scan = MPIDI_COLL_AUTO_SELECT,
-                                              .roots_scan = MPIDI_COLL_AUTO_SELECT,
-                                              .node_bcast = MPIDI_COLL_AUTO_SELECT}
+const MPIDI_coll_algo_container_t MPIDI_Scan_intra_local_node_local_cnt = {
+    .id = MPIDI_Scan_intra_local_node_local_id,
+    .params.ch4_scan_params.ch4_scan_local_node_local = {
+        .node_scan = MPIDI_COLL_AUTO_SELECT,
+        .roots_scan = MPIDI_COLL_AUTO_SELECT,
+        .node_bcast = MPIDI_COLL_AUTO_SELECT}
 };
 
 const MPIDI_coll_algo_container_t MPIDI_Scan_intra_composition_beta_cnt = {

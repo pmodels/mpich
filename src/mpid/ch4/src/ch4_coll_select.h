@@ -316,7 +316,7 @@ MPIDI_coll_algo_container_t *MPIDI_Scan_select(const void *sendbuf,
                                                MPIR_Errflag_t * errflag)
 {
     if (MPII_Comm_is_node_consecutive(comm)) {
-        return &MPIDI_Scan_intra_composition_alpha_cnt;
+        return &MPIDI_Scan_intra_local_node_local_cnt;
     }
 
     return &MPIDI_Scan_intra_composition_beta_cnt;
