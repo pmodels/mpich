@@ -786,26 +786,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_intra_netmod(const void *sendbuf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Alltoallw_inter_composition_alpha
+#define FUNCNAME MPIDI_Alltoallw_inter_fallback
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_inter_composition_alpha(const void *sendbuf,
-                                                                     const int sendcounts[],
-                                                                     const int sdispls[],
-                                                                     const MPI_Datatype
-                                                                     sendtypes[],
-                                                                     void *recvbuf,
-                                                                     const int recvcounts[],
-                                                                     const int rdispls[],
-                                                                     const MPI_Datatype
-                                                                     recvtypes[],
-                                                                     MPIR_Comm * comm_ptr,
-                                                                     MPIR_Errflag_t * errflag,
-                                                                     const
-                                                                     MPIDI_coll_algo_container_t
-                                                                     *
-                                                                     ch4_algo_parameters_container
-                                                                     ATTRIBUTE((unused)))
+MPL_STATIC_INLINE_PREFIX int MPIDI_Alltoallw_inter_fallback(const void *sendbuf,
+                                                            const int sendcounts[],
+                                                            const int sdispls[],
+                                                            const MPI_Datatype
+                                                            sendtypes[],
+                                                            void *recvbuf,
+                                                            const int recvcounts[],
+                                                            const int rdispls[],
+                                                            const MPI_Datatype
+                                                            recvtypes[],
+                                                            MPIR_Comm * comm_ptr,
+                                                            MPIR_Errflag_t * errflag,
+                                                            const
+                                                            MPIDI_coll_algo_container_t
+                                                            *
+                                                            ch4_algo_parameters_container
+                                                            ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
 
