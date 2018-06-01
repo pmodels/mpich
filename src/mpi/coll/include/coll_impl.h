@@ -418,6 +418,7 @@ typedef enum MPIR_Ireduce_scatter_block_intra_algo_t {
     MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_PAIRWISE,
     MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_DOUBLING,
     MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_RECURSIVE_HALVING,
+    MPIR_IREDUCE_SCATTER_BLOCK_INTRA_ALGO_GENTRAN_RECEXCH,
 } MPIR_Ireduce_scatter_block_intra_algo_t;
 extern MPIR_Ireduce_scatter_block_intra_algo_t MPIR_Ireduce_scatter_block_intra_algo_choice;
 
