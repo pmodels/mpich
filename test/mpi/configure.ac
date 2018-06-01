@@ -706,7 +706,7 @@ fi
 AC_SUBST(largetest)
 
 # Extended collectives test
-if test "$enable_collective_algorithms" = "yes" ; then
+if test "$enable_collalgo_tests" = "yes" ; then
     source $srcdir/coll/test_coll_algos.sh
 else
     coll_algo_tests=""
