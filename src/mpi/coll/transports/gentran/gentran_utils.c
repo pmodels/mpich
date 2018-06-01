@@ -33,7 +33,7 @@ static void vtx_extend_utarray(UT_array * dst_array, int n_elems, int *elems)
 #define FUNCNAME vtx_record_issue
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static void vtx_record_issue(MPII_Genutil_sched_t * sched, MPII_Genutil_vtx_t * vtxp)
+static void vtx_record_issue(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t * sched)
 {
     vtxp->vtx_state = MPII_GENUTIL_VTX_STATE__ISSUED;
     LL_APPEND(sched->issued_head, sched->issued_tail, vtxp);
@@ -69,7 +69,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                                     (MPL_DBG_FDEST,
                                      "  --> GENTRAN transport (isend) issued, tag = %d\n",
                                      vtxp->u.isend.tag));
-                    vtx_record_issue(sched, vtxp);
+                    vtx_record_issue(vtxp, sched);
                 }
                 break;
 
@@ -82,7 +82,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST, "  --> GENTRAN transport (irecv) issued\n"));
-                    vtx_record_issue(sched, vtxp);
+                    vtx_record_issue(vtxp, sched);
                 }
                 break;
 
@@ -101,12 +101,12 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                                     (MPL_DBG_FDEST,
                                      "  --> GENTRAN transport (imcast) issued, tag = %d\n",
                                      vtxp->u.imcast.tag));
-                    vtx_record_issue(sched, vtxp);
+                    vtx_record_issue(vtxp, sched);
                 }
                 break;
 
             case MPII_GENUTIL_VTX_KIND__REDUCE_LOCAL:{
-                    vtx_record_issue(sched, vtxp);
+                    vtx_record_issue(vtxp, sched);
                     MPIR_Reduce_local(vtxp->u.reduce_local.inbuf,
                                       vtxp->u.reduce_local.inoutbuf,
                                       vtxp->u.reduce_local.count,
@@ -120,7 +120,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                 break;
 
             case MPII_GENUTIL_VTX_KIND__LOCALCOPY:{
-                    vtx_record_issue(sched, vtxp);
+                    vtx_record_issue(vtxp, sched);
                     MPIR_Localcopy(vtxp->u.localcopy.sendbuf,
                                    vtxp->u.localcopy.sendcount,
                                    vtxp->u.localcopy.sendtype,
