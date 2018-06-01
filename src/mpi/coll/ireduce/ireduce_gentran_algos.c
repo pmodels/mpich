@@ -13,9 +13,9 @@
 
 #include "tsp_gentran.h"
 /* instantiate ireduce tree algorithms for the gentran transport */
-#include "ireduce_tsp_algos_prototypes.h"
-#include "ireduce_tsp_algos.h"
-#include "ireduce_tsp_algos_undef.h"
+#include "ireduce_tsp_tree_algos_prototypes.h"
+#include "ireduce_tsp_tree_algos.h"
+#include "ireduce_tsp_tree_algos_undef.h"
 
 /* instantiate ireduce ring algorithms for the gentran transport */
 #include "ireduce_tsp_ring_algos_prototypes.h"
