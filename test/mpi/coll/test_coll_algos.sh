@@ -128,6 +128,34 @@ for algo_name in ${algo_names}; do
     done
 done
 
+######### Add tests for Reduce_scatter_block algorithms ###########
+
+#disable device collectives for reduce_scatter_block to test MPIR algorithms
+testing_env="env=MPIR_CVAR_REDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_REDUCE_SCATTER_BLOCK_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_IREDUCE_SCATTER_BLOCK_DEVICE_COLLECTIVE=0 "
+algo_names="recexch"
+kvalues="2 3 4"
+
+for algo_name in ${algo_names}; do
+    for kval in ${kvalues}; do
+        #set the environment
+        env="${testing_env} env=MPIR_CVAR_IREDUCE_SCATTER_BLOCK_INTRA_ALGORITHM=${algo_name} "
+        env+="env=MPIR_CVAR_IREDUCE_SCATTER_BLOCK_RECEXCH_KVAL=${kval}"
+
+        coll_algo_tests+="red_scat_block 4 mpiversion=2.2 ${env}${nl}"
+        coll_algo_tests+="red_scat_block 5 mpiversion=2.2 ${env}${nl}"
+        coll_algo_tests+="red_scat_block 8 mpiversion=2.2 ${env}${nl}"
+        coll_algo_tests+="red_scat_block2 4 mpiversion=2.2 ${env}${nl}"
+        coll_algo_tests+="red_scat_block2 5 mpiversion=2.2 ${env}${nl}"
+        coll_algo_tests+="red_scat_block2 10 mpiversion=2.2 ${env}${nl}"
+        coll_algo_tests+="redscatblk3 8 mpiversion=2.2 ${env}${nl}"
+        coll_algo_tests+="redscatblk3 10 mpiversion=2.2 ${env}${nl}"
+    done
+done
+
 export coll_algo_tests
 
 ######### Add tests for Scatter algorithms ###########
