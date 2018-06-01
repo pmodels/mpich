@@ -88,8 +88,6 @@ int MPIR_Iscatter_sched_intra_binomial(const void *sendbuf, int sendcount, MPI_D
     if (((rank == root) && (sendcount == 0)) || ((rank != root) && (recvcount == 0)))
         goto fn_exit;
 
-/* Use binomial tree algorithm */
-
     MPIR_SCHED_CHKPMEM_MALLOC(ss, struct shared_state *, sizeof(struct shared_state), mpi_errno,
                               "shared_state", MPL_MEM_BUFFER);
     ss->sendcount = sendcount;
