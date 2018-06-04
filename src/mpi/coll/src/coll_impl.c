@@ -511,6 +511,8 @@ int MPII_Coll_init(void)
     /* Igather Intra */
     if (0 == strcmp(MPIR_CVAR_IGATHER_INTRA_ALGORITHM, "binomial"))
         MPIR_Igather_intra_algo_choice = MPIR_IGATHER_INTRA_ALGO_BINOMIAL;
+    else if (0 == strcmp(MPIR_CVAR_IGATHER_INTRA_ALGORITHM, "tree"))
+        MPIR_Igather_intra_algo_choice = MPIR_IGATHER_INTRA_ALGO_TREE;
     else
         MPIR_Igather_intra_algo_choice = MPIR_IGATHER_INTRA_ALGO_AUTO;
 
