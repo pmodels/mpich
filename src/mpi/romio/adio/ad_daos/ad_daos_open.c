@@ -381,8 +381,8 @@ void ADIOI_DAOS_OpenColl(ADIO_File fd, int rank,
                                    OID_SEED);
 
     /* MSC - add hint for object class */
-    daos_obj_id_generate(&cont->oid, 0, DAOS_OC_LARGE_RW);
-
+    daos_obj_id_generate(&cont->oid, 0, fd->hints->fs_hints.daos.obj_class);
+    assert(fd->hints->fs_hints.daos.obj_class == DAOS_OC_LARGE_RW);
 #if 0
     {
         char uuid_str[37];

@@ -54,8 +54,7 @@ struct ADIOI_Hints_struct {
     union {
         struct {
             int chunk_size;
-            int grp_size;
-            int block_nr;
+            int obj_class;
         } daos;
         struct {
             int listio_read;
