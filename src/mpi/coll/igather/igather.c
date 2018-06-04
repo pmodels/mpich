@@ -21,6 +21,17 @@ cvars:
         Variable to select igather algorithm
         auto     - Internal algorithm selection
         binomial - Force binomial algorithm
+        tree     - Force genetric transport based tree algorithm
+
+    - name        : MPIR_CVAR_IGATHER_TREE_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for tree based igather
 
     - name        : MPIR_CVAR_IGATHER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -223,6 +234,28 @@ int MPIR_Igather_impl(const void *sendbuf, int sendcount,
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = NULL;
+
+    /* If the user picks one of the transport-enabled algorithms, branch there
+     * before going down to the MPIR_Sched-based algorithms. */
+    /* TODO - Eventually the intention is to replace all of the
+     * MPIR_Sched-based algorithms with transport-enabled algorithms, but that
+     * will require sufficient performance testing and replacement algorithms. */
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        /* intracommunicator */
+        switch (MPIR_Igather_intra_algo_choice) {
+            case MPIR_IGATHER_INTRA_ALGO_TREE:
+                mpi_errno =
+                    MPIR_Igather_intra_tree(sendbuf, sendcount, sendtype,
+                                            recvbuf, recvcount, recvtype, root, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            default:
+                /* go down to the MPIR_Sched-based algorithms */
+                break;
+        }
+    }
 
     mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno)

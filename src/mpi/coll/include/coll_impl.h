@@ -311,6 +311,7 @@ extern MPIR_Iexscan_intra_algo_t MPIR_Iexscan_intra_algo_choice;
 typedef enum MPIR_Igather_intra_algo_t {
     MPIR_IGATHER_INTRA_ALGO_AUTO,
     MPIR_IGATHER_INTRA_ALGO_BINOMIAL,
+    MPIR_IGATHER_INTRA_ALGO_TREE,
 } MPIR_Igather_intra_algo_t;
 extern MPIR_Igather_intra_algo_t MPIR_Igather_intra_algo_choice;
 
