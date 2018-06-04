@@ -96,7 +96,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     fi
 
     for provider in $netmod_args ; do
-        case "$providers" in
+        case "$provider" in
             dnl For these providers, we know which capabilities we want to select by default.
             dnl We want to enable compiling with them, but we don't need to enable runtime checks.
             "psm")
