@@ -615,6 +615,8 @@ int MPII_Coll_init(void)
         MPIR_Ireduce_scatter_intra_algo_choice = MPIR_IREDUCE_SCATTER_INTRA_ALGO_RECURSIVE_DOUBLING;
     else if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM, "recursive_halving"))
         MPIR_Ireduce_scatter_intra_algo_choice = MPIR_IREDUCE_SCATTER_INTRA_ALGO_RECURSIVE_HALVING;
+    else if (0 == strcmp(MPIR_CVAR_IREDUCE_SCATTER_INTRA_ALGORITHM, "recexch"))
+        MPIR_Ireduce_scatter_intra_algo_choice = MPIR_IREDUCE_SCATTER_INTRA_ALGO_GENTRAN_RECEXCH;
     else
         MPIR_Ireduce_scatter_intra_algo_choice = MPIR_IREDUCE_SCATTER_INTRA_ALGO_AUTO;
 
