@@ -1186,6 +1186,9 @@ int MPIR_Ireduce_scatter_sched_intra_recursive_halving(const void *sendbuf, void
                                                        const int *recvcnts, MPI_Datatype datatype,
                                                        MPI_Op op, MPIR_Comm * comm_ptr,
                                                        MPIR_Sched_t s);
+int MPIR_Ireduce_scatter_intra_recexch(const void *sendbuf, void *recvbuf,
+                                       int *recvcounts, MPI_Datatype datatype,
+                                       MPI_Op op, MPIR_Comm * comm, MPIR_Request ** req);
 
 /* sched-based intercomm-only functions */
 int MPIR_Ireduce_scatter_sched_inter_auto(const void *sendbuf, void *recvbuf, const int *recvcnts,
