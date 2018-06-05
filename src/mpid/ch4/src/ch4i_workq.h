@@ -192,15 +192,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vni_progress_pobj(int vni_idx)
 
     MPIR_Assert(MPIDI_CH4_ENABLE_POBJ_WORKQUEUES);
 
+    MPIDI_WORKQ_PROGRESS_START;
     DL_FOREACH(MPIDI_CH4_Global.workqueues.pobj[vni_idx], cur_workq) {
         MPIDI_workq_dequeue(&cur_workq->pend_ops, (void **) &workq_elemt);
         while (workq_elemt != NULL) {
+            MPIDI_WORKQ_ISSUE_START;
             mpi_errno = MPIDI_workq_dispatch(workq_elemt);
             if (mpi_errno != MPI_SUCCESS)
                 goto fn_fail;
+            MPIDI_WORKQ_ISSUE_STOP;
             MPIDI_workq_dequeue(&cur_workq->pend_ops, (void **) &workq_elemt);
         }
     }
+    MPIDI_WORKQ_PROGRESS_STOP;
   fn_fail:
     return mpi_errno;
 }
@@ -212,13 +216,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vni_progress_pvni(int vni_idx)
 
     MPIR_Assert(!MPIDI_CH4_ENABLE_POBJ_WORKQUEUES);
 
+    MPIDI_WORKQ_PROGRESS_START;
+
     MPIDI_workq_dequeue(&MPIDI_CH4_Global.workqueues.pvni[vni_idx], (void **) &workq_elemt);
     while (workq_elemt != NULL) {
+        MPIDI_WORKQ_ISSUE_START;
         mpi_errno = MPIDI_workq_dispatch(workq_elemt);
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
+        MPIDI_WORKQ_ISSUE_STOP;
         MPIDI_workq_dequeue(&MPIDI_CH4_Global.workqueues.pvni[vni_idx], (void **) &workq_elemt);
     }
+    MPIDI_WORKQ_PROGRESS_STOP;
   fn_fail:
     return mpi_errno;
 }
