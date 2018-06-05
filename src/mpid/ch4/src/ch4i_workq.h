@@ -201,9 +201,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_t * workq,
                                                         MPIR_Request ** message,
                                                         OPA_int_t * processed)
 {
+    MPIDI_WORKQ_PT2PT_ENQUEUE_START;
     MPIDI_workq_pt2pt_enqueue_body(workq, op, send_buf, recv_buf, count, datatype,
                                    rank, tag, comm_ptr, context_offset, addr, status,
                                    request, flag, message, processed);
+    MPIDI_WORKQ_PT2PT_ENQUEUE_STOP;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_t * workq,
@@ -225,10 +227,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_t * workq,
                                                       MPIR_Win * win_ptr, MPIDI_av_entry_t * addr,
                                                       OPA_int_t * processed)
 {
+    MPIDI_WORKQ_RMA_ENQUEUE_START;
     MPIDI_workq_rma_enqueue_body(workq, op, origin_addr, origin_count, origin_datatype,
                                  result_addr, result_count, result_datatype,
                                  target_rank, target_disp, target_count, target_datatype,
                                  acc_op, group, lock_type, assert, win_ptr, addr, processed);
+    MPIDI_WORKQ_RMA_ENQUEUE_STOP;
 }
 
 #else /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
