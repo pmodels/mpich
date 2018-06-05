@@ -562,7 +562,7 @@ sub RunList {
                 ($majorReq == $MPIMajorVersion && $minorReq > $MPIMinorVersion))
             {
                 unless (-d $programname) {
-                    SkippedTest($programname, $np, $progArgs, $curdir, "requires MPI version $mpiVersion");
+                    SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "requires MPI version $mpiVersion");
                 }
                 next;
             }
@@ -571,7 +571,7 @@ sub RunList {
 	# test (use strict=false for tests that use non-standard extensions)
         if (lc($requiresStrict) eq "false" && lc($testIsStrict) eq "true") {
             unless (-d $programname) {
-                SkippedTest($programname, $np, $progArgs, $curdir, "non-strict test, strict MPI mode requested");
+                SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "non-strict test, strict MPI mode requested");
             }
             next;
         }
@@ -587,14 +587,14 @@ sub RunList {
 	    # Skip xfail tests if they are not configured. Strict MPI tests that are
 	    # marked xfail will still run with --enable-strictmpi.
             unless (-d $programname) {
-		SkippedTest($programname, $np, $progArgs, $curdir, "xfail tests disabled");
+                SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "xfail tests disabled");
 	    }
 	    next;
 	}
 
         if (lc($requiresMPIX) eq "true" && lc($MPIHasMPIX) eq "no") {
             unless (-d $programname) {
-                SkippedTest($programname, $np, $progArgs, $curdir, "tests MPIX extensions, MPIX testing disabled");
+                SkippedTest($programname, $np, $progArgs, $progEnv, $curdir, "tests MPIX extensions, MPIX testing disabled");
             }
             next;
         }
@@ -833,10 +833,10 @@ sub RunMPIProgram {
 	}
     }
     if ($found_error) {
-        &RunTestFailed( $programname, $np, $progArgs, $timeout, $curdir, $inline, $xfail, $runtime );
+        &RunTestFailed( $programname, $np, $progArgs, $progEnv, $timeout, $curdir, $inline, $xfail, $runtime );
     }
     else { 
-        &RunTestPassed( $programname, $np, $progArgs, $curdir, $xfail, $runtime );
+        &RunTestPassed( $programname, $np, $progArgs, $progEnv, $curdir, $xfail, $runtime );
     }
     &RunPostMsg( $programname, $np, $curdir );
 }
@@ -953,7 +953,7 @@ sub BuildMPIProgram {
 	# in the summary file (which is otherwise written by the
 	# RunMPIProgram step)
 	&RunPreMsg( $programname, $np, $curdir );
-	&RunTestFailed( $programname, $np, "", $timeout, $curdir, "Failed to build $programname; $output", $xfail );
+    &RunTestFailed( $programname, $np, "", "", $timeout, $curdir, "Failed to build $programname; $output", $xfail );
 	&RunPostMsg( $programname, $np, $curdir );
     }
     return $rc;
@@ -1165,7 +1165,7 @@ sub RunPostMsg {
     }
 }
 sub RunTestPassed {
-    my ($programname, $np, $progArgs, $workdir, $xfail, $runtime) = @_;
+    my ($programname, $np, $progArgs, $progEnv, $workdir, $xfail, $runtime) = @_;
     if ($xmloutput) {
 	print XMLOUT "<STATUS>pass</STATUS>$newline";
     print XMLOUT "<TIME>$runtime</TIME>$newline";
@@ -1174,13 +1174,14 @@ sub RunTestPassed {
         print TAPOUT "ok ${total_run} - $workdir/$programname ${np} # time=$runtime\n";
     }
     if ($junitoutput) {
-        print JUNITOUT "    <testcase name=\"${total_run} - $workdir/$programname ${np} ${progArgs}\" time=\"$runtime\"></testcase>\n";
+        print JUNITOUT "    <testcase name=\"${total_run} - $workdir/$programname ${np} ${progArgs} ${progEnv}\" time=\"$runtime\"></testcase>\n";
     }
 }
 sub RunTestFailed {
     my $programname = shift;
     my $np = shift;
     my $progArgs = shift;
+    my $progEnv = shift;
     my $timeout = shift;
     my $workdir = shift;
     my $output = shift;
@@ -1246,7 +1247,7 @@ sub RunTestFailed {
             $xfailstr = " # TODO $xfail";
 	    $testtag  = "skipped";
         }
-        print JUNITOUT "    <testcase name=\"${total_run} - $workdir/$programname ${np} ${progArgs}\" time=\"$runtime\">\n";
+        print JUNITOUT "    <testcase name=\"${total_run} - $workdir/$programname ${np} ${progArgs} ${progEnv}\" time=\"$runtime\">\n";
         print JUNITOUT "      <${testtag} type=\"TestFailed\"\n";
         print JUNITOUT "               message=\"not ok ${total_run} - $workdir/$programname ${np}${xfailstr}\"><![CDATA[";
         print JUNITOUT "not ok ${total_run} - $workdir/$programname ${np}${xfailstr}\n";
@@ -1277,6 +1278,7 @@ sub SkippedTest {
     my $programname = shift;
     my $np = shift;
     my $progArgs = shift;
+    my $progEnv = shift;
     my $workdir = shift;
     my $reason = shift;
 
@@ -1286,7 +1288,7 @@ sub SkippedTest {
         print TAPOUT "ok ${total_seen} - $workdir/$programname $np  # SKIP $reason\n";
     }
     if ($junitoutput) {
-        print JUNITOUT "    <testcase name=\"${total_seen} - $workdir/$programname ${np} ${progArgs}\">\n";
+        print JUNITOUT "    <testcase name=\"${total_seen} - $workdir/$programname ${np} ${progArgs} ${progEnv}\">\n";
         print JUNITOUT "      <skipped type=\"TodoTestSkipped\">\n";
         print JUNITOUT "             message=\"$reason\"><![CDATA[ok ${total_seen} - $workdir/$programname $np  # SKIP $reason]]></skipped>\n";
         print JUNITOUT "    </testcase>\n";
