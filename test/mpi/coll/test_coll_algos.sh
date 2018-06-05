@@ -130,4 +130,26 @@ for algo_name in ${algo_names}; do
     done
 done
 
+######### Add tests for Gather algorithms ###########
+
+#disable device collectives for gather to test MPIR algorithms
+testing_env="env=MPIR_CVAR_GATHER_DEVICE_COLLECTIVE=0 "
+
+#test nb algorithms
+testing_env+="env=MPIR_CVAR_GATHER_INTRA_ALGORITHM=nb "
+testing_env+="env=MPIR_CVAR_IGATHER_DEVICE_COLLECTIVE=0 "
+algo_names="tree"
+kvalues="2 3 4"
+
+for algo_name in ${algo_names}; do
+    for kval in ${kvalues}; do
+        #set the environment
+        env="${testing_env} env=MPIR_CVAR_IGATHER_INTRA_ALGORITHM=${algo_name} "
+        env+="env=MPIR_CVAR_IGATHER_TREE_KVAL=${kval}"
+
+        coll_algo_tests+="gather 4 ${env}${nl}"
+        coll_algo_tests+="gather2 4 ${env}${nl}"
+    done
+done
+
 export coll_algo_tests
