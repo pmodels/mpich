@@ -184,6 +184,45 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
     return mpi_errno;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vni_progress_pobj(int vni_idx)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_workq_elemt_t *workq_elemt = NULL;
+    MPIDI_workq_list_t *cur_workq;
+
+    MPIR_Assert(MPIDI_CH4_ENABLE_POBJ_WORKQUEUES);
+
+    DL_FOREACH(MPIDI_CH4_Global.workqueues.pobj[vni_idx], cur_workq) {
+        MPIDI_workq_dequeue(&cur_workq->pend_ops, (void **) &workq_elemt);
+        while (workq_elemt != NULL) {
+            mpi_errno = MPIDI_workq_dispatch(workq_elemt);
+            if (mpi_errno != MPI_SUCCESS)
+                goto fn_fail;
+            MPIDI_workq_dequeue(&cur_workq->pend_ops, (void **) &workq_elemt);
+        }
+    }
+  fn_fail:
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vni_progress_pvni(int vni_idx)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_workq_elemt_t *workq_elemt = NULL;
+
+    MPIR_Assert(!MPIDI_CH4_ENABLE_POBJ_WORKQUEUES);
+
+    MPIDI_workq_dequeue(&MPIDI_CH4_Global.workqueues.pvni[vni_idx], (void **) &workq_elemt);
+    while (workq_elemt != NULL) {
+        mpi_errno = MPIDI_workq_dispatch(workq_elemt);
+        if (mpi_errno != MPI_SUCCESS)
+            goto fn_fail;
+        MPIDI_workq_dequeue(&MPIDI_CH4_Global.workqueues.pvni[vni_idx], (void **) &workq_elemt);
+    }
+  fn_fail:
+    return mpi_errno;
+}
+
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_t * workq,
                                                         MPIDI_workq_op_t op,
                                                         const void *send_buf,
@@ -235,9 +274,41 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_t * workq,
     MPIDI_WORKQ_RMA_ENQUEUE_STOP;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_workq_vni_progress(int vni_idx)
+{
+    int mpi_errno;
+
+    if (MPIDI_CH4_ENABLE_POBJ_WORKQUEUES) {
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_locks[vni_idx]);
+        mpi_errno = MPIDI_workq_vni_progress_pobj(vni_idx);
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_locks[vni_idx]);
+    } else {
+        /* Per-VNI workqueue does not require VNI lock, since
+         * the queue is lock free */
+        mpi_errno = MPIDI_workq_vni_progress_pvni(vni_idx);
+    }
+
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_workq_global_progress(int *made_progress)
+{
+    int mpi_errno, vni_idx;
+    *made_progress = 1;
+    for (vni_idx = 0; vni_idx < MPIDI_CH4_Global.n_netmod_vnis; vni_idx++) {
+        mpi_errno = MPIDI_workq_vni_progress(vni_idx);
+        if (unlikely(mpi_errno != MPI_SUCCESS))
+            break;
+    }
+    return mpi_errno;
+}
 #else /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
+#define MPIDI_workq_vni_progress_pobj(...)
+#define MPIDI_workq_vni_progress_pvni(...)
 #define MPIDI_workq_pt2pt_enqueue(...)
 #define MPIDI_workq_rma_enqueue(...)
+#define MPIDI_workq_vni_progress(...)
+#define MPIDI_workq_global_progress(...)
 #endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
 
 /* For profiling */
