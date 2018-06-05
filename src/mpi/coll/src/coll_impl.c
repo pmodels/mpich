@@ -497,6 +497,10 @@ int MPII_Coll_init(void)
         MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KNOMIAL;
     else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "tree_kary"))
         MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KARY;
+    else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "tree_kary"))
+        MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_GENTRAN_TREE_KARY;
+    else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "scatter_recexch_allgather"))
+        MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_GENTRAN_SCATTER_RECEXCH_ALLGATHER;
     else if (0 == strcmp(MPIR_CVAR_IBCAST_INTRA_ALGORITHM, "ring"))
         MPIR_Ibcast_intra_algo_choice = MPIR_IBCAST_INTRA_ALGO_GENTRAN_RING;
     else

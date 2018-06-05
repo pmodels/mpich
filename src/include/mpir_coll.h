@@ -768,6 +768,9 @@ int MPIR_Ibcast_intra_tree_kary(void *buffer, int count, MPI_Datatype datatype, 
                                 MPIR_Comm * comm_ptr, MPIR_Request ** request);
 int MPIR_Ibcast_intra_tree_knomial(void *buffer, int count, MPI_Datatype datatype, int root,
                                    MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Ibcast_intra_scatter_recexch_allgather(void *buffer, int count, MPI_Datatype datatype,
+                                                int root, MPIR_Comm * comm_ptr,
+                                                MPIR_Request ** request);
 int MPIR_Ibcast_intra_ring(void *buffer, int count, MPI_Datatype datatype, int root,
                            MPIR_Comm * comm_ptr, MPIR_Request ** request);
 
