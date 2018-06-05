@@ -1165,12 +1165,29 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_comm_work_queues_free(MPIR_Comm * comm)
     }
     MPL_free(comm->dev.work_queues);
 }
+
+/* Get a work queue object pointer for the given VNI index */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_comm_vni_to_workq
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX MPIDI_workq_t *MPIDI_comm_vni_to_workq(MPIR_Comm * comm_ptr, int vni_idx)
+{
+    if (MPIDI_CH4_ENABLE_POBJ_WORKQUEUES)
+        return &comm_ptr->dev.work_queues[vni_idx].pend_ops;
+    else
+        return &MPIDI_CH4_Global.workqueues.pvni[vni_idx];
+}
 #else
 MPL_STATIC_INLINE_PREFIX void MPIDI_comm_work_queues_init()
 {
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_comm_work_queues_free()
+{
+}
+
+MPL_STATIC_INLINE_PREFIX MPIDI_workq_t *MPIDI_comm_vni_to_workq(MPIR_Comm * comm_ptr, int vni_idx)
 {
 }
 #endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */

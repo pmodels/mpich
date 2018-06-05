@@ -45,6 +45,20 @@ static inline void MPIDI_win_work_queues_free(MPIR_Win * win)
 
     MPL_free(win->dev.work_queues);
 }
+
+/* Get a work queue object pointer for the given VNI index */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_win_vni_to_workq
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX MPIDI_workq_t *MPIDI_win_vni_to_workq(MPIR_Win * win_ptr, int vni_idx)
+{
+    if (MPIDI_CH4_ENABLE_POBJ_WORKQUEUES)
+        return &win_ptr->dev.work_queues[vni_idx].pend_ops;
+    else
+        return &MPIDI_CH4_Global.workqueues.pvni[vni_idx];
+}
+
 #else
 /* Empty definitions for non-workqueue builds */
 static inline void MPIDI_win_work_queues_init(MPIR_Win * win)
@@ -52,6 +66,10 @@ static inline void MPIDI_win_work_queues_init(MPIR_Win * win)
 }
 
 static inline void MPIDI_win_work_queues_free(MPIR_Win * win)
+{
+}
+
+MPL_STATIC_INLINE_PREFIX MPIDI_workq_t *MPIDI_win_vni_to_workq(MPIR_Win * win_ptr, int vni_idx)
 {
 }
 #endif /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
