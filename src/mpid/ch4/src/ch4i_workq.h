@@ -29,22 +29,22 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_elemt_free(struct MPIDI_workq_elemt *e
     MPIR_Handle_obj_free(&MPIDI_workq_elemt_mem, elemt);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_t * workq,
-                                                        MPIDI_workq_op_t op,
-                                                        const void *send_buf,
-                                                        void *recv_buf,
-                                                        MPI_Aint count,
-                                                        MPI_Datatype datatype,
-                                                        int rank,
-                                                        int tag,
-                                                        MPIR_Comm * comm_ptr,
-                                                        int context_offset,
-                                                        MPIDI_av_entry_t * addr,
-                                                        MPI_Status * status,
-                                                        MPIR_Request * request,
-                                                        int *flag,
-                                                        MPIR_Request ** message,
-                                                        OPA_int_t * processed)
+MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue_body(MPIDI_workq_t * workq,
+                                                             MPIDI_workq_op_t op,
+                                                             const void *send_buf,
+                                                             void *recv_buf,
+                                                             MPI_Aint count,
+                                                             MPI_Datatype datatype,
+                                                             int rank,
+                                                             int tag,
+                                                             MPIR_Comm * comm_ptr,
+                                                             int context_offset,
+                                                             MPIDI_av_entry_t * addr,
+                                                             MPI_Status * status,
+                                                             MPIR_Request * request,
+                                                             int *flag,
+                                                             MPIR_Request ** message,
+                                                             OPA_int_t * processed)
 {
     MPIDI_workq_elemt_t *pt2pt_elemt;
 
@@ -71,25 +71,25 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_t * workq,
     MPIDI_workq_enqueue(workq, pt2pt_elemt);
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_t * workq,
-                                                      MPIDI_workq_op_t op,
-                                                      const void *origin_addr,
-                                                      int origin_count,
-                                                      MPI_Datatype origin_datatype,
-                                                      void *result_addr,
-                                                      int result_count,
-                                                      MPI_Datatype result_datatype,
-                                                      int target_rank,
-                                                      MPI_Aint target_disp,
-                                                      int target_count,
-                                                      MPI_Datatype target_datatype,
-                                                      MPI_Op acc_op,
-                                                      MPIR_Group * group,
-                                                      int lock_type,
-                                                      int assert,
-                                                      MPIR_Win * win_ptr,
-                                                      MPIDI_av_entry_t * addr,
-                                                      OPA_int_t * processed)
+MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue_body(MPIDI_workq_t * workq,
+                                                           MPIDI_workq_op_t op,
+                                                           const void *origin_addr,
+                                                           int origin_count,
+                                                           MPI_Datatype origin_datatype,
+                                                           void *result_addr,
+                                                           int result_count,
+                                                           MPI_Datatype result_datatype,
+                                                           int target_rank,
+                                                           MPI_Aint target_disp,
+                                                           int target_count,
+                                                           MPI_Datatype target_datatype,
+                                                           MPI_Op acc_op,
+                                                           MPIR_Group * group,
+                                                           int lock_type,
+                                                           int assert,
+                                                           MPIR_Win * win_ptr,
+                                                           MPIDI_av_entry_t * addr,
+                                                           OPA_int_t * processed)
 {
     MPIDI_workq_elemt_t *rma_elemt = NULL;
     rma_elemt = MPIDI_workq_elemt_create();
@@ -135,6 +135,53 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_workq_dispatch(MPIDI_workq_elemt_t * workq_el
 
   fn_fail:
     return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_t * workq,
+                                                        MPIDI_workq_op_t op,
+                                                        const void *send_buf,
+                                                        void *recv_buf,
+                                                        MPI_Aint count,
+                                                        MPI_Datatype datatype,
+                                                        int rank,
+                                                        int tag,
+                                                        MPIR_Comm * comm_ptr,
+                                                        int context_offset,
+                                                        MPIDI_av_entry_t * addr,
+                                                        MPI_Status * status,
+                                                        MPIR_Request * request,
+                                                        int *flag,
+                                                        MPIR_Request ** message,
+                                                        OPA_int_t * processed)
+{
+    MPIDI_workq_pt2pt_enqueue_body(workq, op, send_buf, recv_buf, count, datatype,
+                                   rank, tag, comm_ptr, context_offset, addr, status,
+                                   request, flag, message, processed);
+}
+
+MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_t * workq,
+                                                      MPIDI_workq_op_t op,
+                                                      const void *origin_addr,
+                                                      int origin_count,
+                                                      MPI_Datatype origin_datatype,
+                                                      void *result_addr,
+                                                      int result_count,
+                                                      MPI_Datatype result_datatype,
+                                                      int target_rank,
+                                                      MPI_Aint target_disp,
+                                                      int target_count,
+                                                      MPI_Datatype target_datatype,
+                                                      MPI_Op acc_op,
+                                                      MPIR_Group * group,
+                                                      int lock_type,
+                                                      int assert,
+                                                      MPIR_Win * win_ptr, MPIDI_av_entry_t * addr,
+                                                      OPA_int_t * processed)
+{
+    MPIDI_workq_rma_enqueue_body(workq, op, origin_addr, origin_count, origin_datatype,
+                                 result_addr, result_count, result_datatype,
+                                 target_rank, target_disp, target_count, target_datatype,
+                                 acc_op, group, lock_type, assert, win_ptr, addr, processed);
 }
 
 #else /* #if defined(MPIDI_CH4_USE_WORK_QUEUES) */
