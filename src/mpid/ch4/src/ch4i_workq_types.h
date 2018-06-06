@@ -11,7 +11,15 @@
 #ifndef CH4I_WORKQ_TYPES_H_INCLUDED
 #define CH4I_WORKQ_TYPES_H_INCLUDED
 
-/* Stub implementation for an atomic queue */
+/* Define the work queue implementation type */
+#if defined(ENABLE_IZEM_QUEUE)
+#include <queue/zm_queue.h>
+#define MPIDI_workq_t       zm_queue_t
+#define MPIDI_workq_init    zm_queue_init
+#define MPIDI_workq_enqueue zm_queue_enqueue
+#define MPIDI_workq_dequeue zm_queue_dequeue
+#else
+/* Stub implementation to make it compile */
 typedef void *MPIDI_workq_t;
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_init(MPIDI_workq_t * q)
 {
@@ -24,6 +32,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_enqueue(MPIDI_workq_t * q, void *p)
 MPL_STATIC_INLINE_PREFIX void MPIDI_workq_dequeue(MPIDI_workq_t * q, void **pp)
 {
 }
+#endif
 
 #define MPIDI_WORKQ_ELEMT_PREALLOC 64   /* Number of elements to preallocate in the "direct" block */
 
