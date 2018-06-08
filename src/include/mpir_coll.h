@@ -568,6 +568,9 @@ int MPIR_Iallreduce_intra_gentran_recexch_multiple_buffer(const void *sendbuf, v
 int MPIR_Iallreduce_intra_gentran_tree(const void *sendbuf, void *recvbuf, int count,
                                        MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                        MPIR_Request ** request);
+int MPIR_Iallreduce_intra_gentran_ring(const void *sendbuf, void *recvbuf, int count,
+                                       MPI_Datatype datatype, MPI_Op op,
+                                       MPIR_Comm * comm, MPIR_Request ** req);
 int MPIR_Iallreduce_sched_intra_smp(const void *sendbuf, void *recvbuf, int count,
                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                     MPIR_Sched_t s);
