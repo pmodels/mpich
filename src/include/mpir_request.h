@@ -408,7 +408,7 @@ MPL_STATIC_INLINE_PREFIX int MPIR_Request_completion_processing_fastpath(MPI_Req
     return mpi_errno;
 }
 
-int MPIR_Request_completion_processing(MPIR_Request *, MPI_Status *, int *);
+int MPIR_Request_completion_processing(MPIR_Request *, MPI_Status *);
 int MPIR_Request_get_error(MPIR_Request *);
 
 MPL_STATIC_INLINE_PREFIX int MPID_Request_is_anysource(MPIR_Request *);

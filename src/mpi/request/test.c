@@ -63,7 +63,6 @@ int MPIR_Test_impl(MPIR_Request * request_ptr, int *flag, MPI_Status * status)
 int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    int active_flag;
     MPIR_Request *request_ptr = NULL;
 
     /* If this is a null request handle, then return an empty status */
@@ -81,7 +80,7 @@ int MPIR_Test(MPI_Request * request, int *flag, MPI_Status * status)
         MPIR_ERR_POP(mpi_errno);
 
     if (*flag) {
-        mpi_errno = MPIR_Request_completion_processing(request_ptr, status, &active_flag);
+        mpi_errno = MPIR_Request_completion_processing(request_ptr, status);
         if (!MPIR_Request_is_persistent(request_ptr)) {
             MPIR_Request_free(request_ptr);
             *request = MPI_REQUEST_NULL;

@@ -99,7 +99,6 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
     MPIR_Request **request_ptrs = request_ptr_array;
     int i, j, ii, icount;
     int n_completed;
-    int active_flag;
     int rc = MPI_SUCCESS;
     int disabled_anysource = FALSE;
     const int ignoring_statuses = (array_of_statuses == MPI_STATUSES_IGNORE);
@@ -199,8 +198,7 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
             for (i = ii; i < ii + icount; i++) {
                 if (request_ptrs[i] == NULL)
                     continue;
-                rc = MPIR_Request_completion_processing(request_ptrs[i], MPI_STATUS_IGNORE,
-                                                        &active_flag);
+                rc = MPIR_Request_completion_processing(request_ptrs[i], MPI_STATUS_IGNORE);
                 if (!MPIR_Request_is_persistent(request_ptrs[i])) {
                     MPIR_Request_free(request_ptrs[i]);
                     array_of_requests[i] = MPI_REQUEST_NULL;
@@ -216,8 +214,7 @@ int MPIR_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of
         for (i = ii; i < ii + icount; i++) {
             if (request_ptrs[i] == NULL)
                 continue;
-            rc = MPIR_Request_completion_processing(request_ptrs[i], &array_of_statuses[i],
-                                                    &active_flag);
+            rc = MPIR_Request_completion_processing(request_ptrs[i], &array_of_statuses[i]);
             if (!MPIR_Request_is_persistent(request_ptrs[i])) {
                 MPIR_Request_free(request_ptrs[i]);
                 array_of_requests[i] = MPI_REQUEST_NULL;
