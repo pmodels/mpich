@@ -140,6 +140,9 @@ int MPIR_TSP_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount,
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHERV_SCHED_INTRA_RING);
     return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 
