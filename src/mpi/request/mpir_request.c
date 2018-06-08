@@ -43,6 +43,8 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                 break;
             }
         case MPIR_REQUEST_KIND__RECV:
+        case MPIR_REQUEST_KIND__COLL:
+        case MPIR_REQUEST_KIND__RMA:
             {
                 MPIR_Request_extract_status(request_ptr, status);
                 mpi_errno = request_ptr->status.MPI_ERROR;
@@ -147,14 +149,6 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                     mpi_errno = rc;
                 }
 
-                break;
-            }
-
-        case MPIR_REQUEST_KIND__COLL:
-        case MPIR_REQUEST_KIND__RMA:
-            {
-                mpi_errno = request_ptr->status.MPI_ERROR;
-                MPIR_Request_extract_status(request_ptr, status);
                 break;
             }
 
