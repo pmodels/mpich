@@ -72,7 +72,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_Assert(MPIDI_UCX_global.addrname_len <= INT_MAX);
 
     MPIDU_bc_table_create(rank, size, MPIDI_CH4_Global.node_map[0], MPIDI_UCX_global.if_address,
-                          (int) MPIDI_UCX_global.addrname_len, FALSE,
+                          (int) MPIDI_UCX_global.addrname_len, FALSE, FALSE,
                           (void **) &MPIDI_UCX_global.pmi_addr_table, &bc_indices);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
