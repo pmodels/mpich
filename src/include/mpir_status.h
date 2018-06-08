@@ -38,6 +38,13 @@
 
 #define MPIR_STATUS_GET_CANCEL_BIT(status_) ((status_).count_hi_and_cancelled & 1)
 
+/* Same as MPIR_STATUS_SET_CANCEL_BIT, but check MPI_STATUS_IGNORE as its family. */
+#define MPIR_Status_set_cancel_bit(status_, cancelled_)         \
+    {                                                           \
+        if ((status_) != MPI_STATUS_IGNORE)                     \
+            MPIR_STATUS_SET_CANCEL_BIT(*(status_), cancelled_)  \
+    }
+
 /* Do not set MPI_ERROR (only set if ERR_IN_STATUS is returned */
 #define MPIR_Status_set_empty(status_)                          \
     {                                                           \
