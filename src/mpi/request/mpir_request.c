@@ -34,10 +34,7 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
     switch (request_ptr->kind) {
         case MPIR_REQUEST_KIND__SEND:
             {
-                if (status != MPI_STATUS_IGNORE) {
-                    MPIR_STATUS_SET_CANCEL_BIT(*status,
-                                               MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
-                }
+                MPIR_Status_set_cancel_bit(status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
                 mpi_errno = request_ptr->status.MPI_ERROR;
                 MPII_SENDQ_FORGET(request_ptr);
                 break;
@@ -62,11 +59,8 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                     request_ptr->u.persist.real_request = NULL;
 
                     if (prequest_ptr->kind != MPIR_REQUEST_KIND__GREQUEST) {
-                        if (status != MPI_STATUS_IGNORE) {
-                            MPIR_STATUS_SET_CANCEL_BIT(*status,
-                                                       MPIR_STATUS_GET_CANCEL_BIT
-                                                       (prequest_ptr->status));
-                        }
+                        MPIR_Status_set_cancel_bit(status,
+                                                   MPIR_STATUS_GET_CANCEL_BIT((prequest_ptr->status)));
                         mpi_errno = prequest_ptr->status.MPI_ERROR;
                     } else {
                         /* This is needed for persistent Bsend requests */
@@ -76,11 +70,9 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                         if (mpi_errno == MPI_SUCCESS) {
                             mpi_errno = rc;
                         }
-                        if (status != MPI_STATUS_IGNORE) {
-                            MPIR_STATUS_SET_CANCEL_BIT(*status,
-                                                       MPIR_STATUS_GET_CANCEL_BIT
-                                                       (prequest_ptr->status));
-                        }
+                        MPIR_Status_set_cancel_bit(status,
+                                                   MPIR_STATUS_GET_CANCEL_BIT
+                                                   (prequest_ptr->status));
                         if (mpi_errno == MPI_SUCCESS) {
                             mpi_errno = prequest_ptr->status.MPI_ERROR;
                         }
@@ -95,9 +87,7 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                     if (request_ptr->status.MPI_ERROR != MPI_SUCCESS) {
                         /* if the persistent request failed to start then make the
                          * error code available */
-                        if (status != MPI_STATUS_IGNORE) {
-                            MPIR_STATUS_SET_CANCEL_BIT(*status, FALSE);
-                        }
+                        MPIR_Status_set_cancel_bit(status, FALSE);
                         mpi_errno = request_ptr->status.MPI_ERROR;
                     } else {
                         MPIR_Status_set_empty(status);
