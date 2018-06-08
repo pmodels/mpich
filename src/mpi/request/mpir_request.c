@@ -30,6 +30,7 @@ MPIR_Object_alloc_t MPIR_Request_mem = {
 int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
+    int rc;
 
     switch (request_ptr->kind) {
         case MPIR_REQUEST_KIND__SEND:
@@ -64,12 +65,7 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                         mpi_errno = prequest_ptr->status.MPI_ERROR;
                     } else {
                         /* This is needed for persistent Bsend requests */
-                        int rc;
-
-                        rc = MPIR_Grequest_query(prequest_ptr);
-                        if (mpi_errno == MPI_SUCCESS) {
-                            mpi_errno = rc;
-                        }
+                        mpi_errno = MPIR_Grequest_query(prequest_ptr);
                         MPIR_Status_set_cancel_bit(status,
                                                    MPIR_STATUS_GET_CANCEL_BIT
                                                    (prequest_ptr->status));
@@ -127,12 +123,7 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
 
         case MPIR_REQUEST_KIND__GREQUEST:
             {
-                int rc;
-
-                rc = MPIR_Grequest_query(request_ptr);
-                if (mpi_errno == MPI_SUCCESS) {
-                    mpi_errno = rc;
-                }
+                mpi_errno = MPIR_Grequest_query(request_ptr);
                 MPIR_Request_extract_status(request_ptr, status);
                 rc = MPIR_Grequest_free(request_ptr);
                 if (mpi_errno == MPI_SUCCESS) {
