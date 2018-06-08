@@ -116,19 +116,24 @@ testing_env="env=MPIR_CVAR_ALLGATHERV_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLGATHERV_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLGATHERV_DEVICE_COLLECTIVE=0 "
-algo_names="recexch_distance_doubling recexch_distance_halving"
+algo_names="recexch_distance_doubling recexch_distance_halving gentran_ring"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
-    for kval in ${kvalues}; do
-        #set the environment
-        env="${testing_env} env=MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM=${algo_name} "
-        env+="env=MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL=${kval}"
+    if [ "${algo_name}" != "gentran_ring" ]; then
+        for kval in ${kvalues}; do
+            env="${testing_env} env=MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM=${algo_name} "
+            env+="env=MPIR_CVAR_IALLGATHERV_RECEXCH_KVAL=${kval}"
 
+            coll_algo_tests+="allgatherv2 10 ${env}${nl}"
+            coll_algo_tests+="allgatherv3 10 ${env}${nl}"
+            coll_algo_tests+="allgatherv4 4 timeLimit=600 ${env}${nl}"
+        done
+    else
         coll_algo_tests+="allgatherv2 10 ${env}${nl}"
         coll_algo_tests+="allgatherv3 10 ${env}${nl}"
         coll_algo_tests+="allgatherv4 4 timeLimit=600 ${env}${nl}"
-    done
+    fi
 done
 
 ######### Add tests for Reduce_scatter_block algorithms ###########
