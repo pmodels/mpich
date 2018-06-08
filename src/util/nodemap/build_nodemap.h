@@ -599,4 +599,25 @@ static inline void MPIR_NODEMAP_get_local_info(int rank, int size, int *nodemap,
     }
 }
 
+static inline void MPIR_NODEMAP_get_node_roots(int *nodemap, int size, int **node_roots,
+                                               int *num_nodes)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i, max_node_id;
+
+    mpi_errno = MPID_Get_max_node_id(MPIR_Process.comm_world, &max_node_id);
+    *num_nodes = max_node_id + 1;
+
+    *node_roots = MPL_malloc(sizeof(int) * (*num_nodes), MPL_MEM_ADDRESS);
+    /* FIXME: do proper error handling */
+    MPIR_Assert(*node_roots);
+    for (i = 0; i < *num_nodes; i++)
+        (*node_roots)[i] = -1;
+
+    for (i = 0; i < size; i++) {
+        if ((*node_roots)[nodemap[i]] == -1)
+            (*node_roots)[nodemap[i]] = i;
+    }
+}
+
 #endif /* BUILD_NODEMAP_H_INCLUDED */
