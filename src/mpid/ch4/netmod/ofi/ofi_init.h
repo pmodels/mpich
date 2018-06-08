@@ -885,7 +885,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
         mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_CH4_Global.node_map[0],
                                           &MPIDI_Global.addrname, MPIDI_Global.addrnamelen, TRUE,
-                                          &table, NULL);
+                                          FALSE, &table, NULL);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
