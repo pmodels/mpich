@@ -582,4 +582,21 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
     goto fn_exit;
 }
 
+static inline void MPIR_NODEMAP_get_local_info(int rank, int size, int *nodemap, int *local_size,
+                                               int *local_rank, int *local_leader)
+{
+    int i, node_id = nodemap[rank];
+
+    *local_size = 0;
+    for (i = 0; i < size; i++) {
+        if (nodemap[i] == node_id) {
+            if (*local_size == 0)
+                *local_leader = i;
+            if (i == rank)
+                *local_rank = *local_size;
+            (*local_size)++;
+        }
+    }
+}
+
 #endif /* BUILD_NODEMAP_H_INCLUDED */
