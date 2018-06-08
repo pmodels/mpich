@@ -210,6 +210,7 @@ typedef enum MPIR_Iallgatherv_intra_algo_t {
     MPIR_IALLGATHERV_INTRA_ALGO_RING,
     MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_DOUBLING,
     MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RECEXCH_DISTANCE_HALVING,
+    MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_RING,
 } MPIR_Iallgatherv_intra_algo_t;
 extern MPIR_Iallgatherv_intra_algo_t MPIR_Iallgatherv_intra_algo_choice;
 
