@@ -126,7 +126,6 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
     int i;
     int n_inactive;
     int proc_failure = FALSE;
-    int active_flag;
     int rc = MPI_SUCCESS;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKLMEM_DECL(1);
@@ -219,7 +218,7 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
         int idx = array_of_indices[i];
         status_ptr = (array_of_statuses == MPI_STATUSES_IGNORE) ?
             MPI_STATUS_IGNORE : &array_of_statuses[i];
-        rc = MPIR_Request_completion_processing(request_ptrs[idx], status_ptr, &active_flag);
+        rc = MPIR_Request_completion_processing(request_ptrs[idx], status_ptr);
         if (!MPIR_Request_is_persistent(request_ptrs[idx])) {
             MPIR_Request_free(request_ptrs[idx]);
             array_of_requests[idx] = MPI_REQUEST_NULL;

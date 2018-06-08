@@ -22,20 +22,15 @@ MPIR_Object_alloc_t MPIR_Request_mem = {
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* Complete a request, saving the status data if necessary.
-   "active" has meaning only if the request is a persistent request; this
-   allows the completion routines to indicate that a persistent request
-   was inactive and did not require any extra completion operation.
-
    If debugger information is being provided for pending (user-initiated)
    send operations, the macros MPII_SENDQ_FORGET will be defined to
    call the routine MPII_Sendq_forget; otherwise that macro will be a no-op.
    The implementation of the MPIR_Sendq_xxx is in src/mpi/debugger/dbginit.c .
 */
-int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * status, int *active)
+int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    *active = TRUE;
     switch (request_ptr->kind) {
         case MPIR_REQUEST_KIND__SEND:
             {
@@ -104,7 +99,6 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                         mpi_errno = request_ptr->status.MPI_ERROR;
                     } else {
                         MPIR_Status_set_empty(status);
-                        *active = FALSE;
                     }
                 }
 
@@ -132,8 +126,6 @@ int MPIR_Request_completion_processing(MPIR_Request * request_ptr, MPI_Status * 
                         /* if the persistent request failed to start then make the
                          * error code available */
                         mpi_errno = request_ptr->status.MPI_ERROR;
-                    } else {
-                        *active = FALSE;
                     }
                     /* --END ERROR HANDLING-- */
                 }
