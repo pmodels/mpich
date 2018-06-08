@@ -18,4 +18,9 @@
 #include "iallgatherv_tsp_recexch_algos.h"
 #include "iallgatherv_tsp_recexch_algos_undef.h"
 
+/* instantiate iallgatherv ring algorithms for the gentran transport */
+#include "iallgatherv_tsp_ring_algos_prototypes.h"
+#include "iallgatherv_tsp_ring_algos.h"
+#include "iallgatherv_tsp_ring_algos_undef.h"
+
 #include "tsp_undef.h"
