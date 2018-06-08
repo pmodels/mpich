@@ -56,7 +56,7 @@ Output Parameters:
 int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * message,
               MPI_Status * status)
 {
-    int mpi_errno = MPI_SUCCESS, active_flag;   /* dummy for MPIR_Request_completion_processing */
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *msgp = NULL, *rreq = NULL;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_MRECV);
 
@@ -123,7 +123,7 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message * message
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPIR_Request_completion_processing(rreq, status, &active_flag);
+        mpi_errno = MPIR_Request_completion_processing(rreq, status);
         MPIR_Request_free(rreq);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
