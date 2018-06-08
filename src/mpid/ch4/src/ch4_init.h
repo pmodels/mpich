@@ -58,6 +58,16 @@ cvars:
       description : >-
         If non-empty, this cvar specifies which shm module to use
 
+    - name        : MPIR_CVAR_CH4_ROOTS_ONLY_PMI
+      category    : CH4
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Enables an optimized business card exchange over PMI for node root processes only.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 

@@ -885,28 +885,52 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
         mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_CH4_Global.node_map[0],
                                           &MPIDI_Global.addrname, MPIDI_Global.addrnamelen, TRUE,
-                                          FALSE, &table, NULL);
+                                          MPIR_CVAR_CH4_ROOTS_ONLY_PMI, &table, NULL);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
         /* -------------------------------- */
         /* Table is constructed.  Map it    */
         /* -------------------------------- */
-        mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
-        MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, table, size, mapped_table, 0ULL, NULL), avmap);
+        if (MPIR_CVAR_CH4_ROOTS_ONLY_PMI) {
+            int *node_roots, num_nodes;
 
-        for (i = 0; i < size; i++) {
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+            MPIR_NODEMAP_get_node_roots(MPIDI_CH4_Global.node_map[0], size, &node_roots,
+                                        &num_nodes);
+            mapped_table = (fi_addr_t *) MPL_malloc(num_nodes * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
+            MPIDI_OFI_CALL(fi_av_insert
+                           (MPIDI_Global.av, table, num_nodes, mapped_table, 0ULL, NULL), avmap);
+
+            for (i = 0; i < num_nodes; i++) {
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).dest = mapped_table[i];
 #if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).ep_idx = 0;
 #else
 #if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, node_roots[i])).ep_idx = 0;
 #endif
 #endif
+            }
+            MPL_free(mapped_table);
+            MPL_free(node_roots);
+        } else {
+            mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t), MPL_MEM_ADDRESS);
+            MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, table, size, mapped_table, 0ULL, NULL),
+                           avmap);
+
+            for (i = 0; i < size; i++) {
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+#else
+#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
+                MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).ep_idx = 0;
+#endif
+#endif
+            }
+            MPL_free(mapped_table);
+            MPIDU_bc_table_destroy(table);
         }
-        MPL_free(mapped_table);
-        MPIDU_bc_table_destroy(table);
     }
 
     /* -------------------------------- */
