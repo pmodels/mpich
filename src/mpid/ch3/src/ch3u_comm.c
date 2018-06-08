@@ -548,3 +548,21 @@ void MPIDI_CH3I_Comm_find(MPIR_Context_id_t context_id, MPIR_Comm **comm)
 
     MPIR_FUNC_VERBOSE_EXIT(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);
 }
+
+int MPID_Comm_set_info_immutable(MPIR_Comm * comm, MPIR_Info * info)
+{
+    int mpi_errno = MPI_SUCCESS;
+    return mpi_errno;
+}
+
+int MPID_Comm_set_info_mutable(MPIR_Comm * comm, MPIR_Info * info)
+{
+    int mpi_errno = MPI_SUCCESS;
+    return mpi_errno;
+}
+
+int MPID_Comm_get_info(MPIR_Comm * comm, MPIR_Info ** info)
+{
+    int mpi_errno = MPI_SUCCESS;
+    return mpi_errno;
+}

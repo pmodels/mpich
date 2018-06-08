@@ -744,4 +744,8 @@ int MPID_Type_free_hook(MPIR_Datatype * type);
 int MPID_Op_commit_hook(MPIR_Op * op);
 int MPID_Op_free_hook(MPIR_Op * op);
 
+int MPID_Comm_set_info_immutable(MPIR_Comm *comm, MPIR_Info *info);
+int MPID_Comm_set_info_mutable(MPIR_Comm *comm, MPIR_Info *info);
+int MPID_Comm_get_info(MPIR_Comm *comm, MPIR_Info **info);
+
 #endif /* MPIDPRE_H_INCLUDED */
