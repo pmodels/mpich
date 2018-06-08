@@ -215,51 +215,7 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
 
         case MPIR_REQUEST_KIND__GREQUEST:
             {
-                int rc;
-
-                /* Note that we've acquired the thread private storage above */
-
-                switch (request_ptr->u.ureq.greq_fns->greq_lang) {
-                    case MPIR_LANG__C:
-#ifdef HAVE_CXX_BINDING
-                    case MPIR_LANG__CXX:
-#endif
-                        rc = (request_ptr->u.ureq.greq_fns->query_fn) (request_ptr->u.
-                                                                       ureq.greq_fns->grequest_extra_state,
-                                                                       &request_ptr->status);
-                        MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER,;,
-                                             "**user", "**userquery %d", rc);
-                        break;
-#ifdef HAVE_FORTRAN_BINDING
-                    case MPIR_LANG__FORTRAN:
-                    case MPIR_LANG__FORTRAN90:
-                        {
-                            MPI_Fint ierr;
-                            MPI_Fint is[sizeof(MPI_Status) / sizeof(int)];
-                            ((MPIR_Grequest_f77_query_function *) (request_ptr->u.ureq.
-                                                                   greq_fns->query_fn))
-                                (request_ptr->u.ureq.greq_fns->grequest_extra_state, is, &ierr);
-                            rc = (int) ierr;
-                            if (rc == MPI_SUCCESS)
-                                PMPI_Status_f2c(is, &request_ptr->status);
-                            MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER,;,
-                                                 "**user", "**userquery %d", rc);
-                            break;
-                        }
-#endif
-
-                    default:
-                        {
-                            /* --BEGIN ERROR HANDLING-- */
-                            /* This should not happen */
-                            MPIR_ERR_SETANDSTMT1(mpi_errno, MPI_ERR_INTERN,;,
-                                                 "**badcase",
-                                                 "**badcase %d",
-                                                 request_ptr->u.ureq.greq_fns->greq_lang);
-                            break;
-                            /* --END ERROR HANDLING-- */
-                        }
-                }
+                mpi_errno = MPIR_Grequest_query(request_ptr);
 
                 break;
             }
