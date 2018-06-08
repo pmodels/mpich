@@ -13,6 +13,7 @@ static MPIDU_shm_seg_t memory;
 static MPIDU_shm_barrier_t *barrier;
 static size_t *indices;
 static int local_size;
+static char *segment;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDU_bc_table_destroy
@@ -37,6 +38,58 @@ int MPIDU_bc_table_destroy(void *bc_table)
     goto fn_exit;
 }
 
+
+#undef FUNCNAME
+#define FUNCNAME MPIDU_bc_allgather
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIDU_bc_allgather(MPIR_Comm * comm, int *nodemap, void *bc, int bc_len, int same_len,
+                       void **bc_table, size_t ** bc_indices)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int local_rank, local_leader;
+    int rank = MPIR_Comm_rank(comm), size = MPIR_Comm_size(comm);
+
+    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (!same_len) {
+        bc_len *= 2;
+        *bc_indices = indices;
+    }
+
+    MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
+    if (rank != local_leader) {
+        size_t start = local_leader - nodemap[comm->rank] + (local_rank - 1);
+
+        memcpy(&segment[start * bc_len], bc, bc_len);
+    }
+
+    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (rank == local_leader) {
+        MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+        MPIR_Comm *allgather_comm = comm->node_roots_comm ? comm->node_roots_comm : comm;
+
+        MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, segment, (local_size - 1) * bc_len,
+                            MPI_BYTE, allgather_comm, &errflag);
+    }
+
+    mpi_errno = MPIDU_shm_barrier(barrier, local_size);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    *bc_table = segment;
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #ifdef USE_PMIX_API
 #include <pmix.h>
 
@@ -48,7 +101,7 @@ int MPIDU_bc_table_destroy(void *bc_table)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
-                          void **bc_table, size_t ** bc_indices)
+                          int roots_only, void **bc_table, size_t ** bc_indices)
 {
     int rc, mpi_errno = MPI_SUCCESS;
     int start, end, i;
@@ -57,8 +110,9 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     pmix_value_t value, *pvalue;
     pmix_info_t *info;
     pmix_proc_t proc;
-    char *segment = NULL;
     int local_rank, local_leader;
+
+    MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
 
     val = MPL_malloc(VALLEN, MPL_MEM_ADDRESS);
     memset(val, 0, VALLEN);
@@ -72,14 +126,16 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     MPIR_Assert(key);
     sprintf(key, "bc-%d", rank);
 
-    value.type = PMIX_STRING;
-    value.data.string = val;
-    rc = PMIx_Put(PMIX_LOCAL, key, &value);
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_put");
-    rc = PMIx_Put(PMIX_REMOTE, key, &value);
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_put");
-    rc = PMIx_Commit();
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_commit");
+    if (!roots_only || rank == local_leader) {
+        value.type = PMIX_STRING;
+        value.data.string = val;
+        rc = PMIx_Put(PMIX_LOCAL, key, &value);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_put");
+        rc = PMIx_Put(PMIX_REMOTE, key, &value);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_put");
+        rc = PMIx_Commit();
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_commit");
+    }
 
     PMIX_INFO_CREATE(info, 1);
     PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
@@ -100,20 +156,41 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    start = local_rank * (size / local_size);
-    end = start + (size / local_size);
-    if (local_rank == local_size - 1)
-        end += size % local_size;
-    for (i = start; i < end; i++) {
-        sprintf(key, "bc-%d", i);
-        PMIX_PROC_CONSTRUCT(&proc);
-        MPL_strncpy(proc.nspace, MPIR_Process.pmix_proc.nspace, PMIX_MAX_NSLEN);
-        proc.rank = i;
-        rc = PMIx_Get(&proc, key, NULL, 0, &pvalue);
-        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_get");
-        rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
-        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
-        PMIX_VALUE_RELEASE(pvalue);
+    if (!roots_only) {
+        start = local_rank * (size / local_size);
+        end = start + (size / local_size);
+        if (local_rank == local_size - 1)
+            end += size % local_size;
+        for (i = start; i < end; i++) {
+            sprintf(key, "bc-%d", i);
+            PMIX_PROC_CONSTRUCT(&proc);
+            MPL_strncpy(proc.nspace, MPIR_Process.pmix_proc.nspace, PMIX_MAX_NSLEN);
+            proc.rank = i;
+            rc = PMIx_Get(&proc, key, NULL, 0, &pvalue);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_get");
+            rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+            PMIX_VALUE_RELEASE(pvalue);
+        }
+    } else {
+        int num_nodes, *node_roots;
+        MPIR_NODEMAP_get_node_roots(nodemap, size, &node_roots, &num_nodes);
+
+        start = local_rank * (num_nodes / local_size);
+        end = start + (num_nodes / local_size);
+        if (local_rank == local_size - 1)
+            end += num_nodes % local_size;
+        for (i = start; i < end; i++) {
+            sprintf(key, "bc-%d", i);
+            PMIX_PROC_CONSTRUCT(&proc);
+            MPL_strncpy(proc.nspace, MPIR_Process.pmix_proc.nspace, PMIX_MAX_NSLEN);
+            proc.rank = i;
+            rc = PMIx_Get(&proc, key, NULL, 0, &pvalue);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmix_get");
+            rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+            PMIX_VALUE_RELEASE(pvalue);
+        }
     }
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
     if (mpi_errno)
@@ -144,14 +221,15 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
-                          void **bc_table, size_t ** bc_indices)
+                          int roots_only, void **bc_table, size_t ** bc_indices)
 {
     int rc, mpi_errno = MPI_SUCCESS;
     int start, end, i;
     int out_len, val_len, rem;
     char *key = NULL, *val = NULL, *val_p;
-    char *segment = NULL;
     int local_rank, local_leader;
+
+    MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
 
     val = MPL_malloc(PMI2_MAX_VALLEN, MPL_MEM_ADDRESS);
     memset(val, 0, PMI2_MAX_VALLEN);
@@ -163,9 +241,11 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 
     key = MPL_malloc(PMI2_MAX_KEYLEN, MPL_MEM_ADDRESS);
     MPIR_Assert(key);
-    sprintf(key, "bc-%d", rank);
-    rc = PMI2_KVS_Put(key, val);
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsput");
+    if (!roots_only || rank == local_leader) {
+        sprintf(key, "bc-%d", rank);
+        rc = PMI2_KVS_Put(key, val);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsput");
+    }
     rc = PMI2_KVS_Fence();
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsfence");
 
@@ -182,16 +262,34 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    start = local_rank * (size / local_size);
-    end = start + (size / local_size);
-    if (local_rank == local_size - 1)
-        end += size % local_size;
-    for (i = start; i < end; i++) {
-        sprintf(key, "bc-%d", i);
-        rc = PMI2_KVS_Get(NULL, -1, key, val, PMI2_MAX_VALLEN, &val_len);
-        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsget");
-        rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
-        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+    if (!roots_only) {
+        start = local_rank * (size / local_size);
+        end = start + (size / local_size);
+        if (local_rank == local_size - 1)
+            end += size % local_size;
+        for (i = start; i < end; i++) {
+            sprintf(key, "bc-%d", i);
+            rc = PMI2_KVS_Get(NULL, -1, key, val, PMI2_MAX_VALLEN, &val_len);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsget");
+            rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+        }
+    } else {
+        int num_nodes, *node_roots;
+        MPIR_NODEMAP_get_node_roots(nodemap, size, &node_roots, &num_nodes);
+
+        start = local_rank * (num_nodes / local_size);
+        end = start + (num_nodes / local_size);
+        if (local_rank == local_size - 1)
+            end += num_nodes % local_size;
+        for (i = start; i < end; i++) {
+            sprintf(key, "bc-%d", node_roots[i]);
+            rc = PMI2_KVS_Get(NULL, -1, key, val, PMI2_MAX_VALLEN, &val_len);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvsget");
+            rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+        }
+        MPL_free(node_roots);
     }
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
     if (mpi_errno)
@@ -222,14 +320,15 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len, int same_len,
-                          void **bc_table, size_t ** bc_indices)
+                          int roots_only, void **bc_table, size_t ** bc_indices)
 {
     int rc, mpi_errno = MPI_SUCCESS;
     int start, end, i;
     int key_max, val_max, name_max, out_len, rem;
     char *kvsname = NULL, *key = NULL, *val = NULL, *val_p;
-    char *segment = NULL;
     int local_rank, local_leader;
+
+    MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
 
     rc = PMI_KVS_Get_name_length_max(&name_max);
     MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_name_length_max");
@@ -253,11 +352,13 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
 
     key = MPL_malloc(key_max, MPL_MEM_ADDRESS);
     MPIR_Assert(key);
-    sprintf(key, "bc-%d", rank);
-    rc = PMI_KVS_Put(kvsname, key, val);
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put");
-    rc = PMI_KVS_Commit(kvsname);
-    MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit");
+    if (!roots_only || rank == local_leader) {
+        sprintf(key, "bc-%d", rank);
+        rc = PMI_KVS_Put(kvsname, key, val);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put");
+        rc = PMI_KVS_Commit(kvsname);
+        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_commit");
+    }
 
     MPIR_NODEMAP_get_local_info(rank, size, nodemap, &local_size, &local_rank, &local_leader);
     /* if business cards can be different length, allocate 2x the space */
@@ -272,16 +373,34 @@ int MPIDU_bc_table_create(int rank, int size, int *nodemap, void *bc, int bc_len
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    start = local_rank * (size / local_size);
-    end = start + (size / local_size);
-    if (local_rank == local_size - 1)
-        end += size % local_size;
-    for (i = start; i < end; i++) {
-        sprintf(key, "bc-%d", i);
-        rc = PMI_KVS_Get(kvsname, key, val, val_max);
-        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
-        rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
-        MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+    if (!roots_only) {
+        start = local_rank * (size / local_size);
+        end = start + (size / local_size);
+        if (local_rank == local_size - 1)
+            end += size % local_size;
+        for (i = start; i < end; i++) {
+            sprintf(key, "bc-%d", i);
+            rc = PMI_KVS_Get(kvsname, key, val, val_max);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+            rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+        }
+    } else {
+        int num_nodes, *node_roots;
+        MPIR_NODEMAP_get_node_roots(nodemap, size, &node_roots, &num_nodes);
+
+        start = local_rank * (num_nodes / local_size);
+        end = start + (num_nodes / local_size);
+        if (local_rank == local_size - 1)
+            end += num_nodes % local_size;
+        for (i = start; i < end; i++) {
+            sprintf(key, "bc-%d", node_roots[i]);
+            rc = PMI_KVS_Get(kvsname, key, val, val_max);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
+            rc = MPL_str_get_binary_arg(val, "mpi", &segment[i * bc_len], bc_len, &out_len);
+            MPIR_ERR_CHKANDJUMP(rc, mpi_errno, MPI_ERR_OTHER, "**argstr_missinghost");
+        }
+        MPL_free(node_roots);
     }
     mpi_errno = MPIDU_shm_barrier(barrier, local_size);
     if (mpi_errno)
