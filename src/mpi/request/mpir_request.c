@@ -166,10 +166,13 @@ int MPIR_Request_handle_proc_failed(MPIR_Request * request_ptr)
 #define FUNCNAME MPIR_Request_get_error
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* FIXME: What is this routine for?
+/* This routine is for obtaining the error code of an existing request.
+ * It is similar as MPIR_Request_completion_processing without any "free" + status setting.
  *
- * [BRT] it is used by testall, although looking at testall now, I think the
- * algorithm can be change slightly and eliminate the need for this routine
+ * It is only needed by MPI_Testall because if not all request are completed then (quote):
+ * "neither the array_of_requests nor the array_of_statuses is modified.
+ * If one or more of the requests completes with an error, MPI_ERR_IN_STATUS is returned".
+ * Therefore, we have to get the error code without modifying the request.
  */
 int MPIR_Request_get_error(MPIR_Request * request_ptr)
 {
