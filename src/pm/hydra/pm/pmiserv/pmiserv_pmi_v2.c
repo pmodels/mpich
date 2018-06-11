@@ -366,8 +366,10 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
 
     /* Try to find the epoch point of this process */
     for (i = 0; i < proxy->pg->pg_process_count; i++)
-        if (pg_scratch->ecount[i].fd == fd && pg_scratch->ecount[i].pid == pid)
+        if (pg_scratch->ecount[i].fd == fd && pg_scratch->ecount[i].pid == pid) {
             pg_scratch->ecount[i].epoch++;
+            break;
+        }
 
     if (i == proxy->pg->pg_process_count) {
         /* couldn't find the current process; find a NULL entry */
