@@ -351,10 +351,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         ucp_request_release(pending[i]);
     }
 
-#ifndef USE_PMIX_API
-    pmi_errno = PMI_Barrier();
-    MPIDI_UCX_PMI_ERROR(pmi_errno);
-#else
+#ifdef USE_PMIX_API
     pmix_value_t value;
     pmix_info_t *info;
     int flag = 1;
@@ -367,6 +364,14 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
                              pmi_errno);
     }
     PMIX_INFO_FREE(info, 1);
+#elif defined(USE_PMI2_API)
+    pmi_errno = PMI2_KVS_Fence();
+    if (pmi_errno != PMI2_SUCCESS) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**pmi_kvsfence");
+    }
+#else
+    pmi_errno = PMI_Barrier();
+    MPIDI_UCX_PMI_ERROR(pmi_errno);
 #endif
 
 
