@@ -123,6 +123,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue_body(MPIDI_workq_t * workq
                                                            const void *origin_addr,
                                                            int origin_count,
                                                            MPI_Datatype origin_datatype,
+                                                           const void *compare_addr,
                                                            void *result_addr,
                                                            int result_count,
                                                            MPI_Datatype result_datatype,
@@ -145,6 +146,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue_body(MPIDI_workq_t * workq
     rma_elemt->rma.origin_addr = origin_addr;
     rma_elemt->rma.origin_count = origin_count;
     rma_elemt->rma.origin_datatype = origin_datatype;
+    rma_elemt->rma.compare_addr = compare_addr;
     rma_elemt->rma.result_addr = result_addr;
     rma_elemt->rma.result_count = result_count;
     rma_elemt->rma.result_datatype = result_datatype;
@@ -376,6 +378,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_t * workq,
                                                       const void *origin_addr,
                                                       int origin_count,
                                                       MPI_Datatype origin_datatype,
+                                                      const void *compare_addr,
                                                       void *result_addr,
                                                       int result_count,
                                                       MPI_Datatype result_datatype,
@@ -392,7 +395,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_t * workq,
 {
     MPIDI_WORKQ_RMA_ENQUEUE_START;
     MPIDI_workq_rma_enqueue_body(workq, op, origin_addr, origin_count, origin_datatype,
-                                 result_addr, result_count, result_datatype,
+                                 compare_addr, result_addr, result_count, result_datatype,
                                  target_rank, target_disp, target_count, target_datatype,
                                  acc_op, group, lock_type, assert, win_ptr, addr, processed);
     MPIDI_WORKQ_RMA_ENQUEUE_STOP;

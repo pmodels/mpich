@@ -120,6 +120,7 @@ struct MPIDI_workq_elemt {
             const void *origin_addr;
             int origin_count;
             MPI_Datatype origin_datatype;
+            const void *compare_addr;
             void *result_addr;
             int result_count;
             MPI_Datatype result_datatype;

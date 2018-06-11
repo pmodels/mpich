@@ -40,7 +40,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_put(int transport,
             OPA_incr_int(&MPIDI_CH4U_WIN(win, local_enq_cnts));
             /* result addr/count/datatye is used for Get */
             MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx),
-                                    PUT, origin_addr, origin_count, origin_datatype, NULL, 0,
+                                    PUT, origin_addr, origin_count, origin_datatype, NULL, NULL, 0,
                                     MPI_DATATYPE_NULL, target_rank, target_disp, target_count,
                                     target_datatype, MPI_OP_NULL, NULL, 0, 0, win, av, NULL);
             mpi_errno = MPI_SUCCESS;
@@ -129,9 +129,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_get(int transport,
             /* result addr/count/datatye is used for enqueuing Get because origin_addr in the
              * enqueue function is defined as const void *. */
             MPIDI_workq_rma_enqueue(MPIDI_win_vni_to_workq(win, vni_idx),
-                                    GET, NULL, 0, MPI_DATATYPE_NULL, origin_addr, origin_count,
-                                    origin_datatype, target_rank, target_disp, target_count,
-                                    target_datatype, MPI_OP_NULL, NULL, 0, 0, win, av, NULL);
+                                    GET, NULL, 0, MPI_DATATYPE_NULL, NULL, origin_addr,
+                                    origin_count, origin_datatype, target_rank, target_disp,
+                                    target_count, target_datatype, MPI_OP_NULL, NULL, 0, 0, win, av,
+                                    NULL);
             mpi_errno = MPI_SUCCESS;
         } else {
             mpi_errno = MPIDI_NM_mpi_get(origin_addr, origin_count, origin_datatype,
