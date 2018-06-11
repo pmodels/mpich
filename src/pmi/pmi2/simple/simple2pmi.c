@@ -1528,7 +1528,7 @@ int PMIi_WriteSimpleCommand(int fd, PMI2_Command * resp, const char cmd[],
     char cmdlenbuf[PMII_COMMANDLEN_SIZE + 1];
     char *c = cmdbuf;
     int ret;
-    int remaining_len = PMII_MAX_COMMAND_LEN;
+    int remaining_len = PMII_MAX_COMMAND_LEN - PMII_COMMANDLEN_SIZE;
     int cmdlen;
     int i;
     ssize_t nbytes;
