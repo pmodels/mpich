@@ -24,8 +24,8 @@ static ADIOI_Flatlist_node *flatlist_node_new(MPI_Datatype datatype, MPI_Count c
     flat->count = count;
     flat->flag = 0;
 
-    flat->blocklens = (ADIO_Offset *) ADIOI_Malloc(flat->count * sizeof(ADIO_Offset));
-    flat->indices = (ADIO_Offset *) ADIOI_Malloc(flat->count * sizeof(ADIO_Offset));
+    flat->blocklens = (ADIO_Offset *) ADIOI_Calloc(flat->count * 2, sizeof(ADIO_Offset));
+    flat->indices = flat->blocklens + flat->count;
     return flat;
 }
 
@@ -1180,8 +1180,8 @@ void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type)
     if (opt_blocks == flat_type->count)
         return;
 
-    opt_blocklens = (ADIO_Offset *) ADIOI_Malloc(opt_blocks * sizeof(ADIO_Offset));
-    opt_indices = (ADIO_Offset *) ADIOI_Malloc(opt_blocks * sizeof(ADIO_Offset));
+    opt_blocklens = (ADIO_Offset *) ADIOI_Calloc(opt_blocks * 2, sizeof(ADIO_Offset));
+    opt_indices = opt_blocklens + opt_blocks;
 
     /* fill in new blocklists */
     opt_blocklens[0] = flat_type->blocklens[0];
@@ -1198,7 +1198,6 @@ void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type)
     }
     flat_type->count = opt_blocks;
     ADIOI_Free(flat_type->blocklens);
-    ADIOI_Free(flat_type->indices);
     flat_type->blocklens = opt_blocklens;
     flat_type->indices = opt_indices;
     return;
@@ -1227,7 +1226,6 @@ int ADIOI_Flattened_type_delete(MPI_Datatype datatype,
 
     if (node->refct <= 0) {
         ADIOI_Free(node->blocklens);
-        ADIOI_Free(node->indices);
         ADIOI_Free(node);
     }
 
