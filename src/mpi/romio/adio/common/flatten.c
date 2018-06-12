@@ -24,7 +24,7 @@ static ADIOI_Flatlist_node *flatlist_node_new(MPI_Datatype datatype, MPI_Count c
     flat->count = count;
     flat->flag = 0;
 
-    flat->blocklens = (ADIO_Offset *) ADIOI_Malloc(flat->count * sizeof(ADIO_Offset));
+    flat->blocklens = (ADIO_Offset *) ADIOI_Calloc(flat->count, sizeof(ADIO_Offset));
     flat->indices = (ADIO_Offset *) ADIOI_Malloc(flat->count * sizeof(ADIO_Offset));
     return flat;
 }
