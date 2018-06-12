@@ -1180,8 +1180,8 @@ void ADIOI_Optimize_flattened(ADIOI_Flatlist_node * flat_type)
     if (opt_blocks == flat_type->count)
         return;
 
-    opt_blocklens = (ADIO_Offset *) ADIOI_Malloc(opt_blocks * sizeof(ADIO_Offset));
-    opt_indices = (ADIO_Offset *) ADIOI_Malloc(opt_blocks * sizeof(ADIO_Offset));
+    opt_blocklens = (ADIO_Offset *) ADIOI_Calloc(opt_blocks * 2, sizeof(ADIO_Offset));
+    opt_indices = opt_blocklens + opt_blocks;
 
     /* fill in new blocklists */
     opt_blocklens[0] = flat_type->blocklens[0];
