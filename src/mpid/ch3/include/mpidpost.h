@@ -194,6 +194,22 @@ int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
 
 #define MPID_INTERCOMM_NO_DYNPROC(comm) (0)
 
+/* ULFM support */
+MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm * comm_ptr)
+{
+    return comm_ptr->dev.anysource_enabled;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPID_Request_is_anysource(MPIR_Request * request_ptr)
+{
+    int ret = 0;
+
+    if (request_ptr->kind == MPIR_REQUEST_KIND__RECV)
+        ret = request_ptr->dev.match.parts.rank == MPI_ANY_SOURCE;
+
+    return ret;
+}
+
 /* communicator hooks */
 int MPIDI_CH3I_Comm_create_hook(struct MPIR_Comm *);
 int MPIDI_CH3I_Comm_destroy_hook(struct MPIR_Comm *);
