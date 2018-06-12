@@ -627,10 +627,6 @@ int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
 int MPID_Cancel_send(MPIR_Request *);
 int MPID_Cancel_recv(MPIR_Request *);
 
-int MPID_Comm_AS_enabled(MPIR_Comm *);
-
-int MPID_Request_is_anysource(MPIR_Request *);
-
 MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp);
 
 MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
