@@ -592,6 +592,19 @@ static inline int MPIDI_POSIX_mpi_reduce(const void *sendbuf, void *recvbuf, int
                 MPIR_Reduce_intra_binomial(sendbuf, recvbuf, count, datatype,
                                            op, root, comm, errflag);
             break;
+        case MPIDI_POSIX_Reduce_intra_release_gather_id:
+#ifdef ENABLE_IZEM_ATOMIC
+            mpi_errno =
+                MPIDI_POSIX_mpi_reduce_release_gather(sendbuf, recvbuf, count, datatype,
+                                                      op, root, comm, errflag);
+#else
+            /* else block is needed to keep the compiler happy */
+            /* release_gather based algorithms cannot be used without izem submodule */
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**noizem");
+#endif
+            break;
+        case MPIDI_POSIX_Reduce_intra_invalid_id:
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**noizem");
         default:
             mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op,
                                          root, comm, errflag);

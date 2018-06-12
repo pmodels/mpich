@@ -44,11 +44,18 @@ typedef enum {
     MPIDI_POSIX_Reduce_intra_reduce_scatter_gather_id,
     MPIDI_POSIX_Reduce_intra_binomial_id,
     MPIDI_POSIX_Reduce_intra_auto_id,
-    MPIDI_POSIX_Reduce_intra_invalid_id
+    MPIDI_POSIX_Reduce_intra_invalid_id,
+    MPIDI_POSIX_Reduce_intra_release_gather_id
 } MPIDI_POSIX_Reduce_id_t;
 
 typedef union {
     /* reserved for parameters related to SHM specific collectives */
+    struct MPIDI_POSIX_Reduce_release_gather_parameters {
+        int radix;
+        int tree_type;
+        int buffer_size;
+        int num_buffers;
+    } posix_reduce_release_gather_parameters;
     struct MPIDI_POSIX_Reduce_empty_parameters {
         int empty;
     } posix_reduce_empty_parameters;
