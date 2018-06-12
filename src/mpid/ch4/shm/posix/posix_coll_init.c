@@ -38,7 +38,9 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Variable to select algorithm for intra-node reduce
-        auto - Internal algorithm selection from pt2pt based algorithms
+        auto           - Internal algorithm selection from pt2pt based algorithms
+        release_gather - Force shm optimized algo using release, gather primitives
+                         (izem submodule should be build and enabled for this)
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -59,7 +61,10 @@ int collective_cvars_init(void)
         MPIDI_POSIX_Bcast_algo_choice = MPIDI_POSIX_Bcast_intra_auto_id;
 
     /* Reduce */
-    MPIDI_POSIX_Reduce_algo_choice = MPIDI_POSIX_Reduce_intra_auto_id;
+    if (0 == strcmp(MPIR_CVAR_REDUCE_POSIX_INTRA_ALGORITHM, "release_gather"))
+        MPIDI_POSIX_Reduce_algo_choice = MPIDI_POSIX_Reduce_intra_release_gather_id;
+    else
+        MPIDI_POSIX_Reduce_algo_choice = MPIDI_POSIX_Reduce_intra_auto_id;
 
   fn_exit:
     return mpi_errno;

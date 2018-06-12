@@ -15,7 +15,8 @@ extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Bcast_intra_release_g
 /* Reduce POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_intra_binomial_cnt;
 extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_intra_reduce_scatter_gather_cnt;
-extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_intra_reduce_invalid_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_intra_invalid_cnt;
+extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_intra_release_gather_cnt;
 
 /* Allreduce POSIX containers declaration */
 extern const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Allreduce_intra_recursive_doubling_cnt;

@@ -43,6 +43,10 @@ const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_intra_invalid_cnt = {
     .id = MPIDI_POSIX_Reduce_intra_invalid_id
 };
 
+const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Reduce_intra_release_gather_cnt = {
+    .id = MPIDI_POSIX_Reduce_intra_release_gather_id
+};
+
 /* Allreduce default POSIX containers initialization*/
 const MPIDI_POSIX_coll_algo_container_t MPIDI_POSIX_Allreduce_intra_recursive_doubling_cnt = {
     .id = MPIDI_POSIX_Allreduce_intra_recursive_doubling_id
