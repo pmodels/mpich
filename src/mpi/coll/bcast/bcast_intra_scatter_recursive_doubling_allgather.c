@@ -88,7 +88,6 @@ int MPIR_Bcast_intra_scatter_recursive_doubling_allgather(void *buffer,
     } else {
         MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
-        /* TODO: Pipeline the packing and communication */
         position = 0;
         if (rank == root) {
             mpi_errno = MPIR_Pack_impl(buffer, count, datatype, tmp_buf, nbytes, &position);
