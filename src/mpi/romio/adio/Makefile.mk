@@ -6,6 +6,9 @@
 ##
 
 AM_CPPFLAGS += -I$(top_builddir)/adio/include -I$(top_srcdir)/adio/include
+if ENABLE_PIPELINING_IO
+AM_CPPFLAGS += -DPIPE
+endif
 
 noinst_HEADERS +=                      \
     adio/include/adio.h                \
