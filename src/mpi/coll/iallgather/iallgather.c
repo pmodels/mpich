@@ -20,6 +20,16 @@ cvars:
       description : >-
         k value for recursive exchange based iallgather
 
+    - name        : MPIR_CVAR_IALLGATHER_BRUCKS_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for radix in brucks based iallgather
+
     - name        : MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
@@ -35,6 +45,7 @@ cvars:
         ring               - Force ring algorithm
         recexch_distance_doubling    - Force generic transport recursive exchange with neighbours doubling in distance in each phase
         recexch_distance_halving  - Force generic transport recursive exchange with neighbours halving in distance in each phase
+        gentran_brucks     - Force generic transport based brucks algorithm
 
     - name        : MPIR_CVAR_IALLGATHER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -305,6 +316,14 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
                     MPIR_Iallgather_intra_recexch_distance_halving(sendbuf, sendcount, sendtype,
                                                                    recvbuf, recvcount, recvtype,
                                                                    comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_BRUCKS:
+                mpi_errno =
+                    MPIR_Iallgather_intra_gentran_brucks(sendbuf, sendcount, sendtype, recvbuf,
+                                                         recvcount, recvtype, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;

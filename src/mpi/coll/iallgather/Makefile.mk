@@ -22,4 +22,5 @@ mpi_core_sources +=                                         \
     src/mpi/coll/iallgather/iallgather_inter_local_gather_remote_bcast.c \
     src/mpi/coll/iallgather/iallgather_gentran_algos.c                    \
     src/mpi/coll/iallgather/iallgather_intra_recexch_distance_doubling.c    \
-    src/mpi/coll/iallgather/iallgather_intra_recexch_distance_halving.c
+    src/mpi/coll/iallgather/iallgather_intra_recexch_distance_halving.c    \
+    src/mpi/coll/iallgather/iallgather_intra_gentran_brucks.c
