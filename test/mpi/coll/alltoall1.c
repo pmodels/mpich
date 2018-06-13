@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
                         if (errs < 10) {
                             fprintf(stderr, "Error with communicator %s and size=%d count=%d\n",
                                     MTestGetIntracommName(), size, count);
-                            fprintf(stderr, "recvbuf[%d,%d] = %d, should %d\n",
+                            fprintf(stderr, "recvbuf[%d,%d] = %d, should be %d\n",
                                     j, i, *p, rank * size + j + i);
                         }
                     }
