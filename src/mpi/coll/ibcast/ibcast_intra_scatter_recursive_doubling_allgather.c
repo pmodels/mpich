@@ -105,7 +105,6 @@ int MPIR_Ibcast_sched_intra_scatter_recursive_doubling_allgather(void *buffer, i
     } else {
         MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf", MPL_MEM_BUFFER);
 
-        /* TODO: Pipeline the packing and communication */
         if (rank == root) {
             mpi_errno = MPIR_Sched_copy(buffer, count, datatype, tmp_buf, nbytes, MPI_BYTE, s);
             if (mpi_errno)
