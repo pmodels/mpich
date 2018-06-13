@@ -298,6 +298,7 @@ int MPII_Genutil_sched_selective_sink(MPII_Genutil_sched_t * sched, int n_in_vtc
 
 }
 
+#undef FUNCNAME
 #define FUNCNAME MPII_Genutil_sched_malloc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
