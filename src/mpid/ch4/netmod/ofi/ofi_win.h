@@ -388,6 +388,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init(MPIR_Win * win)
     /* Intialize multiple endpoints in one RMA window. */
     /* First, try to enable scalable EP. */
     if (MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS && MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX > 0) {
+        MPIDI_CH4U_WIN(win, info_args).num_vnis =
+            MPL_MIN(MPIDI_CH4U_WIN(win, info_args).num_vnis, MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX);
         for (i = 0; i < MPIDI_CH4U_WIN(win, info_args).num_vnis; i++) {
             /* Create tx based on scalable EP. */
             if (MPIDI_OFI_win_init_sep(win, i) != MPI_SUCCESS) {
