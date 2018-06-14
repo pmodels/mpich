@@ -343,7 +343,9 @@ int MPIR_TSP_Iallgather_intra_recexch(const void *sendbuf, int sendcount, MPI_Da
 
     /* For correctness, transport based collectives need to get the
      * tag from the same pool as schedule based collectives */
-    MPIDU_Sched_next_tag(comm, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     mpi_errno =
         MPIR_TSP_Iallgather_sched_intra_recexch(sendbuf, sendcount, sendtype, recvbuf, recvcount,
