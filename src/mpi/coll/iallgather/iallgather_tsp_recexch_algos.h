@@ -270,11 +270,13 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, int sendcount,
             MPIR_TSP_sched_localcopy(sendbuf, recvcount, recvtype,
                                      (char *) recvbuf + rank * recv_extent * recvcount, recvcount,
                                      recvtype, sched, 0, NULL);
+        n_invtcs = 1;
+        invtx = dtcopy_id;
+    } else {
+        n_invtcs = 0;
     }
 
     /* Step 1 */
-    n_invtcs = (is_inplace) ? 0 : 1;
-    invtx = dtcopy_id;
     MPIR_TSP_Iallgather_sched_intra_recexch_step1(step1_sendto, step1_recvfrom, step1_nrecvs,
                                                   is_inplace, rank, tag, sendbuf, recvbuf,
                                                   recv_extent, recvcount, recvtype, n_invtcs,
