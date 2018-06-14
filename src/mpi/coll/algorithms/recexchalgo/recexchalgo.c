@@ -188,11 +188,7 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPII_RECEXCHALGO_GET_NEIGHBORS);
 
-  fn_exit:
     return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 
