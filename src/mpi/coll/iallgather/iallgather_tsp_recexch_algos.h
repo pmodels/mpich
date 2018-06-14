@@ -304,7 +304,6 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, int sendcount,
                                                   step2_nphases, recvbuf, recvcount, nranks, k,
                                                   nrecvs, recv_id, tag, recvtype, comm, sched);
 
-  fn_exit:
     /* free the memory */
     for (i = 0; i < step2_nphases; i++)
         MPL_free(step2_nbrs[i]);
@@ -315,8 +314,6 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, int sendcount,
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIR_TSP_IALLGATHER_SCHED_INTRA_RECEXCH);
 
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 
