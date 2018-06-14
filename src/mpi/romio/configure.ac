@@ -99,6 +99,25 @@ AC_ARG_VAR([FROM_OMPI],[set to "yes" if building ROMIO inside of Open MPI])
 FROM_OMPI=${FROM_OMPI:-no}
 if test "$FROM_OMPI" = 1 ; then FROM_OMPI=yes ; fi
 
+# Pipelining in adio lustre driver
+AH_TEMPLATE([ENABLE_PIPELINING_IO],          [Define to enable pipelining I/O])
+
+AC_ARG_ENABLE([pipelining-io],
+   [AS_HELP_STRING([--enable-pipelining-io],
+                   [Enable pipelining I/O support. @<:@default: disabled@:>@])],
+   [enable_pipelining_io=${enableval}], [enable_pipelining_io=yes]
+)
+
+ENABLE_PIPELINING_IO=0
+if test "x$enable_pipelining_io" = "xyes" ; then
+   AC_DEFINE(ENABLE_PIPELINING_IO)
+   ENABLE_PIPELINING_IO=1
+   FFLAGS+=" ${FC_DEFINE}ENABLE_PIPELINING_IO"
+   FCFLAGS+=" ${FC_DEFINE}ENABLE_PIPELINING_IO"
+fi
+AC_SUBST(ENABLE_PIPELINING_IO)
+AM_CONDITIONAL(ENABLE_PIPELINING_IO, [test x$enable_pipelining_io = xyes])
+
 # MPL
 AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
 MPLLIBNAME=${MPLLIBNAME:-"mpl"}
