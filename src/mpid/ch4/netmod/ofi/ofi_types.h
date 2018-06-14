@@ -381,8 +381,12 @@ typedef struct {
     MPIDI_OFI_cacheline_mutex_t mutexes[4];
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
     MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];
+    struct fid_ep *rma_txs[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];
+    struct fid_cntr *rma_cntrs[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];
 #else
     MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_ENDPOINTS];
+    struct fid_ep *rma_txs[MPIDI_OFI_MAX_ENDPOINTS];
+    struct fid_cntr *rma_cntrs[MPIDI_OFI_MAX_ENDPOINTS];
 #endif
 
     /* Window/RMA Globals */

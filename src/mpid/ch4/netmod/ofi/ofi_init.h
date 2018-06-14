@@ -412,6 +412,99 @@ static inline int MPIDI_OFI_conn_manager_destroy()
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_init_rma_sep
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+/* Initialize scalable endpoint for RMA. */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_init_rma_sep(struct fi_info *prov_use,
+                                                    struct fi_cntr_attr cntr_attr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int ret, i;
+    /* Specify number of transmit context according user input and provider limit. */
+    MPIDI_Global.max_rma_sep_tx_cnt = MPL_MIN(MPL_MIN(prov_use->domain_attr->max_ep_tx_ctx,
+                                                      MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX),
+                                              MPIDI_Global.max_ch4_vnis);
+
+    prov_use->ep_attr->tx_ctx_cnt = MPIDI_Global.max_rma_sep_tx_cnt;
+    prov_use->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
+    prov_use->tx_attr->caps = FI_RMA | FI_WRITE | FI_READ | FI_ATOMIC;
+    prov_use->tx_attr->msg_order = FI_ORDER_RAR | FI_ORDER_RAW | FI_ORDER_WAR | FI_ORDER_WAW;
+
+    MPIDI_OFI_CALL_RETURN(fi_scalable_ep
+                          (MPIDI_Global.domain, prov_use, &MPIDI_Global.rma_sep, NULL), ret);
+    if (ret < 0) {
+        MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to create scalable endpoint.\n");
+        MPIDI_Global.rma_sep = NULL;
+        mpi_errno = MPIDI_OFI_ENAVAIL;
+        goto fn_fail;
+    }
+
+    MPIDI_OFI_CALL_RETURN(fi_scalable_ep_bind(MPIDI_Global.rma_sep, &(MPIDI_Global.av->fid), 0),
+                          ret);
+    if (ret < 0) {
+        MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    "Failed to bind scalable endpoint to address vector.\n");
+        MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_sep->fid), epclose);
+        MPIDI_Global.rma_sep = NULL;
+        mpi_errno = MPIDI_OFI_ENAVAIL;
+        goto fn_fail;
+    }
+
+    memset(&cntr_attr, 0, sizeof(cntr_attr));
+    cntr_attr.events = FI_CNTR_EVENTS_COMP;
+    cntr_attr.wait_obj = FI_WAIT_UNSPEC;
+
+    /* Allocate and initilize tx index array. */
+    /* Allocate cntrs and bind to tx. */
+    /* Also bind tx to completion queue. */
+    utarray_new(MPIDI_Global.rma_sep_idx_array, &ut_int_icd, MPL_MEM_RMA);
+    for (i = 0; i < MPIDI_Global.max_rma_sep_tx_cnt; i++) {
+        utarray_push_back(MPIDI_Global.rma_sep_idx_array, &i, MPL_MEM_RMA);
+        MPIDI_OFI_CALL(fi_tx_context
+                       (MPIDI_Global.rma_sep, i, prov_use->tx_attr, &MPIDI_Global.rma_txs[i],
+                        NULL), ep);
+        MPIDI_OFI_CALL(fi_ep_bind
+                       (MPIDI_Global.rma_txs[i], &MPIDI_Global.ctx[i].cq->fid,
+                        FI_TRANSMIT | FI_SELECTIVE_COMPLETION), bind);
+        MPIDI_OFI_CALL(fi_cntr_open(MPIDI_Global.domain,        /* In:  Domain Object        */
+                                    &cntr_attr, /* In:  Configuration object */
+                                    &MPIDI_Global.rma_cntrs[i], /* Out: Counter Object       */
+                                    NULL), openct);     /* Context: counter events   */
+        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_Global.rma_txs[i],
+                                  &MPIDI_Global.rma_cntrs[i]->fid, FI_READ | FI_WRITE), bind);
+        MPIDI_OFI_CALL(fi_enable(MPIDI_Global.rma_txs[i]), ep_enable);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_finalize_rma_sep
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+/* Release RMA SEP related resource. */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_finalize_rma_sep()
+{
+    int i, mpi_errno = MPI_SUCCESS;
+    /* All transmit contexts and cntrs on RMA must be closed. */
+    MPIR_Assert(utarray_len(MPIDI_Global.rma_sep_idx_array) == MPIDI_Global.max_rma_sep_tx_cnt);
+    for (i = 0; i < MPIDI_Global.max_rma_sep_tx_cnt; i++) {
+        MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_txs[i]->fid), epclose);
+        MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_cntrs[i]->fid), cntrclose);
+    }
+    utarray_free(MPIDI_Global.rma_sep_idx_array);
+    MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_sep->fid), epclose);
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_init_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -872,6 +965,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     *n_vnis_provided = MPIDI_Global.max_ch4_vnis;
 
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS && MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX > 0) {
+        MPIDI_OFI_init_rma_sep(prov_use, cntr_attr);
+    }
+
     if (do_av_insert) {
         /* ---------------------------------- */
         /* Get our endpoint name and publish  */
@@ -1069,6 +1166,9 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     MPIR_Assert(OPA_load_int(&MPIDI_Global.am_inflight_inject_emus) == 0);
 
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+        if (MPIDI_Global.rma_sep) {
+            MPIDI_OFI_finalize_rma_sep();
+        }
         for (i = 0; i < MPIDI_Global.max_ch4_vnis; i++) {
             MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_Global.ctx[i].tx), epclose);
             MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_Global.ctx[i].rx), epclose);
@@ -1076,13 +1176,6 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         }
     }
 
-    /* Close RMA scalable EP. */
-    if (MPIDI_Global.rma_sep) {
-        /* All transmit contexts on RMA must be closed. */
-        MPIR_Assert(utarray_len(MPIDI_Global.rma_sep_idx_array) == MPIDI_Global.max_rma_sep_tx_cnt);
-        utarray_free(MPIDI_Global.rma_sep_idx_array);
-        MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_sep->fid), epclose);
-    }
     if (MPIDI_OFI_ENABLE_SHARED_CONTEXTS && MPIDI_Global.rma_stx_ctx != NULL)
         MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_stx_ctx->fid), stx_ctx_close);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.ep->fid), epclose);
