@@ -419,7 +419,6 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     for (i = 0; i < nprocs; i++) {
         if (my_req[i].count) {
             ADIOI_Free(my_req[i].offsets);
-            ADIOI_Free(my_req[i].lens);
             ADIOI_Free(my_req[i].mem_ptrs);
         }
     }
