@@ -366,27 +366,59 @@ static int node_split_gpu_device(MPIR_Comm * comm_ptr, int key,
 
 static const char *SHMEM_INFO_KEY = "shmem_topo";
 
-static int compare_info_args(const void *sendbuf, void *recvbuf, int count, MPIR_Comm * comm_ptr,
-                             int *info_args_global)
+static int compare_info_hint(const char *hintval, MPIR_Comm * comm_ptr, int *info_args_are_equal)
 {
+    int hintval_size = strlen(hintval);
+    int hintval_size_max;
+    int hintval_equal;
+    int hintval_equal_global = 0;
+    char *hintval_global = NULL;
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    int info_args_are_equal = 0;
 
-    mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, MPI_BYTE, MPI_BAND, comm_ptr, &errflag);
+    /* Find the maximum hintval size.  Each process locally compares
+     * its hintval size to the global max, and makes sure that this
+     * comparison is successful on all processes. */
+    mpi_errno =
+        MPIR_Allreduce(&hintval_size, &hintval_size_max, 1, MPI_INT, MPI_MAX, comm_ptr, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    if (!memcmp(sendbuf, recvbuf, count))
-        info_args_are_equal = 1;
+    hintval_equal = (hintval_size == hintval_size_max);
 
     mpi_errno =
-        MPIR_Allreduce(&info_args_are_equal, info_args_global, 1, MPI_INT, MPI_MIN, comm_ptr,
-                       &errflag);
+        MPIR_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
+                       comm_ptr, &errflag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    if (!hintval_equal_global)
+        goto fn_exit;
+
+
+    /* Now that the sizes of the hintvals match, check to make sure
+     * the actual hintvals themselves are the equal */
+    hintval_global = (char *) MPL_malloc(strlen(hintval), MPL_MEM_OTHER);
+
+    mpi_errno =
+        MPIR_Allreduce(hintval, hintval_global, strlen(hintval), MPI_CHAR,
+                       MPI_MAX, comm_ptr, &errflag);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    hintval_equal = !memcmp(hintval, hintval_global, strlen(hintval));
+
+    mpi_errno =
+        MPIR_Allreduce(&hintval_equal, &hintval_equal_global, 1, MPI_INT, MPI_LAND,
+                       comm_ptr, &errflag);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
+    if (hintval_global != NULL)
+        MPL_free(hintval_global);
+
+    *info_args_are_equal = hintval_equal_global;
     return mpi_errno;
 
   fn_fail:
@@ -402,8 +434,6 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
 {
     MPIR_Comm *comm_ptr;
     int mpi_errno = MPI_SUCCESS;
-    int hintval_size, hintval_size_global;
-    char *hintval_global = NULL;
     int flag = 0;
     char hintval[MPI_MAX_INFO_VAL + 1];
     int info_args_are_equal;
@@ -427,27 +457,7 @@ int MPIR_Comm_split_type_node_topo(MPIR_Comm * user_comm_ptr, int split_type, in
         hintval[0] = '\0';
     }
 
-    /* Compare hintval string length */
-    hintval_size = strlen(hintval);
-    mpi_errno =
-        compare_info_args(&hintval_size, &hintval_size_global, sizeof(int) / sizeof(char), comm_ptr,
-                          &info_args_are_equal);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
-    /* if all processes do not give the same length of hintval, skip
-     * topology-aware comm split */
-    if (!info_args_are_equal)
-        goto use_node_comm;
-
-    hintval_global = MPL_malloc(sizeof(hintval), MPL_MEM_OTHER);
-    /* Compare the hintval strings */
-    mpi_errno =
-        compare_info_args(hintval, hintval_global, (strlen(hintval) + 1) * sizeof(char), comm_ptr,
-                          &info_args_are_equal);
-
-    if (hintval_global != NULL)
-        MPL_free(hintval_global);
+    mpi_errno = compare_info_hint(hintval, comm_ptr, &info_args_are_equal);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
