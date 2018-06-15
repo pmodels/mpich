@@ -464,7 +464,7 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr, int m
      *  striping_info[1]: stripe_count
      *  striping_info[2]: avail_cb_nodes
      */
-    int stripe_size, stripe_count, CO = 1;
+    int i, myrank, stripe_size, stripe_count, CO = 1;
     int avail_cb_nodes, divisor, nprocs_for_coll = fd->hints->cb_nodes;
 
     /* Get hints value */
@@ -533,10 +533,12 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr, int m
 
     /* [Sunwoo] If avail_cb_nodes < fd->hints->cb_nodes,
      * fd->is_agg should also be adjusted. */
+    MPI_Comm_rank(fd->comm, &myrank);
+
     if (avail_cb_nodes < fd->hints->cb_nodes) {
         fd->hints->cb_nodes = avail_cb_nodes;
         fd->is_agg = 0;
-        for (int i = 0; i < avail_cb_nodes; i++) {
+        for (i = 0; i < avail_cb_nodes; i++) {
             if (myrank == fd->hints->ranklist[i])
                 fd->is_agg = 1;
         }

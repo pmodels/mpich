@@ -925,7 +925,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf, char *wr
         /* augment the request array for the 2nd and following iterations */
         send_req_idx = num_send_reqs;
         num_send_reqs += nprocs_send;
-        send_reqs = (MPI_Request *) ADIOI_Realloc(send_reqs, num_send_reqs * sizeof(MPI_Request))
+        send_reqs = (MPI_Request *) ADIOI_Realloc(send_reqs, num_send_reqs * sizeof(MPI_Request));
     }
 #endif
 
