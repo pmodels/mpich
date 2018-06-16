@@ -262,7 +262,7 @@ int MPII_Genutil_sched_sink(MPII_Genutil_sched_t * sched)
 #define FUNCNAME MPII_Genutil_sched_fence
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched)
+void MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched)
 {
     int fence_id;
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Gentran: scheduling a fence"));
@@ -273,7 +273,6 @@ int MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched)
     vtx_t *sched_fence = (vtx_t *) utarray_eltptr(sched->vtcs, fence_id);
     sched_fence->vtx_kind = MPII_GENUTIL_VTX_KIND__FENCE;
     sched->last_fence = fence_id;
-    return fence_id;
 }
 
 #undef FUNCNAME
