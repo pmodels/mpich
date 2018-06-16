@@ -7,8 +7,10 @@
 ##  to Argonne National Laboratory subject to Software Grant and Corporate
 ##  Contributor License Agreement dated February 8, 2012.
 
-include $(top_srcdir)/src/mpi/coll/algorithms/treealgo/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/algorithms/recexchalgo/Makefile.mk
-include $(top_srcdir)/src/mpi/coll/algorithms/stubalgo/Makefile.mk
+AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/coll/algorithms/recexchalgo
 
-AM_CPPFLAGS += -I$(top_srcdir)/src/mpi/coll/algorithms/common
+mpi_core_sources += \
+    src/mpi/coll/algorithms/recexchalgo/recexchalgo.c
+
+noinst_HEADERS += \
+    src/mpi/coll/algorithms/recexchalgo/recexchalgo.h

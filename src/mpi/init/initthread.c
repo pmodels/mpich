@@ -96,6 +96,14 @@ MPIR_Per_thread_t MPIR_Per_thread = { 0 };
 
 MPID_Thread_tls_t MPIR_Per_thread_key;
 
+#ifdef MPICH_THREAD_USE_MDTA
+/* This counts how many threads allowed to stay in the progress engine. */
+OPA_int_t num_server_thread = { 0 };
+
+/* Other threads will wait in a sync object, and are recorded here. */
+MPIR_Thread_sync_list_t sync_wait_list = { NULL };
+#endif
+
 /* These are initialized as null (avoids making these into common symbols).
    If the Fortran binding is supported, these can be initialized to
    their Fortran values (MPI only requires that they be valid between
