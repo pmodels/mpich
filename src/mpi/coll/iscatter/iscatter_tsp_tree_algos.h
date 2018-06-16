@@ -42,7 +42,7 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
     int tree_type;
     MPII_Treealgo_tree_t my_tree, parents_tree;
     int next_child;
-    int num_children, *child_subtree_size, *child_data_offset;
+    int num_children, *child_subtree_size = NULL, *child_data_offset = NULL;
     int offset, recv_size;
     int tag;
     int num_send_dependencies;
