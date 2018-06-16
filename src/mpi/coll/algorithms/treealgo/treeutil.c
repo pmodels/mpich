@@ -140,13 +140,13 @@ int MPII_Treeutil_tree_knomial_init(int rank, int nranks, int k, int root,
     /* set the children */
     crank = lrank + 1;  /* crank stands for child rank */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "parent of rank %d is %d, total ranks = %d (root=%d)\n", rank,
+                    (MPL_DBG_FDEST, "parent of rank %d is %d, total ranks = %d (root=%d)", rank,
                      ct->parent, nranks, root));
     for (i = time; i < maxtime; i++) {
         for (j = 1; j < k; j++) {
             if (crank < nranks) {
                 MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                                (MPL_DBG_FDEST, "adding child %d to rank %d\n",
+                                (MPL_DBG_FDEST, "adding child %d to rank %d",
                                  (crank + root) % nranks, rank));
                 mpi_errno = tree_add_child(ct, (crank + root) % nranks);
                 if (mpi_errno)
