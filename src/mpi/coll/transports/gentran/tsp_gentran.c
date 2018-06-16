@@ -73,7 +73,7 @@ int MPII_Genutil_sched_isend(const void *buf,
     vtxp->u.isend.comm = comm_ptr;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] isend\n", vtx_id));
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] isend", vtx_id));
 
     return vtx_id;
 }
@@ -109,7 +109,7 @@ int MPII_Genutil_sched_irecv(void *buf,
     vtxp->u.irecv.comm = comm_ptr;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] irecv\n", vtx_id));
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] irecv", vtx_id));
 
     return vtx_id;
 }
@@ -151,7 +151,7 @@ int MPII_Genutil_sched_imcast(const void *buf,
     vtxp->u.imcast.last_complete = -1;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] imcast\n", vtx_id));
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] imcast", vtx_id));
     return vtx_id;
 }
 
@@ -180,7 +180,7 @@ int MPII_Genutil_sched_reduce_local(const void *inbuf, void *inoutbuf, int count
     vtxp->u.reduce_local.op = op;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] reduce_local\n", vtx_id));
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] reduce_local", vtx_id));
 
     return vtx_id;
 }
@@ -212,7 +212,7 @@ int MPII_Genutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Da
     vtxp->u.localcopy.recvtype = recvtype;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] localcopy\n", vtx_id));
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] localcopy", vtx_id));
 
     return vtx_id;
 }
@@ -227,7 +227,7 @@ int MPII_Genutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Da
 int MPII_Genutil_sched_sink(MPII_Genutil_sched_t * sched)
 {
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: sched [sink] total=%d \n", sched->total_vtcs));
+                    (MPL_DBG_FDEST, "Gentran: sched [sink] total=%d", sched->total_vtcs));
 
     vtx_t *vtxp;
     int i, n_in_vtcs = 0, vtx_id;
@@ -265,7 +265,7 @@ int MPII_Genutil_sched_sink(MPII_Genutil_sched_t * sched)
 int MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched)
 {
     int fence_id;
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Gentran: scheduling a fence\n"));
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Gentran: scheduling a fence"));
 
     /* fence operation is an extension to fence, so we can resuse the fence call */
     fence_id = MPII_Genutil_sched_sink(sched);
@@ -292,7 +292,7 @@ int MPII_Genutil_sched_selective_sink(MPII_Genutil_sched_t * sched, int n_in_vtc
     MPII_Genutil_vtx_add_dependencies(sched, vtx_id, n_in_vtcs, in_vtcs);
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Gentran: schedule [%d] selective_sink task \n", vtx_id));
+                    (MPL_DBG_FDEST, "Gentran: schedule [%d] selective_sink task", vtx_id));
 
     return vtx_id;
 

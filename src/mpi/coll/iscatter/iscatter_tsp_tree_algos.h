@@ -120,7 +120,7 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
         child_subtree_size[i] = next_child - current_child;
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                         (MPL_DBG_FDEST,
-                         "i:%d rank:%d current_child:%d, next_child:%d, child_subtree_size[i]:%d, recv_size:%d\n",
+                         "i:%d rank:%d current_child:%d, next_child:%d, child_subtree_size[i]:%d, recv_size:%d",
                          i, rank, current_child, next_child, child_subtree_size[i], recv_size));
         recv_size += child_subtree_size[i];
     }
@@ -162,7 +162,7 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
     if (my_tree.parent != -1) {
         recv_id = MPIR_TSP_sched_irecv(tmp_buf, recv_size, recvtype, my_tree.parent,
                                        tag, comm, sched, 0, NULL);
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "rank:%d posts recv\n", rank));
+        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "rank:%d posts recv", rank));
     }
 
     /* send data to children */
