@@ -76,7 +76,7 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
     log_p_of_k--;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "allocate memory for storing communication pattern\n"));
+                    (MPL_DBG_FDEST, "allocate memory for storing communication pattern"));
     step1_recvfrom = *step1_recvfrom_ = (int *) MPL_malloc(sizeof(int) * (k - 1), MPL_MEM_COLL);
     step2_nbrs = *step2_nbrs_ = (int **) MPL_malloc(sizeof(int *) * log_p_of_k, MPL_MEM_COLL);
     for (i = 0; i < log_p_of_k; i++) {
@@ -100,7 +100,7 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
 
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "step 1 nbr calculation started. T is %d \n", T));
+                    (MPL_DBG_FDEST, "step 1 nbr calculation started. T is %d", T));
     *step1_nrecvs = 0;
     *step1_sendto = -1;
 
@@ -133,7 +133,7 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
         }
     }
 
-    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "step 1 nbr computation completed\n"));
+    MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "step 1 nbr computation completed"));
 
     /* Step 2 */
     if (*step1_sendto == -1) {  /* calulate step2_nbrs only for participating ranks */
@@ -171,13 +171,13 @@ int MPII_Recexchalgo_get_neighbors(int rank, int nranks, int *k_,
                     step2_nbrs[phase][cnt] =
                         (nbr < rem / (k - 1)) ? (nbr * k) + (k - 1) : nbr + rem;
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                                    (MPL_DBG_FDEST, "step2_nbrs[%d][%d] is %d \n", phase, cnt,
+                                    (MPL_DBG_FDEST, "step2_nbrs[%d][%d] is %d", phase, cnt,
                                      step2_nbrs[phase][cnt]));
                     cnt++;
                 }
             }
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "step 2, phase %d nbr calculation completed\n", phase));
+                            (MPL_DBG_FDEST, "step 2, phase %d nbr calculation completed", phase));
             digit[phase] = cbit;        /* reset the digit to original value */
             phase++;
             mask *= k;
@@ -341,7 +341,7 @@ int MPII_Recexchalgo_reverse_digits_step2(int rank, int comm_size, int k)
     /* calculate the actual rank from logical rank */
     step2_reverse_rank = MPII_Recexchalgo_step2rank_to_origrank(step2_reverse_rank, rem, T, k);
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "reverse_rank is %d\n", step2_reverse_rank));
+                    (MPL_DBG_FDEST, "reverse_rank is %d", step2_reverse_rank));
 
     MPL_free(digit);
     MPL_free(digit_reverse);

@@ -41,7 +41,7 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange(int rank, int nranks, 
         MPII_Recexchalgo_get_count_and_offset(rank, 0, k, nranks, &count, &offset);
         send_offset = offset * recv_extent * recvcount;
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST, "data exchange with %d send_offset %d count %d \n", partner,
+                        (MPL_DBG_FDEST, "data exchange with %d send_offset %d count %d", partner,
                          send_offset, count));
         /* send my data to partner */
         MPIR_TSP_sched_isend(((char *) recvbuf + send_offset), count * recvcount, recvtype, partner,
@@ -51,7 +51,7 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_data_exchange(int rank, int nranks, 
         MPII_Recexchalgo_get_count_and_offset(partner, 0, k, nranks, &count, &offset);
         recv_offset = offset * recv_extent * recvcount;
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST, "data exchange with %d recv_offset %d count %d \n", partner,
+                        (MPL_DBG_FDEST, "data exchange with %d recv_offset %d count %d", partner,
                          recv_offset, count));
         /* recv data from my partner */
         MPIR_TSP_sched_irecv(((char *) recvbuf + recv_offset), count * recvcount, recvtype,
@@ -145,7 +145,7 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_step2(int step1_sendto, int step2_np
                                  nbr, tag, comm, sched, nrecvs, recv_id);
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                             (MPL_DBG_FDEST,
-                             "phase %d nbr is %d send offset %d count %d depend on %d \n", phase,
+                             "phase %d nbr is %d send offset %d count %d depend on %d", phase,
                              nbr, send_offset, count, ((k - 1) * j)));
         }
         /* receive from the neighbors */
@@ -163,7 +163,7 @@ int MPIR_TSP_Iallgather_sched_intra_recexch_step2(int step1_sendto, int step2_np
             nrecvs++;
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                             (MPL_DBG_FDEST,
-                             "phase %d recv from %d recv offset %d cur_count %d recv returns id[%d] %d\n",
+                             "phase %d recv from %d recv offset %d cur_count %d recv returns id[%d] %d",
                              phase, nbr, recv_offset, count, j * (k - 1) + i,
                              recv_id[j * (k - 1) + i]));
         }

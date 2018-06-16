@@ -53,7 +53,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
     /* Check if the vertex has not already been issued and its
      * incoming dependencies have completed */
     if (vtxp->vtx_state == MPII_GENUTIL_VTX_STATE__INIT && vtxp->pending_dependencies == 0) {
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Issuing vertex %d\n", vtxid));
+        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "Issuing vertex %d", vtxid));
 
         switch (vtxp->vtx_kind) {
             case MPII_GENUTIL_VTX_KIND__ISEND:{
@@ -67,7 +67,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
-                                     "  --> GENTRAN transport (isend) issued, tag = %d\n",
+                                     "  --> GENTRAN transport (isend) issued, tag = %d",
                                      vtxp->u.isend.tag));
                     vtx_record_issue(vtxp, sched);
                 }
@@ -81,7 +81,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                                &vtxp->u.irecv.req);
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                                    (MPL_DBG_FDEST, "  --> GENTRAN transport (irecv) issued\n"));
+                                    (MPL_DBG_FDEST, "  --> GENTRAN transport (irecv) issued"));
                     vtx_record_issue(vtxp, sched);
                 }
                 break;
@@ -99,7 +99,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
 
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
-                                     "  --> GENTRAN transport (imcast) issued, tag = %d\n",
+                                     "  --> GENTRAN transport (imcast) issued, tag = %d",
                                      vtxp->u.imcast.tag));
                     vtx_record_issue(vtxp, sched);
                 }
@@ -113,7 +113,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                                       vtxp->u.reduce_local.datatype, vtxp->u.reduce_local.op);
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
-                                     "  --> GENTRAN transport (reduce_local) performed\n"));
+                                     "  --> GENTRAN transport (reduce_local) performed"));
 
                     vtx_record_completion(vtxp, sched);
                 }
@@ -128,7 +128,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                                    vtxp->u.localcopy.recvcount, vtxp->u.localcopy.recvtype);
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
-                                     "  --> GENTRAN transport (localcopy) performed\n"));
+                                     "  --> GENTRAN transport (localcopy) performed"));
 
                     vtx_record_completion(vtxp, sched);
                 }
@@ -137,7 +137,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
                     vtx_record_issue(vtxp, sched);
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
-                                     "  --> GENTRAN transport (selective sink) performed\n"));
+                                     "  --> GENTRAN transport (selective sink) performed"));
                     /* Nothin to do, just record completion */
                     vtx_record_completion(vtxp, sched);
                 }
@@ -145,7 +145,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
             case MPII_GENUTIL_VTX_KIND__SINK:{
                     vtx_record_issue(vtxp, sched);
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                                    (MPL_DBG_FDEST, "  --> GENTRAN transport (sink) performed\n"));
+                                    (MPL_DBG_FDEST, "  --> GENTRAN transport (sink) performed"));
                     /* Nothin to do, just record completion */
                     vtx_record_completion(vtxp, sched);
                 }
@@ -153,7 +153,7 @@ static void vtx_issue(int vtxid, MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_t
             case MPII_GENUTIL_VTX_KIND__FENCE:{
                     vtx_record_issue(vtxp, sched);
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                                    (MPL_DBG_FDEST, "  --> GENTRAN transport (fence) performed\n"));
+                                    (MPL_DBG_FDEST, "  --> GENTRAN transport (fence) performed"));
                     /* Nothin to do, just record completion */
                     vtx_record_completion(vtxp, sched);
                 }
@@ -189,13 +189,13 @@ static void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_
     vtxp->vtx_state = MPII_GENUTIL_VTX_STATE__COMPLETE;
     sched->completed_vtcs++;
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Number of completed vertices = %d\n", sched->completed_vtcs));
+                    (MPL_DBG_FDEST, "Number of completed vertices = %d", sched->completed_vtcs));
 
     /* update outgoing vertices about completion of this vertex */
 
     /* Get the list of outgoing vertices */
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                    (MPL_DBG_FDEST, "Number of outgoing vertices of %d = %d\n", vtxp->vtx_id,
+                    (MPL_DBG_FDEST, "Number of outgoing vertices of %d = %d", vtxp->vtx_id,
                      utarray_len(out_vtcs)));
 
     /* for each outgoing vertex of vertex *vtxp, decrement number of
@@ -209,7 +209,7 @@ static void vtx_record_completion(MPII_Genutil_vtx_t * vtxp, MPII_Genutil_sched_
          * issue the vertex */
         if (pending_dependencies == 0) {
             MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                            (MPL_DBG_FDEST, "Issuing vertex number %d\n", outvtx_id));
+                            (MPL_DBG_FDEST, "Issuing vertex number %d", outvtx_id));
             vtx_issue(outvtx_id, (vtx_t *) utarray_eltptr(sched->vtcs, outvtx_id), sched);
         }
     }
@@ -315,7 +315,7 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
 
     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                     (MPL_DBG_FDEST,
-                     "Updating in_vtcs of vtx %d, vtx_kind %d, in->used %d, n_in_vtcs %d\n", vtx_id,
+                     "Updating in_vtcs of vtx %d, vtx_kind %d, in->used %d, n_in_vtcs %d", vtx_id,
                      vtx->vtx_kind, utarray_len(in), n_in_vtcs));
 
     /* insert the incoming edges */
@@ -326,7 +326,7 @@ void MPII_Genutil_vtx_add_dependencies(MPII_Genutil_sched_t * sched, int vtx_id,
     for (i = 0; i < n_in_vtcs; i++) {
         int in_vtx_id = *(int *) utarray_eltptr(in, i);
         vtx_t *in_vtx = (vtx_t *) utarray_eltptr(sched->vtcs, in_vtx_id);
-        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "invtx: %d\n", in_vtx_id));
+        MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE, (MPL_DBG_FDEST, "invtx: %d", in_vtx_id));
         out_vtcs = in_vtx->out_vtcs;
         vtx_extend_utarray(out_vtcs, 1, &vtx_id);
 
@@ -409,7 +409,7 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
      * on the schedule. */
     if (sched->issued_head == NULL) {
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                        (MPL_DBG_FDEST, "issued list is empty, issue ready vtcs\n"));
+                        (MPL_DBG_FDEST, "issued list is empty, issue ready vtcs"));
 
         if (made_progress)
             *made_progress = TRUE;
@@ -421,7 +421,7 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
 
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                         (MPL_DBG_FDEST,
-                         "completed traversal of vtcs, sched->total_vtcs: %d, sched->completed_vtcs: %d\n",
+                         "completed traversal of vtcs, sched->total_vtcs: %d, sched->completed_vtcs: %d",
                          sched->total_vtcs, sched->completed_vtcs));
     }
 
@@ -436,11 +436,11 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
 #ifdef MPL_USE_DBG_LOGGING
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
-                                     "  --> GENTRAN transport (vtx_kind=%d) complete\n",
+                                     "  --> GENTRAN transport (vtx_kind=%d) complete",
                                      vtxp->vtx_kind));
                     if (vtxp->u.isend.count >= 1)
                         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                                        (MPL_DBG_FDEST, "data sent: %d\n",
+                                        (MPL_DBG_FDEST, "data sent: %d",
                                          *(int *) (vtxp->u.isend.buf)));
 #endif
                     vtx_record_completion(vtxp, sched);
@@ -456,11 +456,11 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
 #ifdef MPL_USE_DBG_LOGGING
                     MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                     (MPL_DBG_FDEST,
-                                     "  --> GENTRAN transport (vtx_kind=%d) complete\n",
+                                     "  --> GENTRAN transport (vtx_kind=%d) complete",
                                      vtxp->vtx_kind));
                     if (vtxp->u.irecv.count >= 1)
                         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
-                                        (MPL_DBG_FDEST, "data recvd: %d\n",
+                                        (MPL_DBG_FDEST, "data recvd: %d",
                                          *(int *) (vtxp->u.irecv.buf)));
 #endif
                     vtx_record_completion(vtxp, sched);
@@ -474,7 +474,7 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
                     if (MPIR_Request_is_complete(vtxp->u.imcast.req[i])) {
                         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                                         (MPL_DBG_FDEST,
-                                         "  --> GENTRAN transport imcast vertex %d complete\n", i));
+                                         "  --> GENTRAN transport imcast vertex %d complete", i));
                         MPIR_Request_free(vtxp->u.imcast.req[i]);
                         vtxp->u.imcast.req[i] = NULL;
                         vtxp->u.imcast.last_complete = i;
@@ -499,7 +499,7 @@ int MPII_Genutil_sched_poke(MPII_Genutil_sched_t * sched, int *is_complete, int 
     if (sched->completed_vtcs == sched->total_vtcs) {
         MPL_DBG_MSG_FMT(MPIR_DBG_COLL, VERBOSE,
                         (MPL_DBG_FDEST,
-                         "  --> GENTRAN transport (test) complete:  sched->total_vtcs=%d\n",
+                         "  --> GENTRAN transport (test) complete:  sched->total_vtcs=%d",
                          sched->total_vtcs));
     }
 #endif
