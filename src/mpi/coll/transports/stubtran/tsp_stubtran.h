@@ -47,7 +47,7 @@ int MPII_Stubutil_sched_localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_D
                                   MPII_Stubutil_sched_t * sched, int n_in_vtcs, int *in_vtcs);
 int MPII_Stubutil_sched_selective_sink(MPII_Stubutil_sched_t * sched, int n_in_vtcs, int *invtcs);
 int MPII_Genutil_sched_sink(MPII_Genutil_sched_t * sched);
-int MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched);
+void MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched);
 void *MPII_Stubutil_sched_malloc(size_t size, MPII_Stubutil_sched_t * sched);
 int MPII_Stubutil_sched_start(MPII_Stubutil_sched_t * sched, MPIR_Comm * comm,
                               MPII_Coll_req_t ** request);

@@ -94,6 +94,6 @@ int MPII_Genutil_sched_start(MPII_Genutil_sched_t * sched, MPIR_Comm * comm,
 int MPII_Genutil_sched_sink(MPII_Genutil_sched_t * sched);
 
 /* Transport function to schedule a fence */
-int MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched);
+void MPII_Genutil_sched_fence(MPII_Genutil_sched_t * sched);
 
 #endif /* TSP_GENTRAN_H_INCLUDED */
