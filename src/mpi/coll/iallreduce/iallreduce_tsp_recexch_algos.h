@@ -103,7 +103,6 @@ int MPIR_TSP_Iallreduce_sched_intra_recexch(const void *sendbuf, void *recvbuf, 
             step1_recvbuf[0] = MPIR_TSP_sched_malloc(count * extent, sched);
 
         for (i = 0; i < step1_nrecvs; i++) {    /* participating rank gets data from non-partcipating ranks */
-            int vtcs[2];
             if (per_nbr_buffer == 1)
                 step1_recvbuf[i] = MPIR_TSP_sched_malloc(count * extent, sched);
             else
