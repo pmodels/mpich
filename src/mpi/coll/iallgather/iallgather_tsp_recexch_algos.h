@@ -232,9 +232,9 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, int sendcount,
                                             int is_dist_halving, int k, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_inplace, is_contig, i;
+    int is_inplace, i;
     int nranks, rank;
-    size_t recv_type_size, recv_extent;
+    size_t recv_extent;
     MPI_Aint recv_lb, true_extent;
     int step1_sendto = -1, step2_nphases, step1_nrecvs, p_of_k, T;
     int dtcopy_id, n_invtcs = 0, invtx;
@@ -251,7 +251,6 @@ int MPIR_TSP_Iallgather_sched_intra_recexch(const void *sendbuf, int sendcount,
     nranks = MPIR_Comm_size(comm);
     rank = MPIR_Comm_rank(comm);
 
-    MPIR_Datatype_get_size_macro(recvtype, recv_type_size);
     MPIR_Datatype_get_extent_macro(recvtype, recv_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recv_lb, &true_extent);
     recv_extent = MPL_MAX(recv_extent, true_extent);
