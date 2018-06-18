@@ -773,7 +773,7 @@ static inline int MPIDI_CH4R_win_finalize(MPIR_Win ** win_ptr)
                                            MPIDI_CH4U_WIN(win, mmap_sz));
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
-            MPL_shm_hnd_finalize(&MPIDI_CH4U_WIN(win, shm_segment_handle));
+            mpi_errno = MPL_shm_hnd_finalize(&MPIDI_CH4U_WIN(win, shm_segment_handle));
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
