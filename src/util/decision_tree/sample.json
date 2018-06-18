@@ -1,0 +1,99 @@
+{ "collective": "reduce",
+    "children":
+    [
+        {
+            "type": "comm_size", "comparison": "lt", "value": 32,
+            "children":
+            [
+                {
+                    "type": "node_size", "comparison": "lte", "value": 8, "algorithm":
+                    {
+                        "mpir": "device",
+                        "device":
+                        {
+                            "algorithm": "alpha",
+                            "netmod":
+                            {
+                                "algorithm": "binomial", "kval": 4
+                            },
+                            "shm":
+                            {
+                                "algorithm": "one"
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "node_size", "comparison": "gt", "value": 8, "algorithm":
+                    {
+                        "mpir": "device",
+                        "device":
+                        {
+                            "algorithm": "netmod",
+                            "netmod":
+                            {
+                                "algorithm": "binomial", "kval": 8
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "msg_size", "comparison": "gt", "value": 1024,
+            "children":
+            [
+                {
+                    "type": "comm_kind", "comparison": "eq", "value": "intra", "algorithm":
+                    {
+                        "mpir": "device",
+                        "device":
+                        {
+                            "algorithm": "beta",
+                            "netmod":
+                            {
+                                "algorithm": "binomial", "kval": 8
+                            },
+                            "shm":
+                            {
+                                "algorithm": "one", "buffer_size": 128
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+},
+
+{ "collective": "bcast",
+    "children":
+    [
+        {
+            "type": "comm_kind", "comparison": "eq", "value": "intra", "algorithm":
+            {
+                "mpir": "device",
+                "device":
+                {
+                    "algorithm": "gamma",
+                    "netmod":
+                    {
+                        "algorithm": "recursive_doubling"
+                    },
+                    "shm":
+                    {
+                        "algorithm": "two", "buffer_size": 256
+                    }
+                }
+            }
+        },
+        {
+            "__COMMENT__": "Having no type means this is the catchall else statement",
+            "algorithm":
+            {
+                "mpir": "device",
+                "__COMMENT__": "Having nothing under mpir means the device should do it's own seleciton"
+            }
+        }
+    ]
+}
