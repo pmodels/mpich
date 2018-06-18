@@ -720,6 +720,7 @@ int MPIR_Ibarrier_sched_impl(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 /* sched-based intracomm-only functions */
 int MPIR_Ibarrier_sched_intra_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 int MPIR_Ibarrier_sched_intra_recursive_doubling(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
+int MPIR_Ibarrier_intra_recexch(MPIR_Comm * comm, MPIR_Request ** req);
 
 /* sched-based intercomm-only functions */
 int MPIR_Ibarrier_sched_inter_auto(MPIR_Comm * comm_ptr, MPIR_Sched_t s);
