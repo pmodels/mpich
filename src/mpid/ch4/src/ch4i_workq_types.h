@@ -48,40 +48,137 @@ struct MPIDI_workq_elemt {
     OPA_int_t *processed;       /* set to true by the progress thread when
                                  * this work item is done */
     union {
-        struct {
-            const void *send_buf;
-            void *recv_buf;
-            MPI_Aint count;
-            MPI_Datatype datatype;
-            int rank;
-            int tag;
-            MPIR_Comm *comm_ptr;
-            int context_offset;
-            MPIDI_av_entry_t *addr;
-            MPI_Status *status;
-            MPIR_Request *request;
-            int *flag;          /* needed for the probe routines */
-            MPIR_Request **message;     /* used for mprobe */
+        union {
+            struct {
+                const void *send_buf;
+                MPI_Aint count;
+                MPI_Datatype datatype;
+                int rank;
+                int tag;
+                MPIR_Comm *comm_ptr;
+                int context_offset;
+                MPIDI_av_entry_t *addr;
+                MPIR_Request *request;
+            } send; /* also for ISEND SSEND ISSEND RSEND IRSEND */
+            struct {
+                void *recv_buf;
+                MPI_Aint count;
+                MPI_Datatype datatype;
+                int rank;
+                int tag;
+                MPIR_Comm *comm_ptr;
+                int context_offset;
+                MPIDI_av_entry_t *addr;
+                MPI_Status *status;
+                MPIR_Request *request;
+            } recv;
+            struct {
+                void *recv_buf;
+                MPI_Aint count;
+                MPI_Datatype datatype;
+                int rank;
+                int tag;
+                MPIR_Comm *comm_ptr;
+                int context_offset;
+                MPIDI_av_entry_t *addr;
+                MPIR_Request *request;
+            } irecv;
+            struct {
+                MPI_Aint count;
+                MPI_Datatype datatype;
+                int rank;
+                int tag;
+                MPIR_Comm *comm_ptr;
+                int context_offset;
+                MPIDI_av_entry_t *addr;
+                MPI_Status *status;
+                MPIR_Request *request;
+                int *flag;
+            } iprobe;
+            struct {
+                MPI_Aint count;
+                MPI_Datatype datatype;
+                int rank;
+                int tag;
+                MPIR_Comm *comm_ptr;
+                int context_offset;
+                MPIDI_av_entry_t *addr;
+                MPI_Status *status;
+                MPIR_Request *request;
+                int *flag;
+                MPIR_Request **message;
+            } improbe;
         } pt2pt;
-        struct {
-            const void *origin_addr;
-            int origin_count;
-            MPI_Datatype origin_datatype;
-            void *result_addr;
-            int result_count;
-            MPI_Datatype result_datatype;
-            int target_rank;
-            MPI_Aint target_disp;
-            int target_count;
-            MPI_Datatype target_datatype;
-            MPI_Op acc_op;
-            MPIR_Group *group;
-            int lock_type;
-            int assert;         /* assert for sync functions */
-            MPIR_Win *win_ptr;
-            MPIDI_av_entry_t *addr;
+        union {
+            struct {
+                const void *origin_addr;
+                int origin_count;
+                MPI_Datatype origin_datatype;
+                int target_rank;
+                MPI_Aint target_disp;
+                int target_count;
+                MPI_Datatype target_datatype;
+                MPIR_Win *win_ptr;
+                MPIDI_av_entry_t *addr;
+            } put;
+            struct {
+                void *result_addr;
+                int result_count;
+                MPI_Datatype result_datatype;
+                int target_rank;
+                MPI_Aint target_disp;
+                int target_count;
+                MPI_Datatype target_datatype;
+                MPIR_Win *win_ptr;
+                MPIDI_av_entry_t *addr;
+            } put;
+            struct {
+                MPIR_Group *group;
+                int assert;         /* assert for sync functions */
+                MPIR_Win *win_ptr;
+            } post;
+            struct {
+                MPIR_Win *win_ptr;
+            } complete;
+            struct {
+                MPIR_Win *win_ptr;
+            } fence;
+            struct {
+                int target_rank
+                int lock_type;
+                int assert;         /* assert for sync functions */
+                MPIR_Win *win_ptr;
+                MPIDI_av_entry_t *addr;
+            } lock;
+                int target_rank;
+                MPIR_Win *win_ptr;
+                MPIDI_av_entry_t *addr;
+            } unlock;
+            struct {
+                int assert;         /* assert for sync functions */
+                MPIR_Win *win_ptr;
+            } lock_all;
+            struct {
+                MPIR_Win *win_ptr;
+            } unlock_all;
+            struct {
+                int target_rank;
+                MPIR_Win *win_ptr;
+                MPIDI_av_entry_t *addr;
+            } flush;
+            struct {
+                MPIR_Win *win_ptr;
+            } flush_all;
+            struct {
+                int target_rank;
+                MPIR_Win *win_ptr;
+                MPIDI_av_entry_t *addr;
+            } flush_local;
+            struct {
+                MPIR_Win *win_ptr;
+            } flush_local_all;
         } rma;
-    };
+    } op;
 };
 
 /* List structure to implement per-object (e.g. per-communicator, per-window) work queues */

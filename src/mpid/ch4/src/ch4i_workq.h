@@ -54,19 +54,75 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_t * workq,
     pt2pt_elemt = &request->dev.ch4.command;
     pt2pt_elemt->op = op;
     pt2pt_elemt->processed = processed;
-    pt2pt_elemt->pt2pt.send_buf = send_buf;
-    pt2pt_elemt->pt2pt.recv_buf = recv_buf;
-    pt2pt_elemt->pt2pt.count = count;
-    pt2pt_elemt->pt2pt.datatype = datatype;
-    pt2pt_elemt->pt2pt.rank = rank;
-    pt2pt_elemt->pt2pt.tag = tag;
-    pt2pt_elemt->pt2pt.comm_ptr = comm_ptr;
-    pt2pt_elemt->pt2pt.context_offset = context_offset;
-    pt2pt_elemt->pt2pt.addr = addr;
-    pt2pt_elemt->pt2pt.status = status;
-    pt2pt_elemt->pt2pt.request = request;
-    pt2pt_elemt->pt2pt.flag = flag;
-    pt2pt_elemt->pt2pt.message = message;
+
+    switch (op) {
+    case SEND:
+    case ISEND:
+    case SSEND:
+    case ISSEND:
+    case RSEND:
+    case IRSEND:
+        pt2pt_elemt->op.pt2pt.send.send_buf = send_buf;
+        pt2pt_elemt->op.pt2pt.send.count = count;
+        pt2pt_elemt->op.pt2pt.send.datatype = datatype;
+        pt2pt_elemt->op.pt2pt.send.rank = rank;
+        pt2pt_elemt->op.pt2pt.send.tag = tag;
+        pt2pt_elemt->op.pt2pt.send.comm_ptr = comm_ptr;
+        pt2pt_elemt->op.pt2pt.send.context_offset = context_offset;
+        pt2pt_elemt->op.pt2pt.send.addr = addr;
+        pt2pt_elemt->op.pt2pt.send.request = request;
+        break;
+    case RECV:
+        pt2pt_elemt->op.pt2pt.recv.recv_buf = recv_buf;
+        pt2pt_elemt->op.pt2pt.recv.count = count;
+        pt2pt_elemt->op.pt2pt.recv.datatype = datatype;
+        pt2pt_elemt->op.pt2pt.recv.rank = rank;
+        pt2pt_elemt->op.pt2pt.recv.tag = tag;
+        pt2pt_elemt->op.pt2pt.recv.comm_ptr = comm_ptr;
+        pt2pt_elemt->op.pt2pt.recv.context_offset = context_offset;
+        pt2pt_elemt->op.pt2pt.recv.addr = addr;
+        pt2pt_elemt->op.pt2pt.recv.status = status;
+        pt2pt_elemt->op.pt2pt.recv.request = request;
+        break;
+    case IRECV:
+        pt2pt_elemt->op.pt2pt.irecv.recv_buf = recv_buf;
+        pt2pt_elemt->op.pt2pt.irecv.count = count;
+        pt2pt_elemt->op.pt2pt.irecv.datatype = datatype;
+        pt2pt_elemt->op.pt2pt.irecv.rank = rank;
+        pt2pt_elemt->op.pt2pt.irecv.tag = tag;
+        pt2pt_elemt->op.pt2pt.irecv.comm_ptr = comm_ptr;
+        pt2pt_elemt->op.pt2pt.irecv.context_offset = context_offset;
+        pt2pt_elemt->op.pt2pt.irecv.addr = addr;
+        pt2pt_elemt->op.pt2pt.irecv.request = request;
+        break;
+    case IPROBE:
+        pt2pt_elemt->op.pt2pt.iprobe.count = count;
+        pt2pt_elemt->op.pt2pt.iprobe.datatype = datatype;
+        pt2pt_elemt->op.pt2pt.iprobe.rank = rank;
+        pt2pt_elemt->op.pt2pt.iprobe.tag = tag;
+        pt2pt_elemt->op.pt2pt.iprobe.comm_ptr = comm_ptr;
+        pt2pt_elemt->op.pt2pt.iprobe.context_offset = context_offset;
+        pt2pt_elemt->op.pt2pt.iprobe.addr = addr;
+        pt2pt_elemt->op.pt2pt.iprobe.status = status;
+        pt2pt_elemt->op.pt2pt.iprobe.request = request;
+        pt2pt_elemt->op.pt2pt.iprobe.flag = flag;
+        break;
+    case IMPROBE:
+        pt2pt_elemt->op.pt2pt.improbe.count = count;
+        pt2pt_elemt->op.pt2pt.improbe.datatype = datatype;
+        pt2pt_elemt->op.pt2pt.improbe.rank = rank;
+        pt2pt_elemt->op.pt2pt.improbe.tag = tag;
+        pt2pt_elemt->op.pt2pt.improbe.comm_ptr = comm_ptr;
+        pt2pt_elemt->op.pt2pt.improbe.context_offset = context_offset;
+        pt2pt_elemt->op.pt2pt.improbe.addr = addr;
+        pt2pt_elemt->op.pt2pt.improbe.status = status;
+        pt2pt_elemt->op.pt2pt.improbe.request = request;
+        pt2pt_elemt->op.pt2pt.improbe.flag = flag;
+        pt2pt_elemt->op.pt2pt.improbe.message = message;
+        break;
+    default:
+        MPIR_Assert(0);
+    })
 
     MPIDI_workq_enqueue(workq, pt2pt_elemt);
 }
@@ -95,23 +151,79 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_workq_rma_enqueue(MPIDI_workq_t * workq,
     rma_elemt = MPIDI_workq_elemt_create();
     rma_elemt->op = op;
     rma_elemt->processed = processed;
-    rma_elemt->rma.origin_addr = origin_addr;
-    rma_elemt->rma.origin_count = origin_count;
-    rma_elemt->rma.origin_datatype = origin_datatype;
-    rma_elemt->rma.result_addr = result_addr;
-    rma_elemt->rma.result_count = result_count;
-    rma_elemt->rma.result_datatype = result_datatype;
-    rma_elemt->rma.target_rank = target_rank;
-    rma_elemt->rma.target_disp = target_disp;
-    rma_elemt->rma.target_count = target_count;
-    rma_elemt->rma.target_datatype = target_datatype;
-    rma_elemt->rma.acc_op = acc_op;
-    rma_elemt->rma.group = group;
-    rma_elemt->rma.lock_type = lock_type;
-    rma_elemt->rma.assert = assert;
-    rma_elemt->rma.win_ptr = win_ptr;
-    rma_elemt->rma.addr = addr;
 
+    switch (op) {
+    case PUT:
+        rma_elemt->op.rma.put.origin_addr = origin_addr;
+        rma_elemt->op.rma.put.origin_count = origin_count;
+        rma_elemt->op.rma.put.origin_datatype = origin_datatype;
+        rma_elemt->op.rma.put.target_rank = target_rank;
+        rma_elemt->op.rma.put.target_disp = target_disp;
+        rma_elemt->op.rma.put.target_count = target_count;
+        rma_elemt->op.rma.put.target_datatype = target_datatype;
+        rma_elemt->op.rma.put.win_ptr = win_ptr;
+        rma_elemt->op.rma.put.addr = addr;
+        break;
+    case GET:
+        rma_elemt->op.rma.get.result_addr = result_addr;
+        rma_elemt->op.rma.get.result_count = result_count;
+        rma_elemt->op.rma.get.result_datatype = result_datatype;
+        rma_elemt->op.rma.get.target_rank = target_rank;
+        rma_elemt->op.rma.get.target_disp = target_disp;
+        rma_elemt->op.rma.get.target_count = target_count;
+        rma_elemt->op.rma.get.target_datatype = target_datatype;
+        rma_elemt->op.rma.get.win_ptr = win_ptr;
+        rma_elemt->op.rma.get.addr = addr;
+        break;
+    case POST:
+        rma_elemt->op.rma.post.group = group;
+        rma_elemt->op.rma.post.assert = assert;
+        rma_elemt->op.rma.post.win_ptr = win_ptr;
+        break;
+    case COMPLETE:
+        rma_elemt->op.rma.complete.win_ptr = win_ptr;
+        break;
+    case FENCE:
+        rma_elemt->op.rma.fence.win_ptr = win_ptr;
+        break;
+    case LOCK:
+        rma_elemt->op.rma.lock.target_rank = target_rank;
+        rma_elemt->op.rma.lock.lock_type = lock_type;
+        rma_elemt->op.rma.lock.assert = assert;
+        rma_elemt->op.rma.lock.win_ptr = win_ptr;
+        rma_elemt->op.rma.lock.addr = addr;
+        break;
+    case UNLOCK:
+        rma_elemt->op.rma.unlock.target_rank = target_rank;
+        rma_elemt->op.rma.unlock.win_ptr = win_ptr;
+        rma_elemt->op.rma.unlock.addr = addr;
+        break;
+    case LOCK_ALL:
+        rma_elemt->op.rma.lock_all.assert = assert;
+        rma_elemt->op.rma.lock_all.win_ptr = win_ptr;
+        break;
+    case UNLOCK_ALL:
+        rma_elemt->op.rma.unlock_all.win_ptr = win_ptr;
+        break;
+    case FLUSH:
+        rma_elemt->op.rma.flush.target_rank = target_rank;
+        rma_elemt->op.rma.flush.win_ptr = win_ptr;
+        rma_elemt->op.rma.flush.addr = addr;
+        break;
+    case FLUSH_ALL:
+        rma_elemt->op.rma.flush_all.win_ptr = win_ptr;
+        break;
+    case FLUSH_LOCAL:
+        rma_elemt->op.rma.flush_local.target_rank = target_rank;
+        rma_elemt->op.rma.flush_local.win_ptr = win_ptr;
+        rma_elemt->op.rma.flush_local.addr = addr;
+        break;
+    case FLUSH_LOCAL_ALL:
+        rma_elemt->op.rma.flush_local_all.win_ptr = win_ptr;
+        break;
+    default:
+        MPIR_Assert(0);
+    }
     MPIDI_workq_enqueue(workq, rma_elemt);
 }
 
