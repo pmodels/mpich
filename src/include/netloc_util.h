@@ -13,6 +13,7 @@
 typedef enum {
     MPIR_NETLOC_NETWORK_TYPE__FAT_TREE,
     MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK,
+    MPIR_NETLOC_NETWORK_TYPE__TORUS,
     MPIR_NETLOC_NETWORK_TYPE__INVALID,
 } MPIR_Netloc_network_topo_type;
 
@@ -25,6 +26,13 @@ typedef struct {
              * the network */
             int *node_levels;
         } tree;
+        struct {
+            int dimension;
+            int *geometry;
+            /*Flat index assignment in round robin manner to PUs
+             * that translates to a tuple, indexed by the uid of nodes */
+            int *node_coordinates;
+        } torus;
     } u;
 
     netloc_node_t *network_endpoint;
@@ -45,5 +53,8 @@ int MPIR_Netloc_get_hostnode_index_in_tree(MPIR_Netloc_network_attributes attrib
                                            netloc_topology_t topology,
                                            netloc_node_t * network_endpoint,
                                            int *index, int *num_nodes);
+int MPIR_Netloc_get_torus_network_coordinates(MPIR_Netloc_network_attributes network_attr,
+                                              netloc_topology_t netloc_topology,
+                                              netloc_node_t * node, long *node_coordinates);
 
 #endif /* NETLOC_UTIL_H_INCLUDED */
