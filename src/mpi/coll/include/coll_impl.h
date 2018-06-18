@@ -276,6 +276,7 @@ extern MPIR_Ialltoallw_inter_algo_t MPIR_Ialltoallw_inter_algo_choice;
 typedef enum MPIR_Ibarrier_intra_algo_t {
     MPIR_IBARRIER_INTRA_ALGO_AUTO,
     MPIR_IBARRIER_INTRA_ALGO_RECURSIVE_DOUBLING,
+    MPIR_IBARRIER_INTRA_ALGO_GENTRAN_RECEXCH,
 } MPIR_Ibarrier_intra_algo_t;
 extern MPIR_Ibarrier_intra_algo_t MPIR_Ibarrier_intra_algo_choice;
 

@@ -471,6 +471,8 @@ int MPII_Coll_init(void)
     /* Ibarrier Intra */
     if (0 == strcmp(MPIR_CVAR_IBARRIER_INTRA_ALGORITHM, "recursive_doubling"))
         MPIR_Ibarrier_intra_algo_choice = MPIR_IBARRIER_INTRA_ALGO_RECURSIVE_DOUBLING;
+    if (0 == strcmp(MPIR_CVAR_IBARRIER_INTRA_ALGORITHM, "recexch"))
+        MPIR_Ibarrier_intra_algo_choice = MPIR_IBARRIER_INTRA_ALGO_GENTRAN_RECEXCH;
     else
         MPIR_Ibarrier_intra_algo_choice = MPIR_IBARRIER_INTRA_ALGO_AUTO;
 
