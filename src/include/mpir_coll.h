@@ -475,6 +475,10 @@ int MPIR_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, 
 int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                           const int *recvcounts, const int *displs, MPI_Datatype recvtype,
                           MPIR_Comm * comm_ptr, MPIR_Request ** request);
+int MPIR_Iallgatherv_intra_gentran_brucks(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                                          void *recvbuf, const int recvcounts[], const int displs[],
+                                          MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
+                                          MPIR_Request ** request);
 
 /* sched-based functions */
 int MPIR_Iallgatherv_sched(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
