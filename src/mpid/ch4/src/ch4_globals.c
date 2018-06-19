@@ -149,23 +149,10 @@ int MPIDI_check_for_failed_procs(void)
      * comm_world.  We need to fix hydra to include the pgid along
      * with the rank, then we need to create the failed group from
      * something bigger than comm_world. */
-#ifdef USE_PMI2_API
+#ifdef USE_PMIX_API
+    MPIR_Assert(0);
+#elif defined(USE_PMI2_API)
     len = PMI2_MAX_VALLEN;
-#elif defined(USE_PMIX_API)
-    len = 1024;
-#else
-    pmi_errno = PMI_KVS_Get_value_length_max(&len);
-    if (pmi_errno != PMI_SUCCESS) {
-        mpi_errno = MPI_ERR_OTHER;
-        MPIR_ERR_POP(mpi_errno);
-    }
-#endif
-
-#ifndef USE_PMIX_API
-    pmi_errno = PMI_KVS_Get_my_name(kvsname, len);
-    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_value_length_max");
-#endif
-#ifdef USE_PMI2_API
     {
         int vallen = 0;
         pmi_errno =
@@ -173,9 +160,11 @@ int MPIDI_check_for_failed_procs(void)
                          len, &vallen);
         MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
     }
-#elif defined(USE_PMIX_API)
-    MPIR_Assert(0);
 #else
+    pmi_errno = PMI_KVS_Get_value_length_max(&len);
+    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_value_length_max");
+    pmi_errno = PMI_KVS_Get_my_name(kvsname, len);
+    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_my_name");
     pmi_errno = PMI_KVS_Get(kvsname, "PMI_dead_processes", failed_procs_string, len);
     MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
 #endif
