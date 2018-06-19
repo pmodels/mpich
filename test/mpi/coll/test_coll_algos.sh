@@ -90,14 +90,14 @@ testing_env="env=MPIR_CVAR_ALLREDUCE_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLREDUCE_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLREDUCE_DEVICE_COLLECTIVE=0 "
-algo_names="recexch_single_buffer recexch_multiple_buffer"
+algo_names="recexch_single_buffer recexch_multiple_buffer tree_kary tree_knomial"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
     for kval in ${kvalues}; do
         #set the environment
         env="${testing_env} env=MPIR_CVAR_IALLREDUCE_INTRA_ALGORITHM=${algo_name} "
-        env+="env=MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL=${kval}"
+        env+="env=MPIR_CVAR_IALLREDUCE_RECEXCH_KVAL=${kval} env=MPIR_CVAR_IALLREDUCE_TREE_PIPELINE_CHUNK_SIZE=4096 "
 
         coll_algo_tests+="allred 4 arg=100 ${env}${nl}"
         coll_algo_tests+="allred 7 ${env}${nl}"
