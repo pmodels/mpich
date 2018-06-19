@@ -21,6 +21,16 @@ cvars:
       description : >-
         k value for recursive exchange based iallgatherv
 
+    - name        : MPIR_CVAR_IALLGATHERV_BRUCKS_KVAL
+      category    : COLLECTIVE
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        k value for radix in brucks based iallgatherv
+
     - name        : MPIR_CVAR_IALLGATHERV_INTRA_ALGORITHM
       category    : COLLECTIVE
       type        : string
@@ -37,6 +47,7 @@ cvars:
         recexch_distance_doubling    - Force generic transport recursive exchange with neighbours doubling in distance in each phase
         recexch_distance_halving     - Force generic transport recursive exchange with neighbours halving in distance in each phase
         gentran_ring              - Force generic transport ring algorithm
+        gentran_brucks     - Force generic transport based brucks algorithm
 
     - name        : MPIR_CVAR_IALLGATHERV_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -329,6 +340,15 @@ int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendt
                     MPIR_Iallgatherv_intra_gentran_ring(sendbuf, sendcount, sendtype,
                                                         recvbuf, recvcounts, displs,
                                                         recvtype, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IALLGATHERV_INTRA_ALGO_GENTRAN_BRUCKS:
+                mpi_errno =
+                    MPIR_Iallgatherv_intra_gentran_brucks(sendbuf, sendcount, sendtype,
+                                                          recvbuf, recvcounts, displs,
+                                                          recvtype, comm_ptr, request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
