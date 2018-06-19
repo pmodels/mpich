@@ -92,9 +92,19 @@ M*/
 
 #if defined(MPICH_IS_THREADED)
 
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
+#define MPIDUI_THREAD_CS_ENTER_NREC(mutex)                              \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            int err_ = 0;                                               \
+            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive locking POBJ mutex"); \
+            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_lock %p", &mutex); \
+            MPIDU_Thread_mutex_lock(&mutex, &err_);                     \
+            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_lock %p", &mutex); \
+            MPIR_Assert(err_ == 0);                                     \
+        }                                                               \
+    } while (0)
 
-#define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex)                            \
+#define MPIDUI_THREAD_CS_ENTER_REC(mutex)                               \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int rec_err_ = 0;                                           \
@@ -113,22 +123,27 @@ M*/
             per_thread->lock_depth++;                                   \
         }                                                               \
     } while (0)
+
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
+
+#define MPIDUI_THREAD_CS_ENTER_GLOBAL    MPIDUI_THREAD_CS_ENTER_REC
 #define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_VNI_GLOBAL MPIDUI_THREAD_CS_ENTER_GLOBAL
+#define MPIDUI_THREAD_CS_ENTER_VNI(mutex) do {} while (0)
 
-#else /* MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_POBJ */
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
 
-#define MPIDUI_THREAD_CS_ENTER_POBJ(mutex)                              \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_ = 0;                                               \
-            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive locking POBJ mutex"); \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_lock %p", &mutex); \
-            MPIDU_Thread_mutex_lock(&mutex, &err_);                     \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_lock %p", &mutex); \
-            MPIR_Assert(err_ == 0);                                     \
-        }                                                               \
-    } while (0)
+#define MPIDUI_THREAD_CS_ENTER_POBJ(mutex)  MPIDUI_THREAD_CS_ENTER_NREC(mutex)
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_VNI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_VNI(mutex) do {} while (0)
+
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+
+#define MPIDUI_THREAD_CS_ENTER_GLOBAL MPIDUI_THREAD_CS_ENTER_REC
+#define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_VNI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_VNI(mutex) MPIDUI_THREAD_CS_ENTER_NREC(mutex)
 
 #endif /* MPICH_THREAD_GRANULARITY */
 
@@ -136,6 +151,87 @@ M*/
 
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_VNI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_VNI(mutex) do {} while (0)
+
+#endif /* MPICH_IS_THREADED */
+
+
+/*M MPIDU_THREAD_CS_TRYENTER - Try enter a named critical section
+
+  Input Parameters:
++ _name - name of the critical section
+- _context - A context (typically an object) of the critical section
+- cs_acqt  - A flag that indicades whether the critical section was acquired
+
+M*/
+#define MPIDU_THREAD_CS_TRYENTER(name, mutex, cs_acq) MPIDUI_THREAD_CS_TRYENTER_##name(mutex, cs_acq)
+
+#if defined(MPICH_IS_THREADED)
+
+#define MPIDUI_THREAD_CS_TRYENTER_NREC(mutex, cs_req)                   \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            int err_ = 0;                                               \
+            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive try locking mutex"); \
+            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_lock %p", &mutex); \
+            MPIDU_Thread_mutex_trylock(&mutex, &err_, &cs_acq);         \
+            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_lock %p", &mutex); \
+            MPIR_Assert(err_ == 0);                                     \
+        }                                                               \
+    } while (0)
+
+#define MPIDUI_THREAD_CS_TRYENTER_REC(mutex, cs_req)                    \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            int rec_err_ = 0;                                           \
+            MPIR_Per_thread_t *per_thread = NULL;                       \
+                                                                        \
+            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "recursive try locking mutex"); \
+            MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key, \
+                                         MPIR_Per_thread, per_thread, &rec_err_); \
+            MPIR_Assert(rec_err_ == 0);                                 \
+                                                                        \
+            if (per_thread->lock_depth == 0) {                          \
+                int err_ = 0;                                           \
+                MPIDU_Thread_mutex_trylock(&mutex, &err_, &cs_acq);     \
+                MPIR_Assert(err_ == 0);                                 \
+                if (cs_acq)                                              \
+                    per_thread->lock_depth++;                           \
+            } else                                                      \
+                per_thread->lock_depth++;                               \
+        }                                                               \
+    } while (0)
+
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
+
+#define MPIDUI_THREAD_CS_TRYENTER_GLOBAL(mutex,cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_POBJ(mutex,cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VNI_GLOBAL(mutex,cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VNI(mutex,cs_acq)
+
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
+
+#define MPIDUI_THREAD_CS_TRYENTER_POBJ(mutex,cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_GLOBAL(mutex,cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VNI_GLOBAL(mutex,cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VNI(mutex,cs_acq)
+
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+
+#define MPIDUI_THREAD_CS_TRYENTER_GLOBAL(mutex,cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_POBJ(mutex,cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VNI_GLOBAL(mutex, cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VNI MPIDUI_THREAD_CS_TRYENTER_NREC
+
+#endif /* MPICH_THREAD_GRANULARITY */
+
+#else /* !defined(MPICH_IS_THREADED) */
+
+#define MPIDUI_THREAD_CS_TRYENTER_GLOBAL(mutex, cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_POBJ(mutex, cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VNI_GLOBAL(mutex, cs_acq)
+#define MPIDUI_THREAD_CS_TRYENTER_VNI(mutex, cs_acq)
 
 #endif /* MPICH_IS_THREADED */
 
@@ -148,12 +244,23 @@ M*/
 
 M*/
 #define MPIDU_THREAD_CS_EXIT(name, mutex) MPIDUI_THREAD_CS_EXIT_##name(mutex)
+#define MPIDU_THREAD_CS_EXIT_REC   MPIDUI_THREAD_CS_EXIT_REC
+#define MPIDU_THREAD_CS_EXIT_NREC  MPIDUI_THREAD_CS_EXIT_NREC
 
 #if defined(MPICH_IS_THREADED)
 
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
+#define MPIDUI_THREAD_CS_EXIT_NREC(mutex)                               \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            int err_ = 0;                                               \
+            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive unlocking POBJ mutex"); \
+            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"MPIDU_Thread_mutex_unlock %p", &mutex); \
+            MPIDU_Thread_mutex_unlock(&mutex, &err_);                   \
+            MPIR_Assert(err_ == 0);                                     \
+        }                                                               \
+    } while (0)
 
-#define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex)                             \
+#define MPIDUI_THREAD_CS_EXIT_REC(mutex)                                \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int rec_err_ = 0;                                           \
@@ -175,21 +282,26 @@ M*/
         }                                                               \
     } while (0)
 
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
+
+#define MPIDUI_THREAD_CS_EXIT_GLOBAL    MPIDUI_THREAD_CS_EXIT_REC
 #define MPIDUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_VNI_GLOBAL MPIDUI_THREAD_CS_EXIT_GLOBAL
+#define MPIDUI_THREAD_CS_EXIT_VNI(mutex) do {} while (0)
 
-#else /* MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_POBJ */
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
 
-#define MPIDUI_THREAD_CS_EXIT_POBJ(mutex)                               \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_ = 0;                                               \
-            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive unlocking POBJ mutex"); \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"MPIDU_Thread_mutex_unlock %p", &mutex); \
-            MPIDU_Thread_mutex_unlock(&mutex, &err_);                   \
-            MPIR_Assert(err_ == 0);                                     \
-        }                                                               \
-    } while (0)
+#define MPIDUI_THREAD_CS_EXIT_POBJ      MPIDUI_THREAD_CS_EXIT_NREC
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_VNI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_VNI(mutex) do {} while (0)
+
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+
+#define MPIDUI_THREAD_CS_EXIT_GLOBAL MPIDUI_THREAD_CS_EXIT_REC
+#define MPIDUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_VNI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_VNI(mutex) MPIDUI_THREAD_CS_EXIT_NREC(mutex)
 
 #endif /* MPICH_THREAD_GRANULARITY */
 
@@ -197,6 +309,8 @@ M*/
 
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_VNI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_VNI(mutex) do {} while (0)
 
 #endif /* MPICH_IS_THREADED */
 
@@ -226,9 +340,11 @@ M*/
             MPIR_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
+
+#define MPIDUI_THREAD_CS_YIELD_VNI_GLOBAL(mutex) MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)
 #define MPIDUI_THREAD_CS_YIELD_POBJ(mutex) do {} while (0)
 
-#else /* MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_POBJ */
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
 
 #define MPIDUI_THREAD_CS_YIELD_POBJ(mutex)                              \
     do {                                                                \
@@ -240,6 +356,12 @@ M*/
         }                                                               \
     } while (0)
 #define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex) do {} while (0)
+
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__VNI
+
+#define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_YIELD_VNI_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_YIELD_POBJ(mutex) do {} while (0)
 
 #endif /* MPICH_THREAD_GRANULARITY */
 
@@ -325,6 +447,8 @@ M*/
     MPL_thread_mutex_lock(mutex_ptr_, err_ptr_)
 #define MPIDUI_thread_mutex_lock_l(mutex_ptr_, err_ptr_)                \
     MPL_thread_mutex_lock(mutex_ptr_, err_ptr_)
+#define MPIDUI_thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr_)  \
+    MPL_thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr_)
 #define MPIDUI_thread_mutex_unlock(mutex_ptr_, err_ptr_)                \
     MPL_thread_mutex_unlock(mutex_ptr_, err_ptr_)
 #define MPIDUI_thread_cond_create(cond_ptr_, err_ptr_)                  \
@@ -355,6 +479,11 @@ do {                                                                    \
 #define MPIDUI_thread_mutex_lock_l(mutex_ptr_, err_ptr_)                \
 do {                                                                    \
     *err_ptr_ = zm_lock_acquire_l(mutex_ptr_);                          \
+} while (0)
+#define MPIDUI_thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr_)  \
+do {                                                                    \
+    /* FIXME: implement izem version of trylock */                      \
+    MPIR_Assert(0);                                                     \
 } while (0)
 #define MPIDUI_thread_mutex_unlock(mutex_ptr_, err_ptr_)                \
 do {                                                                    \
@@ -451,6 +580,15 @@ do {                                                                    \
         OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                \
     } while (0)
 
+#define MPIDU_Thread_mutex_trylock(mutex_ptr_, err_ptr_, cs_acq_ptr)       \
+    do {                                                                \
+        OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                \
+        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPL_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
+        MPIDUI_thread_mutex_trylock(&(mutex_ptr_)->mutex, err_ptr_, cs_acq_ptr);\
+        MPIR_Assert(*err_ptr_ == 0);                                    \
+        MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPL_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
+        OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                \
+    } while (0)
 
 /*@
   MPIDU_Thread_unlock - release a mutex

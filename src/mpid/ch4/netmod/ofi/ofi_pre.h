@@ -161,13 +161,22 @@ typedef struct {
 typedef struct {
     struct fid_mr *mr;
     uint64_t mr_key;
-    struct fid_ep *ep;          /* EP with counter & completion */
-    int sep_tx_idx;             /* transmit context index for scalable EP,
-                                 * -1 means using non scalable EP. */
-    uint64_t *issued_cntr;
-    uint64_t issued_cntr_v;     /* main body of an issued counter,
-                                 * if we are to use per-window counter */
-    struct fid_cntr *cmpl_cntr;
+#ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+    struct fid_ep *eps[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];
+    int sep_tx_indices[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];       /* transmit context index for scalable EP,
+                                                                 * -1 means using non scalable EP. */
+    struct fid_cntr *cmpl_cntrs[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];
+    uint64_t *issued_cntrs[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];
+    uint64_t issued_cntrs_v[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];  /* main body of issued counters,
+                                                                 * if we are to use per-window counter */
+#else
+    struct fid_ep *eps[MPIDI_OFI_MAX_ENDPOINTS];
+    int sep_tx_indices[MPIDI_OFI_MAX_ENDPOINTS];        /* transmit context index for scalable EP,
+                                                         * -1 means using non scalable EP. */
+    struct fid_cntr *cmpl_cntrs[MPIDI_OFI_MAX_ENDPOINTS];
+    uint64_t *issued_cntrs[MPIDI_OFI_MAX_ENDPOINTS];
+    uint64_t issued_cntrs_v[MPIDI_OFI_MAX_ENDPOINTS];
+#endif
     uint64_t win_id;
     struct MPIDI_OFI_win_request *syncQ;
     MPIDI_OFI_win_targetinfo_t *winfo;

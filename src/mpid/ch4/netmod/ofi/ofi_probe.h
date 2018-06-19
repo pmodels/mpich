@@ -32,6 +32,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     MPIR_Request r, *rreq;      /* don't need to init request, output only */
     struct fi_msg_tagged msg;
     int ofi_err;
+    int vni_idx = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_IPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_IPROBE);
@@ -74,7 +75,19 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     }
 
     MPIDI_OFI_CALL(ofi_err, trecvmsg);
-    MPIDI_OFI_PROGRESS_WHILE(MPIDI_OFI_REQUEST(rreq, util_id) == MPIDI_OFI_PEEK_START);
+
+    /* Block until the peek request is processed by OFI.
+     * For the handoff MT model, netmod progress should be called instead of
+     * MPIDI_OFI_PROGRESS_WHILE. MPIDI_OFI_PROGRESS_WHILE calls MPID progress, which
+     * skips netmod progress if progress thread is present. Since we are in the progress
+     * thread in this branch, we should therefore invoke the netmod progress. Similar
+     * reasoning for the trylock-enqueue MT model as well. */
+    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF || MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_TRYLOCK) {
+        while (MPIDI_OFI_REQUEST(rreq, util_id) == MPIDI_OFI_PEEK_START)
+            MPIDI_NM_progress(vni_idx, 0 /*blocking, unused parameter */);
+    } else {
+        MPIDI_OFI_PROGRESS_WHILE(MPIDI_OFI_REQUEST(rreq, util_id) == MPIDI_OFI_PEEK_START);
+    }
 
     switch (MPIDI_OFI_REQUEST(rreq, util_id)) {
         case MPIDI_OFI_PEEK_NOT_FOUND:

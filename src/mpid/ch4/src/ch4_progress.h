@@ -13,6 +13,15 @@
 
 #include "ch4_impl.h"
 
+static inline int MPIDI_have_progress_thread(void)
+{
+    if (MPIDI_CH4_MT_MODEL == MPIDI_CH4_MT_HANDOFF) {
+        return OPA_load_int(&MPIDI_CH4_Global.n_active_progress_threads);
+    } else {
+        return 0;
+    }
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Progress_test
 #undef FCNAME
@@ -36,26 +45,39 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
 
     if (OPA_load_int(&MPIDI_CH4_Global.active_progress_hooks) && (flags & MPIDI_PROGRESS_HOOKS)) {
         MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_PROGRESS_MUTEX);
+        MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4I_THREAD_PROGRESS_MUTEX);
         for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
             if (MPIDI_CH4_Global.progress_hooks[i].active == TRUE) {
                 MPIR_Assert(MPIDI_CH4_Global.progress_hooks[i].func_ptr != NULL);
                 mpi_errno = MPIDI_CH4_Global.progress_hooks[i].func_ptr(&made_progress);
                 if (mpi_errno) {
+                    MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4I_THREAD_PROGRESS_MUTEX);
                     MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_PROGRESS_MUTEX);
                     MPIR_ERR_POP(mpi_errno);
                 }
             }
         }
+        MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4I_THREAD_PROGRESS_MUTEX);
         MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_PROGRESS_MUTEX);
     }
     /* todo: progress unexp_list */
 
-    if (flags & MPIDI_PROGRESS_NM) {
-        mpi_errno = MPIDI_NM_progress(0, 0);
+    if (!(flags & MPIDI_PROGRESS_NM))
+        goto skip_nm;
+
+    /* Netmod progress */
+    for (i = 0; i < MPIDI_CH4_Global.n_netmod_vnis; i++) {
+        if (flags & MPIDI_PROGRESS_NM_VNI_LOCK)
+            MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4_Global.vni_locks[i]);
+        mpi_errno = MPIDI_NM_progress(i, 0);
+        if (flags & MPIDI_PROGRESS_NM_VNI_LOCK)
+            MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4_Global.vni_locks[i]);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
     }
+
+  skip_nm:
 #ifndef MPIDI_CH4_DIRECT_NETMOD
     if (flags & MPIDI_PROGRESS_SHM) {
         mpi_errno = MPIDI_SHM_progress(0, 0);
@@ -64,7 +86,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
         }
     }
 #endif
-    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    MPID_THREAD_CS_YIELD(VNI_GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROGRESS_TEST);
     return mpi_errno;
@@ -78,7 +100,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_test(void)
 {
-    return MPIDI_Progress_test(MPIDI_PROGRESS_ALL);
+    int flags = MPIDI_PROGRESS_ALL;
+
+    if (MPIDI_have_progress_thread())
+        flags &= ~(MPIDI_PROGRESS_NM);
+
+    return MPIDI_Progress_test(flags);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Progress_poke(void)
@@ -229,6 +256,34 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_deactivate(int id)
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_DEACTIVATE);
     return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_progress_thread_fn
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX void MPIDI_progress_thread_fn(void *data)
+{
+    int i, vni_idx, n_vnis = *((int *) data);
+    const int *vnis = ((int *) data) + 1;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_THREAD_FN);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PROGRESS_THREAD_FN);
+
+    /* Inform that I am spawned */
+    OPA_incr_int(&MPIDI_CH4_Global.n_active_progress_threads);
+
+    do {
+        for (i = 0; i < n_vnis; i++) {
+            vni_idx = vnis[i];
+            MPIDI_workq_vni_progress(vni_idx);
+            MPIDI_NM_progress(vni_idx, 0);
+        }
+    } while (OPA_load_int(&MPIDI_CH4_Global.progress_thread_exit_signal) == 0);
+    OPA_decr_int(&MPIDI_CH4_Global.n_active_progress_threads);
+
+    MPL_free(data);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROGRESS_THREAD_FN);
 }
 
 #endif /* CH4_PROGRESS_H_INCLUDED */

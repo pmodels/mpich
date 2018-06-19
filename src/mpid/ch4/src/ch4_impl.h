@@ -18,6 +18,15 @@
 MPL_STATIC_INLINE_PREFIX int MPIDI_Progress_test(int flags);
 
 /* Static inlines */
+static inline void MPIDI_CH4U_win_drain_queue(MPIR_Win * win)
+{
+    /* Make sure pending ops are issued. */
+    while (OPA_load_int(&MPIDI_CH4U_WIN(win, local_enq_cnts))) {
+        /* Only need MPIDI_PROGRESS_HOOKS flag to drain workq. */
+        MPIDI_Progress_test(MPIDI_PROGRESS_HOOKS);
+    }
+}
+
 static inline int MPIDI_CH4U_get_context_index(uint64_t context_id)
 {
     int raw_prefix, idx, bitpos, gen_id;
@@ -453,7 +462,7 @@ static inline int MPIDI_CH4I_valid_group_rank(MPIR_Comm * comm, int rank, MPIR_G
 
 #define MPIDI_CH4R_PROGRESS()                                   \
     do {                                                        \
-        mpi_errno = MPID_Progress_test();                       \
+        mpi_errno = MPIDI_Progress_test(MPIDI_PROGRESS_ALL & ~MPIDI_PROGRESS_NM_VNI_LOCK); \
         if (mpi_errno != MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);  \
     } while (0)
 
@@ -861,9 +870,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_create(void **out_map, MPL_memory_c
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_destroy(void *in_map)
 {
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4I_THREAD_UTIL_MUTEX);
     MPIDI_CH4U_map_t *map = in_map;
     HASH_CLEAR(hh, map->head);
     MPL_free(map);
+    MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4I_THREAD_UTIL_MUTEX);
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
 }
 
@@ -877,12 +888,14 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_set(void *in_map, uint64_t id, void
     MPIDI_CH4U_map_t *map;
     MPIDI_CH4U_map_entry_t *map_entry;
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4I_THREAD_UTIL_MUTEX);
     map = (MPIDI_CH4U_map_t *) in_map;
     map_entry = MPL_malloc(sizeof(MPIDI_CH4U_map_entry_t), class);
     MPIR_Assert(map_entry != NULL);
     map_entry->key = id;
     map_entry->value = val;
     HASH_ADD(hh, map->head, key, sizeof(uint64_t), map_entry, class);
+    MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4I_THREAD_UTIL_MUTEX);
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
 }
 
@@ -895,11 +908,13 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_map_erase(void *in_map, uint64_t id)
     MPIDI_CH4U_map_t *map;
     MPIDI_CH4U_map_entry_t *map_entry;
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4I_THREAD_UTIL_MUTEX);
     map = (MPIDI_CH4U_map_t *) in_map;
     HASH_FIND(hh, map->head, &id, sizeof(uint64_t), map_entry);
     MPIR_Assert(map_entry != NULL);
     HASH_DELETE(hh, map->head, map_entry);
     MPL_free(map_entry);
+    MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4I_THREAD_UTIL_MUTEX);
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
 }
 
@@ -914,12 +929,14 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_map_lookup(void *in_map, uint64_t id)
     MPIDI_CH4U_map_entry_t *map_entry;
 
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
+    MPID_THREAD_CS_ENTER(VNI, MPIDI_CH4I_THREAD_UTIL_MUTEX);
     map = (MPIDI_CH4U_map_t *) in_map;
     HASH_FIND(hh, map->head, &id, sizeof(uint64_t), map_entry);
     if (map_entry == NULL)
         rc = MPIDI_CH4U_MAP_NOT_FOUND;
     else
         rc = map_entry->value;
+    MPID_THREAD_CS_EXIT(VNI, MPIDI_CH4I_THREAD_UTIL_MUTEX);
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_UTIL_MUTEX);
     return rc;
 }

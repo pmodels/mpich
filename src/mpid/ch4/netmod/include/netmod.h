@@ -524,6 +524,7 @@ typedef struct MPIDI_NM_native_funcs {
     MPIDI_NM_mpi_get_t mpi_get;
     MPIDI_NM_mpi_win_free_t mpi_win_free;
     MPIDI_NM_mpi_win_fence_t mpi_win_fence;
+    MPIDI_NM_mpi_win_fence_t win_fence_flush;
     MPIDI_NM_mpi_win_create_t mpi_win_create;
     MPIDI_NM_mpi_accumulate_t mpi_accumulate;
     MPIDI_NM_mpi_win_attach_t mpi_win_attach;
@@ -804,6 +805,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_get(void *origin_addr, int origin_coun
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_fence(int assert,
                                                     MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_win_fence_flush(int massert,
+                                                      MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_create(void *base, MPI_Aint length, int disp_unit,
                                                      MPIR_Info * info, MPIR_Comm * comm_ptr,
                                                      MPIR_Win ** win_ptr) MPL_STATIC_INLINE_SUFFIX;

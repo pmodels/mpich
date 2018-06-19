@@ -14,10 +14,12 @@
 #include <mpidimpl.h>
 #include <stdio.h>
 #include "mpir_cvars.h"
+#include "ch4i_workq_types.h"
 
 /* Macros and inlines */
 #define MPIDI_CH4U_MAP_NOT_FOUND      ((void*)(-1UL))
 
+#define MPIDI_CH4_MAX_PROGRESS_THREADS 256
 #define MAX_PROGRESS_HOOKS 4
 
 /* VNI attributes */
@@ -43,12 +45,14 @@ typedef struct progress_hook_slot {
  * MPIDI_PROGRESS_HOOKS - enables progress on progress hooks. Hooks may invoke upper-level logic internaly,
  *      that's why MPIDI_Progress_test call with MPIDI_PROGRESS_HOOKS set isn't reentrant safe, and shouldn't be called from netmod's fallback logic.
  * MPIDI_PROGRESS_NM and MPIDI_PROGRESS_SHM enables progress on transports only, and guarantee reentrant-safety.
+ * MPIDI_PROGRESS_NM_VNI_LOCK: Take a VNI lock when invoking netmod progress
  */
 #define MPIDI_PROGRESS_HOOKS  (1)
 #define MPIDI_PROGRESS_NM     (1<<1)
 #define MPIDI_PROGRESS_SHM    (1<<2)
+#define MPIDI_PROGRESS_NM_VNI_LOCK     (1<<3)
 
-#define MPIDI_PROGRESS_ALL (MPIDI_PROGRESS_HOOKS|MPIDI_PROGRESS_NM|MPIDI_PROGRESS_SHM)
+#define MPIDI_PROGRESS_ALL (MPIDI_PROGRESS_HOOKS|MPIDI_PROGRESS_NM|MPIDI_PROGRESS_SHM|MPIDI_PROGRESS_NM_VNI_LOCK)
 
 enum {
     MPIDI_CH4U_SEND = 0,        /* Eager send */
@@ -265,6 +269,11 @@ typedef struct MPIDI_CH4U_map_t {
     MPIDI_CH4U_map_entry_t *head;
 } MPIDI_CH4U_map_t;
 
+typedef struct {
+    unsigned mt_model;
+    unsigned enable_pobj_workqueues:1;
+} MPIDI_CH4_configurations_t;
+
 typedef struct MPIDI_CH4_Global_t {
     MPIR_Request *request_test;
     MPIR_Comm *comm_test;
@@ -296,6 +305,28 @@ typedef struct MPIDI_CH4_Global_t {
     int my_sigusr1_count;
 #endif
 
+    int n_netmod_vnis;
+    MPID_Thread_mutex_t *vni_locks;
+
+#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+    /* Work queues */
+    union {
+        /* Per-object queue, when MPIDI_CH4_ENABLE_POBJ_WORKQUEUES */
+        MPIDI_workq_list_t **pobj;
+        /* Per-VNI queue, when !MPIDI_CH4_ENABLE_POBJ_WORKQUEUES */
+        MPIDI_workq_t *pvni;
+    } workqueues;
+#endif
+
+    int progress_hook_id;
+
+    /* Asynchronous progress thread for hand-off */
+    int n_progress_threads;
+    MPID_Thread_id_t progress_thread_ids[MPIDI_CH4_MAX_PROGRESS_THREADS];
+    OPA_int_t n_active_progress_threads;
+    OPA_int_t progress_thread_exit_signal;
+
+    MPIDI_CH4_configurations_t settings;
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_CH4_Global;
 #ifdef MPL_USE_DBG_LOGGING

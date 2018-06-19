@@ -853,6 +853,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
     return ret;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_win_fence_flush(int assert, MPIR_Win * win)
+{
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_WIN_FENCE_FLUSH);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_WIN_FENCE_FLUSH);
+
+    ret = MPIDI_NM_native_func->win_fence_flush(assert, win);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_WIN_FENCE_FLUSH);
+    return ret;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_create(void *base, MPI_Aint length, int disp_unit,
                                                      MPIR_Info * info, MPIR_Comm * comm_ptr,
                                                      MPIR_Win ** win_ptr)

@@ -37,6 +37,8 @@
 **ch4|invalid_shm %s:Invalid shm specified (%s)
 **ch4|invalid_locality:Invalid locality usage
 **ch4|invalid_locality %s:Invalid locality usage (%s)
+**ch4|invalid_mt_model:Invalid multi-threading model
+**ch4|invalid_mt_model %s:Invalid multi-threading model (%s)
 #
 # RMA errors
 #

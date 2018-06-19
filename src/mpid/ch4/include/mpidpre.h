@@ -23,6 +23,29 @@
 #include "shmpre.h"
 #include "uthash.h"
 #include "ch4_coll_params.h"
+#include "ch4i_workq_types.h"
+
+#ifdef MPIDI_CH4_USE_MT_DIRECT
+#define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_DIRECT
+#elif defined MPIDI_CH4_USE_MT_HANDOFF
+#define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_HANDOFF
+#elif defined MPIDI_CH4_USE_MT_TRYLOCK
+#define MPIDI_CH4_MT_MODEL MPIDI_CH4_MT_TRYLOCK
+#elif defined MPIDI_CH4_USE_MT_RUNTIME
+#define MPIDI_CH4_MT_MODEL MPIDI_CH4_Global.settings.mt_model
+#else
+#error "Unknown MT model or MT model not defined"
+#endif
+
+#if defined MPIDI_CH4_USE_POBJ_WORKQUEUES
+#define MPIDI_CH4_ENABLE_POBJ_WORKQUEUES 1
+#elif defined MPIDI_CH4_USE_PVNI_WORKQUEUES
+#define MPIDI_CH4_ENABLE_POBJ_WORKQUEUES 0
+#elif defined MPIDI_CH4_USE_RUNTIME_WORKQUEUES
+#define MPIDI_CH4_ENABLE_POBJ_WORKQUEUES MPIDI_CH4_Global.settings.enable_pobj_workqueues
+#else
+#error "Unknown work queue model or not defined"
+#endif
 
 typedef struct {
     union {
@@ -235,6 +258,7 @@ typedef struct MPIDI_CH4U_win_info_args_t {
      * and it means the user window buffer is allocated over shared memory,
      * thus RMA operation can use shm routines. */
     int alloc_shm;
+    int num_vnis;               /* number of vnis per window */
 } MPIDI_CH4U_win_info_args_t;
 
 struct MPIDI_CH4U_win_lock {
@@ -323,6 +347,7 @@ typedef struct MPIDI_CH4U_win_t {
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
     MPIR_cc_t remote_acc_cmpl_cnts;     /* for acc only, increase at OP issuing, decrease at remote completion */
+    OPA_int_t local_enq_cnts;   /* increase at OP enqueuing, decrease at OP issuing */
 
     MPIDI_CH4U_win_sync_t sync;
     MPIDI_CH4U_win_info_args_t info_args;
@@ -336,6 +361,11 @@ typedef struct {
     MPIDI_CH4U_win_t ch4u;
     union {
     MPIDI_NM_WIN_DECL} netmod;
+
+#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+    int nqueues;
+    MPIDI_workq_list_t *work_queues;
+#endif
 } MPIDI_Devwin_t;
 
 #define MPIDI_CH4U_WIN(win,field)        (((win)->dev.ch4u).field)
@@ -427,6 +457,11 @@ typedef struct MPIDI_Devcomm_t {
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
     } ch4;
+
+#if defined(MPIDI_CH4_USE_WORK_QUEUES)
+    int nqueues;
+    MPIDI_workq_list_t *work_queues;
+#endif
 } MPIDI_Devcomm_t;
 #define MPIDI_CH4U_COMM(comm,field) ((comm)->dev.ch4.ch4u).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field

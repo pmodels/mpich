@@ -28,16 +28,6 @@ categories :
       description : A category for CH4 OFI netmod variables
 
 cvars:
-    - name        : MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG
-      category    : CH4_OFI
-      type        : int
-      default     : 0
-      class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
-      description : >-
-        Prints out the configuration of each capability selected via the capability sets interface.
-
     - name        : MPIR_CVAR_CH4_OFI_ENABLE_DATA
       category    : CH4_OFI
       type        : int
@@ -1587,8 +1577,8 @@ static inline int MPIDI_OFI_application_hints(int rank)
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     (MPL_DBG_FDEST, "MPIDI_OFI_TAG_BITS: %d", MPIDI_OFI_TAG_BITS));
 
-    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && rank == 0) {
-        fprintf(stdout, "==== Capability set configuration ====\n");
+    if (MPIR_CVAR_CH4_RUNTIME_CONF_DEBUG && rank == 0) {
+        fprintf(stdout, "==== OFI netmod capability set configuration ====\n");
         fprintf(stdout, "MPIDI_OFI_ENABLE_DATA: %d\n", MPIDI_OFI_ENABLE_DATA);
         fprintf(stdout, "MPIDI_OFI_ENABLE_AV_TABLE: %d\n", MPIDI_OFI_ENABLE_AV_TABLE);
         fprintf(stdout, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d\n",
@@ -1826,6 +1816,8 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
     /* endpoint type:  see FI_EP_RDM                                            */
     /* Filters applied (for this netmod, we need providers that can support):   */
     /* THREAD_DOMAIN:  Progress serialization is handled by netmod (locking)    */
+    /* or THREAD_COMPLETION: netmod serializes concurrent accesses to OFI       */
+    /*                 objects that share the same completion structure.        */
     /* PROGRESS_AUTO:  request providers that make progress without requiring   */
     /*                 the ADI to dedicate a thread to advance the state        */
     /* FI_DELIVERY_COMPLETE:  RMA operations are visible in remote memory       */
@@ -1833,7 +1825,11 @@ static inline int MPIDI_OFI_init_hints(struct fi_info *hints)
     /* FI_EP_RDM:  Reliable datagram                                            */
     /* ------------------------------------------------------------------------ */
     hints->addr_format = FI_FORMAT_UNSPEC;
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__SINGLE) || (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
     hints->domain_attr->threading = FI_THREAD_DOMAIN;
+#else
+    hints->domain_attr->threading = FI_THREAD_COMPLETION;
+#endif
     if (MPIDI_OFI_ENABLE_DATA_AUTO_PROGRESS) {
         hints->domain_attr->data_progress = FI_PROGRESS_AUTO;
     } else {

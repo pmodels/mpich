@@ -222,6 +222,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
     }
 #endif
 
+    if (MPIDI_CH4_ENABLE_POBJ_WORKQUEUES)
+        MPIDI_comm_work_queues_init(comm);
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_CREATE_HOOK);
     return mpi_errno;
@@ -240,6 +243,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
     int max_n_avts;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_FREE_HOOK);
+
+    if (MPIDI_CH4_ENABLE_POBJ_WORKQUEUES)
+        MPIDI_comm_work_queues_free(comm);
+
     /* release ref to avts */
     switch (MPIDI_COMM(comm, map).mode) {
         case MPIDI_RANK_MAP_NONE:

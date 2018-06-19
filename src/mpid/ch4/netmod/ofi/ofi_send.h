@@ -60,15 +60,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
     uint64_t match_bits;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT_REQUEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT_REQUEST);
-    MPIR_Request *r;
-    MPIDI_OFI_SEND_REQUEST_CREATE_LW(r);
-    *request = r;
+    MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(*request);
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
     mpi_errno =
         MPIDI_OFI_send_handler(MPIDI_Global.ctx[0].tx, buf, data_sz, NULL, comm->rank,
                                MPIDI_OFI_av_to_phys(addr), match_bits,
                                NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK,
                                MPIDI_OFI_COMM(comm).eagain);
+    /* If we set CC>0 in case of injection, we need to decrement the CC
+     * to tell the main thread we completed the injection. */
+    MPIDI_OFI_SEND_REQUEST_COMPLETE_LW_CONDITIONAL(*request);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
   fn_exit:
@@ -241,7 +242,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
                                                    uint64_t type)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq = NULL;
+    MPIR_Request *sreq = *request;
     MPI_Aint last;
     char *send_buf;
     uint64_t match_bits;
@@ -249,7 +250,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, MPI_Aint cou
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
 
-    MPIDI_OFI_REQUEST_CREATE(sreq, MPIR_REQUEST_KIND__SEND);
+    MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(sreq, MPIR_REQUEST_KIND__SEND);
     *request = sreq;
     match_bits = MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, type);
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
@@ -461,7 +462,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, MPI_Aint count,
     }
 
     mpi_errno = MPIDI_OFI_send(buf, count, datatype, rank, tag, comm,
-                               context_offset, addr, request, 1, 0ULL);
+                               context_offset, addr, request, (*request == NULL), 0ULL);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SEND);

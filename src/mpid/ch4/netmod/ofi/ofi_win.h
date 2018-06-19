@@ -99,7 +99,8 @@ static inline int MPIDI_OFI_win_allgather(MPIR_Win * win, void *base, int disp_u
 #define FUNCNAME MPIDI_OFI_win_set_per_win_sync
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_set_per_win_sync(MPIR_Win * win)
+/* Setup per-window sync using independent counter. */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_set_per_win_sync(MPIR_Win * win, int vni_idx)
 {
     int ret, mpi_errno = MPI_SUCCESS;
 
@@ -112,25 +113,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_set_per_win_sync(MPIR_Win * win)
     cntr_attr.wait_obj = FI_WAIT_UNSPEC;
     MPIDI_OFI_CALL_RETURN(fi_cntr_open(MPIDI_Global.domain,     /* In:  Domain Object        */
                                        &cntr_attr,      /* In:  Configuration object */
-                                       &MPIDI_OFI_WIN(win).cmpl_cntr,   /* Out: Counter Object       */
+                                       &MPIDI_OFI_WIN(win).cmpl_cntrs[vni_idx], /* Out: Counter Object       */
                                        NULL), ret);     /* Context: counter events   */
     if (ret < 0) {
         MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to open completion counter.\n");
         mpi_errno = MPIDI_OFI_ENAVAIL;
         goto fn_fail;
     }
-
-    MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_OFI_WIN(win).issued_cntr_v;
+    MPIDI_OFI_WIN(win).issued_cntrs[vni_idx] = &MPIDI_OFI_WIN(win).issued_cntrs_v[vni_idx];
 
     MPIDI_OFI_CALL_RETURN(fi_ep_bind
-                          (MPIDI_OFI_WIN(win).ep, &MPIDI_OFI_WIN(win).cmpl_cntr->fid,
-                           FI_READ | FI_WRITE), ret);
+                          (MPIDI_OFI_WIN(win).eps[vni_idx],
+                           &MPIDI_OFI_WIN(win).cmpl_cntrs[vni_idx]->fid, FI_READ | FI_WRITE), ret);
 
     if (ret < 0) {
         MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     "Failed to bind completion counter to endpoint.\n");
         /* Close and release completion counter resource. */
-        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntr->fid), cntrclose);
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntrs[vni_idx]->fid), cntrclose);
         mpi_errno = MPIDI_OFI_EPERROR;
         goto fn_fail;
     }
@@ -155,7 +155,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_set_per_win_sync(MPIR_Win * win)
 #define FUNCNAME MPIDI_OFI_win_init_sep
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init_sep(MPIR_Win * win)
+/* Activate per-window EP/counter using scalable ep. */
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init_sep(MPIR_Win * win, int vni_idx)
 {
     int i, ret, mpi_errno = MPI_SUCCESS;
     struct fi_info *finfo;
@@ -208,21 +209,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init_sep(MPIR_Win * win)
     }
     /* Retrieve transmit context on scalable EP. */
     MPIDI_OFI_CALL_RETURN(fi_tx_context
-                          (MPIDI_Global.rma_sep, *index, finfo->tx_attr, &(MPIDI_OFI_WIN(win).ep),
-                           NULL), ret);
+                          (MPIDI_Global.rma_sep, *index, finfo->tx_attr,
+                           &(MPIDI_OFI_WIN(win).eps[vni_idx]), NULL), ret);
+
     if (ret < 0) {
         MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     "Failed to retrieve transmit context from scalable endpoint.\n");
         mpi_errno = MPIDI_OFI_ENAVAIL;
         goto fn_fail;
     }
+    MPIDI_OFI_WIN(win).sep_tx_indices[vni_idx] = *index;
 
-    MPIDI_OFI_WIN(win).sep_tx_idx = *index;
     /* Pop this index out of reserving array. */
     utarray_pop_back(MPIDI_Global.rma_sep_idx_array);
 
-    MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep,
-                                     &MPIDI_Global.ctx[0].cq->fid,
+    MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).eps[vni_idx],
+                                     &MPIDI_Global.ctx[vni_idx].cq->fid,
                                      FI_TRANSMIT | FI_SELECTIVE_COMPLETION), ret);
     if (ret < 0) {
         MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -231,8 +233,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init_sep(MPIR_Win * win)
         goto fn_fail;
     }
 
-    if (MPIDI_OFI_win_set_per_win_sync(win) == MPI_SUCCESS) {
-        MPIDI_OFI_CALL_RETURN(fi_enable(MPIDI_OFI_WIN(win).ep), ret);
+    if (MPIDI_OFI_win_set_per_win_sync(win, vni_idx) == MPI_SUCCESS) {
+        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_WIN(win).eps[vni_idx]), ep_enable);
         if (ret < 0) {
             MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to activate endpoint.\n");
             mpi_errno = MPIDI_OFI_EPERROR;
@@ -250,16 +252,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init_sep(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT_SEP);
     return mpi_errno;
   fn_fail:
-    if (MPIDI_OFI_WIN(win).sep_tx_idx != -1) {
+    if (MPIDI_OFI_WIN(win).sep_tx_indices[vni_idx] != -1) {
         /* Push tx idx back into available pool. */
-        utarray_push_back(MPIDI_Global.rma_sep_idx_array, &MPIDI_OFI_WIN(win).sep_tx_idx,
-                          MPL_MEM_RMA);
-        MPIDI_OFI_WIN(win).sep_tx_idx = -1;
+        utarray_push_back(MPIDI_Global.rma_sep_idx_array,
+                          &MPIDI_OFI_WIN(win).sep_tx_indices[vni_idx], MPL_MEM_RMA);
+        MPIDI_OFI_WIN(win).sep_tx_indices[vni_idx] = -1;
     }
-    if (MPIDI_OFI_WIN(win).ep != NULL) {
+    if (MPIDI_OFI_WIN(win).eps[vni_idx] != NULL) {
         /* Close an endpoint and release all resources associated with it. */
-        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
-        MPIDI_OFI_WIN(win).ep = NULL;
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).eps[vni_idx]->fid), epclose);
+        MPIDI_OFI_WIN(win).eps[vni_idx] = NULL;
     }
     goto fn_exit;
 }
@@ -277,7 +279,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init_sep(MPIR_Win * win)
 #define FUNCNAME MPIDI_OFI_win_init_stx
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win)
+static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win, int vni_idx)
 {
     /* Activate per-window EP/counter using STX */
     int ret, mpi_errno = MPI_SUCCESS;
@@ -318,7 +320,7 @@ static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win)
     finfo->ep_attr->tx_ctx_cnt = FI_SHARED_CONTEXT;     /* Request a shared context */
     finfo->ep_attr->rx_ctx_cnt = 0;     /* We don't need RX contexts */
     MPIDI_OFI_CALL_RETURN(fi_endpoint(MPIDI_Global.domain,
-                                      finfo, &MPIDI_OFI_WIN(win).ep, NULL), ret);
+                                      finfo, &MPIDI_OFI_WIN(win).eps[vni_idx], NULL), ret);
     if (ret < 0) {
         MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                     "Failed to create per-window EP using shared TX context, "
@@ -327,8 +329,9 @@ static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win)
         goto fn_fail;
     }
 
-    if (MPIDI_OFI_win_set_per_win_sync(win) == MPI_SUCCESS) {
-        MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.rma_stx_ctx->fid, 0),
+    if (MPIDI_OFI_win_set_per_win_sync(win, vni_idx) == MPI_SUCCESS) {
+        MPIDI_OFI_CALL_RETURN(fi_ep_bind
+                              (MPIDI_OFI_WIN(win).eps[vni_idx], &MPIDI_Global.rma_stx_ctx->fid, 0),
                               ret);
         if (ret < 0) {
             MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -337,8 +340,8 @@ static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win)
             goto fn_fail;
         }
 
-        MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep,
-                                         &MPIDI_Global.ctx[0].cq->fid,
+        MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).eps[vni_idx],
+                                         &MPIDI_Global.ctx[vni_idx].cq->fid,
                                          FI_TRANSMIT | FI_SELECTIVE_COMPLETION), ret);
         if (ret < 0) {
             MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -347,7 +350,8 @@ static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win)
             goto fn_fail;
         }
 
-        MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.av->fid, 0), ret);
+        MPIDI_OFI_CALL_RETURN(fi_ep_bind(MPIDI_OFI_WIN(win).eps[vni_idx], &MPIDI_Global.av->fid, 0),
+                              ret);
         if (ret < 0) {
             MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         "Failed to bind endpoint to address vector.\n");
@@ -355,7 +359,7 @@ static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win)
             goto fn_fail;
         }
 
-        MPIDI_OFI_CALL_RETURN(fi_enable(MPIDI_OFI_WIN(win).ep), ret);
+        MPIDI_OFI_CALL_RETURN(fi_enable(MPIDI_OFI_WIN(win).eps[vni_idx]), ret);
         if (ret < 0) {
             MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE, "Failed to activate endpoint.\n");
             mpi_errno = MPIDI_OFI_EPERROR;
@@ -372,10 +376,10 @@ static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT_STX);
     return mpi_errno;
   fn_fail:
-    if (MPIDI_OFI_WIN(win).ep != NULL) {
+    if (MPIDI_OFI_WIN(win).eps[vni_idx] != NULL) {
         /* Close an endpoint and release all resources associated with it. */
-        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
-        MPIDI_OFI_WIN(win).ep = NULL;
+        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).eps[vni_idx]->fid), epclose);
+        MPIDI_OFI_WIN(win).eps[vni_idx] = NULL;
     }
     goto fn_exit;
 }
@@ -384,18 +388,48 @@ static inline int MPIDI_OFI_win_init_stx(MPIR_Win * win)
 #define FUNCNAME MPIDI_OFI_win_init_global
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_win_init_global(MPIR_Win * win)
+static inline int MPIDI_OFI_win_init_global(MPIR_Win * win, int vni_idx)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT_GLOBAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_INIT_GLOBAL);
 
-    MPIDI_OFI_WIN(win).ep = MPIDI_Global.ctx[0].tx;
-    MPIDI_OFI_WIN(win).cmpl_cntr = MPIDI_Global.rma_cmpl_cntr;
-    MPIDI_OFI_WIN(win).issued_cntr = &MPIDI_Global.rma_issued_cntr;
+    MPIDI_OFI_WIN(win).eps[vni_idx] = MPIDI_Global.ctx[vni_idx].tx;
+    MPIDI_OFI_WIN(win).cmpl_cntrs[vni_idx] = MPIDI_Global.rma_cmpl_cntr;
+    MPIDI_OFI_WIN(win).issued_cntrs[vni_idx] = &MPIDI_Global.rma_issued_cntr;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT_GLOBAL);
 
     return 0;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_win_close_eps_cntrs
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+/* Close allocated endpoints and cntrs in one window. */
+static inline int MPIDI_OFI_win_close_eps_cntrs(MPIR_Win * win, int max_vni_idx)
+{
+    int i, mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_CLOSE_EPS_CNTRS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_CLOSE_EPS_CNTRS);
+
+    for (i = 0; i <= max_vni_idx; i++) {
+        /* For scalable EP: push transmit context index back into available pool. */
+        if (MPIDI_OFI_WIN(win).sep_tx_indices[i] != -1) {
+            utarray_push_back(MPIDI_Global.rma_sep_idx_array,
+                              &(MPIDI_OFI_WIN(win).sep_tx_indices[i]), MPL_MEM_RMA);
+        }
+        if (MPIDI_OFI_WIN(win).eps[i] != MPIDI_Global.ctx[i].tx)
+            MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).eps[i]->fid), epclose);
+        if (MPIDI_OFI_WIN(win).cmpl_cntrs[i] != MPIDI_Global.rma_cmpl_cntr)
+            MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntrs[i]->fid), cntrclose);
+    }
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_CLOSE_EPS_CNTRS);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -408,7 +442,7 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
                                      MPIR_Info * info,
                                      MPIR_Comm * comm_ptr, int create_flavor, int model)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, i;
     uint64_t window_instance, max_contexts_allowed;
     MPIR_Win *win = NULL;
 
@@ -444,29 +478,43 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
 
     MPIDI_CH4U_map_set(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id, win, MPL_MEM_RMA);
 
-    MPIDI_OFI_WIN(win).sep_tx_idx = -1; /* By default, -1 means not using scalable EP. */
+    /* Mark sep_tx_indices to indicate no sep is being used */
+    for (i = 0; i < MPIDI_CH4U_WIN(win, info_args).num_vnis; i++)
+        MPIDI_OFI_WIN(win).sep_tx_indices[i] = -1;
 
+    /* Intialize multiple endpoints in one RMA window. */
     /* First, try to enable scalable EP. */
     if (MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS && MPIR_CVAR_CH4_OFI_MAX_RMA_SEP_CTX > 0) {
-        /* Create tx based on scalable EP. */
-        if (MPIDI_OFI_win_init_sep(win) == MPI_SUCCESS) {
-            goto fn_exit;
+        for (i = 0; i < MPIDI_CH4U_WIN(win, info_args).num_vnis; i++) {
+            /* Create tx based on scalable EP. */
+            if (MPIDI_OFI_win_init_sep(win, i) != MPI_SUCCESS) {
+                /* Roll back all previous sep tx allocation. */
+                MPIDI_OFI_win_close_eps_cntrs(win, i - 1);
+                break;
+            }
         }
-    }
-
-    /* If scalable EP is not available, try shared transmit context next. */
-    /* Create tx using shared transmit context. */
-    if (MPIDI_OFI_win_init_stx(win) == MPI_SUCCESS) {
         goto fn_exit;
     }
-
-    /* Fall back to use global EP, without per-window sync support. */
-    MPIDI_OFI_win_init_global(win);
+    /* If scalable EP is not available, try shared transmit context next. */
+    for (i = 0; i < MPIDI_CH4U_WIN(win, info_args).num_vnis; i++) {
+        /* Create tx using shared transmit context. */
+        if (MPIDI_OFI_win_init_stx(win, i) != MPI_SUCCESS) {
+            /* Roll back all previous shared tx allocation. */
+            MPIDI_OFI_win_close_eps_cntrs(win, i - 1);
+            goto fallback_global;
+        }
+    }
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT);
     return mpi_errno;
   fn_fail:
+    goto fn_exit;
+
+  fallback_global:
+    /* Fall back to use global EP. */
+    for (i = 0; i < MPIDI_CH4U_WIN(win, info_args).num_vnis; i++)
+        MPIDI_OFI_win_init_global(win, i);
     goto fn_exit;
 }
 
@@ -477,7 +525,7 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
 static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    int itercount = 0;
+    int itercount = 0, i;
     int ret;
     uint64_t tcount, donecount;
     MPIDI_OFI_win_request_t *r;
@@ -486,31 +534,33 @@ static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
 
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
-    tcount = *MPIDI_OFI_WIN(win).issued_cntr;
-    donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
+    /* Progress all endpoints in current window before reaching fence. */
+    for (i = 0; i < MPIDI_CH4U_WIN(win, info_args).num_vnis; i++) {
+        tcount = *MPIDI_OFI_WIN(win).issued_cntrs[i];
+        donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntrs[i]);
 
-    MPIR_Assert(donecount <= tcount);
-
-    while (tcount > donecount) {
         MPIR_Assert(donecount <= tcount);
-        MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
-        MPIDI_OFI_PROGRESS();
-        MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
-        donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntr);
-        itercount++;
 
-        if (itercount == 1000) {
-            ret = fi_cntr_wait(MPIDI_OFI_WIN(win).cmpl_cntr, tcount, 0);
-            MPIDI_OFI_ERR(ret < 0 && ret != -FI_ETIMEDOUT,
-                          mpi_errno,
-                          MPI_ERR_RMA_RANGE,
-                          "**ofid_cntr_wait",
-                          "**ofid_cntr_wait %s %d %s %s",
-                          __SHORT_FILE__, __LINE__, FCNAME, fi_strerror(-ret));
-            itercount = 0;
+        while (tcount > donecount) {
+            MPIR_Assert(donecount <= tcount);
+            MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
+            MPIDI_OFI_PROGRESS();
+            MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
+            donecount = fi_cntr_read(MPIDI_OFI_WIN(win).cmpl_cntrs[i]);
+            itercount++;
+
+            if (itercount == 1000) {
+                ret = fi_cntr_wait(MPIDI_OFI_WIN(win).cmpl_cntrs[i], tcount, 0);
+                MPIDI_OFI_ERR(ret < 0 && ret != -FI_ETIMEDOUT,
+                              mpi_errno,
+                              MPI_ERR_RMA_RANGE,
+                              "**ofid_cntr_wait",
+                              "**ofid_cntr_wait %s %d %s %s",
+                              __SHORT_FILE__, __LINE__, FCNAME, fi_strerror(-ret));
+                itercount = 0;
+            }
         }
     }
-
     r = MPIDI_OFI_WIN(win).syncQ;
 
     while (r) {
@@ -729,15 +779,8 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
 
     MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(win->comm_ptr).win_id_allocator, window_instance);
     MPIDI_CH4U_map_erase(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id);
-    /* For scalable EP: push transmit context index back into available pool. */
-    if (MPIDI_OFI_WIN(win).sep_tx_idx != -1) {
-        utarray_push_back(MPIDI_Global.rma_sep_idx_array, &(MPIDI_OFI_WIN(win).sep_tx_idx),
-                          MPL_MEM_RMA);
-    }
-    if (MPIDI_OFI_WIN(win).ep != MPIDI_Global.ctx[0].tx)
-        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).ep->fid), epclose);
-    if (MPIDI_OFI_WIN(win).cmpl_cntr != MPIDI_Global.rma_cmpl_cntr)
-        MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).cmpl_cntr->fid), cntrclose);
+    /* Close multi endpoints and cntrs in one RMA window. */
+    MPIDI_OFI_win_close_eps_cntrs(win, MPIDI_CH4U_WIN(win, info_args).num_vnis - 1);
     MPIDI_OFI_CALL(fi_close(&MPIDI_OFI_WIN(win).mr->fid), mr_unreg);
     if (MPIDI_OFI_WIN(win).winfo) {
         MPL_free(MPIDI_OFI_WIN(win).winfo);
@@ -748,6 +791,31 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_WIN_FREE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_mpi_win_fence_flush
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+/* Flush RMA operations in win_fence */
+static inline int MPIDI_NM_win_fence_flush(int massert, MPIR_Win * win)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_WIN_FENCE_FLUSH);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_WIN_FENCE_FLUSH);
+
+    if (MPIDI_OFI_ENABLE_RMA) {
+        /* network completion */
+        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
+    }
+
+    mpi_errno = MPIDI_CH4R_win_fence_flush(massert, win);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_WIN_FENCE_FLUSH);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
