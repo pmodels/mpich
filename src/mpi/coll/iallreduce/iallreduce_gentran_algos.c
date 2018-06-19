@@ -18,4 +18,9 @@
 #include "iallreduce_tsp_recexch_algos.h"
 #include "iallreduce_tsp_recexch_algos_undef.h"
 
+/* instantiate iallreduce tree algorithms for the gentran transport */
+#include "iallreduce_tsp_tree_algos_prototypes.h"
+#include "iallreduce_tsp_tree_algos.h"
+#include "iallreduce_tsp_tree_algos_undef.h"
+
 #include "tsp_undef.h"
