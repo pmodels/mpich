@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
     int wrank, i;
     MPI_Comm comm;
     MPI_Info info;
+    int world_size;
 
     MTest_Init(&argc, &argv);
 
@@ -34,6 +35,7 @@ int main(int argc, char *argv[])
         verbose = 1;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
     /* Check to see if MPI_COMM_TYPE_SHARED works correctly */
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
@@ -151,7 +153,21 @@ int main(int argc, char *argv[])
         MPI_Comm_free(&comm);
     }
 
-    /* test #2: a hint we don't know about */
+    /* test #2: mismatching hints across processes */
+    MPI_Info_delete(info, "nbhd_common_dirname");
+
+    if (wrank == 1)
+        MPI_Info_set(info, "nbhd_common_dirname", "__first_garbage_value__");
+    else
+        MPI_Info_set(info, "nbhd_common_dirname", "__second_garbage_value__");
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_NEIGHBORHOOD, 0, info, &comm);
+    if (world_size > 1 && comm != MPI_COMM_NULL) {
+        printf("Expected MPI_COMM_NULL, but got non null communicator\n");
+        MPI_Comm_free(&comm);
+        errs++;
+    }
+
+    /* test #3: a hint we don't know about */
     MPI_Info_delete(info, "nbhd_common_dirname");
     MPI_Info_set(info, "mpix_tooth_fairy", "enable");
     MPI_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_NEIGHBORHOOD, 0, info, &comm);
