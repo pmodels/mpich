@@ -8,6 +8,9 @@ dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_CONDITIONAL([BUILD_CH4],[test "$device_name" = "ch4"])
 
+AM_COND_IF([BUILD_CH4],[
+AC_MSG_NOTICE([RUNNING PREREQ FOR CH4 DEVICE])
+
 # the CH4 device depends on the common NBC scheduler code
 build_mpid_common_sched=yes
 build_mpid_common_datatype=yes
@@ -17,9 +20,6 @@ build_mpid_common_bc=yes
 MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
 MPID_MAX_PROCESSOR_NAME=128
 MPID_MAX_ERROR_STRING=512
-
-AM_COND_IF([BUILD_CH4],[
-AC_MSG_NOTICE([RUNNING PREREQ FOR CH4 DEVICE])
 
 # $device_args - contains the netmods
 if test -z "${device_args}" ; then
