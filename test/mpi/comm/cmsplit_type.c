@@ -22,7 +22,7 @@ static const char *split_topo[] = {
 };
 
 static const char *split_topo_network[] = {
-    "switch_level:2", NULL
+    "switch_level:2", "subcomm_min_size:2", NULL
 };
 
 int main(int argc, char *argv[])
