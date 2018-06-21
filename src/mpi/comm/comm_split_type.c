@@ -440,6 +440,173 @@ static int network_split_switch_level(MPIR_Comm * comm_ptr, int key,
     goto fn_exit;
 }
 
+static int get_color_from_subset_bitmap(int node_index, int *bitmap, int bitmap_size, int min_size)
+{
+    int color;
+    int subset_size;
+    int current_comm_color;
+    int prev_comm_color;
+    int i;
+
+    subset_size = 0;
+    current_comm_color = 0;
+    prev_comm_color = -1;
+
+    for (i = 0; i < bitmap_size; i++) {
+        if (subset_size >= min_size) {
+            subset_size = 0;
+            prev_comm_color = current_comm_color;
+            current_comm_color = i;
+        }
+        subset_size += bitmap[i];
+        if (i == node_index) {
+            color = current_comm_color;
+        }
+    }
+    if (subset_size < min_size && i == bitmap_size)
+        color = prev_comm_color;
+
+  fn_exit:
+    return color;
+
+  fn_fail:
+    goto fn_exit;
+
+}
+
+static int network_split_by_minsize(MPIR_Comm * comm_ptr, int key, int subcomm_min_size,
+                                    MPIR_Comm ** newcomm_ptr)
+{
+
+    int mpi_errno = MPI_SUCCESS;
+    int i, color;
+    int comm_size = MPIR_Comm_size(comm_ptr);
+    netloc_node_t *network_node;
+
+    if (subcomm_min_size == 0 || comm_size < subcomm_min_size ||
+        MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__INVALID) {
+        *newcomm_ptr = NULL;
+    } else
+        if (MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__FAT_TREE ||
+            MPIR_Process.network_attr.type == MPIR_NETLOC_NETWORK_TYPE__CLOS_NETWORK) {
+        int node_index, num_nodes;
+        int *num_processes_at_node;
+        MPIR_Errflag_t errflag = MPIR_ERR_NONE;
+        int subset_size;
+        int current_comm_color;
+        int prev_comm_color;
+
+        network_node = MPIR_Process.network_attr.network_endpoint;
+
+        mpi_errno =
+            MPIR_Netloc_get_hostnode_index_in_tree(MPIR_Process.network_attr,
+                                                   MPIR_Process.netloc_topology, network_node,
+                                                   &node_index, &num_nodes);
+
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        num_processes_at_node = (int *) MPL_calloc(1, sizeof(int) * num_nodes, MPL_MEM_OTHER);
+        num_processes_at_node[node_index] = 1;
+
+        /* Send the count to processes */
+        mpi_errno =
+            MPIR_Allreduce(MPI_IN_PLACE, num_processes_at_node, num_nodes, MPI_INT,
+                           MPI_SUM, comm_ptr, &errflag);
+
+        color =
+            get_color_from_subset_bitmap(node_index, num_processes_at_node, num_nodes,
+                                         subcomm_min_size);
+
+        mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+
+        /* There are more processes in the subset than requested within the node.
+         * Split further inside each node */
+        if (num_processes_at_node[node_index] > subcomm_min_size && node_index == color &&
+            ((node_index < (node_index - 1) ||
+              num_processes_at_node[node_index] < subcomm_min_size))) {
+            MPIR_Comm *node_comm;
+            int subcomm_rank;
+            int min_tree_depth;
+            hwloc_cpuset_t *node_comm_bindset;
+            int num_procs;
+
+            num_procs = num_processes_at_node[node_index];
+            node_comm = *newcomm_ptr;
+            subcomm_rank = MPIR_Comm_rank(node_comm);
+            node_comm_bindset =
+                (hwloc_cpuset_t *) MPL_calloc(num_procs, sizeof(hwloc_cpuset_t), MPL_MEM_OTHER);
+            node_comm_bindset[subcomm_rank] = MPIR_Process.bindset;
+
+            /* Send the bindset to processes in node communicator */
+            mpi_errno =
+                MPIR_Allreduce(MPI_IN_PLACE, node_comm_bindset,
+                               num_procs * sizeof(hwloc_cpuset_t), MPI_BYTE,
+                               MPI_NO_OP, node_comm, &errflag);
+
+
+            min_tree_depth = -1;
+            for (i = 0; i < num_procs; i++) {
+                hwloc_obj_t obj_containing_cpuset =
+                    hwloc_get_obj_covering_cpuset(MPIR_Process.hwloc_topology,
+                                                  node_comm_bindset[i]);
+                if (obj_containing_cpuset->depth < min_tree_depth || min_tree_depth == -1) {
+                    min_tree_depth = obj_containing_cpuset->depth;
+                }
+            }
+
+            if (min_tree_depth) {
+                int num_hwloc_objs_at_depth =
+                    hwloc_get_nbobjs_by_depth(MPIR_Process.hwloc_topology, min_tree_depth);
+                int *processes_cpuset =
+                    (int *) MPL_calloc(num_hwloc_objs_at_depth, sizeof(int), MPL_MEM_OTHER);
+                hwloc_obj_t parent_obj;
+                int hw_obj_index;
+                int current_proc_index = -1;
+
+                parent_obj = NULL;
+                hw_obj_index = 0;
+                while ((parent_obj =
+                        hwloc_get_next_obj_by_depth(MPIR_Process.hwloc_topology, min_tree_depth,
+                                                    parent_obj)) != NULL) {
+                    for (i = 0; i < num_procs; i++) {
+                        if (hwloc_bitmap_isincluded(parent_obj->cpuset, node_comm_bindset[i]) ||
+                            hwloc_bitmap_isequal(parent_obj->cpuset, node_comm_bindset[i])) {
+                            processes_cpuset[hw_obj_index] = 1;
+                            if (i == subcomm_rank) {
+                                current_proc_index = hw_obj_index;
+                            }
+                            break;
+                        }
+                    }
+                    hw_obj_index++;
+                }
+
+                color =
+                    get_color_from_subset_bitmap(current_proc_index, processes_cpuset,
+                                                 num_hwloc_objs_at_depth, subcomm_min_size);
+
+                mpi_errno = MPIR_Comm_split_impl(node_comm, color, key, newcomm_ptr);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                MPL_free(processes_cpuset);
+                MPIR_Comm_free_impl(node_comm);
+            }
+            MPL_free(node_comm_bindset);
+        }
+        MPL_free(num_processes_at_node);
+    } else {
+        *newcomm_ptr = NULL;
+    }
+
+  fn_exit:
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
 #endif
 
 static const char *SHMEM_INFO_KEY = "shmem_topo";
@@ -599,6 +766,10 @@ int MPIR_Comm_split_type_network_topo(MPIR_Comm * comm_ptr, int key, const char 
         && *(hintval + strlen("switch_level:")) != '\0') {
         int switch_level = atoi(hintval + strlen("switch_level:"));
         mpi_errno = network_split_switch_level(comm_ptr, key, switch_level, newcomm_ptr);
+    } else if (!strncmp(hintval, ("subcomm_min_size:"), strlen("subcomm_min_size:"))
+               && *(hintval + strlen("subcomm_min_size:")) != '\0') {
+        int subcomm_min_size = atoi(hintval + strlen("subcomm_min_size:"));
+        mpi_errno = network_split_by_minsize(comm_ptr, key, subcomm_min_size, newcomm_ptr);
     }
 #endif
   fn_exit:
