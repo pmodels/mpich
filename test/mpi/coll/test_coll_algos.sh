@@ -91,14 +91,15 @@ testing_env="env=MPIR_CVAR_ALLGATHER_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_ALLGATHER_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IALLGATHER_DEVICE_COLLECTIVE=0 "
-algo_names="recexch_distance_doubling recexch_distance_halving"
+algo_names="recexch_distance_doubling recexch_distance_halving gentran_brucks"
 kvalues="2 3 4"
 
 for algo_name in ${algo_names}; do
     for kval in ${kvalues}; do
         #set the environment
         env="${testing_env} env=MPIR_CVAR_IALLGATHER_INTRA_ALGORITHM=${algo_name} "
-        env+="env=MPIR_CVAR_IALLGATHER_RECEXCH_KVAL=${kval}"
+        env+="env=MPIR_CVAR_IALLGATHER_RECEXCH_KVAL=${kval} "
+        env+="env=MPIR_CVAR_IALLGATHER_BRUCKS_KVAL=${kval}"
 
         coll_algo_tests+="allgather2 10 ${env}${nl}"
         coll_algo_tests+="allgather3 10 ${env}${nl}"
