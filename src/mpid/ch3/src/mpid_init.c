@@ -105,6 +105,7 @@ static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state
 int MPID_Init(int *argc, char ***argv, int requested, int *provided, 
 	      int *has_args, int *has_env)
 {
+    int pmi_errno;
     int mpi_errno = MPI_SUCCESS;
     int has_parent;
     MPIDI_PG_t * pg=NULL;
@@ -149,7 +150,13 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 #ifdef USE_PMI2_API
     MPIDI_failed_procs_string = MPL_malloc(sizeof(char) * PMI2_MAX_VALLEN, MPL_MEM_STRINGS);
 #else
-    PMI_KVS_Get_value_length_max(&val);
+    pmi_errno = PMI_KVS_Get_value_length_max(&val);
+    if (pmi_errno != PMI_SUCCESS)
+    {
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
+                             "**pmi_kvs_get_value_length_max",
+                             "**pmi_kvs_get_value_length_max %d", pmi_errno);
+    }
     MPIDI_failed_procs_string = MPL_malloc(sizeof(char) * (val+1), MPL_MEM_STRINGS);
 #endif
 
