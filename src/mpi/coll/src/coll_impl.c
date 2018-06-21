@@ -529,7 +529,7 @@ int MPII_Coll_init(void)
     /* Igather Inter */
     if (0 == strcmp(MPIR_CVAR_IGATHER_INTER_ALGORITHM, "long_inter"))
         MPIR_Igather_inter_algo_choice = MPIR_IGATHER_INTER_ALGO_LONG;
-    else if (0 == strcmp(MPIR_CVAR_IGATHER_INTRA_ALGORITHM, "short_inter"))
+    else if (0 == strcmp(MPIR_CVAR_IGATHER_INTER_ALGORITHM, "short_inter"))
         MPIR_Igather_inter_algo_choice = MPIR_IGATHER_INTER_ALGO_SHORT;
     else
         MPIR_Igather_inter_algo_choice = MPIR_IGATHER_INTER_ALGO_AUTO;
