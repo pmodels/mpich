@@ -52,3 +52,5 @@ dtype_send 2
 recv_any 2
 irecv_any 2
 large_tag 2
+precv_anysrc 2 timeLimit=60
+precv_anysrc_exp 2 timeLimit=60
