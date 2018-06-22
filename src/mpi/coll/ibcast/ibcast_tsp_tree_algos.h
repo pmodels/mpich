@@ -68,18 +68,18 @@ int MPIR_TSP_Ibcast_sched_intra_tree(void *buffer, int count, MPI_Datatype datat
         MPIR_ERR_POP(mpi_errno);
     num_children = my_tree.num_children;
 
-    /* For correctness, transport based collectives need to get the
-     * tag from the same pool as schedule based collectives */
-    mpi_errno = MPIR_Sched_next_tag(comm, &tag);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
-
     /* do pipelined tree broadcast */
     /* NOTE: Make sure you are handling non-contiguous datatypes
      * correctly with pipelined broadcast, for example, buffer+offset
      * if being calculated correctly */
     for (i = 0; i < num_chunks; i++) {
         int msgsize = (i == 0) ? chunk_size_floor : chunk_size_ceil;
+
+        /* For correctness, transport based collectives need to get the
+         * tag from the same pool as schedule based collectives */
+        mpi_errno = MPIR_Sched_next_tag(comm, &tag);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
         /* Receive message from parent */
         if (my_tree.parent != -1) {
