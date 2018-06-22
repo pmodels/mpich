@@ -437,7 +437,7 @@ typedef struct {
 #define MPID_DEV_COMM_DECL       MPIDI_Devcomm_t dev;
 #define MPID_DEV_OP_DECL         MPIDI_Devop_t   dev;
 
-typedef struct MPIDI_av_entry {
+typedef struct {
     union {
     MPIDI_NM_ADDR_DECL} netmod;
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
