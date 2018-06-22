@@ -184,10 +184,6 @@ typedef struct {
 
         union {
         MPIDI_SHM_REQUEST_DECL} shm;
-
-#ifdef MPIDI_CH4_USE_WORK_QUEUES
-        MPIDI_workq_elemt_t command;
-#endif
     } ch4;
 } MPIDI_Devreq_t;
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
