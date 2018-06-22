@@ -21,13 +21,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend(int rank,
                                                   MPI_Count count,
                                                   MPI_Datatype datatype, MPIR_Request * sreq)
 {
+    int mpi_errno;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISEND);
 
-    MPIR_Assert(0);
+    mpi_errno = MPIDI_NM_am_isend(rank, comm, handler_id, am_hdr, am_hdr_sz, data, count, datatype,
+                                  sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISEND);
-    return MPI_SUCCESS;
+
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
@@ -39,13 +43,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isendv(int rank,
                                                    MPI_Count count,
                                                    MPI_Datatype datatype, MPIR_Request * sreq)
 {
+    int mpi_errno;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ISENDV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISENDV);
 
-    MPIR_Assert(0);
+    mpi_errno = MPIDI_NM_am_isendv(rank, comm, handler_id, am_hdr, iov_len, data, count, datatype,
+                                   sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISENDV);
-    return MPI_SUCCESS;
+
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t context_id, int src_rank,
@@ -56,24 +64,31 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t contex
                                                         MPI_Count count,
                                                         MPI_Datatype datatype, MPIR_Request * sreq)
 {
+    int mpi_errno;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ISEND_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISEND_REPLY);
 
-    MPIR_Assert(0);
+    mpi_errno = MPIDI_NM_am_isend_reply(context_id, src_rank, handler_id, am_hdr, am_hdr_sz, data,
+                                        count, datatype, sreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISEND_REPLY);
-    return MPI_SUCCESS;
+
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_am_hdr_max_sz(void)
 {
+    size_t val;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_HDR_MAX_SZ);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_HDR_MAX_SZ);
 
-    MPIR_Assert(0);
+    val = MPIDI_NM_am_hdr_max_sz();
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_HDR_MAX_SZ);
-    return MPI_SUCCESS;
+
+    return val;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
@@ -81,37 +96,46 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr(int rank,
                                                      int handler_id,
                                                      const void *am_hdr, size_t am_hdr_sz)
 {
+    int mpi_errno;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
 
-    MPIR_Assert(0);
+    mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, handler_id, am_hdr, am_hdr_sz);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
-    return MPI_SUCCESS;
+
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t context_id,
                                                            int src_rank, int handler_id,
                                                            const void *am_hdr, size_t am_hdr_sz)
 {
+    int mpi_errno;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR_REPLY);
 
-    MPIR_Assert(0);
+    mpi_errno = MPIDI_NM_am_send_hdr_reply(context_id, src_rank, handler_id, am_hdr, am_hdr_sz);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR_REPLY);
-    return MPI_SUCCESS;
+
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_am_recv(MPIR_Request * req)
 {
+    int mpi_errno;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_RECV);
 
-    MPIR_Assert(0);
+    mpi_errno = MPIDI_NM_am_recv(req);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_RECV);
-    return MPI_SUCCESS;
+
+    return mpi_errno;
 }
 
 #endif /* POSIX_AM_H_INCLUDED */
