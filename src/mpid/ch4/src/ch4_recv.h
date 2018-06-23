@@ -129,26 +129,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
         MPIDI_NM_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, av, request);
 #else
     if (unlikely(rank == MPI_ANY_SOURCE)) {
-        mpi_errno =
-            MPIDI_SHM_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
-
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
+        /* NM_Irecv for ANY_SOURCE will also post a receive for SHM. */
+        mpi_errno = MPIDI_NM_mpi_recv_init(buf, count, datatype, rank, tag,
+                                           comm, context_offset, av, request);
+        if (mpi_errno == MPI_SUCCESS) {
+            MPIDI_CH4I_REQUEST(*request, is_local) = 0;
+            MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
         }
-
-        mpi_errno =
-            MPIDI_NM_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, av,
-                                   &(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)));
-
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
-
-        MPIDI_CH4I_REQUEST(*request, is_local) = 1;
-        MPIDI_CH4I_REQUEST(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request), is_local) = 0;
-
-        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)) =
-            *request;
     } else {
         int r;
         if ((r = MPIDI_av_is_local(av)))
