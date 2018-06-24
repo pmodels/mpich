@@ -302,8 +302,15 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
             MPIDI_CH4I_REQUEST(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request), is_local) = 0;
         }
 
-        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)) =
-            *request;
+        if (MPIR_Request_is_complete(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request))) {
+            /* It is possible that the NM_irecv can be completed immediately, we have to cancel here. */
+            int continue_matching = 1;
+            MPIDI_CH4R_anysource_matched(*request, MPIDI_CH4R_NETMOD, &continue_matching);
+            MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
+        } else {
+            MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)) =
+                *request;
+        }
     } else {
         int r;
         if ((r = MPIDI_av_is_local(av)))
