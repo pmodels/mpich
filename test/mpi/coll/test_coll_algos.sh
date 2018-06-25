@@ -27,7 +27,6 @@ for algo_name in ${algo_names}; do
 
         coll_algo_tests+="bcasttest 10 ${env}${nl}"
         coll_algo_tests+="bcastzerotype 5 ${env}${nl}"
-        coll_algo_tests+="bcasttest 10 ${env}${nl}"
     done
 done
 
