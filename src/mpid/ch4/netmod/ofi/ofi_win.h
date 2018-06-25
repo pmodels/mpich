@@ -401,16 +401,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_win_init(MPIR_Win * win)
         goto fn_exit;
     }
 
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-
   fallback_global:
     /* Fall back to use global EP. */
     for (i = 0; i < MPIDI_CH4U_WIN(win, info_args).num_vnis; i++)
         MPIDI_OFI_win_init_global(win, i);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT);
+    return mpi_errno;
+  fn_fail:
     goto fn_exit;
 }
 
