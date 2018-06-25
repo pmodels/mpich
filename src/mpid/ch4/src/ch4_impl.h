@@ -963,13 +963,11 @@ static inline int MPIDI_CH4U_allocate_shm_segment(MPIR_Comm * shm_comm_ptr,
 {
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int mpi_errno = MPI_SUCCESS;
-    MPL_shm_hnd_t shm_segment_handle;
-    void *map_ptr = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_ALLOCATE_SHM_SEGMENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_ALLOCATE_SHM_SEGMENT);
 
-    mpi_errno = MPL_shm_hnd_init(&shm_segment_handle);
+    mpi_errno = MPL_shm_hnd_init(shm_segment_hdl_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -977,13 +975,13 @@ static inline int MPIDI_CH4U_allocate_shm_segment(MPIR_Comm * shm_comm_ptr,
         char *serialized_hnd_ptr = NULL;
 
         /* create shared memory region for all processes in win and map */
-        mpi_errno = MPL_shm_seg_create_and_attach(shm_segment_handle,
-                                                  shm_segment_len, (char **) &map_ptr, 0);
+        mpi_errno = MPL_shm_seg_create_and_attach(*shm_segment_hdl_ptr,
+                                                  shm_segment_len, (char **) base_ptr, 0);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
         /* serialize handle and broadcast it to the other processes in win */
-        mpi_errno = MPL_shm_hnd_get_serialized_by_ref(shm_segment_handle, &serialized_hnd_ptr);
+        mpi_errno = MPL_shm_hnd_get_serialized_by_ref(*shm_segment_hdl_ptr, &serialized_hnd_ptr);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -996,7 +994,7 @@ static inline int MPIDI_CH4U_allocate_shm_segment(MPIR_Comm * shm_comm_ptr,
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
         /* unlink shared memory region so it gets deleted when all processes exit */
-        mpi_errno = MPL_shm_seg_remove(shm_segment_handle);
+        mpi_errno = MPL_shm_seg_remove(*shm_segment_hdl_ptr);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     } else {
@@ -1007,22 +1005,20 @@ static inline int MPIDI_CH4U_allocate_shm_segment(MPIR_Comm * shm_comm_ptr,
                                shm_comm_ptr, &errflag);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
-        mpi_errno = MPL_shm_hnd_deserialize(shm_segment_handle, serialized_hnd,
+        mpi_errno = MPL_shm_hnd_deserialize(*shm_segment_hdl_ptr, serialized_hnd,
                                             strlen(serialized_hnd));
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
         /* attach to shared memory region created by rank 0 */
-        mpi_errno = MPL_shm_seg_attach(shm_segment_handle, shm_segment_len, (char **) &map_ptr, 0);
+        mpi_errno = MPL_shm_seg_attach(*shm_segment_hdl_ptr, shm_segment_len,
+                                       (char **) base_ptr, 0);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
         mpi_errno = MPIR_Barrier(shm_comm_ptr, &errflag);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     }
-
-    *shm_segment_hdl_ptr = shm_segment_handle;
-    *base_ptr = map_ptr;
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_ALLOCATE_SHM_SEGMENT);
