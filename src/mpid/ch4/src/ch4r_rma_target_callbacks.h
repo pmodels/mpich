@@ -655,7 +655,7 @@ static inline int MPIDI_handle_acc_cmpl(MPIR_Request * rreq)
                                               MPIDI_CH4U_REQUEST(rreq, req->areq.target_addr),
                                               MPIDI_CH4U_REQUEST(rreq, req->areq.target_count),
                                               MPIDI_CH4U_REQUEST(rreq, req->areq.target_datatype),
-                                              0, MPIDI_CH4U_REQUEST(rreq, req->areq.op));
+                                              MPIDI_CH4U_REQUEST(rreq, req->areq.op));
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     } else {
@@ -670,7 +670,7 @@ static inline int MPIDI_handle_acc_cmpl(MPIR_Request * rreq)
                                                                      req->areq.origin_datatype),
                                                   iov[i].iov_base, count,
                                                   MPIDI_CH4U_REQUEST(rreq,
-                                                                     req->areq.target_datatype), 0,
+                                                                     req->areq.target_datatype),
                                                   MPIDI_CH4U_REQUEST(rreq, req->areq.op));
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
@@ -737,7 +737,7 @@ static inline int MPIDI_handle_get_acc_cmpl(MPIR_Request * rreq)
                                               MPIDI_CH4U_REQUEST(rreq, req->areq.target_addr),
                                               MPIDI_CH4U_REQUEST(rreq, req->areq.target_count),
                                               MPIDI_CH4U_REQUEST(rreq, req->areq.target_datatype),
-                                              0, MPIDI_CH4U_REQUEST(rreq, req->areq.op));
+                                              MPIDI_CH4U_REQUEST(rreq, req->areq.op));
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     } else {
@@ -755,7 +755,7 @@ static inline int MPIDI_handle_get_acc_cmpl(MPIR_Request * rreq)
                                                                      req->areq.origin_datatype),
                                                   iov[i].iov_base, count,
                                                   MPIDI_CH4U_REQUEST(rreq,
-                                                                     req->areq.target_datatype), 0,
+                                                                     req->areq.target_datatype),
                                                   MPIDI_CH4U_REQUEST(rreq, req->areq.op));
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
