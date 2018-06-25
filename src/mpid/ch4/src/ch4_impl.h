@@ -1037,7 +1037,7 @@ static inline int MPIDI_CH4U_allocate_shm_segment(MPIR_Comm * shm_comm_ptr,
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int source_count,
                                                        MPI_Datatype source_dtp, void *target_buf,
                                                        int target_count, MPI_Datatype target_dtp,
-                                                       MPI_Aint stream_offset, MPI_Op acc_op)
+                                                       MPI_Op acc_op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_User_function *uop = NULL;
@@ -1072,18 +1072,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int sou
 
     if (is_empty_source == TRUE || MPIR_DATATYPE_IS_PREDEFINED(target_dtp)) {
         /* directly apply op if target dtp is predefined dtp OR source buffer is empty */
-        MPI_Aint real_stream_offset;
-        void *curr_target_buf;
-
-        if (is_empty_source == FALSE) {
-            MPIR_Assert(source_dtp == target_dtp);
-            real_stream_offset = (stream_offset / source_dtp_size) * source_dtp_extent;
-            curr_target_buf = (void *) ((char *) target_buf + real_stream_offset);
-        } else {
-            curr_target_buf = target_buf;
-        }
-
-        (*uop) (source_buf, curr_target_buf, &source_count, &source_dtp);
+        (*uop) (source_buf, target_buf, &source_count, &source_dtp);
     } else {
         /* derived datatype */
         MPIR_Segment *segp;
@@ -1107,7 +1096,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compute_acc_op(void *source_buf, int sou
         }
         /* --END ERROR HANDLING-- */
         MPIR_Segment_init(NULL, target_count, target_dtp, segp);
-        first = stream_offset;
+        first = 0;
         last = first + source_count * source_dtp_size;
 
         MPIR_Datatype_get_ptr(target_dtp, dtp);
