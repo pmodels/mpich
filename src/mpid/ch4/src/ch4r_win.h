@@ -974,7 +974,6 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
     MPIR_Win *win = NULL;
     ssize_t total_size = 0LL;
     MPIDI_CH4U_win_shared_info_t *shared_table = NULL;
-    void *map_ptr = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_ALLOCATE_SHARED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_ALLOCATE_SHARED);
 
@@ -1014,18 +1013,17 @@ static inline int MPIDI_CH4R_mpi_win_allocate_shared(MPI_Aint size,
     size_t page_sz, mapsize;
 
     mapsize = MPIDI_CH4R_get_mapsize(total_size, &page_sz);
+    MPIDI_CH4U_WIN(win, mmap_sz) = mapsize;
 
     mpi_errno = MPIDI_CH4U_allocate_shm_segment(comm_ptr, mapsize, 1 /* symmetric_flag */ ,
-                                                &MPIDI_CH4U_WIN(win, shm_segment_handle), &map_ptr);
+                                                &MPIDI_CH4U_WIN(win, shm_segment_handle),
+                                                &MPIDI_CH4U_WIN(win, mmap_addr));
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
-    MPIDI_CH4U_WIN(win, mmap_addr) = map_ptr;
-    MPIDI_CH4U_WIN(win, mmap_sz) = mapsize;
-
     /* compute the base addresses of each process within the shared memory segment */
     {
-        char *cur_base = (char *) map_ptr;
+        char *cur_base = (char *) MPIDI_CH4U_WIN(win, mmap_addr);
         for (i = 0; i < comm_ptr->local_size; i++) {
             if (shared_table[i].size)
                 shared_table[i].shm_base_addr = cur_base;
