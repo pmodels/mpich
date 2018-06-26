@@ -480,6 +480,13 @@ unexpected messages queued.
 **progresshookstoomany: too many progress hooks are registered
 
 #
+# Errors for NUMA detection
+#
+**nobind: not initialized (probably due to no process binding)
+**memtype: no memory type found
+**hwloc: not enabled
+
+#
 # To be removed
 #
 **init_vcrt:failed to create VCRT
