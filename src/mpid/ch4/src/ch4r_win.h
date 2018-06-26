@@ -242,7 +242,8 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
 
     if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
         mpi_errno = MPIDI_CH4R_mpi_win_set_info(win, info);
-        MPIR_Assert(mpi_errno == 0);
+        if (MPI_SUCCESS != mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
     }
 
 
@@ -689,14 +690,18 @@ static inline int MPIDI_CH4R_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_GET_INFO);
 
     mpi_errno = MPIR_Info_alloc(info_p_p);
-    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+    if (MPI_SUCCESS != mpi_errno) {
+        *info_p_p = NULL;
+        MPIR_ERR_POP(mpi_errno);
+    }
 
     if (MPIDI_CH4U_WIN(win, info_args).no_locks)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "no_locks", "true");
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "no_locks", "false");
 
-    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+    if (MPI_SUCCESS != mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     {
 #define BUFSIZE 32
@@ -722,7 +727,8 @@ static inline int MPIDI_CH4R_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_
         }
 
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_ordering", buf);
-        MPIR_Assert(mpi_errno == MPI_SUCCESS);
+        if (MPI_SUCCESS != mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 #undef BUFSIZE
     }
 
@@ -731,36 +737,50 @@ static inline int MPIDI_CH4R_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "accumulate_ops", "same_op_no_op");
 
-    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+    if (MPI_SUCCESS != mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     if (MPIDI_CH4U_WIN(win, info_args).alloc_shared_noncontig)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "alloc_shared_noncontig", "true");
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "alloc_shared_noncontig", "false");
 
-    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+    if (MPI_SUCCESS != mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     if (MPIDI_CH4U_WIN(win, info_args).same_size)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_size", "true");
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_size", "false");
 
-    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+    if (MPI_SUCCESS != mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     if (MPIDI_CH4U_WIN(win, info_args).same_disp_unit)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_disp_unit", "true");
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "same_disp_unit", "false");
 
+    if (MPI_SUCCESS != mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
     if (MPIDI_CH4U_WIN(win, info_args).alloc_shm)
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "alloc_shm", "true");
     else
         mpi_errno = MPIR_Info_set_impl(*info_p_p, "alloc_shm", "false");
 
-    MPIR_Assert(mpi_errno == MPI_SUCCESS);
+    if (MPI_SUCCESS != mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_GET_INFO);
     return mpi_errno;
+  fn_fail:
+    if (*info_p_p != NULL) {
+        MPIR_Info_free(*info_p_p);
+        *info_p_p = NULL;
+    }
+    goto fn_exit;
 }
 
 #undef FUNCNAME
