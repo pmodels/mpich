@@ -13,7 +13,6 @@
  * intentionally omitted since this header might get included multiple
  * times within the same .c file. */
 
-#include "algo_common.h"
 #include "treealgo.h"
 #include "tsp_namespace_def.h"
 
