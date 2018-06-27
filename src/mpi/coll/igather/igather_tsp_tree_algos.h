@@ -138,7 +138,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
     } else if (num_children > 0 && lrank != 0) {        /* intermediate ranks in the tree */
         tmp_buf = MPIR_TSP_sched_malloc(recv_size * sendtype_extent, sched);
     } else {    /* leaf ranks in the tree */
-        tmp_buf = sendbuf;
+        tmp_buf = (void *) sendbuf;
     }
 
     recv_id = MPL_malloc(sizeof(int) * num_children, MPL_MEM_COLL);
@@ -154,7 +154,7 @@ int MPIR_TSP_Igather_sched_intra_tree(const void *sendbuf, int sendcount,
             if (lrank == 0 && root != 0 && is_inplace)
                 data_buf = (char *) recvbuf + root * recvcount * recvtype_extent;
             else
-                data_buf = sendbuf;
+                data_buf = (void *) sendbuf;
 
             dtcopy_id =
                 MPIR_TSP_sched_localcopy(data_buf, sendcount, sendtype,
