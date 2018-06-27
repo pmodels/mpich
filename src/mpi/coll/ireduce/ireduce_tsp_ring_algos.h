@@ -112,7 +112,7 @@ int MPIR_TSP_Ireduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int co
             reduce_buffer = recvbuf;
         else
             reduce_buffer = (void *) sendbuf;
-    } else if (is_ring_leaf && !is_root) {
+    } else {    /* is_ring_leaf && !is_root */
         reduce_buffer = (void *) sendbuf;
     }
 
