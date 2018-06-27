@@ -26,7 +26,7 @@ int MPIR_TSP_Ireduce_sched_intra_ring(const void *sendbuf, void *recvbuf, int co
                                       MPIR_Comm * comm, int maxbytes, MPIR_TSP_sched_t * sched)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, j, t;
+    int j;
     int num_chunks, chunk_size_floor, chunk_size_ceil;
     int offset = 0;
     size_t extent, type_size;
