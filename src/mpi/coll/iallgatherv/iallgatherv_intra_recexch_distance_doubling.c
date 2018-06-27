@@ -22,7 +22,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgatherv_intra_recexch_distance_doubling(const void *sendbuf, int sendcount,
                                                      MPI_Datatype sendtype, void *recvbuf,
-                                                     int *recvcounts, int *displs,
+                                                     const int *recvcounts, const int *displs,
                                                      MPI_Datatype recvtype, MPIR_Comm * comm,
                                                      MPIR_Request ** req)
 {
