@@ -46,6 +46,7 @@ cvars:
         recexch_distance_doubling    - Force generic transport recursive exchange with neighbours doubling in distance in each phase
         recexch_distance_halving  - Force generic transport recursive exchange with neighbours halving in distance in each phase
         gentran_brucks     - Force generic transport based brucks algorithm
+        gentran_ring       - Force generic transport ring algorithm
 
     - name        : MPIR_CVAR_IALLGATHER_INTER_ALGORITHM
       category    : COLLECTIVE
@@ -324,6 +325,15 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount,
                 mpi_errno =
                     MPIR_Iallgather_intra_gentran_brucks(sendbuf, sendcount, sendtype, recvbuf,
                                                          recvcount, recvtype, comm_ptr, request);
+                if (mpi_errno)
+                    MPIR_ERR_POP(mpi_errno);
+                goto fn_exit;
+                break;
+            case MPIR_IALLGATHER_INTRA_ALGO_GENTRAN_RING:
+                mpi_errno =
+                    MPIR_Iallgather_intra_gentran_ring(sendbuf, sendcount, sendtype,
+                                                       recvbuf, recvcount, recvtype, comm_ptr,
+                                                       request);
                 if (mpi_errno)
                     MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
