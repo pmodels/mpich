@@ -34,8 +34,8 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
     int size, rank;
     int i, j, is_inplace = false;
     int lrank;
-    size_t sendtype_lb, sendtype_extent, sendtype_size, sendtype_true_extent;
-    size_t recvtype_lb, recvtype_extent, recvtype_size, recvtype_true_extent;
+    size_t sendtype_lb, sendtype_extent, sendtype_true_extent;
+    size_t recvtype_lb, recvtype_extent, recvtype_true_extent;
     int dtcopy_id[2];
     void *tmp_buf = NULL;
     int recv_id;
@@ -74,12 +74,10 @@ int MPIR_TSP_Iscatter_sched_intra_tree(const void *sendbuf, int sendcount,
         sendcount = recvcount;
     }
 
-    MPIR_Datatype_get_size_macro(sendtype, sendtype_size);
     MPIR_Datatype_get_extent_macro(sendtype, sendtype_extent);
     MPIR_Type_get_true_extent_impl(sendtype, &sendtype_lb, &sendtype_true_extent);
     sendtype_extent = MPL_MAX(sendtype_extent, sendtype_true_extent);
 
-    MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
     MPIR_Datatype_get_extent_macro(recvtype, recvtype_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_lb, &recvtype_true_extent);
     recvtype_extent = MPL_MAX(recvtype_extent, recvtype_true_extent);
