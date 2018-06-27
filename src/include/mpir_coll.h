@@ -518,12 +518,12 @@ int MPIR_Iallgatherv_sched_intra_ring(const void *sendbuf, int sendcount, MPI_Da
                                       MPI_Datatype recvtype, MPIR_Comm * comm_ptr, MPIR_Sched_t s);
 int MPIR_Iallgatherv_intra_recexch_distance_doubling(const void *sendbuf, int sendcount,
                                                      MPI_Datatype sendtype, void *recvbuf,
-                                                     int *recvcounts, int *displs,
+                                                     const int *recvcounts, const int *displs,
                                                      MPI_Datatype recvtype, MPIR_Comm * comm,
                                                      MPIR_Request ** req);
 int MPIR_Iallgatherv_intra_recexch_distance_halving(const void *sendbuf, int sendcount,
                                                     MPI_Datatype sendtype, void *recvbuf,
-                                                    int *recvcounts, int *displs,
+                                                    const int *recvcounts, const int *displs,
                                                     MPI_Datatype recvtype, MPIR_Comm * comm,
                                                     MPIR_Request ** req);
 
