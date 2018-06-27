@@ -45,7 +45,7 @@ int MPIR_TSP_Ireduce_sched_intra_tree(const void *sendbuf, void *recvbuf, int co
     int is_tree_root, is_tree_leaf, is_tree_intermediate;       /* Variables to store location of this rank in the tree */
     int is_root;
     MPII_Treealgo_tree_t my_tree;
-    void **child_buffer;        /* Buffer array in which data from children is received */
+    void **child_buffer = NULL; /* Buffer array in which data from children is received */
     void *reduce_buffer;        /* Buffer in which reduced data is present */
     int *vtcs = NULL, *recv_id = NULL, *reduce_id = NULL;       /* Arrays to store graph vertex ids */
     int nvtcs;
