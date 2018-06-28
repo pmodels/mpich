@@ -51,7 +51,6 @@ int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPII_Tre
         goto fn_exit;
 
     lrank = (rank + (nranks - root)) % nranks;
-    MPIR_Assert(k >= 2);
 
     ct->parent = (lrank == 0) ? -1 : (((lrank - 1) / k) + root) % nranks;
 
