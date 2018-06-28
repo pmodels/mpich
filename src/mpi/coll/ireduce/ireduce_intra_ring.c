@@ -28,7 +28,7 @@ int MPIR_Ireduce_intra_ring(const void *sendbuf, void *recvbuf, int count,
 
     mpi_errno = MPII_Gentran_Ireduce_intra_ring(sendbuf, recvbuf, count, datatype, op, root,
                                                 comm_ptr, request,
-                                                MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE);
+                                                MPIR_CVAR_IREDUCE_RING_CHUNK_SIZE);
 
     return mpi_errno;
 }
