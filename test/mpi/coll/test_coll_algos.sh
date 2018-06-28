@@ -25,6 +25,7 @@ for algo_name in ${algo_names}; do
         env="${testing_env} env=MPIR_CVAR_IBCAST_INTRA_ALGORITHM=${algo_name} "
         env+="env=MPIR_CVAR_IBCAST_TREE_KVAL=${kval} env=MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE=4096 "
         env+="env=MPIR_CVAR_IBCAST_SCATTER_KVAL=${kval} env=MPIR_CVAR_IBCAST_ALLGATHER_RECEXCH_KVAL=${kval} "
+        env+="env=MPIR_CVAR_IBCAST_RING_CHUNK_SIZE=4096 "
 
         coll_algo_tests+="bcasttest 10 ${env}${nl}"
         coll_algo_tests+="bcastzerotype 5 ${env}${nl}"
