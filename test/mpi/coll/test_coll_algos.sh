@@ -16,19 +16,31 @@ testing_env="env=MPIR_CVAR_BCAST_DEVICE_COLLECTIVE=0 "
 #test nb algorithms
 testing_env+="env=MPIR_CVAR_BCAST_INTRA_ALGORITHM=nb "
 testing_env+="env=MPIR_CVAR_IBCAST_DEVICE_COLLECTIVE=0 "
-algo_names="tree_kary tree_knomial scatter_recexch_allgather"
+algo_names="tree scatter_recexch_allgather"
+tree_types="0 1"
 kvalues="3"
 
 for algo_name in ${algo_names}; do
     for kval in ${kvalues}; do
-        #set the environment
-        env="${testing_env} env=MPIR_CVAR_IBCAST_INTRA_ALGORITHM=${algo_name} "
-        env+="env=MPIR_CVAR_IBCAST_TREE_KVAL=${kval} env=MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE=4096 "
-        env+="env=MPIR_CVAR_IBCAST_SCATTER_KVAL=${kval} env=MPIR_CVAR_IBCAST_ALLGATHER_RECEXCH_KVAL=${kval} "
-        env+="env=MPIR_CVAR_IBCAST_RING_CHUNK_SIZE=4096 "
+        if [ ${algo_name} -eq "tree" ]; then
+            for tree_type in ${tree_types}; do
+                #set the environment
+                env="${testing_env} env=MPIR_CVAR_IBCAST_INTRA_ALGORITHM=${algo_name} "
+                env+="env=MPIR_CVAR_IBCAST_TREE_TYPE=${tree_type} "
+                env+="env=MPIR_CVAR_IBCAST_TREE_KVAL=${kval} env=MPIR_CVAR_IBCAST_TREE_PIPELINE_CHUNK_SIZE=4096 "
+                env+="env=MPIR_CVAR_IBCAST_RING_CHUNK_SIZE=4096 "
 
-        coll_algo_tests+="bcasttest 10 ${env}${nl}"
-        coll_algo_tests+="bcastzerotype 5 ${env}${nl}"
+                coll_algo_tests+="bcasttest 10 ${env}${nl}"
+                coll_algo_tests+="bcastzerotype 5 ${env}${nl}"
+            done
+        else
+            #set the environment
+            env="${testing_env} env=MPIR_CVAR_IBCAST_INTRA_ALGORITHM=${algo_name} "
+            env+="env=MPIR_CVAR_IBCAST_SCATTER_KVAL=${kval} env=MPIR_CVAR_IBCAST_ALLGATHER_RECEXCH_KVAL=${kval} "
+
+            coll_algo_tests+="bcasttest 10 ${env}${nl}"
+            coll_algo_tests+="bcastzerotype 5 ${env}${nl}"
+        fi
     done
 done
 
