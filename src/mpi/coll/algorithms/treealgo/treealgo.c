@@ -60,6 +60,12 @@ int MPII_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int ro
                 MPIR_ERR_POP(mpi_errno);
             break;
 
+        case TREE_TYPE_KNOMIAL_2:
+            mpi_errno = MPII_Treeutil_tree_knomial_2_init(rank, nranks, k, root, ct);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
+            break;
+
         default:
             MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**treetype", "**treetype %d",
                                  tree_type);
