@@ -48,8 +48,8 @@ int MPII_Treealgo_tree_create(int rank, int nranks, int tree_type, int k, int ro
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPII_TREEALGO_TREE_INIT);
 
     switch (tree_type) {
-        case TREE_TYPE_KNOMIAL:
-            mpi_errno = MPII_Treeutil_tree_knomial_init(rank, nranks, k, root, ct);
+        case TREE_TYPE_KNOMIAL_1:
+            mpi_errno = MPII_Treeutil_tree_knomial_1_init(rank, nranks, k, root, ct);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             break;

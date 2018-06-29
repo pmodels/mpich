@@ -75,11 +75,11 @@ int MPII_Treeutil_tree_kary_init(int rank, int nranks, int k, int root, MPII_Tre
 
 
 #undef FUNCNAME
-#define FUNCNAME MPII_Treeutil_tree_knomial_init
+#define FUNCNAME MPII_Treeutil_tree_knomial_1_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPII_Treeutil_tree_knomial_init(int rank, int nranks, int k, int root,
-                                    MPII_Treealgo_tree_t * ct)
+int MPII_Treeutil_tree_knomial_1_init(int rank, int nranks, int k, int root,
+                                      MPII_Treealgo_tree_t * ct)
 {
     int lrank, i, j, maxtime, tmp, time, parent, current_rank, running_rank, crank;
     int mpi_errno = MPI_SUCCESS;

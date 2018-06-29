@@ -30,7 +30,7 @@ cvars:
       description : >-
         Tree type for tree based ireduce
         0 - kary tree
-        1 - knomial tree
+        1 - knomial_1 tree
 
     - name        : MPIR_CVAR_IREDUCE_TREE_PIPELINE_CHUNK_SIZE
       category    : COLLECTIVE
